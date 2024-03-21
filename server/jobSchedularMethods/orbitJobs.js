@@ -10,7 +10,7 @@ const ORBIT_MONITORING = "submitOrbitMonitoring.js";
 function createOrbitMegaphoneJob() {
   const uniqueJobName = `Orbit Megaphone Job`;
   const job = {
-    interval: "15s",
+    interval: "30m",
     name: uniqueJobName,
     path: path.join(__dirname, "..", "jobs", MEGAPHONE_JOB),
   };

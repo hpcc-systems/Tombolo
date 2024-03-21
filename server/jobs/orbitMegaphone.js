@@ -37,7 +37,6 @@ const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
     orbitIntegrations.map(async (integration) => {
       //if megaphone is not active, stop here and don't run
       if (!integration?.dataValues?.metaData?.megaPhoneAlerts?.active) return;
-      console.log("made it here");
 
       let application_id = integration.dataValues?.application_id;
 
@@ -84,11 +83,10 @@ const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
             console.log(
               integration.dataValues.metaData.megaPhoneAlerts.emailContacts
             );
-            logger.info("new build created!!");
+
             if (
               integration.dataValues.metaData.megaPhoneAlerts?.emailContacts
             ) {
-              logger.info("creating notification q!!!");
               //create a notification queue
               await notification.create({
                 type: "email",
