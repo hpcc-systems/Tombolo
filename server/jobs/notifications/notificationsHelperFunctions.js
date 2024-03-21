@@ -5,13 +5,22 @@ const models = require("../../models");
 const logger = require("../../config/logger");
 
 const NotificationQueue = models.notification_queue;
-const { retryOptions: { maxRetries, retryDelays } } = require("../../config/emailConfig");
+const {
+  retryOptions: { maxRetries, retryDelays },
+} = require("../../config/emailConfig");
 
 // Renders HTML template for email notification
-const renderEmailBody = ({ notificationOrigin, emailData }) => {
-    const templatePath = path.join( __dirname, "..", "..", "notificationTemplates","email", `${notificationOrigin}.ejs`);
-    const template = fs.readFileSync(templatePath, "utf-8")
-    return ejs.render(template, emailData);
+const renderEmailBody = ({ templateName, emailData }) => {
+  const templatePath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "notificationTemplates",
+    "email",
+    `${templateName}.ejs`
+  );
+  const template = fs.readFileSync(templatePath, "utf-8");
+  return ejs.render(template, emailData);
 };
 
 // Function to calculate the retryAfter time
@@ -29,11 +38,12 @@ const calculateRetryAfter = ({
 };
 
 //Update notification queue on error
-async function updateNotificationQueueOnError({ notificationId,
+async function updateNotificationQueueOnError({
+  notificationId,
   attemptCount,
   notification,
-  error
- }) {
+  error,
+}) {
   try {
     await NotificationQueue.update(
       {
@@ -52,7 +62,6 @@ async function updateNotificationQueueOnError({ notificationId,
     logger.error(updateError);
   }
 }
-
 
 module.exports = {
   renderEmailBody,
