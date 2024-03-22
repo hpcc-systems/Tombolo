@@ -24,9 +24,13 @@ module.exports = {
         allowNull: false,
         type: Sequelize.ENUM("immediate", "scheduled"),
       },
+      templateName: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
       deliveryTime: {
         allowNull: true,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       lastScanned: {
         allowNull: true,
