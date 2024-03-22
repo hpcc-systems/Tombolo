@@ -11,16 +11,21 @@ const {
 
 // Renders HTML template for email notification
 const renderEmailBody = ({ templateName, emailData }) => {
-  const templatePath = path.join(
-    __dirname,
-    "..",
-    "..",
-    "notificationTemplates",
-    "email",
-    `${templateName}.ejs`
-  );
-  const template = fs.readFileSync(templatePath, "utf-8");
-  return ejs.render(template, emailData);
+  try {
+    const templatePath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "notificationTemplates",
+      "email",
+      `${templateName}.ejs`
+    );
+    const template = fs.readFileSync(templatePath, "utf-8");
+    return ejs.render(template, emailData);
+  } catch (err) {
+    logger.error(err);
+    return { error: true, message: err };
+  }
 };
 
 // Function to calculate the retryAfter time

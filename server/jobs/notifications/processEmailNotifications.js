@@ -13,6 +13,7 @@ const {
   renderEmailBody,
   updateNotificationQueueOnError,
 } = require("./notificationsHelperFunctions");
+const { error } = require("console");
 
 const NotificationQueue = models.notification_queue;
 const Notification = models.monitoring_notifications;
@@ -52,8 +53,6 @@ const Notification = models.monitoring_notifications;
       } = notification;
       const emailDetails = metaData?.emailDetails;
 
-      renderEmailBody({ templateName, emailData: emailDetails.data });
-
       // Check if it meets the criteria to be sent
       if (
         (deliveryType === "immediate" && (reTryAfter < now || !reTryAfter)) ||
@@ -63,7 +62,16 @@ const Notification = models.monitoring_notifications;
           deliveryTime > lastScanned)
       ) {
         try {
-          console.log(emailDetails.mainRecipients);
+          //render the email body
+          const emailBody = renderEmailBody({
+            templateName,
+            emailData: emailDetails.data,
+          });
+
+          // Check if template is rendered successfully
+          if (emailBody?.error) {
+            throw new Error("Error retrieving template: " + emailBody?.message);
+          }
           //Common email details
           const commonEmailDetails = {
             receiver: emailDetails?.mainRecipients?.join(",") || "",
