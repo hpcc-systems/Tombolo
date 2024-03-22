@@ -3,6 +3,7 @@
   /* some colors from bootstrap */
   --primary: #007bff;
   --secondary: #6c757d;
+  --secondary-light: #d3d3d3;
   --success: #28a745;
   --info: #17a2b8;
   --warning: #ffc107;
@@ -1121,4 +1122,8 @@ div.tooltip {
   font-weight: 700 !important;
   font-family: inherit !important;
   color: rgba(0, 0, 0, 1) !important;
+}
+
+.monacoEditor {
+  border: 1px solid #d9d9d9;
 }

@@ -23,10 +23,12 @@ function JobMonitoringTab({
 
   //Redux
   const {
-    applicationReducer: { integrations },
+    applicationReducer: { applicationId, integrations },
   } = useSelector((state) => state);
 
-  const asrIntegration = integrations?.find((integration) => integration.name === 'ASR') !== undefined;
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
 
   return (
     <div>

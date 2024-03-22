@@ -65,6 +65,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
       },
+      lastJobRunDetails: {
+        allowNull: true,
+        type: DataTypes.JSON,
+      },
       metaData: {
         allowNull: false,
         type: Sequelize.JSON,

@@ -61,25 +61,25 @@ class AppHeader extends Component {
   }, 100);
 
   // eslint-disable-next-line react/no-deprecated
-  // componentWillReceiveProps(props) {
-  //   if (props.application && props.application.applicationTitle !== '') {
-  //     this.setState((prev) => {
-  //       const currentAppId = props.application.applicationId;
-  //       if (currentAppId) {
-  //         let appList = prev.applications;
-  //         // when user adds new app he will change state in redux by selecting that app, we will check if that app exists in our list, is now we will add it.
-  //         const app = appList.find((app) => app.value === currentAppId);
-  //         if (!app)
-  //           appList = [
-  //             ...appList,
-  //             { value: props.application.applicationId, display: props.application.applicationTitle },
-  //           ];
-  //         return { selected: props.application.applicationTitle, applications: appList };
-  //       }
-  //       return { selected: props.application.applicationTitle };
-  //     });
-  //   }
-  // }
+  componentWillReceiveProps(props) {
+    if (props.application && props.application.applicationTitle !== '') {
+      this.setState((prev) => {
+        const currentAppId = props.application.applicationId;
+        if (currentAppId) {
+          let appList = prev.applications;
+          // when user adds new app he will change state in redux by selecting that app, we will check if that app exists in our list, is now we will add it.
+          const app = appList.find((app) => app.value === currentAppId);
+          if (!app)
+            appList = [
+              ...appList,
+              { value: props.application.applicationId, display: props.application.applicationTitle },
+            ];
+          return { selected: props.application.applicationTitle, applications: appList };
+        }
+        return { selected: props.application.applicationTitle };
+      });
+    }
+  }
   componentDidMount() {
     if (this.props.location.pathname.includes('manualJobDetails')) {
       return;
@@ -141,7 +141,8 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getConsumers());
       this.props.dispatch(applicationActions.getLicenses());
       this.props.dispatch(applicationActions.getConstraints());
-      this.props.dispatch(applicationActions.getIntegrations(this.props.application?.applicationId));
+      // this.props.dispatch(applicationActions.getIntegrations(this.props.application.applicationId));
+      this.props.dispatch(applicationActions.getAllActiveIntegrations());
     }
 
     if (this.props.newApplication) {

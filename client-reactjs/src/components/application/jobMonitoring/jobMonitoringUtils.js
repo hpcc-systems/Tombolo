@@ -107,34 +107,45 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
 };
 
 // Get domains for job monitoring - ASR
-// Note - Domain list depends on the type of monitoring which is referred as activity type in the backend.
-// get the Activity ID from backend/database
-
-export const getDomains = async () => {
-  const activityTypeId = '0008'; // JOB/APP monitoring activity type per the ASR database
+export const getDomains = async ({ monitoringTypeId }) => {
   const options = {
     method: 'GET',
     headers: authHeader(),
   };
-  const response = await fetch(`/api/fido/domains/${activityTypeId}`, options);
+  const response = await fetch(`/api/asr/domainsForSpecificMonitoring/${monitoringTypeId}`, options);
   if (!response.ok) {
     throw new Error('Failed to get domains');
   }
   const domains = await response.json();
+
   return domains;
 };
 
 //Get product categories for selected domain and activity type
 export const getProductCategories = async ({ domainId }) => {
-  const activityTypeId = '0008'; // JOB/APP monitoring activity type per the ASR database
   const options = {
     method: 'GET',
     headers: authHeader(),
   };
-  const response = await fetch(`/api/fido/productCategories/${domainId}/${activityTypeId}`, options);
+  const response = await fetch(`/api/asr/productCategoriesForSpecificDomain/${domainId}`, options);
   if (!response.ok) {
     throw new Error('Failed to get product categories');
   }
   const productCategories = await response.json();
   return productCategories;
+};
+
+// Get id for particular monitoring type example "Job Monitoring"
+export const getMonitoringTypeId = async ({ monitoringTypeName }) => {
+  const options = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+  const response = await fetch(`/api/monitorings/getMonitoringTypeId/${monitoringTypeName}`, options);
+  console.log('response');
+  if (!response.ok) {
+    throw new Error('Failed to get monitoring type Id');
+  }
+  const monitoringTypeId = await response.json();
+  return monitoringTypeId;
 };

@@ -68,7 +68,7 @@ class LeftNav extends Component {
     const applicationId = this.props?.applicationId || '';
     const integrations = this.props?.integrations || [];
 
-    const asrActive = integrations.find((i) => i.name === 'ASR')?.active;
+    const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
 
     if (!this.props.loggedIn || !this.props.user || Object.getOwnPropertyNames(this.props.user).length == 0) {
       return null;

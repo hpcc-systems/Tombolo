@@ -1,1 +1,10 @@
-job monitoring show details about when it is suppose to run such as Daily PM
+1. When add job monitoring modal is close reset the local state
+2. When tab closes reset the selected tab state
+3. Max threshold hold exceeded option be available only when threshold time is provided
+4. Added a job tried to stright up approve, got some kind of undefined errr / while clicking edit also
+5. Displaying undefined minutes
+6. job monitoring in table display chronologically by date
+7. Bulk update
+8. Show job monitoring only for app selected application
+9. Same integration multiple times in redux. Find out what is causing this -
+                                                                                                                                                                         

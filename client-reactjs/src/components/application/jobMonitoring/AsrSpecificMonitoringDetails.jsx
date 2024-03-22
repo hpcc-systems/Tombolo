@@ -1,50 +1,60 @@
 // Desc: This file contains the form for ASR specific monitoring details
 import React, { useEffect, useState } from 'react';
-const { Form, Row, Col, Input, Select, message } = require('antd');
+import { Form, Row, Col, Input, Select, message } from 'antd';
 
-import { getDomains, getProductCategories } from './jobMonitoringUtils';
+import { getDomains, getProductCategories, getMonitoringTypeId } from './jobMonitoringUtils';
 
 //Constants
 const { Option } = Select;
-const jobRunType = [
-  { label: 'Daytime', value: 'Daytime' },
-  { label: 'Overnight', value: 'Overnight' },
-  { label: 'AM', value: 'AM' },
-  { label: 'PM', value: 'PM' },
-  { label: 'Every 2 Days', value: 'Every2days' },
-];
+const monitoringTypeName = 'Job Monitoring';
+
 const severityLevels = [0, 1, 2, 3];
 
 function AsrSpecificMonitoringDetails({ form }) {
   //Local States
-  const [domain, setDomain] = useState([]);
+  const [monitoringTypeId, setMonitoringTypeId] = useState(null);
+  const [domains, setDomains] = useState([]);
   const [productCategories, setProductCategories] = useState([]);
   const [selectedDomain, setSelectedDomain] = useState(null);
 
   //Effects
   useEffect(() => {
-    // Get domains
+    // monitoring type id
+
     (async () => {
       try {
-        const domainData = await getDomains();
-        setDomain(domainData);
+        const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
+        setMonitoringTypeId(monitoringTypeId);
+      } catch (error) {
+        message.error('Error fetching monitoring type ID');
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    // Get domains
+    if (!monitoringTypeId) return;
+    (async () => {
+      try {
+        const domainData = await getDomains({ monitoringTypeId });
+        setDomains(domainData);
       } catch (error) {
         message.error('Error fetching domains');
       }
     })();
 
     // Get product categories
-    if (selectedDomain) {
-      (async () => {
-        try {
-          const productCategories = await getProductCategories({ domainId: selectedDomain });
-          setProductCategories(productCategories);
-        } catch (error) {
-          message.error('Error fetching product category');
-        }
-      })();
-    }
-  }, [selectedDomain]);
+    if (!selectedDomain) return;
+
+    (async () => {
+      try {
+        const productCategories = await getProductCategories({ domainId: selectedDomain });
+        setProductCategories(productCategories);
+      } catch (error) {
+        message.error('Error fetching product category');
+      }
+    })();
+  }, [monitoringTypeId, selectedDomain]);
 
   //Handle domain change function
   const handleDomainChange = (value) => {
@@ -58,11 +68,11 @@ function AsrSpecificMonitoringDetails({ form }) {
         <Col span={12}>
           <Form.Item label="Domain" name="domain" rules={[{ required: true, message: 'Please select an option' }]}>
             <Select onChange={(value) => handleDomainChange(value)} placeholder="Domain">
-              {domain.length > 0 &&
-                domain.map((d) => {
+              {domains.length > 0 &&
+                domains.map((d) => {
                   return (
-                    <Option key={d.value} value={d.value}>
-                      {d.label}
+                    <Option key={d.id} value={d.id}>
+                      {d.name}
                     </Option>
                   );
                 })}
@@ -76,8 +86,8 @@ function AsrSpecificMonitoringDetails({ form }) {
             rules={[{ required: true, message: 'Please select an option' }]}>
             <Select placeholder="Product Category">
               {productCategories.map((c) => (
-                <Option key={c.value} value={c.value}>
-                  {c.label}
+                <Option key={c.id} value={c.id}>
+                  {`${c.name} (${c.shortCode})`}
                 </Option>
               ))}
             </Select>
@@ -86,26 +96,6 @@ function AsrSpecificMonitoringDetails({ form }) {
       </Row>
 
       <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            label="Job Monitor Type"
-            name="jobMonitorType"
-            rules={[
-              {
-                required: true,
-                message: 'Please enter a 6-digit number in HHMMSS format!',
-              },
-            ]}>
-            <Select placeholder="Job monitor type">
-              {jobRunType.map((t) => (
-                <Option key={t.value} value={t.value}>
-                  {t.label}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Col>
-
         <Col span={12}>
           <Form.Item
             label="Severity"
@@ -120,9 +110,6 @@ function AsrSpecificMonitoringDetails({ form }) {
             </Select>
           </Form.Item>
         </Col>
-      </Row>
-
-      <Row gutter={16}>
         <Col span={12}>
           <Form.Item
             label="Require Complete"
@@ -138,6 +125,9 @@ function AsrSpecificMonitoringDetails({ form }) {
             </Select>
           </Form.Item>
         </Col>
+      </Row>
+
+      <Row gutter={16}>
         <Col span={12}>
           <Form.Item
             label="Maximum Build Time / Threshold (in mins)"

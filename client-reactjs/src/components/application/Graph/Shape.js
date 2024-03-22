@@ -112,7 +112,7 @@ const ports = {
 class Node extends React.Component {
   shouldComponentUpdate() {
     const { node } = this.props;
-    console.log(this.props);
+
     if (node) {
       // Graph does not detect changes in nodes data when toggle collapse, need to mention it here manually
       if (node.hasChanged('data') || node.data?.isCollapsed) {

@@ -120,7 +120,6 @@ class JobScheduler {
       await this.scheduleSuperFileMonitoringOnServerStart();
       await this.scheduleClusterMonitoringOnServerStart();
       await this.scheduleKeyCheck();
-      // await this.scheduleJobMonitoringOnServerStart();
       await this.createClusterUsageHistoryJob();
       await this.scheduleEmailNotificationProcessing();
       await this.scheduleTeamsNotificationProcessing();
@@ -338,10 +337,6 @@ class JobScheduler {
   createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
   }
-
-  // createIntegrations() {
-  //   return createIntegrations.call(this);
-  // }
 }
 
 module.exports = new JobScheduler();

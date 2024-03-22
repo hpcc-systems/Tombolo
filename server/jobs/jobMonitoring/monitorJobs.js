@@ -1,10 +1,10 @@
 const { parentPort, workerData } = require("worker_threads");
 const { WorkunitsService } = require("@hpcc-js/comms");
 
-
 const logger = require("../../config/logger");
 const models = require("../../models");
 const {decryptString} = require("../../utils/cipher");
+const {matchJobName} = require("./monitorJobsUtil");
 
 const JobMonitoring = models.jobMonitoring;
 const cluster = models.cluster;
@@ -38,6 +38,7 @@ const { all } = require("axios");
       } else {
         jobMonitoringsByCluster[clusterId].push(jobMonitoring);
       }
+
     });
 
     // --Get unique cluster IDs --
@@ -49,7 +50,7 @@ const { all } = require("axios");
       raw: true,
     });
 
-    // Decrypting passwords
+    // Decrypting cluster passwords
     clustersInfo.forEach((clusterInfo) => {
       if (clusterInfo.hash) {
         clusterInfo.password = decryptString(clusterInfo.hash);
@@ -107,7 +108,6 @@ const { all } = require("axios");
     const promiseList = promises.map((p) => p.promise);
     const wuInfo = await Promise.all(promiseList);
 
-  
 
     // -- Group detailed workunit info by cluster --
     const wuDetailInfo = {};
@@ -120,65 +120,61 @@ const { all } = require("axios");
       }
     });
 
-    // TODO - remove  later - write the wuDetailInfo to test file located in root
-    const fs = require("fs");
-    fs.writeFileSync("test.json", JSON.stringify(wuDetailInfo, null, 2));
-    // ----------------------------------------
-
-    // -- Check if workunit name ( Job name ) matches any of the job monitoring name or pattern
+    // Workunits that match the name or pattern of job from job monitoring, needs to be updated
+    const jobMonitoringsToUpdate = [];
+    const notifications = [];
     jobMonitorings.forEach((monitoring) => {
-      console.log('Here --')
-      const {
-        clusterId,
-        jobName: jobNameOrPattern,
-        monitoringScope,
-        id,
-      } = monitoring;
+      const {clusterId,jobName: jobNameOrPattern,id, metaData} = monitoring;
+      const {notificationMetaData : {
+        notificationCondition=[], 
+        teamsHooks = [], 
+        notifyContacts=[], 
+        primaryContacts=[], 
+        secondaryContacts=[]}} = metaData; 
 
       const clusterWUs = wuDetailInfo[clusterId];
 
-      if (!clusterWUs) {
-        return;
-      }
-      // ------------------------------ Job monitorings to be updated ------------------------------
-      const jobMonitoringsToUpdate = {};
-      //--------------------------------------------------------------------------------------------
+      if (!clusterWUs) {return;}
 
       clusterWUs.forEach((wu) => {
         const { Wuid, Jobname, State } = wu;
-        console.log('----------dd--------------------------------');
-        console.log(Wuid, Jobname, State);
-        console.log('------------------------------------------');
+        console.log("-- Job name and pattern --", Jobname, jobNameOrPattern);
+        //TODO -  Ignore if last run wuid is === to the current wuid
 
         // Check if the job name matches the name or pattern
-        if (monitoringScope === "SpecificJob" && Jobname === jobNameOrPattern) {
-          jobMonitoringsToUpdate[Wuid] = {id, details: wu};
+        if (matchJobName(jobNameOrPattern, Jobname)){
+          console.log('--- wu job name matched with monitoring job name ---')
+          jobMonitoringsToUpdate.push({ id, lastJobRunDetails: wu });
 
 
-          // Check if any notification conditions are met
-          let {
-            metaData: {
-              notificationMetaData: { notificationCondition },
-            },
-          } = monitoring;
+          // TODO - First take  care of the case when threshold exceeded - More info needed
+          // TODO - If the job is in state other than completed and its past the run window - Handle here
 
-          // The state matches the condition
-          notificationCondition = notificationCondition.map((condition) => {
+          // Change the state to lowercase
+          const lowerCaseNotificationCondition = notificationCondition.map((condition) => {
             return condition.toLowerCase();
           });
 
-          console.log('----------------NC ----------------------------');
-          console.log(notificationCondition);
-          console.log(State.toLowerCase());
-          console.log("----------------------------------------------");
-
-
-          if(notificationCondition.includes(State.toLowerCase())){
-            console.log(" --- this notification condition is met ---", State)
+          // The state matches the condition (Failed, Aborted))
+          if(lowerCaseNotificationCondition.includes(State.toLowerCase())){
+            console.log('-- Notification condition has been met --');
           }
+
         }
       });
+
+      //TODO - If job was not started with in the given window - Handle Here
     });
+
+    // Update job monitorings with last job run details
+    if (jobMonitoringsToUpdate.length > 0) {
+     for(let j in jobMonitoringsToUpdate){
+       const {id, lastJobRunDetails} = jobMonitoringsToUpdate[j];
+       await JobMonitoring.update({lastJobRunDetails}, {where: {id}});
+     }
+     console.log('--- update complete ---')
+    }
+
   } catch (err) {
     logger.error(err);
   } finally {

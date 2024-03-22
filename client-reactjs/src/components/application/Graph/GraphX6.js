@@ -22,8 +22,7 @@ import { getWorkingCopyGraph, saveWorkingCopyGraph } from '../../common/CommonUt
 const NOTIFICATION_CONF = {
   placement: 'top',
   style: {
-    width: 'auto',
-    maxWidth: '750px',
+    width: '400px',
   },
 };
 
