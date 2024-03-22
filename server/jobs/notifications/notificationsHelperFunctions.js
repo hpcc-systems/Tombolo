@@ -11,7 +11,6 @@ const {
 
 // Renders HTML template for email notification
 const renderEmailBody = ({ templateName, emailData }) => {
-  try {
     const templatePath = path.join(
       __dirname,
       "..",
@@ -22,10 +21,6 @@ const renderEmailBody = ({ templateName, emailData }) => {
     );
     const template = fs.readFileSync(templatePath, "utf-8");
     return ejs.render(template, emailData);
-  } catch (err) {
-    logger.error(err);
-    return { error: true, message: err };
-  }
 };
 
 // Function to calculate the retryAfter time
@@ -53,7 +48,7 @@ async function updateNotificationQueueOnError({
     await NotificationQueue.update(
       {
         attemptCount: attemptCount + 1,
-        failureMessage: { err: error.message, notification },
+        failureMessage: { err: error.message },
         reTryAfter: calculateRetryAfter({
           attemptCount,
           retryDelays: retryDelays,

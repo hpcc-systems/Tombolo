@@ -68,10 +68,6 @@ const Notification = models.monitoring_notifications;
             emailData: emailDetails.data,
           });
 
-          // Check if template is rendered successfully
-          if (emailBody?.error) {
-            throw new Error("Error retrieving template: " + emailBody?.message);
-          }
           //Common email details
           const commonEmailDetails = {
             receiver: emailDetails?.mainRecipients?.join(",") || "",
@@ -91,10 +87,7 @@ const Notification = models.monitoring_notifications;
             // If notification origin is not manual, match the template
             notificationsToBeSent.push({
               ...commonEmailDetails,
-              htmlBody: renderEmailBody({
-                templateName,
-                emailData: emailDetails.data,
-              }),
+              htmlBody: emailBody,
             });
           }
         } catch (error) {
