@@ -6,6 +6,7 @@ const initialState = {
   updatedApplication: '',
   deletedApplicationId: '',
   clusters: [],
+  noClusters: { redirect: false, noClusters: false },
   consumers: [],
   licenses: [],
   constraints: [],
@@ -47,6 +48,11 @@ export function applicationReducer(state = initialState, action) {
       return {
         ...state,
         clusters: action.clusters,
+      };
+    case Constants.NO_CLUSTERS_FOUND:
+      return {
+        ...state,
+        noClusters: action.noClusters,
       };
     case Constants.CONSUMERS_RETRIEVED:
       return {

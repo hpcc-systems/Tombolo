@@ -31,7 +31,7 @@ function ClusterUsage() {
     }
 
     // If no clusterId in url
-    if (clusters && !urlQueries.clusterId) {
+    if (clusters?.length && !urlQueries.clusterId) {
       setSelectedCluster(clusters[0].id);
       addQueriesToUrl({ queryName: 'clusterId', queryValue: clusters[0].id });
     }
