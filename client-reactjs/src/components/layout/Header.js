@@ -147,7 +147,6 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getAllActiveIntegrations());
     }
 
-    console.log(this.props);
     //if noClusters.noClusters prop is true, show the no cluster modal and dispatch action to reset the noClusters state
     if (this.props.noClusters.noClusters && !this.props.noClusters.redirect) {
       this.props.dispatch(applicationActions.updateNoClustersFound({ noClusters: true, redirect: true }));

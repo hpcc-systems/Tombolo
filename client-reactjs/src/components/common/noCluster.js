@@ -9,7 +9,15 @@ const NoCluster = ({ visible, setVisible, applicationId }) => {
 
   return (
     <div>
-      <Modal title="No Clusters Setup" open={visible} onOk={handleOk}>
+      <Modal
+        title="No Clusters Setup"
+        open={visible}
+        onOk={handleOk}
+        footer={(_, { OkBtn }) => (
+          <>
+            <OkBtn />
+          </>
+        )}>
         <p>
           It looks like you do not have any clusters set up, most of Tombolos functionalities rely on a connection to an
           HPCC cluster including:
