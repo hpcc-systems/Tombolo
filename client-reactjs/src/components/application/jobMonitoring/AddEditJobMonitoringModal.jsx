@@ -37,6 +37,7 @@ const AddEditJobMonitoringModal = ({
   const [activeTab, setActiveTab] = useState('0');
   // Keep track of visited tabs, some form fields are loaded only when tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
+  const [selectedCluster, setSelectedCluster] = useState(null);
 
   // Handle tab change
   const handleTabChange = (key) => {
@@ -58,12 +59,14 @@ const AddEditJobMonitoringModal = ({
           setMonitoringScope={setMonitoringScope}
           jobMonitorings={jobMonitorings}
           isEditing={isEditing}
+          selectedCluster={selectedCluster}
+          setSelectedCluster={setSelectedCluster}
         />
       ),
       id: 1,
     },
     {
-      label: 'Monitoring Details',
+      label: 'Scheduling Details',
       id: 2,
       component: () => (
         <JobMonitoringTab
@@ -78,6 +81,7 @@ const AddEditJobMonitoringModal = ({
           setCronMessage={setCronMessage}
           erroneousScheduling={erroneousScheduling}
           monitoringScope={monitoringScope}
+          selectedCluster={selectedCluster}
         />
       ),
     },
@@ -104,7 +108,7 @@ const AddEditJobMonitoringModal = ({
 
   const handleCancel = () => {
     form.resetFields();
-    setIntermittentScheduling({ schedulingType: 'daily', id: uuidv4() });
+    setIntermittentScheduling({ frequency: 'daily', id: uuidv4() });
     setCompleteSchedule([]);
     setDisplayAddJobMonitoringModal(false);
     setActiveTab('0');

@@ -164,7 +164,7 @@ const JobMonitoringTable = ({
     setDisplayAddRejectModal(true);
   };
 
-  return <Table dataSource={jobMonitorings} columns={columns} rowKey="id" size="small" />;
+  return <Table dataSource={jobMonitorings} columns={columns} rowKey="id" size="small" pagination={{ pageSize: 20 }} />;
 };
 
 export default JobMonitoringTable;

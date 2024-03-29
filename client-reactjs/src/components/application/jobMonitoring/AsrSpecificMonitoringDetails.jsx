@@ -1,6 +1,6 @@
 // Desc: This file contains the form for ASR specific monitoring details
 import React, { useEffect, useState } from 'react';
-import { Form, Row, Col, Input, Select, message } from 'antd';
+import { Form, Row, Col, Select, message, TimePicker } from 'antd';
 
 import { getDomains, getProductCategories, getMonitoringTypeId } from './jobMonitoringUtils';
 
@@ -10,7 +10,7 @@ const monitoringTypeName = 'Job Monitoring';
 
 const severityLevels = [0, 1, 2, 3];
 
-function AsrSpecificMonitoringDetails({ form }) {
+function AsrSpecificMonitoringDetails({ form, clusterOffset }) {
   //Local States
   const [monitoringTypeId, setMonitoringTypeId] = useState(null);
   const [domains, setDomains] = useState([]);
@@ -20,7 +20,6 @@ function AsrSpecificMonitoringDetails({ form }) {
   //Effects
   useEffect(() => {
     // monitoring type id
-
     (async () => {
       try {
         const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
@@ -130,23 +129,10 @@ function AsrSpecificMonitoringDetails({ form }) {
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item
-            label="Maximum Build Time / Threshold (in mins)"
-            name="threshold"
-            required={form.getFieldValue('notificationCondition')?.includes('ThresholdExceeded')}
-            rules={[
-              {
-                validator: async (_, value) => {
-                  if (form.getFieldValue('notificationCondition')?.includes('ThresholdExceeded')) {
-                    if (!value) {
-                      return Promise.reject(new Error('This field is required'));
-                    } else if (!(parseInt(value) > 0 && parseInt(value) < 1440)) {
-                      return Promise.reject(new Error('Threshold should be between 0 and 1440'));
-                    }
-                  }
-                },
-              },
-            ]}>
-            <Input type="number" min={1} max={1440} style={{ width: '100%' }} placeholder="Threshold (in minutes)" />
+            label="Expected Run/Completion Time (HH:MM)"
+            name="expectedRunCompletionTime"
+            rules={[{ required: true, message: 'Expected Run/Completion time is a required field' }]}>
+            <TimePicker allowClear style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
           </Form.Item>
         </Col>
       </Row>

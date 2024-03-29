@@ -1,10 +1,27 @@
 1. When add job monitoring modal is close reset the local state
 2. When tab closes reset the selected tab state
 3. Max threshold hold exceeded option be available only when threshold time is provided
-4. Added a job tried to stright up approve, got some kind of undefined errr / while clicking edit also
+4. Added a job tried to straight up approve, got some kind of undefined errr / while clicking edit also
 5. Displaying undefined minutes
 6. job monitoring in table display chronologically by date
 7. Bulk update
 8. Show job monitoring only for app selected application
 9. Same integration multiple times in redux. Find out what is causing this -
+10. Other matts concerns - check teams chat
+11. Consider adding a config files for poller such as job monitoring where users can enter the pooling interval etc 
+12. Option to pause, pausing and restarting should not require re-approval
+13. Details showing threshold undefined - remove it and add expected run/complete time
+14. After creating JM, un-shift and add to the state array so it appears at the top
+15. render the threshold start time correctly - remove old threshold
+16. add spinner while searching job with  pattern , see if you can display the matched jobs if pattern entered but disable select
+17.  Details - product and domain displaying id , display the name instead
+19. Check where helper text is needed and add docs
+20.  ** TIME ZONE ***
+21. Expected run / completion time must be dictated by window / interval
+22. If the job was in pending state or in compiling state - those work unit need to be re-check in next run, they could have failed or moved to undesired state
+23. Editing scheduling tab - err
+24. if user selects 20,30,31 dates under monthly show warning saying - some months do not have this date
+25. follow up emails up 2 3 emails
+
+
                                                                                                                                                                          

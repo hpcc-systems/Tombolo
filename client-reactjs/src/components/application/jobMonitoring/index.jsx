@@ -1,7 +1,10 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
+import dayjs from 'dayjs';
+import moment from 'moment';
 
 import AddJobMonitoringBtn from './AddJobMonitoringBtn.jsx';
 import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
@@ -21,9 +24,9 @@ function JobMonitoring() {
   //Local States
   const [displayAddJobMonitoringModal, setDisplayAddJobMonitoringModal] = useState(false);
   const [intermittentScheduling, setIntermittentScheduling] = useState({
-    schedulingType: 'daily',
-    id: uuidv4(),
     frequency: 'daily',
+    id: uuidv4(),
+    runWindow: 'daily',
   });
   const [completeSchedule, setCompleteSchedule] = useState([]);
   const [cron, setCron] = useState('');
@@ -77,21 +80,21 @@ function JobMonitoring() {
       form.setFieldsValue(selectedMonitoring);
       setMonitoringScope(selectedMonitoring.monitoringScope);
       form.setFieldsValue({
-        threshold: selectedMonitoring?.metaData?.threshold,
+        expectedRunCompletionTime: selectedMonitoring?.metaData?.expectedRunCompletionTime,
         ...selectedMonitoring?.metaData?.asrSpecificMetaData,
         ...selectedMonitoring?.metaData?.notificationMetaData,
       });
       if (selectedMonitoring.metaData.schedule) {
         const { schedule } = selectedMonitoring.metaData;
         if (schedule.length > 0) {
-          const { schedulingType } = schedule[0];
-          if (schedulingType === 'cron') {
+          const { frequency } = schedule[0];
+          if (frequency === 'cron') {
             setCron(schedule[0].cron);
-          } else if (schedulingType === 'daily' || schedulingType === 'weekly') {
+          } else if (frequency === 'daily' || frequency === 'weekly') {
             setIntermittentScheduling(schedule[0]);
           } else {
             setCompleteSchedule(schedule);
-            setIntermittentScheduling({ schedulingType: schedule[0].schedulingType });
+            setIntermittentScheduling({ frequency: schedule[0].frequency });
           }
         }
       }
@@ -111,15 +114,12 @@ function JobMonitoring() {
     setSavingJobMonitoring(true);
     let validForm = true;
 
-    console.log('-----', intermittentScheduling);
-    console.log('------', form.getFieldsValue());
-
     // Validate from and set validForm to false if any field is invalid
-    try {
-      await form.validateFields();
-    } catch (err) {
-      validForm = false;
-    }
+    // try {
+    //   await form.validateFields();
+    // } catch (err) {
+    //   validForm = false;
+    // }
 
     //Check if schedule is valid
     const jobSchedule = checkScheduleValidity({ intermittentScheduling, completeSchedule, cron, cronMessage });
@@ -195,12 +195,14 @@ function JobMonitoring() {
         delete allInputs[key];
       }
 
-      // Add threshold to metaData if entered, delete from allInputs
+      // Add expectedRunCompletionTime to metaData if entered, delete from allInputs
       const metaData = {};
-      if (allInputs.threshold) {
-        metaData.threshold = allInputs.threshold;
+      if (allInputs.expectedRunCompletionTime) {
+        let expectedRunCompletionTime = allInputs.expectedRunCompletionTime;
+        expectedRunCompletionTime = expectedRunCompletionTime.format('HH:mm');
+        console.log('expectedRunCompletionTime --- ', expectedRunCompletionTime);
       }
-      delete allInputs.threshold;
+      delete allInputs.expectedRunCompletionTime;
 
       // Add schedule to metaData if entered,
       // Note: cluster wide monitoring should not have schedule because work units can have varying schedules

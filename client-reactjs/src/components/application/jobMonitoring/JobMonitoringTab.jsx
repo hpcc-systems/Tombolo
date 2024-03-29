@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Checkbox, Card, Form, Input } from 'antd';
+import { Checkbox, Card, Form, TimePicker } from 'antd';
 
 import './jobMonitoring.css';
 import SchedulePicker from './SchedulePicker';
@@ -18,12 +18,27 @@ function JobMonitoringTab({
   setCronMessage,
   erroneousScheduling,
   monitoringScope,
+  selectedCluster,
 }) {
   const [activateMonitoring, setActivateMonitoring] = useState(false);
+  const [clusterOffset, setClusterOffset] = useState(null);
+
+  useEffect(() => {
+    if (selectedCluster?.timezone_offset === null || selectedCluster?.timezone_offset === undefined) return;
+    const offSet = selectedCluster.timezone_offset / 60;
+    if (offSet == 0) {
+      setClusterOffset('UTC');
+    } else {
+      setClusterOffset(`UTC ${offSet}`);
+    }
+  }, [selectedCluster]);
 
   //Redux
   const {
-    applicationReducer: { applicationId, integrations },
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
   } = useSelector((state) => state);
 
   const asrIntegration = integrations.some(
@@ -52,28 +67,12 @@ function JobMonitoringTab({
       )}
 
       <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
-        {asrIntegration && <AsrSpecificMonitoringDetails form={form} />}
+        {asrIntegration && <AsrSpecificMonitoringDetails form={form} clusterOffset={clusterOffset} />}
         <Form form={form} layout="vertical" initialValues={{ isActive: false }}>
           {/* conditionally render this field if ASR is disabled */}
           {!asrIntegration && (
-            <Form.Item
-              label="Maximum Build Time / Threshold (in mins)"
-              name="threshold"
-              required={form.getFieldValue('notificationCondition')?.includes('ThresholdExceeded')}
-              rules={[
-                {
-                  validator: async (_, value) => {
-                    if (form.getFieldValue('notificationCondition')?.includes('ThresholdExceeded')) {
-                      if (!value) {
-                        return Promise.reject(new Error('This field is required'));
-                      } else if (!(parseInt(value) > 0 && parseInt(value) < 1440)) {
-                        return Promise.reject(new Error('Threshold should be between 0 and 1440'));
-                      }
-                    }
-                  },
-                },
-              ]}>
-              <Input type="number" min={1} max={1440} style={{ width: '50%' }} placeholder="Threshold (in minutes)" />
+            <Form.Item label="Expected Run/Completion Time (HH:MM) " name="expectedRunCompletionTime">
+              <TimePicker style={{ width: '50%' }} format="HH:mm" suffixIcon={clusterOffset} />
             </Form.Item>
           )}
 

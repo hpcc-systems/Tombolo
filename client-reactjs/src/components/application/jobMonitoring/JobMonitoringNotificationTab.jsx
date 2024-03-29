@@ -13,15 +13,18 @@ const { Option } = Select;
 const jobStatuses = [
   { label: 'Failed', value: 'Failed' },
   { label: 'Aborted', value: 'Aborted' },
-  { label: 'Threshold Exceeded', value: 'ThresholdExceeded' }, //TODO - If threshold exceed option is selected make threshold time input value required
-  { label: 'Not started by runtime', value: 'NotStarted' },
-  { label: 'Not completed by runtime', value: 'NotCompleted' },
+  { label: 'Unknown', value: 'Unknown' },
+  { label: 'Not started on time', value: 'NotStarted', disabled: true },
+  { label: 'Not completed on time', value: 'NotCompleted' },
 ];
 
 function JobMonitoringNotificationTab({ form, teamsHooks }) {
   // Redux
   const {
-    applicationReducer: { applicationId, integrations },
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
   } = useSelector((state) => state);
   const asrIntegration = integrations.some(
     (integration) => integration.name === 'ASR' && integration.application_id === applicationId

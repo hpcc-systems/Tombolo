@@ -1,0 +1,26 @@
+[ Pre ] Create current date time
+1. get all job monitoring
+2. Group monitoring by cluster
+3. Get cluster info for each cluster ( including username and password)
+4. For each cluster create workunit service 
+5. Get WU that were executed in past 30 min for each cluster
+    5.A. check cluster time zone offset and last scanned date to calculate what 30 mins ago is
+    5.B. If no last scanned is available just use offset to perform calculation
+6. Check if any of those work unit's job name match 
+7. For all matching make call to cluster and get complete details about each WU
+8. The job monitoring with the matching job name needs to be updated. Save them in an array []
+9. Check if notification conditions such as [Failed, Aborted and Unknown match]
+9.A. If matched - push appropriate details to notificationsToBeSent array
+10. Check other notification Conditions [not started on time, not completed on time ]
+    Find the expected run / complete window based on timezone where cluster is running and run/completion time  
+    If past run time and the run time is not within the window - push appropriate details to notification queue
+11. Finally update job monitoring 
+12. Finally update notification queue
+
+# Handle error in each iteration, if one item in iteration fails - keep going
+# Roll back if one of the update  fails
+
+Question - Is one monitoring for one job 
+           What if one monitoring match multiple jobs 
+
+

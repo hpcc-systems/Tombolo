@@ -21,22 +21,22 @@ export const getAllJobMonitorings = async ({ applicationId }) => {
 //Function that checks if the  job schedule is correct
 export const checkScheduleValidity = ({ intermittentScheduling, completeSchedule, cron, cronMessage }) => {
   // Abandon intermittent schedule if user did not completely add the schedule.Eg if they submit form and schedule was partially entered
-  const { schedulingType, scheduleBy, days, dates, weeks, day, month, date, week } = intermittentScheduling;
+  const { frequency, scheduleBy, days, dates, weeks, day, month, date, week } = intermittentScheduling;
 
   let allSchedule = [...completeSchedule];
-  if (schedulingType === 'daily') {
+  if (frequency === 'daily') {
     allSchedule = [...completeSchedule, intermittentScheduling];
-  } else if (schedulingType === 'weekly' && days?.length > 0) {
+  } else if (frequency === 'weekly' && days?.length > 0) {
     allSchedule = [...completeSchedule, intermittentScheduling];
-  } else if (schedulingType === 'monthly' && scheduleBy === 'dates' && dates?.length > 0) {
+  } else if (frequency === 'monthly' && scheduleBy === 'dates' && dates?.length > 0) {
     allSchedule = [...completeSchedule, intermittentScheduling];
-  } else if (schedulingType === 'monthly' && scheduleBy === 'weeks-day' && weeks?.length > 0 && day) {
+  } else if (frequency === 'monthly' && scheduleBy === 'weeks-day' && weeks?.length > 0 && day) {
     allSchedule = [...completeSchedule, intermittentScheduling];
-  } else if (schedulingType === 'yearly' && scheduleBy === 'month-date' && month && date) {
+  } else if (frequency === 'yearly' && scheduleBy === 'month-date' && month && date) {
     allSchedule = [...completeSchedule, intermittentScheduling];
-  } else if (schedulingType === 'yearly' && scheduleBy === 'week-day-month' && week && day && month) {
+  } else if (frequency === 'yearly' && scheduleBy === 'week-day-month' && week && day && month) {
     allSchedule = [...completeSchedule, intermittentScheduling];
-  } else if (schedulingType === 'cron' && cron != null && cronMessage?.valid) {
+  } else if (frequency === 'cron' && cron != null && cronMessage?.valid) {
     allSchedule = [...completeSchedule, intermittentScheduling];
   }
 

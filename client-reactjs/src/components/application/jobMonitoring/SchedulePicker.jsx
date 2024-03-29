@@ -5,7 +5,7 @@ import { Radio, Space, Checkbox, Select, Tag, Input, Tooltip } from 'antd';
 import cronstrue from 'cronstrue';
 
 // Daily schedule options
-const dailyOptions = [
+const dailyRunWindowAndIntervals = [
   { label: 'Daily (00:00 - 23:59)', value: 'daily' },
   { label: 'Every Morning (00:00 - 11:59)', value: 'morning' },
   { label: 'Every Afternoon (12:00 - 23:59)', value: 'afternoon' },
@@ -61,23 +61,23 @@ function SchedulePicker({
   const addSchedule = () => {
     intermittentScheduling.id = uuidv4();
     setCompleteSchedule((prev) => [...prev, { ...intermittentScheduling }]);
-    if (intermittentScheduling.scheduleBy === 'month-date' && intermittentScheduling.schedulingType === 'yearly') {
+    if (intermittentScheduling.scheduleBy === 'month-date' && intermittentScheduling.frequency === 'yearly') {
       setIndividualValues((prev) => ({ ...prev, radio1_month: null, radio1_date: null }));
       setIntermittentScheduling((prev) => ({
-        schedulingType: prev.schedulingType,
+        frequency: prev.frequency,
         scheduleBy: 'month-date',
       }));
     }
-    if (intermittentScheduling.scheduleBy === 'week-day-month' && intermittentScheduling.schedulingType === 'yearly') {
+    if (intermittentScheduling.scheduleBy === 'week-day-month' && intermittentScheduling.frequency === 'yearly') {
       setIndividualValues((prev) => ({ ...prev, radio2_month: null, radio2_day: null, radio2_week: null }));
       setIntermittentScheduling((prev) => ({
-        schedulingType: prev.schedulingType,
+        frequency: prev.frequency,
         scheduleBy: 'week-day-month',
       }));
     }
-    if (intermittentScheduling.scheduleBy === 'weeks-day' && intermittentScheduling.schedulingType === 'monthly') {
+    if (intermittentScheduling.scheduleBy === 'weeks-day' && intermittentScheduling.frequency === 'monthly') {
       setIndividualValues((prev) => ({ ...prev, weeks: [], day: null }));
-      setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, scheduleBy: 'weeks-day' }));
+      setIntermittentScheduling((prev) => ({ frequency: prev.frequency, scheduleBy: 'weeks-day' }));
     }
   };
 
@@ -89,22 +89,22 @@ function SchedulePicker({
     setCompleteSchedule([]);
     setIndividualValues({});
     if (selected === 'daily') {
-      setIntermittentScheduling({ schedulingType: selected, frequency: 'daily' });
+      setIntermittentScheduling({ frequency: selected, runWindow: 'daily' });
     } else {
-      setIntermittentScheduling({ schedulingType: selected });
+      setIntermittentScheduling({ frequency: selected });
     }
   };
 
   // Daily Break down - When daily option is selected
   const dailyBreakDown = (
     <div>
-      <Radio checked>Run Frequency</Radio>
-      <div style={{ margin: '5px 0 0 20px', color: 'var(--secondary)' }}>
+      <Radio checked>Daily run window/interval</Radio>
+      <div style={{ margin: '5px 0 0 20px', color: 'var(--secondary)', width: '100%' }}>
         <Select
           style={{ width: '100%' }}
-          defaultValue={intermittentScheduling?.frequency}
-          onChange={(value) => setIntermittentScheduling((prev) => ({ ...prev, frequency: value }))}>
-          {dailyOptions.map((option) => (
+          defaultValue={intermittentScheduling?.runWindow}
+          onChange={(value) => setIntermittentScheduling((prev) => ({ ...prev, runWindow: value }))}>
+          {dailyRunWindowAndIntervals.map((option) => (
             <Select.Option value={option.value} key={option.value}>
               {option.label}
             </Select.Option>
@@ -164,7 +164,7 @@ function SchedulePicker({
             onChange={() => {
               setMonthlyRadio('1');
               setIndividualValues({});
-              setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, scheduleBy: 'dates' }));
+              setIntermittentScheduling((prev) => ({ frequency: prev.frequency, scheduleBy: 'dates' }));
               setCompleteSchedule([]);
             }}>
             On{' '}
@@ -191,7 +191,7 @@ function SchedulePicker({
             onChange={() => {
               setMonthlyRadio('2');
               setIndividualValues({ dates: [], weeks: [], day: null });
-              setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, scheduleBy: 'weeks-day' }));
+              setIntermittentScheduling((prev) => ({ frequency: prev.frequency, scheduleBy: 'weeks-day' }));
               setCompleteSchedule([]);
             }}>
             On
@@ -244,7 +244,7 @@ function SchedulePicker({
             onChange={() => {
               setYearlyRadio('1');
               setIndividualValues({});
-              setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, scheduleBy: 'month-date' }));
+              setIntermittentScheduling((prev) => ({ frequency: prev.frequency, scheduleBy: 'month-date' }));
               setCompleteSchedule([]);
             }}>
             On
@@ -288,7 +288,7 @@ function SchedulePicker({
               setYearlyRadio('2');
               setIndividualValues({});
               setIntermittentScheduling((prev) => ({
-                schedulingType: prev.schedulingType,
+                frequency: prev.frequency,
                 scheduleBy: 'week-day-month',
               }));
 
@@ -352,7 +352,7 @@ function SchedulePicker({
   const handleCronInputChange = (e) => {
     const v = e.target.value;
     setCron(v);
-    setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, cron: v }));
+    setIntermittentScheduling((prev) => ({ frequency: prev.frequency, cron: v }));
   };
 
   //Cron Input and validation
@@ -385,7 +385,7 @@ function SchedulePicker({
   ];
 
   const selectedComponent = schedulingOptions.find(
-    (option) => option.value === intermittentScheduling.schedulingType
+    (option) => option.value === intermittentScheduling.frequency
   )?.component;
 
   // Weeks and day tag content
@@ -405,8 +405,8 @@ function SchedulePicker({
         <div className="schedule-options">
           <Radio.Group
             onChange={(e) => handlingSchedulingOptionChange(e)}
-            value={intermittentScheduling.schedulingType}
-            defaultValue={intermittentScheduling.schedulingType}>
+            value={intermittentScheduling.frequency}
+            defaultValue={intermittentScheduling.frequency}>
             <Space direction="vertical">
               {schedulingOptions.map((schedule) => (
                 <Radio key={schedule.value} value={schedule.value}>

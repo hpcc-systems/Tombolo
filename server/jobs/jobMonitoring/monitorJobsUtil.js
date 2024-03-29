@@ -85,7 +85,71 @@ console.log("3 -", ans3);
 console.log("4 -", ans4);
 console.log('5 -', ans5);
 ---------------------------------------------------------------------------------------------------------------- */
+// Find start and end time of a work unit since js communication library does not give that
+function findStartAndEndTimes(data) {
+    let minDate = Infinity;
+    let maxDate = -Infinity;
+
+    data.forEach(item => {
+        const date = new Date(item.When).getTime();
+        if (date < minDate) {
+            minDate = date;
+        }
+        if (date > maxDate) {
+            maxDate = date;
+        }
+    });
+    
+    const timeTaken = maxDate - minDate;
+
+    return {
+      startTime: new Date(minDate).toISOString(),
+      endTime: new Date(maxDate).toISOString(),
+      timeTaken: timeTaken,
+    };
+}
+
+// -----------------------------------------------------------------------------------
+function calculateRunOrCompleteByTimes(schedule) {
+    return schedule.map(job => {
+        const { schedulingType, frequency, expectedRunCompletionTime } = job;
+        const [hours, minutes] = expectedRunCompletionTime.split(':').map(Number);
+        let runOrCompleteBy = new Date();
+
+        switch (schedulingType) {
+            case 'daily':
+                runOrCompleteBy.setHours(hours, minutes, 0, 0);
+                break;
+            case 'every2Days':
+                runOrCompleteBy.setDate(runOrCompleteBy.getDate() - 1);
+                runOrCompleteBy.setHours(hours, minutes, 0, 0);
+                break;
+            case 'overNight':
+                if (runOrCompleteBy.getHours() < 12) {
+                    runOrCompleteBy.setDate(runOrCompleteBy.getDate() - 1);
+                }
+                runOrCompleteBy.setHours(hours, minutes, 0, 0);
+                break;
+            case 'afternoon':
+                runOrCompleteBy.setHours(hours < 12 ? hours + 12 : hours, minutes, 0, 0);
+                break;
+            case 'morning':
+                runOrCompleteBy.setHours(hours < 12 ? hours : hours - 12, minutes, 0, 0);
+                break;
+            default:
+                throw new Error(`Unknown scheduling type: ${schedulingType}`);
+        }
+
+        return {
+            ...job,
+            runOrCompleteBy: runOrCompleteBy.toISOString()
+        };
+    });
+}
+
 
 module.exports = {
-    matchJobName,
+  matchJobName,
+  findStartAndEndTimes,
+  calculateRunOrCompleteByTimes,
 };

@@ -35,6 +35,10 @@ router.post(
   ],
   async (req, res) => {
     // Handle the POST request here
+    console.log('------------------------------------------');
+    console.dir(req.body, {depth: null})
+    console.log('------------------------------------------');
+    return;
     try {
       // Validate the req.body
       const errors = validationResult(req);
@@ -66,7 +70,17 @@ router.get(
   ],
   async (req, res) => {
     try {
-      const jobMonitorings = await JobMonitoring.findAll();
+      // Validate the application ID
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        logger.error(errors);
+        return res.status(400).json({ errors: errors.array() });
+      }
+      
+      const jobMonitorings = await JobMonitoring.findAll({
+        where: { applicationId: req.params.applicationId },
+        order: [["createdAt", "DESC"]],
+      });
       res.status(200).json(jobMonitorings);
     } catch (err) {
       logger.error(err);

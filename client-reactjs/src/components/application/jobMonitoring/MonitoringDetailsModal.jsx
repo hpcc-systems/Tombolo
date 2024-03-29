@@ -208,10 +208,10 @@ export default MonitoringDetailsModal;
 const generateTagsForSchedule = (schedule) => {
   const tags = [];
   schedule.forEach((s) => {
-    if (s.schedulingType === 'daily') {
+    if (s.frequency === 'daily') {
       tags.push('Everyday');
     }
-    if (s.schedulingType === 'weekly') {
+    if (s.frequency === 'weekly') {
       let tempData = 'Every week on';
       s.days.forEach((d, i) => {
         tempData += ` ${getDayLabel(d)} ${i < s.days.length - 1 ? ',' : ''}`;
@@ -244,7 +244,7 @@ const generateTagsForSchedule = (schedule) => {
       tempData += ` of ${getMonthLabel(s.month)}`;
       tags.push(tempData);
     }
-    if (s.schedulingType === 'cron') {
+    if (s.frequency === 'cron') {
       tags.push(cronstrue.toString(s.cron));
     }
   });
