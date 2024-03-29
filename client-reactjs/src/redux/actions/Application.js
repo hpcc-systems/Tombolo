@@ -11,6 +11,7 @@ export const applicationActions = {
   getLicenses,
   getConstraints,
   updateConstraints,
+  updateNoClustersFound,
   // getIntegrations,
   // updateIntegrations,
   getAllActiveIntegrations,
@@ -48,9 +49,22 @@ function getClusters() {
   return (dispatch) => {
     fetch('/api/hpcc/read/getClusters', { headers: authHeader() })
       .then((response) => (response.ok ? response.json() : handleError(response)))
-      .then((clusters) => dispatch({ type: Constants.CLUSTERS_RETRIEVED, clusters }))
+      .then((clusters) => {
+        //if there are no clusters, set this to null for later checks
+        if (clusters.length === 0) {
+          dispatch({ type: Constants.NO_CLUSTERS_FOUND, noClusters: { redirect: false, noClusters: true } });
+        } else {
+          dispatch({ type: Constants.NO_CLUSTERS_FOUND, noClusters: { redirect: false, noClusters: false } });
+        }
+
+        dispatch({ type: Constants.CLUSTERS_RETRIEVED, clusters });
+      })
       .catch(console.log);
   };
+}
+
+function updateNoClustersFound(noClusters) {
+  return { type: Constants.NO_CLUSTERS_FOUND, noClusters };
 }
 
 function getConsumers() {
