@@ -55,6 +55,26 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         type: DataTypes.STRING,
       },
+      approvedAt: {
+        allowNull: true,
+        type: DataTypes.DATE,
+      },
+      createdBy: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      createdAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
+      updatedBy: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
       metaData: {
         type: DataTypes.JSON,
         allowNull: true,

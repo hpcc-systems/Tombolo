@@ -66,6 +66,26 @@ module.exports = {
         allowNull: true,
         type: Sequelize.DataTypes.STRING,
       },
+      approvedAt: {
+        allowNull: true,
+        type: Sequelize.DataTypes.DATE,
+      },
+      createdBy: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
+      },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DataTypes.DATE,
+      },
+      updatedBy: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DataTypes.DATE,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
