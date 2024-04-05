@@ -74,10 +74,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DataTypes.STRING,
       },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DataTypes.DATE,
-      },
       updatedBy: {
         allowNull: false,
         type: Sequelize.DataTypes.STRING,
