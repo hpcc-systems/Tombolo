@@ -41,7 +41,11 @@ router.post(
       const { id, name, cron, active } = directoryMonitoring;
 
       if (active) {
-        jobScheduler.createDirectoryMonitoringBreeJob({ id, name, cron });
+        jobScheduler.createDirectoryMonitoringBreeJob({
+          directoryMonitoring_id: id,
+          name,
+          cron,
+        });
       }
 
       res.status(201).json(directoryMonitoring);
@@ -92,7 +96,11 @@ router.put(
       const { active, approved, name, cron } = updatedMonitoring;
 
       if (active && approved) {
-        jobScheduler.createDirectoryMonitoringBreeJob({ id, name, cron });
+        jobScheduler.createDirectoryMonitoringBreeJob({
+          directoryMonitoring_id: id,
+          name,
+          cron,
+        });
       } else {
         removeJob(id);
       }
@@ -269,7 +277,11 @@ router.put(
 
       // location for starting or stopping monitoring job
       if (active && approved) {
-        jobScheduler.createDirectoryMonitoringBreeJob({ id, name, cron });
+        jobScheduler.createDirectoryMonitoringBreeJob({
+          directoryMonitoring_id: id,
+          name,
+          cron,
+        });
       } else {
         removeJob(id);
       }

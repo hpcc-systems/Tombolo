@@ -57,7 +57,6 @@ const moment = require("moment");
     let files = result.filter((item) => !item.isDir);
 
     const newFilesToMonitor = [];
-    const fileAndTimeStamps = [];
 
     // Notification Details
     let emailNotificationDetails;
@@ -126,13 +125,14 @@ const moment = require("moment");
         let notificationDetail;
         if (fileDetected) {
           notificationDetail = {
+            name: fileName,
             value: "file_detected",
-            title: `New file uploaded to ${directory.join("/")}`,
+            title: `New file uploaded to ${directory}`,
             text: "Details about recently added file - ",
             details: {
               "File Name": fileName,
               "Landing zone": landingZone,
-              Directory: directory.join("/"),
+              Directory: directory,
               "File detected at": new Date(fileModifiedTime).toString(),
             },
           };
@@ -154,43 +154,87 @@ const moment = require("moment");
       }
     }
 
-    //If files that were previously being monitored does not exist, stop monitoring
-    currentlyMonitoring = currentlyMonitoring.reduce(
-      (acc, current, index, array) => {
-        const obj = fileAndTimeStamps.find((item) => {
-          return (
-            item.name === current.name &&
-            item.modifiedTime === current.modifiedTime
-          );
-        });
-        if (obj) {
-          return acc.concat([array[index]]);
-        } else {
-          return acc;
-        }
-      },
-      []
-    );
+    if (currentlyMonitoring.length > 0) {
+      //remove files that have been moved out by checking against files array
+      currentlyMonitoring = currentlyMonitoring.filter((current) => {
+        const { name, modifiedTime } = current;
+        return !files.find(
+          (file) => file.name === name && file.modifiedtime === modifiedTime
+        );
+      });
+    }
 
     // check for threshold
-    for (let current of currentlyMonitoring) {
+    currentlyMonitoring.forEach((current) => {
       const { notified } = current;
+
       const pastExpectedMoveTime = current.threshold < currentTimeStamp;
-      //if it isn't past the threshold time,
-      if (pastExpectedMoveTime && !notified) {
+
+      if (pastExpectedMoveTime && !notified.length) {
         newNotificationDetails.push({
+          name: current.name,
           value: "file_not_moving",
-          title: `${current.name} stuck at ${directory.join(" / ")}`,
-          text: `${current.name} has been stuck at ${directory.join(
-            "/"
-          )} longer than ${threshold} minutes`,
+          title: `${current.name} stuck at ${directory}`,
+          text: `${current.name} has been stuck at ${directory} longer than ${threshold} minutes`,
           details: {
             "File Name": current.name,
             "Landing zone": landingZone,
-            Directory: directory.join("/"),
+            Directory: directory,
             "File received at": new Date(current.modifiedTime).toString(),
             "Expected move time": new Date(current.threshold).toString(),
           },
+        });
+      }
+    });
+
+    console.log("newNotificationDetails");
+    console.log(newNotificationDetails);
+
+    //send notifications if necessary
+    for (let notificationDetail of newNotificationDetails) {
+      //send email notification
+      if (emailNotificationDetails) {
+        //TODO: create notification queue with proper template in next isue
+        logger.verbose("Email notification sent: " + newNotificationDetails);
+
+        //once notification is sent, update currently monitoring notified field
+        currentlyMonitoring = currentlyMonitoring.map((item) => {
+          if (notificationDetail.name === item.name) {
+            return {
+              ...item,
+              notified: [
+                {
+                  notified: true,
+                  method: "email",
+                  dateNotified: currentTimeStamp,
+                },
+              ],
+            };
+          }
+          return item;
+        });
+      }
+
+      //send teams notification
+      if (teamsNotificationDetails) {
+        //TODO: create notification queue with proper template in next isue
+        logger.verbose("Teams notification sent: " + newNotificationDetails);
+
+        //once notification is sent, update currently monitoring notified field
+        currentlyMonitoring = currentlyMonitoring.map((item) => {
+          if (notificationDetail.name === item.name) {
+            return {
+              ...item,
+              notified: [
+                {
+                  notified: true,
+                  method: "msTeams",
+                  dateNotified: currentTimeStamp,
+                },
+              ],
+            };
+          }
+          return item;
         });
       }
     }
@@ -201,21 +245,6 @@ const moment = require("moment");
       ...currentlyMonitoring,
       ...newFilesToMonitor,
     ];
-
-    //send notifications if necessary
-    if (newNotificationDetails.length > 0) {
-      //send email notification
-      if (emailNotificationDetails) {
-        //TODO: create notification queue with proper template in next isue
-        logger.verbose("Email notification sent: " + newNotificationDetails);
-      }
-
-      //send teams notification
-      if (teamsNotificationDetails) {
-        //TODO: create notification queue with proper template in next isue
-        logger.verbose("Teams notification sent: " + newNotificationDetails);
-      }
-    }
 
     await directoryMonitoring.update(
       { metaData },
