@@ -2,7 +2,7 @@ const express = require("express");
 const logger = require("../../config/logger");
 const router = express.Router();
 const models = require("../../models");
-// const jobScheduler = require("../../job-scheduler");
+const jobScheduler = require("../../job-scheduler");
 const DirectoryMonitoring = models.directoryMonitoring;
 const validatorUtil = require("../../utils/validator");
 const { body, param, validationResult } = require("express-validator");
@@ -38,7 +38,11 @@ router.post(
         newMonitoring
       );
 
-      // location for starting or stopping monitoring job
+      const { id, name, cron, active } = directoryMonitoring;
+
+      if (active) {
+        jobScheduler.createDirectoryMonitoringBreeJob({ id, name, cron });
+      }
 
       res.status(201).json(directoryMonitoring);
     } catch (error) {
@@ -78,14 +82,20 @@ router.put(
           .status(404)
           .json({ error: "Directory monitoring entry not found" });
       }
-      await directoryMonitoring.update({
+      const updatedMonitoring = await directoryMonitoring.update({
         approved: req.body.approved,
         approvalNote: req.body.approvalNote,
         approvedBy: req.body.approvedBy,
         approvedAt: req.body.approvedAt,
       });
 
-      // location for starting or stopping monitoring job
+      const { active, approved, name, cron } = updatedMonitoring;
+
+      if (active && approved) {
+        jobScheduler.createDirectoryMonitoringBreeJob({ id, name, cron });
+      } else {
+        removeJob(id);
+      }
 
       res.status(200).json(directoryMonitoring);
     } catch (error) {
@@ -129,7 +139,8 @@ router.put(
 
       await directoryMonitoring.update(updates);
 
-      // location for starting or stopping monitoring job
+      //make sure and remove job if it is updated
+      removeJob(id);
 
       res.status(200).json(directoryMonitoring);
     } catch (error) {
@@ -163,7 +174,9 @@ router.delete(
 
       await directoryMonitoring.destroy();
 
-      // location for starting or stopping monitoring job
+      //remove the job
+      removeJob(id);
+
       res.status(204).end();
     } catch (error) {
       logger.error(error);
@@ -251,10 +264,15 @@ router.put(
           .json({ error: "Directory monitoring entry not found" });
       }
 
-      const { active } = directoryMonitoring;
+      const { active, approved, name, cron } = directoryMonitoring;
       await directoryMonitoring.update({ active: !active });
 
       // location for starting or stopping monitoring job
+      if (active && approved) {
+        jobScheduler.createDirectoryMonitoringBreeJob({ id, name, cron });
+      } else {
+        removeJob(id);
+      }
 
       res.status(200).json(directoryMonitoring);
     } catch (error) {
@@ -265,5 +283,16 @@ router.put(
     }
   }
 );
+
+function removeJob(id) {
+  const breeJobs = jobScheduler.getAllJobs();
+  const expectedJobName = `Directory Monitoring - ${id}`;
+  for (job of breeJobs) {
+    if (job.name === expectedJobName) {
+      jobScheduler.removeJobFromScheduler(expectedJobName);
+      break;
+    }
+  }
+}
 
 module.exports = router;
