@@ -88,12 +88,11 @@ export const handleDeleteJobMonitoring = async ({ id, jobMonitorings, setJobMoni
 // Function to identify erroneous tab(s)
 const formFields = {
   0: ['monitoringName', 'description', 'monitoringScope', 'clusterId', 'jobName'],
-  1: ['domain', 'productCategory', 'jobMonitorType', 'severity', 'requireComplete', 'threshold', 'isActive'],
+  1: ['domain', 'productCategory', 'expectedStartTime', 'expectedCompletionTime', 'severity', 'requireComplete'],
   2: ['notificationCondition', 'teamsHooks', 'primaryContacts', 'secondaryContacts', 'notifyContacts'],
 };
 
 export const identifyErroneousTabs = ({ erroneousFields }) => {
-  console.log(erroneousFields);
   const erroneousTabs = [];
   const tab0ErroneousFields = erroneousFields.filter((item) => formFields[0].includes(item));
   const tab1ErroneousFields = erroneousFields.filter((item) => formFields[1].includes(item));
@@ -142,10 +141,60 @@ export const getMonitoringTypeId = async ({ monitoringTypeName }) => {
     headers: authHeader(),
   };
   const response = await fetch(`/api/monitorings/getMonitoringTypeId/${monitoringTypeName}`, options);
-  console.log('response');
   if (!response.ok) {
     throw new Error('Failed to get monitoring type Id');
   }
   const monitoringTypeId = await response.json();
   return monitoringTypeId;
+};
+
+//Toggle job monitoring status, just post the id of the job monitoring to  /toggle in the req body
+export const toggleJobMonitoringStatus = async ({ id }) => {
+  const payload = {
+    method: 'PATCH',
+    headers: authHeader(),
+    body: JSON.stringify({ id }),
+  };
+
+  const response = await fetch(`/api/jobmonitoring/toggleIsActive`, payload);
+  if (!response.ok) {
+    throw new Error('Failed to toggle job monitoring status');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+// Bulk delete job monitorings
+export const handleBulkDeleteJobMonitorings = async ({ selectedJobMonitorings }) => {
+  const payload = {
+    method: 'DELETE',
+    headers: authHeader(),
+    body: JSON.stringify({ ids: selectedJobMonitorings }),
+  };
+
+  const response = await fetch(`/api/jobmonitoring/bulkDelete`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to bulk delete job monitorings');
+  }
+  const data = await response.json();
+  return data;
+};
+
+// Bulk update
+export const handleBulkUpdateJobMonitorings = async ({ updatedData }) => {
+  const payload = {
+    method: 'PATCH',
+    headers: authHeader(),
+    body: JSON.stringify({ metaData: updatedData }),
+  };
+
+  const response = await fetch(`/api/jobmonitoring/bulkUpdate`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to bulk update job monitorings');
+  }
+  const data = await response.json();
+  return data;
 };

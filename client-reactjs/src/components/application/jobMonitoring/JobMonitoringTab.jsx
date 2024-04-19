@@ -1,10 +1,14 @@
+/* eslint-disable unused-imports/no-unused-vars */
+/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Checkbox, Card, Form, TimePicker } from 'antd';
+import { Checkbox, Card, Form, TimePicker, Row, Col, Select } from 'antd';
 
 import './jobMonitoring.css';
 import SchedulePicker from './SchedulePicker';
 import AsrSpecificMonitoringDetails from './AsrSpecificMonitoringDetails';
+
+const { Option } = Select;
 
 function JobMonitoringTab({
   intermittentScheduling,
@@ -19,6 +23,9 @@ function JobMonitoringTab({
   erroneousScheduling,
   monitoringScope,
   selectedCluster,
+  domains,
+  productCategories,
+  setSelectedDomain,
 }) {
   const [activateMonitoring, setActivateMonitoring] = useState(false);
   const [clusterOffset, setClusterOffset] = useState(null);
@@ -61,24 +68,65 @@ function JobMonitoringTab({
             setCronMessage={setCronMessage}
           />
           {erroneousScheduling && (
-            <div style={{ color: 'var(--danger)', textAlign: 'center' }}>Please select schedule for the job</div>
+            <div style={{ color: '#ff4d4f', textAlign: 'center' }}>Please select schedule for the job</div>
           )}
         </Card>
       )}
 
       <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
-        {asrIntegration && <AsrSpecificMonitoringDetails form={form} clusterOffset={clusterOffset} />}
+        {asrIntegration && (
+          <AsrSpecificMonitoringDetails
+            form={form}
+            clusterOffset={clusterOffset}
+            domains={domains}
+            productCategories={productCategories}
+            setSelectedDomain={setSelectedDomain}
+          />
+        )}
         <Form form={form} layout="vertical" initialValues={{ isActive: false }}>
-          {/* conditionally render this field if ASR is disabled */}
-          {!asrIntegration && (
-            <Form.Item label="Expected Run/Completion Time (HH:MM) " name="expectedRunCompletionTime">
-              <TimePicker style={{ width: '50%' }} format="HH:mm" suffixIcon={clusterOffset} />
-            </Form.Item>
-          )}
+          {/* Always render below fields*/}
 
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Expected Start Time (HH:MM) "
+                name="expectedStartTime"
+                rules={[{ required: true, message: 'Expected start time is a required' }]}>
+                <TimePicker style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Expected Completion Time (HH:MM) "
+                name="expectedCompletionTime"
+                rules={[{ required: true, message: 'Expected completion time is a required' }]}>
+                <TimePicker style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {!asrIntegration && (
+            <Col span={12}>
+              <Form.Item
+                label="Require Complete"
+                name="requireComplete"
+                rules={[{ required: true, message: 'Please select one option' }]}>
+                <Select placeholder="Require complete">
+                  <Option key="yes" value={true}>
+                    Yes
+                  </Option>
+                  <Option key="no" value={false}>
+                    No
+                  </Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          )}
+          {/* 
           <Form.Item
             name="isActive"
             valuePropName="checked"
+            initialValue={false}
             extra={
               activateMonitoring ? (
                 <div style={{ marginTop: '-10px', marginLeft: '20px', color: 'var(--primary)' }}>
@@ -87,10 +135,9 @@ function JobMonitoringTab({
               ) : null
             }>
             <Checkbox checked={activateMonitoring} onChange={(e) => setActivateMonitoring(e.target.checked)}>
-              {' '}
-              Activate Job Monitoring{' '}
+              Activate Job Monitoring
             </Checkbox>
-          </Form.Item>
+          </Form.Item> */}
         </Form>
       </Card>
     </div>

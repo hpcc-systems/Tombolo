@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       isActive: {
         allowNull: false,
+        defaultValue: false,
         type: DataTypes.BOOLEAN,
       },
       approvalStatus: {

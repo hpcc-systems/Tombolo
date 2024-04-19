@@ -1,16 +1,12 @@
 "use strict";
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("monitoring_timestamps", {
+    await queryInterface.createTable("monitoring_logs", {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-      },
-      applicationId: {
-        allowNull: false,
         type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
       },
       cluster_id: {
         allowNull: false,
@@ -20,7 +16,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.UUID,
       },
-      run_time: {
+      scan_time: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
@@ -43,8 +39,16 @@ module.exports = {
         type: Sequelize.JSON,
       },
     });
+    await queryInterface.addIndex(
+      "monitoring_logs",
+      ["cluster_id", "monitoring_type_id"],
+      {
+        unique: true,
+        name: "monitoring_logs_cluster_id_monitoring_type_id",
+      }
+    );
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("monitoring_timestamps");
+    await queryInterface.dropTable("monitoring_logs");
   },
 };

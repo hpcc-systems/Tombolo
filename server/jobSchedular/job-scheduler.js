@@ -1,6 +1,6 @@
 const Bree = require("bree");
 
-const logger = require("./config/logger");
+const logger = require("../config/logger.js");
 const {
   logBreeJobs,
   createNewBreeJob,
@@ -11,23 +11,23 @@ const {
   stopAllJobs,
   startJob,
   startAllJobs,
-} = require("./jobSchedularMethods/breeJobs.js");
+} = require("../jobSchedularMethods/breeJobs.js");
 const {
   scheduleCheckForJobsWithSingleDependency,
   executeJob,
   scheduleActiveCronJobs,
   scheduleMessageBasedJobs,
   addJobToScheduler,
-} = require("./jobSchedularMethods/workFlowJobs.js");
+} = require("../jobSchedularMethods/workFlowJobs.js");
 const {
   scheduleClusterTimezoneOffset,
   createClusterUsageHistoryJob,
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
-} = require("./jobSchedularMethods/clusterJobs.js");
+} = require("../jobSchedularMethods/clusterJobs.js");
 const {
   scheduleJobStatusPolling,
-} = require("./jobSchedularMethods/hpccJobs.js");
+} = require("../jobSchedularMethods/hpccJobs.js");
 const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
@@ -36,23 +36,24 @@ const {
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
   scheduleFileMonitoring,
-} = require("./jobSchedularMethods/hpccFiles.js");
-const { scheduleKeyCheck } = require("./jobSchedularMethods/apiKeys.js");
+} = require("../jobSchedularMethods/hpccFiles.js");
+const { scheduleKeyCheck } = require("../jobSchedularMethods/apiKeys.js");
 const {
   scheduleEmailNotificationProcessing,
   scheduleTeamsNotificationProcessing,
-} = require("./jobSchedularMethods/notificationJobs.js");
+} = require("../jobSchedularMethods/notificationJobs.js");
 
 const {
   createOrbitMegaphoneJob,
   createOrbitMonitoringJob,
   scheduleOrbitMonitoringOnServerStart,
-} = require("./jobSchedularMethods/orbitJobs.js");
+} = require("../jobSchedularMethods/orbitJobs.js");
 
 
 const {
   startJobMonitoring,
-} = require("./jobSchedularMethods/jobMonitoring.js");
+  startIntermediateJobsMonitoring,
+} = require("../jobSchedularMethods/jobMonitoring.js");
 
 class JobScheduler {
   constructor() {
@@ -126,6 +127,7 @@ class JobScheduler {
       await this.scheduleOrbitMonitoringOnServerStart();
       await this.createOrbitMegaphoneJob();
       await this.startJobMonitoring();
+      await this.startIntermediateJobsMonitoring();
     })();
   }
 
@@ -317,6 +319,9 @@ class JobScheduler {
   // Job monitoring
   startJobMonitoring() {
     return startJobMonitoring.call(this);
+  }
+  startIntermediateJobsMonitoring() {
+    return startIntermediateJobsMonitoring.call(this);
   }
 
   //Process notification queue

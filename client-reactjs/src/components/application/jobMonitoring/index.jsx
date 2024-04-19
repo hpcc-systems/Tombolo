@@ -4,9 +4,7 @@ import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
-import moment from 'moment';
-
-import AddJobMonitoringBtn from './AddJobMonitoringBtn.jsx';
+import JobMonitoringActionButton from './JobMonitoringActionButton.jsx';
 import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
 import './jobMonitoring.css';
 import { authHeader } from '../../common/AuthHeader.js';
@@ -15,12 +13,29 @@ import {
   checkScheduleValidity,
   getAllTeamsHook,
   identifyErroneousTabs,
+  getDomains,
+  getProductCategories,
+  getMonitoringTypeId,
 } from './jobMonitoringUtils.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
 import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
 import ApproveRejectModal from './ApproveRejectModal.jsx';
+import BulkUpdateModal from './BulkUpdateModal.jsx';
+import BreadCrumbs from '../../common/BreadCrumbs';
+
+// Constants
+const monitoringTypeName = 'Job Monitoring';
 
 function JobMonitoring() {
+  //Redux
+  const {
+    applicationReducer: {
+      application: { applicationId },
+    },
+    authenticationReducer: { user },
+    applicationReducer: { clusters },
+  } = useSelector((state) => state);
+
   //Local States
   const [displayAddJobMonitoringModal, setDisplayAddJobMonitoringModal] = useState(false);
   const [intermittentScheduling, setIntermittentScheduling] = useState({
@@ -41,29 +56,21 @@ function JobMonitoring() {
   const [displayAddRejectModal, setDisplayAddRejectModal] = useState(false);
   const [savingJobMonitoring, setSavingJobMonitoring] = useState(false); // Flag to indicate if job monitoring is being saved
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  const [domains, setDomains] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
+  const [monitoringTypeId, setMonitoringTypeId] = useState(null);
+  const [selectedDomain, setSelectedDomain] = useState(null);
+  const [activeTab, setActiveTab] = useState('0');
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
 
-  //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-    },
-    authenticationReducer: { user },
-    applicationReducer: { clusters },
-  } = useSelector((state) => state);
+  // Create form instance
+  const [form] = Form.useForm();
 
-  //When component mounts get all teams hook
+  //When component mounts and appid change get all job monitorings
   useEffect(() => {
-    //Get all teams hook
-    (async () => {
-      try {
-        const allTeamsHook = await getAllTeamsHook();
-        setTeamsHook(allTeamsHook);
-      } catch (error) {
-        message.error('Error fetching teams hook');
-      }
-    })();
-
-    // Get all job monitorings
+    if (!applicationId) return;
     (async () => {
       try {
         const allMonitorings = await getAllJobMonitorings({ applicationId });
@@ -79,10 +86,20 @@ function JobMonitoring() {
     if (editingData?.isEditing) {
       form.setFieldsValue(selectedMonitoring);
       setMonitoringScope(selectedMonitoring.monitoringScope);
+      setSelectedCluster(selectedMonitoring.clusterId);
+
+      // Convert to dayjs objects
+      let expectedCompletionTime = selectedMonitoring?.metaData?.expectedCompletionTime;
+      let expectedStartTime = selectedMonitoring?.metaData?.expectedStartTime;
+      expectedCompletionTime = dayjs(expectedCompletionTime, 'HH:mm');
+      expectedStartTime = dayjs(expectedStartTime, 'HH:mm');
+
       form.setFieldsValue({
-        expectedRunCompletionTime: selectedMonitoring?.metaData?.expectedRunCompletionTime,
         ...selectedMonitoring?.metaData?.asrSpecificMetaData,
         ...selectedMonitoring?.metaData?.notificationMetaData,
+        requireComplete: selectedMonitoring.metaData.requireComplete,
+        expectedCompletionTime,
+        expectedStartTime,
       });
       if (selectedMonitoring.metaData.schedule) {
         const { schedule } = selectedMonitoring.metaData;
@@ -90,6 +107,7 @@ function JobMonitoring() {
           const { frequency } = schedule[0];
           if (frequency === 'cron') {
             setCron(schedule[0].cron);
+            setIntermittentScheduling({ frequency: schedule[0].frequency });
           } else if (frequency === 'daily' || frequency === 'weekly') {
             setIntermittentScheduling(schedule[0]);
           } else {
@@ -101,8 +119,87 @@ function JobMonitoring() {
     }
   }, [editingData]);
 
-  // Create form instance
-  const [form] = Form.useForm();
+  // Get all teams hook, monitoring type ID
+  useEffect(() => {
+    // Teams hook
+    (async () => {
+      try {
+        const allTeamsHook = await getAllTeamsHook();
+        setTeamsHook(allTeamsHook);
+      } catch (error) {
+        message.error('Error fetching teams hook');
+      }
+    })();
+
+    // Get monitoringType id for job monitoring
+    (async () => {
+      try {
+        const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
+        setMonitoringTypeId(monitoringTypeId);
+      } catch (error) {
+        message.error('Error fetching monitoring type ID');
+      }
+    })();
+  }, []);
+
+  // Get domains and product categories
+  useEffect(() => {
+    // Get domains
+    if (!monitoringTypeId) return;
+    (async () => {
+      try {
+        let domainData = await getDomains({ monitoringTypeId });
+        domainData = domainData.map((d) => ({
+          label: d.name,
+          value: d.id,
+        }));
+        setDomains(domainData);
+      } catch (error) {
+        message.error('Error fetching domains');
+      }
+    })();
+
+    // If monitoring selected - set selected domain so corresponding product categories can be fetched
+    if (selectedMonitoring?.metaData?.asrSpecificMetaData?.domain) {
+      setSelectedDomain(selectedMonitoring.metaData.asrSpecificMetaData.domain);
+    }
+
+    // Get product categories
+    if (!selectedDomain) return;
+    (async () => {
+      try {
+        const productCategories = await getProductCategories({ domainId: selectedDomain });
+        const formattedProductCategories = productCategories.map((c) => ({
+          label: `${c.name} (${c.shortCode})`,
+          value: c.id,
+        }));
+        setProductCategories(formattedProductCategories);
+      } catch (error) {
+        message.error('Error fetching product category');
+      }
+    })();
+  }, [monitoringTypeId, selectedDomain, selectedMonitoring]);
+
+  // Function reset states when modal is closed
+  const resetStates = () => {
+    setIntermittentScheduling({
+      frequency: 'daily',
+      id: uuidv4(),
+      runWindow: 'daily',
+    });
+    setCompleteSchedule([]);
+    setDisplayAddJobMonitoringModal(false);
+    setSelectedMonitoring(null);
+    setEditingData({ isEditing: false });
+    setMonitoringScope(null);
+    setErroneousTabs([]);
+    setErroneousScheduling(false);
+    setSelectedCluster(null);
+    setProductCategories([]);
+    setActiveTab('0');
+    setCron('');
+    form.resetFields();
+  };
 
   //When add button new job monitoring button clicked
   const handleAddJobMonitoringButtonClick = () => {
@@ -115,11 +212,11 @@ function JobMonitoring() {
     let validForm = true;
 
     // Validate from and set validForm to false if any field is invalid
-    // try {
-    //   await form.validateFields();
-    // } catch (err) {
-    //   validForm = false;
-    // }
+    try {
+      await form.validateFields();
+    } catch (err) {
+      validForm = false;
+    }
 
     //Check if schedule is valid
     const jobSchedule = checkScheduleValidity({ intermittentScheduling, completeSchedule, cron, cronMessage });
@@ -170,7 +267,7 @@ function JobMonitoring() {
       // Group ASR specific metaData and delete from allInputs
       const asrSpecificMetaData = {};
       const { domain, productCategory, jobMonitorType, severity, requireComplete } = allInputs;
-      const asrSpecificFields = { domain, productCategory, jobMonitorType, severity, requireComplete };
+      const asrSpecificFields = { domain, productCategory, jobMonitorType, severity };
       for (let key in asrSpecificFields) {
         if (asrSpecificFields[key] !== undefined) {
           asrSpecificMetaData[key] = asrSpecificFields[key];
@@ -195,19 +292,19 @@ function JobMonitoring() {
         delete allInputs[key];
       }
 
-      // Add expectedRunCompletionTime to metaData if entered, delete from allInputs
+      // Add expectedCompletionTime to metaData if entered, delete from allInputs
       const metaData = {};
-      if (allInputs.expectedRunCompletionTime) {
-        let expectedRunCompletionTime = allInputs.expectedRunCompletionTime;
-        expectedRunCompletionTime = expectedRunCompletionTime.format('HH:mm');
-        console.log('expectedRunCompletionTime --- ', expectedRunCompletionTime);
-      }
-      delete allInputs.expectedRunCompletionTime;
+      let { expectedStartTime, expectedCompletionTime } = allInputs;
+      metaData.requireComplete = requireComplete;
+      metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
+      metaData.expectedStartTime = expectedStartTime.format('HH:mm');
+      delete allInputs.requireComplete;
+      delete allInputs.expectedCompletionTime;
+      delete allInputs.expectedStartTime;
 
       // Add schedule to metaData if entered,
       // Note: cluster wide monitoring should not have schedule because work units can have varying schedules
       if (jobSchedule.schedule.length > 0 && monitoringScope !== 'ClusterWideMonitoring') {
-        console.log('jobSchedule.schedule', jobSchedule.schedule);
         metaData.schedule = jobSchedule.schedule;
       }
 
@@ -218,7 +315,10 @@ function JobMonitoring() {
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
       });
-      allInputs.createdBy = userDetails;
+
+      if (!editingData?.isEditing) {
+        allInputs.createdBy = userDetails;
+      }
       allInputs.lastUpdatedBy = userDetails;
 
       //Add asrSpecificMetaData, notificationMetaData to metaData object
@@ -253,25 +353,39 @@ function JobMonitoring() {
         setJobMonitorings(updatedJobMonitorings);
         message.success('Job monitoring updated successfully');
       } else {
-        setJobMonitorings([...jobMonitorings, responseData]);
+        setJobMonitorings([responseData, ...jobMonitorings]);
         message.success('Job monitoring saved successfully');
       }
-      // Close model if saved successfully
+
+      // Toggle editingData to false
+      if (editingData?.isEditing) {
+        setEditingData({ isEditing: false });
+      }
+
+      // Rest states and Close model if saved successfully
+      resetStates();
       setDisplayAddJobMonitoringModal(false);
     } catch (err) {
       message.error(err.message);
     } finally {
       setSavingJobMonitoring(false);
-      if (editingData?.isEditing) {
-        setEditingData({ isEditing: false });
-      }
     }
   };
 
   //JSX
   return (
     <>
-      <AddJobMonitoringBtn handleAddJobMonitoringButtonClick={handleAddJobMonitoringButtonClick} />
+      <BreadCrumbs
+        extraContent={
+          <JobMonitoringActionButton
+            handleAddJobMonitoringButtonClick={handleAddJobMonitoringButtonClick}
+            selectedRows={selectedRows}
+            setSelectedRows={setSelectedRows}
+            setJobMonitorings={setJobMonitorings}
+            setBulkEditModalVisibility={setBulkEditModalVisibility}
+          />
+        }
+      />
       <AddEditJobMonitoringModal
         displayAddJobMonitoringModal={displayAddJobMonitoringModal}
         setDisplayAddJobMonitoringModal={setDisplayAddJobMonitoringModal}
@@ -298,6 +412,14 @@ function JobMonitoring() {
         erroneousTabs={erroneousTabs}
         setErroneousTabs={setErroneousTabs}
         setErroneousScheduling={setErroneousScheduling}
+        selectedCluster={selectedCluster}
+        setSelectedCluster={setSelectedCluster}
+        resetStates={resetStates}
+        domains={domains}
+        productCategories={productCategories}
+        setSelectedDomain={setSelectedDomain}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
       <JobMonitoringTable
         jobMonitorings={jobMonitorings}
@@ -308,6 +430,7 @@ function JobMonitoring() {
         setEditingData={setEditingData}
         setDisplayAddRejectModal={setDisplayAddRejectModal}
         applicationId={applicationId}
+        setSelectedRows={setSelectedRows}
       />
       <MonitoringDetailsModal
         displayMonitoringDetailsModal={displayMonitoringDetailsModal}
@@ -316,6 +439,8 @@ function JobMonitoring() {
         setSelectedMonitoring={setSelectedMonitoring}
         clusters={clusters}
         teamsHooks={teamsHooks}
+        domains={domains}
+        productCategories={productCategories}
       />
       <ApproveRejectModal
         id={selectedMonitoring?.id}
@@ -326,6 +451,16 @@ function JobMonitoring() {
         user={user}
         setJobMonitorings={setJobMonitorings}
       />
+      {bulkEditModalVisibility && (
+        <BulkUpdateModal
+          bulkEditModalVisibility={bulkEditModalVisibility}
+          setBulkEditModalVisibility={setBulkEditModalVisibility}
+          jobMonitorings={jobMonitorings}
+          setJobMonitorings={setJobMonitorings}
+          selectedRows={selectedRows}
+        />
+      )}
+      ,
     </>
   );
 }

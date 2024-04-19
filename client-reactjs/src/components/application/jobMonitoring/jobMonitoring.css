@@ -91,6 +91,14 @@
 }
 
 .job__monitoring_tiny-description .ant-descriptions-item-label {
-  width: 150px;
+  width: 200px;
   font-weight: 500;
+}
+
+.jobMonitoringTable__inactive-monitoring {
+  background-color: #ffd6d7;
+}
+
+.jobMonitoringTable__active-monitoring {
+  background-color: #efffe8;
 }

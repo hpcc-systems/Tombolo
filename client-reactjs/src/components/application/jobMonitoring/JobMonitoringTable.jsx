@@ -1,10 +1,18 @@
 import React from 'react';
-import { Table, Tooltip, Popconfirm } from 'antd';
-import { EyeOutlined, EditOutlined, DeleteOutlined, CheckCircleFilled, BellOutlined } from '@ant-design/icons';
+import { Table, Tooltip, Popconfirm, message } from 'antd';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleFilled,
+  BellOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+} from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-import { handleDeleteJobMonitoring } from './jobMonitoringUtils';
+import { handleDeleteJobMonitoring, toggleJobMonitoringStatus } from './jobMonitoringUtils';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
@@ -25,6 +33,7 @@ const JobMonitoringTable = ({
   setDisplayAddJobMonitoringModal,
   setDisplayMonitoringDetailsModal,
   setDisplayAddRejectModal,
+  setSelectedRows,
 }) => {
   //Redux
   const {
@@ -83,7 +92,7 @@ const JobMonitoringTable = ({
       title: 'Active',
       dataIndex: 'isActive',
       key: 'isActive',
-      render: (_, record) => (record.isActive && record.approvalStatus === 'Approved' ? 'Yes' : 'No'),
+      render: (_, record) => (record.isActive ? 'Yes' : 'No'),
     },
     {
       title: 'Approval status',
@@ -108,6 +117,28 @@ const JobMonitoringTable = ({
               onClick={() => editJobMonitoring(record)}
             />
           </Tooltip>
+
+          <Tooltip title="Approve">
+            <CheckCircleFilled
+              style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}
+              onClick={() => evaluateMonitoring(record)}
+            />
+          </Tooltip>
+          <Tooltip title={record.isActive ? 'Pause' : 'Start'}>
+            {record.isActive ? (
+              <PauseCircleOutlined
+                disabled={record.approvalStatus !== 'Approved'}
+                onClick={() => toggleMonitoringStatus(record)}
+                style={{ color: 'var(--primary)', marginRight: 15 }}
+              />
+            ) : (
+              <PlayCircleOutlined
+                disabled={record.approvalStatus !== 'Approved'}
+                onClick={() => toggleMonitoringStatus(record)}
+                style={{ color: 'var(--primary)', marginRight: 15 }}
+              />
+            )}
+          </Tooltip>
           <Tooltip title="Delete">
             <Popconfirm
               title={
@@ -127,12 +158,6 @@ const JobMonitoringTable = ({
               style={{ width: '500px !important' }}>
               <DeleteOutlined style={{ color: 'var(--primary)', marginRight: 15 }} />
             </Popconfirm>
-          </Tooltip>
-          <Tooltip title="Approve">
-            <CheckCircleFilled
-              style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}
-              onClick={() => evaluateMonitoring(record)}
-            />
           </Tooltip>
           <Tooltip title="Notifications">
             <Link to={`/${applicationId}/dashboard/notifications?monitoringId=124&monitoringType=jobMonitoring`}>
@@ -164,7 +189,38 @@ const JobMonitoringTable = ({
     setDisplayAddRejectModal(true);
   };
 
-  return <Table dataSource={jobMonitorings} columns={columns} rowKey="id" size="small" pagination={{ pageSize: 20 }} />;
+  // Start or pause monitoring
+  const toggleMonitoringStatus = async (record) => {
+    try {
+      if (record.approvalStatus !== 'Approved') {
+        message.error('Monitoring must be in approved state before it can be started');
+        return;
+      }
+      const updatedData = await toggleJobMonitoringStatus({ id: record.id });
+      setJobMonitorings((prev) => prev.map((monitoring) => (monitoring.id === record.id ? updatedData : monitoring)));
+    } catch (err) {
+      message.error('Failed to toggle monitoring status');
+    }
+  };
+  return (
+    <Table
+      dataSource={jobMonitorings}
+      columns={columns}
+      rowKey="id"
+      size="small"
+      // bordered
+      rowSelection={{
+        type: 'checkbox',
+        onChange: (_selectedRowKeys, selectedRowsData) => {
+          setSelectedRows(selectedRowsData);
+        },
+      }}
+      pagination={{ pageSize: 20 }}
+      rowClassName={(record) =>
+        record.isActive ? 'jobMonitoringTable__active-monitoring' : 'jobMonitoringTable__inactive-monitoring'
+      }
+    />
+  );
 };
 
 export default JobMonitoringTable;

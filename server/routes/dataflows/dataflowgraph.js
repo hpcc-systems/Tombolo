@@ -8,7 +8,7 @@ let File = models.file;
 let Index = models.indexes;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
-const JobScheduler = require('../../job-scheduler');
+const JobScheduler = require('../../jobSchedular/job-scheduler');
 const assetUtil = require('../../utils/assets');
 
 router.get('/',

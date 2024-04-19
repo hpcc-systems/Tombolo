@@ -46,7 +46,7 @@ const ApproveRejectModal = ({
     }
 
     if (fromErr) {
-      console.log('Form error');
+      setSavingEvaluation(false);
       return;
     }
 
@@ -151,7 +151,7 @@ const ApproveRejectModal = ({
               name="approverComment"
               rules={[
                 { required: true, message: 'Please enter comments' },
-                { min: 3, message: 'Comments must be at least 3 characters' },
+                { min: 4, message: 'Comments must be at least 4 characters' },
                 { max: 200, message: 'Comments cannot exceed 200 characters' },
               ]}>
               <Input.TextArea rows={3} maxLength={200} showCount placeholder="Comments" />

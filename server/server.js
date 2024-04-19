@@ -20,7 +20,7 @@ const { sequelize: dbConnection } = require("./models");
 const logger = require("./config/logger");
 
 /* BREE JOB SCHEDULER */
-const JobScheduler = require("./job-scheduler");
+const JobScheduler = require("./jobSchedular/job-scheduler");
 
 /* Initialize express app */
 const app = express();
@@ -86,11 +86,6 @@ const teamsHook = require("./routes/msTeamsHook/read");
 const notification_queue = require("./routes/notification_queue/read");
 const monitorings = require("./routes/monitorings/read");
 const asr = require("./routes/asr/read");
-
-console.log('------------------------------------------');
-console.log(process.env.TZ);
-console.log(new Date().getTimezoneOffset());
-console.log('------------------------------------------');
 
 // Log all HTTP requests
 app.use((req, res, next) => {
