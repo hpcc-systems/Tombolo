@@ -294,13 +294,21 @@ function JobMonitoring() {
 
       // Add expectedCompletionTime to metaData if entered, delete from allInputs
       const metaData = {};
+
       let { expectedStartTime, expectedCompletionTime } = allInputs;
       metaData.requireComplete = requireComplete;
-      metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
-      metaData.expectedStartTime = expectedStartTime.format('HH:mm');
       delete allInputs.requireComplete;
-      delete allInputs.expectedCompletionTime;
-      delete allInputs.expectedStartTime;
+
+      /* Attempt formatting if only from filed is touched, while editing user may completely skip to click schedule 
+      tab. if so these fields wont be touched and will be undefined */
+      if (form.isFieldTouched('expectedCompletionTime')) {
+        metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
+        delete allInputs.expectedCompletionTime;
+      }
+      if (form.isFieldTouched('expectedStartTime')) {
+        metaData.expectedStartTime = expectedStartTime.format('HH:mm');
+        delete allInputs.expectedStartTime;
+      }
 
       // Add schedule to metaData if entered,
       // Note: cluster wide monitoring should not have schedule because work units can have varying schedules
@@ -458,6 +466,7 @@ function JobMonitoring() {
           jobMonitorings={jobMonitorings}
           setJobMonitorings={setJobMonitorings}
           selectedRows={selectedRows}
+          setSelectedRows={setSelectedRows}
         />
       )}
       ,

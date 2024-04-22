@@ -14,6 +14,7 @@ const BulkUpdateModal = ({
   jobMonitorings,
   setJobMonitorings,
   selectedRows,
+  setSelectedRows,
 }) => {
   // Original
   const [primaryContacts, setPrimaryContacts] = useState([]);
@@ -171,6 +172,15 @@ const BulkUpdateModal = ({
         }
         return job;
       });
+
+      // Set selected monitoring to the updated monitoring
+      setSelectedRows((prev) =>
+        prev.map((row) => {
+          const updatedRow = updatedMetaData.find((data) => data.id === row.id);
+          return { ...row, metaData: updatedRow.metaData };
+        })
+      );
+
       setJobMonitorings(newJobMonitoringData);
       resetState();
     } catch (err) {
