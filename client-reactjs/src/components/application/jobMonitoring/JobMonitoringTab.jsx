@@ -1,8 +1,6 @@
-/* eslint-disable unused-imports/no-unused-vars */
-/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Checkbox, Card, Form, TimePicker, Row, Col, Select } from 'antd';
+import { Card, Form, TimePicker, Row, Col, Select } from 'antd';
 
 import './jobMonitoring.css';
 import SchedulePicker from './SchedulePicker';
@@ -27,7 +25,6 @@ function JobMonitoringTab({
   productCategories,
   setSelectedDomain,
 }) {
-  const [activateMonitoring, setActivateMonitoring] = useState(false);
   const [clusterOffset, setClusterOffset] = useState(null);
 
   useEffect(() => {
@@ -122,22 +119,6 @@ function JobMonitoringTab({
               </Form.Item>
             </Col>
           )}
-          {/* 
-          <Form.Item
-            name="isActive"
-            valuePropName="checked"
-            initialValue={false}
-            extra={
-              activateMonitoring ? (
-                <div style={{ marginTop: '-10px', marginLeft: '20px', color: 'var(--primary)' }}>
-                  (Note: Monitoring will only become active upon approval)
-                </div>
-              ) : null
-            }>
-            <Checkbox checked={activateMonitoring} onChange={(e) => setActivateMonitoring(e.target.checked)}>
-              Activate Job Monitoring
-            </Checkbox>
-          </Form.Item> */}
         </Form>
       </Card>
     </div>

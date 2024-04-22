@@ -96,9 +96,9 @@
 }
 
 .jobMonitoringTable__inactive-monitoring {
-  background-color: #ffd6d7;
+  background-color: var(--paused);
 }
 
 .jobMonitoringTable__active-monitoring {
-  background-color: #efffe8;
+  background-color: var(--active);
 }

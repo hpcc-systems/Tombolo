@@ -19,10 +19,6 @@ const monitoringScopeOptions = [
     label: 'Monitoring by Job Pattern',
     value: 'PatternMatching',
   },
-  // {
-  //   label: 'Cluster-wide monitoring',
-  //   value: 'ClusterWideMonitoring',
-  // },
 ];
 
 function JobMonitoringBasicTab({

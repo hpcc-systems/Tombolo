@@ -154,7 +154,6 @@ const AddEditJobMonitoringModal = ({
     }
   };
 
-  // console.log(tabItems);
   return (
     <Modal
       open={displayAddJobMonitoringModal}

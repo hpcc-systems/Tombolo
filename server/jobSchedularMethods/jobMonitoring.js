@@ -1,7 +1,7 @@
 const MONITOR_JOBS_FILE_NAME = 'monitorJobs.js';
 const MONITOR_INTERMEDIATE_JOBS_FILE_NAME= 'monitorIntermediateStateJobs.js';
 const  JOB_MONITORING_INTERVAL = 30; // in minutes
-const INTERMEDIATE_JOB_MONITORING_INTERVAL = 1; // in minutes
+const INTERMEDIATE_JOB_MONITORING_INTERVAL = 10; // in minutes
 
 const path = require('path');
 const logger = require('../config/logger');
@@ -13,13 +13,22 @@ const humanReadableIntervalForJobMonitoring = generateIntervalString({
   timeSlots : jobMonitoringTimeSlots,
 });
 
+const intermediateJobMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({
+  interval: INTERMEDIATE_JOB_MONITORING_INTERVAL,
+});
+const humanReadableIntervalForIntermediateJobMonitoring =
+  generateIntervalString({
+    timeSlots: intermediateJobMonitoringTimeSlots,
+  });
+
+
 async function startJobMonitoring() {
   try {
     let jobName = "job-monitoring" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "10s", // TODO remove and use interval
-      // interval: humanReadableIntervalForJobMonitoring,
+      // interval: "10s", // For development
+      interval: humanReadableIntervalForJobMonitoring,
       path: path.join(
         __dirname,
         "..",
@@ -46,8 +55,8 @@ async function startIntermediateJobsMonitoring() {
     let jobName = "intermediate-state-jobs-monitoring" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "5s",
-      // interval: humanReadableInterval,
+      // interval: "5s", // For development
+      interval: humanReadableIntervalForIntermediateJobMonitoring,
       path: path.join(
         __dirname,
         "..",

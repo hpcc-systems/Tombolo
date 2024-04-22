@@ -1,4 +1,3 @@
-/* eslint-disable unused-imports/no-unused-imports */
 //Packages
 import React from 'react';
 import { useSelector } from 'react-redux';

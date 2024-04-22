@@ -8,6 +8,8 @@
   --info: #17a2b8;
   --warning: #ffc107;
   --danger: #dc3545;
+  --paused: #ffd6d7;
+  --active: #efffe8;
   --light: #f8f9fa;
   --dark: #343a40;
 }
