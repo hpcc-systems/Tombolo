@@ -1,0 +1,24 @@
+{
+  "application_id": "7e50408e-8010-4c1e-85c2-723ddc929c34",
+  "cluster_id": "b3468a23-27e8-4915-88ea-cd7a75c40760",
+  "name": "test",
+  "cron": "* * * * *",
+  "type": "directory",
+  "directory": "/test",
+  "active": 0,
+  "metaData": {
+    "description": "this is a test monitoring",
+    "testData": {
+      "Dir": "/var/lib/HPCCSystems/hpcc-data/thor",
+      "Name": ".woodbr01::a2541test",
+      "Wuid": "W20170531-112812",
+      "Owner": "testuser"
+    }
+  },
+  "approved": 1,
+  "approvalNote": "test note",
+  "approvedBy": "fancma01@risk.regn.net",
+  "approvedAt": 1712682310228,
+  "createdBy": "fancma01@risk.regn.net",
+  "updatedBy": "fancma01@risk.regn.net"
+}

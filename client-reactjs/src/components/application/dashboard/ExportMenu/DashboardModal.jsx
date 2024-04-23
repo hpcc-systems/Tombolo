@@ -118,7 +118,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
   return (
     <>
       <Modal
-        visible={modalVisible}
+        open={modalVisible}
         width={modalWidth}
         onCancel={cancelModal}
         maskClosable={false}
@@ -131,7 +131,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
         }
         footer={false}
         style={{ marginTop: '200px' }}>
-        <Tabs>
+        <Tabs type="card">
           <TabPane tab="Active Keys" key="1">
             <div style={{ marginBottom: '1rem' }}>
               <DashboardApiTable

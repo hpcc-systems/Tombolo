@@ -254,7 +254,7 @@ function Clusters() {
       />
 
       <Modal
-        visible={addClusterModalVisible}
+        open={addClusterModalVisible}
         onCancel={handleCancel}
         okText={<Text text="Add" />}
         onOk={addCluster}
@@ -322,7 +322,7 @@ function Clusters() {
       </Modal>
 
       <Modal
-        visible={clusterDetailModalVisible}
+        open={clusterDetailModalVisible}
         onCancel={handleCancel}
         okText={<Text text="Close" />}
         onOk={handleCancel}

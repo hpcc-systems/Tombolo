@@ -155,15 +155,29 @@ const AddEditJobMonitoringModal = ({
       );
     }
   };
+  //TODO -- remove tabs.tabpane replace with tabItems
+  // const tabItems = tabs.map((tab, index) => ({
+  //   key: index,
+  //   label: erroneousTabs.includes(index.toString()) ? (
+  //     <span>
+  //       <Badge color="var(--danger)" /> {`${tab.label}`}
+  //     </span>
+  //   ) : (
+  //     `${tab.label}`
+  //   ),
+  //   children: tab.component(),
+  //   forceRender: true,
+  // }));
 
+  // console.log(tabItems);
   return (
     <Modal
-      visible={displayAddJobMonitoringModal}
+      open={displayAddJobMonitoringModal}
       width={800}
       onCancel={handleCancel}
       footer={renderFooter()}
       maskClosable={false}>
-      <Tabs activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)}>
+      <Tabs type="card" activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)}>
         {tabs.map((tab, index) => (
           <Tabs.TabPane
             key={index}

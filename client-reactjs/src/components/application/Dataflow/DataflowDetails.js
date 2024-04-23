@@ -7,7 +7,6 @@ import BreadCrumbs from '../../common/BreadCrumbs';
 import GraphX6 from '../Graph/GraphX6';
 import useSelectDataflow from '../../../hooks/useSelectDataflow';
 import Text from '../../common/Text';
-const TabPane = Tabs.TabPane;
 
 function DataflowDetails() {
   const history = useHistory();
@@ -18,6 +17,24 @@ function DataflowDetails() {
   const handleBackToAllJobs = () => {
     history.push(`/${params.applicationId}/dataflow`);
   };
+
+  const tabItems = [
+    {
+      key: '1',
+      label: <Text text="Designer" />,
+      children: (
+        <div style={{ height: '80vh' }}>
+          <GraphX6 readOnly={canEdit ? false : true} />
+        </div>
+      ),
+    },
+    {
+      key: '2',
+      label: <Text text="Assets" />,
+
+      children: <DataflowAssetsTable />,
+    },
+  ];
 
   if (!isDataflowReady)
     return (
@@ -33,7 +50,9 @@ function DataflowDetails() {
       </div>
       <div>
         <Tabs
+          type="card"
           defaultActiveKey="1"
+          items={tabItems}
           destroyInactiveTabPane={true}
           tabBarExtraContent={
             <span>
@@ -42,14 +61,14 @@ function DataflowDetails() {
               </Button>
             </span>
           }>
-          <TabPane tab={<Text text="Designer" />} key="1">
+          {/* <TabPane tab={<Text text="Designer" />} key="1">
             <div style={{ height: '80vh' }}>
               <GraphX6 readOnly={canEdit ? false : true} />
             </div>
           </TabPane>
           <TabPane tab={<Text text="Assets" />} key="2">
             <DataflowAssetsTable />
-          </TabPane>
+          </TabPane> */}
         </Tabs>
       </div>
     </React.Fragment>

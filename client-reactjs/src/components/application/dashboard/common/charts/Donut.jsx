@@ -1,78 +1,66 @@
-import React, { useState, useEffect } from 'react';
-import { Pie, measureTextWidth } from '@ant-design/plots';
+import React, { useEffect, useState } from 'react';
+import { Pie } from '@ant-design/plots';
 
-function renderStatistic(containerWidth, text, style) {
-  const { width: textWidth, height: textHeight } = measureTextWidth(text, style);
-  const R = containerWidth / 2; // r^2 = (w / 2)^2 + (h - offsetY)^2
-
-  let scale = 1;
-
-  if (containerWidth < textWidth) {
-    scale = Math.min(Math.sqrt(Math.abs(Math.pow(R, 2) / (Math.pow(textWidth / 2, 2) + Math.pow(textHeight, 2)))), 1);
-  }
-
-  const textStyleStr = `width:${containerWidth}px;`;
-  return `<div style="${textStyleStr};font-size:${scale}em;line-height:${scale < 1 ? 1 : 'inherit'};">${text}</div>`;
-}
-
-function Donut({ donutData }) {
+function Donut({ donutData, title }) {
   const [config, setConfig] = useState({
-    appendPadding: 10,
     data: donutData,
     angleField: 'value',
     colorField: 'type',
-    radius: 1,
-    innerRadius: 0.64,
-    meta: {
-      value: {
-        formatter: (v) => `${v} ¥`,
-      },
-    },
+    paddingRight: 80,
+    innerRadius: 0.6,
     label: {
-      type: 'inner',
-      offset: '-50%',
+      text: 'value',
       style: {
-        textAlign: 'center',
+        fontWeight: '700',
+        fontSize: '1.5rem',
       },
-      autoRotate: false,
-      content: '{value}',
     },
-    statistic: {
-      title: {
-        offsetY: -4,
+    legend: {
+      color: {
+        title: false,
+        position: 'right',
+        rowPadding: 0,
       },
-      content: {
-        // offsetY: 4,
+    },
+    annotations: [
+      {
+        type: 'text',
         style: {
-          fontSize: '32px',
+          text: title,
+          x: '50%',
+          y: '50%',
+          textAlign: 'center',
+          fontSize: 40,
+          fontStyle: 'bold',
         },
-        customHtml: (container, view, datum, data) => {
-          const { width } = container.getBoundingClientRect();
-          const text = datum ? `${datum.value}` : `${data.reduce((r, d) => r + d.value, 0)}`;
-          return renderStatistic(width, text, {
-            fontSize: 32,
-          });
-        },
-      },
-    },
-    interactions: [
-      {
-        type: 'element-selected',
-      },
-      {
-        type: 'element-active',
-      },
-      {
-        type: 'pie-statistic-active',
       },
     ],
   });
 
   useEffect(() => {
-    if (donutData) {
-      setConfig((prev) => ({ ...prev, data: donutData }));
-    }
+    if (donutData) setConfig((prev) => ({ ...prev, data: donutData }));
   }, [donutData]);
+
+  useEffect(() => {
+    if (title) {
+      setConfig((prev) => ({
+        ...prev,
+        annotations: [
+          {
+            type: 'text',
+            style: {
+              text: title,
+              x: '50%',
+              y: '50%',
+              textAlign: 'center',
+              fontSize: 40,
+              fontStyle: 'bold',
+            },
+          },
+        ],
+      }));
+    }
+  }, [title]);
 
   return <Pie {...config} />;
 }

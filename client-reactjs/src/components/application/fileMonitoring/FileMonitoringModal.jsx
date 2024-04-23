@@ -287,7 +287,7 @@ function FileMonitoringModal({
   // JSX -----------------------------------------------------------------------------
   return (
     <Modal
-      visible={visible}
+      open={visible}
       maskClosable={false}
       width={modalWidth}
       onCancel={cancelFileMonitoringModal}
@@ -299,6 +299,7 @@ function FileMonitoringModal({
         </div>
       ) : (
         <Tabs
+          type="card"
           activeKey={activeTab}
           onTabClick={(record) => {
             setActiveTab(record);

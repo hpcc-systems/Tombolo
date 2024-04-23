@@ -611,7 +611,7 @@ class IndexDetails extends PureComponent {
             </div>
           ) : null}
 
-          <Tabs defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
+          <Tabs type="card" defaultActiveKey="1" tabBarExtraContent={this.props.displayingInModal ? null : controls}>
             <TabPane tab={<Text text="Basic" />} key="1">
               <Form
                 {...formItemLayout}
@@ -640,8 +640,8 @@ class IndexDetails extends PureComponent {
                             <Col span={21} order={1}>
                               <AutoComplete
                                 className="certain-category-search"
-                                dropdownClassName="certain-category-search-dropdown"
-                                dropdownMatchSelectWidth={false}
+                                popupClassName="certain-category-search-dropdown"
+                                popupMatchSelectWidth={false}
                                 dropdownStyle={{ width: 300 }}
                                 style={{ width: '100%' }}
                                 onSearch={(value) => this.searchIndexes(value)}

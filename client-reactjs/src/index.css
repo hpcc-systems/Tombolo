@@ -1,4 +1,4 @@
-@import '~antd/dist/antd.css';
+@import '~antd/dist/reset.css';
 :root {
   /* some colors from bootstrap */
   --primary: #007bff;
@@ -1104,8 +1104,12 @@ div.tooltip {
   display: none;
 }
 
+.OrbitTable .ant-table-column-has-sorters {
+  border-radius: 0px 8px 0px 0px;
+}
+
 .OrbitTable .ant-table-thead > tr > th {
-  background: #002140;
+  background: #002140 !important;
   color: white;
 }
 
@@ -1135,7 +1139,22 @@ div.tooltip {
 
 .chartLabel {
   color: rgb(71, 70, 70);
-  margin-bottom: 2rem;
+}
+
+.g2-tooltip {
+  font-size: 1rem !important;
+  font-family: inherit !important;
+  color: rgba(0, 0, 0, 1) !important;
+}
+
+.g2-tooltip-title {
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  color: rgba(0, 0, 0, 1) !important;
+}
+
+.monacoEditor {
+  border: 1px solid #d9d9d9;
 }
 
 .checkbox-section {

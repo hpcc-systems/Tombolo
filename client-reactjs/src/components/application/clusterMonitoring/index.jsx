@@ -59,10 +59,11 @@ function ClusterMonitoring() {
   //When submit btn on modal is clicked
   const handleOk = async () => {
     try {
+      await validateForms();
       // await form.validateFields(); // if errs will be caught by catch block
       const payload = form.getFieldsValue();
       payload.app_id = applicationId;
-      await form.validateFields();
+      // await form.validateFields();
       await saveClusterMonitoring(payload);
     } catch (err) {
       handleError(err);
@@ -92,6 +93,7 @@ function ClusterMonitoring() {
       };
 
       const response = await fetch(`/api/clustermonitoring/all/${applicationId}`, payload);
+
       if (!response.ok) handleError(response);
 
       const data = await response.json();
@@ -102,6 +104,20 @@ function ClusterMonitoring() {
       console.log(err);
       message.error('Failed to fetch cluster monitoring');
     }
+  };
+
+  //validate forms before saving
+  const validateForms = async () => {
+    let validationError = null;
+    let formData = {};
+
+    try {
+      formData = await form.validateFields();
+    } catch (err) {
+      validationError = err;
+    }
+
+    return { validationError, formData };
   };
 
   const saveClusterMonitoring = async (formData) => {
@@ -166,6 +182,7 @@ function ClusterMonitoring() {
       };
 
       const response = await fetch(`/api/clustermonitoring/`, payload);
+
       if (!response.ok) handleError(response);
 
       const data = await response.json();
@@ -294,7 +311,7 @@ function ClusterMonitoring() {
       />
 
       <Modal
-        visible={visible}
+        open={visible}
         onOk={handleOk}
         onCancel={handleCancel}
         footer={btns[activeTab]}
@@ -307,6 +324,7 @@ function ClusterMonitoring() {
           initialValues={{ msTeamsGroups: [''], emails: [''] }}>
           <Tabs
             activeKey={activeTab}
+            type="card"
             onTabClick={(record) => {
               setActiveTab(record);
             }}>

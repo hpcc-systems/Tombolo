@@ -170,7 +170,7 @@ function VisualizationDetails() {
 
   return (
     <React.Fragment>
-      <Tabs defaultActiveKey="1" tabBarExtraContent={controls}>
+      <Tabs type="card" defaultActiveKey="1" tabBarExtraContent={controls}>
         <TabPane tab={<Text text="Basic" />} key="1">
           <Spin spinning={formState.loading}>
             <Form {...formItemLayout} labelAlign="left" form={form} onFinish={handleOk}>
@@ -180,8 +180,8 @@ function VisualizationDetails() {
                     <Col span={19}>
                       <AutoComplete
                         className="certain-category-search"
-                        dropdownClassName="certain-category-search-dropdown"
-                        dropdownMatchSelectWidth={false}
+                        popupClassName="certain-category-search-dropdown"
+                        popupMatchSelectWidth={false}
                         dropdownStyle={{ width: 300 }}
                         style={{ width: '100%' }}
                         onSearch={(value) => searchFiles(value)}

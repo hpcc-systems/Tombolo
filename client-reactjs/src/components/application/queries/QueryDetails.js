@@ -605,7 +605,7 @@ class QueryDetails extends PureComponent {
               <Spin spinning={this.state.initialDataLoading} size="large" />
             </div>
           ) : null}
-          <Tabs defaultActiveKey="1" tabBarExtraContent={controls}>
+          <Tabs type="card" defaultActiveKey="1" tabBarExtraContent={controls}>
             <TabPane tab={<Text text="Basic" />} key="1">
               <Form
                 {...formItemLayout}
@@ -643,8 +643,8 @@ class QueryDetails extends PureComponent {
                                 <Col span={21} order={1}>
                                   <AutoComplete
                                     className="certain-category-search"
-                                    dropdownClassName="certain-category-search-dropdown"
-                                    dropdownMatchSelectWidth={false}
+                                    popupClassName="certain-category-search-dropdown"
+                                    popupMatchSelectWidth={false}
                                     dropdownStyle={{ width: 300 }}
                                     style={{ width: '100%' }}
                                     onSearch={(value) => this.searchQueries(value)}

@@ -32,7 +32,7 @@ app.set("trust proxy", 1);
 
 // Limit rate of requests to 400 per 15 minutes
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
+  windowMs: 15 * 60 * 1000,
   max: 400,
 });
 
@@ -83,6 +83,9 @@ const teamsHook = require("./routes/msTeamsHook/read");
 const fido = require("./routes/fido/read");
 const notification_queue = require("./routes/notification_queue/read");
 const sent_notifications = require("./routes/sent_notifications/read");
+const monitorings = require("./routes/monitorings/read");
+const asr = require("./routes/asr/read");
+const directoryMonitoring = require("./routes/directorymonitoring/read");
 
 // Log all HTTP requests
 app.use((req, res, next) => {
@@ -127,9 +130,12 @@ app.use("/api/cluster", cluster);
 app.use("/api/orbit", orbit);
 app.use("/api/integrations", integrations);
 app.use("/api/teamsHook", teamsHook);
-app.use("/api/fido", fido);fido
+app.use("/api/fido", fido);
 app.use("/api/notification_queue", notification_queue);
 app.use("/api/sent_notifications", sent_notifications);
+app.use("/api/monitorings", monitorings);
+app.use("/api/asr", asr);
+app.use("/api/directoryMonitoring", directoryMonitoring);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
@@ -137,8 +143,9 @@ app.use((err, req, res, next) => {
   res.status(500).send("Something went wrong");
 });
 
-// Disables SSL verification for self-signed certificates in development mode 
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = process.env.NODE_ENV === "production" ? 1 : 0;
+// Disables SSL verification for self-signed certificates in development mode
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] =
+  process.env.NODE_ENV === "production" ? 1 : 0;
 
 /* Start server */
 server.listen(port, "0.0.0.0", async () => {

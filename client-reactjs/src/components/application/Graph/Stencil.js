@@ -1,9 +1,9 @@
-import { Addon } from '@antv/x6';
+import { Stencil as StencilUtil } from '@antv/x6-plugin-stencil';
 import { i18n } from '../../common/Text';
 
 export default class Stencil {
   static init(stencilContainer, graph) {
-    const stencil = new Addon.Stencil({
+    const stencil = new StencilUtil({
       title: 'Assets',
       target: graph,
       layoutOptions: {
@@ -36,11 +36,11 @@ export default class Stencil {
       },
     });
 
+    this.addShape(graph, stencil);
+
     if (stencilContainer.current) {
       stencilContainer.current.appendChild(stencil.container);
     }
-
-    this.addShape(graph, stencil);
   }
 
   static addShape(graph, stencil) {
@@ -55,6 +55,13 @@ export default class Stencil {
     const assetsNodes = assets.map((asset) => {
       return graph.createNode({
         shape: 'custom-shape',
+
+        attrs: {
+          body: {
+            fill: '#2ECC71', // Background color
+            stroke: '#000', // Border color
+          },
+        },
         data: {
           isStencil: true,
           type: asset.type,

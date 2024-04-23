@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Tabs } from 'antd';
 import GraphExpanded from './charts/GraphExpanded.jsx';
@@ -31,7 +31,7 @@ function ClusterUsage() {
     }
 
     // If no clusterId in url
-    if (clusters && !urlQueries.clusterId) {
+    if (clusters?.length && !urlQueries.clusterId) {
       setSelectedCluster(clusters[0].id);
       addQueriesToUrl({ queryName: 'clusterId', queryValue: clusters[0].id });
     }
@@ -50,9 +50,9 @@ function ClusterUsage() {
       const range = historyDateRange.split(',');
       const startDate = range[0];
       const endDate = range[1];
-      setHistoryDateRange([moment(new Date(startDate)), moment(new Date(endDate))]);
+      setHistoryDateRange([dayjs(new Date(startDate)), dayjs(new Date(endDate))]);
     } else {
-      setHistoryDateRange([moment().subtract(30, 'days'), moment()]);
+      setHistoryDateRange([dayjs().subtract(30, 'days'), dayjs()]);
     }
   }, []);
 
@@ -103,6 +103,7 @@ function ClusterUsage() {
     <Tabs
       tabBarExtraContent={<ExportMenu selectedCluster={selectedCluster} />}
       activeKey={activeTab}
+      type="card"
       onChange={handleTabSwitching}>
       <Tabs.TabPane tab="Usage history" key="1">
         <Filters

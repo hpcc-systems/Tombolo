@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, Empty, Spin, Space } from 'antd';
 import { useSelector } from 'react-redux';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import OrbitTable from './OrbitTable';
 import WorkUnitCharts from '../common/charts/WorkUnitCharts';
 import Filters from './Filters';
@@ -43,7 +43,7 @@ function Orbit() {
     businessUnitsOptions: [],
     wuid: [],
     wuidOptions: [],
-    dateRange: [moment().subtract(15, 'days'), moment()],
+    dateRange: [dayjs().subtract(15, 'days'), dayjs()],
     groupDataBy: 'day',
   });
 
@@ -155,7 +155,7 @@ function Orbit() {
       if (params.get('dateRange')) {
         const dateString = params.get('dateRange');
         const dates = dateString.split(',');
-        const range = [moment(dates[0]), moment(dates[1])];
+        const range = [dayjs(dates[0]), dayjs(dates[1])];
         filters.dateRange = range;
       }
       if (params.get('groupDataBy')) {
@@ -187,7 +187,7 @@ function Orbit() {
         businessUnitsOptions: uniqueBusinessUnitsOptions,
         wuid: uniqueWorkUnits,
         wuidOptions: uniqueWorkUnitsOptions,
-        dateRange: filters.dateRange?.length ? filters.dateRange : [moment().subtract(15, 'days'), moment()],
+        dateRange: filters.dateRange?.length ? filters.dateRange : [dayjs().subtract(15, 'days'), dayjs()],
         groupDataBy: filters.groupDataBy ? filters.groupDataBy : 'day',
       }));
 
@@ -237,11 +237,11 @@ function Orbit() {
 
     //apply filters to work units once the build list is filtered
     let filtered = workUnits.filter((workUnit) => {
-      let wuDate = moment(workUnit.lastRun);
+      let wuDate = dayjs(workUnit.lastRun);
 
       if (
-        wuDate > moment(dashboardFilters.dateRange[0]) &&
-        wuDate < moment(dashboardFilters.dateRange[1]) &&
+        wuDate > dayjs(dashboardFilters.dateRange[0]) &&
+        wuDate < dayjs(dashboardFilters.dateRange[1]) &&
         dashboardFilters.initialStatus?.includes(workUnit.initialStatus.toUpperCase()) &&
         dashboardFilters.finalStatus?.includes(workUnit.finalStatus.toUpperCase()) &&
         dashboardFilters.version?.includes(workUnit.version) &&
@@ -273,11 +273,11 @@ function Orbit() {
 
       if (build.workUnits?.length > 0) {
         build.workUnits.forEach((workUnit) => {
-          let wuDate = moment(workUnit.lastRun);
+          let wuDate = dayjs(workUnit.lastRun);
 
           if (
-            wuDate > moment(dashboardFilters.dateRange[0]) &&
-            wuDate < moment(dashboardFilters?.dateRange[1]) &&
+            wuDate > dayjs(dashboardFilters.dateRange[0]) &&
+            wuDate < dayjs(dashboardFilters?.dateRange[1]) &&
             dashboardFilters.initialStatus?.includes(workUnit.initialStatus.toUpperCase()) &&
             dashboardFilters.finalStatus?.includes(workUnit.finalStatus.toUpperCase()) &&
             dashboardFilters.version?.includes(workUnit.version) &&
@@ -317,9 +317,9 @@ function Orbit() {
         newTitleMetrics.push({
           title: 'Date Range Selected',
           description:
-            moment(dashboardFilters?.dateRange[0]).format('MM/DD/YY') +
+            dayjs(dashboardFilters?.dateRange[0]).format('MM/DD/YY') +
             ' - ' +
-            moment(dashboardFilters?.dateRange[1]).format('MM/DD/YY'),
+            dayjs(dashboardFilters?.dateRange[1]).format('MM/DD/YY'),
         });
       }
 
@@ -331,8 +331,8 @@ function Orbit() {
       switch (groupDataBy) {
         case 'week':
           data = filteredWorkUnits.map((workUnit) => {
-            const weekStart = moment(workUnit.lastRun).startOf('week').format('MM/DD/YY');
-            const weekEnd = moment(workUnit.lastRun).endOf('week').format('MM/DD/YY');
+            const weekStart = dayjs(workUnit.lastRun).startOf('week').format('MM/DD/YY');
+            const weekEnd = dayjs(workUnit.lastRun).endOf('week').format('MM/DD/YY');
             const updatedItem = { ...workUnit };
             updatedItem.metaData.lastRun = `${weekStart} - ${weekEnd}`;
             return updatedItem;
@@ -342,7 +342,7 @@ function Orbit() {
         case 'month':
           data = filteredWorkUnits.map((workUnit) => {
             const updatedItem = { ...workUnit };
-            updatedItem.metaData.lastRun = moment(moment(workUnit.lastRun).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
+            updatedItem.metaData.lastRun = dayjs(dayjs(workUnit.lastRun).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
             return updatedItem;
           });
           break;
@@ -350,7 +350,7 @@ function Orbit() {
         case 'quarter':
           data = filteredWorkUnits.map((workUnit) => {
             const updatedItem = { ...workUnit };
-            const date = moment.utc(workUnit.lastRun);
+            const date = dayjs.utc(workUnit.lastRun);
             const year = date.year();
             const quarter = Math.ceil((date.month() + 1) / 3);
             updatedItem.metaData.lastRun = `${year} - Q${quarter}`;
@@ -361,7 +361,7 @@ function Orbit() {
         case 'year':
           data = filteredWorkUnits.map((workUnit) => {
             const updatedItem = { ...workUnit };
-            const date = moment.utc(workUnit.lastRun);
+            const date = dayjs.utc(workUnit.lastRun);
             const year = date.year();
             updatedItem.metaData.lastRun = year;
             return updatedItem;
@@ -439,6 +439,7 @@ function Orbit() {
   return (
     <div>
       <Tabs
+        type="card"
         tabBarExtraContent={
           <>
             <Space style={{ marginRight: '1rem' }}>

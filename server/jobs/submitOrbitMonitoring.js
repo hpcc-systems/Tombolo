@@ -13,32 +13,11 @@ const {
 } = require("./messageCards/notificationTemplate");
 const { update } = require("lodash");
 
-const sql = require("mssql");
+const {
+  runMySQLQuery,
 
-const dbConfig = {
-  server: process.env.ORBIT_DB,
-  database: process.env.ORBIT_DB_NAME,
-  user: process.env.ORBIT_DB_USER,
-  password: process.env.ORBIT_DB_PWD,
-  port: parseInt(process.env.ORBIT_DB_PORT),
-  trustServerCertificate: true,
-};
-
-const runSQLQuery = async (query) => {
-  try {
-    await sql.connect(dbConfig);
-
-    const result = await sql.query(query);
-
-    return result;
-  } catch (err) {
-    console.log(err);
-    return {
-      err,
-      message: "There was an issue contacting the orbit reports server",
-    };
-  }
-};
+  orbitDbConfig,
+} = require("../utils/runSQLQueries.js");
 
 (async () => {
   try {
@@ -70,22 +49,22 @@ const runSQLQuery = async (query) => {
 
     //get most recent WorkUnits
 
-    const query = `select Top 10 HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status', Version, BuildTemplateIdKey as 'BuildID'  from DimBuildInstance where Name = '${build}' order by Date desc`;
+    const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status', Version, BuildTemplateIdKey as 'BuildID'  from DimBuildInstance where Name = '${build}' AND HpccWorkUnit IS NOT NULL order by Date desc Limit 10`;
 
-    const wuResult = await runSQLQuery(query);
+    const wuResult = await runMySQLQuery(query, orbitDbConfig);
 
     if (wuResult.err) {
-      throw Error(result.message);
+      throw Error(wuResult.err);
     }
 
     // Keep track of changes
     const metaDifference = [];
 
-    if (!wuResult || !wuResult.recordset || wuResult.recordset[0]) return;
+    if (!wuResult || !wuResult[0] || !wuResult[0][0]) return;
 
     //check for most recent workunit changes and push to metadifference
     if (notifyCondition.includes("buildStatus")) {
-      let newStatus = wuResult.recordset[0].Status;
+      let newStatus = wuResult[0][0].Status;
       newStatus = newStatus.toLowerCase();
 
       if (monitoringCondition?.buildStatus.includes(newStatus)) {
@@ -180,7 +159,7 @@ const runSQLQuery = async (query) => {
     //check for status changes of the all gathered workunits
 
     await Promise.all(
-      wuResult.recordset.map(async (result) => {
+      wuResult[0].map(async (result) => {
         //check if result is is orbitbuilds table
         const orbitBuild = await orbitBuilds.findOne({
           where: {
@@ -203,7 +182,6 @@ const runSQLQuery = async (query) => {
             { where: { id: orbitBuild.id } }
           );
         } else {
-          console.log("new build found, creating it!!" + result);
           //if it doesn't, create it
           await orbitBuilds.create({
             application_id: application_id,
@@ -265,7 +243,7 @@ const runSQLQuery = async (query) => {
       businessUnit: businessUnit,
       region: "USA",
       severityCode: severityCode,
-      date: wuResult.recordset[0].Date,
+      date: wuResult[0].Date,
       remedy:
         "Please Contact one of the following for assistance <br/>" +
         "PRIMARY: " +
@@ -276,10 +254,10 @@ const runSQLQuery = async (query) => {
       notification_id: notification_id,
       issue: {
         metaDifference: metaDifference,
-        status: wuResult.recordset[0].Status,
+        status: wuResult[0][0].Status,
         build: build,
         host: host,
-        workUnit: wuResult.recordset[0].WorkUnit,
+        workUnit: wuResult[0][0].WorkUnit,
         cron: cron,
       },
     };

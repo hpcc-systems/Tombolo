@@ -2,7 +2,6 @@
 /* eslint-disable unused-imports/no-unused-imports */
 import React from 'react';
 import { Gauge } from '@ant-design/plots';
-import { Popover } from 'antd';
 
 const MeterGauge = ({ data }) => {
   //Gauge color
@@ -19,81 +18,34 @@ const MeterGauge = ({ data }) => {
   };
 
   const config = {
-    percent: data.maxUsage / 100,
-    innerRadius: 0.8,
-    range: {
-      color: gaugeColor(data.maxUsage),
+    width: 300,
+    height: 300,
+    fill: 'black',
+    data: {
+      target: data.maxUsage,
+      total: 100,
+      name: 'Usage',
+      threshold: [data.maxUsage, 100],
     },
-    indicator: {
-      pointer: {
-        style: {
-          stroke: '#D0D0D0',
-        },
+    scale: {
+      color: {
+        range: [gaugeColor(data.maxUsage), 'grey'],
       },
-      pin: {
-        style: {
-          stroke: '#D0D0D0',
-        },
-      },
+      fontSize: 24,
+      fill: 'black',
     },
-    axis: {
-      label: {
-        formatter(v) {
-          return Number(v) * 100;
-        },
-      },
-      subTickLine: {
-        count: 3,
-      },
-    },
-    statistic: {
-      title: {
-        formatter: () => {
-          return `${data.maxUsage} %`;
-        },
-        style: () => {
-          return {
-            fontSize: '16px',
-          };
-        },
-      },
-      content: {
-        offsetY: 36,
-        style: {
-          fontSize: '18px',
-          color: '#1890ff',
-          textDecoration: 'underline',
-        },
-
-        formatter: () => {
-          return data.engines.length < 2 ? data.name : [`${data.name} [+ ${data.engines.length - 1} more]`];
-        },
-      },
+    style: {
+      textContent: (target) => `\n${target}%\n${data.engines}`,
+      fontSize: 24,
+      fontFill: '',
+      textSize: 24,
     },
   };
-  return (
-    <Popover
-      placement="left"
-      content={
-        <div>
-          <div>Max : {data.maxUsage} % </div>
-          <div>Mean: {data.meanUsage} % </div>
 
-          {data.engines.length > 1 ? (
-            <>
-              <hr />
-              <>
-                {data.engines.map((engine) => {
-                  return <div key={engine}> {engine}</div>;
-                })}
-              </>
-            </>
-          ) : null}
-        </div>
-      }>
-      <Gauge {...config} style={{ width: '250px', height: '250px', padding: '20px' }} />
-      <> </>
-    </Popover>
+  return (
+    <>
+      <Gauge {...config} />
+    </>
   );
 };
 
