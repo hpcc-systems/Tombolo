@@ -32,6 +32,8 @@ const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   createSuperFileMonitoringBreeJob,
+  createDirectoryMonitoringBreeJob,
+  scheduleDirectoryMonitoringOnServerStart,
   scheduleSuperFileMonitoringOnServerStart,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
@@ -128,6 +130,7 @@ class JobScheduler {
       await this.createOrbitMegaphoneJob();
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
+      await this.scheduleDirectoryMonitoringOnServerStart();
     })();
   }
 
@@ -283,6 +286,18 @@ class JobScheduler {
       filemonitoring_id,
       cron,
     });
+  }
+
+  createDirectoryMonitoringBreeJob({ directoryMonitoring_id, name, cron }) {
+    return createDirectoryMonitoringBreeJob.call(this, {
+      directoryMonitoring_id,
+      name,
+      cron,
+    });
+  }
+
+  scheduleDirectoryMonitoringOnServerStart() {
+    return scheduleDirectoryMonitoringOnServerStart.call(this);
   }
 
   scheduleSuperFileMonitoringOnServerStart() {
