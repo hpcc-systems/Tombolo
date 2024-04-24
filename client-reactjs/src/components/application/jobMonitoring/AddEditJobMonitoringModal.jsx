@@ -11,6 +11,7 @@ const AddEditJobMonitoringModal = ({
   monitoringScope,
   setMonitoringScope,
   handleSaveJobMonitoring,
+  handleUpdateJobMonitoring,
   intermittentScheduling,
   setIntermittentScheduling,
   setCompleteSchedule,
@@ -143,12 +144,22 @@ const AddEditJobMonitoringModal = ({
           <Button type="primary" ghost onClick={handlePrevious}>
             Previous
           </Button>
-          <Button
-            type="primary"
-            onClick={handleSaveJobMonitoring}
-            icon={savingJobMonitoring ? <LoadingOutlined /> : null}>
-            Submit
-          </Button>
+          {!isEditing && (
+            <Button
+              type="primary"
+              onClick={handleSaveJobMonitoring}
+              icon={savingJobMonitoring ? <LoadingOutlined /> : null}>
+              Submit
+            </Button>
+          )}
+          {isEditing && (
+            <Button
+              type="primary"
+              onClick={handleUpdateJobMonitoring}
+              icon={savingJobMonitoring ? <LoadingOutlined /> : null}>
+              Update
+            </Button>
+          )}
         </>
       );
     }

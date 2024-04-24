@@ -1,4 +1,3 @@
-/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
@@ -7,8 +6,8 @@ import dayjs from 'dayjs';
 import JobMonitoringActionButton from './JobMonitoringActionButton.jsx';
 import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
 import './jobMonitoring.css';
-import { authHeader } from '../../common/AuthHeader.js';
 import {
+  createJobMonitoring,
   getAllJobMonitorings,
   checkScheduleValidity,
   getAllTeamsHook,
@@ -16,6 +15,8 @@ import {
   getDomains,
   getProductCategories,
   getMonitoringTypeId,
+  updateSelectedMonitoring,
+  isScheduleUpdated,
 } from './jobMonitoringUtils.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
 import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
@@ -206,7 +207,7 @@ function JobMonitoring() {
     setDisplayAddJobMonitoringModal(true);
   };
 
-  //Save job monitoring
+  //Save new job monitoring
   const handleSaveJobMonitoring = async () => {
     setSavingJobMonitoring(true);
     let validForm = true;
@@ -259,11 +260,6 @@ function JobMonitoring() {
         allInputs.jobName = '*';
       }
 
-      // if editingData.isEditing is true, add id to allInputs
-      if (editingData?.isEditing) {
-        allInputs.id = selectedMonitoring.id;
-      }
-
       // Group ASR specific metaData and delete from allInputs
       const asrSpecificMetaData = {};
       const { domain, productCategory, jobMonitorType, severity, requireComplete } = allInputs;
@@ -299,16 +295,11 @@ function JobMonitoring() {
       metaData.requireComplete = requireComplete;
       delete allInputs.requireComplete;
 
-      /* Attempt formatting if only from filed is touched, while editing user may completely skip to click schedule 
-      tab. if so these fields wont be touched and will be undefined */
-      if (form.isFieldTouched('expectedCompletionTime')) {
-        metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
-        delete allInputs.expectedCompletionTime;
-      }
-      if (form.isFieldTouched('expectedStartTime')) {
-        metaData.expectedStartTime = expectedStartTime.format('HH:mm');
-        delete allInputs.expectedStartTime;
-      }
+      // Format expectedCompletionTime and expectedStartTime
+      metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
+      delete allInputs.expectedCompletionTime;
+      metaData.expectedStartTime = expectedStartTime.format('HH:mm');
+      delete allInputs.expectedStartTime;
 
       // Add schedule to metaData if entered,
       // Note: cluster wide monitoring should not have schedule because work units can have varying schedules
@@ -324,9 +315,7 @@ function JobMonitoring() {
         email: user.email,
       });
 
-      if (!editingData?.isEditing) {
-        allInputs.createdBy = userDetails;
-      }
+      allInputs.createdBy = userDetails;
       allInputs.lastUpdatedBy = userDetails;
 
       //Add asrSpecificMetaData, notificationMetaData to metaData object
@@ -336,45 +325,185 @@ function JobMonitoring() {
       //Add metaData to allInputs
       allInputs = { ...allInputs, metaData };
 
-      const payload = {
-        method: editingData.isEditing ? 'PATCH' : 'POST',
-        header: authHeader(),
-        body: JSON.stringify(allInputs),
-      };
-
-      const response = await fetch(`/api/jobmonitoring`, payload);
-
-      if (!response.ok) {
-        return message.error('Failed to save job monitoring');
-      }
-
-      //Set newly added job monitoring to jobMonitorings
-      const responseData = await response.json();
-
-      if (editingData?.isEditing) {
-        const updatedJobMonitorings = jobMonitorings.map((jobMonitoring) => {
-          if (jobMonitoring.id === responseData.id) {
-            return responseData;
-          }
-          return jobMonitoring;
-        });
-        setJobMonitorings(updatedJobMonitorings);
-        message.success('Job monitoring updated successfully');
-      } else {
-        setJobMonitorings([responseData, ...jobMonitorings]);
-        message.success('Job monitoring saved successfully');
-      }
-
-      // Toggle editingData to false
-      if (editingData?.isEditing) {
-        setEditingData({ isEditing: false });
-      }
+      const responseData = await createJobMonitoring({ inputData: allInputs });
+      setJobMonitorings([responseData, ...jobMonitorings]);
+      message.success('Job monitoring saved successfully');
 
       // Rest states and Close model if saved successfully
       resetStates();
       setDisplayAddJobMonitoringModal(false);
     } catch (err) {
       message.error(err.message);
+    } finally {
+      setSavingJobMonitoring(false);
+    }
+  };
+
+  // Handle update existing monitoring
+  const handleUpdateJobMonitoring = async () => {
+    setSavingJobMonitoring(true);
+    try {
+      // Validate from and set validForm to false if any field is invalid
+      let validForm = true;
+      try {
+        await form.validateFields();
+      } catch (err) {
+        validForm = false;
+      }
+
+      //Check if schedule is valid
+      const jobSchedule = checkScheduleValidity({ intermittentScheduling, completeSchedule, cron, cronMessage });
+
+      // Error message need to be set for schedule because it is not part of from instance
+      if (!jobSchedule.valid) {
+        setErroneousScheduling(true);
+        validForm = false;
+      } else {
+        setErroneousScheduling(false);
+      }
+
+      // Identify erroneous tabs
+      const erroneousFields = form
+        .getFieldsError()
+        .filter((f) => f.errors.length > 0)
+        .map((f) => f.name[0]);
+      const badTabs = identifyErroneousTabs({ erroneousFields });
+      if (!badTabs.includes('1') && !jobSchedule.valid) {
+        badTabs.push('1');
+      }
+      if (badTabs.length > 0) {
+        setErroneousTabs(badTabs);
+      }
+
+      // If form is invalid or schedule is invalid return
+      if (!validForm) {
+        setSavingJobMonitoring(false);
+        return;
+      }
+
+      // Form fields
+      const formFields = form.getFieldsValue();
+      const fields = Object.keys(formFields);
+
+      // Need to be checked separately, because the data is nested inside metaData object
+      const asrSpecificFields = ['domain', 'productCategory', 'severity'];
+      const metaDataFields = ['expectedCompletionTime', 'expectedStartTime', 'requireComplete'];
+      const notificationMetaDataFields = [
+        'teamsHooks',
+        'primaryContacts',
+        'secondaryContacts',
+        'notifyContacts',
+        'notificationCondition',
+      ];
+
+      // Identify the fields that were touched
+      const touchedFields = [];
+      fields.forEach((field) => {
+        if (form.isFieldTouched(field)) {
+          touchedFields.push(field);
+        }
+      });
+
+      // Check if schedule is changed - it is not part of form instance
+      const existingSchedule = selectedMonitoring?.metaData?.schedule || [];
+      const scheduleChanged = isScheduleUpdated({ existingSchedule, newSchedule: jobSchedule.schedule });
+      if (scheduleChanged) {
+        touchedFields.push('schedule');
+      }
+
+      // If no touched fields
+      if (touchedFields.length === 0) {
+        return message.error('No changes detected');
+      }
+
+      // updated monitoring
+      let updatedData = { ...selectedMonitoring };
+
+      // Add schedule to metaData if altered
+      if (touchedFields.includes('schedule')) {
+        updatedData.metaData.schedule = jobSchedule.schedule;
+      }
+
+      //Touched ASR fields
+      const touchedAsrFields = touchedFields.filter((field) => asrSpecificFields.includes(field));
+      const touchedMetaDataFields = touchedFields.filter((field) => metaDataFields.includes(field));
+      const touchedNotificationMetaDataFields = touchedFields.filter((field) =>
+        notificationMetaDataFields.includes(field)
+      );
+
+      // update selected monitoring with asr specific fields that are nested inside metaData > asrSpecificMetaData
+      if (touchedAsrFields.length > 0) {
+        let existingAsrSpecificMetaData = selectedMonitoring?.metaData?.asrSpecificMetaData || {};
+        const upDatedAsrSpecificMetaData = form.getFieldsValue(touchedAsrFields);
+        const newAsrSpecificFields = { ...existingAsrSpecificMetaData, ...upDatedAsrSpecificMetaData };
+        updatedData.metaData.asrSpecificMetaData = newAsrSpecificFields;
+      }
+
+      // update selected monitoring with run time fields that are nested inside metaData
+      if (touchedMetaDataFields.length > 0) {
+        if (touchedMetaDataFields.includes('expectedCompletionTime')) {
+          const expectedCompletionTime = form.getFieldValue('expectedCompletionTime');
+          const newExpectedCompletionTime = expectedCompletionTime.format('HH:mm');
+          updatedData.metaData.expectedCompletionTime = newExpectedCompletionTime;
+        }
+
+        if (touchedMetaDataFields.includes('expectedStartTime')) {
+          const expectedStartTime = form.getFieldValue('expectedStartTime');
+          const newExpectedStartTime = expectedStartTime.format('HH:mm');
+          updatedData.metaData.expectedStartTime = newExpectedStartTime;
+        }
+
+        if (touchedMetaDataFields.includes('requireComplete')) {
+          const requireComplete = form.getFieldValue('requireComplete');
+          updatedData.metaData.requireComplete = requireComplete;
+        }
+      }
+
+      // update selected monitoring with notificationMetaData fields that are nested inside metaData
+      if (touchedNotificationMetaDataFields.length > 0) {
+        const existingNotificationMetaData = selectedMonitoring.metaData.notificationMetaData || {};
+        const updatedNotificationMetaData = form.getFieldsValue(touchedNotificationMetaDataFields);
+        const newNotificationMetaData = { ...existingNotificationMetaData, ...updatedNotificationMetaData };
+        updatedData.metaData.notificationMetaData = newNotificationMetaData;
+      }
+
+      // new values of any other fields that are not part of asrFields, metaDataFields, notificationMetaDataFields
+      const otherFields = fields.filter(
+        (field) =>
+          !asrSpecificFields.includes(field) &&
+          !metaDataFields.includes(field) &&
+          !notificationMetaDataFields.includes(field)
+      );
+
+      // Update other fields
+      const otherFieldsValues = form.getFieldsValue(otherFields);
+      const newOtherFields = { ...selectedMonitoring, ...otherFieldsValues };
+      updatedData = { ...updatedData, ...newOtherFields };
+
+      // updated by
+      const userDetails = JSON.stringify({
+        id: user.id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+      });
+      updatedData.lastUpdatedBy = userDetails;
+
+      // Make api call
+      await updateSelectedMonitoring({ updatedData });
+
+      // If no error thrown set state with new data
+      setJobMonitorings((prev) => {
+        const updatedJobMonitorings = prev.map((jobMonitoring) => {
+          if (jobMonitoring.id === updatedData.id) {
+            return updatedData;
+          }
+          return jobMonitoring;
+        });
+        return updatedJobMonitorings;
+      });
+      resetStates();
+    } catch (err) {
+      message.error('Failed to update job monitoring');
     } finally {
       setSavingJobMonitoring(false);
     }
@@ -398,6 +527,7 @@ function JobMonitoring() {
         displayAddJobMonitoringModal={displayAddJobMonitoringModal}
         setDisplayAddJobMonitoringModal={setDisplayAddJobMonitoringModal}
         handleSaveJobMonitoring={handleSaveJobMonitoring}
+        handleUpdateJobMonitoring={handleUpdateJobMonitoring}
         form={form}
         intermittentScheduling={intermittentScheduling}
         setIntermittentScheduling={setIntermittentScheduling}

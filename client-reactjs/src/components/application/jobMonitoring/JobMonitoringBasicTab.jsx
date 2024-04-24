@@ -98,7 +98,7 @@ function JobMonitoringBasicTab({
           label="Monitoring Name"
           name="monitoringName"
           rules={[
-            { required: true, message: 'Required filed' },
+            { required: true, message: 'Required field' },
             { max: 100, message: 'Maximum of 100 characters allowed' },
             () => ({
               validator(_, value) {
@@ -160,7 +160,7 @@ function JobMonitoringBasicTab({
           </Select>
         </Form.Item>
 
-        <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required filed' }]}>
+        <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required field' }]}>
           <Select onChange={(value) => handleClusterChange(value)}>
             {clusters.map((cluster) => {
               return (
@@ -190,7 +190,7 @@ function JobMonitoringBasicTab({
             }
             name="jobName"
             rules={[
-              { required: true, message: 'Required filed' },
+              { required: true, message: 'Required field' },
               { max: 256, message: 'Maximum of 256 characters allowed' },
             ]}>
             <AutoComplete
@@ -221,7 +221,7 @@ function JobMonitoringBasicTab({
             }
             name="jobName"
             rules={[
-              { required: true, message: 'Required filed' },
+              { required: true, message: 'Required field' },
               { max: 256, message: 'Maximum of 256 characters allowed' },
             ]}>
             <Input placeholder="Enter a pattern" />

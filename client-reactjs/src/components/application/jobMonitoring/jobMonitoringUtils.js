@@ -1,6 +1,24 @@
 import { authHeader } from '../../common/AuthHeader.js';
 import { message } from 'antd';
 
+// Create a job monitoring
+export const createJobMonitoring = async ({ inputData }) => {
+  const payload = {
+    method: 'POST',
+    header: authHeader(),
+    body: JSON.stringify(inputData),
+  };
+
+  const response = await fetch(`/api/jobmonitoring`, payload);
+
+  if (!response.ok) {
+    return message.error('Failed to save job monitoring');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
 // Function to get all job monitorings from the server
 export const getAllJobMonitorings = async ({ applicationId }) => {
   const payload = {
@@ -57,6 +75,24 @@ export const getAllTeamsHook = async () => {
   const response = await fetch(`/api/teamsHook/`, payload);
   if (!response.ok) {
     throw new Error('Failed to get teams hook');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+// Update a job monitoring
+export const updateSelectedMonitoring = async ({ updatedData }) => {
+  const payload = {
+    method: 'PATCH',
+    headers: authHeader(),
+    body: JSON.stringify(updatedData),
+  };
+
+  const response = await fetch(`/api/jobmonitoring/`, payload);
+
+  if (!response.ok) {
+    return message.error('Failed to update job monitoring');
   }
 
   const data = await response.json();
@@ -198,3 +234,12 @@ export const handleBulkUpdateJobMonitorings = async ({ updatedData }) => {
   const data = await response.json();
   return data;
 };
+
+// Check if 2 schedule are the same
+export function isScheduleUpdated({ existingSchedule, newSchedule }) {
+  if (existingSchedule.length !== newSchedule.length) return true;
+  for (let i = 0; i < existingSchedule.length; i++) {
+    if (JSON.stringify(existingSchedule[i]) !== JSON.stringify(newSchedule[i])) return true;
+  }
+  return false;
+}
