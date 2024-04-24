@@ -343,5 +343,94 @@ router.delete("/products/:id",
     }
 });
 
+// ------------------------------------------------------------------------------------------------
+
+// Get all domains for specific monitoring (activity) type
+router.get("/domainsForSpecificMonitoring/:monitoringTypeId",
+[param("monitoringTypeId").isString().isLength({min: 1})],
+ async(req, res) => {
+  try{
+    //Validate request
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+      return res.status(400).send("Invalid monitoringTypeId");
+    }
+
+    const monitoringTypeId = req.params.monitoringTypeId;
+    
+    // Make call to db and  get all domains for the activity type
+    const domains = await DomainMonitoringTypes.findAll({
+      where: { monitoring_type_id: monitoringTypeId },
+      include: [
+        {
+          model: Domains,
+          attributes: ["id", "name"],
+        },
+      ],
+      raw: true,
+    });
+
+    // Remove junction table attributes and rename the domain object keys
+    const response = domains.map((domain) =>  {
+      return {id : domain["asr_domain.id"],
+      name : domain["asr_domain.name"],
+    }
+    });
+
+    res.status(200).json(response);
+  }catch(error){
+    logger.error(error)
+    res.status(500).send("Unable to fetch domains");
+  }
+});
+
+
+
+// Route to get product category for specific domain and activity type
+router.get(
+  "/productCategoriesForSpecificDomain/:domainId",
+  [
+    param("domainId").isUUID().withMessage("Domain ID must be a UUID"),
+  ],
+  async (req, res) => {
+    try {
+      //Validate request
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).send("Invalid domain ID");
+      }
+
+      const domainId = req.params.domainId;
+
+      // Make a call to DomainProduct table and get all products for the domain
+      const productCategories = await DomainProduct.findAll({
+        where: { domain_id: domainId },
+        include: [
+          {
+            model: Products,
+            attributes: ["id", "name", "shortCode", "tier"],
+          },
+        ],
+        raw: true,
+      });
+
+      // remove junction table attributes and rename the product object keys
+      const response = productCategories.map((product) => {
+        return {
+          id: product["asr_product.id"],
+          name: product["asr_product.name"],
+          shortCode: product["asr_product.shortCode"],
+          tier: product["asr_product.tier"],
+        };
+      });
+
+      res.status(200).json(response);
+    } catch (error) {
+      logger.error(error);
+      res.status(500).send("Unable to fetch product categories");
+    }
+  }
+);
+
 module.exports = router;
 

@@ -87,4 +87,22 @@ async(req, res) => {
 }
 );
 
+// Get monitoring type id by name, name is in the request body as monitoringTypeName
+router.get("/getMonitoringTypeId/:monitoringTypeName", async (req, res) => {
+  try {
+    const monitoringType = await MonitoringTypes.findOne({
+      where: {
+        name: req.params.monitoringTypeName,
+      },
+    });
+    if (!monitoringType) {
+      return res.status(404).json({ message: "Monitoring type not found" });
+    }
+    res.status(200).json(monitoringType.id);
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: "Failed to get monitoring type id" });
+  }
+});
+
 module.exports = router;

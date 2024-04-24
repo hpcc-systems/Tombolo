@@ -10,19 +10,24 @@ import AsrSpecificNotificationsDetails from './AsrSpecificNotificationsDetails';
 //Constants
 const { Option } = Select;
 const jobStatuses = [
-  { label: 'Completed', value: 'Completed' },
   { label: 'Failed', value: 'Failed' },
   { label: 'Aborted', value: 'Aborted' },
-  { label: 'Blocked', value: 'Blocked' },
-  { label: 'Threshold Exceeded', value: 'ThresholdExceeded' }, //TODO - If threshold exceed option is selected make threshold time input value required
+  { label: 'Unknown', value: 'Unknown' },
+  { label: 'Not started on time', value: 'NotStarted', disabled: true },
+  { label: 'Not completed on time', value: 'NotCompleted' },
 ];
 
 function JobMonitoringNotificationTab({ form, teamsHooks }) {
-  //Redux
+  // Redux
   const {
-    applicationReducer: { integrations },
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
   } = useSelector((state) => state);
-  const asrIntegration = integrations?.find((integration) => integration.name === 'ASR') !== undefined;
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
 
   // JSX
   return (
