@@ -14,6 +14,7 @@ import { userActions } from '../../redux/actions/User';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { hasAdminRole } from '../common/AuthUtil.js';
 import Text, { i18n } from '../common/Text';
+import NoCluster from '../common/noCluster.js';
 
 class AppHeader extends Component {
   pwdformRef = React.createRef();
@@ -36,6 +37,7 @@ class AppHeader extends Component {
     newpassword: '',
     confirmnewpassword: '',
     isAboutModalVisible: false,
+    isClusterModalVisible: false,
     language: 'EN',
   };
 
@@ -143,6 +145,12 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getConstraints());
       // this.props.dispatch(applicationActions.getIntegrations(this.props.application.applicationId));
       this.props.dispatch(applicationActions.getAllActiveIntegrations());
+    }
+
+    //if noClusters.noClusters prop is true, show the no cluster modal and dispatch action to reset the noClusters state
+    if (this.props.noClusters.noClusters && !this.props.noClusters.redirect) {
+      this.props.dispatch(applicationActions.updateNoClustersFound({ noClusters: true, redirect: true }));
+      this.setState({ isClusterModalVisible: true });
     }
 
     if (this.props.newApplication) {
@@ -344,6 +352,12 @@ class AppHeader extends Component {
     });
   };
 
+  setClusterModalVisible = (visible) => {
+    this.setState({
+      isClusterModalVisible: visible,
+    });
+  };
+
   // Options for languages dropdown
 
   render() {
@@ -408,133 +422,151 @@ class AppHeader extends Component {
     });
 
     return (
-      <div style={{ display: 'flex', alignItems: 'center', maxHeight: '100%', justifyContent: 'space-between' }}>
-        <div>
-          <Link to={'/'} style={{ marginRight: '70px' }}>
-            <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
-          </Link>
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', maxHeight: '100%', justifyContent: 'space-between' }}>
+          <div>
+            <Link to={'/'} style={{ marginRight: '70px' }}>
+              <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
+            </Link>
 
-          <Dropdown
-            menu={{
-              items: menuItems,
-              onClick: (e) => {
-                this.handleChange(e.key);
-              },
-            }}
-            placement="bottom"
-            trigger={['click']}>
-            <Tooltip title="Select an Application" placement="right">
-              <Space
-                style={{
-                  color: 'white',
-                  border: '1px solid white',
-                  cursor: 'pointer',
-                  padding: '0 4px',
-                  borderRadius: '3px',
-                  maxHeight: '32px',
-                  minWidth: '200px',
-                }}>
-                <AppstoreOutlined />
-                <span> {this.state.selected}</span>
-              </Space>
-            </Tooltip>
-          </Dropdown>
-        </div>
+            <Dropdown
+              menu={{
+                items: menuItems,
+                onClick: (e) => {
+                  this.handleChange(e.key);
+                },
+              }}
+              placement="bottom"
+              trigger={['click']}>
+              <Tooltip title="Select an Application" placement="right">
+                <Space
+                  style={{
+                    color: 'white',
+                    border: '1px solid white',
+                    cursor: 'pointer',
+                    padding: '0 4px',
+                    borderRadius: '3px',
+                    maxHeight: '32px',
+                    minWidth: '200px',
+                  }}>
+                  <AppstoreOutlined />
+                  <span> {this.state.selected}</span>
+                </Space>
+              </Tooltip>
+            </Dropdown>
+          </div>
 
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Dropdown menu={{ items: helpMenuItems, onClick: (e) => helpMenuClick(e) }} trigger={['click']}>
-            <Button shape="round" style={{ marginRight: '10px' }}>
-              <i className="fa fa-lg fa-question-circle"></i>
-              <span style={{ paddingLeft: '5px' }}>
-                {<Text text="Help" />} <DownOutlined />
-              </span>
-            </Button>
-          </Dropdown>
-          <Dropdown
-            menu={{ items: actionMenuItems, onClick: (e) => this.handleUserActionMenuClick(e) }}
-            trigger={['click']}>
-            <Button shape="round">
-              <i className="fa fa-lg fa-user-circle"></i>
-              <span style={{ paddingLeft: '5px' }}>
-                {this.props.user.firstName + ' ' + this.props.user.lastName} <DownOutlined />
-              </span>
-            </Button>
-          </Dropdown>
-          <>{this.props.languageSwitcher}</>
-        </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Dropdown menu={{ items: helpMenuItems, onClick: (e) => helpMenuClick(e) }} trigger={['click']}>
+              <Button shape="round" style={{ marginRight: '10px' }}>
+                <i className="fa fa-lg fa-question-circle"></i>
+                <span style={{ paddingLeft: '5px' }}>
+                  {<Text text="Help" />} <DownOutlined />
+                </span>
+              </Button>
+            </Dropdown>
+            <Dropdown
+              menu={{ items: actionMenuItems, onClick: (e) => this.handleUserActionMenuClick(e) }}
+              trigger={['click']}>
+              <Button shape="round">
+                <i className="fa fa-lg fa-user-circle"></i>
+                <span style={{ paddingLeft: '5px' }}>
+                  {this.props.user.firstName + ' ' + this.props.user.lastName} <DownOutlined />
+                </span>
+              </Button>
+            </Dropdown>
+            <>{this.props.languageSwitcher}</>
+          </div>
 
-        <Modal
-          title={<Text>Change Password</Text>}
-          open={this.state.visible}
-          width="520px"
-          footer={[
-            <Button key="cancel" onClick={this.handleCancel}>
-              <Text>Cancel</Text>
-            </Button>,
-            <Button key="submit" onClick={this.handleOk} type="primary" loading={this.state.loading}>
-              <Text>Change Password</Text>
-            </Button>,
-          ]}>
-          <Form ref={this.pwdformRef}>
-            <Form.Item
-              {...formItemLayout}
-              name="oldpassword"
-              label={<Text>Password</Text>}
-              rules={[{ required: true, message: 'Please enter the current password!' }]}>
-              <Input
-                type="password"
+          <Modal
+            title={<Text>Change Password</Text>}
+            open={this.state.visible}
+            width="520px"
+            footer={[
+              <Button key="cancel" onClick={this.handleCancel}>
+                <Text>Cancel</Text>
+              </Button>,
+              <Button key="submit" onClick={this.handleOk} type="primary" loading={this.state.loading}>
+                <Text>Change Password</Text>
+              </Button>,
+            ]}>
+            <Form ref={this.pwdformRef}>
+              <Form.Item
+                {...formItemLayout}
                 name="oldpassword"
-                placeholder={i18n('Password')}
-                onChange={this.handleChangePasswordFieldChange}
-              />
-            </Form.Item>
+                label={<Text>Password</Text>}
+                rules={[{ required: true, message: 'Please enter the current password!' }]}>
+                <Input
+                  type="password"
+                  name="oldpassword"
+                  placeholder={i18n('Password')}
+                  onChange={this.handleChangePasswordFieldChange}
+                />
+              </Form.Item>
 
-            <Form.Item
-              {...formItemLayout}
-              name="newpassword"
-              label={<Text>New Password</Text>}
-              rules={[{ required: true, message: 'Please enter the new password!' }]}>
-              <Input
-                type="password"
+              <Form.Item
+                {...formItemLayout}
                 name="newpassword"
-                placeholder={i18n('New Password')}
-                onChange={this.handleChangePasswordFieldChange}
-              />
-            </Form.Item>
+                label={<Text>New Password</Text>}
+                rules={[{ required: true, message: 'Please enter the new password!' }]}>
+                <Input
+                  type="password"
+                  name="newpassword"
+                  placeholder={i18n('New Password')}
+                  onChange={this.handleChangePasswordFieldChange}
+                />
+              </Form.Item>
 
-            <Form.Item
-              {...formItemLayout}
-              name="confirmnewpassword"
-              label={<Text>Confirm Password</Text>}
-              rules={[{ required: true, message: 'Please confirm the new password!' }]}>
-              <Input
-                type="password"
+              <Form.Item
+                {...formItemLayout}
                 name="confirmnewpassword"
-                placeholder={i18n('Confirm Password')}
-                onChange={this.handleChangePasswordFieldChange}
-              />
-            </Form.Item>
-          </Form>
-        </Modal>
-        <Modal
-          title="Tombolo"
-          open={this.state.isAboutModalVisible}
-          footer={[
-            <Button key="close" onClick={this.handleAboutClose}>
-              Close
-            </Button>,
-          ]}>
-          <p className="float-left font-weight-bold">Tombolo v{process.env.REACT_APP_VERSION}</p>
-        </Modal>
-      </div>
+                label={<Text>Confirm Password</Text>}
+                rules={[{ required: true, message: 'Please confirm the new password!' }]}>
+                <Input
+                  type="password"
+                  name="confirmnewpassword"
+                  placeholder={i18n('Confirm Password')}
+                  onChange={this.handleChangePasswordFieldChange}
+                />
+              </Form.Item>
+            </Form>
+          </Modal>
+          <Modal
+            title="Tombolo"
+            open={this.state.isAboutModalVisible}
+            footer={[
+              <Button key="close" onClick={this.handleAboutClose}>
+                Close
+              </Button>,
+            ]}>
+            <p className="float-left font-weight-bold">Tombolo v{process.env.REACT_APP_VERSION}</p>
+          </Modal>
+        </div>
+        <NoCluster
+          visible={this.state.isClusterModalVisible}
+          setVisible={this.setClusterModalVisible}
+          applicationId={this.props.application?.applicationId}
+        />
+      </>
     );
   }
 }
 
 function mapStateToProps(state) {
   const { loggingIn, user } = state.authenticationReducer;
-  const { application, clusters, newApplication, updatedApplication, deletedApplicationId } = state.applicationReducer;
-  return { loggingIn, user, clusters, application, newApplication, updatedApplication, deletedApplicationId };
+  const { application, clusters, newApplication, updatedApplication, deletedApplicationId, noClusters } =
+    state.applicationReducer;
+
+  return {
+    loggingIn,
+    user,
+    clusters,
+    noClusters,
+    application,
+    newApplication,
+    updatedApplication,
+    deletedApplicationId,
+  };
 }
 
 //export default withRouter(AppHeader);

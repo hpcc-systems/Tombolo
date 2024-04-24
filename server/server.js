@@ -86,6 +86,7 @@ const teamsHook = require("./routes/msTeamsHook/read");
 const notification_queue = require("./routes/notification_queue/read");
 const monitorings = require("./routes/monitorings/read");
 const asr = require("./routes/asr/read");
+const directoryMonitoring = require("./routes/directorymonitoring/read");
 
 // Log all HTTP requests
 app.use((req, res, next) => {
@@ -133,6 +134,7 @@ app.use("/api/teamsHook", teamsHook);
 app.use("/api/notification_queue", notification_queue);
 app.use("/api/monitorings", monitorings);
 app.use("/api/asr", asr);
+app.use("/api/directoryMonitoring", directoryMonitoring);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
