@@ -11,8 +11,6 @@ import NotificationCountByOriginDonut from './charts/NotificationCountByOriginDo
 function NotificationDashboard({ sentNotifications, dashBoardFilter }) {
   const [filteredNotifications, setFilteredNotifications] = useState([]);
 
-  console.count('NotificationDashboard');
-
   // Effects
   useEffect(() => {
     let filtered;
@@ -52,7 +50,7 @@ function NotificationDashboard({ sentNotifications, dashBoardFilter }) {
 
           <div className="notifications_chart_card">
             <div className="notifications_chart_title">Notification Count by Day </div>
-            <NotificationCountOnLineGraph sentNotifications={filteredNotifications} />
+            <NotificationCountOnLineGraph sentNotifications={filteredNotifications} dashBoardFilter={dashBoardFilter} />
           </div>
 
           <div className="notifications_chart_card">

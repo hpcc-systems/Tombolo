@@ -20,18 +20,24 @@ const NotificationCountByOriginDonut = ({ sentNotifications }) => {
 
   // Configure the chart
   const config = {
-    appendPadding: 10,
     data: data,
     angleField: 'count',
     colorField: 'origin',
+    // paddingRight: 80,
     radius: 0.8,
-    innerRadius: 0.6,
+    innerRadius: 0.5,
+    // radius: 1,
+    // paddingTop: 0,
     label: {
-      type: 'spider',
-      offset: '50%',
-      content: '{name}\n{value}',
-      style: {
-        textAlign: 'center',
+      position: 'spider',
+      // text: 'count',
+      text: (d) => `${d.origin}\n ${d.count}`,
+    },
+    legend: {
+      color: {
+        title: false,
+        position: 'right',
+        rowPadding: 5,
       },
     },
     interactions: [{ type: 'element-active' }],

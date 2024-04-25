@@ -7,7 +7,6 @@ import { Tabs, Space, message } from 'antd';
 import SentNotificationsTable from './NotificationsTable';
 import NotificationDashboard from './NotificationDashboard';
 import NotificationActions from './BulkActions';
-// import ExportMenu from '../ExportMenu/ExportMenu';
 import { getAllSentNotifications } from './notificationUtil';
 import NotificationDetailsModal from './NotificationDetailsModal';
 import CreateNotificationModal from './CreateNotificationModal';
@@ -147,6 +146,7 @@ const Index = () => {
     <div>
       <Tabs
         defaultActiveKey={activeTab}
+        className="notification-tabs"
         onChange={handleTabChange}
         tabBarExtraContent={
           <Space size="small">
@@ -194,7 +194,7 @@ const Index = () => {
           />
         </TabPane>
         <TabPane tab="Dashboard" key="2">
-          <NotificationDashboard sentNotifications={sentNotifications} dashBoardFilter={dashBoardFilter}  />
+          <NotificationDashboard sentNotifications={sentNotifications} dashBoardFilter={dashBoardFilter} />
         </TabPane>
       </Tabs>
       <NotificationDetailsModal

@@ -4,7 +4,7 @@ import { Column } from '@ant-design/charts';
 
 function NotificationCountByProductsInGraph({ sentNotifications }) {
   // Prepare the data
-  const chartData = [];
+  let chartData = [];
   sentNotifications.forEach((notification) => {
     if (notification.metaData && notification.metaData.asrSpecificMetaData) {
       const category = notification.metaData.asrSpecificMetaData.productCategory;
@@ -13,34 +13,40 @@ function NotificationCountByProductsInGraph({ sentNotifications }) {
     }
   });
 
-  // Calculate the number of unique categories
-  const uniqueCategories = new Set(chartData.map((data) => data.category)).size;
+  let data = Object.values(
+    chartData.reduce((acc, { category, status, count }) => {
+      let key = `${category}|${status}`;
+      if (!acc[key]) {
+        acc[key] = { category, status, count };
+      } else {
+        acc[key].count += count;
+      }
+      return acc;
+    }, {})
+  );
 
   const config = {
-    data: chartData,
-    isStack: true,
+    data: data,
     xField: 'category',
     yField: 'count',
-    seriesField: 'status',
-    columnWidthRatio: uniqueCategories < 3 ? 0.2 : 0.6, // Done this to avoid column being too wide when there are few categories
-    meta: {
-      count: {
-        tickInterval: 5,
-      },
+    stack: true,
+    colorField: 'status',
+    columnWidthRatio: 0.1,
+
+    style: {
+      maxWidth: 150,
     },
     label: {
-      position: 'middle',
-      layout: [
-        {
-          type: 'interval-adjust-position',
-        },
-        {
-          type: 'interval-hide-overlap',
-        },
-        {
-          type: 'adjust-color',
-        },
-      ],
+      position: 'inside',
+      text: (d) => `${d.count}`,
+      textBaseline: 'middle',
+    },
+    legend: {
+      color: {
+        title: false,
+        position: 'right',
+        rowPadding: 5,
+      },
     },
   };
 

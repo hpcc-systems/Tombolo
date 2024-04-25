@@ -158,11 +158,11 @@ const CreateNotificationModal = ({
     <div>
       <Modal
         width={800}
-        size={'small'}
         open={displayCreateNotificationModal}
         title={<span>New Notification</span>}
         onOk={handleOk}
         onCancel={handleCancel}
+        footerStyle={{ marginTop: '20px', background: 'red' }}
         footer={[
           <Button key="back" onClick={handleCancel}>
             Close

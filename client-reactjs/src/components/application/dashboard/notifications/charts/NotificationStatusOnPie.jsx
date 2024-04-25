@@ -19,15 +19,25 @@ function NotificationStatusOnPie({ sentNotifications }) {
     angleField: 'count',
     colorField: 'status',
     radius: 0.75,
-
     label: {
-      type: 'spider',
+      position: 'spider',
       labelHeight: 50,
-      content: '{name}\n{percentage}',
+      // text: 'count',
+      text: (d) => `${d.status}\n ${d.count}`,
+
       style: {
         fontSize: 14,
       },
     },
+
+    legend: {
+      color: {
+        title: false,
+        position: 'right',
+        rowPadding: 5,
+      },
+    },
+
     interactions: [
       {
         type: 'element-selected',

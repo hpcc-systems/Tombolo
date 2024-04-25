@@ -1,14 +1,24 @@
-import React from 'react';
+/* eslint-disable unused-imports/no-unused-imports */
+/* eslint-disable unused-imports/no-unused-vars */
+import React, { useEffect, useState } from 'react';
 import { Line } from '@ant-design/plots';
 
-function NotificationCountOnLineGraph({ sentNotifications }) {
-  // Get the date 14 days ago
-  const date14DaysAgo = new Date();
-  date14DaysAgo.setDate(date14DaysAgo.getDate() - 14);
+function NotificationCountOnLineGraph({ sentNotifications, dashBoardFilter }) {
+  const [goBackToDays, setGoBackToDays] = useState(14);
 
-  // Create an array of all dates within the past 14 days
+  useEffect(() => {
+    if (dashBoardFilter.filterBy === 'days') {
+      setGoBackToDays(dashBoardFilter.days);
+    }
+  }, [dashBoardFilter]);
+
+  // Get the date goBackToDays days ago
+  const date14DaysAgo = new Date();
+  date14DaysAgo.setDate(date14DaysAgo.getDate() - goBackToDays);
+
+  // Create an array of all dates within the past goBackToDays days
   const dates = [];
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < goBackToDays; i++) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     dates.push(date.toISOString().split('T')[0]);
@@ -32,34 +42,30 @@ function NotificationCountOnLineGraph({ sentNotifications }) {
   // Transform the counts into the format needed for the chart
   const chartData = Object.entries(dailyCounts).map(([date, count]) => ({ date, count }));
 
+  // Iterate through chart data and convert date to short date
+  chartData.forEach((data) => {
+    const date = new Date(data.date);
+    data.date = date.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+    });
+  });
+
   // Configuration
   const config = {
     data: chartData,
     xField: 'date',
     yField: 'count',
-    meta: {
-      count: {
-        tickInterval: 2,
-      },
-    },
+
     point: {
-      size: 5,
-      shape: 'diamond',
-      style: {
-        fill: 'white',
-        lineWidth: 2,
-      },
-      tooltip: {
-        showMarkers: true,
-      },
-      interactions: [
-        {
-          type: 'marker-active',
-        },
-      ],
+      shapeField: 'diamond',
+      sizeField: 4,
     },
     label: {
-      position: 'top',
+      position: 'right',
+      style: {
+        padding: 10,
+      },
     },
   };
 
