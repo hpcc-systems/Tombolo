@@ -18,10 +18,20 @@ function NotificationCountOnLineGraph({ sentNotifications, dashBoardFilter }) {
 
   // Create an array of all dates within the past goBackToDays days
   const dates = [];
-  for (let i = 0; i < goBackToDays; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    dates.push(date.toISOString().split('T')[0]);
+  if (dashBoardFilter.filterBy === 'days') {
+    for (let i = 0; i < goBackToDays; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      dates.push(date.toISOString().split('T')[0]);
+    }
+  } else {
+    const { range } = dashBoardFilter;
+    let currentDate = new Date(range[1]); // start from date2
+
+    while (currentDate >= range[0]) {
+      dates.push(currentDate.toISOString().split('T')[0]);
+      currentDate.setDate(currentDate.getDate() - 1); // go back one day
+    }
   }
   dates.reverse();
 

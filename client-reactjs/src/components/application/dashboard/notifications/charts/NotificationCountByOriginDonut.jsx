@@ -24,7 +24,7 @@ const NotificationCountByOriginDonut = ({ sentNotifications }) => {
     angleField: 'count',
     colorField: 'origin',
     // paddingRight: 80,
-    radius: 0.8,
+    radius: 0.7,
     innerRadius: 0.5,
     // radius: 1,
     // paddingTop: 0,

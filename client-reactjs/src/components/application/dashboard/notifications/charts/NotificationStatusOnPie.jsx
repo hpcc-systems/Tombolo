@@ -32,7 +32,6 @@ function NotificationStatusOnPie({ sentNotifications }) {
 
     legend: {
       color: {
-        title: false,
         position: 'right',
         rowPadding: 5,
       },

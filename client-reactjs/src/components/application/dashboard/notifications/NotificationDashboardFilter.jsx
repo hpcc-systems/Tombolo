@@ -1,6 +1,8 @@
+/* eslint-disable unused-imports/no-unused-vars */
+/* eslint-disable unused-imports/no-unused-imports */
 // Package imports
 import React, { useState } from 'react';
-import { Dropdown, DatePicker, Menu, Button, Slider } from 'antd';
+import { Dropdown, DatePicker, Menu, Button, Slider, Modal, Drawer } from 'antd';
 import { FilterOutlined } from '@ant-design/icons';
 import moment from 'moment';
 
@@ -92,16 +94,68 @@ const NotificationDashboardFilter = ({ dashBoardFilter, setDashBoardFilter }) =>
   );
 
   return (
-    <Dropdown overlay={menu} onOpenChange={handleVisibleChange} open={visible}>
-      <Button type="primary" ghost onClick={(e) => e.preventDefault()}>
-        <>
-          {dashBoardFilter.filterLabel}
-          <span style={{ marginLeft: '10px' }}>
-            <FilterOutlined />
-          </span>
-        </>
+    <>
+      {/* <Dropdown overlay={menu} onOpenChange={handleVisibleChange} open={visible}>
+        <Button type="primary" ghost onClick={(e) => e.preventDefault()}>
+          <>
+            {dashBoardFilter.filterLabel}
+            <span style={{ marginLeft: '10px' }}>
+              <FilterOutlined />
+            </span>
+          </>
+        </Button>
+      </Dropdown> */}
+      <Button
+        type="primary"
+        ghost
+        icon={<FilterOutlined />}
+        onClick={() => {
+          setVisible(true);
+        }}>
+        {dashBoardFilter.filterLabel}
       </Button>
-    </Dropdown>
+      <Modal
+        open={visible}
+        mask={false}
+        maskClosable={true}
+        footer={null}
+        closable={false}
+        // closeIcon={null}
+        onCancel={() => setVisible(false)}
+        style={{
+          top: '100px',
+          right: '20px',
+          position: 'absolute',
+        }}>
+        <>
+          <div style={{ fontWeight: 'bold' }}>Days</div>
+          <Slider
+            size="small"
+            defaultValue={dashBoardFilter.days}
+            min={1}
+            max={60}
+            keyboard={true}
+            trackStyle={{ backgroundColor: 'var(--primary)' }}
+            autoFocus={true}
+            onChange={handleNumberChange}
+            tooltip={{
+              open: visible,
+              formatter: (value) => `${value}`,
+              size: 'small',
+            }}
+          />
+        </>
+        <>
+          <div style={{ marginBottom: '10px', fontWeight: 'bold' }}> Range </div>
+          <DatePicker.RangePicker
+            defaultValue={dashBoardFilter.range}
+            onChange={handleDateChange}
+            disabledDate={disableFutureDates}
+            style={{ width: '100%' }}
+          />
+        </>
+      </Modal>
+    </>
   );
 };
 

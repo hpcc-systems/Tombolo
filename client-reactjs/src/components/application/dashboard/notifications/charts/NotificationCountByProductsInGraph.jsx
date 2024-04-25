@@ -32,6 +32,7 @@ function NotificationCountByProductsInGraph({ sentNotifications }) {
     stack: true,
     colorField: 'status',
     columnWidthRatio: 0.1,
+    autoFit: true,
 
     style: {
       maxWidth: 150,
