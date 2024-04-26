@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Tabs, Button, Badge } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { v4 as uuidv4 } from 'uuid';
 
 import JobMonitoringBasicTab from './JobMonitoringBasicTab.jsx';
 import JobMonitoringTab from './JobMonitoringTab';
@@ -9,10 +8,10 @@ import JobMonitoringNotificationTab from './JobMonitoringNotificationTab.jsx';
 
 const AddEditJobMonitoringModal = ({
   displayAddJobMonitoringModal,
-  setDisplayAddJobMonitoringModal,
   monitoringScope,
   setMonitoringScope,
   handleSaveJobMonitoring,
+  handleUpdateJobMonitoring,
   intermittentScheduling,
   setIntermittentScheduling,
   setCompleteSchedule,
@@ -25,16 +24,19 @@ const AddEditJobMonitoringModal = ({
   form,
   clusters,
   teamsHooks,
-  setSelectedMonitoring,
   savingJobMonitoring,
   jobMonitorings,
-  setEditingData,
   isEditing,
   erroneousTabs,
-  setErroneousTabs,
-  setErroneousScheduling,
+  resetStates,
+  domains,
+  productCategories,
+  setSelectedDomain,
+  selectedCluster,
+  setSelectedCluster,
+  activeTab,
+  setActiveTab,
 }) => {
-  const [activeTab, setActiveTab] = useState('0');
   // Keep track of visited tabs, some form fields are loaded only when tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
 
@@ -58,12 +60,14 @@ const AddEditJobMonitoringModal = ({
           setMonitoringScope={setMonitoringScope}
           jobMonitorings={jobMonitorings}
           isEditing={isEditing}
+          selectedCluster={selectedCluster}
+          setSelectedCluster={setSelectedCluster}
         />
       ),
       id: 1,
     },
     {
-      label: 'Monitoring Details',
+      label: 'Scheduling Details',
       id: 2,
       component: () => (
         <JobMonitoringTab
@@ -78,6 +82,10 @@ const AddEditJobMonitoringModal = ({
           setCronMessage={setCronMessage}
           erroneousScheduling={erroneousScheduling}
           monitoringScope={monitoringScope}
+          selectedCluster={selectedCluster}
+          domains={domains}
+          productCategories={productCategories}
+          setSelectedDomain={setSelectedDomain}
         />
       ),
     },
@@ -103,18 +111,10 @@ const AddEditJobMonitoringModal = ({
   };
 
   const handleCancel = () => {
-    form.resetFields();
-    setIntermittentScheduling({ schedulingType: 'daily', id: uuidv4() });
-    setCompleteSchedule([]);
-    setDisplayAddJobMonitoringModal(false);
+    resetStates();
     setActiveTab('0');
     setVisitedTabs(['0']);
-    setSelectedMonitoring(null);
-    setEditingData({ isEditing: false });
-    setErroneousTabs([]);
-    setErroneousScheduling(false);
     setActiveTab('0');
-    setMonitoringScope(null);
   };
 
   //Render footer buttons based on active tab
@@ -144,38 +144,34 @@ const AddEditJobMonitoringModal = ({
           <Button type="primary" ghost onClick={handlePrevious}>
             Previous
           </Button>
-          <Button
-            type="primary"
-            // disabled={savingJobMonitoring || visitedTabs.length !== tabs.length}
-            onClick={handleSaveJobMonitoring}
-            icon={savingJobMonitoring ? <LoadingOutlined /> : null}>
-            Submit
-          </Button>
+          {!isEditing && (
+            <Button
+              type="primary"
+              onClick={handleSaveJobMonitoring}
+              icon={savingJobMonitoring ? <LoadingOutlined /> : null}>
+              Submit
+            </Button>
+          )}
+          {isEditing && (
+            <Button
+              type="primary"
+              onClick={handleUpdateJobMonitoring}
+              icon={savingJobMonitoring ? <LoadingOutlined /> : null}>
+              Update
+            </Button>
+          )}
         </>
       );
     }
   };
-  //TODO -- remove tabs.tabpane replace with tabItems
-  // const tabItems = tabs.map((tab, index) => ({
-  //   key: index,
-  //   label: erroneousTabs.includes(index.toString()) ? (
-  //     <span>
-  //       <Badge color="var(--danger)" /> {`${tab.label}`}
-  //     </span>
-  //   ) : (
-  //     `${tab.label}`
-  //   ),
-  //   children: tab.component(),
-  //   forceRender: true,
-  // }));
 
-  // console.log(tabItems);
   return (
     <Modal
       open={displayAddJobMonitoringModal}
       width={800}
       onCancel={handleCancel}
       footer={renderFooter()}
+      destroyOnClose={true}
       maskClosable={false}>
       <Tabs type="card" activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)}>
         {tabs.map((tab, index) => (

@@ -7,7 +7,7 @@ import { Tabs, Space, message } from 'antd';
 import SentNotificationsTable from './NotificationsTable';
 import NotificationDashboard from './NotificationDashboard';
 import NotificationActions from './BulkActions';
-import { getAllSentNotifications } from './notificationUtil';
+import { getAllSentNotifications, getAllMonitorings, getAllDomains, getAllProductCategories } from './notificationUtil';
 import NotificationDetailsModal from './NotificationDetailsModal';
 import CreateNotificationModal from './CreateNotificationModal';
 import UpdateNotificationModal from './UpdateNotification';
@@ -21,6 +21,7 @@ const { TabPane } = Tabs;
 const Index = () => {
   //Local states
   const [sentNotifications, setSentNotifications] = useState([]);
+  const [monitorings, setMonitorings] = useState([]);
   const [filteredNotification, setFilteredNotification] = useState([]);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [selectedNotificationsIds, setSelectedNotificationsIds] = useState([]);
@@ -33,6 +34,8 @@ const Index = () => {
   const [matchCount, setMatchCount] = useState(0);
   const [activeTab, setActiveTabKey] = useState('1');
   const [dashBoardFilter, setDashBoardFilter] = useState({filterBy: 'days', days: 14, range: [null, null], filterLabel: 'Last 14 days'});
+  const [domains, setDomains] = useState([]);
+  const [ productCategories, setProductCategories] = useState([]);
 
   //Redux
   const { applicationId } = useSelector((state) => state.applicationReducer.application);
@@ -58,6 +61,37 @@ const Index = () => {
     if (filtersVisibility) {
       setFiltersVisible(filtersVisibility === 'true');
     }
+
+    // Get all activity types [monitoring types]
+    (async() =>{
+      try{
+        const response = await getAllMonitorings();
+        setMonitorings(response);
+      }catch(error){
+        message.error('Failed to fetch activity types');
+      }
+    })();
+
+    // Get all domains
+    (async() =>{
+      try{
+        const response = await getAllDomains();
+        setDomains(response);
+      }catch(error){
+        message.error('Failed to fetch domains');
+      }
+    })();
+
+    // Get all product categories
+    (async() =>{
+      try{
+        const response = await getAllProductCategories();
+        setProductCategories(response);
+      }catch(error){
+        message.error('Failed to fetch product categories');
+      }
+    })();
+
   }, []);
 
   useEffect(() => {
@@ -178,7 +212,7 @@ const Index = () => {
         }>
         <TabPane tab="Logged Notifications" key="1">
           {filtersVisible && (
-            <NotificationTableFilters filters={filters} setFilters={setFilters} sentNotifications={sentNotifications} />
+            <NotificationTableFilters filters={filters} setFilters={setFilters} sentNotifications={sentNotifications} monitorings={monitorings} domains={domains} productCategories={productCategories}/>
           )}
 
           <SentNotificationsTable
@@ -191,10 +225,16 @@ const Index = () => {
             setDisplayUpdateModal={setDisplayUpdateModal}
             filters={filters}
             searchTerm={searchTerm}
+            monitorings={monitorings}
           />
         </TabPane>
         <TabPane tab="Dashboard" key="2">
-          <NotificationDashboard sentNotifications={sentNotifications} dashBoardFilter={dashBoardFilter} />
+          <NotificationDashboard
+            sentNotifications={sentNotifications}
+            dashBoardFilter={dashBoardFilter}
+            monitorings={monitorings}
+            productCategories={productCategories}
+          />
         </TabPane>
       </Tabs>
       <NotificationDetailsModal
@@ -202,12 +242,16 @@ const Index = () => {
         displayNotificationDetailsModal={displayNotificationDetailsModal}
         setDisplayNotificationDetailsModal={setDisplayNotificationDetailsModal}
         setSelectedNotification={setSelectedNotification}
+        monitorings={monitorings}
+        domains={domains}
+        productCategories={productCategories}
       />
       <CreateNotificationModal
         displayCreateNotificationModal={displayCreateNotificationModal}
         setDisplayCreateNotificationModal={setDisplayCreateNotificationModal}
         setNotifications={setSentNotifications}
         setSentNotifications={setSentNotifications}
+        monitorings={monitorings}
       />
       <UpdateNotificationModal
         displayUpdateModal={displayUpdateModal}

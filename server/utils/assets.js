@@ -21,7 +21,7 @@ let Sequelize = require('sequelize');
 const path = require('path');
 const fs = require('fs')
 const {execFile, spawn} = require('child_process');
-const JobScheduler = require('../job-scheduler');
+const JobScheduler = require('../jobSchedular/job-scheduler');
 const { Op } = require('sequelize');
 const logger = require('../config/logger');
 

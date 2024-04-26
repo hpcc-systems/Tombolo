@@ -1,6 +1,6 @@
 const Bree = require("bree");
 
-const logger = require("./config/logger");
+const logger = require("../config/logger.js");
 const {
   logBreeJobs,
   createNewBreeJob,
@@ -11,45 +11,51 @@ const {
   stopAllJobs,
   startJob,
   startAllJobs,
-} = require("./jobSchedularMethods/breeJobs.js");
+} = require("../jobSchedularMethods/breeJobs.js");
 const {
   scheduleCheckForJobsWithSingleDependency,
   executeJob,
   scheduleActiveCronJobs,
   scheduleMessageBasedJobs,
   addJobToScheduler,
-} = require("./jobSchedularMethods/workFlowJobs.js");
+} = require("../jobSchedularMethods/workFlowJobs.js");
 const {
   scheduleClusterTimezoneOffset,
   createClusterUsageHistoryJob,
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
-} = require("./jobSchedularMethods/clusterJobs.js");
+} = require("../jobSchedularMethods/clusterJobs.js");
 const {
-  createJobMonitoringBreeJob,
-  scheduleJobMonitoringOnServerStart,
   scheduleJobStatusPolling,
-} = require("./jobSchedularMethods/hpccJobs.js");
+} = require("../jobSchedularMethods/hpccJobs.js");
 const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   createSuperFileMonitoringBreeJob,
+  createDirectoryMonitoringBreeJob,
+  scheduleDirectoryMonitoringOnServerStart,
   scheduleSuperFileMonitoringOnServerStart,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
   scheduleFileMonitoring,
-} = require("./jobSchedularMethods/hpccFiles.js");
-const { scheduleKeyCheck } = require("./jobSchedularMethods/apiKeys.js");
+} = require("../jobSchedularMethods/hpccFiles.js");
+const { scheduleKeyCheck } = require("../jobSchedularMethods/apiKeys.js");
 const {
   scheduleEmailNotificationProcessing,
   scheduleTeamsNotificationProcessing,
-} = require("./jobSchedularMethods/notificationJobs.js");
+} = require("../jobSchedularMethods/notificationJobs.js");
 
 const {
   createOrbitMegaphoneJob,
   createOrbitMonitoringJob,
   scheduleOrbitMonitoringOnServerStart,
-} = require("./jobSchedularMethods/orbitJobs.js");
+} = require("../jobSchedularMethods/orbitJobs.js");
+
+
+const {
+  startJobMonitoring,
+  startIntermediateJobsMonitoring,
+} = require("../jobSchedularMethods/jobMonitoring.js");
 
 class JobScheduler {
   constructor() {
@@ -122,6 +128,9 @@ class JobScheduler {
       await this.scheduleTeamsNotificationProcessing();
       await this.scheduleOrbitMonitoringOnServerStart();
       await this.createOrbitMegaphoneJob();
+      await this.startJobMonitoring();
+      await this.startIntermediateJobsMonitoring();
+      await this.scheduleDirectoryMonitoringOnServerStart();
     })();
   }
 
@@ -251,15 +260,6 @@ class JobScheduler {
     return scheduleClusterMonitoringOnServerStart.call(this);
   }
 
-  // Job Monitoring
-  createJobMonitoringBreeJob(jobMonitoring_id, cron) {
-    return createJobMonitoringBreeJob.call(this, jobMonitoring_id, cron);
-  }
-
-  scheduleJobMonitoringOnServerStart() {
-    return scheduleJobMonitoringOnServerStart.call(this);
-  }
-
   scheduleJobStatusPolling() {
     return scheduleJobStatusPolling.call(this);
   }
@@ -286,6 +286,18 @@ class JobScheduler {
       filemonitoring_id,
       cron,
     });
+  }
+
+  createDirectoryMonitoringBreeJob({ directoryMonitoring_id, name, cron }) {
+    return createDirectoryMonitoringBreeJob.call(this, {
+      directoryMonitoring_id,
+      name,
+      cron,
+    });
+  }
+
+  scheduleDirectoryMonitoringOnServerStart() {
+    return scheduleDirectoryMonitoringOnServerStart.call(this);
   }
 
   scheduleSuperFileMonitoringOnServerStart() {
@@ -317,6 +329,14 @@ class JobScheduler {
   // API keys check
   scheduleKeyCheck() {
     return scheduleKeyCheck.call(this);
+  }
+
+  // Job monitoring
+  startJobMonitoring() {
+    return startJobMonitoring.call(this);
+  }
+  startIntermediateJobsMonitoring() {
+    return startIntermediateJobsMonitoring.call(this);
   }
 
   //Process notification queue

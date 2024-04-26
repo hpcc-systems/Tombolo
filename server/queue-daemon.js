@@ -6,7 +6,7 @@ const hpccUtil = require('./utils/hpcc-util');
 let JobExecution = models.job_execution;
 let Job = models.job;
 let Cluster = models.cluster;
-const JobScheduler = require('./job-scheduler');
+const JobScheduler = require('./jobSchedular/job-scheduler');
 require('dotenv').config();
 const NotificationModule = require('./routes/notifications/email-notification');
 

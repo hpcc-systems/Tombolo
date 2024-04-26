@@ -95,3 +95,108 @@ export const statuses = [
   'Non-actionable',
   'Non-issue',
 ];
+//Get monitoring ID - aka activity type if
+export const monitoringTypeId = async ({ monitoringName }) => {
+  const payload = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/getMonitoringTypeId/${monitoringName}`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch monitoring type');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+// Get all domains
+export const getAllDomains = async () => {
+  const payload = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/asr/domainsOnly`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch domains');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+// Get all domains for a specific monitoring
+export const getDomains = async ({ monitoringId }) => {
+  const payload = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/asr/domainsForSpecificMonitoring/${monitoringId}`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch domains');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+// Get all product categories for a domain
+export const getProductCategories = async ({ domainId }) => {
+  const payload = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/asr/productCategoriesForSpecificDomain/${domainId}`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch product categories');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+// Get all product categories regardless of domain
+export const getAllProductCategories = async () => {
+  const payload = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/asr/productsOnly`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch product categories');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+// Get all monitorings
+export const getAllMonitorings = async () => {
+  const payload = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/monitorings/`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch activity types');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+export const getActivityTypes = async () => {
+  return [];
+};

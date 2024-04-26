@@ -16,22 +16,34 @@ const monitoringScopeOptions = [
     value: 'SpecificJob',
   },
   {
-    label: 'Cluster-wide monitoring',
-    value: 'ClusterWideMonitoring',
-  },
-  {
     label: 'Monitoring by Job Pattern',
     value: 'PatternMatching',
   },
 ];
 
-function JobMonitoringBasicTab({ form, clusters, monitoringScope, setMonitoringScope, jobMonitorings, isEditing }) {
+function JobMonitoringBasicTab({
+  form,
+  clusters,
+  monitoringScope,
+  setMonitoringScope,
+  jobMonitorings,
+  isEditing,
+  selectedCluster,
+  setSelectedCluster,
+}) {
   //Local State
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [selectedUserGuideName, setSelectedUserGuideName] = useState('');
   const [jobs, setJobs] = useState([]);
   const [fetchingJobs, setFetchingJobs] = useState(false);
-  const [selectedCluster, setSelectedCluster] = useState(null);
+  // const [selectedCluster, setSelectedCluster] = useState(null);
+
+  // Handle cluster change
+  const handleClusterChange = (value) => {
+    // set details about selected cluster
+    const selectedClusterDetails = clusters.find((cluster) => cluster.id === value);
+    setSelectedCluster(selectedClusterDetails);
+  };
 
   // Get jobs function
   const getJobs = debounce(async (value) => {
@@ -40,7 +52,7 @@ function JobMonitoringBasicTab({ form, clusters, monitoringScope, setMonitoringS
       const payload = {
         method: 'POST',
         header: authHeader(),
-        body: JSON.stringify({ keyword: value, clusterId: selectedCluster }),
+        body: JSON.stringify({ keyword: value, clusterId: selectedCluster.id }),
       };
 
       const response = await fetch(`/api/hpcc/read/jobsearch`, payload);
@@ -86,7 +98,7 @@ function JobMonitoringBasicTab({ form, clusters, monitoringScope, setMonitoringS
           label="Monitoring Name"
           name="monitoringName"
           rules={[
-            { required: true, message: 'Required filed' },
+            { required: true, message: 'Required field' },
             { max: 100, message: 'Maximum of 100 characters allowed' },
             () => ({
               validator(_, value) {
@@ -148,8 +160,8 @@ function JobMonitoringBasicTab({ form, clusters, monitoringScope, setMonitoringS
           </Select>
         </Form.Item>
 
-        <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required filed' }]}>
-          <Select onChange={(value) => setSelectedCluster(value)}>
+        <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required field' }]}>
+          <Select onChange={(value) => handleClusterChange(value)}>
             {clusters.map((cluster) => {
               return (
                 <Option key={cluster.id} value={cluster.id}>
@@ -160,7 +172,7 @@ function JobMonitoringBasicTab({ form, clusters, monitoringScope, setMonitoringS
           </Select>
         </Form.Item>
 
-        {monitoringScope === 'SpecificJob' ? (
+        {monitoringScope === 'SpecificJob' && selectedCluster ? (
           <Form.Item
             label={
               <span>
@@ -178,7 +190,7 @@ function JobMonitoringBasicTab({ form, clusters, monitoringScope, setMonitoringS
             }
             name="jobName"
             rules={[
-              { required: true, message: 'Required filed' },
+              { required: true, message: 'Required field' },
               { max: 256, message: 'Maximum of 256 characters allowed' },
             ]}>
             <AutoComplete
@@ -191,7 +203,7 @@ function JobMonitoringBasicTab({ form, clusters, monitoringScope, setMonitoringS
           </Form.Item>
         ) : null}
 
-        {monitoringScope === 'PatternMatching' ? (
+        {monitoringScope === 'PatternMatching' && selectedCluster ? (
           <Form.Item
             label={
               <span>
@@ -209,7 +221,7 @@ function JobMonitoringBasicTab({ form, clusters, monitoringScope, setMonitoringS
             }
             name="jobName"
             rules={[
-              { required: true, message: 'Required filed' },
+              { required: true, message: 'Required field' },
               { max: 256, message: 'Maximum of 256 characters allowed' },
             ]}>
             <Input placeholder="Enter a pattern" />

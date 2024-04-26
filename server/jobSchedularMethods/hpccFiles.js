@@ -8,10 +8,12 @@ const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
 const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
   "submitLogicalFileMonitoring.js";
 const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = "submitSuperFileMonitoring.js";
+const SUBMIT_DIRECTORY_MONITORING_FILE_NAME = "submitDirectoryMonitoring.js";
 const FILE_MONITORING = "fileMonitoringPoller.js";
 
 const filemonitoring_superfile = models.filemonitoring_superfiles;
 const FileMonitoring = models.fileMonitoring;
+const directoryMonitoring = models.directoryMonitoring;
 
 function createLandingZoneFileMonitoringBreeJob({
   filemonitoring_id,
@@ -32,6 +34,25 @@ function createLandingZoneFileMonitoringBreeJob({
     },
   };
   this.bree.add(job);
+}
+
+function createDirectoryMonitoringBreeJob({ directoryMonitoring_id, cron }) {
+  const uniqueJobName = `Directory Monitoring - ${directoryMonitoring_id}`;
+  const job = {
+    cron,
+    name: uniqueJobName,
+    path: path.join(
+      __dirname,
+      "..",
+      "jobs",
+      SUBMIT_DIRECTORY_MONITORING_FILE_NAME
+    ),
+    worker: {
+      workerData: { directoryMonitoring_id },
+    },
+  };
+  this.bree.add(job);
+  this.bree.start(uniqueJobName);
 }
 
 function createLogicalFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
@@ -164,10 +185,34 @@ async function scheduleFileMonitoring() {
   }
 }
 
+async function scheduleDirectoryMonitoringOnServerStart() {
+  logger.info("📂 DIRECTORY MONITORING STARTED ...");
+  try {
+    const activeDirectoryMonitoring = await directoryMonitoring.findAll({
+      where: {
+        active: true,
+        approved: true,
+        // monitoringAssetType: "landingZoneFile",
+      },
+      raw: true,
+    });
+    for (const monitoring of activeDirectoryMonitoring) {
+      await this.createDirectoryMonitoringBreeJob({
+        directoryMonitoring_id: monitoring.id,
+        cron: monitoring.cron,
+      });
+    }
+  } catch (err) {
+    logger.error(err);
+  }
+}
+
 module.exports = {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   createSuperFileMonitoringBreeJob,
+  createDirectoryMonitoringBreeJob,
+  scheduleDirectoryMonitoringOnServerStart,
   scheduleSuperFileMonitoringOnServerStart,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,

@@ -22,7 +22,7 @@ router.post(
       .notEmpty()
       .withMessage("Monitoring scope is required"),
     body("clusterId").isUUID().withMessage("Cluster ID must be a valid UUID"),
-    body("isActive").isBoolean().withMessage("isActive must be a boolean"),
+    // body("isActive").isBoolean().withMessage("isActive must be a boolean"),
     body("jobName").notEmpty().withMessage("Job name is required"),
     body("applicationId")
       .isUUID()
@@ -66,7 +66,17 @@ router.get(
   ],
   async (req, res) => {
     try {
-      const jobMonitorings = await JobMonitoring.findAll();
+      // Validate the application ID
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        logger.error(errors);
+        return res.status(400).json({ errors: errors.array() });
+      }
+      
+      const jobMonitorings = await JobMonitoring.findAll({
+        where: { applicationId: req.params.applicationId },
+        order: [["createdAt", "DESC"]],
+      });
       res.status(200).json(jobMonitorings);
     } catch (err) {
       logger.error(err);
@@ -92,23 +102,23 @@ router.patch(
   [
     body("id").isUUID().withMessage("ID must be a valid UUID"),
     body("monitoringName")
-      .notEmpty()
-      .withMessage("Monitoring name is required"),
-    body("description").notEmpty().withMessage("Description is required"),
-    body("monitoringScope")
-      .notEmpty()
-      .withMessage("Monitoring scope is required"),
+      .isString()
+      .withMessage("Monitoring name must be type string"),
+    body("description").isString().withMessage("Description must be string"),
+    body("monitoringScope").isString().withMessage("Monitoring must be string"),
     body("clusterId").isUUID().withMessage("Cluster ID must be a valid UUID"),
-    body("isActive").isBoolean().withMessage("isActive must be a boolean"),
-    body("jobName").notEmpty().withMessage("Job name is required"),
+    body("jobName").isString().withMessage("Job name is required"),
     body("applicationId")
       .isUUID()
       .withMessage("Application ID must be a valid UUID"),
     body("metaData")
       .isObject()
       .withMessage("Meta data must be an object if provided"),
-    body("createdBy").notEmpty().withMessage("Created by is required"),
-    body("lastUpdatedBy").notEmpty().withMessage("Last updated by is required"),
+    body("createdBy")
+      .optional()
+      .isString()
+      .withMessage("Created by must be an object if provided"),
+    body("lastUpdatedBy").isString().withMessage("Last updated by is required"),
   ],
   async (req, res) => {
     try {
@@ -125,6 +135,7 @@ router.patch(
       payload.approverComment = null;
       payload.approvedBy = null;
       payload.approvedAt = null;
+      payload.isActive = false;
 
       //Update the job monitoring
       const updatedRows = await JobMonitoring.update(req.body, {
@@ -179,14 +190,41 @@ router.patch(
 
     try {
       const { id, approverComment, approvalStatus, approvedBy } = req.body;
+      let isActive = false;
+      if (approvalStatus === "Approved") {
+        toggleActive = true;
+      }
       await JobMonitoring.update(
-        { approvalStatus, approverComment, approvedBy, approvedAt: new Date() },
+        { approvalStatus, approverComment, approvedBy, approvedAt: new Date(), isActive },
         { where: { id } }
       );
       res.status(200).send("Successfully saved your evaluation");
     } catch (err) {
       logger.error(err);
       res.status(500).send("Failed to evaluate job monitoring");
+    }
+  }
+);
+
+// Bulk delete
+router.delete(
+  "/bulkDelete",
+  [
+    body("ids").isArray().withMessage("IDs must be an array"),
+    body("ids.*").isUUID().withMessage("Invalid id"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(503).send("Failed to delete");
+    }
+
+    try {
+      const response = await JobMonitoring.destroy({ where: { id: req.body.ids } });
+      res.status(200).json(response);
+    } catch (err) {
+      logger.error(err);
+      res.status(500).send("Failed to delete job monitoring");
     }
   }
 );
@@ -210,6 +248,81 @@ router.delete(
     }
   }
 );
+
+// Toggle job monitoring
+router.patch(
+  "/toggleIsActive",
+  [
+    body("id").isUUID().withMessage("ID must be a valid UUID"),
+  ],
+  async (req, res) => {
+
+    // Handle the PATCH request here
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(503).send("Failed to toggle");
+    }
+
+    try {
+      const { id } = req.body;
+      // Get and toggle
+      const jobMonitoring = await JobMonitoring.findByPk(id);
+      if (!jobMonitoring) {
+        logger.error("Toggle Job monitoring - Job monitoring not found");
+        return res.status(404).send("Job monitoring not found");
+      }
+      const isApproved = jobMonitoring.approvalStatus === "Approved";
+      if (!isApproved) {
+        logger.error("Toggle Job monitoring - Job monitoring not approved");
+        return res.status(503).send("Can't toggle job monitoring that is not in approved state");
+      }
+      const currentStatus = jobMonitoring.isActive;
+      const data = await jobMonitoring.update({ isActive: !currentStatus });
+
+      res.status(200).send(data);
+    } catch (err) {
+      logger.error(err);
+      res.status(500).send("Failed to toggle job monitoring");
+    }
+  }
+);
+
+// Bulk update - only primary, secondary and notify contact are part of bulk update for now
+router.patch(
+  "/bulkUpdate",
+  [
+    body("metaData").isArray().withMessage("Data must be array of objects"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      logger.error(errors);
+      return res.status(503).send("Failed to update");
+    }
+
+    try {
+
+      const {metaData: payload} = req.body;
+
+      for(const data of payload){
+        await JobMonitoring.update({
+          metaData: data.metaData,
+        },{
+          where: {id: data.id}
+        });
+      }
+
+      res.status(200).json({success: true, message: "Successfully updated job monitorings"});
+     
+    } catch (err) {
+      logger.error(err);
+      res.status(500).send("Failed to update job monitoring");
+    }
+  }
+);
+
+
+
 
 // Export the router
 module.exports = router;

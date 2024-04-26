@@ -6,7 +6,7 @@ import { Descriptions, Tooltip, Tag } from 'antd';
 import { formatDateTime } from '../../../common/CommonUtil';
 import './notifications.css';
 
-function NotificationDetails({ selectedNotification }) {
+function NotificationDetails({ selectedNotification, monitorings, domains, productCategories }) {
   // Destructure metaData
   const {
     metaData: { asrSpecificMetaData },
@@ -16,7 +16,9 @@ function NotificationDetails({ selectedNotification }) {
   return (
     <>
       <Descriptions column={1} bordered={true} size="small" className="notifications_tiny-description">
-        <Descriptions.Item label="Origin ">{selectedNotification.notificationOrigin}</Descriptions.Item>
+        <Descriptions.Item label="Origin ">
+          {monitorings.find((m) => m.id === selectedNotification.notificationOrigin)?.name || <Tag>Unknown</Tag>}
+        </Descriptions.Item>
         <Descriptions.Item label="Reason ">{selectedNotification.notificationTitle}</Descriptions.Item>
         <Descriptions.Item label=" Details ">
           <div className="notifications__fixed-size-description-item tiny-scroll-bar">
@@ -27,8 +29,8 @@ function NotificationDetails({ selectedNotification }) {
         {selectedNotification.recipients && (
           <Descriptions.Item label="Recipient(s) ">
             <div className="notifications__fixed-size-description-item tiny-scroll-bar">
-              {selectedNotification?.recipients?.intended.map((r) => (
-                <Tag key={r}>{r}</Tag>
+              {selectedNotification?.recipients?.intended.map((r, i) => (
+                <Tag key={i}>{r}</Tag>
               ))}
             </div>
           </Descriptions.Item>
@@ -42,15 +44,19 @@ function NotificationDetails({ selectedNotification }) {
         )}
 
         {asrSpecificMetaData && asrSpecificMetaData?.domain && (
-          <Descriptions.Item label="Domain ">{asrSpecificMetaData.domain}</Descriptions.Item>
+          <Descriptions.Item label="Domain ">
+            {domains.find((d) => d.id === asrSpecificMetaData.domain)?.name || <Tag>Unknown</Tag>}
+          </Descriptions.Item>
         )}
         {asrSpecificMetaData && asrSpecificMetaData?.productCategory && (
-          <Descriptions.Item label="Product Category">{asrSpecificMetaData.productCategory}</Descriptions.Item>
+          <Descriptions.Item label="Product Category">
+            {productCategories.find((pc) => pc.id === asrSpecificMetaData.productCategory)?.name || <Tag>Unknown</Tag>}
+          </Descriptions.Item>
         )}
         {asrSpecificMetaData && asrSpecificMetaData?.jiraTickets && (
           <Descriptions.Item label="Jira Tickets">
-            {asrSpecificMetaData.jiraTickets.map((t) => (
-              <Tag key={t}>{t}</Tag>
+            {asrSpecificMetaData.jiraTickets.map((t, i) => (
+              <Tag key={i}>{t}</Tag>
             ))}
           </Descriptions.Item>
         )}
@@ -60,8 +66,8 @@ function NotificationDetails({ selectedNotification }) {
         {asrSpecificMetaData && asrSpecificMetaData?.primaryContact && (
           <Descriptions.Item label="Primary Contact(s)">
             <div className="notifications__fixed-size-description-item tiny-scroll-bar">
-              {asrSpecificMetaData.primaryContact.map((pc) => (
-                <Tag key={pc}>{pc}</Tag>
+              {asrSpecificMetaData.primaryContact.map((pc, i) => (
+                <Tag key={i}>{pc}</Tag>
               ))}
             </div>
           </Descriptions.Item>
@@ -69,8 +75,8 @@ function NotificationDetails({ selectedNotification }) {
         {asrSpecificMetaData && asrSpecificMetaData?.secondaryContact && (
           <Descriptions.Item label="Secondary Contact(s)">
             <div className="notifications__fixed-size-description-item">
-              {asrSpecificMetaData.secondaryContact.map((sc) => (
-                <Tag key={sc}>{sc}</Tag>
+              {asrSpecificMetaData.secondaryContact.map((sc, i) => (
+                <Tag key={i}>{sc}</Tag>
               ))}
             </div>
             .
@@ -79,8 +85,8 @@ function NotificationDetails({ selectedNotification }) {
         {asrSpecificMetaData && asrSpecificMetaData?.notifyContact && (
           <Descriptions.Item label="Notify Contact(s)">
             <div className="notifications__fixed-size-description-item">
-              {asrSpecificMetaData.notifyContact.map((nc) => (
-                <Tag key={nc}>{nc}</Tag>
+              {asrSpecificMetaData.notifyContact.map((nc, i) => (
+                <Tag key={i}>{nc}</Tag>
               ))}
             </div>
           </Descriptions.Item>

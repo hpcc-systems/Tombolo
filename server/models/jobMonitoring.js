@@ -20,9 +20,10 @@ module.exports = (sequelize, DataTypes) => {
       },
       isActive: {
         allowNull: false,
+        defaultValue: false,
         type: DataTypes.BOOLEAN,
       },
-      approvalStatus:{
+      approvalStatus: {
         allowNull: false,
         type: DataTypes.ENUM("Approved", "Rejected", "Pending"),
       },
@@ -30,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         type: DataTypes.STRING,
       },
-      approvedAt:{
+      approvedAt: {
         allowNull: true,
         type: DataTypes.DATE,
       },
@@ -53,6 +54,10 @@ module.exports = (sequelize, DataTypes) => {
       jobName: {
         allowNull: false,
         type: DataTypes.STRING,
+      },
+      lastJobRunDetails: {
+        allowNull: true,
+        type: DataTypes.JSON,
       },
       metaData: {
         allowNull: false,

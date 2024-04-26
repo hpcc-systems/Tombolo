@@ -24,6 +24,7 @@ const NotificationActions = ({
   const deleteSelectedNotifications = async () => {
     try {
       await deleteMultipleNotifications(selectedNotificationsIds);
+      message.success('Selected notifications deleted successfully');
       setSelectedNotificationsIds([]);
       setNotifications((prevNotifications) =>
         prevNotifications.filter((notification) => !selectedNotificationsIds.includes(notification.id))
@@ -69,7 +70,7 @@ const NotificationActions = ({
               selectedNotificationsIds.length > 1 ? 's' : ''
             }?`}
             okText="Yes"
-            okButtonProps={{ type: 'danger' }}
+            okButtonProps={{ type: 'primary', danger: true }}
             onConfirm={deleteSelectedNotifications}
             cancelText="No">
             Delete Notifications

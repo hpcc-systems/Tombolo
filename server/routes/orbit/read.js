@@ -19,7 +19,7 @@ const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 const SqlString = require("sqlstring");
 
-const jobScheduler = require("../../job-scheduler");
+const jobScheduler = require("../../jobSchedular/job-scheduler.js");
 
 const {
   runMySQLQuery,

@@ -23,7 +23,7 @@ function NotificationStatusOnPie({ sentNotifications }) {
       position: 'spider',
       labelHeight: 50,
       // text: 'count',
-      text: (d) => `${d.status}\n ${d.count}`,
+      text: (d) => `${d.count} - ${d.status}`,
 
       style: {
         fontSize: 14,

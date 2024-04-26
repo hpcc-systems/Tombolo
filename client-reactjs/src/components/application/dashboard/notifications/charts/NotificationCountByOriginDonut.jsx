@@ -2,7 +2,7 @@
 import React from 'react';
 import { Pie } from '@ant-design/plots';
 
-const NotificationCountByOriginDonut = ({ sentNotifications }) => {
+const NotificationCountByOriginDonut = ({ sentNotifications, monitorings }) => {
   // Prepare the data
   const originCounts = {};
   sentNotifications.forEach((notification) => {
@@ -15,7 +15,8 @@ const NotificationCountByOriginDonut = ({ sentNotifications }) => {
 
   const data = [];
   Object.keys(originCounts).forEach((origin) => {
-    data.push({ origin: origin, count: originCounts[origin] });
+    const originName = monitorings.find((monitoring) => monitoring.id === origin)?.name || origin;
+    data.push({ origin: originName, count: originCounts[origin] });
   });
 
   // Configure the chart
@@ -31,7 +32,8 @@ const NotificationCountByOriginDonut = ({ sentNotifications }) => {
     label: {
       position: 'spider',
       // text: 'count',
-      text: (d) => `${d.origin}\n ${d.count}`,
+      text: (d) => `${d.count} - ${d.origin}`,
+      offset: 50,
     },
     legend: {
       color: {

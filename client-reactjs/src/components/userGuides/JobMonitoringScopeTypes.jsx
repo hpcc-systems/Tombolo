@@ -5,7 +5,7 @@ function JobMonitoringScopeTypes() {
     <div className="guide">
       <h2>Job Monitoring Scope Guide</h2>
 
-      <p>The scope of your job monitoring can be defined in three ways:</p>
+      <p>The scope of your job monitoring can be defined in two ways:</p>
 
       <h3>Specific Job in a Cluster</h3>
       <p>
@@ -14,11 +14,11 @@ function JobMonitoringScopeTypes() {
         doesn&apos;t exist yet, you have the option to manually input the job name in the provided text box.
       </p>
 
-      <h3>Cluster Wide Monitoring</h3>
+      {/* <h3>Cluster Wide Monitoring</h3>
       <p>
         Selecting this option will monitor the entire cluster. Each time the monitoring process runs, it records the
         time of the run and checks if any new jobs meet the notification or alert criteria.
-      </p>
+      </p> */}
 
       <h3>Monitoring by Job Pattern</h3>
       <p>

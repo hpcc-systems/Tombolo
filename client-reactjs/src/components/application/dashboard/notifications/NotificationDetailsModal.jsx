@@ -10,6 +10,9 @@ function NotificationDetailsModal({
   setDisplayNotificationDetailsModal,
   selectedNotification,
   setSelectedNotification,
+  monitorings,
+  domains,
+  productCategories,
 }) {
   //Close Modal
   const handleCancel = () => {
@@ -29,7 +32,12 @@ function NotificationDetailsModal({
           Close
         </Button>
       }>
-      <NotificationDetails selectedNotification={selectedNotification} />
+      <NotificationDetails
+        selectedNotification={selectedNotification}
+        monitorings={monitorings}
+        domains={domains}
+        productCategories={productCategories}
+      />
     </Modal>
   );
 }

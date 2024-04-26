@@ -9,7 +9,7 @@ import './notifications.css';
 //Constants
 const { Option } = Select;
 
-function NotificationTableFilters({ setFilters, sentNotifications }) {
+function NotificationTableFilters({ setFilters, sentNotifications, monitorings, domains, productCategories }) {
   //Redux
   const {
     applicationReducer: { integrations },
@@ -28,10 +28,18 @@ function NotificationTableFilters({ setFilters, sentNotifications }) {
   useEffect(() => {
     const filterOptions = { origin: [], status: [], domain: [], product: [] };
     sentNotifications.forEach((notification) => {
-      filterOptions.origin = [...filterOptions.origin, notification.notificationOrigin];
+      const originName =
+        monitorings.find((m) => m.id === notification.notificationOrigin)?.name || notification.notificationOrigin;
+      const domainName =
+        domains.find((d) => d.id === notification?.metaData?.asrSpecificMetaData?.domain)?.name ||
+        notification?.metaData?.asrSpecificMetaData?.domain;
+      const productCategoryName =
+        productCategories.find((p) => p.id === notification?.metaData?.asrSpecificMetaData?.productCategory)?.name ||
+        notification?.metaData?.asrSpecificMetaData?.productCategory;
+      filterOptions.origin = [...filterOptions.origin, originName];
       filterOptions.status = [...filterOptions.status, notification.status];
-      filterOptions.domain = [...filterOptions.domain, notification?.metaData?.asrSpecificMetaData?.domain];
-      filterOptions.product = [...filterOptions.product, notification?.metaData?.asrSpecificMetaData?.productCategory];
+      filterOptions.domain = [...filterOptions.domain, domainName];
+      filterOptions.product = [...filterOptions.product, productCategoryName];
     });
 
     setOriginOptions([...new Set(filterOptions.origin)]);

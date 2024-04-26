@@ -1,7 +1,25 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Radio, Space, Checkbox, Select, Tag, Input } from 'antd';
+import { Radio, Space, Checkbox, Select, Tag, Input, Form } from 'antd';
 import cronstrue from 'cronstrue';
+
+// Daily schedule options
+const dailyRunWindowAndIntervals = [
+  { label: 'Any time (00:00 - 23:59)', value: 'daily' },
+  { label: 'Morning (00:00 - 11:59)', value: 'morning' },
+  { label: 'Afternoon (12:00 - 23:59)', value: 'afternoon' },
+  { label: 'Overnight (Prev 12:00 - Current day 12:00)', value: 'overnight' },
+  { label: 'Every 2 Days', value: 'every2Days' },
+];
+
+// Daily schedule options
+const weeklyRunWindow = [
+  { label: 'Any time (00:00 - 23:59)', value: 'daily' },
+  { label: 'Morning (00:00 - 11:59)', value: 'morning' },
+  { label: 'Afternoon (12:00 - 23:59)', value: 'afternoon' },
+  { label: 'Overnight (Prev  12:00 - Current Day 12:00)', value: 'overnight' },
+];
 
 import {
   daysOfWeek,
@@ -41,6 +59,14 @@ function SchedulePicker({
   const [monthlyRadio, setMonthlyRadio] = useState(null);
   const [individualValues, setIndividualValues] = useState({}); // Individual input fields such as month, year, day
 
+  useEffect(() => {
+    // clean up - reset the local state when modal is closed
+    return () => {
+      setYearlyRadio(null);
+      setMonthlyRadio(null);
+    };
+  }, []);
+
   //useEffect to parse cron expression
   useEffect(() => {
     const parsedCron = parseCron(cron);
@@ -51,23 +77,23 @@ function SchedulePicker({
   const addSchedule = () => {
     intermittentScheduling.id = uuidv4();
     setCompleteSchedule((prev) => [...prev, { ...intermittentScheduling }]);
-    if (intermittentScheduling.scheduleBy === 'month-date' && intermittentScheduling.schedulingType === 'yearly') {
+    if (intermittentScheduling.scheduleBy === 'month-date' && intermittentScheduling.frequency === 'yearly') {
       setIndividualValues((prev) => ({ ...prev, radio1_month: null, radio1_date: null }));
       setIntermittentScheduling((prev) => ({
-        schedulingType: prev.schedulingType,
+        frequency: prev.frequency,
         scheduleBy: 'month-date',
       }));
     }
-    if (intermittentScheduling.scheduleBy === 'week-day-month' && intermittentScheduling.schedulingType === 'yearly') {
+    if (intermittentScheduling.scheduleBy === 'week-day-month' && intermittentScheduling.frequency === 'yearly') {
       setIndividualValues((prev) => ({ ...prev, radio2_month: null, radio2_day: null, radio2_week: null }));
       setIntermittentScheduling((prev) => ({
-        schedulingType: prev.schedulingType,
+        frequency: prev.frequency,
         scheduleBy: 'week-day-month',
       }));
     }
-    if (intermittentScheduling.scheduleBy === 'weeks-day' && intermittentScheduling.schedulingType === 'monthly') {
+    if (intermittentScheduling.scheduleBy === 'weeks-day' && intermittentScheduling.frequency === 'monthly') {
       setIndividualValues((prev) => ({ ...prev, weeks: [], day: null }));
-      setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, scheduleBy: 'weeks-day' }));
+      setIntermittentScheduling((prev) => ({ frequency: prev.frequency, scheduleBy: 'weeks-day' }));
     }
   };
 
@@ -78,14 +104,31 @@ function SchedulePicker({
     setMonthlyRadio(null);
     setCompleteSchedule([]);
     setIndividualValues({});
-    setIntermittentScheduling({ schedulingType: selected });
+    if (selected === 'cron') {
+      setIntermittentScheduling({ frequency: selected });
+    } else {
+      setIntermittentScheduling({ frequency: selected, runWindow: 'daily' });
+    }
   };
 
   // Daily Break down - When daily option is selected
   const dailyBreakDown = (
     <div>
-      <Radio checked>Runs everyday</Radio>
-      <div style={{ margin: '-5px 0 0 20px', color: 'var(--secondary)' }}>
+      <Radio checked>Daily run window/interval</Radio>
+      <div style={{ margin: '5px 0 0 20px', color: 'var(--secondary)', width: '100%' }}>
+        <Select
+          size="small"
+          style={{ width: '100%' }}
+          value={intermittentScheduling?.runWindow}
+          onChange={(value) => setIntermittentScheduling((prev) => ({ ...prev, runWindow: value }))}>
+          {dailyRunWindowAndIntervals.map((option) => (
+            <Select.Option value={option.value} key={option.value}>
+              {option.label}
+            </Select.Option>
+          ))}
+        </Select>
+      </div>
+      <div style={{ margin: '0px 0 0 20px', color: 'var(--secondary)' }}>
         Note: For weekends / weekdays select Weekly option
       </div>
     </div>
@@ -94,101 +137,128 @@ function SchedulePicker({
   // Weekly breakdown - When weekly option is selected
   const weeklyBreakDown = (
     <div>
-      <div style={{ marginBottom: '8px' }}>Runs every week on :</div>
-      <Checkbox.Group
-        options={daysOfWeek}
-        value={intermittentScheduling.days}
-        onChange={(checkedValues) => {
-          setIntermittentScheduling((prev) => ({ ...prev, days: checkedValues }));
-        }}
-      />
+      <Form.Item label="Runs every week on" required></Form.Item>
+      <div style={{ margin: '-10px 0 0 10px' }}>
+        <Checkbox.Group
+          options={daysOfWeek.map((day) => ({ label: day.shortLabel, value: day.value }))}
+          value={intermittentScheduling.days}
+          onChange={(checkedValues) => {
+            setIntermittentScheduling((prev) => ({ ...prev, days: checkedValues }));
+          }}
+        />
+      </div>
+
+      <Form.Item label="Run window" required></Form.Item>
+      <div style={{ margin: '-10px 0 0 10px' }}>
+        <Select
+          size="small"
+          style={{ width: '70%' }}
+          value={intermittentScheduling?.runWindow || 'daily'}
+          onChange={(value) => setIntermittentScheduling((prev) => ({ ...prev, runWindow: value }))}>
+          {weeklyRunWindow.map((option) => (
+            <Select.Option value={option.value} key={option.value}>
+              {option.label}
+            </Select.Option>
+          ))}
+        </Select>
+      </div>
     </div>
   );
 
   // Monthly breakdown - When monthly option is selected
   const monthlyBreakDown = (
-    <div>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <div>Runs every month</div>
-        <span style={{ marginTop: '5px' }}>
-          <Radio
-            value="1"
-            checked={monthlyRadio === '1'}
-            onChange={() => {
-              setMonthlyRadio('1');
-              setIndividualValues({});
-              setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, scheduleBy: 'dates' }));
-              setCompleteSchedule([]);
-            }}>
-            On{' '}
-          </Radio>
-          <Select
-            options={daysOfMonth}
-            style={{ minWidth: '140px', maxWidth: '430px' }}
-            disabled={monthlyRadio !== '1'}
-            size="small"
-            placeholder="date(s)"
-            maxTagCount={5}
-            maxTagPlaceholder={(omittedValues) => <span> + {omittedValues.length} more</span>}
-            mode="multiple"
-            value={individualValues?.dates}
-            onChange={(values) => {
-              setIndividualValues((prev) => ({ ...prev, dates: values }));
-              setIntermittentScheduling((prev) => ({ ...prev, dates: values }));
-            }}></Select>
-        </span>
-        <span style={{ marginTop: '10px' }}>
-          <Radio
-            value="2"
-            checked={monthlyRadio === '2'}
-            onChange={() => {
-              setMonthlyRadio('2');
-              setIndividualValues({ dates: [], weeks: [], day: null });
-              setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, scheduleBy: 'weeks-day' }));
-              setCompleteSchedule([]);
-            }}>
-            On
-          </Radio>
-          <Select
-            size="small"
-            mode="multiple"
-            disabled={monthlyRadio !== '2'}
-            maxTagCount={2}
-            maxTagPlaceholder={(omittedValues) => <span> + {omittedValues.length} more</span>}
-            options={weeks}
-            placeholder="week(s)"
-            style={{ minWidth: '140px', maxWidth: '240px' }}
-            value={individualValues?.weeks}
-            onChange={(values) => {
-              setIndividualValues((prev) => ({ ...prev, weeks: values }));
-              setIntermittentScheduling((prev) => ({ ...prev, weeks: values }));
-            }}></Select>
-          <Select
-            style={{ minWidth: '100px', marginLeft: '5px' }}
-            size="small"
-            disabled={monthlyRadio !== '2'}
-            options={daysOfWeek}
-            placeholder="day"
-            value={individualValues?.day}
-            onChange={(value) => {
-              setIndividualValues((prev) => ({ ...prev, day: value }));
-              setIntermittentScheduling((prev) => ({ ...prev, day: value }));
-            }}></Select>
-          {individualValues?.weeks?.length > 0 && individualValues?.day ? (
-            <span className="schedularSelector__addMoreBtn" onClick={addSchedule}>
-              Add more
-            </span>
-          ) : null}
-        </span>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <Form.Item label="Runs every month" required></Form.Item>
+      <span style={{ marginTop: '-10px' }}>
+        <Radio
+          value="1"
+          checked={monthlyRadio === '1'}
+          onChange={() => {
+            setMonthlyRadio('1');
+            setIndividualValues({});
+            setIntermittentScheduling((prev) => ({ frequency: prev.frequency, scheduleBy: 'dates' }));
+            setCompleteSchedule([]);
+          }}>
+          On{' '}
+        </Radio>
+        <Select
+          options={daysOfMonth}
+          style={{ minWidth: '245px', maxWidth: '530px' }}
+          disabled={monthlyRadio !== '1'}
+          size="small"
+          placeholder="date(s)"
+          maxTagCount={5}
+          maxTagPlaceholder={(omittedValues) => <span> + {omittedValues.length} more</span>}
+          mode="multiple"
+          value={individualValues?.dates}
+          onChange={(values) => {
+            setIndividualValues((prev) => ({ ...prev, dates: values }));
+            setIntermittentScheduling((prev) => ({ ...prev, dates: values }));
+          }}></Select>
+      </span>
+      <span style={{ marginTop: '10px' }}>
+        <Radio
+          value="2"
+          checked={monthlyRadio === '2'}
+          onChange={() => {
+            setMonthlyRadio('2');
+            setIndividualValues({ dates: [], weeks: [], day: null });
+            setIntermittentScheduling((prev) => ({ frequency: prev.frequency, scheduleBy: 'weeks-day' }));
+            setCompleteSchedule([]);
+          }}>
+          On
+        </Radio>
+        <Select
+          size="small"
+          mode="multiple"
+          disabled={monthlyRadio !== '2'}
+          maxTagCount={2}
+          maxTagPlaceholder={(omittedValues) => <span> + {omittedValues.length} more</span>}
+          options={weeks}
+          placeholder="week(s)"
+          style={{ minWidth: '140px', maxWidth: '440px' }}
+          value={individualValues?.weeks}
+          onChange={(values) => {
+            setIndividualValues((prev) => ({ ...prev, weeks: values }));
+            setIntermittentScheduling((prev) => ({ ...prev, weeks: values }));
+          }}></Select>
+        <Select
+          style={{ minWidth: '100px', marginLeft: '5px' }}
+          size="small"
+          disabled={monthlyRadio !== '2'}
+          options={daysOfWeek}
+          placeholder="day"
+          value={individualValues?.day}
+          onChange={(value) => {
+            setIndividualValues((prev) => ({ ...prev, day: value }));
+            setIntermittentScheduling((prev) => ({ ...prev, day: value }));
+          }}></Select>
+        {individualValues?.weeks?.length > 0 && individualValues?.day ? (
+          <span className="schedularSelector__addMoreBtn" onClick={addSchedule}>
+            Add more
+          </span>
+        ) : null}
+      </span>
+      <Form.Item label="Run window" required></Form.Item>
+      <Select
+        style={{ marginTop: '-10px' }}
+        size="small"
+        value={intermittentScheduling?.runWindow || 'daily'}
+        onChange={(value) => setIntermittentScheduling((prev) => ({ ...prev, runWindow: value }))}>
+        {weeklyRunWindow.map((option) => (
+          <Select.Option value={option.value} key={option.value}>
+            {option.label}
+          </Select.Option>
+        ))}
+      </Select>
     </div>
   );
 
   // Yearly breakdown - when yearly option is selected
   const yearlyBreakDown = (
     <div>
-      <div>Runs every year</div>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <Form.Item label="Runs every year" required></Form.Item>
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: '-15px' }}>
         <span>
           <Radio
             style={{ marginTop: '5px' }}
@@ -197,7 +267,7 @@ function SchedulePicker({
             onChange={() => {
               setYearlyRadio('1');
               setIndividualValues({});
-              setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, scheduleBy: 'month-date' }));
+              setIntermittentScheduling((prev) => ({ frequency: prev.frequency, scheduleBy: 'month-date' }));
               setCompleteSchedule([]);
             }}>
             On
@@ -205,7 +275,7 @@ function SchedulePicker({
           <Select
             options={months}
             placeholder="month"
-            style={{ width: '100px' }}
+            style={{ width: '180px' }}
             value={individualValues.radio1_month}
             size="small"
             disabled={yearlyRadio !== '1'}
@@ -217,7 +287,7 @@ function SchedulePicker({
           <Select
             size="small"
             options={daysOfMonth}
-            style={{ width: '70px', marginLeft: '10px' }}
+            style={{ width: '160px', marginLeft: '10px' }}
             placeholder="date"
             value={individualValues.radio1_date}
             disabled={yearlyRadio !== '1'}
@@ -241,7 +311,7 @@ function SchedulePicker({
               setYearlyRadio('2');
               setIndividualValues({});
               setIntermittentScheduling((prev) => ({
-                schedulingType: prev.schedulingType,
+                frequency: prev.frequency,
                 scheduleBy: 'week-day-month',
               }));
 
@@ -298,6 +368,19 @@ function SchedulePicker({
             </span>
           ) : null}
         </span>
+
+        <Form.Item label="Run window" required></Form.Item>
+        <Select
+          style={{ marginTop: '-10px' }}
+          size="small"
+          value={intermittentScheduling?.runWindow || 'daily'}
+          onChange={(value) => setIntermittentScheduling((prev) => ({ ...prev, runWindow: value }))}>
+          {weeklyRunWindow.map((option) => (
+            <Select.Option value={option.value} key={option.value}>
+              {option.label}
+            </Select.Option>
+          ))}
+        </Select>
       </div>
     </div>
   );
@@ -305,17 +388,21 @@ function SchedulePicker({
   const handleCronInputChange = (e) => {
     const v = e.target.value;
     setCron(v);
-    setIntermittentScheduling((prev) => ({ schedulingType: prev.schedulingType, cron: v }));
+    setIntermittentScheduling((prev) => ({ frequency: prev.frequency, cron: v }));
   };
 
   //Cron Input and validation
   const cronInputAndValidation = (
     <>
-      <Input placeholder="*/5 * * * *" onChange={(e) => handleCronInputChange(e)} allowClear />
+      <Input placeholder="*/5 * * * *" onChange={(e) => handleCronInputChange(e)} allowClear value={cron} />
       {cronMessage == null ? (
         <div>
           Click{' '}
-          <a href="https://crontab.cronhub.io/" style={{ textDecoration: 'underline' }}>
+          <a
+            href="https://crontab.cronhub.io/"
+            style={{ textDecoration: 'underline' }}
+            target="_blank"
+            rel="noreferrer">
             Here
           </a>{' '}
           to create cron expression
@@ -338,7 +425,7 @@ function SchedulePicker({
   ];
 
   const selectedComponent = schedulingOptions.find(
-    (option) => option.value === intermittentScheduling.schedulingType
+    (option) => option.value === intermittentScheduling.frequency
   )?.component;
 
   // Weeks and day tag content
@@ -358,8 +445,8 @@ function SchedulePicker({
         <div className="schedule-options">
           <Radio.Group
             onChange={(e) => handlingSchedulingOptionChange(e)}
-            value={intermittentScheduling.schedulingType}
-            defaultValue={intermittentScheduling.schedulingType}>
+            value={intermittentScheduling.frequency}
+            defaultValue={intermittentScheduling.frequency}>
             <Space direction="vertical">
               {schedulingOptions.map((schedule) => (
                 <Radio key={schedule.value} value={schedule.value}>
