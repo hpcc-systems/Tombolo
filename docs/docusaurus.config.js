@@ -69,7 +69,8 @@ const config = {
         title: "Tombolo",
         logo: {
           alt: "My Site Logo",
-          src: "https://solutionslab.hpccsystems.com/static/f33aa696bb2d18f8ee3fca8b1a4d78ee/4dd32/logo-dark.webp",
+          src: "/img/logo-light.svg",
+          srcDark: "/img/logo-dark.webp",
         },
         items: [
           {
@@ -110,7 +111,6 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,
