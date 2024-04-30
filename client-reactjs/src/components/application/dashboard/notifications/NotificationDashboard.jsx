@@ -8,8 +8,22 @@ import NotificationCountOnLineGraph from './charts/NotificationCountOnLineGraph'
 import NotificationCountByProductsInGraph from './charts/NotificationCountByProductsInGraph';
 import NotificationCountByOriginDonut from './charts/NotificationCountByOriginDonut';
 
-function NotificationDashboard({ sentNotifications, dashBoardFilter }) {
+function NotificationDashboard({ sentNotifications, dashBoardFilter, monitorings, productCategories }) {
   const [filteredNotifications, setFilteredNotifications] = useState([]);
+
+  useEffect(() => {
+    console.log('Loading ...');
+    const handleResize = () => {
+      console.log('Resized');
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Effects
   useEffect(() => {
@@ -41,7 +55,7 @@ function NotificationDashboard({ sentNotifications, dashBoardFilter }) {
         <>
           <div className="notifications_chart_card">
             <div className="notifications_chart_title">Notification Count by Origin </div>
-            <NotificationCountByOriginDonut sentNotifications={filteredNotifications} />
+            <NotificationCountByOriginDonut sentNotifications={filteredNotifications} monitorings={monitorings} />
           </div>
           <div className="notifications_chart_card">
             <div className="notifications_chart_title">Distribution of Notifications by Status</div>
@@ -55,7 +69,10 @@ function NotificationDashboard({ sentNotifications, dashBoardFilter }) {
 
           <div className="notifications_chart_card">
             <div className="notifications_chart_title">Notifications by Product with Status Count</div>
-            <NotificationCountByProductsInGraph sentNotifications={filteredNotifications} />
+            <NotificationCountByProductsInGraph
+              sentNotifications={filteredNotifications}
+              productCategories={productCategories}
+            />
           </div>
         </>
       )}

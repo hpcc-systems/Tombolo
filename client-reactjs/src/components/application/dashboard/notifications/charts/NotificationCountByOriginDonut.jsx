@@ -2,7 +2,7 @@
 import React from 'react';
 import { Pie } from '@ant-design/plots';
 
-const NotificationCountByOriginDonut = ({ sentNotifications }) => {
+const NotificationCountByOriginDonut = ({ sentNotifications, monitorings }) => {
   // Prepare the data
   const originCounts = {};
   sentNotifications.forEach((notification) => {
@@ -15,7 +15,8 @@ const NotificationCountByOriginDonut = ({ sentNotifications }) => {
 
   const data = [];
   Object.keys(originCounts).forEach((origin) => {
-    data.push({ origin: origin, count: originCounts[origin] });
+    const originName = monitorings.find((monitoring) => monitoring.id === origin)?.name || origin;
+    data.push({ origin: originName, count: originCounts[origin] });
   });
 
   // Configure the chart
@@ -23,15 +24,20 @@ const NotificationCountByOriginDonut = ({ sentNotifications }) => {
     data: data,
     angleField: 'count',
     colorField: 'origin',
-    // paddingRight: 80,
     radius: 0.7,
     innerRadius: 0.5,
-    // radius: 1,
-    // paddingTop: 0,
+
     label: {
       position: 'spider',
-      // text: 'count',
-      text: (d) => `${d.origin}\n ${d.count}`,
+      text: (d) => `${d.origin} (${d.count})`,
+      transform: [
+        {
+          type: 'overlapHide',
+        },
+      ],
+    },
+    tooltip: {
+      title: 'origin',
     },
     legend: {
       color: {
@@ -41,6 +47,19 @@ const NotificationCountByOriginDonut = ({ sentNotifications }) => {
       },
     },
     interactions: [{ type: 'element-active' }],
+    annotations: [
+      {
+        type: 'text',
+        style: {
+          text: `${sentNotifications?.length}`,
+          x: '50%',
+          y: '50%',
+          textAlign: 'center',
+          fontSize: 40,
+          fontStyle: 'bold',
+        },
+      },
+    ],
   };
   // JSX to render the donut chart
   return <Pie {...config} />;

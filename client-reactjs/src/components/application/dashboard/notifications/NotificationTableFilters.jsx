@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, Row, Col, DatePicker, Select } from 'antd';
+import dayjs from 'dayjs';
 
 // Local imports
 import './notifications.css';
@@ -9,7 +10,7 @@ import './notifications.css';
 //Constants
 const { Option } = Select;
 
-function NotificationTableFilters({ setFilters, sentNotifications }) {
+function NotificationTableFilters({ setFilters, sentNotifications, monitorings, domains, productCategories }) {
   //Redux
   const {
     applicationReducer: { integrations },
@@ -23,15 +24,24 @@ function NotificationTableFilters({ setFilters, sentNotifications }) {
   const [statusOptions, setStatusOptions] = useState([]);
   const [domainOptions, setDomainOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
+  const past60Days = dayjs().subtract(60, 'days');
 
   //Effects
   useEffect(() => {
     const filterOptions = { origin: [], status: [], domain: [], product: [] };
     sentNotifications.forEach((notification) => {
-      filterOptions.origin = [...filterOptions.origin, notification.notificationOrigin];
+      const originName =
+        monitorings.find((m) => m.id === notification.notificationOrigin)?.name || notification.notificationOrigin;
+      const domainName =
+        domains.find((d) => d.id === notification?.metaData?.asrSpecificMetaData?.domain)?.name ||
+        notification?.metaData?.asrSpecificMetaData?.domain;
+      const productCategoryName =
+        productCategories.find((p) => p.id === notification?.metaData?.asrSpecificMetaData?.productCategory)?.name ||
+        notification?.metaData?.asrSpecificMetaData?.productCategory;
+      filterOptions.origin = [...filterOptions.origin, originName];
       filterOptions.status = [...filterOptions.status, notification.status];
-      filterOptions.domain = [...filterOptions.domain, notification?.metaData?.asrSpecificMetaData?.domain];
-      filterOptions.product = [...filterOptions.product, notification?.metaData?.asrSpecificMetaData?.productCategory];
+      filterOptions.domain = [...filterOptions.domain, domainName];
+      filterOptions.product = [...filterOptions.product, productCategoryName];
     });
 
     setOriginOptions([...new Set(filterOptions.origin)]);
@@ -55,7 +65,13 @@ function NotificationTableFilters({ setFilters, sentNotifications }) {
           <Col span={5}>
             <div className="notifications__filter-label">Created Date Range</div>
             <Form.Item name="createdBetween">
-              <DatePicker.RangePicker style={{ width: '100%' }} allowClear />
+              <DatePicker.RangePicker
+                style={{ width: '100%' }}
+                allowClear
+                disabledDate={(current) =>
+                  !current || current.isBefore(past60Days) || current.isAfter(dayjs().endOf('day'))
+                }
+              />
             </Form.Item>
           </Col>
 

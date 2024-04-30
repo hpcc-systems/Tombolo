@@ -4,8 +4,8 @@
   "private": true,
   "dependencies": {
     "@ant-design/charts": "^2.0.3",
-    "@ant-design/plots": "2.1.14",
     "@ant-design/icons": "^4.7.0",
+    "@ant-design/plots": "2.1.14",
     "@antv/layout": "^0.1.31",
     "@antv/x6": "^2.18.1",
     "@antv/x6-plugin-stencil": "^2.1.5",

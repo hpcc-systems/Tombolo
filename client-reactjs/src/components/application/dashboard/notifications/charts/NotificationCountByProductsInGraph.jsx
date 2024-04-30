@@ -2,7 +2,7 @@
 import React from 'react';
 import { Column } from '@ant-design/charts';
 
-function NotificationCountByProductsInGraph({ sentNotifications }) {
+function NotificationCountByProductsInGraph({ sentNotifications, productCategories }) {
   // Prepare the data
   let chartData = [];
   sentNotifications.forEach((notification) => {
@@ -24,6 +24,11 @@ function NotificationCountByProductsInGraph({ sentNotifications }) {
       return acc;
     }, {})
   );
+
+  // replace ids of the products by its name
+  data.forEach((d) => {
+    d.category = productCategories.find((product) => product.id === d.category)?.name || d.category;
+  });
 
   const config = {
     data: data,

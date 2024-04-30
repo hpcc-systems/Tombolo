@@ -5,7 +5,7 @@ import { Modal, Form, Input, Select, DatePicker, Button, Row, Col, message } fro
 import moment from 'moment';
 
 // Local imports
-import { getAllDomains, getProductCategories, getActivityTypes } from '../../../../api/fido';
+import { getDomains, getProductCategories } from './notificationUtil';
 import { createNotification } from './notificationUtil';
 import { statuses } from './notificationUtil';
 
@@ -13,6 +13,7 @@ import { statuses } from './notificationUtil';
 const { Option } = Select;
 const { TextArea } = Input;
 
+// Interception stages
 const interceptionStages = [
   'Scrubs',
   'System Stability',
@@ -27,13 +28,13 @@ const CreateNotificationModal = ({
   displayCreateNotificationModal,
   setDisplayCreateNotificationModal,
   setSentNotifications,
+  monitorings,
 }) => {
   // Local states
   const [savingForm, setSavingForm] = useState(false);
   const [domains, setDomains] = useState([]);
-  const [selectedDomain, setSelectedDomain] = useState(null);
-  const [allActivityTypes, setAllActivityTypes] = useState([]);
   const [selectedActivityType, setSelectedActivityType] = useState(null);
+  const [selectedDomain, setSelectedDomain] = useState(null);
   const [productCategories, setProductCategories] = useState([]);
   const [form] = Form.useForm();
 
@@ -45,54 +46,52 @@ const CreateNotificationModal = ({
     authenticationReducer: { user },
   } = useSelector((state) => state);
 
-  // Get all domains
+  // Effect - Get related domains when activity type is changed
   useEffect(() => {
+    if (!selectedActivityType) {
+      return;
+    }
     (async () => {
       try {
-        const data = await getAllDomains();
+        const data = await getDomains({ monitoringId: selectedActivityType });
         setDomains(data);
       } catch (err) {
         message.error('Error fetching domains');
       }
     })();
-  }, []);
+  }, [selectedActivityType]);
 
-  // When domain changes, get activity types related to the domain
+  // Effect - Get related product categories when domain is changed
   useEffect(() => {
-    if (!selectedDomain) return;
-
+    if (!selectedDomain) {
+      return;
+    }
     (async () => {
       try {
-        const data = await getActivityTypes({ domainId: selectedDomain });
-        setAllActivityTypes(data);
+        const response = await getProductCategories({ domainId: selectedDomain });
+        setProductCategories(response);
       } catch (err) {
-        message.error('Error fetching activity types');
+        message.error('Failed to fetch product category for selected domain');
       }
     })();
   }, [selectedDomain]);
 
+  // Handle activity change
+  const handleActivityChange = (value) => {
+    setSelectedActivityType(value);
+    setSelectedDomain(null);
+    form.setFieldsValue({ domain: null, productCategory: null });
+  };
+
   // Handle domain change
   const handleDomainChange = async (value) => {
     try {
-      form.setFieldsValue({ productCategory: undefined, origin: undefined });
       setSelectedDomain(value);
+      form.setFieldsValue({ productCategory: null });
     } catch (error) {
       message.error('Error fetching product category');
     }
   };
-
-  //Handle when activity type changes
-  useEffect(() => {
-    (async () => {
-      try {
-        form.setFieldsValue({ productCategory: undefined });
-        const data = await getProductCategories({ domainId: selectedDomain, activityTypeId: selectedActivityType });
-        setProductCategories(data);
-      } catch (err) {
-        message.error('Error fetching product categories');
-      }
-    })();
-  }, [selectedActivityType]);
 
   // Save new notification
   const handleOk = async () => {
@@ -108,11 +107,12 @@ const CreateNotificationModal = ({
     //If form fields are valid proceed to save
     try {
       // Notification common payload fields
+      const productCategoryShortCode = productCategories.find(
+        (c) => c.id === form.getFieldValue('productCategory')
+      ).shortCode;
       const commonPayloadFields = {
         applicationId,
-        searchableNotificationId: `${form.getFieldValue('productCategory')}_${moment().format(
-          'YYYYMMDD_HHmmss_SSS'
-        )}_MANUAL`,
+        searchableNotificationId: `${productCategoryShortCode}_${moment().format('YYYYMMDD_HHmmss_SSS')}_MANUAL`,
         notificationOrigin: form.getFieldValue('origin'),
         notificationChannel: 'none',
         notificationTitle: form.getFieldValue('notificationTitle'),
@@ -154,6 +154,7 @@ const CreateNotificationModal = ({
     setDisplayCreateNotificationModal(false);
   };
 
+  // JSX
   return (
     <div>
       <Modal
@@ -171,7 +172,7 @@ const CreateNotificationModal = ({
             Save
           </Button>,
         ]}>
-        <Form layout="vertical" form={form}>
+        <Form layout="vertical" form={form} style={{ marginBottom: '30px' }}>
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item
@@ -190,29 +191,30 @@ const CreateNotificationModal = ({
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="domain"
-                label="Domain"
+                name="origin"
+                label="Activity Type"
                 required
-                rules={[{ required: true, message: 'Domain is required' }]}>
-                <Select placeholder="Select a domain" onChange={handleDomainChange}>
-                  {domains.map((domain) => (
-                    <Option key={domain.Domain} value={domain.Domain}>
-                      {domain['Domain Name']}
+                rules={[{ required: true, message: 'Activity type is required' }]}>
+                <Select placeholder="Select activity type" onChange={(value) => handleActivityChange(value)}>
+                  {monitorings.map((a) => (
+                    <Option key={a.id} value={a.id}>
+                      {a.name}
                     </Option>
                   ))}
                 </Select>
               </Form.Item>
             </Col>
+
             <Col span={12}>
               <Form.Item
-                name="origin"
-                label="Activity Type"
+                name="domain"
+                label="Domain"
                 required
-                rules={[{ required: true, message: 'Activity type is required' }]}>
-                <Select placeholder="Select activity type" onChange={(value) => setSelectedActivityType(value)}>
-                  {allActivityTypes.map((a) => (
-                    <Option key={a['Activity ID']} value={a['Activity ID']}>
-                      {a['Activity Type']}
+                rules={[{ required: true, message: 'Domain is required' }]}>
+                <Select placeholder="Select a domain" onChange={(value) => handleDomainChange(value)}>
+                  {domains.map((domain) => (
+                    <Option key={domain.id} value={domain.id}>
+                      {domain.name}
                     </Option>
                   ))}
                 </Select>
@@ -229,8 +231,8 @@ const CreateNotificationModal = ({
                 rules={[{ required: true, message: 'Category is required' }]}>
                 <Select placeholder="Select a product category">
                   {productCategories.map((category) => (
-                    <Option key={category.value} value={category.value}>
-                      {category.label}
+                    <Option key={category.id} value={category.id}>
+                      {`${category.name} (${category.shortCode})`}
                     </Option>
                   ))}
                 </Select>
@@ -271,7 +273,7 @@ const CreateNotificationModal = ({
                 label="Date Logged"
                 required
                 rules={[{ required: true, message: 'Date logged is required' }]}>
-                <DatePicker showTime={{ format: 'hh:mm A' }} format="dddd MMM DD hh:mm A" style={{ width: '100%' }} />
+                <DatePicker showTime={{ format: 'hh:mm' }} format="HH:mm" style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>
@@ -284,7 +286,7 @@ const CreateNotificationModal = ({
             </Col>
             <Col span={12}>
               <Form.Item name="resolutionDate" label="Resolution Date">
-                <DatePicker showTime style={{ width: '100%' }} />
+                <DatePicker showTime={{ format: 'hh:mm' }} format="HH:mm" style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>

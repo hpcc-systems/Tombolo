@@ -300,9 +300,6 @@ router.post(
         );
         workunitsResult = Object.values(workunitsHash);
       }
-            console.log("---- response ----------------------------");
-            console.dir(workunitsResult);
-            console.log("------------------------------------------");
       return res.status(200).send(workunitsResult);
     } catch (error) {
       logger.error("jobsearch error", error);

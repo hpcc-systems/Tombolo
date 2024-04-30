@@ -5,7 +5,7 @@ const validatorUtil = require("../../utils/validator");
 const { body, param, validationResult } = require("express-validator");
 const hpccJSComms = require("@hpcc-js/comms");
 const hpccUtil = require("../../utils/hpcc-util");
-const JobScheduler = require("../../job-scheduler");
+const JobScheduler = require("../../jobSchedular/job-scheduler");
 
 const ClusterMonitoring = models.clusterMonitoring;
 const router = express.Router();

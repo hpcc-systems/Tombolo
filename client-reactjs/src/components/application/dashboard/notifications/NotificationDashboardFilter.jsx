@@ -1,29 +1,22 @@
-/* eslint-disable unused-imports/no-unused-vars */
-/* eslint-disable unused-imports/no-unused-imports */
 // Package imports
-import React, { useState } from 'react';
-import { Dropdown, DatePicker, Menu, Button, Slider, Modal, Drawer } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { DatePicker, Button, Slider, Modal } from 'antd';
 import { FilterOutlined } from '@ant-design/icons';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 const NotificationDashboardFilter = ({ dashBoardFilter, setDashBoardFilter }) => {
   const [visible, setVisible] = useState(false);
+  const past60Days = dayjs().subtract(60, 'days');
 
-  // When menu item is clicked
-  const handleMenuClick = (e) => {
-    if (e.key === 'days') {
-      setDashBoardFilter((prev) => ({ ...prev, filterBy: 'days', filterLabel: `Last ${dashBoardFilter.days} days` }));
-    }
-    if (e.key === 'range' && dashBoardFilter.range[0] && dashBoardFilter.range[1]) {
-      setDashBoardFilter((prev) => ({
-        ...prev,
-        filterBy: 'range',
-        filterLabel: `${moment(dashBoardFilter.range[0]).format('MM/DD/YY')} - ${moment(
-          dashBoardFilter.range[1]
-        ).format('MM/DD/YY')}`,
-      }));
-    }
-  };
+  //Effects
+  useEffect(() => {
+    console.log('Loading ...');
+
+    // Clean up
+    return () => {
+      console.log('Cleaned up');
+    };
+  }, []);
 
   // When slider value is changed
   const handleNumberChange = (value) => {
@@ -50,61 +43,8 @@ const NotificationDashboardFilter = ({ dashBoardFilter, setDashBoardFilter }) =>
     }));
   };
 
-  // When dropdown is opened or closed
-  const handleVisibleChange = (flag) => {
-    setVisible(flag);
-  };
-
-  // Disable all dates after today
-  const disableFutureDates = (current) => {
-    return current && current > moment().endOf('day');
-  };
-
-  // Menu
-  const menu = (
-    <Menu onClick={handleMenuClick} style={{ width: '400px' }}>
-      <Menu.Item key="days">
-        <div style={{ fontWeight: 'bold' }}>Days</div>
-        <Slider
-          size="small"
-          defaultValue={dashBoardFilter.days}
-          min={1}
-          max={60}
-          keyboard={true}
-          trackStyle={{ backgroundColor: 'var(--primary)' }}
-          autoFocus={true}
-          onChange={handleNumberChange}
-          tooltip={{
-            open: visible,
-            formatter: (value) => `${value}`,
-            size: 'small',
-          }}
-        />
-      </Menu.Item>
-      <Menu.Item key="range">
-        <div style={{ marginBottom: '10px', fontWeight: 'bold' }}> Range </div>
-        <DatePicker.RangePicker
-          defaultValue={dashBoardFilter.range}
-          onChange={handleDateChange}
-          disabledDate={disableFutureDates}
-          style={{ width: '100%' }}
-        />
-      </Menu.Item>
-    </Menu>
-  );
-
   return (
     <>
-      {/* <Dropdown overlay={menu} onOpenChange={handleVisibleChange} open={visible}>
-        <Button type="primary" ghost onClick={(e) => e.preventDefault()}>
-          <>
-            {dashBoardFilter.filterLabel}
-            <span style={{ marginLeft: '10px' }}>
-              <FilterOutlined />
-            </span>
-          </>
-        </Button>
-      </Dropdown> */}
       <Button
         type="primary"
         ghost
@@ -114,47 +54,53 @@ const NotificationDashboardFilter = ({ dashBoardFilter, setDashBoardFilter }) =>
         }}>
         {dashBoardFilter.filterLabel}
       </Button>
-      <Modal
-        open={visible}
-        mask={false}
-        maskClosable={true}
-        footer={null}
-        closable={false}
-        // closeIcon={null}
-        onCancel={() => setVisible(false)}
-        style={{
-          top: '100px',
-          right: '20px',
-          position: 'absolute',
-        }}>
-        <>
-          <div style={{ fontWeight: 'bold' }}>Days</div>
-          <Slider
-            size="small"
-            defaultValue={dashBoardFilter.days}
-            min={1}
-            max={60}
-            keyboard={true}
-            trackStyle={{ backgroundColor: 'var(--primary)' }}
-            autoFocus={true}
-            onChange={handleNumberChange}
-            tooltip={{
-              open: visible,
-              formatter: (value) => `${value}`,
-              size: 'small',
-            }}
-          />
-        </>
-        <>
-          <div style={{ marginBottom: '10px', fontWeight: 'bold' }}> Range </div>
-          <DatePicker.RangePicker
-            defaultValue={dashBoardFilter.range}
-            onChange={handleDateChange}
-            disabledDate={disableFutureDates}
-            style={{ width: '100%' }}
-          />
-        </>
-      </Modal>
+      {visible && (
+        <Modal
+          open={visible}
+          mask={false}
+          maskClosable={true}
+          footer={null}
+          closable={false}
+          // closeIcon={null}
+          onCancel={() => setVisible(false)}
+          style={{
+            top: '100px',
+            right: '20px',
+            position: 'absolute',
+          }}>
+          <>
+            <div style={{ fontWeight: 'bold' }}>Days</div>
+            <Slider
+              size="small"
+              defaultValue={dashBoardFilter.days}
+              min={1}
+              max={60}
+              keyboard={true}
+              style={{
+                track: { background: 'var(--primary)' },
+              }}
+              autoFocus={true}
+              onChange={handleNumberChange}
+              tooltip={{
+                open: visible && dashBoardFilter.filterBy === 'days',
+                formatter: (value) => `${value}`,
+                size: 'small',
+              }}
+            />
+          </>
+          <>
+            <div style={{ marginBottom: '10px', fontWeight: 'bold' }}> Range </div>
+            <DatePicker.RangePicker
+              defaultValue={dashBoardFilter.range}
+              onChange={handleDateChange}
+              disabledDate={(current) =>
+                !current || current.isBefore(past60Days) || current.isAfter(dayjs().endOf('day'))
+              }
+              style={{ width: '100%' }}
+            />
+          </>
+        </Modal>
+      )}
     </>
   );
 };

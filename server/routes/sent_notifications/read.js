@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { body, check, param } = require("express-validator");
+const { body, param } = require("express-validator");
 const moment = require("moment");
 const sequelize = require("sequelize");
 
@@ -81,8 +81,17 @@ router.get(
         logger.error(errors);
         return res.status(400).send("Validation error occurred");
       }
+
+      // Get notifications from last 60 days only
+      const sixtyDaysAgo = moment().subtract(60, "days").toDate();
+
       
       const notifications = await SentNotifications.findAll({
+        where: {
+          createdAt: {
+            [Op.gte]: sixtyDaysAgo,
+          },
+        },
         order: [["createdAt", "DESC"]],
       });
       res.status(200).json(notifications);

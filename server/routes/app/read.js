@@ -29,7 +29,7 @@ const authServiceUtil = require("../../utils/auth-service-utils");
 let Sequelize = require("sequelize");
 const Op = Sequelize.Op;
 const multer = require("multer");
-const jobScheduler = require("../../job-scheduler");
+const jobScheduler = require("../../jobSchedular/job-scheduler");
 const sanitize = require("sanitize-filename");
 const AssetGroups = models.assets_groups;
 

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const jobScheduler = require("../../job-scheduler");
+const jobScheduler = require("../../jobSchedular/job-scheduler");
 const { body, query, validationResult } = require('express-validator');
 const validatorUtil = require('../../utils/validator');
 

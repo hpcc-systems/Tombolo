@@ -1,7 +1,7 @@
 // Packages
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Menu, Dropdown, Popconfirm, message } from 'antd';
+import { Button, Dropdown, Popconfirm, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, FilterOutlined } from '@ant-design/icons';
 
 //Local imports
@@ -18,12 +18,14 @@ const NotificationActions = ({
 }) => {
   //Redux
   const {
-    applicationReducer: { integrations },
+    applicationReducer: { integrations, application },
   } = useSelector((state) => state);
+
   // Delete selected notifications
   const deleteSelectedNotifications = async () => {
     try {
       await deleteMultipleNotifications(selectedNotificationsIds);
+      message.success('Selected notifications deleted successfully');
       setSelectedNotificationsIds([]);
       setNotifications((prevNotifications) =>
         prevNotifications.filter((notification) => !selectedNotificationsIds.includes(notification.id))
@@ -45,53 +47,64 @@ const NotificationActions = ({
   };
 
   // Menu for action button
-  const menu = (
-    <Menu>
-      <Menu.ItemGroup>
-        {integrations.some((i) => i.name === 'ASR') && (
-          <>
-            <Menu.Item key="1" icon={<PlusOutlined />} onClick={openCreateNotificationModal}>
-              Add New Notification
-            </Menu.Item>
-            <Menu.Item
-              key="2"
-              disabled={selectedNotificationsIds.length < 2}
-              icon={<EditOutlined />}
-              onClick={setDisplayUpdateModal}>
-              Update Notifications
-            </Menu.Item>
-          </>
-        )}
+  const items = [
+    {
+      key: '3',
+      icon: <DeleteOutlined />,
+      label: (
+        <Popconfirm
+          title={`Are you sure you want to delete selected ${selectedNotificationsIds.length} notification${
+            selectedNotificationsIds.length > 1 ? 's' : ''
+          }?`}
+          okText="Yes"
+          okButtonProps={{ type: 'primary', danger: true }}
+          onConfirm={deleteSelectedNotifications}
+          cancelText="No">
+          Delete notifications
+        </Popconfirm>
+      ),
+      disabled: selectedNotificationsIds.length < 2,
+    },
+    {
+      key: '4',
+      icon: <FilterOutlined />,
+      label: filtersVisible ? 'Hide filters' : 'Show filters',
+      onClick: changeFilterVisibility,
+    },
+  ];
 
-        <Menu.Item key="3" disabled={selectedNotificationsIds.length < 2} icon={<DeleteOutlined />}>
-          <Popconfirm
-            title={`Are you sure you want to delete selected ${selectedNotificationsIds.length} notification${
-              selectedNotificationsIds.length > 1 ? 's' : ''
-            }?`}
-            okText="Yes"
-            okButtonProps={{ type: 'danger' }}
-            onConfirm={deleteSelectedNotifications}
-            cancelText="No">
-            Delete Notifications
-          </Popconfirm>
-        </Menu.Item>
-      </Menu.ItemGroup>
-
-      <Menu.Divider />
-
-      <Menu.ItemGroup>
-        <Menu.Item key="4" icon={<FilterOutlined />} onClick={changeFilterVisibility}>
-          {filtersVisible ? 'Hide Filters' : 'Show Filters'}
-        </Menu.Item>
-      </Menu.ItemGroup>
-    </Menu>
+  // If ASR is enabled, add ASR only options to action button  menu
+  const isAsrIntegrationEnabled = integrations.some(
+    (integration) => integration.name === 'ASR' && application.applicationId === integration.application_id
   );
+
+  if (isAsrIntegrationEnabled) {
+    items.unshift(
+      {
+        key: '1',
+        icon: <PlusOutlined />,
+        label: 'Add new notification',
+        onClick: openCreateNotificationModal,
+      },
+      {
+        key: '2',
+        icon: <EditOutlined />,
+        label: 'Edit notifications',
+        disabled: selectedNotificationsIds.length < 2,
+        onClick: setDisplayUpdateModal,
+      }
+    );
+  }
 
   // Returning JSX
   return (
-    <Dropdown overlay={menu}>
+    <Dropdown
+      menu={{
+        items,
+      }}>
       <Button type="primary">
-        Actions <DownOutlined />
+        Actions
+        <DownOutlined />
       </Button>
     </Dropdown>
   );

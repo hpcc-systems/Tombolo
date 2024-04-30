@@ -12,6 +12,8 @@ function MonitoringDetailsModal({
   setSelectedMonitoring,
   clusters,
   teamsHooks,
+  domains,
+  productCategories,
 }) {
   // When cancel button is clicked, close the modal and reset the selectedMonitoring
   const handleCancel = () => {
@@ -37,7 +39,7 @@ function MonitoringDetailsModal({
     clusterId,
     approverComment,
   } = selectedMonitoring;
-  const { asrSpecificMetaData, notificationMetaData, threshold, schedule } = metaData;
+  const { asrSpecificMetaData, notificationMetaData, schedule } = metaData;
   return (
     <Modal
       maskClosable={false}
@@ -56,13 +58,18 @@ function MonitoringDetailsModal({
           {monitoringName}
         </Descriptions.Item>
         <Descriptions.Item label="Description">{description}</Descriptions.Item>
-        <Descriptions.Item label="Cluster">{clusters.find((c) => c.id === clusterId).name}</Descriptions.Item>
+        <Descriptions.Item label="Cluster">
+          {clusters.find((c) => c.id === clusterId)?.name || (
+            <Tag style={{ color: 'var(--danger)' }}>Deleted cluster</Tag>
+          )}
+        </Descriptions.Item>
         <Descriptions.Item label="Monitoring scope">
           {monitoringScope.replace(/([A-Z])/g, ' $1').trim()}
         </Descriptions.Item>
         {monitoringScope !== 'ClusterWideMonitoring' && (
           <Descriptions.Item label="Job name / pattern">{jobName}</Descriptions.Item>
         )}
+        {schedule && <Descriptions.Item label="Frequency">{schedule[0].frequency}</Descriptions.Item>}
         {schedule && schedule.length > 0 && (
           <Descriptions.Item label="Job Schedule">
             {generateTagsForSchedule(schedule).map((s, i) => (
@@ -70,17 +77,32 @@ function MonitoringDetailsModal({
             ))}
           </Descriptions.Item>
         )}
+
+        {metaData?.expectedStartTime && (
+          <Descriptions.Item label="Expected Start Time">{metaData.expectedStartTime}</Descriptions.Item>
+        )}
+        {metaData?.expectedCompletionTime && (
+          <Descriptions.Item label="Expected Completion Time">{metaData.expectedCompletionTime}</Descriptions.Item>
+        )}
         {/* ----------------- ASR SPECIFIC ------------------------------------------------------- */}
         {asrSpecificMetaData?.jobMonitorType && (
           <Descriptions.Item label="Job Monitoring Type">{asrSpecificMetaData.jobMonitorType}</Descriptions.Item>
         )}
         {asrSpecificMetaData?.domain && (
-          <Descriptions.Item label="Domain">{asrSpecificMetaData.domain}</Descriptions.Item>
+          <Descriptions.Item label="Domain">
+            {domains.filter((d) => d.value === asrSpecificMetaData.domain)[0]?.label || (
+              <Tag color="red"> Deleted domain</Tag>
+            )}
+          </Descriptions.Item>
         )}
         {asrSpecificMetaData?.productCategory && (
-          <Descriptions.Item label="Product category">{asrSpecificMetaData.productCategory}</Descriptions.Item>
+          <Descriptions.Item label="Product category">
+            {productCategories.filter((c) => c.value === asrSpecificMetaData.productCategory)[0]?.label || (
+              <Tag color="red"> Deleted product</Tag>
+            )}
+          </Descriptions.Item>
         )}
-        {asrSpecificMetaData?.productCategory && (
+        {asrSpecificMetaData?.severity && (
           <Descriptions.Item label="Severity">{asrSpecificMetaData.severity}</Descriptions.Item>
         )}
         {asrSpecificMetaData?.requireComplete && (
@@ -89,13 +111,12 @@ function MonitoringDetailsModal({
           </Descriptions.Item>
         )}
         {/* ---------NOTIFICATION TRIGGERS AND CONTACTS --------------------------------------------- */}
-        <Descriptions.Item label="Threshold">{`${threshold} minutes`}</Descriptions.Item>
         {notificationMetaData &&
           notificationMetaData.notificationCondition &&
           notificationMetaData.notificationCondition.length > 0 && (
             <Descriptions.Item label="Notify when">
-              {notificationMetaData.notificationCondition.map((condition) => (
-                <Tag key={condition}>{condition.replace(/([A-Z])/g, ' $1').trim()}</Tag>
+              {notificationMetaData.notificationCondition.map((condition, i) => (
+                <Tag key={i}>{condition.replace(/([A-Z])/g, ' $1').trim()}</Tag>
               ))}
             </Descriptions.Item>
           )}
@@ -103,9 +124,9 @@ function MonitoringDetailsModal({
           <Descriptions.Item label="Primary contact(s)">
             {notificationMetaData.primaryContacts.map((email, index) =>
               index < notificationMetaData.primaryContacts.length - 1 ? (
-                <span key={email}>{email},</span>
+                <span key={index}>{email},</span>
               ) : (
-                <span key={email}>{email}</span>
+                <span key={index}>{email}</span>
               )
             )}
           </Descriptions.Item>
@@ -114,9 +135,9 @@ function MonitoringDetailsModal({
           <Descriptions.Item label="Secondary contact(s)">
             {notificationMetaData.secondaryContacts.map((email, index) =>
               index < notificationMetaData.secondaryContacts.length - 1 ? (
-                <span key={email}>{email},</span>
+                <span key={index}>{email},</span>
               ) : (
-                <span key={email}>{email}</span>
+                <span key={index}>{email}</span>
               )
             )}
           </Descriptions.Item>
@@ -125,9 +146,9 @@ function MonitoringDetailsModal({
           <Descriptions.Item label="Notify contact(s)">
             {notificationMetaData.notifyContacts.map((email, index) =>
               index < notificationMetaData.notifyContacts.length - 1 ? (
-                <span key={email}>{email},</span>
+                <span key={index}>{email},</span>
               ) : (
-                <span key={email}>{email}</span>
+                <span key={index}>{email}</span>
               )
             )}
           </Descriptions.Item>
@@ -204,10 +225,10 @@ export default MonitoringDetailsModal;
 const generateTagsForSchedule = (schedule) => {
   const tags = [];
   schedule.forEach((s) => {
-    if (s.schedulingType === 'daily') {
+    if (s.frequency === 'daily') {
       tags.push('Everyday');
     }
-    if (s.schedulingType === 'weekly') {
+    if (s.frequency === 'weekly') {
       let tempData = 'Every week on';
       s.days.forEach((d, i) => {
         tempData += ` ${getDayLabel(d)} ${i < s.days.length - 1 ? ',' : ''}`;
@@ -240,7 +261,7 @@ const generateTagsForSchedule = (schedule) => {
       tempData += ` of ${getMonthLabel(s.month)}`;
       tags.push(tempData);
     }
-    if (s.schedulingType === 'cron') {
+    if (s.frequency === 'cron') {
       tags.push(cronstrue.toString(s.cron));
     }
   });
@@ -252,9 +273,9 @@ const generateTagsForSchedule = (schedule) => {
 const getHookTags = ({ AllTeamsHooks, hookIds }) => {
   const hooks = AllTeamsHooks.filter((hook) => hookIds.includes(hook.id));
   const deletedHooks = hookIds.filter((id) => !hooks.find((hook) => hook.id === id));
-  const currentTags = hooks.map((hook) => (
-    <Tooltip key="id" title={hook.url}>
-      <Tag style={{ color: 'var(--primary)' }} key={hook.id}>
+  const currentTags = hooks.map((hook, i) => (
+    <Tooltip key={i} title={hook.url}>
+      <Tag style={{ color: 'var(--primary)' }} key={i}>
         {hook.name}
       </Tag>
     </Tooltip>
@@ -276,8 +297,3 @@ const approvalStatusTagColors = {
   Rejected: 'var(--danger)',
   Pending: 'var(--warning)',
 };
-
-/*
-TODO- submit button enable/disable bug
-TODO - Switching between tabs with prev and next buttons and clicking on tabs bug
-*/

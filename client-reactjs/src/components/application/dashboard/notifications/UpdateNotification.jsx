@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { DownOutlined } from '@ant-design/icons';
-import { Modal, Form, Select, Input, DatePicker, Button, message, Dropdown, Menu, Alert, List } from 'antd';
-import moment from 'moment';
+import { Modal, Form, Select, Input, DatePicker, Button, message, Dropdown, Menu, Alert, List, Space } from 'antd';
+import dayjs from 'dayjs';
 
 //Local Imports
 import { statuses } from './notificationUtil';
@@ -38,7 +38,7 @@ const UpdateNotificationModal = ({
     if (selectedNotificationsIds.length === 1) {
       const selectedNotificationDetails = sentNotifications.find((n) => n.id === selectedNotificationsIds[0]);
       if (selectedNotificationDetails.resolutionDateTime) {
-        selectedNotificationDetails.resolutionDateTime = moment(selectedNotificationDetails.resolutionDateTime);
+        selectedNotificationDetails.resolutionDateTime = dayjs(selectedNotificationDetails.resolutionDateTime);
       }
 
       if (selectedNotificationDetails.metaData?.asrSpecificMetaData?.jiraTickets) {
@@ -155,6 +155,8 @@ const UpdateNotificationModal = ({
           allUpdatedNotifications.push(notification);
         }
       });
+
+      message.success('Notifications updated successfully');
       setSentNotifications(allUpdatedNotifications);
 
       // Reset sate and form fields
@@ -169,6 +171,8 @@ const UpdateNotificationModal = ({
     } catch (err) {
       console.error(err);
       message.error('Enter updated information');
+    } finally {
+      form.resetFields();
     }
   };
 
@@ -311,8 +315,8 @@ const UpdateNotificationModal = ({
           }>
           <DatePicker
             style={{ width: '100%' }}
-            format="MM/DD/YYYY hh:mm A"
-            showTime={{ format: 'hh:mm A', use12Hours: true }}
+            format="MM/DD/YYYY HH:mm"
+            showTime={{ format: 'HH:mm' }}
             placeholder="Resolution Date"
             disabled={selectedNotificationsIds.length != 1 && actions.resolutionDateTime != 'Update'}
           />
@@ -347,6 +351,18 @@ const UpdateNotificationModal = ({
   // Handle step change
   const handleStepChange = async (step) => {
     if (step === 2) {
+      // List of fields
+      const allFormFieldsAndValues = form.getFieldsValue(true);
+      const fieldNames = Object.keys(allFormFieldsAndValues);
+
+      // Check if any of these fields were touched
+      const fieldsTouched = fieldNames.filter((fieldName) => form.isFieldTouched(fieldName));
+
+      if (fieldsTouched.length === 0) {
+        message.info('No change detected');
+        return;
+      }
+
       let actionsSelected = false;
       for (let key in actions) {
         if (actions[key] !== 'Select action' && actions[key] !== 'None') {
@@ -379,25 +395,25 @@ const UpdateNotificationModal = ({
   const generateFooterButtons = () => {
     if (updateStep === 1) {
       return (
-        <div>
+        <Space>
           <Button key="cancel" onClick={handleUpdateCancel}>
             Cancel
           </Button>
           <Button key="continue" type="primary" onClick={() => handleStepChange(2)}>
             Continue
           </Button>
-        </div>
+        </Space>
       );
     }
 
     if (updateStep === 2) {
       return (
-        <div>
+        <Space>
           <Button onClick={() => handleStepChange(1)}>Back</Button>
           <Button type="primary" onClick={updateNotifications}>
             Update
           </Button>
-        </div>
+        </Space>
       );
     }
   };

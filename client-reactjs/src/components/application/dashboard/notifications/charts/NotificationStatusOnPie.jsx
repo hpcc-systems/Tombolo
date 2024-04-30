@@ -19,11 +19,18 @@ function NotificationStatusOnPie({ sentNotifications }) {
     angleField: 'count',
     colorField: 'status',
     radius: 0.75,
+    tooltip: {
+      title: 'status',
+    },
     label: {
       position: 'spider',
       labelHeight: 50,
-      // text: 'count',
-      text: (d) => `${d.status}\n ${d.count}`,
+      text: (d) => ` ${d.status} (${d.count})`,
+      transform: [
+        {
+          type: 'overlapHide',
+        },
+      ],
 
       style: {
         fontSize: 14,

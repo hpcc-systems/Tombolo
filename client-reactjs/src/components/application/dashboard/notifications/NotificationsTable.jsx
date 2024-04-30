@@ -16,6 +16,7 @@ function SentNotificationsTable({
   setDisplayNotificationDetailsModal,
   setDisplayUpdateModal,
   searchTerm,
+  monitorings,
 }) {
   // When row(s) are selected
   const rowSelection = {
@@ -75,7 +76,8 @@ function SentNotificationsTable({
       width: '10%',
       ellipsis: true,
       render: (notificationOrigin) => {
-        return <Tooltip title={notificationOrigin}>{notificationOrigin}</Tooltip>;
+        const originName = monitorings.find((m) => m.id === notificationOrigin)?.name || notificationOrigin;
+        return <Tooltip title={originName}>{originName}</Tooltip>;
       },
     },
     {
@@ -182,7 +184,7 @@ function SentNotificationsTable({
             title="Are you sure delete this notification?"
             onConfirm={() => deleteSingleNotification(record.id)}
             okText="Yes"
-            okButtonProps={{ type: 'danger' }}
+            okButtonProps={{ type: 'primary', danger: true }}
             cancelText="No">
             <Tooltip title="Delete">
               <Button

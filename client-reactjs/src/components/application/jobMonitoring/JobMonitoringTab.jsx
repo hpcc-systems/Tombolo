@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Checkbox, Card, Form, Input } from 'antd';
+import { Card, Form, TimePicker, Row, Col, Select } from 'antd';
 
 import './jobMonitoring.css';
 import SchedulePicker from './SchedulePicker';
 import AsrSpecificMonitoringDetails from './AsrSpecificMonitoringDetails';
+
+const { Option } = Select;
 
 function JobMonitoringTab({
   intermittentScheduling,
@@ -18,15 +20,34 @@ function JobMonitoringTab({
   setCronMessage,
   erroneousScheduling,
   monitoringScope,
+  selectedCluster,
+  domains,
+  productCategories,
+  setSelectedDomain,
 }) {
-  const [activateMonitoring, setActivateMonitoring] = useState(false);
+  const [clusterOffset, setClusterOffset] = useState(null);
+
+  useEffect(() => {
+    if (selectedCluster?.timezone_offset === null || selectedCluster?.timezone_offset === undefined) return;
+    const offSet = selectedCluster.timezone_offset / 60;
+    if (offSet == 0) {
+      setClusterOffset('UTC');
+    } else {
+      setClusterOffset(`UTC ${offSet}`);
+    }
+  }, [selectedCluster]);
 
   //Redux
   const {
-    applicationReducer: { integrations },
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
   } = useSelector((state) => state);
 
-  const asrIntegration = integrations?.find((integration) => integration.name === 'ASR') !== undefined;
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
 
   return (
     <div>
@@ -44,49 +65,60 @@ function JobMonitoringTab({
             setCronMessage={setCronMessage}
           />
           {erroneousScheduling && (
-            <div style={{ color: 'var(--danger)', textAlign: 'center' }}>Please select schedule for the job</div>
+            <div style={{ color: '#ff4d4f', textAlign: 'center' }}>Please select schedule for the job</div>
           )}
         </Card>
       )}
 
       <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
-        {asrIntegration && <AsrSpecificMonitoringDetails form={form} />}
-        <Form form={form} layout="vertical">
-          {/* conditionally render this field if ASR is disabled */}
-          {!asrIntegration && (
-            <Form.Item
-              label="Maximum Build Time / Threshold (in mins)"
-              name="threshold"
-              required={form.getFieldValue('notificationCondition')?.includes('ThresholdExceeded')}
-              rules={[
-                {
-                  validator: async (_, value) => {
-                    if (form.getFieldValue('notificationCondition')?.includes('ThresholdExceeded')) {
-                      if (!value) {
-                        return Promise.reject(new Error('This field is required'));
-                      } else if (!(parseInt(value) > 0 && parseInt(value) < 1440)) {
-                        return Promise.reject(new Error('Threshold should be between 0 and 1440'));
-                      }
-                    }
-                  },
-                },
-              ]}>
-              <Input type="number" min={1} max={1440} style={{ width: '50%' }} placeholder="Threshold (in minutes)" />
-            </Form.Item>
-          )}
+        {asrIntegration && (
+          <AsrSpecificMonitoringDetails
+            form={form}
+            clusterOffset={clusterOffset}
+            domains={domains}
+            productCategories={productCategories}
+            setSelectedDomain={setSelectedDomain}
+          />
+        )}
+        <Form form={form} layout="vertical" initialValues={{ isActive: false }}>
+          {/* Always render below fields*/}
 
-          <Form.Item
-            name="isActive"
-            valuePropName="checked"
-            extra={
-              activateMonitoring ? (
-                <div style={{ marginTop: '-10px', marginLeft: '20px', color: 'var(--primary)' }}>
-                  (Note: Monitoring will only become active upon approval)
-                </div>
-              ) : null
-            }>
-            <Checkbox onChange={(e) => setActivateMonitoring(e.target.checked)}> Activate Job Monitoring </Checkbox>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Expected Start Time (HH:MM) "
+                name="expectedStartTime"
+                rules={[{ required: true, message: 'Expected start time is a required' }]}>
+                <TimePicker style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Expected Completion Time (HH:MM) "
+                name="expectedCompletionTime"
+                rules={[{ required: true, message: 'Expected completion time is a required' }]}>
+                <TimePicker style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {!asrIntegration && (
+            <Col span={12}>
+              <Form.Item
+                label="Require Complete"
+                name="requireComplete"
+                rules={[{ required: true, message: 'Please select one option' }]}>
+                <Select placeholder="Require complete">
+                  <Option key="yes" value={true}>
+                    Yes
+                  </Option>
+                  <Option key="no" value={false}>
+                    No
+                  </Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          )}
         </Form>
       </Card>
     </div>

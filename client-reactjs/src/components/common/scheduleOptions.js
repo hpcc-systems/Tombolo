@@ -1,11 +1,11 @@
 const daysOfWeek = [
-  { label: 'Monday', value: '1' },
-  { label: 'Tuesday', value: '2' },
-  { label: 'Wednesday', value: '3' },
-  { label: 'Thursday', value: '4' },
-  { label: 'Friday', value: '5' },
-  { label: 'Saturday', value: '6' },
-  { label: 'Sunday', value: '0' },
+  { label: 'Monday', shortLabel: 'Mon', value: '1' },
+  { label: 'Tuesday', shortLabel: 'Tue', value: '2' },
+  { label: 'Wednesday', shortLabel: 'Wed', value: '3' },
+  { label: 'Thursday', shortLabel: 'Thurs', value: '4' },
+  { label: 'Friday', shortLabel: 'Fri', value: '5' },
+  { label: 'Saturday', shortLabel: 'Sat', value: '6' },
+  { label: 'Sunday', shortLabel: 'Sun', value: '0' },
 ];
 
 const weeks = [

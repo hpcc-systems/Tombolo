@@ -66,7 +66,6 @@ function NotificationCountOnLineGraph({ sentNotifications, dashBoardFilter }) {
     data: chartData,
     xField: 'date',
     yField: 'count',
-
     point: {
       shapeField: 'diamond',
       sizeField: 4,

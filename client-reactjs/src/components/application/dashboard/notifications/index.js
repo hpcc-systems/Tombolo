@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 // Package imports
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -7,7 +6,7 @@ import { Tabs, Space, message } from 'antd';
 import SentNotificationsTable from './NotificationsTable';
 import NotificationDashboard from './NotificationDashboard';
 import NotificationActions from './BulkActions';
-import { getAllSentNotifications } from './notificationUtil';
+import { getAllSentNotifications, getAllMonitorings, getAllDomains, getAllProductCategories } from './notificationUtil';
 import NotificationDetailsModal from './NotificationDetailsModal';
 import CreateNotificationModal from './CreateNotificationModal';
 import UpdateNotificationModal from './UpdateNotification';
@@ -16,11 +15,10 @@ import NotificationsSearch from './NotificationsSearch';
 import NotificationDashboardFilter from './NotificationDashboardFilter';
 import './notifications.css';
 
-const { TabPane } = Tabs;
-
 const Index = () => {
   //Local states
   const [sentNotifications, setSentNotifications] = useState([]);
+  const [monitorings, setMonitorings] = useState([]);
   const [filteredNotification, setFilteredNotification] = useState([]);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [selectedNotificationsIds, setSelectedNotificationsIds] = useState([]);
@@ -32,7 +30,14 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [matchCount, setMatchCount] = useState(0);
   const [activeTab, setActiveTabKey] = useState('1');
-  const [dashBoardFilter, setDashBoardFilter] = useState({filterBy: 'days', days: 14, range: [null, null], filterLabel: 'Last 14 days'});
+  const [dashBoardFilter, setDashBoardFilter] = useState({
+    filterBy: 'days',
+    days: 14,
+    range: [null, null],
+    filterLabel: 'Last 14 days',
+  });
+  const [domains, setDomains] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
 
   //Redux
   const { applicationId } = useSelector((state) => state.applicationReducer.application);
@@ -58,6 +63,36 @@ const Index = () => {
     if (filtersVisibility) {
       setFiltersVisible(filtersVisibility === 'true');
     }
+
+    // Get all activity types [monitoring types]
+    (async () => {
+      try {
+        const response = await getAllMonitorings();
+        setMonitorings(response);
+      } catch (error) {
+        message.error('Failed to fetch activity types');
+      }
+    })();
+
+    // Get all domains
+    (async () => {
+      try {
+        const response = await getAllDomains();
+        setDomains(response);
+      } catch (error) {
+        message.error('Failed to fetch domains');
+      }
+    })();
+
+    // Get all product categories
+    (async () => {
+      try {
+        const response = await getAllProductCategories();
+        setProductCategories(response);
+      } catch (error) {
+        message.error('Failed to fetch product categories');
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -175,39 +210,74 @@ const Index = () => {
 
             {/* <ExportMenu /> */}
           </Space>
-        }>
-        <TabPane tab="Logged Notifications" key="1">
-          {filtersVisible && (
-            <NotificationTableFilters filters={filters} setFilters={setFilters} sentNotifications={sentNotifications} />
-          )}
+        }
+        items={[
+          {
+            label: 'Logged Notifications',
+            key: '1',
+            children: (
+              <>
+                {filtersVisible && (
+                  <NotificationTableFilters
+                    filters={filters}
+                    setFilters={setFilters}
+                    sentNotifications={sentNotifications}
+                    monitorings={monitorings}
+                    domains={domains}
+                    productCategories={productCategories}
+                  />
+                )}
 
-          <SentNotificationsTable
-            sentNotifications={filteredNotification}
-            setSentNotifications={setSentNotifications}
-            selectedNotificationsIds={selectedNotificationsIds}
-            setSelectedNotificationsIds={setSelectedNotificationsIds}
-            setSelectedNotification={setSelectedNotification}
-            setDisplayNotificationDetailsModal={setDisplayNotificationDetailsModal}
-            setDisplayUpdateModal={setDisplayUpdateModal}
-            filters={filters}
-            searchTerm={searchTerm}
-          />
-        </TabPane>
-        <TabPane tab="Dashboard" key="2">
-          <NotificationDashboard sentNotifications={sentNotifications} dashBoardFilter={dashBoardFilter} />
-        </TabPane>
-      </Tabs>
+                <SentNotificationsTable
+                  sentNotifications={filteredNotification}
+                  setSentNotifications={setSentNotifications}
+                  selectedNotificationsIds={selectedNotificationsIds}
+                  setSelectedNotificationsIds={setSelectedNotificationsIds}
+                  setSelectedNotification={setSelectedNotification}
+                  setDisplayNotificationDetailsModal={setDisplayNotificationDetailsModal}
+                  setDisplayUpdateModal={setDisplayUpdateModal}
+                  filters={filters}
+                  searchTerm={searchTerm}
+                  monitorings={monitorings}
+                />
+              </>
+            ),
+          },
+          {
+            label: 'Dashboard',
+            key: '2',
+            children: (
+              <>
+                {/* When tab are switched, the canvas size of the charts change causing the charts to resize for unknown reason. As a result, the charts are 
+                not displayed properly. Re-rendering all the charts when user is in tab 2 and ejecting them when user moves to different tab as workaround to fix the issue. */}
+                {activeTab === '2' && (
+                  <NotificationDashboard
+                    sentNotifications={sentNotifications}
+                    dashBoardFilter={dashBoardFilter}
+                    monitorings={monitorings}
+                    productCategories={productCategories}
+                  />
+                )}
+              </>
+            ),
+          },
+        ]}></Tabs>
+
       <NotificationDetailsModal
         selectedNotification={selectedNotification}
         displayNotificationDetailsModal={displayNotificationDetailsModal}
         setDisplayNotificationDetailsModal={setDisplayNotificationDetailsModal}
         setSelectedNotification={setSelectedNotification}
+        monitorings={monitorings}
+        domains={domains}
+        productCategories={productCategories}
       />
       <CreateNotificationModal
         displayCreateNotificationModal={displayCreateNotificationModal}
         setDisplayCreateNotificationModal={setDisplayCreateNotificationModal}
         setNotifications={setSentNotifications}
         setSentNotifications={setSentNotifications}
+        monitorings={monitorings}
       />
       <UpdateNotificationModal
         displayUpdateModal={displayUpdateModal}

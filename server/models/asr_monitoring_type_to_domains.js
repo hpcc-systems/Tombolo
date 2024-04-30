@@ -55,18 +55,18 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  // AsrMonitoringTypeToDomainsRelation.associate = function (models) {
-  //   AsrMonitoringTypeToDomainsRelation.belongsTo(models.monitoring_types, {
-  //     foreignKey: "monitoring_type_id",
-  //     onDelete: "CASCADE",
-  //     onUpdate: "CASCADE",
-  //   });
-  //   AsrMonitoringTypeToDomainsRelation.belongsTo(models.asr_domains, {
-  //     foreignKey: "domain_id",
-  //     onDelete: "CASCADE",
-  //     onUpdate: "CASCADE",
-  //   });
-  // };
+  AsrMonitoringTypeToDomainsRelation.associate = function (models) {
+    AsrMonitoringTypeToDomainsRelation.belongsTo(models.monitoring_types, {
+      foreignKey: "monitoring_type_id",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    });
+    AsrMonitoringTypeToDomainsRelation.belongsTo(models.asr_domains, {
+      foreignKey: "domain_id",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    });
+  };
 
   return AsrMonitoringTypeToDomainsRelation;
 };
