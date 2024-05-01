@@ -37,8 +37,7 @@ const config = {
   presets: [
     [
       "classic",
-      /** @type {import('@docusaurus/preset-classic').Options} */
-      ({
+      {
         docs: {
           sidebarPath: "./sidebars.js",
         },
@@ -48,97 +47,95 @@ const config = {
         theme: {
           customCss: "./src/css/custom.css",
         },
-      }),
+      },
     ],
   ],
 
-  themeConfig:
-    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-    ({
-      // Replace with your project's social card
-      image: "img/docusaurus-social-card.jpg",
-      navbar: {
-        logo: {
-          alt: "My Site Logo",
-          src: "/img/logo.png",
-          srcDark: "/img/logo.png",
-        },
-        items: [
-          {
-            to: "/docs/category/quick-start",
-            label: "Quick Start",
-          },
-          {
-            to: "/docs/category/user-guides",
-            label: "User",
-          },
-          {
-            to: "/docs/category/developer-guides",
-            label: "Developer",
-          },
-          {
-            href: "https://github.com/hpcc-systems/Tombolo",
-            label: "GitHub",
-            position: "right",
-          },
-          // ADD THIS IF WE NEED VERSIONING IN THE FUTURE
-          // {
-          //   type: "docsVersionDropdown",
-          // },
-        ],
+  themeConfig: {
+    // Replace with your project's social card
+    image: "img/docusaurus-social-card.jpg",
+    navbar: {
+      logo: {
+        alt: "My Site Logo",
+        src: "/img/logo.png",
+        srcDark: "/img/logo.png",
       },
-      footer: {
-        style: "dark",
-        logo: {
-          alt: "My Site Logo",
-          src: "/img/logo-dark.webp",
-          srcDark: "/img/logo-dark.webp",
+      items: [
+        {
+          to: "/docs/category/quick-start",
+          label: "Quick Start",
         },
-        links: [
-          {
-            title: "Docs",
-            items: [
-              {
-                to: "/docs/category/quick-start",
-                label: "Quick Start",
-              },
-              {
-                to: "/docs/category/user-guides",
-                label: "User",
-              },
-              {
-                to: "/docs/category/developer-guides",
-                label: "Developer",
-              },
-            ],
-          },
-          {
-            title: "More",
-            items: [
-              {
-                label: "GitHub",
-                href: "https://github.com/hpcc-systems/Tombolo",
-              },
-            ],
-          },
+        {
+          to: "/docs/category/user-guides",
+          label: "User",
+        },
+        {
+          to: "/docs/category/developer-guides",
+          label: "Developer",
+        },
+        {
+          href: "https://github.com/hpcc-systems/Tombolo",
+          label: "GitHub",
+          position: "right",
+        },
+        // ADD THIS IF WE NEED VERSIONING IN THE FUTURE
+        // {
+        //   type: "docsVersionDropdown",
+        // },
+      ],
+    },
+    footer: {
+      style: "dark",
+      logo: {
+        alt: "My Site Logo",
+        src: "/img/logo-dark.webp",
+        srcDark: "/img/logo-dark.webp",
+      },
+      links: [
+        {
+          title: "Docs",
+          items: [
+            {
+              to: "/docs/category/quick-start",
+              label: "Quick Start",
+            },
+            {
+              to: "/docs/category/user-guides",
+              label: "User",
+            },
+            {
+              to: "/docs/category/developer-guides",
+              label: "Developer",
+            },
+          ],
+        },
+        {
+          title: "More",
+          items: [
+            {
+              label: "GitHub",
+              href: "https://github.com/hpcc-systems/Tombolo",
+            },
+          ],
+        },
 
-          {
-            title: "HPCC Systems",
-            items: [
-              {
-                label: "Site",
-                href: "https://hpccsystems.com/",
-              },
-            ],
-          },
-        ],
-        copyright: `Tombolo is an open source project maintained by HPCC Systems.`,
-      },
-      prism: {
-        theme: prismThemes.github,
-        darkTheme: prismThemes.dracula,
-      },
-    }),
+        {
+          title: "HPCC Systems",
+          items: [
+            {
+              label: "Site",
+              href: "https://hpccsystems.com/",
+            },
+          ],
+        },
+      ],
+      copyright: `Tombolo is an open source project maintained by HPCC Systems.`,
+    },
+    prism: {
+      theme: prismThemes.github,
+      darkTheme: prismThemes.dracula,
+    },
+  },
 };
 
 export default config;
