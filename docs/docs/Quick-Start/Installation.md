@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Intro
+# Installation
 
 Let's discover **Tombolo**.
 

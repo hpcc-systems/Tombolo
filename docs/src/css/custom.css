@@ -13,9 +13,7 @@
   --ifm-color-primary-light: #095d8c;
   --ifm-color-primary-lighter: #096292;
   --ifm-color-primary-lightest: #0a6ea5;
-  --ifm-color-highlight: #d65b78;
-  --ifm-color-highlight-hover: #bd425f;
-  --ifm-color-emphasis-300: #d65b78;
+
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
   --ifm-navbar-height: 4.5rem;
@@ -30,9 +28,7 @@
   --ifm-color-primary-light: #79b7db;
   --ifm-color-primary-lighter: #85bede;
   --ifm-color-primary-lightest: #aad1e8;
-  --ifm-color-highlight: #d65b78;
-  --ifm-color-highlight-hover: #bd425f;
-  --ifm-color-emphasis-300: #d65b78;
+
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
@@ -45,6 +41,10 @@ button:hover {
 }
 
 .navbar__logo {
-  height: 3rem;
+  height: 1.5rem;
   margin-right: 1.5rem;
+}
+
+.footer__logo {
+  height: 3rem;
 }

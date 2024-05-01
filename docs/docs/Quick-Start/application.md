@@ -1,8 +1,8 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
-# Applications
+# Create an Application
 
 Applications provide a way to seperate groups of data and settings inside of Tombolo. Each application has its own set of Assets, Dataflows, Jobs, Monitorings, and Notifications as well as administration settings. You can switch application instances at any time by utilizing the selector in the top left corner of the navigation bar, by the Tombolo logo.
 

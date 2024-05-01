@@ -16,7 +16,7 @@ const config = {
   url: "https://your-docusaurus-site.example.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/Tombolo-whole/",
+  baseUrl: "/Tombolo/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -41,17 +41,9 @@ const config = {
       ({
         docs: {
           sidebarPath: "./sidebars.js",
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
         },
         blog: {
           showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
         },
         theme: {
           customCss: "./src/css/custom.css",
@@ -66,38 +58,57 @@ const config = {
       // Replace with your project's social card
       image: "img/docusaurus-social-card.jpg",
       navbar: {
-        title: "Tombolo",
         logo: {
           alt: "My Site Logo",
-          src: "/img/logo-light.svg",
-          srcDark: "/img/logo-dark.webp",
+          src: "/img/logo.png",
+          srcDark: "/img/logo.png",
         },
         items: [
           {
-            type: "docSidebar",
-            sidebarId: "tutorialSidebar",
-            position: "left",
-            label: "Tutorial",
+            to: "/docs/category/quick-start",
+            label: "Quick Start",
+          },
+          {
+            to: "/docs/category/user-guides",
+            label: "User",
+          },
+          {
+            to: "/docs/category/developer-guides",
+            label: "Developer",
           },
           {
             href: "https://github.com/hpcc-systems/Tombolo",
             label: "GitHub",
             position: "right",
           },
-          {
-            type: "docsVersionDropdown",
-          },
+          // ADD THIS IF WE NEED VERSIONING IN THE FUTURE
+          // {
+          //   type: "docsVersionDropdown",
+          // },
         ],
       },
       footer: {
         style: "dark",
+        logo: {
+          alt: "My Site Logo",
+          src: "/img/logo-dark.webp",
+          srcDark: "/img/logo-dark.webp",
+        },
         links: [
           {
             title: "Docs",
             items: [
               {
-                label: "Tutorial",
-                to: "/docs/intro",
+                to: "/docs/category/quick-start",
+                label: "Quick Start",
+              },
+              {
+                to: "/docs/category/user-guides",
+                label: "User",
+              },
+              {
+                to: "/docs/category/developer-guides",
+                label: "Developer",
               },
             ],
           },
@@ -110,7 +121,18 @@ const config = {
               },
             ],
           },
+
+          {
+            title: "HPCC Systems",
+            items: [
+              {
+                label: "Site",
+                href: "https://hpccsystems.com/",
+              },
+            ],
+          },
         ],
+        copyright: `Tombolo is an open source project maintained by HPCC Systems.`,
       },
       prism: {
         theme: prismThemes.github,
