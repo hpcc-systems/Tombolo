@@ -19,6 +19,7 @@
     "d3-color": "^3.1.0",
     "dayjs": "^1.11.10",
     "downloadjs": "^1.4.7",
+    "ejs": "^3.1.10",
     "font-awesome": "^4.7.0",
     "http-proxy-middleware": "^1.0.6",
     "i18next": "^21.9.1",
