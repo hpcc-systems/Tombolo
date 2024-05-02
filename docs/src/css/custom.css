@@ -1,0 +1,50 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #08557f;
+  --ifm-color-primary-dark: #074c72;
+  --ifm-color-primary-darker: #07486c;
+  --ifm-color-primary-darkest: #063b59;
+  --ifm-color-primary-light: #095d8c;
+  --ifm-color-primary-lighter: #096292;
+  --ifm-color-primary-lightest: #0a6ea5;
+
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-navbar-height: 4.5rem;
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme="dark"] {
+  --ifm-color-primary: #61aad4;
+  --ifm-color-primary-dark: #499dcd;
+  --ifm-color-primary-darker: #3d96ca;
+  --ifm-color-primary-darkest: #2e7daa;
+  --ifm-color-primary-light: #79b7db;
+  --ifm-color-primary-lighter: #85bede;
+  --ifm-color-primary-lightest: #aad1e8;
+
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+button {
+  color: var(--ifm-color-highlight);
+}
+
+button:hover {
+  color: var(--ifm-color-highlight-hover);
+}
+
+.navbar__logo {
+  height: 1.5rem;
+  margin-right: 1.5rem;
+}
+
+.footer__logo {
+  height: 3rem;
+}

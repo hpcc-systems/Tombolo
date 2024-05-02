@@ -3,7 +3,7 @@ const logger = require("../../config/logger");
 const router = express.Router();
 const models = require("../../models");
 
-const jobScheduler = require("../../job-scheduler");
+const jobScheduler = require("../../jobSchedular/job-scheduler");
 const DirectoryMonitoring = models.directoryMonitoring;
 const validatorUtil = require("../../utils/validator");
 const { body, param, validationResult } = require("express-validator");
