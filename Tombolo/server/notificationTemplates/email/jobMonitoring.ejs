@@ -1,86 +1,169 @@
-<!-- Note : 
-  1. This is a sample email template, Use this template as a reference to create your own template.
-  2. All variables passed into the function should be defined. If any variable is undefined, it should default to a predetermined value.
-  3. All E-mail clients do not support external css file, Therefore we have to use inline css - 
-     although its repetitive and not a good practice. 
--->
 <!DOCTYPE html>
 <html>
-  <head>
-    <style>
-      .container {
-        margin: 10px;
-        padding: 20px;
-      }
 
-      .section {
-        margin-top: 15px;
-      }
-      .greeting {
-        margin-bottom: 10px;
-      }
-      .signature {
-        margin-top: 15px;
-      }
-      .footer {
-        margin-top: 30px;
-        font-size: 12px;
-        color: #999;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="section">
-        <div class="greeting">Hello,</div>
-        <%= typeof jobName !== 'undefined' ? jobName :"____" %> is in <%= typeof
-        state !== 'undefined' ? state : "____" %> state on <%= typeof
-        clusterName !== 'undefined' ? clusterName: "____" %>. Please take below
-        actions
-      </div>
+<head>
+  <style>
+    .main_body {
+      width: 100%
+    }
 
-      <!-- HTML Table -->
-      <div class="section">
-        <table
-          style="
-            border: 1px solid black;
-            border-collapse: collapse;
-            padding: 5px;
-          "
-        >
+    .section {
+      margin: 0 auto !important;
+      width: 800px;
+      border-collapse: collapse;
+      font-family: Arial;
+      font-size: 14px;
+    }
+
+    .section-table-td {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 5px;
+    }
+
+    .section-footer {
+      background: none;
+      text-align: center;
+      border-top: 1px solid #dddddd;
+      font-size: 12px;
+    }
+
+    .section-footer-td {
+      padding-top: 50px;
+      padding-bottom: 50px;
+      color: #808080;
+    }
+
+    .section-header {
+      background: none !important;
+    }
+
+    .section-header-td {
+      padding-top: 30px;
+      padding-bottom: 30px;
+    }
+  </style>
+</head>
+
+<table class="main_body">
+  <tbody>
+    <tr>
+      <td>
+        <table class="section section-header">
           <tbody>
             <tr>
-              <td style="border: 1px solid black">Row 1, Column 1</td>
-              <td style="border: 1px solid black">Row 1, Column 2</td>
-              <td style="border: 1px solid black">Row 1, Column 3</td>
-              <td style="border: 1px solid black">Row 1, Column 4</td>
-              <td style="border: 1px solid black">Row 1, Column 5</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid black">Row 2, Column 1</td>
-              <td style="border: 1px solid black">Row 2, Column 2</td>
-              <td style="border: 1px solid black">Row 2, Column 3</td>
-              <td style="border: 1px solid black">Row 2, Column 4</td>
-              <td style="border: 1px solid black">Row 2, Column 5</td>
+              <td class="section-header-td">
+                The job below is in Failed State. Please take necessary actions.
+              </td>
             </tr>
           </tbody>
         </table>
-      </div>
+        <table class="section section-table">
+          <tbody>
+            <tr class="section-table-td">
+              <td class="section-table-td">Monitoring Name</td>
+              <td class="section-table-td"><%= typeof monitoringName !== 'undefined' ? monitoringName : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Notification ID</td>
+              <td class="section-table-td"><%= typeof notificationId !== 'undefined' ? notificationId : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Domain</td>
+              <td class="section-table-td"><%= typeof domain !== 'undefined' ? domain : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Product</td>
+              <td class="section-table-td"><%= typeof product !== 'undefined' ? product : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Issue</td>
+              <td class="section-table-td"><%= typeof issue !== 'undefined' ? issue : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Host</td>
+              <td class="section-table-td"><%= typeof host !== 'undefined' ? host : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Job Name Filter</td>
+              <td class="section-table-td"><%= typeof jobNameFilter !== 'undefined' ? jobNameFilter : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Returned Job State</td>
+              <td class="section-table-td"><%= typeof returnedJobState !== 'undefined' ? returnedJobState : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Returned Job WUID</td>
+              <td class="section-table-td"><%= typeof returnedJobWuid !== 'undefined' ? returnedJobWuid : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Require Complete</td>
+              <td class="section-table-td"><%= typeof requireComplete !== 'undefined' ? requireComplete : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Expected Start</td>
+              <td class="section-table-td"><%= typeof expectedStart !== 'undefined' ? expectedStart : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Expected Completion</td>
+              <td class="section-table-td"><%= typeof expectedCompletion !== 'undefined' ? expectedCompletion : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Severity Code</td>
+              <td class="section-table-td"><%= typeof severity !== 'undefined' ? severity : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">First Logged</td>
+              <td class="section-table-td"><%= typeof firstLogged !== 'undefined' ? firstLogged : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Last Logged</td>
+              <td class="section-table-td"><%= typeof lastLogged !== 'undefined' ? lastLogged : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Region</td>
+              <td class="section-table-td"><%= typeof region !== 'undefined' ? region : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Business Unit</td>
+              <td class="section-table-td"><%= typeof businessUnit !== 'undefined' ? businessUnit : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Teams Channel</td>
+              <td class="section-table-td">
+                <% if (typeof teamsChannel !== 'undefined') { %>
+                <a href="<%= teamsChannel %>"><%= teamsChannel %></a>
+                <% } else { %>
+                NA
+                <% } %>
+              </td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Remedy</td>
+              <td class="section-table-td">
+                <% if (typeof remedy !== 'undefined') { %>
+                <div><%= remedy.instruction %></div>
+                <div class="list"><span class="label"> Primary: </span> <%= remedy.primaryContact %></div>
+                <div class="list"><span class="label">Secondary: </span> <%= remedy.secondaryContact %></div>
+                <% } else { %>
+                <p>NA</p>
+                <% } %>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="section section-footer">
+          <tbody>
+            <tr>
+              <td class="section-footer-td">
+                This notification is sent by Tombolo because your email address is included in the job monitoring notification recipient list. If you wish to stop receiving these alerts, please contact the Tombolo administrator.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-      <!-- Mentions -->
-      <div class="section">
-        [MENTIONS]
-        <at>email1@example.com</at>
-        <at>email2@example.com</at>
-        <at>email3@example.com</at>
-      </div>
-
-      <div class="signature">Tombolo</div>
-      <div class="footer">
-        You are receiving this message because you are part of the job
-        monitoring notification list. To stop getting these alerts please
-        contact the administrator.
-      </div>
-    </div>
-  </body>
 </html>
