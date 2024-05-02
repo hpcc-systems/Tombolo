@@ -1,0 +1,5 @@
+# Treat all text files without a CR (as we have Docker) 
+# https://docs.github.com/en/get-started/getting-started-with-git/configuring-git-to-handle-line-endings
+*.sh text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf

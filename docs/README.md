@@ -1,28 +1,41 @@
-# Tombolo
+# Website
 
-#### A Data Curation tool for an HPCC Systems Data Lake
+This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator. 
 
-![](/docs/images/tombolo/Slide1.png)
+### Installation
 
-- Tombolo is an asset tracker for a Data Lake.
-- Assets can include Files, Indexes, Jobs, Queries, Drop Zones.
+``` 
+$ yarn
+```
 
+### Local Development  
 
-## Files
-- Metadata around Files include ownership, deployment, layout metadata, scrub & validation rules and permissible purpose.
+```
+$ yarn start
+```
 
-##### Ownership  
-![](/docs/images/tombolo/Slide3.png)
-##### Layout
-![](/docs/images/tombolo/Slide4.png)
-##### Permissible Purpose
-![](/docs/images/tombolo/Slide5.png)
-##### Scrubs (File fixes and validation rules)
-![](/docs/images/tombolo/Slide6.png)
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
-- Most importantly Tombolo tracks relationships between Files that capture the lineage of a data asset. This information is important to data scientists and auditors to understand the evolution of data.
+### Build
 
-![](/docs/images/tombolo/Slide2.png)
+```
+$ yarn build
+```
 
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
 
+### Deployment
 
+Using SSH:
+
+```
+$ USE_SSH=true yarn deploy
+```
+
+Not using SSH:
+
+```
+$ GIT_USER=<Your GitHub username> yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
