@@ -28,6 +28,7 @@
     "jwt-decode": "^2.2.0",
     "moment": "^2.30.1",
     "papaparse": "^5.2.0",
+    "postcss": "^8.4.31",
     "re-resizable": "^6.9.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
