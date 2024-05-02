@@ -1,160 +1,113 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Select, Form, Button, message, Input } from 'antd';
-import { authHeader } from '../../../common/AuthHeader';
-import { monitoringStatusOptions } from '../common/monitoringStatusOptions.js';
-import { v4 as uuidv4 } from 'uuid';
-import { useForm } from 'antd/lib/form/Form';
+// Packages
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Button, Dropdown, Popconfirm, message } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, FilterOutlined } from '@ant-design/icons';
 
-const { TextArea } = Input;
+//Local imports
+import { deleteMultipleNotifications } from './notificationUtil';
 
-function BulkActions({ selectedNotificationsForBulkAction, setBulkActionModalVisibility, setUpdatedNotificationInDb }) {
-  const [selectedAction, setSelectedAction] = useState(null);
-  const [selectedStatus, setSelectedStatus] = useState(null);
-  const [footerBtn, setFooterBtn] = useState(null);
+const NotificationActions = ({
+  selectedNotificationsIds,
+  setNotifications,
+  setSelectedNotificationsIds,
+  setDisplayCreateNotificationModal,
+  setDisplayUpdateModal,
+  setFiltersVisible,
+  filtersVisible,
+}) => {
+  //Redux
+  const {
+    applicationReducer: { integrations, application },
+  } = useSelector((state) => state);
 
-  const ids = selectedNotificationsForBulkAction.map((notification) => notification.id);
-  const [actionForm] = useForm();
+  // Delete selected notifications
+  const deleteSelectedNotifications = async () => {
+    try {
+      await deleteMultipleNotifications(selectedNotificationsIds);
+      message.success('Selected notifications deleted successfully');
+      setSelectedNotificationsIds([]);
+      setNotifications((prevNotifications) =>
+        prevNotifications.filter((notification) => !selectedNotificationsIds.includes(notification.id))
+      );
+    } catch (err) {
+      message.error('Failed to delete selected notifications');
+    }
+  };
 
-  const actions = [
-    { label: `Delete notification${ids.length > 1 ? 's' : ''}`, value: 'delete' },
-    { label: `Update status${ids.length > 1 ? 'es' : ''}`, value: 'update' },
-    { label: `Update comment${ids.length > 1 ? 's' : ''}`, value: 'updateComment' },
+  // Open create notification modal
+  const openCreateNotificationModal = () => {
+    setDisplayCreateNotificationModal(true);
+  };
+
+  //Change filter visibility
+  const changeFilterVisibility = () => {
+    localStorage.setItem('filtersVisible', !filtersVisible);
+    setFiltersVisible((prev) => !prev);
+  };
+
+  // Menu for action button
+  const items = [
+    {
+      key: '3',
+      icon: <DeleteOutlined />,
+      label: (
+        <Popconfirm
+          title={`Are you sure you want to delete selected ${selectedNotificationsIds.length} notification${
+            selectedNotificationsIds.length > 1 ? 's' : ''
+          }?`}
+          okText="Yes"
+          okButtonProps={{ type: 'primary', danger: true }}
+          onConfirm={deleteSelectedNotifications}
+          cancelText="No">
+          Delete notifications
+        </Popconfirm>
+      ),
+      disabled: selectedNotificationsIds.length < 2,
+    },
+    {
+      key: '4',
+      icon: <FilterOutlined />,
+      label: filtersVisible ? 'Hide filters' : 'Show filters',
+      onClick: changeFilterVisibility,
+    },
   ];
 
-  //Change footer buttons when status or actions change
-  useEffect(() => {
-    const btn = updateFooterBtns(selectedAction);
-    setFooterBtn(btn);
-
-    // If single notification selected, populate comment
-    if (selectedNotificationsForBulkAction.length == 1) {
-      actionForm.setFieldsValue({ comment: selectedNotificationsForBulkAction[0].comment });
-    }
-  }, [selectedStatus, selectedAction]);
-
-  //Cancel btn
-  const cancelBtn = (
-    <Button
-      type="primary"
-      onClick={() => {
-        setBulkActionModalVisibility(false);
-      }}>
-      Cancel
-    </Button>
+  // If ASR is enabled, add ASR only options to action button  menu
+  const isAsrIntegrationEnabled = integrations.some(
+    (integration) => integration.name === 'ASR' && application.applicationId === integration.application_id
   );
 
-  // func to update footer btns
-  const updateFooterBtns = (selectedAction) => {
-    switch (selectedAction) {
-      case 'update':
-        if (selectedStatus) {
-          return (
-            <Button type="primary" onClick={updateNotifications}>{`Update ${ids.length} Notification${
-              ids.length > 1 ? 's' : ''
-            }`}</Button>
-          );
-        } else {
-          return cancelBtn;
-        }
-      case 'delete':
-        return (
-          <Button type="primary" onClick={deleteNotifications}>{`Delete ${ids.length} Notification${
-            ids.length > 1 ? 's' : ''
-          }`}</Button>
-        );
+  if (isAsrIntegrationEnabled) {
+    items.unshift(
+      {
+        key: '1',
+        icon: <PlusOutlined />,
+        label: 'Add new notification',
+        onClick: openCreateNotificationModal,
+      },
+      {
+        key: '2',
+        icon: <EditOutlined />,
+        label: 'Edit notifications',
+        disabled: selectedNotificationsIds.length < 2,
+        onClick: setDisplayUpdateModal,
+      }
+    );
+  }
 
-      case 'updateComment':
-        return (
-          <Button type="primary" onClick={updateNotifications}>{`Update ${ids.length} comment${
-            ids.length > 1 ? 's' : ''
-          }`}</Button>
-        );
-
-      default:
-        return cancelBtn;
-    }
-  };
-
-  //Update notifications
-  const updateNotifications = async () => {
-    const payload = actionForm.getFieldsValue();
-    console.log(payload);
-    try {
-      const config = {
-        method: 'PUT',
-        headers: authHeader(),
-        body: JSON.stringify({ notifications: ids, ...payload }),
-      };
-      const response = await fetch(`/api/notifications/read`, config);
-      if (!response.ok) throw new Error(response.statusText);
-      const data = await response.json();
-      if (!data.success) throw new Error('Failed to update');
-      message.success('Update successful');
-      setUpdatedNotificationInDb(uuidv4());
-      setBulkActionModalVisibility(false);
-    } catch (err) {
-      message.error('Failed to update');
-    }
-  };
-
-  //Delete notifications
-  const deleteNotifications = async () => {
-    try {
-      const config = {
-        method: 'DELETE',
-        headers: authHeader(),
-        body: JSON.stringify({ notifications: ids }),
-      };
-      const response = await fetch(`/api/notifications/read`, config);
-      if (!response.ok) throw new Error(response.statusText);
-
-      const data = await response.json();
-      if (!data.success) throw new Error('Failed to delete');
-      message.success('Successfully deleted');
-      setUpdatedNotificationInDb(uuidv4());
-      setBulkActionModalVisibility(false);
-    } catch (err) {
-      message.error('Failed to delete');
-    }
-  };
-
+  // Returning JSX
   return (
-    <Modal
-      open={true}
-      title="Actions"
-      footer={footerBtn}
-      destroyOnClose
-      onCancel={() => {
-        setBulkActionModalVisibility(false);
+    <Dropdown
+      menu={{
+        items,
       }}>
-      <Form layout="vertical" name="action" form={actionForm}>
-        <Form.Item label="Select Action">
-          <Select
-            options={actions}
-            onChange={(selection) => {
-              setSelectedAction(null);
-              setSelectedAction(selection);
-            }}
-          />
-        </Form.Item>
-        {selectedAction === 'update' ? (
-          <Form.Item label="New status" name="status">
-            <Select options={monitoringStatusOptions} onChange={(selection) => setSelectedStatus(selection)} />
-          </Form.Item>
-        ) : null}
-
-        {selectedAction === 'updateComment' ? (
-          <Form.Item
-            label="comment"
-            name="comment"
-            validateTrigger={['onChange', 'onBlur']}
-            rules={[{ max: 1500, message: 'Comment longer then 1500 characters' }]}>
-            <TextArea rows={3} />
-          </Form.Item>
-        ) : null}
-      </Form>
-    </Modal>
+      <Button type="primary">
+        Actions
+        <DownOutlined />
+      </Button>
+    </Dropdown>
   );
-}
+};
 
-export default BulkActions;
+export default NotificationActions;

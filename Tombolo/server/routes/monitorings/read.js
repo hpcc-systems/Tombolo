@@ -13,6 +13,9 @@ const MonitoringTypes = models.monitoring_types;
 // Route to get all monitoring types
 router.get("/", async(req, res) => {
     try{
+        console.log('------------------------------------------');
+        console.dir("GET ALL MONITORINGS")
+        console.log('------------------------------------------');
         const monitoringTypes = await MonitoringTypes.findAll();
         res.status(200).json(monitoringTypes);
     }catch(err){

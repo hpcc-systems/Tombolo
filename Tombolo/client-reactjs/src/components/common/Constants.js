@@ -10,6 +10,7 @@ export const Constants = {
   APPLICATION_DELETED: 'APPLICATION_DELETED',
 
   DATE_FORMAT_OPTIONS: { year: 'numeric', month: 'long', day: 'numeric' },
+  COMPACT_DATE_FORMAT_OPTIONS: { year: 'numeric', month: 'numeric', day: 'numeric' },
   TIME_FORMAT_OPTIONS: { hour: '2-digit', minute: '2-digit' },
 
   TOMBOLO_ADMIN: 'Tombolo_Admin',

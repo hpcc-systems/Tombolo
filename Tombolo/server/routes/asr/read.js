@@ -63,7 +63,7 @@ router.post("/domains/",[
   }
 );
 
-//Get All domains
+//Get All domains and associated monitoring types
 router.get("/domains/", async(req, res) => {
     try{
         // get all domains and the associated monitoring types by using includes
@@ -87,6 +87,21 @@ router.get("/domains/", async(req, res) => {
         res.status(500).json({message: 'Failed to fetch domains'});
     }
 });
+
+router.get("/domainsOnly/", async(req, res) => {
+  try{
+    // get all domains only
+    const domains = await Domains.findAll({
+      raw: true,
+    });
+
+    res.status(200).json(domains);
+  }catch(err){
+    logger.error(err);
+    res.status(500).json({message: 'Failed to fetch domains'});
+  }
+});
+
 
 // Update a domain
 router.patch(
@@ -224,7 +239,7 @@ async(req, res) => {
 }
 );
 
-// Get all products
+// Get all products and related domains
 router.get("/products/", async(req, res) => {
      try {
        // get all products and the associated domains
@@ -247,6 +262,21 @@ router.get("/products/", async(req, res) => {
        logger.error(err);
        res.status(500).json({ message: "Failed to fetch domains" });
      }
+});
+
+// Get all products only
+router.get("/productsOnly/", async(req, res) => {
+  try {
+    // get all products only
+    const products = await Products.findAll({
+      raw: true,
+    });
+
+    res.status(200).json(products);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ message: "Failed to fetch products" });
+  }
 });
 
 // Patch a product
@@ -385,8 +415,7 @@ router.get("/domainsForSpecificMonitoring/:monitoringTypeId",
 });
 
 
-
-// Route to get product category for specific domain and activity type
+// Route to get product category for specific domain 
 router.get(
   "/productCategoriesForSpecificDomain/:domainId",
   [

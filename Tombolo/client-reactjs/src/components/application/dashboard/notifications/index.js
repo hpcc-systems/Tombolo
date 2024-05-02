@@ -1,247 +1,295 @@
+// Package imports
 import React, { useEffect, useState } from 'react';
-import { Tabs, Empty, Spin, Button, Space } from 'antd';
 import { useSelector } from 'react-redux';
-import { message } from 'antd';
-import dayjs from 'dayjs';
+import { Tabs, Space, message } from 'antd';
 
-import NotificationsTable from './NotificationsTable';
-import NotificationCharts from '../common/charts/NotificationCharts';
-import Filters from './Filters';
-import MetricBoxes from '../common/charts/MetricBoxes';
-import '../common/css/index.css';
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
-import { camelToTitleCase } from '../../../common/CommonUtil';
-import ExportMenu from '../ExportMenu/ExportMenu';
-import BulkActions from './BulkActions';
+import SentNotificationsTable from './NotificationsTable';
+import NotificationDashboard from './NotificationDashboard';
+import NotificationActions from './BulkActions';
+import { getAllSentNotifications, getAllMonitorings, getAllDomains, getAllProductCategories } from './notificationUtil';
+import NotificationDetailsModal from './NotificationDetailsModal';
+import CreateNotificationModal from './CreateNotificationModal';
+import UpdateNotificationModal from './UpdateNotification';
+import NotificationTableFilters from './NotificationTableFilters';
+import NotificationsSearch from './NotificationsSearch';
+import NotificationDashboardFilter from './NotificationDashboardFilter';
+import './notifications.css';
 
-function Index() {
-  const [notifications, setNotifications] = useState([]);
-  const [loadingData, setLoadingData] = useState(true);
-  const [metrics, setMetrics] = useState([]);
-  const [stackBarData, setStackBarData] = useState([]);
-  const [donutData, setDonutData] = useState([]);
-  const [groupDataBy, setGroupDataBy] = useState('day');
-  const [selectedNotificationsForBulkAction, setSelectedNotificationForBulkAction] = useState([]);
-  const [bulkActionModalVisible, setBulkActionModalVisibility] = useState(false);
-  const [updatedNotificationInDb, setUpdatedNotificationInDb] = useState(null);
-
-  const {
-    application: { applicationId },
-  } = useSelector((item) => item.applicationReducer);
-
-  // Default filters to fetch notifications
-  const [defaultFilters, setDefaultFilters] = useState({
-    monitoringType: ['jobMonitoring', 'file', 'cluster', 'superFile', 'megaphone', 'orbitMonitoring'],
-    monitoringStatus: ['notified', 'triage', 'completed', 'inProgress'],
-    dateRange: [dayjs().subtract(15, 'days'), dayjs()],
-    applicationId,
+const Index = () => {
+  //Local states
+  const [sentNotifications, setSentNotifications] = useState([]);
+  const [monitorings, setMonitorings] = useState([]);
+  const [filteredNotification, setFilteredNotification] = useState([]);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [selectedNotificationsIds, setSelectedNotificationsIds] = useState([]);
+  const [displayNotificationDetailsModal, setDisplayNotificationDetailsModal] = useState(false);
+  const [displayCreateNotificationModal, setDisplayCreateNotificationModal] = useState(false);
+  const [displayUpdateModal, setDisplayUpdateModal] = useState(false);
+  const [filtersVisible, setFiltersVisible] = useState(true);
+  const [filters, setFilters] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [matchCount, setMatchCount] = useState(0);
+  const [activeTab, setActiveTabKey] = useState('1');
+  const [dashBoardFilter, setDashBoardFilter] = useState({
+    filterBy: 'days',
+    days: 14,
+    range: [null, null],
+    filterLabel: 'Last 14 days',
   });
+  const [domains, setDomains] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
 
+  //Redux
+  const { applicationId } = useSelector((state) => state.applicationReducer.application);
+
+  // When the component loads
   useEffect(() => {
-    const groupedData = notifications.map((notification) => {
-      const weekStart = dayjs(notification.createdAt).startOf('week').format('MM/DD/YY');
-      const weekEnd = dayjs(notification.createdAt).endOf('week').format('MM/DD/YY');
-      const updatedItem = { ...notification };
-      updatedItem.createdAt = `${weekStart} - ${weekEnd}`;
-      return updatedItem;
-    });
+    if (!applicationId) return;
 
-    setStackBarData(groupedData);
-  }, [groupDataBy]);
-
-  // When component loads create filter to load initial data
-  useEffect(() => {
-    if (applicationId) {
-      filterAndFetchNotifications(defaultFilters);
-    }
+    //Get all sent notifications
+    (async () => {
+      try {
+        const data = await getAllSentNotifications({ applicationId });
+        setSentNotifications(data);
+      } catch (error) {
+        message.error('Unable to fetch  notifications');
+      }
+    })();
   }, [applicationId]);
 
-  // When notification changes run
+  // When component loads check if filters visibility is set in local storage
   useEffect(() => {
-    if (notifications.length > 0) {
-      const newMetrics = []; // Pie and card data
-      const newStackBarData = []; // Stack bar Data
-      const newDonutData = []; // Donut data
+    const filtersVisibility = localStorage.getItem('filtersVisible');
+    if (filtersVisibility) {
+      setFiltersVisible(filtersVisibility === 'true');
+    }
 
-      newMetrics.push({ title: 'Total', description: notifications.length });
-
-      const notificationCountByStatus = {};
-      const notificationCountByMonitoringType = {};
-
-      //---------------------------------------
-      let data;
-      switch (groupDataBy) {
-        case 'week':
-          data = notifications.map((notification) => {
-            const weekStart = dayjs(notification.createdAt).startOf('week').format('MM/DD/YY');
-            const weekEnd = dayjs(notification.createdAt).endOf('week').format('MM/DD/YY');
-            const updatedItem = { ...notification };
-            updatedItem.createdAt = `${weekStart} - ${weekEnd}`;
-            return updatedItem;
-          });
-          break;
-
-        case 'month':
-          data = notifications.map((notification) => {
-            const updatedItem = { ...notification };
-            updatedItem.createdAt = dayjs(dayjs(notification.createdAt).utc(), 'MM/DD/YYYY').format('MMMM YYYY');
-            return updatedItem;
-          });
-          break;
-
-        case 'quarter':
-          data = notifications.map((notification) => {
-            const updatedItem = { ...notification };
-            const date = dayjs.utc(notification.createdAt);
-            const year = date.year();
-            const quarter = Math.ceil((date.month() + 1) / 3);
-            updatedItem.createdAt = `${year} - Q${quarter}`;
-            return updatedItem;
-          });
-          break;
-
-        case 'year':
-          data = notifications.map((notification) => {
-            const updatedItem = { ...notification };
-            const date = dayjs.utc(notification.createdAt);
-            const year = date.year();
-            updatedItem.createdAt = year;
-            return updatedItem;
-          });
-          break;
-
-        default:
-          data = notifications;
+    // Get all activity types [monitoring types]
+    (async () => {
+      try {
+        const response = await getAllMonitorings();
+        setMonitorings(response);
+      } catch (error) {
+        message.error('Failed to fetch activity types');
       }
-      //---------------------------------------
-      data.forEach((notification) => {
-        if (notificationCountByStatus[notification?.status]) {
-          const newCount = notificationCountByStatus[notification.status] + 1;
-          notificationCountByStatus[notification.status] = newCount;
-        } else {
-          notificationCountByStatus[notification?.status] = 1;
+    })();
+
+    // Get all domains
+    (async () => {
+      try {
+        const response = await getAllDomains();
+        setDomains(response);
+      } catch (error) {
+        message.error('Failed to fetch domains');
+      }
+    })();
+
+    // Get all product categories
+    (async () => {
+      try {
+        const response = await getAllProductCategories();
+        setProductCategories(response);
+      } catch (error) {
+        message.error('Failed to fetch product categories');
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    // Calculate the number of matched string instances
+    if (searchTerm) {
+      let instanceCount = 0;
+      sentNotifications.forEach((notification) => {
+        const searchableNotificationId = notification?.searchableNotificationId.toLocaleLowerCase();
+        const modifiedBy = JSON.stringify(notification?.updatedBy?.name || '').toLocaleLowerCase();
+        // const contacts = JSON.stringify(notification?.recipients || '').toLocaleLowerCase();
+
+        if (searchableNotificationId.includes(searchTerm)) {
+          instanceCount++;
         }
 
-        if (groupDataBy == 'day') {
-          newStackBarData.push({
-            x: notification.createdAt.split('T')[0],
-            y: 1,
-            z: camelToTitleCase(notification.status),
-          });
-        } else {
-          newStackBarData.push({ x: notification.createdAt, y: 1, z: camelToTitleCase(notification?.status) });
+        if (modifiedBy.includes(searchTerm)) {
+          instanceCount++;
         }
-
-        // notificationCountByMonitoringType;
-        const { monitoring_type } = notification;
-        if (notificationCountByMonitoringType[monitoring_type]) {
-          notificationCountByMonitoringType[monitoring_type] = notificationCountByMonitoringType[monitoring_type] + 1;
-        } else {
-          notificationCountByMonitoringType[monitoring_type] = 1;
-        }
+        // if (contacts.includes(searchTerm)) {
+        //   instanceCount++;
+        // }
       });
 
-      //---------------------------------------
-      for (let key in notificationCountByStatus) {
-        newMetrics.push({ title: camelToTitleCase(key), description: notificationCountByStatus[key] });
-      }
-      //---------------------------------------
-      for (let key in notificationCountByMonitoringType) {
-        newDonutData.push({ type: camelToTitleCase(key), value: notificationCountByMonitoringType?.[key] });
-      }
-      //---------------------------------------
-
-      setMetrics(newMetrics);
-      setStackBarData(newStackBarData);
-      setDonutData(newDonutData);
+      setMatchCount(instanceCount);
+    } else {
+      setMatchCount(0);
     }
-  }, [notifications, groupDataBy]);
 
-  //Get list of file monitorings that matches a filter
-  const filterAndFetchNotifications = async (filters) => {
-    try {
-      setLoadingData(true);
-      const payload = {
-        method: 'GET',
-        header: authHeader(),
-      };
-      const queryData = JSON.stringify({ ...filters, applicationId });
+    //When the filters change or sentNotifications change calculate the filtered notifications
+    const filteredNotifications = sentNotifications.filter((notification) => {
+      let isFiltered = true;
 
-      const response = await fetch(`/api/notifications/read/filteredNotifications?queryData=${queryData}`, payload);
-      if (!response.ok) handleError(response);
-      const data = await response.json();
-      setNotifications(data);
-    } catch (error) {
-      message.error('Failed to fetch notifications');
-    } finally {
-      setLoadingData(false);
-    }
+      const searchableNotificationId = notification?.searchableNotificationId.toLocaleLowerCase();
+      const modifiedBy = JSON.stringify(notification?.updatedBy?.name || '').toLocaleLowerCase();
+      const contacts = JSON.stringify(notification?.recipients || '').toLocaleLowerCase();
+
+      // if search term matches searchableNotificationId or  modifiedBy display only those if search term is null do not run this logic
+      if (searchTerm) {
+        isFiltered =
+          isFiltered &&
+          (searchableNotificationId.includes(searchTerm) ||
+            modifiedBy.includes(searchTerm) ||
+            contacts.includes(searchTerm));
+      }
+
+      //Filter by created date
+      if (filters.createdBetween) {
+        isFiltered =
+          isFiltered &&
+          new Date(notification.createdAt) >= filters.createdBetween[0] &&
+          new Date(notification.createdAt) <= filters.createdBetween[1];
+      }
+
+      //Filter by origin
+      if (filters.origin) {
+        isFiltered = isFiltered && notification.notificationOrigin === filters.origin;
+      }
+
+      //Filter by status
+      if (filters.status) {
+        isFiltered = isFiltered && notification.status === filters.status;
+      }
+
+      //Filter by domain
+      if (filters.domain) {
+        isFiltered = isFiltered && notification?.metaData?.asrSpecificMetaData?.domain === filters.domain;
+      }
+
+      //Filter by product
+      if (filters.product) {
+        isFiltered = isFiltered && notification?.metaData?.asrSpecificMetaData?.productCategory === filters.product;
+      }
+
+      return isFiltered;
+    });
+
+    setFilteredNotification(filteredNotifications);
+  }, [sentNotifications, filters, searchTerm]);
+
+  // Handle Tab change function
+  const handleTabChange = (key) => {
+    setActiveTabKey(key);
   };
 
   return (
     <div>
       <Tabs
-        type="card"
+        defaultActiveKey={activeTab}
+        className="notification-tabs"
+        onChange={handleTabChange}
         tabBarExtraContent={
-          <Space>
-            <Button
-              type="primary"
-              ghost
-              disabled={selectedNotificationsForBulkAction.length > 0 ? false : true}
-              onClick={() => {
-                setBulkActionModalVisibility(true);
-              }}>
-              Actions
-            </Button>
-            <ExportMenu />
-          </Space>
-        }>
-        <Tabs.TabPane key="1" tab="Notifications">
-          <NotificationsTable
-            applicationId={applicationId}
-            setSelectedNotificationForBulkAction={setSelectedNotificationForBulkAction}
-            updatedNotificationInDb={updatedNotificationInDb}
-          />
-          {bulkActionModalVisible ? (
-            <BulkActions
-              setBulkActionModalVisibility={setBulkActionModalVisibility}
-              selectedNotificationsForBulkAction={selectedNotificationsForBulkAction}
-              setUpdatedNotificationInDb={setUpdatedNotificationInDb}
-            />
-          ) : null}
-        </Tabs.TabPane>
-        <Tabs.TabPane key="2" tab="Dashboard">
-          <Filters
-            applicationId={applicationId}
-            setNotifications={setNotifications}
-            setLoadingData={setLoadingData}
-            groupDataBy={groupDataBy}
-            setGroupDataBy={setGroupDataBy}
-            setDefaultFilters={setDefaultFilters}
-          />
+          <Space size="small">
+            {activeTab === '1' && (
+              <>
+                <NotificationsSearch
+                  width="600px"
+                  setSearchTerm={setSearchTerm}
+                  matchCount={matchCount}
+                  searchTerm={searchTerm}
+                />
+                <NotificationActions
+                  selectedNotificationsIds={selectedNotificationsIds}
+                  setSelectedNotificationsIds={setSelectedNotificationsIds}
+                  setNotifications={setSentNotifications}
+                  setDisplayCreateNotificationModal={setDisplayCreateNotificationModal}
+                  setDisplayUpdateModal={setDisplayUpdateModal}
+                  setFiltersVisible={setFiltersVisible}
+                  filtersVisible={filtersVisible}
+                />
+              </>
+            )}
+            {activeTab === '2' && (
+              <NotificationDashboardFilter setDashBoardFilter={setDashBoardFilter} dashBoardFilter={dashBoardFilter} />
+            )}
 
-          {notifications.length > 0 ? (
-            <div className="notifications__charts">
-              <MetricBoxes metrics={metrics} notifications={notifications} />
-              <NotificationCharts
-                metrics={metrics}
-                stackBarData={stackBarData}
-                setGroupDataBy={setGroupDataBy}
-                groupDataBy={groupDataBy}
-                donutData={donutData}
-              />
-            </div>
-          ) : loadingData ? (
-            <div style={{ width: '82%', textAlign: 'center', marginTop: '50px' }}>
-              <Spin />
-            </div>
-          ) : (
-            <Empty style={{ marginTop: '150px', width: '82%' }} image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          )}
-        </Tabs.TabPane>
-      </Tabs>
+            {/* <ExportMenu /> */}
+          </Space>
+        }
+        items={[
+          {
+            label: 'Logged Notifications',
+            key: '1',
+            children: (
+              <>
+                {filtersVisible && (
+                  <NotificationTableFilters
+                    filters={filters}
+                    setFilters={setFilters}
+                    sentNotifications={sentNotifications}
+                    monitorings={monitorings}
+                    domains={domains}
+                    productCategories={productCategories}
+                  />
+                )}
+
+                <SentNotificationsTable
+                  sentNotifications={filteredNotification}
+                  setSentNotifications={setSentNotifications}
+                  selectedNotificationsIds={selectedNotificationsIds}
+                  setSelectedNotificationsIds={setSelectedNotificationsIds}
+                  setSelectedNotification={setSelectedNotification}
+                  setDisplayNotificationDetailsModal={setDisplayNotificationDetailsModal}
+                  setDisplayUpdateModal={setDisplayUpdateModal}
+                  filters={filters}
+                  searchTerm={searchTerm}
+                  monitorings={monitorings}
+                />
+              </>
+            ),
+          },
+          {
+            label: 'Dashboard',
+            key: '2',
+            children: (
+              <>
+                {/* When tab are switched, the canvas size of the charts change causing the charts to resize for unknown reason. As a result, the charts are 
+                not displayed properly. Re-rendering all the charts when user is in tab 2 and ejecting them when user moves to different tab as workaround to fix the issue. */}
+                {activeTab === '2' && (
+                  <NotificationDashboard
+                    sentNotifications={sentNotifications}
+                    dashBoardFilter={dashBoardFilter}
+                    monitorings={monitorings}
+                    productCategories={productCategories}
+                  />
+                )}
+              </>
+            ),
+          },
+        ]}></Tabs>
+
+      <NotificationDetailsModal
+        selectedNotification={selectedNotification}
+        displayNotificationDetailsModal={displayNotificationDetailsModal}
+        setDisplayNotificationDetailsModal={setDisplayNotificationDetailsModal}
+        setSelectedNotification={setSelectedNotification}
+        monitorings={monitorings}
+        domains={domains}
+        productCategories={productCategories}
+      />
+      <CreateNotificationModal
+        displayCreateNotificationModal={displayCreateNotificationModal}
+        setDisplayCreateNotificationModal={setDisplayCreateNotificationModal}
+        setNotifications={setSentNotifications}
+        setSentNotifications={setSentNotifications}
+        monitorings={monitorings}
+      />
+      <UpdateNotificationModal
+        displayUpdateModal={displayUpdateModal}
+        setDisplayUpdateModal={setDisplayUpdateModal}
+        selectedNotificationsIds={selectedNotificationsIds}
+        setSelectedNotification={setSelectedNotification}
+        setSentNotifications={setSentNotifications}
+        sentNotifications={sentNotifications}
+        setSelectedNotificationsIds={setSelectedNotificationsIds}
+      />
     </div>
   );
-}
+};
 
 export default Index;

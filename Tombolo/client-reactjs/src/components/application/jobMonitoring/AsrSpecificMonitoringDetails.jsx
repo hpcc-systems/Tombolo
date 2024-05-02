@@ -1,6 +1,6 @@
 // Desc: This file contains the form for ASR specific monitoring details
 import React from 'react';
-import { Form, Row, Col, Select } from 'antd';
+const { Form, Row, Col, Select } = require('antd');
 
 //Constants
 const { Option } = Select;
