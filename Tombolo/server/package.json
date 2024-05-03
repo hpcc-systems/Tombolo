@@ -25,6 +25,7 @@
     "express": "^4.17.3",
     "express-rate-limit": "^5.5.1",
     "express-validator": "^6.13.0",
+    "express-xss-sanitizer": "^1.2.0",
     "i": "^0.3.7",
     "jsonwebtoken": "^9.0.0",
     "kafkajs": "^1.15.0",

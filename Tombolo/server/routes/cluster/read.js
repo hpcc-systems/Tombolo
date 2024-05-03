@@ -95,17 +95,14 @@ router.get(
             break;
           }
 
-          if(item.date > end_date){
+          if (item.date > end_date) {
             break;
-          }
-
-          else{
-             filtered_data[key].unshift(item);
+          } else {
+            filtered_data[key].unshift(item);
           }
         }
       }
-            res.status(200).send(filtered_data );
-
+      res.status(200).send(filtered_data);
     } catch (err) {
       logger.error(err);
       res.status(503).json({
@@ -172,6 +169,11 @@ router.get(
         output = JSON.stringify(output);
       }
 
+      //verify type to avoid user input
+      if (type !== "JSON" && type !== "CSV") {
+        throw Error("Invalid file type");
+      }
+
       const filePath = path.join(
         __dirname,
         "..",
@@ -205,7 +207,12 @@ router.get(
 //method for removing file after download on front-end
 router.delete("/clusterStorageHistory/file/:type", async (req, res) => {
   try {
-    const { type, dataType } = req.params;
+    const { type } = req.params;
+
+    //verify type to avoid user input
+    if (type !== "JSON" && type !== "CSV") {
+      throw Error("Invalid file type");
+    }
     const filePath = path.join(
       __dirname,
       "..",
