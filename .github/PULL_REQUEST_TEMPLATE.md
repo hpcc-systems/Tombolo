@@ -1,38 +1,51 @@
 ## Description
 
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
+Please provide a summary of the changes made and the issue it resolves. Include relevant context and any dependencies required for this change.
 
 Fixes # (issue)
 
-## Type of change
+## Developer's Check List
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Vulnerability fix (package bumps or CodeQL adjustments to ensure code security)
-- [ ] This change requires a documentation update
+Please select at least one
 
-## Developer Checklist:
+- [ ] Bug fix (non-breaking change that resolves an issue)
+- [ ] Breaking change (enhancement, fix, or feature that alters existing functionality)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Vulnerability fix (package updates or CodeQL adjustments to enhance code security)
+- [ ] Documentation update (addition or update of documentation or helper text)
+- [ ] Other change (please explain in the comment section)
 
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have resolved any conflicts with the branch I am attempting to merge to. 
+#### Code Quality ( All must be selected )
+
+- [ ] I have commented on my code, especially in complex areas
+- [ ] I have resolved any conflicts with the target branch
+- [ ] My changes do not generate new warnings
+- [ ] I have checked my code for any misspellings
+- [ ] I have ensured my code does not duplicate existing code unnecessarily
+
+#### Documentation
+
+- [ ] No documentation changes were required
 - [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
-- [ ] I have checked my code and corrected any misspellings
-- [ ] I have ensured that my code does not unecessarily duplicate existing cod
-- [ ] I have ensured that all security checks have been passed
-- [ ] All input boxes have sensible character limits applied
-- [ ] Refreshing related pages puts page in a workable and sensible state  
 
+#### Security
+
+- [ ] I have confirmed that all security checks (e.g., CodeQL) have passed
+- [ ] No user input validation was required for this change
+- [ ] All user inputs have appropriate validation, including reasonable character limits
+
+#### UX
+
+- [ ] This change does not involve any updates to UX elements
+- [ ] Refreshing related pages results in a functional and logical state
+- [ ] Appropriate error messages are displayed when necessary
+
+#### Testing
+
+- [ ] Existing unit tests pass locally with my changes
+- [ ] No new unit tests were necessary for my changes
+- [ ] I have added new unit tests for my changes
 
 ## Reviewer Checklist
-- [ ] I have pulled the branch into my local environemtn and started the project succesfully
-- [ ] I have reviewed the code for proper comments and mispellings
-- [ ] All input boxes have sensible character limits applied
-- [ ] Refreshing related pages puts page in a workable and sensible state  
-- [ ] Submitting any relevant Forms relays proper messaging to user
-- [ ] I have checked that all security checks have been passed
-- [ ] I have checked that all backend routes have proper validation 
+
+- [ ] I have successfully pulled the branch into my local environment, initiated the project, and verified that all the checked items above have passed
