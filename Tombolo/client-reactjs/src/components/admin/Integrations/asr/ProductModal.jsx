@@ -93,6 +93,7 @@ const ProductModal = ({
     try {
       const payload = {
         ...values,
+        id: selectedProduct.id,
         updatedBy: { lastName: user.lastName, firstName: user.firstName, email: user.email },
       };
       await updateProduct({ id: selectedProduct.id, payload });
@@ -112,7 +113,6 @@ const ProductModal = ({
   // JSX
   return (
     <Modal
-      title="Add product"
       open={productModalOpen}
       okText={selectedProduct ? 'Update' : 'Save'}
       onOk={handleOk}

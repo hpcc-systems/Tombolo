@@ -98,7 +98,7 @@ const ProductsTab = ({ products, setSelectedProduct, setProductModalOpen, setPro
           <Popconfirm
             title="Are you sure you want to delete this product?"
             onConfirm={() => handleDelete(record)}
-            okButtonProps={{ type: 'danger' }}>
+            okButtonProps={{ type: 'primary', danger: true }}>
             <DeleteOutlined type="delete" />
           </Popconfirm>
         </Space>

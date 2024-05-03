@@ -254,6 +254,7 @@ router.get("/products/", async(req, res) => {
              attributes: ["id", "name"],
            },
          ],
+         order: [["createdAt", "DESC"]],
          raw: true,
        });
 
@@ -283,7 +284,7 @@ router.get("/productsOnly/", async(req, res) => {
 router.put(
   "/products/:id",
   [
-    param("id").notEmpty().isUUID().withMessage("ID must be a UUID"),
+    param("id").notEmpty().isInt().withMessage("ID must be an integer"),
     body("name").notEmpty().isString().withMessage("Product name is required"),
     body("shortCode").notEmpty().isString().withMessage("Short code is required"),
     body("tier").notEmpty().isInt().withMessage("Tier is required"),

@@ -42,7 +42,7 @@ const DomainsTab = ({ domains, setSelectedDomain, setDomainModalOpen }) => {
             title="Are you sure you want to delete this domain?"
             onConfirm={() => handleDelete(record)}
             okText="Yes"
-            okButtonProps={{ type: 'danger' }}>
+            okButtonProps={{ type: 'primary', danger: true }}>
             <DeleteOutlined style={{ color: 'var(--primary)' }} type="delete" />
           </Popconfirm>
         </Space>
