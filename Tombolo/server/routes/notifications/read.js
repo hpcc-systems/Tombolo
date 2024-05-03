@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+
 const fsPromises = require("fs/promises");
 const path = require("path");
 const { Op } = require("sequelize");
@@ -13,6 +14,8 @@ const monitoring_notifications = models.monitoring_notifications;
 const fileMonitoring = models.fileMonitoring;
 const clusterMonitoring = models.clusterMonitoring;
 const jobMonitoring = models.jobMonitoring;
+
+const ROOT = "tombolo/server";
 
 router.get("/filteredNotifications", async (req, res) => {
   try {
@@ -165,7 +168,13 @@ router.get(
 
         output = JSON.stringify(output);
       }
-      const filePath = path.join(
+
+      //verify type to avoid user input
+      if (type !== "JSON" && type !== "CSV") {
+        throw Error("Invalid file type");
+      }
+
+      let filePath = path.join(
         __dirname,
         "..",
         "..",
@@ -173,21 +182,13 @@ router.get(
         `Tombolo-Notifications.${type}`
       );
 
-      const createPromise = fsPromises.writeFile(
-        filePath,
-        output,
-        function (err) {
-          if (err) {
-            return console.log(err);
-          }
-        }
-      );
-
       await createPromise;
 
       res.status(200).download(filePath);
     } catch (error) {
-      res.status(500).json({ message: "Unable to get notifications" });
+      res
+        .status(500)
+        .json({ message: "Unable to get notifications: " + error });
     }
   }
 );
@@ -204,6 +205,12 @@ router.delete(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const type = req.params.type;
+
+      //verify type to avoid user input
+      if (type !== "JSON" && type !== "CSV") {
+        throw Error("Invalid file type");
+      }
+
       const filePath = path.join(
         __dirname,
         "..",

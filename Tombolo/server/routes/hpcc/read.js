@@ -264,18 +264,18 @@ router.post(
     try {
       const { keyword, clusterId, clusterType } = req.body;
       const wuService = await hpccUtil.getWorkunitsService(clusterId);
-        console.log("------ key word ----------------------------");
-        console.dir(keyword);
-        console.log("------------------------------------------");
+      console.log("------ key word ----------------------------");
+      console.dir(keyword);
+      console.log("------------------------------------------");
 
       //If no * add to start and end
       // If there are one or more astrik leave as they are
       let jobName = keyword.includes("*") ? keyword : `*${keyword}*`;
-      console.log('------ job name----------------------------');
-      console.dir(jobName)
-      console.log('------------------------------------------');
+      console.log("------ job name----------------------------");
+      console.dir(jobName);
+      console.log("------------------------------------------");
       const response = await wuService.WUQuery({
-        Jobname: jobName ,
+        Jobname: jobName,
         Cluster: clusterType,
       });
 
@@ -292,7 +292,7 @@ router.post(
                 cluster: wu.Cluster,
                 ExecuteCost: wu.CompileCost,
                 FileAccessCost: wu.FileAccessCost,
-                CompileCost: wu.CompileCost
+                CompileCost: wu.CompileCost,
               };
             return acc;
           },
@@ -996,53 +996,76 @@ router.get("/dropZoneDirectories", async (req, res) => {
   }
 });
 
-router.get('/getDropZones', [
-	query('clusterId')
-    .isUUID(4).withMessage('Invalid cluster id'),
-  ],  function (req, res) {
-	  const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
-	if (!errors.isEmpty()) {
-	  return res.status(422).json({ success: false, errors: errors.array() });
-	}
-	try {
-		 hpccUtil.getCluster(req.query.clusterId).then(function(cluster) {
-			let url = cluster.thor_host + ':' + cluster.thor_port +'/WsTopology/TpDropZoneQuery.json';
-			request.get({
-				url: url,
-				auth : hpccUtil.getClusterAuth(cluster)
-			}, function(err, response, body) {
-			if (err) {
-				console.log('ERROR - ', err);
-				return response.status(500).send('Error');
-			}
-			else {
-				let result = JSON.parse(body);
-				let dropZones = result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
-				let _dropZones = {};
-				let dropZoneDetails = []
-				dropZones.map(dropzone => {
-					dropZoneDetails.push({name : dropzone.Name, path: dropzone.Path, machines : dropzone.TpMachines.TpMachine})
-					_dropZones[dropzone.Name] = [];
-					lodash.flatMap(dropzone.TpMachines.TpMachine, (tpMachine) => {
-						_dropZones[dropzone.Name] = _dropZones[dropzone.Name].concat([tpMachine.Netaddress]);
-					})
-				});
+router.get(
+  "/getDropZones",
+  [query("clusterId").isUUID(4).withMessage("Invalid cluster id")],
+  function (req, res) {
+    const errors = validationResult(req).formatWith(
+      validatorUtil.errorFormatter
+    );
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ success: false, errors: errors.array() });
+    }
+    try {
+      hpccUtil
+        .getCluster(req.query.clusterId)
+        .then(function (cluster) {
+          let url =
+            cluster.thor_host +
+            ":" +
+            cluster.thor_port +
+            "/WsTopology/TpDropZoneQuery.json";
+          request.get(
+            {
+              url: url,
+              auth: hpccUtil.getClusterAuth(cluster),
+            },
+            function (err, response, body) {
+              if (err) {
+                console.log("ERROR - ", err);
+                return response.status(500).send("Error");
+              } else {
+                let result = JSON.parse(body);
+                let dropZones =
+                  result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
+                let _dropZones = {};
+                let dropZoneDetails = [];
+                dropZones.map((dropzone) => {
+                  dropZoneDetails.push({
+                    name: dropzone.Name,
+                    path: dropzone.Path,
+                    machines: dropzone.TpMachines.TpMachine,
+                  });
+                  _dropZones[dropzone.Name] = [];
+                  lodash.flatMap(dropzone.TpMachines.TpMachine, (tpMachine) => {
+                    _dropZones[dropzone.Name] = _dropZones[
+                      dropzone.Name
+                    ].concat([tpMachine.Netaddress]);
+                  });
+                });
 
-				if(req.query.for === "fileUpload" || req.query.for === "manualJobSerach" || req.query.for === "lzFileExplorer"){
-					res.json(dropZoneDetails)
-				}else{
-					res.json(_dropZones);
-				}
-			}
-			})
-		}).catch(err =>{
-			res.status(500).json({success: false, message : err});
-		})
-	} catch (err) {
-		console.log('err', err);
-		return res.status(500).send("Error occured while getting dropzones");
-	}
-})
+                if (
+                  req.query.for === "fileUpload" ||
+                  req.query.for === "manualJobSerach" ||
+                  req.query.for === "lzFileExplorer"
+                ) {
+                  res.json(dropZoneDetails);
+                } else {
+                  res.json(_dropZones);
+                }
+              }
+            }
+          );
+        })
+        .catch((err) => {
+          res.status(500).json({ success: false, message: err });
+        });
+    } catch (err) {
+      console.log("err", err);
+      return res.status(500).send("Error occured while getting dropzones");
+    }
+  }
+);
 
 router.get(
   "/dropZoneDirectoryDetails",
@@ -1313,6 +1336,19 @@ io.of("/landingZoneFileUpload").on("connection", (socket) => {
     destinationFolder = message.pathToAsset;
     machine = message.machine;
   });
+
+  //check if cluster exists in db before continuing to verify input
+  let clusterExists = Cluster.findOne({ where: { id: cluster.id } });
+  if (!clusterExists) {
+    socket.emit("file-upload-response", {
+      id: null,
+      fileName: null,
+      success: false,
+      message: "Cluster does not exist",
+    });
+    return;
+  }
+
   //Upload File
   const upload = async (cluster, destinationFolder, id, fileName) => {
     //Check file ext
