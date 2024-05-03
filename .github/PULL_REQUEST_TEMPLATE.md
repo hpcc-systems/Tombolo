@@ -4,7 +4,7 @@ Please provide a summary of the changes made and the issue it resolves. Include 
 
 Fixes # (issue)
 
-## Developer's Check List
+## Developer's Checklist
 
 Please select at least one
 
