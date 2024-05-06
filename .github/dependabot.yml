@@ -4,5 +4,6 @@ updates:
     directory: "/**"
     schedule:
       interval: "daily"
+    target-branch: "dev" # Dependabot will scan the 'dev' branch
     allow:
       - dependency-type: "production"
