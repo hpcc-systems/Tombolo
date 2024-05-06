@@ -217,7 +217,7 @@ const JobMonitoringTable = ({
       }}
       pagination={{ pageSize: 20 }}
       rowClassName={(record) =>
-        record.isActive ? 'jobMonitoringTable__active-monitoring' : 'jobMonitoringTable__inactive-monitoring'
+        record?.isActive ? 'jobMonitoringTable__active-monitoring' : 'jobMonitoringTable__inactive-monitoring'
       }
     />
   );
