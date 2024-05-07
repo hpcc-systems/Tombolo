@@ -18,7 +18,6 @@ const passport = require("passport");
 const cors = require("cors");
 const { sequelize: dbConnection } = require("./models");
 const logger = require("./config/logger");
-const { xss } = require("express-xss-sanitizer");
 
 /* BREE JOB SCHEDULER */
 const JobScheduler = require("./jobSchedular/job-scheduler");
@@ -44,7 +43,6 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json());
 app.use(limiter);
-app.use(xss());
 
 if (process.env.APP_AUTH_METHOD === "azure_ad") {
   const bearerStrategy = require("./utils/passportStrategies/passport-azure");
