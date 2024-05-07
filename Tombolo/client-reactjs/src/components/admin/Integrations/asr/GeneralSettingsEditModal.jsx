@@ -177,6 +177,9 @@ function GeneralSettingsEditModal({
                     if (!value.every((v) => isEmail(v))) {
                       return Promise.reject(new Error('One or more emails are invalid'));
                     }
+                    if (!value.every((v) => isEmail(v) && v.length <= 254)) {
+                      return Promise.reject(new Error('One or more  exceed the maximum length'));
+                    }
                     return Promise.resolve();
                   },
                 },
@@ -212,6 +215,9 @@ function GeneralSettingsEditModal({
                       }
                       if (!value.every((v) => isEmail(v))) {
                         return Promise.reject(new Error('Invalid email'));
+                      }
+                      if (!value.every((v) => isEmail(v) && v.length <= 254)) {
+                        return Promise.reject(new Error('One or more  exceed the maximum length'));
                       }
                       return Promise.resolve();
                     },
@@ -262,13 +268,15 @@ function GeneralSettingsEditModal({
                   required
                   name="nocEmailContacts"
                   label="NOC Notification Email"
-                  // validateTrigger={['onBlur']}
+                  validateTrigger={['onBlur']}
                   rules={[
                     { required: true, message: 'Email is required' },
                     {
                       validator: (_, value) => {
                         if (value && !isEmail(value)) {
-                          return Promise.reject(new Error('Email is invalid'));
+                          return Promise.reject(new Error('Invalid email'));
+                        } else if (value.length > 255) {
+                          return Promise.reject(new Error('Email provided exceeds the maximum length'));
                         }
                         return Promise.resolve();
                       },
