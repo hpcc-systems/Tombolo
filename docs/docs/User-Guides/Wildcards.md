@@ -16,16 +16,16 @@ specific pattern, or assets that are not currently in the cluster but could arri
 
 ## Asterisk
 
-Matches any number of characters. You can use the asterisk <span>(\*)</span> anywhere in a character string.
+Matches any number of characters. You can use the asterisk **(\*)** anywhere in a character string.
 
 Examples
 
 <ul>
     <li>
-        <span>wh*</span> - finds what, white, and why, but not awhile or watch.
+        **wh***- finds what, white, and why, but not awhile or watch.
     </li>
     <li>
-        <span>*wh*</span> - finds what, white, why and awhile, but not watch.
+        **\*wh\*** - finds what, white, why and awhile, but not watch.
     </li>
 </ul>
 
@@ -37,9 +37,9 @@ Examples
 
 <ul>
     <li>
-        b?ll- finds ball, bell, and bill, but not bal.
+        **b?ll** - finds ball, bell, and bill, but not bal.
     </li>
     <li>
-        Covid??Query- finds Covid19Query, Covid98Query, CovidABQuery, but not Covid1Query.
+        **Big??Query** - finds Big19Query, Big98Query, BigABQuery, but not Big1Query.
     </li>
 </ul>
