@@ -181,13 +181,16 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
           </TabPane>
         </Tabs>
       </Card>
-      <GeneralSettingsEditModal
-        displayGeneralSettingsEditModal={displayGeneralSettingsEditModal}
-        setDisplayGeneralSettingsEditModal={setDisplayGeneralSettingsEditModal}
-        integrationDetails={integrationDetails}
-        setIntegrationDetails={setIntegrationDetails}
-        teamsChannels={teamsChannels}
-      />
+
+      {displayGeneralSettingsEditModal && (
+        <GeneralSettingsEditModal
+          displayGeneralSettingsEditModal={displayGeneralSettingsEditModal}
+          setDisplayGeneralSettingsEditModal={setDisplayGeneralSettingsEditModal}
+          integrationDetails={integrationDetails}
+          setIntegrationDetails={setIntegrationDetails}
+          teamsChannels={teamsChannels}
+        />
+      )}
       <DomainModal
         domainModalOpen={domainModalOpen}
         setDomainModalOpen={setDomainModalOpen}
