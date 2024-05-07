@@ -1,5 +1,7 @@
 ---
-sidebar_position: 1
+sidebar_position: 6
+label: "User Interface"
+title: "User Interface"
 ---
 
 # User Interface

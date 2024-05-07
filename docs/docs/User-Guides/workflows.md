@@ -1,5 +1,7 @@
 ---
-sidebar_position: 2
+sidebar_position: 8
+label: "Workflows"
+title: "Workflows"
 ---
 
 # Workflows

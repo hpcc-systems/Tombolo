@@ -1,5 +1,7 @@
 ---
-sidebar_position: 6
+sidebar_position: 3
+label: "Github"
+title: "Github"
 ---
 
 # Connect to Github
