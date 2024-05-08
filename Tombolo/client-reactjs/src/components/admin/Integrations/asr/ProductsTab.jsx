@@ -5,10 +5,13 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 
 // Local imports
 import { getProducts, deleteProduct } from './asr-integration-util';
+import useWindowSize from '../../../../hooks/useWindowSize';
 
 const ProductsTab = ({ products, setSelectedProduct, setProductModalOpen, setProducts }) => {
   // Local State
   const [productData, setProductData] = useState([]);
+  const [pageSize, setPageSize] = useState(null);
+  const { inner } = useWindowSize();
 
   // Effect
   useEffect(() => {
@@ -48,6 +51,11 @@ const ProductsTab = ({ products, setSelectedProduct, setProductModalOpen, setPro
       setProductData(organizedData);
     }
   }, [products]);
+
+  // Effect
+  useEffect(() => {
+    setPageSize(Math.abs(Math.round(inner.height / 62)));
+  }, [inner]);
 
   // Product table columns
   const columns = [
@@ -98,7 +106,7 @@ const ProductsTab = ({ products, setSelectedProduct, setProductModalOpen, setPro
           <Popconfirm
             title="Are you sure you want to delete this product?"
             onConfirm={() => handleDelete(record)}
-            okButtonProps={{ type: 'danger' }}>
+            okButtonProps={{ type: 'primary', danger: true }}>
             <DeleteOutlined type="delete" />
           </Popconfirm>
         </Space>
@@ -127,7 +135,13 @@ const ProductsTab = ({ products, setSelectedProduct, setProductModalOpen, setPro
   // JSX
   return (
     <>
-      <Table columns={columns} dataSource={productData} size="small" rowKey={(record) => record.id} />
+      <Table
+        columns={columns}
+        dataSource={productData}
+        size="small"
+        rowKey={(record) => record.id}
+        pagination={{ pageSize }}
+      />
     </>
   );
 };
