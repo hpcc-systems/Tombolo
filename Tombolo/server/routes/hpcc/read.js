@@ -264,16 +264,10 @@ router.post(
     try {
       const { keyword, clusterId, clusterType } = req.body;
       const wuService = await hpccUtil.getWorkunitsService(clusterId);
-      console.log("------ key word ----------------------------");
-      console.dir(keyword);
-      console.log("------------------------------------------");
 
       //If no * add to start and end
       // If there are one or more astrik leave as they are
       let jobName = keyword.includes("*") ? keyword : `*${keyword}*`;
-      console.log("------ job name----------------------------");
-      console.dir(jobName);
-      console.log("------------------------------------------");
       const response = await wuService.WUQuery({
         Jobname: jobName,
         Cluster: clusterType,
