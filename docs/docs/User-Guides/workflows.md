@@ -1,7 +1,9 @@
 ---
-sidebar_position: 2
+sidebar_position: 8
+label: "Workflows"
+title: "Workflows"
 ---
 
 # Workflows
 
-Workflows allow users to efficiently interact with HPCC clusters to ensure your data tasks are handled appropriately.
+Our Workflows Guides are currently under construction and should be released soon.

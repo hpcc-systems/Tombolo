@@ -1,5 +1,7 @@
 ---
 sidebar_position: 5
+label: "MS Teams Webhooks"
+title: "MS Teams Webhooks"
 ---
 
 # Microsoft Teams Webhooks
