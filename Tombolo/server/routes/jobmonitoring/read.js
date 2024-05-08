@@ -39,7 +39,7 @@ router.post(
       // Validate the req.body
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log(errors);
+        logger.log(errors);
         return res.status(422).json({ errors: errors.array() });
       }
 

@@ -79,6 +79,7 @@ const ApproveRejectModal = ({
           prev[index] = {
             ...prev[index],
             approvalStatus: action,
+            isActive: action === 'rejected' ? false : prev[index].isActive,
             approvedBy: JSON.stringify({
               id: user.id,
               name: `${user.firstName} ${user.lastName}`,

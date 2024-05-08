@@ -80,7 +80,7 @@ function JobMonitoringTab({
             setSelectedDomain={setSelectedDomain}
           />
         )}
-        <Form form={form} layout="vertical" initialValues={{ isActive: false }}>
+        <Form form={form} layout="vertical">
           {/* Always render below fields*/}
 
           <Row gutter={16}>

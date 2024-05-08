@@ -87,7 +87,7 @@ function JobMonitoring() {
     if (editingData?.isEditing) {
       form.setFieldsValue(selectedMonitoring);
       setMonitoringScope(selectedMonitoring.monitoringScope);
-      setSelectedCluster(selectedMonitoring.clusterId);
+      setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring.clusterId));
 
       // Convert to dayjs objects
       let expectedCompletionTime = selectedMonitoring?.metaData?.expectedCompletionTime;
@@ -494,6 +494,8 @@ function JobMonitoring() {
       // If no error thrown set state with new data
       setJobMonitorings((prev) => {
         const updatedJobMonitorings = prev.map((jobMonitoring) => {
+          updatedData.approvalStatus = 'Pending';
+          updatedData.isActive = false;
           if (jobMonitoring.id === updatedData.id) {
             return updatedData;
           }

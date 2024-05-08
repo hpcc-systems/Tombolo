@@ -21,9 +21,9 @@ function AsrSpecificMonitoringDetails({ form, domains, productCategories, setSel
           <Form.Item label="Domain" name="domain" rules={[{ required: true, message: 'Please select an option' }]}>
             <Select onChange={(value) => handleDomainChange(value)} placeholder="Domain">
               {domains.length > 0 &&
-                domains.map((d) => {
+                domains.map((d, i) => {
                   return (
-                    <Option key={d.id} value={d.value}>
+                    <Option key={i} value={d.value}>
                       {d.label}
                     </Option>
                   );
@@ -37,8 +37,8 @@ function AsrSpecificMonitoringDetails({ form, domains, productCategories, setSel
             name="productCategory"
             rules={[{ required: true, message: 'Please select an option' }]}>
             <Select placeholder="Product Category">
-              {productCategories.map((c) => (
-                <Option key={c.id} value={c.value}>
+              {productCategories.map((c, i) => (
+                <Option key={i} value={c.value}>
                   {c.label}
                 </Option>
               ))}
@@ -54,8 +54,8 @@ function AsrSpecificMonitoringDetails({ form, domains, productCategories, setSel
             name="severity"
             rules={[{ required: true, message: 'Please select a severity level!' }]}>
             <Select placeholder="Select a severity level">
-              {severityLevels.map((level) => (
-                <Option key={level} value={level}>
+              {severityLevels.map((level, i) => (
+                <Option key={i} value={level}>
                   {level}
                 </Option>
               ))}

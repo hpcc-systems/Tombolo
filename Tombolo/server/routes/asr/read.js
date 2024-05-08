@@ -286,13 +286,19 @@ router.put(
   [
     param("id").notEmpty().isUUID().withMessage("ID must be an UUID"),
     body("name").notEmpty().isString().withMessage("Product name is required"),
-    body("shortCode").notEmpty().isString().withMessage("Short code is required"),
+    body("shortCode")
+      .notEmpty()
+      .isString()
+      .withMessage("Short code is required"),
     body("tier").notEmpty().isInt().withMessage("Tier is required"),
     param("domainIds")
       .optional()
       .isArray()
       .withMessage("Product ID must be an array of UUIDs"),
-    body("updatedBy").notEmpty().isObject().withMessage("Updated by must be an object"),
+    body("updatedBy")
+      .notEmpty()
+      .isObject()
+      .withMessage("Updated by must be an object"),
   ],
   async (req, res) => {
     try {
@@ -342,7 +348,9 @@ router.put(
       }
 
       const message =
-        response[0] === 0 ? "Product not found" : "Successfully updated product";
+        response[0] === 0
+          ? "Product not found"
+          : "Successfully updated product";
       res.status(200).json({ message });
     } catch (err) {
       logger.error(err);
