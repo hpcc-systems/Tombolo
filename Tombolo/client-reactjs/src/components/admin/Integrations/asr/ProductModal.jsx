@@ -142,7 +142,7 @@ const ProductModal = ({
           </Select>
         </Form.Item>
         <Form.Item label="Domain" name="domainIds">
-          <Select placeholder="Select Domain" mode="tags">
+          <Select placeholder="Select Domain" mode="multiple">
             {[...new Set(domains.map((domain) => domain.id))].map((domainId) => {
               const domain = domains.find((d) => d.id === domainId);
               return (
