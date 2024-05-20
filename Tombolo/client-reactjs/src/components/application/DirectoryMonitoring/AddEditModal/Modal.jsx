@@ -4,7 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 
 import BasicTab from './BasicTab.jsx';
 import MonitoringTab from './MonitoringTab.jsx';
-// import NotificationTab from './NotificationTab.jsx';
+import NotificationTab from './NotificationTab.jsx';
 
 const AddEditModal = ({
   displayAddEditModal,
@@ -88,9 +88,7 @@ const AddEditModal = ({
     {
       label: 'Notifications',
       id: 3,
-      component: () => (
-        /*<DirectoryMonitoringNotificationTab form={form} teamsHooks={teamsHooks} />*/ <>notification tab</>
-      ),
+      component: () => <NotificationTab form={form} teamsHooks={teamsHooks} />,
     },
   ];
 
