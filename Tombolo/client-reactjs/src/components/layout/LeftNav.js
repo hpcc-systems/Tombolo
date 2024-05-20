@@ -14,6 +14,7 @@ import {
   CloudServerOutlined,
   ApiOutlined,
   BellOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
@@ -128,12 +129,22 @@ class LeftNav extends Component {
             null
           ),
           getItem(
+            <Link to={'/' + applicationId + '/directoryMonitoring'}>
+              <span>
+                <FolderOutlined /> Directory
+              </span>
+            </Link>,
+            '4b',
+            null,
+            null
+          ),
+          getItem(
             <Link to={'/' + applicationId + '/clustermonitoring'}>
               <span>
                 <ClusterOutlined /> Cluster
               </span>
             </Link>,
-            '4b',
+            '4c',
             null,
             null
           ),
@@ -143,7 +154,7 @@ class LeftNav extends Component {
                 <ClockCircleOutlined /> Job
               </span>
             </Link>,
-            '4c',
+            '4d',
             null,
             null
           ),
@@ -153,7 +164,7 @@ class LeftNav extends Component {
                 <ContainerOutlined /> Superfiles
               </span>
             </Link>,
-            '4d',
+            '4e',
             null,
             null
           ),
@@ -164,7 +175,7 @@ class LeftNav extends Component {
                     <CloudServerOutlined /> Orbit
                   </span>
                 </Link>,
-                '4e',
+                '4f',
                 null,
                 null
               )
