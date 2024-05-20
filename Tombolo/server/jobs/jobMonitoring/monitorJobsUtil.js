@@ -1,6 +1,29 @@
+// Local imports
+const models = require("../../models");
+const asrProducts = models.asr_products;
+const asrDomains = models.asr_domains;
+
 //Package(s)
 const moment = require("moment");
 const cronParser = require("cron-parser");
+const { initial } = require("lodash");
+
+// All possible intermediate states
+const intermediateStates = [
+  "unknown",
+  "compiling",
+  "compiled",
+  "running",
+  "aborting",
+  "blocked",
+  "submitted",
+  "wait",
+  "scheduled",
+  "uploading_files",
+  "debug_paused",
+  "debug_running",
+  "paused",
+];
 
 // Convert date to string in the format YYYYMMDD
 const replaceDatePlaceholders = (formatWithWildcards) => {
@@ -54,21 +77,22 @@ const matchJobName = (jobNameFormat, jobName) => {
   return regex.test(jobName);
 };
 
-/* Match job name Tests ------------------------------------------------------------------------------
-const ans = matchJobName( "Launch <DATE> Current ","Launch 20240322 Current Carrier");
-const ans1 = matchJobName( "Launch <DATE,1,%Y_%m_%d> test ","Launch 2024_03_24 test ");
-const ans2 = matchJobName("Launch *", "Launch 20240323 test spray");
-const ans3 = matchJobName("* Launch *", "X Launch 20240323 test spray");
-const ans4 = matchJobName("* <DATE,1,%Y%d> *", "Launch 202423 test spray");
-const ans5 = matchJobName("Launch <DATE,1,%y%B> Current Carrier", "Launch 24March Current Carrier");
+// const ans = matchJobName( "Launch <DATE> Current ","Launch 20240515 Current ");
+// const ans1 = matchJobName( "Launch <DATE,1,%Y_%m_%d> test ","Launch 2024_03_24 test ");
+// const ans2 = matchJobName("Launch *", "Launch 20240323 test spray");
+// const ans3 = matchJobName("* Launch *", "X Launch 20240323 test spray");
+// const ans4 = matchJobName("* <DATE,1,%Y%d> *", "Launch 202423 test spray");
+// const ans5 = matchJobName("Launch <DATE,1,%y%B> Current Carrier", "Launch 24March Current Carrier");
+const ans6 = matchJobName("covid cases <DATE>", "covid cases 20240515");
 
-console.log("0 -", ans);
-console.log("1 -", ans1);
-console.log("2 -", ans2);
-console.log("3 -", ans3);
-console.log("4 -", ans4);
-console.log('5 -', ans5);
-------------------------------------------------------------------------------------------------------- */
+// console.log("0 -", ans);
+// console.log("1 -", ans1);
+// console.log("2 -", ans2);
+// console.log("3 -", ans3);
+// console.log("4 -", ans4);
+// console.log('5 -', ans5);
+console.log('6 -', ans6)
+
 
 // Find start and end time of a work unit since js communication library does not give that
 function findStartAndEndTimes(data) {
@@ -458,6 +482,141 @@ function calculateRunOrCompleteByTimes({schedule, timezone_offset, expectedStart
   }
 }
 
+// Function to get productCategory when productCategoryId is provided
+async function getProductCategory(productCategoryId) {
+  const product = await asrProducts.findOne({
+    where: { id: productCategoryId },
+  });
+  return product;
+}
+
+//Function  to get domain when domain ID is provided
+async function getDomain(domainId) {
+  const domain = await asrDomains.findOne({
+    where: { id: domainId },
+  });
+  return domain;
+}
+
+// Determine what template to use based on the monitoring metaData
+async function determineNotificationTemplateAndNotificationPrefix(metaData) {
+  const { asrSpecificMetaData = {}} = metaData;
+  const asr = Object.keys(asrSpecificMetaData).length > 0;
+  if (asr) {
+    const {shortCode} = await getProductCategory(asrSpecificMetaData.productCategory);
+    return {
+      templateName: "jobMonitoring_asr",
+      prefix: shortCode || "JM",
+    }; 
+  }else{
+    return {
+      templateName: "jobMonitoring",
+      prefix: "JM",
+    };
+  }
+}
+
+// Generate a human readable notification ID in the format of <TEXT>_YYYYMMDD_HHMMSS_MS
+const generateNotificationId = ({notificationPrefix, timezoneOffset}) => {
+  // Get current date and time in UTC
+  let now = new Date();
+
+  // Adjust for the timezone offset
+  now.setMinutes(now.getMinutes() + timezoneOffset);
+
+  // Get date components
+  let year = now.getUTCFullYear();
+  let month = String(now.getUTCMonth() + 1).padStart(2, "0"); // Months are 0-based
+  let day = String(now.getUTCDate()).padStart(2, "0");
+
+  // Get time components
+  let hours = String(now.getUTCHours()).padStart(2, "0");
+  let minutes = String(now.getUTCMinutes()).padStart(2, "0");
+  let seconds = String(now.getUTCSeconds()).padStart(2, "0");
+  let milliseconds = String(now.getUTCMilliseconds()).padStart(3, "0"); // Milliseconds can be 3 digits
+
+  // Construct the unique ID
+  let uniqueId = `${notificationPrefix}_${year}${month}${day}_${hours}${minutes}${seconds}_${milliseconds}`;
+
+  return uniqueId;
+};
+
+// Generate notification payload
+async function createNotificationPayload({
+  wu,
+  cluster,
+  type,
+}) {
+
+  let templateName = "jobMonitoring";
+  let prefix = "JM";
+
+  const asrRelatedNotificationPayload = {};
+
+  if(type === "msTeams"){
+    console.log("Teams ----- does it have asr stuff ", wu.asrSpecificMetaData)
+  }
+
+  if (wu.asrSpecificMetaData) {
+    const { name, shortCode } = await getProductCategory(
+      wu.asrSpecificMetaData.productCategory
+    );
+
+    templateName = "jobMonitoring_asr";
+    prefix = shortCode;
+    asrRelatedNotificationPayload.product = name;
+    
+    const domain = await getDomain(wu.asrSpecificMetaData.domain);
+    asrRelatedNotificationPayload.businessUnit = domain.name;
+
+    asrRelatedNotificationPayload.severity = wu.asrSpecificMetaData.severity;
+    asrRelatedNotificationPayload.region = "USA" // TODO - this should come from somewhere not hard coded
+
+    asrRelatedNotificationPayload.remedy = {
+      instruction: 'Please contact one of the following to facilitate issue resolution',
+      primaryContact: wu.primaryContacts[0],
+      secondaryContact: wu.secondaryContacts[0],
+    };
+
+  }
+  
+   const notificationId = generateNotificationId({
+     notificationPrefix: prefix,
+     timezoneOffset: cluster.timezone_offset,
+   });
+  const payload = {
+    notificationOrigin: "Job Monitoring",
+    originationId: wu.jobMonitoringId,
+    type: type,
+    deliveryType: "immediate",
+    templateName,
+    metaData: {
+      ...asrRelatedNotificationPayload,
+      ...wu,
+      notificationId,
+      requireComplete: wu.requireComplete ? "Yes" : "No",
+      Jobname: wu.Jobname,
+      Wuid: wu.Wuid,
+      expectedStart: new Date(wu.expectedStartTime).toLocaleString(),
+      expectedCompletion: new Date(wu.expectedCompletionTime).toLocaleString(),
+      discoveredAt: findLocalDateTimeAtCluster(
+        cluster.timezone_offset
+      ).toLocaleString(),
+      host: cluster.thor_host,
+      subject: `Tombolo Job Monitoring Alert`,
+      mainRecipients: [
+        ...wu.primaryContacts,
+        ...(wu.secondaryContacts || []),
+        ...(wu.notifyContacts || []),
+      ],
+      cc: [],
+    },
+    wuId: wu.Wuid,
+  };
+
+  return payload;
+}
+
 module.exports = {
   matchJobName,
   findStartAndEndTimes,
@@ -466,4 +625,8 @@ module.exports = {
   wuStartTimeWhenLastScanUnavailable,
   findLocalDateTimeAtCluster,
   checkIfCurrentTimeIsWithinRunWindow,
+  determineNotificationTemplateAndNotificationPrefix,
+  intermediateStates,
+  generateNotificationId,
+  createNotificationPayload,
 };

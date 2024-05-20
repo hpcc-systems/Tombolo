@@ -60,7 +60,7 @@ function SentNotificationsTable({
             <span
               style={{
                 background:
-                  searchTerm.length > 0 && searchableNotificationId.toLocaleLowerCase().includes(searchTerm)
+                  searchTerm.length > 0 && searchableNotificationId?.toLocaleLowerCase().includes(searchTerm)
                     ? 'var(--highlight)'
                     : 'transparent',
               }}>
@@ -140,7 +140,7 @@ function SentNotificationsTable({
             <span
               style={{
                 background:
-                  searchTerm.length > 0 && updatedBy?.name.toLocaleLowerCase().includes(searchTerm)
+                  searchTerm.length > 0 && updatedBy?.name?.toLocaleLowerCase().includes(searchTerm)
                     ? 'var(--highlight)'
                     : 'transparent',
               }}>

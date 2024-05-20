@@ -42,6 +42,13 @@
       padding-top: 30px;
       padding-bottom: 30px;
     }
+
+    .section-note-td {
+      padding-top: 5px;
+      padding-bottom: 5px;
+      font-size: 12px;
+      color: #808080;
+    }
   </style>
 </head>
 
@@ -53,7 +60,7 @@
           <tbody>
             <tr>
               <td class="section-header-td">
-                The job below is in Failed State. Please take necessary actions.
+                <%= typeof notificationDescription !== 'undefined' ? notificationDescription : "" %>
               </td>
             </tr>
           </tbody>
@@ -61,24 +68,12 @@
         <table class="section section-table">
           <tbody>
             <tr class="section-table-td">
-              <td class="section-table-td">Monitoring Name</td>
-              <td class="section-table-td"><%= typeof monitoringName !== 'undefined' ? monitoringName : "NA" %></td>
-            </tr>
-            <tr class="section-table-td">
               <td class="section-table-td">Notification ID</td>
               <td class="section-table-td"><%= typeof notificationId !== 'undefined' ? notificationId : "NA" %></td>
             </tr>
             <tr class="section-table-td">
-              <td class="section-table-td">Domain</td>
-              <td class="section-table-td"><%= typeof domain !== 'undefined' ? domain : "NA" %></td>
-            </tr>
-            <tr class="section-table-td">
-              <td class="section-table-td">Product</td>
-              <td class="section-table-td"><%= typeof product !== 'undefined' ? product : "NA" %></td>
-            </tr>
-            <tr class="section-table-td">
-              <td class="section-table-td">Issue</td>
-              <td class="section-table-td"><%= typeof issue !== 'undefined' ? issue : "NA" %></td>
+              <td class="section-table-td">Monitoring Name</td>
+              <td class="section-table-td"><%= typeof monitoringName !== 'undefined' ? monitoringName : "NA" %></td>
             </tr>
             <tr class="section-table-td">
               <td class="section-table-td">Host</td>
@@ -89,65 +84,40 @@
               <td class="section-table-td"><%= typeof jobNameFilter !== 'undefined' ? jobNameFilter : "NA" %></td>
             </tr>
             <tr class="section-table-td">
+              <td class="section-table-td">Returned Job Name</td>
+              <td class="section-table-td"><%= typeof Jobname !== 'undefined' ? Jobname : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
               <td class="section-table-td">Returned Job State</td>
-              <td class="section-table-td"><%= typeof returnedJobState !== 'undefined' ? returnedJobState : "NA" %></td>
+              <td class="section-table-td"><%= typeof State !== 'undefined' ? State : "NA" %></td>
             </tr>
             <tr class="section-table-td">
               <td class="section-table-td">Returned Job WUID</td>
-              <td class="section-table-td"><%= typeof returnedJobWuid !== 'undefined' ? returnedJobWuid : "NA" %></td>
+              <td class="section-table-td"><%= typeof Wuid !== 'undefined' ? Wuid : "NA" %></td>
             </tr>
             <tr class="section-table-td">
               <td class="section-table-td">Require Complete</td>
-              <td class="section-table-td"><%= typeof requireComplete !== 'undefined' ? requireComplete : "NA" %></td>
+              <td class="section-table-td"><%= typeof requireComplete !== 'undefined' ? requireComplete  : "NA" %></td>
             </tr>
             <tr class="section-table-td">
               <td class="section-table-td">Expected Start</td>
-              <td class="section-table-td"><%= typeof expectedStart !== 'undefined' ? expectedStart : "NA" %></td>
+              <td class="section-table-td"><%= typeof expectedStartTime !== 'undefined' ? expectedStartTime : "NA" %></td>
             </tr>
             <tr class="section-table-td">
               <td class="section-table-td">Expected Completion</td>
-              <td class="section-table-td"><%= typeof expectedCompletion !== 'undefined' ? expectedCompletion : "NA" %></td>
-            </tr>
-            <tr class="section-table-td">
-              <td class="section-table-td">Severity Code</td>
-              <td class="section-table-td"><%= typeof severity !== 'undefined' ? severity : "NA" %></td>
+              <td class="section-table-td"><%= typeof expectedCompletionTime !== 'undefined' ? expectedCompletionTime : "NA" %></td>
             </tr>
             <tr class="section-table-td">
               <td class="section-table-td">First Logged</td>
-              <td class="section-table-td"><%= typeof firstLogged !== 'undefined' ? firstLogged : "NA" %></td>
+              <td class="section-table-td"><%= typeof discoveredAt !== 'undefined' ? discoveredAt : "NA" %></td>
             </tr>
-            <tr class="section-table-td">
-              <td class="section-table-td">Last Logged</td>
-              <td class="section-table-td"><%= typeof lastLogged !== 'undefined' ? lastLogged : "NA" %></td>
-            </tr>
-            <tr class="section-table-td">
-              <td class="section-table-td">Region</td>
-              <td class="section-table-td"><%= typeof region !== 'undefined' ? region : "NA" %></td>
-            </tr>
-            <tr class="section-table-td">
-              <td class="section-table-td">Business Unit</td>
-              <td class="section-table-td"><%= typeof businessUnit !== 'undefined' ? businessUnit : "NA" %></td>
-            </tr>
-            <tr class="section-table-td">
-              <td class="section-table-td">Teams Channel</td>
-              <td class="section-table-td">
-                <% if (typeof teamsChannel !== 'undefined') { %>
-                <a href="<%= teamsChannel %>"><%= teamsChannel %></a>
-                <% } else { %>
-                NA
-                <% } %>
-              </td>
-            </tr>
-            <tr class="section-table-td">
-              <td class="section-table-td">Remedy</td>
-              <td class="section-table-td">
-                <% if (typeof remedy !== 'undefined') { %>
-                <div><%= remedy.instruction %></div>
-                <div class="list"><span class="label"> Primary: </span> <%= remedy.primaryContact %></div>
-                <div class="list"><span class="label">Secondary: </span> <%= remedy.secondaryContact %></div>
-                <% } else { %>
-                <p>NA</p>
-                <% } %>
+          </tbody>
+        </table>
+        <table class="section">
+          <tbody>
+            <tr>
+              <td class="section-note-td">
+                Note: The timestamps displayed in this notification reflect the time zone of the running cluster.
               </td>
             </tr>
           </tbody>
@@ -156,7 +126,7 @@
           <tbody>
             <tr>
               <td class="section-footer-td">
-                This notification is sent by Tombolo because your email address is included in the job monitoring notification recipient list. If you wish to stop receiving these alerts, please contact the Tombolo administrator.
+                This notification is sent by Tombolo because your email address is included in the job monitoring notification recipient list. If you wish to stop receiving these alerts, please contact your Tombolo administrator.
               </td>
             </tr>
           </tbody>

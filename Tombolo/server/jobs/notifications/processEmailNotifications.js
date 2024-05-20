@@ -1,22 +1,14 @@
 // Packages
 const { Op } = require("sequelize");
-const path = require("path");
 
 //Local Imports
 const models = require("../../models");
 const logger = require("../../config/logger");
-const {
-  sendEmail,
-  retryOptions: { maxRetries, retryDelays },
-} = require("../../config/emailConfig");
-const {
-  renderEmailBody,
-  updateNotificationQueueOnError,
-} = require("./notificationsHelperFunctions");
-const { error } = require("console");
+const { sendEmail, retryOptions: { maxRetries },} = require("../../config/emailConfig");
+const {renderEmailBody, updateNotificationQueueOnError} = require("./notificationsHelperFunctions");
 
 const NotificationQueue = models.notification_queue;
-const Notification = models.monitoring_notifications;
+const SentNotification = models.sent_notifications;
 
 (async () => {
   try {
@@ -25,8 +17,8 @@ const Notification = models.monitoring_notifications;
     const notificationsToBeSent = []; // Notification that meets the criteria to be sent
     const successfulDelivery = [];
 
+    // Get notifications with attempt count less than maxRetries and type email
     try {
-      // Get notifications
       notifications = await NotificationQueue.findAll({
         where: {
           type: "email",
@@ -39,19 +31,10 @@ const Notification = models.monitoring_notifications;
       return;
     }
 
+    // Sort out notifications that meet the criteria to be sent
     for (let notification of notifications) {
-      const {
-        id,
-        notificationOrigin,
-        deliveryType,
-        attemptCount,
-        templateName,
-        metaData,
-        reTryAfter,
-        lastScanned,
-        deliveryTime,
-      } = notification;
-      const emailDetails = metaData?.emailDetails;
+      const { deliveryType, reTryAfter, lastScanned, deliveryTime } =
+        notification;
 
       // Check if it meets the criteria to be sent
       if (
@@ -61,74 +44,70 @@ const Notification = models.monitoring_notifications;
           deliveryTime < now &&
           deliveryTime > lastScanned)
       ) {
-        try {
-          //render the email body
-          const emailBody = renderEmailBody({
-            templateName,
-            emailData: emailDetails.data,
-          });
-
-          //Common email details
-          const commonEmailDetails = {
-            receiver: emailDetails?.mainRecipients?.join(",") || "",
-            cc: emailDetails?.cc?.join(",") || "",
-            subject: emailDetails.subject,
-            notificationId: id,
-            attemptCount,
-          };
-
-          // Notification origin is manual - send the email as it is
-          if (notificationOrigin === "manual") {
-            notificationsToBeSent.push({
-              ...commonEmailDetails,
-              plainTextBody: emailDetails.body,
-            });
-          } else {
-            // If notification origin is not manual, match the template
-            notificationsToBeSent.push({
-              ...commonEmailDetails,
-              htmlBody: emailBody,
-            });
-          }
-        } catch (error) {
-          logger.error(error);
-          await updateNotificationQueueOnError({
-            notificationId: notification.id,
-            attemptCount,
-            notification,
-            error,
-          });
-        }
+        notificationsToBeSent.push(notification);
       }
     }
 
-    // If there are notifications to be sent
+    // If there are no notifications to be sent - return
+    if (notificationsToBeSent.length === 0) {
+      return;
+    }
+
+    // If there are notifications to be sent - send the emails
     for (let notification of notificationsToBeSent) {
       const {
-        receiver,
-        cc,
-        subject,
-        plainTextBody,
-        htmlBody,
-        notificationId,
+        metaData,
         attemptCount,
+        id: notificationQueueId,
+        notificationOrigin,
+        templateName,
       } = notification;
 
       try {
-        await sendEmail({ receiver, cc, subject, plainTextBody, htmlBody });
-        successfulDelivery.push(notificationId);
+        //Common email details applicable for all emails
+        const commonEmailDetails = {
+          receiver: metaData?.mainRecipients?.join(",") || "",
+          cc: metaData?.cc?.join(",") || "",
+          subject: metaData.subject,
+        };
 
-        // If email is sent successfully , delete the notification from the queue
-        await NotificationQueue.destroy({
-          where: { id: notificationId },
-        });
+        //E-mail payload
+        let emailPayload;
+
+        // Notification origin is manual - send the email as it is
+        if (notificationOrigin === "manual") {
+          emailPayload = {
+            notificationQueueId,
+            ...commonEmailDetails,
+            ...metaData,
+            plainTextBody: metaData.body,
+          };
+        } else {
+          // If notification origin is not manual, render email body with template
+          const emailBody = renderEmailBody({
+            templateName,
+            emailData: metaData,
+          });
+          emailPayload = {
+            notificationQueueId,
+            ...commonEmailDetails,
+            ...metaData,
+            htmlBody: emailBody,
+          };
+
+          // Send email
+          await sendEmail({ ...emailPayload });
+
+          // Assume success - if no error is thrown
+          successfulDelivery.push(emailPayload);
+        }
       } catch (error) {
-        // If email failed to send, update the notification queue
+        // If sending fails update the notification queue
         logger.error(error);
 
         // Update notification queue
         await updateNotificationQueueOnError({
-          notificationId,
+          notificationId: notificationQueueId,
           attemptCount,
           notification,
           error,
@@ -143,15 +122,43 @@ const Notification = models.monitoring_notifications;
       logger.error(error);
     }
 
-    //Update notifications table
-    //TODO - Notifications table should be refactored to accommodate ASR needs
+    //Update sent notifications table
     try {
-      await Notification.bulkCreate(
-        successfulDelivery.map((id) => ({ notificationQueueId: id }))
-      );
+      // clean successfully delivered notifications
+      for(let notification of successfulDelivery) {
+        const notificationCopy = { ...notification };
+        delete notificationCopy.htmlBody;
+        delete notificationCopy.plainTextBody;
+        delete notificationCopy.notificationQueueId;
+
+        notificationCopy.searchableNotificationId = notification.notificationId;
+        notificationCopy.notificationChannel= "email",
+        notificationCopy.notificationTitle= notification.subject,
+        notificationCopy.applicationId= notification.applicationId,
+        notificationCopy.status= "Pending Review",
+        notificationCopy.createdBy= { name:  "System" },
+        notificationCopy.createdAt= now,
+        notificationCopy.updatedAt= now,
+
+        await SentNotification.create(notificationCopy);
+      }
     } catch (error) {
       logger.error(error);
     }
+
+    // Bulk delete the sent notifications form notification queue
+    try {
+      const successfulDeliveryIds = successfulDelivery.map(
+        ({ notificationQueueId }) => notificationQueueId
+      );
+
+      await NotificationQueue.destroy({
+        where: { id: successfulDeliveryIds },
+      });
+    } catch (err) {
+      logger.error(err);
+    }
+    
   } catch (error) {
     logger.error(error);
   }
@@ -165,3 +172,4 @@ const Notification = models.monitoring_notifications;
 5. Gotcha - If you console.log new Date() in node.js environment, It will log UTC time in ISO 8601 format. 
    It is because node.js internally calls .toISOString() on the date object before logging it.
 */
+
