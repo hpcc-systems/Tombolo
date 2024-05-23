@@ -1,0 +1,24 @@
+name: Docker Compose
+
+on:
+  push:
+    branches: [yadhap/cicd]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AZURE_VM_IP }}
+          username: ${{ secrets.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          script: |
+            cd /Tombolo/Tombolo
+            git stash
+            git pull
+            docker-compose down
+            docker-compose build
+            docker-compose up -d
