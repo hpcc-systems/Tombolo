@@ -16,7 +16,7 @@ jobs:
 
       - name: Navigate to project directory and deploy
         run: |
-          cd ~/..
+          cd ~
           pwd
           ls
           cd Tombolo/Tombolo
