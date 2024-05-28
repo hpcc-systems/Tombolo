@@ -35,6 +35,8 @@ router.post(
         return res.status(422).json({ errors: errors.array() });
       }
       const newMonitoring = req.body;
+      //always place new monitoring in pending status
+      newMonitoring.approvalStatus = "Pending";
       const directoryMonitoring = await DirectoryMonitoring.create(
         newMonitoring
       );
@@ -87,8 +89,16 @@ router.put(
           .status(404)
           .json({ error: "Directory monitoring entry not found" });
       }
+
+      let approvalStatus = "";
+      if (req.body.approved) {
+        approvalStatus = "Approved";
+      } else {
+        approvalStatus = "Pending";
+      }
       const updatedMonitoring = await directoryMonitoring.update({
         approved: req.body.approved,
+        approvalStatus: approvalStatus,
         approvalNote: req.body.approvalNote,
         approvedBy: req.body.approvedBy,
         approvedAt: req.body.approvedAt,

@@ -32,15 +32,11 @@ const AddEditModal = ({
   setSelectedCluster,
   activeTab,
   setActiveTab,
+  directory,
+  setDirectory,
 }) => {
   // Keep track of visited tabs, some form fields are loaded only when tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
-
-  //unusued stuff
-  console.log(setSelectedCluster);
-  console.log(directoryMonitorings);
-  console.log(clusters);
-  console.log(teamsHooks);
 
   // Handle tab change
   const handleTabChange = (key) => {
@@ -62,6 +58,8 @@ const AddEditModal = ({
           isEditing={isEditing}
           selectedCluster={selectedCluster}
           setSelectedCluster={setSelectedCluster}
+          directory={directory}
+          setDirectory={setDirectory}
         />
       ),
       id: 1,

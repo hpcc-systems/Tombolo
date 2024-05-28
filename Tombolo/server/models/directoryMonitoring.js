@@ -23,6 +23,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         unique: true,
       },
+      description: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
       cron: {
         allowNull: true,
         type: DataTypes.STRING,
@@ -46,6 +50,10 @@ module.exports = (sequelize, DataTypes) => {
       approved: {
         allowNull: false,
         type: DataTypes.BOOLEAN,
+      },
+      approvalStatus: {
+        allowNull: false,
+        type: DataTypes.STRING,
       },
       approvalNote: {
         allowNull: true,

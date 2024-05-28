@@ -27,10 +27,10 @@ const approveButtonColor = (approvalStatus) => {
 
 const DirectoryMonitoringTable = ({
   setEditingData,
-  DirectoryMonitorings,
+  directoryMonitorings,
   setDirectoryMonitorings,
   setSelectedMonitoring,
-  setDisplayAddDirectoryMonitoringModal,
+  setDisplayAddEditModal,
   setDisplayMonitoringDetailsModal,
   setDisplayAddRejectModal,
   setSelectedRows,
@@ -45,9 +45,9 @@ const DirectoryMonitoringTable = ({
   // Columns for the table
   const columns = [
     {
-      title: 'Monitoring Name',
-      dataIndex: 'monitoringName',
-      key: 'monitoringName',
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
     },
     {
       title: 'Description',
@@ -60,9 +60,9 @@ const DirectoryMonitoringTable = ({
       ),
     },
     {
-      title: 'Directory/Pattern',
-      dataIndex: 'directoryName',
-      key: 'directoryName',
+      title: 'Directory',
+      dataIndex: 'directory',
+      key: 'directory',
     },
     {
       title: 'Created By',
@@ -85,8 +85,8 @@ const DirectoryMonitoringTable = ({
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'active',
+      key: 'active',
       render: (_, record) => (record.isActive ? 'Yes' : 'No'),
     },
     {
@@ -146,7 +146,7 @@ const DirectoryMonitoringTable = ({
                 </>
               }
               onConfirm={() =>
-                handleDeleteDirectoryMonitoring({ id: record.id, DirectoryMonitorings, setDirectoryMonitorings })
+                handleDeleteDirectoryMonitoring({ id: record.id, directoryMonitorings, setDirectoryMonitorings })
               }
               okText="Continue"
               okButtonProps={{ danger: true }}
@@ -177,7 +177,7 @@ const DirectoryMonitoringTable = ({
     setEditingData({ isEditing: true, selectedMonitoring: record });
 
     setSelectedMonitoring(record);
-    setDisplayAddDirectoryMonitoringModal(true);
+    setDisplayAddEditModal(true);
   };
 
   // Approve or reject monitoring
@@ -189,7 +189,7 @@ const DirectoryMonitoringTable = ({
   // Start or pause monitoring
   const toggleMonitoringStatus = async (record) => {
     try {
-      if (record.approvalStatus !== 'Approved') {
+      if (!record.approved) {
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }
@@ -203,7 +203,7 @@ const DirectoryMonitoringTable = ({
   };
   return (
     <Table
-      dataSource={DirectoryMonitorings}
+      dataSource={directoryMonitorings}
       columns={columns}
       rowKey="id"
       size="small"

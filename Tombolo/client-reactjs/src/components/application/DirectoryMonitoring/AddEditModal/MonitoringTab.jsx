@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, TimePicker, Row, Col, Select } from 'antd';
+import { Card, Form, TimePicker, InputNumber, Row, Col } from 'antd';
 import SchedulePicker from '../../jobMonitoring/SchedulePicker';
-
-const { Option } = Select;
 
 function MonitoringTab({
   intermittentScheduling,
@@ -49,42 +47,28 @@ function MonitoringTab({
 
       <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
         <Form form={form} layout="vertical">
-          {/* Always render below fields*/}
-
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item
-                label="Expected Start Time (HH:MM) "
-                name="expectedStartTime"
-                rules={[{ required: true, message: 'Expected start time is a required' }]}>
+                label="Expected File Move By Time (HH:MM)"
+                name="expectedMoveByTime"
+                rules={[{ required: false, message: 'Expected start time is a required' }]}>
                 <TimePicker style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
               </Form.Item>
             </Col>
+
             <Col span={12}>
-              <Form.Item
-                label="Expected Completion Time (HH:MM) "
-                name="expectedCompletionTime"
-                rules={[{ required: true, message: 'Expected completion time is a required' }]}>
-                <TimePicker style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
+              <Form.Item label="Minimum File Count" name="minimumFileCount" rules={[{ required: false }]}>
+                <InputNumber style={{ width: '100%' }} defaultValue={0} max={32768} />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label="Maxiumum File Count" name="maximumFileCount" rules={[{ required: false }]}>
+                <InputNumber style={{ width: '100%' }} defaultValue={0} max={32768} />
               </Form.Item>
             </Col>
           </Row>
-
-          <Col span={12}>
-            <Form.Item
-              label="Require Complete"
-              name="requireComplete"
-              rules={[{ required: true, message: 'Please select one option' }]}>
-              <Select placeholder="Require complete">
-                <Option key="yes" value={true}>
-                  Yes
-                </Option>
-                <Option key="no" value={false}>
-                  No
-                </Option>
-              </Select>
-            </Form.Item>
-          </Col>
         </Form>
       </Card>
     </div>

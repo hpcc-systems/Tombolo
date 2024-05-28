@@ -4,17 +4,13 @@ import { useSelector } from 'react-redux';
 import { Form, Card, Select } from 'antd';
 import { isEmail } from 'validator';
 
-//Local Imports
-// import AsrSpecificNotificationsDetails from './AsrSpecificNotificationsDetails';
-
 //Constants
 const { Option } = Select;
 const directoryStatuses = [
-  { label: 'Failed', value: 'Failed' },
-  { label: 'Aborted', value: 'Aborted' },
-  { label: 'Unknown', value: 'Unknown' },
-  { label: 'Not started on time', value: 'NotStarted', disabled: true },
-  { label: 'Not completed on time', value: 'NotCompleted' },
+  { label: 'File Not Moving', value: 'threshold' },
+  { label: 'File Detected', value: 'fileDetected,' },
+  { label: 'Maximum File Count', value: 'maximumFileCount' },
+  { label: 'Minimum File Count', value: 'minimumFilecount' },
 ];
 
 function NotificationTab({ form, teamsHooks }) {
@@ -25,9 +21,6 @@ function NotificationTab({ form, teamsHooks }) {
       integrations,
     },
   } = useSelector((state) => state);
-  //   const asrIntegration = integrations.some(
-  //     (integration) => integration.name === 'ASR' && integration.application_id === applicationId
-  //   );
 
   console.log(integrations, applicationId);
 
@@ -85,8 +78,6 @@ function NotificationTab({ form, teamsHooks }) {
             tokenSeparators={[',']}
           />
         </Form.Item>
-
-        {/* {asrIntegration && <AsrSpecificNotificationsDetails />} */}
       </Form>
     </Card>
   );
