@@ -16,7 +16,7 @@ jobs:
 
       - name: Navigate to project directory and deploy
         run: |
-          cd ~/../azureuser
+          cd ~/..
           pwd
           cd Tombolo/Tombolo
           git stash
