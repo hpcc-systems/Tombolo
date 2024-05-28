@@ -16,7 +16,7 @@ jobs:
 
       - name: Navigate to project directory and deploy
         run: |
-          cd ~/..
+          cd ~/../Tombolo/Tombolo
           pwd
           git stash
           git pull
