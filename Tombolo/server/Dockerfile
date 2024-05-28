@@ -15,6 +15,8 @@ RUN apt-get install -y openssh-client openssh-server \
     expect rsync libapr1 psmisc libaprutil1 libarchive13 libatlas3-base \
     libboost-regex1.65.1 libmemcached11 libmemcachedutil2 libnuma1 \
     libpython2.7 libpython3.6 libxslt1.1 libcurl3-gnutls netcat git
+    
+RUN apt-get install -y python
 
 ARG cdnUrl=https://cdn.hpccsystems.com
 ARG hpccVersion=7.12.50
