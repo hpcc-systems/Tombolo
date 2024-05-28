@@ -19,7 +19,7 @@ jobs:
             echo ------------------------
             ls
             echo -----------------------
-            cd /Tombolo/Tombolo
+            cd Tombolo/Tombolo
             git stash
             git pull
             git stash apply
