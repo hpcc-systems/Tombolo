@@ -2,7 +2,7 @@ name: Docker Compose
 
 on:
   push:
-    branches: [yadhap/cicd]
+    branches: [yadhap/cicd, dev]
 
 jobs:
   deploy:
@@ -16,10 +16,10 @@ jobs:
           username: ${{ secrets.AZURE_VM_USERNAME }}
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
           script: |
-            cd /Tombolo/Tombolo
+            cd Tombolo/Tombolo
             git stash
             git pull
             git stash apply
-            docker-compose down
-            docker-compose build
-            docker-compose up -d
+            sudo docker-compose down
+            sudo docker-compose build
+            sudo docker-compose up -d
