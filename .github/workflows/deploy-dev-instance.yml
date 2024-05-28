@@ -16,9 +16,9 @@ jobs:
 
       - name: Navigate to project directory and deploy
         run: |
-          cd ~/..
-          cd Tombolo/Tombolo
+          cd ~/../azureuser
           pwd
+          cd Tombolo/Tombolo
           git stash
           git pull
           git stash apply
