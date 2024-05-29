@@ -146,15 +146,11 @@ const monitoring_logs = models.monitoring_logs;
 
         jobMonitoringsByCluster[clusterInfo.id].forEach((jobMonitoring) => {
           const jobNameFormat = jobMonitoring.jobName;
-          ECLWorkunit.forEach((wu) => {
-            console.log(wu.Jobname);
-          });
 
           ECLWorkunit = ECLWorkunit.filter((wu) => {
             return matchJobName(jobNameFormat, wu.Jobname);
           });
 
-          console.dir(ECLWorkunit, {depth: null})
 
           if (wuBasicInfoByCluster[clusterInfo.id]){
             wuBasicInfoByCluster[clusterInfo.id] = wuBasicInfoByCluster[clusterInfo.id].concat(ECLWorkunit);
