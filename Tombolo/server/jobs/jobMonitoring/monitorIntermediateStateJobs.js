@@ -13,9 +13,9 @@ const {
   findLocalDateTimeAtCluster,
   checkIfCurrentTimeIsWithinRunWindow,
   intermediateStates,
-  generateNotificationId,
-  adjustedLocaleString,
-  createNotificationPayload
+  nocAlertData,
+  createNotificationPayload,
+  createNocNotificationPayload,
 } = require("./monitorJobsUtil");
 
 // Constants
@@ -168,6 +168,18 @@ const monitoring_logs = models.monitoring_logs;
               if (wu.teamsHooks) {
                 const teamsNotification = await createNotificationPayload({wu,cluster,type: "msTeams",});
                 notificationsToBeQueued.push(teamsNotification);
+              }
+
+              // If wu has asr related metaData and sever
+              if (wu.asrSpecificMetaData) {
+                const nocData = await nocAlertData({
+                  application_id: wu.applicationId,
+                  severity: wu.asrSpecificMetaData.severity});
+
+                if(nocData.triggerNocAlert){
+                  const nocNotification = await createNocNotificationPayload({wu, nocData});
+                  notificationsToBeQueued.push(nocNotification);
+                }
               }
             }
             // Still in intermediate state but window is passed an the job is required to be completed

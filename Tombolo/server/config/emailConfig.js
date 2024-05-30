@@ -29,10 +29,10 @@ const smtpConfig = {
 const transporter = nodemailer.createTransport(smtpConfig);
 
 // Send email function
-const sendEmail = ({receiver, cc, subject, plainTextBody, htmlBody}) => {
+const sendEmail = ({receiver, cc, subject, plainTextBody, htmlBody, sender = smtpConfig.sender}) => {
   return new Promise((resolve, reject) => {
     const mailOptions = {
-      from: smtpConfig.sender,
+      from: sender,
       to: receiver,
       cc: cc,
       subject: subject,

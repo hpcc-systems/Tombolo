@@ -2,11 +2,11 @@
 const models = require("../../models");
 const asrProducts = models.asr_products;
 const asrDomains = models.asr_domains;
-
+const { integration_mapping, integrations } = models;
+ 
 //Package(s)
 const moment = require("moment");
 const cronParser = require("cron-parser");
-const { initial } = require("lodash");
 
 // All possible intermediate states
 const intermediateStates = [
@@ -83,7 +83,7 @@ const matchJobName = (jobNameFormat, jobName) => {
 // const ans3 = matchJobName("* Launch *", "X Launch 20240323 test spray");
 // const ans4 = matchJobName("* <DATE,1,%Y%d> *", "Launch 202423 test spray");
 // const ans5 = matchJobName("Launch <DATE,1,%y%B> Current Carrier", "Launch 24March Current Carrier");
-const ans6 = matchJobName("covid cases <DATE>", "covid cases 20240515");
+// const ans6 = matchJobName("covid cases <DATE>", "covid cases 20240515");
 
 // console.log("0 -", ans);
 // console.log("1 -", ans1);
@@ -91,7 +91,7 @@ const ans6 = matchJobName("covid cases <DATE>", "covid cases 20240515");
 // console.log("3 -", ans3);
 // console.log("4 -", ans4);
 // console.log('5 -', ans5);
-console.log('6 -', ans6)
+// console.log('6 -', ans6)
 
 
 // Find start and end time of a work unit since js communication library does not give that
@@ -553,9 +553,6 @@ async function createNotificationPayload({
 
   const asrRelatedNotificationPayload = {};
 
-  if(type === "msTeams"){
-    console.log("Teams ----- does it have asr stuff ", wu.asrSpecificMetaData)
-  }
 
   if (wu.asrSpecificMetaData) {
     const { name, shortCode } = await getProductCategory(
@@ -617,6 +614,85 @@ async function createNotificationPayload({
   return payload;
 }
 
+
+// Should NOC alert to be sent or not
+const  nocAlertData = async ({application_id, severity}) => {
+
+  // Get ASR integration mapping details
+  const result = await integration_mapping.findAll({
+    include: [
+      {
+        model: integrations,
+        where: { name: "ASR" },
+      },
+    ],
+    where: { application_id },
+    raw: true,
+  });
+
+  const data = {};
+
+
+  if (result.length === 0) {
+    data.triggerNocAlert = false;
+  }else{
+    const integration = result[0];
+    const {metaData: {nocAlerts = {}}} = integration;
+    if(nocAlerts.active && severity >= nocAlerts.severityLevelForNocAlerts) {
+      data.triggerNocAlert = true;
+      data.mainRecipients = nocAlerts.emailContacts;
+      data.sender = nocAlerts.nocSenderEmail;
+    }else{
+      data.triggerNocAlert = false;
+    }
+  }
+
+  return data;
+};
+
+// NOC notification payload
+const createNocNotificationPayload = async ({nocData, wu}) => {
+  const {asrSpecificMetaData} = wu;
+  const domain = await getDomain(asrSpecificMetaData.domain);
+  const product = await getProductCategory(asrSpecificMetaData.productCategory);
+  const notificationDetails = {
+    templateName: "nocAlert",
+    notificationOrigin: "Job Monitoring",
+    originationId: wu.jobMonitoringId,
+    deliveryType: "immediate",
+    type: "email",
+    templateName: "nocAlert",
+    createdBy: "System",
+    metaData: {
+      subject: "Automated Sev Ticket Request",
+      ...nocData, // recipients and sender
+      ...wu,
+      notificationDescription:
+        "The following issue has been identified via automation.Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required. Thank you",
+      product: product.shortCode, // Code only
+      domain: domain.name, // Code only
+      issue: `Analysis detected a monitored job in ${wu.State} state`,
+      severity: asrSpecificMetaData.severity,
+      firstLogged: new Date().toLocaleString(), // Needs to be cluster time not UTC
+      lastLogged: new Date().toLocaleString(), // Needs to be cluster time not UTC
+      primaryContact: "PRIMARY CONTACT HERE",
+      secondaryContact: "SECONDARY CONTACT HERE",
+      region: "USA",
+      businessUnit: domain.name,
+      notificationId: generateNotificationId({
+        notificationPrefix: product.shortCode,
+        timezoneOffset: 0,
+      }),
+      remedy : {
+      instruction: 'Please contact one of the following to facilitate issue resolution',
+      primaryContact: wu.primaryContacts[0],
+      secondaryContact: wu.secondaryContacts[0],
+    },
+    },
+  };
+  return notificationDetails;
+};
+
 module.exports = {
   matchJobName,
   findStartAndEndTimes,
@@ -629,4 +705,6 @@ module.exports = {
   intermediateStates,
   generateNotificationId,
   createNotificationPayload,
+  nocAlertData,
+  createNocNotificationPayload,
 };
