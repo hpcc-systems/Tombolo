@@ -6,18 +6,16 @@ import { Descriptions, Tooltip, Tag } from 'antd';
 import { formatDateTime } from '../../../common/CommonUtil';
 import './notifications.css';
 
-function NotificationDetails({ selectedNotification, monitorings, domains, productCategories }) {
+function NotificationDetails({ selectedNotification, domains, productCategories }) {
   // Destructure metaData
-  const {
-    metaData: { asrSpecificMetaData },
-  } = selectedNotification;
+  const { asrSpecificMetaData } = selectedNotification;
 
   // JSX
   return (
     <>
       <Descriptions column={1} bordered={true} size="small" className="notifications_tiny-description">
         <Descriptions.Item label="Origin ">
-          {monitorings.find((m) => m.id === selectedNotification.notificationOrigin)?.name || <Tag>Unknown</Tag>}
+          {selectedNotification.notificationOrigin || <Tag>Unknown</Tag>}
         </Descriptions.Item>
         <Descriptions.Item label="Reason ">{selectedNotification.notificationTitle}</Descriptions.Item>
         <Descriptions.Item label=" Details ">

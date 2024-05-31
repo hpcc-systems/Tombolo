@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .main_body {
+      width: 100%
+    }
+
+    .section {
+      margin: 0 auto !important;
+      width: 800px;
+      border-collapse: collapse;
+      font-family: Arial;
+      font-size: 14px;
+    }
+
+    .section-table-td {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 5px;
+    }
+
+    .section-footer {
+      background: none;
+      text-align: center;
+      border-top: 1px solid #dddddd;
+      font-size: 12px;
+    }
+
+    .section-footer-td {
+      padding-top: 50px;
+      padding-bottom: 50px;
+      color: #808080;
+    }
+
+    .section-header {
+      background: none !important;
+    }
+
+    .section-header-td {
+      padding-top: 30px;
+      padding-bottom: 30px;
+    }
+
+    .list {
+      margin: 5px;
+    }
+  </style>
+</head>
+
+<table class="main_body">
+  <tbody>
+    <tr>
+      <td>
+        <table class="section section-header">
+          <tbody>
+            <tr>
+              <td class="section-header-td">
+                <%= notificationDescription ? notificationDescription : "Job Monitoring Alert" %>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="section section-table">
+          <tbody>
+            <tr class="section-table-td">
+              <td class="section-table-td">Monitoring Name</td>
+              <td class="section-table-td"><%= typeof monitoringName !== 'undefined' ? monitoringName : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Notification ID</td>
+              <td class="section-table-td"><%= typeof notificationId !== 'undefined' ? notificationId : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Product</td>
+              <td class="section-table-td"><%= typeof product !== 'undefined' ? product : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Issue</td>
+              <td class="section-table-td">
+                <div><%= notificationDescription %></div>
+                <% if (typeof host !== 'undefined') { %>
+                <div class="list"><span class="label">Host: </span> <%= host %></div>
+                <% } %>
+                <% if (typeof Wuid !== 'undefined') { %>
+                <div class="list"><span class="label">WUID: </span> <%= Wuid %></div>
+                <% } %>
+                <% if (typeof State !== 'undefined') { %>
+                <div class="list"><span class="label">WU State: </span> <%= State %></div>
+                <% } %>
+              </td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Require Complete</td>
+              <td class="section-table-td"><%= typeof requireComplete !== 'undefined' ? requireComplete : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Expected Start</td>
+              <td class="section-table-td"><%= typeof expectedStart !== 'undefined' ? expectedStart : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Expected Completion</td>
+              <td class="section-table-td"><%= typeof expectedCompletion !== 'undefined' ? expectedCompletion : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Severity Code</td>
+              <td class="section-table-td"><%= typeof severity !== 'undefined' ? severity : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">First Logged</td>
+              <td class="section-table-td"><%= typeof discoveredAt !== 'undefined' ? discoveredAt : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Last Logged</td>
+              <td class="section-table-td"><%= typeof discoveredAt !== 'undefined' ? discoveredAt : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Region</td>
+              <td class="section-table-td"><%= typeof region !== 'undefined' ? region : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Business Unit</td>
+              <td class="section-table-td"><%= typeof businessUnit !== 'undefined' ? businessUnit : "NA" %></td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Teams Channel</td>
+              <td class="section-table-td">
+                <% if (typeof teamsChannel !== 'undefined') { %>
+                <a href="<%= teamsChannel %>"><%= teamsChannel %></a>
+                <% } else { %>
+                NA
+                <% } %>
+              </td>
+            </tr>
+            <tr class="section-table-td">
+              <td class="section-table-td">Remedy</td>
+              <td class="section-table-td">
+                <% if (typeof remedy !== 'undefined') { %>
+                <div><%= remedy.instruction %></div>
+                <div class="list"><span class="label"> Primary: </span> <%= remedy.primaryContact %></div>
+                <% if (remedy.secondaryContact) { %>
+                <div class="list"><span class="label">Secondary: </span> <%= remedy.secondaryContact %></div>
+                <% } %>
+                <% } else { %>
+                <p>NA</p>
+                <% } %>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="section section-footer">
+          <tbody>
+            <tr>
+              <td class="section-footer-td">
+                This notification is sent by Tombolo because your email address is included in the job monitoring notification recipient list. If you wish to stop receiving these alerts, please contact your Tombolo administrator.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</html>

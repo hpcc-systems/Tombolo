@@ -1,6 +1,7 @@
 import React from 'react';
 import { Descriptions, Modal, Button, Tooltip, Tag } from 'antd';
 import cronstrue from 'cronstrue';
+import _ from 'lodash';
 
 import { Constants } from '../../common/Constants';
 import { getDayLabel, getMonthLabel, getDateLabel, getWeekLabel } from '../../common/scheduleOptions.js';
@@ -39,6 +40,7 @@ function MonitoringDetailsModal({
     clusterId,
     approverComment,
   } = selectedMonitoring;
+  const { requireComplete } = metaData;
   const { asrSpecificMetaData, notificationMetaData, schedule } = metaData;
   return (
     <Modal
@@ -69,7 +71,7 @@ function MonitoringDetailsModal({
         {monitoringScope !== 'ClusterWideMonitoring' && (
           <Descriptions.Item label="Job name / pattern">{jobName}</Descriptions.Item>
         )}
-        {schedule && <Descriptions.Item label="Frequency">{schedule[0].frequency}</Descriptions.Item>}
+        {schedule && <Descriptions.Item label="Frequency">{_.capitalize(schedule[0].frequency)}</Descriptions.Item>}
         {schedule && schedule.length > 0 && (
           <Descriptions.Item label="Job Schedule">
             {generateTagsForSchedule(schedule).map((s, i) => (
@@ -84,6 +86,7 @@ function MonitoringDetailsModal({
         {metaData?.expectedCompletionTime && (
           <Descriptions.Item label="Expected Completion Time">{metaData.expectedCompletionTime}</Descriptions.Item>
         )}
+        <Descriptions.Item label="Require complete">{requireComplete ? 'Yes' : 'No'}</Descriptions.Item>
         {/* ----------------- ASR SPECIFIC ------------------------------------------------------- */}
         {asrSpecificMetaData?.jobMonitorType && (
           <Descriptions.Item label="Job Monitoring Type">{asrSpecificMetaData.jobMonitorType}</Descriptions.Item>
@@ -105,11 +108,6 @@ function MonitoringDetailsModal({
         {asrSpecificMetaData?.severity && (
           <Descriptions.Item label="Severity">{asrSpecificMetaData.severity}</Descriptions.Item>
         )}
-        {asrSpecificMetaData?.requireComplete && (
-          <Descriptions.Item label="Require complete">
-            {asrSpecificMetaData.requireComplete ? 'Yes' : 'No'}
-          </Descriptions.Item>
-        )}
         {/* ---------NOTIFICATION TRIGGERS AND CONTACTS --------------------------------------------- */}
         {notificationMetaData &&
           notificationMetaData.notificationCondition &&
@@ -120,7 +118,7 @@ function MonitoringDetailsModal({
               ))}
             </Descriptions.Item>
           )}
-        {notificationMetaData.primaryContacts && notificationMetaData.primaryContacts.length > 0 && (
+        {notificationMetaData?.primaryContacts && notificationMetaData.primaryContacts.length > 0 && (
           <Descriptions.Item label="Primary contact(s)">
             {notificationMetaData.primaryContacts.map((email, index) =>
               index < notificationMetaData.primaryContacts.length - 1 ? (
@@ -131,7 +129,7 @@ function MonitoringDetailsModal({
             )}
           </Descriptions.Item>
         )}
-        {notificationMetaData.secondaryContacts && notificationMetaData.secondaryContacts.length > 0 && (
+        {notificationMetaData?.secondaryContacts && notificationMetaData.secondaryContacts.length > 0 && (
           <Descriptions.Item label="Secondary contact(s)">
             {notificationMetaData.secondaryContacts.map((email, index) =>
               index < notificationMetaData.secondaryContacts.length - 1 ? (
@@ -142,7 +140,7 @@ function MonitoringDetailsModal({
             )}
           </Descriptions.Item>
         )}
-        {notificationMetaData.notifyContacts && notificationMetaData.notifyContacts.length > 0 && (
+        {notificationMetaData?.notifyContacts && notificationMetaData.notifyContacts.length > 0 && (
           <Descriptions.Item label="Notify contact(s)">
             {notificationMetaData.notifyContacts.map((email, index) =>
               index < notificationMetaData.notifyContacts.length - 1 ? (
@@ -153,14 +151,14 @@ function MonitoringDetailsModal({
             )}
           </Descriptions.Item>
         )}
-        {notificationMetaData.teamsHooks && notificationMetaData.teamsHooks.length > 0 && (
+        {notificationMetaData?.teamsHooks && notificationMetaData.teamsHooks.length > 0 && (
           <Descriptions.Item label="Teams channel(s)">
             {getHookTags({ AllTeamsHooks: teamsHooks, hookIds: notificationMetaData.teamsHooks })}
           </Descriptions.Item>
         )}
         {/* ---------------------------------------------------------------------------------------- */}
         <Descriptions.Item label="Active">
-          {isActive && approvalStatus === 'Approved' ? (
+          {isActive ? (
             <Tag color="var(--success)" key={'yes'}>
               Yes
             </Tag>

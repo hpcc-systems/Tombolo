@@ -1,51 +1,45 @@
-// Modules
+// Packages
 const { Op } = require("sequelize");
-const axios = require("axios");
 const path = require("path");
+const axios = require("axios");
 
 //Local Imports
 const models = require("../../models");
 const logger = require("../../config/logger");
-const {retryOptions: { maxRetries, retryDelays }} = require("../../config/emailConfig");
-const {updateNotificationQueueOnError} = require("./notificationsHelperFunctions");
+const {
+  retryOptions: { maxRetries, retryDelays }, // use the same config for emails and teams
+} = require("../../config/emailConfig");
+const {
+  renderNotificationBody,
+  updateNotificationQueueOnError,
+} = require("./notificationsHelperFunctions");
+const { application } = require("express");
+
 const NotificationQueue = models.notification_queue;
+const SentNotification = models.sent_notifications;
 const TeamsHook = models.teams_hook;
-const Notification = models.monitoring_notifications;
 
 (async () => {
-  const notificationsToBeSent = []; // That meets the criteria to be sent
-  const now = Date.now();
-  const successfulDelivery=[]
-
   try {
-    let notifications;
+    const now = Date.now();
+    const notificationsToBeSent = []; // Notification that meets the criteria to be sent
+    const successfulDelivery = [];
 
-    try {
-      notifications = await NotificationQueue.findAll({
-        where: {
-          type: "msTeams",
-          attemptCount: { [Op.lt]: maxRetries },
-        },
-      });
-    } catch (err) {
-      logger.error(err);
-      return;
-    }
+    // Get notifications
+    let notifications = await NotificationQueue.findAll({
+      where: {
+        type: "msTeams",
+        attemptCount: { [Op.lt]: maxRetries },
+      },
+      raw: true,
+    });
 
-    // Loop through all notifications and check if it meets the criteria to be sent
+    // Sort out notifications that meet the criteria to be sent
     for (let notification of notifications) {
-      const {
-        id,
-        notificationOrigin,
-        deliveryType,
-        attemptCount,
-        metaData,
-        reTryAfter,
-        lastScanned,
-        deliveryTime,
-      } = notification;
-      const msTeamsDetails = metaData?.msTeamsDetails;
+      const { deliveryType, reTryAfter, lastScanned, deliveryTime } =
+        notification;
 
+      // Check if it meets the criteria to be sent
       if (
         (deliveryType === "immediate" && (reTryAfter < now || !reTryAfter)) ||
         (deliveryType === "scheduled" && (reTryAfter < now || !reTryAfter)) ||
@@ -53,96 +47,44 @@ const Notification = models.monitoring_notifications;
           deliveryTime < now &&
           deliveryTime > lastScanned)
       ) {
-        try {
-          //Common teams details
-          const commonMsTeamsDetails = {
-            receiver: msTeamsDetails?.recipients,
-            notificationId: id,
-            attemptCount,
-          };
-
-          // If notification origin is manual, send the email as it is
-          if (notificationOrigin === "manual") {
-            notificationsToBeSent.push({
-              ...commonMsTeamsDetails,
-              messageCard: `**${msTeamsDetails.subject}**\n\n${msTeamsDetails.htmlBody}`,
-            });
-          } else {
-            //Import correct card file
-            const getTemplate = require(path.join(
-              "..",
-              "..",
-              "notificationTemplates",
-              "teams",
-              `${notificationOrigin}.js`
-            ));
-
-            //Get message card
-            const messageCard = getTemplate({
-              notificationData: msTeamsDetails.data,
-            });
-
-            notificationsToBeSent.push({
-              ...commonMsTeamsDetails,
-              messageCard,
-            });
-          }
-        } catch (error) {
-          logger.error(error);
-          //If error occurs - increment attempt count, update reTryAfter
-          await updateNotificationQueueOnError({
-            notificationId: notification.id,
-            attemptCount,
-            notification,
-            error,
-          });
-        }
+        notificationsToBeSent.push(notification);
       }
     }
 
-    // If there are notifications to be sent
+    // push notification to teams channel
     for (let notification of notificationsToBeSent) {
-      const { receiver, messageCard, notificationId, attemptCount } =
-        notification;
+      const { metaData, templateName, attemptCount } = notification;
       try {
-        // Receiver is array of  hook IDs - get URL from database
-        const hooksObj = await TeamsHook.findAll({
-          where: { id: receiver },
-          attributes: ["url"],
+        const hookId = metaData.teamsHooks[0]; // Only let user enter 1 hook
+
+        const { id, url } = await TeamsHook.findOne({
+          where: { id: hookId },
           raw: true,
         });
 
-        // Teams end points
-        const hooks = hooksObj.map((h) => h.url);
-        const requests = hooks.map((h) => axios.post(h, messageCard));
-
-        const response = await Promise.allSettled(requests);
-
-        for (res of response) {
-          // If delivered - destroy the notification
-          if (res.status === "fulfilled") {
-            // Destroy the notification from queue
-            try {
-              await NotificationQueue.destroy({
-                where: { id: notificationId },
-              });
-            } catch (err) {
-              logger.error(err);
-            }
-            successfulDelivery.push(notificationId);
-          } else {
-            logger.error({ err: res.reason });
-            //Update the notification queue if failed to send
-            await updateNotificationQueueOnError({
-              attemptCount,
-              notificationId,
-              notification,
-              error: { message: res.reason },
-            });
-          }
+        // Based on templateName, get the teamsCardData function from the templates folder
+        let teamsCardData;
+        try {
+          const module = await import(
+            `../../notificationTemplates/teams/${templateName}.js`
+          );
+          teamsCardData = module.teamsCardData;
+        } catch (error) {
+          logger.error(error);
         }
+
+        // message card
+        const card = teamsCardData({ data: metaData });
+        await axios.post(url, card);
+        successfulDelivery.push(notification);
       } catch (err) {
         logger.error(err);
+        updateNotificationQueueOnError({
+          notificationId: notification.id,
+          attemptCount,
+          notification,
+          error: err,
+        });
       }
     }
 
@@ -153,17 +95,38 @@ const Notification = models.monitoring_notifications;
       logger.error(error);
     }
 
-    //Update notifications table
-    //TODO - Notifications table should be refactored to accommodate ASR needs
+    //Update sent notifications table
     try {
-      await Notification.bulkCreate(
-        successfulDelivery.map((id) => ({ notificationQueueId: id }))
+      // clean successfully delivered notifications
+      const cleanedDeliveredNotification = successfulDelivery.map(
+        (notification) => {
+          return {
+            ...notification,
+            searchableNotificationId: notification.metaData.notificationId,
+            notificationChannel: notification.type,
+            notificationTitle: notification.metaData.subject,
+            applicationId: notification.metaData.applicationId,
+            status: "Pending Review",
+            createdBy: { name: "System" },
+            createdAt: now,
+            updatedAt: now,
+          };
+        }
       );
+      await SentNotification.bulkCreate(cleanedDeliveredNotification);
     } catch (error) {
       logger.error(error);
     }
 
-
+    // Bulk delete the sent notifications form notification queue
+    try{
+      await NotificationQueue.destroy({
+      where: { id: successfulDelivery.map(({ id }) => id) },
+    });
+    }catch(err){
+      logger.error(err);
+    }
+    
   } catch (error) {
     logger.error(error);
   }
