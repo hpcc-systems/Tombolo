@@ -84,12 +84,34 @@ export const getAllTeamsHook = async () => {
 // Update a directory monitoring
 export const updateSelectedMonitoring = async ({ updatedData }) => {
   const payload = {
-    method: 'PATCH',
+    method: 'PUT',
     headers: authHeader(),
     body: JSON.stringify(updatedData),
   };
 
-  const response = await fetch(`/api/DirectoryMonitoring/`, payload);
+  const { id } = updatedData;
+
+  const response = await fetch(`/api/DirectoryMonitoring/${id}/update`, payload);
+
+  if (!response.ok) {
+    return message.error('Failed to update directory monitoring');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+// Update a directory monitoring
+export const approveSelectedMonitoring = async ({ updatedData }) => {
+  const payload = {
+    method: 'PUT',
+    headers: authHeader(),
+    body: JSON.stringify(updatedData),
+  };
+
+  const { id } = updatedData;
+
+  const response = await fetch(`/api/DirectoryMonitoring/${id}/approve`, payload);
 
   if (!response.ok) {
     return message.error('Failed to update directory monitoring');
@@ -139,35 +161,6 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
   if (tab2ErroneousFields.length > 0) erroneousTabs.push((2).toString());
 
   return erroneousTabs;
-};
-
-// Get domains for directory monitoring - ASR
-export const getDomains = async ({ monitoringTypeId }) => {
-  const options = {
-    method: 'GET',
-    headers: authHeader(),
-  };
-  const response = await fetch(`/api/asr/domainsForSpecificMonitoring/${monitoringTypeId}`, options);
-  if (!response.ok) {
-    throw new Error('Failed to get domains');
-  }
-  const domains = await response.json();
-
-  return domains;
-};
-
-//Get product categories for selected domain and activity type
-export const getProductCategories = async ({ domainId }) => {
-  const options = {
-    method: 'GET',
-    headers: authHeader(),
-  };
-  const response = await fetch(`/api/asr/productCategoriesForSpecificDomain/${domainId}`, options);
-  if (!response.ok) {
-    throw new Error('Failed to get product categories');
-  }
-  const productCategories = await response.json();
-  return productCategories;
 };
 
 // Get id for particular monitoring type example "directory Monitoring"

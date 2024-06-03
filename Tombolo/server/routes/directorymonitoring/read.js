@@ -35,6 +35,17 @@ router.post(
         return res.status(422).json({ errors: errors.array() });
       }
       const newMonitoring = req.body;
+
+      //check if name already exists as directory monitoring
+      const existingMonitoring = await DirectoryMonitoring.findOne({
+        where: { name: newMonitoring.name },
+      });
+
+      if (existingMonitoring) {
+        return res
+          .status(409)
+          .json({ error: "Directory monitoring name already exists" });
+      }
       //always place new monitoring in pending status
       newMonitoring.approvalStatus = "Pending";
       const directoryMonitoring = await DirectoryMonitoring.create(
@@ -149,12 +160,17 @@ router.put(
           .status(404)
           .json({ error: "Directory monitoring entry not found" });
       }
-      //make sure approvals are reset
 
-      updates.approved = false;
-      updates.approvalNote = null;
-      updates.approvedBy = null;
-      updates.approvedAt = null;
+      //make sure approvals are reset
+      resetApprovals(updates);
+
+      //make sure name doesn't exist
+      const existingMonitoring = await checkNameExists(updates.name);
+      if (existingMonitoring) {
+        return res
+          .status(409)
+          .json({ error: "Directory monitoring name already exists" });
+      }
 
       await directoryMonitoring.update(updates);
 
@@ -306,6 +322,67 @@ router.put(
     }
   }
 );
+//bulk update route to update multiple monitorings
+router.put(
+  "/bulkUpdate",
+  [body("metaData").isArray().withMessage("Data must be array of objects")],
+  async (req, res) => {
+    try {
+      const { metaData } = req.body;
+      for (let i = 0; i < metaData.length; i++) {
+        const { id, ...updates } = metaData[i];
+        const directoryMonitoring = await DirectoryMonitoring.findByPk(id);
+        if (!directoryMonitoring) {
+          return res
+            .status(404)
+            .json({ error: "Directory monitoring entry not found" });
+        }
+
+        //make sure approvals are reset
+        resetApprovals(updates);
+
+        //make sure name doesn't exist
+        const existingMonitoring = await checkNameExists(updates.name);
+        if (existingMonitoring) {
+          return res
+            .status(409)
+            .json({ error: "Directory monitoring name already exists" });
+        }
+
+        await directoryMonitoring.update(updates);
+      }
+      res.status(200).json({ message: "Directory monitorings updated" });
+    } catch (error) {
+      logger.error(error);
+      res
+        .status(500)
+        .json({ error: "Failed to update directory monitoring entries" });
+    }
+  }
+);
+
+//bulk delete route to delete multiple monitorings
+router.delete("/bulkDelete", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    for (let i = 0; i < ids.length; i++) {
+      const directoryMonitoring = await DirectoryMonitoring.findByPk(ids[i]);
+      if (!directoryMonitoring) {
+        return res
+          .status(404)
+          .json({ error: "Directory monitoring entry not found" });
+      }
+      await directoryMonitoring.destroy();
+      removeJob(ids[i]);
+    }
+    res.status(204).end();
+  } catch (error) {
+    logger.error(error);
+    res
+      .status(500)
+      .json({ error: "Failed to delete directory monitoring entries" });
+  }
+});
 
 function removeJob(id) {
   const breeJobs = jobScheduler.getAllJobs();
@@ -316,6 +393,18 @@ function removeJob(id) {
       break;
     }
   }
+}
+
+async function checkNameExists(name) {
+  return DirectoryMonitoring.findOne({ where: { name } });
+}
+
+function resetApprovals(updates) {
+  updates.approved = false;
+  updates.approvalNote = null;
+  updates.approvedBy = null;
+  updates.approvedAt = null;
+  return updates;
 }
 
 module.exports = router;

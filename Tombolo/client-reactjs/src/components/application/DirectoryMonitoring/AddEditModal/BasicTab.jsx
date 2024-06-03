@@ -39,7 +39,7 @@ function BasicTab({
               () => ({
                 validator(_, value) {
                   if (isEditing) return Promise.resolve();
-                  if (!value || !directoryMonitorings.find((directory) => directory.monitoringName === value)) {
+                  if (!value || !directoryMonitorings.find((directory) => directory.name === value)) {
                     return Promise.resolve();
                   }
                   return Promise.reject(new Error('Monitoring name must be unique'));

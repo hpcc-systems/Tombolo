@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Button, message, Tooltip } from 'antd';
 
-import { authHeader } from '../../common/AuthHeader.js';
 import { Constants } from '../../common/Constants.js';
+
+import { approveSelectedMonitoring } from './Utils.js';
 
 const ApproveRejectModal = ({
   id,
@@ -54,20 +55,17 @@ const ApproveRejectModal = ({
       const formData = form.getFieldsValue();
       formData.id = id;
       formData.approvalStatus = action;
+      formData.approved = true;
+      formData.approvedAt = new Date();
       formData.approvedBy = JSON.stringify({
         id: user.id,
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
       });
-      const payload = {
-        method: 'PATCH',
-        header: authHeader(),
-        body: JSON.stringify(formData),
-      };
 
-      const response = await fetch(`/api/directorymonitoring/evaluate`, payload);
-
-      if (!response.ok) {
+      const response = await approveSelectedMonitoring({ updatedData: formData });
+      console.log(response);
+      if (response.error) {
         message.error('Error saving your response');
       } else {
         message.success('Your response has been saved');
@@ -79,14 +77,14 @@ const ApproveRejectModal = ({
           prev[index] = {
             ...prev[index],
             approvalStatus: action,
-            isActive: action === 'rejected' ? false : prev[index].isActive,
+            active: action === 'rejected' ? false : prev[index].active,
             approvedBy: JSON.stringify({
               id: user.id,
               name: `${user.firstName} ${user.lastName}`,
               email: user.email,
             }),
             approvedAt: new Date(),
-            approverComment: formData.approverComment,
+            approvalNote: formData.approvalNote,
           };
           return [...prev];
         });
@@ -149,7 +147,7 @@ const ApproveRejectModal = ({
           <Form form={form} layout="vertical">
             <Form.Item
               label="Comments"
-              name="approverComment"
+              name="approvalNote"
               rules={[
                 { required: true, message: 'Please enter comments' },
                 { min: 4, message: 'Comments must be at least 4 characters' },

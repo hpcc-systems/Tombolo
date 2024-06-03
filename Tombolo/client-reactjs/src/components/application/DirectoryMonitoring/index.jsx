@@ -16,6 +16,7 @@ import ActionButton from './ActionButton';
 import DirectoryMonitoringTable from './Table';
 import ApproveRejectModal from './ApproveRejectModal';
 import dayjs from 'dayjs';
+import BulkUpdateModal from './BulkUpdateModal.jsx';
 
 const DirectoryMonitoring = () => {
   const {
@@ -59,14 +60,14 @@ const DirectoryMonitoring = () => {
       form.setFieldsValue(selectedMonitoring);
       setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring.clusterId));
 
-      // Convert to dayjs objects
-      let expectedStartTime = selectedMonitoring?.metaData?.expectedStartTime;
-      expectedStartTime = dayjs(expectedStartTime, 'HH:mm');
-
       form.setFieldsValue({
         ...selectedMonitoring?.metaData?.notificationMetaData,
-        requireComplete: selectedMonitoring.metaData.requireComplete,
-        expectedStartTime,
+
+        expectedMoveByTime: selectedMonitoring?.metaData?.expectedMoveByTime
+          ? dayjs(selectedMonitoring?.metaData?.expectedMoveByTime, 'HH:mm')
+          : null,
+        minimumFileCount: selectedMonitoring?.metaData?.minimumFileCount,
+        maximumFileCount: selectedMonitoring?.metaData?.maximumFileCount,
       });
       if (selectedMonitoring.metaData.schedule) {
         const { schedule } = selectedMonitoring.metaData;
@@ -178,7 +179,16 @@ const DirectoryMonitoring = () => {
       // Add expectedCompletionTime to metaData if entered, delete from allInputs
       const metaData = {};
 
-      let { expectedMoveByTime } = allInputs;
+      let { expectedMoveByTime, maximumFileCount, minimumFileCount } = allInputs;
+
+      if (maximumFileCount) {
+        metaData.maximumFileCount = maximumFileCount;
+      }
+      delete allInputs.maximumFileCount;
+      if (minimumFileCount) {
+        metaData.minimumFileCount = minimumFileCount;
+      }
+      delete allInputs.minimumFileCount;
 
       if (expectedMoveByTime) {
         // Format expectedCompletionTime and expectcfedStartTime
@@ -204,8 +214,6 @@ const DirectoryMonitoring = () => {
 
       //Add metaData to allInputs
       allInputs = { ...allInputs, metaData };
-
-      console.log(allInputs);
 
       //data transformations necessary for submitting
       allInputs.directory = allInputs.dirToMonitor.join('/');
@@ -254,7 +262,6 @@ const DirectoryMonitoring = () => {
   //console log all unused variables
   console.log(displayMonitoringDetailsModal);
   console.log(setTeamsHook);
-  console.log(bulkEditModalVisibility);
 
   //JSX
   return (
@@ -334,17 +341,16 @@ const DirectoryMonitoring = () => {
         user={user}
         setDirectoryMonitorings={setDirectoryMonitorings}
       />
-      {/*
       {bulkEditModalVisibility && (
         <BulkUpdateModal
           bulkEditModalVisibility={bulkEditModalVisibility}
           setBulkEditModalVisibility={setBulkEditModalVisibility}
-          DirectoryMonitorings={DirectoryMonitorings}
+          directoryMonitorings={directoryMonitorings}
           setDirectoryMonitorings={setDirectoryMonitorings}
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
         />
-      )} */}
+      )}
       ,
     </>
   );
