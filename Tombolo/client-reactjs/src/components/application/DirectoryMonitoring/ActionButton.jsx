@@ -10,6 +10,7 @@ const ActionButton = ({
   setSelectedRows,
   setDirectoryMonitorings,
   setBulkEditModalVisibility,
+  setBulkApprovalModalVisibility,
 }) => {
   const deleteSelected = async () => {
     try {
@@ -29,6 +30,8 @@ const ActionButton = ({
       handleAddDirectoryMonitoringButtonClick();
     } else if (key === '2') {
       setBulkEditModalVisibility(true);
+    } else if (key === '3') {
+      setBulkApprovalModalVisibility(true);
     }
   };
 
@@ -42,6 +45,9 @@ const ActionButton = ({
             Bulk Edit
           </Menu.Item>
           <Menu.Item key="3" disabled={selectedRows.length < 2}>
+            Bulk Approve or Reject
+          </Menu.Item>
+          <Menu.Item key="4" disabled={selectedRows.length < 2}>
             <Popconfirm
               title={`Are you sure you want to delete  selected ${selectedRows.length} monitorings?. `}
               okButtonProps={{ type: 'primary', danger: true }}

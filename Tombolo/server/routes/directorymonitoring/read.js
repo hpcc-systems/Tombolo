@@ -281,7 +281,7 @@ router.get(
 );
 
 //pause or start monitoring with active boolean
-router.put(
+router.patch(
   "/:id/active",
   [param("id").isUUID().withMessage("ID must be a UUID")],
   async (req, res) => {
@@ -312,7 +312,7 @@ router.put(
       } else {
         removeJob(id);
       }
-
+      logger.verbose("Directory monitoring active status updated");
       res.status(200).json(directoryMonitoring);
     } catch (error) {
       logger.error(error);
@@ -362,27 +362,108 @@ router.put(
 );
 
 //bulk delete route to delete multiple monitorings
-router.delete("/bulkDelete", async (req, res) => {
-  try {
-    const { ids } = req.body;
-    for (let i = 0; i < ids.length; i++) {
-      const directoryMonitoring = await DirectoryMonitoring.findByPk(ids[i]);
-      if (!directoryMonitoring) {
-        return res
-          .status(404)
-          .json({ error: "Directory monitoring entry not found" });
+router.delete(
+  "/bulkDelete",
+  [body("ids").isArray().withMessage("ID's must be passed in an array")],
+  async (req, res) => {
+    try {
+      const { ids } = req.body;
+      for (let i = 0; i < ids.length; i++) {
+        const directoryMonitoring = await DirectoryMonitoring.findByPk(ids[i]);
+        if (!directoryMonitoring) {
+          return res
+            .status(404)
+            .json({ error: "Directory monitoring entry not found" });
+        }
+        await directoryMonitoring.destroy();
+        removeJob(ids[i]);
       }
-      await directoryMonitoring.destroy();
-      removeJob(ids[i]);
+      res.status(204).end();
+    } catch (error) {
+      logger.error(error);
+      res
+        .status(500)
+        .json({ error: "Failed to delete directory monitoring entries" });
     }
-    res.status(204).end();
-  } catch (error) {
-    logger.error(error);
-    res
-      .status(500)
-      .json({ error: "Failed to delete directory monitoring entries" });
   }
-});
+);
+
+//bulk approve route to approve multiple monitorings
+router.patch(
+  "/bulkApprove",
+  [
+    // Add validation rules here
+    body("approvalNote")
+      .notEmpty()
+      .isString()
+      .withMessage("Approval comment must be a string")
+      .isLength({ min: 4, max: 200 })
+      .withMessage(
+        "Approval comment must be between 4 and 200 characters long"
+      ),
+    body("approved").isBoolean().withMessage("Approved must be a boolean"),
+    body("ids").isArray().withMessage("Invalid ids"),
+    body("approvalStatus")
+      .notEmpty()
+      .isString()
+      .withMessage("Approval Status must be a string"),
+    body("approvedBy")
+      .notEmpty()
+      .isString()
+      .withMessage("Approved by must be a string"),
+    body("active").isBoolean().withMessage("Active must be a boolean"),
+  ],
+  async (req, res) => {
+    try {
+      const {
+        ids,
+        approved,
+        approvalNote,
+        approvedAt,
+        approvedBy,
+        approvalStatus,
+        active,
+      } = req.body;
+
+      for (let i = 0; i < ids.length; i++) {
+        const { id } = ids[i];
+        const directoryMonitoring = await DirectoryMonitoring.findByPk(id);
+        if (!directoryMonitoring) {
+          return res
+            .status(404)
+            .json({ error: "Directory monitoring entry not found" });
+        }
+
+        await directoryMonitoring.update({
+          approved: approved,
+          approvalStatus: approvalStatus,
+          approvalNote: approvalNote,
+          approvedBy: approvedBy,
+          approvedAt: approvedAt,
+          active: active,
+        });
+
+        const { name, cron } = directoryMonitoring;
+
+        if (active && approved) {
+          jobScheduler.createDirectoryMonitoringBreeJob({
+            directoryMonitoring_id: id,
+            name,
+            cron,
+          });
+        } else {
+          removeJob(id);
+        }
+      }
+      res.status(200).json({ message: "Directory monitorings approved" });
+    } catch (error) {
+      logger.error(error);
+      res
+        .status(500)
+        .json({ error: "Failed to approve directory monitoring entries" });
+    }
+  }
+);
 
 function removeJob(id) {
   const breeJobs = jobScheduler.getAllJobs();
@@ -402,6 +483,7 @@ async function checkNameExists(name) {
 function resetApprovals(updates) {
   updates.approved = false;
   updates.approvalNote = null;
+  updates.approvalStatus = "Pending";
   updates.approvedBy = null;
   updates.approvedAt = null;
   return updates;

@@ -17,6 +17,7 @@ import DirectoryMonitoringTable from './Table';
 import ApproveRejectModal from './ApproveRejectModal';
 import dayjs from 'dayjs';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
+import BulkApprovalModal from './BulkApprovalModal.jsx';
 
 const DirectoryMonitoring = () => {
   const {
@@ -53,6 +54,7 @@ const DirectoryMonitoring = () => {
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
+  const [bulkApprovalModalVisibility, setBulkApprovalModalVisibility] = useState(false);
   const [directory, setDirectory] = useState(null);
 
   useEffect(() => {
@@ -101,7 +103,7 @@ const DirectoryMonitoring = () => {
     (async () => {
       try {
         const allDirectoryMonitorings = await getAllDirectoryMonitorings({ applicationId });
-        console.log(allDirectoryMonitorings);
+
         setDirectoryMonitorings(allDirectoryMonitorings);
       } catch (error) {
         message.error('Error fetching directory monitorings');
@@ -274,6 +276,7 @@ const DirectoryMonitoring = () => {
             setSelectedRows={setSelectedRows}
             setDirectoryMonitorings={setDirectoryMonitorings}
             setBulkEditModalVisibility={setBulkEditModalVisibility}
+            setBulkApprovalModalVisibility={setBulkApprovalModalVisibility}
           />
         }
       />
@@ -351,7 +354,18 @@ const DirectoryMonitoring = () => {
           setSelectedRows={setSelectedRows}
         />
       )}
-      ,
+      {bulkApprovalModalVisibility && (
+        <BulkApprovalModal
+          bulkApprovalModalVisibility={bulkApprovalModalVisibility}
+          setBulkApprovalModalVisibility={setBulkApprovalModalVisibility}
+          directoryMonitorings={directoryMonitorings}
+          setDirectoryMonitorings={setDirectoryMonitorings}
+          selectedRows={selectedRows}
+          setSelectedRows={setSelectedRows}
+          applicationId={applicationId}
+          user={user}
+        />
+      )}
     </>
   );
 };

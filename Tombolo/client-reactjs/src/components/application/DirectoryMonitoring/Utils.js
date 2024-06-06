@@ -185,7 +185,7 @@ export const toggleDirectoryMonitoringStatus = async ({ id }) => {
     body: JSON.stringify({ id }),
   };
 
-  const response = await fetch(`/api/DirectoryMonitoring/toggleIsActive`, payload);
+  const response = await fetch(`/api/DirectoryMonitoring/${id}/active`, payload);
   if (!response.ok) {
     throw new Error('Failed to toggle directory monitoring status');
   }
@@ -223,6 +223,31 @@ export const handleBulkUpdateDirectoryMonitorings = async ({ updatedData }) => {
 
   if (!response.ok) {
     throw new Error('Failed to bulk update directory monitorings');
+  }
+  const data = await response.json();
+  return data;
+};
+
+export const handleBulkApproveDirectoryMonitorings = async ({ selectedDirectoryMonitorings, formData }) => {
+  const { approved, approvedAt, approvedBy, approvalStatus, active } = formData;
+  console.log(formData);
+  const payload = {
+    method: 'PATCH',
+    headers: authHeader(),
+    body: JSON.stringify({
+      ids: selectedDirectoryMonitorings,
+      approved,
+      approvedAt,
+      approvedBy,
+      approvalStatus,
+      active,
+    }),
+  };
+
+  const response = await fetch(`/api/DirectoryMonitoring/bulkApprove`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to bulk approve directory monitorings');
   }
   const data = await response.json();
   return data;

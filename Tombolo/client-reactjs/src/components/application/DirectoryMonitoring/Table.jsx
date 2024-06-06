@@ -87,7 +87,7 @@ const DirectoryMonitoringTable = ({
       title: 'Active',
       dataIndex: 'active',
       key: 'active',
-      render: (_, record) => (record.isActive ? 'Yes' : 'No'),
+      render: (_, record) => (record.active ? 'Yes' : 'No'),
     },
     {
       title: 'Approval status',
@@ -119,8 +119,8 @@ const DirectoryMonitoringTable = ({
               onClick={() => evaluateMonitoring(record)}
             />
           </Tooltip>
-          <Tooltip title={record.isActive ? 'Pause' : 'Start'}>
-            {record.isActive ? (
+          <Tooltip title={record.active ? 'Pause' : 'Start'}>
+            {record.active ? (
               <PauseCircleOutlined
                 disabled={record.approvalStatus !== 'Approved'}
                 onClick={() => toggleMonitoringStatus(record)}
