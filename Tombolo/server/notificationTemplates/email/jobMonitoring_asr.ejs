@@ -9,7 +9,8 @@
 
     .section {
       margin: 0 auto !important;
-      width: 800px;
+      min-width: 800px;
+      max-width: 1280px;
       border-collapse: collapse;
       font-family: Arial;
       font-size: 14px;
@@ -24,13 +25,20 @@
     .section-footer {
       background: none;
       text-align: center;
-      border-top: 1px solid #dddddd;
+      border-top: 1px solid #dddddd !important;
       font-size: 12px;
     }
 
     .section-footer-td {
-      padding-top: 50px;
+      padding-top: 20px;
       padding-bottom: 50px;
+      color: #808080;
+      border-top: 1px solid #808080;
+    }
+
+    .section-note-td {
+      padding-top: 10px;
+      padding-bottom: 20px;
       color: #808080;
     }
 
@@ -149,6 +157,17 @@
             </tr>
           </tbody>
         </table>
+
+        <table class="section">
+          <tbody>
+            <tr>
+              <td class="section-note-td">
+                Note: The timestamps displayed in this notification reflect the time zone of the running cluster.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
         <table class="section section-footer">
           <tbody>
             <tr>

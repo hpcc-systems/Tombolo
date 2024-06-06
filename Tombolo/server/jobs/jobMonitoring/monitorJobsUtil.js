@@ -594,7 +594,8 @@ async function createNotificationPayload({
       requireComplete: wu.requireComplete ? "Yes" : "No",
       Jobname: wu.Jobname,
       Wuid: wu.Wuid,
-      expectedStart: new Date(wu.expectedStartTime).toLocaleString(),
+      expectedStart:
+        new Date(wu.expectedStartTime).toLocaleString(),
       expectedCompletion: new Date(wu.expectedCompletionTime).toLocaleString(),
       discoveredAt: findLocalDateTimeAtCluster(
         cluster.timezone_offset
@@ -673,11 +674,9 @@ const createNocNotificationPayload = async ({nocData, wu}) => {
       domain: domain.name, // Code only
       issue: `Analysis detected a monitored job in ${wu.State} state`,
       severity: asrSpecificMetaData.severity,
-      firstLogged: new Date().toLocaleString(), // Needs to be cluster time not UTC
-      lastLogged: new Date().toLocaleString(), // Needs to be cluster time not UTC
-      primaryContact: "PRIMARY CONTACT HERE",
-      secondaryContact: "SECONDARY CONTACT HERE",
-      region: "USA",
+      firstLogged: new Date().toLocaleString(), //TODO -  Needs to be cluster time not UTC
+      lastLogged: new Date().toLocaleString(), //TODO -  Needs to be cluster time not UTC
+      region: "USA", // TODO - this should come from somewhere not hard coded
       businessUnit: domain.name,
       notificationId: generateNotificationId({
         notificationPrefix: product.shortCode,
