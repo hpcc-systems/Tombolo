@@ -53,6 +53,7 @@ function JobMonitoring() {
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [teamsHooks, setTeamsHook] = useState([]);
   const [editingData, setEditingData] = useState({ isEditing: false }); // Data to be edited
+  const [duplicatingData, setDuplicatingData] = useState({ isDuplicating: false }); // JM to be duplicated
   const [monitoringScope, setMonitoringScope] = useState(null); // ClusterWideMonitoring or ClusterSpecificMonitoring
   const [displayAddRejectModal, setDisplayAddRejectModal] = useState(false);
   const [savingJobMonitoring, setSavingJobMonitoring] = useState(false); // Flag to indicate if job monitoring is being saved
@@ -84,7 +85,7 @@ function JobMonitoring() {
 
   //When intention to edit a monitoring is discovered
   useEffect(() => {
-    if (editingData?.isEditing) {
+    if (editingData?.isEditing || duplicatingData?.isDuplicating) {
       form.setFieldsValue(selectedMonitoring);
       setMonitoringScope(selectedMonitoring.monitoringScope);
       setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring.clusterId));
@@ -117,8 +118,18 @@ function JobMonitoring() {
           }
         }
       }
+
+      if (duplicatingData.isDuplicating) {
+        form.setFields([
+          {
+            name: 'monitoringName',
+            value: null,
+            error: ['Please enter a unique monitoring name'],
+          },
+        ]);
+      }
     }
-  }, [editingData]);
+  }, [editingData, duplicatingData]);
 
   // Get all teams hook, monitoring type ID
   useEffect(() => {
@@ -192,6 +203,7 @@ function JobMonitoring() {
     setDisplayAddJobMonitoringModal(false);
     setSelectedMonitoring(null);
     setEditingData({ isEditing: false });
+    setDuplicatingData({ isDuplicating: false });
     setMonitoringScope(null);
     setErroneousTabs([]);
     setErroneousScheduling(false);
@@ -549,6 +561,7 @@ function JobMonitoring() {
         jobMonitorings={jobMonitorings}
         setEditingData={setEditingData}
         isEditing={editingData?.isEditing}
+        setDuplicatingData={setDuplicatingData}
         erroneousTabs={erroneousTabs}
         setErroneousTabs={setErroneousTabs}
         setErroneousScheduling={setErroneousScheduling}
@@ -568,6 +581,7 @@ function JobMonitoring() {
         setSelectedMonitoring={setSelectedMonitoring}
         setDisplayAddJobMonitoringModal={setDisplayAddJobMonitoringModal}
         setEditingData={setEditingData}
+        setDuplicatingData={setDuplicatingData}
         setDisplayAddRejectModal={setDisplayAddRejectModal}
         applicationId={applicationId}
         setSelectedRows={setSelectedRows}

@@ -102,3 +102,11 @@
 .jobMonitoringTable__active-monitoring {
   background-color: var(--active);
 }
+
+.jobMonitoringTable__hidden_actions > * {
+  padding: 5px;
+}
+
+.jobMonitoringTable__hidden_actions > *:hover {
+  background-color: var(--secondary-light);
+}
