@@ -54,11 +54,13 @@ const ApproveRejectModal = ({
       const formData = form.getFieldsValue();
       formData.id = id;
       formData.approvalStatus = action;
-      formData.approvedBy = JSON.stringify({
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-      });
+      if (typeof user === 'object' && user !== null) {
+        formData.approvedBy = JSON.stringify({
+          id: user.id,
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+        });
+      }
       const payload = {
         method: 'PATCH',
         header: authHeader(),
@@ -76,15 +78,19 @@ const ApproveRejectModal = ({
         setDisplayAddRejectModal(false);
         setJobMonitorings((prev) => {
           const index = prev.findIndex((item) => item.id === id);
+          let approvedBy = prev[index].approvedBy;
+          if (typeof user === 'object' && user !== null) {
+            approvedBy = JSON.stringify({
+              id: user.id,
+              name: `${user.firstName} ${user.lastName}`,
+              email: user.email,
+            });
+          }
           prev[index] = {
             ...prev[index],
             approvalStatus: action,
             isActive: action === 'rejected' ? false : prev[index].isActive,
-            approvedBy: JSON.stringify({
-              id: user.id,
-              name: `${user.firstName} ${user.lastName}`,
-              email: user.email,
-            }),
+            approvedBy,
             approvedAt: new Date(),
             approverComment: formData.approverComment,
           };
@@ -138,9 +144,12 @@ const ApproveRejectModal = ({
           <div style={{ marginTop: '15px' }}>
             This monitoring was{' '}
             <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{selectedMonitoring?.approvalStatus}</span> by{' '}
-            <Tooltip title={<div>{JSON.parse(selectedMonitoring?.approvedBy)?.email}</div>}>
+            <Tooltip
+              title={
+                <div>{selectedMonitoring?.approvedBy ? JSON.parse(selectedMonitoring?.approvedBy)?.email : ''}</div>
+              }>
               <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
-                {JSON.parse(selectedMonitoring?.approvedBy)?.name}{' '}
+                {selectedMonitoring?.approvedBy ? JSON.parse(selectedMonitoring?.approvedBy)?.name : ''}{' '}
               </span>
             </Tooltip>
             on {new Date(selectedMonitoring?.approvedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}.
