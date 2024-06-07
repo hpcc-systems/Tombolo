@@ -9,6 +9,7 @@ import {
   PlayCircleOutlined,
   PauseCircleOutlined,
   CopyOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -120,32 +121,35 @@ const JobMonitoringTable = ({
             />
           </Tooltip>
 
-          <Tooltip title="Approve">
-            <CheckCircleFilled
-              style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}
-              onClick={() => evaluateMonitoring(record)}
-            />
-          </Tooltip>
-          <Tooltip title={record.isActive ? 'Pause' : 'Start'}>
-            {record.isActive ? (
-              <PauseCircleOutlined
-                disabled={record.approvalStatus !== 'Approved'}
-                onClick={() => toggleMonitoringStatus(record)}
-                style={{ color: 'var(--primary)', marginRight: 15 }}
-              />
-            ) : (
-              <PlayCircleOutlined
-                disabled={record.approvalStatus !== 'Approved'}
-                onClick={() => toggleMonitoringStatus(record)}
-                style={{ color: 'var(--primary)', marginRight: 15 }}
-              />
-            )}
-          </Tooltip>
           <Popover
+            placement="bottom"
             content={
               <div
                 style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }}
                 className="jobMonitoringTable__hidden_actions">
+                <div title="Approve" onClick={() => evaluateMonitoring(record)}>
+                  <CheckCircleFilled style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }} />{' '}
+                  Approve / Reject
+                </div>
+
+                {record.isActive ? (
+                  <div onClick={() => toggleMonitoringStatus(record)}>
+                    <PauseCircleOutlined
+                      disabled={record.approvalStatus !== 'Approved'}
+                      style={{ color: 'var(--primary)', marginRight: 15 }}
+                    />
+                    Pause
+                  </div>
+                ) : (
+                  <div onClick={() => toggleMonitoringStatus(record)}>
+                    <PlayCircleOutlined
+                      disabled={record.approvalStatus !== 'Approved'}
+                      style={{ color: 'var(--primary)', marginRight: 15 }}
+                    />
+                    Start
+                  </div>
+                )}
+
                 <Popconfirm
                   title={
                     <>
@@ -175,7 +179,9 @@ const JobMonitoringTable = ({
                 </div>
               </div>
             }>
-            <span style={{ color: 'var(--primary)' }}>More</span>
+            <span style={{ color: 'var(--primary)' }}>
+              More <DownOutlined style={{ fontSize: '10px' }} />
+            </span>
           </Popover>
         </>
       ),

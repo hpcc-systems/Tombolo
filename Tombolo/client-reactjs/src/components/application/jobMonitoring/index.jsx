@@ -561,7 +561,7 @@ function JobMonitoring() {
         jobMonitorings={jobMonitorings}
         setEditingData={setEditingData}
         isEditing={editingData?.isEditing}
-        setDuplicatingData={setDuplicatingData}
+        isDuplicating={duplicatingData?.isDuplicating}
         erroneousTabs={erroneousTabs}
         setErroneousTabs={setErroneousTabs}
         setErroneousScheduling={setErroneousScheduling}

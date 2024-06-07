@@ -27,6 +27,7 @@ const AddEditJobMonitoringModal = ({
   savingJobMonitoring,
   jobMonitorings,
   isEditing,
+  isDuplicating,
   erroneousTabs,
   resetStates,
   domains,
@@ -60,6 +61,7 @@ const AddEditJobMonitoringModal = ({
           setMonitoringScope={setMonitoringScope}
           jobMonitorings={jobMonitorings}
           isEditing={isEditing}
+          isDuplicating={isDuplicating}
           selectedCluster={selectedCluster}
           setSelectedCluster={setSelectedCluster}
         />
