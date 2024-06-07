@@ -116,6 +116,7 @@ export const handleDeleteJobMonitoring = async ({ id, jobMonitorings, setJobMoni
     // Set job monitorings
     const filteredJobMonitorings = jobMonitorings.filter((item) => item.id !== id);
     setJobMonitorings(filteredJobMonitorings);
+    message.success('Job monitoring deleted successfully');
   } catch (err) {
     message.error(err.message);
   }
