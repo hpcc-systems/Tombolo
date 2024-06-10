@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Form, Select, AutoComplete, Input, Card } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
@@ -28,6 +28,7 @@ function JobMonitoringBasicTab({
   setMonitoringScope,
   jobMonitorings,
   isEditing,
+  isDuplicating,
   selectedCluster,
   setSelectedCluster,
 }) {
@@ -36,7 +37,24 @@ function JobMonitoringBasicTab({
   const [selectedUserGuideName, setSelectedUserGuideName] = useState('');
   const [jobs, setJobs] = useState([]);
   const [fetchingJobs, setFetchingJobs] = useState(false);
-  // const [selectedCluster, setSelectedCluster] = useState(null);
+  const monitoringNameInputRef = useRef(null);
+
+  // If duplicating focus on monitoring name input, empty monitoring name field and show error
+  useEffect(() => {
+    if (form && !isEditing) {
+      monitoringNameInputRef.current.focus();
+    }
+
+    if (isDuplicating) {
+      form.setFields([
+        {
+          name: 'monitoringName',
+          value: null,
+          errors: ['Enter a unique monitoring name'],
+        },
+      ]);
+    }
+  }, [isDuplicating, form]);
 
   // Handle cluster change
   const handleClusterChange = (value) => {
@@ -110,7 +128,7 @@ function JobMonitoringBasicTab({
               },
             }),
           ]}>
-          <Input placeholder="Enter a name" />
+          <Input placeholder="Enter a name" ref={monitoringNameInputRef} />
         </Form.Item>
 
         <Form.Item

@@ -1,7 +1,7 @@
 "use strict";
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("directorymonitoring", {
+    await queryInterface.createTable("directoryMonitoring", {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -105,6 +105,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("directorymonitoring");
+    await queryInterface.dropTable("directoryMonitoring");
   },
 };
