@@ -10,6 +10,8 @@ const JobMonitoringActionButton = ({
   setSelectedRows,
   setJobMonitorings,
   setBulkEditModalVisibility,
+  setFiltersVisible,
+  filtersVisible,
 }) => {
   const deleteSelected = async () => {
     try {
@@ -27,7 +29,15 @@ const JobMonitoringActionButton = ({
       handleAddJobMonitoringButtonClick();
     } else if (key === '2') {
       setBulkEditModalVisibility(true);
+    } else if (key === '4') {
+      changeFilterVisibility();
     }
+  };
+
+  //Change filter visibility
+  const changeFilterVisibility = () => {
+    localStorage.setItem('jMFiltersVisible', !filtersVisible);
+    setFiltersVisible((prev) => !prev);
   };
 
   return (
@@ -48,6 +58,7 @@ const JobMonitoringActionButton = ({
               Bulk Delete
             </Popconfirm>
           </Menu.Item>
+          <Menu.Item key="4">{filtersVisible ? 'Hide filters' : 'Show filters'}</Menu.Item>
         </Menu>
       )}>
       <Button type="primary">
