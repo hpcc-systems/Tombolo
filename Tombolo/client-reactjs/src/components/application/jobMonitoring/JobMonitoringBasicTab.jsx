@@ -5,6 +5,7 @@ import { debounce } from 'lodash';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import InfoDrawer from '../../common/InfoDrawer';
+import { doesNameExist } from './jobMonitoringUtils';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -46,11 +47,28 @@ function JobMonitoringBasicTab({
     }
 
     if (isDuplicating) {
+      let currentMonitoringName = form.getFieldValue('monitoringName');
+      let copyCount = 1;
+
+      // Remove any existing copy count from the name
+      const match = currentMonitoringName.match(/^(.*) \(Copy \d+\)$/);
+      if (match) {
+        currentMonitoringName = match[1];
+      }
+
+      let newName = `${currentMonitoringName} (Copy ${copyCount})`;
+
+      // Keep incrementing the copy count until a unique name is found
+      while (doesNameExist({ jobMonitorings, newName })) {
+        copyCount++;
+        newName = `${currentMonitoringName} (Copy ${copyCount})`;
+      }
+
       form.setFields([
         {
           name: 'monitoringName',
-          value: null,
-          errors: ['Enter a unique monitoring name'],
+          value: newName,
+          errors: [''],
         },
       ]);
     }
@@ -121,7 +139,7 @@ function JobMonitoringBasicTab({
             () => ({
               validator(_, value) {
                 if (isEditing) return Promise.resolve();
-                if (!value || !jobMonitorings.find((job) => job.monitoringName === value)) {
+                if (!value || !doesNameExist({ jobMonitorings, newName: value })) {
                   return Promise.resolve();
                 }
                 return Promise.reject(new Error('Monitoring name must be unique'));
