@@ -50,10 +50,11 @@ function JobMonitoringBasicTab({
       let currentMonitoringName = form.getFieldValue('monitoringName');
       let copyCount = 1;
 
-      // Remove any existing copy count from the name
-      const match = currentMonitoringName.match(/^(.*) \(Copy \d+\)$/);
+      // Extract base name and copy count from the current name
+      const match = currentMonitoringName.match(/^(.*) \(Copy (\d+)\)$/);
       if (match) {
         currentMonitoringName = match[1];
+        copyCount = parseInt(match[2]) + 1;
       }
 
       let newName = `${currentMonitoringName} (Copy ${copyCount})`;
