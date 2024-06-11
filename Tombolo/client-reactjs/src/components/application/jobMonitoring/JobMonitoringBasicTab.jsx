@@ -69,7 +69,7 @@ function JobMonitoringBasicTab({
         {
           name: 'monitoringName',
           value: newName,
-          warnings: ['Auto generated name'],
+          warnings: ['Auto generated name. Please   modify if necessary.'],
         },
       ]);
     }
