@@ -118,16 +118,6 @@ function JobMonitoring() {
           }
         }
       }
-
-      if (duplicatingData.isDuplicating) {
-        form.setFields([
-          {
-            name: 'monitoringName',
-            value: null,
-            error: ['Please enter a unique monitoring name'],
-          },
-        ]);
-      }
     }
   }, [editingData, duplicatingData]);
 
