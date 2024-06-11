@@ -258,3 +258,8 @@ export function isScheduleUpdated({ existingSchedule, newSchedule }) {
   }
   return false;
 }
+
+// Check if new name job monitoring name already exists
+export function doesNameExist({ jobMonitorings, newName }) {
+  return jobMonitorings.some((job) => job.monitoringName === newName);
+}
