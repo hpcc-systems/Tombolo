@@ -40,7 +40,7 @@ function JobMonitoringBasicTab({
   const [fetchingJobs, setFetchingJobs] = useState(false);
   const monitoringNameInputRef = useRef(null);
 
-  // If duplicating focus on monitoring name input, empty monitoring name field and show error
+  // If duplicating focus on monitoring name input, empty monitoring name field and show warning message
   useEffect(() => {
     if (form && !isEditing) {
       monitoringNameInputRef.current.focus();
@@ -68,7 +68,7 @@ function JobMonitoringBasicTab({
         {
           name: 'monitoringName',
           value: newName,
-          errors: [''],
+          warnings: ['Auto generated name'],
         },
       ]);
     }
@@ -133,6 +133,7 @@ function JobMonitoringBasicTab({
         <Form.Item
           label="Monitoring Name"
           name="monitoringName"
+          validateTrigger="onBlur"
           rules={[
             { required: true, message: 'Required field' },
             { max: 100, message: 'Maximum of 100 characters allowed' },
