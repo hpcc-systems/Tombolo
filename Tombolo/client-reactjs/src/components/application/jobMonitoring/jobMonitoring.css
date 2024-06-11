@@ -132,4 +132,5 @@
   justify-content: right;
   color: var(--primary);
   background: none;
+  font-weight: 600;
 }

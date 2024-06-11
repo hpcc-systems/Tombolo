@@ -147,7 +147,7 @@ function JobMonitoring() {
     }
   }, [editingData, duplicatingData]);
 
-  // Get all teams hook, monitoring type ID
+  // Get all teams hook, monitoring type ID, Filters from local storage
   useEffect(() => {
     // Teams hook
     (async () => {
@@ -168,6 +168,13 @@ function JobMonitoring() {
         message.error('Error fetching monitoring type ID');
       }
     })();
+
+    // Get filters from local storage
+    const existingFiltersFromLocalStorage = localStorage.getItem('jMFilters');
+    if (existingFiltersFromLocalStorage) {
+      const filtersFromLocalStorage = JSON.parse(existingFiltersFromLocalStorage);
+      setFilters(filtersFromLocalStorage);
+    }
   }, []);
 
   // Get domains and product categories
@@ -210,47 +217,47 @@ function JobMonitoring() {
 
   // When filterChange filter the job monitorings
   useEffect(() => {
-    if (Object.keys(filters).length > 0) {
-      const { approvalStatus, activeStatus, domain, frequency, product } = filters;
+    if (jobMonitorings.length === 0) return;
+    if (Object.keys(filters).length < 1) return;
+    const { approvalStatus, activeStatus, domain, frequency, product } = filters;
 
-      // Convert activeStatus to boolean
-      let activeStatusBool;
-      if (activeStatus === 'Active') {
-        activeStatusBool = true;
-      } else if (activeStatus === 'Inactive') {
-        activeStatusBool = false;
+    // Convert activeStatus to boolean
+    let activeStatusBool;
+    if (activeStatus === 'Active') {
+      activeStatusBool = true;
+    } else if (activeStatus === 'Inactive') {
+      activeStatusBool = false;
+    }
+
+    const filteredJobMonitorings = jobMonitorings.filter((jobMonitoring) => {
+      let include = true;
+      const currentDomain = jobMonitoring?.metaData?.asrSpecificMetaData?.domain;
+      const currentProduct = jobMonitoring?.metaData?.asrSpecificMetaData?.productCategory;
+      const currentFrequency = jobMonitoring?.metaData?.schedule[0]?.frequency;
+
+      if (approvalStatus && jobMonitoring.approvalStatus !== approvalStatus) {
+        include = false;
+      }
+      if (activeStatusBool !== undefined && jobMonitoring.isActive !== activeStatusBool) {
+        include = false;
+      }
+      if (domain && currentDomain !== domain) {
+        include = false;
       }
 
-      const filteredJobMonitorings = jobMonitorings.filter((jobMonitoring) => {
-        let include = true;
-        const currentDomain = jobMonitoring?.metaData?.asrSpecificMetaData?.domain;
-        const currentProduct = jobMonitoring?.metaData?.asrSpecificMetaData?.productCategory;
-        const currentFrequency = jobMonitoring?.metaData?.schedule[0]?.frequency;
+      if (product && currentProduct !== product) {
+        include = false;
+      }
 
-        if (approvalStatus && jobMonitoring.approvalStatus !== approvalStatus) {
-          include = false;
-        }
-        if (activeStatusBool !== undefined && jobMonitoring.isActive !== activeStatusBool) {
-          include = false;
-        }
-        if (domain && currentDomain !== domain) {
-          include = false;
-        }
+      if (frequency && currentFrequency !== frequency) {
+        include = false;
+      }
 
-        if (product && currentProduct !== product) {
-          include = false;
-        }
+      return include;
+    });
 
-        if (frequency && currentFrequency !== frequency) {
-          include = false;
-        }
-
-        return include;
-      });
-
-      setFilteredJobMonitoring(filteredJobMonitorings);
-    }
-  }, [filters]);
+    setFilteredJobMonitoring(filteredJobMonitorings);
+  }, [filters, jobMonitorings]);
 
   // Function reset states when modal is closed
   const resetStates = () => {

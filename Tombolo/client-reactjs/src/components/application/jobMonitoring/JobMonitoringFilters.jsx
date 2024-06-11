@@ -1,7 +1,7 @@
 // Packages
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Form, Row, Col, Select, Button } from 'antd';
+import { Form, Row, Col, Select } from 'antd';
 import _ from 'lodash';
 
 // Local imports
@@ -11,7 +11,6 @@ import './jobMonitoring.css';
 const { Option } = Select;
 
 function NotificationTableFilters({
-  filters,
   setFilters,
   jobMonitorings,
   domains,
@@ -38,14 +37,29 @@ function NotificationTableFilters({
   const [frequencyOptions, setFrequencyOptions] = useState([]);
   const [filterCount, setFilterCount] = useState(4);
 
-  console.count('NotificationTableFilters');
-
   //Effects
   useEffect(() => {
     // Display filters if true in local storage
     const filtersVisibility = localStorage.getItem('jMFiltersVisible');
+    const existingFilters = localStorage.getItem('jMFilters');
+
     if (filtersVisibility) {
       setFiltersVisible(filtersVisibility === 'true');
+    }
+
+    if (existingFilters) {
+      const filtersFromLocalStorage = JSON.parse(existingFilters);
+      form.setFieldsValue(filtersFromLocalStorage);
+      let count = 0;
+
+      // Set filter count
+      for (let keys of Object.keys(filtersFromLocalStorage)) {
+        if (filtersFromLocalStorage[keys]) {
+          count++;
+        }
+      }
+
+      setFilterCount(count);
     }
   }, []);
 
@@ -110,17 +124,20 @@ function NotificationTableFilters({
   }, [jobMonitorings, domains, allProductCategories, productCategories, selectedDomain]);
 
   // When the filter item changes
-  const handleFormChange = (changedValues) => {
-    const allFilters = { ...filters, ...changedValues };
+  const handleFormChange = () => {
+    const allFilters = form.getFieldsValue();
     setFilters(allFilters);
 
-    let filtersLength = 0;
-    Object.keys(allFilters).forEach((key) => {
-      if (allFilters[key] !== undefined) {
-        filtersLength++;
+    localStorage.setItem('jMFilters', JSON.stringify(allFilters));
+
+    // Set new filter count
+    let count = 0;
+    for (let keys of Object.keys(allFilters)) {
+      if (allFilters[keys]) {
+        count++;
       }
-    });
-    setFilterCount(filtersLength);
+    }
+    setFilterCount(count);
   };
 
   //Handle domain Change
@@ -217,10 +234,10 @@ function NotificationTableFilters({
 
       {filterCount > 0 && !filtersVisible && (
         <div className="notification__filters_count">
-          <Button size="small" type="link" danger onClick={handleFilterCountClick}>
-            {`${filterCount} Filter${filterCount > 1 ? 's' : ''} applied `}
-            <span style={{ color: 'var(--primary)', paddingLeft: '5px' }}> {' - Click to view'}</span>
-          </Button>
+          <div onClick={handleFilterCountClick}>
+            <span style={{ color: 'var(--danger)' }}>{`${filterCount} filter(s) active`}</span>
+            <span style={{ color: 'var(--primary)', paddingLeft: '5px' }}> - View</span>
+          </div>
         </div>
       )}
     </div>
