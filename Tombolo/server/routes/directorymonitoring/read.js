@@ -52,16 +52,6 @@ router.post(
         newMonitoring
       );
 
-      const { id, name, cron, active } = directoryMonitoring;
-
-      if (active) {
-        jobScheduler.createDirectoryMonitoringBreeJob({
-          directoryMonitoring_id: id,
-          name,
-          cron,
-        });
-      }
-
       res.status(201).json(directoryMonitoring);
     } catch (error) {
       logger.error(error);
@@ -115,19 +105,19 @@ router.put(
         approvedAt: req.body.approvedAt,
       });
 
-      const { active, approved, name, cron } = updatedMonitoring;
+      // const { active, approved, name, cron } = updatedMonitoring;
 
-      if (active && approved) {
-        jobScheduler.createDirectoryMonitoringBreeJob({
-          directoryMonitoring_id: id,
-          name,
-          cron,
-        });
-      } else {
-        removeJob(id);
-      }
+      // // if (active && approved) {
+      // //   jobScheduler.createDirectoryMonitoringBreeJob({
+      // //     directoryMonitoring_id: id,
+      // //     name,
+      // //     cron,
+      // //   });
+      // // } else {
+      // //   removeJob(id);
+      // // }
 
-      res.status(200).json(directoryMonitoring);
+      res.status(200).json(updatedMonitoring);
     } catch (error) {
       logger.error(error);
       res
@@ -189,7 +179,7 @@ router.put(
 
 // Delete a directory monitoring entry
 router.delete(
-  "/:id",
+  "/delete/:id",
   [param("id").isUUID().withMessage("ID must be a UUID")],
   async (req, res) => {
     try {
@@ -303,15 +293,15 @@ router.patch(
       await directoryMonitoring.update({ active: !active });
 
       // location for starting or stopping monitoring job
-      if (active && approved) {
-        jobScheduler.createDirectoryMonitoringBreeJob({
-          directoryMonitoring_id: id,
-          name,
-          cron,
-        });
-      } else {
-        removeJob(id);
-      }
+      // if (active && approved) {
+      //   jobScheduler.createDirectoryMonitoringBreeJob({
+      //     directoryMonitoring_id: id,
+      //     name,
+      //     cron,
+      //   });
+      // } else {
+      //   removeJob(id);
+      // }
       logger.verbose("Directory monitoring active status updated");
       res.status(200).json(directoryMonitoring);
     } catch (error) {
@@ -368,7 +358,9 @@ router.delete(
   async (req, res) => {
     try {
       const { ids } = req.body;
+
       for (let i = 0; i < ids.length; i++) {
+        console.log(ids[i]);
         const directoryMonitoring = await DirectoryMonitoring.findByPk(ids[i]);
         if (!directoryMonitoring) {
           return res
@@ -443,17 +435,17 @@ router.patch(
           active: active,
         });
 
-        const { name, cron } = directoryMonitoring;
+        // const { name, cron } = directoryMonitoring;
 
-        if (active && approved) {
-          jobScheduler.createDirectoryMonitoringBreeJob({
-            directoryMonitoring_id: id,
-            name,
-            cron,
-          });
-        } else {
-          removeJob(id);
-        }
+        // // if (active && approved) {
+        // //   jobScheduler.createDirectoryMonitoringBreeJob({
+        // //     directoryMonitoring_id: id,
+        // //     name,
+        // //     cron,
+        // //   });
+        // // } else {
+        // //   removeJob(id);
+        // // }
       }
       res.status(200).json({ message: "Directory monitorings approved" });
     } catch (error) {

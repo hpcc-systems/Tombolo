@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Form, Select, Input, Card } from 'antd';
 import LandingZoneFileExplorer from '../../../common/LandingZoneFileExplorer';
 import { InfoCircleOutlined } from '@ant-design/icons';
@@ -15,15 +15,48 @@ function BasicTab({
   selectedCluster,
   setSelectedCluster,
   setDirectory,
+  copying,
+  selectedMonitoring = { selectedMonitoring },
 }) {
   //Local State
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [selectedUserGuideName, setSelectedUserGuideName] = useState('');
+  const nameRef = useRef(null);
 
   // Handle cluster change
   const handleClusterChange = (value) => {
     const selectedClusterDetails = clusters.find((cluster) => cluster.id === value);
     setSelectedCluster(selectedClusterDetails);
+  };
+
+  // If duplicating focus on monitoring name input, empty monitoring name field and show error
+  useEffect(() => {
+    if (form && !isEditing) {
+      nameRef.current.focus();
+    }
+
+    if (copying) {
+      const newName = findUniqueName(form.getFieldValue('name'));
+
+      form.setFields([
+        {
+          name: 'name',
+          value: newName,
+          warnings: ['Auto generated name'],
+        },
+      ]);
+    }
+  }, [copying, form]);
+
+  const findUniqueName = (name) => {
+    let i = 1;
+    let newName = name + ' ( ' + i + ' )';
+    while (directoryMonitorings.find((directory) => directory.name === newName)) {
+      i++;
+      newName = name + ' ( ' + i + ' )';
+    }
+
+    return newName;
   };
 
   return (
@@ -46,7 +79,7 @@ function BasicTab({
                 },
               }),
             ]}>
-            <Input placeholder="Enter a name" />
+            <Input placeholder="Enter a name" ref={nameRef} onBlur={() => form.validateFields()} />
           </Form.Item>
 
           <Form.Item
@@ -81,10 +114,10 @@ function BasicTab({
             </Select>
           </Form.Item>
 
-          {selectedCluster ? (
+          {selectedCluster || selectedMonitoring?.cluster_id ? (
             <Form.Item name="directoryName" rules={[{ max: 256, message: 'Maximum of 256 characters allowed' }]}>
               <LandingZoneFileExplorer
-                clusterId={selectedCluster.id}
+                clusterId={selectedCluster?.id || selectedMonitoring?.cluster_id}
                 DirectoryOnly={true}
                 setLandingZoneRootPath={setDirectory}
                 enableEdit={true}

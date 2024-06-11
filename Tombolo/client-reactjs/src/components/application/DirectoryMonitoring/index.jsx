@@ -18,6 +18,7 @@ import ApproveRejectModal from './ApproveRejectModal';
 import dayjs from 'dayjs';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BulkApprovalModal from './BulkApprovalModal.jsx';
+import ViewDetailsModal from './ViewDetailsModal';
 
 const DirectoryMonitoring = () => {
   const {
@@ -43,7 +44,7 @@ const DirectoryMonitoring = () => {
   const [cronMessage, setCronMessage] = useState(null); // Cron message to display when cron is invalid or has errors
   const [erroneousScheduling, setErroneousScheduling] = useState(false);
   const [directoryMonitorings, setDirectoryMonitorings] = useState([]);
-  const [displayMonitoringDetailsModal, setDisplayMonitoringDetailsModal] = useState(false);
+  const [displayViewDetailsModal, setDisplayViewDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [teamsHooks, setTeamsHook] = useState([]);
   const [editingData, setEditingData] = useState({ isEditing: false }); // Data to be edited
@@ -56,9 +57,10 @@ const DirectoryMonitoring = () => {
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
   const [bulkApprovalModalVisibility, setBulkApprovalModalVisibility] = useState(false);
   const [directory, setDirectory] = useState(null);
+  const [copying, setCopying] = useState(false);
 
   useEffect(() => {
-    if (editingData?.isEditing) {
+    if (editingData?.isEditing || copying) {
       form.setFieldsValue(selectedMonitoring);
       setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring.clusterId));
 
@@ -87,7 +89,7 @@ const DirectoryMonitoring = () => {
         }
       }
     }
-  }, [editingData]);
+  }, [editingData, copying]);
 
   // Get all teams hook,
   useEffect(() => {
@@ -156,14 +158,13 @@ const DirectoryMonitoring = () => {
       return;
     }
 
-    // If form is valid and schedule is valid save directory monitoring
     try {
       //All inputs
-      let allInputs = form.getFieldsValue();
+      let userFieldInputs = form.getFieldsValue();
 
-      // Group Notification specific metaData and delete from allInputs
+      // Group Notification specific metaData and delete from userFieldInputs
       const notificationMetaData = {};
-      const { notificationCondition, teamsHooks, primaryContacts, secondaryContacts, notifyContacts } = allInputs;
+      const { notificationCondition, teamsHooks, primaryContacts, secondaryContacts, notifyContacts } = userFieldInputs;
       const notificationSpecificFields = {
         notificationCondition,
         teamsHooks,
@@ -175,28 +176,28 @@ const DirectoryMonitoring = () => {
         if (notificationSpecificFields[key] !== undefined) {
           notificationMetaData[key] = notificationSpecificFields[key];
         }
-        delete allInputs[key];
+        delete userFieldInputs[key];
       }
 
-      // Add expectedCompletionTime to metaData if entered, delete from allInputs
+      // Add expectedCompletionTime to metaData if entered, delete from userFieldInputs
       const metaData = {};
 
-      let { expectedMoveByTime, maximumFileCount, minimumFileCount } = allInputs;
+      let { expectedMoveByTime, maximumFileCount, minimumFileCount } = userFieldInputs;
 
       if (maximumFileCount) {
         metaData.maximumFileCount = maximumFileCount;
       }
-      delete allInputs.maximumFileCount;
+      delete userFieldInputs.maximumFileCount;
       if (minimumFileCount) {
         metaData.minimumFileCount = minimumFileCount;
       }
-      delete allInputs.minimumFileCount;
+      delete userFieldInputs.minimumFileCount;
 
       if (expectedMoveByTime) {
         // Format expectedCompletionTime and expectcfedStartTime
         metaData.expectedMoveByTime = expectedMoveByTime.format('HH:mm');
       }
-      delete allInputs.expectedMoveByTime;
+      delete userFieldInputs.expectedMoveByTime;
 
       const userDetails = JSON.stringify({
         id: user.id,
@@ -210,23 +211,25 @@ const DirectoryMonitoring = () => {
         metaData.schedule = directorySchedule.schedule;
 
         if (directorySchedule.schedule[0]?.cron) {
-          allInputs.cron = directorySchedule.schedule[0].cron;
+          userFieldInputs.cron = directorySchedule.schedule[0].cron;
         }
       }
 
-      //Add metaData to allInputs
-      allInputs = { ...allInputs, metaData };
+      //Add metaData to userFieldInputs
+      userFieldInputs = { ...userFieldInputs, metaData };
+
+      console.log(userFieldInputs);
 
       //data transformations necessary for submitting
-      allInputs.directory = allInputs.dirToMonitor.join('/');
-      allInputs['application_id'] = applicationId;
-      allInputs.type = 'directory';
-      allInputs.active = false;
-      allInputs.approved = false;
-      allInputs.createdBy = userDetails;
-      allInputs.updatedBy = userDetails;
+      userFieldInputs.directory = userFieldInputs.dirToMonitor.join('/');
+      userFieldInputs['application_id'] = applicationId;
+      userFieldInputs.type = 'directory';
+      userFieldInputs.active = false;
+      userFieldInputs.approved = false;
+      userFieldInputs.createdBy = userDetails;
+      userFieldInputs.updatedBy = userDetails;
 
-      const responseData = await createDirectoryMonitoring({ inputData: allInputs });
+      const responseData = await createDirectoryMonitoring({ inputData: userFieldInputs });
       setDirectoryMonitorings([responseData, ...directoryMonitorings]);
       console.log(responseData);
       message.success('Directory monitoring saved successfully');
@@ -260,10 +263,6 @@ const DirectoryMonitoring = () => {
     setCron('');
     form.resetFields();
   };
-
-  //console log all unused variables
-  console.log(displayMonitoringDetailsModal);
-  console.log(setTeamsHook);
 
   //JSX
   return (
@@ -312,29 +311,30 @@ const DirectoryMonitoring = () => {
         setActiveTab={setActiveTab}
         directory={directory}
         setDirectory={setDirectory}
+        copying={copying}
+        setCopying={setCopying}
+        selectedMonitoring={selectedMonitoring}
       />
       <DirectoryMonitoringTable
         directoryMonitorings={directoryMonitorings}
         setDirectoryMonitorings={setDirectoryMonitorings}
-        setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
+        setDisplayViewDetailsModal={setDisplayViewDetailsModal}
         setSelectedMonitoring={setSelectedMonitoring}
         setDisplayAddEditModal={setDisplayAddEditModal}
         setEditingData={setEditingData}
         setDisplayAddRejectModal={setDisplayAddRejectModal}
         applicationId={applicationId}
         setSelectedRows={setSelectedRows}
+        setCopying={setCopying}
       />
-      {/*
-      <MonitoringDetailsModal
-        displayMonitoringDetailsModal={displayMonitoringDetailsModal}
-        setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
+      <ViewDetailsModal
+        displayViewDetailsModal={displayViewDetailsModal}
+        setDisplayViewDetailsModal={setDisplayViewDetailsModal}
         selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
         clusters={clusters}
         teamsHooks={teamsHooks}
-        domains={domains}
-        productCategories={productCategories}
-      /> */}
+      />
       <ApproveRejectModal
         id={selectedMonitoring?.id}
         displayAddRejectModal={displayAddRejectModal}

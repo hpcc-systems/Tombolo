@@ -55,7 +55,7 @@ const ApproveRejectModal = ({
       const formData = form.getFieldsValue();
       formData.id = id;
       formData.approvalStatus = action;
-      formData.approved = true;
+      formData.approved = action === 'Rejected' ? false : true;
       formData.approvedAt = new Date();
       formData.approvedBy = JSON.stringify({
         id: user.id,
@@ -64,7 +64,7 @@ const ApproveRejectModal = ({
       });
 
       const response = await approveSelectedMonitoring({ updatedData: formData });
-      console.log(response);
+
       if (response.error) {
         message.error('Error saving your response');
       } else {
@@ -76,8 +76,9 @@ const ApproveRejectModal = ({
           const index = prev.findIndex((item) => item.id === id);
           prev[index] = {
             ...prev[index],
+            approved: action === 'Rejected' ? false : true,
             approvalStatus: action,
-            active: action === 'rejected' ? false : prev[index].active,
+            active: action === 'Rejected' ? false : prev[index].active,
             approvedBy: JSON.stringify({
               id: user.id,
               name: `${user.firstName} ${user.lastName}`,

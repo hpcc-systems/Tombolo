@@ -34,6 +34,9 @@ const AddEditModal = ({
   setActiveTab,
   directory,
   setDirectory,
+  copying,
+  setCopying,
+  selectedMonitoring = { selectedMonitoring },
 }) => {
   // Keep track of visited tabs, some form fields are loaded only when tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
@@ -60,6 +63,8 @@ const AddEditModal = ({
           setSelectedCluster={setSelectedCluster}
           directory={directory}
           setDirectory={setDirectory}
+          copying={copying}
+          selectedMonitoring={selectedMonitoring}
         />
       ),
       id: 1,
@@ -109,6 +114,7 @@ const AddEditModal = ({
     setActiveTab('0');
     setVisitedTabs(['0']);
     setActiveTab('0');
+    setCopying(false);
     setDisplayAddEditModal(false);
   };
 

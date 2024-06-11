@@ -122,21 +122,23 @@ export const approveSelectedMonitoring = async ({ updatedData }) => {
 };
 
 //Delete directory monitoring
-export const handleDeleteDirectoryMonitoring = async ({ id, DirectoryMonitorings, setDirectoryMonitorings }) => {
+export const handleDeleteDirectoryMonitoring = async ({ id, directoryMonitorings, setDirectoryMonitorings }) => {
   try {
     const payload = {
       method: 'DELETE',
       header: authHeader(),
     };
 
-    const response = await fetch(`/api/DirectoryMonitoring/${id}`, payload);
+    const response = await fetch(`/api/DirectoryMonitoring/delete/${id}`, payload);
 
-    if (!response.ok) {
+    console.log(response);
+
+    if (!response.status === 204) {
       return message.error('Failed to delete directory monitoring');
     }
 
     // Set directory monitorings
-    const filteredDirectoryMonitorings = DirectoryMonitorings.filter((item) => item.id !== id);
+    const filteredDirectoryMonitorings = directoryMonitorings.filter((item) => item.id !== id);
     setDirectoryMonitorings(filteredDirectoryMonitorings);
   } catch (err) {
     message.error(err.message);
@@ -196,6 +198,7 @@ export const toggleDirectoryMonitoringStatus = async ({ id }) => {
 
 // Bulk delete directory monitorings
 export const handleBulkDeleteDirectoryMonitorings = async ({ selectedDirectoryMonitorings }) => {
+  console.log(selectedDirectoryMonitorings);
   const payload = {
     method: 'DELETE',
     headers: authHeader(),
@@ -203,6 +206,8 @@ export const handleBulkDeleteDirectoryMonitorings = async ({ selectedDirectoryMo
   };
 
   const response = await fetch(`/api/DirectoryMonitoring/bulkDelete`, payload);
+
+  console.log(response);
 
   if (!response.ok) {
     throw new Error('Failed to bulk delete directory monitorings');

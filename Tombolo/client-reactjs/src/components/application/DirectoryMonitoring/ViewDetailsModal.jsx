@@ -2,12 +2,12 @@ import React from 'react';
 import { Descriptions, Modal, Button, Tooltip, Tag } from 'antd';
 import cronstrue from 'cronstrue';
 
-import { Constants } from '../../common/Constants';
+import { Constants } from '../../common/Constants.js';
 import { getDayLabel, getMonthLabel, getDateLabel, getWeekLabel } from '../../common/scheduleOptions.js';
 
-function MonitoringDetailsModal({
-  displayMonitoringDetailsModal,
-  setDisplayMonitoringDetailsModal,
+function ViewDetailsModal({
+  displayViewDetailsModal,
+  setDisplayViewDetailsModal,
   selectedMonitoring,
   setSelectedMonitoring,
   clusters,
@@ -15,27 +15,27 @@ function MonitoringDetailsModal({
 }) {
   // When cancel button is clicked, close the modal and reset the selectedMonitoring
   const handleCancel = () => {
-    setDisplayMonitoringDetailsModal(false);
+    setDisplayViewDetailsModal(false);
     setSelectedMonitoring(null);
   };
 
   //Destructure the selectedMonitoring object
   if (selectedMonitoring === null) return null; // If selectedMonitoring is null, return null (don't display the modal)
   const {
-    monitoringName,
+    name,
     description,
-    monitoringScope,
-    directoryName,
+    directory,
     createdAt,
     createdBy,
-    lastUpdatedBy,
-    isActive,
+    updatedBy,
+    active,
     approvalStatus,
     approvedAt,
     approvedBy,
     metaData,
-    clusterId,
-    approverComment,
+    cluster_id,
+    approvalNote,
+    approved,
   } = selectedMonitoring;
   const { notificationMetaData, schedule } = metaData;
   return (
@@ -45,7 +45,7 @@ function MonitoringDetailsModal({
       style={{ maxHeight: '95vh', overflow: 'auto' }}
       closable={true}
       onCancel={handleCancel}
-      open={displayMonitoringDetailsModal}
+      open={displayViewDetailsModal}
       footer={
         <Button type="primary" onClick={handleCancel}>
           Close
@@ -53,17 +53,17 @@ function MonitoringDetailsModal({
       }>
       <Descriptions column={1} bordered={true} size="small" className="directory__monitoring_tiny-description">
         <Descriptions.Item label="Monitoring name " className="tiny-description">
-          {monitoringName}
+          {name}
         </Descriptions.Item>
         <Descriptions.Item label="Description">{description}</Descriptions.Item>
         <Descriptions.Item label="Cluster">
-          {clusters.find((c) => c.id === clusterId)?.name || (
+          {clusters.find((c) => c.id === cluster_id)?.name || (
             <Tag style={{ color: 'var(--danger)' }}>Deleted cluster</Tag>
           )}
         </Descriptions.Item>
-        {monitoringScope !== 'ClusterWideMonitoring' && (
-          <Descriptions.Item label="Directory name / pattern">{directoryName}</Descriptions.Item>
-        )}
+
+        <Descriptions.Item label="Directory name / pattern">{directory}</Descriptions.Item>
+
         {schedule && <Descriptions.Item label="Frequency">{schedule[0].frequency}</Descriptions.Item>}
         {schedule && schedule.length > 0 && (
           <Descriptions.Item label="Directory Schedule">
@@ -73,7 +73,7 @@ function MonitoringDetailsModal({
           </Descriptions.Item>
         )}
 
-        {metaData?.expectedMoveByTim && (
+        {metaData?.expectedMoveByTime && (
           <Descriptions.Item label="Expected File Move By Time">{metaData.expectedMoveByTime}</Descriptions.Item>
         )}
 
@@ -124,9 +124,8 @@ function MonitoringDetailsModal({
             {getHookTags({ AllTeamsHooks: teamsHooks, hookIds: notificationMetaData.teamsHooks })}
           </Descriptions.Item>
         )}
-        {/* ---------------------------------------------------------------------------------------- */}
         <Descriptions.Item label="Active">
-          {isActive && approvalStatus === 'Approved' ? (
+          {active && approved ? (
             <Tag color="var(--success)" key={'yes'}>
               Yes
             </Tag>
@@ -141,7 +140,7 @@ function MonitoringDetailsModal({
             {approvalStatus}
           </Tag>
         </Descriptions.Item>
-        {approverComment && <Descriptions.Item label="Approver's comment">{approverComment}</Descriptions.Item>}
+        {approvalNote && <Descriptions.Item label="Approver's comment">{approvalNote}</Descriptions.Item>}
         {approvedBy && (
           <Descriptions.Item label="Approved by">
             <Tooltip
@@ -168,15 +167,16 @@ function MonitoringDetailsModal({
           </Tooltip>
           on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
         </Descriptions.Item>
+
         <Descriptions.Item label="Last updated by">
           <Tooltip
             title={
               <>
-                <div>User ID : {JSON.parse(lastUpdatedBy).id}</div>
-                <div>Email : {JSON.parse(lastUpdatedBy).email}</div>
+                <div>User ID : {JSON.parse(updatedBy).id}</div>
+                <div>Email : {JSON.parse(updatedBy).email}</div>
               </>
             }>
-            <span style={{ color: 'var(--primary)' }}>{JSON.parse(lastUpdatedBy).name} </span>
+            <span style={{ color: 'var(--primary)' }}>{JSON.parse(updatedBy).name} </span>
           </Tooltip>
           on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
         </Descriptions.Item>
@@ -185,7 +185,7 @@ function MonitoringDetailsModal({
   );
 }
 
-export default MonitoringDetailsModal;
+export default ViewDetailsModal;
 
 //Generate tags for schedule
 const generateTagsForSchedule = (schedule) => {
