@@ -217,9 +217,10 @@ function NotificationTableFilters({
 
       {filterCount > 0 && !filtersVisible && (
         <div className="notification__filters_count">
-          <Button size="small" type="link" onClick={handleFilterCountClick}>{`${filterCount} Filter${
-            filterCount > 1 ? 's' : ''
-          } applied`}</Button>
+          <Button size="small" type="link" danger onClick={handleFilterCountClick}>
+            {`${filterCount} Filter${filterCount > 1 ? 's' : ''} applied `}
+            <span style={{ color: 'var(--primary)', paddingLeft: '5px' }}> {' - Click to view'}</span>
+          </Button>
         </div>
       )}
     </div>
