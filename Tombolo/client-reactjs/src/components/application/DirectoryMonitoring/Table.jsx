@@ -201,7 +201,6 @@ const DirectoryMonitoringTable = ({
   // Start or pause monitoring
   const toggleMonitoringStatus = async (record) => {
     try {
-      console.log(record);
       if (!record.approved) {
         message.error('Monitoring must be in approved state before it can be started');
         return;

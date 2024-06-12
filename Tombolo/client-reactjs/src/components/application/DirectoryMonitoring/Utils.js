@@ -131,8 +131,6 @@ export const handleDeleteDirectoryMonitoring = async ({ id, directoryMonitorings
 
     const response = await fetch(`/api/DirectoryMonitoring/delete/${id}`, payload);
 
-    console.log(response);
-
     if (!response.status === 204) {
       return message.error('Failed to delete directory monitoring');
     }
@@ -199,7 +197,6 @@ export const toggleDirectoryMonitoringStatus = async ({ id }) => {
 
 // Bulk delete directory monitorings
 export const handleBulkDeleteDirectoryMonitorings = async ({ selectedDirectoryMonitorings }) => {
-  console.log(selectedDirectoryMonitorings);
   const payload = {
     method: 'DELETE',
     headers: authHeader(),

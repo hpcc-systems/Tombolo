@@ -25,8 +25,7 @@ const ActionButton = ({
         message.success('Selected directory monitorings deleted successfully');
       }
     } catch (err) {
-      console.log(err);
-      message.error('Unable to delete selected directory monitorings');
+      message.error('Unable to delete selected directory monitorings: ' + err);
     }
   };
 

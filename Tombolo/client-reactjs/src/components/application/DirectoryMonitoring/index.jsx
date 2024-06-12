@@ -226,8 +226,6 @@ const DirectoryMonitoring = () => {
       //Add metaData to userFieldInputs
       userFieldInputs = { ...userFieldInputs, metaData };
 
-      console.log(userFieldInputs);
-
       //data transformations necessary for submitting
       userFieldInputs.directory = userFieldInputs.dirToMonitor.join('/');
       userFieldInputs['application_id'] = applicationId;
