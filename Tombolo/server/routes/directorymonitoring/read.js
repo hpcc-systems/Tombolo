@@ -175,9 +175,6 @@ router.delete(
 
       await directoryMonitoring.destroy();
 
-      //remove the job
-      removeJob(id);
-
       res.status(204).end();
     } catch (error) {
       logger.error(error);
