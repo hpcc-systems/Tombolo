@@ -48,6 +48,14 @@ module.exports = {
         allowNull: true,
         type: Sequelize.DataTypes.STRING,
       },
+      machine: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
+      },
+      landingZone: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
+      },
       directory: {
         allowNull: false,
         type: Sequelize.DataTypes.STRING,

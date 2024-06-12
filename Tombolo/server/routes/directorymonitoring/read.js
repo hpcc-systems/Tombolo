@@ -3,7 +3,6 @@ const logger = require("../../config/logger");
 const router = express.Router();
 const models = require("../../models");
 
-const jobScheduler = require("../../jobSchedular/job-scheduler");
 const DirectoryMonitoring = models.directoryMonitoring;
 const validatorUtil = require("../../utils/validator");
 const { body, param, validationResult } = require("express-validator");
@@ -64,7 +63,7 @@ router.post(
 
 //aprove or reject one
 router.put(
-  "/:id/approve",
+  "/approve/:id",
   [
     param("id").isUUID().withMessage("Application ID must be a valid UUID"),
     body("approved").isBoolean().withMessage("Approved must be a boolean"),
@@ -105,18 +104,6 @@ router.put(
         approvedAt: req.body.approvedAt,
       });
 
-      // const { active, approved, name, cron } = updatedMonitoring;
-
-      // // if (active && approved) {
-      // //   jobScheduler.createDirectoryMonitoringBreeJob({
-      // //     directoryMonitoring_id: id,
-      // //     name,
-      // //     cron,
-      // //   });
-      // // } else {
-      // //   removeJob(id);
-      // // }
-
       res.status(200).json(updatedMonitoring);
     } catch (error) {
       logger.error(error);
@@ -129,7 +116,7 @@ router.put(
 
 // Update an existing directory monitoring entry
 router.put(
-  "/:id/update",
+  "/update/:id",
   [
     param("id").isUUID().withMessage("Application ID must be a valid UUID"),
     body("updatedBy").notEmpty().withMessage("Updated by is required"),
@@ -154,18 +141,7 @@ router.put(
       //make sure approvals are reset
       resetApprovals(updates);
 
-      //make sure name doesn't exist
-      const existingMonitoring = await checkNameExists(updates.name);
-      if (existingMonitoring) {
-        return res
-          .status(409)
-          .json({ error: "Directory monitoring name already exists" });
-      }
-
       await directoryMonitoring.update(updates);
-
-      //make sure and remove job if it is updated
-      removeJob(id);
 
       res.status(200).json(directoryMonitoring);
     } catch (error) {
@@ -292,16 +268,6 @@ router.patch(
       const { active, approved, name, cron } = directoryMonitoring;
       await directoryMonitoring.update({ active: !active });
 
-      // location for starting or stopping monitoring job
-      // if (active && approved) {
-      //   jobScheduler.createDirectoryMonitoringBreeJob({
-      //     directoryMonitoring_id: id,
-      //     name,
-      //     cron,
-      //   });
-      // } else {
-      //   removeJob(id);
-      // }
       logger.verbose("Directory monitoring active status updated");
       res.status(200).json(directoryMonitoring);
     } catch (error) {
@@ -313,7 +279,7 @@ router.patch(
   }
 );
 //bulk update route to update multiple monitorings
-router.put(
+router.patch(
   "/bulkUpdate",
   [body("metaData").isArray().withMessage("Data must be array of objects")],
   async (req, res) => {
@@ -321,6 +287,7 @@ router.put(
       const { metaData } = req.body;
       for (let i = 0; i < metaData.length; i++) {
         const { id, ...updates } = metaData[i];
+
         const directoryMonitoring = await DirectoryMonitoring.findByPk(id);
         if (!directoryMonitoring) {
           return res
@@ -328,19 +295,11 @@ router.put(
             .json({ error: "Directory monitoring entry not found" });
         }
 
-        //make sure approvals are reset
         resetApprovals(updates);
-
-        //make sure name doesn't exist
-        const existingMonitoring = await checkNameExists(updates.name);
-        if (existingMonitoring) {
-          return res
-            .status(409)
-            .json({ error: "Directory monitoring name already exists" });
-        }
 
         await directoryMonitoring.update(updates);
       }
+      console.log("updated");
       res.status(200).json({ message: "Directory monitorings updated" });
     } catch (error) {
       logger.error(error);
@@ -368,7 +327,6 @@ router.delete(
             .json({ error: "Directory monitoring entry not found" });
         }
         await directoryMonitoring.destroy();
-        removeJob(ids[i]);
       }
       res.status(204).end();
     } catch (error) {
@@ -434,18 +392,6 @@ router.patch(
           approvedAt: approvedAt,
           active: active,
         });
-
-        // const { name, cron } = directoryMonitoring;
-
-        // // if (active && approved) {
-        // //   jobScheduler.createDirectoryMonitoringBreeJob({
-        // //     directoryMonitoring_id: id,
-        // //     name,
-        // //     cron,
-        // //   });
-        // // } else {
-        // //   removeJob(id);
-        // // }
       }
       res.status(200).json({ message: "Directory monitorings approved" });
     } catch (error) {
@@ -456,21 +402,6 @@ router.patch(
     }
   }
 );
-
-function removeJob(id) {
-  const breeJobs = jobScheduler.getAllJobs();
-  const expectedJobName = `Directory Monitoring - ${id}`;
-  for (job of breeJobs) {
-    if (job.name === expectedJobName) {
-      jobScheduler.removeJobFromScheduler(expectedJobName);
-      break;
-    }
-  }
-}
-
-async function checkNameExists(name) {
-  return DirectoryMonitoring.findOne({ where: { name } });
-}
 
 function resetApprovals(updates) {
   updates.approved = false;

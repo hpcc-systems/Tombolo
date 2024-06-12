@@ -15,12 +15,17 @@ const ActionButton = ({
   const deleteSelected = async () => {
     try {
       const selectedRowIds = selectedRows.map((row) => row.id);
-      await handleBulkDeleteDirectoryMonitorings({ selectedDirectoryMonitorings: selectedRowIds });
+      const res = await handleBulkDeleteDirectoryMonitorings({ selectedDirectoryMonitorings: selectedRowIds });
       setDirectoryMonitorings((prev) =>
-        prev.filter((DirectoryMonitoring) => !selectedRowIds.includes(DirectoryMonitoring.id))
+        prev.filter((directoryMonitoring) => !selectedRowIds.includes(directoryMonitoring.id))
       );
       setSelectedRows([]);
+
+      if (res) {
+        message.success('Selected directory monitorings deleted successfully');
+      }
     } catch (err) {
+      console.log(err);
       message.error('Unable to delete selected directory monitorings');
     }
   };

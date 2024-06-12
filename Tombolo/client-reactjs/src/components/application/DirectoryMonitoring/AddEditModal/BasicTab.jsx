@@ -114,10 +114,10 @@ function BasicTab({
             </Select>
           </Form.Item>
 
-          {selectedCluster || selectedMonitoring?.cluster_id ? (
+          {selectedCluster || selectedMonitoring.cluster_id ? (
             <Form.Item name="directoryName" rules={[{ max: 256, message: 'Maximum of 256 characters allowed' }]}>
               <LandingZoneFileExplorer
-                clusterId={selectedCluster?.id || selectedMonitoring?.cluster_id}
+                clusterId={selectedCluster?.id || selectedMonitoring.cluster_id}
                 DirectoryOnly={true}
                 setLandingZoneRootPath={setDirectory}
                 enableEdit={true}
@@ -125,7 +125,7 @@ function BasicTab({
             </Form.Item>
           ) : null}
 
-          {selectedCluster ? (
+          {selectedCluster || selectedMonitoring.cluster_id ? (
             <Form.Item
               label={
                 <>

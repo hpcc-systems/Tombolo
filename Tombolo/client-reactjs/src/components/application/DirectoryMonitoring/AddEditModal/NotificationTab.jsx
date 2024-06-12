@@ -1,6 +1,5 @@
 //Packages
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { Form, Card, Select } from 'antd';
 import { isEmail } from 'validator';
 
@@ -14,16 +13,6 @@ const directoryStatuses = [
 ];
 
 function NotificationTab({ form, teamsHooks }) {
-  // Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      integrations,
-    },
-  } = useSelector((state) => state);
-
-  console.log(integrations, applicationId);
-
   // JSX
   return (
     <Card>

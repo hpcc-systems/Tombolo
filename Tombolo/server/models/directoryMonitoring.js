@@ -39,6 +39,14 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.BOOLEAN,
       },
+      machine: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      landingZone: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
       directory: {
         allowNull: false,
         type: DataTypes.STRING,

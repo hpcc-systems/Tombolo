@@ -9,6 +9,8 @@ import {
   createDirectoryMonitoring,
   getAllDirectoryMonitorings,
   getAllTeamsHook,
+  updateMonitoring,
+  isScheduleUpdated,
 } from './Utils.js';
 
 import AddEditModal from './AddEditModal/Modal';
@@ -62,7 +64,8 @@ const DirectoryMonitoring = () => {
   useEffect(() => {
     if (editingData?.isEditing || copying) {
       form.setFieldsValue(selectedMonitoring);
-      setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring.clusterId));
+
+      setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring.cluster_id));
 
       form.setFieldsValue({
         ...selectedMonitoring?.metaData?.notificationMetaData,
@@ -72,6 +75,8 @@ const DirectoryMonitoring = () => {
           : null,
         minimumFileCount: selectedMonitoring?.metaData?.minimumFileCount,
         maximumFileCount: selectedMonitoring?.metaData?.maximumFileCount,
+        dirToMonitor: selectedMonitoring.directory.split('/'),
+        pattern: selectedMonitoring?.metaData?.pattern,
       });
       if (selectedMonitoring.metaData.schedule) {
         const { schedule } = selectedMonitoring.metaData;
@@ -103,18 +108,21 @@ const DirectoryMonitoring = () => {
     })();
 
     (async () => {
-      try {
-        const allDirectoryMonitorings = await getAllDirectoryMonitorings({ applicationId });
-
-        setDirectoryMonitorings(allDirectoryMonitorings);
-      } catch (error) {
-        message.error('Error fetching directory monitorings');
-      }
+      fetchAllDirectoryMonitorings();
     })();
   }, []);
 
   const handleAddDirectoryMonitoringButtonClick = () => {
     setDisplayAddEditModal(true);
+  };
+
+  const fetchAllDirectoryMonitorings = async () => {
+    try {
+      const allDirectoryMonitorings = await getAllDirectoryMonitorings({ applicationId });
+      setDirectoryMonitorings(allDirectoryMonitorings);
+    } catch (error) {
+      message.error('Error fetching directory monitorings');
+    }
   };
 
   const handleSaveDirectoryMonitoring = async () => {
@@ -231,7 +239,6 @@ const DirectoryMonitoring = () => {
 
       const responseData = await createDirectoryMonitoring({ inputData: userFieldInputs });
       setDirectoryMonitorings([responseData, ...directoryMonitorings]);
-      console.log(responseData);
       message.success('Directory monitoring saved successfully');
 
       // Rest states and Close model if saved successfully
@@ -244,7 +251,149 @@ const DirectoryMonitoring = () => {
     }
   };
 
-  const handleUpdateDirectoryMonitoring = async () => {};
+  const handleUpdateDirectoryMonitoring = async () => {
+    setSavingDirectoryMonitoring(true);
+    try {
+      // Validate from and set validForm to false if any field is invalid
+      let validForm = true;
+      try {
+        await form.validateFields();
+      } catch (err) {
+        validForm = false;
+      }
+
+      //Check if schedule is valid
+      const directorySchedule = checkScheduleValidity({ intermittentScheduling, completeSchedule, cron, cronMessage });
+
+      // Error message need to be set for schedule because it is not part of from instance
+      if (!directorySchedule.valid) {
+        setErroneousScheduling(true);
+        validForm = false;
+      } else {
+        setErroneousScheduling(false);
+      }
+
+      // Identify erroneous tabs
+      const erroneousFields = form
+        .getFieldsError()
+        .filter((f) => f.errors.length > 0)
+        .map((f) => f.name[0]);
+      const badTabs = identifyErroneousTabs({ erroneousFields });
+      if (!badTabs.includes('1') && !directorySchedule.valid) {
+        badTabs.push('1');
+      }
+      if (badTabs.length > 0) {
+        setErroneousTabs(badTabs);
+      }
+
+      // If form is invalid or schedule is invalid return
+      if (!validForm) {
+        setSavingDirectoryMonitoring(false);
+        return;
+      }
+
+      // Form fields
+      const formFields = form.getFieldsValue();
+      const fields = Object.keys(formFields);
+
+      // Need to be checked separately, because the data is nested inside metaData object
+      const metaDataFields = ['expectedMoveByTime', 'minimumFileCount', 'maximumFileCount'];
+      const notificationMetaDataFields = ['teamsHooks', 'primaryContacts', 'notificationCondition'];
+
+      // Identify the fields that were touched
+      const touchedFields = [];
+      fields.forEach((field) => {
+        if (form.isFieldTouched(field)) {
+          touchedFields.push(field);
+        }
+      });
+
+      // Check if schedule is changed - it is not part of form instance
+      const existingSchedule = selectedMonitoring?.metaData?.schedule || [];
+      const scheduleChanged = isScheduleUpdated({ existingSchedule, newSchedule: directorySchedule.schedule });
+      if (scheduleChanged) {
+        touchedFields.push('schedule');
+      }
+
+      // If no touched fields
+      if (touchedFields.length === 0) {
+        return message.error('No changes detected');
+      }
+
+      // updated monitoring
+      let updatedData = { ...selectedMonitoring };
+
+      // Add schedule to metaData if altered
+      if (touchedFields.includes('schedule')) {
+        updatedData.metaData.schedule = directorySchedule.schedule;
+      }
+
+      //Touched ASR fields
+      const touchedMetaDataFields = touchedFields.filter((field) => metaDataFields.includes(field));
+      const touchedNotificationMetaDataFields = touchedFields.filter((field) =>
+        notificationMetaDataFields.includes(field)
+      );
+
+      // update selected monitoring with run time fields that are nested inside metaData
+      if (touchedMetaDataFields.length > 0) {
+        if (touchedMetaDataFields.includes('expectedMoveByTime')) {
+          const expectedMoveByTime = form.getFieldValue('expectedMoveByTime');
+          const newExpectedMoveByTime = expectedMoveByTime.format('HH:mm');
+          updatedData.metaData.expecteMoveByTime = newExpectedMoveByTime;
+        }
+
+        if (touchedMetaDataFields.includes('minimumFileCount')) {
+          const minimumFileCount = form.getFieldValue('minimumFileCount');
+          updatedData.metaData.minimumFileCount = minimumFileCount;
+        }
+
+        if (touchedMetaDataFields.includes('maximumFileCount')) {
+          const maximumFileCount = form.getFieldValue('maximumFileCount');
+          updatedData.metaData.maximumFileCount = maximumFileCount;
+        }
+      }
+
+      // update selected monitoring with notificationMetaData fields that are nested inside metaData
+      if (touchedNotificationMetaDataFields.length > 0) {
+        const existingNotificationMetaData = selectedMonitoring.metaData.notificationMetaData || {};
+        const updatedNotificationMetaData = form.getFieldsValue(touchedNotificationMetaDataFields);
+        const newNotificationMetaData = { ...existingNotificationMetaData, ...updatedNotificationMetaData };
+        updatedData.metaData.notificationMetaData = newNotificationMetaData;
+      }
+
+      // new values of any other fields that are not part of asrFields, metaDataFields, notificationMetaDataFields
+      const otherFields = fields.filter(
+        (field) => !metaDataFields.includes(field) && !notificationMetaDataFields.includes(field)
+      );
+
+      // Update other fields
+      const otherFieldsValues = form.getFieldsValue(otherFields);
+      const newOtherFields = { ...selectedMonitoring, ...otherFieldsValues };
+      updatedData = { ...updatedData, ...newOtherFields };
+
+      // updated by
+      const userDetails = JSON.stringify({
+        id: user.id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+      });
+      updatedData.lastUpdatedBy = userDetails;
+
+      // Make api call
+      await updateMonitoring({ updatedData });
+
+      // If no error thrown set state with new data
+      fetchAllDirectoryMonitorings();
+
+      message.success('Directory monitoring saved successfully');
+
+      resetStates();
+    } catch (err) {
+      message.error('Failed to update directory monitoring');
+    } finally {
+      setSavingDirectoryMonitoring(false);
+    }
+  };
 
   const resetStates = () => {
     setIntermittentScheduling({
@@ -261,6 +410,7 @@ const DirectoryMonitoring = () => {
     setSelectedCluster(null);
     setActiveTab('0');
     setCron('');
+    setCopying(false);
     form.resetFields();
   };
 
@@ -273,6 +423,7 @@ const DirectoryMonitoring = () => {
             handleAddDirectoryMonitoringButtonClick={handleAddDirectoryMonitoringButtonClick}
             selectedRows={selectedRows}
             setSelectedRows={setSelectedRows}
+            directoryMonitorings={directoryMonitorings}
             setDirectoryMonitorings={setDirectoryMonitorings}
             setBulkEditModalVisibility={setBulkEditModalVisibility}
             setBulkApprovalModalVisibility={setBulkApprovalModalVisibility}
@@ -352,6 +503,7 @@ const DirectoryMonitoring = () => {
           setDirectoryMonitorings={setDirectoryMonitorings}
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
+          fetchAllDirectoryMonitorings={fetchAllDirectoryMonitorings}
         />
       )}
       {bulkApprovalModalVisibility && (

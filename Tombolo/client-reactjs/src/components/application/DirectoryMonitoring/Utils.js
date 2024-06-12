@@ -82,7 +82,7 @@ export const getAllTeamsHook = async () => {
 };
 
 // Update a directory monitoring
-export const updateSelectedMonitoring = async ({ updatedData }) => {
+export const updateMonitoring = async ({ updatedData }) => {
   const payload = {
     method: 'PUT',
     headers: authHeader(),
@@ -91,7 +91,7 @@ export const updateSelectedMonitoring = async ({ updatedData }) => {
 
   const { id } = updatedData;
 
-  const response = await fetch(`/api/DirectoryMonitoring/${id}/update`, payload);
+  const response = await fetch(`/api/DirectoryMonitoring/update/${id}`, payload);
 
   if (!response.ok) {
     return message.error('Failed to update directory monitoring');
@@ -111,7 +111,7 @@ export const approveSelectedMonitoring = async ({ updatedData }) => {
 
   const { id } = updatedData;
 
-  const response = await fetch(`/api/DirectoryMonitoring/${id}/approve`, payload);
+  const response = await fetch(`/api/DirectoryMonitoring/approve/${id}`, payload);
 
   if (!response.ok) {
     return message.error('Failed to update directory monitoring');
@@ -188,6 +188,7 @@ export const toggleDirectoryMonitoringStatus = async ({ id }) => {
   };
 
   const response = await fetch(`/api/DirectoryMonitoring/${id}/active`, payload);
+
   if (!response.ok) {
     throw new Error('Failed to toggle directory monitoring status');
   }
@@ -206,14 +207,10 @@ export const handleBulkDeleteDirectoryMonitorings = async ({ selectedDirectoryMo
   };
 
   const response = await fetch(`/api/DirectoryMonitoring/bulkDelete`, payload);
-
-  console.log(response);
-
   if (!response.ok) {
     throw new Error('Failed to bulk delete directory monitorings');
   }
-  const data = await response.json();
-  return data;
+  return true;
 };
 
 // Bulk update
@@ -229,13 +226,14 @@ export const handleBulkUpdateDirectoryMonitorings = async ({ updatedData }) => {
   if (!response.ok) {
     throw new Error('Failed to bulk update directory monitorings');
   }
+
   const data = await response.json();
   return data;
 };
 
 export const handleBulkApproveDirectoryMonitorings = async ({ selectedDirectoryMonitorings, formData }) => {
   const { approved, approvedAt, approvedBy, approvalStatus, active } = formData;
-  console.log(formData);
+
   const payload = {
     method: 'PATCH',
     headers: authHeader(),

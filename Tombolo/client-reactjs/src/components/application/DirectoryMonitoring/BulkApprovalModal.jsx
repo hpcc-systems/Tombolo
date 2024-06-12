@@ -25,20 +25,14 @@ const BulkApprovalModal = ({
 
   // When reject or accepted is clicked
   const handleSubmit = async () => {
-    let formErr = false;
-
     try {
       await form.validateFields();
     } catch (error) {
-      formErr = true;
+      message.error(error);
     }
-    console.log(formErr);
 
     try {
       const formData = form.getFieldsValue();
-
-      console.log(action);
-      console.log(user);
 
       formData.approvalStatus = action;
       formData.approved = true;
