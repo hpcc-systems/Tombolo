@@ -11,6 +11,9 @@ import {
   getAllTeamsHook,
   updateMonitoring,
   isScheduleUpdated,
+  getMonitoringTypeId,
+  getDomains,
+  getProductCategories,
 } from './Utils.js';
 
 import AddEditModal from './AddEditModal/Modal';
@@ -21,6 +24,8 @@ import dayjs from 'dayjs';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BulkApprovalModal from './BulkApprovalModal.jsx';
 import ViewDetailsModal from './ViewDetailsModal';
+
+const monitoringTypeName = 'Directory Monitoring';
 
 const DirectoryMonitoring = () => {
   const {
@@ -61,6 +66,12 @@ const DirectoryMonitoring = () => {
   const [directory, setDirectory] = useState(null);
   const [copying, setCopying] = useState(false);
 
+  //asr specific
+  const [domains, setDomains] = useState([]);
+  const [selectedDomain, setSelectedDomain] = useState(null);
+  const [productCategories, setProductCategories] = useState([]);
+  const [monitoringTypeId, setMonitoringTypeId] = useState(null);
+
   useEffect(() => {
     if (editingData?.isEditing || copying) {
       form.setFieldsValue(selectedMonitoring);
@@ -69,7 +80,7 @@ const DirectoryMonitoring = () => {
 
       form.setFieldsValue({
         ...selectedMonitoring?.metaData?.notificationMetaData,
-
+        ...selectedMonitoring?.metaData?.asrSpecificMetaData,
         expectedMoveByTime: selectedMonitoring?.metaData?.expectedMoveByTime
           ? dayjs(selectedMonitoring?.metaData?.expectedMoveByTime, 'HH:mm')
           : null,
@@ -110,7 +121,55 @@ const DirectoryMonitoring = () => {
     (async () => {
       fetchAllDirectoryMonitorings();
     })();
+
+    // Get monitoringType id for job monitoring
+    (async () => {
+      try {
+        const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
+        setMonitoringTypeId(monitoringTypeId);
+      } catch (error) {
+        message.error('Error fetching monitoring type ID');
+      }
+    })();
   }, []);
+
+  // Get domains and product categories
+  useEffect(() => {
+    // Get domains
+    if (!monitoringTypeId) return;
+    (async () => {
+      try {
+        let domainData = await getDomains({ monitoringTypeId });
+        domainData = domainData.map((d) => ({
+          label: d.name,
+          value: d.id,
+        }));
+        setDomains(domainData);
+      } catch (error) {
+        message.error('Error fetching domains');
+      }
+    })();
+
+    // If monitoring selected - set selected domain so corresponding product categories can be fetched
+    if (selectedMonitoring?.metaData?.asrSpecificMetaData?.domain) {
+      setSelectedDomain(selectedMonitoring.metaData.asrSpecificMetaData.domain);
+    }
+
+    // Get product categories
+    if (!selectedDomain) return;
+    (async () => {
+      try {
+        const productCategories = await getProductCategories({ domainId: selectedDomain });
+        const formattedProductCategories = productCategories.map((c) => ({
+          label: `${c.name} (${c.shortCode})`,
+          value: c.id,
+        }));
+        setProductCategories(formattedProductCategories);
+      } catch (error) {
+        message.error('Error fetching product category');
+      }
+    })();
+  }, [monitoringTypeId, selectedDomain, selectedMonitoring]);
 
   const handleAddDirectoryMonitoringButtonClick = () => {
     setDisplayAddEditModal(true);
@@ -170,6 +229,17 @@ const DirectoryMonitoring = () => {
       //All inputs
       let userFieldInputs = form.getFieldsValue();
 
+      // Group ASR specific metaData and delete from allInputs
+      const asrSpecificMetaData = {};
+      const { domain, productCategory, severity } = userFieldInputs;
+      const asrSpecificFields = { domain, productCategory, severity };
+      for (let key in asrSpecificFields) {
+        if (asrSpecificFields[key] !== undefined) {
+          asrSpecificMetaData[key] = asrSpecificFields[key];
+        }
+        delete userFieldInputs[key];
+      }
+
       // Group Notification specific metaData and delete from userFieldInputs
       const notificationMetaData = {};
       const { notificationCondition, teamsHooks, primaryContacts, secondaryContacts, notifyContacts } = userFieldInputs;
@@ -214,6 +284,7 @@ const DirectoryMonitoring = () => {
       });
 
       metaData.notificationMetaData = notificationMetaData;
+      metaData.asrSpecificMetaData = asrSpecificMetaData;
 
       if (directorySchedule.schedule.length > 0) {
         metaData.schedule = directorySchedule.schedule;
@@ -299,9 +370,15 @@ const DirectoryMonitoring = () => {
       const formFields = form.getFieldsValue();
       const fields = Object.keys(formFields);
 
-      // Need to be checked separately, because the data is nested inside metaData object
       const metaDataFields = ['pattern', 'expectedMoveByTime', 'minimumFileCount', 'maximumFileCount'];
-      const notificationMetaDataFields = ['teamsHooks', 'primaryContacts', 'notificationCondition'];
+      const notificationMetaDataFields = [
+        'teamsHooks',
+        'primaryContacts',
+        'secondaryContacts',
+        'notifyContacts',
+        'notificationCondition',
+      ];
+      const asrSpecificFields = ['domain', 'productCategory', 'severity'];
 
       // Identify the fields that were touched
       const touchedFields = [];
@@ -332,10 +409,20 @@ const DirectoryMonitoring = () => {
       }
 
       //Touched ASR fields
+      const touchedAsrFields = touchedFields.filter((field) => asrSpecificFields.includes(field));
+
       const touchedMetaDataFields = touchedFields.filter((field) => metaDataFields.includes(field));
       const touchedNotificationMetaDataFields = touchedFields.filter((field) =>
         notificationMetaDataFields.includes(field)
       );
+
+      // update selected monitoring with asr specific fields that are nested inside metaData > asrSpecificMetaData
+      if (touchedAsrFields.length > 0) {
+        let existingAsrSpecificMetaData = selectedMonitoring?.metaData?.asrSpecificMetaData || {};
+        const upDatedAsrSpecificMetaData = form.getFieldsValue(touchedAsrFields);
+        const newAsrSpecificFields = { ...existingAsrSpecificMetaData, ...upDatedAsrSpecificMetaData };
+        updatedData.metaData.asrSpecificMetaData = newAsrSpecificFields;
+      }
 
       // update selected monitoring with run time fields that are nested inside metaData
       if (touchedMetaDataFields.length > 0) {
@@ -472,6 +559,9 @@ const DirectoryMonitoring = () => {
         setDirectory={setDirectory}
         copying={copying}
         setCopying={setCopying}
+        domains={domains}
+        productCategories={productCategories}
+        setSelectedDomain={setSelectedDomain}
         selectedMonitoring={selectedMonitoring}
       />
       <DirectoryMonitoringTable

@@ -282,6 +282,7 @@ router.patch(
   async (req, res) => {
     try {
       const { metaData } = req.body;
+      console.log(metaData);
       for (let i = 0; i < metaData.length; i++) {
         const { id, ...updates } = metaData[i];
 
@@ -294,9 +295,11 @@ router.patch(
 
         resetApprovals(updates);
 
-        await directoryMonitoring.update(updates);
+        const res = await directoryMonitoring.update(updates);
+
+        console.log("updated");
       }
-      console.log("updated");
+
       res.status(200).json({ message: "Directory monitorings updated" });
     } catch (error) {
       logger.error(error);

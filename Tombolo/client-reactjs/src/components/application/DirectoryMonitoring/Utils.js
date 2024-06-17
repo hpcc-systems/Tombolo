@@ -261,3 +261,32 @@ export function isScheduleUpdated({ existingSchedule, newSchedule }) {
   }
   return false;
 }
+
+// Get domains for job monitoring - ASR
+export const getDomains = async ({ monitoringTypeId }) => {
+  const options = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+  const response = await fetch(`/api/asr/domainsForSpecificMonitoring/${monitoringTypeId}`, options);
+  if (!response.ok) {
+    throw new Error('Failed to get domains');
+  }
+  const domains = await response.json();
+
+  return domains;
+};
+
+//Get product categories for selected domain and activity type
+export const getProductCategories = async ({ domainId }) => {
+  const options = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+  const response = await fetch(`/api/asr/productCategoriesForSpecificDomain/${domainId}`, options);
+  if (!response.ok) {
+    throw new Error('Failed to get product categories');
+  }
+  const productCategories = await response.json();
+  return productCategories;
+};

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, TimePicker, InputNumber, Row, Col } from 'antd';
 import SchedulePicker from '../../jobMonitoring/SchedulePicker';
+import AsrSpecificMonitoring from './ASRSpecificMonitoring';
+import { useSelector } from 'react-redux';
 
 function MonitoringTab({
   intermittentScheduling,
@@ -14,6 +16,9 @@ function MonitoringTab({
   setCronMessage,
   erroneousScheduling,
   selectedCluster,
+  domains,
+  productCategories,
+  setSelectedDomain,
 }) {
   const [clusterOffset, setClusterOffset] = useState(null);
 
@@ -26,6 +31,18 @@ function MonitoringTab({
       setClusterOffset(`UTC ${offSet}`);
     }
   }, [selectedCluster]);
+
+  //Redux
+  const {
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
+  } = useSelector((state) => state);
+
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
 
   return (
     <div>
@@ -45,6 +62,17 @@ function MonitoringTab({
         )}
       </Card>
 
+      <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
+        {asrIntegration && (
+          <AsrSpecificMonitoring
+            form={form}
+            clusterOffset={clusterOffset}
+            domains={domains}
+            productCategories={productCategories}
+            setSelectedDomain={setSelectedDomain}
+          />
+        )}
+      </Card>
       <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
         <Form form={form} layout="vertical">
           <Row gutter={16}>
