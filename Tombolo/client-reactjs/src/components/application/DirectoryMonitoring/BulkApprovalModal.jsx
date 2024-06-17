@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Button, message, Input, Select } from 'antd';
+import { Modal, Form, Button, message, Input, Select, Checkbox } from 'antd';
 import { handleBulkApproveDirectoryMonitorings, getAllDirectoryMonitorings } from './Utils';
 
 const { useForm } = Form;
@@ -42,6 +42,10 @@ const BulkApprovalModal = ({
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
       });
+
+      if (formData.active === undefined) {
+        formData.active = false;
+      }
 
       const response = await handleBulkApproveDirectoryMonitorings({
         selectedDirectoryMonitorings: selectedRows,
@@ -107,14 +111,12 @@ const BulkApprovalModal = ({
           </Form.Item>
 
           {action === 'Approved' && (
-            <Form.Item
-              label="Turn Monitoring On?"
-              name="active"
-              rules={[{ required: true, message: 'Please make a selection' }]}>
-              <Select placeholder="Select an action" initialValue={'Please make a selection'} style={{ width: '100%' }}>
+            <Form.Item label="Start monitoring now?" valuePropName="checked" name="active">
+              <Checkbox defaultChecked={false}></Checkbox>
+              {/* <Select placeholder="Select an action" initialValue={'Please make a selection'} style={{ width: '100%' }}>
                 <Select.Option value={true}>Yes</Select.Option>
                 <Select.Option value={false}>No</Select.Option>
-              </Select>
+              </Select> */}
             </Form.Item>
           )}
         </Form>

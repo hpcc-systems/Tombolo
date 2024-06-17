@@ -29,6 +29,11 @@ function BasicTab({
     setSelectedCluster(selectedClusterDetails);
   };
 
+  //reload
+  useEffect(() => {
+    console.log(selectedCluster);
+  }, [selectedCluster]);
+
   // If duplicating focus on monitoring name input, empty monitoring name field and show error
   useEffect(() => {
     if (form && !isEditing) {
@@ -79,7 +84,18 @@ function BasicTab({
                 },
               }),
             ]}>
-            <Input placeholder="Enter a name" ref={nameRef} onBlur={() => form.validateFields()} />
+            <Input
+              placeholder="Enter a name"
+              ref={nameRef}
+              onBlur={() =>
+                form.setFields([
+                  {
+                    name: 'name',
+                    warnings: [],
+                  },
+                ])
+              }
+            />
           </Form.Item>
 
           <Form.Item
@@ -114,10 +130,10 @@ function BasicTab({
             </Select>
           </Form.Item>
 
-          {selectedCluster || selectedMonitoring.cluster_id ? (
+          {selectedCluster || selectedMonitoring?.cluster_id ? (
             <Form.Item name="directoryName" rules={[{ max: 256, message: 'Maximum of 256 characters allowed' }]}>
               <LandingZoneFileExplorer
-                clusterId={selectedCluster?.id || selectedMonitoring.cluster_id}
+                clusterId={selectedCluster?.id || selectedMonitoring?.cluster_id}
                 DirectoryOnly={true}
                 setLandingZoneRootPath={setDirectory}
                 enableEdit={true}
@@ -125,7 +141,7 @@ function BasicTab({
             </Form.Item>
           ) : null}
 
-          {selectedCluster || selectedMonitoring.cluster_id ? (
+          {selectedCluster || selectedMonitoring?.cluster_id ? (
             <Form.Item
               label={
                 <>

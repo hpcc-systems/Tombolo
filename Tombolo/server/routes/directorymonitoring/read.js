@@ -406,6 +406,7 @@ function resetApprovals(updates) {
   updates.approvalStatus = "Pending";
   updates.approvedBy = null;
   updates.approvedAt = null;
+  updates.active = false;
   return updates;
 }
 

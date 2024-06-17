@@ -223,6 +223,11 @@ const DirectoryMonitoring = () => {
         }
       }
 
+      if (userFieldInputs.pattern) {
+        metaData.pattern = userFieldInputs.pattern;
+        delete userFieldInputs.pattern;
+      }
+
       //Add metaData to userFieldInputs
       userFieldInputs = { ...userFieldInputs, metaData };
 
@@ -295,7 +300,7 @@ const DirectoryMonitoring = () => {
       const fields = Object.keys(formFields);
 
       // Need to be checked separately, because the data is nested inside metaData object
-      const metaDataFields = ['expectedMoveByTime', 'minimumFileCount', 'maximumFileCount'];
+      const metaDataFields = ['pattern', 'expectedMoveByTime', 'minimumFileCount', 'maximumFileCount'];
       const notificationMetaDataFields = ['teamsHooks', 'primaryContacts', 'notificationCondition'];
 
       // Identify the fields that were touched
@@ -338,6 +343,11 @@ const DirectoryMonitoring = () => {
           const expectedMoveByTime = form.getFieldValue('expectedMoveByTime');
           const newExpectedMoveByTime = expectedMoveByTime.format('HH:mm');
           updatedData.metaData.expecteMoveByTime = newExpectedMoveByTime;
+        }
+
+        if (touchedMetaDataFields.includes('pattern')) {
+          const pattern = form.getFieldValue('pattern');
+          updatedData.metaData.pattern = pattern;
         }
 
         if (touchedMetaDataFields.includes('minimumFileCount')) {

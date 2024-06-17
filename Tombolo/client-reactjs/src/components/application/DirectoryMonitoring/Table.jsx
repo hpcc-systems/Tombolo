@@ -243,7 +243,7 @@ const DirectoryMonitoringTable = ({
       }}
       pagination={{ pageSize: 20 }}
       rowClassName={(record) =>
-        record?.active ? 'DirectoryMonitoringTable__active-monitoring' : 'DirectoryMonitoringTable__inactive-monitoring'
+        record?.active ? 'jobMonitoringTable__active-monitoring' : 'jobMonitoringTable__inactive-monitoring'
       }
     />
   );

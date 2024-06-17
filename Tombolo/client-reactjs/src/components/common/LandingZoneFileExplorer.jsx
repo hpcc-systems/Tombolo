@@ -24,13 +24,23 @@ function LandingZoneFileExplorer({
   useEffect(() => {
     if (clusterId) {
       getLandingZones(clusterId);
-      setLandingZoneDetails((prev) => ({ ...prev, landingZones: [], directories: [] }));
     }
   }, [clusterId]);
 
+  useEffect(() => {
+    console.log(landingZoneDetails);
+  }, [landingZoneDetails]);
+
   //GET LANDING ZONE FUNCTION
   const getLandingZones = async (clusterId) => {
-    setLandingZoneDetails((prev) => ({ ...prev, fetchingLandingZone: true }));
+    setLandingZoneDetails((prev) => ({
+      ...prev,
+      fetchingLandingZone: true,
+      landingZones: [],
+      selectedLandingZone: { machines: [] },
+      selectedMachine: null,
+      directories: [],
+    }));
     const url = `/api/hpcc/read/getDropZones?clusterId=${clusterId}&for=lzFileExplorer`;
     try {
       const response = await fetch(url, { headers: authHeader() });

@@ -37,7 +37,7 @@ function ViewDetailsModal({
     approvalNote,
     approved,
   } = selectedMonitoring;
-  const { notificationMetaData, schedule } = metaData;
+  const { notificationMetaData, schedule, pattern } = metaData;
   return (
     <Modal
       maskClosable={false}
@@ -61,9 +61,8 @@ function ViewDetailsModal({
             <Tag style={{ color: 'var(--danger)' }}>Deleted cluster</Tag>
           )}
         </Descriptions.Item>
-
-        <Descriptions.Item label="Directory name / pattern">{directory}</Descriptions.Item>
-
+        <Descriptions.Item label="Directory name">{directory}</Descriptions.Item>
+        <Descriptions.Item label="File Name pattern">{pattern ? pattern : 'No Pattern Set'}</Descriptions.Item>
         {schedule && <Descriptions.Item label="Frequency">{schedule[0].frequency}</Descriptions.Item>}
         {schedule && schedule.length > 0 && (
           <Descriptions.Item label="Directory Schedule">
@@ -72,11 +71,9 @@ function ViewDetailsModal({
             ))}
           </Descriptions.Item>
         )}
-
         {metaData?.expectedMoveByTime && (
           <Descriptions.Item label="Expected File Move By Time">{metaData.expectedMoveByTime}</Descriptions.Item>
         )}
-
         {notificationMetaData &&
           notificationMetaData.notificationCondition &&
           notificationMetaData.notificationCondition.length > 0 && (
@@ -90,9 +87,9 @@ function ViewDetailsModal({
           <Descriptions.Item label="Primary contact(s)">
             {notificationMetaData.primaryContacts.map((email, index) =>
               index < notificationMetaData.primaryContacts.length - 1 ? (
-                <span key={index}>{email},</span>
+                <span key={index}>{email}, </span>
               ) : (
-                <span key={index}>{email}</span>
+                <span key={index}>{email}, </span>
               )
             )}
           </Descriptions.Item>
@@ -167,7 +164,6 @@ function ViewDetailsModal({
           </Tooltip>
           on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
         </Descriptions.Item>
-
         <Descriptions.Item label="Last updated by">
           <Tooltip
             title={
