@@ -11,10 +11,9 @@ import {
   getAllTeamsHook,
   updateMonitoring,
   isScheduleUpdated,
-  getMonitoringTypeId,
-  getDomains,
-  getProductCategories,
 } from './Utils.js';
+
+import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools.js';
 
 import AddEditModal from './AddEditModal/Modal';
 import ActionButton from './ActionButton';

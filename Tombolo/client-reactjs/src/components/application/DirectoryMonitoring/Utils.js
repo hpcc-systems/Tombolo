@@ -163,20 +163,6 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
   return erroneousTabs;
 };
 
-// Get id for particular monitoring type example "directory Monitoring"
-export const getMonitoringTypeId = async ({ monitoringTypeName }) => {
-  const options = {
-    method: 'GET',
-    headers: authHeader(),
-  };
-  const response = await fetch(`/api/monitorings/getMonitoringTypeId/${monitoringTypeName}`, options);
-  if (!response.ok) {
-    throw new Error('Failed to get monitoring type Id');
-  }
-  const monitoringTypeId = await response.json();
-  return monitoringTypeId;
-};
-
 //Toggle directory monitoring status, just post the id of the directory monitoring to  /toggle in the req body
 export const toggleDirectoryMonitoringStatus = async ({ id }) => {
   const payload = {
@@ -261,32 +247,3 @@ export function isScheduleUpdated({ existingSchedule, newSchedule }) {
   }
   return false;
 }
-
-// Get domains for job monitoring - ASR
-export const getDomains = async ({ monitoringTypeId }) => {
-  const options = {
-    method: 'GET',
-    headers: authHeader(),
-  };
-  const response = await fetch(`/api/asr/domainsForSpecificMonitoring/${monitoringTypeId}`, options);
-  if (!response.ok) {
-    throw new Error('Failed to get domains');
-  }
-  const domains = await response.json();
-
-  return domains;
-};
-
-//Get product categories for selected domain and activity type
-export const getProductCategories = async ({ domainId }) => {
-  const options = {
-    method: 'GET',
-    headers: authHeader(),
-  };
-  const response = await fetch(`/api/asr/productCategoriesForSpecificDomain/${domainId}`, options);
-  if (!response.ok) {
-    throw new Error('Failed to get product categories');
-  }
-  const productCategories = await response.json();
-  return productCategories;
-};
