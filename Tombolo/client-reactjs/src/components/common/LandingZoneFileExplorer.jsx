@@ -53,6 +53,13 @@ function LandingZoneFileExplorer({
     }
   }, [landingZoneDetails.selectedLandingZone]);
 
+  useEffect (() => {
+    if (selectedMonitoring?.dirToMonitor) {
+      form.setFieldsValue({ dirToMonitor: selectedMonitoring.dirToMonitor });
+    }
+  
+  }, [landingZoneDetails.directories]);
+
   //GET LANDING ZONE FUNCTION
   const getLandingZones = async (clusterId) => {
     setLandingZoneDetails((prev) => ({
@@ -81,7 +88,6 @@ function LandingZoneFileExplorer({
   // WHEN LANDING ZONE SELECTION IS CHANGED
   const handleLandingZoneSelectionChange = (value) => {
     const selectedLandingZone = landingZoneDetails.landingZones.find((lz) => lz.name === value);
-
     if (!selectedLandingZone) return;
     setLandingZoneRootPath({ landingZonePath: selectedLandingZone?.path });
     setLandingZoneDetails((prev) => ({ ...prev, selectedLandingZone, directories: [] }));
