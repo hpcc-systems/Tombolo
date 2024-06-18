@@ -12,6 +12,8 @@ function LandingZoneFileExplorer({
   setLandingZoneRootPath,
   enableEdit,
   onDirectoryPathChange,
+  selectedMonitoring,
+  form,
 }) {
   const [landingZoneDetails, setLandingZoneDetails] = useState({
     fetchingLandingZone: false,
@@ -24,12 +26,32 @@ function LandingZoneFileExplorer({
   useEffect(() => {
     if (clusterId) {
       getLandingZones(clusterId);
+      console.log(form);
+      // if (
+      //   selectedMonitoring?.landingZone &&
+      //   selectedMonitoring?.machine &&
+      //   selectedMonitoring.cluster_id === clusterId
+      // ) {
+      // } else {
+      //   //reset fields when cluster changes
+      //   form.setFieldsValue({ landingZone: undefined, machine: undefined, dirToMonitor: undefined });
+      // }
     }
   }, [clusterId]);
 
   useEffect(() => {
     console.log(landingZoneDetails);
-  }, [landingZoneDetails]);
+    if (landingZoneDetails && selectedMonitoring?.landingZone) {
+      handleLandingZoneSelectionChange(selectedMonitoring.landingZone);
+    }
+  }, [landingZoneDetails.landingZones]);
+
+  useEffect(() => {
+    console.log(landingZoneDetails);
+    if (landingZoneDetails && selectedMonitoring?.machine) {
+      handleMachineChange(selectedMonitoring.machine);
+    }
+  }, [landingZoneDetails.selectedLandingZone]);
 
   //GET LANDING ZONE FUNCTION
   const getLandingZones = async (clusterId) => {
@@ -47,17 +69,21 @@ function LandingZoneFileExplorer({
       if (!response.ok) throw Error('Error getting landing zones');
       const landingZones = await response.json();
       setLandingZoneDetails((prev) => ({ ...prev, fetchingLandingZone: false, landingZones }));
+      console.log(landingZones);
+      return true;
     } catch (err) {
       message.error(err.message);
       setLandingZoneDetails((prev) => ({ ...prev, fetchingLandingZone: false }));
+      return false;
     }
   };
 
   // WHEN LANDING ZONE SELECTION IS CHANGED
   const handleLandingZoneSelectionChange = (value) => {
     const selectedLandingZone = landingZoneDetails.landingZones.find((lz) => lz.name === value);
-    console.log('THIS IS SELECTED LZ', selectedLandingZone);
-    setLandingZoneRootPath({ landingZonePath: selectedLandingZone.path });
+
+    if (!selectedLandingZone) return;
+    setLandingZoneRootPath({ landingZonePath: selectedLandingZone?.path });
     setLandingZoneDetails((prev) => ({ ...prev, selectedLandingZone, directories: [] }));
   };
 
@@ -65,6 +91,8 @@ function LandingZoneFileExplorer({
   const handleMachineChange = async (value) => {
     setLandingZoneDetails((prev) => ({ ...prev, selectedMachine: value, directories: [] }));
     try {
+      if (!value || !landingZoneDetails.selectedLandingZone.path) return;
+
       const response = await fetchDirectories({
         clusterId,
         machine: value,

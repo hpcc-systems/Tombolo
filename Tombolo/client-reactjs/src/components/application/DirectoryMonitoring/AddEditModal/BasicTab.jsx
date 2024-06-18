@@ -29,11 +29,6 @@ function BasicTab({
     setSelectedCluster(selectedClusterDetails);
   };
 
-  //reload
-  useEffect(() => {
-    console.log(selectedCluster);
-  }, [selectedCluster]);
-
   // If duplicating focus on monitoring name input, empty monitoring name field and show error
   useEffect(() => {
     if (form && !isEditing) {
@@ -137,6 +132,8 @@ function BasicTab({
                 DirectoryOnly={true}
                 setLandingZoneRootPath={setDirectory}
                 enableEdit={true}
+                form={form}
+                selectedMonitoring={selectedMonitoring}
               />
             </Form.Item>
           ) : null}
