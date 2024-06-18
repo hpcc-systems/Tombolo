@@ -29,6 +29,7 @@ const port = process.env.PORT || 3000;
 /* Initialize Socket IO */
 const server = require("http").Server(app);
 const socketIo = require("socket.io")(server);
+server.maxHeadersCoiunt = 1000;
 module.exports.io = socketIo;
 
 app.set("trust proxy", 1);
@@ -139,7 +140,10 @@ app.use("/api/directoryMonitoring", directoryMonitoring);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
-  logger.error(`Error caught by Express error handler on route ${req.path}`, err);
+  logger.error(
+    `Error caught by Express error handler on route ${req.path}`,
+    err
+  );
   res.status(500).send("Something went wrong");
 });
 
