@@ -21,7 +21,6 @@ import DirectoryMonitoringTable from './Table';
 import ApproveRejectModal from './ApproveRejectModal';
 import dayjs from 'dayjs';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
-import BulkApprovalModal from './BulkApprovalModal.jsx';
 import ViewDetailsModal from './ViewDetailsModal';
 
 const monitoringTypeName = 'Directory Monitoring';
@@ -61,7 +60,6 @@ const DirectoryMonitoring = () => {
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
-  const [bulkApprovalModalVisibility, setBulkApprovalModalVisibility] = useState(false);
   const [directory, setDirectory] = useState(null);
   const [copying, setCopying] = useState(false);
 
@@ -520,7 +518,7 @@ const DirectoryMonitoring = () => {
             directoryMonitorings={directoryMonitorings}
             setDirectoryMonitorings={setDirectoryMonitorings}
             setBulkEditModalVisibility={setBulkEditModalVisibility}
-            setBulkApprovalModalVisibility={setBulkApprovalModalVisibility}
+            setBulkApprovalModalVisibility={setDisplayAddRejectModal}
           />
         }
       />
@@ -590,7 +588,8 @@ const DirectoryMonitoring = () => {
         selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
         user={user}
-        setDirectoryMonitorings={setDirectoryMonitorings}
+        fetchAllDirectoryMonitorings={fetchAllDirectoryMonitorings}
+        selectedRows={selectedRows}
       />
       {bulkEditModalVisibility && (
         <BulkUpdateModal
@@ -601,18 +600,6 @@ const DirectoryMonitoring = () => {
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
           fetchAllDirectoryMonitorings={fetchAllDirectoryMonitorings}
-        />
-      )}
-      {bulkApprovalModalVisibility && (
-        <BulkApprovalModal
-          bulkApprovalModalVisibility={bulkApprovalModalVisibility}
-          setBulkApprovalModalVisibility={setBulkApprovalModalVisibility}
-          directoryMonitorings={directoryMonitorings}
-          setDirectoryMonitorings={setDirectoryMonitorings}
-          selectedRows={selectedRows}
-          setSelectedRows={setSelectedRows}
-          applicationId={applicationId}
-          user={user}
         />
       )}
     </>

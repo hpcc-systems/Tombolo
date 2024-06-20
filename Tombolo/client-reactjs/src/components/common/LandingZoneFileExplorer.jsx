@@ -21,44 +21,70 @@ function LandingZoneFileExplorer({
     selectedLandingZone: { machines: [] },
     selectedMachine: null,
     directories: [],
+    initialSet: false,
   });
 
   useEffect(() => {
     if (clusterId) {
       getLandingZones(clusterId);
-      console.log(form);
-      // if (
-      //   selectedMonitoring?.landingZone &&
-      //   selectedMonitoring?.machine &&
-      //   selectedMonitoring.cluster_id === clusterId
-      // ) {
-      // } else {
-      //   //reset fields when cluster changes
-      //   form.setFieldsValue({ landingZone: undefined, machine: undefined, dirToMonitor: undefined });
-      // }
+      form.setFieldsValue({ landingZone: undefined, machine: undefined, dirToMonitor: undefined });
     }
   }, [clusterId]);
 
+  //if selected monitoring is loaded, set landing zone details
   useEffect(() => {
-    console.log(landingZoneDetails);
-    if (landingZoneDetails && selectedMonitoring?.landingZone) {
+    //step 1, set landing zone if loaded
+    if (
+      !landingZoneDetails.fetchingLandingZone &&
+      landingZoneDetails.landingZones.length > 0 &&
+      selectedMonitoring?.landingZone &&
+      !landingZoneDetails.initialSet &&
+      form.getFieldValue('landingZone') !== selectedMonitoring.landingZone
+    ) {
       handleLandingZoneSelectionChange(selectedMonitoring.landingZone);
+      form.setFieldsValue({ landingZone: selectedMonitoring?.landingZone });
     }
-  }, [landingZoneDetails.landingZones]);
 
-  useEffect(() => {
-    console.log(landingZoneDetails);
-    if (landingZoneDetails && selectedMonitoring?.machine) {
+    //step 2, set machine if loaded
+    if (
+      !landingZoneDetails.fetchingLandingZone &&
+      landingZoneDetails.landingZones.length > 0 &&
+      !landingZoneDetails.selectedMachine &&
+      selectedMonitoring?.machine &&
+      !landingZoneDetails.initialSet
+    ) {
       handleMachineChange(selectedMonitoring.machine);
+      form.setFieldsValue({ machine: selectedMonitoring?.machine });
     }
-  }, [landingZoneDetails.selectedLandingZone]);
 
-  useEffect (() => {
-    if (selectedMonitoring?.dirToMonitor) {
-      form.setFieldsValue({ dirToMonitor: selectedMonitoring.dirToMonitor });
+    //step 3, set directory if loaded
+    if (
+      !landingZoneDetails.fetchingLandingZone &&
+      landingZoneDetails.landingZones.length > 0 &&
+      landingZoneDetails.selectedMachine &&
+      selectedMonitoring?.directory &&
+      selectedMonitoring.machine === landingZoneDetails.selectedMachine &&
+      !landingZoneDetails.initialSet
+    ) {
+      fetchDirectories({
+        clusterId,
+        machine: selectedMonitoring.machine,
+        path: `${landingZoneDetails.selectedLandingZone.path}`,
+        dirOnly: true,
+      });
+      form.setFieldsValue({ dirToMonitor: selectedMonitoring?.directory?.split('/') });
     }
-  
-  }, [landingZoneDetails.directories]);
+    //finally set landing zone details initial set flag to true
+    if (
+      landingZoneDetails.selectedLandingZone &&
+      landingZoneDetails.selectedMachine &&
+      landingZoneDetails.directories.length > 0 &&
+      !landingZoneDetails.initialSet
+    ) {
+      console.log('step 4');
+      setLandingZoneDetails((prev) => ({ ...prev, initialSet: true }));
+    }
+  }, [landingZoneDetails]);
 
   //GET LANDING ZONE FUNCTION
   const getLandingZones = async (clusterId) => {
@@ -76,7 +102,6 @@ function LandingZoneFileExplorer({
       if (!response.ok) throw Error('Error getting landing zones');
       const landingZones = await response.json();
       setLandingZoneDetails((prev) => ({ ...prev, fetchingLandingZone: false, landingZones }));
-      console.log(landingZones);
       return true;
     } catch (err) {
       message.error(err.message);
@@ -87,6 +112,10 @@ function LandingZoneFileExplorer({
 
   // WHEN LANDING ZONE SELECTION IS CHANGED
   const handleLandingZoneSelectionChange = (value) => {
+    if (!value) {
+      setLandingZoneDetails((prev) => ({ ...prev, selectedLandingZone: { machines: [] }, directories: [] }));
+      form.setFieldsValue({ machine: undefined, dirToMonitor: undefined });
+    }
     const selectedLandingZone = landingZoneDetails.landingZones.find((lz) => lz.name === value);
     if (!selectedLandingZone) return;
     setLandingZoneRootPath({ landingZonePath: selectedLandingZone?.path });
@@ -95,7 +124,13 @@ function LandingZoneFileExplorer({
 
   //WHEN MACHINE IS CHANGED IS CHANGED -> Get first level dirs
   const handleMachineChange = async (value) => {
+    if (!value) {
+      setLandingZoneDetails((prev) => ({ ...prev, directories: [] }));
+      form.setFieldsValue({ dirToMonitor: undefined });
+      return;
+    }
     setLandingZoneDetails((prev) => ({ ...prev, selectedMachine: value, directories: [] }));
+
     try {
       if (!value || !landingZoneDetails.selectedLandingZone.path) return;
 
