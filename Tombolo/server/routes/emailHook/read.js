@@ -21,7 +21,7 @@ router.get("/", async (req, res) => {
 // GET ONE
 router.get(
   "/:id",
-  [paramter("id").isUUID.withMessage("ID must be a valid UUID")],
+  [param("id").isUUID().withMessage("ID must be a valid UUID")],
   async (req, res) => {
     try {
       const response = await emailsHook.findOne({
