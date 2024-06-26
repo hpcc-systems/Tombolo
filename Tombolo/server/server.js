@@ -87,6 +87,7 @@ const sent_notifications = require("./routes/sent_notifications/read");
 const monitorings = require("./routes/monitorings/read");
 const asr = require("./routes/asr/read");
 const directoryMonitoring = require("./routes/directorymonitoring/read");
+const emailHook = require("./routes/emailHook/read");
 
 // Log all HTTP requests
 app.use((req, res, next) => {
@@ -136,10 +137,14 @@ app.use("/api/sent_notifications", sent_notifications);
 app.use("/api/monitorings", monitorings);
 app.use("/api/asr", asr);
 app.use("/api/directoryMonitoring", directoryMonitoring);
+app.use("/api/emailHook", emailHook);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
-  logger.error(`Error caught by Express error handler on route ${req.path}`, err);
+  logger.error(
+    `Error caught by Express error handler on route ${req.path}`,
+    err
+  );
   res.status(500).send("Something went wrong");
 });
 
