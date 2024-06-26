@@ -4,9 +4,10 @@ const { body, param, validationResult } = require("express-validator");
 
 const logger = require("../../config/logger");
 const models = require("../../models");
+const { where } = require("sequelize");
 const emailsHook = models.email_hook;
 
-// GET all emails hooks
+// GET
 router.get("/", async (req, res) => {
   try {
     const response = await emailsHook.findAll({ raw: true });
@@ -16,6 +17,23 @@ router.get("/", async (req, res) => {
     res.status(500).send("Error while fetching email hooks. " + err);
   }
 });
+
+// GET ONE
+router.get(
+  "/:id",
+  [paramter("id").isUUID.withMessage("ID must be a valid UUID")],
+  async (req, res) => {
+    try {
+      const response = await emailsHook.findOne({
+        where: { id: req.params.id },
+      });
+      res.status(200).send(response);
+    } catch (err) {
+      logger.error(err);
+      res.status(500).send("Error while fetching email hooks. " + err);
+    }
+  }
+);
 
 // POST create
 router.post(
@@ -127,7 +145,7 @@ router.patch(
   }
 );
 
-// DELETE delete emails hook
+// DELETE
 router.delete(
   "/:id",
   [param("id").isUUID().withMessage("ID is required and must be a UUID")],
