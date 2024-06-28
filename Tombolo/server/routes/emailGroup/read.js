@@ -4,33 +4,32 @@ const { body, param, validationResult } = require("express-validator");
 
 const logger = require("../../config/logger");
 const models = require("../../models");
-const { where } = require("sequelize");
-const emailsHook = models.email_hook;
+const emailsGroup = models.email_group;
 
 // GET
 router.get("/", async (req, res) => {
   try {
-    const response = await emailsHook.findAll({ raw: true });
+    const response = await emailsGroup.findAll({ raw: true });
     res.status(200).send(response);
   } catch (err) {
     logger.error(err);
-    res.status(500).send("Error while fetching email hooks. " + err);
+    res.status(500).send("Error while fetching email groups. " + err);
   }
 });
 
 // GET ONE
 router.get(
   "/:id",
-  [paramter("id").isUUID.withMessage("ID must be a valid UUID")],
+  [param("id").isUUID().withMessage("ID must be a valid UUID")],
   async (req, res) => {
     try {
-      const response = await emailsHook.findOne({
+      const response = await emailsGroup.findOne({
         where: { id: req.params.id },
       });
       res.status(200).send(response);
     } catch (err) {
       logger.error(err);
-      res.status(500).send("Error while fetching email hooks. " + err);
+      res.status(500).send("Error while fetching email groups. " + err);
     }
   }
 );
@@ -45,7 +44,10 @@ router.post(
       .withMessage(
         "Name is required and must be a string containing a-z, A-Z, 0-9, _"
       ),
-    body("url").isString().withMessage("URL is required and must be a string"),
+    body("emails")
+      .optional()
+      .isObject()
+      .withMessage("Emails must be a valid JSON"),
     body("createdBy")
       .isString()
       .matches(/^[a-zA-Z0-9_ ]+$/)
@@ -69,20 +71,22 @@ router.post(
       .withMessage("ApprovedBy  must be a string containing a-z, A-Z, 0-9, _"),
     body("metaData")
       .optional({ nullable: true })
-      .isJSON()
+      .isObject()
       .withMessage("MetaData must be a valid JSON or null"),
   ],
   async (req, res) => {
     try {
       const errors = validationResult(req);
+      console.log(errors);
       if (!errors.isEmpty()) {
         return res.status(503).json({ errors: errors.array() });
       }
-      const response = await emailsHook.create(req.body);
+      const response = await emailsGroup.create(req.body);
+      console.log(response);
       res.status(200).send(response);
     } catch (err) {
       logger.error(err);
-      res.status(500).send("Error while creating email hook. " + err);
+      res.status(500).send("Error while creating email group. " + err);
     }
   }
 );
@@ -105,7 +109,7 @@ router.patch(
       .withMessage("Name must be a string containing a-z, A-Z, 0-9, _"),
     body("emails")
       .optional()
-      .isJSON()
+      .isObject()
       .withMessage("Emails must be a valid JSON"),
     body("lastModifiedBy")
       .isString()
@@ -124,7 +128,7 @@ router.patch(
       .withMessage("ApprovedBy  must be a string containing a-z, A-Z, 0-9, _"),
     body("metaData")
       .optional({ nullable: true })
-      .isJSON()
+      .isObject()
       .withMessage("MetaData must be a valid JSON or null"),
   ],
 
@@ -134,13 +138,13 @@ router.patch(
       if (!errors.isEmpty()) {
         return res.status(503).json({ errors: errors.array() });
       }
-      const response = await emailsHook.update(req.body, {
+      const response = await emailsGroup.update(req.body, {
         where: { id: req.body.id },
       });
       res.status(200).send(response);
     } catch (err) {
       logger.error(err);
-      res.status(500).send("Error while updating email hook. " + err);
+      res.status(500).send("Error while updating email group. " + err);
     }
   }
 );
@@ -156,13 +160,13 @@ router.delete(
         return res.status(503).json({ errors: errors.array() });
       }
 
-      const response = await emailsHook.destroy({
+      const response = await emailsGroup.destroy({
         where: { id: req.params.id },
       });
-      res.status(200).send("Successfully deleted emails hook");
+      res.status(200).send("Successfully deleted emails group");
     } catch (err) {
       logger.error(err);
-      res.status(500).send("Error while deleting emails hook. " + err);
+      res.status(500).send("Error while deleting emails group. " + err);
     }
   }
 );

@@ -14,6 +14,8 @@ import {
   CloudServerOutlined,
   ApiOutlined,
   BellOutlined,
+  WindowsOutlined,
+  UsergroupAddOutlined,
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
@@ -235,10 +237,20 @@ class LeftNav extends Component {
           getItem(
             <Link to={'/admin/notification-settings/msTeams'}>
               <span>
-                <i className="fa fa-windows" /> MS Teams
+                <WindowsOutlined /> <span style={{ marginLeft: '1rem' }}>MS Teams</span>
               </span>
             </Link>,
             '7a',
+            null,
+            null
+          ),
+          getItem(
+            <Link to={'/admin/notification-settings/emails'}>
+              <span>
+                <UsergroupAddOutlined /> <span style={{ marginLeft: '1rem' }}>Emails</span>
+              </span>
+            </Link>,
+            '7b',
             null,
             null
           ),

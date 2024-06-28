@@ -1,7 +1,7 @@
 "use strict";
 module.exports = (sequelize, DataTypes) => {
-  const email_hook = sequelize.define(
-    "email_hook",
+  const email_group = sequelize.define(
+    "email_group",
     {
       id: {
         allowNull: false,
@@ -58,5 +58,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  return email_hook;
+  return email_group;
 };

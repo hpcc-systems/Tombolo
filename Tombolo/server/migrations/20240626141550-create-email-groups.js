@@ -1,7 +1,7 @@
 "use strict";
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("email_hooks", {
+    await queryInterface.createTable("email_groups", {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -60,6 +60,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("email_hooks");
+    await queryInterface.dropTable("email_groups");
   },
 };
