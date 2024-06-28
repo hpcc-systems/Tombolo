@@ -177,7 +177,7 @@ exports.getDirectories = async ({
     try {
       const clusterDetails = await getConnection(clusterId);
       const fileSprayService = new hpccJSComms.FileSprayService(clusterDetails);
-      console.log(clusterId, Netaddr, Path, DirectoryOnly);
+
       const fileList = await fileSprayService.FileList({
         DirectoryOnly,
         Netaddr,
