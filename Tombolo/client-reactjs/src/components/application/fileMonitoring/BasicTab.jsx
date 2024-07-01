@@ -103,7 +103,7 @@ function FileMonitoringBasicTab({
       if (!response.ok) handleError(response);
 
       const suggestions = await response.json();
-      console.log(suggestions);
+
       setFileSuggestions(suggestions);
     } catch (error) {
       message.error('There was an error searching the files from cluster');
@@ -212,7 +212,9 @@ function FileMonitoringBasicTab({
             clusterId={selectedCluster}
             DirectoryOnly={true}
             setLandingZoneRootPath={setLandingZoneRootPath}
+            selectedMonitoring={selectedFileMonitoringDetails}
             enableEdit={true}
+            form={basicTabForm}
           />
         ) : null}
 

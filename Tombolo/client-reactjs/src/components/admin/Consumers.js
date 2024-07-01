@@ -64,7 +64,6 @@ class Consumers extends Component {
 
   //Help model
   showHelpDrawer = () => {
-    console.log('Open inline help');
     this.setState({ openHelp: true });
   };
   onHelpDrawerClose = () => {
@@ -290,7 +289,6 @@ class Consumers extends Component {
         transferType: this.state.newConsumer.transferType,
       });
 
-      console.log('data: ' + data);
       fetch('/api/consumer/consumer', {
         method: 'post',
         headers: authHeader(),
@@ -337,7 +335,6 @@ class Consumers extends Component {
 
   handleTypeChange = (value) => {
     var showADGroupField = false;
-    console.log(process.env.REACT_APP_LDAP_SEARCH_ENABLED);
     if (value == 'Internal' && process.env.REACT_APP_LDAP_SEARCH_ENABLED == 'true') {
       showADGroupField = true;
     }
@@ -460,9 +457,6 @@ class Consumers extends Component {
                 <InfoCircleOutlined
                   style={{ marginLeft: '5px', fontSize: '14px' }}
                   onClick={() => this.showHelpDrawer()}
-                  // onClick={() => {
-                  //   console.log('help wanted');
-                  // }}
                 />
               </>
             }

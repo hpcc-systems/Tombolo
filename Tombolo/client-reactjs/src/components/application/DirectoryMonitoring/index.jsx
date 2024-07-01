@@ -1,33 +1,31 @@
 import React, { useState, useEffect } from 'react';
+import BreadCrumbs from '../../common/BreadCrumbs';
 import { useSelector } from 'react-redux';
-import { Form, message } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
-import dayjs from 'dayjs';
-import JobMonitoringActionButton from './JobMonitoringActionButton.jsx';
-import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
-import './jobMonitoring.css';
+import { Form, message } from 'antd';
 import {
-  createJobMonitoring,
-  getAllJobMonitorings,
   checkScheduleValidity,
-  getAllTeamsHook,
   identifyErroneousTabs,
-  updateSelectedMonitoring,
+  createDirectoryMonitoring,
+  getAllDirectoryMonitorings,
+  getAllTeamsHook,
+  updateMonitoring,
   isScheduleUpdated,
-} from './jobMonitoringUtils.js';
+} from './Utils.js';
 
 import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools.js';
-import JobMonitoringTable from './JobMonitoringTable.jsx';
-import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
-import ApproveRejectModal from './ApproveRejectModal.jsx';
+
+import AddEditModal from './AddEditModal/Modal';
+import ActionButton from './ActionButton';
+import DirectoryMonitoringTable from './Table';
+import ApproveRejectModal from './ApproveRejectModal';
+import dayjs from 'dayjs';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
-import BreadCrumbs from '../../common/BreadCrumbs';
+import ViewDetailsModal from './ViewDetailsModal';
 
-// Constants
-const monitoringTypeName = 'Job Monitoring';
+const monitoringTypeName = 'Directory Monitoring';
 
-function JobMonitoring() {
-  //Redux
+const DirectoryMonitoring = () => {
   const {
     applicationReducer: {
       application: { applicationId },
@@ -36,8 +34,11 @@ function JobMonitoring() {
     applicationReducer: { clusters },
   } = useSelector((state) => state);
 
+  //form
+  const [form] = Form.useForm();
+
   //Local States
-  const [displayAddJobMonitoringModal, setDisplayAddJobMonitoringModal] = useState(false);
+  const [displayAddEditModal, setDisplayAddEditModal] = useState(false);
   const [intermittentScheduling, setIntermittentScheduling] = useState({
     frequency: 'daily',
     id: uuidv4(),
@@ -47,60 +48,43 @@ function JobMonitoring() {
   const [cron, setCron] = useState('');
   const [cronMessage, setCronMessage] = useState(null); // Cron message to display when cron is invalid or has errors
   const [erroneousScheduling, setErroneousScheduling] = useState(false);
-  const [jobMonitorings, setJobMonitorings] = useState([]);
-  const [displayMonitoringDetailsModal, setDisplayMonitoringDetailsModal] = useState(false);
+  const [directoryMonitorings, setDirectoryMonitorings] = useState([]);
+  const [displayViewDetailsModal, setDisplayViewDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [teamsHooks, setTeamsHook] = useState([]);
   const [editingData, setEditingData] = useState({ isEditing: false }); // Data to be edited
-  const [duplicatingData, setDuplicatingData] = useState({ isDuplicating: false }); // JM to be duplicated
-  const [monitoringScope, setMonitoringScope] = useState(null); // ClusterWideMonitoring or ClusterSpecificMonitoring
   const [displayAddRejectModal, setDisplayAddRejectModal] = useState(false);
-  const [savingJobMonitoring, setSavingJobMonitoring] = useState(false); // Flag to indicate if job monitoring is being saved
+  const [savingDirectoryMonitoring, setSavingDirectoryMonitoring] = useState(false); // Flag to indicate if directory monitoring is being saved
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
   const [selectedCluster, setSelectedCluster] = useState(null);
-  const [domains, setDomains] = useState([]);
-  const [productCategories, setProductCategories] = useState([]);
-  const [monitoringTypeId, setMonitoringTypeId] = useState(null);
-  const [selectedDomain, setSelectedDomain] = useState(null);
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
+  const [directory, setDirectory] = useState(null);
+  const [copying, setCopying] = useState(false);
 
-  // Create form instance
-  const [form] = Form.useForm();
+  //asr specific
+  const [domains, setDomains] = useState([]);
+  const [selectedDomain, setSelectedDomain] = useState(null);
+  const [productCategories, setProductCategories] = useState([]);
+  const [monitoringTypeId, setMonitoringTypeId] = useState(null);
 
-  //When component mounts and appid change get all job monitorings
   useEffect(() => {
-    if (!applicationId) return;
-    (async () => {
-      try {
-        const allMonitorings = await getAllJobMonitorings({ applicationId });
-        setJobMonitorings(allMonitorings);
-      } catch (error) {
-        message.error('Error fetching job monitorings');
-      }
-    })();
-  }, [applicationId]);
-
-  //When intention to edit a monitoring is discovered
-  useEffect(() => {
-    if (editingData?.isEditing || duplicatingData?.isDuplicating) {
+    if (editingData?.isEditing || copying) {
       form.setFieldsValue(selectedMonitoring);
-      setMonitoringScope(selectedMonitoring.monitoringScope);
-      setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring.clusterId));
 
-      // Convert to dayjs objects
-      let expectedCompletionTime = selectedMonitoring?.metaData?.expectedCompletionTime;
-      let expectedStartTime = selectedMonitoring?.metaData?.expectedStartTime;
-      expectedCompletionTime = dayjs(expectedCompletionTime, 'HH:mm');
-      expectedStartTime = dayjs(expectedStartTime, 'HH:mm');
+      setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring.cluster_id));
 
       form.setFieldsValue({
-        ...selectedMonitoring?.metaData?.asrSpecificMetaData,
         ...selectedMonitoring?.metaData?.notificationMetaData,
-        requireComplete: selectedMonitoring.metaData.requireComplete,
-        expectedCompletionTime,
-        expectedStartTime,
+        ...selectedMonitoring?.metaData?.asrSpecificMetaData,
+        expectedMoveByTime: selectedMonitoring?.metaData?.expectedMoveByTime
+          ? dayjs(selectedMonitoring?.metaData?.expectedMoveByTime, 'HH:mm')
+          : null,
+        minimumFileCount: selectedMonitoring?.metaData?.minimumFileCount,
+        maximumFileCount: selectedMonitoring?.metaData?.maximumFileCount,
+        dirToMonitor: selectedMonitoring.directory.split('/'),
+        pattern: selectedMonitoring?.metaData?.pattern,
       });
       if (selectedMonitoring.metaData.schedule) {
         const { schedule } = selectedMonitoring.metaData;
@@ -118,11 +102,10 @@ function JobMonitoring() {
         }
       }
     }
-  }, [editingData, duplicatingData]);
+  }, [editingData, copying]);
 
-  // Get all teams hook, monitoring type ID
+  // Get all teams hook,
   useEffect(() => {
-    // Teams hook
     (async () => {
       try {
         const allTeamsHook = await getAllTeamsHook();
@@ -130,6 +113,10 @@ function JobMonitoring() {
       } catch (error) {
         message.error('Error fetching teams hook');
       }
+    })();
+
+    (async () => {
+      fetchAllDirectoryMonitorings();
     })();
 
     // Get monitoringType id for job monitoring
@@ -181,36 +168,21 @@ function JobMonitoring() {
     })();
   }, [monitoringTypeId, selectedDomain, selectedMonitoring]);
 
-  // Function reset states when modal is closed
-  const resetStates = () => {
-    setIntermittentScheduling({
-      frequency: 'daily',
-      id: uuidv4(),
-      runWindow: 'daily',
-    });
-    setCompleteSchedule([]);
-    setDisplayAddJobMonitoringModal(false);
-    setSelectedMonitoring(null);
-    setEditingData({ isEditing: false });
-    setDuplicatingData({ isDuplicating: false });
-    setMonitoringScope(null);
-    setErroneousTabs([]);
-    setErroneousScheduling(false);
-    setSelectedCluster(null);
-    setProductCategories([]);
-    setActiveTab('0');
-    setCron('');
-    form.resetFields();
+  const handleAddDirectoryMonitoringButtonClick = () => {
+    setDisplayAddEditModal(true);
   };
 
-  //When add button new job monitoring button clicked
-  const handleAddJobMonitoringButtonClick = () => {
-    setDisplayAddJobMonitoringModal(true);
+  const fetchAllDirectoryMonitorings = async () => {
+    try {
+      const allDirectoryMonitorings = await getAllDirectoryMonitorings({ applicationId });
+      setDirectoryMonitorings(allDirectoryMonitorings);
+    } catch (error) {
+      message.error('Error fetching directory monitorings');
+    }
   };
 
-  //Save new job monitoring
-  const handleSaveJobMonitoring = async () => {
-    setSavingJobMonitoring(true);
+  const handleSaveDirectoryMonitoring = async () => {
+    setSavingDirectoryMonitoring(true);
     let validForm = true;
 
     // Validate from and set validForm to false if any field is invalid
@@ -221,10 +193,10 @@ function JobMonitoring() {
     }
 
     //Check if schedule is valid
-    const jobSchedule = checkScheduleValidity({ intermittentScheduling, completeSchedule, cron, cronMessage });
+    const directorySchedule = checkScheduleValidity({ intermittentScheduling, completeSchedule, cron, cronMessage });
 
     // Error message need to be set for schedule because it is not part of from instance
-    if (!jobSchedule.valid) {
+    if (!directorySchedule.valid) {
       setErroneousScheduling(true);
       validForm = false;
     } else {
@@ -237,7 +209,7 @@ function JobMonitoring() {
       .filter((f) => f.errors.length > 0)
       .map((f) => f.name[0]);
     const badTabs = identifyErroneousTabs({ erroneousFields });
-    if (!badTabs.includes('1') && !jobSchedule.valid) {
+    if (!badTabs.includes('1') && !directorySchedule.valid) {
       badTabs.push('1');
     }
     if (badTabs.length > 0) {
@@ -246,35 +218,28 @@ function JobMonitoring() {
 
     // If form is invalid or schedule is invalid return
     if (!validForm) {
-      setSavingJobMonitoring(false);
+      setSavingDirectoryMonitoring(false);
       return;
     }
 
-    // If form is valid and schedule is valid save job monitoring
     try {
       //All inputs
-      let allInputs = form.getFieldsValue();
-
-      //If monitoring scope is cluster-wide jobName should be * -  As it is required field in DB
-      const { monitoringScope } = allInputs;
-      if (monitoringScope === 'ClusterWideMonitoring') {
-        allInputs.jobName = '*';
-      }
+      let userFieldInputs = form.getFieldsValue();
 
       // Group ASR specific metaData and delete from allInputs
       const asrSpecificMetaData = {};
-      const { domain, productCategory, jobMonitorType, severity, requireComplete } = allInputs;
-      const asrSpecificFields = { domain, productCategory, jobMonitorType, severity };
+      const { domain, productCategory, severity } = userFieldInputs;
+      const asrSpecificFields = { domain, productCategory, severity };
       for (let key in asrSpecificFields) {
         if (asrSpecificFields[key] !== undefined) {
           asrSpecificMetaData[key] = asrSpecificFields[key];
         }
-        delete allInputs[key];
+        delete userFieldInputs[key];
       }
 
-      // Group Notification specific metaData and delete from allInputs
+      // Group Notification specific metaData and delete from userFieldInputs
       const notificationMetaData = {};
-      const { notificationCondition, teamsHooks, primaryContacts, secondaryContacts, notifyContacts } = allInputs;
+      const { notificationCondition, teamsHooks, primaryContacts, secondaryContacts, notifyContacts } = userFieldInputs;
       const notificationSpecificFields = {
         notificationCondition,
         teamsHooks,
@@ -286,63 +251,79 @@ function JobMonitoring() {
         if (notificationSpecificFields[key] !== undefined) {
           notificationMetaData[key] = notificationSpecificFields[key];
         }
-        delete allInputs[key];
+        delete userFieldInputs[key];
       }
 
-      // Add expectedCompletionTime to metaData if entered, delete from allInputs
+      // Add expectedCompletionTime to metaData if entered, delete from userFieldInputs
       const metaData = {};
 
-      let { expectedStartTime, expectedCompletionTime } = allInputs;
-      metaData.requireComplete = requireComplete;
-      delete allInputs.requireComplete;
+      let { expectedMoveByTime, maximumFileCount, minimumFileCount } = userFieldInputs;
 
-      // Format expectedCompletionTime and expectedStartTime
-      metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
-      delete allInputs.expectedCompletionTime;
-      metaData.expectedStartTime = expectedStartTime.format('HH:mm');
-      delete allInputs.expectedStartTime;
-
-      // Add schedule to metaData if entered,
-      // Note: cluster wide monitoring should not have schedule because work units can have varying schedules
-      if (jobSchedule.schedule.length > 0 && monitoringScope !== 'ClusterWideMonitoring') {
-        metaData.schedule = jobSchedule.schedule;
+      if (maximumFileCount) {
+        metaData.maximumFileCount = maximumFileCount;
       }
+      delete userFieldInputs.maximumFileCount;
+      if (minimumFileCount) {
+        metaData.minimumFileCount = minimumFileCount;
+      }
+      delete userFieldInputs.minimumFileCount;
 
-      //Add applicationId, createdBy, lastUpdatedBy to allInputs
-      allInputs.applicationId = applicationId;
+      if (expectedMoveByTime) {
+        // Format expectedCompletionTime and expectcfedStartTime
+        metaData.expectedMoveByTime = expectedMoveByTime.format('HH:mm');
+      }
+      delete userFieldInputs.expectedMoveByTime;
+
       const userDetails = JSON.stringify({
         id: user.id,
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
       });
 
-      allInputs.createdBy = userDetails;
-      allInputs.lastUpdatedBy = userDetails;
-
-      //Add asrSpecificMetaData, notificationMetaData to metaData object
-      metaData.asrSpecificMetaData = asrSpecificMetaData;
       metaData.notificationMetaData = notificationMetaData;
+      metaData.asrSpecificMetaData = asrSpecificMetaData;
 
-      //Add metaData to allInputs
-      allInputs = { ...allInputs, metaData };
+      if (directorySchedule.schedule.length > 0) {
+        metaData.schedule = directorySchedule.schedule;
 
-      const responseData = await createJobMonitoring({ inputData: allInputs });
-      setJobMonitorings([responseData, ...jobMonitorings]);
-      message.success('Job monitoring saved successfully');
+        if (directorySchedule.schedule[0]?.cron) {
+          userFieldInputs.cron = directorySchedule.schedule[0].cron;
+        }
+      }
+
+      if (userFieldInputs.pattern) {
+        metaData.pattern = userFieldInputs.pattern;
+        delete userFieldInputs.pattern;
+      }
+
+      //Add metaData to userFieldInputs
+      userFieldInputs = { ...userFieldInputs, metaData };
+
+      //data transformations necessary for submitting
+      userFieldInputs.directory = userFieldInputs.dirToMonitor.join('/');
+      userFieldInputs['application_id'] = applicationId;
+      userFieldInputs.type = 'directory';
+      userFieldInputs.active = false;
+      userFieldInputs.approved = false;
+      userFieldInputs.createdBy = userDetails;
+      userFieldInputs.updatedBy = userDetails;
+
+      const responseData = await createDirectoryMonitoring({ inputData: userFieldInputs });
+      setDirectoryMonitorings([responseData, ...directoryMonitorings]);
+      message.success('Directory monitoring saved successfully');
 
       // Rest states and Close model if saved successfully
       resetStates();
-      setDisplayAddJobMonitoringModal(false);
+      setDisplayAddEditModal(false);
     } catch (err) {
       message.error(err.message);
     } finally {
-      setSavingJobMonitoring(false);
+      setSavingDirectoryMonitoring(false);
     }
   };
 
-  // Handle update existing monitoring
-  const handleUpdateJobMonitoring = async () => {
-    setSavingJobMonitoring(true);
+  const handleUpdateDirectoryMonitoring = async () => {
+    setSavingDirectoryMonitoring(true);
     try {
       // Validate from and set validForm to false if any field is invalid
       let validForm = true;
@@ -353,10 +334,10 @@ function JobMonitoring() {
       }
 
       //Check if schedule is valid
-      const jobSchedule = checkScheduleValidity({ intermittentScheduling, completeSchedule, cron, cronMessage });
+      const directorySchedule = checkScheduleValidity({ intermittentScheduling, completeSchedule, cron, cronMessage });
 
       // Error message need to be set for schedule because it is not part of from instance
-      if (!jobSchedule.valid) {
+      if (!directorySchedule.valid) {
         setErroneousScheduling(true);
         validForm = false;
       } else {
@@ -369,7 +350,7 @@ function JobMonitoring() {
         .filter((f) => f.errors.length > 0)
         .map((f) => f.name[0]);
       const badTabs = identifyErroneousTabs({ erroneousFields });
-      if (!badTabs.includes('1') && !jobSchedule.valid) {
+      if (!badTabs.includes('1') && !directorySchedule.valid) {
         badTabs.push('1');
       }
       if (badTabs.length > 0) {
@@ -378,7 +359,7 @@ function JobMonitoring() {
 
       // If form is invalid or schedule is invalid return
       if (!validForm) {
-        setSavingJobMonitoring(false);
+        setSavingDirectoryMonitoring(false);
         return;
       }
 
@@ -386,9 +367,7 @@ function JobMonitoring() {
       const formFields = form.getFieldsValue();
       const fields = Object.keys(formFields);
 
-      // Need to be checked separately, because the data is nested inside metaData object
-      const asrSpecificFields = ['domain', 'productCategory', 'severity'];
-      const metaDataFields = ['expectedCompletionTime', 'expectedStartTime', 'requireComplete'];
+      const metaDataFields = ['pattern', 'expectedMoveByTime', 'minimumFileCount', 'maximumFileCount'];
       const notificationMetaDataFields = [
         'teamsHooks',
         'primaryContacts',
@@ -396,6 +375,7 @@ function JobMonitoring() {
         'notifyContacts',
         'notificationCondition',
       ];
+      const asrSpecificFields = ['domain', 'productCategory', 'severity'];
 
       // Identify the fields that were touched
       const touchedFields = [];
@@ -407,7 +387,7 @@ function JobMonitoring() {
 
       // Check if schedule is changed - it is not part of form instance
       const existingSchedule = selectedMonitoring?.metaData?.schedule || [];
-      const scheduleChanged = isScheduleUpdated({ existingSchedule, newSchedule: jobSchedule.schedule });
+      const scheduleChanged = isScheduleUpdated({ existingSchedule, newSchedule: directorySchedule.schedule });
       if (scheduleChanged) {
         touchedFields.push('schedule');
       }
@@ -422,11 +402,12 @@ function JobMonitoring() {
 
       // Add schedule to metaData if altered
       if (touchedFields.includes('schedule')) {
-        updatedData.metaData.schedule = jobSchedule.schedule;
+        updatedData.metaData.schedule = directorySchedule.schedule;
       }
 
       //Touched ASR fields
       const touchedAsrFields = touchedFields.filter((field) => asrSpecificFields.includes(field));
+
       const touchedMetaDataFields = touchedFields.filter((field) => metaDataFields.includes(field));
       const touchedNotificationMetaDataFields = touchedFields.filter((field) =>
         notificationMetaDataFields.includes(field)
@@ -442,21 +423,25 @@ function JobMonitoring() {
 
       // update selected monitoring with run time fields that are nested inside metaData
       if (touchedMetaDataFields.length > 0) {
-        if (touchedMetaDataFields.includes('expectedCompletionTime')) {
-          const expectedCompletionTime = form.getFieldValue('expectedCompletionTime');
-          const newExpectedCompletionTime = expectedCompletionTime.format('HH:mm');
-          updatedData.metaData.expectedCompletionTime = newExpectedCompletionTime;
+        if (touchedMetaDataFields.includes('expectedMoveByTime')) {
+          const expectedMoveByTime = form.getFieldValue('expectedMoveByTime');
+          const newExpectedMoveByTime = expectedMoveByTime.format('HH:mm');
+          updatedData.metaData.expecteMoveByTime = newExpectedMoveByTime;
         }
 
-        if (touchedMetaDataFields.includes('expectedStartTime')) {
-          const expectedStartTime = form.getFieldValue('expectedStartTime');
-          const newExpectedStartTime = expectedStartTime.format('HH:mm');
-          updatedData.metaData.expectedStartTime = newExpectedStartTime;
+        if (touchedMetaDataFields.includes('pattern')) {
+          const pattern = form.getFieldValue('pattern');
+          updatedData.metaData.pattern = pattern;
         }
 
-        if (touchedMetaDataFields.includes('requireComplete')) {
-          const requireComplete = form.getFieldValue('requireComplete');
-          updatedData.metaData.requireComplete = requireComplete;
+        if (touchedMetaDataFields.includes('minimumFileCount')) {
+          const minimumFileCount = form.getFieldValue('minimumFileCount');
+          updatedData.metaData.minimumFileCount = minimumFileCount;
+        }
+
+        if (touchedMetaDataFields.includes('maximumFileCount')) {
+          const maximumFileCount = form.getFieldValue('maximumFileCount');
+          updatedData.metaData.maximumFileCount = maximumFileCount;
         }
       }
 
@@ -470,10 +455,7 @@ function JobMonitoring() {
 
       // new values of any other fields that are not part of asrFields, metaDataFields, notificationMetaDataFields
       const otherFields = fields.filter(
-        (field) =>
-          !asrSpecificFields.includes(field) &&
-          !metaDataFields.includes(field) &&
-          !notificationMetaDataFields.includes(field)
+        (field) => !metaDataFields.includes(field) && !notificationMetaDataFields.includes(field)
       );
 
       // Update other fields
@@ -490,26 +472,38 @@ function JobMonitoring() {
       updatedData.lastUpdatedBy = userDetails;
 
       // Make api call
-      await updateSelectedMonitoring({ updatedData });
+      await updateMonitoring({ updatedData });
 
       // If no error thrown set state with new data
-      setJobMonitorings((prev) => {
-        const updatedJobMonitorings = prev.map((jobMonitoring) => {
-          updatedData.approvalStatus = 'Pending';
-          updatedData.isActive = false;
-          if (jobMonitoring.id === updatedData.id) {
-            return updatedData;
-          }
-          return jobMonitoring;
-        });
-        return updatedJobMonitorings;
-      });
+      fetchAllDirectoryMonitorings();
+
+      message.success('Directory monitoring saved successfully');
+
       resetStates();
     } catch (err) {
-      message.error('Failed to update job monitoring');
+      message.error('Failed to update directory monitoring');
     } finally {
-      setSavingJobMonitoring(false);
+      setSavingDirectoryMonitoring(false);
     }
+  };
+
+  const resetStates = () => {
+    setIntermittentScheduling({
+      frequency: 'daily',
+      id: uuidv4(),
+      runWindow: 'daily',
+    });
+    setCompleteSchedule([]);
+    setDisplayAddEditModal(false);
+    setSelectedMonitoring(null);
+    setEditingData({ isEditing: false });
+    setErroneousTabs([]);
+    setErroneousScheduling(false);
+    setSelectedCluster(null);
+    setActiveTab('0');
+    setCron('');
+    setCopying(false);
+    form.resetFields();
   };
 
   //JSX
@@ -517,20 +511,22 @@ function JobMonitoring() {
     <>
       <BreadCrumbs
         extraContent={
-          <JobMonitoringActionButton
-            handleAddJobMonitoringButtonClick={handleAddJobMonitoringButtonClick}
+          <ActionButton
+            handleAddDirectoryMonitoringButtonClick={handleAddDirectoryMonitoringButtonClick}
             selectedRows={selectedRows}
             setSelectedRows={setSelectedRows}
-            setJobMonitorings={setJobMonitorings}
+            directoryMonitorings={directoryMonitorings}
+            setDirectoryMonitorings={setDirectoryMonitorings}
             setBulkEditModalVisibility={setBulkEditModalVisibility}
+            setBulkApprovalModalVisibility={setDisplayAddRejectModal}
           />
         }
       />
-      <AddEditJobMonitoringModal
-        displayAddJobMonitoringModal={displayAddJobMonitoringModal}
-        setDisplayAddJobMonitoringModal={setDisplayAddJobMonitoringModal}
-        handleSaveJobMonitoring={handleSaveJobMonitoring}
-        handleUpdateJobMonitoring={handleUpdateJobMonitoring}
+      <AddEditModal
+        displayAddEditModal={displayAddEditModal}
+        setDisplayAddEditModal={setDisplayAddEditModal}
+        handleSaveDirectoryMonitoring={handleSaveDirectoryMonitoring}
+        handleUpdateDirectoryMonitoring={handleUpdateDirectoryMonitoring}
         form={form}
         intermittentScheduling={intermittentScheduling}
         setIntermittentScheduling={setIntermittentScheduling}
@@ -544,46 +540,46 @@ function JobMonitoring() {
         clusters={clusters}
         teamsHooks={teamsHooks}
         setSelectedMonitoring={setSelectedMonitoring}
-        monitoringScope={monitoringScope}
-        setMonitoringScope={setMonitoringScope}
-        savingJobMonitoring={savingJobMonitoring}
-        jobMonitorings={jobMonitorings}
+        savingDirectoryMonitoring={savingDirectoryMonitoring}
+        directoryMonitorings={directoryMonitorings}
         setEditingData={setEditingData}
         isEditing={editingData?.isEditing}
-        isDuplicating={duplicatingData?.isDuplicating}
         erroneousTabs={erroneousTabs}
         setErroneousTabs={setErroneousTabs}
         setErroneousScheduling={setErroneousScheduling}
         selectedCluster={selectedCluster}
         setSelectedCluster={setSelectedCluster}
         resetStates={resetStates}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        directory={directory}
+        setDirectory={setDirectory}
+        copying={copying}
+        setCopying={setCopying}
         domains={domains}
         productCategories={productCategories}
         setSelectedDomain={setSelectedDomain}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        selectedMonitoring={selectedMonitoring}
       />
-      <JobMonitoringTable
-        jobMonitorings={jobMonitorings}
-        setJobMonitorings={setJobMonitorings}
-        setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
+      <DirectoryMonitoringTable
+        directoryMonitorings={directoryMonitorings}
+        setDirectoryMonitorings={setDirectoryMonitorings}
+        setDisplayViewDetailsModal={setDisplayViewDetailsModal}
         setSelectedMonitoring={setSelectedMonitoring}
-        setDisplayAddJobMonitoringModal={setDisplayAddJobMonitoringModal}
+        setDisplayAddEditModal={setDisplayAddEditModal}
         setEditingData={setEditingData}
-        setDuplicatingData={setDuplicatingData}
         setDisplayAddRejectModal={setDisplayAddRejectModal}
         applicationId={applicationId}
         setSelectedRows={setSelectedRows}
+        setCopying={setCopying}
       />
-      <MonitoringDetailsModal
-        displayMonitoringDetailsModal={displayMonitoringDetailsModal}
-        setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
+      <ViewDetailsModal
+        displayViewDetailsModal={displayViewDetailsModal}
+        setDisplayViewDetailsModal={setDisplayViewDetailsModal}
         selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
         clusters={clusters}
         teamsHooks={teamsHooks}
-        domains={domains}
-        productCategories={productCategories}
       />
       <ApproveRejectModal
         id={selectedMonitoring?.id}
@@ -592,21 +588,22 @@ function JobMonitoring() {
         selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
         user={user}
-        setJobMonitorings={setJobMonitorings}
+        fetchAllDirectoryMonitorings={fetchAllDirectoryMonitorings}
+        selectedRows={selectedRows}
       />
       {bulkEditModalVisibility && (
         <BulkUpdateModal
           bulkEditModalVisibility={bulkEditModalVisibility}
           setBulkEditModalVisibility={setBulkEditModalVisibility}
-          jobMonitorings={jobMonitorings}
-          setJobMonitorings={setJobMonitorings}
+          directoryMonitorings={directoryMonitorings}
+          setDirectoryMonitorings={setDirectoryMonitorings}
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
+          fetchAllDirectoryMonitorings={fetchAllDirectoryMonitorings}
         />
       )}
-      ,
     </>
   );
-}
+};
 
-export default JobMonitoring;
+export default DirectoryMonitoring;

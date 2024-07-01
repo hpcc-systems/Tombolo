@@ -31,7 +31,7 @@ module.exports = {
         type: Sequelize.DataTypes.STRING,
       },
       cron: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.DataTypes.STRING,
       },
       type: {
@@ -43,6 +43,18 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DataTypes.BOOLEAN,
         defaultValue: false,
+      },
+      description: {
+        allowNull: true,
+        type: Sequelize.DataTypes.STRING,
+      },
+      machine: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
+      },
+      landingZone: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
       },
       directory: {
         allowNull: false,
@@ -57,6 +69,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DataTypes.BOOLEAN,
         defaultValue: false,
+      },
+      approvalStatus: {
+        allowNull: false,
+        type: Sequelize.DataTypes.STRING,
       },
       approvalNote: {
         allowNull: true,

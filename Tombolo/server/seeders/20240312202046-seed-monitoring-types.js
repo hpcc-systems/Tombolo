@@ -14,6 +14,16 @@ module.exports = {
           email: "NA",
         }),
       },
+      {
+        id: uuidv4(),
+        name: "Directory Monitoring",
+        createdAt: new Date(),
+        createdBy: JSON.stringify({
+          firstName: null,
+          lastName: "System",
+          email: "NA",
+        }),
+      },
     ]);
   },
 

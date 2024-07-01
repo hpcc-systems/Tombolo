@@ -1,42 +1,42 @@
 import { authHeader } from '../../common/AuthHeader.js';
 import { message } from 'antd';
 
-// Create a job monitoring
-export const createJobMonitoring = async ({ inputData }) => {
+// Create a directory monitoring
+export const createDirectoryMonitoring = async ({ inputData }) => {
   const payload = {
     method: 'POST',
     header: authHeader(),
     body: JSON.stringify(inputData),
   };
 
-  const response = await fetch(`/api/jobmonitoring`, payload);
+  const response = await fetch(`/api/DirectoryMonitoring`, payload);
 
   if (!response.ok) {
-    return message.error('Failed to save job monitoring');
+    return message.error('Failed to save directory monitoring');
   }
 
   const data = await response.json();
   return data;
 };
 
-// Function to get all job monitorings from the server
-export const getAllJobMonitorings = async ({ applicationId }) => {
+// Function to get all directory monitorings from the server
+export const getAllDirectoryMonitorings = async ({ applicationId }) => {
   const payload = {
     method: 'GET',
     header: authHeader(),
   };
 
-  const response = await fetch(`/api/jobmonitoring/all/${applicationId}`, payload);
+  const response = await fetch(`/api/DirectoryMonitoring/all/${applicationId}`, payload);
 
   if (!response.ok) {
-    throw new Error('Failed to get job monitorings');
+    throw new Error('Failed to get directory monitorings');
   }
 
   const data = await response.json();
   return data;
 };
 
-//Function that checks if the  job schedule is correct
+//Function that checks if the  directory schedule is correct
 export const checkScheduleValidity = ({ intermittentScheduling, completeSchedule, cron, cronMessage }) => {
   // Abandon intermittent schedule if user did not completely add the schedule.Eg if they submit form and schedule was partially entered
   const { frequency, scheduleBy, days, dates, weeks, day, month, date, week } = intermittentScheduling;
@@ -81,42 +81,63 @@ export const getAllTeamsHook = async () => {
   return data;
 };
 
-// Update a job monitoring
-export const updateSelectedMonitoring = async ({ updatedData }) => {
+// Update a directory monitoring
+export const updateMonitoring = async ({ updatedData }) => {
   const payload = {
-    method: 'PATCH',
+    method: 'PUT',
     headers: authHeader(),
     body: JSON.stringify(updatedData),
   };
 
-  const response = await fetch(`/api/jobmonitoring/`, payload);
+  const { id } = updatedData;
+
+  const response = await fetch(`/api/DirectoryMonitoring/update/${id}`, payload);
 
   if (!response.ok) {
-    return message.error('Failed to update job monitoring');
+    return message.error('Failed to update directory monitoring');
   }
 
   const data = await response.json();
   return data;
 };
 
-//Delete job monitoring
-export const handleDeleteJobMonitoring = async ({ id, jobMonitorings, setJobMonitorings }) => {
+// Update a directory monitoring
+export const approveSelectedMonitoring = async ({ updatedData }) => {
+  const payload = {
+    method: 'PUT',
+    headers: authHeader(),
+    body: JSON.stringify(updatedData),
+  };
+
+  const { id } = updatedData;
+
+  const response = await fetch(`/api/DirectoryMonitoring/approve/${id}`, payload);
+
+  if (!response.ok) {
+    return message.error('Failed to update directory monitoring');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+//Delete directory monitoring
+export const handleDeleteDirectoryMonitoring = async ({ id, directoryMonitorings, setDirectoryMonitorings }) => {
   try {
     const payload = {
       method: 'DELETE',
       header: authHeader(),
     };
 
-    const response = await fetch(`/api/jobmonitoring/${id}`, payload);
+    const response = await fetch(`/api/DirectoryMonitoring/delete/${id}`, payload);
 
-    if (!response.ok) {
-      return message.error('Failed to delete job monitoring');
+    if (!response.status === 204) {
+      return message.error('Failed to delete directory monitoring');
     }
 
-    // Set job monitorings
-    const filteredJobMonitorings = jobMonitorings.filter((item) => item.id !== id);
-    setJobMonitorings(filteredJobMonitorings);
-    message.success('Job monitoring deleted successfully');
+    // Set directory monitorings
+    const filteredDirectoryMonitorings = directoryMonitorings.filter((item) => item.id !== id);
+    setDirectoryMonitorings(filteredDirectoryMonitorings);
   } catch (err) {
     message.error(err.message);
   }
@@ -124,7 +145,7 @@ export const handleDeleteJobMonitoring = async ({ id, jobMonitorings, setJobMoni
 
 // Function to identify erroneous tab(s)
 const formFields = {
-  0: ['monitoringName', 'description', 'monitoringScope', 'clusterId', 'jobName'],
+  0: ['monitoringName', 'description', 'monitoringScope', 'clusterId', 'directoryName'],
   1: ['domain', 'productCategory', 'expectedStartTime', 'expectedCompletionTime', 'severity', 'requireComplete'],
   2: ['notificationCondition', 'teamsHooks', 'primaryContacts', 'secondaryContacts', 'notifyContacts'],
 };
@@ -142,52 +163,77 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
   return erroneousTabs;
 };
 
-//Toggle job monitoring status, just post the id of the job monitoring to  /toggle in the req body
-export const toggleJobMonitoringStatus = async ({ id }) => {
+//Toggle directory monitoring status, just post the id of the directory monitoring to  /toggle in the req body
+export const toggleDirectoryMonitoringStatus = async ({ id }) => {
   const payload = {
     method: 'PATCH',
     headers: authHeader(),
     body: JSON.stringify({ id }),
   };
 
-  const response = await fetch(`/api/jobmonitoring/toggleIsActive`, payload);
+  const response = await fetch(`/api/DirectoryMonitoring/${id}/active`, payload);
+
   if (!response.ok) {
-    throw new Error('Failed to toggle job monitoring status');
+    throw new Error('Failed to toggle directory monitoring status');
   }
 
   const data = await response.json();
   return data;
 };
 
-// Bulk delete job monitorings
-export const handleBulkDeleteJobMonitorings = async ({ selectedJobMonitorings }) => {
+// Bulk delete directory monitorings
+export const handleBulkDeleteDirectoryMonitorings = async ({ selectedDirectoryMonitorings }) => {
   const payload = {
     method: 'DELETE',
     headers: authHeader(),
-    body: JSON.stringify({ ids: selectedJobMonitorings }),
+    body: JSON.stringify({ ids: selectedDirectoryMonitorings }),
   };
 
-  const response = await fetch(`/api/jobmonitoring/bulkDelete`, payload);
-
+  const response = await fetch(`/api/DirectoryMonitoring/bulkDelete`, payload);
   if (!response.ok) {
-    throw new Error('Failed to bulk delete job monitorings');
+    throw new Error('Failed to bulk delete directory monitorings');
   }
-  const data = await response.json();
-  return data;
+  return true;
 };
 
 // Bulk update
-export const handleBulkUpdateJobMonitorings = async ({ updatedData }) => {
+export const handleBulkUpdateDirectoryMonitorings = async ({ updatedData }) => {
   const payload = {
     method: 'PATCH',
     headers: authHeader(),
     body: JSON.stringify({ metaData: updatedData }),
   };
 
-  const response = await fetch(`/api/jobmonitoring/bulkUpdate`, payload);
+  const response = await fetch(`/api/DirectoryMonitoring/bulkUpdate`, payload);
 
   if (!response.ok) {
-    throw new Error('Failed to bulk update job monitorings');
+    throw new Error('Failed to bulk update directory monitorings');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+export const handleBulkApproveDirectoryMonitorings = async ({ selectedDirectoryMonitorings, formData }) => {
+  const { approved, approvedAt, approvedBy, approvalStatus, active } = formData;
+
+  const payload = {
+    method: 'PATCH',
+    headers: authHeader(),
+    body: JSON.stringify({
+      ids: selectedDirectoryMonitorings,
+      approved,
+      approvedAt,
+      approvedBy,
+      approvalStatus,
+      active,
+    }),
+  };
+
+  const response = await fetch(`/api/DirectoryMonitoring/bulkApprove`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to bulk approve directory monitorings');
   }
   const data = await response.json();
   return data;
@@ -200,9 +246,4 @@ export function isScheduleUpdated({ existingSchedule, newSchedule }) {
     if (JSON.stringify(existingSchedule[i]) !== JSON.stringify(newSchedule[i])) return true;
   }
   return false;
-}
-
-// Check if new name job monitoring name already exists
-export function doesNameExist({ jobMonitorings, newName }) {
-  return jobMonitorings.some((job) => job.monitoringName === newName);
 }
