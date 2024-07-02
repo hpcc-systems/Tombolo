@@ -37,13 +37,20 @@ const JobMonitoringTable = ({
   setDisplayMonitoringDetailsModal,
   setDisplayAddRejectModal,
   setSelectedRows,
+  domains,
+  allProductCategories,
 }) => {
   //Redux
   const {
     applicationReducer: {
       application: { applicationId },
+      integrations,
     },
   } = useSelector((state) => state);
+
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
 
   // Columns for the table
   const columns = [
@@ -52,21 +59,7 @@ const JobMonitoringTable = ({
       dataIndex: 'monitoringName',
       key: 'monitoringName',
     },
-    {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
-      render: (text) => (
-        <Tooltip title={text}>
-          <span>{text.length > 100 ? `${text.slice(0, 100)}...` : text}</span>
-        </Tooltip>
-      ),
-    },
-    {
-      title: 'Monitoring Scope',
-      dataIndex: 'monitoringScope',
-      key: 'monitoringScope',
-    },
+
     {
       title: 'Job Name/Pattern',
       dataIndex: 'jobName',
@@ -179,7 +172,7 @@ const JobMonitoringTable = ({
                 </div>
               </div>
             }>
-            <span style={{ color: 'var(--primary)' }}>
+            <span style={{ color: 'var(--secondary)' }}>
               More <DownOutlined style={{ fontSize: '10px' }} />
             </span>
           </Popover>
@@ -187,6 +180,60 @@ const JobMonitoringTable = ({
       ),
     },
   ];
+
+  // If ASR integration on add couple asr specific columns
+  if (asrIntegration) {
+    columns.splice(4, 0, {
+      title: 'Domain',
+      render: (record) => {
+        const domain = record?.metaData?.asrSpecificMetaData?.domain || '';
+        const domainName = domains.filter((d) => d.value === domain)[0]?.label;
+        if (domainName) {
+          return domainName;
+        } else {
+          return domain;
+        }
+      },
+    });
+    columns.splice(5, 0, {
+      title: 'Product',
+      render: (record) => {
+        const productId = record?.metaData?.asrSpecificMetaData?.productCategory || '';
+        let productName = allProductCategories.filter((d) => d.id === productId)[0]?.name;
+        const productShortCode = allProductCategories.filter((d) => d.id === productId)[0]?.shortCode;
+        if (productName) {
+          // Truncate product name to 25 chars if it is too long
+          if (productName.length > 20) {
+            productName = `${productName.substring(0, 20)} ...`;
+          }
+
+          return <Tooltip title={productName}>{`${productName} ( ${productShortCode} )`}</Tooltip>;
+        } else {
+          return productId;
+        }
+      },
+    });
+  }
+
+  // If no ASR integration
+  if (!asrIntegration) {
+    columns.splice(4, 0, {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      render: (text) => (
+        <Tooltip title={text}>
+          <span>{text.length > 100 ? `${text.slice(0, 100)}...` : text}</span>
+        </Tooltip>
+      ),
+    });
+
+    columns.splice(5, 0, {
+      title: 'Monitoring Scope',
+      dataIndex: 'monitoringScope',
+      key: 'monitoringScope',
+    });
+  }
 
   // When eye icon is clicked, display the monitoring details modal
   const viewMonitoringDetails = (record) => {
@@ -235,7 +282,6 @@ const JobMonitoringTable = ({
       columns={columns}
       rowKey="id"
       size="small"
-      // bordered
       rowSelection={{
         type: 'checkbox',
         onChange: (_selectedRowKeys, selectedRowsData) => {

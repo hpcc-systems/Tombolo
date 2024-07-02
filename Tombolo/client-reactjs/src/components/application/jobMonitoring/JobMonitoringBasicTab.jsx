@@ -5,6 +5,7 @@ import { debounce } from 'lodash';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import InfoDrawer from '../../common/InfoDrawer';
+import { doesNameExist } from './jobMonitoringUtils';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -39,18 +40,36 @@ function JobMonitoringBasicTab({
   const [fetchingJobs, setFetchingJobs] = useState(false);
   const monitoringNameInputRef = useRef(null);
 
-  // If duplicating focus on monitoring name input, empty monitoring name field and show error
+  // If duplicating focus on monitoring name input, empty monitoring name field and show warning message
   useEffect(() => {
     if (form && !isEditing) {
       monitoringNameInputRef.current.focus();
     }
 
     if (isDuplicating) {
+      let currentMonitoringName = form.getFieldValue('monitoringName');
+      let copyCount = 1;
+
+      // Extract base name and copy count from the current name
+      const match = currentMonitoringName.match(/^(.*) \(Copy (\d+)\)$/);
+      if (match) {
+        currentMonitoringName = match[1];
+        copyCount = parseInt(match[2]) + 1;
+      }
+
+      let newName = `${currentMonitoringName} (Copy ${copyCount})`;
+
+      // Keep incrementing the copy count until a unique name is found
+      while (doesNameExist({ jobMonitorings, newName })) {
+        copyCount++;
+        newName = `${currentMonitoringName} (Copy ${copyCount})`;
+      }
+
       form.setFields([
         {
           name: 'monitoringName',
-          value: null,
-          errors: ['Enter a unique monitoring name'],
+          value: newName,
+          warnings: ['Auto generated name. Please   modify if necessary.'],
         },
       ]);
     }
@@ -115,13 +134,14 @@ function JobMonitoringBasicTab({
         <Form.Item
           label="Monitoring Name"
           name="monitoringName"
+          validateTrigger="onBlur"
           rules={[
             { required: true, message: 'Required field' },
             { max: 100, message: 'Maximum of 100 characters allowed' },
             () => ({
               validator(_, value) {
                 if (isEditing) return Promise.resolve();
-                if (!value || !jobMonitorings.find((job) => job.monitoringName === value)) {
+                if (!value || !doesNameExist({ jobMonitorings, newName: value })) {
                   return Promise.resolve();
                 }
                 return Promise.reject(new Error('Monitoring name must be unique'));

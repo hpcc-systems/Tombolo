@@ -22,6 +22,7 @@ import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
 import ApproveRejectModal from './ApproveRejectModal.jsx';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs';
+import JobMonitoringFilters from './JobMonitoringFilters.jsx';
 
 // Constants
 const monitoringTypeName = 'Job Monitoring';
@@ -48,6 +49,7 @@ function JobMonitoring() {
   const [cronMessage, setCronMessage] = useState(null); // Cron message to display when cron is invalid or has errors
   const [erroneousScheduling, setErroneousScheduling] = useState(false);
   const [jobMonitorings, setJobMonitorings] = useState([]);
+  const [filteredJobMonitoring, setFilteredJobMonitoring] = useState([]); // Filtered job monitorings
   const [displayMonitoringDetailsModal, setDisplayMonitoringDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [teamsHooks, setTeamsHook] = useState([]);
@@ -59,12 +61,15 @@ function JobMonitoring() {
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [domains, setDomains] = useState([]);
-  const [productCategories, setProductCategories] = useState([]);
+  const [productCategories, setProductCategories] = useState([]); // Product categories for selected domain
+  const [allProductCategories, setAllProductCategories] = useState([]); // All product categories - regardless of domain
   const [monitoringTypeId, setMonitoringTypeId] = useState(null);
   const [selectedDomain, setSelectedDomain] = useState(null);
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
+  const [filters, setFilters] = useState({});
+  const [filtersVisible, setFiltersVisible] = useState(true);
 
   // Create form instance
   const [form] = Form.useForm();
@@ -76,8 +81,18 @@ function JobMonitoring() {
       try {
         const allMonitorings = await getAllJobMonitorings({ applicationId });
         setJobMonitorings(allMonitorings);
+        setFilteredJobMonitoring(allMonitorings);
       } catch (error) {
         message.error('Error fetching job monitorings');
+      }
+    })();
+
+    (async () => {
+      try {
+        const allProducts = await getAllProductCategories();
+        setAllProductCategories(allProducts);
+      } catch (error) {
+        message.error('Error fetching list of all products categories');
       }
     })();
   }, [applicationId]);
@@ -117,20 +132,10 @@ function JobMonitoring() {
           }
         }
       }
-
-      if (duplicatingData.isDuplicating) {
-        form.setFields([
-          {
-            name: 'monitoringName',
-            value: null,
-            error: ['Please enter a unique monitoring name'],
-          },
-        ]);
-      }
     }
   }, [editingData, duplicatingData]);
 
-  // Get all teams hook, monitoring type ID
+  // Get all teams hook, monitoring type ID, Filters from local storage
   useEffect(() => {
     // Teams hook
     (async () => {
@@ -151,6 +156,13 @@ function JobMonitoring() {
         message.error('Error fetching monitoring type ID');
       }
     })();
+
+    // Get filters from local storage
+    const existingFiltersFromLocalStorage = localStorage.getItem('jMFilters');
+    if (existingFiltersFromLocalStorage) {
+      const filtersFromLocalStorage = JSON.parse(existingFiltersFromLocalStorage);
+      setFilters(filtersFromLocalStorage);
+    }
   }, []);
 
   // Get domains and product categories
@@ -190,6 +202,50 @@ function JobMonitoring() {
       }
     })();
   }, [monitoringTypeId, selectedDomain, selectedMonitoring]);
+
+  // When filterChange filter the job monitorings
+  useEffect(() => {
+    if (jobMonitorings.length === 0) return;
+    if (Object.keys(filters).length < 1) return;
+    const { approvalStatus, activeStatus, domain, frequency, product } = filters;
+
+    // Convert activeStatus to boolean
+    let activeStatusBool;
+    if (activeStatus === 'Active') {
+      activeStatusBool = true;
+    } else if (activeStatus === 'Inactive') {
+      activeStatusBool = false;
+    }
+
+    const filteredJobMonitorings = jobMonitorings.filter((jobMonitoring) => {
+      let include = true;
+      const currentDomain = jobMonitoring?.metaData?.asrSpecificMetaData?.domain;
+      const currentProduct = jobMonitoring?.metaData?.asrSpecificMetaData?.productCategory;
+      const currentFrequency = jobMonitoring?.metaData?.schedule[0]?.frequency;
+
+      if (approvalStatus && jobMonitoring.approvalStatus !== approvalStatus) {
+        include = false;
+      }
+      if (activeStatusBool !== undefined && jobMonitoring.isActive !== activeStatusBool) {
+        include = false;
+      }
+      if (domain && currentDomain !== domain) {
+        include = false;
+      }
+
+      if (product && currentProduct !== product) {
+        include = false;
+      }
+
+      if (frequency && currentFrequency !== frequency) {
+        include = false;
+      }
+
+      return include;
+    });
+
+    setFilteredJobMonitoring(filteredJobMonitorings);
+  }, [filters, jobMonitorings]);
 
   // Function reset states when modal is closed
   const resetStates = () => {
@@ -533,8 +589,23 @@ function JobMonitoring() {
             setSelectedRows={setSelectedRows}
             setJobMonitorings={setJobMonitorings}
             setBulkEditModalVisibility={setBulkEditModalVisibility}
+            setFiltersVisible={setFiltersVisible}
+            filtersVisible={filtersVisible}
           />
         }
+      />
+      <JobMonitoringFilters
+        jobMonitorings={jobMonitorings}
+        setFilters={setFilters}
+        filters={filters}
+        domains={domains}
+        productCategories={productCategories}
+        allProductCategories={allProductCategories}
+        setProductCategories={setProductCategories}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+        filtersVisible={filtersVisible}
+        setFiltersVisible={setFiltersVisible}
       />
       <AddEditJobMonitoringModal
         displayAddJobMonitoringModal={displayAddJobMonitoringModal}
@@ -574,7 +645,7 @@ function JobMonitoring() {
         setActiveTab={setActiveTab}
       />
       <JobMonitoringTable
-        jobMonitorings={jobMonitorings}
+        jobMonitorings={filteredJobMonitoring}
         setJobMonitorings={setJobMonitorings}
         setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
         setSelectedMonitoring={setSelectedMonitoring}
@@ -584,6 +655,9 @@ function JobMonitoring() {
         setDisplayAddRejectModal={setDisplayAddRejectModal}
         applicationId={applicationId}
         setSelectedRows={setSelectedRows}
+        domains={domains}
+        productCategories={productCategories}
+        allProductCategories={allProductCategories}
       />
       <MonitoringDetailsModal
         displayMonitoringDetailsModal={displayMonitoringDetailsModal}

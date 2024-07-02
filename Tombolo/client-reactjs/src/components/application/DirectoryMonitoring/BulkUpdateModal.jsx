@@ -168,8 +168,6 @@ const BulkUpdateModal = ({
         });
       });
 
-      console.log(updatedMetaData);
-
       // Update
       const res = await handleBulkUpdateDirectoryMonitorings({ updatedData: updatedMetaData });
 
