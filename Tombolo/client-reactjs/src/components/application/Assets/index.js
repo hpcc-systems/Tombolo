@@ -78,7 +78,6 @@ const Assets = () => {
   useEffect(() => {
     //application changed
     if (application?.applicationId) {
-      console.log(groupsReducer.tree);
       if (groupsReducer.tree.length === 0 || groupsReducer.error) {
         fetchGroups(); // run this function on initial load to populate tree and datalist;
       }
