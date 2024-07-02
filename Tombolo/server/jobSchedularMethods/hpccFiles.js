@@ -185,34 +185,11 @@ async function scheduleFileMonitoring() {
   }
 }
 
-async function scheduleDirectoryMonitoringOnServerStart() {
-  logger.info("📂 DIRECTORY MONITORING STARTED ...");
-  try {
-    const activeDirectoryMonitoring = await directoryMonitoring.findAll({
-      where: {
-        active: true,
-        approved: true,
-        // monitoringAssetType: "landingZoneFile",
-      },
-      raw: true,
-    });
-    for (const monitoring of activeDirectoryMonitoring) {
-      await this.createDirectoryMonitoringBreeJob({
-        directoryMonitoring_id: monitoring.id,
-        cron: monitoring.cron,
-      });
-    }
-  } catch (err) {
-    logger.error(err);
-  }
-}
-
 module.exports = {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   createSuperFileMonitoringBreeJob,
   createDirectoryMonitoringBreeJob,
-  scheduleDirectoryMonitoringOnServerStart,
   scheduleSuperFileMonitoringOnServerStart,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,

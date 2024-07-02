@@ -3,7 +3,6 @@ const logger = require("../../config/logger");
 const router = express.Router();
 const models = require("../../models");
 
-const jobScheduler = require("../../jobSchedular/job-scheduler");
 const DirectoryMonitoring = models.directoryMonitoring;
 const validatorUtil = require("../../utils/validator");
 const { body, param, validationResult } = require("express-validator");
@@ -35,19 +34,22 @@ router.post(
         return res.status(422).json({ errors: errors.array() });
       }
       const newMonitoring = req.body;
+
+      //check if name already exists as directory monitoring
+      const existingMonitoring = await DirectoryMonitoring.findOne({
+        where: { name: newMonitoring.name },
+      });
+
+      if (existingMonitoring) {
+        return res
+          .status(409)
+          .json({ error: "Directory monitoring name already exists" });
+      }
+      //always place new monitoring in pending status
+      newMonitoring.approvalStatus = "Pending";
       const directoryMonitoring = await DirectoryMonitoring.create(
         newMonitoring
       );
-
-      const { id, name, cron, active } = directoryMonitoring;
-
-      if (active) {
-        jobScheduler.createDirectoryMonitoringBreeJob({
-          directoryMonitoring_id: id,
-          name,
-          cron,
-        });
-      }
 
       res.status(201).json(directoryMonitoring);
     } catch (error) {
@@ -61,7 +63,7 @@ router.post(
 
 //aprove or reject one
 router.put(
-  "/:id/approve",
+  "/approve/:id",
   [
     param("id").isUUID().withMessage("Application ID must be a valid UUID"),
     body("approved").isBoolean().withMessage("Approved must be a boolean"),
@@ -87,26 +89,22 @@ router.put(
           .status(404)
           .json({ error: "Directory monitoring entry not found" });
       }
+
+      let approvalStatus = "";
+      if (req.body.approved) {
+        approvalStatus = "Approved";
+      } else {
+        approvalStatus = "Pending";
+      }
       const updatedMonitoring = await directoryMonitoring.update({
         approved: req.body.approved,
+        approvalStatus: approvalStatus,
         approvalNote: req.body.approvalNote,
         approvedBy: req.body.approvedBy,
         approvedAt: req.body.approvedAt,
       });
 
-      const { active, approved, name, cron } = updatedMonitoring;
-
-      if (active && approved) {
-        jobScheduler.createDirectoryMonitoringBreeJob({
-          directoryMonitoring_id: id,
-          name,
-          cron,
-        });
-      } else {
-        removeJob(id);
-      }
-
-      res.status(200).json(directoryMonitoring);
+      res.status(200).json(updatedMonitoring);
     } catch (error) {
       logger.error(error);
       res
@@ -118,7 +116,7 @@ router.put(
 
 // Update an existing directory monitoring entry
 router.put(
-  "/:id/update",
+  "/update/:id",
   [
     param("id").isUUID().withMessage("Application ID must be a valid UUID"),
     body("updatedBy").notEmpty().withMessage("Updated by is required"),
@@ -139,17 +137,11 @@ router.put(
           .status(404)
           .json({ error: "Directory monitoring entry not found" });
       }
-      //make sure approvals are reset
 
-      updates.approved = false;
-      updates.approvalNote = null;
-      updates.approvedBy = null;
-      updates.approvedAt = null;
+      //make sure approvals are reset
+      resetApprovals(updates);
 
       await directoryMonitoring.update(updates);
-
-      //make sure and remove job if it is updated
-      removeJob(id);
 
       res.status(200).json(directoryMonitoring);
     } catch (error) {
@@ -163,7 +155,7 @@ router.put(
 
 // Delete a directory monitoring entry
 router.delete(
-  "/:id",
+  "/delete/:id",
   [param("id").isUUID().withMessage("ID must be a UUID")],
   async (req, res) => {
     try {
@@ -182,9 +174,6 @@ router.delete(
       }
 
       await directoryMonitoring.destroy();
-
-      //remove the job
-      removeJob(id);
 
       res.status(204).end();
     } catch (error) {
@@ -255,7 +244,7 @@ router.get(
 );
 
 //pause or start monitoring with active boolean
-router.put(
+router.patch(
   "/:id/active",
   [param("id").isUUID().withMessage("ID must be a UUID")],
   async (req, res) => {
@@ -276,17 +265,7 @@ router.put(
       const { active, approved, name, cron } = directoryMonitoring;
       await directoryMonitoring.update({ active: !active });
 
-      // location for starting or stopping monitoring job
-      if (active && approved) {
-        jobScheduler.createDirectoryMonitoringBreeJob({
-          directoryMonitoring_id: id,
-          name,
-          cron,
-        });
-      } else {
-        removeJob(id);
-      }
-
+      logger.verbose("Directory monitoring active status updated");
       res.status(200).json(directoryMonitoring);
     } catch (error) {
       logger.error(error);
@@ -296,16 +275,139 @@ router.put(
     }
   }
 );
+//bulk update route to update multiple monitorings
+router.patch(
+  "/bulkUpdate",
+  [body("metaData").isArray().withMessage("Data must be array of objects")],
+  async (req, res) => {
+    try {
+      const { metaData } = req.body;
+      for (let i = 0; i < metaData.length; i++) {
+        const { id, ...updates } = metaData[i];
 
-function removeJob(id) {
-  const breeJobs = jobScheduler.getAllJobs();
-  const expectedJobName = `Directory Monitoring - ${id}`;
-  for (job of breeJobs) {
-    if (job.name === expectedJobName) {
-      jobScheduler.removeJobFromScheduler(expectedJobName);
-      break;
+        const directoryMonitoring = await DirectoryMonitoring.findByPk(id);
+        if (!directoryMonitoring) {
+          return res
+            .status(404)
+            .json({ error: "Directory monitoring entry not found" });
+        }
+
+        resetApprovals(updates);
+
+        await directoryMonitoring.update(updates);
+      }
+      console.log("updated");
+      res.status(200).json({ message: "Directory monitorings updated" });
+    } catch (error) {
+      logger.error(error);
+      res
+        .status(500)
+        .json({ error: "Failed to update directory monitoring entries" });
     }
   }
+);
+
+//bulk delete route to delete multiple monitorings
+router.delete(
+  "/bulkDelete",
+  [body("ids").isArray().withMessage("ID's must be passed in an array")],
+  async (req, res) => {
+    try {
+      const { ids } = req.body;
+
+      for (let i = 0; i < ids.length; i++) {
+        console.log(ids[i]);
+        const directoryMonitoring = await DirectoryMonitoring.findByPk(ids[i]);
+        if (!directoryMonitoring) {
+          return res
+            .status(404)
+            .json({ error: "Directory monitoring entry not found" });
+        }
+        await directoryMonitoring.destroy();
+      }
+      res.status(204).end();
+    } catch (error) {
+      logger.error(error);
+      res
+        .status(500)
+        .json({ error: "Failed to delete directory monitoring entries" });
+    }
+  }
+);
+
+//bulk approve route to approve multiple monitorings
+router.patch(
+  "/bulkApprove",
+  [
+    // Add validation rules here
+    body("approvalNote")
+      .notEmpty()
+      .isString()
+      .withMessage("Approval comment must be a string")
+      .isLength({ min: 4, max: 200 })
+      .withMessage(
+        "Approval comment must be between 4 and 200 characters long"
+      ),
+    body("approved").isBoolean().withMessage("Approved must be a boolean"),
+    body("ids").isArray().withMessage("Invalid ids"),
+    body("approvalStatus")
+      .notEmpty()
+      .isString()
+      .withMessage("Approval Status must be a string"),
+    body("approvedBy")
+      .notEmpty()
+      .isString()
+      .withMessage("Approved by must be a string"),
+    body("active").isBoolean().withMessage("Active must be a boolean"),
+  ],
+  async (req, res) => {
+    try {
+      const {
+        ids,
+        approved,
+        approvalNote,
+        approvedAt,
+        approvedBy,
+        approvalStatus,
+        active,
+      } = req.body;
+
+      for (let i = 0; i < ids.length; i++) {
+        const { id } = ids[i];
+        const directoryMonitoring = await DirectoryMonitoring.findByPk(id);
+        if (!directoryMonitoring) {
+          return res
+            .status(404)
+            .json({ error: "Directory monitoring entry not found" });
+        }
+
+        await directoryMonitoring.update({
+          approved: approved,
+          approvalStatus: approvalStatus,
+          approvalNote: approvalNote,
+          approvedBy: approvedBy,
+          approvedAt: approvedAt,
+          active: active,
+        });
+      }
+      res.status(200).json({ message: "Directory monitorings approved" });
+    } catch (error) {
+      logger.error(error);
+      res
+        .status(500)
+        .json({ error: "Failed to approve directory monitoring entries" });
+    }
+  }
+);
+
+function resetApprovals(updates) {
+  updates.approved = false;
+  updates.approvalNote = null;
+  updates.approvalStatus = "Pending";
+  updates.approvedBy = null;
+  updates.approvedAt = null;
+  updates.active = false;
+  return updates;
 }
 
 module.exports = router;
