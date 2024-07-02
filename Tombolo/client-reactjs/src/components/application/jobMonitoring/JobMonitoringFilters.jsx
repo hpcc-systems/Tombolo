@@ -234,7 +234,7 @@ function NotificationTableFilters({
 
       {filterCount > 0 && !filtersVisible && (
         <div className="notification__filters_count">
-          <div onClick={handleFilterCountClick}>
+          <div onClick={handleFilterCountClick} style={{ cursor: 'pointer' }}>
             <span style={{ color: 'var(--danger)' }}>{`${filterCount} filter(s) active`}</span>
             <span style={{ color: 'var(--primary)', paddingLeft: '5px' }}> - View</span>
           </div>
