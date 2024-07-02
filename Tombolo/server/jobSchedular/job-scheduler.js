@@ -33,7 +33,6 @@ const {
   createLogicalFileMonitoringBreeJob,
   createSuperFileMonitoringBreeJob,
   createDirectoryMonitoringBreeJob,
-  scheduleDirectoryMonitoringOnServerStart,
   scheduleSuperFileMonitoringOnServerStart,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
@@ -50,7 +49,6 @@ const {
   createOrbitMonitoringJob,
   scheduleOrbitMonitoringOnServerStart,
 } = require("../jobSchedularMethods/orbitJobs.js");
-
 
 const {
   startJobMonitoring,
@@ -130,7 +128,6 @@ class JobScheduler {
       await this.createOrbitMegaphoneJob();
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
-      await this.scheduleDirectoryMonitoringOnServerStart();
     })();
   }
 
@@ -294,10 +291,6 @@ class JobScheduler {
       name,
       cron,
     });
-  }
-
-  scheduleDirectoryMonitoringOnServerStart() {
-    return scheduleDirectoryMonitoringOnServerStart.call(this);
   }
 
   scheduleSuperFileMonitoringOnServerStart() {
