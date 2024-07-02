@@ -37,6 +37,9 @@ const AddEditModal = ({
   copying,
   setCopying,
   selectedMonitoring = { selectedMonitoring },
+  domains,
+  productCategories,
+  setSelectedDomain,
 }) => {
   // Keep track of visited tabs, some form fields are loaded only when tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
@@ -85,6 +88,9 @@ const AddEditModal = ({
           setCronMessage={setCronMessage}
           erroneousScheduling={erroneousScheduling}
           selectedCluster={selectedCluster}
+          domains={domains}
+          productCategories={productCategories}
+          setSelectedDomain={setSelectedDomain}
         />
       ),
     },

@@ -73,6 +73,7 @@ router.put(
       .withMessage("Approval note must be a string"),
     body("approvedBy").isString().withMessage("Approved by is required"),
     body("approvedAt").notEmpty().withMessage("Approved at is required"),
+    body("active").isBoolean().withMessage("Active must be a boolean"),
   ],
   async (req, res) => {
     try {
@@ -94,7 +95,7 @@ router.put(
       if (req.body.approved) {
         approvalStatus = "Approved";
       } else {
-        approvalStatus = "Pending";
+        approvalStatus = "Rejected";
       }
       const updatedMonitoring = await directoryMonitoring.update({
         approved: req.body.approved,
@@ -102,6 +103,7 @@ router.put(
         approvalNote: req.body.approvalNote,
         approvedBy: req.body.approvedBy,
         approvedAt: req.body.approvedAt,
+        active: req.body.active,
       });
 
       res.status(200).json(updatedMonitoring);
@@ -294,9 +296,9 @@ router.patch(
 
         resetApprovals(updates);
 
-        await directoryMonitoring.update(updates);
+        const res = await directoryMonitoring.update(updates);
       }
-      console.log("updated");
+
       res.status(200).json({ message: "Directory monitorings updated" });
     } catch (error) {
       logger.error(error);

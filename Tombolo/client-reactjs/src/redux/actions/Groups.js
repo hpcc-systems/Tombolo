@@ -26,10 +26,7 @@ export const getGroupsTree = (applicationId) => {
 
       const tree = await response.json();
 
-      console.log(tree);
-
       const dataList = generateList(tree);
-      console.log(dataList);
 
       dispatch(fetchGroupsTreeSuccess({ tree, dataList }));
     } catch (error) {

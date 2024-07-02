@@ -167,25 +167,28 @@ const getConnection = async (clusterId) => {
   };
 };
 
-exports.getDirectories = async ({ clusterId, Netaddr, Path, DirectoryOnly }) => {
+exports.getDirectories = async ({
+  clusterId,
+  Netaddr,
+  Path,
+  DirectoryOnly,
+}) => {
   return new Promise(async (resolve, reject) => {
-    try{
-      const clusterDetails =  await getConnection(clusterId)
+    try {
+      const clusterDetails = await getConnection(clusterId);
       const fileSprayService = new hpccJSComms.FileSprayService(clusterDetails);
-      const fileList =  await fileSprayService.FileList({
+
+      const fileList = await fileSprayService.FileList({
         DirectoryOnly,
         Netaddr,
         Path,
       });
       const result = fileList.files?.PhysicalFileStruct || [];
       resolve(result);
-  }catch(err){
-    reject(err)
-  }
-  })
-  
-  
-
+    } catch (err) {
+      reject(err);
+    }
+  });
 };
 
 exports.executeSprayJob = (job) => {
@@ -236,7 +239,6 @@ exports.executeSprayJob = (job) => {
       .catch((error) => reject("Error occured during dropzone file search"));
   });
 };
-
 
 exports.queryInfo = (clusterId, queryName) => {
   let resultObj = { basic: {} },

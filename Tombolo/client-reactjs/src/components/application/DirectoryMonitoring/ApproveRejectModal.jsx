@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, message, Tooltip } from 'antd';
-
+import { Modal, Form, Input, Button, message, Tooltip, Select, Checkbox } from 'antd';
 import { Constants } from '../../common/Constants.js';
-
-import { approveSelectedMonitoring } from './Utils.js';
+import { approveSelectedMonitoring, handleBulkApproveDirectoryMonitorings } from './Utils.js';
 
 const ApproveRejectModal = ({
   id,
@@ -12,11 +10,14 @@ const ApproveRejectModal = ({
   setSelectedMonitoring,
   user,
   selectedMonitoring,
-  setDirectoryMonitorings,
+  fetchAllDirectoryMonitorings,
+  selectedRows,
 }) => {
   const [form] = Form.useForm();
   const [savingEvaluation, setSavingEvaluation] = useState(false);
   const [monitoringEvaluated, setMonitoringEvaluated] = useState(false);
+  const [action, setAction] = useState('');
+  const [active, setActive] = useState(false);
 
   //When component mounts check if monitoring is already evaluated
   useEffect(() => {
@@ -37,7 +38,7 @@ const ApproveRejectModal = ({
   };
 
   // When reject or accepted is clicked
-  const handleSubmit = async ({ action }) => {
+  const handleSubmit = async () => {
     setSavingEvaluation(true);
     let fromErr = false;
     try {
@@ -63,7 +64,18 @@ const ApproveRejectModal = ({
         email: user.email,
       });
 
-      const response = await approveSelectedMonitoring({ updatedData: formData });
+      formData.active = active;
+
+      let response = null;
+
+      if (selectedRows && !selectedMonitoring) {
+        response = await handleBulkApproveDirectoryMonitorings({
+          selectedDirectoryMonitorings: selectedRows,
+          formData,
+        });
+      } else {
+        response = await approveSelectedMonitoring({ updatedData: formData });
+      }
 
       if (response.error) {
         message.error('Error saving your response');
@@ -72,23 +84,10 @@ const ApproveRejectModal = ({
         form.resetFields();
         setSelectedMonitoring(null);
         setDisplayAddRejectModal(false);
-        setDirectoryMonitorings((prev) => {
-          const index = prev.findIndex((item) => item.id === id);
-          prev[index] = {
-            ...prev[index],
-            approved: action === 'Rejected' ? false : true,
-            approvalStatus: action,
-            active: action === 'Rejected' ? false : prev[index].active,
-            approvedBy: JSON.stringify({
-              id: user.id,
-              name: `${user.firstName} ${user.lastName}`,
-              email: user.email,
-            }),
-            approvedAt: new Date(),
-            approvalNote: formData.approvalNote,
-          };
-          return [...prev];
-        });
+        setMonitoringEvaluated(false);
+        setAction('');
+        setActive(false);
+        fetchAllDirectoryMonitorings();
       }
     } catch (error) {
       message.error(error.message);
@@ -107,20 +106,11 @@ const ApproveRejectModal = ({
       footer={
         !monitoringEvaluated
           ? [
-              <Button
-                key="reject"
-                type="primary"
-                danger
-                onClick={() => handleSubmit({ action: 'Rejected' })}
-                disabled={savingEvaluation}>
-                Reject
+              <Button key="cancel" onClick={handleCancel} disabled={savingEvaluation}>
+                Cancel
               </Button>,
-              <Button
-                key="accepted"
-                type="primary"
-                onClick={() => handleSubmit({ action: 'Approved' })}
-                disabled={savingEvaluation}>
-                Approve
+              <Button key="accepted" type="primary" onClick={() => handleSubmit()} disabled={savingEvaluation}>
+                Submit
               </Button>,
             ]
           : [
@@ -145,18 +135,40 @@ const ApproveRejectModal = ({
             on {new Date(selectedMonitoring?.approvedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}.
           </div>
         ) : (
-          <Form form={form} layout="vertical">
-            <Form.Item
-              label="Comments"
-              name="approvalNote"
-              rules={[
-                { required: true, message: 'Please enter comments' },
-                { min: 4, message: 'Comments must be at least 4 characters' },
-                { max: 200, message: 'Comments cannot exceed 200 characters' },
-              ]}>
-              <Input.TextArea rows={3} maxLength={200} showCount placeholder="Comments" />
-            </Form.Item>
-          </Form>
+          <div style={{ padding: '5px' }}>
+            <Form form={form} layout="vertical">
+              <Form.Item
+                label="Comments"
+                name="approvalNote"
+                rules={[
+                  { required: true, message: 'Please enter comments' },
+                  { min: 4, message: 'Comments must be at least 4 characters' },
+                  { max: 200, message: 'Comments cannot exceed 200 characters' },
+                ]}>
+                <Input.TextArea rows={3} maxLength={200} showCount placeholder="Comments" />
+              </Form.Item>
+              <Form.Item label="Action" name="action" rules={[{ required: true, message: 'Please select an action' }]}>
+                <Select
+                  placeholder="Select an action"
+                  initialValue={'Please Select an Action'}
+                  onChange={(e) => {
+                    setAction(e);
+                  }}
+                  style={{ width: '100%' }}>
+                  <Select.Option value="Approved">Approve</Select.Option>
+                  <Select.Option value="Rejected">Reject</Select.Option>
+                </Select>
+              </Form.Item>
+
+              {action === 'Approved' && (
+                <Form.Item valuePropName="checked" name="active">
+                  <Checkbox defaultChecked={false} onChange={(e) => setActive(e.target.checked)}>
+                    Start monitoring now
+                  </Checkbox>
+                </Form.Item>
+              )}
+            </Form>
+          </div>
         )}
       </div>
     </Modal>

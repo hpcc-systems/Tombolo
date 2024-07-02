@@ -12,13 +12,16 @@ import {
   checkScheduleValidity,
   getAllTeamsHook,
   identifyErroneousTabs,
-  getDomains,
-  getProductCategories,
-  getAllProductCategories,
-  getMonitoringTypeId,
   updateSelectedMonitoring,
   isScheduleUpdated,
 } from './jobMonitoringUtils.js';
+
+import {
+  getMonitoringTypeId,
+  getDomains,
+  getProductCategories,
+  getAllProductCategories,
+} from '../../common/ASRTools.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
 import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
 import ApproveRejectModal from './ApproveRejectModal.jsx';

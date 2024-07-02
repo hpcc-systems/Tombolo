@@ -2,6 +2,8 @@
 import React from 'react';
 import { Form, Card, Select } from 'antd';
 import { isEmail } from 'validator';
+import { useSelector } from 'react-redux';
+import AsrSpecificNotification from './ASRSpecificNotification';
 
 //Constants
 const { Option } = Select;
@@ -13,6 +15,16 @@ const directoryStatuses = [
 ];
 
 function NotificationTab({ form, teamsHooks }) {
+  // Redux
+  const {
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
+  } = useSelector((state) => state);
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
   // JSX
   return (
     <Card>
@@ -67,6 +79,8 @@ function NotificationTab({ form, teamsHooks }) {
             tokenSeparators={[',']}
           />
         </Form.Item>
+
+        {asrIntegration && <AsrSpecificNotification />}
       </Form>
     </Card>
   );

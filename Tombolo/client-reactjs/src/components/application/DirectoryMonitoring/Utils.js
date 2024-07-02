@@ -163,20 +163,6 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
   return erroneousTabs;
 };
 
-// Get id for particular monitoring type example "directory Monitoring"
-export const getMonitoringTypeId = async ({ monitoringTypeName }) => {
-  const options = {
-    method: 'GET',
-    headers: authHeader(),
-  };
-  const response = await fetch(`/api/monitorings/getMonitoringTypeId/${monitoringTypeName}`, options);
-  if (!response.ok) {
-    throw new Error('Failed to get monitoring type Id');
-  }
-  const monitoringTypeId = await response.json();
-  return monitoringTypeId;
-};
-
 //Toggle directory monitoring status, just post the id of the directory monitoring to  /toggle in the req body
 export const toggleDirectoryMonitoringStatus = async ({ id }) => {
   const payload = {
