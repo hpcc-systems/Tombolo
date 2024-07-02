@@ -162,8 +162,9 @@ const ApproveRejectModal = ({
 
               {action === 'Approved' && (
                 <Form.Item valuePropName="checked" name="active">
-                  <label style={{ marginRight: '1rem' }}> Start monitoring now? </label>
-                  <Checkbox defaultChecked={false} onChange={(e) => setActive(e.target.checked)}></Checkbox>
+                  <Checkbox defaultChecked={false} onChange={(e) => setActive(e.target.checked)}>
+                    Start monitoring now
+                  </Checkbox>
                 </Form.Item>
               )}
             </Form>
