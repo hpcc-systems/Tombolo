@@ -106,7 +106,7 @@ const ApproveRejectModal = ({
       footer={
         !monitoringEvaluated
           ? [
-              <Button key="reject" type="primary" danger onClick={() => handleSubmit()} disabled={savingEvaluation}>
+              <Button key="cancel" onClick={handleCancel} disabled={savingEvaluation}>
                 Cancel
               </Button>,
               <Button key="accepted" type="primary" onClick={() => handleSubmit()} disabled={savingEvaluation}>
@@ -161,7 +161,8 @@ const ApproveRejectModal = ({
               </Form.Item>
 
               {action === 'Approved' && (
-                <Form.Item label="Start monitoring now?" valuePropName="checked" name="active">
+                <Form.Item valuePropName="checked" name="active">
+                  <label style={{ marginRight: '1rem' }}> Start monitoring now? </label>
                   <Checkbox defaultChecked={false} onChange={(e) => setActive(e.target.checked)}></Checkbox>
                 </Form.Item>
               )}
