@@ -171,6 +171,20 @@ export const getProductCategories = async ({ domainId }) => {
   return productCategories;
 };
 
+// Get all product categories regardless of selected domain
+export const getAllProductCategories = async () => {
+  const options = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+  const response = await fetch(`/api/asr/productsOnly`, options);
+  if (!response.ok) {
+    throw new Error('Failed to get product categories');
+  }
+  const productCategories = await response.json();
+  return productCategories;
+};
+
 // Get id for particular monitoring type example "Job Monitoring"
 export const getMonitoringTypeId = async ({ monitoringTypeName }) => {
   const options = {
