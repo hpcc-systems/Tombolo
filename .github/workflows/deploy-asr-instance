@@ -2,7 +2,8 @@ name: Docker Compose ASR
  
 on:
   push:
-    branches: [ASR-Deploy]
+    branches:
+      - ASR-Deploy
 
 jobs:
   deploy:
@@ -15,7 +16,7 @@ jobs:
       - name: Navigate to project directory and deploy
         run: |
           cd ~/Tombolo/Tombolo
-          git checkout dev
+          git checkout ASR-Deploy
           git stash
           git pull
           git stash apply
