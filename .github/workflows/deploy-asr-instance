@@ -2,7 +2,8 @@ name: Docker Compose ASR
  
 on:
   push:
-    branches: ASR-Deploy
+    branches:
+      - ASR-Deploy
 
 jobs:
   deploy:
