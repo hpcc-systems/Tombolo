@@ -15,7 +15,7 @@ jobs:
       - name: Navigate to project directory and deploy
         run: |
           cd ~/Tombolo/Tombolo
-          git checkout dev
+          git checkout ASR-Deploy
           git stash
           git pull
           git stash apply
