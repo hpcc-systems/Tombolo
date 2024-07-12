@@ -2,8 +2,7 @@ name: Docker Compose ASR
  
 on:
   push:
-    branches:
-      - ASR-Deploy
+    branches: [yadhap/cicd-azure, ASR-Deploy]
 
 jobs:
   deploy:
