@@ -53,6 +53,7 @@ const {
 const {
   startJobMonitoring,
   startIntermediateJobsMonitoring,
+  startJobPunctualityMonitoring,
 } = require("../jobSchedularMethods/jobMonitoring.js");
 
 class JobScheduler {
@@ -128,6 +129,7 @@ class JobScheduler {
       await this.createOrbitMegaphoneJob();
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
+      await this.startJobPunctualityMonitoring();
     })();
   }
 
@@ -330,6 +332,10 @@ class JobScheduler {
   }
   startIntermediateJobsMonitoring() {
     return startIntermediateJobsMonitoring.call(this);
+  }
+
+  startJobPunctualityMonitoring() {
+    return startJobPunctualityMonitoring.call(this);
   }
 
   //Process notification queue

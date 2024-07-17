@@ -17,7 +17,7 @@ const jobStatuses = [
   { label: 'Not completed on time', value: 'NotCompleted' },
 ];
 
-function JobMonitoringNotificationTab({ form, teamsHooks }) {
+function JobMonitoringNotificationTab({ form }) {
   // Redux
   const {
     applicationReducer: {
@@ -41,16 +41,6 @@ function JobMonitoringNotificationTab({ form, teamsHooks }) {
             {jobStatuses.map((status) => (
               <Option key={status.value} value={status.value}>
                 {status.label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item label="Teams Channel" name="teamsHooks">
-          <Select placeholder="Select a teams Channel " mode="multiple">
-            {teamsHooks.map((team) => (
-              <Option key={team.id} value={team.id}>
-                {team.name}
               </Option>
             ))}
           </Select>

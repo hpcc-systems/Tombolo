@@ -6,7 +6,6 @@ const asrDomains = models.asr_domains;
 //Package(s)
 const moment = require("moment");
 const cronParser = require("cron-parser");
-const { initial } = require("lodash");
 
 // All possible intermediate states
 const intermediateStates = [
@@ -26,7 +25,7 @@ const intermediateStates = [
 ];
 
 // Convert date to string in the format YYYYMMDD
-const replaceDatePlaceholders = (formatWithWildcards) => {
+const replaceDatePlaceholders = ({formatWithWildcards, timezone_offset}) => {
   return formatWithWildcards.replace(/<DATE(,[^>]+)?>/g, (_, dateOptions) => {
     if (!dateOptions) {
       // No options, just replace with current date in YYYYMMDD format
@@ -36,7 +35,7 @@ const replaceDatePlaceholders = (formatWithWildcards) => {
     const [adjustment, dateFormat] = dateOptions.slice(1).split(",");
 
     // Adjust date as necessary
-    let date = moment();
+    let date = moment().utcOffset(timezone_offset);
     if (adjustment) {
       const adjustmentNumber = Number(adjustment);
       if (!isNaN(adjustmentNumber)) {
@@ -65,34 +64,19 @@ const replaceDatePlaceholders = (formatWithWildcards) => {
 };
 
 // Match job name with job name format
-const matchJobName = (jobNameFormat, jobName) => {
-  // Replace wildcard with regex equivalent
-  const formatWithWildcards = jobNameFormat.replace(/\*/g, ".*");
+const matchJobName = ({ jobNameFormat, jobName, timezone_offset}) => {
+  // Replace wildcard * with regex equivalent .* and  ? with .
+  const formatWithWildcards = jobNameFormat
+    .replace(/\*/g, ".*")
+    .replace(/\?/g, ".");
 
   // Handle date replacements
-  const formatWithDates = replaceDatePlaceholders(formatWithWildcards);
+  const formatWithDates = replaceDatePlaceholders({formatWithWildcards, timezone_offset});
 
   // Create regex and test against jobName
   const regex = new RegExp(`^${formatWithDates}$`);
   return regex.test(jobName);
 };
-
-// const ans = matchJobName( "Launch <DATE> Current ","Launch 20240515 Current ");
-// const ans1 = matchJobName( "Launch <DATE,1,%Y_%m_%d> test ","Launch 2024_03_24 test ");
-// const ans2 = matchJobName("Launch *", "Launch 20240323 test spray");
-// const ans3 = matchJobName("* Launch *", "X Launch 20240323 test spray");
-// const ans4 = matchJobName("* <DATE,1,%Y%d> *", "Launch 202423 test spray");
-// const ans5 = matchJobName("Launch <DATE,1,%y%B> Current Carrier", "Launch 24March Current Carrier");
-const ans6 = matchJobName("covid cases <DATE>", "covid cases 20240515");
-
-// console.log("0 -", ans);
-// console.log("1 -", ans1);
-// console.log("2 -", ans2);
-// console.log("3 -", ans3);
-// console.log("4 -", ans4);
-// console.log('5 -', ans5);
-console.log('6 -', ans6)
-
 
 // Find start and end time of a work unit since js communication library does not give that
 function findStartAndEndTimes(data) {
@@ -275,7 +259,6 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime
     let momentDate = moment(localDateTimeAtCluster); 
 
     let thisWeek =momentDate.week() - moment(momentDate).startOf("month").week() + 1;
-    console.log("Week of month ---", thisWeek);
 
     // All weeks for matching day
     let  weeks = [];
@@ -300,9 +283,6 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime
     });
 
     // return object with start and end time etc
-    console.log('----- Monthly - week - day  ---------------');
-    console.log({ ...window, ...startAndEnd });
-    console.log('------------------------------------------');
     return { ...window, ...startAndEnd };
   }
 }
@@ -498,24 +478,6 @@ async function getDomain(domainId) {
   return domain;
 }
 
-// Determine what template to use based on the monitoring metaData
-async function determineNotificationTemplateAndNotificationPrefix(metaData) {
-  const { asrSpecificMetaData = {}} = metaData;
-  const asr = Object.keys(asrSpecificMetaData).length > 0;
-  if (asr) {
-    const {shortCode} = await getProductCategory(asrSpecificMetaData.productCategory);
-    return {
-      templateName: "jobMonitoring_asr",
-      prefix: shortCode || "JM",
-    }; 
-  }else{
-    return {
-      templateName: "jobMonitoring",
-      prefix: "JM",
-    };
-  }
-}
-
 // Generate a human readable notification ID in the format of <TEXT>_YYYYMMDD_HHMMSS_MS
 const generateNotificationId = ({notificationPrefix, timezoneOffset}) => {
   // Get current date and time in UTC
@@ -542,80 +504,138 @@ const generateNotificationId = ({notificationPrefix, timezoneOffset}) => {
 };
 
 // Generate notification payload
-async function createNotificationPayload({
-  wu,
-  cluster,
+const createNotificationPayload = ({
   type,
-}) {
-
-  let templateName = "jobMonitoring";
-  let prefix = "JM";
-
-  const asrRelatedNotificationPayload = {};
-
-  if(type === "msTeams"){
-    console.log("Teams ----- does it have asr stuff ", wu.asrSpecificMetaData)
-  }
-
-  if (wu.asrSpecificMetaData) {
-    const { name, shortCode } = await getProductCategory(
-      wu.asrSpecificMetaData.productCategory
-    );
-
-    templateName = "jobMonitoring_asr";
-    prefix = shortCode;
-    asrRelatedNotificationPayload.product = name;
-    
-    const domain = await getDomain(wu.asrSpecificMetaData.domain);
-    asrRelatedNotificationPayload.businessUnit = domain.name;
-
-    asrRelatedNotificationPayload.severity = wu.asrSpecificMetaData.severity;
-    asrRelatedNotificationPayload.region = "USA" // TODO - this should come from somewhere not hard coded
-
-    asrRelatedNotificationPayload.remedy = {
-      instruction: 'Please contact one of the following to facilitate issue resolution',
-      primaryContact: wu.primaryContacts[0],
-      secondaryContact: wu.secondaryContacts[0],
-    };
-
-  }
-  
-   const notificationId = generateNotificationId({
-     notificationPrefix: prefix,
-     timezoneOffset: cluster.timezone_offset,
-   });
+  templateName,
+  originationId,
+  applicationId,
+  recipients,
+  monitoringName,
+  notificationId,
+  asrSpecificMetaData = {}, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
+  issue,
+  wuState,
+  firstLogged,
+  lastLogged,
+  notificationDescription,
+}) => {
   const payload = {
-    notificationOrigin: "Job Monitoring",
-    originationId: wu.jobMonitoringId,
-    type: type,
-    deliveryType: "immediate",
+    type,
     templateName,
+    notificationOrigin: "Job Monitoring",
+    originationId,
+    deliveryType: "immediate",
     metaData: {
-      ...asrRelatedNotificationPayload,
-      ...wu,
+      notificationOrigin: "Job Monitoring",
+      applicationId,
+      subject: "Job Monitoring Alert: Job in failed state",
+      mainRecipients: recipients.primaryContacts || [],
+      cc: [...recipients.secondaryContacts, ...recipients.notifyContacts],
+      notificationDescription,
       notificationId,
-      requireComplete: wu.requireComplete ? "Yes" : "No",
-      Jobname: wu.Jobname,
-      Wuid: wu.Wuid,
-      expectedStart: new Date(wu.expectedStartTime).toLocaleString(),
-      expectedCompletion: new Date(wu.expectedCompletionTime).toLocaleString(),
-      discoveredAt: findLocalDateTimeAtCluster(
-        cluster.timezone_offset
-      ).toLocaleString(),
-      host: cluster.thor_host,
-      subject: `Tombolo Job Monitoring Alert`,
-      mainRecipients: [
-        ...wu.primaryContacts,
-        ...(wu.secondaryContacts || []),
-        ...(wu.notifyContacts || []),
-      ],
-      cc: [],
+      ...asrSpecificMetaData,
+      issue,
+      firstLogged,
+      lastLogged,
+      remedy: {
+        Instruction:
+          "Please contact one of the following to facilitate issue resolution:",
+        "Primary Contact": recipients.primaryContacts,
+        "Secondary Contact": [
+          ...recipients.secondaryContacts,
+          ...recipients.notifyContacts,
+        ],
+      },
     },
-    wuId: wu.Wuid,
   };
 
   return payload;
+};
+
+function extractDateSubstring(inputString) {
+  // Regular expression to match '<DATE ... >'
+  const regex = /<DATE[^>]*>/;
+
+  // Use match to find the substring
+  const match = inputString.match(regex);
+
+  // Return the matched substring or null if no match found
+  return match ? match[0] : "";
 }
+
+// Return replacement object for date
+function getDateReplacements(date) {
+  const replacements = {
+    "%Y": date.getFullYear(),
+    "%m": (date.getMonth() + 1).toString().padStart(2, "0"),
+    "%d": date.getDate().toString().padStart(2, "0"),
+    "%t": " ",
+    "%y": date.getFullYear().toString().slice(-2),
+    "%B": date.toLocaleString("en-US", { month: "long" }),
+    "%b": date.toLocaleString("en-US", { month: "short" }),
+    "%h": date.toLocaleString("en-US", { month: "short" }),
+    "%e": date.getDate().toString().padStart(2, "0"),
+    "%j": Math.ceil((date - new Date(date.getFullYear(), 0, 0)) / 86400000)
+      .toString()
+      .padStart(3, "0"),
+  };
+  return replacements;
+}
+
+// Generate job name from job pattern
+function generateJobName({ pattern, timezone_offset = 0 }) {
+  let patternCopy = pattern;
+  if (!patternCopy) return "";
+
+  if (!patternCopy.includes("<DATE")) {
+    return patternCopy;
+  }
+
+  // Extract date string from patternCopy
+  const dateSubstring = extractDateSubstring(patternCopy);
+
+  // No pattern, no adjustments
+  if (dateSubstring === "<DATE>") {
+    const date = new Date(Date.now() + timezone_offset * 1000);
+    const replacements = getDateReplacements(date);
+    const translatedDate =
+      replacements["%Y"] + replacements["%m"] + replacements["%d"];
+    patternCopy = patternCopy.replace(dateSubstring, translatedDate);
+  }
+
+  // If pattern has adjustments
+  else if (dateSubstring.includes("<DATE,")) {
+    const strings = dateSubstring.split(",");
+    let adjustment = 0;
+    const parsedAdjustment = parseInt(strings[1]);
+    if (!isNaN(parsedAdjustment)) {
+      adjustment = parsedAdjustment;
+      strings.splice(1, 1);
+      const newDateSubstring = strings.join("");
+      patternCopy = patternCopy.replace(dateSubstring, newDateSubstring);
+      patternCopy = patternCopy.replace("<DATE", "");
+      patternCopy = patternCopy.replace(">", "");
+
+      const date = new Date(
+        Date.now() + timezone_offset * 60000 + adjustment * 86400000
+      );
+      const replacements = getDateReplacements(date);
+
+      for (const key in replacements) {
+        patternCopy = patternCopy.replace(key, replacements[key]);
+      }
+    }
+  }
+  return patternCopy;
+}
+
+// Test cases
+// console.log( generateJobName({pattern: "Launch <DATE> Current",timezone_offset: 0}));
+// console.log(generateJobName({ pattern: "Launch*Alirts Despray", timezone_offset: 0 }));
+// console.log( generateJobName({pattern: "Launch <DATE>*Alirts Despray",timezone_offset: 0}));
+// console.log(generateJobName({ pattern: "Launch <DATE,-1,%Y-%m-%d> Build*", timezone_offset: 0}));
+// console.log( generateJobName({pattern: "<DATE,0,%y/%m/%d>* Test",timezone_offset: 0}));
+// console.log(generateJobName({ pattern: "Launch <DATE,0,%Y_%m_%d>"}));
 
 module.exports = {
   matchJobName,
@@ -625,8 +645,10 @@ module.exports = {
   wuStartTimeWhenLastScanUnavailable,
   findLocalDateTimeAtCluster,
   checkIfCurrentTimeIsWithinRunWindow,
-  determineNotificationTemplateAndNotificationPrefix,
-  intermediateStates,
   generateNotificationId,
   createNotificationPayload,
+  generateJobName,
+  intermediateStates,
+  getProductCategory,
+  getDomain,
 };

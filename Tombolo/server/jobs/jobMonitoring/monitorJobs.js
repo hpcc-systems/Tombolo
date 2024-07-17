@@ -1,4 +1,4 @@
-const MONITORING_NAME = "Job Monitoring";
+const monitoring_name = "Job Monitoring";
 const { parentPort } = require("worker_threads");
 const { WorkunitsService } = require("@hpcc-js/comms");
 
@@ -7,45 +7,33 @@ const models = require("../../models");
 const { decryptString } = require("../../utils/cipher");
 const {
   matchJobName,
-  calculateRunOrCompleteByTimes,
   wuStartTimeWhenLastScanAvailable,
   wuStartTimeWhenLastScanUnavailable,
-  determineNotificationTemplateAndNotificationPrefix,
-  findLocalDateTimeAtCluster,
-  checkIfCurrentTimeIsWithinRunWindow,
-  intermediateStates
+  createNotificationPayload,
+  intermediateStates,
+  generateNotificationId,
+  getProductCategory,
+  getDomain,
 } = require("./monitorJobsUtil");
+const e = require("express");
 
 const JobMonitoring = models.jobMonitoring;
 const cluster = models.cluster;
-const notification_queue = models.notification_queue;
-const monitoring_types = models.monitoring_types;
-const monitoring_logs = models.monitoring_logs;
+const MonitoringTypes = models.monitoring_types;
+const MonitoringLogs = models.monitoring_logs;
+const NotificationQueue = models.notification_queue;
 
 (async () => {
   const now = new Date(); // UTC time
 
   try {
     // Get monitoring type ID for "Job Monitoring"
-    const monitoringType = await monitoring_types.findOne({
-      where: { name: MONITORING_NAME },
-      raw: true,
-    });
-
-    // if monitoring type is not found, log error and exit
-    if (!monitoringType) {
-      throw new Error(
-        `Monitoring type ${MONITORING_NAME} not found. possible rename or delete`
-      );
-    }
-    // Job monitoring ID
-    const monitoringTypeId = monitoringType.id;
+    const {id} = await MonitoringTypes.findOne({where: { name: monitoring_name },raw: true});
+    if (!id) {throw new Error(`Monitoring type ${monitoring_name} not found.`)};
+    const monitoringTypeId = id;
 
     // Find all active job monitorings.
-    const jobMonitorings = await JobMonitoring.findAll({
-      where: { isActive: 1, approvalStatus: "Approved" },
-      raw: true,
-    });
+    const jobMonitorings = await JobMonitoring.findAll({where: { isActive: 1, approvalStatus: "Approved" }, raw: true,});
 
     /* if no job monitorings are found - return */
     if (jobMonitorings.length < 1) {
@@ -75,14 +63,13 @@ const monitoring_logs = models.monitoring_logs;
     const clusterIds = Object.keys(jobMonitoringsByCluster);
 
     // Get cluster info for all unique clusters
-    const clustersInfo = await cluster.findAll({
-      where: { id: clusterIds },
-      raw: true,
-    });
+    const clustersInfo = await cluster.findAll({where: { id: clusterIds },raw: true});
+    const clusterInfoObj = {}; // For easy access later
 
     // Decrypt cluster passwords if they exist
     clustersInfo.forEach((clusterInfo) => {
       try {
+        clusterInfoObj[clusterInfo.id] = clusterInfo;
         if (clusterInfo.hash) {
           clusterInfo.password = decryptString(clusterInfo.hash);
         } else {
@@ -94,15 +81,8 @@ const monitoring_logs = models.monitoring_logs;
     });
 
     // Get the last time the cluster was scanned for job monitoring purposes
-    const lastClusterScanDetails = await monitoring_logs.findAll({
+    const lastClusterScanDetails = await MonitoringLogs.findAll({
       where: { monitoring_type_id: monitoringTypeId, cluster_id: clusterIds },
-      attributes: [
-        "id",
-        "cluster_id",
-        "monitoring_type_id",
-        "scan_time",
-        "metaData",
-      ],
       raw: true,
     });
 
@@ -119,12 +99,9 @@ const monitoring_logs = models.monitoring_logs;
       }
     });
 
-    /* Fetch basic information for all work units per cluster, based on the timestamp of the last scan for job monitoring. 
-    If no timestamp is available, default to data from the past 30 minutes. */
+    /* Fetch basic information for all work units per cluster */
     const wuBasicInfoByCluster = {};
-    for (let c in clustersInfo) {
-      const clusterInfo = clustersInfo[c];
-
+    for (let clusterInfo of clustersInfo) {
       try {
         const wuService = new WorkunitsService({
           baseUrl: `${clusterInfo.thor_host}:${clusterInfo.thor_port}/`,
@@ -132,33 +109,15 @@ const monitoring_logs = models.monitoring_logs;
           password: clusterInfo.password || "",
         });
 
-  
         // Date to string
         const startTime = clusterInfo.startTime.toISOString();
 
-
-        let {
-          Workunits: { ECLWorkunit },
-        } = await wuService.WUQuery({
-          StartDate: startTime,
+        let { Workunits: { ECLWorkunit }} = await wuService.WUQuery({ StartDate: startTime});
+        const wuWithClusterIds = ECLWorkunit.map((wu) => {
+          return { ...wu, clusterId: clusterInfo.id };
         });
 
-
-        jobMonitoringsByCluster[clusterInfo.id].forEach((jobMonitoring) => {
-          const jobNameFormat = jobMonitoring.jobName;
-
-          ECLWorkunit = ECLWorkunit.filter((wu) => {
-            return matchJobName(jobNameFormat, wu.Jobname);
-          });
-
-
-          if (wuBasicInfoByCluster[clusterInfo.id]){
-            wuBasicInfoByCluster[clusterInfo.id] = wuBasicInfoByCluster[clusterInfo.id].concat(ECLWorkunit);
-          }else{
-            wuBasicInfoByCluster[clusterInfo.id] = ECLWorkunit;
-          }
-        });
-
+        wuBasicInfoByCluster[clusterInfo.id] = [...wuWithClusterIds];
       } catch (err) {
         logger.error( `Job monitoring - Error while reaching out to cluster ${clusterInfo.id} : ${err}`
         );
@@ -178,240 +137,227 @@ const monitoring_logs = models.monitoring_logs;
     // If no new monitoring work units are found, update the monitoring logs and exit
     if (!newWorkUnitsFound) {
           for (let id of clusterIds) {
+            // grab existing metaData
+            const log = await MonitoringLogs.findOne({
+              where: { monitoring_type_id: monitoringTypeId, cluster_id: id },
+              raw: true,
+            });
+
+            // Existing intermediate state jobs
+            let existingIntermediateStateJobs = [];
+            let existingMetaData = {};
+
+            if (log) {
+              existingMetaData = log.metaData || {};
+              existingIntermediateStateJobs =
+                existingMetaData?.wuInIntermediateState || [];
+            }
+
             try {
-              await monitoring_logs.upsert({
-                cluster_id: id,
-                monitoring_type_id: monitoringTypeId,
-                scan_time: now,
-              });
+             const x = await MonitoringLogs.upsert(
+               {
+                 cluster_id: id,
+                 monitoring_type_id: monitoringTypeId,
+                 scan_time: now,
+                 metaData: {
+                   ...existingMetaData,
+                   wuInIntermediateState: existingIntermediateStateJobs,
+                 },
+               },
+               {
+                 returning: true, // This option ensures the method returns the updated or created entry
+                 conflictTarget: ["cluster_id", "monitoring_type_id"], // Specify the fields to check for conflicts
+               }
+             );
             } catch (err) {
               logger.error(`Job monitoring - Error while updating last cluster scanned time stamp`);
             }
           }
-      logger.info("Job Monitoring - No new work units found for any clusters");
+      logger.verbose("Job Monitoring - No new work units found for any clusters");
       return;
     }
-
     // Clusters with new work units - Done to minimize the number of calls to db later
     const clusterIdsWithNewWUs = Object.keys(wuBasicInfoByCluster);
 
-    /* Iterate through each job monitoring. Compare the work unit state with the specified notification conditions. If conditions are met, 
-    store details in notificationsToBeQueued. Identify monitorings that need updates and store them in jobMonitoringsToUpdate array. */
-    const jobMonitoringsToUpdate = [];
-    const notificationsToBeQueued = [];
-    const wuInIntermediateState = [];
+    const jmWithNewWUs = {};
+    let lowerCaseNotificationCondition = [];
+    const jobMonitoringObj = {}; // For easy access late
 
-    jobMonitorings.forEach((monitoring) => {
-      const {monitoringName,clusterId,jobName: jobNameOrPattern,id,metaData, applicationId} = monitoring;
+    for(let monitoring of jobMonitorings){
+      jobMonitoringObj[monitoring.id] = monitoring;
+      const {monitoringName, clusterId, jobName: jobNameOrPattern, id, metaData} = monitoring;
+      const { notificationMetaData: {notificationCondition = []} } = metaData;
+      lowerCaseNotificationCondition = notificationCondition.map((condition) => condition.toLowerCase());
 
       // If cluster has no new workunits, skip - reduces computation
       if (!clusterIdsWithNewWUs.includes(clusterId)) {
-        return;
+        continue;
       }
 
       try{
         const cluster = clustersInfo.find((cluster) => cluster.id === clusterId);
-        const {
-          requireComplete,expectedStartTime,expectedCompletionTime,schedule,
+
+        let clusterWUs = wuBasicInfoByCluster[clusterId];
+ 
+        const matchedWus = clusterWUs.filter((wu) => {
+          return matchJobName({ jobNameFormat: jobNameOrPattern, jobName: wu.Jobname, timezone_offset: cluster.timezone_offset });
+        });
+
+        jmWithNewWUs[id] = matchedWus;
+      } catch (err) {
+        logger.error(`Job monitoring. Looping job monitorings ${monitoringName}. id:  ${id}. ERR -  ${err.message}` );
+      }
+    };
+
+    //Wus in failed state failed, aborted, unknown
+    const failedStateJobs = [];
+    const intermediateStateJobs = [];
+    // Check if any jobs are in undesired state
+    for(let jmId in jmWithNewWUs){ // Iterating over an object
+      const wus = jmWithNewWUs[jmId];
+      for(let wu of wus){   
+        // Separate failed state jobs
+        if(lowerCaseNotificationCondition.includes(wu.State.toLowerCase())){
+          failedStateJobs.push({...wu, jmId});
+          continue;
+        }
+
+        // Separate intermediate state jobs
+        if(intermediateStates.includes(wu.State.toLowerCase())){
+          intermediateStateJobs.push({
+            ...wu,
+            jobMonitoringData: jobMonitoringObj[jmId],
+          });
+          continue;
+        }
+      }
+    }
+
+   // Create notifications for failed state jobs
+    for(let failedJob of failedStateJobs){
+      const { jmId, ...wu } = failedJob;
+      const jobMonitoring = jobMonitoringObj[jmId];
+      const {
+        monitoringName,
+        jobName,
+        clusterId,
+        metaData: {
+          asrSpecificMetaData,
           notificationMetaData: {
-            notificationCondition = [],
-            teamsHooks = [],
             notifyContacts = [],
             primaryContacts = [],
             secondaryContacts = [],
           },
-        } = metaData;
+        },
+      } = jobMonitoring;
 
-        // remove destructured values from metaData, so you don't have to pass them around
-        const metaDataCopy = { ...metaData }; // To avoid mutation
-        const destructuredItems = ["requireComplete", "expectedStartTime", "expectedCompletionTime", "schedule", "notificationMetaData"];
-        destructuredItems.forEach((item) => {
-          delete metaDataCopy[item];
-        });
+      // Notification ID prefix
+      let notificationPrefix = "JM";
+      let product;
+      let domain;
+      let severity;
 
+      if (asrSpecificMetaData && asrSpecificMetaData.productCategory) {
+        // Product
+        const { name: productName, shortCode } = await getProductCategory(
+          asrSpecificMetaData.productCategory
+        );
+        notificationPrefix = shortCode;
+        product = productName;
 
-        const clusterWUs = wuBasicInfoByCluster[clusterId];
+        //Domain
+        const { name: domainName } = await getDomain(
+          asrSpecificMetaData.domain
+        );
+        domain = domainName;
 
-        // Calculate the run window for the job
-        const window = calculateRunOrCompleteByTimes({
-          schedule,
-          timezone_offset: cluster.timezone_offset,
-          expectedStartTime,
-          expectedCompletionTime,
-        });
-
-        /* If the schedule is not set for today, the run window will be null. 
-        This indicates that the job is not scheduled to run today. Therefore return*/
-        if (!window) { 
-          return
-        }
-
-        // Iterate through each work unit and compare the state with the notification conditions etc
-        clusterWUs.forEach((wu) => {
-          try {
-            const { Wuid, Jobname, State } = wu;
-
-            // Workunit details
-             const wuDetails = {
-               jobMonitoringId: id,
-               Jobname,
-               jobNameFilter: jobNameOrPattern,
-               Wuid,
-               State,
-               requireComplete,
-               expectedStartTime: window.start,
-               expectedCompletionTime: window.end,
-               discoveredAt: now, // UTC time
-               clusterId,
-             };
-
-            // Change the state to lowercase
-            const lowerCaseNotificationCondition = notificationCondition.map(
-              (condition) => condition.toLowerCase()
-            );
-
-            const wuState = State.toLowerCase();
-
-            // determine which template to use based on metaData
-            const templateName = determineNotificationTemplateAndNotificationPrefix(metaData );
-
-            const currentTimeToWindowRelation =
-              checkIfCurrentTimeIsWithinRunWindow({
-                start: wuDetails.expectedStartTime,
-                end: wuDetails.expectedCompletionTime,
-                currentTime: findLocalDateTimeAtCluster(cluster.timezone_offset),
-              });
-
-              
-            // The state matches the condition (Failed, Aborted, Unknown))
-            if (lowerCaseNotificationCondition.includes(wuState)) {
-              notificationsToBeQueued.push({
-                ...wuDetails,
-                issue: `Analysis detected a monitored job in ${wuState} state`,
-                teamsHooks,
-                notifyContacts,
-                primaryContacts,
-                secondaryContacts,
-                notificationOrigin: "Job Monitoring",
-                templateName,
-              });
-            }
-
-            // Else if expected time is passed, job is not completed but is required to be completed
-            else if (
-              currentTimeToWindowRelation === "after" &&
-              requireComplete &&
-              wuState !== "completed"
-            ) {
-              logger.debug(`Expected rune time( ${wuDetails.expectedCompletionTime} ) passed for ${Jobname} - ${Wuid} - in ${wuState} state. pushing to queue`);
-              notificationsToBeQueued.push({
-                ...wuDetails,
-                issue: `Analysis detected a monitored job that was expected to complete by ${wuDetails.expectedCompletionTime} but is still in ${wuState} state`,
-                teamsHooks,
-                notifyContacts,
-                primaryContacts,
-                secondaryContacts,
-                notificationOrigin: "Job Monitoring",
-                templateName,
-              });
-            }
-
-            // If a job is in waiting , compiling or other intermediate state, wu must be re-checked in another run
-            else if (intermediateStates.includes(wuState)) {
-              wuInIntermediateState.push({
-                ...wuDetails,
-                ...metaDataCopy,
-                applicationId,
-                monitoringName,
-                teamsHooks,
-                notifyContacts,
-                primaryContacts,
-                secondaryContacts,
-                notificationOrigin: "Job Monitoring",
-                // templateName,
-                notificationCondition: lowerCaseNotificationCondition,
-              });
-            }
-
-            // Update jobmonitoring regardless of the state
-            jobMonitoringsToUpdate.push(wuDetails);
-          } catch (err) {
-            logger.error( `Job monitoring - Err while inspecting ${wu.Jobname} workunit ${wu.Wuid} detail info : ${err.message}`);
-          }
-        });
-      } catch (err) {
-        logger.error(`Job monitoring. Looping job monitorings ${monitoringName}. id:  ${id}. ERR -  ${err.message}` );
+        //Severity
+        severity = asrSpecificMetaData.severity;
       }
-    });
+      
+      //Notification payload
+      const notificationPayload = createNotificationPayload({
+        type: "email",
+        notificationDescription: `Monitoring detected that a monitored job is in ${wu.State} state`,
+        templateName: "jobMonitoring",
+        originationId: monitoringTypeId,
+        applicationId: jobMonitoring.applicationId,
+        recipients: { primaryContacts, secondaryContacts, notifyContacts },
+        jobName: jobName,
+        wuState: wu.State,
+        monitoringName,
+        issue: {
+          Issue: `Job in ${wu.State} state`,
+          Cluster: clusterInfoObj[clusterId].name || "",
+          "Job Name/Filter": jobName,
+          "Returned Job": wu.Jobname,
+          "Discovered at":
+            new Date(
+              now + clusterInfoObj[clusterId].timezone_offset * 60 * 1000
+            ).toISOString() || now.toISOString(),
+          State: wu.State,
+        },
+        notificationId: generateNotificationId({
+          notificationPrefix,
+          timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
+        }),
+        asrSpecificMetaData: {
+          region: "USA",
+          product,
+          domain,
+          severity,
+        }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
+        firstLogged: new Date(
+          now + clusterInfoObj[clusterId].timezone_offset * 60 * 1000
+        ).toISOString(),
+        lastLogged: new Date(
+          now + clusterInfoObj[clusterId].timezone_offset * 60 * 1000
+        ).toISOString(),
+      });
 
-    // Organize notifications to be queued. If teams hook present type should be hook else email. the entry should be made twice
-    const organizedNotificationToBeQueued = [];
-    notificationsToBeQueued.forEach((notification) => {
-      const notificationCopy = {...notification};
-
-      if(notification.teamsHooks && notification.teamsHooks.length > 1){
-        notificationCopy.type = "hook";
-        organizedNotificationToBeQueued.push(notificationCopy);
-      }
-
-    });
-
-    // Queue notifications
-    try {
-      await notification_queue.bulkCreate(notificationsToBeQueued);
-    } catch (err) {
-      logger.error(
-        `Job monitoring - Error while queuing notifications : ${err.message}`
-      );
+      //Create notification queue
+      await NotificationQueue.create(notificationPayload);
     }
 
-    // Get existing metaData from all monitoring logs
-    const lastClusterScanMetaData = {};
-    lastClusterScanDetails.forEach((detail) => {
-      const { cluster_id, metaData } = detail;
-      lastClusterScanMetaData[cluster_id] = metaData;
-    });
 
-
-    wuInIntermediateState.forEach((wu) => {
-      const { clusterId } = wu;
-      const existingMetaData = lastClusterScanMetaData[clusterId];
-      const existingIntermediateStateWus = existingMetaData?.wuInIntermediateState || [];
-      const allIntermediateStateWus = [...existingIntermediateStateWus, wu];
-      lastClusterScanMetaData[clusterId] = {
-        ...existingMetaData,
-        wuInIntermediateState: allIntermediateStateWus,
-      };
-    });
-
-    // Update/create lastClusterScanned data
+  // Update monitoring logs 
     for (let id of clusterIds) {
       try {
-        await monitoring_logs.upsert({
+        //Get existing metadata
+        const log = await MonitoringLogs.findOne({
+          where: { monitoring_type_id: monitoringTypeId, cluster_id: id },
+          raw: true,
+        });
+
+        if(!log){continue}
+
+        // Filter intermediate state jobs for the cluster
+        const intermediateStateJobsForCluster = intermediateStateJobs.filter((job) => job.clusterId === id);
+
+        let existingIntermediateStateJobs = [];
+        let existingMetaData = {};
+
+        existingMetaData = log.metaData || {};
+        existingIntermediateStateJobs = existingMetaData?.wuInIntermediateState || [];
+        
+        // Update or create monitoring logs
+        await MonitoringLogs.upsert({
           cluster_id: id,
           monitoring_type_id: monitoringTypeId,
           scan_time: now,
-          metaData: lastClusterScanMetaData[id] || {},
+          metaData: {
+            ...existingMetaData,
+            wuInIntermediateState: [
+              ...existingIntermediateStateJobs,
+              ...intermediateStateJobsForCluster,
+            ],
+          },
+          returning: true,
+          conflictTarget: ["cluster_id", "monitoring_type_id"],
         });
       } catch (err) {
         logger.error(
-          `Job monitoring - Error while updating last cluster scanned data for  cluster ${id} : ${err.message}`
-        );
-      }
-    }
-
-    // Update  job monitorings
-    for (let jobMonitoring of jobMonitoringsToUpdate) {
-      const { jobMonitoringId, Jobname, Wuid } = jobMonitoring;
-      delete jobMonitoring.jobMonitoringId;
-      try {
-        await JobMonitoring.update({
-          jobMonitoringId,
-          lastJobRunDetails: jobMonitoring,
-        }, {where : {id: jobMonitoringId }});
-      } catch (err) {
-        logger.error(
-          `Job monitoring - Error  updating job monitoring- ${Jobname} workunit ${Wuid} : ${err.message}`
+          `Job monitoring - Error while updating last cluster scanned time stamp`, err
         );
       }
     }
@@ -424,3 +370,8 @@ const monitoring_logs = models.monitoring_logs;
     else process.exit(0);
   }
 })();
+
+
+
+// TODO - Start from Intermediate
+// TODO - All monitorings - update last run details
