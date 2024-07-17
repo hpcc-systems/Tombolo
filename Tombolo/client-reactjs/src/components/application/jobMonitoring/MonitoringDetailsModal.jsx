@@ -12,7 +12,6 @@ function MonitoringDetailsModal({
   selectedMonitoring,
   setSelectedMonitoring,
   clusters,
-  teamsHooks,
   domains,
   productCategories,
 }) {
