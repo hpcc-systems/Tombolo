@@ -10,7 +10,6 @@ import {
   createJobMonitoring,
   getAllJobMonitorings,
   checkScheduleValidity,
-  getAllTeamsHook,
   identifyErroneousTabs,
   getDomains,
   getProductCategories,
@@ -54,7 +53,6 @@ function JobMonitoring() {
   const [filteredJobMonitoring, setFilteredJobMonitoring] = useState([]); // Filtered job monitorings
   const [displayMonitoringDetailsModal, setDisplayMonitoringDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
-  const [teamsHooks, setTeamsHook] = useState([]);
   const [editingData, setEditingData] = useState({ isEditing: false }); // Data to be edited
   const [duplicatingData, setDuplicatingData] = useState({ isDuplicating: false }); // JM to be duplicated
   const [monitoringScope, setMonitoringScope] = useState(null); // ClusterWideMonitoring or ClusterSpecificMonitoring
@@ -139,16 +137,6 @@ function JobMonitoring() {
 
   // Get all teams hook, monitoring type ID, Filters from local storage
   useEffect(() => {
-    // Teams hook
-    (async () => {
-      try {
-        const allTeamsHook = await getAllTeamsHook();
-        setTeamsHook(allTeamsHook);
-      } catch (error) {
-        message.error('Error fetching teams hook');
-      }
-    })();
-
     // Get monitoringType id for job monitoring
     (async () => {
       try {
@@ -342,10 +330,9 @@ function JobMonitoring() {
 
       // Group Notification specific metaData and delete from allInputs
       const notificationMetaData = {};
-      const { notificationCondition, teamsHooks, primaryContacts, secondaryContacts, notifyContacts } = allInputs;
+      const { notificationCondition, primaryContacts, secondaryContacts, notifyContacts } = allInputs;
       const notificationSpecificFields = {
         notificationCondition,
-        teamsHooks,
         primaryContacts,
         secondaryContacts,
         notifyContacts,
@@ -458,7 +445,6 @@ function JobMonitoring() {
       const asrSpecificFields = ['domain', 'productCategory', 'severity'];
       const metaDataFields = ['expectedCompletionTime', 'expectedStartTime', 'requireComplete'];
       const notificationMetaDataFields = [
-        'teamsHooks',
         'primaryContacts',
         'secondaryContacts',
         'notifyContacts',
@@ -625,7 +611,6 @@ function JobMonitoring() {
         setCronMessage={setCronMessage}
         erroneousScheduling={erroneousScheduling}
         clusters={clusters}
-        teamsHooks={teamsHooks}
         setSelectedMonitoring={setSelectedMonitoring}
         monitoringScope={monitoringScope}
         setMonitoringScope={setMonitoringScope}
@@ -667,7 +652,6 @@ function JobMonitoring() {
         selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
         clusters={clusters}
-        teamsHooks={teamsHooks}
         domains={domains}
         productCategories={productCategories}
       />
