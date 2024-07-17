@@ -23,7 +23,6 @@ const AddEditJobMonitoringModal = ({
   erroneousScheduling,
   form,
   clusters,
-  teamsHooks,
   savingJobMonitoring,
   jobMonitorings,
   isEditing,
@@ -94,7 +93,7 @@ const AddEditJobMonitoringModal = ({
     {
       label: 'Notifications',
       id: 3,
-      component: () => <JobMonitoringNotificationTab form={form} teamsHooks={teamsHooks} />,
+      component: () => <JobMonitoringNotificationTab form={form} />,
     },
   ];
 

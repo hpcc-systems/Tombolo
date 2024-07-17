@@ -65,22 +65,6 @@ export const checkScheduleValidity = ({ intermittentScheduling, completeSchedule
   }
 };
 
-//Get all teams hook
-export const getAllTeamsHook = async () => {
-  const payload = {
-    method: 'GET',
-    header: authHeader(),
-  };
-
-  const response = await fetch(`/api/teamsHook/`, payload);
-  if (!response.ok) {
-    throw new Error('Failed to get teams hook');
-  }
-
-  const data = await response.json();
-  return data;
-};
-
 // Update a job monitoring
 export const updateSelectedMonitoring = async ({ updatedData }) => {
   const payload = {
@@ -126,7 +110,7 @@ export const handleDeleteJobMonitoring = async ({ id, jobMonitorings, setJobMoni
 const formFields = {
   0: ['monitoringName', 'description', 'monitoringScope', 'clusterId', 'jobName'],
   1: ['domain', 'productCategory', 'expectedStartTime', 'expectedCompletionTime', 'severity', 'requireComplete'],
-  2: ['notificationCondition', 'teamsHooks', 'primaryContacts', 'secondaryContacts', 'notifyContacts'],
+  2: ['notificationCondition', 'primaryContacts', 'secondaryContacts', 'notifyContacts'],
 };
 
 export const identifyErroneousTabs = ({ erroneousFields }) => {
