@@ -151,11 +151,6 @@ function MonitoringDetailsModal({
             )}
           </Descriptions.Item>
         )}
-        {notificationMetaData?.teamsHooks && notificationMetaData.teamsHooks.length > 0 && (
-          <Descriptions.Item label="Teams channel(s)">
-            {getHookTags({ AllTeamsHooks: teamsHooks, hookIds: notificationMetaData.teamsHooks })}
-          </Descriptions.Item>
-        )}
         {/* ---------------------------------------------------------------------------------------- */}
         <Descriptions.Item label="Active">
           {isActive ? (
@@ -265,28 +260,6 @@ const generateTagsForSchedule = (schedule) => {
   });
 
   return tags;
-};
-
-// Get hooks tags
-const getHookTags = ({ AllTeamsHooks, hookIds }) => {
-  const hooks = AllTeamsHooks.filter((hook) => hookIds.includes(hook.id));
-  const deletedHooks = hookIds.filter((id) => !hooks.find((hook) => hook.id === id));
-  const currentTags = hooks.map((hook, i) => (
-    <Tooltip key={i} title={hook.url}>
-      <Tag style={{ color: 'var(--primary)' }} key={i}>
-        {hook.name}
-      </Tag>
-    </Tooltip>
-  ));
-  const deletedTags = deletedHooks.map((_hook, i) => (
-    <Tooltip key={i} title="This hook has been deleted. To remove it, please edit the job monitoring settings.">
-      <Tag color="warning" key={i}>
-        Deleted
-      </Tag>
-    </Tooltip>
-  ));
-
-  return [...currentTags, ...deletedTags];
 };
 
 //Approval status tags colors
