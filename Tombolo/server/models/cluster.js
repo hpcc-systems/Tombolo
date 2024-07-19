@@ -1,4 +1,5 @@
 "use strict";
+
 module.exports = (sequelize, DataTypes) => {
   const cluster = sequelize.define(
     "cluster",
@@ -8,20 +9,52 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         allowNull: false,
-        autoIncrement: false,
       },
-      name: DataTypes.STRING,
-      thor_host: DataTypes.STRING,
-      thor_port: DataTypes.STRING,
-      roxie_host: DataTypes.STRING,
-      roxie_port: DataTypes.STRING,
-      username: DataTypes.STRING,
-      hash: DataTypes.STRING,
-      timezone_offset: DataTypes.INTEGER,
-      metaData: { type: DataTypes.JSON, defaultValue: {} },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      thor_host: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      thor_port: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      roxie_host: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      roxie_port: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      username: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      hash: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      defaultEngine: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      timezone_offset: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      metaData: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: true,
+      },
     },
     { paranoid: true, freezeTableName: true }
   );
+
   cluster.associate = function (models) {
     // associations can be defined here
     cluster.hasMany(models.dataflow, { foreignKey: "clusterId" });
@@ -47,5 +80,6 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: "CASCADE",
     });
   };
+
   return cluster;
 };

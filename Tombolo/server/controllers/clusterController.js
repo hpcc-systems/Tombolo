@@ -14,7 +14,7 @@ const Cluster = models.cluster;
 // Add a cluster
 const addCluster = async (req, res) => {
     try {
-        const { name: clusterName, username: userID, password, adminEmails } = req.body;
+        const { name: clusterName, username: userID, password, metaData = {} } = req.body;
         // Make sure cluster is whitelisted
         const cluster = clusters.find((c) => c.name === clusterName);
         if (!cluster) throw new CustomError("Cluster not whitelisted", 400);
@@ -59,7 +59,6 @@ const addCluster = async (req, res) => {
         const offSetInMinutes = parseInt(wuSummary.Result.Value) / 60;
 
         // Payload
-        const hashedPassword = encryptString(password);
         const clusterPayload = {
           name: cluster.name,
           thor_host: cluster.thor,
@@ -68,10 +67,14 @@ const addCluster = async (req, res) => {
           roxie_port: cluster.roxie_port,
           defaultEngine: defaultEngine.Name,
           username: userID,
-          hash: hashedPassword,
           timezone_offset: offSetInMinutes,
-          metaData: {},
+          metaData,
         };
+
+        // Has password and add to the obj if it exists
+        if(password){
+            clusterPayload.hash = encryptString(password);;
+        }
 
          // Create cluster
         const newCluster = await Cluster.create(clusterPayload);

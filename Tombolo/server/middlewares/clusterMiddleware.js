@@ -17,15 +17,13 @@ const validateAddClusterInputs = [
     .withMessage("Password must be a string")
     .isLength({ max: 200 })
     .withMessage("Password must not exceed 200 characters"),
-  body("adminEmails")
-    .isArray()
-    .withMessage("Emails must be an array")
-    .custom((emails) => emails.every((email) => typeof email === "string"))
-    .withMessage("All emails must be strings"),
+  body("metaData")
+    .optional({ nullable: true })
+    .isObject()
+    .withMessage("metaData must be an object"),
   (req, res, next) => {
-
     const errors = validationResult(req).array();
-    const errorString = errors.map(e => e.msg).join(', ');
+    const errorString = errors.map((e) => e.msg).join(", ");
     if (errors.length > 0) {
       return res.status(400).json({ success: false, message: errorString });
     }
