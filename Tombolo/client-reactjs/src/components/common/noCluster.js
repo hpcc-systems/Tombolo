@@ -13,6 +13,7 @@ const NoCluster = ({ visible, setVisible, applicationId }) => {
         title="No Clusters Setup"
         open={visible}
         onOk={handleOk}
+        onCancel={handleOk}
         footer={(_, { OkBtn }) => (
           <>
             <OkBtn />

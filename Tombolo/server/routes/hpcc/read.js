@@ -14,7 +14,7 @@ var Index = models.indexes;
 var Job = models.job;
 let hpccJSComms = require("@hpcc-js/comms");
 const { body, query, validationResult } = require("express-validator");
-const ClusterWhitelist = require("../../cluster-whitelist");
+
 let lodash = require("lodash");
 const { io } = require("../../server");
 const fs = require("fs");
@@ -24,6 +24,17 @@ const path = require("path");
 var sanitize = require("sanitize-filename");
 const logger = require("../../config/logger");
 const moment = require("moment");
+
+let ClusterWhitelist = { clusters: [] };
+
+// check that cluster whitelist exists
+if (!fs.existsSync(path.join(__dirname, "../../cluster-whitelist.js"))) {
+  //log that cluster whitelist not found
+  logger.error("Cluster whitelist not found, please create one");
+} else {
+  ClusterWhitelist = require("../../cluster-whitelist");
+}
+
 router.post(
   "/filesearch",
   [
