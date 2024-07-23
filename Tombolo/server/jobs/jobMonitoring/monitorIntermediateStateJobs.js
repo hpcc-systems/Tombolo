@@ -13,7 +13,6 @@ const {
   checkIfCurrentTimeIsWithinRunWindow,
   intermediateStates,
   generateNotificationId,
-  adjustedLocaleString,
   getProductCategory,
   getDomain,
   createNotificationPayload,
@@ -103,7 +102,6 @@ const monitoring_logs = models.monitoring_logs;
     const notificationsToBeQueued = [];
     const wuNoLongerInIntermediateState = [];
     const wuWithNewIntermediateState = {};
-    const wuNoLongerToBeMonitored = [];
 
     for (let [
       monitoringIndex,
@@ -139,9 +137,16 @@ const monitoring_logs = models.monitoring_logs;
                 },
                 asrSpecificMetaData,
                 requireComplete = [],
+                expectedStartTime,
+                expectedCompletionTime,
               },
             },
           } = wu;
+
+          // Cluster details
+          const clusterDetail = clustersInfo.find(
+            (cluster) => cluster.id === clusterId
+          );
 
           // Notification ID prefix
           let notificationPrefix = "JM";
@@ -181,9 +186,9 @@ const monitoring_logs = models.monitoring_logs;
             // Check if current time is before, after, within the window
             const currentTimeToWindowRelation =
               checkIfCurrentTimeIsWithinRunWindow({
-                start: wu.expectedStartTime,
-                end: wu.expectedCompletionTime,
-                currentTime: cluster.localTime,
+                start: expectedStartTime,
+                end: expectedCompletionTime,
+                currentTime: clusterDetail.localTime,
               });
 
             // WU now in state such as failed, aborted etc
@@ -191,7 +196,6 @@ const monitoring_logs = models.monitoring_logs;
               // Add new State to the WU
               wu.State = _.capitalize(State);
               
-
               // notification object
               const notificationPayload = createNotificationPayload({
                 type: "email",
@@ -236,8 +240,10 @@ const monitoring_logs = models.monitoring_logs;
                 ).toISOString(),
               });
 
+              // notificationPayload.wuId = wu.Wuid;
               notificationsToBeQueued.push(notificationPayload);
-              wuNoLongerToBeMonitored.push(wu.Wuid);
+              // wuNoLongerToBeMonitored.push(wu.Wuid);
+              wuNoLongerInIntermediateState.push(wu.Wuid);
             }
             // Still in intermediate state but window is passed an the job is required to be completed
             else if (
@@ -292,7 +298,8 @@ const monitoring_logs = models.monitoring_logs;
                 ).toISOString(),
               });
               notificationsToBeQueued.push(notificationPayload);
-              wuNoLongerToBeMonitored.push(wu.Wuid);
+              // wuNoLongerToBeMonitored.push(wu.Wuid);
+              wuNoLongerInIntermediateState.push(wu.Wuid);
             }
             // IF the job is still in intermediate state and the current time is within the run  window
             else if (
@@ -314,10 +321,6 @@ const monitoring_logs = models.monitoring_logs;
           }
         }
 
-        // Update the monitoring logs
-        for (let item of copyMonitoringsWithIntermediateStateWus) {
-          await monitoring_logs.update(item, { where: { id: item.id } });
-        }
       } catch (err) {
         logger.error(err);
       }
@@ -326,7 +329,6 @@ const monitoring_logs = models.monitoring_logs;
     // Insert notification in queue
     for (let notification of notificationsToBeQueued) {
       await notification_queue.create(notification);
-      wuNoLongerInIntermediateState.push(notification.wuId);
     }
 
     // if wuNoLongerInIntermediateState is empty, or state of intermediate wu has not changed return
@@ -357,13 +359,6 @@ const monitoring_logs = models.monitoring_logs;
             wu.State = wuWithNewIntermediateState[wu.Wuid];
           }
         }
-
-        // Stop tracking failed or jobs that have passed the run window
-        wuNoLongerToBeMonitored.forEach((wuId) => {
-          wuStillInIntermediateState = wuStillInIntermediateState.filter(
-            (wu) => wu.Wuid !== wuId
-          );
-        });
 
         // copy existingMetadata and update wuInIntermediateState and update the monitoring log
         const existingMetadata = { ...metaData };
