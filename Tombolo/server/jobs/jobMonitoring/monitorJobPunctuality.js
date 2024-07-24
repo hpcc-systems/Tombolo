@@ -38,6 +38,8 @@ const Integrations = models.integrations;
 
     // Find severity level (For ASR ) - based on that determine when to send out notifications
     let severityThreshHold = 0;
+    let severeEmailRecipients;
+
     try{
     const {id : integrationId} = await Integrations.findOne({where: {name: "ASR"}, raw: true});
     
@@ -47,11 +49,16 @@ const Integrations = models.integrations;
         where : {integration_id : integrationId}, raw: true
       });
 
-      const { metaData: {nocAlerts: { severityLevelForNocAlerts }}} = integrationMapping;
+      const {
+        metaData: {
+          nocAlerts: { severityLevelForNocAlerts, emailContacts },
+        },
+      } = integrationMapping;
       severityThreshHold = severityLevelForNocAlerts;
+      severeEmailRecipients = emailContacts;
     }
     }catch(error){
-      logger.error(`Job Monitoring : Error while getting integration level severity threshold: ${error.message}`);
+      logger.error(`Job Punctuality Monitoring : Error while getting integration level severity threshold: ${error.message}`);
     }
 
     // All clusters
@@ -277,6 +284,15 @@ const Integrations = models.integrations;
           // Queue email notification
           await NotificationQueue.create(notificationPayload);
 
+          // NOC email notification
+          if (jobLevelSeverity >= severityThreshHold && severeEmailRecipients) {
+            notificationPayload.metaData.notificationDescription = `[SEV TICKET REQUEST]   
+                                                                      The following issue has been identified via automation.   
+                                                                      Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`  
+            notificationPayload.metaData.mainRecipients = severeEmailRecipients;
+            delete notificationPayload.metaData.cc;
+            await NotificationQueue.create(notificationPayload);
+          }
           // Update the job monitoring
           await JobMonitoring.update(
             {
