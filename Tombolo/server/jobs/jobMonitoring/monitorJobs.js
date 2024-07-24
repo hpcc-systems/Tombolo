@@ -282,6 +282,7 @@ const NotificationQueue = models.notification_queue;
         templateName: "jobMonitoring",
         originationId: monitoringTypeId,
         applicationId: jobMonitoring.applicationId,
+        subject: `Job Monitoring Alert: Job in ${wu.State} state`,
         recipients: { primaryContacts, secondaryContacts, notifyContacts },
         jobName: jobName,
         wuState: wu.State,

@@ -16,6 +16,8 @@ const Cluster = models.cluster;
 const NotificationQueue = models.notification_queue;
 const monitoringTypeName = "Job Monitoring";
 const MonitoringTypes = models.monitoring_types;
+const IntegrationMapping = models.integration_mapping;
+const Integrations = models.integrations;
 
 
 (async () => {
@@ -32,6 +34,24 @@ const MonitoringTypes = models.monitoring_types;
     // if no job monitorings are found - return
     if (jobMonitorings.length < 1) {
       return;
+    }
+
+    // Find severity level (For ASR ) - based on that determine when to send out notifications
+    let severityThreshHold = 0;
+    try{
+    const {id : integrationId} = await Integrations.findOne({where: {name: "ASR"}, raw: true});
+    
+    if(integrationId){
+      // Get integration mapping with integration details
+      const integrationMapping = await IntegrationMapping.findOne({
+        where : {integration_id : integrationId}, raw: true
+      });
+
+      const { metaData: {nocAlerts: { severityLevelForNocAlerts }}} = integrationMapping;
+      severityThreshHold = severityLevelForNocAlerts;
+    }
+    }catch(error){
+      logger.error(`Job Monitoring : Error while getting integration level severity threshold: ${error.message}`);
     }
 
     // All clusters
@@ -91,9 +111,17 @@ const MonitoringTypes = models.monitoring_types;
           continue;
         }
 
-        const { schedule, expectedStartTime, expectedCompletionTime } =
-          metaData;
+        const { schedule, expectedStartTime, expectedCompletionTime } =metaData;
         const clusterInfo = clustersObj[clusterId];
+
+        // Job level severity threshold
+        const jobLevelSeverity = asrSpecificMetaData?.severity || 0;
+
+        // If job level severity is less than the threshold, check only after the completion time
+        let backDateInMinutes = 0;
+        if(jobLevelSeverity < severityThreshHold){
+          backDateInMinutes = 1440; // 24 hours
+        }
 
         // Calculate the run window for the job
         const window = calculateRunOrCompleteByTimes({
@@ -101,26 +129,30 @@ const MonitoringTypes = models.monitoring_types;
           timezone_offset: clusterInfo.timezone_offset,
           expectedStartTime,
           expectedCompletionTime,
+          backDateInMinutes,
         });
 
-
-        // If the window is not today, continue
+        // If the window null - continue. Job is not expected to run 
         if (!window) {
           continue;
         }
 
-        const timePassed = window.start < window.currentTime;
-
-        // If the time has not passed, continue
-        if (!timePassed) {
-          continue;
+        let timePassed = false;
+        let lateByInMinutes = 0; 
+        if(jobLevelSeverity < severityThreshHold){
+          lateByInMinutes = Math.floor((window.currentTime - window.end) / 60000);
+        }else{
+          timePassed = window.start < window.currentTime;
+          lateByInMinutes = Math.floor((window.currentTime - window.start) / 60000);
         }
 
-        // If time passed, get the number of minutes passed
-        const minutesPassed = Math.floor(
-          (window.currentTime - window.start) / 60000
-        );
-        if (minutesPassed < 10) {
+        // Give grace period of 10 minutes
+        if(lateByInMinutes >10){
+          timePassed = true;
+        }
+        
+        // If the time has not passed, continue
+        if (!timePassed) {
           continue;
         }
 
@@ -158,7 +190,6 @@ const MonitoringTypes = models.monitoring_types;
           EndDate: window.end,
           Jobname: translatedJobName,
         });
-
 
         // If workunits are found, update the job monitoring and continue
         if (ECLWorkunit.length > 0) {
@@ -213,6 +244,7 @@ const MonitoringTypes = models.monitoring_types;
             templateName: "jobMonitoring",
             originationId: monitoringTypeDetails.id,
             applicationId: applicationId,
+            subject: `Job Monitoring Alert: Job not started on expected time`,
             recipients: {
               primaryContacts,
               secondaryContacts,
@@ -225,6 +257,8 @@ const MonitoringTypes = models.monitoring_types;
               Issue: `Job not started on expected time`,
               Cluster: clusterInfo.name,
               "Job Name/Filter": jobNamePattern,
+              "Expected Start": window.start,
+              "Current Time": window.currentTime,
             },
             notificationId: generateNotificationId({
               notificationPrefix,
@@ -249,6 +283,7 @@ const MonitoringTypes = models.monitoring_types;
               lastJobRunDetails: {
                 ...lastJobRunDetails,
                 jobPunctualityDetails: {
+                  wus: [],
                   punctual: false,
                   notified: true,
                   windowStartTime: window.start,

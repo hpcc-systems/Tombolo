@@ -203,6 +203,7 @@ const monitoring_logs = models.monitoring_logs;
                 templateName: "jobMonitoring",
                 originationId: monitoringTypeId,
                 applicationId: applicationId,
+                subject: `Job Monitoring Alert: Job in ${State} state`,
                 recipients: {
                   primaryContacts,
                   secondaryContacts,
@@ -261,6 +262,7 @@ const monitoring_logs = models.monitoring_logs;
                 templateName: "jobMonitoring",
                 originationId: monitoringTypeId,
                 applicationId: applicationId,
+                subject: `Job Monitoring Alert: Job not completed by expected time`,
                 recipients: {
                   primaryContacts,
                   secondaryContacts,
