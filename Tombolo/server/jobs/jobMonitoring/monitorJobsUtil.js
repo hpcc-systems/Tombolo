@@ -167,15 +167,16 @@ function calculateStartAndEndDateTime({localDateTimeAtCluster, runWindow, expect
 }
 
 // Daily jobs
-function calculateRunOrCompleteByTimeForDailyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset}) {
+function calculateRunOrCompleteByTimeForDailyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes = 0}) {
   const {runWindow} = schedule;
 
-  const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
+ const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
+ const adjustedLocalTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000);
 
  let window = {frequency: "daily", currentTime: localDateTimeAtCluster};
 
   const startAndEnd = calculateStartAndEndDateTime({
-    localDateTimeAtCluster,
+    localDateTimeAtCluster : adjustedLocalTimeAtCluster,
     runWindow,
     expectedStartTime,
     expectedCompletionTime,
@@ -184,35 +185,45 @@ function calculateRunOrCompleteByTimeForDailyJobs({schedule, expectedStartTime, 
 }
 
 // Weekly jobs
-function calculateRunOrCompleteByTimeForWeeklyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset}) {
-  const  {days, runWindow } = schedule;
+function calculateRunOrCompleteByTimeForWeeklyJobs({
+  schedule,
+  expectedStartTime,
+  expectedCompletionTime,
+  timezone_offset,
+  backDateInMinutes = 0,
+}) {
+  const { days, runWindow } = schedule;
 
   // Find current day at the cluster given timezone offset and this system  in utc
   const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
-  const day = localDateTimeAtCluster.getDay();
-  const runDay = days.find(d => d === day.toString());
+   const adjustedLocalTimeAtCluster = new Date(
+     localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000
+   );
+  const day = adjustedLocalTimeAtCluster.getDay();
+  const runDay = days.find((d) => d === day.toString());
 
   let window = null;
-  if(!runDay) {
+  if (!runDay) {
     return window;
   }
-  window= {frequency: "weekly", currentTime: localDateTimeAtCluster};
+  window = { frequency: "weekly", currentTime: localDateTimeAtCluster };
 
   const startAndEnd = calculateStartAndEndDateTime({
-    localDateTimeAtCluster,
+    localDateTimeAtCluster: adjustedLocalTimeAtCluster,
     runWindow,
     expectedStartTime,
     expectedCompletionTime,
   });
 
-  return {...window, ...startAndEnd};
+  return { ...window, ...startAndEnd };
 }
 
 // Monthly jobs
-function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset}) {
+function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes = 0}) {
   // Determine if schedule is by date or week and weekday
   const { scheduleBy } = schedule[0];
   const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
+  const adjustedLocalTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000);
 
   let window = {
     currentTime: localDateTimeAtCluster,
@@ -221,7 +232,7 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime
 
   if (scheduleBy === "dates") {
     const { dates, runWindow } = schedule[0]; // by date has only one element in an array
-    const dateAtCluster = localDateTimeAtCluster.getDate();
+    const dateAtCluster = adjustedLocalTimeAtCluster.getDate();
 
     // check if date in schedule matches the current date at the cluster
     const runDate = dates.find((d) => d === dateAtCluster);
@@ -236,7 +247,7 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime
 
     // Calculate start and end time
     const startAndEnd = calculateStartAndEndDateTime({
-      localDateTimeAtCluster,
+      localDateTimeAtCluster : adjustedLocalTimeAtCluster,
       runWindow,
       expectedStartTime,
       expectedCompletionTime,
@@ -247,7 +258,7 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime
   }
 
   if(scheduleBy === "weeks-day"){
-    const dayAtCluster = localDateTimeAtCluster.getDay();
+    const dayAtCluster = adjustedLocalTimeAtCluster.getDay();
     const day = schedule.find(s => s.day === dayAtCluster.toString());
 
     // no matching day
@@ -256,7 +267,7 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime
     }
 
     // week of month
-    let momentDate = moment(localDateTimeAtCluster); 
+    let momentDate = moment(adjustedLocalTimeAtCluster); 
 
     let thisWeek =momentDate.week() - moment(momentDate).startOf("month").week() + 1;
 
@@ -276,7 +287,7 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime
 
     // Calculate start and end time
     const startAndEnd = calculateStartAndEndDateTime({
-      localDateTimeAtCluster,
+      localDateTimeAtCluster:  adjustedLocalTimeAtCluster,
       runWindow: day.runWindow,
       expectedStartTime,
       expectedCompletionTime,
@@ -288,13 +299,15 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime
 }
 
 // Yearly jobs
-function calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset}) {
+function calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes = 0}) {
   const {scheduleBy} = schedule[0];
 
   // Local date time at cluster
   const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
+  const adjustedLocalDateTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000);
+
   // Current month at the cluster
-  const monthAtCluster = localDateTimeAtCluster.getMonth();
+  const monthAtCluster = adjustedLocalDateTimeAtCluster.getMonth();
   const months = schedule.map((s) => s.month);
 
   // Not scheduled to run in the current month - so return null
@@ -310,7 +323,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime,
 
   if(scheduleBy === "month-date"){
     // current date at the cluster
-    const dateAtCluster = localDateTimeAtCluster.getDate();
+    const dateAtCluster = adjustedLocalDateTimeAtCluster.getDate();
     const dates = [];
     schedule.forEach(s => {
       dates.push(s.date);
@@ -326,7 +339,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime,
 
     // Calculate start and end time
     const startAndEnd = calculateStartAndEndDateTime({
-      localDateTimeAtCluster,
+      localDateTimeAtCluster: adjustedLocalDateTimeAtCluster,
       runWindow: schedule[0].runWindow,
       expectedStartTime,
       expectedCompletionTime,
@@ -340,7 +353,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime,
     }  
   
   if(scheduleBy === "week-day-month"){
-    const dayAtCluster = localDateTimeAtCluster.getDay();
+    const dayAtCluster = adjustedLocalDateTimeAtCluster.getDay();
 
     // Days 
     const days = schedule.map(s => s.day);
@@ -353,7 +366,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime,
     }
 
     // week of month
-    let momentDate = moment(localDateTimeAtCluster); 
+    let momentDate = moment(adjustedLocalDateTimeAtCluster); 
     let thisWeek =momentDate.week() - moment(momentDate).startOf("month").week() + 1;
     const weeks = schedule.map(s => s.week);
     const scheduleWeekMatch = weeks.includes(thisWeek);
@@ -368,7 +381,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime,
 
     // Calculate start and end time
     const startAndEnd = calculateStartAndEndDateTime({
-      localDateTimeAtCluster,
+      localDateTimeAtCluster: adjustedLocalDateTimeAtCluster,
       runWindow: day.runWindow,
       expectedStartTime,
       expectedCompletionTime,
@@ -385,11 +398,13 @@ function calculateRunOrCompleteByTimeForCronJobs({
   expectedStartTime,
   expectedCompletionTime,
   timezone_offset,
+  backDateInMinutes = 0,
 }) {
   const cron = schedule[0].cron;
 
   // Local date time at cluster
   const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
+  const adjustedLocalDateTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000);
 
   // Get the previous and next dates the cron job was supposed to run
   const interval = cronParser.parseExpression(cron, {
@@ -411,10 +426,16 @@ function calculateRunOrCompleteByTimeForCronJobs({
 
   let withInWindow = false;
 
-  if(prevStartDateTime <= localDateTimeAtCluster && localDateTimeAtCluster <= prevEndDateTime) {
+  if (
+    prevStartDateTime <= adjustedLocalDateTimeAtCluster &&
+    adjustedLocalDateTimeAtCluster <= prevEndDateTime
+  ) {
     withInWindow = true;
   }
-  if(nextStartDateTime <= localDateTimeAtCluster && localDateTimeAtCluster <= nextEndDateTime) {
+  if (
+    nextStartDateTime <= adjustedLocalDateTimeAtCluster &&
+    adjustedLocalDateTimeAtCluster <= nextEndDateTime
+  ) {
     withInWindow = true;
   }
 
@@ -423,8 +444,8 @@ function calculateRunOrCompleteByTimeForCronJobs({
   }
   return {
     frequency: "cron",
-    start: setTimeToDate(localDateTimeAtCluster, expectedStartTime),
-    end: setTimeToDate(localDateTimeAtCluster, expectedCompletionTime),
+    start: setTimeToDate(adjustedLocalDateTimeAtCluster, expectedStartTime),
+    end: setTimeToDate(adjustedLocalDateTimeAtCluster, expectedCompletionTime),
     currentTime: localDateTimeAtCluster,
   };
 
@@ -442,21 +463,21 @@ function checkIfCurrentTimeIsWithinRunWindow({start, end, currentTime}) {
 }
 
 // Calculate run and complete by time for a job on cluster's local time
-function calculateRunOrCompleteByTimes({schedule, timezone_offset, expectedStartTime, expectedCompletionTime}) {
+function calculateRunOrCompleteByTimes({schedule, timezone_offset, expectedStartTime, expectedCompletionTime, backDateInMinutes = 0}) {
   // determine frequency
   frequency = schedule[0].frequency;
 
   switch (frequency) {
     case "daily":
-      return calculateRunOrCompleteByTimeForDailyJobs({schedule: schedule[0],expectedStartTime, expectedCompletionTime, timezone_offset});
+      return calculateRunOrCompleteByTimeForDailyJobs({schedule: schedule[0],expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
     case "weekly":
-      return calculateRunOrCompleteByTimeForWeeklyJobs({schedule: schedule[0], expectedStartTime, expectedCompletionTime, timezone_offset});
+      return calculateRunOrCompleteByTimeForWeeklyJobs({schedule: schedule[0], expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
     case "monthly":
-      return calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset});
+      return calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
     case "yearly":
-      return calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset});
+      return calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
     case "cron":
-      return calculateRunOrCompleteByTimeForCronJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset});
+      return calculateRunOrCompleteByTimeForCronJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
     default:
       throw new Error(`Unknown frequency: ${frequency}`);
   }
@@ -509,12 +530,11 @@ const createNotificationPayload = ({
   templateName,
   originationId,
   applicationId,
+  subject,
   recipients,
-  monitoringName,
   notificationId,
   asrSpecificMetaData = {}, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
   issue,
-  wuState,
   firstLogged,
   lastLogged,
   notificationDescription,
@@ -528,7 +548,7 @@ const createNotificationPayload = ({
     metaData: {
       notificationOrigin: "Job Monitoring",
       applicationId,
-      subject: "Job Monitoring Alert: Job in failed state",
+      subject,
       mainRecipients: recipients.primaryContacts || [],
       cc: [...recipients.secondaryContacts, ...recipients.notifyContacts],
       notificationDescription,
