@@ -8,17 +8,51 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         allowNull: false,
-        autoIncrement: false,
       },
-      name: DataTypes.STRING,
-      thor_host: DataTypes.STRING,
-      thor_port: DataTypes.STRING,
-      roxie_host: DataTypes.STRING,
-      roxie_port: DataTypes.STRING,
-      username: DataTypes.STRING,
-      hash: DataTypes.STRING,
-      timezone_offset: DataTypes.INTEGER,
-      metaData: { type: DataTypes.JSON, defaultValue: {} },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      thor_host: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      thor_port: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      roxie_host: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      roxie_port: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      username: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      hash: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      timezone_offset: {
+        type: DataTypes.INTEGER,
+        allowNull: true, // TODO Must be changed to false once we are able to get default engine for containerized cluster
+      },
+      defaultEngine: {
+        type: DataTypes.JSON,
+        defaultValue: "hthor", // TODO Must be allowNull - false &&& no default value  once we are able to get default engine for containerized cluster
+      },
+      accountMetaData: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+      },
+      metaData: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+      },
     },
     { paranoid: true, freezeTableName: true }
   );
