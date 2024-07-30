@@ -8,12 +8,12 @@ module.exports = {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      searchableNotificationId:{
+      searchableNotificationId: {
         allowNull: false,
         type: Sequelize.STRING,
       },
       applicationId: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.UUID,
       },
       notifiedAt: {

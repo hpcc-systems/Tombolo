@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
       },
       applicationId: {
-        allowNull: false,
+        allowNull: true,
         type: DataTypes.UUID,
       },
       notifiedAt: {
@@ -88,13 +88,14 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   SentNotifications.associate = function (models) {
-    // associations 
-    SentNotifications.belongsTo(models.application, { foreignKey: 'applicationId'});
+    // associations
+    SentNotifications.belongsTo(models.application, {
+      foreignKey: "applicationId",
+    });
   };
 
   return SentNotifications;
 };
-
 
 /*
 {
