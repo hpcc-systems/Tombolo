@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       applicationId: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.UUID,
       },
       notifiedAt: {

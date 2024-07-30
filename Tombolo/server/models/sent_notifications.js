@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
       },
       applicationId: {
-        allowNull: false,
+        allowNull: true,
         type: DataTypes.UUID,
       },
       notifiedAt: {
