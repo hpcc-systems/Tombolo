@@ -3,10 +3,12 @@ const {AccountService} = require("@hpcc-js/comms")
 
 const logger = require("../../config/logger.js");
 const {passwordExpiryAlertDaysForCluster} = require("../../config/monitorings.js");
-const {clusterAccountNotificationPayload} = require("./clusterMonitoringUtils.js");
+const {passwordExpiryInProximityNotificationPayload} = require("./clusterReachabilityMonitoringUtils.js");
 const { decryptString } = require("../../utils/cipher");
 const models = require("../../models");
+
 const Cluster = models.cluster;
+const NotificationQueue = models.notification_queue;
 
 (async() => {
     // UTC time 
@@ -27,67 +29,57 @@ const Cluster = models.cluster;
 
     //Loop through all clusters and check reachability
     for(let cluster of allClusters){
-
       try{
-        // payload 
-        const newAccountMetaData = {...cluster.accountMetaData, lastMonitored: now};
+        // Destructure cluster
+        const { accountMetaData, name: clusterName, metaData: clusterMetaData } = cluster;
+
+        // Cluster payload 
+        const newAccountMetaData = {...accountMetaData, lastMonitored: now};
         
         //Create an instance
         const accountService = new AccountService({
             baseUrl: `${cluster.thor_host}:${cluster.thor_port}`,
-            userID: cluster.username, // TODO - for test purposes
+            userID: cluster.username,
             password: cluster.password,
         });
 
         // Get account information
         const myAccount = await accountService.MyAccount();
-        const {
-          passwordNeverExpires,
-          passwordIsExpired,
-          passwordDaysRemaining,
-          firstName,
-        } = myAccount;
-
-        // console.log('------------------------------------------');
-        // console.log(cluster.name)
-        console.dir({
-          passwordNeverExpires,
-          passwordIsExpired,
-          passwordDaysRemaining,
-          firstName,
-        });
-        // console.log('------------------------------------------');
-       
-        // If password never expires, update the accountMetaData and continue
-        if(passwordNeverExpires || passwordNeverExpires == null){ // API returns true, false or null
-          try{
-            await Cluster.update({accountMetaData: newAccountMetaData}, {where: {id: cluster.id}});
-          }catch(err){
-            logger.error(`Cluster reachability: update cluster ${cluster.id} ${err.message}`);
-          }
-           continue;
-        }
+        const {passwordDaysRemaining} = myAccount;
 
         // If passwordDaysRemaining not in the alert range, update the accountMetaData and continue
-        if(passwordDaysRemaining > passwordExpiryAlertDaysForCluster){
-          try{
-            await Cluster.update({accountMetaData: newAccountMetaData}, {where: {id: cluster.id}});
-          }catch(err){
-            logger.error(`Cluster reachability: update cluster ${cluster.id} ${err.message}`);
-          }
-          continue;
+        if(passwordDaysRemaining && passwordExpiryAlertDaysForCluster.includes(passwordDaysRemaining)){
+            // Check if alert was sent for the day
+            const passwordExpiryAlertSentForDay = accountMetaData?.passwordExpiryAlertSentForDay;
+            if ( !passwordExpiryAlertSentForDay || passwordExpiryAlertSentForDay !== passwordDaysRemaining) {
+              try{
+                //Queue notification
+                const payload = passwordExpiryInProximityNotificationPayload({
+                  clusterName,
+                  templateName: "hpccPasswordExpiryAlert",
+                  passwordDaysRemaining,
+                  recipients: clusterMetaData?.adminEmails || [],
+                  notificationId: `PWD_EXPIRY_${now.getTime()}`,
+                });
+
+                await NotificationQueue.create(payload);
+                
+                //Update accountMetaData
+                newAccountMetaData.passwordExpiryAlertSentForDay =  passwordDaysRemaining;
+              }catch(err){
+                logger.error(`Cluster reachability:  ${cluster.name} failed to queue notification ${err}`);
+              }
+            }
+        }else{
+            //Update accountMetaData
+            newAccountMetaData.passwordExpiryAlertSentForDay =  null;
         }
 
-
-        // If password expired and the alert was not sent in past - send alert
-        if (passwordIsExpired) {
-          //TODO - send alert to user
-        }
-
-        // If password expiry days remaining is in alert range and alert was not sent in past - send alert
+        // Update accountMetaData
+        await Cluster.update({accountMetaData: newAccountMetaData}, {where: {id: cluster.id}});
 
       }catch(err){
-        logger.error(`Cluster reachability:  ${cluster.name} is unreachable ${err.message}`);
+        logger.error(`Cluster reachability:  ${cluster.name} is unreachable ${err}`);
       }
     }
 
