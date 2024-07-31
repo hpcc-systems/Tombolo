@@ -88,6 +88,7 @@ const sent_notifications = require("./routes/sent_notifications/read");
 const monitorings = require("./routes/monitorings/read");
 const asr = require("./routes/asr/read");
 const directoryMonitoring = require("./routes/directorymonitoring/read");
+const status = require("./routes/status/read");
 
 // Log all HTTP requests
 app.use((req, res, next) => {
@@ -97,6 +98,7 @@ app.use((req, res, next) => {
 
 app.use("/api/user", userRead);
 app.use("/api/updateNotification", updateNotifications);
+app.use("/api/status", status);
 
 //exposed API, requires api key for any routes
 app.use("/api/apikeys", api);

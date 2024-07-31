@@ -7,6 +7,12 @@ import { InteractionRequiredAuthError } from '@azure/msal-browser';
 
 export function handleError(response) {
   message.config({ top: 130 });
+
+  //if response is false, it means that we cannot communicate with backend, set backend status to false so UI will show error message
+  if (response === false) {
+    store.dispatch({ type: 'SET_BACKEND_STATUS', payload: false });
+    return;
+  }
   if (response.status == 401) {
     //token expired
     localStorage.removeItem('user');
@@ -103,7 +109,13 @@ window.fetch = async (...args) => {
       config.headers = { ...config.headers, ...azureHeaders };
     }
   }
-  const response = await originalFetch(resource, config);
-  // response interceptor here
-  return response;
+  try {
+    const response = await originalFetch(resource, config);
+    // response interceptor here
+    return response;
+  } catch (error) {
+    // if an error is caught here, it means we cannot communicate with backend, return false to indicate that and log error
+    console.log('Error:', error);
+    return false;
+  }
 };
