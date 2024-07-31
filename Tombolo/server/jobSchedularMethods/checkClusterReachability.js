@@ -12,8 +12,8 @@ async function checkClusterReachability() {
     let jobName = "cluster-reachability-monitoring" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "10s", // For development
-      // interval: clusterReachabilityMonitoringInterval,
+      // interval: "10s", // For development
+      interval: clusterReachabilityMonitoringInterval,
       path: path.join(
         __dirname,
         "..",
