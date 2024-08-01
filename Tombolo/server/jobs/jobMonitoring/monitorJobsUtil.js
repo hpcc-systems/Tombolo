@@ -657,6 +657,10 @@ function generateJobName({ pattern, timezone_offset = 0 }) {
 // console.log( generateJobName({pattern: "<DATE,0,%y/%m/%d>* Test",timezone_offset: 0}));
 // console.log(generateJobName({ pattern: "Launch <DATE,0,%Y_%m_%d>"}));
 
+const nocAlertDescription = `[SEV TICKET REQUEST]   
+                             The following issue has been identified via automation.   
+                            Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`;
+
 module.exports = {
   matchJobName,
   findStartAndEndTimes,
@@ -671,4 +675,5 @@ module.exports = {
   intermediateStates,
   getProductCategory,
   getDomain,
+  nocAlertDescription,
 };

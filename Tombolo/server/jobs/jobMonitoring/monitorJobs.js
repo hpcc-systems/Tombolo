@@ -14,6 +14,8 @@ const {
   generateNotificationId,
   getProductCategory,
   getDomain,
+  findLocalDateTimeAtCluster,
+  nocAlertDescription,
 } = require("./monitorJobsUtil");
 const e = require("express");
 
@@ -53,7 +55,7 @@ const Integrations = models.integrations;
 
     // Find severity level (For ASR ) - based on that determine when to send out notifications
     let severityThreshHold = 0;
-    let severeEmailRecipients;
+    let severeEmailRecipients = null;
 
     try {
       const { id: integrationId } = await Integrations.findOne({
@@ -68,13 +70,16 @@ const Integrations = models.integrations;
           raw: true,
         });
 
-        const {
-          metaData: {
-            nocAlerts: { severityLevelForNocAlerts, emailContacts },
-          },
-        } = integrationMapping;
-        severityThreshHold = severityLevelForNocAlerts;
-        severeEmailRecipients = emailContacts;
+    
+        if(integrationMapping){
+          const {
+            metaData: {
+              nocAlerts: { severityLevelForNocAlerts, emailContacts },
+            },
+          } = integrationMapping;
+          severityThreshHold = severityLevelForNocAlerts;
+          severeEmailRecipients = emailContacts;
+        }
       }
     } catch (error) {
       logger.error(
@@ -154,6 +159,7 @@ const Integrations = models.integrations;
 
     /* Fetch basic information for all work units per cluster */
     const wuBasicInfoByCluster = {};
+    const failedToReachClusters = [];
     for (let clusterInfo of clustersInfo) {
       try {
         const wuService = new WorkunitsService({
@@ -174,9 +180,8 @@ const Integrations = models.integrations;
 
         wuBasicInfoByCluster[clusterInfo.id] = [...wuWithClusterIds];
       } catch (err) {
-        logger.error(
-          `Job monitoring - Error while reaching out to cluster ${clusterInfo.id} : ${err}`
-        );
+        failedToReachClusters.push(clusterInfo.id);
+        logger.error(`Job monitoring - Error while reaching out to cluster ${clusterInfo.id} : ${err}`);
       }
     }
 
@@ -371,10 +376,9 @@ const Integrations = models.integrations;
           Cluster: clusterInfoObj[clusterId].name || "",
           "Job Name/Filter": jobName,
           "Returned Job": wu.Jobname,
-          "Discovered at":
-            new Date(
-              now + clusterInfoObj[clusterId].timezone_offset * 60 * 1000
-            ).toISOString() || now.toISOString(),
+          "Discovered at": findLocalDateTimeAtCluster(
+            clusterInfoObj[clusterId].timezone_offset
+          ),
           State: wu.State,
         },
         notificationId: generateNotificationId({
@@ -387,12 +391,12 @@ const Integrations = models.integrations;
           domain,
           severity,
         }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
-        firstLogged: new Date(
-          now + clusterInfoObj[clusterId].timezone_offset * 60 * 1000
-        ).toISOString(),
-        lastLogged: new Date(
-          now + clusterInfoObj[clusterId].timezone_offset * 60 * 1000
-        ).toISOString(),
+        firstLogged: findLocalDateTimeAtCluster(
+          clusterInfoObj[clusterId].timezone_offset
+        ),
+        lastLogged: findLocalDateTimeAtCluster(
+          clusterInfoObj[clusterId].timezone_offset
+        ),
       });
 
       //Create notification queue
@@ -400,17 +404,20 @@ const Integrations = models.integrations;
 
       // If severity is above threshold, send out NOC notification
       if (severity >= severityThreshHold && severeEmailRecipients) {
-        notificationPayload.metaData.notificationDescription = `[SEV TICKET REQUEST]   
-                                                                      The following issue has been identified via automation.   
-                                                                      Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`;
+        notificationPayload.metaData.notificationDescription = nocAlertDescription;
         notificationPayload.metaData.mainRecipients = severeEmailRecipients;
         delete notificationPayload.metaData.cc;
         await NotificationQueue.create(notificationPayload);
       }
     }
 
+    // If failed to reach cluster, do not update last monitored time in monitoring logs
+    const scannedClusters = clusterIds.filter(
+      (id) => !failedToReachClusters.includes(id)
+    );
+
     // Update monitoring logs
-    for (let id of clusterIds) {
+    for (let id of scannedClusters) {
       try {
         //Get existing metadata
         const log = await MonitoringLogs.findOne({
@@ -456,6 +463,7 @@ const Integrations = models.integrations;
         );
       }
     }
+
   } catch (err) {
     logger.error(err);
   } finally {
@@ -464,8 +472,3 @@ const Integrations = models.integrations;
     else process.exit(0);
   }
 })();
-
-
-
-// TODO - Start from Intermediate
-// TODO - All monitorings - update last run details

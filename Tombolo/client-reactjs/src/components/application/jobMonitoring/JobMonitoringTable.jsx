@@ -39,6 +39,7 @@ const JobMonitoringTable = ({
   setSelectedRows,
   domains,
   allProductCategories,
+  filteringJobs,
 }) => {
   //Redux
   const {
@@ -279,6 +280,7 @@ const JobMonitoringTable = ({
   return (
     <Table
       dataSource={jobMonitorings}
+      loading={filteringJobs}
       columns={columns}
       rowKey="id"
       size="small"

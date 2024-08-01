@@ -73,6 +73,7 @@ function JobMonitoring() {
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
   const [filters, setFilters] = useState({});
   const [filtersVisible, setFiltersVisible] = useState(true);
+  const [filteringJobs, setFilteringJobs] = useState(false);
 
   // Create form instance
   const [form] = Form.useForm();
@@ -84,7 +85,6 @@ function JobMonitoring() {
       try {
         const allMonitorings = await getAllJobMonitorings({ applicationId });
         setJobMonitorings(allMonitorings);
-        setFilteredJobMonitoring(allMonitorings);
       } catch (error) {
         message.error('Error fetching job monitorings');
       }
@@ -198,6 +198,7 @@ function JobMonitoring() {
 
   // When filterChange filter the job monitorings
   useEffect(() => {
+    setFilteringJobs(true);
     if (jobMonitorings.length === 0) return;
     // if (Object.keys(filters).length < 1) return;
     const { approvalStatus, activeStatus, domain, frequency, product } = filters;
@@ -238,6 +239,7 @@ function JobMonitoring() {
     });
 
     setFilteredJobMonitoring(filteredJm);
+    setFilteringJobs(false);
   }, [filters, jobMonitorings]);
 
   // Function reset states when modal is closed
@@ -649,6 +651,7 @@ function JobMonitoring() {
         domains={domains}
         productCategories={productCategories}
         allProductCategories={allProductCategories}
+        filteringJobs={filteringJobs}
       />
       <MonitoringDetailsModal
         displayMonitoringDetailsModal={displayMonitoringDetailsModal}
