@@ -12,7 +12,7 @@ export const createJobMonitoring = async ({ inputData }) => {
   const response = await fetch(`/api/jobmonitoring`, payload);
 
   if (!response.ok) {
-    return message.error('Failed to save job monitoring');
+    throw new Error('Failed to save job monitoring');
   }
 
   const data = await response.json();
@@ -76,7 +76,7 @@ export const updateSelectedMonitoring = async ({ updatedData }) => {
   const response = await fetch(`/api/jobmonitoring/`, payload);
 
   if (!response.ok) {
-    return message.error('Failed to update job monitoring');
+    throw new Error('Failed to update job monitoring');
   }
 
   const data = await response.json();
@@ -94,7 +94,7 @@ export const handleDeleteJobMonitoring = async ({ id, jobMonitorings, setJobMoni
     const response = await fetch(`/api/jobmonitoring/${id}`, payload);
 
     if (!response.ok) {
-      return message.error('Failed to delete job monitoring');
+      throw new Error('Failed to delete job monitoring');
     }
 
     // Set job monitorings
@@ -102,7 +102,7 @@ export const handleDeleteJobMonitoring = async ({ id, jobMonitorings, setJobMoni
     setJobMonitorings(filteredJobMonitorings);
     message.success('Job monitoring deleted successfully');
   } catch (err) {
-    message.error(err.message);
+    throw new Error(err.message);
   }
 };
 

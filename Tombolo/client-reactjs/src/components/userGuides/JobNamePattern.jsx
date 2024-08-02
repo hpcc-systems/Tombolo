@@ -106,8 +106,9 @@ function JobNamePattern() {
 
       <h3>Invalid Job Name</h3>
       <p>
-        If an invalid job name is provided, the system will handle it in the same way as an invalid host name. Please
-        see the Host field notes for details.
+        If an invalid job name or pattern is provided, Tombolo won&apos;t be able to monitor the job correctly. It may
+        search for a non-existent name or mistakenly monitor a wrong job that matches the pattern. Therefore, please
+        ensure the name or pattern you provide is correct.
       </p>
     </div>
   );

@@ -38,25 +38,27 @@ const Integrations = models.integrations;
 
     // Find severity level (For ASR ) - based on that determine when to send out notifications
     let severityThreshHold = 0;
-    let severeEmailRecipients;
+    let severeEmailRecipients = null;
 
     try{
     const {id : integrationId} = await Integrations.findOne({where: {name: "ASR"}, raw: true});
     
-    if(integrationId){
-      // Get integration mapping with integration details
-      const integrationMapping = await IntegrationMapping.findOne({
-        where : {integration_id : integrationId}, raw: true
-      });
+      if(integrationId){
+        // Get integration mapping with integration details
+        const integrationMapping = await IntegrationMapping.findOne({
+          where : {integration_id : integrationId}, raw: true
+        });
 
-      const {
-        metaData: {
-          nocAlerts: { severityLevelForNocAlerts, emailContacts },
-        },
-      } = integrationMapping;
-      severityThreshHold = severityLevelForNocAlerts;
-      severeEmailRecipients = emailContacts;
-    }
+        if(integrationMapping){
+          const {
+            metaData: {
+              nocAlerts: { severityLevelForNocAlerts, emailContacts },
+            },
+          } = integrationMapping;
+          severityThreshHold = severityLevelForNocAlerts;
+          severeEmailRecipients = emailContacts;
+        }
+      }
     }catch(error){
       logger.error(`Job Punctuality Monitoring : Error while getting integration level severity threshold: ${error.message}`);
     }

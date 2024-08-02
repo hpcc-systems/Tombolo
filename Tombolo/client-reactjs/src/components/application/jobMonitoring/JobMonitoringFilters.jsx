@@ -35,7 +35,7 @@ function NotificationTableFilters({
   const [domainOptions, setDomainOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
   const [frequencyOptions, setFrequencyOptions] = useState([]);
-  const [filterCount, setFilterCount] = useState(4);
+  const [filterCount, setFilterCount] = useState(0);
 
   //Effects
   useEffect(() => {
@@ -151,6 +151,17 @@ function NotificationTableFilters({
     setFiltersVisible(true);
   };
 
+  // Clear filters when clear is clicked
+  const clearFilters = () => {
+    form.resetFields();
+    setFilterCount(0);
+    setFilters({});
+    // If exists remove jMFilters from local storage
+    if (localStorage.getItem('jMFilters')) {
+      localStorage.removeItem('jMFilters');
+    }
+  };
+
   //JSX
   return (
     <div className="notifications__filters">
@@ -234,9 +245,15 @@ function NotificationTableFilters({
 
       {filterCount > 0 && !filtersVisible && (
         <div className="notification__filters_count">
-          <div onClick={handleFilterCountClick} style={{ cursor: 'pointer' }}>
+          <div style={{ cursor: 'pointer' }}>
             <span style={{ color: 'var(--danger)' }}>{`${filterCount} filter(s) active`}</span>
-            <span style={{ color: 'var(--primary)', paddingLeft: '5px' }}> - View</span>
+            <span style={{ color: 'var(--primary)', paddingLeft: '5px' }} onClick={handleFilterCountClick}>
+              - View
+            </span>
+            <span style={{ color: 'var(--primary)', paddingLeft: '5px' }} onClick={clearFilters}>
+              {' '}
+              | Clear
+            </span>
           </div>
         </div>
       )}
