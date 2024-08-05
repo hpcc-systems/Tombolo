@@ -42,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true, // TODO Must be changed to false once we are able to get default engine for containerized cluster
       },
       defaultEngine: {
-        type: DataTypes.JSON,
+        type: DataTypes.STRING,
         defaultValue: "hthor", // TODO Must be allowNull - false &&& no default value  once we are able to get default engine for containerized cluster
       },
       accountMetaData: {
