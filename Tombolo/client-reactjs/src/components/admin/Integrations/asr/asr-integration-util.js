@@ -55,6 +55,9 @@ export const getDomains = async () => {
 
   const data = await response.json();
 
+  //sort domains by name
+  data.sort((a, b) => a.name.localeCompare(b.name));
+
   return data;
 };
 
@@ -110,6 +113,9 @@ export const getProducts = async () => {
   }
 
   const data = await response.json();
+
+  // Sort products by name
+  data.sort((a, b) => a.name.localeCompare(b.name));
 
   return data;
 };

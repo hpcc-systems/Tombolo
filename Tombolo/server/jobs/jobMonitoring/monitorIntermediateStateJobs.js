@@ -13,7 +13,6 @@ const {
   checkIfCurrentTimeIsWithinRunWindow,
   intermediateStates,
   generateNotificationId,
-  adjustedLocaleString,
   getProductCategory,
   getDomain,
   createNotificationPayload,
@@ -24,6 +23,8 @@ const cluster = models.cluster;
 const notification_queue = models.notification_queue;
 const monitoring_types = models.monitoring_types;
 const monitoring_logs = models.monitoring_logs;
+const IntegrationMapping = models.integration_mapping;
+const Integrations = models.integrations;
 
 (async () => {
   const now = new Date(); // UTC time
@@ -61,8 +62,6 @@ const monitoring_logs = models.monitoring_logs;
       where: { id: clusterIds },
       raw: true,
     });
-
-    
 
     // Decrypt cluster passwords if they exist
     clustersInfo.forEach((clusterInfo) => {
@@ -103,14 +102,45 @@ const monitoring_logs = models.monitoring_logs;
     const notificationsToBeQueued = [];
     const wuNoLongerInIntermediateState = [];
     const wuWithNewIntermediateState = {};
-    const wuNoLongerToBeMonitored = [];
+
+    // Find severity level (For ASR ) - based on that determine when to send out notifications
+    let severityThreshHold = 0;
+    let severeEmailRecipients;
+    try {
+      const { id: integrationId } = await Integrations.findOne({
+        where: { name: "ASR" },
+        raw: true,
+      });
+
+      if (integrationId) {
+        // Get integration mapping with integration details
+        const integrationMapping = await IntegrationMapping.findOne({
+          where: { integration_id: integrationId },
+          raw: true,
+        });
+
+        const {
+          metaData: {
+            nocAlerts: { severityLevelForNocAlerts, emailContacts },
+          },
+        } = integrationMapping;
+        severityThreshHold = severityLevelForNocAlerts;
+        severeEmailRecipients = emailContacts;
+      }
+    } catch (error) {
+      logger.error(
+        `Job Monitoring : Error while getting integration level severity threshold: ${error.message}`
+      );
+    }
 
     for (let [
       monitoringIndex,
       monitoring,
     ] of monitoringsWithIntermediateStateWus.entries()) {
       const { cluster_id } = monitoring;
-      const clusterDetail = clustersInfo.find((cluster) => cluster.id === cluster_id);
+      const clusterDetail = clustersInfo.find(
+        (cluster) => cluster.id === cluster_id
+      );
 
       try {
         // create a new instance of WorkunitsService
@@ -120,7 +150,9 @@ const monitoring_logs = models.monitoring_logs;
           password: clusterDetail.password || "",
         });
 
-        const { metaData: { wuInIntermediateState }} = monitoring;
+        const {
+          metaData: { wuInIntermediateState },
+        } = monitoring;
 
         // Iterate through all the intermediate state WUs
         for (let wu of wuInIntermediateState) {
@@ -139,9 +171,16 @@ const monitoring_logs = models.monitoring_logs;
                 },
                 asrSpecificMetaData,
                 requireComplete = [],
+                expectedStartTime,
+                expectedCompletionTime,
               },
             },
           } = wu;
+
+          // Cluster details
+          const clusterDetail = clustersInfo.find(
+            (cluster) => cluster.id === clusterId
+          );
 
           // Notification ID prefix
           let notificationPrefix = "JM";
@@ -181,24 +220,24 @@ const monitoring_logs = models.monitoring_logs;
             // Check if current time is before, after, within the window
             const currentTimeToWindowRelation =
               checkIfCurrentTimeIsWithinRunWindow({
-                start: wu.expectedStartTime,
-                end: wu.expectedCompletionTime,
-                currentTime: cluster.localTime,
+                start: expectedStartTime,
+                end: expectedCompletionTime,
+                currentTime: clusterDetail.localTime,
               });
 
             // WU now in state such as failed, aborted etc
             if (notificationConditionLowerCase.includes(State)) {
               // Add new State to the WU
               wu.State = _.capitalize(State);
-              
 
               // notification object
               const notificationPayload = createNotificationPayload({
                 type: "email",
-                notificationDescription : `Analysis detected a monitored job in ${State} state`,
+                notificationDescription: `Analysis detected a monitored job in ${State} state`,
                 templateName: "jobMonitoring",
                 originationId: monitoringTypeId,
                 applicationId: applicationId,
+                subject: `Job Monitoring Alert: Job in ${State} state`,
                 recipients: {
                   primaryContacts,
                   secondaryContacts,
@@ -212,7 +251,7 @@ const monitoring_logs = models.monitoring_logs;
                   Cluster: clusterDetail.name,
                   "Job Name/Filter": jobNamePattern,
                   "Returned Job": wu.Jobname,
-                  "State": wu.State,
+                  State: wu.State,
                   "Discovered at":
                     new Date(
                       now + clusterDetail.timezone_offset * 60 * 1000
@@ -236,8 +275,24 @@ const monitoring_logs = models.monitoring_logs;
                 ).toISOString(),
               });
 
+              // notificationPayload.wuId = wu.Wuid;
               notificationsToBeQueued.push(notificationPayload);
-              wuNoLongerToBeMonitored.push(wu.Wuid);
+
+              // NOC email notification if severity is high
+              if (
+                severity >= severityThreshHold &&
+                severeEmailRecipients
+              ) {
+                notificationPayload.metaData.notificationDescription = `[SEV TICKET REQUEST]   
+                                                                      The following issue has been identified via automation.   
+                                                                      Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`;
+                notificationPayload.metaData.mainRecipients =
+                  severeEmailRecipients;
+                delete notificationPayload.metaData.cc;
+                notificationsToBeQueued.push(notificationPayload);
+              }
+
+              wuNoLongerInIntermediateState.push(wu.Wuid);
             }
             // Still in intermediate state but window is passed an the job is required to be completed
             else if (
@@ -255,6 +310,7 @@ const monitoring_logs = models.monitoring_logs;
                 templateName: "jobMonitoring",
                 originationId: monitoringTypeId,
                 applicationId: applicationId,
+                subject: `Job Monitoring Alert: Job not completed by expected time`,
                 recipients: {
                   primaryContacts,
                   secondaryContacts,
@@ -292,7 +348,20 @@ const monitoring_logs = models.monitoring_logs;
                 ).toISOString(),
               });
               notificationsToBeQueued.push(notificationPayload);
-              wuNoLongerToBeMonitored.push(wu.Wuid);
+
+              // NOC email notification if severity is high
+              if (severity >= severityThreshHold && severeEmailRecipients) {
+                notificationPayload.metaData.notificationDescription = `[SEV TICKET REQUEST]   
+                                                                      The following issue has been identified via automation.   
+                                                                      Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`;
+                notificationPayload.metaData.mainRecipients =
+                  severeEmailRecipients;
+                delete notificationPayload.metaData.cc;
+                notificationsToBeQueued.push(notificationPayload);
+              }
+
+              
+              wuNoLongerInIntermediateState.push(wu.Wuid);
             }
             // IF the job is still in intermediate state and the current time is within the run  window
             else if (
@@ -313,11 +382,6 @@ const monitoring_logs = models.monitoring_logs;
             );
           }
         }
-
-        // Update the monitoring logs
-        for (let item of copyMonitoringsWithIntermediateStateWus) {
-          await monitoring_logs.update(item, { where: { id: item.id } });
-        }
       } catch (err) {
         logger.error(err);
       }
@@ -326,7 +390,6 @@ const monitoring_logs = models.monitoring_logs;
     // Insert notification in queue
     for (let notification of notificationsToBeQueued) {
       await notification_queue.create(notification);
-      wuNoLongerInIntermediateState.push(notification.wuId);
     }
 
     // if wuNoLongerInIntermediateState is empty, or state of intermediate wu has not changed return
@@ -357,13 +420,6 @@ const monitoring_logs = models.monitoring_logs;
             wu.State = wuWithNewIntermediateState[wu.Wuid];
           }
         }
-
-        // Stop tracking failed or jobs that have passed the run window
-        wuNoLongerToBeMonitored.forEach((wuId) => {
-          wuStillInIntermediateState = wuStillInIntermediateState.filter(
-            (wu) => wu.Wuid !== wuId
-          );
-        });
 
         // copy existingMetadata and update wuInIntermediateState and update the monitoring log
         const existingMetadata = { ...metaData };

@@ -1,5 +1,4 @@
 "use strict";
-
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable("cluster", {
@@ -15,19 +14,19 @@ module.exports = {
       },
       thor_host: {
         type: Sequelize.STRING,
-        allowNull: true,
+        allowNull: false,
       },
       thor_port: {
         type: Sequelize.STRING,
-        allowNull: true,
+        allowNull: false,
       },
       roxie_host: {
         type: Sequelize.STRING,
-        allowNull: true,
+        allowNull: false,
       },
       roxie_port: {
         type: Sequelize.STRING,
-        allowNull: true,
+        allowNull: false,
       },
       username: {
         type: Sequelize.STRING,
@@ -43,12 +42,15 @@ module.exports = {
       },
       timezone_offset: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        allowNull: false
+      },
+      accountMetaData: {
+        type: Sequelize.JSON,
+        defaultValue: {},
       },
       metaData: {
         type: Sequelize.JSON,
         defaultValue: {},
-        allowNull: true,
       },
       createdAt: {
         allowNull: false,

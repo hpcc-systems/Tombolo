@@ -22,23 +22,64 @@ const cluster = models.cluster;
 const MonitoringTypes = models.monitoring_types;
 const MonitoringLogs = models.monitoring_logs;
 const NotificationQueue = models.notification_queue;
+const IntegrationMapping = models.integration_mapping;
+const Integrations = models.integrations;
 
 (async () => {
   const now = new Date(); // UTC time
 
   try {
     // Get monitoring type ID for "Job Monitoring"
-    const {id} = await MonitoringTypes.findOne({where: { name: monitoring_name },raw: true});
-    if (!id) {throw new Error(`Monitoring type ${monitoring_name} not found.`)};
+    const { id } = await MonitoringTypes.findOne({
+      where: { name: monitoring_name },
+      raw: true,
+    });
+    if (!id) {
+      throw new Error(`Monitoring type ${monitoring_name} not found.`);
+    }
     const monitoringTypeId = id;
 
     // Find all active job monitorings.
-    const jobMonitorings = await JobMonitoring.findAll({where: { isActive: 1, approvalStatus: "Approved" }, raw: true,});
+    const jobMonitorings = await JobMonitoring.findAll({
+      where: { isActive: 1, approvalStatus: "Approved" },
+      raw: true,
+    });
 
     /* if no job monitorings are found - return */
     if (jobMonitorings.length < 1) {
       logger.debug("No active job monitorings found.");
       return;
+    }
+
+    // Find severity level (For ASR ) - based on that determine when to send out notifications
+    let severityThreshHold = 0;
+    let severeEmailRecipients;
+
+    try {
+      const { id: integrationId } = await Integrations.findOne({
+        where: { name: "ASR" },
+        raw: true,
+      });
+
+      if (integrationId) {
+        // Get integration mapping with integration details
+        const integrationMapping = await IntegrationMapping.findOne({
+          where: { integration_id: integrationId },
+          raw: true,
+        });
+
+        const {
+          metaData: {
+            nocAlerts: { severityLevelForNocAlerts, emailContacts },
+          },
+        } = integrationMapping;
+        severityThreshHold = severityLevelForNocAlerts;
+        severeEmailRecipients = emailContacts;
+      }
+    } catch (error) {
+      logger.error(
+        `Job Monitoring : Error while getting integration level severity threshold: ${error.message}`
+      );
     }
 
     /* Organize job monitoring based on cluster ID. This approach simplifies interaction with 
@@ -63,7 +104,10 @@ const NotificationQueue = models.notification_queue;
     const clusterIds = Object.keys(jobMonitoringsByCluster);
 
     // Get cluster info for all unique clusters
-    const clustersInfo = await cluster.findAll({where: { id: clusterIds },raw: true});
+    const clustersInfo = await cluster.findAll({
+      where: { id: clusterIds },
+      raw: true,
+    });
     const clusterInfoObj = {}; // For easy access later
 
     // Decrypt cluster passwords if they exist
@@ -76,7 +120,9 @@ const NotificationQueue = models.notification_queue;
           clusterInfo.password = null;
         }
       } catch (error) {
-        logger.error(`Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}` );
+        logger.error(
+          `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`
+        );
       }
     });
 
@@ -93,9 +139,16 @@ const NotificationQueue = models.notification_queue;
       );
 
       if (lastScanDetails) {
-        clusterInfo.startTime = wuStartTimeWhenLastScanAvailable(lastScanDetails.scan_time,clusterInfo.timezone_offset);
+        clusterInfo.startTime = wuStartTimeWhenLastScanAvailable(
+          lastScanDetails.scan_time,
+          clusterInfo.timezone_offset
+        );
       } else {
-        clusterInfo.startTime = wuStartTimeWhenLastScanUnavailable(now,clusterInfo.timezone_offset,30);
+        clusterInfo.startTime = wuStartTimeWhenLastScanUnavailable(
+          now,
+          clusterInfo.timezone_offset,
+          30
+        );
       }
     });
 
@@ -112,68 +165,75 @@ const NotificationQueue = models.notification_queue;
         // Date to string
         const startTime = clusterInfo.startTime.toISOString();
 
-        let { Workunits: { ECLWorkunit }} = await wuService.WUQuery({ StartDate: startTime});
+        let {
+          Workunits: { ECLWorkunit },
+        } = await wuService.WUQuery({ StartDate: startTime });
         const wuWithClusterIds = ECLWorkunit.map((wu) => {
           return { ...wu, clusterId: clusterInfo.id };
         });
 
         wuBasicInfoByCluster[clusterInfo.id] = [...wuWithClusterIds];
       } catch (err) {
-        logger.error( `Job monitoring - Error while reaching out to cluster ${clusterInfo.id} : ${err}`
+        logger.error(
+          `Job monitoring - Error while reaching out to cluster ${clusterInfo.id} : ${err}`
         );
       }
     }
 
     // If no new workunits are found for any clusters, exit
     let newWorkUnitsFound = false;
-    for(let keys in wuBasicInfoByCluster){
-      if(wuBasicInfoByCluster[keys].length > 0){
+    for (let keys in wuBasicInfoByCluster) {
+      if (wuBasicInfoByCluster[keys].length > 0) {
         newWorkUnitsFound = true;
-      }else{
+      } else {
         delete wuBasicInfoByCluster[keys];
       }
     }
 
     // If no new monitoring work units are found, update the monitoring logs and exit
     if (!newWorkUnitsFound) {
-          for (let id of clusterIds) {
-            // grab existing metaData
-            const log = await MonitoringLogs.findOne({
-              where: { monitoring_type_id: monitoringTypeId, cluster_id: id },
-              raw: true,
-            });
+      for (let id of clusterIds) {
+        // grab existing metaData
+        const log = await MonitoringLogs.findOne({
+          where: { monitoring_type_id: monitoringTypeId, cluster_id: id },
+          raw: true,
+        });
 
-            // Existing intermediate state jobs
-            let existingIntermediateStateJobs = [];
-            let existingMetaData = {};
+        // Existing intermediate state jobs
+        let existingIntermediateStateJobs = [];
+        let existingMetaData = {};
 
-            if (log) {
-              existingMetaData = log.metaData || {};
-              existingIntermediateStateJobs =
-                existingMetaData?.wuInIntermediateState || [];
+        if (log) {
+          existingMetaData = log.metaData || {};
+          existingIntermediateStateJobs =
+            existingMetaData?.wuInIntermediateState || [];
+        }
+
+        try {
+          const x = await MonitoringLogs.upsert(
+            {
+              cluster_id: id,
+              monitoring_type_id: monitoringTypeId,
+              scan_time: now,
+              metaData: {
+                ...existingMetaData,
+                wuInIntermediateState: existingIntermediateStateJobs,
+              },
+            },
+            {
+              returning: true, // This option ensures the method returns the updated or created entry
+              conflictTarget: ["cluster_id", "monitoring_type_id"], // Specify the fields to check for conflicts
             }
-
-            try {
-             const x = await MonitoringLogs.upsert(
-               {
-                 cluster_id: id,
-                 monitoring_type_id: monitoringTypeId,
-                 scan_time: now,
-                 metaData: {
-                   ...existingMetaData,
-                   wuInIntermediateState: existingIntermediateStateJobs,
-                 },
-               },
-               {
-                 returning: true, // This option ensures the method returns the updated or created entry
-                 conflictTarget: ["cluster_id", "monitoring_type_id"], // Specify the fields to check for conflicts
-               }
-             );
-            } catch (err) {
-              logger.error(`Job monitoring - Error while updating last cluster scanned time stamp`);
-            }
-          }
-      logger.verbose("Job Monitoring - No new work units found for any clusters");
+          );
+        } catch (err) {
+          logger.error(
+            `Job monitoring - Error while updating last cluster scanned time stamp`
+          );
+        }
+      }
+      logger.verbose(
+        "Job Monitoring - No new work units found for any clusters"
+      );
       return;
     }
     // Clusters with new work units - Done to minimize the number of calls to db later
@@ -183,47 +243,66 @@ const NotificationQueue = models.notification_queue;
     let lowerCaseNotificationCondition = [];
     const jobMonitoringObj = {}; // For easy access late
 
-    for(let monitoring of jobMonitorings){
+    for (let monitoring of jobMonitorings) {
       jobMonitoringObj[monitoring.id] = monitoring;
-      const {monitoringName, clusterId, jobName: jobNameOrPattern, id, metaData} = monitoring;
-      const { notificationMetaData: {notificationCondition = []} } = metaData;
-      lowerCaseNotificationCondition = notificationCondition.map((condition) => condition.toLowerCase());
+      const {
+        monitoringName,
+        clusterId,
+        jobName: jobNameOrPattern,
+        id,
+        metaData,
+      } = monitoring;
+      const {
+        notificationMetaData: { notificationCondition = [] },
+      } = metaData;
+      lowerCaseNotificationCondition = notificationCondition.map((condition) =>
+        condition.toLowerCase()
+      );
 
       // If cluster has no new workunits, skip - reduces computation
       if (!clusterIdsWithNewWUs.includes(clusterId)) {
         continue;
       }
 
-      try{
-        const cluster = clustersInfo.find((cluster) => cluster.id === clusterId);
+      try {
+        const cluster = clustersInfo.find(
+          (cluster) => cluster.id === clusterId
+        );
 
         let clusterWUs = wuBasicInfoByCluster[clusterId];
- 
+
         const matchedWus = clusterWUs.filter((wu) => {
-          return matchJobName({ jobNameFormat: jobNameOrPattern, jobName: wu.Jobname, timezone_offset: cluster.timezone_offset });
+          return matchJobName({
+            jobNameFormat: jobNameOrPattern,
+            jobName: wu.Jobname,
+            timezone_offset: cluster.timezone_offset,
+          });
         });
 
         jmWithNewWUs[id] = matchedWus;
       } catch (err) {
-        logger.error(`Job monitoring. Looping job monitorings ${monitoringName}. id:  ${id}. ERR -  ${err.message}` );
+        logger.error(
+          `Job monitoring. Looping job monitorings ${monitoringName}. id:  ${id}. ERR -  ${err.message}`
+        );
       }
-    };
+    }
 
     //Wus in failed state failed, aborted, unknown
     const failedStateJobs = [];
     const intermediateStateJobs = [];
     // Check if any jobs are in undesired state
-    for(let jmId in jmWithNewWUs){ // Iterating over an object
+    for (let jmId in jmWithNewWUs) {
+      // Iterating over an object
       const wus = jmWithNewWUs[jmId];
-      for(let wu of wus){   
+      for (let wu of wus) {
         // Separate failed state jobs
-        if(lowerCaseNotificationCondition.includes(wu.State.toLowerCase())){
-          failedStateJobs.push({...wu, jmId});
+        if (lowerCaseNotificationCondition.includes(wu.State.toLowerCase())) {
+          failedStateJobs.push({ ...wu, jmId });
           continue;
         }
 
         // Separate intermediate state jobs
-        if(intermediateStates.includes(wu.State.toLowerCase())){
+        if (intermediateStates.includes(wu.State.toLowerCase())) {
           intermediateStateJobs.push({
             ...wu,
             jobMonitoringData: jobMonitoringObj[jmId],
@@ -233,8 +312,8 @@ const NotificationQueue = models.notification_queue;
       }
     }
 
-   // Create notifications for failed state jobs
-    for(let failedJob of failedStateJobs){
+    // Create notifications for failed state jobs
+    for (let failedJob of failedStateJobs) {
       const { jmId, ...wu } = failedJob;
       const jobMonitoring = jobMonitoringObj[jmId];
       const {
@@ -274,7 +353,7 @@ const NotificationQueue = models.notification_queue;
         //Severity
         severity = asrSpecificMetaData.severity;
       }
-      
+
       //Notification payload
       const notificationPayload = createNotificationPayload({
         type: "email",
@@ -282,6 +361,7 @@ const NotificationQueue = models.notification_queue;
         templateName: "jobMonitoring",
         originationId: monitoringTypeId,
         applicationId: jobMonitoring.applicationId,
+        subject: `Job Monitoring Alert: Job in ${wu.State} state`,
         recipients: { primaryContacts, secondaryContacts, notifyContacts },
         jobName: jobName,
         wuState: wu.State,
@@ -317,10 +397,19 @@ const NotificationQueue = models.notification_queue;
 
       //Create notification queue
       await NotificationQueue.create(notificationPayload);
+
+      // If severity is above threshold, send out NOC notification
+      if (severity >= severityThreshHold && severeEmailRecipients) {
+        notificationPayload.metaData.notificationDescription = `[SEV TICKET REQUEST]   
+                                                                      The following issue has been identified via automation.   
+                                                                      Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`;
+        notificationPayload.metaData.mainRecipients = severeEmailRecipients;
+        delete notificationPayload.metaData.cc;
+        await NotificationQueue.create(notificationPayload);
+      }
     }
 
-
-  // Update monitoring logs 
+    // Update monitoring logs
     for (let id of clusterIds) {
       try {
         //Get existing metadata
@@ -329,17 +418,22 @@ const NotificationQueue = models.notification_queue;
           raw: true,
         });
 
-        if(!log){continue}
+        if (!log) {
+          continue;
+        }
 
         // Filter intermediate state jobs for the cluster
-        const intermediateStateJobsForCluster = intermediateStateJobs.filter((job) => job.clusterId === id);
+        const intermediateStateJobsForCluster = intermediateStateJobs.filter(
+          (job) => job.clusterId === id
+        );
 
         let existingIntermediateStateJobs = [];
         let existingMetaData = {};
 
         existingMetaData = log.metaData || {};
-        existingIntermediateStateJobs = existingMetaData?.wuInIntermediateState || [];
-        
+        existingIntermediateStateJobs =
+          existingMetaData?.wuInIntermediateState || [];
+
         // Update or create monitoring logs
         await MonitoringLogs.upsert({
           cluster_id: id,
@@ -357,11 +451,11 @@ const NotificationQueue = models.notification_queue;
         });
       } catch (err) {
         logger.error(
-          `Job monitoring - Error while updating last cluster scanned time stamp`, err
+          `Job monitoring - Error while updating last cluster scanned time stamp`,
+          err
         );
       }
     }
-
   } catch (err) {
     logger.error(err);
   } finally {

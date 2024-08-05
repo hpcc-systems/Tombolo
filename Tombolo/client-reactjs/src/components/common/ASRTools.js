@@ -12,6 +12,9 @@ export const getDomains = async ({ monitoringTypeId }) => {
   }
   const domains = await response.json();
 
+  //sort domains by name
+  domains.sort((a, b) => a.name.localeCompare(b.name));
+
   return domains;
 };
 
@@ -26,6 +29,10 @@ export const getProductCategories = async ({ domainId }) => {
     throw new Error('Failed to get product categories');
   }
   const productCategories = await response.json();
+
+  //sort product categories by name
+  productCategories.sort((a, b) => a.name.localeCompare(b.name));
+
   return productCategories;
 };
 // Get all product categories regardless of selected domain
@@ -41,6 +48,10 @@ export const getAllProductCategories = async () => {
     throw new Error('Failed to get product categories');
   }
   const productCategories = await response.json();
+
+  //sort product categories by name
+  productCategories.sort((a, b) => a.name.localeCompare(b.name));
+
   return productCategories;
 };
 
