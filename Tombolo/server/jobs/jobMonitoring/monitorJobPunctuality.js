@@ -1,6 +1,7 @@
 const { WorkunitsService } = require("@hpcc-js/comms");
 const logger = require("../../config/logger");
 const { decryptString } = require("../../utils/cipher");
+const { parentPort } = require("worker_threads");
 const {
   calculateRunOrCompleteByTimes,
   generateJobName,
@@ -8,6 +9,8 @@ const {
   getProductCategory,
   getDomain,
   generateNotificationId,
+  differenceInMs,
+  nocAlertDescription,
 } = require("./monitorJobsUtil");
 const models = require("../../models");
 
@@ -24,7 +27,6 @@ const Integrations = models.integrations;
   const now = new Date(); // UTC time
   
   try {
-    // Get all job monitorings
     // Find all active job monitorings.
     const jobMonitorings = await JobMonitoring.findAll({
       where: { isActive: 1, approvalStatus: "Approved" },
@@ -125,11 +127,30 @@ const Integrations = models.integrations;
 
         // Job level severity threshold
         const jobLevelSeverity = asrSpecificMetaData?.severity || 0;
+      
 
         // If job level severity is less than the threshold, check only after the completion time
-        let backDateInMinutes = 0;
-        if(jobLevelSeverity < severityThreshHold){
-          backDateInMinutes = 1440; // 24 hours
+        let backDateInMs = 0;
+        if ( jobLevelSeverity < severityThreshHold) {
+          let runWindowForJob = null;
+          if (schedule[0]?.runWindow) {
+            runWindowForJob = schedule[0].runWindow;
+          }
+
+          // Calculate the back date in ms
+          if (runWindowForJob === "overnight") {
+            backDateInMs = differenceInMs({
+              startTime: expectedCompletionTime,
+              endTime: expectedStartTime,
+              daysDifference: 1,
+            });
+          } else {
+            backDateInMs = differenceInMs({
+              startTime: expectedCompletionTime,
+              endTime: expectedStartTime,
+              daysDifference: 0,
+            });
+          }
         }
 
         // Calculate the run window for the job
@@ -138,7 +159,7 @@ const Integrations = models.integrations;
           timezone_offset: clusterInfo.timezone_offset,
           expectedStartTime,
           expectedCompletionTime,
-          backDateInMinutes,
+          backDateInMs,
         });
 
         // If the window null - continue. Job is not expected to run 
@@ -146,12 +167,13 @@ const Integrations = models.integrations;
           continue;
         }
 
-        let timePassed = false;
+        let alertTimePassed = false;
         let lateByInMinutes = 0; 
         if(jobLevelSeverity < severityThreshHold){
+          alertTimePassed = window.end < window.currentTime;
           lateByInMinutes = Math.floor((window.currentTime - window.end) / 60000);
         }else{
-          timePassed = window.start < window.currentTime;
+          alertTimePassed = window.start < window.currentTime;
           lateByInMinutes = Math.floor((window.currentTime - window.start) / 60000);
         }
 
@@ -161,7 +183,7 @@ const Integrations = models.integrations;
         }
         
         // If the time has not passed, continue
-        if (!timePassed) {
+        if (!alertTimePassed) {
           continue;
         }
 
@@ -199,6 +221,25 @@ const Integrations = models.integrations;
           EndDate: window.end,
           Jobname: translatedJobName,
         });
+
+        // If a job is overnight, it could potentially have 2 translatedJobName as it can run on 2 different days
+        if(schedule[0]?.runWindow === 'overnight'){
+          const translatedJobNameNextDay = generateJobName({
+            pattern: jobNamePattern,
+            timezone_offset: clusterInfo.timezone_offset,
+            backDateInDays: 1,
+          });
+
+          const {
+            Workunits: { ECLWorkunit: ECLWorkunitNextDay },
+          } = await wuService.WUQuery({
+            StartDate: window.start,
+            EndDate: window.end,
+            Jobname: translatedJobNameNextDay,
+          });
+
+          ECLWorkunit.push(...ECLWorkunitNextDay);
+        }
 
         // If workunits are found, update the job monitoring and continue
         if (ECLWorkunit.length > 0) {
@@ -288,12 +329,16 @@ const Integrations = models.integrations;
 
           // NOC email notification
           if (jobLevelSeverity >= severityThreshHold && severeEmailRecipients) {
-            notificationPayload.metaData.notificationDescription = `[SEV TICKET REQUEST]   
-                                                                      The following issue has been identified via automation.   
-                                                                      Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`  
-            notificationPayload.metaData.mainRecipients = severeEmailRecipients;
-            delete notificationPayload.metaData.cc;
-            await NotificationQueue.create(notificationPayload);
+            const notificationPayloadForNoc = { ...notificationPayload };
+            notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;  
+            notificationPayloadForNoc.metaData.mainRecipients = severeEmailRecipients;
+            notificationPayloadForNoc.metaData.notificationId =
+              generateNotificationId({
+                notificationPrefix,
+                timezoneOffset: offSet || 0,
+              });
+            delete notificationPayloadForNoc.metaData.cc;
+            await NotificationQueue.create(notificationPayloadForNoc);
           }
           // Update the job monitoring
           await JobMonitoring.update(
@@ -317,11 +362,12 @@ const Integrations = models.integrations;
         logger.error(
           `Error while processing jobs for  punctuality check ${jobMonitoring.id}: ${error.message}`
         );
+      }finally{
+         if (parentPort) parentPort.postMessage("done");
+         else process.exit(0);
       }
     }
   } catch (error) {
-    logger.error(
-      `Error in job punctuality monitoring script: ${error.message}`
-    );
+    logger.error(`Error in job punctuality monitoring script: ${error.message}`);
   }
 })();

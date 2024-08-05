@@ -195,9 +195,19 @@ const Integrations = models.integrations;
       }
     }
 
+    console.log('------------------------------------------');
+    console.dir("HERE")
+    console.log(newWorkUnitsFound);
+    console.log('------------------------------------------');
+
     // If no new monitoring work units are found, update the monitoring logs and exit
     if (!newWorkUnitsFound) {
-      for (let id of clusterIds) {
+      // If failed to reach cluster, do not update last monitored time in monitoring logs
+      const scanned_clusters = clusterIds.filter(
+        (id) => !failedToReachClusters.includes(id)
+      );
+
+      for (let id of scanned_clusters) {
         // grab existing metaData
         const log = await MonitoringLogs.findOne({
           where: { monitoring_type_id: monitoringTypeId, cluster_id: id },
@@ -275,6 +285,9 @@ const Integrations = models.integrations;
         );
 
         let clusterWUs = wuBasicInfoByCluster[clusterId];
+        console.log('---- Cluster wus -------------------------');
+        console.dir(clusterWUs)
+        console.log('------------------------------------------');
 
         const matchedWus = clusterWUs.filter((wu) => {
           return matchJobName({
@@ -404,10 +417,15 @@ const Integrations = models.integrations;
 
       // If severity is above threshold, send out NOC notification
       if (severity >= severityThreshHold && severeEmailRecipients) {
-        notificationPayload.metaData.notificationDescription = nocAlertDescription;
-        notificationPayload.metaData.mainRecipients = severeEmailRecipients;
-        delete notificationPayload.metaData.cc;
-        await NotificationQueue.create(notificationPayload);
+        const notificationPayloadForNoc = { ...notificationPayload };
+        notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;
+        notificationPayloadForNoc.metaData.mainRecipients = severeEmailRecipients;
+        notificationPayload.metaData.notificationId = generateNotificationId({
+          notificationPrefix,
+          timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
+        }),
+        delete notificationPayloadForNoc.metaData.cc;
+        await NotificationQueue.create(notificationPayloadForNoc);
       }
     }
 
@@ -467,7 +485,6 @@ const Integrations = models.integrations;
   } catch (err) {
     logger.error(err);
   } finally {
-    logger.debug(`Job monitoring completed started ${now} and ended at ${new Date()}`);
     if (parentPort) parentPort.postMessage("done");
     else process.exit(0);
   }

@@ -199,7 +199,9 @@ function JobMonitoring() {
   // When filterChange filter the job monitorings
   useEffect(() => {
     setFilteringJobs(true);
-    if (jobMonitorings.length === 0) return;
+    if (jobMonitorings.length === 0) {
+      setFilteringJobs(false);
+    }
     // if (Object.keys(filters).length < 1) return;
     const { approvalStatus, activeStatus, domain, frequency, product } = filters;
 

@@ -216,9 +216,7 @@ const Integrations = models.integrations;
 
           try {
             const info = await wuService.WUInfo({ Wuid: wu.Wuid });
-            const {
-              Workunit: { State },
-            } = info;
+            const {Workunit: { State }} = info;
 
             // Check if current time is before, after, within the window
             const currentTimeToWindowRelation =
@@ -234,6 +232,9 @@ const Integrations = models.integrations;
 
             // WU now in state such as failed, aborted etc
             if (notificationConditionLowerCase.includes(State)) {
+              console.log('------------------------------------------');
+              console.dir("Intermediate job failed")
+              console.log('------------------------------------------');
               // Add new State to the WU
               wu.State = _.capitalize(State);
 
@@ -286,10 +287,15 @@ const Integrations = models.integrations;
 
               // NOC email notification if severity is high
               if (sendAlertToNoc) {
-                notificationPayload.metaData.notificationDescription = nocAlertDescription;
-                notificationPayload.metaData.mainRecipients = severeEmailRecipients;
-                delete notificationPayload.metaData.cc;
-                notificationsToBeQueued.push(notificationPayload);
+                const notificationPayloadForNoc = { ...notificationPayload}
+                notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;
+                notificationPayloadForNoc.metaData.mainRecipients = severeEmailRecipients;
+                notificationPayloadForNoc.metaData.notificationId = generateNotificationId({
+                  notificationPrefix,
+                  timezoneOffset: clusterDetail.timezone_offset || 0,
+                }),
+                delete notificationPayloadForNoc.metaData.cc;
+                notificationsToBeQueued.push(notificationPayloadForNoc);
               }
 
               wuNoLongerInIntermediateState.push(wu.Wuid);
@@ -300,6 +306,9 @@ const Integrations = models.integrations;
               currentTimeToWindowRelation === "after" &&
               requireComplete === true
             ) {
+              console.log('------------------------------------------');
+              console.dir("Intermediate job passed time")
+              console.log('------------------------------------------');
 
               // Add new State to the WU
               wu.State = _.capitalize(State);
@@ -347,15 +356,34 @@ const Integrations = models.integrations;
                   clusterDetail.timezone_offset
                 ),
               });
+
+              // console.log('-----------Payload 1----------------------');
+              // console.dir(notificationPayload)
+              // console.log('------------------------------------------');
               notificationsToBeQueued.push(notificationPayload);
 
               // NOC email notification if severity is high
               if (sendAlertToNoc) {
-                notificationPayload.metaData.notificationDescription = nocAlertDescription;
-                notificationPayload.metaData.mainRecipients = severeEmailRecipients;
-                delete notificationPayload.metaData.cc;
-                notificationsToBeQueued.push(notificationPayload);
+                const notificationPayloadForNoc = { ...notificationPayload}
+                notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;
+                notificationPayloadForNoc.metaData.mainRecipients = severeEmailRecipients;
+                notificationPayloadForNoc.metaData.notificationId = generateNotificationId({
+                  notificationPrefix,
+                  timezoneOffset: clusterDetail.timezone_offset || 0,
+                }),
+                delete notificationPayloadForNoc.metaData.cc;
+
+                
+              // console.log("-----------Payload 2----------------------");
+              // console.dir(notificationPayload);
+              // console.log("------------------------------------------");
+
+                notificationsToBeQueued.push(notificationPayloadForNoc);
               }
+
+              console.log('----------To be queued -------------------');
+              console.dir(notificationsToBeQueued)
+              console.log('------------------------------------------');
 
               wuNoLongerInIntermediateState.push(wu.Wuid);
             }
@@ -364,12 +392,18 @@ const Integrations = models.integrations;
               intermediateStates.includes(State) &&
               currentTimeToWindowRelation === "within"
             ) {
+              console.log('------------------------------------------');
+              console.dir("STILL IN INTERMEDIATE STATE")
+              console.log('------------------------------------------');
 
               // If the State has changed from last time it was checked, update monitoring needs to be updated with new state
               if (wu.State !== State) {
                 wuWithNewIntermediateState[wu.Wuid] = State;
               }
             } else {
+              console.log('------------------------------------------');
+              console.dir("COMPLETED")
+              console.log('------------------------------------------');
               // WU in completed state - Remove the WU from the intermediate state
               wuNoLongerInIntermediateState.push(wu.Wuid);
             }
@@ -386,6 +420,9 @@ const Integrations = models.integrations;
 
     // Insert notification in queue
     for (let notification of notificationsToBeQueued) {
+      // console.log('-NOTIFICATION LOOP ------------------------');
+      // console.dir(notification);
+      // console.log('------------------------------------------');
       await notification_queue.create(notification);
     }
 
@@ -432,9 +469,6 @@ const Integrations = models.integrations;
   } catch (err) {
     logger.error(err);
   } finally {
-    logger.debug(
-      `Job monitoring completed started ${now} and ended at ${new Date()}`
-    );
     if (parentPort) parentPort.postMessage("done");
     else process.exit(0);
   }
