@@ -174,11 +174,28 @@ const getClusterWhiteList = async (req, res) => {
 }
 
 
+// Blind ping without credentials 
+const performInitialPing = async (req, res) => {
+    res.send({
+      success : false, message : "Unauthorized"
+    })
+}
+
+// Ping with user provided credentials
+const performCredentialedPing = async (req, res) => {
+    res.send({
+      success: false,
+      message: "Authorized",
+    });
+}
+
 module.exports = {
   addCluster,
   getClusters,
   getCluster,
   deleteCluster,
   updateCluster,
-  getClusterWhiteList
+  getClusterWhiteList,
+  performInitialPing,
+  performCredentialedPing,
 };
