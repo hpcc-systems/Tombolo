@@ -48,6 +48,10 @@ module.exports = {
         type: Sequelize.JSON,
         defaultValue: {},
       },
+      adminEmails: {
+        type: Sequelize.JSON,
+        allowNull: false,
+      },
       metaData: {
         type: Sequelize.JSON,
         defaultValue: {},

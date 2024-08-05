@@ -14,7 +14,7 @@ const Cluster = models.cluster;
 // Add a cluster
 const addCluster = async (req, res) => {
     try {
-        const { name: clusterName, username: userID, password, metaData = {} } = req.body;
+        const { name: clusterName, username: userID, password, adminEmails, metaData = {} } = req.body;
         // Make sure cluster is whitelisted
         const cluster = clusters.find((c) => c.name === clusterName);
         if (!cluster) throw new CustomError("Cluster not whitelisted", 400);
@@ -82,6 +82,7 @@ const addCluster = async (req, res) => {
           defaultEngine: defaultEngine.Name,
           username: userID,
           timezone_offset: offSetInMinutes,
+          adminEmails,
           metaData,
         };
 

@@ -44,11 +44,15 @@ module.exports = (sequelize, DataTypes) => {
       },
       timezone_offset: {
         type: DataTypes.INTEGER,
-        allowNull: true, // TODO Must be changed to false once we are able to get default engine for containerized cluster
+        allowNull: false,
       },
       accountMetaData: {
         type: DataTypes.JSON,
         defaultValue: {},
+      },
+      adminEmails: {
+        type: DataTypes.JSON,
+        allowNull: true,
       },
       metaData: {
         type: DataTypes.JSON,
