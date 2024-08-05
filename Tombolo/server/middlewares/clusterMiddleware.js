@@ -72,8 +72,42 @@ const validateUpdateClusterInputs = [
   },
 ]; 
 
+// Validate name for blind ping
+const validateClusterPingPayload = [
+  body("name")
+    .isString()
+    .withMessage("Name must be a string")
+    .isLength({ max: 300 })
+    .withMessage("Name must not exceed 300 characters"),
+
+    // username - validate if present
+    body("username")
+    .optional({ nullable: true })
+    .isAlphanumeric()
+    .withMessage("Username must be alphanumeric")
+    .isLength({ max: 200 })
+    .withMessage("Username must not exceed 200 characters"),
+
+    // Password - validate if present
+    body("password")
+    .optional({ nullable: true })
+    .isString()
+    .withMessage("Password must be a string")
+    .isLength({ max: 200 })
+    .withMessage("Password must not exceed 200 characters"),
+  (req, res, next) => {
+    const errors = validationResult(req).array();
+    const errorString = errors.map((e) => e.msg).join(", ");
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, message: errorString });
+    }
+    next();
+  },
+];
+
 module.exports = {
   validateAddClusterInputs,
   validateClusterId,
   validateUpdateClusterInputs,
+  validateClusterPingPayload,
 };

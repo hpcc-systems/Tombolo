@@ -174,19 +174,31 @@ const getClusterWhiteList = async (req, res) => {
 }
 
 
-// Blind ping without credentials 
-const performInitialPing = async (req, res) => {
-    res.send({
-      success : false, message : "Unauthorized"
-    })
-}
+// Ping HPCC cluster to find if it is reachable
+const pingCluster = async (req, res) => {
+    try {
+      const { name, username, password } = req.body;
+      const cluster = clusters.find((c) => c.name === name);
 
-// Ping with user provided credentials
-const performCredentialedPing = async (req, res) => {
-    res.send({
-      success: false,
-      message: "Authorized",
-    });
+      // If bogus cluster name is provided, return error
+      if (!cluster) throw new CustomError("Cluster not whitelisted", 400);
+
+      // construct base url
+      const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
+
+      // Ping cluster
+      await new AccountService({ baseUrl, userID: username, password }).MyAccount();
+      res.status(200).json({ success: true, message: "Authorized" });
+    } catch (err) {
+      let errMessage = "Unable to reach cluster";
+      let statusCode = err.statusCode || 500;
+
+      if (err.message.includes("Unauthorized")) {
+        errMessage = "Unauthorized";
+        statusCode = 401;
+      }
+      res.status(statusCode).json({ success: false, message: errMessage });
+    }
 }
 
 module.exports = {
@@ -196,6 +208,5 @@ module.exports = {
   deleteCluster,
   updateCluster,
   getClusterWhiteList,
-  performInitialPing,
-  performCredentialedPing,
+  pingCluster,
 };

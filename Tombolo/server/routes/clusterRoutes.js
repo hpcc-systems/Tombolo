@@ -5,6 +5,7 @@ const {
   validateAddClusterInputs,
   validateClusterId,
   validateUpdateClusterInputs,
+  validateClusterPingPayload,
 } = require("../middlewares/clusterMiddleware");
 const {
   addCluster,
@@ -13,12 +14,10 @@ const {
   deleteCluster,
   updateCluster,
   getClusterWhiteList,
-  performInitialPing,
-  performCredentialedPing,
+  pingCluster,
 } = require("../controllers/clusterController");
 
-router.get("/initialPing", performInitialPing); // GET - Ping cluster blindly with out providing any credentials
-router.get("/credentialedPing", performCredentialedPing); // GET - Ping cluster with credentials
+router.get("/ping", validateClusterPingPayload, pingCluster); // GET - Ping cluster 
 router.get("/whiteList", getClusterWhiteList); // GET - cluster white list
 router.post("/", validateAddClusterInputs, addCluster); // CREATE - one cluster
 router.get("/", getClusters); // GET - all clusters
@@ -28,5 +27,3 @@ router.patch("/:id", validateUpdateClusterInputs, updateCluster); // UPDATE - on
 
 
 module.exports = router;
-
-// TODO - add middlewares to last 2 routes
