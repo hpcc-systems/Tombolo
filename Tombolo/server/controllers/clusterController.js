@@ -24,13 +24,27 @@ const addCluster = async (req, res) => {
         await new AccountService({baseUrl,userID,password}).MyAccount();
 
         // Get default cluster (engine) if exists - if not pick the first one 
-        const {TargetClusters : {TpClusterNameType}} = await new TopologyService({baseUrl, userID, password}).TpListTargetClusters();
-        const defaultEngine = TpClusterNameType.find((c) => c.IsDefault) || TpClusterNameType[0];
+        const {TpLogicalClusters: {TpLogicalCluster}}  = await new TopologyService({
+          baseUrl,
+          userID,
+          password,
+        }).TpLogicalClusterQuery();
+
+        let defaultEngine = null;
+        if (TpLogicalCluster.length > 0) {
+          // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
+          // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
+            defaultEngine = TpLogicalCluster.find((engine) => engine.Name === "hthor" && !engine.QueriesOnly);
+            if (!defaultEngine) {
+              defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
+            }
+        }
 
         // if default cluster is not found, return error
         if (!defaultEngine) throw new CustomError("Default engine not found", 400);
 
         // Execute ECL code to get timezone offset
+        logger.verbose("Adding new cluster: Executing ECL code to get timezone offset");
         const eclCode = "IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);"
         // Create timezone offset in default engine
         const wus = new WorkunitsService({baseUrl,userID,password});
