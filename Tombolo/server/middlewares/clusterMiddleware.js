@@ -21,6 +21,15 @@ const validateAddClusterInputs = [
     .optional({ nullable: true })
     .isObject()
     .withMessage("metaData must be an object"),
+  body("createdBy")
+    .isObject()
+    .withMessage("createdBy must be an object")
+    .custom((createdBy) => {
+      if (!createdBy.name || !createdBy.email) {
+        throw new Error("createdBy must have name and email");
+      }
+      return true;
+    }),
   (req, res, next) => {
     const errors = validationResult(req).array();
     const errorString = errors.map((e) => e.msg).join(", ");
@@ -62,12 +71,21 @@ const validateUpdateClusterInputs = [
     .withMessage("Emails must be an array")
     .custom((emails) => emails.every((email) => typeof email === "string"))
     .withMessage("All emails must be strings"),
+  body("updatedBy")
+    .isObject()
+    .withMessage("updatedBy must be an object")
+    .custom((createdBy) => {
+      if (!createdBy.name || !createdBy.email) {
+        throw new Error("Updated by must have name and email");
+      }
+      return true;
+    }),
   (req, res, next) => {
-     const errors = validationResult(req).array();
-     const errorString = errors.map((e) => e.msg).join(", ");
-     if (errors.length > 0) {
-       return res.status(400).json({ success: false, message: errorString });
-     }
+    const errors = validationResult(req).array();
+    const errorString = errors.map((e) => e.msg).join(", ");
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, message: errorString });
+    }
     next();
   },
 ]; 

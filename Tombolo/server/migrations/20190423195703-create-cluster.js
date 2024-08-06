@@ -56,6 +56,14 @@ module.exports = {
         type: Sequelize.JSON,
         defaultValue: {},
       },
+      createdBy: {
+        type: Sequelize.JSON,
+        allowNull: false,
+      },
+      updatedBy:{
+        type: Sequelize.JSON,
+        allowNull: true,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

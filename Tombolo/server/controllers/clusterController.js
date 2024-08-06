@@ -14,7 +14,7 @@ const Cluster = models.cluster;
 // Add a cluster
 const addCluster = async (req, res) => {
     try {
-        const { name: clusterName, username: userID, password, adminEmails, metaData = {} } = req.body;
+        const { name: clusterName, username: userID, password, adminEmails, metaData = {}, createdBy, updatedBy } = req.body;
         // Make sure cluster is whitelisted
         const cluster = clusters.find((c) => c.name === clusterName);
         if (!cluster) throw new CustomError("Cluster not whitelisted", 400);
@@ -83,6 +83,8 @@ const addCluster = async (req, res) => {
           username: userID,
           timezone_offset: offSetInMinutes,
           adminEmails,
+          createdBy,
+          updatedBy,
           metaData,
         };
 
@@ -105,7 +107,10 @@ const addCluster = async (req, res) => {
 const getClusters = async (req, res) => {
     try {
         // Get clusters ASC by name 
-        const clusters = await Cluster.findAll({ order: [["name", "ASC"]] });
+        const clusters = await Cluster.findAll({
+          attributes: { exclude: ["hash"] },
+          order: [["name", "ASC"]],
+        });
         res.status(200).json({ success: true, data: clusters });
     } catch (err) {
         logger.error(`Get clusters: ${err.message}`);
@@ -117,7 +122,10 @@ const getClusters = async (req, res) => {
 const getCluster = async (req, res) => {
     try {
         // Get one cluster by id
-        const cluster = await Cluster.findOne({ where: { id: req.params.id } });
+        const cluster = await Cluster.findOne({
+          where: { id: req.params.id },
+          attributes: { exclude: ["hash"] },
+        });
         if (!cluster) throw new CustomError("Cluster not found", 404);
         res.status(200).json({ success: true, data: cluster });
     } catch (err) {
@@ -143,16 +151,14 @@ const deleteCluster = async (req, res) => {
 const updateCluster = async (req, res) => {
    // Only username, password, adminEmails can be updated. only update that if it is present in the request body
     try {
-        const { username, password, adminEmails } = req.body;
+        const { username, password, adminEmails, updatedBy } = req.body;
         const cluster = await Cluster.findOne({ where: { id: req.params.id } });
-        const existingMetaData = {...cluster.metaData};
         if (!cluster) throw new CustomError("Cluster not found", 404);
         if (username) cluster.username = username;
         if (password) cluster.hash = encryptString(password);
-        if (adminEmails){
-          existingMetaData.adminEmails = adminEmails;
-          cluster.metaData = existingMetaData;
-        } 
+        if (adminEmails) cluster.adminEmails = adminEmails;
+        cluster.updatedBy = updatedBy;
+        
         await cluster.save();
         res.status(200).json({ success: true, data: cluster });
     } catch (err) {

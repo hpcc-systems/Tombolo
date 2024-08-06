@@ -59,6 +59,14 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: {},
         allowNull: true,
       },
+      createdBy: {
+        type: DataTypes.JSON,
+        allowNull: false,
+      },
+      updatedBy: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
     },
     { paranoid: true, freezeTableName: true }
   );
