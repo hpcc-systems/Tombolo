@@ -17,7 +17,7 @@ const {
   pingCluster,
 } = require("../controllers/clusterController");
 
-router.get("/ping", validateClusterPingPayload, pingCluster); // GET - Ping cluster 
+router.post("/ping", validateClusterPingPayload, pingCluster); // GET - Ping cluster 
 router.get("/whiteList", getClusterWhiteList); // GET - cluster white list
 router.post("/", validateAddClusterInputs, addCluster); // CREATE - one cluster
 router.get("/", getClusters); // GET - all clusters
