@@ -4,7 +4,7 @@
 
 ## Installation Guide
 
-#### Local Environment (Without Docker)
+#### Local Environment (Without Docker) 
 
 1. Clone the repository
 2. Create `.env` file in the root.
