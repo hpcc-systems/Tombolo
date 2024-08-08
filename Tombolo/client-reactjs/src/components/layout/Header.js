@@ -1,5 +1,5 @@
-import { AppstoreOutlined, DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Form, Input, message, Modal, notification, Space, Tooltip } from 'antd';
+import { AppstoreOutlined, DownOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Form, Input, message, Modal, Space, Tooltip } from 'antd';
 import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -123,8 +123,6 @@ class AppHeader extends Component {
             this.setState({ applications });
             //this.handleRef();
             this.debouncedHandleRef();
-          } else {
-            this.openHelpNotification();
           }
         })
         .catch((error) => {
@@ -242,26 +240,7 @@ class AppHeader extends Component {
     }
   }
 
-  openHelpNotification = () => {
-    const key = `open${Date.now()}`;
-    notification.open({
-      message: 'Hello',
-      description:
-        'Welcome ' +
-        this.props.user.firstName +
-        ' ' +
-        this.props.user.lastName +
-        '. Please make sure you check out the User Guide under Help option.',
-      key,
-      onClose: this.close(),
-      icon: <QuestionCircleOutlined />,
-      top: 70,
-    });
-  };
-
-  close = () => {
-    console.log('Notification was closed. Either the close button was clicked or duration time elapsed.');
-  };
+  close = () => {};
 
   search(value) {
     this.props.history.push('/report/' + value);

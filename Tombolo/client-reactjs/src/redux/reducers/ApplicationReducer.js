@@ -2,6 +2,7 @@ import { Constants } from '../../components/common/Constants';
 
 const initialState = {
   application: {},
+  noApplication: { firstTourShown: false, addButtonTourShown: false, noApplication: false },
   newApplication: '',
   updatedApplication: '',
   deletedApplicationId: '',
@@ -44,6 +45,22 @@ export function applicationReducer(state = initialState, action) {
         application: currentApplication,
         deletedApplicationId: action.applicationId,
       };
+    case Constants.NO_APPLICATION_FOUND:
+      return {
+        ...state,
+        noApplication: action.noApplication,
+      };
+
+    case Constants.APPLICATION_LEFT_TOUR_SHOWN:
+      return {
+        ...state,
+        noApplication: { ...state.noApplication, firstTourShown: true },
+      };
+    case Constants.APPLICATION_ADD_BUTTON_TOUR_SHOWN:
+      return {
+        ...state,
+        noApplication: { ...state.noApplication, addButtonTourShown: true },
+      };
     case Constants.CLUSTERS_RETRIEVED:
       return {
         ...state,
@@ -84,6 +101,7 @@ export function applicationReducer(state = initialState, action) {
         ...state,
         integrations: action.integrations,
       };
+
     default:
       return state;
   }

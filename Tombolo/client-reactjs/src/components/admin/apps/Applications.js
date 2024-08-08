@@ -7,7 +7,7 @@ import {
   ShareAltOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Button, Divider, notification, Popconfirm, Table, Tooltip } from 'antd';
+import { Button, Divider, notification, Popconfirm, Table, Tooltip, Tour } from 'antd';
 import download from 'downloadjs';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -32,7 +32,9 @@ class Applications extends Component {
     showAddApplicationModal: false,
     isCreatingNewApp: false,
     openShareAppDialog: false,
+    showTour: false,
     submitted: false,
+    appAddButtonRef: React.createRef(),
   };
 
   componentDidMount() {
@@ -66,6 +68,12 @@ class Applications extends Component {
       })
       .then((data) => {
         this.setApplications(data);
+
+        // SHOW TOUR IF NO APPLICATIONS
+        if (!this.props.noApplication.addButtonTourShown && data.length === 0) {
+          this.setState({ showTour: true });
+          this.props.dispatch(applicationActions.updateApplicationAddButtonTourShown(true));
+        }
       })
       .catch((error) => {
         console.log(error);
@@ -95,11 +103,10 @@ class Applications extends Component {
         notification.open({
           message: 'Application Removed',
           description: 'The application has been removed.',
-          onClick: () => {
-            console.log('Closed!');
-          },
+          onClick: () => {},
         });
         this.getApplications();
+
         this.props.dispatch(applicationActions.applicationDeleted(app_id));
       })
       .catch((error) => {
@@ -175,8 +182,22 @@ class Applications extends Component {
     if (record.visibility !== 'Public' && record.creator === this.props.user.username) return true;
   };
 
+  handleTourClose = () => {
+    this.setState({ showTour: false });
+  };
+
   //JSX
   render() {
+    const steps = [
+      {
+        title: 'Add Application',
+        description:
+          'Click here to add an application. Once you add an application, you will be able to connect to an hpcc systems cluster and unlock the rest of the application.',
+        placement: 'bottom',
+        arrow: true,
+        target: () => this.state.appAddButtonRef?.current,
+      },
+    ];
     const applicationColumns = [
       {
         width: '2%',
@@ -271,12 +292,13 @@ class Applications extends Component {
         <BreadCrumbs
           extraContent={
             <Tooltip placement="bottom" title={'Click to add a new Application'}>
-              <Button type="primary" onClick={() => this.handleAddApplication()}>
+              <Button type="primary" ref={this.state.appAddButtonRef} onClick={() => this.handleAddApplication()}>
                 {<Text text="Add Application" />}
               </Button>
             </Tooltip>
           }
         />
+        <Tour steps={steps} open={this.state.showTour} onClose={this.handleTourClose}></Tour>
 
         <div style={{ padding: '15px' }}>
           <Table
@@ -316,7 +338,8 @@ class Applications extends Component {
 
 function mapStateToProps(state) {
   const { user } = state.authenticationReducer;
-  return { user };
+  const { noApplication } = state.applicationReducer;
+  return { user, noApplication };
 }
 let connectedApp = connect(mapStateToProps)(Applications);
 export default connectedApp;

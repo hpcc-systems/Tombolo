@@ -12,9 +12,9 @@ export const applicationActions = {
   getConstraints,
   updateConstraints,
   updateNoClustersFound,
-  // getIntegrations,
-  // updateIntegrations,
   getAllActiveIntegrations,
+  updateApplicationAddButtonTourShown,
+  updateApplicationLeftTourShown,
 };
 
 function applicationSelected(applicationId, applicationTitle) {
@@ -43,6 +43,14 @@ function applicationDeleted(applicationId) {
     type: Constants.APPLICATION_DELETED,
     applicationId,
   };
+}
+
+function updateApplicationLeftTourShown(shown) {
+  return { type: Constants.APPLICATION_LEFT_TOUR_SHOWN, shown };
+}
+
+function updateApplicationAddButtonTourShown(shown) {
+  return { type: Constants.APPLICATION_ADD_BUTTON_TOUR_SHOWN, shown };
 }
 
 function getClusters() {
