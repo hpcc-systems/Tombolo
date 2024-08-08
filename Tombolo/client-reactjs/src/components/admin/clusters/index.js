@@ -7,7 +7,7 @@ import ClustersTable from './ClustersTable';
 import ClusterDetailsModal from './ClusterDetailsModal';
 import AddClusterModal from './AddClusterModal';
 import EditClusterModal from './EditClusterModal';
-import { getAllClusters, getClusterWhiteList, getInstanceName } from './clusterUtils';
+import { getAllClusters, getClusterWhiteList, getConfigurationDetails } from './clusterUtils';
 
 function Clusters() {
   // States
@@ -44,7 +44,7 @@ function Clusters() {
     // Get tombolo instance name
     (async () => {
       try {
-        const { instanceName } = await getInstanceName();
+        const { instanceName } = await getConfigurationDetails();
         setTombolo_instance_name(instanceName);
       } catch (e) {
         message.error('Failed to fetch instance name');
