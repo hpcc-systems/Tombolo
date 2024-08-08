@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message } from 'antd';
+import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message, Alert, Typography } from 'antd';
 import { isEmail } from 'validator';
 const { useSelector } = require('react-redux');
 
@@ -7,6 +7,7 @@ import { pingCluster, addCluster } from './clusterUtils';
 
 // Constants
 const { Option } = Select;
+const { Text } = Typography;
 
 function AddClusterModal({
   displayAddClusterModal,
@@ -14,6 +15,7 @@ function AddClusterModal({
   clusterWhiteList,
   clusters,
   setClusters,
+  tombolo_instance_name,
 }) {
   // Hooks
   const [form] = Form.useForm();
@@ -33,6 +35,7 @@ function AddClusterModal({
   const handleModalCancel = () => {
     form.resetFields();
     setRequireCredentials(false);
+    setClusterReachable(false);
     setDisplayAddClusterModal(false);
   };
 
@@ -215,30 +218,46 @@ function AddClusterModal({
             </Form.Item>
 
             {requireCredentials && (
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label="Username"
-                    name="username"
-                    required
-                    rules={[{ required: true, message: 'Please enter a username' }]}>
-                    <Input autoComplete="off" />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <input type="text" style={{ display: 'none' }} />
-                  <Form.Item
-                    label="Password"
-                    name="password"
-                    required
-                    rules={[{ required: true, message: 'Please enter a password' }]}>
-                    <Input.Password autoComplete="new-password" />
-                  </Form.Item>
-                </Col>
-              </Row>
+              <>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label="Username"
+                      name="username"
+                      required
+                      rules={[{ required: true, message: 'Please enter a username' }]}>
+                      <Input autoComplete="off" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <input type="text" style={{ display: 'none' }} />
+                    <Form.Item
+                      label="Password"
+                      name="password"
+                      required
+                      rules={[{ required: true, message: 'Please enter a password' }]}>
+                      <Input.Password autoComplete="new-password" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </>
             )}
           </Form>
         </Spin>
+        {!requireCredentials && clusterReachable && (
+          <Alert
+            size="small"
+            banner
+            type="info"
+            style={{ padding: '5px 15px' }}
+            message={
+              <span>
+                Tombolo will execute jobs in the HPCC cluster using the username{' '}
+                <Text strong>{tombolo_instance_name}</Text>
+              </span>
+            }
+          />
+        )}
       </Card>
     </Modal>
   );

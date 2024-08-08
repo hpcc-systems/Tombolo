@@ -17,6 +17,7 @@ function Clusters() {
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [displayAddClusterModal, setDisplayAddClusterModal] = useState(false);
   const [displayEditClusterModal, setDisplayEditClusterModal] = useState(false);
+  const [tombolo_instance_name, setTombolo_instance_name] = useState(null);
 
   // Effects
   useEffect(() => {
@@ -39,6 +40,9 @@ function Clusters() {
         message.error('Failed to fetch cluster white list');
       }
     })();
+
+    //TODO: Get tombolo instance name
+    setTombolo_instance_name('Tombolo');
   }, []);
   return (
     <>
@@ -62,6 +66,7 @@ function Clusters() {
         clusters={clusters}
         setClusters={setClusters}
         clusterWhiteList={clusterWhiteList}
+        tombolo_instance_name={tombolo_instance_name}
       />
       {displayEditClusterModal && (
         <EditClusterModal
