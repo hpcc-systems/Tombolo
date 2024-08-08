@@ -101,4 +101,21 @@ export const updateCluster = async ({id, clusterInfo}) => {
     return responseJson.data;
 };
 
+// Get instance name /api/config/instanceName
+export const getInstanceName = async () => {
+    const payload = {
+        method: 'GET',
+        headers: authHeader(),
+    };
+
+    const response = await fetch(`/api/config/instanceName`, payload);
+
+    if(!response.ok) {
+        throw new Error('Failed to fetch instance name');
+    }
+
+    const responseJson = await response.json();
+    return responseJson.data; // {instanceName: 'Tombolo'}
+};
+
 

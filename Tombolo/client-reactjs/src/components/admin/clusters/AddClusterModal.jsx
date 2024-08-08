@@ -244,7 +244,7 @@ function AddClusterModal({
             )}
           </Form>
         </Spin>
-        {!requireCredentials && clusterReachable && (
+        {!requireCredentials && clusterReachable && tombolo_instance_name && (
           <Alert
             size="small"
             banner

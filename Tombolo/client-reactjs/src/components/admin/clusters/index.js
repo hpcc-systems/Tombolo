@@ -7,7 +7,7 @@ import ClustersTable from './ClustersTable';
 import ClusterDetailsModal from './ClusterDetailsModal';
 import AddClusterModal from './AddClusterModal';
 import EditClusterModal from './EditClusterModal';
-import { getAllClusters, getClusterWhiteList } from './clusterUtils';
+import { getAllClusters, getClusterWhiteList, getInstanceName } from './clusterUtils';
 
 function Clusters() {
   // States
@@ -41,8 +41,15 @@ function Clusters() {
       }
     })();
 
-    //TODO: Get tombolo instance name
-    setTombolo_instance_name('Tombolo');
+    // Get tombolo instance name
+    (async () => {
+      try {
+        const { instanceName } = await getInstanceName();
+        setTombolo_instance_name(instanceName);
+      } catch (e) {
+        message.error('Failed to fetch instance name');
+      }
+    })();
   }, []);
   return (
     <>
