@@ -56,6 +56,8 @@ const {
   startJobPunctualityMonitoring,
 } = require("../jobSchedularMethods/jobMonitoring.js");
 
+const {checkClusterReachability} = require("../jobSchedularMethods/checkClusterReachability.js");
+
 class JobScheduler {
   constructor() {
     this.bree = new Bree({
@@ -130,6 +132,7 @@ class JobScheduler {
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
+      await this.checkClusterReachability();
     })();
   }
 
@@ -355,6 +358,10 @@ class JobScheduler {
 
   createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
+  }
+
+  checkClusterReachability(){
+    return checkClusterReachability.call(this);
   }
 }
 

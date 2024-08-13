@@ -10,7 +10,7 @@ module.exports = {
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       thor_host: {
         type: Sequelize.STRING,
@@ -36,21 +36,33 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true,
       },
+      defaultEngine:{
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
       timezone_offset: {
         type: Sequelize.INTEGER,
-        allowNull: true, // TODO Must be changed to false once we are able to get default engine for containerized cluster
-      },
-      defaultEngine: {
-        type: Sequelize.JSON,
-        defaultValue: "hthor", // TODO Must be allowNull - false &&& no default value  once we are able to get default engine for containerized cluster
+        allowNull: false
       },
       accountMetaData: {
         type: Sequelize.JSON,
         defaultValue: {},
       },
+      adminEmails: {
+        type: Sequelize.JSON,
+        allowNull: false,
+      },
       metaData: {
         type: Sequelize.JSON,
         defaultValue: {},
+      },
+      createdBy: {
+        type: Sequelize.JSON,
+        allowNull: false,
+      },
+      updatedBy:{
+        type: Sequelize.JSON,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
@@ -66,6 +78,7 @@ module.exports = {
       },
     });
   },
+
   down: (queryInterface, Sequelize) => {
     return queryInterface.dropTable("cluster");
   },
