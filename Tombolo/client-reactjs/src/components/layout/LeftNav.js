@@ -93,7 +93,7 @@ class LeftNav extends Component {
     const items = [
       getItem(
         <>
-          {disabled && clusterDisabled && clusterDisabled ? (
+          {disabled || clusterDisabled ? (
             <>
               <i className="fa fa-fw fa-cubes" />
               <span style={{ marginLeft: '1rem' }}>Assets</span>{' '}
@@ -113,7 +113,7 @@ class LeftNav extends Component {
       ),
       getItem(
         <>
-          {disabled && clusterDisabled ? (
+          {disabled || clusterDisabled ? (
             <>
               <i className="fa fa-fw fa-random" />
               <span style={{ marginLeft: '1rem' }}>Definitions</span>
@@ -133,7 +133,7 @@ class LeftNav extends Component {
       ),
       getItem(
         <>
-          {disabled && clusterDisabled ? (
+          {disabled || clusterDisabled ? (
             <>
               <i className="fa fa-fw fa-microchip" />
               <span style={{ marginLeft: '1rem' }}>Job Execution</span>
@@ -287,14 +287,14 @@ class LeftNav extends Component {
       getItem(
         <>
           {disabled ? (
-            <>
+            <span ref={this.props.clusterLinkRef}>
               <ClusterOutlined />
               <span style={{ marginLeft: '1rem' }}>Clusters</span>
-            </>
+            </span>
           ) : (
-            <Link ref={this.props.clusterLinkRef} style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/clusters'}>
-              <ClusterOutlined />
-              <span style={{ marginLeft: '1rem' }}>Clusters</span>
+            <Link ref={this.props.clusterLinkRef} style={{ color: 'rgba(255, 255, 255, .65)' }} to={'/admin/clusters'}>
+              <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
+              <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>Clusters</span>
             </Link>
           )}
         </>,

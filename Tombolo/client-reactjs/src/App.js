@@ -83,6 +83,7 @@ class App extends React.Component {
     locale: 'en',
     message: '',
     tourOpen: false,
+    clusterTourOpen: false,
     appLinkRef: React.createRef(),
     clusterLinkRef: React.createRef(),
   };
@@ -107,11 +108,29 @@ class App extends React.Component {
         i18next.changeLanguage(localStorage.getItem('i18nextLng'));
       }
     }
+
+    //listen for clicks on the document to close tour if nav link is clicked
+    document.addEventListener('click', this.handleClick);
   }
+
+  handleClick = (e) => {
+    if (this.state.appLinkRef.current && this.state.appLinkRef.current.contains(e.target)) {
+      this.setState({ tourOpen: false });
+    }
+
+    if (this.state.clusterLinkRef.current && this.state.clusterLinkRef.current.contains(e.target)) {
+      this.setState({ clusterTourOpen: false });
+    }
+  };
 
   //function to handle tour shown close
   handleTourShownClose = () => {
     this.setState({ tourOpen: false });
+  };
+
+  //function to handle tour shown close
+  handleClusterTourShownClose = () => {
+    this.setState({ clusterTourOpen: false });
   };
 
   onCollapse = (collapsed) => {
@@ -139,9 +158,26 @@ class App extends React.Component {
     const isApplicationSet = this.props.application && this.props.application.applicationId !== '' ? true : false;
 
     //if an application doesn't exist and the tour hasn't been shown, show the tour
-    if (!this.props.application?.length && !this.props.noApplication.firstTourShown && isBackendConnected) {
-      this.setState({ tourOpen: true });
+    if (this.props.noApplication.noApplication && !this.props.noApplication.firstTourShown && isBackendConnected) {
+      //if you're not already on the application page, show the left nav tour
+      if (window.location.pathname !== '/admin/applications') {
+        this.setState({ tourOpen: true });
+      }
       this.props.dispatch(applicationActions.updateApplicationLeftTourShown(true));
+    }
+
+    //if an application exists, but a cluster doesn't, show the cluster tour
+    if (
+      this.props.application?.applicationId &&
+      this.props.noClusters.noClusters &&
+      !this.props.noClusters.firstTourShown
+    ) {
+      //if you're not already on the cluster page, show the left nav tour
+      if (window.location.pathname !== '/admin/clusters') {
+        this.setState({ clusterTourOpen: true });
+      }
+
+      this.props.dispatch(applicationActions.updateClustersLeftTourShown(true));
     }
 
     const dataFlowComp = () => {
@@ -164,7 +200,7 @@ class App extends React.Component {
       {
         title: 'Welcome to Tombolo',
         description:
-          'Welcome to Tombolo. There are a couple of final steps to get you started on your journey. We will unlock features as we move through this interactive tutorial.',
+          'There is some setup that we need to complete before being able to fully utilize Tombolo. We will unlock features as we move through this interactive tutorial.',
         target: null,
       },
       {
@@ -174,8 +210,11 @@ class App extends React.Component {
             <p>
               It looks like you have not set up an application yet. Applications are a necessary part of Tombolos basic
               functions, and we must set one up before unlocking the rest of the application. Click on the navigation
-              element to head to the application management screen and set one up. If youre interested to read more
-              about applications, head to our documentation page at{' '}
+              element to head to the application management screen and set one up.
+            </p>
+            <br />
+            <p>
+              If youre interested to read more about applications, head to our documentation page at{' '}
               <a
                 target="_blank"
                 rel="noreferrer"
@@ -191,16 +230,32 @@ class App extends React.Component {
       },
     ];
 
-    // const clusterSteps = [
-    //   {
-    //     title: 'Clusters',
-    //     description:
-    //       'Now that we have an application set up, we can connect to an hpcc systems cluster to unlock the rest of the application. Click here to head to the cluster management screen and set one up.',
-    //     placement: 'right',
-    //     arrrow: true,
-    //     target: () => this.state.clusterLinkRef?.current,
-    //   },
-    // ];
+    const clusterSteps = [
+      {
+        title: 'Clusters',
+        description: (
+          <>
+            <p>
+              Now that we have an application set up, we can connect to an hpcc systems cluster to unlock the rest of
+              the application. Click the navigation element to head to the cluster management screen and set one up.
+            </p>
+            <br />
+            <p>
+              If youre interested to read more about Clusters, head to our documentation page at{' '}
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href="https://hpcc-systems.github.io/Tombolo/docs/Quick-Start/cluster">
+                https://hpcc-systems.github.io/Tombolo/docs/Quick-Start/cluster
+              </a>
+            </p>
+          </>
+        ),
+        placement: 'right',
+        arrrow: true,
+        target: () => this.state.clusterLinkRef?.current,
+      },
+    ];
 
     return (
       <ConfigProvider locale={this.locale(this.state.locale)}>
@@ -259,6 +314,11 @@ class App extends React.Component {
                     />
                   </Header>
                   <Tour steps={steps} open={this.state.tourOpen} onClose={this.handleTourShownClose} />
+                  <Tour
+                    steps={clusterSteps}
+                    open={this.state.clusterTourOpen}
+                    onClose={this.handleClusterTourShownClose}
+                  />
                   <Layout>
                     <LeftNav
                       BG_COLOR={BG_COLOR}
@@ -358,10 +418,10 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state) {
-  const { application, clusters, noApplication } = state.applicationReducer;
+  const { application, clusters, noApplication, noClusters } = state.applicationReducer;
   const backendStatus = state.backendReducer;
   const { user } = state.authenticationReducer;
-  return { application, clusters, user, backendStatus, noApplication };
+  return { application, clusters, user, backendStatus, noApplication, noClusters };
 }
 
 const connectedApp = connect(mapStateToProps)(App);

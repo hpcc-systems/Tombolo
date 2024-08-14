@@ -11,10 +11,13 @@ export const applicationActions = {
   getLicenses,
   getConstraints,
   updateConstraints,
-  updateNoClustersFound,
   getAllActiveIntegrations,
   updateApplicationAddButtonTourShown,
   updateApplicationLeftTourShown,
+  updateNoApplicationFound,
+  updateNoClustersFound,
+  updateClustersAddButtonTourShown,
+  updateClustersLeftTourShown,
 };
 
 function applicationSelected(applicationId, applicationTitle) {
@@ -45,6 +48,10 @@ function applicationDeleted(applicationId) {
   };
 }
 
+function updateNoApplicationFound(noApplication) {
+  return { type: Constants.NO_APPLICATION_FOUND, noApplication };
+}
+
 function updateApplicationLeftTourShown(shown) {
   return { type: Constants.APPLICATION_LEFT_TOUR_SHOWN, shown };
 }
@@ -59,13 +66,13 @@ function getClusters() {
       .then((response) => (response.ok ? response.json() : handleError(response)))
       .then((clusters) => {
         //if there are no clusters, set this to null for later checks
+
         if (clusters.length === 0) {
-          dispatch({ type: Constants.NO_CLUSTERS_FOUND, noClusters: { redirect: false, noClusters: true } });
-        } else {
-          dispatch({ type: Constants.NO_CLUSTERS_FOUND, noClusters: { redirect: false, noClusters: false } });
+          dispatch({ type: Constants.NO_CLUSTERS_FOUND, noClusters: true });
+          return;
         }
 
-        dispatch({ type: Constants.CLUSTERS_RETRIEVED, clusters });
+        dispatch({ type: Constants.CLUSTERS_FOUND, clusters });
       })
       .catch(console.log);
   };
@@ -73,6 +80,14 @@ function getClusters() {
 
 function updateNoClustersFound(noClusters) {
   return { type: Constants.NO_CLUSTERS_FOUND, noClusters };
+}
+
+function updateClustersLeftTourShown(shown) {
+  return { type: Constants.CLUSTERS_LEFT_TOUR_SHOWN, shown };
+}
+
+function updateClustersAddButtonTourShown(shown) {
+  return { type: Constants.CLUSTERS_ADD_BUTTON_TOUR_SHOWN, shown };
 }
 
 function getConsumers() {

@@ -116,7 +116,12 @@ class Applications extends Component {
 
   // ADD OR CREATE NEW APPLICATION
   handleAddApplication = () => {
-    this.setState({ showAddApplicationModal: true, selectedApplication: null, isCreatingNewApp: true });
+    this.setState({
+      showAddApplicationModal: true,
+      selectedApplication: null,
+      isCreatingNewApp: true,
+      showTour: false,
+    });
   };
 
   // CLOSE ADD APPLICATION MODAL
@@ -191,8 +196,7 @@ class Applications extends Component {
     const steps = [
       {
         title: 'Add Application',
-        description:
-          'Click here to add an application. Once you add an application, you will be able to connect to an hpcc systems cluster and unlock the rest of the application.',
+        description: 'Click here to add an application. After adding an application, we can move on to the next step. ',
         placement: 'bottom',
         arrow: true,
         target: () => this.state.appAddButtonRef?.current,

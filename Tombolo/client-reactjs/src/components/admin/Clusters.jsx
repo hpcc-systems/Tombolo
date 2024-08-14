@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, message, Tooltip, Popconfirm, Divider, Select } from 'antd';
+import React, { useEffect, useState, useRef } from 'react';
+import { Table, Button, Modal, Form, Input, message, Tooltip, Popconfirm, Divider, Select, Tour } from 'antd';
 import {
   DeleteOutlined,
   EditOutlined,
@@ -19,7 +19,9 @@ import ObjectKeyValue from '../common/ObjectKeyValue.jsx';
 
 const Option = Select.Option;
 
-function Clusters() {
+const Clusters = () => {
+  const { applicationReducer } = useSelector((store) => store);
+
   const [clusterWhiteList, setClusterWhiteList] = useState([]); // List of clusters from cluster server/whitelist file
   const clusters = useSelector((state) => state.applicationReducer.clusters); // List of cluster from redux-store. Clusters that are already added to DB
   const [selectedCluster, setSelectedCluster] = useState(null);
@@ -27,6 +29,10 @@ function Clusters() {
   const [clusterDetailModalVisible, setClusterDetailModalVisible] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [details, setDetails] = useState();
+  //tour management
+  const addClusterButtonRef = useRef(null);
+  const [tourOpen, setTourOpen] = useState(false);
+
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
@@ -45,6 +51,18 @@ function Clusters() {
     getClusterWhiteList();
   }, []);
 
+  useEffect(() => {
+    //show tour if needed
+    if (
+      applicationReducer.noClusters.noClusters &&
+      applicationReducer.noClusters.firstTourShown &&
+      !applicationReducer.noClusters.addButtonTourShown
+    ) {
+      setTourOpen(true);
+      dispatch(applicationActions.updateClustersAddButtonTourShown(true));
+    }
+  }, [applicationReducer]);
+
   //Get clusters whitelist function
   const getClusterWhiteList = async () => {
     try {
@@ -61,6 +79,7 @@ function Clusters() {
   // When add btn is clicked
   const handleAddClusterBtnClick = () => {
     setAddClusterModalVisible(true);
+    setTourOpen(false);
   };
 
   // when cancel btn is clicked on the modal
@@ -94,6 +113,7 @@ function Clusters() {
       message.success('Successfully added cluster');
       setAddClusterModalVisible(false);
       dispatch(applicationActions.getClusters());
+      console.log('dispatched app actions');
     } catch (err) {
       message.error(err.message);
     } finally {
@@ -237,15 +257,29 @@ function Clusters() {
     },
   ];
 
+  //Tour steps
+  const steps = [
+    {
+      title: 'Add Cluster',
+      description:
+        'Click here to add a Cluster from the whitelist file. Once you add a Cluster you will unlock the rest of the application and be on your way to managing and monitoring your data. ',
+      placement: 'bottom',
+      arrow: true,
+      target: () => addClusterButtonRef.current,
+    },
+  ];
+
   return (
     <>
       <Button
         onClick={handleAddClusterBtnClick}
         type="primary"
+        ref={addClusterButtonRef}
         style={{ margin: '5px', display: 'block', marginLeft: 'auto' }}>
         {<Text text="Add Cluster" />}
       </Button>
 
+      <Tour open={tourOpen} steps={steps} onClose={() => setTourOpen(false)}></Tour>
       <Table
         columns={clusterTableColumns}
         rowKey={(record) => record.id}
@@ -333,6 +367,6 @@ function Clusters() {
       <InfoDrawer open={open} onClose={onClose} content="cluster"></InfoDrawer>
     </>
   );
-}
+};
 
 export default Clusters;
