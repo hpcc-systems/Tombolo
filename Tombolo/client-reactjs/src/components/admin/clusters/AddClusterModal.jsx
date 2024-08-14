@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message, Alert, Typography } from 'antd';
 import { isEmail } from 'validator';
 const { useSelector } = require('react-redux');
@@ -30,6 +30,19 @@ function AddClusterModal({
   const [pingingCluster, setPingingCluster] = useState(false);
   const [clusterReachable, setClusterReachable] = useState(false);
   const [addingCluster, setAddingCluster] = useState(false);
+  const [abortController, setAbortController] = useState(null);
+
+  // Effects
+  useEffect(() => {
+    // Create an abort controller
+    const controller = new AbortController();
+    setAbortController(controller);
+
+    return () => {
+      // Clean up AbortController when modal is closed
+      controller.abort();
+    };
+  }, []);
 
   // Handle modal cancel
   const handleModalCancel = () => {
@@ -37,6 +50,7 @@ function AddClusterModal({
     setRequireCredentials(false);
     setClusterReachable(false);
     setDisplayAddClusterModal(false);
+    setPingingCluster(false);
   };
 
   // Available clusters (whitelisted minus already saved)
@@ -59,7 +73,7 @@ function AddClusterModal({
       ]);
 
       const clusterInfo = form.getFieldsValue(['name', 'username', 'password']);
-      const response = await pingCluster(clusterInfo);
+      const response = await pingCluster({ clusterInfo, abortController });
 
       // Based on response set if cluster requires credentials
       if (response === 200) {
@@ -101,7 +115,7 @@ function AddClusterModal({
     if (requireCredentials) {
       try {
         const clusterInfo = form.getFieldsValue(['name', 'username', 'password']);
-        const response = await pingCluster(clusterInfo);
+        const response = await pingCluster({ clusterInfo, abortController });
 
         // Invalid credentials provided
         if (response === 401) {
@@ -124,6 +138,7 @@ function AddClusterModal({
             errors: ['Unable to establish connection with the cluster'],
           },
         ]);
+        return;
       }
     }
 
@@ -156,7 +171,6 @@ function AddClusterModal({
       onCancel={handleModalCancel}
       maskClosable={false}
       width={800}
-      loading={true}
       closable={false}
       footer={[
         <Button key="cancel" onClick={handleModalCancel} type="primary" ghost>
@@ -170,6 +184,11 @@ function AddClusterModal({
           loading={addingCluster}>
           {`Sav${addingCluster ? 'ing' : 'e'}`}
         </Button>,
+        addingCluster && (
+          <div key="alert" style={{ padding: '5px', color: 'var(--dark)' }}>
+            Please stand by. This may take a moment.
+          </div>
+        ),
       ]}>
       <Card size="small">
         <Spin tip={`Pinging Cluster .. `} spinning={pingingCluster}>
@@ -244,7 +263,7 @@ function AddClusterModal({
             )}
           </Form>
         </Spin>
-        {!requireCredentials && clusterReachable && tombolo_instance_name && (
+        {!requireCredentials && clusterReachable && tombolo_instance_name && !addingCluster && (
           <Alert
             size="small"
             banner

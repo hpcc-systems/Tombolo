@@ -49,11 +49,12 @@ export const getClusterWhiteList = async () => {
 };
 
 //Ping a cluster
-export const pingCluster = async (clusterInfo) => {
+export const pingCluster = async ({clusterInfo, abortController}) => {
     const payload = {
         method: 'POST',
         headers: authHeader(),
         body: JSON.stringify(clusterInfo),
+        signal: abortController.signal,
     };
     
     const response = await fetch(`/api/cluster/ping`, payload);

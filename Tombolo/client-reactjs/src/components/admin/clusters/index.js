@@ -67,14 +67,17 @@ function Clusters() {
         selectedCluster={selectedCluster}
         setSelectedCluster={setSelectedCluster}
       />
-      <AddClusterModal
-        displayAddClusterModal={displayAddClusterModal}
-        setDisplayAddClusterModal={setDisplayAddClusterModal}
-        clusters={clusters}
-        setClusters={setClusters}
-        clusterWhiteList={clusterWhiteList}
-        tombolo_instance_name={tombolo_instance_name}
-      />
+      {displayAddClusterModal && (
+        <AddClusterModal
+          displayAddClusterModal={displayAddClusterModal}
+          setDisplayAddClusterModal={setDisplayAddClusterModal}
+          clusters={clusters}
+          setClusters={setClusters}
+          clusterWhiteList={clusterWhiteList}
+          tombolo_instance_name={tombolo_instance_name}
+        />
+      )}
+
       {displayEditClusterModal && (
         <EditClusterModal
           displayEditClusterModal={displayEditClusterModal}
