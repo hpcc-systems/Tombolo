@@ -16,8 +16,20 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
 
   // States
   const [updateCredentials, setUpdateCredentials] = useState(false);
+  const [abortController, setAbortController] = useState(null);
 
   // Effects
+  useEffect(() => {
+    // Create an abort controller
+    const controller = new AbortController();
+    setAbortController(controller);
+
+    return () => {
+      // Clean up AbortController when modal is closed
+      controller.abort();
+    };
+  }, []);
+
   useEffect(() => {
     if (!selectedCluster) {
       return;
@@ -56,7 +68,7 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
       try {
         const clusterInfo = form.getFieldsValue(['username', 'password']);
         clusterInfo.name = selectedCluster.name;
-        const response = await pingCluster(clusterInfo);
+        const response = await pingCluster({ clusterInfo, abortController });
 
         // Invalid credentials provided
         if (response === 401) {
@@ -107,7 +119,9 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
       open={displayEditClusterModal}
       destroyOnClose={true}
       width={800}
-      closable={false}
+      onCancel={handleModalCancel}
+      closable={true}
+      title="Edit Cluster"
       footer={[
         <Button type="primary" ghost key="cancel" onClick={handleModalCancel}>
           Cancel

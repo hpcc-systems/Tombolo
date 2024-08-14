@@ -61,12 +61,16 @@ function Clusters() {
         setSelectedCluster={setSelectedCluster}
         setDisplayEditClusterModal={setDisplayEditClusterModal}
       />
-      <ClusterDetailsModal
-        displayClusterDetailsModal={displayClusterDetailsModal}
-        setDisplayClusterDetailsModal={setDisplayClusterDetailsModal}
-        selectedCluster={selectedCluster}
-        setSelectedCluster={setSelectedCluster}
-      />
+
+      {displayClusterDetailsModal && (
+        <ClusterDetailsModal
+          displayClusterDetailsModal={displayClusterDetailsModal}
+          setDisplayClusterDetailsModal={setDisplayClusterDetailsModal}
+          selectedCluster={selectedCluster}
+          setSelectedCluster={setSelectedCluster}
+        />
+      )}
+
       {displayAddClusterModal && (
         <AddClusterModal
           displayAddClusterModal={displayAddClusterModal}

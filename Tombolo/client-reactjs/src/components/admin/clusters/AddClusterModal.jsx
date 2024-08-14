@@ -152,7 +152,7 @@ function AddClusterModal({
       payload.createdBy = creator;
 
       // Make API request to add cluster
-      const response = await addCluster(payload);
+      const response = await addCluster({ clusterInfo: payload, abortController });
       setClusters([...clusters, response]);
       setRequireCredentials(false);
       message.success('Cluster added successfully');
@@ -170,8 +170,9 @@ function AddClusterModal({
       open={displayAddClusterModal}
       onCancel={handleModalCancel}
       maskClosable={false}
+      title="Add Cluster"
       width={800}
-      closable={false}
+      closable={true}
       footer={[
         <Button key="cancel" onClick={handleModalCancel} type="primary" ghost>
           Cancel
