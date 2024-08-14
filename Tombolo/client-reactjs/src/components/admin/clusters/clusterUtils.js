@@ -49,11 +49,12 @@ export const getClusterWhiteList = async () => {
 };
 
 //Ping a cluster
-export const pingCluster = async (clusterInfo) => {
+export const pingCluster = async ({clusterInfo, abortController}) => {
     const payload = {
         method: 'POST',
         headers: authHeader(),
         body: JSON.stringify(clusterInfo),
+        signal: abortController.signal,
     };
     
     const response = await fetch(`/api/cluster/ping`, payload);
@@ -66,21 +67,22 @@ export const pingCluster = async (clusterInfo) => {
 };
 
 //Add cluster
-export const addCluster = async (clusterInfo) => {
-    const payload = {
-        method: 'POST',
-        headers: authHeader(),
-        body: JSON.stringify(clusterInfo),
-    };
+export const addCluster = async ({ clusterInfo, abortController }) => {
+  const payload = {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify(clusterInfo),
+    signal: abortController.signal,
+  };
 
-    const response = await fetch(`/api/cluster`, payload);
+  const response = await fetch(`/api/cluster`, payload);
 
-    if(!response.ok) {
-        throw new Error('Failed to add cluster');
-    }
+  if (!response.ok) {
+    throw new Error('Failed to add cluster');
+  }
 
-    const responseJson = await response.json();
-    return responseJson.data;
+  const responseJson = await response.json();
+  return responseJson.data;
 };
 
 // update cluster
