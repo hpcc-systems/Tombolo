@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { message } from 'antd';
-
+import { useSelector, useDispatch } from 'react-redux';
+import { applicationActions } from '../../../redux/actions/Application';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import ClusterActionBtn from './ClusterActionBtn';
 import ClustersTable from './ClustersTable';
@@ -18,6 +19,12 @@ function Clusters() {
   const [displayAddClusterModal, setDisplayAddClusterModal] = useState(false);
   const [displayEditClusterModal, setDisplayEditClusterModal] = useState(false);
   const [tombolo_instance_name, setTombolo_instance_name] = useState(null);
+
+  //tour management
+  const { applicationReducer } = useSelector((store) => store);
+  const addClusterButtonRef = useRef(null);
+  const [tourOpen, setTourOpen] = useState(false);
+  const dispatch = useDispatch();
 
   // Effects
   useEffect(() => {
@@ -51,9 +58,36 @@ function Clusters() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    //show tour if needed
+    if (
+      applicationReducer.noClusters.noClusters &&
+      applicationReducer.noClusters.firstTourShown &&
+      !applicationReducer.noClusters.addButtonTourShown
+    ) {
+      setTourOpen(true);
+      dispatch(applicationActions.updateClustersAddButtonTourShown(true));
+    }
+  }, [applicationReducer]);
+
+  //when cluster state is adjusted, dispatch redux action to update clusters in redux
+  useEffect(() => {
+    dispatch(applicationActions.updateClusters(clusters));
+  }, [clusters]);
+
   return (
     <>
-      <BreadCrumbs extraContent={<ClusterActionBtn setDisplayAddClusterModal={setDisplayAddClusterModal} />} />
+      <BreadCrumbs
+        extraContent={
+          <ClusterActionBtn
+            setDisplayAddClusterModal={setDisplayAddClusterModal}
+            tourOpen={tourOpen}
+            setTourOpen={setTourOpen}
+            addClusterButtonRef={addClusterButtonRef}
+          />
+        }
+      />
       <ClustersTable
         clusters={clusters}
         setClusters={setClusters}

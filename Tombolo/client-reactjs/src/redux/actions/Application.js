@@ -18,6 +18,7 @@ export const applicationActions = {
   updateNoClustersFound,
   updateClustersAddButtonTourShown,
   updateClustersLeftTourShown,
+  updateClusters,
 };
 
 function applicationSelected(applicationId, applicationTitle) {
@@ -76,6 +77,10 @@ function getClusters() {
       })
       .catch(console.log);
   };
+}
+
+function updateClusters(clusters) {
+  return { type: Constants.CLUSTERS_FOUND, clusters };
 }
 
 function updateNoClustersFound(noClusters) {

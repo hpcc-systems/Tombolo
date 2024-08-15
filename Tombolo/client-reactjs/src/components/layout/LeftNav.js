@@ -328,7 +328,7 @@ class LeftNav extends Component {
       ),
       getItem(
         <>
-          {disabled && clusterDisabled ? (
+          {disabled || clusterDisabled ? (
             <>
               <i className="fa fa-fw fa-github" />
               <span style={{ marginLeft: '1rem' }}>Github</span>
@@ -348,9 +348,8 @@ class LeftNav extends Component {
       ),
       getItem(
         <>
-          {disabled && clusterDisabled ? (
+          {disabled || clusterDisabled ? (
             <>
-              {' '}
               <i className="fa fa-fw fa-user-circle" />
               <span style={{ marginLeft: '1rem' }}>Collaborator</span>
             </>
@@ -380,7 +379,7 @@ class LeftNav extends Component {
       ),
       getItem(
         <>
-          {disabled && clusterDisabled ? (
+          {disabled || clusterDisabled ? (
             <>
               <ApiOutlined />
               <span style={{ marginLeft: '1rem' }}>Integrations</span>
