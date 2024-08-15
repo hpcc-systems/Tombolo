@@ -17,7 +17,6 @@ import {
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
-import Text from '../common/Text';
 
 function getItem(label, key, icon, children, type, disabled) {
   return {
@@ -37,24 +36,26 @@ class LeftNav extends Component {
     current: '1',
   };
 
-  componentDidUpdate(prevProps) {
-    const applicationId = this.props?.applicationId;
-    const prevApplicationId = prevProps?.applicationId;
-    if (applicationId !== prevApplicationId) {
-      // if current app and prev app is not same we are redirected to /appid/asset page, so we will reset menu highlight
-      this.setState({ current: '1' });
-    }
-  }
-
   componentDidMount() {
     const options = {
+      assets: '1',
       dataflow: '2',
       dataflowinstances: '3',
-      actions: '4',
-      clusters: '5',
-      github: '6',
-      consumers: '7',
-      applications: '8',
+      fileMonitoring: '4a',
+      directoryMonitoring: '4b',
+      clustermonitoring: '4c',
+      jobmonitoring: '4d',
+      superfileMonitoring: '4e',
+      orbitMonitoring: '4f',
+      notifications: '5a',
+      clusterUsage: '5b',
+      Orbit: '5c',
+      clusters: '6',
+      github: '8',
+      consumers: '9',
+      applications: '10',
+      integrations: '11',
+      msTeams: '12a',
     };
 
     // on init we check pathname if it contains options key in name, if it does => highlight that menu item
@@ -90,7 +91,7 @@ class LeftNav extends Component {
       else return '';
     };
 
-    const items = [
+    const workflowItems = [
       getItem(
         <>
           {disabled || clusterDisabled ? (
@@ -151,6 +152,9 @@ class LeftNav extends Component {
         null,
         clusterDisabled
       ),
+    ];
+
+    const monitoringItems = [
       getItem(
         <>
           <DashboardOutlined />
@@ -283,7 +287,7 @@ class LeftNav extends Component {
       ),
     ];
 
-    const settingItems = [
+    const connectionItems = [
       getItem(
         <>
           {disabled ? (
@@ -306,28 +310,6 @@ class LeftNav extends Component {
       ),
       getItem(
         <>
-          <BellOutlined />
-          <span style={{ marginLeft: '1rem' }}>Notifications</span>
-        </>,
-        '7',
-        null,
-        [
-          getItem(
-            <Link to={'/admin/notification-settings/msTeams'}>
-              <span>
-                <i className="fa fa-windows" /> MS Teams
-              </span>
-            </Link>,
-            '7a',
-            null,
-            null
-          ),
-        ],
-        null,
-        clusterDisabled
-      ),
-      getItem(
-        <>
           {disabled || clusterDisabled ? (
             <>
               <i className="fa fa-fw fa-github" />
@@ -341,26 +323,6 @@ class LeftNav extends Component {
           )}{' '}
         </>,
         '8',
-        null,
-        null,
-        null,
-        clusterDisabled
-      ),
-      getItem(
-        <>
-          {disabled || clusterDisabled ? (
-            <>
-              <i className="fa fa-fw fa-user-circle" />
-              <span style={{ marginLeft: '1rem' }}>Collaborator</span>
-            </>
-          ) : (
-            <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/consumers'}>
-              <i className="fa fa-fw fa-user-circle" />
-              <span style={{ marginLeft: '1rem' }}>Collaborator</span>
-            </Link>
-          )}
-        </>,
-        '9',
         null,
         null,
         null,
@@ -397,19 +359,44 @@ class LeftNav extends Component {
         null,
         clusterDisabled
       ),
-      //TODO: Uncomment when compliance is ready
-      // getItem(
-      //   <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/compliance'}>
-      //     {this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}
-      //     <span style={{ marginLeft: '1rem' }}>Compliance</span>
-      //   </Link>,
-      //   '12',
-      //   null
-      // ),
+      getItem(
+        <>
+          <BellOutlined />
+          <span style={{ marginLeft: '1rem' }}>Notifications</span>
+        </>,
+        '12',
+        null,
+        [
+          getItem(
+            <Link to={'/admin/notification-settings/msTeams'}>
+              <span>
+                <i className="fa fa-windows" /> MS Teams
+              </span>
+            </Link>,
+            '12a',
+            null,
+            null
+          ),
+        ],
+        null,
+        clusterDisabled
+      ),
     ];
 
     const onClick = (e) => {
       this.setState({ current: e.key });
+    };
+
+    const title = (title) => {
+      return (
+        <Typography.Title ellipsis={true} className="left-nav-title">
+          {title}
+        </Typography.Title>
+      );
+    };
+
+    const menu = (items) => {
+      return <Menu theme="dark" mode="inline" items={items} selectedKeys={[this.state.current]} onClick={onClick} />;
     };
 
     return (
@@ -430,27 +417,14 @@ class LeftNav extends Component {
           bottom: 0,
           zIndex: 100,
         }}>
-        <Menu theme="dark" mode="inline" items={items} selectedKeys={[this.state.current]} onClick={onClick} />
-
-        {canEdit && this.props.collapsed ? null : (
-          <Typography.Title ellipsis={true} className="left-nav-title">
-            {<Text text="Settings" />}
-          </Typography.Title>
-        )}
-
-        {canEdit ? (
-          <Menu theme="dark" mode="inline" items={settingItems} selectedKeys={[this.state.current]} onClick={onClick} />
-        ) : null}
-
-        {canEdit && this.props.collapsed ? null : (
-          <Typography.Title ellipsis={true} className="left-nav-title">
-            {<Text text="Admin" />}
-          </Typography.Title>
-        )}
-
-        {canEdit ? (
-          <Menu theme="dark" mode="inline" items={adminItems} selectedKeys={[this.state.current]} onClick={onClick} />
-        ) : null}
+        {this.props.collapsed ? null : title('Workflows')}
+        {menu(workflowItems)}
+        {this.props.collapsed ? null : title('Monitoring')}
+        {menu(monitoringItems)}
+        {canEdit && this.props.collapsed ? null : title('Connections')}
+        {menu(connectionItems)}
+        {canEdit && this.props.collapsed ? null : title('Admin')}
+        {canEdit && menu(adminItems)}
       </Sider>
     );
   }
