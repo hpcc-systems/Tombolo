@@ -1,4 +1,5 @@
 "use strict";
+
 module.exports = (sequelize, DataTypes) => {
   const cluster = sequelize.define(
     "cluster",
@@ -37,25 +38,39 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      defaultEngine: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       timezone_offset: {
         type: DataTypes.INTEGER,
-        allowNull: true, // TODO Must be changed to false once we are able to get default engine for containerized cluster
-      },
-      defaultEngine: {
-        type: DataTypes.JSON,
-        defaultValue: "hthor", // TODO Must be allowNull - false &&& no default value  once we are able to get default engine for containerized cluster
+        allowNull: false,
       },
       accountMetaData: {
         type: DataTypes.JSON,
         defaultValue: {},
       },
+      adminEmails: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
       metaData: {
         type: DataTypes.JSON,
         defaultValue: {},
+        allowNull: true,
+      },
+      createdBy: {
+        type: DataTypes.JSON,
+        allowNull: false,
+      },
+      updatedBy: {
+        type: DataTypes.JSON,
+        allowNull: true,
       },
     },
     { paranoid: true, freezeTableName: true }
   );
+
   cluster.associate = function (models) {
     // associations can be defined here
     cluster.hasMany(models.dataflow, { foreignKey: "clusterId" });
@@ -81,5 +96,6 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: "CASCADE",
     });
   };
+
   return cluster;
 };

@@ -50,8 +50,8 @@ const DirectoryMonitoring = React.lazy(() => import('./components/application/Di
 // Admin pages
 const Users = React.lazy(() => import('./components/admin/Users'));
 const AdminApplications = React.lazy(() => import('./components/admin/apps/Applications'));
-const AdminClusters = React.lazy(() => import('./components/admin/Clusters'));
-const ClusterDetails = React.lazy(() => import('./components/admin/ClusterDetails'));
+// const AdminClusters = React.lazy(() => import('./components/admin/Clusters'));
+const Clusters = React.lazy(() => import('./components/admin/clusters/'));
 const AdminConsumers = React.lazy(() => import('./components/admin/Consumers'));
 const Regulations = React.lazy(() => import('./components/admin/ControlsAndRegulations'));
 const GitHubSettings = React.lazy(() => import('./components/admin/GitHubSettings/GitHubSettings'));
@@ -380,8 +380,7 @@ class App extends React.Component {
                             <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
                             <PrivateRoute path="/admin/applications" component={AdminApplications} />
                             <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
-                            <PrivateRoute path="/admin/clusters/:clusterId" component={ClusterDetails} />
-                            <PrivateRoute path="/admin/clusters" component={AdminClusters} />
+                            <PrivateRoute path="/admin/clusters" component={Clusters} />
                             <PrivateRoute path="/admin/notification-settings/msTeams" component={TeamsNotification} />
                             <PrivateRoute path="/admin/github" component={GitHubSettings} />
                             <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} />
