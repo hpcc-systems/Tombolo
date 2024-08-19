@@ -16,6 +16,7 @@ const rateLimit = require("express-rate-limit");
 const tokenService = require("./utils/token_service");
 const passport = require("passport");
 const cors = require("cors");
+const compression = require("compression");
 const { sequelize: dbConnection } = require("./models");
 const logger = require("./config/logger");
 
@@ -97,6 +98,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Use compression  to reduce the size of the response body and increase the speed of a web application
+app.use(compression());
+
 app.use("/api/user", userRead);
 app.use("/api/updateNotification", updateNotifications);
 app.use("/api/status", status);
@@ -105,7 +109,7 @@ app.use("/api/status", status);
 app.use("/api/apikeys", api);
 
 // Authenticate token before proceeding to route
-app.use(tokenService.verifyToken);
+// app.use(tokenService.verifyToken);
 
 app.use("/api/job", job);
 app.use("/api/bree", bree);

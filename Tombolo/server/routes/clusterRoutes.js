@@ -9,6 +9,7 @@ const {
 } = require("../middlewares/clusterMiddleware");
 const {
   addCluster,
+  addClusterWithProgress,
   getClusters,
   getCluster,
   deleteCluster,
@@ -20,6 +21,11 @@ const {
 router.post("/ping", validateClusterPingPayload, pingCluster); // GET - Ping cluster 
 router.get("/whiteList", getClusterWhiteList); // GET - cluster white list
 router.post("/", validateAddClusterInputs, addCluster); // CREATE - one cluster
+router.post(
+  "/addClusterWithProgress",
+  validateAddClusterInputs,
+  addClusterWithProgress
+); // CREATE - one cluster with progress
 router.get("/", getClusters); // GET - all clusters
 router.get("/:id", validateClusterId, getCluster); // GET - one cluster by id
 router.delete("/:id", validateClusterId, deleteCluster); // DELETE - one cluster by id
