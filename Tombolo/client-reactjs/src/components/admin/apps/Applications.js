@@ -200,6 +200,7 @@ class Applications extends Component {
         placement: 'bottom',
         arrow: true,
         target: () => this.state.appAddButtonRef?.current,
+        nextButtonProps: { style: { display: 'none' }, disabled: true },
       },
     ];
     const applicationColumns = [

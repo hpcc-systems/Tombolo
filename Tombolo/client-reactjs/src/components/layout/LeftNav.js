@@ -33,7 +33,7 @@ const { Sider } = Layout;
 
 class LeftNav extends Component {
   state = {
-    current: '1',
+    current: '0',
   };
 
   componentDidMount() {
@@ -64,6 +64,12 @@ class LeftNav extends Component {
       if (path.includes(key)) {
         this.setState({ current: options[key] });
       }
+    }
+
+    //check local storage for collapsed preference
+    const collapsed = localStorage.getItem('collapsed');
+    if (collapsed === 'true') {
+      this.props.onCollapse(true);
     }
   }
 
@@ -381,6 +387,15 @@ class LeftNav extends Component {
         null,
         clusterDisabled
       ),
+      //TODO: Uncomment when compliance is ready
+      // getItem(
+      //   <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/compliance'}>
+      //     {this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}
+      //     <span style={{ marginLeft: '1rem' }}>Compliance</span>
+      //   </Link>,
+      //   '12',
+      //   null
+      // ),
     ];
 
     const onClick = (e) => {
