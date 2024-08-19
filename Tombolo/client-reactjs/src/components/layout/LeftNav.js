@@ -421,6 +421,15 @@ class LeftNav extends Component {
         null,
         clusterDisabled
       ),
+      //TODO: Uncomment when compliance is ready
+      // getItem(
+      //   <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/compliance'}>
+      //     {this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}
+      //     <span style={{ marginLeft: '1rem' }}>Compliance</span>
+      //   </Link>,
+      //   '12',
+      //   null
+      // ),
     ];
 
     const onClick = (e) => {
