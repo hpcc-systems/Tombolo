@@ -109,7 +109,7 @@ app.use("/api/status", status);
 app.use("/api/apikeys", api);
 
 // Authenticate token before proceeding to route
-// app.use(tokenService.verifyToken);
+app.use(tokenService.verifyToken);
 
 app.use("/api/job", job);
 app.use("/api/bree", bree);
