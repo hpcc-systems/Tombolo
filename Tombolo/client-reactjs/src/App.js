@@ -2,7 +2,6 @@ import React, { Suspense } from 'react';
 import { connect } from 'react-redux';
 import { Layout, ConfigProvider, Spin, Card, Tour } from 'antd';
 import { Router, Route, Switch } from 'react-router-dom';
-import { Redirect } from 'react-router';
 import history from './components/common/History';
 import i18next from 'i18next';
 import zh_CN from 'antd/es/locale/zh_CN'; // For every language import respective module from antd
@@ -191,13 +190,8 @@ class App extends React.Component {
       return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user} />;
     };
 
-    const getAssets = () => {
-      const applicationId = this.props.application?.applicationId;
-      if (applicationId) {
-        return <Redirect to={`/${applicationId}/assets`} />;
-      } else {
-        return <Assets />;
-      }
+    const getHome = () => {
+      return <Home />;
     };
 
     //steps for tour
@@ -413,7 +407,7 @@ class App extends React.Component {
                               path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
                               component={ManualJobDetail}
                             />
-                            {this.props.authWithAzure ? <Route exact path="*" component={getAssets} /> : null}
+                            {this.props.authWithAzure ? <Route exact path="*" component={getHome} /> : null}
                           </Switch>
                         </Suspense>
                       </ErrorBoundary>

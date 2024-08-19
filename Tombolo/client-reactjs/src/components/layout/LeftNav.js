@@ -73,6 +73,40 @@ class LeftNav extends Component {
     }
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.location.pathname !== prevProps.location.pathname) {
+      const options = {
+        '/': '0',
+        assets: '1',
+        dataflow: '2',
+        dataflowinstances: '3',
+        fileMonitoring: '4a',
+        directoryMonitoring: '4b',
+        clustermonitoring: '4c',
+        jobmonitoring: '4d',
+        superfileMonitoring: '4e',
+        orbitMonitoring: '4f',
+        notifications: '5a',
+        clusterUsage: '5b',
+        Orbit: '5c',
+        clusters: '6',
+        github: '8',
+        consumers: '9',
+        applications: '10',
+        integrations: '11',
+        msTeams: '12a',
+      };
+
+      // on init we check pathname if it contains options key in name, if it does => highlight that menu item
+      for (const key in options) {
+        let path = this.props.history.location.pathname;
+        if (path.includes(key)) {
+          this.setState({ current: options[key] });
+        }
+      }
+    }
+  }
+
   render() {
     const applicationId = this.props?.applicationId || '';
     const integrations = this.props?.integrations || [];
