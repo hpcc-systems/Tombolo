@@ -135,6 +135,8 @@ class App extends React.Component {
 
   onCollapse = (collapsed) => {
     this.setState({ collapsed });
+    //set collapsed into local storage
+    localStorage.setItem('collapsed', collapsed);
   };
 
   // Setting locale for antd components.
