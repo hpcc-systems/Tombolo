@@ -9,6 +9,9 @@ import zh_CN from 'antd/es/locale/zh_CN'; // For every language import respectiv
 import en_US from 'antd/es/locale/en_US';
 import logo from './images/logo.png';
 
+//home page
+import Home from './components/application/home/index.js';
+
 // Auth pages
 import Assets from './components/application/Assets'; // This is "home" view, can go into main bundle
 const LoginPage = React.lazy(() => import('./components/login/LoginPage'));
@@ -359,7 +362,7 @@ class App extends React.Component {
                           ) : null}
 
                           <Switch>
-                            <PrivateRoute exact path="/" component={getAssets} />
+                            <PrivateRoute exact path="/" component={Home} />
                             <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
                             <PrivateRoute
                               path="/:applicationId/assets/fileTemplate/:assetId?"

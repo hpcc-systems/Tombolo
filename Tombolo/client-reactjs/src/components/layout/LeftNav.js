@@ -33,7 +33,7 @@ const { Sider } = Layout;
 
 class LeftNav extends Component {
   state = {
-    current: '1',
+    current: '0',
   };
 
   componentDidMount() {
