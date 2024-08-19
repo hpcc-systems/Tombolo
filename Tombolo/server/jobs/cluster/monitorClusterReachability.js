@@ -31,7 +31,7 @@ const NotificationQueue = models.notification_queue;
     for(let cluster of allClusters){
       try{
         // Destructure cluster
-        const { accountMetaData, name: clusterName, metaData: clusterMetaData } = cluster;
+        const { accountMetaData, name: clusterName, adminEmails } = cluster;
 
         // Cluster payload 
         const newAccountMetaData = {...accountMetaData, lastMonitored: now};
@@ -58,7 +58,7 @@ const NotificationQueue = models.notification_queue;
                   clusterName,
                   templateName: "hpccPasswordExpiryAlert",
                   passwordDaysRemaining,
-                  recipients: clusterMetaData?.adminEmails || [],
+                  recipients: adminEmails || [],
                   notificationId: `PWD_EXPIRY_${now.getTime()}`,
                 });
 
