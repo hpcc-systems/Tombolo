@@ -3,7 +3,6 @@ import { Link, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Layout, Menu, Typography } from 'antd';
 import {
-  LoadingOutlined,
   DashboardOutlined,
   FileSearchOutlined,
   ClusterOutlined,
@@ -19,13 +18,15 @@ import {
 
 import { hasEditPermission } from '../common/AuthUtil.js';
 import Text from '../common/Text';
-function getItem(label, key, icon, children, type) {
+
+function getItem(label, key, icon, children, type, disabled) {
   return {
     key,
     icon,
     children,
     label,
     type,
+    disabled,
   };
 }
 
@@ -63,11 +64,19 @@ class LeftNav extends Component {
         this.setState({ current: options[key] });
       }
     }
+
+    //check local storage for collapsed preference
+    const collapsed = localStorage.getItem('collapsed');
+    if (collapsed === 'true') {
+      this.props.onCollapse(true);
+    }
   }
 
   render() {
     const applicationId = this.props?.applicationId || '';
     const integrations = this.props?.integrations || [];
+    const disabled = applicationId === '' ? true : false;
+    const clusterDisabled = this.props?.clusters?.length === 0 ? true : false;
 
     const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
 
@@ -82,33 +91,71 @@ class LeftNav extends Component {
     //get item structure
     //label, key, icon, children, type;
 
+    const urlPrefix = () => {
+      if (applicationId) return '/' + applicationId;
+      else return '';
+    };
+
     const items = [
       getItem(
-        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/assets'}>
-          <i className="fa fa-fw fa-cubes" />
-          <span style={{ marginLeft: '1rem', color: 'rgba(255, 255, 255, 0.65)' }}>Assets</span>
-        </Link>,
-
+        <>
+          {disabled || clusterDisabled ? (
+            <>
+              <i className="fa fa-fw fa-cubes" />
+              <span style={{ marginLeft: '1rem' }}>Assets</span>{' '}
+            </>
+          ) : (
+            <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/assets'}>
+              <i className="fa fa-fw fa-cubes" />
+              <span style={{ marginLeft: '1rem' }}>Assets</span>
+            </Link>
+          )}
+        </>,
         '1',
-        null
+        null,
+        null,
+        null,
+        clusterDisabled
       ),
       getItem(
-        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/dataflow'}>
-          <i className="fa fa-fw fa-random" />
-          <span style={{ marginLeft: '1rem' }}>Definitions</span>
-        </Link>,
-
+        <>
+          {disabled || clusterDisabled ? (
+            <>
+              <i className="fa fa-fw fa-random" />
+              <span style={{ marginLeft: '1rem' }}>Definitions</span>
+            </>
+          ) : (
+            <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/dataflow'}>
+              <i className="fa fa-fw fa-random" />
+              <span style={{ marginLeft: '1rem' }}>Definitions</span>
+            </Link>
+          )}
+        </>,
         '2',
-        null
+        null,
+        null,
+        null,
+        clusterDisabled
       ),
       getItem(
-        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/dataflowinstances'}>
-          <i className="fa fa-fw fa-microchip" />
-          <span style={{ marginLeft: '1rem' }}>Job Execution</span>
-        </Link>,
-
+        <>
+          {disabled || clusterDisabled ? (
+            <>
+              <i className="fa fa-fw fa-microchip" />
+              <span style={{ marginLeft: '1rem' }}>Job Execution</span>
+            </>
+          ) : (
+            <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={urlPrefix() + '/dataflowinstances'}>
+              <i className="fa fa-fw fa-microchip" />
+              <span style={{ marginLeft: '1rem' }}>Job Execution</span>
+            </Link>
+          )}
+        </>,
         '3',
-        null
+        null,
+        null,
+        null,
+        clusterDisabled
       ),
       getItem(
         <>
@@ -126,7 +173,9 @@ class LeftNav extends Component {
             </Link>,
             '4a',
             null,
-            null
+            null,
+            null,
+            clusterDisabled
           ),
           getItem(
             <Link to={'/' + applicationId + '/directoryMonitoring'}>
@@ -136,7 +185,9 @@ class LeftNav extends Component {
             </Link>,
             '4b',
             null,
-            null
+            null,
+            null,
+            clusterDisabled
           ),
           getItem(
             <Link to={'/' + applicationId + '/clustermonitoring'}>
@@ -146,7 +197,9 @@ class LeftNav extends Component {
             </Link>,
             '4c',
             null,
-            null
+            null,
+            null,
+            clusterDisabled
           ),
           getItem(
             <Link to={'/' + applicationId + '/jobmonitoring'}>
@@ -156,7 +209,9 @@ class LeftNav extends Component {
             </Link>,
             '4d',
             null,
-            null
+            null,
+            null,
+            clusterDisabled
           ),
           getItem(
             <Link to={'/' + applicationId + '/superfileMonitoring'}>
@@ -166,7 +221,9 @@ class LeftNav extends Component {
             </Link>,
             '4e',
             null,
-            null
+            null,
+            null,
+            clusterDisabled
           ),
           asrActive
             ? getItem(
@@ -177,10 +234,14 @@ class LeftNav extends Component {
                 </Link>,
                 '4f',
                 null,
-                null
+                null,
+                null,
+                clusterDisabled
               )
             : null,
-        ]
+        ],
+        null,
+        clusterDisabled
       ),
       getItem(
         <>
@@ -222,18 +283,32 @@ class LeftNav extends Component {
                 null
               )
             : null,
-        ]
+        ],
+        null,
+        clusterDisabled
       ),
     ];
 
     const settingItems = [
       getItem(
-        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/clusters'}>
-          <ClusterOutlined />
-          <span style={{ marginLeft: '1rem' }}>Clusters</span>
-        </Link>,
+        <>
+          {disabled ? (
+            <span ref={this.props.clusterLinkRef}>
+              <ClusterOutlined />
+              <span style={{ marginLeft: '1rem' }}>Clusters</span>
+            </span>
+          ) : (
+            <Link ref={this.props.clusterLinkRef} style={{ color: 'rgba(255, 255, 255, .65)' }} to={'/admin/clusters'}>
+              <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
+              <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>Clusters</span>
+            </Link>
+          )}
+        </>,
         '6',
-        null
+        null,
+        null,
+        null,
+        clusterDisabled
       ),
       getItem(
         <>
@@ -253,29 +328,55 @@ class LeftNav extends Component {
             null,
             null
           ),
-        ]
+        ],
+        null,
+        clusterDisabled
       ),
       getItem(
-        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/github'}>
-          <i className="fa fa-fw fa-github" />
-          <span style={{ marginLeft: '1rem' }}>Github</span>
-        </Link>,
+        <>
+          {disabled || clusterDisabled ? (
+            <>
+              <i className="fa fa-fw fa-github" />
+              <span style={{ marginLeft: '1rem' }}>Github</span>
+            </>
+          ) : (
+            <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/github'}>
+              <i className="fa fa-fw fa-github" />
+              <span style={{ marginLeft: '1rem' }}>Github</span>
+            </Link>
+          )}{' '}
+        </>,
         '8',
-        null
+        null,
+        null,
+        null,
+        clusterDisabled
       ),
       getItem(
-        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/consumers'}>
-          <i className="fa fa-fw fa-user-circle" />
-          <span style={{ marginLeft: '1rem' }}>Collaborator</span>
-        </Link>,
+        <>
+          {disabled || clusterDisabled ? (
+            <>
+              <i className="fa fa-fw fa-user-circle" />
+              <span style={{ marginLeft: '1rem' }}>Collaborator</span>
+            </>
+          ) : (
+            <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/consumers'}>
+              <i className="fa fa-fw fa-user-circle" />
+              <span style={{ marginLeft: '1rem' }}>Collaborator</span>
+            </Link>
+          )}
+        </>,
         '9',
-        null
+        null,
+        null,
+        null,
+        clusterDisabled
       ),
     ];
 
     const adminItems = [
       getItem(
-        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/applications'}>
+        <Link ref={this.props.appLinkRef} style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/applications'}>
           <i className="fa fa-fw fa-desktop" />
           <span style={{ marginLeft: '1rem' }}>Applications</span>
         </Link>,
@@ -283,21 +384,34 @@ class LeftNav extends Component {
         null
       ),
       getItem(
-        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/integrations'}>
-          <ApiOutlined />
-          <span style={{ marginLeft: '1rem' }}>Integrations</span>
-        </Link>,
+        <>
+          {disabled || clusterDisabled ? (
+            <>
+              <ApiOutlined />
+              <span style={{ marginLeft: '1rem' }}>Integrations</span>
+            </>
+          ) : (
+            <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/integrations'}>
+              <ApiOutlined />
+              <span style={{ marginLeft: '1rem' }}>Integrations</span>
+            </Link>
+          )}
+        </>,
         '11',
-        null
+        null,
+        null,
+        null,
+        clusterDisabled
       ),
-      getItem(
-        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/compliance'}>
-          {this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}
-          <span style={{ marginLeft: '1rem' }}>Compliance</span>
-        </Link>,
-        '12',
-        null
-      ),
+      //TODO: Uncomment when compliance is ready
+      // getItem(
+      //   <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/compliance'}>
+      //     {this.props.isReportLoading ? <LoadingOutlined /> : <i className="fa fa-fw fa-balance-scale" />}
+      //     <span style={{ marginLeft: '1rem' }}>Compliance</span>
+      //   </Link>,
+      //   '12',
+      //   null
+      // ),
     ];
 
     const onClick = (e) => {
