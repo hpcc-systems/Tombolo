@@ -1201,3 +1201,8 @@ div.tooltip {
   font-size: 1rem;
   margin-bottom: 3rem;
 }
+
+.home .ant-card-head {
+  background: rgb(0, 21, 41);
+  color: white;
+}
