@@ -227,6 +227,8 @@ class App extends React.Component {
         placement: 'right',
         arrow: true,
         target: () => this.state.appLinkRef?.current,
+        nextButtonProps: { style: { display: 'none' }, disabled: true },
+        prevButtonProps: { style: { display: 'none' }, disabled: true },
       },
     ];
 
@@ -254,6 +256,7 @@ class App extends React.Component {
         placement: 'right',
         arrrow: true,
         target: () => this.state.clusterLinkRef?.current,
+        nextButtonProps: { style: { display: 'none' }, disabled: true },
       },
     ];
 
@@ -313,7 +316,12 @@ class App extends React.Component {
                       languageSwitcher={<LanguageSwitcher setLocale={this.setLocale} />}
                     />
                   </Header>
-                  <Tour steps={steps} open={this.state.tourOpen} onClose={this.handleTourShownClose} />
+                  <Tour
+                    steps={steps}
+                    open={this.state.tourOpen}
+                    onClose={this.handleTourShownClose}
+                    indicatorsRender={() => <></>}
+                  />
                   <Tour
                     steps={clusterSteps}
                     open={this.state.clusterTourOpen}

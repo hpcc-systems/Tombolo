@@ -18,6 +18,7 @@ function ClusterActionBtn({ setDisplayAddClusterModal, tourOpen, setTourOpen, ad
       placement: 'bottom',
       arrow: true,
       target: () => addClusterButtonRef.current,
+      nextButtonProps: { style: { display: 'none' }, disabled: true },
     },
   ];
   return (
