@@ -65,6 +65,12 @@ class LeftNav extends Component {
         this.setState({ current: options[key] });
       }
     }
+
+    //check local storage for collapsed preference
+    const collapsed = localStorage.getItem('collapsed');
+    if (collapsed === 'true') {
+      this.props.onCollapse(true);
+    }
   }
 
   render() {
