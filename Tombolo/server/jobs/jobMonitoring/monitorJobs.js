@@ -285,9 +285,6 @@ const Integrations = models.integrations;
         );
 
         let clusterWUs = wuBasicInfoByCluster[clusterId];
-        console.log('---- Cluster wus -------------------------');
-        console.dir(clusterWUs)
-        console.log('------------------------------------------');
 
         const matchedWus = clusterWUs.filter((wu) => {
           return matchJobName({
