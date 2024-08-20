@@ -11,96 +11,251 @@ const CustomError = require("../utils/customError.js");
 
 const Cluster = models.cluster;
 
-// Add a cluster
+// Add a cluster - Without sending progress updates to client
 const addCluster = async (req, res) => {
-    try {
-        const { name: clusterName, username: userID, password, adminEmails, metaData = {}, createdBy, updatedBy } = req.body;
-        // Make sure cluster is whitelisted
-        const cluster = clusters.find((c) => c.name === clusterName);
-        if (!cluster) throw new CustomError("Cluster not whitelisted", 400);
-        const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
+  try {
+    const {
+      name: clusterName,
+      username: userID,
+      password,
+      adminEmails,
+      metaData = {},
+      createdBy,
+      updatedBy,
+    } = req.body;
+    // Make sure cluster is whitelisted
+    const cluster = clusters.find((c) => c.name === clusterName);
 
-        // Check if cluster is reachable
-        await new AccountService({baseUrl,userID,password}).MyAccount();
+    if (!cluster){
+      return;
+    } 
 
-        // Get default cluster (engine) if exists - if not pick the first one 
-        const {TpLogicalClusters: {TpLogicalCluster}}  = await new TopologyService({
-          baseUrl,
-          userID,
-          password,
-        }).TpLogicalClusterQuery();
+    const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
 
-        let defaultEngine = null;
-        if (TpLogicalCluster.length > 0) {
-          // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
-          // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
-            defaultEngine = TpLogicalCluster.find((engine) => engine.Name === "hthor" && !engine.QueriesOnly);
-            if (!defaultEngine) {
-              defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
-            }
-        }
+    // Check if cluster is reachable
+    await new AccountService({ baseUrl, userID, password }).MyAccount();
 
-        // if default cluster is not found, return error
-        if (!defaultEngine) throw new CustomError("Default engine not found", 400);
+    // Get default cluster (engine) if exists - if not pick the first one
+    const {
+      TpLogicalClusters: { TpLogicalCluster },
+    } = await new TopologyService({
+      baseUrl,
+      userID,
+      password,
+    }).TpLogicalClusterQuery();
 
-        // Execute ECL code to get timezone offset
-        logger.verbose("Adding new cluster: Executing ECL code to get timezone offset");
-        const eclCode = "IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);"
-        // Create timezone offset in default engine
-        const wus = new WorkunitsService({baseUrl,userID,password});
-        const { Workunit: {Wuid} } = await wus.WUCreateAndUpdate({
-          Jobname: "Get Timezone Offset",
-          QueryText:eclCode,
-          ClusterSelection: defaultEngine.Name,
-        });
-
-        // Submit the recently created workunit
-        await wus.WUSubmit({ Wuid, Cluster: defaultEngine.Name});
-        
-        let wuState = "submitted";
-        const finalStates = ["unknown", "completed", "failed", "aborted"];
-        while (!finalStates.includes(wuState)) {
-          // Delay for 1 second before checking the state again
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          const {
-            Workunits: { ECLWorkunit },
-          } = await wus.WUQuery({ Wuid });
-          wuState = ECLWorkunit[0].State;
-        }
-
-        // Work unit result
-        const wuSummary = await wus.WUResultSummary({ Wuid });
-        const offSetInMinutes = parseInt(wuSummary.Result.Value) / 60;
-
-        // Payload
-        const clusterPayload = {
-          name: cluster.name,
-          thor_host: cluster.thor,
-          thor_port: cluster.thor_port,
-          roxie_host: cluster.roxie,
-          roxie_port: cluster.roxie_port,
-          defaultEngine: defaultEngine.Name,
-          username: userID,
-          timezone_offset: offSetInMinutes,
-          adminEmails,
-          createdBy,
-          updatedBy,
-          metaData,
-        };
-
-        // Has password and add to the obj if it exists
-        if(password){
-            clusterPayload.hash = encryptString(password);;
-        }
-
-         // Create cluster
-        const newCluster = await Cluster.create(clusterPayload);
-        res.status(201).json({ success: true, data: newCluster });
-        
-    } catch (err) {
-        logger.error(`Add cluster: ${err.message}`);
-        res.status(err.status || 500).json({ success: false, message: err.message });
+    let defaultEngine = null;
+    if (TpLogicalCluster.length > 0) {
+      // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
+      // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
+      defaultEngine = TpLogicalCluster.find(
+        (engine) => engine.Name === "hthor" && !engine.QueriesOnly
+      );
+      if (!defaultEngine) {
+        defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
+      }
     }
+
+    // if default cluster is not found, return error
+    if (!defaultEngine) throw new CustomError("Default engine not found", 400);
+
+    // Execute ECL code to get timezone offset
+    logger.verbose("Adding new cluster: Executing ECL code to get timezone offset");
+
+    const eclCode =
+      "IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);";
+    // Create timezone offset in default engine
+    const wus = new WorkunitsService({ baseUrl, userID, password });
+    const {
+      Workunit: { Wuid },
+    } = await wus.WUCreateAndUpdate({
+      Jobname: "Get Timezone Offset",
+      QueryText: eclCode,
+      ClusterSelection: defaultEngine.Name,
+    });
+
+    // Submit the recently created workunit
+    await wus.WUSubmit({ Wuid, Cluster: defaultEngine.Name });
+
+    let wuState = "submitted";
+    const finalStates = ["unknown", "completed", "failed", "aborted"];
+    while (!finalStates.includes(wuState)) {
+      // Delay for 2 seconds before checking the state again
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      const {
+        Workunits: { ECLWorkunit },
+      } = await wus.WUQuery({ Wuid });
+      wuState = ECLWorkunit[0].State;
+    }
+
+    // Work unit result
+    const wuSummary = await wus.WUResultSummary({ Wuid });
+    const offSetInMinutes = parseInt(wuSummary.Result.Value) / 60;
+
+    // Payload
+    const clusterPayload = {
+      name: cluster.name,
+      thor_host: cluster.thor,
+      thor_port: cluster.thor_port,
+      roxie_host: cluster.roxie,
+      roxie_port: cluster.roxie_port,
+      defaultEngine: defaultEngine.Name,
+      username: userID,
+      timezone_offset: offSetInMinutes,
+      adminEmails,
+      createdBy,
+      updatedBy,
+      metaData,
+    };
+
+    // Has password and add to the obj if it exists
+    if (password) {
+      clusterPayload.hash = encryptString(password);
+    }
+    
+    // Create cluster
+    const newCluster = await Cluster.create(clusterPayload);
+    res.status(201).json({ success: true, data: newCluster });
+  } catch (err) {
+    logger.error(`Add cluster: ${err.message}`);
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+};
+
+// Add a cluster and continuously send progress updates
+const addClusterWithProgress = async (req, res) => {
+  // Set headers for SSE
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("Transfer-Encoding", "chunked");
+
+  // Function to send updates
+  const sendUpdate = (data) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+    res.flush();
+  };
+
+  try {
+    const {
+      name: clusterName,
+      username: userID,
+      password,
+      adminEmails,
+      metaData = {},
+      createdBy,
+      updatedBy,
+    } = req.body;
+    // Make sure cluster is whitelisted
+    const cluster = clusters.find((c) => c.name === clusterName);
+
+    if (!cluster){
+      return;
+    } 
+
+    const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
+
+    // Check if cluster is reachable
+    sendUpdate({step: 1, success: true, message: "Authenticating cluster .."});
+    await new AccountService({ baseUrl, userID, password }).MyAccount();
+    sendUpdate({step: 1, success: true, message: "Cluster authentication complete"});
+
+    // Get default cluster (engine) if exists - if not pick the first one
+    sendUpdate({step: 2, success: true, message: "Selecting default engine .."});
+    const {
+      TpLogicalClusters: { TpLogicalCluster },
+    } = await new TopologyService({
+      baseUrl,
+      userID,
+      password,
+    }).TpLogicalClusterQuery();
+
+    let defaultEngine = null;
+    if (TpLogicalCluster.length > 0) {
+      // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
+      // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
+      defaultEngine = TpLogicalCluster.find(
+        (engine) => engine.Name === "hthor" && !engine.QueriesOnly
+      );
+      if (!defaultEngine) {
+        defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
+      }
+    }
+
+    // if default cluster is not found, return error
+    if (!defaultEngine) throw new CustomError("Default engine not found", 400);
+
+    sendUpdate({step: 2, success: true, message: "Default engine selection complete"});
+
+    // Execute ECL code to get timezone offset
+    sendUpdate({step: 3,  success: true, message: "Getting timezone offset .."});
+    logger.verbose("Adding new cluster: Executing ECL code to get timezone offset");
+
+    const eclCode =
+      "IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);";
+    // Create timezone offset in default engine
+    const wus = new WorkunitsService({ baseUrl, userID, password });
+    const {
+      Workunit: { Wuid },
+    } = await wus.WUCreateAndUpdate({
+      Jobname: "Get Timezone Offset",
+      QueryText: eclCode,
+      ClusterSelection: defaultEngine.Name,
+    });
+
+    // Submit the recently created workunit
+    await wus.WUSubmit({ Wuid, Cluster: defaultEngine.Name });
+
+    let wuState = "submitted";
+    const finalStates = ["unknown", "completed", "failed", "aborted"];
+    while (!finalStates.includes(wuState)) {
+      // Delay for 2 seconds before checking the state again
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      const {
+        Workunits: { ECLWorkunit },
+      } = await wus.WUQuery({ Wuid });
+      wuState = ECLWorkunit[0].State;
+    }
+
+    // Work unit result
+    const wuSummary = await wus.WUResultSummary({ Wuid });
+    const offSetInMinutes = parseInt(wuSummary.Result.Value) / 60;
+
+    // throw new Error("Error occurred while getting timezone offset");
+    sendUpdate({step: 3 , success: true, message: "Getting timezone offset complete"});
+    sendUpdate({step: 4, success: true,message: "Preparing to save cluster ..."});
+
+    // Payload
+    const clusterPayload = {
+      name: cluster.name,
+      thor_host: cluster.thor,
+      thor_port: cluster.thor_port,
+      roxie_host: cluster.roxie,
+      roxie_port: cluster.roxie_port,
+      defaultEngine: defaultEngine.Name,
+      username: userID,
+      timezone_offset: offSetInMinutes,
+      adminEmails,
+      createdBy,
+      updatedBy,
+      metaData,
+    };
+
+    // Has password and add to the obj if it exists
+    if (password) {
+      clusterPayload.hash = encryptString(password);
+    }
+    // Create cluster
+    const newCluster = await Cluster.create(clusterPayload);
+    sendUpdate({step: 4, success: true,message: "Cluster added successfully", cluster: newCluster});
+    res.end();
+    // res.status(201).json({ success: true, data: newCluster });
+  } catch (err) {
+    logger.error(`Add cluster: ${err.message}`);
+    // res.status(err.status || 500).json({ success: false, message: err.message });
+    sendUpdate({step: 99, success: false, message: err.message});
+    res.end();
+  }
 };
 
 // Retrieve all clusters
@@ -209,6 +364,7 @@ const pingCluster = async (req, res) => {
 
 module.exports = {
   addCluster,
+  addClusterWithProgress,
   getClusters,
   getCluster,
   deleteCluster,

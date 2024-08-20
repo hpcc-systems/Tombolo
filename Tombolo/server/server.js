@@ -16,6 +16,7 @@ const rateLimit = require("express-rate-limit");
 const tokenService = require("./utils/token_service");
 const passport = require("passport");
 const cors = require("cors");
+const compression = require("compression");
 const { sequelize: dbConnection } = require("./models");
 const logger = require("./config/logger");
 
@@ -96,6 +97,9 @@ app.use((req, res, next) => {
   logger.http(`[${req.ip}] [${req.method}] [${req.url}]`);
   next();
 });
+
+// Use compression  to reduce the size of the response body and increase the speed of a web application
+app.use(compression());
 
 app.use("/api/user", userRead);
 app.use("/api/updateNotification", updateNotifications);
