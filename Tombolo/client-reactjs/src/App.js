@@ -81,7 +81,7 @@ const BG_COLOR = '';
 
 class App extends React.Component {
   state = {
-    collapsed: false,
+    collapsed: true,
     locale: 'en',
     message: '',
     tourOpen: false,
