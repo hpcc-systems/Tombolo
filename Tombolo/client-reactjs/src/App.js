@@ -340,8 +340,8 @@ class App extends React.Component {
                     <Content
                       style={{
                         transition: '.1s linear',
-                        margin: '55px 16px',
-                        marginLeft: this.state.collapsed ? '70px' : '215px',
+                        margin: '55px 0px',
+                        marginLeft: this.state.collapsed ? '55px' : '200px',
                       }}>
                       <ErrorBoundary>
                         <Suspense fallback={<Fallback />}>

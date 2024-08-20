@@ -1175,3 +1175,7 @@ div.tooltip {
   display: block;
   margin-bottom: 5px;
 }
+
+main > div {
+  margin: 1rem;
+}

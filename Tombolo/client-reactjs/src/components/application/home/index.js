@@ -15,7 +15,7 @@ const Home = () => {
   } = useSelector((state) => state);
 
   return (
-    <div className="container">
+    <content className="container">
       <div className="top">
         <div className="header">
           <h1 style={{ width: '100%', marginTop: '1rem' }}>Welcome to Tombolo!</h1>
@@ -110,7 +110,7 @@ const Home = () => {
           </p>
         </div>
       </div>
-    </div>
+    </content>
   );
 };
 
