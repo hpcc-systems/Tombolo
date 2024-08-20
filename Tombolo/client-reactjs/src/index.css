@@ -1175,34 +1175,3 @@ div.tooltip {
   display: block;
   margin-bottom: 5px;
 }
-
-.home {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-around;
-  flex-wrap: wrap;
-
-  width: 100%;
-  text-align: center;
-  font-size: 1.5rem;
-}
-
-.homeHeader {
-  background: rgb(0, 21, 41);
-  color: white;
-  padding: 2rem;
-  width: 100%;
-  margin-bottom: 3rem;
-}
-
-.homeSub {
-  width: 30%;
-  font-size: 1rem;
-  margin-bottom: 3rem;
-}
-
-.home .ant-card-head {
-  background: rgb(0, 21, 41);
-  color: white;
-}
