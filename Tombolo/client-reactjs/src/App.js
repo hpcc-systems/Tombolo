@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { connect } from 'react-redux';
-import { Layout, ConfigProvider, Spin, Card } from 'antd';
+import { Layout, ConfigProvider, Spin, Card, Tour } from 'antd';
 import { Router, Route, Switch } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import history from './components/common/History';
@@ -71,6 +71,7 @@ import { PrivateRoute } from './components/common/PrivateRoute';
 import { userActions } from './redux/actions/User';
 import { checkBackendStatus } from './redux/actions/Backend';
 import { store } from './redux/store/Store';
+import { applicationActions } from './redux/actions/Application';
 
 const { Header, Content } = Layout;
 
@@ -78,16 +79,23 @@ const BG_COLOR = '';
 
 class App extends React.Component {
   state = {
-    collapsed: true,
+    collapsed: false,
     locale: 'en',
+    message: '',
+    tourOpen: false,
+    clusterTourOpen: false,
+    appLinkRef: React.createRef(),
+    clusterLinkRef: React.createRef(),
   };
 
   componentDidMount() {
     //if status of backend hasn't been retrieved, check it
     if (!this.props.backendStatus.statusRetrieved) {
+      this.setState({ message: 'Connecting to...' });
       store.dispatch(checkBackendStatus());
     } else {
       if (!this.props.authWithAzure) {
+        this.setState({ message: 'Authenticating...' });
         store.dispatch(userActions.validateToken());
       }
 
@@ -100,10 +108,35 @@ class App extends React.Component {
         i18next.changeLanguage(localStorage.getItem('i18nextLng'));
       }
     }
+
+    //listen for clicks on the document to close tour if nav link is clicked
+    document.addEventListener('click', this.handleClick);
   }
+
+  handleClick = (e) => {
+    if (this.state.appLinkRef.current && this.state.appLinkRef.current.contains(e.target)) {
+      this.setState({ tourOpen: false });
+    }
+
+    if (this.state.clusterLinkRef.current && this.state.clusterLinkRef.current.contains(e.target)) {
+      this.setState({ clusterTourOpen: false });
+    }
+  };
+
+  //function to handle tour shown close
+  handleTourShownClose = () => {
+    this.setState({ tourOpen: false });
+  };
+
+  //function to handle tour shown close
+  handleClusterTourShownClose = () => {
+    this.setState({ clusterTourOpen: false });
+  };
 
   onCollapse = (collapsed) => {
     this.setState({ collapsed });
+    //set collapsed into local storage
+    localStorage.setItem('collapsed', collapsed);
   };
 
   // Setting locale for antd components.
@@ -126,6 +159,29 @@ class App extends React.Component {
     const isBackendStatusRetrieved = this.props.backendStatus.statusRetrieved;
     const isApplicationSet = this.props.application && this.props.application.applicationId !== '' ? true : false;
 
+    //if an application doesn't exist and the tour hasn't been shown, show the tour
+    if (this.props.noApplication.noApplication && !this.props.noApplication.firstTourShown && isBackendConnected) {
+      //if you're not already on the application page, show the left nav tour
+      if (window.location.pathname !== '/admin/applications') {
+        this.setState({ tourOpen: true });
+      }
+      this.props.dispatch(applicationActions.updateApplicationLeftTourShown(true));
+    }
+
+    //if an application exists, but a cluster doesn't, show the cluster tour
+    if (
+      this.props.application?.applicationId &&
+      this.props.noClusters.noClusters &&
+      !this.props.noClusters.firstTourShown
+    ) {
+      //if you're not already on the cluster page, show the left nav tour
+      if (window.location.pathname !== '/admin/clusters') {
+        this.setState({ clusterTourOpen: true });
+      }
+
+      this.props.dispatch(applicationActions.updateClustersLeftTourShown(true));
+    }
+
     const dataFlowComp = () => {
       let applicationId = this.props.application ? this.props.application.applicationId : '';
       let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
@@ -141,13 +197,78 @@ class App extends React.Component {
       }
     };
 
+    //steps for tour
+    const steps = [
+      {
+        title: 'Welcome to Tombolo',
+        description:
+          'There is some setup that we need to complete before being able to fully utilize Tombolo. We will unlock features as we move through this interactive tutorial.',
+        target: null,
+      },
+      {
+        title: 'Applications',
+        description: (
+          <>
+            <p>
+              It looks like you have not set up an application yet. Applications are a necessary part of Tombolos basic
+              functions, and we must set one up before unlocking the rest of the application. Click on the navigation
+              element to head to the application management screen and set one up.
+            </p>
+            <br />
+            <p>
+              If youre interested to read more about applications, head to our documentation page at{' '}
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href="https://hpcc-systems.github.io/Tombolo/docs/Quick-Start/application">
+                https://hpcc-systems.github.io/Tombolo/docs/Quick-Start/application
+              </a>
+            </p>
+          </>
+        ),
+        placement: 'right',
+        arrow: true,
+        target: () => this.state.appLinkRef?.current,
+        nextButtonProps: { style: { display: 'none' }, disabled: true },
+        prevButtonProps: { style: { display: 'none' }, disabled: true },
+      },
+    ];
+
+    const clusterSteps = [
+      {
+        title: 'Clusters',
+        description: (
+          <>
+            <p>
+              Now that we have an application set up, we can connect to an hpcc systems cluster to unlock the rest of
+              the application. Click the navigation element to head to the cluster management screen and set one up.
+            </p>
+            <br />
+            <p>
+              If youre interested to read more about Clusters, head to our documentation page at{' '}
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href="https://hpcc-systems.github.io/Tombolo/docs/Quick-Start/cluster">
+                https://hpcc-systems.github.io/Tombolo/docs/Quick-Start/cluster
+              </a>
+            </p>
+          </>
+        ),
+        placement: 'right',
+        arrrow: true,
+        target: () => this.state.clusterLinkRef?.current,
+        nextButtonProps: { style: { display: 'none' }, disabled: true },
+      },
+    ];
+
     return (
       <ConfigProvider locale={this.locale(this.state.locale)}>
         <Suspense fallback={<Fallback />}>
           <Router history={history}>
             <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
-              {/* don't load anything until backend connection is checked */}
-              {!isBackendConnected ? (
+              {/* Go through loading sequence, first check if backend is connected and report with proper message */}
+              {!isBackendConnected || !this.props.authWithAzure || !this.props.user || !this.props.user.token ? (
                 <div
                   style={{
                     display: 'flex',
@@ -156,7 +277,7 @@ class App extends React.Component {
                     height: '100vh',
                     backgroundColor: '#f0f2f5',
                   }}>
-                  {isBackendStatusRetrieved ? (
+                  {!isBackendConnected && isBackendStatusRetrieved ? (
                     <Card title={<img src={logo} />} style={{ width: '50%', textAlign: 'center' }}>
                       <h2>
                         Tombolo has encountered a network issue, please refresh the page. If the issue persists, contact
@@ -164,33 +285,59 @@ class App extends React.Component {
                       </h2>
                     </Card>
                   ) : (
-                    <Spin size="large" />
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center',
+                        width: '100%',
+                      }}>
+                      <div style={{ width: '100%', marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
+                        <img src={logo} />
+                      </div>
+                      <Spin size="large" />
+                      <div style={{ width: '100%', marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
+                        <h2>{this.state.message}</h2>
+                      </div>
+                    </div>
                   )}
                 </div>
               ) : (
-                /* if backend is connected, load the app */
+                /* Now that everything is loaded, present the application */
                 <>
-                  {this.props.user && this.props.user.token ? (
-                    <Header
-                      style={{
-                        backgroundColor: BG_COLOR,
-                        maxHeight: '50px',
-                        position: 'fixed',
-                        zIndex: 100,
-                        width: '100%',
-                      }}>
-                      <AppHeader
-                        setLocale={this.setLocale}
-                        languageSwitcher={<LanguageSwitcher setLocale={this.setLocale} />}
-                      />
-                    </Header>
-                  ) : null}
+                  <Header
+                    style={{
+                      backgroundColor: BG_COLOR,
+                      maxHeight: '50px',
+                      position: 'fixed',
+                      zIndex: 100,
+                      width: '100%',
+                    }}>
+                    <AppHeader
+                      setLocale={this.setLocale}
+                      languageSwitcher={<LanguageSwitcher setLocale={this.setLocale} />}
+                    />
+                  </Header>
+                  <Tour
+                    steps={steps}
+                    open={this.state.tourOpen}
+                    onClose={this.handleTourShownClose}
+                    indicatorsRender={() => <></>}
+                  />
+                  <Tour
+                    steps={clusterSteps}
+                    open={this.state.clusterTourOpen}
+                    onClose={this.handleClusterTourShownClose}
+                  />
                   <Layout>
                     <LeftNav
                       BG_COLOR={BG_COLOR}
                       onCollapse={this.onCollapse}
                       collapsed={this.state.collapsed}
                       isApplicationSet={isApplicationSet}
+                      clusters={this.props.clusters}
+                      appLinkRef={this.state.appLinkRef}
+                      clusterLinkRef={this.state.clusterLinkRef}
                     />
 
                     <Content
@@ -256,6 +403,7 @@ class App extends React.Component {
                               path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
                               component={DataflowInstanceDetails}
                             />
+                            <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />{' '}
                             <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
                             <PrivateRoute path="/:applicationId/actions" component={Actions} />
                             <PrivateRoute
@@ -279,10 +427,10 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state) {
-  const { application } = state.applicationReducer;
+  const { application, clusters, noApplication, noClusters } = state.applicationReducer;
   const backendStatus = state.backendReducer;
   const { user } = state.authenticationReducer;
-  return { application, user, backendStatus };
+  return { application, clusters, user, backendStatus, noApplication, noClusters };
 }
 
 const connectedApp = connect(mapStateToProps)(App);

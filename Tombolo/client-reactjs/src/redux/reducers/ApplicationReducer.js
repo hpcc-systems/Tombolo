@@ -2,11 +2,12 @@ import { Constants } from '../../components/common/Constants';
 
 const initialState = {
   application: {},
+  noApplication: { firstTourShown: false, addButtonTourShown: false, noApplication: false },
+  noClusters: { firstTourShown: false, addButtonTourShown: false, noClusters: false },
   newApplication: '',
   updatedApplication: '',
   deletedApplicationId: '',
   clusters: [],
-  noClusters: { redirect: false, noClusters: false },
   consumers: [],
   licenses: [],
   constraints: [],
@@ -44,16 +45,46 @@ export function applicationReducer(state = initialState, action) {
         application: currentApplication,
         deletedApplicationId: action.applicationId,
       };
-    case Constants.CLUSTERS_RETRIEVED:
+    case Constants.NO_APPLICATION_FOUND:
+      return {
+        ...state,
+        noApplication: { ...state.noApplication, noApplication: true },
+      };
+
+    case Constants.APPLICATION_LEFT_TOUR_SHOWN:
+      return {
+        ...state,
+        noApplication: { ...state.noApplication, firstTourShown: true },
+      };
+    case Constants.APPLICATION_ADD_BUTTON_TOUR_SHOWN:
+      return {
+        ...state,
+        noApplication: { ...state.noApplication, addButtonTourShown: true },
+      };
+
+    case Constants.NO_CLUSTERS_FOUND:
+      return {
+        ...state,
+        noClusters: { ...state.noClusters, noClusters: true },
+      };
+
+    case Constants.CLUSTERS_LEFT_TOUR_SHOWN:
+      return {
+        ...state,
+        noClusters: { ...state.noClusters, firstTourShown: true },
+      };
+    case Constants.CLUSTERS_ADD_BUTTON_TOUR_SHOWN:
+      return {
+        ...state,
+        noClusters: { ...state.noClusters, addButtonTourShown: true },
+      };
+
+    case Constants.CLUSTERS_FOUND:
       return {
         ...state,
         clusters: action.clusters,
       };
-    case Constants.NO_CLUSTERS_FOUND:
-      return {
-        ...state,
-        noClusters: action.noClusters,
-      };
+
     case Constants.CONSUMERS_RETRIEVED:
       return {
         ...state,
@@ -84,6 +115,7 @@ export function applicationReducer(state = initialState, action) {
         ...state,
         integrations: action.integrations,
       };
+
     default:
       return state;
   }

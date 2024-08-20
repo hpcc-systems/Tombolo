@@ -115,7 +115,11 @@ window.fetch = async (...args) => {
     return response;
   } catch (error) {
     // if an error is caught here, it means we cannot communicate with backend, return false to indicate that and log error
-    console.log('Error:', error);
+    if (error.name === 'AbortError') {
+      console.log(`Request to ${resource} was aborted`);
+    } else {
+      console.log('Error:', error);
+    }
     return false;
   }
 };

@@ -1,5 +1,5 @@
-import { AppstoreOutlined, DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Form, Input, message, Modal, notification, Space, Tooltip } from 'antd';
+import { AppstoreOutlined, DownOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Form, Input, message, Modal, Space, Tooltip } from 'antd';
 import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -14,7 +14,6 @@ import { userActions } from '../../redux/actions/User';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { hasAdminRole } from '../common/AuthUtil.js';
 import Text, { i18n } from '../common/Text';
-import NoCluster from '../common/noCluster.js';
 
 class AppHeader extends Component {
   pwdformRef = React.createRef();
@@ -119,17 +118,21 @@ class AppHeader extends Component {
           let applications = data.map((application) => {
             return { value: application.id, display: application.title };
           });
+
           if (applications && applications.length > 0) {
             this.setState({ applications });
             //this.handleRef();
             this.debouncedHandleRef();
-          } else {
-            this.openHelpNotification();
+          }
+
+          if (applications.length === 0) {
+            this.props.dispatch(applicationActions.updateNoApplicationFound({ noApplication: true }));
           }
         })
         .catch((error) => {
           console.log(error);
-        });
+        })
+        .finally(() => {});
     }
   }
 
@@ -143,15 +146,14 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getConsumers());
       this.props.dispatch(applicationActions.getLicenses());
       this.props.dispatch(applicationActions.getConstraints());
-      // this.props.dispatch(applicationActions.getIntegrations(this.props.application.applicationId));
       this.props.dispatch(applicationActions.getAllActiveIntegrations());
     }
 
-    //if noClusters.noClusters prop is true, show the no cluster modal and dispatch action to reset the noClusters state
-    if (this.props.noClusters.noClusters && !this.props.noClusters.redirect) {
-      this.props.dispatch(applicationActions.updateNoClustersFound({ noClusters: true, redirect: true }));
-      this.setState({ isClusterModalVisible: true });
-    }
+    // //if noClusters.noClusters prop is true, show the no cluster modal and dispatch action to reset the noClusters state
+    // if (this.props.noClusters.noClusters && !this.props.noClusters.redirect) {
+    //   this.props.dispatch(applicationActions.updateNoClustersFound({ noClusters: true, redirect: true }));
+    //   this.setState({ isClusterModalVisible: true });
+    // }
 
     if (this.props.newApplication) {
       let applications = this.state.applications;
@@ -242,26 +244,7 @@ class AppHeader extends Component {
     }
   }
 
-  openHelpNotification = () => {
-    const key = `open${Date.now()}`;
-    notification.open({
-      message: 'Hello',
-      description:
-        'Welcome ' +
-        this.props.user.firstName +
-        ' ' +
-        this.props.user.lastName +
-        '. Please make sure you check out the User Guide under Help option.',
-      key,
-      onClose: this.close(),
-      icon: <QuestionCircleOutlined />,
-      top: 70,
-    });
-  };
-
-  close = () => {
-    console.log('Notification was closed. Either the close button was clicked or duration time elapsed.');
-  };
+  close = () => {};
 
   search(value) {
     this.props.history.push('/report/' + value);
@@ -542,11 +525,6 @@ class AppHeader extends Component {
             <p className="float-left font-weight-bold">Tombolo v{process.env.REACT_APP_VERSION}</p>
           </Modal>
         </div>
-        <NoCluster
-          visible={this.state.isClusterModalVisible}
-          setVisible={this.setClusterModalVisible}
-          applicationId={this.props.application?.applicationId}
-        />
       </>
     );
   }
