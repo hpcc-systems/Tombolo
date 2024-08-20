@@ -81,7 +81,7 @@ const BG_COLOR = '';
 
 class App extends React.Component {
   state = {
-    collapsed: true,
+    collapsed: localStorage.getItem('collapsed') === 'true',
     locale: 'en',
     message: '',
     tourOpen: false,
