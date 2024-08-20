@@ -195,11 +195,6 @@ const Integrations = models.integrations;
       }
     }
 
-    console.log('------------------------------------------');
-    console.dir("HERE")
-    console.log(newWorkUnitsFound);
-    console.log('------------------------------------------');
-
     // If no new monitoring work units are found, update the monitoring logs and exit
     if (!newWorkUnitsFound) {
       // If failed to reach cluster, do not update last monitored time in monitoring logs

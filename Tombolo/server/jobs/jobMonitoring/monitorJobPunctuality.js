@@ -38,33 +38,6 @@ const Integrations = models.integrations;
       return;
     }
 
-    // Find severity level (For ASR ) - based on that determine when to send out notifications
-    let severityThreshHold = 0;
-    let severeEmailRecipients = null;
-
-    try{
-    const {id : integrationId} = await Integrations.findOne({where: {name: "ASR"}, raw: true});
-    
-      if(integrationId){
-        // Get integration mapping with integration details
-        const integrationMapping = await IntegrationMapping.findOne({
-          where : {integration_id : integrationId}, raw: true
-        });
-
-        if(integrationMapping){
-          const {
-            metaData: {
-              nocAlerts: { severityLevelForNocAlerts, emailContacts },
-            },
-          } = integrationMapping;
-          severityThreshHold = severityLevelForNocAlerts;
-          severeEmailRecipients = emailContacts;
-        }
-      }
-    }catch(error){
-      logger.error(`Job Punctuality Monitoring : Error while getting integration level severity threshold: ${error.message}`);
-    }
-
     // All clusters
     const clusters = await Cluster.findAll({ raw: true });
 
@@ -125,8 +98,46 @@ const Integrations = models.integrations;
         const { schedule, expectedStartTime, expectedCompletionTime } =metaData;
         const clusterInfo = clustersObj[clusterId];
 
+         // Find severity level (For ASR ) - based on that determine when to send out notifications
+        let severityThreshHold = 0;
+        let severeEmailRecipients = null;
+
+        if(metaData.asrSpecificMetaData){
+          try{
+          const {id : integrationId} = await Integrations.findOne({where: {name: "ASR"}, raw: true});
+          
+          if(integrationId){
+            // Get integration mapping with integration details
+            const integrationMapping = await IntegrationMapping.findOne({
+              where: {
+                integration_id: integrationId,
+                application_id: applicationId,
+              },
+              raw: true,
+            });
+
+            if(integrationMapping){
+              const {
+                metaData: {
+                  nocAlerts: { severityLevelForNocAlerts, emailContacts },
+                },
+              } = integrationMapping;
+              severityThreshHold = severityLevelForNocAlerts;
+              severeEmailRecipients = emailContacts;
+            }
+            }
+          }catch(error){
+            logger.error(`Job Punctuality Monitoring : Error while getting integration level severity threshold: ${error.message}`);
+          }
+        }
+
+
         // Job level severity threshold
         const jobLevelSeverity = asrSpecificMetaData?.severity || 0;
+
+        // console.log('---------- SEVERITY ----------------------');
+        // console.log(jobLevelSeverity, severityThreshHold)
+        // console.log('------------------------------------------');
       
 
         // If job level severity is less than the threshold, check only after the completion time
@@ -152,6 +163,8 @@ const Integrations = models.integrations;
             });
           }
         }
+
+        console.log("-------------------------------------->")
 
         // Calculate the run window for the job
         const window = calculateRunOrCompleteByTimes({
@@ -189,6 +202,8 @@ const Integrations = models.integrations;
 
         // Check if notification has been sent out for this job, for the current window
         const jobPunctualityDetails = lastJobRunDetails?.jobPunctualityDetails;
+
+        console.log("------", lastJobRunDetails);
         if (jobPunctualityDetails) {
           const { windowStartTime, windowEndTime } = jobPunctualityDetails;
           if (
