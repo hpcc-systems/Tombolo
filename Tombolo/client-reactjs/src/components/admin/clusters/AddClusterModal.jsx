@@ -4,6 +4,7 @@ import { isEmail } from 'validator';
 const { useSelector } = require('react-redux');
 
 import { pingCluster, addCluster } from './clusterUtils';
+import AddClusterSteps from './AddClusterSteps';
 
 // Constants
 const { Option } = Select;
@@ -31,6 +32,12 @@ function AddClusterModal({
   const [clusterReachable, setClusterReachable] = useState(false);
   const [addingCluster, setAddingCluster] = useState(false);
   const [abortController, setAbortController] = useState(null);
+  // For displaying cluster saving updates
+  const [completedSteps, setCompletedSteps] = useState([]);
+  const [displaySteps, setDisplaySteps] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedAndRemainingSteps, setCompletedAndRemainingSteps] = useState([]);
+  const [errorEncountered, setErrorEncountered] = useState(false);
 
   // Effects
   useEffect(() => {
@@ -44,6 +51,14 @@ function AddClusterModal({
     };
   }, []);
 
+  // Const resetAllCluster adding steps
+  const resetAllClusterAddSteps = () => {
+    setCurrentStep(0);
+    setCompletedSteps([]);
+    setCompletedAndRemainingSteps([]);
+    setErrorEncountered(false);
+  };
+
   // Handle modal cancel
   const handleModalCancel = () => {
     form.resetFields();
@@ -51,6 +66,9 @@ function AddClusterModal({
     setClusterReachable(false);
     setDisplayAddClusterModal(false);
     setPingingCluster(false);
+    setCompletedSteps([]);
+    setAddingCluster(false);
+    resetAllClusterAddSteps();
   };
 
   // Available clusters (whitelisted minus already saved)
@@ -99,6 +117,10 @@ function AddClusterModal({
 
   // Submit add new cluster form
   const submitNewCluster = async () => {
+    // Reset all step related states
+    resetAllClusterAddSteps();
+    setDisplaySteps(true);
+
     // Validate all the form fields
     let validationErrors = false;
     try {
@@ -153,14 +175,57 @@ function AddClusterModal({
 
       // Make API request to add cluster
       const response = await addCluster({ clusterInfo: payload, abortController });
-      setClusters([...clusters, response]);
-      setRequireCredentials(false);
-      message.success('Cluster added successfully');
-      form.resetFields();
-      setDisplayAddClusterModal(false);
+
+      if (!response.ok) {
+        throw new Error('Failed to add cluster');
+      } else {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+
+        let sendingResponse = true;
+
+        while (sendingResponse) {
+          const { done, value } = await reader.read();
+          if (done) {
+            sendingResponse = false;
+          }
+          const decodedValue = decoder.decode(value);
+          const jsonStrings = decodedValue
+            .split('\n')
+            .filter((str) => str.trim() !== '')
+            .map((str) => str.replace(/^data: /, ''));
+          const serverSentEvents = jsonStrings.map((str) => JSON.parse(str));
+
+          // Set completed steps
+          setCompletedSteps((prev) => [...prev, ...serverSentEvents]);
+
+          // If server event have cluster key-value pair, then add it to clusters
+          serverSentEvents.forEach((event) => {
+            //If error encountered, stop the process
+            if (event.step === 99) {
+              throw new Error(event.message);
+            }
+
+            if (event.cluster) {
+              setClusters([...clusters, event.cluster]);
+              setRequireCredentials(false);
+              message.success('Cluster added successfully');
+              form.resetFields();
+              setDisplayAddClusterModal(false);
+              setAddingCluster(false);
+              setDisplaySteps(false);
+            }
+          });
+        }
+      }
     } catch (err) {
-      message.error('Failed to add cluster');
-    } finally {
+      // If completed step does not have an item with step 99
+      // The error occurred outside pre-defined 4 steps
+      if (!completedSteps.find((step) => step.step === 99)) {
+        setCompletedAndRemainingSteps((prev) => [...prev, { step: 99, message: err.message }]);
+      }
+      setErrorEncountered(true);
+      setDisplaySteps(true);
       setAddingCluster(false);
     }
   };
@@ -177,108 +242,116 @@ function AddClusterModal({
         <Button key="cancel" onClick={handleModalCancel} type="primary" ghost>
           Cancel
         </Button>,
-        <Button
-          key="save"
-          type="primary"
-          onClick={submitNewCluster}
-          disabled={!clusterReachable || addingCluster}
-          loading={addingCluster}>
-          {`Sav${addingCluster ? 'ing' : 'e'}`}
-        </Button>,
-        addingCluster && (
-          <div key="alert" style={{ padding: '5px', color: 'var(--dark)' }}>
-            Please stand by. This may take a moment.
-          </div>
+        !addingCluster && (
+          <Button key="save" type="primary" onClick={submitNewCluster}>
+            {errorEncountered ? 'Retry' : 'Save'}
+          </Button>
         ),
       ]}>
-      <Card size="small">
-        <Spin tip={`Pinging Cluster .. `} spinning={pingingCluster}>
-          <Form layout="vertical" form={form} loading>
-            <Form.Item
-              label="Cluster"
-              name="name"
-              required
-              rules={[{ required: true, message: 'Please select a cluster' }]}>
-              <Select onChange={handleClusterChange}>
-                {availableClusters.map((cluster) => (
-                  <Option key={cluster.name} value={cluster.name}>
-                    {cluster.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              label="Admin Emails"
-              name="adminEmails"
-              required
-              rules={[
-                {
-                  validator: (_, value) => {
-                    if (!value || value.length === 0) {
-                      return Promise.reject(new Error('Please add at least one email!'));
-                    }
-                    if (value.length > 20) {
-                      return Promise.reject(new Error('Too many emails'));
-                    }
-                    if (!value.every((v) => isEmail(v))) {
-                      return Promise.reject(new Error('One or more emails are invalid'));
-                    }
-                    return Promise.resolve();
-                  },
-                },
-              ]}>
-              <Select
-                suffixIcon={null}
-                mode="tags"
-                allowClear
-                placeholder="Enter a comma-delimited list of email addresses"
-                tokenSeparators={[',', ' ']}
-              />
-            </Form.Item>
-
-            {requireCredentials && (
-              <>
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item
-                      label="Username"
-                      name="username"
-                      required
-                      rules={[{ required: true, message: 'Please enter a username' }]}>
-                      <Input autoComplete="off" />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <input type="text" style={{ display: 'none' }} />
-                    <Form.Item
-                      label="Password"
-                      name="password"
-                      required
-                      rules={[{ required: true, message: 'Please enter a password' }]}>
-                      <Input.Password autoComplete="new-password" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </>
-            )}
-          </Form>
-        </Spin>
-        {!requireCredentials && clusterReachable && tombolo_instance_name && !addingCluster && (
-          <Alert
-            size="small"
-            banner
-            type="info"
-            style={{ padding: '5px 15px' }}
-            message={
-              <span>
-                Tombolo will execute jobs in the HPCC cluster using the username{' '}
-                <Text strong>{tombolo_instance_name}</Text>
-              </span>
-            }
+      <>
+        {displaySteps && (
+          <AddClusterSteps
+            completedSteps={completedSteps}
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            completedAndRemainingSteps={completedAndRemainingSteps}
+            setCompletedAndRemainingSteps={setCompletedAndRemainingSteps}
+            errorEncountered={errorEncountered}
+            setErrorEncountered={setErrorEncountered}
           />
         )}
-      </Card>
+
+        {!addingCluster && (
+          <Card size="small">
+            <Spin tip={`Pinging Cluster .. `} spinning={pingingCluster}>
+              <Form layout="vertical" form={form}>
+                <Form.Item
+                  label="Cluster"
+                  name="name"
+                  required
+                  rules={[{ required: true, message: 'Please select a cluster' }]}>
+                  <Select onChange={handleClusterChange}>
+                    {availableClusters.map((cluster) => (
+                      <Option key={cluster.name} value={cluster.name}>
+                        {cluster.name}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+
+                <Form.Item
+                  label="Admin Emails"
+                  name="adminEmails"
+                  required
+                  rules={[
+                    {
+                      validator: (_, value) => {
+                        if (!value || value.length === 0) {
+                          return Promise.reject(new Error('Please add at least one email!'));
+                        }
+                        if (value.length > 20) {
+                          return Promise.reject(new Error('Too many emails'));
+                        }
+                        if (!value.every((v) => isEmail(v))) {
+                          return Promise.reject(new Error('One or more emails are invalid'));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}>
+                  <Select
+                    suffixIcon={null}
+                    mode="tags"
+                    allowClear
+                    placeholder="Enter a comma-delimited list of email addresses"
+                    tokenSeparators={[',', ' ']}
+                  />
+                </Form.Item>
+
+                {requireCredentials && (
+                  <>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item
+                          label="Username"
+                          name="username"
+                          required
+                          rules={[{ required: true, message: 'Please enter a username' }]}>
+                          <Input autoComplete="off" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <input type="text" style={{ display: 'none' }} />
+                        <Form.Item
+                          label="Password"
+                          name="password"
+                          required
+                          rules={[{ required: true, message: 'Please enter a password' }]}>
+                          <Input.Password autoComplete="new-password" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </>
+                )}
+              </Form>
+            </Spin>
+            {!requireCredentials && clusterReachable && tombolo_instance_name && !addingCluster && (
+              <Alert
+                size="small"
+                banner
+                type="info"
+                style={{ padding: '5px 15px' }}
+                message={
+                  <span>
+                    Tombolo will execute jobs in the HPCC cluster using the username{' '}
+                    <Text strong>{tombolo_instance_name}</Text>
+                  </span>
+                }
+              />
+            )}
+          </Card>
+        )}
+      </>
     </Modal>
   );
 }
