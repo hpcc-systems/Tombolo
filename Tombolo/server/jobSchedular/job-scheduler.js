@@ -116,23 +116,23 @@ class JobScheduler {
 
   bootstrap() {
     (async () => {
-      // await this.scheduleActiveCronJobs();
-      // await this.scheduleJobStatusPolling();
-      // await this.scheduleClusterTimezoneOffset();
-      // await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
-      // await this.scheduleFileMonitoringOnServerStart();
-      // await this.scheduleSuperFileMonitoringOnServerStart();
-      // await this.scheduleClusterMonitoringOnServerStart();
-      // await this.scheduleKeyCheck();
-      // await this.createClusterUsageHistoryJob();
+      await this.scheduleActiveCronJobs();
+      await this.scheduleJobStatusPolling();
+      await this.scheduleClusterTimezoneOffset();
+      await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
+      await this.scheduleFileMonitoringOnServerStart();
+      await this.scheduleSuperFileMonitoringOnServerStart();
+      await this.scheduleClusterMonitoringOnServerStart();
+      await this.scheduleKeyCheck();
+      await this.createClusterUsageHistoryJob();
       await this.scheduleEmailNotificationProcessing();
-      // await this.scheduleTeamsNotificationProcessing();
-      // await this.scheduleOrbitMonitoringOnServerStart();
-      // await this.createOrbitMegaphoneJob();
-      // await this.startJobMonitoring();
-      // await this.startIntermediateJobsMonitoring();
+      await this.scheduleTeamsNotificationProcessing();
+      await this.scheduleOrbitMonitoringOnServerStart();
+      await this.createOrbitMegaphoneJob();
+      await this.startJobMonitoring();
+      await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
-      // await this.checkClusterReachability();
+      await this.checkClusterReachability();
     })();
   }
 

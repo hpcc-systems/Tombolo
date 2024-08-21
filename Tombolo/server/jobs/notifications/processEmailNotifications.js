@@ -98,10 +98,6 @@ const SentNotification = models.sent_notifications;
           // Send email
           const  emailResponse = await sendEmail({ ...emailPayload });
 
-          console.log('------------------------------------------');
-          console.dir(emailResponse)
-          console.log('------------------------------------------');
-
           // Assume success - if no error is thrown
           successfulDelivery.push(emailPayload);
         }
