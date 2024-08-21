@@ -26,6 +26,10 @@ services:
     volumes:
       - /tmp/pm2
       - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
+      - /var/log/tombolo-server:/app/logs
+    logging:
+      driver: "none" # This line disables Docker logs. All logs are written to the file system
+
     networks:
       - tombolo-network
     ports:
