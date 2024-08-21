@@ -19,7 +19,7 @@ const Home = () => {
       <div className="top">
         <div className="header">
           <h1 style={{ width: '100%', marginTop: '1rem' }}>Welcome to Tombolo!</h1>
-          <h2>Easy Interaction with HPCC Systems Clusters</h2>
+          <h2>Transform Data with Ease: Your Low-Code Bridge to HPCC Systems.</h2>
         </div>
 
         <div className="middle">
@@ -101,7 +101,9 @@ const Home = () => {
           </div>
         </div>
         <div className="footerRow">
-          <img src={logo} alt="HPCC Systems" style={{ width: '10rem', margin: '0 auto' }} />
+          <a style={{ margin: '0 auto' }} href="https://solutionslab.hpccsystems.com/">
+            <img src={logo} alt="HPCC Systems" style={{ width: '10rem', margin: '0 auto' }} />
+          </a>
         </div>
         <div className="footerRow">
           <p>

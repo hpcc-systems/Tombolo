@@ -3,11 +3,11 @@
   flex-direction: column;
   justify-content: space-between;
   flex-wrap: wrap;
-
   width: 100%;
-  height: calc(100vh - 110px);
+  height: calc(100% + 55px);
   text-align: center;
   font-size: 1.5rem;
+  min-height: 1300px;
 }
 
 .container ul {
@@ -33,6 +33,7 @@
   flex-direction: column;
   justify-content: space-between;
   margin-top: -5px;
+  margin-bottom: 3rem;
 }
 
 .middle {
@@ -57,7 +58,6 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  margin-bottom: -55px;
 }
 
 .footerRow {
