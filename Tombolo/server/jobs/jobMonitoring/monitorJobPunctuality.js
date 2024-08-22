@@ -1,6 +1,7 @@
 const { WorkunitsService } = require("@hpcc-js/comms");
 const logger = require("../../config/logger");
 const { decryptString } = require("../../utils/cipher");
+const { parentPort } = require("worker_threads");
 const {
   calculateRunOrCompleteByTimes,
   generateJobName,
@@ -8,6 +9,8 @@ const {
   getProductCategory,
   getDomain,
   generateNotificationId,
+  differenceInMs,
+  nocAlertDescription,
 } = require("./monitorJobsUtil");
 const models = require("../../models");
 
@@ -24,7 +27,6 @@ const Integrations = models.integrations;
   const now = new Date(); // UTC time
   
   try {
-    // Get all job monitorings
     // Find all active job monitorings.
     const jobMonitorings = await JobMonitoring.findAll({
       where: { isActive: 1, approvalStatus: "Approved" },
@@ -36,33 +38,16 @@ const Integrations = models.integrations;
       return;
     }
 
-    // Find severity level (For ASR ) - based on that determine when to send out notifications
-    let severityThreshHold = 0;
-    let severeEmailRecipients;
+    // Get all unique clusters for the job monitorings
+    const clusterIds = jobMonitorings.map(
+      (jobMonitoring) => jobMonitoring.clusterId
+    );
 
-    try{
-    const {id : integrationId} = await Integrations.findOne({where: {name: "ASR"}, raw: true});
-    
-    if(integrationId){
-      // Get integration mapping with integration details
-      const integrationMapping = await IntegrationMapping.findOne({
-        where : {integration_id : integrationId}, raw: true
-      });
-
-      const {
-        metaData: {
-          nocAlerts: { severityLevelForNocAlerts, emailContacts },
-        },
-      } = integrationMapping;
-      severityThreshHold = severityLevelForNocAlerts;
-      severeEmailRecipients = emailContacts;
-    }
-    }catch(error){
-      logger.error(`Job Punctuality Monitoring : Error while getting integration level severity threshold: ${error.message}`);
-    }
-
-    // All clusters
-    const clusters = await Cluster.findAll({ raw: true });
+    // All clusters that are associated with the job monitorings
+    const clusters = await Cluster.findAll({
+      where: { id: clusterIds },
+      raw: true,
+    });
 
     // Decrypt cluster passwords if they exist
     clusters.forEach((clusterInfo) => {
@@ -118,16 +103,70 @@ const Integrations = models.integrations;
           continue;
         }
 
-        const { schedule, expectedStartTime, expectedCompletionTime } =metaData;
+        const { schedule, expectedStartTime, expectedCompletionTime } = metaData;
         const clusterInfo = clustersObj[clusterId];
+
+        // Find severity level (For ASR ) - based on that determine when to send out notifications
+        let severityThreshHold = 0;
+        let severeEmailRecipients = null;
+
+        if (metaData.asrSpecificMetaData) {
+          try {
+            const { id: integrationId } = await Integrations.findOne({
+              where: { name: "ASR" },
+              raw: true,
+            });
+
+            if (integrationId) {
+              // Get integration mapping with integration details
+              const integrationMapping = await IntegrationMapping.findOne({
+                where: {
+                  integration_id: integrationId,
+                  application_id: applicationId,
+                },
+                raw: true,
+              });
+
+              if (integrationMapping) {
+                const {
+                  metaData: {
+                    nocAlerts: { severityLevelForNocAlerts, emailContacts },
+                  },
+                } = integrationMapping;
+                severityThreshHold = severityLevelForNocAlerts;
+                severeEmailRecipients = emailContacts;
+              }
+            }
+          } catch (error) {
+            logger.error(
+              `Job Punctuality Monitoring : Error while getting integration level severity threshold: ${error.message}`
+            );
+          }
+        }
 
         // Job level severity threshold
         const jobLevelSeverity = asrSpecificMetaData?.severity || 0;
 
-        // If job level severity is less than the threshold, check only after the completion time
-        let backDateInMinutes = 0;
-        if(jobLevelSeverity < severityThreshHold){
-          backDateInMinutes = 1440; // 24 hours
+        // Back date in minutes need to be calculated so run window is correctly calculated . EX - for overnight jobs
+        let backDateInMs = 0;
+        let runWindowForJob = null;
+        if (schedule[0]?.runWindow) {
+          runWindowForJob = schedule[0].runWindow;
+        }
+
+        // Calculate the back date in ms
+        if (runWindowForJob === "overnight") {
+          backDateInMs = differenceInMs({
+            startTime: expectedCompletionTime,
+            endTime: expectedStartTime,
+            daysDifference: 1,
+          });
+        } else {
+          backDateInMs = differenceInMs({
+            startTime: expectedCompletionTime,
+            endTime: expectedStartTime,
+            daysDifference: 0,
+          });
         }
 
         // Calculate the run window for the job
@@ -136,45 +175,56 @@ const Integrations = models.integrations;
           timezone_offset: clusterInfo.timezone_offset,
           expectedStartTime,
           expectedCompletionTime,
-          backDateInMinutes,
+          backDateInMs,
         });
 
-        // If the window null - continue. Job is not expected to run 
+        // If the window null - continue. Job is not expected to run
         if (!window) {
           continue;
         }
 
-        let timePassed = false;
-        let lateByInMinutes = 0; 
-        if(jobLevelSeverity < severityThreshHold){
-          lateByInMinutes = Math.floor((window.currentTime - window.end) / 60000);
-        }else{
-          timePassed = window.start < window.currentTime;
-          lateByInMinutes = Math.floor((window.currentTime - window.start) / 60000);
+        let alertTimePassed = false;
+        let lateByInMinutes = 0;
+
+        /* jobLevelSeverity < severityThreshHold means the job is not so severe. 
+        We can wait until expected completion time before notifying about unpunctuality */
+
+        if (jobLevelSeverity < severityThreshHold || !severityThreshHold) {
+          alertTimePassed = window.end < window.currentTime;
+          lateByInMinutes = Math.floor(
+            (window.currentTime - window.end) / 60000
+          );
+        } else {
+          alertTimePassed = window.start < window.currentTime;
+          lateByInMinutes = Math.floor(
+            (window.currentTime - window.start) / 60000
+          );
         }
 
-        // Give grace period of 10 minutes
-        if(lateByInMinutes >10){
-          timePassed = true;
-        }
-        
-        // If the time has not passed, continue
-        if (!timePassed) {
+        // If the time has not passed, or with in grace period of 10 minutes, continue
+        if (!alertTimePassed || lateByInMinutes < 10) {
           continue;
         }
 
         // Check if notification has been sent out for this job, for the current window
         const jobPunctualityDetails = lastJobRunDetails?.jobPunctualityDetails;
+
+        let notificationAlreadySentForThisWindow = false;
+
         if (jobPunctualityDetails) {
           const { windowStartTime, windowEndTime } = jobPunctualityDetails;
           if (
             windowStartTime === window.start.toISOString() &&
             windowEndTime === window.end.toISOString()
           ) {
-            continue;
+            notificationAlreadySentForThisWindow = true;
           }
         }
 
+        // If notification has already been sent for this window for this JM- continue
+        if (notificationAlreadySentForThisWindow) {
+          continue;
+        }
 
         // Make a call to HPCC to see if the job has started
         const translatedJobName = generateJobName({
@@ -197,6 +247,25 @@ const Integrations = models.integrations;
           EndDate: window.end,
           Jobname: translatedJobName,
         });
+
+        // If a job is overnight, it could potentially have 2 translatedJobName as it can run on 2 different days
+        if (schedule[0]?.runWindow === "overnight") {
+          const translatedJobNameNextDay = generateJobName({
+            pattern: jobNamePattern,
+            timezone_offset: clusterInfo.timezone_offset,
+            backDateInDays: 1,
+          });
+
+          const {
+            Workunits: { ECLWorkunit: ECLWorkunitNextDay },
+          } = await wuService.WUQuery({
+            StartDate: window.start,
+            EndDate: window.end,
+            Jobname: translatedJobNameNextDay,
+          });
+
+          ECLWorkunit.push(...ECLWorkunitNextDay);
+        }
 
         // If workunits are found, update the job monitoring and continue
         if (ECLWorkunit.length > 0) {
@@ -247,7 +316,7 @@ const Integrations = models.integrations;
           const notificationPayload = createNotificationPayload({
             type: "email",
             notificationDescription:
-              "Monitoring detected that a monitored job has not started on time",
+              "Monitoring detected that a monitored job  did not started on time",
             templateName: "jobMonitoring",
             originationId: monitoringTypeDetails.id,
             applicationId: applicationId,
@@ -277,8 +346,12 @@ const Integrations = models.integrations;
               domain,
               severity,
             }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
-            firstLogged: new Date(now.getTime() + offSet * 60 * 1000).toISOString(),
-            lastLogged: new Date(now.getTime() + offSet * 60 * 1000).toISOString(),
+            firstLogged: new Date(
+              now.getTime() + offSet * 60 * 1000
+            ).toISOString(),
+            lastLogged: new Date(
+              now.getTime() + offSet * 60 * 1000
+            ).toISOString(),
           });
 
           // Queue email notification
@@ -286,12 +359,18 @@ const Integrations = models.integrations;
 
           // NOC email notification
           if (jobLevelSeverity >= severityThreshHold && severeEmailRecipients) {
-            notificationPayload.metaData.notificationDescription = `[SEV TICKET REQUEST]   
-                                                                      The following issue has been identified via automation.   
-                                                                      Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`  
-            notificationPayload.metaData.mainRecipients = severeEmailRecipients;
-            delete notificationPayload.metaData.cc;
-            await NotificationQueue.create(notificationPayload);
+            const notificationPayloadForNoc = { ...notificationPayload };
+            notificationPayloadForNoc.metaData.notificationDescription =
+              nocAlertDescription;
+            notificationPayloadForNoc.metaData.mainRecipients =
+              severeEmailRecipients;
+            notificationPayloadForNoc.metaData.notificationId =
+              generateNotificationId({
+                notificationPrefix,
+                timezoneOffset: offSet || 0,
+              });
+            delete notificationPayloadForNoc.metaData.cc;
+            await NotificationQueue.create(notificationPayloadForNoc);
           }
           // Update the job monitoring
           await JobMonitoring.update(
@@ -321,5 +400,8 @@ const Integrations = models.integrations;
     logger.error(
       `Error in job punctuality monitoring script: ${error.message}`
     );
+  } finally {
+    if (parentPort) parentPort.postMessage("done");
+    else process.exit(0);
   }
 })();

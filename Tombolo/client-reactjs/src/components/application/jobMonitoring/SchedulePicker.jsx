@@ -10,7 +10,7 @@ const dailyRunWindowAndIntervals = [
   { label: 'Morning (00:00 - 11:59)', value: 'morning' },
   { label: 'Afternoon (12:00 - 23:59)', value: 'afternoon' },
   { label: 'Overnight (Prev 12:00 - Current day 12:00)', value: 'overnight' },
-  { label: 'Every 2 Days', value: 'every2Days' },
+  // { label: 'Every 2 Days', value: 'every2Days' },
 ];
 
 // Daily schedule options

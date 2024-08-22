@@ -73,6 +73,7 @@ function JobMonitoring() {
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
   const [filters, setFilters] = useState({});
   const [filtersVisible, setFiltersVisible] = useState(true);
+  const [filteringJobs, setFilteringJobs] = useState(false);
 
   // Create form instance
   const [form] = Form.useForm();
@@ -84,7 +85,6 @@ function JobMonitoring() {
       try {
         const allMonitorings = await getAllJobMonitorings({ applicationId });
         setJobMonitorings(allMonitorings);
-        setFilteredJobMonitoring(allMonitorings);
       } catch (error) {
         message.error('Error fetching job monitorings');
       }
@@ -138,7 +138,7 @@ function JobMonitoring() {
     }
   }, [editingData, duplicatingData]);
 
-  // Get all teams hook, monitoring type ID, Filters from local storage
+  // Get  monitoring type ID, Filters from local storage
   useEffect(() => {
     // Get monitoringType id for job monitoring
     (async () => {
@@ -198,8 +198,11 @@ function JobMonitoring() {
 
   // When filterChange filter the job monitorings
   useEffect(() => {
-    if (jobMonitorings.length === 0) return;
-    if (Object.keys(filters).length < 1) return;
+    setFilteringJobs(true);
+    if (jobMonitorings.length === 0) {
+      setFilteringJobs(false);
+    }
+    // if (Object.keys(filters).length < 1) return;
     const { approvalStatus, activeStatus, domain, frequency, product } = filters;
 
     // Convert activeStatus to boolean
@@ -210,7 +213,7 @@ function JobMonitoring() {
       activeStatusBool = false;
     }
 
-    const filteredJobMonitorings = jobMonitorings.filter((jobMonitoring) => {
+    const filteredJm = jobMonitorings.filter((jobMonitoring) => {
       let include = true;
       const currentDomain = jobMonitoring?.metaData?.asrSpecificMetaData?.domain;
       const currentProduct = jobMonitoring?.metaData?.asrSpecificMetaData?.productCategory;
@@ -237,7 +240,8 @@ function JobMonitoring() {
       return include;
     });
 
-    setFilteredJobMonitoring(filteredJobMonitorings);
+    setFilteredJobMonitoring(filteredJm);
+    setFilteringJobs(false);
   }, [filters, jobMonitorings]);
 
   // Function reset states when modal is closed
@@ -385,6 +389,7 @@ function JobMonitoring() {
       allInputs = { ...allInputs, metaData };
 
       const responseData = await createJobMonitoring({ inputData: allInputs });
+
       setJobMonitorings([responseData, ...jobMonitorings]);
       message.success('Job monitoring saved successfully');
 
@@ -648,6 +653,7 @@ function JobMonitoring() {
         domains={domains}
         productCategories={productCategories}
         allProductCategories={allProductCategories}
+        filteringJobs={filteringJobs}
       />
       <MonitoringDetailsModal
         displayMonitoringDetailsModal={displayMonitoringDetailsModal}

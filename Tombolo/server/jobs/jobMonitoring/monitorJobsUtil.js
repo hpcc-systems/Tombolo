@@ -136,6 +136,7 @@ function setTimeToDate(date, time) {
 //Calculate start and end time given local time at cluster , run window, expected start and completion time
 function calculateStartAndEndDateTime({localDateTimeAtCluster, runWindow, expectedStartTime, expectedCompletionTime}) {
   let startAndEnd;
+  const previousDay = new Date(localDateTimeAtCluster.getTime() - 86400000);
   if (runWindow === "overnight") {
     startAndEnd = {
       start: setTimeToDate(previousDay, expectedStartTime || "12:00"),
@@ -167,11 +168,11 @@ function calculateStartAndEndDateTime({localDateTimeAtCluster, runWindow, expect
 }
 
 // Daily jobs
-function calculateRunOrCompleteByTimeForDailyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes = 0}) {
+function calculateRunOrCompleteByTimeForDailyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMs = 0}) {
   const {runWindow} = schedule;
 
  const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
- const adjustedLocalTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000);
+ const adjustedLocalTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMs);
 
  let window = {frequency: "daily", currentTime: localDateTimeAtCluster};
 
@@ -190,14 +191,14 @@ function calculateRunOrCompleteByTimeForWeeklyJobs({
   expectedStartTime,
   expectedCompletionTime,
   timezone_offset,
-  backDateInMinutes = 0,
+  backDateInMs = 0,
 }) {
   const { days, runWindow } = schedule;
 
   // Find current day at the cluster given timezone offset and this system  in utc
   const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
    const adjustedLocalTimeAtCluster = new Date(
-     localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000
+     localDateTimeAtCluster.getTime() - backDateInMs
    );
   const day = adjustedLocalTimeAtCluster.getDay();
   const runDay = days.find((d) => d === day.toString());
@@ -219,11 +220,11 @@ function calculateRunOrCompleteByTimeForWeeklyJobs({
 }
 
 // Monthly jobs
-function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes = 0}) {
+function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMs = 0}) {
   // Determine if schedule is by date or week and weekday
   const { scheduleBy } = schedule[0];
   const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
-  const adjustedLocalTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000);
+  const adjustedLocalTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMs);
 
   let window = {
     currentTime: localDateTimeAtCluster,
@@ -299,12 +300,12 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime
 }
 
 // Yearly jobs
-function calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes = 0}) {
+function calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMs = 0}) {
   const {scheduleBy} = schedule[0];
 
   // Local date time at cluster
   const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
-  const adjustedLocalDateTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000);
+  const adjustedLocalDateTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMs);
 
   // Current month at the cluster
   const monthAtCluster = adjustedLocalDateTimeAtCluster.getMonth();
@@ -398,13 +399,13 @@ function calculateRunOrCompleteByTimeForCronJobs({
   expectedStartTime,
   expectedCompletionTime,
   timezone_offset,
-  backDateInMinutes = 0,
+  backDateInMs = 0,
 }) {
   const cron = schedule[0].cron;
 
   // Local date time at cluster
   const localDateTimeAtCluster = findLocalDateTimeAtCluster(timezone_offset);
-  const adjustedLocalDateTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMinutes * 60 * 1000);
+  const adjustedLocalDateTimeAtCluster = new Date(localDateTimeAtCluster.getTime() - backDateInMs);
 
   // Get the previous and next dates the cron job was supposed to run
   const interval = cronParser.parseExpression(cron, {
@@ -463,21 +464,21 @@ function checkIfCurrentTimeIsWithinRunWindow({start, end, currentTime}) {
 }
 
 // Calculate run and complete by time for a job on cluster's local time
-function calculateRunOrCompleteByTimes({schedule, timezone_offset, expectedStartTime, expectedCompletionTime, backDateInMinutes = 0}) {
+function calculateRunOrCompleteByTimes({schedule, timezone_offset, expectedStartTime, expectedCompletionTime, backDateInMs = 0}) {
   // determine frequency
   frequency = schedule[0].frequency;
 
   switch (frequency) {
     case "daily":
-      return calculateRunOrCompleteByTimeForDailyJobs({schedule: schedule[0],expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
+      return calculateRunOrCompleteByTimeForDailyJobs({schedule: schedule[0],expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMs});
     case "weekly":
-      return calculateRunOrCompleteByTimeForWeeklyJobs({schedule: schedule[0], expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
+      return calculateRunOrCompleteByTimeForWeeklyJobs({schedule: schedule[0], expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMs});
     case "monthly":
-      return calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
+      return calculateRunOrCompleteByTimeForMonthlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMs});
     case "yearly":
-      return calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
+      return calculateRunOrCompleteByTimeForYearlyJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMs});
     case "cron":
-      return calculateRunOrCompleteByTimeForCronJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMinutes});
+      return calculateRunOrCompleteByTimeForCronJobs({schedule, expectedStartTime, expectedCompletionTime, timezone_offset, backDateInMs});
     default:
       throw new Error(`Unknown frequency: ${frequency}`);
   }
@@ -603,7 +604,7 @@ function getDateReplacements(date) {
 }
 
 // Generate job name from job pattern
-function generateJobName({ pattern, timezone_offset = 0 }) {
+function generateJobName({ pattern, timezone_offset = 0, backDateInDays = 0 }) {
   let patternCopy = pattern;
   if (!patternCopy) return "";
 
@@ -616,7 +617,9 @@ function generateJobName({ pattern, timezone_offset = 0 }) {
 
   // No pattern, no adjustments
   if (dateSubstring === "<DATE>") {
-    const date = new Date(Date.now() + timezone_offset * 1000);
+    let date = new Date(Date.now() + timezone_offset * 1000);
+    // adjust backdate
+    date = new Date(date.getTime() - backDateInDays * 86400000);
     const replacements = getDateReplacements(date);
     const translatedDate =
       replacements["%Y"] + replacements["%m"] + replacements["%d"];
@@ -636,9 +639,7 @@ function generateJobName({ pattern, timezone_offset = 0 }) {
       patternCopy = patternCopy.replace("<DATE", "");
       patternCopy = patternCopy.replace(">", "");
 
-      const date = new Date(
-        Date.now() + timezone_offset * 60000 + adjustment * 86400000
-      );
+      const date = new Date(Date.now() + timezone_offset * 60000 + adjustment * 86400000);
       const replacements = getDateReplacements(date);
 
       for (const key in replacements) {
@@ -657,6 +658,29 @@ function generateJobName({ pattern, timezone_offset = 0 }) {
 // console.log( generateJobName({pattern: "<DATE,0,%y/%m/%d>* Test",timezone_offset: 0}));
 // console.log(generateJobName({ pattern: "Launch <DATE,0,%Y_%m_%d>"}));
 
+const nocAlertDescription = `[SEV TICKET REQUEST]   
+                             The following issue has been identified via automation.   
+                            Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`;
+
+
+
+// Given 2 times in HH:MM format, calculate the difference in milliseconds 
+function differenceInMs({ startTime, endTime, daysDifference }) {
+  const [hours1, minutes1] = startTime.split(":").map(Number);
+  const [hours2, minutes2] = endTime.split(":").map(Number);
+
+  const startDate = new Date();
+  const endDate = new Date();
+
+  startDate.setHours(hours1, minutes1, 0, 0);
+  endDate.setHours(hours2, minutes2, 0, 0);
+
+  startDate.setDate(startDate.getDate() - daysDifference);
+
+  const difference = endDate - startDate; // Convert milliseconds to minutes
+  return Math.abs(difference);
+}
+
 module.exports = {
   matchJobName,
   findStartAndEndTimes,
@@ -671,4 +695,6 @@ module.exports = {
   intermediateStates,
   getProductCategory,
   getDomain,
+  nocAlertDescription,
+  differenceInMs,
 };

@@ -104,7 +104,7 @@ function MonitoringDetailsModal({
             )}
           </Descriptions.Item>
         )}
-        {asrSpecificMetaData?.severity && (
+        {asrSpecificMetaData?.severity !== undefined && asrSpecificMetaData?.severity !== null && (
           <Descriptions.Item label="Severity">{asrSpecificMetaData.severity}</Descriptions.Item>
         )}
         {/* ---------NOTIFICATION TRIGGERS AND CONTACTS --------------------------------------------- */}
@@ -213,22 +213,33 @@ function MonitoringDetailsModal({
 
 export default MonitoringDetailsModal;
 
+// Interpret run window
+const interpretRunWindow = (schedule) => {
+  const runWindow = schedule[0].runWindow || '';
+  if (runWindow === '') {
+    return '';
+  } else if (runWindow === 'daily') return 'Anytime';
+  else {
+    return _.capitalize(runWindow);
+  }
+};
+
 //Generate tags for schedule
 const generateTagsForSchedule = (schedule) => {
   const tags = [];
   schedule.forEach((s) => {
     if (s.frequency === 'daily') {
-      tags.push('Everyday');
+      tags.push(interpretRunWindow(schedule));
     }
     if (s.frequency === 'weekly') {
-      let tempData = 'Every week on';
+      let tempData = `Every Week ${interpretRunWindow(schedule)} on`;
       s.days.forEach((d, i) => {
         tempData += ` ${getDayLabel(d)} ${i < s.days.length - 1 ? ',' : ''}`;
       });
       tags.push(tempData);
     }
     if (s.scheduleBy === 'dates') {
-      let tempData = 'Every month on';
+      let tempData = `Every month ${interpretRunWindow(schedule)}`;
       s.dates.forEach((d, i) => {
         tempData += ` ${getDateLabel(d)} ${i < s.dates.length - 1 ? ',' : ''}`;
       });

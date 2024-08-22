@@ -16,6 +16,7 @@ const {
   getProductCategory,
   getDomain,
   createNotificationPayload,
+  nocAlertDescription,
 } = require("./monitorJobsUtil");
 
 // Constants
@@ -74,7 +75,7 @@ const Integrations = models.integrations;
 
         clusterInfo.localTime = findLocalDateTimeAtCluster(
           clusterInfo.timezone_offset || 0
-        ).toISOString();
+        );
       } catch (error) {
         logger.error(
           `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`
@@ -105,7 +106,7 @@ const Integrations = models.integrations;
 
     // Find severity level (For ASR ) - based on that determine when to send out notifications
     let severityThreshHold = 0;
-    let severeEmailRecipients;
+    let severeEmailRecipients = null;
     try {
       const { id: integrationId } = await Integrations.findOne({
         where: { name: "ASR" },
@@ -119,17 +120,19 @@ const Integrations = models.integrations;
           raw: true,
         });
 
-        const {
-          metaData: {
-            nocAlerts: { severityLevelForNocAlerts, emailContacts },
-          },
-        } = integrationMapping;
-        severityThreshHold = severityLevelForNocAlerts;
-        severeEmailRecipients = emailContacts;
+        if(integrationMapping){
+          const {
+            metaData: {
+              nocAlerts: { severityLevelForNocAlerts, emailContacts },
+            },
+          } = integrationMapping;
+          severityThreshHold = severityLevelForNocAlerts;
+          severeEmailRecipients = emailContacts;
+        }
       }
     } catch (error) {
       logger.error(
-        `Job Monitoring : Error while getting integration level severity threshold: ${error.message}`
+        `Intermediate State Job Monitoring : Error while getting integration level severity threshold: ${error.message}`
       );
     }
 
@@ -213,9 +216,7 @@ const Integrations = models.integrations;
 
           try {
             const info = await wuService.WUInfo({ Wuid: wu.Wuid });
-            const {
-              Workunit: { State },
-            } = info;
+            const {Workunit: { State }} = info;
 
             // Check if current time is before, after, within the window
             const currentTimeToWindowRelation =
@@ -224,9 +225,16 @@ const Integrations = models.integrations;
                 end: expectedCompletionTime,
                 currentTime: clusterDetail.localTime,
               });
+            
+     
+            const sendAlertToNoc = severity >= severityThreshHold && severeEmailRecipients;
+            
 
             // WU now in state such as failed, aborted etc
             if (notificationConditionLowerCase.includes(State)) {
+              console.log('------------------------------------------');
+              console.dir("Intermediate job failed")
+              console.log('------------------------------------------');
               // Add new State to the WU
               wu.State = _.capitalize(State);
 
@@ -252,10 +260,9 @@ const Integrations = models.integrations;
                   "Job Name/Filter": jobNamePattern,
                   "Returned Job": wu.Jobname,
                   State: wu.State,
-                  "Discovered at":
-                    new Date(
-                      now + clusterDetail.timezone_offset * 60 * 1000
-                    ).toISOString() || now.toISOString(),
+                  "Discovered at": findLocalDateTimeAtCluster(
+                    clusterDetail.timezone_offset
+                  ),
                 },
                 notificationId: generateNotificationId({
                   notificationPrefix,
@@ -267,29 +274,28 @@ const Integrations = models.integrations;
                   domain,
                   severity,
                 }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
-                firstLogged: new Date(
-                  now + clusterDetail.timezone_offset * 60 * 1000
-                ).toISOString(),
-                lastLogged: new Date(
-                  now + clusterDetail.timezone_offset * 60 * 1000
-                ).toISOString(),
+                firstLogged: findLocalDateTimeAtCluster(
+                  clusterDetail.timezone_offset
+                ),
+                lastLogged: findLocalDateTimeAtCluster(
+                  clusterDetail.timezone_offset
+                ),
               });
 
-              // notificationPayload.wuId = wu.Wuid;
+              notificationPayload.wuId = wu.Wuid;
               notificationsToBeQueued.push(notificationPayload);
 
               // NOC email notification if severity is high
-              if (
-                severity >= severityThreshHold &&
-                severeEmailRecipients
-              ) {
-                notificationPayload.metaData.notificationDescription = `[SEV TICKET REQUEST]   
-                                                                      The following issue has been identified via automation.   
-                                                                      Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`;
-                notificationPayload.metaData.mainRecipients =
-                  severeEmailRecipients;
-                delete notificationPayload.metaData.cc;
-                notificationsToBeQueued.push(notificationPayload);
+              if (sendAlertToNoc) {
+                const notificationPayloadForNoc = { ...notificationPayload}
+                notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;
+                notificationPayloadForNoc.metaData.mainRecipients = severeEmailRecipients;
+                notificationPayloadForNoc.metaData.notificationId = generateNotificationId({
+                  notificationPrefix,
+                  timezoneOffset: clusterDetail.timezone_offset || 0,
+                }),
+                delete notificationPayloadForNoc.metaData.cc;
+                notificationsToBeQueued.push(notificationPayloadForNoc);
               }
 
               wuNoLongerInIntermediateState.push(wu.Wuid);
@@ -300,6 +306,10 @@ const Integrations = models.integrations;
               currentTimeToWindowRelation === "after" &&
               requireComplete === true
             ) {
+              console.log('------------------------------------------');
+              console.dir("Intermediate job passed time")
+              console.log('------------------------------------------');
+
               // Add new State to the WU
               wu.State = _.capitalize(State);
 
@@ -325,10 +335,9 @@ const Integrations = models.integrations;
                   "Job Name/Filter": jobNamePattern,
                   "Returned Job": wu.Jobname,
                   State: wu.State,
-                  "Discovered at":
-                    new Date(
-                      now + clusterDetail.timezone_offset * 60 * 1000
-                    ).toISOString() || now.toISOString(),
+                  "Discovered at": findLocalDateTimeAtCluster(
+                    clusterDetail.timezone_offset
+                  ),
                 },
                 notificationId: generateNotificationId({
                   notificationPrefix,
@@ -340,27 +349,42 @@ const Integrations = models.integrations;
                   domain,
                   severity,
                 }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
-                firstLogged: new Date(
-                  now + clusterDetail.timezone_offset * 60 * 1000
-                ).toISOString(),
-                lastLogged: new Date(
-                  now + clusterDetail.timezone_offset * 60 * 1000
-                ).toISOString(),
+                firstLogged: findLocalDateTimeAtCluster(
+                  clusterDetail.timezone_offset
+                ),
+                lastLogged: findLocalDateTimeAtCluster(
+                  clusterDetail.timezone_offset
+                ),
               });
+
+              // console.log('-----------Payload 1----------------------');
+              // console.dir(notificationPayload)
+              // console.log('------------------------------------------');
               notificationsToBeQueued.push(notificationPayload);
 
               // NOC email notification if severity is high
-              if (severity >= severityThreshHold && severeEmailRecipients) {
-                notificationPayload.metaData.notificationDescription = `[SEV TICKET REQUEST]   
-                                                                      The following issue has been identified via automation.   
-                                                                      Please open a sev ticket if this issue is not yet in the process of being addressed. Bridgeline not currently required.`;
-                notificationPayload.metaData.mainRecipients =
-                  severeEmailRecipients;
-                delete notificationPayload.metaData.cc;
-                notificationsToBeQueued.push(notificationPayload);
+              if (sendAlertToNoc) {
+                const notificationPayloadForNoc = { ...notificationPayload}
+                notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;
+                notificationPayloadForNoc.metaData.mainRecipients = severeEmailRecipients;
+                notificationPayloadForNoc.metaData.notificationId = generateNotificationId({
+                  notificationPrefix,
+                  timezoneOffset: clusterDetail.timezone_offset || 0,
+                }),
+                delete notificationPayloadForNoc.metaData.cc;
+
+                
+              // console.log("-----------Payload 2----------------------");
+              // console.dir(notificationPayload);
+              // console.log("------------------------------------------");
+
+                notificationsToBeQueued.push(notificationPayloadForNoc);
               }
 
-              
+              console.log('----------To be queued -------------------');
+              console.dir(notificationsToBeQueued)
+              console.log('------------------------------------------');
+
               wuNoLongerInIntermediateState.push(wu.Wuid);
             }
             // IF the job is still in intermediate state and the current time is within the run  window
@@ -368,17 +392,24 @@ const Integrations = models.integrations;
               intermediateStates.includes(State) &&
               currentTimeToWindowRelation === "within"
             ) {
+              console.log('------------------------------------------');
+              console.dir("STILL IN INTERMEDIATE STATE")
+              console.log('------------------------------------------');
+
               // If the State has changed from last time it was checked, update monitoring needs to be updated with new state
               if (wu.State !== State) {
                 wuWithNewIntermediateState[wu.Wuid] = State;
               }
             } else {
+              console.log('------------------------------------------');
+              console.dir("COMPLETED")
+              console.log('------------------------------------------');
               // WU in completed state - Remove the WU from the intermediate state
               wuNoLongerInIntermediateState.push(wu.Wuid);
             }
           } catch (err) {
             logger.error(
-              `WUId - ${wu.Wuid} - Cluster ${cluster_id}: ${err.message}`
+              `Monitor Intermediate Jobs. WUId - ${wu.Wuid} - Cluster ${cluster_id}: ${err.message}`
             );
           }
         }
@@ -389,6 +420,9 @@ const Integrations = models.integrations;
 
     // Insert notification in queue
     for (let notification of notificationsToBeQueued) {
+      // console.log('-NOTIFICATION LOOP ------------------------');
+      // console.dir(notification);
+      // console.log('------------------------------------------');
       await notification_queue.create(notification);
     }
 
@@ -429,15 +463,12 @@ const Integrations = models.integrations;
           { where: { id } }
         );
       } catch (error) {
-        logger.error(`Error updating log with id ${log.id}:`, error);
+        logger.error(`Intermediate State Jobs - Error updating log with id ${log.id}:`, error);
       }
     }
   } catch (err) {
     logger.error(err);
   } finally {
-    logger.debug(
-      `Job monitoring completed started ${now} and ended at ${new Date()}`
-    );
     if (parentPort) parentPort.postMessage("done");
     else process.exit(0);
   }
