@@ -2,12 +2,14 @@ import React, { Suspense } from 'react';
 import { connect } from 'react-redux';
 import { Layout, ConfigProvider, Spin, Card, Tour } from 'antd';
 import { Router, Route, Switch } from 'react-router-dom';
-import { Redirect } from 'react-router';
 import history from './components/common/History';
 import i18next from 'i18next';
 import zh_CN from 'antd/es/locale/zh_CN'; // For every language import respective module from antd
 import en_US from 'antd/es/locale/en_US';
 import logo from './images/logo.png';
+
+//home page
+import Home from './components/application/home/index.js';
 
 // Auth pages
 import Assets from './components/application/Assets'; // This is "home" view, can go into main bundle
@@ -79,7 +81,7 @@ const BG_COLOR = '';
 
 class App extends React.Component {
   state = {
-    collapsed: false,
+    collapsed: localStorage.getItem('collapsed') === 'true',
     locale: 'en',
     message: '',
     tourOpen: false,
@@ -188,13 +190,8 @@ class App extends React.Component {
       return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user} />;
     };
 
-    const getAssets = () => {
-      const applicationId = this.props.application?.applicationId;
-      if (applicationId) {
-        return <Redirect to={`/${applicationId}/assets`} />;
-      } else {
-        return <Assets />;
-      }
+    const getHome = () => {
+      return <Home />;
     };
 
     //steps for tour
@@ -343,8 +340,8 @@ class App extends React.Component {
                     <Content
                       style={{
                         transition: '.1s linear',
-                        margin: '55px 16px',
-                        marginLeft: this.state.collapsed ? '70px' : '215px',
+                        margin: '55px 0px',
+                        marginLeft: this.state.collapsed ? '55px' : '200px',
                       }}>
                       <ErrorBoundary>
                         <Suspense fallback={<Fallback />}>
@@ -359,7 +356,7 @@ class App extends React.Component {
                           ) : null}
 
                           <Switch>
-                            <PrivateRoute exact path="/" component={getAssets} />
+                            <PrivateRoute exact path="/" component={Home} />
                             <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
                             <PrivateRoute
                               path="/:applicationId/assets/fileTemplate/:assetId?"
@@ -410,7 +407,7 @@ class App extends React.Component {
                               path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
                               component={ManualJobDetail}
                             />
-                            {this.props.authWithAzure ? <Route exact path="*" component={getAssets} /> : null}
+                            {this.props.authWithAzure ? <Route exact path="*" component={getHome} /> : null}
                           </Switch>
                         </Suspense>
                       </ErrorBoundary>

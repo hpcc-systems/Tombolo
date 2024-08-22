@@ -1,0 +1,115 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+  height: calc(100% + 55px);
+  text-align: center;
+  font-size: 1.5rem;
+  min-height: 1300px;
+}
+
+.container ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.container ul li {
+  margin-bottom: 1rem;
+}
+
+.header {
+  background: rgb(8, 85, 127);
+  color: white;
+  padding: 6rem;
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.top {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-top: -5px;
+  margin-bottom: 3rem;
+}
+
+.middle {
+  width: 95%;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.middle .ant-card {
+  width: 30%;
+
+  font-size: 1.25rem;
+}
+
+.footer {
+  background: rgb(48, 56, 70);
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.footerRow {
+  width: 100%;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.footerRow a {
+  color: white;
+  text-decoration: underline;
+}
+
+.footerRow p {
+  margin: 0 auto;
+  font-size: 1rem;
+}
+
+.sub {
+  width: 30%;
+  font-size: 1rem;
+  margin-bottom: 3rem;
+}
+
+.container .ant-card-head {
+  background: #002140;
+  color: white;
+}
+
+/* @media breakpoint for tablets */
+@media (max-width: 1024px) {
+  .container {
+    height: auto;
+  }
+
+  .middle {
+    margin-bottom: 3rem;
+    flex-direction: column;
+  }
+  .middle .ant-card {
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+
+  .footerRow {
+    flex-direction: column;
+  }
+
+  .sub {
+    width: 100%;
+  }
+}
