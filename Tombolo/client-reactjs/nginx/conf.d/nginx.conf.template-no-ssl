@@ -31,14 +31,24 @@ server {
     proxy_hide_header X-Powered-By;
   }
 
-    location /socket.io {
+  # Location block for SSE at /api/addClusterWithProgress
+  location /api/cluster/addClusterWithProgress {
+      proxy_pass http://node:3000;  # Pass to your Node.js server
+      proxy_set_header Connection keep-alive;
+      proxy_buffering off;  # Disable buffering to support SSE
+      proxy_cache off;      # Disable caching
+      chunked_transfer_encoding off;  # Disable chunked transfer encoding
+      add_header Cache-Control no-cache;  # Ensure no caching is done on client side
+  }
+
+  location /socket.io {
     proxy_pass http://node:3000;
     proxy_http_version 1.1;
     proxy_set_header Upgrade ${DOLLAR}http_upgrade;
     proxy_set_header Connection 'upgrade';
     proxy_set_header Host ${DOLLAR}host;
     proxy_cache_bypass ${DOLLAR}http_upgrade;
-}
+  }
 
   error_page 500 502 503 504 /50x.html;
     location = /50x.html {
