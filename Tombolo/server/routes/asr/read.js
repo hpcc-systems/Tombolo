@@ -19,6 +19,7 @@ router.post(
   "/domains/",
   [
     body("name").notEmpty().withMessage("Domain name is required"),
+    body("region").notEmpty().withMessage("Region is required"),
     body("monitoringTypeIds")
       .optional()
       .isArray()
@@ -40,11 +41,11 @@ router.post(
 
       /* if monitoring type is provided, 
       create domain, next  iterate over monitoringTypeId and make entry to  asr_domain_monitoring_types*/
-      const { name, severityThreshold, severityAlertRecipients, monitoringTypeIds, createdBy } =
+      const { name, region, severityThreshold, severityAlertRecipients, monitoringTypeIds, createdBy } =
         req.body;
       let domain;
       if (monitoringTypeIds) {
-        domain = await Domains.create({ name, severityThreshold, severityAlertRecipients, createdBy });
+        domain = await Domains.create({ name, region, severityThreshold, severityAlertRecipients, createdBy });
 
         // create domain monitoring type mapping
         const createPromises = monitoringTypeIds.map((monitoringId) => {
@@ -60,7 +61,7 @@ router.post(
 
       // if no monitoring type is provided, create domain without monitoring type
       else {
-        domain = await Domains.create({ name, severityThreshold,severityAlertRecipients, createdBy });
+        domain = await Domains.create({ name, region, severityThreshold,severityAlertRecipients, createdBy });
       }
       res.status(200).json({ message: "Domain created successfully", domain });
     } catch (error) {
@@ -136,6 +137,7 @@ router.patch(
       // Update domain and delete or add relation in the junction table
       const {
         name,
+        region,
         severityThreshold,
         severityAlertRecipients, 
         monitoringTypeIds,
@@ -145,7 +147,13 @@ router.patch(
       if (monitoringTypeIds) {
         response = await sequelize.transaction(async (t) => {
           await Domains.update(
-            { name, severityThreshold, severityAlertRecipients, updatedBy },
+            {
+              name,
+              region,
+              severityThreshold,
+              severityAlertRecipients,
+              updatedBy,
+            },
             { where: { id: req.params.id }, transaction: t }
           );
 
@@ -171,7 +179,7 @@ router.patch(
         });
       } else {
         response = await Domains.update(
-          { name, severityThreshold, severityAlertRecipients, updatedBy },
+          { name, region, severityThreshold, severityAlertRecipients, updatedBy },
           { where: { id: req.params.id } }
         );
       }
@@ -265,7 +273,7 @@ router.get("/products/", async(req, res) => {
                attributes: [], // Exclude the junction table from the result
              },
              as: "associatedDomains",
-             attributes: ["id", "name", "severityThreshold", "severityAlertRecipients"],
+             attributes: ["id", "name", "region", "severityThreshold", "severityAlertRecipients"],
            },
          ],
          order: [["createdAt", "DESC"]],
@@ -420,6 +428,7 @@ router.get("/domainsForSpecificMonitoring/:monitoringTypeId",
           attributes: [
             "id",
             "name",
+            "region",
             "severityThreshold",
             "severityAlertRecipients",
           ],
