@@ -14,6 +14,18 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         type: DataTypes.STRING,
       },
+      severityThreshold: {
+        allowNull: false,
+        type: DataTypes.INTEGER,
+      },
+      severityAlertRecipients: {
+        allowNull: false,
+        type: DataTypes.JSON,
+      },
+      metaData: {
+        allowNull: true,
+        type: DataTypes.JSON,
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
@@ -58,7 +70,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "domain_id",
       as: "associatedProducts",
     });
-  }
+  };
 
   return AsrDomains;
 };
