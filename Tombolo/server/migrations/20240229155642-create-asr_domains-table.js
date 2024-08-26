@@ -15,6 +15,10 @@ module.exports = {
         unique: true,
         type: DataTypes.STRING,
       },
+      severityThreshold: {
+        allowNull: false,
+        type: DataTypes.INTEGER,
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
