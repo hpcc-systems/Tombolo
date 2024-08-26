@@ -1,7 +1,7 @@
 // Package imports
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Modal, Form, Input, Select, message } from 'antd';
+import { Modal, Form, Input, Select, message, Row, Col } from 'antd';
 import { isEmail } from 'validator';
 
 //Local Imports
@@ -130,25 +130,30 @@ const DomainModal = ({
       okText={selectedDomain ? 'Update' : 'Save'}
       maskClosable={false}>
       <Form form={form} layout="vertical">
-        <Form.Item
-          label="Domain"
-          name="name"
-          rules={[{ required: true, message: 'Please input the product name!' }, { max: 100 }]}>
-          <Input placeholder="Product Name" />
-        </Form.Item>
-
-        <Form.Item
-          label="Severity Threshold"
-          rules={[{ required: true, message: 'Severity threshold is required' }]}
-          name="severityThreshold">
-          <Select>
-            {severityThresholds.map((severity) => (
-              <Option key={severity} value={severity}>
-                {severity}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Domain"
+              name="name"
+              rules={[{ required: true, message: 'Please input the product name!' }, { max: 100 }]}>
+              <Input placeholder="Product Name" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Severity Threshold"
+              rules={[{ required: true, message: 'Severity threshold is required' }]}
+              name="severityThreshold">
+              <Select placeholder="Severity Threshold">
+                {severityThresholds.map((severity) => (
+                  <Option key={severity} value={severity}>
+                    {severity}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Form.Item
           label="Severity E-mail Recipients"

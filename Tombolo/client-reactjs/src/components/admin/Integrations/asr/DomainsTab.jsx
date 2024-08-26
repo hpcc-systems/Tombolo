@@ -17,15 +17,15 @@ const DomainsTab = ({ domains, setSelectedDomain, setDomainModalOpen }) => {
       width: '12%',
     },
     {
-      title: 'Severity',
+      title: 'Severity Threshold',
       dataIndex: 'severityThreshold',
-      width: '8%',
+      width: '10%',
     },
     {
       title: 'Severity Alert Recipients',
       dataIndex: 'severityAlertRecipients',
       render: (recipients) => <>{recipients.map((r, i) => `${i < recipients.length - 1 ? r + ', ' : r}`)}</>,
-      width: '40%',
+      width: '38%',
     },
     {
       title: 'Activity Type',
