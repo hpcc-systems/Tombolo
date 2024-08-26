@@ -14,33 +14,29 @@ const DomainsTab = ({ domains, setSelectedDomain, setDomainModalOpen }) => {
     {
       title: 'Domain Name',
       dataIndex: 'name',
-      width: '15%',
+      width: '12%',
     },
     {
-      title: 'Severity Threshold',
+      title: 'Severity',
       dataIndex: 'severityThreshold',
-      width: '15%',
+      width: '8%',
     },
     {
       title: 'Severity Alert Recipients',
       dataIndex: 'severityAlertRecipients',
-      render: (recipients) => (
-        <>
-          {recipients.map((r, i) => (
-            <Tag key={i}>{r}</Tag>
-          ))}
-        </>
-      ),
+      render: (recipients) => <>{recipients.map((r, i) => `${i < recipients.length - 1 ? r + ', ' : r}`)}</>,
+      width: '40%',
     },
     {
       title: 'Activity Type',
       dataIndex: 'activityTypes',
+      width: '30%',
       render: (tags) => (
         <>
           {tags.map(
             (tag, i) =>
               tag.name && (
-                <Tag color="blue" key={i}>
+                <Tag color="blue" key={i} size="small">
                   {tag.name}
                 </Tag>
               )
