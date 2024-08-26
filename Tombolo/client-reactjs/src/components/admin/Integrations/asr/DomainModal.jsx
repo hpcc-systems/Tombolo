@@ -10,6 +10,7 @@ import { createNewDomain, getDomains, updateDomain } from './asr-integration-uti
 // Constants
 const { Option } = Select;
 const severityThresholds = [0, 1, 2, 3];
+const regions = ['UK', 'USA'];
 
 const DomainModal = ({
   domainModalOpen,
@@ -29,6 +30,7 @@ const DomainModal = ({
       activityTypesIds = activityTypesIds.filter((id) => id !== null);
       form.setFieldsValue({
         name: selectedDomain.name,
+        region: selectedDomain.region,
         severityThreshold: selectedDomain.severityThreshold,
         monitoringTypeIds: activityTypesIds,
         severityAlertRecipients: selectedDomain.severityAlertRecipients,
@@ -130,21 +132,34 @@ const DomainModal = ({
       okText={selectedDomain ? 'Update' : 'Save'}
       maskClosable={false}>
       <Form form={form} layout="vertical">
-        <Row gutter={16}>
-          <Col span={12}>
+        <Row gutter={8}>
+          <Col span={10}>
             <Form.Item
               label="Domain"
               name="name"
               rules={[{ required: true, message: 'Please input the product name!' }, { max: 100 }]}>
-              <Input placeholder="Product Name" />
+              <Input />
             </Form.Item>
           </Col>
-          <Col span={12}>
+
+          <Col span={7}>
+            <Form.Item label="Region" name="region" rules={[{ required: true, message: 'Please Select a region' }]}>
+              <Select>
+                {regions.map((region) => (
+                  <Option key={region} value={region}>
+                    {region}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+
+          <Col span={7}>
             <Form.Item
               label="Severity Threshold"
               rules={[{ required: true, message: 'Severity threshold is required' }]}
               name="severityThreshold">
-              <Select placeholder="Severity Threshold">
+              <Select>
                 {severityThresholds.map((severity) => (
                   <Option key={severity} value={severity}>
                     {severity}
@@ -183,8 +198,8 @@ const DomainModal = ({
           />
         </Form.Item>
 
-        <Form.Item label="Activity Type" name="monitoringTypeIds" rules={[{ required: false }]}>
-          <Select placeholder="Select Activity Type" mode="multiple">
+        <Form.Item label="Activity Type(s)" name="monitoringTypeIds" rules={[{ required: false }]}>
+          <Select mode="multiple">
             {monitoringTypes.map((type) => (
               <Option key={type.id} value={type.id}>
                 {type.name}
