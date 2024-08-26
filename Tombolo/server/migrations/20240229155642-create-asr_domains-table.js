@@ -19,6 +19,14 @@ module.exports = {
         allowNull: false,
         type: DataTypes.INTEGER,
       },
+      severityAlertRecipients: {
+        allowNull: false,
+        type: DataTypes.JSON,
+      },
+      metaData: {
+        allowNull: true,
+        type: DataTypes.JSON,
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
