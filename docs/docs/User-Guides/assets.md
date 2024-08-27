@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 label: "Assets"
 title: "Assets"
 ---
@@ -28,7 +28,7 @@ project by clicking on the GitHub Projects link in the left navigation bar.
 
 ## Index
 
-For indexes, you can search and add them using the auto-complete search field. A minimum of three characters
+For indeces, you can search and add them using the auto-complete search field. A minimum of three characters
 is required to trigger the search. You can view the payload and workunit related to the imported indexes.
 
 ## Query

@@ -1,8 +1,0 @@
-{
-  "label": "Developer Guides",
-  "position": 3,
-  "link": {
-    "type": "generated-index",
-    "description": "Developer Guides to learn how to intereact with Tombolo's Codebase, API, and create Integrations."
-  }
-}
