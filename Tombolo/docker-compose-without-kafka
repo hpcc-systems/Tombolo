@@ -26,6 +26,7 @@ services:
     volumes:
       - /tmp/pm2
       - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
+      - /var/log/tombolo-server:/app/logs
     networks:
       - tombolo-network
     ports:
@@ -34,6 +35,8 @@ services:
       - mysql_db
     env_file:
       - .env
+    logging:
+      driver: "none" # This line disables Docker logs. All logs are written to the file system
 
   mysql_db:
     image: mysql:5.7
