@@ -19,6 +19,7 @@ router.post(
   "/domains/",
   [
     body("name").notEmpty().withMessage("Domain name is required"),
+    body("region").notEmpty().withMessage("Region is required"),
     body("monitoringTypeIds")
       .optional()
       .isArray()
@@ -44,6 +45,7 @@ router.post(
       create domain, next  iterate over monitoringTypeId and make entry to  asr_domain_monitoring_types*/
       const {
         name,
+        region,
         severityThreshold,
         severityAlertRecipients,
         monitoringTypeIds,
@@ -53,6 +55,7 @@ router.post(
       if (monitoringTypeIds) {
         domain = await Domains.create({
           name,
+          region,
           severityThreshold,
           severityAlertRecipients,
           createdBy,
@@ -74,6 +77,7 @@ router.post(
       else {
         domain = await Domains.create({
           name,
+          region,
           severityThreshold,
           severityAlertRecipients,
           createdBy,
@@ -156,6 +160,7 @@ router.patch(
       // Update domain and delete or add relation in the junction table
       const {
         name,
+        region,
         severityThreshold,
         severityAlertRecipients,
         monitoringTypeIds,
@@ -165,7 +170,13 @@ router.patch(
       if (monitoringTypeIds) {
         response = await sequelize.transaction(async (t) => {
           await Domains.update(
-            { name, severityThreshold, severityAlertRecipients, updatedBy },
+            {
+              name,
+              region,
+              severityThreshold,
+              severityAlertRecipients,
+              updatedBy,
+            },
             { where: { id: req.params.id }, transaction: t }
           );
 
@@ -191,7 +202,13 @@ router.patch(
         });
       } else {
         response = await Domains.update(
-          { name, severityThreshold, severityAlertRecipients, updatedBy },
+          {
+            name,
+            region,
+            severityThreshold,
+            severityAlertRecipients,
+            updatedBy,
+          },
           { where: { id: req.params.id } }
         );
       }
@@ -298,6 +315,7 @@ router.get("/products/", async (req, res) => {
           attributes: [
             "id",
             "name",
+            "region",
             "severityThreshold",
             "severityAlertRecipients",
           ],
@@ -458,6 +476,7 @@ router.get(
             attributes: [
               "id",
               "name",
+              "region",
               "severityThreshold",
               "severityAlertRecipients",
             ],
