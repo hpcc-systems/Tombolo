@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         type: DataTypes.STRING,
       },
+      region: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
       severityThreshold: {
         allowNull: false,
         type: DataTypes.INTEGER,
