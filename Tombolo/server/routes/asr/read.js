@@ -15,14 +15,21 @@ const Products = models.asr_products;
 const DomainProduct = models.asr_domain_to_products;
 
 // Create a new domain
-router.post("/domains/",[
+router.post(
+  "/domains/",
+  [
     body("name").notEmpty().withMessage("Domain name is required"),
     body("monitoringTypeIds")
       .optional()
       .isArray()
       .withMessage("Monitoring type is required"),
     body("createdBy").notEmpty().withMessage("Created by is required"),
-  ], async (req, res) => {
+    body("severityThreshold")
+      .isInt()
+      .withMessage("Severity threshold is required and must be an integer"),
+    body("severityAlertRecipients").isArray().withMessage("Severity alert recipients must be an array"),
+  ],
+  async (req, res) => {
     try {
       // Validate the payload
       const errors = validationResult(req);
@@ -33,10 +40,11 @@ router.post("/domains/",[
 
       /* if monitoring type is provided, 
       create domain, next  iterate over monitoringTypeId and make entry to  asr_domain_monitoring_types*/
-      const { name, monitoringTypeIds, createdBy } = req.body;
+      const { name, severityThreshold, severityAlertRecipients, monitoringTypeIds, createdBy } =
+        req.body;
       let domain;
       if (monitoringTypeIds) {
-        domain = await Domains.create({ name, createdBy });
+        domain = await Domains.create({ name, severityThreshold, severityAlertRecipients, createdBy });
 
         // create domain monitoring type mapping
         const createPromises = monitoringTypeIds.map((monitoringId) => {
@@ -45,17 +53,16 @@ router.post("/domains/",[
             monitoring_type_id: monitoringId,
             createdBy,
           });
-        }
-        );
+        });
 
         await Promise.all(createPromises);
       }
 
       // if no monitoring type is provided, create domain without monitoring type
       else {
-        domain = await Domains.create({ name, createdBy });
+        domain = await Domains.create({ name, severityThreshold,severityAlertRecipients, createdBy });
       }
-      res.status(200).json({message: "Domain created successfully", domain});
+      res.status(200).json({ message: "Domain created successfully", domain });
     } catch (error) {
       logger.error(error);
       res.status(500).json({ message: "Failed to create domain" });
@@ -109,6 +116,8 @@ router.patch(
   [
     param("id").isUUID().withMessage("ID must be a UUID"),
     body("name").notEmpty().withMessage("Domain name is required"),
+    body("severityThreshold").isInt().withMessage("Severity threshold is required and must be an integer"),
+    body("severityAlertRecipients").isArray().withMessage("Severity alert recipients must be an array"),
     body("monitoringTypeIds")
       .optional()
       .isArray()
@@ -125,12 +134,18 @@ router.patch(
       }
 
       // Update domain and delete or add relation in the junction table
-      const { name, monitoringTypeIds, updatedBy } = req.body;
+      const {
+        name,
+        severityThreshold,
+        severityAlertRecipients, 
+        monitoringTypeIds,
+        updatedBy,
+      } = req.body;
       let response;
       if (monitoringTypeIds) {
         response = await sequelize.transaction(async (t) => {
           await Domains.update(
-            { name, updatedBy },
+            { name, severityThreshold, severityAlertRecipients, updatedBy },
             { where: { id: req.params.id }, transaction: t }
           );
 
@@ -156,13 +171,12 @@ router.patch(
         });
       } else {
         response = await Domains.update(
-          { name, updatedBy },
+          { name, severityThreshold, severityAlertRecipients, updatedBy },
           { where: { id: req.params.id } }
         );
       }
 
-      const message =
-        response[0] === 0 ? "Domain not found" : "Successfully updated domain";
+      const message = response[0] === 0 ? "Domain not found" : "Successfully updated domain";
       res.status(200).json({ message });
     } catch (err) {
       logger.error(err);
@@ -251,7 +265,7 @@ router.get("/products/", async(req, res) => {
                attributes: [], // Exclude the junction table from the result
              },
              as: "associatedDomains",
-             attributes: ["id", "name"],
+             attributes: ["id", "name", "severityThreshold", "severityAlertRecipients"],
            },
          ],
          order: [["createdAt", "DESC"]],
@@ -403,7 +417,12 @@ router.get("/domainsForSpecificMonitoring/:monitoringTypeId",
       include: [
         {
           model: Domains,
-          attributes: ["id", "name"],
+          attributes: [
+            "id",
+            "name",
+            "severityThreshold",
+            "severityAlertRecipients",
+          ],
         },
       ],
       raw: true,
