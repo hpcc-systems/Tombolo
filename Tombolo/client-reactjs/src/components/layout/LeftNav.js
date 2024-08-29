@@ -151,12 +151,12 @@ class LeftNav extends Component {
           {disabled || clusterDisabled ? (
             <>
               <i className="fa fa-fw fa-random" />
-              <span style={{ marginLeft: '1rem' }}>Definitions</span>
+              <span style={{ marginLeft: '1rem' }}>Workflows</span>
             </>
           ) : (
             <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/dataflow'}>
               <i className="fa fa-fw fa-random" />
-              <span style={{ marginLeft: '1rem' }}>Definitions</span>
+              <span style={{ marginLeft: '1rem' }}>Workflows</span>
             </Link>
           )}
         </>,
@@ -171,12 +171,12 @@ class LeftNav extends Component {
           {disabled || clusterDisabled ? (
             <>
               <i className="fa fa-fw fa-microchip" />
-              <span style={{ marginLeft: '1rem' }}>Job Execution</span>
+              <span style={{ marginLeft: '1rem' }}>Workflow History</span>
             </>
           ) : (
             <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={urlPrefix() + '/dataflowinstances'}>
               <i className="fa fa-fw fa-microchip" />
-              <span style={{ marginLeft: '1rem' }}>Job Execution</span>
+              <span style={{ marginLeft: '1rem' }}>Workflow History</span>
             </Link>
           )}
         </>,
