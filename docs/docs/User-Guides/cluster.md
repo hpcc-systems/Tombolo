@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# Connect to a Cluster
+# Clusters
 
 Tombolo can speak directly to HPCC clusters to run ECL code, monitor jobs, files, or cluster usage states, and schedule user-defined dataflows.
 

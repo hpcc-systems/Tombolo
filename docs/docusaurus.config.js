@@ -70,10 +70,6 @@ const config = {
           label: "User",
         },
         {
-          to: "/docs/category/developer-guides",
-          label: "Developer",
-        },
-        {
           href: "https://github.com/hpcc-systems/Tombolo",
           label: "GitHub",
           position: "right",
@@ -102,10 +98,6 @@ const config = {
             {
               to: "/docs/category/user-guides",
               label: "User",
-            },
-            {
-              to: "/docs/category/developer-guides",
-              label: "Developer",
             },
           ],
         },
