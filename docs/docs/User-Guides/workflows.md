@@ -40,7 +40,7 @@ The workflow designer utilizes three main areas.
 On the left navigation bar, you will see the different assets that you can drag onto the designer screen to be utilized inside of the workflows. In order to use any of these, simply drag the node on to the [designer screen](#designer-screen) and double click the node to select the desired asset to associate with that node.
 
 <ul>
-<li>Job - Utilize the Jobs that you have uploaded as [assets](/docs/User-Guides/assets). Refer to the guide linked guide to upload Jobs.
+<li>Job - Utilize the Jobs that you have uploaded as [assets](/docs/User-Guides/assets). Refer to the guide linked guide to upload Jobs.</li>
 <li>File - Utilize a File inside of the workflow. Refer to the [assets](/docs/User-Guides/assets) guide for information on how to upload.</li>
 <li>Montiring - Utilize a File Template inside of the workflow. Refer to the [assets](/docs/User-Guides/assets) guide for information on how to set this up.</li>
 <li>>Index - Utilize an Index inside of the workflow. Refer to the [assets](/docs/User-Guides/assets) guide for information.</li>
