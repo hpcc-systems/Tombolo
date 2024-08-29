@@ -217,8 +217,8 @@ class App extends React.Component {
               <a
                 target="_blank"
                 rel="noreferrer"
-                href="https://hpcc-systems.github.io/Tombolo/docs/User-Guide/application">
-                https://hpcc-systems.github.io/Tombolo/docs/User-Guides/application
+                href="https://hpcc-systems.github.io/Tombolo/docs/User-Guides/application">
+                our documentation site.
               </a>
             </p>
           </>
@@ -247,7 +247,7 @@ class App extends React.Component {
                 target="_blank"
                 rel="noreferrer"
                 href="https://hpcc-systems.github.io/Tombolo/docs/User-Guides/cluster">
-                https://hpcc-systems.github.io/Tombolo/docs/User-Guides/cluster
+                our documentation site.
               </a>
             </p>
           </>

@@ -110,8 +110,8 @@ The `cd` command changes the directory you're working with.
 
 The `npm i` command installs dependencies located in the package.json file necessary for running and compiling the code.
 
-The `npm start` command starts your front end development environment at [http://localhost:3000/](http://localhost:3000/)
+The `npm start` command starts your front end development environment at [http://localhost:3001/](http://localhost:3001/)
 
 ## Congratulations
 
-Your Tombolo installation is now up and running. Navigate to [http://localhost:3000/](http://localhost:3000/) to start the new user tutorial. Tombolo has a built in tutorial that will walk you through the final steps to getting your installation up and running.
+Your Tombolo installation is now up and running. Navigate to [http://localhost:3001/](http://localhost:3001/) to start the new user tutorial. Tombolo has a built in tutorial that will walk you through the final steps to getting your installation up and running.
