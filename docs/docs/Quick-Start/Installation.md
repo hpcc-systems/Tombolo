@@ -73,14 +73,20 @@ npx sequelize db:migrate
 ```
 
 ```bash
+npx sequelize db:seed:all
+```
+
+```bash
 node server.js
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+The `cd` command changes the directory you're working with.
 
 The `npm i` command installs dependencies located in the package.json file necessary for running and compiling the code.
 
 The `npx sequelize db:migrate` command installs dependencies located in the package.json file necessary for running and compiling the code.
+
+The `npx sequelize db:seed:all` command seeds the database with necessary data for runtime.
 
 The `node server.js` command starts the backend server and associated API's necessary for the front end
 
@@ -89,7 +95,7 @@ The `node server.js` command starts the backend server and associated API's nece
 Open a seperate terminal, and navigate to your installation location
 
 ```bash
-cd client-reactjs
+cd tombolo/client-reactjs
 ```
 
 ```bash
@@ -100,7 +106,7 @@ npm i
 npm start
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+The `cd` command changes the directory you're working with.
 
 The `npm i` command installs dependencies located in the package.json file necessary for running and compiling the code.
 
@@ -108,4 +114,4 @@ The `npm start` command starts your front end development environment at [http:/
 
 ## Congratulations
 
-Your Tombolo installation is now up and running. Lets learn some of the core concepts of the software.
+Your Tombolo installation is now up and running. Navigate to [http://localhost:3000/](http://localhost:3000/) to start the new user tutorial. Tombolo has a built in tutorial that will walk you through the final steps to getting your installation up and running.

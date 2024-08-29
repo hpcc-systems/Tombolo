@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 8
 label: "User Interface"
 title: "User Interface"
 ---
@@ -16,39 +16,48 @@ Tombolo's user interface is divded into three major zones.
 
 The left hand navigation is the primary method Tombolo uses to navigate to it's different functionalities and settings. It is split into three different sections.
 
-1. [General](#general)
-2. [Settings](#settings)
-3. [Admin](#admin)
+1. [Workflows](#workflows)
+2. [Monitoring](#monitoring)
+3. [Connections](#connections)
+4. [Admin](#admin)
 
-### General
+### Workflows
 
-The general section contains all of Tombolo's functionalities for communicating with HPCC Clusters, including:
+The workflows section contains all of Tombolo's functionalities for setting up, monitoring, and running workflows within an HPCC system.
 
 <ul>
     <li>[Workflow Setup](/docs/User-Guides/workflows)</li>
     <li>[Asset Management](/docs/User-Guides/assets)</li>
-    <li>[Monitorings](/docs/User-Guides/monitoring)</li>
-    <li>[Dashboards](/docs/User-Guides/dashboards)</li>
+
 </ul>
 
-### Settings
+### Monitoring
 
-The settings section contain's a set of tools to configure tombolo's connections to other platforms, including:
+The monitoring section contain's a set of tools to monitor assets within HPCC.
+
+<ul>
+    <li>[Monitorings](/docs/User-Guides/monitoring)</li>
+    <li>[Dashboards](/docs/User-Guides/dashboards)</li>
+
+</ul>
+
+### Connections
+
+The connections section contain's all of Tombolo's external connection tools including:
 
 <ul>
 <li>Clusters</li>
-<li>Notifications</li>
 <li>Github</li>
 </ul>
 
 ### Admin
 
-The admin section contain's a set of tools to configure tombolo's administrative settings, including:
+The admin section contains all of application management tools including:
 
 <ul>
 <li>Applications</li>
 <li>Integrations</li>
-<li>Compliance</li>
+<li>Notifications</li>
 </ul>
 
 ## Top User Menu
