@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 6
 label: "Monitoring"
 title: "Monitoring"
 ---
@@ -9,9 +9,9 @@ title: "Monitoring"
 Tombolo currently offers the ability to monitor 4 different kinds of assets.
 
 1. [Files](#file)
-2. [Clusters](#cluster)
-3. [Jobs](#job)
-4. [Superfiles](#superfile)
+2. [Clusters](#clusters)
+3. [Jobs](#jobs)
+4. [Superfiles](#superfiles)
 
 There is two settings that is common to all monitorings.
 
