@@ -363,7 +363,7 @@ class AppHeader extends Component {
 
     const helpMenuClick = (e) => {
       if (e.key == 1) {
-        window.open(process.env.PUBLIC_URL + '/Tombolo-User-Guide.pdf');
+        window.open('https://hpcc-systems.github.io/Tombolo/');
       } else if (e.key == 2) {
         this.openAboutModal();
       }
