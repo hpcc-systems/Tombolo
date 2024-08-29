@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.JSON,
       },
-      metaData:{
+      metaData: {
         allowNull: true,
         type: DataTypes.JSON,
       },
@@ -74,7 +74,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "domain_id",
       as: "associatedProducts",
     });
-  }
+  };
 
   return AsrDomains;
 };

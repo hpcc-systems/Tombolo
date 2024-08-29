@@ -14,17 +14,34 @@ const DomainsTab = ({ domains, setSelectedDomain, setDomainModalOpen }) => {
     {
       title: 'Domain Name',
       dataIndex: 'name',
-      width: '15%',
+      width: '11%',
+    },
+    {
+      title: 'Region',
+      dataIndex: 'region',
+      width: '4%',
+    },
+    {
+      title: 'Severity Threshold',
+      dataIndex: 'severityThreshold',
+      width: '9%',
+    },
+    {
+      title: 'Severity Alert Recipients',
+      dataIndex: 'severityAlertRecipients',
+      render: (recipients) => <>{recipients.map((r, i) => `${i < recipients.length - 1 ? r + ', ' : r}`)}</>,
+      width: '38%',
     },
     {
       title: 'Activity Type',
       dataIndex: 'activityTypes',
+      width: '30%',
       render: (tags) => (
         <>
           {tags.map(
             (tag, i) =>
               tag.name && (
-                <Tag color="blue" key={i}>
+                <Tag color="blue" key={i} size="small">
                   {tag.name}
                 </Tag>
               )
@@ -58,7 +75,10 @@ const DomainsTab = ({ domains, setSelectedDomain, setDomainModalOpen }) => {
       domains.forEach((d) => {
         domainAndActivityTypes.push({
           name: d.name,
+          region: d.region,
           id: d.id,
+          severityThreshold: d.severityThreshold,
+          severityAlertRecipients: d.severityAlertRecipients || [],
           activityType: { id: d['monitoringTypes.id'], name: d['monitoringTypes.name'] },
         });
       });
@@ -75,6 +95,9 @@ const DomainsTab = ({ domains, setSelectedDomain, setDomainModalOpen }) => {
           acc.push({
             id: item.id,
             name: item.name,
+            region: item.region,
+            severityThreshold: item.severityThreshold,
+            severityAlertRecipients: item.severityAlertRecipients || [],
             activityTypes: [item.activityType],
           });
         }

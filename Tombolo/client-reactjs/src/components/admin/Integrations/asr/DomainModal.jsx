@@ -1,13 +1,16 @@
 // Package imports
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Modal, Form, Input, Select, message } from 'antd';
+import { Modal, Form, Input, Select, message, Row, Col } from 'antd';
+import { isEmail } from 'validator';
 
 //Local Imports
 import { createNewDomain, getDomains, updateDomain } from './asr-integration-util.js';
 
 // Constants
 const { Option } = Select;
+const severityThresholds = [0, 1, 2, 3];
+const regions = ['UK', 'USA'];
 
 const DomainModal = ({
   domainModalOpen,
@@ -25,7 +28,13 @@ const DomainModal = ({
     if (selectedDomain) {
       let activityTypesIds = selectedDomain.activityTypes.map((d) => d.id);
       activityTypesIds = activityTypesIds.filter((id) => id !== null);
-      form.setFieldsValue({ name: selectedDomain.name, monitoringTypeIds: activityTypesIds });
+      form.setFieldsValue({
+        name: selectedDomain.name,
+        region: selectedDomain.region,
+        severityThreshold: selectedDomain.severityThreshold,
+        monitoringTypeIds: activityTypesIds,
+        severityAlertRecipients: selectedDomain.severityAlertRecipients,
+      });
     }
   }, [selectedDomain]);
 
@@ -123,14 +132,74 @@ const DomainModal = ({
       okText={selectedDomain ? 'Update' : 'Save'}
       maskClosable={false}>
       <Form form={form} layout="vertical">
+        <Row gutter={8}>
+          <Col span={10}>
+            <Form.Item
+              label="Domain"
+              name="name"
+              rules={[{ required: true, message: 'Please input the product name!' }, { max: 100 }]}>
+              <Input />
+            </Form.Item>
+          </Col>
+
+          <Col span={7}>
+            <Form.Item label="Region" name="region" rules={[{ required: true, message: 'Please Select a region' }]}>
+              <Select>
+                {regions.map((region) => (
+                  <Option key={region} value={region}>
+                    {region}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+
+          <Col span={7}>
+            <Form.Item
+              label="Severity Threshold"
+              rules={[{ required: true, message: 'Severity threshold is required' }]}
+              name="severityThreshold">
+              <Select>
+                {severityThresholds.map((severity) => (
+                  <Option key={severity} value={severity}>
+                    {severity}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+
         <Form.Item
-          label="Domain"
-          name="name"
-          rules={[{ required: true, message: 'Please input the product name!' }, { max: 100 }]}>
-          <Input placeholder="Product Name" />
+          label="Severity E-mail Recipients"
+          name="severityAlertRecipients"
+          required
+          rules={[
+            {
+              validator: (_, value) => {
+                if (!value || value.length === 0) {
+                  return Promise.reject(new Error('Please add at least one email!'));
+                }
+                if (value.length > 20) {
+                  return Promise.reject(new Error('Too many emails'));
+                }
+                if (!value.every((v) => isEmail(v))) {
+                  return Promise.reject(new Error('One or more emails are invalid'));
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}>
+          <Select
+            mode="tags"
+            allowClear
+            placeholder="Enter a comma-delimited list of email addresses"
+            tokenSeparators={[',']}
+          />
         </Form.Item>
-        <Form.Item label="Activity Type" name="monitoringTypeIds" rules={[{ required: false }]}>
-          <Select placeholder="Select Activity Type" mode="multiple">
+
+        <Form.Item label="Activity Type(s)" name="monitoringTypeIds" rules={[{ required: false }]}>
+          <Select mode="multiple">
             {monitoringTypes.map((type) => (
               <Option key={type.id} value={type.id}>
                 {type.name}
