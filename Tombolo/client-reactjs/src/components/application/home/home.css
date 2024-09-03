@@ -2,27 +2,26 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  flex-wrap: wrap;
   width: 100%;
   height: calc(100% + 55px);
   text-align: center;
   font-size: 1.5rem;
-  min-height: 1300px;
 }
 
 .container ul {
   list-style: none;
   padding-left: 0;
+  margin-bottom: 0;
 }
 
 .container ul li {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .header {
   background: rgb(8, 85, 127);
   color: white;
-  padding: 6rem;
+  padding: 3rem;
   width: 100%;
   margin-bottom: 3rem;
 }
