@@ -29,8 +29,6 @@ const { body, query, validationResult } = require("express-validator");
 //let FileTree = require('../../models/File_Tree');
 const axios = require("axios");
 const logger = require("../../config/logger");
-const { CompressionTypes } = require("kafkajs");
-const { Console } = require("console");
 
 router.post(
   "/superfile_meta",
