@@ -15,8 +15,6 @@ import AssetsTable from './AssetsTable';
 import TitleRenderer from './TitleRenderer.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
 import useModal from '../../../hooks/useModal';
-import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
-import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import Text, { i18n } from '../../common/Text';
 import InfoDrawer from '../../common/InfoDrawer';
@@ -56,9 +54,6 @@ const Assets = () => {
 
   const [editGroup, setEditGroup] = useState({ edit: false, groupId: '' });
   const [itemToMove, setItemToMove] = useState({});
-  const [selectDetailsforPdfDialogVisibility, setSelectDetailsforPdfDialogVisibility] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState();
-  const [toPrintAssets, setToPrintAssets] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [openHelp, setOpenHelp] = useState(false);
 
@@ -151,16 +146,6 @@ const Assets = () => {
     }
   };
 
-  const handlePrintAssets = () => {
-    getNestedAssets(
-      application.applicationId,
-      setSelectedAsset,
-      setSelectDetailsforPdfDialogVisibility,
-      { ...selectedKeys, type: 'Group' },
-      setToPrintAssets
-    );
-  };
-
   const handleMenuClick = (e, group) => {
     const goTo = (point) => {
       dispatch(assetsActions.newAsset(application.applicationId, selectedKeys.id));
@@ -178,7 +163,6 @@ const Assets = () => {
       'Edit-Group': () => openNewGroupDialog({ edit: true, groupId: '' }),
       'Delete-Group': () => handleDeleteGroup(),
       'Move-Group': () => openMoveAssetDialog({ ...group, type: 'Group' }),
-      'Print-Assets': () => handlePrintAssets(),
     };
 
     const runAction = actions[e.key];
@@ -304,11 +288,6 @@ const Assets = () => {
     { key: 'RealBI Dashboard', icon: <i className="fa fa-lg fa-area-chart"></i>, label: 'RealBI Dashboard' },
   ];
 
-  //Generate PDF & printing task complete function
-  const printingTaskCompleted = () => {
-    setSelectDetailsforPdfDialogVisibility(false);
-  };
-
   return (
     <React.Fragment>
       <div style={{ height: '100%', overflow: 'hidden' }}>
@@ -376,17 +355,6 @@ const Assets = () => {
           isShowing={showMoveDialog}
           toggle={closeMoveAssetDialog}
           application={applicationReducer.application}
-        />
-      ) : null}
-
-      {/* Dialog box to select which element to export as PDF */}
-      {selectDetailsforPdfDialogVisibility ? (
-        <SelectDetailsForPdfDialog
-          selectedAsset={selectedAsset}
-          toPrintAssets={toPrintAssets}
-          visible={selectDetailsforPdfDialogVisibility}
-          printingTaskCompleted={printingTaskCompleted}
-          setVisiblity={setSelectDetailsforPdfDialogVisibility}
         />
       ) : null}
       <InfoDrawer open={openHelp} onClose={onHelpDrawerClose} width="25%" content="assets"></InfoDrawer>
