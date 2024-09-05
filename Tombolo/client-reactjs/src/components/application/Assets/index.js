@@ -172,7 +172,6 @@ const Assets = () => {
       File: () => goTo('file'),
       Index: () => goTo('index'),
       Query: () => goTo('query'),
-      'RealBI Dashboard': () => goTo('visualizations'),
       'File Template': () => goTo('fileTemplate'),
       Group: () => openNewGroupDialog({ edit: false, groupId: '' }),
       'Edit-Group': () => openNewGroupDialog({ edit: true, groupId: '' }),
@@ -301,7 +300,6 @@ const Assets = () => {
     { key: 'Job', icon: <i className="fa fa-lg fa-clock-o"></i>, label: 'Job' },
     { key: 'Query', icon: <i className="fa fa-lg fa-search"></i>, label: 'Query' },
     { key: 'Index', icon: <i className="fa fa-lg fa-indent"></i>, label: 'Index' },
-    { key: 'RealBI Dashboard', icon: <i className="fa fa-lg fa-area-chart"></i>, label: 'RealBI Dashboard' },
   ];
 
   //Generate PDF & printing task complete function

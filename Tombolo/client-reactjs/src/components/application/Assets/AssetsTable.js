@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Table, message, Popconfirm, Tooltip, Divider, Space, Typography, Button } from 'antd';
+import { Table, message, Tooltip, Divider, Space, Typography, Button } from 'antd';
 import { useHistory } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  DeleteOutlined,
-  EditOutlined,
-  QuestionCircleOutlined,
-  FolderOpenOutlined,
-  FilePdfOutlined,
-  AreaChartOutlined,
-} from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, FolderOpenOutlined, FilePdfOutlined } from '@ant-design/icons';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
@@ -80,7 +73,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   }, [selectedAsset]);
 
   //When edit icon is clicked
-  const handleEdit = (id, type, action, vizUrl) => {
+  const handleEdit = (id, type, action) => {
     dispatch(assetsActions.assetSelected(id, applicationId, ''));
 
     switch (type) {
@@ -98,9 +91,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
         break;
       case 'Query':
         history.push('/' + applicationId + '/assets/query/' + id);
-        break;
-      case 'RealBI Dashboard':
-        window.open(vizUrl);
         break;
       case 'Group':
         if (action !== 'edit') {
@@ -153,10 +143,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
         deleteUrl = '/api/groups';
         method = 'delete';
         break;
-      case 'RealBI Dashboard':
-        data = JSON.stringify({ id: id });
-        deleteUrl = '/api/file/read/deleteVisualization';
-        break;
       default:
         break;
     }
@@ -189,32 +175,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
     dispatch(assetsActions.assetInGroupSelected(groupId));
   };
 
-  const handleCreateVisualization = (id, cluster_id) => {
-    console.log(cluster_id);
-    fetch('/api/file/read/visualization', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify({
-        id: id,
-        application_id: applicationId,
-        email: authReducer.user.email,
-        editingAllowed: editingAllowed,
-      }),
-    })
-      .then(function (response) {
-        if (response.ok && response.status == 200) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then(function (data) {
-        if (data && data.success) {
-          fetchDataAndRenderTable();
-          window.open(data.url);
-        }
-      });
-  };
-
   const generateAssetIcon = (type) => {
     const icons = {
       Job: <i className="fa fa-clock-o"></i>,
@@ -223,7 +183,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       Query: <i className="fa fa-search"></i>,
       Group: <i className="fa fa-folder-o"></i>,
       'File Template': <i className="fa fa-file-text-o"></i>,
-      'RealBI Dashboard': <i className="fa fa-area-chart"></i>,
     };
     return <React.Fragment>{icons[type]}</React.Fragment>;
   };
@@ -391,25 +350,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
               }
             />
           </Tooltip>
-
-          {record.type === 'File' ? (
-            record.visualization ? (
-              <Tooltip placement="right" title={<Text text="RealBI Dashboard" />}>
-                <a href={record.visualization} target="_blank" rel="noreferrer">
-                  <AreaChartOutlined className="asset-action-icon" />
-                </a>
-              </Tooltip>
-            ) : (
-              <Popconfirm
-                title="Are you sure you want to create a chart with this data?"
-                onConfirm={() => handleCreateVisualization(record.id, record.cluster_id)}
-                icon={<QuestionCircleOutlined />}>
-                <Tooltip placement="right" title={<Text text="RealBI Dashboard" />}>
-                  <AreaChartOutlined className="asset-action-icon" />
-                </Tooltip>
-              </Popconfirm>
-            )
-          ) : null}
         </Space>
       ),
     },
