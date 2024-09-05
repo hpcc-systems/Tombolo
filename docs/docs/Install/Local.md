@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Local Installation
+# Local
 
 ## Step 1 - Recommended and Required Software
 
@@ -13,12 +13,9 @@ sidebar_position: 1
 - [Git](https://git-scm.com/downloads) latest version recommended.
 - [MySQL Database](https://dev.mysql.com/downloads/) latest version recommended (URL, and port number, must be accessible from the installation environment).
 - [HPCC cluster](https://hpccsystems.com/getting-started/) latest version recommended.
-
 - [Azure Subscription](https://azure.microsoft.com/en-us/free)
-<ul>
-<li>1. App registration in Azure (Client ID and Tenant ID. For  Authentication , Authorization  and  to Redirect after authentication)
-Two App registration process must be completed one for client application and one for server application</li>
-<li>Adding users to an AD group for authentication (User access control)</li></ul>
+  - App registration in Azure (Client ID and Tenant ID. For Authentication , Authorization and to Redirect after authentication). Two processes must be completed one for client application and one for server application
+  - Adding users to an AD group for authentication (User access control)
 
 ### Recommended
 

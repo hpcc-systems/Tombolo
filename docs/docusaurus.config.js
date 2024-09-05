@@ -62,8 +62,8 @@ const config = {
       },
       items: [
         {
-          to: "/docs/category/quick-start",
-          label: "Quick Start",
+          to: "/docs/category/install",
+          label: "Install",
         },
         {
           to: "/docs/category/user-guides",
@@ -92,8 +92,8 @@ const config = {
           title: "Docs",
           items: [
             {
-              to: "/docs/category/quick-start",
-              label: "Quick Start",
+              to: "/docs/category/install",
+              label: "Install",
             },
             {
               to: "/docs/category/user-guides",
