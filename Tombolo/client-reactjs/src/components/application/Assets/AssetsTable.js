@@ -73,7 +73,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   }, [selectedAsset]);
 
   //When edit icon is clicked
-  const handleEdit = (id, type, action, vizUrl) => {
+  const handleEdit = (id, type, action) => {
     dispatch(assetsActions.assetSelected(id, applicationId, ''));
 
     switch (type) {
@@ -91,9 +91,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
         break;
       case 'Query':
         history.push('/' + applicationId + '/assets/query/' + id);
-        break;
-      case 'RealBI Dashboard':
-        window.open(vizUrl);
         break;
       case 'Group':
         if (action !== 'edit') {
@@ -186,7 +183,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
       Query: <i className="fa fa-search"></i>,
       Group: <i className="fa fa-folder-o"></i>,
       'File Template': <i className="fa fa-file-text-o"></i>,
-      'RealBI Dashboard': <i className="fa fa-area-chart"></i>,
     };
     return <React.Fragment>{icons[type]}</React.Fragment>;
   };
