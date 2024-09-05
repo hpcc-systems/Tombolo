@@ -79,10 +79,6 @@ module.exports = (sequelize, DataTypes) => {
     cluster.hasMany(models.dataflow_cluster_credentials, {
       foreignKey: "cluster_id",
     });
-    cluster.hasMany(models.visualizations, {
-      foreignKey: "clusterId",
-      onDelete: "CASCADE",
-    });
     cluster.hasMany(models.fileTemplate, {
       foreignKey: "cluster_id",
       onDelete: "CASCADE",
