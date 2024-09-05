@@ -516,9 +516,6 @@ const ScheduleTab = ({ nodes, selectedAsset, addToSchedule, readOnly, editingAll
               <Select.Option value="Template">
                 {<Text text="Template Based (Run when a file that matches a template arrives)" />}
               </Select.Option>
-              <Select.Option value="Message">
-                {<Text text="Run on External Message (run when a message is received in a Kafka topic)" />}
-              </Select.Option>
             </Select>
           )}
         </Form.Item>
