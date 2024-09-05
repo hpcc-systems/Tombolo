@@ -92,15 +92,9 @@ cd tombolo/server
 npm run boostrap-server
 ```
 
-```bash
-node server.js
-```
-
 The `cd` command changes the directory you're working with.
 
-The `npm run boostrap-server` command installs dependencies located in the package.json file necessary for running and compiling the code, then creates the database schema and runs necessary migrations and seeder files for the application.
-
-The `node server.js` command starts the backend server and associated API's necessary for the front end
+The `npm run boostrap-server` command installs dependencies located in the package.json file necessary for running and compiling the code, then creates the database schema and runs necessary migrations and seeder files for the application. After this is finished, it will start the server.
 
 ## Start the front end
 
@@ -111,18 +105,12 @@ cd tombolo/client-reactjs
 ```
 
 ```bash
-npm i
-```
-
-```bash
-npm start
+npm run bootstrap-client
 ```
 
 The `cd` command changes the directory you're working with.
 
-The `npm run bootstrap-client` command installs dependencies located in the package.json file necessary for running and compiling the code.
-
-The `npm start` command starts your front end development environment at [http://localhost:3001/](http://localhost:3001/)
+The `npm run bootstrap-client` command installs dependencies located in the package.json file necessary for running and compiling the code. After this is finished, it will start the front end.
 
 ## Step 5 - Open the application
 
