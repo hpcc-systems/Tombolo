@@ -25,9 +25,9 @@ const Home = () => {
         <div className="middle">
           <Card>
             <h2>Workflows</h2>
-            <br />
+
             <p>Get started with creating your own workflows and jobs to process data.</p>
-            <br />
+
             <ul>
               <li>
                 <Link to={`/${applicationId}/assets`}>Assets</Link>
@@ -42,9 +42,9 @@ const Home = () => {
           </Card>
           <Card>
             <h2>Monitoring</h2>
-            <br />
+
             <p>Set up monitoring and alerts for when things go awry with your data processing jobs and files.</p>
-            <br />
+
             <ul>
               <li>
                 <Link to={`/${applicationId}/fileMonitoring`}>File Monitoring</Link>
@@ -64,9 +64,9 @@ const Home = () => {
 
           <Card>
             <h2>Dashboards</h2>
-            <br />
+
             <p>Visualize all of the notifications produced by Tombolo, and cluster usage with dashboards.</p>
-            <br />
+
             <ul>
               <li>
                 <Link to={`/${applicationId}/dashboard/clusterUsage`}>Cluster Usage Dashboards</Link>
