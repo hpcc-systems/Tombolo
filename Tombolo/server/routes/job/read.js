@@ -194,7 +194,6 @@ router.post( '/jobFileRelation',
 
       const jobInfo = await hpccUtil.getJobInfo(job.cluster_id, result.wuid, job.jobType);
       const jobfiles = jobInfo?.jobfiles;
-      //{ jobfiles: [ { name: 'covid19::kafka::guid', file_type: 'input' } ,{ name: 'covid19::kafka::guid', file_type: 'output' } ] }
 
       let relatedFiles = [];
       // Check if there were manually added files to job via Input/Output file tabs on frontend and add them to main related files list
@@ -235,7 +234,7 @@ router.post( '/jobFileRelation',
             const file = await createOrUpdateFile({
               dataflowId,
               jobId: job.id,
-              jobfile: jobfile, //{ name: 'covid19::kafka::guid', file_type: 'output' }
+              jobfile: jobfile,
               clusterId: job.cluster_id,
               applicationId: job.application_id,
               assetGroupId: assetGroup ? assetGroup.groupId : ''
@@ -890,16 +889,5 @@ router.post( '/manualJobResponse',
     }
   }
 );
-
-const QueueDaemon = require('../../queue-daemon');
-const { forEach } = require('lodash');
-
-router.get('/msg', (req, res) => {
-  if (req.query.topic && req.query.message) {
-    QueueDaemon.submitMessage(req.query.topic, req.query.message);
-    return res.json({ topic: req.query.topic, message: req.query.message });
-  }
-});
-
 
 module.exports = router;

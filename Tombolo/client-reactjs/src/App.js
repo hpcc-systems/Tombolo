@@ -33,7 +33,6 @@ const FileTemplate = React.lazy(() => import('./components/application/templates
 const JobDetailsForm = React.lazy(() => import('./components/application/Jobs/JobDetails'));
 const IndexDetailsForm = React.lazy(() => import('./components/application/IndexDetails'));
 const QueryDetailsForm = React.lazy(() => import('./components/application/queries/QueryDetails'));
-const VisualizationDetailsForm = React.lazy(() => import('./components/application/VisualizationDetails'));
 const ManualJobDetail = React.lazy(() => import('./components/application/Jobs/ManualJobDetail'));
 const Actions = React.lazy(() => import('./components/application/actions/actions'));
 const AddJobsForm = React.lazy(() => import('./components/application/Jobs/AddjobsForm/AddJobsForm'));
@@ -375,10 +374,6 @@ class App extends React.Component {
                             <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
                             <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
                             <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
-                            <PrivateRoute
-                              path="/:applicationId/assets/visualizations/:visualizationId?"
-                              component={VisualizationDetailsForm}
-                            />
                             <PrivateRoute path="/:applicationId/assets" component={Assets} />
                             <PrivateRoute
                               path="/:applicationId/dataflow/details/:dataflowId?"
