@@ -5,6 +5,27 @@ import Link from "@docusaurus/Link";
 
 const GuideList = [
   {
+    title: "Docker Installation",
+    description: (
+      <>
+        <p>
+          Docker installation is the easiest way to get started with Tombolo. It
+          only requires Docker to be installed on your machine. This is best for
+          users who want to get started quickly with Tombolo without setting up
+          dependencies on your local machine.
+        </p>
+        <div className="buttons_src-pages-index-module">
+          <Link
+            className="button button--secondary button--lg"
+            to="/docs/Install/Docker"
+          >
+            Docker Installation ⏱️5 minutes
+          </Link>
+        </div>
+      </>
+    ),
+  },
+  {
     title: "Local Installation",
     description: (
       <>
@@ -21,27 +42,6 @@ const GuideList = [
             to="/docs/Install/Local"
           >
             Local Installation ⏱️15 minutes
-          </Link>
-        </div>
-      </>
-    ),
-  },
-  {
-    title: "Docker Installation",
-    description: (
-      <>
-        <p>
-          Docker installation is the easiest way to get started with Tombolo. It
-          only requires Docker to be installed on your machine. This is best for
-          users who want to get started quickly with Tombolo without setting up
-          dependencies on your local machine.
-        </p>
-        <div className="buttons_src-pages-index-module">
-          <Link
-            className="button button--secondary button--lg"
-            to="/docs/Install/Docker"
-          >
-            Docker Installation ⏱️5 minutes
           </Link>
         </div>
       </>
