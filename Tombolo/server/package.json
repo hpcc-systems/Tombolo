@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest --silent",
     "bootstrap-server": "(npm install) && (npm run createSchema) && (npm run migrations)  && (npm run seeds) && (nodemon server.js)",
-    "createSchema": "npx sequelize db:create tombolo",
+    "createSchema": "npx sequelize db:create",
     "migrations": "npx sequelize db:migrate",
     "seeds": "npx sequelize db:seed:all"
   },
@@ -26,8 +26,6 @@
     "express-rate-limit": "^5.5.1",
     "express-validator": "^6.13.0",
     "jsonwebtoken": "^9.0.0",
-    "kafkajs": "^1.15.0",
-    "kafkajs-snappy": "^1.1.0",
     "lodash": "^4.17.20",
     "moment": "^2.29.4",
     "morgan": "^1.10.0",
