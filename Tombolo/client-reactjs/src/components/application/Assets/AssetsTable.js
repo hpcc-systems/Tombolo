@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, message, Tooltip, Divider, Space, Typography, Button } from 'antd';
 import { useHistory } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
-import { DeleteOutlined, EditOutlined, FolderOpenOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, FolderOpenOutlined } from '@ant-design/icons';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
@@ -321,21 +321,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
             <FolderOpenOutlined
               className="asset-action-icon"
               onClick={() => openMoveAssetDialog(record.id, record.type, record.name, selectedGroup)}
-            />
-          </Tooltip>
-
-          <Tooltip placement="right" title={<Text text="Print" />}>
-            <FilePdfOutlined
-              className="asset-action-icon"
-              onClick={() =>
-                getNestedAssets(
-                  applicationId,
-                  setSelectedAsset,
-                  setSelectDetailsforPdfDialogVisibility,
-                  record,
-                  setToPrintAssets
-                )
-              }
             />
           </Tooltip>
         </Space>
