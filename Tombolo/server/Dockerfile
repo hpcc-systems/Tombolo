@@ -10,18 +10,20 @@ ENV DEBCONF_NONINTERACTIVE_SEEN true
 RUN echo "tzdata tzdata/Areas select America" > /tmp/preseed.txt; \
     echo "tzdata tzdata/Zones/America select New_York" >> /tmp/preseed.txt; \
     debconf-set-selections /tmp/preseed.txt
-# intall packages used by ecl client tools
+# Install python
+RUN apt-get install -y python
+
+# install packages used by ecl client tools
 RUN apt-get install -y openssh-client openssh-server \
     expect rsync libapr1 psmisc libaprutil1 libarchive13 libatlas3-base \
     libboost-regex1.65.1 libmemcached11 libmemcachedutil2 libnuma1 \
     libpython2.7 libpython3.6 libxslt1.1 libcurl3-gnutls netcat git
     
-RUN apt-get install -y python
 
 ARG cdnUrl=https://cdn.hpccsystems.com
 ARG hpccVersion=7.12.50
 ARG clientToolsUrl=$cdnUrl/releases/CE-Candidate-$hpccVersion/bin/clienttools/hpccsystems-clienttools-community_$hpccVersion-1bionic_amd64.deb
-# intall ecl client tools
+# install ecl client tools
 RUN wget -O clienttools.deb $clientToolsUrl && dpkg -i clienttools.deb && rm clienttools.deb
 RUN ecl bundle install https://github.com/hpcc-systems/ML_Core.git \
     && ecl bundle install https://github.com/hpcc-systems/PBblas.git \
