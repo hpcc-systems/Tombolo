@@ -21,7 +21,6 @@ let Indexes = models.indexes;
 let Query = models.query;
 let Job = models.job;
 const JobFile = models.jobfile;
-let Visualization = models.visualizations;
 var request = require("request");
 const validatorUtil = require("../../utils/validator");
 const { body, query, validationResult } = require("express-validator");
@@ -29,8 +28,6 @@ const { body, query, validationResult } = require("express-validator");
 //let FileTree = require('../../models/File_Tree');
 const axios = require("axios");
 const logger = require("../../config/logger");
-const { CompressionTypes } = require("kafkajs");
-const { Console } = require("console");
 
 router.post(
   "/superfile_meta",
@@ -603,175 +600,6 @@ router.get("/dataTypes", (req, res) => {
   }
 });
 
-router.post(
-  "/visualization",
-  [
-    body("id")
-      .optional({ checkFalsy: true })
-      .isUUID(4)
-      .withMessage("Invalid file id"),
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("email").isEmail().withMessage("Invalid email"),
-    body("fileName")
-      .optional({ checkFalsy: true })
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\ -]*$/)
-      .withMessage("Invalid name"),
-    body("clusterId")
-      .optional({ checkFalsy: true })
-      .isUUID(4)
-      .withMessage("Invalid cluster"),
-    body("groupId")
-      .optional({ checkFalsy: true })
-      .isInt()
-      .withMessage("Invalid groupId"),
-    body("editingAllowed")
-      .isBoolean()
-      .withMessage("Invalid value for editingAllowed"),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
-    try {
-      let file = null,
-        cluster = null,
-        bodyObj = {},
-        authToken = "";
-      if (req.body.id) {
-        file = await File.findOne({ where: { id: req.body.id } });
-      }
-
-      if (file && file.cluster_id) {
-        cluster = await Cluster.findOne({ where: { id: file.cluster_id } });
-      }
-
-      bodyObj = {
-        filename: file ? file.name : req.body.name,
-        workspaceName: "Tombolo",
-        dashboardName: file && file.name ? file.name : req.body.fileName,
-        editingAllowed: req.body.editingAllowed,
-      };
-
-      if (cluster) {
-        bodyObj.cluster = {
-          name: cluster.name,
-          host: cluster.thor_host,
-          infoPort: cluster.thor_port,
-          dataPort: cluster.roxie_port,
-        };
-      }
-
-      if (
-        req.headers["authorization"] &&
-        req.headers["authorization"].startsWith("Bearer ")
-      ) {
-        authToken = req.headers["authorization"].slice(
-          7,
-          req.headers["authorization"].length
-        );
-      }
-
-      request.post(
-        {
-          url: process.env["REALBI_URL"] + "/api/v1/integration",
-          body: JSON.stringify(bodyObj),
-          headers: {
-            "content-type": "application/json",
-            Authorization: authToken,
-          },
-        },
-        async function (err, response, body) {
-          if (err) {
-            console.log("ERROR - ", err);
-            return res
-              .status(500)
-              .send("Error occured while creating visualization");
-          } else {
-            var result = JSON.parse(body);
-
-            let viz = await Visualization.create({
-              name: req.body.fileName ? req.body.fileName : file.name,
-              application_id: req.body.application_id,
-              url: result.workspaceUrl,
-              type: req.body.type,
-              description: req.body.description,
-              assetId: file ? file.id : "",
-              clusterId: file ? file.cluster_id : "",
-            });
-            if (req.body.groupId && req.body.groupId != "") {
-              let assetsGroups = await AssetsGroups.findOrCreate({
-                where: { assetId: viz.id, groupId: req.body.groupId },
-                defaults: {
-                  assetId: viz.id,
-                  groupId: req.body.groupId,
-                },
-              });
-            }
-            res.json({ success: true, url: result.workspaceUrl });
-          }
-        }
-      );
-    } catch (err) {
-      console.log(err);
-      return res.status(500).send("Error occured while creating visualization");
-    }
-  }
-);
-
-router.post(
-  "/deleteVisualization",
-  [body("id").isUUID(4).withMessage("Invalid id")],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    try {
-      let vizDestroyed = await Visualization.destroy({
-        where: { id: req.body.id },
-      });
-      let assetsGroupsDestroyed = await AssetsGroups.destroy({
-        where: { assetId: req.body.id },
-      });
-
-      res.json({ success: true });
-    } catch (err) {
-      console.log(err);
-      return res.status(500).send("Error occured while deleting visualization");
-    }
-  }
-);
-
-router.get(
-  "/getVisualizationDetails",
-  [query("id").isUUID(4).withMessage("Invalid id")],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    try {
-      let visualization = await Visualization.findOne({
-        where: { id: req.query.id },
-        attributes: ["id", "name", "url", "description", "clusterId"],
-      });
-      res.json(visualization);
-    } catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .send("Error occured while retrieving visualization details");
-    }
-  }
-);
 
 router.post(
   "/tomboloFileSearch",
@@ -795,7 +623,7 @@ router.post(
       console.log(err);
       return res
         .status(500)
-        .send("Error occured while retrieving visualization details");
+        .send("Error occured while retrieving file details");
     }
   }
 );

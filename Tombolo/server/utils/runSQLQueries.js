@@ -2,20 +2,24 @@ const sql = require("mssql");
 const mysql = require("mysql2/promise");
 
 const orbitDbConfig = {
-  host: process.env.ORBIT_DB,
-  database: process.env.ORBIT_DB_NAME,
-  user: process.env.ORBIT_DB_USER,
-  password: process.env.ORBIT_DB_PWD,
-  port: parseInt(process.env.ORBIT_DB_PORT),
+  host: process.env.ORBIT_DB ? process.env.ORBIT_DB : "",
+  database: process.env.ORBIT_DB_NAME ? process.env.ORBIT_DB_NAME : "",
+  user: process.env.ORBIT_DB_USER ? process.env.ORBIT_DB_USER : "",
+  password: process.env.ORBIT_DB_PWD ? process.env.ORBIT_DB_PWD : "",
+  port: parseInt(process.env.ORBIT_DB_PORT)
+    ? parseInt(process.env.ORBIT_DB_PORT)
+    : 0,
   ssl: { minVersion: "TLSv1.2" },
 };
 
 const fidoDbConfig = {
-  server: process.env.FIDO_DB,
-  database: process.env.FIDO_DB_NAME,
-  user: process.env.FIDO_DB_USER,
-  password: process.env.FIDO_DB_PWD,
-  port: parseInt(process.env.FIDO_DB_PORT),
+  server: process.env.FIDO_DB ? process.env.FIDO_DB : "",
+  database: process.env.FIDO_DB_NAME ? process.env.FIDO_DB_NAME : "",
+  user: process.env.FIDO_DB_USER ? process.env.FIDO_DB_USER : "",
+  password: process.env.FIDO_DB_PWD ? process.env.FIDO_DB_PWD : "",
+  port: parseInt(process.env.FIDO_DB_PORT)
+    ? parseInt(process.env.FIDO_DB_PORT)
+    : 0,
   trustServerCertificate: true,
 };
 

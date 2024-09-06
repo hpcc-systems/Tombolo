@@ -53,15 +53,6 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'groupId',
       otherKey: 'assetId'
     });
-    groups.belongsToMany(models.visualizations, {
-      constraints:false,
-      foreignKeyConstraint:false,
-      through: 'assets_groups',
-      as: 'visualizations',
-      foreignKey: 'groupId',
-      otherKey: 'assetId'
-
-    });
 
     // groups.hasMany(models.groups, {
     //   as: 'child',
