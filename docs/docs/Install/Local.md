@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Local
 
-Local installation requires a few dependencies to be installed directly on your machine. This is the best choice for developers who want to contribute to the project, or develop integrations to customize their instance. If you intend to use this installation for production purposes, or do not want to configure your own system, we recommend a containerized installation using [Docker Installation](/docs/Install/Docker) instead.
+Local installation requires a few dependencies to be installed directly on your machine. This is the best choice for developers who want to contribute to the project, or develop integrations to customize their instance. If you intend to use this installation for production purposes, or do not want to configure your own system, we recommend a containerized installation using our [Docker Installation Guide](/docs/Install/Docker) instead.
 
 ## Step 1 - Recommended and Required Software
 
