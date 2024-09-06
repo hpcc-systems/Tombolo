@@ -8,7 +8,8 @@
     "bootstrap-server": "(npm install) && (npm run createSchema) && (npm run migrations)  && (npm run seeds) && (nodemon server.js)",
     "createSchema": "npx sequelize db:create",
     "migrations": "npx sequelize db:migrate",
-    "seeds": "npx sequelize db:seed:all"
+    "seeds": "npx sequelize db:seed:all",
+    "dropSchema": "npx sequelize db:drop"
   },
   "author": "",
   "license": "ISC",
