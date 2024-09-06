@@ -9,10 +9,9 @@ const GuideList = [
     description: (
       <>
         <p>
-          Docker installation is the easiest way to get started with Tombolo. It
-          only requires Docker to be installed on your machine. This is best for
-          users who want to get started quickly with Tombolo without setting up
-          dependencies on your local machine.
+          Docker installation is the easiest way to get started with Tombolo.
+          This is best for users who want to get started quickly with Tombolo
+          without setting up dependencies on your local machine.
         </p>
         <div className="buttons_src-pages-index-module">
           <Link
@@ -32,8 +31,7 @@ const GuideList = [
         <p>
           Local installation requires a few dependencies to be installed
           directly on your machine. This is the best choice for developers who
-          want to contribute to the project, or develop integrations to
-          customize their instance.
+          want to contribute to the project, or develop integrations.
         </p>
 
         <div className="buttons_src-pages-index-module">
