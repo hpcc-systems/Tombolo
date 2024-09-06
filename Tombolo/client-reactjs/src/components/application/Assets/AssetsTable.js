@@ -2,15 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Table, message, Tooltip, Divider, Space, Typography, Button } from 'antd';
 import { useHistory } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
-import { DeleteOutlined, EditOutlined, FolderOpenOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, FolderOpenOutlined } from '@ant-design/icons';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
 import { hasEditPermission } from '../../common/AuthUtil.js';
 import { Constants } from '../../common/Constants';
 import { assetsActions } from '../../../redux/actions/Assets';
-import SelectDetailsForPdfDialog from '../Assets/pdf/SelectDetailsForPdfDialog';
-import { getNestedAssets } from '../Assets/pdf/downloadPdf';
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../../common/DeleteAsset';
 import Text from '../../common/Text.jsx';
@@ -31,9 +29,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
 
   const { assetTypeFilter, keywords } = assetReducer.searchParams;
   const [assetToMove, setAssetToMove] = useState({ id: '', type: '', title: '', selectedKeys: {} });
-  const [selectedAsset, setSelectedAsset] = useState();
-  const [toPrintAssets, setToPrintAssets] = useState([]);
-  const [selectDetailsforPdfDialogVisibility, setSelectDetailsforPdfDialogVisibility] = useState(false);
   const [assets, setAssets] = useState([]);
 
   const fetchDataAndRenderTable = async () => {
@@ -64,13 +59,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   useEffect(() => {
     fetchDataAndRenderTable();
   }, [applicationId, assetTypeFilter, keywords, selectedGroup?.selectedKeys?.id]);
-
-  //Execute generate pdf function after asset is selected
-  useEffect(() => {
-    if (selectedAsset) {
-      generatePdf();
-    }
-  }, [selectedAsset]);
 
   //When edit icon is clicked
   const handleEdit = (id, type, action) => {
@@ -335,34 +323,10 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
               onClick={() => openMoveAssetDialog(record.id, record.type, record.name, selectedGroup)}
             />
           </Tooltip>
-
-          <Tooltip placement="right" title={<Text text="Print" />}>
-            <FilePdfOutlined
-              className="asset-action-icon"
-              onClick={() =>
-                getNestedAssets(
-                  applicationId,
-                  setSelectedAsset,
-                  setSelectDetailsforPdfDialogVisibility,
-                  record,
-                  setToPrintAssets
-                )
-              }
-            />
-          </Tooltip>
         </Space>
       ),
     },
   ];
-
-  //Generate PDF & printing task complete function
-  const generatePdf = () => {
-    setSelectDetailsforPdfDialogVisibility(true);
-  };
-
-  const printingTaskCompleted = () => {
-    setSelectDetailsforPdfDialogVisibility(false);
-  };
 
   return (
     <React.Fragment>
@@ -399,17 +363,6 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
           refreshGroups={refreshGroups}
           reloadTable={fetchDataAndRenderTable}
           application={applicationReducer.application}
-        />
-      ) : null}
-
-      {/* Dialog box to select which element to export as PDF */}
-      {selectDetailsforPdfDialogVisibility ? (
-        <SelectDetailsForPdfDialog
-          setVisiblity={setSelectDetailsforPdfDialogVisibility}
-          visible={selectDetailsforPdfDialogVisibility}
-          selectedAsset={selectedAsset}
-          toPrintAssets={toPrintAssets}
-          printingTaskCompleted={printingTaskCompleted}
         />
       ) : null}
     </React.Fragment>

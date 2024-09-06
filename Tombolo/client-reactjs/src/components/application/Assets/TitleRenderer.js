@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DeleteOutlined, EyeOutlined, FilePdfOutlined, FolderOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EyeOutlined, FolderOutlined, PlusOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import { Dropdown } from 'antd';
 
@@ -41,11 +41,6 @@ const TitleRenderer = ({ nodeData, handleMenuClick }) => {
         key: 'Move-Group',
         label: <Text text="Move" />,
         icon: <FolderOutlined />,
-      },
-      {
-        key: 'Print-Assets',
-        label: <Text text="Print Assets" />,
-        icon: <FilePdfOutlined />,
       },
     ];
 
