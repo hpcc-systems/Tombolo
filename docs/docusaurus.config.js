@@ -62,12 +62,24 @@ const config = {
       },
       items: [
         {
-          to: "/docs/category/install",
-          label: "Install",
+          to: "/docs/category/installation--configuration",
+          label: "Installation & Configuration",
         },
         {
           to: "/docs/category/user-guides",
-          label: "User",
+          label: "User Guides",
+        },
+        {
+          to: "/docs/category/developer-resources",
+          label: "Developer Resources",
+        },
+        {
+          to: "/release-notes",
+          label: "Release Notes",
+        },
+        {
+          to: "/faq",
+          label: "FAQ",
         },
         {
           href: "https://github.com/hpcc-systems/Tombolo",
@@ -93,7 +105,7 @@ const config = {
           items: [
             {
               to: "/docs/category/install",
-              label: "Install",
+              label: "Installation & Configuration",
             },
             {
               to: "/docs/category/user-guides",

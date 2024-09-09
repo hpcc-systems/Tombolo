@@ -1,7 +1,8 @@
 ---
 sidebar_position: 2
+slug: /docker/
 ---
 
-# Docker
+# Docker Setup
 
 ## Step 1 - Recommended and Required Software
