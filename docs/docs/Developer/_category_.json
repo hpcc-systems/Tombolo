@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "label": "Developer Resources",
+=======
+  "label": "Developer",
+>>>>>>> dev
   "position": 3,
   "link": {
     "type": "generated-index",

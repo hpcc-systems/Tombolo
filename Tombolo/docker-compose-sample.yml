@@ -15,7 +15,7 @@ services:
       - mysql_db
     env_file:
       - .env
-    entrypoint: ["sh", "/etc/nginx/run_nginx.sh", "${HOST_HOSTNAME}"]
+    entrypoint: ["sh", "/etc/nginx/run_nginx.sh", "${HOSTNAME}"]
 
   node:
     #restart: always
@@ -24,20 +24,19 @@ services:
       context: ./server
       dockerfile: Dockerfile
     volumes:
-      - /tmp/pm2
+      - /tmp/pm2:/tmp/pm2
       - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
       - /var/log/tombolo-server:/app/logs
-    logging:
-      driver: "none" # This line disables Docker logs. All logs are written to the file system
-
     networks:
       - tombolo-network
     ports:
-      - ${PORT}:${PORT}
+      - ${SERVER_PORT}:${SERVER_PORT}
     depends_on:
       - mysql_db
     env_file:
       - .env
+    logging:
+      driver: "none" # This line disables Docker logs. All logs are written to the file system
 
   mysql_db:
     image: mysql:5.7
@@ -49,7 +48,7 @@ services:
       - ${DB_PORT}:3306
     environment:
       MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_ROOT_USER: ${DB_USERNAME},
+      MYSQL_ROOT_USER: ${DB_USERNAME}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_HOST: ${DB_HOSTNAME}
     networks:
