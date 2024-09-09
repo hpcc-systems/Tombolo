@@ -17,7 +17,6 @@
     "@docusaurus/core": "^3.2.1",
     "@docusaurus/preset-classic": "^3.2.1",
     "@mdx-js/react": "^3.0.0",
-    "antd": "^5.20.6",
     "clsx": "^2.0.0",
     "express": "^4.19.2",
     "follow-redirects": "^1.15.6",
