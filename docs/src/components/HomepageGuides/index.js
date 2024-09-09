@@ -67,7 +67,11 @@ function Guide({ Svg, title, description }) {
 export default function HomepageGuides() {
   return (
     <>
-      <h2>Get Started by choosing your Installation Type</h2>
+      <h2
+        style={{ marginTop: "2rem", marginBottom: "2rem", textAlign: "center" }}
+      >
+        Get Started by choosing your Installation Type
+      </h2>
       <section className={styles.features}>
         <div className="container">
           <div className="row" style={{ justifyContent: "space-around" }}>
