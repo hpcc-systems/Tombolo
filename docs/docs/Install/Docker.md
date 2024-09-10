@@ -38,14 +38,14 @@ git clone https://github.com/hpcc-systems/Tombolo.git
 There are two configuration files that need to be modified. The one at the root of the project is for the backend service, and the one inside `client-react.js` is for the front-end React application.
 
 <div class="important_block">
-> Please carefully review each variable before making any changes. Detailed explanations can be found in the [Configurations](/docs/install/configurations).
+> Please carefully review each variable before making any changes. Detailed explanations can be found in the [Configurations](./Configurations).
 </div>
 
 1. Navigate to `/Tombolo/Tombolo` and create a new `.env` file.
 2. Copy all the contents from `/Tombolo/Tombolo/.env.sample` and paste them into the newly created `.env` file.
 3. Navigate to `/Tombolo/Tombolo/client-reactjs` and create a new `.env` file.
 4. Copy all the contents from `/Tombolo/Tombolo/client-reactjs/.env.sample` and paste them into the newly created `.env` file.
-5. Review both `.env` files and update variables if necessary. Use the [Configurations](/docs/install/configurations) documentation as a guide.
+5. Review both `.env` files and update variables if necessary. Use the [Configurations](./Configurations) documentation as a guide.
 
 ---
 
