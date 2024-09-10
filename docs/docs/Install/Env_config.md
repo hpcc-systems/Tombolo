@@ -1,6 +1,5 @@
 ---
 sidebar_position: 3
-slug: /configurations/
 pagination_next: null
 pagination_prev: null
 title: Configurations
