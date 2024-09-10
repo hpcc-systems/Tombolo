@@ -34,6 +34,17 @@ const config = {
     locales: ["en", "fr"],
   },
 
+  //disabled pagination globally
+  markdown: {
+    parseFrontMatter: async (params) => {
+      // Reuse the default parser
+      const result = await params.defaultParseFrontMatter(params);
+      result.frontMatter.pagination_prev = null;
+      result.frontMatter.pagination_next = null;
+      return result;
+    },
+  },
+
   presets: [
     [
       "classic",
@@ -104,12 +115,24 @@ const config = {
           title: "Docs",
           items: [
             {
-              to: "/docs/category/install",
+              to: "/docs/category/installation--configuration",
               label: "Installation & Configuration",
             },
             {
               to: "/docs/category/user-guides",
-              label: "User",
+              label: "User Guides",
+            },
+            {
+              to: "/docs/category/developer-resources",
+              label: "Developer Resources",
+            },
+            {
+              to: "/release-notes",
+              label: "Release Notes",
+            },
+            {
+              to: "/faq",
+              label: "FAQ",
             },
           ],
         },

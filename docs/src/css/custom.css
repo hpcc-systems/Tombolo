@@ -81,3 +81,7 @@ button:hover {
   border-color: transparent transparent transparent
     var(--ifm-color-info-contrast-foreground) !important;
 }
+
+.pagination-nav {
+  display: none !important;
+}
