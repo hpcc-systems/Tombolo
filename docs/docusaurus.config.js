@@ -34,6 +34,17 @@ const config = {
     locales: ["en", "fr"],
   },
 
+  //disabled pagination globally
+  markdown: {
+    parseFrontMatter: async (params) => {
+      // Reuse the default parser
+      const result = await params.defaultParseFrontMatter(params);
+      result.frontMatter.pagination_prev = null;
+      result.frontMatter.pagination_next = null;
+      return result;
+    },
+  },
+
   presets: [
     [
       "classic",
