@@ -7,7 +7,7 @@ title: Configurations
 
 # Environment Configuration
 
-To get Tombolo up and running, you'll need to configure two essential files. For your convenience, sample .env files are already included in the project. Simply rename these sample files to .env and adjust the values to suit your specific environment.
+To get Tombolo up and running, you'll need to configure two essential files. For your convenience, sample .env files are already included in the project. Simply copy these sample files and adjust the values to suit your specific environment.
 
 1. **General Environment File**:  
    This file contains server-related configurations and Docker-related settings. It is located in the root directory of the project: `Tombolo/Tombolo/.env`.
