@@ -48,3 +48,36 @@ button:hover {
 .footer__logo {
   height: 3rem;
 }
+
+/* Important block - used in md file to highlight info */
+.important_block {
+  background: var(--ifm-color-danger) !important; /* Semi-transparent red */
+  border: 1px solid var(--ifm-color-danger);
+  padding: 10px 10px 3px;
+  border-radius: 10px;
+}
+
+.important_block * {
+  color: white;
+}
+
+.important_block blockquote {
+  border-left: var(--ifm-blockquote-border-left-width) solid
+    var(--ifm-color-secondary-lightest);
+}
+
+/* Style for the details component - used in md files */
+.custom_details_component .alert--info {
+  --ifm-alert-background-color: var(--ifm-color-info-contrast-background);
+  --ifm-alert-background-color-highlight: rgba(84, 199, 236, 0.15);
+  --ifm-alert-foreground-color: var(-ifm-color-secondary-darkest);
+  --ifm-alert-border-color: var(--ifm-color-secondary-darkest);
+}
+
+.custom_details_component
+  .details_node_modules-\@docusaurus-theme-common-lib-components-Details-styles-module
+  > summary::before {
+  top: 0.65rem !important;
+  border-color: transparent transparent transparent
+    var(--ifm-color-info-contrast-foreground) !important;
+}
