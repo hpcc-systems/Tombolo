@@ -10,7 +10,7 @@ Local installation requires a few dependencies to be installed directly on your 
 
 ## System Requirements and Prerequisites
 
-Before setting up Tombolo with Docker, ensure your system meets the following requirements:
+### System Specifications
 
 - **CPU**: 2+ cores
 - **RAM**: 4GB+ (8GB recommended for optimal performance)
