@@ -27,7 +27,10 @@ function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
       };
 
       const response = await fetch(`/api/cluster/currentClusterUsage/${clusterId}`, payload);
-      if (!response.ok) handleError(response);
+      if (!response.ok) {
+        handleError(response);
+        return;
+      }
       const data = await response.json();
 
       const groupedUsage = [];

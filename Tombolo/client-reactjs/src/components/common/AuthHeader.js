@@ -19,13 +19,16 @@ export function handleError(response) {
     store.dispatch(userActions.logout());
   } else if (response.status == 422) {
     throw Error('Error occurred while saving the data. Please check the form data');
+  } else if (response.status == 404) {
+    message.error('404: Resource not found on server');
+    return;
+  } else if (typeof response === 'string') {
+    message.error(response);
+    return;
   } else {
-    let errorMessage = '';
-    response.json().then((responseData) => {
-      errorMessage = responseData.message;
-      //throw new Error(errorMessage);
-      message.error(errorMessage);
-    });
+    //if we have not defined a handling above, throw undefined error
+    message.error('An undefined error occurred. Please try again later');
+    return;
   }
 }
 

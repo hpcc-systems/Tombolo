@@ -90,7 +90,10 @@ function ClusterUsage() {
       const queryData = JSON.stringify({ clusterId, historyDateRange });
 
       const response = await fetch(`/api/cluster/clusterStorageHistory/${queryData}`, payload);
-      if (!response.ok) handleError(response);
+      if (!response.ok) {
+        handleError(response);
+        return;
+      }
       const data = await response.json();
       setClusterUsageHistory(data);
     } catch (err) {
