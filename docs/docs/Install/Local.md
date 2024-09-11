@@ -33,6 +33,8 @@ Before setting up Tombolo with Docker, ensure your system meets the following re
 
 - [Visual Studio Code](https://code.visualstudio.com/download) or your preferred IDE with integrated terminal.
 
+---
+
 ## Step 1 - Clone the Git Repository
 
 Open a Command Prompt, Powershell, Terminal, or any other integrated terminal and navigate to your desired installation location.
@@ -42,6 +44,8 @@ Run the command below.
 ```bash
 git clone https://github.com/hpcc-systems/Tombolo.git
 ```
+
+---
 
 ## Step 2 - Configure Environment Variables
 
@@ -92,6 +96,8 @@ REACT_APP_AZURE_API_TOKEN_SCOPE={your api token scope}
 
 Save the file when finished.
 
+---
+
 ## Step 3 - Run the application
 
 ### Server
@@ -125,6 +131,8 @@ npm run bootstrap-client
 The `cd` command changes the directory you're working with.
 
 The `npm run bootstrap-client` command installs dependencies located in the package.json file necessary for running and compiling the code. After this is finished, it will start the front end.
+
+---
 
 ## Step 4 - Open the application
 
