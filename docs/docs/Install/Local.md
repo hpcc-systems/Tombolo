@@ -6,6 +6,8 @@ sidebar_position: 1
 
 Local installation requires a few dependencies to be installed directly on your machine. This is the best choice for developers who want to contribute to the project, or develop integrations to customize their instance. If you intend to use this installation for production purposes, or do not want to configure your own system, we recommend a containerized installation using our [Docker Installation Guide](/docs/Install/Docker) instead.
 
+---
+
 ## System Requirements and Prerequisites
 
 Before setting up Tombolo with Docker, ensure your system meets the following requirements:
@@ -13,8 +15,6 @@ Before setting up Tombolo with Docker, ensure your system meets the following re
 - **CPU**: 2+ cores
 - **RAM**: 4GB+ (8GB recommended for optimal performance)
 - **Storage**: At least 10GB of free disk space
-
----
 
 ### Required Software
 
