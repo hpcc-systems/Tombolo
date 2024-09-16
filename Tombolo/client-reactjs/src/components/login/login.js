@@ -9,11 +9,23 @@ const Login = () => {
 
   return (
     <Form onFinish={onFinish} layout="vertical">
-      <Form.Item label="Username" name="username" rules={[{ required: true, message: 'Please input your username!' }]}>
+      <Form.Item
+        label="Username"
+        name="username"
+        rules={[
+          { required: true, message: 'Please input your username!' },
+          { max: 64, message: 'Maximum of 64 characters allowed' },
+        ]}>
         <Input />
       </Form.Item>
 
-      <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Please input your password!' }]}>
+      <Form.Item
+        label="Password"
+        name="password"
+        rules={[
+          { required: true, message: 'Please input your password!' },
+          { max: 64, message: 'Maximum of 64 characters allowed' },
+        ]}>
         <Input.Password />
       </Form.Item>
 

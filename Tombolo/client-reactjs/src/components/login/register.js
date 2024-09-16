@@ -18,6 +18,7 @@ const Register = () => {
             required: true,
             message: 'Please input your first name!',
           },
+          { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
         <Input />
       </Form.Item>
@@ -29,6 +30,7 @@ const Register = () => {
             required: true,
             message: 'Please input your last name!',
           },
+          { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
         <Input />
       </Form.Item>
@@ -45,6 +47,7 @@ const Register = () => {
             required: true,
             message: 'Please input your email!',
           },
+          { max: 256, message: 'Maximum of 256 characters allowed' },
         ]}>
         <Input />
       </Form.Item>
@@ -57,6 +60,7 @@ const Register = () => {
             required: true,
             message: 'Please input your password!',
           },
+          { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
         <Input.Password />
       </Form.Item>
