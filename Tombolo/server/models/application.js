@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
 
   application.associate = function (models) {
     /* USER_APPLICATION */
-    application.hasMany(models.user_application, {
+    application.hasMany(models.UserApplication, {
       foreignKey: "application_id",
       onDelete: "CASCADE",
       hooks: true,
@@ -100,6 +100,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });
+
   };
 
   return application;
