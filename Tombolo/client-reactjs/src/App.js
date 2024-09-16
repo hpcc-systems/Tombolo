@@ -68,6 +68,8 @@ import { userActions } from './redux/actions/User';
 import { checkBackendStatus } from './redux/actions/Backend';
 import { store } from './redux/store/Store';
 import { applicationActions } from './redux/actions/Application';
+import Login from './components/login/login.js';
+import Register from './components/login/register.js';
 
 const { Header, Content } = Layout;
 
