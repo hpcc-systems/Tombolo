@@ -1,16 +1,17 @@
 import React from 'react';
+import { Card } from 'antd';
+import logo from '../../images/logo.png';
 
-const BasicLayout = (content) => {
+const BasicLayout = ({ content }) => {
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: '#f0f2f5',
-      }}>
-      <Card title={<img src={logo} />} style={{ width: '50%', textAlign: 'center' }}>
+    <div className="basicLayout">
+      <Card
+        title={
+          <>
+            <img src={logo} />
+          </>
+        }
+        className="basicLayoutCard">
         <h2>{content}</h2>
       </Card>
     </div>

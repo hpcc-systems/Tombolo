@@ -13,6 +13,8 @@ import Home from './components/application/home/index.js';
 
 // Auth pages
 import Assets from './components/application/Assets'; // This is "home" view, can go into main bundle
+const Login = React.lazy(() => import('./components/login/login'));
+const Register = React.lazy(() => import('./components/login/register'));
 
 //Dataflow pages
 const Dataflow = React.lazy(() => import('./components/application/Dataflow'));
@@ -68,8 +70,7 @@ import { userActions } from './redux/actions/User';
 import { checkBackendStatus } from './redux/actions/Backend';
 import { store } from './redux/store/Store';
 import { applicationActions } from './redux/actions/Application';
-import Login from './components/login/login.js';
-import Register from './components/login/register.js';
+import BasicLayout from './components/common/BasicLayout.js';
 
 const { Header, Content } = Layout;
 
@@ -260,141 +261,179 @@ class App extends React.Component {
         <Suspense fallback={<Fallback />}>
           <Router history={history}>
             <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
-              {/* Go through loading sequence, first check if backend is connected and report with proper message */}
-              {!isBackendConnected || !this.props.authWithAzure || !this.props.user || !this.props.user.token ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '100vh',
-                    backgroundColor: '#f0f2f5',
-                  }}>
-                  {!isBackendConnected && isBackendStatusRetrieved ? (
-                    <Card title={<img src={logo} />} style={{ width: '50%', textAlign: 'center' }}>
-                      <h2>
-                        Tombolo has encountered a network issue, please refresh the page. If the issue persists, contact
-                        your system administrator.
-                      </h2>
-                    </Card>
-                  ) : (
+              {window.location.pathname === '/login' || window.location.pathname === '/register' ? (
+                <BasicLayout
+                  content={
+                    <Switch>
+                      <Route path="/login" component={Login} />
+                      <Route path="/register" component={Register} />
+                    </Switch>
+                  }
+                />
+              ) : (
+                <>
+                  {/* Go through loading sequence, first check if backend is connected and report with proper message */}
+                  {!isBackendConnected || !this.props.authWithAzure || !this.props.user || !this.props.user.token ? (
                     <div
                       style={{
                         display: 'flex',
-                        flexWrap: 'wrap',
                         justifyContent: 'center',
-                        width: '100%',
+                        alignItems: 'center',
+                        height: '100vh',
+                        backgroundColor: '#f0f2f5',
                       }}>
-                      <div style={{ width: '100%', marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
-                        <img src={logo} />
-                      </div>
-                      <Spin size="large" />
-                      <div style={{ width: '100%', marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
-                        <h2>{this.state.message}</h2>
-                      </div>
+                      {!isBackendConnected && isBackendStatusRetrieved ? (
+                        <Card title={<img src={logo} />} style={{ width: '50%', textAlign: 'center' }}>
+                          <h2>
+                            Tombolo has encountered a network issue, please refresh the page. If the issue persists,
+                            contact your system administrator.
+                          </h2>
+                        </Card>
+                      ) : (
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            width: '100%',
+                          }}>
+                          <div
+                            style={{ width: '100%', marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
+                            <img src={logo} />
+                          </div>
+                          <Spin size="large" />
+                          <div style={{ width: '100%', marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
+                            <h2>{this.state.message}</h2>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ) : (
-                /* Now that everything is loaded, present the application */
-                <>
-                  <Header
-                    style={{
-                      backgroundColor: BG_COLOR,
-                      maxHeight: '50px',
-                      position: 'fixed',
-                      zIndex: 100,
-                      width: '100%',
-                    }}>
-                    <AppHeader
-                      setLocale={this.setLocale}
-                      languageSwitcher={<LanguageSwitcher setLocale={this.setLocale} />}
-                    />
-                  </Header>
-                  <Tour
-                    steps={steps}
-                    open={this.state.tourOpen}
-                    onClose={this.handleTourShownClose}
-                    indicatorsRender={() => <></>}
-                  />
-                  <Tour
-                    steps={clusterSteps}
-                    open={this.state.clusterTourOpen}
-                    onClose={this.handleClusterTourShownClose}
-                  />
-                  <Layout>
-                    <LeftNav
-                      BG_COLOR={BG_COLOR}
-                      onCollapse={this.onCollapse}
-                      collapsed={this.state.collapsed}
-                      isApplicationSet={isApplicationSet}
-                      clusters={this.props.clusters}
-                      appLinkRef={this.state.appLinkRef}
-                      clusterLinkRef={this.state.clusterLinkRef}
-                    />
+                  ) : (
+                    /* Now that everything is loaded, present the application */
+                    <>
+                      <Header
+                        style={{
+                          backgroundColor: BG_COLOR,
+                          maxHeight: '50px',
+                          position: 'fixed',
+                          zIndex: 100,
+                          width: '100%',
+                        }}>
+                        <AppHeader
+                          setLocale={this.setLocale}
+                          languageSwitcher={<LanguageSwitcher setLocale={this.setLocale} />}
+                        />
+                      </Header>
+                      <Tour
+                        steps={steps}
+                        open={this.state.tourOpen}
+                        onClose={this.handleTourShownClose}
+                        indicatorsRender={() => <></>}
+                      />
+                      <Tour
+                        steps={clusterSteps}
+                        open={this.state.clusterTourOpen}
+                        onClose={this.handleClusterTourShownClose}
+                      />
+                      <Layout>
+                        <LeftNav
+                          BG_COLOR={BG_COLOR}
+                          onCollapse={this.onCollapse}
+                          collapsed={this.state.collapsed}
+                          isApplicationSet={isApplicationSet}
+                          clusters={this.props.clusters}
+                          appLinkRef={this.state.appLinkRef}
+                          clusterLinkRef={this.state.clusterLinkRef}
+                        />
 
-                    <Content
-                      style={{
-                        transition: '.1s linear',
-                        margin: '55px 0px',
-                        marginLeft: this.state.collapsed ? '55px' : '200px',
-                      }}>
-                      <ErrorBoundary>
-                        <Suspense fallback={<Fallback />}>
-                          <Switch>
-                            <PrivateRoute exact path="/" component={Home} />
-                            <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
-                            <PrivateRoute
-                              path="/:applicationId/assets/fileTemplate/:assetId?"
-                              component={FileTemplate}
-                            />
-                            <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
-                            <PrivateRoute path="/:applicationId/superfileMonitoring" component={SuperFileMonitoring} />
-                            <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
-                            <PrivateRoute path="/:applicationId/OrbitMonitoring" component={OrbitMonitoring} />
-                            <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />
-                            <PrivateRoute path="/:applicationId/directoryMonitoring" component={DirectoryMonitoring} />
-                            <PrivateRoute path="/:applicationId/dashboard/notifications" component={Notifications} />
-                            <PrivateRoute path="/:applicationId/dashboard/clusterUsage" component={ClusterUsage} />
-                            <PrivateRoute path="/:applicationId/dashboard/Orbit" component={Orbit} />
-                            <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
-                            <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
-                            <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
-                            <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
-                            <PrivateRoute path="/:applicationId/assets" component={Assets} />
-                            <PrivateRoute
-                              path="/:applicationId/dataflow/details/:dataflowId?"
-                              component={DataflowDetails}
-                            />
-                            <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
-                            <PrivateRoute path="/admin/applications" component={AdminApplications} />
-                            <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
-                            <PrivateRoute path="/admin/clusters" component={Clusters} />
-                            <PrivateRoute path="/admin/notification-settings/msTeams" component={TeamsNotification} />
-                            <PrivateRoute path="/admin/github" component={GitHubSettings} />
-                            <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} />
-                            <PrivateRoute path="/admin/users" component={Users} />
-                            <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
-                            <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
-                            <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
-                            <PrivateRoute path="/admin/integrations" component={Integrations} />
-                            <PrivateRoute
-                              path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
-                              component={DataflowInstanceDetails}
-                            />
-                            <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />{' '}
-                            <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
-                            <PrivateRoute path="/:applicationId/actions" component={Actions} />
-                            <PrivateRoute
-                              path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
-                              component={ManualJobDetail}
-                            />
-                            {this.props.authWithAzure ? <Route exact path="*" component={getHome} /> : null}
-                          </Switch>
-                        </Suspense>
-                      </ErrorBoundary>
-                    </Content>
-                  </Layout>
+                        <Content
+                          style={{
+                            transition: '.1s linear',
+                            margin: '55px 0px',
+                            marginLeft: this.state.collapsed ? '55px' : '200px',
+                          }}>
+                          <ErrorBoundary>
+                            <Suspense fallback={<Fallback />}>
+                              <Switch>
+                                <PrivateRoute exact path="/" component={Home} />
+                                <PrivateRoute
+                                  path="/:applicationId/assets/file/:assetId?"
+                                  component={FileDetailsForm}
+                                />
+                                <PrivateRoute
+                                  path="/:applicationId/assets/fileTemplate/:assetId?"
+                                  component={FileTemplate}
+                                />
+                                <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
+                                <PrivateRoute
+                                  path="/:applicationId/superfileMonitoring"
+                                  component={SuperFileMonitoring}
+                                />
+                                <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
+                                <PrivateRoute path="/:applicationId/OrbitMonitoring" component={OrbitMonitoring} />
+                                <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />
+                                <PrivateRoute
+                                  path="/:applicationId/directoryMonitoring"
+                                  component={DirectoryMonitoring}
+                                />
+                                <PrivateRoute
+                                  path="/:applicationId/dashboard/notifications"
+                                  component={Notifications}
+                                />
+                                <PrivateRoute path="/:applicationId/dashboard/clusterUsage" component={ClusterUsage} />
+                                <PrivateRoute path="/:applicationId/dashboard/Orbit" component={Orbit} />
+                                <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
+                                <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
+                                <PrivateRoute
+                                  path="/:applicationId/assets/index/:assetId?"
+                                  component={IndexDetailsForm}
+                                />
+                                <PrivateRoute
+                                  path="/:applicationId/assets/query/:assetId?"
+                                  component={QueryDetailsForm}
+                                />
+                                <PrivateRoute path="/:applicationId/assets" component={Assets} />
+                                <PrivateRoute
+                                  path="/:applicationId/dataflow/details/:dataflowId?"
+                                  component={DataflowDetails}
+                                />
+                                <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
+                                <PrivateRoute path="/admin/applications" component={AdminApplications} />
+                                <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
+                                <PrivateRoute path="/admin/clusters" component={Clusters} />
+                                <PrivateRoute
+                                  path="/admin/notification-settings/msTeams"
+                                  component={TeamsNotification}
+                                />
+                                <PrivateRoute path="/admin/github" component={GitHubSettings} />
+                                <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} />
+                                <PrivateRoute path="/admin/users" component={Users} />
+                                <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
+                                <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
+                                <PrivateRoute
+                                  path="/admin/integrations/:integrationName"
+                                  component={IntegrationSettings}
+                                />
+                                <PrivateRoute path="/admin/integrations" component={Integrations} />
+                                <PrivateRoute
+                                  path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
+                                  component={DataflowInstanceDetails}
+                                />
+                                <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />{' '}
+                                <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
+                                <PrivateRoute path="/:applicationId/actions" component={Actions} />
+                                <PrivateRoute
+                                  path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
+                                  component={ManualJobDetail}
+                                />
+                                {this.props.authWithAzure ? <Route exact path="*" component={getHome} /> : null}
+                              </Switch>
+                            </Suspense>
+                          </ErrorBoundary>
+                        </Content>
+                      </Layout>
+                    </>
+                  )}
                 </>
               )}
             </Layout>

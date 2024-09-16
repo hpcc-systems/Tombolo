@@ -1179,3 +1179,15 @@ div.tooltip {
 main > div {
   margin: 0.5rem;
 }
+
+.basicLayout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f2f5;
+}
+
+.basicLayoutCard {
+  width: 33%;
+}
