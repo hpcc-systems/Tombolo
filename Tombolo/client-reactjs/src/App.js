@@ -13,11 +13,6 @@ import Home from './components/application/home/index.js';
 
 // Auth pages
 import Assets from './components/application/Assets'; // This is "home" view, can go into main bundle
-const LoginPage = React.lazy(() => import('./components/login/LoginPage'));
-const LoggedOut = React.lazy(() => import('./components/login/LoggedOut'));
-const ForgotPassword = React.lazy(() => import('./components/login/ForgotPassword'));
-const ResetPassword = React.lazy(() => import('./components/login/ResetPassword'));
-const RegisterPage = React.lazy(() => import('./components/login/RegisterPage'));
 
 //Dataflow pages
 const Dataflow = React.lazy(() => import('./components/application/Dataflow'));
@@ -344,16 +339,6 @@ class App extends React.Component {
                       }}>
                       <ErrorBoundary>
                         <Suspense fallback={<Fallback />}>
-                          {!this.props.authWithAzure ? ( // value is passed via AzureApp component
-                            <>
-                              <Route exact path="/login" component={LoginPage} />
-                              <Route exact path="/register" component={RegisterPage} />
-                              <Route exact path="/forgot-password" component={ForgotPassword} />
-                              <Route exact path="/reset-password/:id" component={ResetPassword} />
-                              <Route exact path="/logout" component={LoggedOut} />
-                            </>
-                          ) : null}
-
                           <Switch>
                             <PrivateRoute exact path="/" component={Home} />
                             <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
