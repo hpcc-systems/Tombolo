@@ -76,7 +76,7 @@ const Register = () => {
           },
           { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
-        <Input.Password size="large" />
+        <Input.Password size="large" autoComplete="new-password" />
       </Form.Item>
 
       <Form.Item
@@ -89,7 +89,7 @@ const Register = () => {
           },
           { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
-        <Input.Password size="large" />
+        <Input.Password size="large" autoComplete="new-password" />
       </Form.Item>
 
       <Form.Item>
