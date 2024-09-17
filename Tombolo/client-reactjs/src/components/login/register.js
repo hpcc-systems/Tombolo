@@ -31,7 +31,7 @@ const Register = () => {
               },
               { max: 64, message: 'Maximum of 64 characters allowed' },
             ]}>
-            <Input />
+            <Input size="large" />
           </Form.Item>
         </Col>
         <Col span={12}>
@@ -45,7 +45,7 @@ const Register = () => {
               },
               { max: 64, message: 'Maximum of 64 characters allowed' },
             ]}>
-            <Input />
+            <Input size="large" />
           </Form.Item>
         </Col>
       </Row>
@@ -63,7 +63,7 @@ const Register = () => {
           },
           { max: 256, message: 'Maximum of 256 characters allowed' },
         ]}>
-        <Input />
+        <Input size="large" />
       </Form.Item>
 
       <Form.Item
@@ -76,7 +76,7 @@ const Register = () => {
           },
           { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
-        <Input.Password />
+        <Input.Password size="large" />
       </Form.Item>
 
       <Form.Item
@@ -89,7 +89,7 @@ const Register = () => {
           },
           { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
-        <Input.Password />
+        <Input.Password size="large" />
       </Form.Item>
 
       <Form.Item>

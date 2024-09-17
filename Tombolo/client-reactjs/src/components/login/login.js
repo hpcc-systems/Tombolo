@@ -24,7 +24,7 @@ const Login = () => {
           { required: true, message: 'Please input your email!' },
           { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
-        <Input />
+        <Input size="large" />
       </Form.Item>
       <Form.Item
         label={
@@ -37,7 +37,7 @@ const Login = () => {
           { required: true, message: 'Please input your password!' },
           { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
-        <Input.Password />
+        <Input.Password size="large" />
       </Form.Item>
       <a href="/reset-password">Forgot password?</a>
       <Form.Item>
