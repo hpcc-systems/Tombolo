@@ -77,7 +77,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     //user to application relation
-    user.hasMany(models.UserApplication, {
+    user.hasMany(models.user_application, {
       foreignKey: "user_id",
       onDelete: "CASCADE",
     });
