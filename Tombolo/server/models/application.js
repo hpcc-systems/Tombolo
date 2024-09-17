@@ -100,7 +100,6 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });
-
   };
 
   return application;
