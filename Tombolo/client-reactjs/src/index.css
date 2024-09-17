@@ -1189,5 +1189,14 @@ main > div {
 }
 
 .basicLayoutCard {
-  width: 33%;
+  width: 80%;
+  max-width: 25rem;
+}
+
+.basicLayoutCard button {
+  width: 100%;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  height: fit-content;
+  min-height: 3.5rem;
 }

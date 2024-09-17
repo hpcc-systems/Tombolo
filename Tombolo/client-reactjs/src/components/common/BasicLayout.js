@@ -3,16 +3,18 @@ import { Card } from 'antd';
 import logo from '../../images/logo.png';
 
 const BasicLayout = ({ content }) => {
+  let width = null;
+  //if pathname is /register, make .basicLayout wider
+  if (window.location.pathname === '/register') {
+    width = '40rem';
+  }
   return (
     <div className="basicLayout">
-      <Card
-        title={
-          <>
-            <img src={logo} />
-          </>
-        }
-        className="basicLayoutCard">
-        <h2>{content}</h2>
+      <Card className="basicLayoutCard" style={{ maxWidth: width }}>
+        <div style={{ width: 'fit-content', margin: '0 auto', marginBottom: '1rem' }}>
+          <img src={logo} />
+        </div>
+        <div>{content}</div>
       </Card>
     </div>
   );
