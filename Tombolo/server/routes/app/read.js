@@ -162,6 +162,7 @@ router.post(
             description: req.body.description,
             creator: req.body.creator,
             visibility: req.body.visibility,
+            createdBy: req.body.createdBy,
           })
           .then(function (application) {
             if (req.body.user_id) {
@@ -169,6 +170,8 @@ router.post(
                 .create({
                   user_id: req.body.user_id,
                   application_id: application.id,
+                  createdBy: req.body.createdBy,
+                  user_app_relation: "created"
                 })
                 .then(function (userapp) {
                   res.json({

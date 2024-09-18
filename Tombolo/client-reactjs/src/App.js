@@ -434,6 +434,108 @@ class App extends React.Component {
                       </Layout>
                     </>
                   )}
+
+                </div>
+              ) : (
+                /* Now that everything is loaded, present the application */
+                <>
+                  <Header
+                    style={{
+                      backgroundColor: BG_COLOR,
+                      maxHeight: '50px',
+                      position: 'fixed',
+                      zIndex: 100,
+                      width: '100%',
+                    }}>
+                    <AppHeader
+                      setLocale={this.setLocale}
+                      languageSwitcher={<LanguageSwitcher setLocale={this.setLocale} />}
+                    />
+                  </Header>
+                  <Tour
+                    steps={steps}
+                    open={this.state.tourOpen}
+                    onClose={this.handleTourShownClose}
+                    indicatorsRender={() => <></>}
+                  />
+                  <Tour
+                    steps={clusterSteps}
+                    open={this.state.clusterTourOpen}
+                    onClose={this.handleClusterTourShownClose}
+                  />
+                  <Layout>
+                    <LeftNav
+                      BG_COLOR={BG_COLOR}
+                      onCollapse={this.onCollapse}
+                      collapsed={this.state.collapsed}
+                      isApplicationSet={isApplicationSet}
+                      clusters={this.props.clusters}
+                      appLinkRef={this.state.appLinkRef}
+                      clusterLinkRef={this.state.clusterLinkRef}
+                    />
+
+                    <Content
+                      style={{
+                        transition: '.1s linear',
+                        margin: '55px 0px',
+                        marginLeft: this.state.collapsed ? '55px' : '200px',
+                      }}>
+                      <ErrorBoundary>
+                        <Suspense fallback={<Fallback />}>
+                          <Switch>
+                            <PrivateRoute exact path="/" component={Home} />
+                            <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
+                            <PrivateRoute
+                              path="/:applicationId/assets/fileTemplate/:assetId?"
+                              component={FileTemplate}
+                            />
+                            <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
+                            <PrivateRoute path="/:applicationId/superfileMonitoring" component={SuperFileMonitoring} />
+                            <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
+                            <PrivateRoute path="/:applicationId/OrbitMonitoring" component={OrbitMonitoring} />
+                            <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />
+                            <PrivateRoute path="/:applicationId/directoryMonitoring" component={DirectoryMonitoring} />
+                            <PrivateRoute path="/:applicationId/dashboard/notifications" component={Notifications} />
+                            <PrivateRoute path="/:applicationId/dashboard/clusterUsage" component={ClusterUsage} />
+                            <PrivateRoute path="/:applicationId/dashboard/Orbit" component={Orbit} />
+                            <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
+                            <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
+                            <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
+                            <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
+                            <PrivateRoute path="/:applicationId/assets" component={Assets} />
+                            <PrivateRoute
+                              path="/:applicationId/dataflow/details/:dataflowId?"
+                              component={DataflowDetails}
+                            />
+                            <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
+                            <PrivateRoute path="/admin/applications" component={AdminApplications} />
+                            <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
+                            <PrivateRoute path="/admin/clusters" component={Clusters} />
+                            <PrivateRoute path="/admin/notification-settings/msTeams" component={TeamsNotification} />
+                            <PrivateRoute path="/admin/github" component={GitHubSettings} />
+                            <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} />
+                            <PrivateRoute path="/admin/users" component={Users} />
+                            <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
+                            <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
+                            <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
+                            <PrivateRoute path="/admin/integrations" component={Integrations} />
+                            <PrivateRoute
+                              path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
+                              component={DataflowInstanceDetails}
+                            />
+                            <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />{' '}
+                            <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
+                            <PrivateRoute path="/:applicationId/actions" component={Actions} />
+                            <PrivateRoute
+                              path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
+                              component={ManualJobDetail}
+                            />
+                            {this.props.authWithAzure ? <Route exact path="*" component={getHome} /> : null}
+                          </Switch>
+                        </Suspense>
+                      </ErrorBoundary>
+                    </Content>
+                  </Layout>
                 </>
               )}
             </Layout>
