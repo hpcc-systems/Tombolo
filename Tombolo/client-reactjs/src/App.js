@@ -10,11 +10,13 @@ import logo from './images/logo.png';
 
 //home page
 import Home from './components/application/home/index.js';
+import Assets from './components/application/Assets';
 
 // Auth pages
-import Assets from './components/application/Assets'; // This is "home" view, can go into main bundle
 const Login = React.lazy(() => import('./components/login/login'));
 const Register = React.lazy(() => import('./components/login/register'));
+const ResetPassword = React.lazy(() => import('./components/login/ResetPassword.js'));
+const ForgotPassword = React.lazy(() => import('./components/login/ForgotPassword.js'));
 
 //Dataflow pages
 const Dataflow = React.lazy(() => import('./components/application/Dataflow'));
@@ -256,17 +258,36 @@ class App extends React.Component {
       },
     ];
 
+    const loginSteps = [
+      {
+        url: 'login',
+      },
+      {
+        url: 'register',
+      },
+      {
+        url: 'reset-password',
+      },
+      {
+        url: 'forgot-password',
+      },
+    ];
+
+    const isLogin = loginSteps.some((step) => window.location.pathname.split('/')[1] === step.url);
+
     return (
       <ConfigProvider locale={this.locale(this.state.locale)}>
         <Suspense fallback={<Fallback />}>
           <Router history={history}>
             <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
-              {window.location.pathname === '/login' || window.location.pathname === '/register' ? (
+              {isLogin ? (
                 <BasicLayout
                   content={
                     <Switch>
                       <Route path="/login" component={Login} />
                       <Route path="/register" component={Register} />
+                      <Route path="/reset-password/:resetToken" component={ResetPassword} />
+                      <Route path="/forgot-password" component={ForgotPassword} />
                     </Switch>
                   }
                 />

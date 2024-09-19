@@ -1,8 +1,19 @@
-import React from 'react';
-import { Form, Input, Button, Col, Row, Divider } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, Button, Col, Row, Divider, Popover } from 'antd';
 import msLogo from '../../images/mslogo.png';
+import passwordComplexityValidator from '../common/passwordComplexityValidator';
+// import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
 const Register = () => {
+  const [popOverContent, setPopOverContent] = useState(null);
+  const [form] = Form.useForm();
+
+  const validatePassword = (value) => {
+    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true }));
+  };
+
+  useEffect(() => {}, [popOverContent]);
+
   const onFinish = (values) => {
     console.log('Received values of form: ', values);
     // Add your logic to register the user here
@@ -10,7 +21,7 @@ const Register = () => {
   };
 
   return (
-    <Form onFinish={onFinish} layout="vertical">
+    <Form onFinish={onFinish} layout="vertical" form={form}>
       <Divider>Sign up With</Divider>
       <Form.Item>
         <Button style={{ background: 'black', color: 'white' }}>
@@ -54,8 +65,10 @@ const Register = () => {
         label="Email"
         rules={[
           {
+            required: true,
+            whitespace: true,
             type: 'email',
-            message: 'Please enter a valid email address!',
+            message: 'Invalid e-mail address.',
           },
           {
             required: true,
@@ -66,28 +79,53 @@ const Register = () => {
         <Input size="large" />
       </Form.Item>
 
-      <Form.Item
-        name="password"
-        label="Password"
-        rules={[
-          {
-            required: true,
-            message: 'Please input your password!',
-          },
-          { max: 64, message: 'Maximum of 64 characters allowed' },
-        ]}>
-        <Input.Password size="large" autoComplete="new-password" />
-      </Form.Item>
-
+      <Popover placement="right" trigger="focus" title="Password Complexity" content={popOverContent}>
+        <Form.Item
+          name="password"
+          label="Password"
+          rules={[
+            {
+              required: true,
+              message: 'Please input your password!',
+            },
+            { max: 64, message: 'Maximum of 64 characters allowed' },
+            () => ({
+              validator(_, value) {
+                //passwordComplexityValidator always returns an array with at least one attributes element
+                const errors = passwordComplexityValidator({ password: value });
+                if (!value || errors.length === 1) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Password does not meet complexity requirements!'));
+              },
+            }),
+          ]}>
+          <Input.Password
+            size="large"
+            autoComplete="new-password"
+            onChange={(e) => {
+              validatePassword(e.target.value);
+            }}
+            onFocus={(e) => {
+              validatePassword(e.target.value);
+            }}
+          />
+        </Form.Item>
+      </Popover>
       <Form.Item
         name="confirmPassword"
         label="Confirm Password"
         rules={[
-          {
-            required: true,
-            message: 'Please input your password!',
-          },
+          { required: true, message: 'Please confirm your new password!' },
           { max: 64, message: 'Maximum of 64 characters allowed' },
+          ({ getFieldValue }) => ({
+            validator(_, value) {
+              if (!value || getFieldValue('password') === value) {
+                return Promise.resolve();
+              }
+              return Promise.reject(new Error('The two passwords do not match!'));
+            },
+          }),
         ]}>
         <Input.Password size="large" autoComplete="new-password" />
       </Form.Item>
