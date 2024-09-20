@@ -1,6 +1,6 @@
 const logger = require('../config/logger');
 const models = require('../models');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const User = models.user;
 
@@ -121,7 +121,8 @@ const changePassword = async (req, res) => {
         }
 
         // Update password
-        existingUser.hash = bcrypt.hashSync(newPassword, 10);
+        const salt = bcrypt.genSaltSync(10);
+        existingUser.hash = bcrypt.hashSync(newPassword, salt);
 
         // Save user with updated details
         const updatedUser = await existingUser.save();
