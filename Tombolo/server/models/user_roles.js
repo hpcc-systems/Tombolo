@@ -1,6 +1,7 @@
 // user and role types mapping table
 'use strict';
 module.exports = (sequelize, DataTypes) => {
+  // Define the UserRoles
   const UserRoles = sequelize.define("UserRoles",{
     id: {
         primaryKey: true,
@@ -11,10 +12,18 @@ module.exports = (sequelize, DataTypes) => {
     userId:{
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+            model: 'users', // Name of the users table
+            key: 'id',
+        }
     },
     roleId:{
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+            model: 'role_types', // Name of the role_types table
+            key: 'id',
+        }
     },
     createdBy:{
         type: DataTypes.UUID,
@@ -29,8 +38,13 @@ module.exports = (sequelize, DataTypes) => {
 }
 
   );
+
+  // Associations
   UserRoles.associate = function(models) {
+   UserRoles.belongsTo(models.user, {foreignKey: 'userId'});
+   UserRoles.belongsTo(models.RoleTypes, {foreignKey: 'roleId', as: "role_details"});
   };
+  
   return UserRoles;
 };
 
