@@ -54,6 +54,7 @@ if (process.env.APP_AUTH_METHOD === "azure_ad") {
 
 /*  ROUTES */
 const auth = require("./routes/authRoutes");
+const users = require("./routes/userRoutes");
 const job = require("./routes/job/read");
 const bree = require("./routes/bree/read");
 const ldap = require("./routes/ldap/read");
@@ -99,20 +100,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// Use compression  to reduce the size of the response body and increase the speed of a web application
+// Reduce response size & increase speed
 app.use(compression());
 
+// Unauthenticated routes
 app.use("/api/auth", auth);
-app.use("/api/user", userRead);
-app.use("/api/updateNotification", updateNotifications);
 app.use("/api/status", status);
-
-//exposed API, requires api key for any routes
 app.use("/api/apikeys", api);
 
 // Authenticate token before proceeding to route
-app.use(tokenService.verifyToken);
+// app.use(tokenService.verifyToken);
 
+// Authenticated routes
+app.use("/api/user", users);
 app.use("/api/job", job);
 app.use("/api/bree", bree);
 app.use("/api/ldap", ldap);
