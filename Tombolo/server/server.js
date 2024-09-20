@@ -53,6 +53,7 @@ if (process.env.APP_AUTH_METHOD === "azure_ad") {
 }
 
 /*  ROUTES */
+const auth = require("./routes/authRoutes");
 const job = require("./routes/job/read");
 const bree = require("./routes/bree/read");
 const ldap = require("./routes/ldap/read");
@@ -101,6 +102,7 @@ app.use((req, res, next) => {
 // Use compression  to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
 
+app.use("/api/auth", auth);
 app.use("/api/user", userRead);
 app.use("/api/updateNotification", updateNotifications);
 app.use("/api/status", status);
