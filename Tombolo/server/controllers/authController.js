@@ -21,8 +21,8 @@ const createBasicUser = async (req, res) => {
     const payload = req.body;
 
     // Hash password
-    const salt = bcrypt.genSaltSync(10);
-    payload.hash = bcrypt.hashSync(req.body.password, salt);
+     const salt = bcrypt.genSaltSync(10);
+     payload.hash = bcrypt.hashSync(req.body.password, salt);
 
     // Save user to DB
     const user = await User.create(payload);

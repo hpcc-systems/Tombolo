@@ -3,37 +3,8 @@ import { Constants } from '../../components/common/Constants';
 var jwtDecode = require('jwt-decode');
 
 export const userActions = {
-  login,
-  logout,
   validateToken,
 };
-
-function login(accessToken) {
-  try {
-    const decoded = jwtDecode(accessToken);
-    const user = {
-      id: decoded.id,
-      email: decoded.email,
-      role: decoded.role,
-      token: accessToken,
-      username: decoded.username,
-      lastName: decoded.lastName,
-      firstName: decoded.firstName,
-      organization: decoded.organization,
-      permissions: decoded.role[0].name,
-    };
-    localStorage.setItem('user', JSON.stringify(user));
-    return { type: Constants.LOGIN_SUCCESS, payload: user };
-  } catch (error) {
-    console.log('login error', error);
-    return { type: Constants.INVALID_TOKEN, payload: error.message };
-  }
-}
-
-function logout() {
-  localStorage.removeItem('user');
-  return { type: Constants.LOGOUT };
-}
 
 function validateToken() {
   return async (dispatch) => {
