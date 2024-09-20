@@ -80,6 +80,7 @@ const Home = () => {
         </div>
       </div>
       <div className="footer">
+        {/* could not make this look good, so commented out, could probably add into the main area but it is on our docs so seems redundant */}
         {/* <div className="footerRow">
           <div className="sub">
             <h2>Powered by HPCC Systems</h2>
