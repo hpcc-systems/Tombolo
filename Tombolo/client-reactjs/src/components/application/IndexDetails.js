@@ -14,7 +14,7 @@ import { debounce } from 'lodash';
 
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../common/DeleteAsset/index.js';
-import Text, { i18n } from '../common/Text.jsx';
+import Text from '../common/Text.jsx';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 message.config({ top: 130 });
@@ -628,7 +628,7 @@ class IndexDetails extends PureComponent {
                             disabled={!editingAllowed}
                             onChange={this.onClusterSelection}
                             style={{ width: 190 }}
-                            placeholder={i18n('Cluster')}>
+                            placeholder={'Cluster'}>
                             {this.props.clusters.map((cluster) => (
                               <Option key={cluster.id}>{cluster.name}</Option>
                             ))}
@@ -646,7 +646,7 @@ class IndexDetails extends PureComponent {
                                 style={{ width: '100%' }}
                                 onSearch={(value) => this.searchIndexes(value)}
                                 onSelect={(value) => this.onFileSelected(value)}
-                                placeholder={i18n('Search indexes')}
+                                placeholder={'Search indexes'}
                                 disabled={!editingAllowed}
                                 notFoundContent={searchResultsLoaded ? 'Not Found' : <Spin />}>
                                 {indexSearchSuggestions.map((suggestion) => (
@@ -685,7 +685,7 @@ class IndexDetails extends PureComponent {
                   <Input
                     id="name"
                     onChange={this.onChange}
-                    placeholder={i18n('Name')}
+                    placeholder={'Name'}
                     disabled={searchResultsLoaded || !editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
@@ -709,7 +709,7 @@ class IndexDetails extends PureComponent {
                   <Input
                     id="file_title"
                     onChange={this.onChange}
-                    placeholder={i18n('Title')}
+                    placeholder={'Title'}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
@@ -742,7 +742,7 @@ class IndexDetails extends PureComponent {
                   <Input
                     id="file_primary_svc"
                     onChange={this.onChange}
-                    placeholder={i18n('Primary Service')}
+                    placeholder={'Primary Service'}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
@@ -764,7 +764,7 @@ class IndexDetails extends PureComponent {
                   <Input
                     id="file_bkp_svc"
                     onChange={this.onChange}
-                    placeholder={i18n('Backup Service')}
+                    placeholder={'Backup Service'}
                     disabled={!editingAllowed}
                     className={this.state.enableEdit ? null : 'read-only-input'}
                   />
@@ -784,7 +784,7 @@ class IndexDetails extends PureComponent {
                     },
                   ]}>
                   {this.state.enableEdit ? (
-                    <Input id="path" onChange={this.onChange} placeholder={i18n('Path')} disabled={!editingAllowed} />
+                    <Input id="path" onChange={this.onChange} placeholder={'Path'} disabled={!editingAllowed} />
                   ) : (
                     <textarea className="read-only-textarea" />
                   )}
@@ -795,7 +795,7 @@ class IndexDetails extends PureComponent {
             <TabPane tab={<Text text="Source File" />} key="2">
               <div>
                 <Select
-                  placeholder={i18n('Select Source Files')}
+                  placeholder={'Select Source Files'}
                   defaultValue={this.state.selectedSourceFile}
                   style={{ width: 190 }}
                   onSelect={this.onSourceFileSelection}

@@ -4,7 +4,7 @@ import { authHeader } from '../../../common/AuthHeader';
 import ConfirmAction from '../../../common/ConfirmAction';
 import { useDispatch, useSelector } from 'react-redux';
 import { propagationActions } from '../../../../redux/actions/Propagation';
-import Text, { i18n } from '../../../common/Text';
+import Text from '../../../common/Text';
 
 const BaseLine = ({ record }) => {
   const [applicationId, propagation] = useSelector((state) => [
@@ -49,7 +49,7 @@ const BaseLine = ({ record }) => {
           onConfirm={async () => await baseLineActions({ action: 'remove', id: record.id })}
           tooltip={<Text>Remove base Line</Text>}
           confirm={{
-            title: i18n('Would you like to remove base line from this report?'),
+            title: 'Would you like to remove base line from this report?',
           }}
         />
       ) : (
@@ -58,7 +58,7 @@ const BaseLine = ({ record }) => {
           tooltip={<Text>Mark report as a Base Line</Text>}
           onConfirm={async () => await baseLineActions({ action: 'assign', id: record.id })}
           confirm={{
-            title: i18n('Base line will be overwritten, would you like to make this report a new base line?'),
+            title: 'Base line will be overwritten, would you like to make this report a new base line?',
           }}
         />
       )}

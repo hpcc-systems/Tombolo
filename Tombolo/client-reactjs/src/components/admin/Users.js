@@ -4,7 +4,7 @@ import React, { Component } from 'react';
 
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import BreadCrumbs from '../common/BreadCrumbs';
-import Text, { i18n } from '../common/Text';
+import Text from '../common/Text';
 
 const Option = Select.Option;
 
@@ -286,7 +286,7 @@ class Users extends Component {
                   id="firstName"
                   name="firstName"
                   onChange={this.onChange}
-                  placeholder={i18n('First Name')}
+                  placeholder={'First Name'}
                   value={this.state.newUser.firstName}
                 />
               </Form.Item>
@@ -299,7 +299,7 @@ class Users extends Component {
                   id="lastName"
                   name="lastName"
                   onChange={this.onChange}
-                  placeholder={i18n('Last Name')}
+                  placeholder={'Last Name'}
                   value={this.state.newUser.lastName}
                 />
               </Form.Item>
@@ -312,7 +312,7 @@ class Users extends Component {
                   id="username"
                   name="username"
                   onChange={this.onChange}
-                  placeholder={i18n('User Name')}
+                  placeholder={'User Name'}
                   value={this.state.newUser.username}
                 />
               </Form.Item>
@@ -326,7 +326,7 @@ class Users extends Component {
                   name="password"
                   onChange={this.onChange}
                   value={this.state.newUser.password}
-                  placeholder={i18n('Password')}
+                  placeholder={'Password'}
                 />
               </Form.Item>
 

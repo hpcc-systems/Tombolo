@@ -1,5 +1,5 @@
 import { AppstoreOutlined, DownOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Form, Input, message, Modal, Space, Tooltip } from 'antd';
+import { Button, Dropdown, message, Space, Tooltip } from 'antd';
 import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -13,7 +13,6 @@ import { expandGroups, selectGroup, getGroupsTree } from '../../redux/actions/Gr
 import { userActions } from '../../redux/actions/User';
 import { authHeader, handleError } from '../common/AuthHeader.js';
 import { hasAdminRole } from '../common/AuthUtil.js';
-import Text, { i18n } from '../common/Text';
 
 class AppHeader extends Component {
   pwdformRef = React.createRef();
@@ -92,14 +91,6 @@ class AppHeader extends Component {
       });
     }
 
-    //Check local storage if the preferred language is saved
-    const appLanguage = localStorage.getItem('i18nextLng');
-    if (!appLanguage) {
-      this.setState({ language: 'EN' });
-    } else {
-      this.setState({ language: localStorage.getItem('i18nextLng').toUpperCase() });
-    }
-
     if (this.state.applications.length === 0) {
       var url = `/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
       if (hasAdminRole(this.props.user)) {
@@ -148,12 +139,6 @@ class AppHeader extends Component {
       this.props.dispatch(applicationActions.getConstraints());
       this.props.dispatch(applicationActions.getAllActiveIntegrations());
     }
-
-    // //if noClusters.noClusters prop is true, show the no cluster modal and dispatch action to reset the noClusters state
-    // if (this.props.noClusters.noClusters && !this.props.noClusters.redirect) {
-    //   this.props.dispatch(applicationActions.updateNoClustersFound({ noClusters: true, redirect: true }));
-    //   this.setState({ isClusterModalVisible: true });
-    // }
 
     if (this.props.newApplication) {
       let applications = this.state.applications;
@@ -254,85 +239,17 @@ class AppHeader extends Component {
     this.setState({ searchText: e.target.value });
   };
 
-  handleChangePassword = () => {
-    this.setState({ visible: true });
-  };
-
-  handleOk = async () => {
-    let _self = this;
-    await this.pwdformRef.current.validateFields();
-
-    this.setState({ loading: true });
-    fetch('/api/user/changePassword', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify({
-        username: this.props.user.username,
-        oldpassword: this.state.oldpassword,
-        newpassword: this.state.newpassword,
-        confirmnewpassword: this.state.confirmnewpassword,
-      }),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw response;
-        }
-      })
-      .then((_response) => {
-        _self.clearChangePasswordDlg();
-        message.config({ top: 130 });
-        message.success('Password changed successfully.');
-        _self.setState({ loading: false, visible: false });
-      })
-      .catch(function (_err) {
-        _self.clearChangePasswordDlg();
-        _self.setState({ loading: false, visible: false });
-        message.config({ top: 130 });
-        message.error('There was an error while changing the password.');
-      });
-  };
-
   handleCancel = () => {
     this.setState({ visible: false });
   };
 
   handleUserActionMenuClick = (e) => {
     if (e.key == 1) {
-      this.handleChangePassword();
+      // go to myaccount page
+      window.location.href = '/myaccount';
     } else if (e.key == 2) {
       this.handleLogOut();
     }
-  };
-
-  handleChangePasswordFieldChange = (e) => {
-    this.setState({ ...this.state, [e.target.name]: e.target.value });
-  };
-
-  clearChangePasswordDlg = () => {
-    this.setState({
-      oldpassword: '',
-      newpassword: '',
-      confirmnewpassword: '',
-    });
-    this.pwdformRef.current.setFieldsValue({
-      oldpassword: '',
-      newpassword: '',
-      confirmnewpassword: '',
-    });
-  };
-
-  handleAboutClose = () => {
-    this.setState({
-      isAboutModalVisible: false,
-    });
-  };
-
-  openAboutModal = () => {
-    this.setState({
-      isAboutModalVisible: true,
-    });
   };
 
   setClusterModalVisible = (visible) => {
@@ -348,7 +265,7 @@ class AppHeader extends Component {
       {
         key: '1',
         icon: null,
-        label: 'Change Password',
+        label: 'My Account',
         children: null,
         type: null,
       },
@@ -360,42 +277,6 @@ class AppHeader extends Component {
         type: null,
       },
     ];
-
-    const helpMenuClick = (e) => {
-      if (e.key == 1) {
-        window.open('https://hpcc-systems.github.io/Tombolo/');
-      } else if (e.key == 2) {
-        this.openAboutModal();
-      }
-    };
-
-    const helpMenuItems = [
-      {
-        key: '1',
-        icon: null,
-        label: 'User Guide',
-        children: null,
-        type: null,
-      },
-      {
-        key: '2',
-        icon: null,
-        label: 'About',
-        children: null,
-        type: null,
-      },
-    ];
-
-    const formItemLayout = {
-      labelCol: {
-        xs: { span: 2 },
-        sm: { span: 9 },
-      },
-      wrapperCol: {
-        xs: { span: 2 },
-        sm: { span: 12 },
-      },
-    };
 
     if (!this.props.user || !this.props.user.token) {
       return null;
@@ -438,16 +319,7 @@ class AppHeader extends Component {
               </Tooltip>
             </Dropdown>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Dropdown menu={{ items: helpMenuItems, onClick: (e) => helpMenuClick(e) }} trigger={['click']}>
-              <Button shape="round" style={{ marginRight: '10px' }}>
-                <i className="fa fa-lg fa-question-circle"></i>
-                <span style={{ paddingLeft: '5px' }}>
-                  {<Text text="Help" />} <DownOutlined />
-                </span>
-              </Button>
-            </Dropdown>
+          <div>
             <Dropdown
               menu={{ items: actionMenuItems, onClick: (e) => this.handleUserActionMenuClick(e) }}
               trigger={['click']}>
@@ -458,72 +330,7 @@ class AppHeader extends Component {
                 </span>
               </Button>
             </Dropdown>
-            <>{this.props.languageSwitcher}</>
           </div>
-
-          <Modal
-            title={<Text>Change Password</Text>}
-            open={this.state.visible}
-            width="520px"
-            footer={[
-              <Button key="cancel" onClick={this.handleCancel}>
-                <Text>Cancel</Text>
-              </Button>,
-              <Button key="submit" onClick={this.handleOk} type="primary" loading={this.state.loading}>
-                <Text>Change Password</Text>
-              </Button>,
-            ]}>
-            <Form ref={this.pwdformRef}>
-              <Form.Item
-                {...formItemLayout}
-                name="oldpassword"
-                label={<Text>Password</Text>}
-                rules={[{ required: true, message: 'Please enter the current password!' }]}>
-                <Input
-                  type="password"
-                  name="oldpassword"
-                  placeholder={i18n('Password')}
-                  onChange={this.handleChangePasswordFieldChange}
-                />
-              </Form.Item>
-
-              <Form.Item
-                {...formItemLayout}
-                name="newpassword"
-                label={<Text>New Password</Text>}
-                rules={[{ required: true, message: 'Please enter the new password!' }]}>
-                <Input
-                  type="password"
-                  name="newpassword"
-                  placeholder={i18n('New Password')}
-                  onChange={this.handleChangePasswordFieldChange}
-                />
-              </Form.Item>
-
-              <Form.Item
-                {...formItemLayout}
-                name="confirmnewpassword"
-                label={<Text>Confirm Password</Text>}
-                rules={[{ required: true, message: 'Please confirm the new password!' }]}>
-                <Input
-                  type="password"
-                  name="confirmnewpassword"
-                  placeholder={i18n('Confirm Password')}
-                  onChange={this.handleChangePasswordFieldChange}
-                />
-              </Form.Item>
-            </Form>
-          </Modal>
-          <Modal
-            title="Tombolo"
-            open={this.state.isAboutModalVisible}
-            footer={[
-              <Button key="close" onClick={this.handleAboutClose}>
-                Close
-              </Button>,
-            ]}>
-            <p className="float-left font-weight-bold">Tombolo v{process.env.REACT_APP_VERSION}</p>
-          </Modal>
         </div>
       </>
     );

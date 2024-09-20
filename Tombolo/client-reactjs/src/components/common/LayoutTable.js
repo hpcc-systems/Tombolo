@@ -3,7 +3,7 @@ import { Button, Collapse, Form, Input, message, Modal, Select, Table } from 'an
 import { EditOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import ConstraintsTags from '../admin/Compliance/Constraints/ConstraintsTags';
-import Text, { i18n } from './Text';
+import Text from './Text';
 import ReadOnlyField from './ReadOnlyField';
 const { Option } = Select;
 
@@ -153,9 +153,9 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
           <Form.Item noStyle shouldUpdate>
             {() => {
               return (
-                <Form.Item name="constraints" label={i18n('Select constraints') + ':'}>
+                <Form.Item name="constraints" label={'Select constraints' + ':'}>
                   {editing ? (
-                    <Select mode="multiple" placeholder={i18n('Please select constraints')}>
+                    <Select mode="multiple" placeholder={'Please select constraints'}>
                       {constraints.map((el) => {
                         return (
                           <Option key={el.id} value={el.id}>
@@ -172,7 +172,7 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
             }}
           </Form.Item>
 
-          <Form.Item label={i18n('Description') + ':'} name="description">
+          <Form.Item label={'Description' + ':'} name="description">
             {editing ? <Input.TextArea className="custom-scroll" allowClear cols={5} /> : <ReadOnlyField />}
           </Form.Item>
         </Form>

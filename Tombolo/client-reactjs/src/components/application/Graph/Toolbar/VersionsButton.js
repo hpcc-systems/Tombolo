@@ -32,7 +32,7 @@ import { Toolbar, Menu } from '@antv/x6-react-components';
 import { authHeader, handleError } from '../../../common/AuthHeader';
 import { useEffect } from 'react';
 import { getWorkingCopyGraph, saveWorkingCopyGraph } from '../../../common/CommonUtil';
-import Text, { i18n } from '../../../common/Text';
+import Text from '../../../common/Text';
 
 const Item = Toolbar.Item; // eslint-disable-line
 const { confirm } = Modal;
@@ -500,13 +500,13 @@ const VersionsButton = ({ graphRef }) => {
         active={saveGraph.loading}
         icon={saveGraph.loading ? <LoadingOutlined /> : <SaveOutlined />}
         onClick={openSaveDialog}>
-        {saveGraph.loading ? '...' + i18n('...Saving') : i18n('Save Version')}
+        {saveGraph.loading ? '...' + '...Saving' : 'Save Version'}
       </Item>
       <Item className="versions_list" name="versions" tooltip="Versions" dropdown={getVersionsList()} />
       {!clickedVersion.name ? (
         <Item name="current_version">
           <Badge color="#3bb44a" />
-          {i18n('You are on Working Copy')}
+          {'You are on Working Copy'}
         </Item>
       ) : (
         <>
