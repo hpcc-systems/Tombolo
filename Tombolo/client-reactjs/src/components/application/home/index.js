@@ -17,7 +17,7 @@ const Home = () => {
 
   return (
     <section className="container">
-      <div className="top">
+      <div className="innerContainer">
         <div className="header">
           <h1 style={{ width: '100%', marginTop: '1rem' }}>Welcome to Tombolo!</h1>
           <h2>Transform and Process Data with Ease: Your Low-Code Bridge to HPCC Systems.</h2>
