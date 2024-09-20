@@ -21,7 +21,12 @@ const Login = () => {
         label="Email"
         name="email"
         rules={[
-          { required: true, message: 'Please input your email!' },
+          {
+            required: true,
+            whitespace: true,
+            type: 'email',
+            message: 'Invalid e-mail address.',
+          },
           { max: 64, message: 'Maximum of 64 characters allowed' },
         ]}>
         <Input size="large" />
@@ -39,7 +44,7 @@ const Login = () => {
         ]}>
         <Input.Password size="large" autoComplete="new-password" />
       </Form.Item>
-      <a href="/reset-password">Forgot password?</a>
+      <a href="/forgot-password">Forgot password?</a>
       <Form.Item>
         <Button type="primary" htmlType="submit">
           Log in
