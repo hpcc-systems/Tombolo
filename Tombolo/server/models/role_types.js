@@ -1,6 +1,8 @@
 // role types model definition
 'use strict';
 module.exports = (sequelize, DataTypes) => {
+
+  // Define the RoleTypes
   const RoleTypes = sequelize.define("RoleTypes",{
     id: {
         primaryKey: true,
@@ -21,17 +23,26 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'role_types',
     freezeTableName: true,
     timeStamps: true,
-    paranoid: true
+    paranoid: true,
+    hooks: {
+      beforeBulkDestroy: async(roleType, options) => {
+        // Deleted associated user roles
+        const UserRoles = sequelize.models.UserRoles;
+        await UserRoles.destroy({where: {roleId: roleType.where.id,}});
+      },
+    }
 }
 
   );
+
+  // Associations
   RoleTypes.associate = function(models) {
-    // associations can be defined here
-    RoleTypes.belongsToMany(models.user, {
-      through: models.UserRoles,
-      foreignKey: "roleId",
-      onDelete: "CASCADE",
+    RoleTypes.hasMany(models.UserRoles, {
+      foreignKey: 'roleId',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
     });
   };
+  
   return RoleTypes;
 };
