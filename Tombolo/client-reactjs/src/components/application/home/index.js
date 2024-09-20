@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from 'antd';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+
 import logo from '../../../images/logo-dark.webp';
 
 import './home.css';
@@ -79,7 +80,7 @@ const Home = () => {
         </div>
       </div>
       <div className="footer">
-        <div className="footerRow">
+        {/* <div className="footerRow">
           <div className="sub">
             <h2>Powered by HPCC Systems</h2>
             <p>Tombolo is built on top of HPCC Systems, a powerful open-source platform for big data analysis.</p>
@@ -99,11 +100,43 @@ const Home = () => {
               access to big data tools and analysis.
             </p>
           </div>
-        </div>
+        </div> */}
+
         <div className="footerRow">
-          <a style={{ margin: '0 auto' }} href="https://solutionslab.hpccsystems.com/">
-            <img src={logo} alt="HPCC Systems" style={{ width: '10rem', margin: '0 auto' }} />
-          </a>
+          <div className="sub" style={{ display: 'flex', alignItems: 'center' }}>
+            <a style={{ margin: '0 auto' }} href="https://solutionslab.hpccsystems.com/">
+              <img src={logo} alt="HPCC Systems" style={{ width: '10rem', margin: '0 auto' }} />
+            </a>
+          </div>
+
+          <div className="sub">
+            <h2>Help</h2>
+            <ul>
+              <li>
+                <a href="https://hpcc-systems.github.io/Tombolo/">Docs</a>
+              </li>
+              <li>
+                <a href="https://github.com/hpcc-systems/Tombolo">Github</a>
+              </li>
+              <li>
+                <a href="mailto:customer-solutions@hpcc.systems.com">Contact</a>
+              </li>
+            </ul>
+          </div>
+          <div className="sub">
+            <h2>About</h2>
+            <ul>
+              <li>
+                <a href="https://hpcc-systems.github.io/Tombolo/">Tombolo</a>
+              </li>
+              <li>
+                <a href="https://solutionslab.hpccsystems.com/">HPCC Systems</a>
+              </li>
+              <li>
+                <a href="https://risk.lexisnexis.com/">LexisNexis Risk Solutions</a>
+              </li>
+            </ul>
+          </div>
         </div>
         <div className="footerRow">
           <p>

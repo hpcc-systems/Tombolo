@@ -53,15 +53,16 @@
 .footer {
   background: rgb(48, 56, 70);
   color: white;
-  padding: 2rem;
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  padding: 3rem;
 }
 
 .footerRow {
   width: 100%;
-  margin-bottom: 2rem;
+  padding: 1rem;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -81,7 +82,7 @@
 .sub {
   width: 30%;
   font-size: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
 }
 
 .container .ant-card-head {
