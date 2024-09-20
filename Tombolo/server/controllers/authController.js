@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {v4: uuidv4} = require("uuid");
 
@@ -21,7 +21,8 @@ const createBasicUser = async (req, res) => {
     const payload = req.body;
 
     // Hash password
-    payload.hash = bcrypt.hashSync(req.body.password, 10);
+     const salt = bcrypt.genSaltSync(10);
+     payload.hash = bcrypt.hashSync(req.body.password, salt);
 
     // Save user to DB
     const user = await User.create(payload);
