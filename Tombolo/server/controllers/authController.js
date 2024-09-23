@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const {v4: uuidv4} = require("uuid");
+const { v4: uuidv4 } = require("uuid");
 
 const logger = require("../config/logger");
 const models = require("../models");
@@ -58,7 +58,7 @@ const createBasicUser = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "User created successfully",
-      data: {...userObj,  "UserRoles": [],},
+      data: { ...userObj, UserRoles: [] },
     });
   } catch (err) {
     logger.error(`Create user: ${err.message}`);
@@ -125,19 +125,29 @@ const loginBasicUser = async (req, res) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create({id: tokenId,
-      userId: user.id, 
-      token: refreshToken, 
-      deviceInfo, 
-      metaData: {}, 
-      iat : new Date(iat * 1000), 
-      exp : new Date(exp * 1000)});
+    await RefreshTokens.create({
+      id: tokenId,
+      userId: user.id,
+      token: refreshToken,
+      deviceInfo,
+      metaData: {},
+      iat: new Date(iat * 1000),
+      exp: new Date(exp * 1000),
+    });
 
     // Success response
-    res.status(200).json({ success: true, message: "User logged in successfully", data: userObj });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "User logged in successfully",
+        data: userObj,
+      });
   } catch (err) {
     logger.error(`Login user: ${err.message}`);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
   }
 };
 
