@@ -3,9 +3,6 @@ import { connect } from 'react-redux';
 import { Layout, ConfigProvider, Spin, Card, Tour } from 'antd';
 import { Router, Route, Switch } from 'react-router-dom';
 import history from './components/common/History';
-import i18next from 'i18next';
-import zh_CN from 'antd/es/locale/zh_CN'; // For every language import respective module from antd
-import en_US from 'antd/es/locale/en_US';
 import logo from './images/logo.png';
 
 //home page
@@ -63,7 +60,6 @@ const TeamsNotification = React.lazy(() => import('./components/admin/notificati
 
 // Shared layout, etc.
 import { LeftNav } from './components/layout/LeftNav';
-import LanguageSwitcher from './components/layout/LanguageSwitcher';
 import { AppHeader } from './components/layout/Header';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
@@ -81,7 +77,6 @@ const BG_COLOR = '';
 class App extends React.Component {
   state = {
     collapsed: localStorage.getItem('collapsed') === 'true',
-    locale: 'en',
     message: '',
     tourOpen: false,
     clusterTourOpen: false,
@@ -98,15 +93,6 @@ class App extends React.Component {
       if (!this.props.authWithAzure) {
         this.setState({ message: 'Authenticating...' });
         store.dispatch(userActions.validateToken());
-      }
-
-      // When app loads if there is language set in local storage use that.
-      const appLanguage = localStorage.getItem('i18nextLng');
-      if (!appLanguage || appLanguage.length < 2) {
-        i18next.changeLanguage('en');
-      } else {
-        this.setState({ locale: appLanguage });
-        i18next.changeLanguage(localStorage.getItem('i18nextLng'));
       }
     }
 
@@ -138,21 +124,6 @@ class App extends React.Component {
     this.setState({ collapsed });
     //set collapsed into local storage
     localStorage.setItem('collapsed', collapsed);
-  };
-
-  // Setting locale for antd components.
-  setLocale = (language) => {
-    this.setState({ locale: language });
-  };
-
-  // Returns which locale module to use based on users selection of language
-  locale = (lang) => {
-    switch (lang) {
-      case 'cn':
-        return zh_CN;
-      default:
-        return en_US;
-    }
   };
 
   render() {
@@ -276,7 +247,7 @@ class App extends React.Component {
     const isLogin = loginSteps.some((step) => window.location.pathname.split('/')[1] === step.url);
 
     return (
-      <ConfigProvider locale={this.locale(this.state.locale)}>
+      <ConfigProvider>
         <Suspense fallback={<Fallback />}>
           <Router history={history}>
             <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
@@ -340,10 +311,7 @@ class App extends React.Component {
                           zIndex: 100,
                           width: '100%',
                         }}>
-                        <AppHeader
-                          setLocale={this.setLocale}
-                          languageSwitcher={<LanguageSwitcher setLocale={this.setLocale} />}
-                        />
+                        <AppHeader setLocale={this.setLocale} />
                       </Header>
                       <Tour
                         steps={steps}

@@ -16,7 +16,7 @@ import TitleRenderer from './TitleRenderer.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
 import useModal from '../../../hooks/useModal';
 import { CreateGroupDialog } from './CreateGroupDialog';
-import Text, { i18n } from '../../common/Text';
+import Text from '../../common/Text';
 import InfoDrawer from '../../common/InfoDrawer';
 
 const { DirectoryTree } = Tree;
@@ -312,7 +312,7 @@ const Assets = () => {
               allowClear
               value={searchKeyword}
               // addonBefore={selectBefore}
-              placeholder={i18n('Search assets')}
+              placeholder={'Search assets'}
               onSearch={handleAssetSearch}
               onChange={handleSearchKeywordChange}
             />

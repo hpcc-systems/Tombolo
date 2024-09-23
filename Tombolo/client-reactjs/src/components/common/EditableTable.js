@@ -4,7 +4,7 @@ import Papa from 'papaparse';
 import React from 'react';
 
 import { omitDeep } from './CommonUtil';
-import Text, { i18n } from '../common/Text';
+import Text from '../common/Text';
 
 const EditableContext = React.createContext();
 const Option = Select.Option;
@@ -100,11 +100,7 @@ class EditableCell extends React.Component {
             },
           ]}>
           {celleditor == 'select' ? (
-            <Select
-              ref={(node) => (this.input = node)}
-              allowClear
-              placeholder={i18n('Select')}
-              onChange={this.saveSelect}>
+            <Select ref={(node) => (this.input = node)} allowClear placeholder={'Select'} onChange={this.saveSelect}>
               {celleditorparams && celleditorparams.values
                 ? celleditorparams.values.map((cellEditorParam) => (
                     <Option key={cellEditorParam} value={cellEditorParam}>
@@ -396,7 +392,7 @@ class EditableTable extends React.Component {
           <span style={{ paddingRight: '5px' }}>
             {this.props.enableEdit ? (
               <Button onClick={this.handleAdd} type="default">
-                {i18n('Add a row')}
+                {'Add a row'}
               </Button>
             ) : null}
           </span>

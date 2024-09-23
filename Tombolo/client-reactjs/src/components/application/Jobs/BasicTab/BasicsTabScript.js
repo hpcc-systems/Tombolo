@@ -2,7 +2,7 @@ import { Col, Form, Input, Row } from 'antd';
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { threeColformItemLayout } from '../../../common/CommonUtil.js';
-import Text, { i18n } from '../../../common/Text';
+import Text from '../../../common/Text';
 import MonacoEditor from '../../../common/MonacoEditor.js';
 
 function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inTabView }) {
@@ -16,7 +16,7 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
         <Input
           id="job_name"
           onChange={onChange}
-          placeholder={i18n('Name')}
+          placeholder={'Name'}
           disabled={!editingAllowed}
           className={enableEdit ? null : 'read-only-input'}
         />
@@ -36,7 +36,7 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
         <Input
           id="job_title"
           onChange={onChange}
-          placeholder={i18n('Title')}
+          placeholder={'Title'}
           disabled={!editingAllowed}
           className={enableEdit ? null : 'read-only-input'}
         />
@@ -76,7 +76,7 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
               <Input
                 id="job_bkp_svc"
                 onChange={onChange}
-                placeholder={i18n('Contact')}
+                placeholder={'Contact'}
                 value={localState.contact}
                 disabled={!editingAllowed}
               />
@@ -100,7 +100,7 @@ function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inT
               <Input
                 id="job_author"
                 onChange={onChange}
-                placeholder={i18n('Author')}
+                placeholder={'Author'}
                 value={localState.author}
                 disabled={!editingAllowed}
               />

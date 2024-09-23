@@ -1,8 +1,4 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 100%;
   height: calc(100% + 55px);
   text-align: center;
   font-size: 1.5rem;
@@ -23,16 +19,15 @@
   color: white;
   padding: 3rem;
   width: 100%;
-  margin-bottom: 3rem;
 }
 
-.top {
+.innerContainer {
   width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   margin-top: -5px;
-  margin-bottom: 3rem;
+  height: calc(100% + 5px);
 }
 
 .middle {
@@ -42,6 +37,8 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .middle .ant-card {
@@ -53,15 +50,15 @@
 .footer {
   background: rgb(48, 56, 70);
   color: white;
-  padding: 2rem;
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  padding: 3rem 3rem 1rem 3rem;
 }
 
 .footerRow {
   width: 100%;
-  margin-bottom: 2rem;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -81,7 +78,7 @@
 .sub {
   width: 30%;
   font-size: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
 }
 
 .container .ant-card-head {

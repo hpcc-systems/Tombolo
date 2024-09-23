@@ -31,7 +31,7 @@ import MonacoEditor from '../../common/MonacoEditor.js';
 import OverwriteAssetModal from '../../common/OverWriteAssetModal';
 import SuperFileMeta from '../../common/SuperFileMeta';
 import AssociatedDataflows from '../AssociatedDataflows';
-import Text, { i18n } from '../../common/Text.jsx';
+import Text from '../../common/Text.jsx';
 import FileExplorerModal from './FileExplorerModal';
 
 const TabPane = Tabs.TabPane;
@@ -875,7 +875,7 @@ class FileDetails extends Component {
                           onClear={this.clearState}
                           value={this.state.fileSearchValue}
                           onChange={(value) => this.setState({ fileSearchValue: value })}
-                          placeholder={i18n('Search files')}
+                          placeholder={'Search files'}
                           disabled={!editingAllowed}
                           notFoundContent={this.state.fileSearch.loading ? <Spin /> : 'Not Found'}>
                           {this.state.fileSearch.data.map((suggestion) => (
@@ -883,7 +883,6 @@ class FileDetails extends Component {
                               {suggestion.text}
                             </Option>
                           ))}
-                          {/* <Input.Search placeholder={i18n('Search files')} /> */}
                         </AutoComplete>
                       </Col>
                       <Col span={4}>
@@ -912,7 +911,7 @@ class FileDetails extends Component {
                       <Input
                         disabled={disableReadOnlyFields || !editingAllowed}
                         className={!enableEdit ? 'read-only-input' : ''}
-                        placeholder={enableEdit ? i18n('Name') : i18n('Name is not provided')}
+                        placeholder={enableEdit ? 'Name' : 'Name is not provided'}
                       />
                     )}
                   </Form.Item>
@@ -934,7 +933,7 @@ class FileDetails extends Component {
                     ]}>
                     <Input
                       name="title"
-                      placeholder={enableEdit ? i18n('Title') : i18n('Title is not provided')}
+                      placeholder={enableEdit ? 'Title' : 'Title is not provided'}
                       disabled={!editingAllowed}
                       className={!enableEdit ? 'read-only-input' : ''}
                     />
@@ -953,7 +952,7 @@ class FileDetails extends Component {
                     <Input
                       disabled={isAssociated}
                       className={!enableEdit ? 'read-only-input' : ''}
-                      placeholder={enableEdit ? i18n('Scope') : i18n('Scope is not provided')}
+                      placeholder={enableEdit ? 'Scope' : 'Scope is not provided'}
                     />
                   </Form.Item>
                   <Form.Item
@@ -963,7 +962,7 @@ class FileDetails extends Component {
                     rules={[{ type: 'url', message: 'Please enter a valid URL' }]}>
                     <Input
                       disabled={!editingAllowed}
-                      placeholder={enableEdit ? i18n('Service URL') : i18n('Service URL is not provided')}
+                      placeholder={enableEdit ? 'Service URL' : 'Service URL is not provided'}
                     />
                   </Form.Item>
 
@@ -977,10 +976,7 @@ class FileDetails extends Component {
                         message: 'Please enter a valid path',
                       },
                     ]}>
-                    <Input
-                      disabled={!editingAllowed}
-                      placeholder={enableEdit ? i18n('Path') : i18n('Path is not provided')}
-                    />
+                    <Input disabled={!editingAllowed} placeholder={enableEdit ? 'Path' : 'Path is not provided'} />
                   </Form.Item>
                   <Form.Item
                     label={<Text text="Is Super File" />}
@@ -1014,7 +1010,7 @@ class FileDetails extends Component {
                         disabled={!editingAllowed}
                         onChange={this.onSupplierSelection}
                         value={this.state.file.supplier || ''}
-                        placeholder={enableEdit ? i18n('Select a supplier') : i18n('Supplier is not provided')}>
+                        placeholder={enableEdit ? 'Select a supplier' : 'Supplier is not provided'}>
                         {suppliers.map((supplier) => (
                           <Option key={supplier.id} value={supplier.id}>
                             {supplier.name}
@@ -1037,7 +1033,7 @@ class FileDetails extends Component {
                         disabled={!editingAllowed}
                         onChange={this.onConsumerSelection}
                         value={this.state.file.consumer || ''}
-                        placeholder={enableEdit ? i18n('Select a consumer') : i18n('Consumer is not provided')}>
+                        placeholder={enableEdit ? 'Select a consumer' : 'Consumer is not provided'}>
                         {consumers.map((consumer) => (
                           <Option key={consumer.id} value={consumer.id}>
                             {consumer.name}
@@ -1060,7 +1056,7 @@ class FileDetails extends Component {
                         disabled={!editingAllowed}
                         onChange={this.onOwnerSelection}
                         value={this.state.file.owner || ''}
-                        placeholder={enableEdit ? i18n('Select a owner') : i18n('Owner is not provided')}>
+                        placeholder={enableEdit ? 'Select a owner' : 'Owner is not provided'}>
                         {owners.map((owner) => (
                           <Option key={owner.id} value={owner.id}>
                             {owner.name}
@@ -1074,7 +1070,7 @@ class FileDetails extends Component {
                     {() => (
                       <Form.Item name="constraints" label={<Text>File Constraints</Text>}>
                         {enableEdit ? (
-                          <Select mode="multiple" placeholder={i18n('Please select constraints')}>
+                          <Select mode="multiple" placeholder={'Please select constraints'}>
                             {this.props.constraints.map((el) => {
                               return (
                                 <Option key={el.id} value={el.id}>

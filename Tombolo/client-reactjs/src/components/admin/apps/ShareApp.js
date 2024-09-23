@@ -4,7 +4,6 @@ import debounce from 'lodash/debounce';
 import React, { Component } from 'react';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { i18n } from '../../common/Text';
 
 const { confirm } = Modal;
 const { Option } = Select;
@@ -312,7 +311,7 @@ class ShareApp extends Component {
                 style={{ width: '70%', marginRight: '5px' }}
                 onSearch={(value) => this.searchUsers(value)}
                 onSelect={(value, user) => this.onUserSelected(value, user)}
-                placeholder={i18n('Search users')}>
+                placeholder={'Search users'}>
                 {userSuggestions.map((user) => {
                   return (
                     <Option key={user.email} value={user.email}>
