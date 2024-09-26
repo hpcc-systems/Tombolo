@@ -36,7 +36,11 @@ npm run test
 
 ### Adding Tests
 
-All new tests should be placed within the tests directory. To add a test, create a new file with a .test.js extension. Ensure that the file names are descriptive, reflecting the functionality being tested. This makes it easier to identify and manage individual test cases. For consistency, you can refer to existing test files as templates when structuring your tests. This helps maintain uniformity across the test suite, making it easier to read, understand, and debug as needed.
+All tests and test-related configurations are in the `tests` directory inside `server`. To add a test, create a new file with a `.test.js` extension in the appropriate `tests` subdirectory. For example, if you are writing a test for a piece of function, you might want to do that inside the `unit-tests` subdirectory. If the matching or relevant subdirectory does not exist, you may create one.
+
+Ensure that the file names are descriptive, reflecting the functionality being tested. This makes it easier to identify and manage individual test cases. For consistency, you can refer to existing test files as templates when structuring your tests. This helps maintain uniformity across the test suite, making it easier to read, understand, and debug as needed.
+
+If you are writing a test to test APIs, which is an end-to-end testing for a route, be sure to import that route in the `test_server.js`.
 
 ---
 
