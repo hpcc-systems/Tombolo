@@ -374,6 +374,17 @@ class LeftNav extends Component {
         null
       ),
       getItem(
+        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/userManagement'}>
+          <i className="fa fa-fw fa-users" />
+          <span style={{ marginLeft: '1rem' }}>Users</span>
+        </Link>,
+        '11',
+        null,
+        null,
+        null,
+        null
+      ),
+      getItem(
         <>
           {disabled || clusterDisabled ? (
             <>
@@ -387,7 +398,7 @@ class LeftNav extends Component {
             </Link>
           )}
         </>,
-        '11',
+        '12',
         null,
         null,
         null,
@@ -398,7 +409,7 @@ class LeftNav extends Component {
           <BellOutlined />
           <span style={{ marginLeft: '1rem' }}>Notifications</span>
         </>,
-        '12',
+        '13',
         null,
         [
           getItem(
@@ -407,7 +418,7 @@ class LeftNav extends Component {
                 <i className="fa fa-windows" /> MS Teams
               </span>
             </Link>,
-            '12a',
+            '13a',
             null,
             null
           ),

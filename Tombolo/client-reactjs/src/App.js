@@ -58,6 +58,7 @@ const Compliance = React.lazy(() => import('./components/admin/Compliance/Compli
 const Integrations = React.lazy(() => import('./components/admin/Integrations'));
 const IntegrationSettings = React.lazy(() => import('./components/admin/Integrations/IntegrationSettings'));
 const TeamsNotification = React.lazy(() => import('./components/admin/notifications/MsTeams/Teams'));
+const UserManagement = React.lazy(() => import('./components/admin/userManagement/index.jsx'));
 
 // Shared layout, etc.
 import { LeftNav } from './components/layout/LeftNav';
@@ -390,6 +391,7 @@ class App extends React.Component {
                                 />
                                 <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
                                 <PrivateRoute path="/admin/applications" component={AdminApplications} />
+                                <PrivateRoute path="/admin/userManagement" component={UserManagement} />
                                 <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
                                 <PrivateRoute path="/admin/clusters" component={Clusters} />
                                 <PrivateRoute
