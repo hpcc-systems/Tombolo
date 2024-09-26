@@ -91,7 +91,7 @@ const validateUpdateUserPayload = [
   body("email")
     .isEmail()
     .withMessage("Email address is not valid")
-    .notEmpty()
+    .optional()
     .withMessage("Email is required")
     .isLength({ max: 100 })
     .withMessage("Email must be less than 100 characters"),
