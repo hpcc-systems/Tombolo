@@ -1,11 +1,13 @@
-import React from 'react';
-import { Button, Divider } from 'antd';
-import MyAccountForm from './myAccountForm';
+import React, { useState } from 'react';
+import { Divider } from 'antd';
+
+import ChangePasswordModal from './changePasswordModal';
+import EditAccountActionButton from './editAccountActionButton';
 import MyAccountTable from './myAccountTable';
 import MyAccountInfo from './myAccountInfo';
 import BreadCrumbs from '../../common/BreadCrumbs';
 
-const myAccount = () => {
+const MyAccount = () => {
   const user = {
     firstName: 'John',
     lastName: 'Doe',
@@ -13,20 +15,15 @@ const myAccount = () => {
     roles: ['Admin', 'User'],
     applications: ['Tombolo1', 'Dev2'],
   };
-  const logout = () => {
-    // Add your logic to logout the user here
-    alert('logout code fires here');
-  };
+
+  const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
+
+  console.log(changePasswordModalVisible);
+
   return (
     <>
       <BreadCrumbs
-        extraContent={
-          <>
-            <Button type="primary" onClick={logout}>
-              Logout
-            </Button>
-          </>
-        }
+        extraContent={<EditAccountActionButton setChangePasswordModalVisible={setChangePasswordModalVisible} />}
       />
       <div
         style={{
@@ -38,10 +35,12 @@ const myAccount = () => {
           justifyContent: 'center',
         }}>
         <h1>My Account</h1>
-
+        <ChangePasswordModal
+          changePasswordModalVisible={changePasswordModalVisible}
+          setChangePasswordModalVisible={setChangePasswordModalVisible}
+        />
         <MyAccountInfo user={user} />
-        <Divider>Edit Info</Divider>
-        <MyAccountForm />
+
         <Divider>Session Management</Divider>
         <MyAccountTable />
       </div>
@@ -49,4 +48,4 @@ const myAccount = () => {
   );
 };
 
-export default myAccount;
+export default MyAccount;
