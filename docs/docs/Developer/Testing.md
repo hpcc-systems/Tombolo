@@ -15,6 +15,7 @@ Before running or writing tests, please add the following environment variables 
 
 ```
 TEST_SERVER_PORT: Port for the test server (e.g., 3002)
+TEST_DB_HOSTNAME: Hostname for the test database (e.g., localhost)
 TEST_DB_USERNAME: Username for the test database (e.g., root)
 TEST_DB_PASSWORD: Password for the test database (e.g., root)
 TEST_DB_PORT: Port for the test database (e.g., 3306)
