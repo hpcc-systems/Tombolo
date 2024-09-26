@@ -8,7 +8,38 @@ import './User.css';
 const UserManagement = () => {
   //general states
   const [selectedRows, setSelectedRows] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([
+    {
+      id: 0,
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@doe.com',
+      roles: ['Admin'],
+      applications: ['test'],
+      verifiedUser: true,
+      registrationStatus: 'active',
+    },
+    {
+      id: 1,
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'jane@doe.com',
+      roles: [''],
+      applications: [''],
+      verifiedUser: false,
+      registrationStatus: 'pending',
+    },
+    {
+      id: 2,
+      firstName: 'Jim',
+      lastName: 'Doe',
+      email: 'jim@doe.com',
+      roles: ['Contributor'],
+      applications: ['test'],
+      verifiedUser: false,
+      registrationStatus: 'pending',
+    },
+  ]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [editingData, setEditingData] = useState(null);
 
@@ -16,6 +47,7 @@ const UserManagement = () => {
   const [filtersVisible, setFiltersVisible] = useState(true);
   const [filteringUsers, setFilteringUsers] = useState(false);
   const [filters, setFilters] = useState({});
+  const [filteredUsers, setFilteredUsers] = useState(users);
 
   //modal visibility states
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
@@ -28,17 +60,60 @@ const UserManagement = () => {
     setDisplayAddUserModal(true);
   };
 
+  //unused so far
+  console.log(
+    editingData,
+    bulkEditModalVisibility,
+    displayAddUserModal,
+    displayUserDetailsModal,
+    displayAddRejectModal,
+    setFilteringUsers
+  );
+
   useEffect(() => {
-    //unused
-    console.log(
-      editingData,
-      bulkEditModalVisibility,
-      displayAddUserModal,
-      displayUserDetailsModal,
-      displayAddRejectModal,
-      setFilteringUsers
-    );
-  });
+    //when filters change, calculate filtered users
+    if (Object.keys(filters).length > 0) {
+      setFilteringUsers(true);
+
+      const filtered = users.filter((user) => {
+        if (filters.role) {
+          if (!user.roles.includes(filters.role)) {
+            return false;
+          }
+        }
+        if (filters.application) {
+          if (!user.applications.includes(filters.application)) {
+            return false;
+          }
+        }
+
+        if (filters.verifiedUser) {
+          if (filters.verifiedUser === 'True') {
+            if (!user.verifiedUser) {
+              return false;
+            }
+          }
+          if (filters.verifiedUser === 'False') {
+            if (user.verifiedUser) {
+              return false;
+            }
+          }
+        }
+
+        if (filters.registrationStatus) {
+          if (user.registrationStatus !== filters.registrationStatus) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      setFilteredUsers(filtered);
+      setFilteringUsers(false);
+    } else {
+      setFilteringUsers(false);
+    }
+  }, [filters]);
 
   return (
     <>
@@ -63,7 +138,7 @@ const UserManagement = () => {
         setFiltersVisible={setFiltersVisible}
       />
       <UserManagementTable
-        users={users}
+        users={filteredUsers}
         filteringUsers={filteringUsers}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
