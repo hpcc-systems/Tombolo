@@ -43,6 +43,7 @@ const ClusterUsage = React.lazy(() => import('./components/application/dashboard
 const ClusterMonitoring = React.lazy(() => import('./components/application/clusterMonitoring'));
 const JobMonitoring = React.lazy(() => import('./components/application/jobMonitoring'));
 const DirectoryMonitoring = React.lazy(() => import('./components/application/DirectoryMonitoring'));
+const MyAccount = React.lazy(() => import('./components/application/myAccount/myAccount'));
 
 // Admin pages
 const Users = React.lazy(() => import('./components/admin/Users'));
@@ -345,6 +346,7 @@ class App extends React.Component {
                             <Suspense fallback={<Fallback />}>
                               <Switch>
                                 <PrivateRoute exact path="/" component={Home} />
+                                <PrivateRoute path="/myAccount" component={MyAccount} />
                                 <PrivateRoute
                                   path="/:applicationId/assets/file/:assetId?"
                                   component={FileDetailsForm}
