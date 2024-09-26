@@ -1,6 +1,6 @@
 const request = require("supertest");
-const { app, db, startServer, closeServer } = require("./test_server");
-const User = require("../models").user;
+const { app } = require("../test_server");
+const User = require("../../models").user;
 const bcrypt = require("bcryptjs");
 
 const nonExistentID = "897acab7-f5c8-4435-9847-97de16adf663";

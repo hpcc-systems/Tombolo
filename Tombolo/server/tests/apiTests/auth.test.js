@@ -1,5 +1,5 @@
 const request = require("supertest");
-const { app, db, startServer, closeServer } = require("./test_server");
+const { app } = require("../test_server");
 
 // User payload
 const payload = {

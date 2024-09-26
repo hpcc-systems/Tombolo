@@ -17,10 +17,14 @@ app.use(express.json());
 // Import routes
 const auth = require("../routes/authRoutes");
 const user = require("../routes/userRoutes");
+const cluster = require("../routes/clusterRoutes");
+
 
 // Use routes
 app.use("/api/auth", auth);
 app.use("/api/users", user);
+app.use("/api/cluster", cluster);
+
 
 // Function to start the server
 let server;
