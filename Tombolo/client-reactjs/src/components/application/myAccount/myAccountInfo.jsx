@@ -1,38 +1,88 @@
-import React from 'react';
-import { Card, Typography, Row, Col, Input } from 'antd';
-
-const { Text } = Typography;
+import React, { useState, useEffect } from 'react';
+import { Card, Form, Row, Col, Input, Button } from 'antd';
 
 const MyAccountInfo = ({ user }) => {
-  console.log(user);
-  const { firstName, lastName, email, roles, applications } = user;
+  const [form] = Form.useForm();
+  const [editing, setEditing] = useState(false);
+
+  const { roles, applications } = user;
+
+  useEffect(() => {}, [editing]);
+
+  const onSubmit = () => {
+    alert('save user code fires here');
+  };
 
   return (
     <div style={{ width: '100%' }}>
       <Card style={{ width: '50%', margin: '0 auto', textAlign: 'left' }}>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Text>First Name:</Text>
-            <Input disabled placeholder={firstName}></Input>
-          </Col>
-          <Col span={12}>
-            <Text>Last Name:</Text>
+        <Form form={form} layout="vertical" initialValues={user}>
+          <>
+            {/* first name, last name, password, confirm password fields */}
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="First Name"
+                  name="firstName"
+                  rules={[{ max: 64, message: 'Maximum of 64 characters allowed' }]}>
+                  <Input disabled={!editing} size="large" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Last Name"
+                  name="lastName"
+                  rules={[{ max: 64, message: 'Maximum of 64 characters allowed' }]}>
+                  <Input disabled={!editing} size="large" />
+                </Form.Item>
+              </Col>
+            </Row>
 
-            <Input disabled placeholder={lastName}></Input>
-          </Col>
-        </Row>
-        <Text>Email:</Text>
-        <Input disabled placeholder={email}></Input>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Text>Roles:</Text>
-            <Input disabled placeholder={roles.join(', ')}></Input>
-          </Col>
-          <Col span={12}>
-            <Text>Applications:</Text>
-            <Input disabled placeholder={applications.join(', ')}></Input>
-          </Col>
-        </Row>
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[
+                {
+                  whitespace: true,
+                  type: 'email',
+                  message: 'Invalid e-mail address.',
+                },
+                { max: 64, message: 'Maximum of 64 characters allowed' },
+              ]}>
+              <Input disabled={!editing} size="large" />
+            </Form.Item>
+          </>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Roles" name="roles">
+                <Input disabled value={roles.join(', ')}></Input>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Applications" name="applications">
+                <Input disabled value={applications.join(', ')}></Input>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+            {!editing ? (
+              <Button type="primary" htmlType="submit" onClick={() => setEditing(true)}>
+                Edit
+              </Button>
+            ) : (
+              <>
+                <Button style={{ marginRight: '1rem' }} onClick={() => setEditing(false)}>
+                  Cancel
+                </Button>
+                <Button type="primary" htmlType="submit" onClick={onSubmit}>
+                  Save
+                </Button>
+              </>
+            )}
+          </div>
+        </Form>
       </Card>
     </div>
   );
