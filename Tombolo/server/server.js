@@ -55,6 +55,7 @@ if (process.env.APP_AUTH_METHOD === "azure_ad") {
 /*  ROUTES */
 const auth = require("./routes/authRoutes");
 const users = require("./routes/userRoutes");
+const sessions = require("./routes/sessionRoutes");
 const job = require("./routes/job/read");
 const bree = require("./routes/bree/read");
 const ldap = require("./routes/ldap/read");
@@ -108,11 +109,12 @@ app.use("/api/auth", auth);
 app.use("/api/status", status);
 app.use("/api/apikeys", api);
 
-// Authenticate token before proceeding to route
-// app.use(tokenService.verifyToken);
+//Authenticate token before proceeding to route
+app.use(tokenService.verifyToken);
 
 // Authenticated routes
 app.use("/api/user", users);
+app.use("/api/session", sessions);
 app.use("/api/job", job);
 app.use("/api/bree", bree);
 app.use("/api/ldap", ldap);
