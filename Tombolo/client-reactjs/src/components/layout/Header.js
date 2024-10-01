@@ -1,18 +1,16 @@
 import { AppstoreOutlined, DownOutlined } from '@ant-design/icons';
-import { Button, Dropdown, message, Space, Tooltip } from 'antd';
+import { Button, Dropdown, Space, Tooltip } from 'antd';
 import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
 
 import logo from '../../images/logo.png';
-import { msalInstance } from '../../index';
+
 import { applicationActions } from '../../redux/actions/Application';
 import { assetsActions } from '../../redux/actions/Assets';
 import { expandGroups, selectGroup, getGroupsTree } from '../../redux/actions/Groups';
-import { userActions } from '../../redux/actions/User';
 import { authHeader, handleError } from '../common/AuthHeader.js';
-import { hasAdminRole } from '../common/AuthUtil.js';
 
 class AppHeader extends Component {
   pwdformRef = React.createRef();
@@ -92,10 +90,11 @@ class AppHeader extends Component {
     }
 
     if (this.state.applications.length === 0) {
-      var url = `/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
-      if (hasAdminRole(this.props.user)) {
-        url = '/api/app/read/app_list';
-      }
+      // var url = `/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
+      // if (hasAdminRole(this.props.user)) {
+      //   url = '/api/app/read/app_list';
+      // }
+      const url = '/api/app/read/app_list';
       fetch(url, {
         headers: authHeader(),
       })
@@ -182,7 +181,7 @@ class AppHeader extends Component {
   }
 
   handleLogOut = (_e) => {
-    localStorage.removeItem('user');
+    // localStorage.removeItem('user');
     this.setState({
       applicationId: '',
       selected: 'Select an Application',
@@ -193,14 +192,14 @@ class AppHeader extends Component {
     this.props.dispatch(selectGroup({ id: '', key: '0-0' }));
     //reset cluster selectiong
     this.props.dispatch(assetsActions.clusterSelected(''));
-    this.props.dispatch(userActions.logout());
+    // this.props.dispatch(userActions.logout());
 
-    if (process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad') {
-      msalInstance.logoutRedirect();
-    } else {
-      this.props.history.push('/login');
-      message.success('You have been successfully logged out. ');
-    }
+    // if (process.env.REACT_APP_APP_AUTH_METHOD === 'azure_ad') {
+    //   msalInstance.logoutRedirect();
+    // } else {
+    //   this.props.history.push('/login');
+    //   message.success('You have been successfully logged out. ');
+    // }
   };
 
   handleChange(value) {
@@ -278,9 +277,9 @@ class AppHeader extends Component {
       },
     ];
 
-    if (!this.props.user || !this.props.user.token) {
-      return null;
-    }
+    // if (!this.props.user || !this.props.user.token) {
+    //   return null;
+    // }
     const menuItems = this.state.applications.map((app) => {
       return { key: app.value, label: app.display };
     });
@@ -338,18 +337,18 @@ class AppHeader extends Component {
 }
 
 function mapStateToProps(state) {
-  const { loggingIn, user } = state.authenticationReducer;
+  // const { loggingIn, user } = state.authenticationReducer;
+  const user = { firstName: 'John', lastName: 'Doe' };
   const { application, clusters, newApplication, updatedApplication, deletedApplicationId, noClusters } =
     state.applicationReducer;
 
   return {
-    loggingIn,
-    user,
     clusters,
     noClusters,
     application,
     newApplication,
     updatedApplication,
+    user,
     deletedApplicationId,
   };
 }

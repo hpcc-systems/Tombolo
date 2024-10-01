@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   validateNewUserPayload,
   validateLoginPayload,
+  validateEmailDuplicate,
 } = require("../middlewares/authMiddleware");
 
 // Import user controller
@@ -13,13 +14,16 @@ const {
   loginBasicUser,
 } = require("../controllers/authController");
 
-
 // Routes
-router.post("/registerBasicUser", validateNewUserPayload, createBasicUser); // Create a new user ( Traditional )
-router.post("/loginBasicUser", validateLoginPayload, loginBasicUser ); // Login user ( Traditional )
+router.post(
+  "/registerBasicUser",
+  validateNewUserPayload,
+  validateEmailDuplicate,
+  createBasicUser
+); // Create a new user ( Traditional )
+router.post("/loginBasicUser", validateLoginPayload, loginBasicUser); // Login user ( Traditional )
 // router.post("/registerOAuthUser" ); // Register  user ( OAuth )
 // router.post("/loginOAuthUser" ); // Login user ( OAuth )
 // Forgot password route
-
 
 module.exports = router;

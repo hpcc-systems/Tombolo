@@ -1,6 +1,8 @@
 // Validate add user inputs using express validator
-const { body, param, validationResult } = require("express-validator");
+const { body, validationResult } = require("express-validator");
 const logger = require("../config/logger");
+const models = require("../models");
+const User = models.user;
 
 // Validate registration payload
 const validateNewUserPayload = [
@@ -61,7 +63,6 @@ const validateNewUserPayload = [
   },
 ];
 
-
 // Validate login payload
 const validateLoginPayload = [
   body("email")
@@ -71,10 +72,7 @@ const validateLoginPayload = [
     .withMessage("Email is required")
     .isLength({ max: 100 })
     .withMessage("Email must be less than 100 characters"),
-  body("password")
-    .isString()
-    .notEmpty()
-    .withMessage("Password is required"),
+  body("password").isString().notEmpty().withMessage("Password is required"),
   (req, res, next) => {
     const errors = validationResult(req).array();
     const errorString = errors.map((e) => e.msg).join(", ");
@@ -86,10 +84,29 @@ const validateLoginPayload = [
   },
 ];
 
-
+const validateEmailDuplicate = [
+  async (req, res, next) => {
+    const { email } = req.body;
+    const message = "Email already in use";
+    const user = await User.findOne({ where: { email } });
+    if (user) {
+      return res.status(400).json({
+        success: false,
+        message: message,
+        formErrors: {
+          email: {
+            errors: message,
+          },
+        },
+      });
+    }
+    next();
+  },
+];
 
 // Exports
 module.exports = {
   validateNewUserPayload,
   validateLoginPayload,
+  validateEmailDuplicate,
 };

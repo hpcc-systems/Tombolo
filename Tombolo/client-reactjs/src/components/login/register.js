@@ -4,6 +4,8 @@ import msLogo from '../../images/mslogo.png';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
 // import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
+import { authActions } from '../../redux/actions/Auth';
+
 const Register = () => {
   const [popOverContent, setPopOverContent] = useState(null);
   const [form] = Form.useForm();
@@ -14,10 +16,13 @@ const Register = () => {
 
   useEffect(() => {}, [popOverContent]);
 
-  const onFinish = (values) => {
-    console.log('Received values of form: ', values);
-    // Add your logic to register the user here
-    alert('register user code fires here');
+  const onFinish = async (values) => {
+    try {
+      const test = await authActions.registerBasicUser(values);
+      console.log(test);
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   return (

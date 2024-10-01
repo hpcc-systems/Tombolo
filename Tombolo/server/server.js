@@ -25,7 +25,7 @@ const JobScheduler = require("./jobSchedular/job-scheduler");
 
 /* Initialize express app */
 const app = express();
-const port = process.env.SERVER_PORT || 3000;
+const port = process.env.PORT || 3000;
 
 /* Initialize Socket IO */
 const server = require("http").Server(app);
@@ -53,8 +53,6 @@ if (process.env.APP_AUTH_METHOD === "azure_ad") {
 }
 
 /*  ROUTES */
-const auth = require("./routes/authRoutes");
-const users = require("./routes/userRoutes");
 const job = require("./routes/job/read");
 const bree = require("./routes/bree/read");
 const ldap = require("./routes/ldap/read");
@@ -62,7 +60,6 @@ const appRead = require("./routes/app/read");
 const query = require("./routes/query/read");
 const hpccRead = require("./routes/hpcc/read");
 const fileRead = require("./routes/file/read");
-const userRead = require("./routes/user/read");
 const groups = require("./routes/groups/group");
 const indexRead = require("./routes/index/read");
 const reportRead = require("./routes/report/read");
@@ -82,7 +79,6 @@ const key = require("./routes/key/read");
 const api = require("./routes/api/read");
 const jobmonitoring = require("./routes/jobmonitoring/read");
 const superfileMonitoring = require("./routes/superfilemonitoring/read");
-const cluster = require("./routes/clusterRoutes.js");
 const configurations = require("./routes/configRoutes.js");
 const orbit = require("./routes/orbit/read");
 const integrations = require("./routes/integrations/read");
@@ -94,25 +90,30 @@ const asr = require("./routes/asr/read");
 const directoryMonitoring = require("./routes/directorymonitoring/read");
 const status = require("./routes/status/read");
 
+//MVC & TESTED
+const auth = require("./routes/authRoutes.js");
+const cluster = require("./routes/clusterRoutes.js");
+const user = require("./routes/userRoutes.js");
+
 // Log all HTTP requests
 app.use((req, res, next) => {
   logger.http(`[${req.ip}] [${req.method}] [${req.url}]`);
   next();
 });
 
-// Reduce response size & increase speed
+// Use compression  to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
 
-// Unauthenticated routes
 app.use("/api/auth", auth);
+app.use("/api/updateNotification", updateNotifications);
 app.use("/api/status", status);
+
+//exposed API, requires api key for any routes
 app.use("/api/apikeys", api);
 
 // Authenticate token before proceeding to route
-// app.use(tokenService.verifyToken);
+app.use(tokenService.verifyToken);
 
-// Authenticated routes
-app.use("/api/user", users);
 app.use("/api/job", job);
 app.use("/api/bree", bree);
 app.use("/api/ldap", ldap);
@@ -147,6 +148,7 @@ app.use("/api/sent_notifications", sent_notifications);
 app.use("/api/monitorings", monitorings);
 app.use("/api/asr", asr);
 app.use("/api/directoryMonitoring", directoryMonitoring);
+app.use("/api/user", user);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {

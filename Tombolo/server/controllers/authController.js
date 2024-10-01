@@ -21,8 +21,8 @@ const createBasicUser = async (req, res) => {
     const payload = req.body;
 
     // Hash password
-     const salt = bcrypt.genSaltSync(10);
-     payload.hash = bcrypt.hashSync(req.body.password, salt);
+    const salt = bcrypt.genSaltSync(10);
+    payload.hash = bcrypt.hashSync(req.body.password, salt);
 
     // Save user to DB
     const user = await User.create(payload);
@@ -61,6 +61,7 @@ const createBasicUser = async (req, res) => {
       data: { ...userObj, UserRoles: [] },
     });
   } catch (err) {
+    logger.error(err);
     logger.error(`Create user: ${err.message}`);
     res
       .status(err.status || 500)
@@ -136,14 +137,13 @@ const loginBasicUser = async (req, res) => {
     });
 
     // Success response
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "User logged in successfully",
-        data: userObj,
-      });
+    res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      data: userObj,
+    });
   } catch (err) {
+    console.log(err);
     logger.error(`Login user: ${err.message}`);
     res
       .status(err.status || 500)
