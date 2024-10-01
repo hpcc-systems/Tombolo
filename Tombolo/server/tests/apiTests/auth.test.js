@@ -14,6 +14,8 @@ const payload = {
   },
 };
 
+let token;
+
 describe("Register and Login", () => {
   // Test end to end basic user registration
   it("Should register a new user on /api/auth/registerBasicUser", async () => {
@@ -34,6 +36,8 @@ describe("Register and Login", () => {
     const response = await request(app)
       .post("/api/auth/loginBasicUser")
       .send(payload);
+
+    token = response.body.data.token;
 
     // Check the response
     expect(response.status).toBe(200);

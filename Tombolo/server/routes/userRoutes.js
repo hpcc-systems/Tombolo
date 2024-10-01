@@ -7,7 +7,7 @@ const {
   validateUpdateUserPayload,
   validateChangePasswordPayload,
   validateBulkDeletePayload,
-  validateBulkUpdatePayload
+  validateBulkUpdatePayload,
 } = require("../middlewares/userMiddleware");
 
 
@@ -19,7 +19,7 @@ const {
   getAllUsers,
   changePassword,
   bulkDeleteUsers,
-  bulkUpdateUsers
+  bulkUpdateUsers,
 } = require("../controllers/userController");
 
 // Routes
@@ -30,6 +30,7 @@ router.delete("/:id", validateUserId, deleteUser); // Delete a user by id
 router.patch("/change-password/:id", validateUserId,validateChangePasswordPayload, changePassword); // Change password
 router.patch("/bulk-update", validateBulkUpdatePayload, bulkUpdateUsers); // Bulk update users
 router.patch("/:id", validateUserId, validateUpdateUserPayload, updateBasicUserInfo); // Update a user by id
+
 
 //Export 
 module.exports = router;

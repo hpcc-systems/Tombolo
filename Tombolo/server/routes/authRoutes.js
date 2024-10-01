@@ -6,12 +6,18 @@ const {
   validateNewUserPayload,
   validateLoginPayload,
   validateEmailDuplicate,
+  verifyValidTokenExists,
+  validatePasswordResetRequestPayload,
+  validateResetPasswordPayload,
 } = require("../middlewares/authMiddleware");
 
 // Import user controller
 const {
   createBasicUser,
   loginBasicUser,
+  logOutBasicUser,
+  handlePasswordResetRequest,
+  resetPassword,
 } = require("../controllers/authController");
 
 // Routes
@@ -22,6 +28,16 @@ router.post(
   createBasicUser
 ); // Create a new user ( Traditional )
 router.post("/loginBasicUser", validateLoginPayload, loginBasicUser); // Login user ( Traditional )
+router.post("/registerBasicUser", validateNewUserPayload, createBasicUser); // Create a new user ( Traditional )
+router.post("/loginBasicUser", validateLoginPayload, loginBasicUser); // Login user ( Traditional )
+router.post("/logoutBasicUser", verifyValidTokenExists, logOutBasicUser); // Logout user
+router.post(
+  "/handlePasswordResetRequest",
+  validatePasswordResetRequestPayload,
+  handlePasswordResetRequest
+); // Reset password
+router.post("/resetPassword", validateResetPasswordPayload, resetPassword); // Reset password
+
 // router.post("/registerOAuthUser" ); // Register  user ( OAuth )
 // router.post("/loginOAuthUser" ); // Login user ( OAuth )
 // Forgot password route

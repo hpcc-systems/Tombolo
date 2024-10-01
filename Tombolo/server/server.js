@@ -91,9 +91,10 @@ const directoryMonitoring = require("./routes/directorymonitoring/read");
 const status = require("./routes/status/read");
 
 //MVC & TESTED
-const auth = require("./routes/authRoutes.js");
+const auth = require("./routes/authRoutes");
+const users = require("./routes/userRoutes");
+const sessions = require("./routes/sessionRoutes");
 const cluster = require("./routes/clusterRoutes.js");
-const user = require("./routes/userRoutes.js");
 
 // Log all HTTP requests
 app.use((req, res, next) => {
@@ -111,9 +112,12 @@ app.use("/api/status", status);
 //exposed API, requires api key for any routes
 app.use("/api/apikeys", api);
 
-// Authenticate token before proceeding to route
+//Authenticate token before proceeding to route
 app.use(tokenService.verifyToken);
 
+// Authenticated routes
+app.use("/api/user", users);
+app.use("/api/session", sessions);
 app.use("/api/job", job);
 app.use("/api/bree", bree);
 app.use("/api/ldap", ldap);
@@ -148,7 +152,6 @@ app.use("/api/sent_notifications", sent_notifications);
 app.use("/api/monitorings", monitorings);
 app.use("/api/asr", asr);
 app.use("/api/directoryMonitoring", directoryMonitoring);
-app.use("/api/user", user);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
