@@ -17,13 +17,7 @@ const Register = () => {
 
   const onFinish = async (values) => {
     try {
-      const test = await authActions.registerBasicUser(values);
-      console.log(test);
-      if (test?.type === Constants.LOGIN_SUCCESS) {
-        console.log('User registered and logged in');
-        //redirect to app and force refresh
-        window.location.href = '/';
-      }
+      await authActions.registerBasicUser(values);
     } catch (e) {
       console.log(e);
     }
