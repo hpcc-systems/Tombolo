@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Col, Row, Divider, Popover } from 'antd';
 import msLogo from '../../images/mslogo.png';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
-import { Constants } from '../common/Constants';
 import { authActions } from '../../redux/actions/Auth';
 
 const Register = () => {
