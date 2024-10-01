@@ -66,7 +66,7 @@ import { AppHeader } from './components/layout/Header';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
 import { PrivateRoute } from './components/common/PrivateRoute';
-import { userActions } from './redux/actions/User';
+// import { userActions } from './redux/actions/User';
 import { checkBackendStatus } from './redux/actions/Backend';
 import { store } from './redux/store/Store';
 import { applicationActions } from './redux/actions/Application';
@@ -92,10 +92,10 @@ class App extends React.Component {
       this.setState({ message: 'Connecting to...' });
       store.dispatch(checkBackendStatus());
     } else {
-      if (!this.props.authWithAzure) {
-        this.setState({ message: 'Authenticating...' });
-        store.dispatch(userActions.validateToken());
-      }
+      // if (!this.props.authWithAzure) {
+      //   this.setState({ message: 'Authenticating...' });
+      //   store.dispatch(userActions.validateToken());
+      // }
     }
 
     //listen for clicks on the document to close tour if nav link is clicked

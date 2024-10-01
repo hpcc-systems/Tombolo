@@ -1,6 +1,8 @@
 // Validate add user inputs using express validator
 const { body, validationResult } = require("express-validator");
 const logger = require("../config/logger");
+const models = require("../models");
+const User = models.user;
 const jwt = require("jsonwebtoken");
 
 // Validate registration payload
@@ -71,10 +73,7 @@ const validateLoginPayload = [
     .withMessage("Email is required")
     .isLength({ max: 100 })
     .withMessage("Email must be less than 100 characters"),
-  body("password")
-    .isString()
-    .notEmpty()
-    .withMessage("Password is required"),
+  body("password").isString().notEmpty().withMessage("Password is required"),
   (req, res, next) => {
     const errors = validationResult(req).array();
     const errorString = errors.map((e) => e.msg).join(", ");
@@ -86,13 +85,34 @@ const validateLoginPayload = [
   },
 ];
 
+const validateEmailDuplicate = [
+  async (req, res, next) => {
+    const { email } = req.body;
+    const message = "Email already in use";
+    const user = await User.findOne({ where: { email } });
+    if (user) {
+      return res.status(400).json({
+        success: false,
+        message: message,
+        formErrors: {
+          email: {
+            errors: message,
+          },
+        },
+      });
+    }
+    next();
+  },
+];
 // Validate valid access token is present in request header
 const verifyValidTokenExists = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     logger.error("Authorization: Access token not provided");
-    return res.status(401).json({ success: false, message: "Access token not provided" });
+    return res
+      .status(401)
+      .json({ success: false, message: "Access token not provided" });
   }
 
   const accessToken = authHeader.split(" ")[1];
@@ -104,10 +124,11 @@ const verifyValidTokenExists = (req, res, next) => {
     // Attach token to req object for further processing in the controller
     req.accessToken = accessToken;
     next(); // Proceed to the controller
-
   } catch (err) {
     logger.error("Authorization: Invalid or expired access token");
-    return res.status(401).json({ success: false, message: "Invalid or expired access token" });
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid or expired access token" });
   }
 };
 
@@ -152,7 +173,7 @@ const validateResetPasswordPayload = [
     .matches(/[0-9]/)
     .withMessage("Password must contain at least one number")
     .matches(/[\W_]/)
-    .withMessage("Password must contain at least one special character"), 
+    .withMessage("Password must contain at least one special character"),
   (req, res, next) => {
     const errors = validationResult(req).array();
     const errorString = errors.map((e) => e.msg).join(", ");
@@ -161,14 +182,14 @@ const validateResetPasswordPayload = [
       return res.status(400).json({ success: false, message: errorString });
     }
     next();
-  }
+  },
 ];
-
 
 // Exports
 module.exports = {
   validateNewUserPayload,
   validateLoginPayload,
+  validateEmailDuplicate,
   verifyValidTokenExists,
   validatePasswordResetRequestPayload,
   validateResetPasswordPayload,

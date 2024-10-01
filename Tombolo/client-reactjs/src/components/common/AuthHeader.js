@@ -1,8 +1,7 @@
-import { userActions } from '../../redux/actions/User';
+// import { userActions } from '../../redux/actions/User';
 import { store } from '../../redux/store/Store';
 import { message } from 'antd';
 import { msalInstance } from '../../index';
-
 import { InteractionRequiredAuthError } from '@azure/msal-browser';
 
 export function handleError(response) {
@@ -13,23 +12,32 @@ export function handleError(response) {
     store.dispatch({ type: 'SET_BACKEND_STATUS', payload: false });
     return;
   }
-  if (response.status == 401) {
-    //token expired
-    localStorage.removeItem('user');
-    store.dispatch(userActions.logout());
-  } else if (response.status == 422) {
-    throw Error('Error occurred while saving the data. Please check the form data');
-  } else if (response.status == 404) {
-    message.error('404: Resource not found on server');
-    return;
-  } else if (typeof response === 'string') {
-    message.error(response);
-    return;
-  } else {
-    //if we have not defined a handling above, throw undefined error
-    message.error('An undefined error occurred. Please try again later');
-    return;
-  }
+
+  response.json().then((data) => {
+    if (data.message) {
+      message.error(data.message);
+    } else {
+      message.error('An undefined error occurred. Please try again later');
+    }
+  });
+
+  // if (response.status == 401) {
+  //   //token expired
+  //   // localStorage.removeItem('user');
+  //   // store.dispatch(userActions.logout());
+  // } else if (response.status == 422) {
+  //   throw Error('Error occurred while saving the data. Please check the form data');
+  // } else if (response.status == 404) {
+  //   message.error('404: Resource not found on server');
+  //   return;
+  // } else if (typeof response === 'string') {
+  //   message.error(response);
+  //   return;
+  // } else {
+  //   //if we have not defined a handling above, throw undefined error
+  //   message.error('An undefined error occurred. Please try again later');
+  //   return;
+  // }
 }
 
 // When the client sends a fetch request the header requires an auth token.
