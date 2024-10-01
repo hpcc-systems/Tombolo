@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Col, Row, Divider, Popover } from 'antd';
 import msLogo from '../../images/mslogo.png';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
-// import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-
+import { Constants } from '../common/Constants';
 import { authActions } from '../../redux/actions/Auth';
 
 const Register = () => {
@@ -20,6 +19,11 @@ const Register = () => {
     try {
       const test = await authActions.registerBasicUser(values);
       console.log(test);
+      if (test?.type === Constants.LOGIN_SUCCESS) {
+        console.log('User registered and logged in');
+        //redirect to app and force refresh
+        window.location.href = '/';
+      }
     } catch (e) {
       console.log(e);
     }

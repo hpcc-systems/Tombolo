@@ -3,8 +3,10 @@ import { Constants } from '../../components/common/Constants';
 const initialState = {
   isAuthenticated: false,
   token: null,
-  refreshToken: null,
-  user: null, // Add user object
+  roles: [],
+  firstName: '',
+  lastName: '',
+  id: '',
 };
 
 export function authenticationReducer(state = initialState, action) {
@@ -14,32 +16,43 @@ export function authenticationReducer(state = initialState, action) {
         ...state,
         isAuthenticated: true,
         token: action.payload.token,
-        refreshToken: action.payload.refreshToken,
-        user: action.payload.user, // Set user object
+        roles: action.payload.roles,
+        firstName: action.payload.firstName,
+        lastName: action.payload.lastName,
+        id: action.payload.id,
       };
     case Constants.LOGIN_FAILED:
       return {
         ...state,
         isAuthenticated: false,
         token: null,
-        refreshToken: null,
+        roles: [],
         user: null, // Reset user object
+        firstName: '',
+        lastName: '',
+        id: '',
       };
     case Constants.LOGOUT_SUCCESS:
       return {
         ...state,
         isAuthenticated: false,
         token: null,
-        refreshToken: null,
+        roles: [],
         user: null, // Reset user object
+        firstName: '',
+        lastName: '',
+        id: '',
       };
     case Constants.LOGOUT_FAILED:
       return {
         ...state,
         isAuthenticated: true,
         token: action.payload.token,
-        refreshToken: action.payload.refreshToken,
+        roles: action.payload.roles,
         user: action.payload.user, // Set user object
+        firstName: action.payload.firstName,
+        lastName: action.payload.lastName,
+        id: action.payload.id,
       };
     default:
       return state;

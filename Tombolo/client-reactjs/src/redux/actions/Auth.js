@@ -28,12 +28,21 @@ async function registerBasicUser(values) {
   const user = await registerBasicUserFunc(values);
 
   if (user) {
-    alert('user registered, next PR we will log user in after succesful registration');
+    //log in user
+    const loginResponse = await loginBasicUserFunc(values.email, values.password);
+    console.log(loginResponse);
+    if (loginResponse) {
+      let data = loginResponse.data;
+      data.isAuthenticated = true;
+      console.log(data);
+
+      return {
+        type: Constants.LOGIN_SUCCESS,
+        payload: data,
+      };
+    }
   }
-  //   return {
-  //     type: Constants.REFRESH_TOKEN_SUCCESS,
-  //     payload: { token },
-  //   };
+
   return;
 }
 
@@ -50,6 +59,31 @@ const registerBasicUserFunc = async (values) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(values),
+    },
+    { headers: authHeader() }
+  );
+
+  if (!response.ok) {
+    handleError(response);
+    return null;
+  }
+
+  const data = await response.json();
+
+  return data;
+};
+
+const loginBasicUserFunc = async (email, password) => {
+  const url = '/api/auth/loginBasicUser';
+
+  const response = await fetch(
+    url,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
     },
     { headers: authHeader() }
   );

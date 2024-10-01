@@ -86,6 +86,15 @@ class App extends React.Component {
     clusterLinkRef: React.createRef(),
   };
 
+  //if user prop is updated, re-render
+  componentDidUpdate(prevProps) {
+    console.log(prevProps);
+    console.log(this.props);
+    if (this.props.user !== prevProps.user) {
+      this.forceUpdate();
+    }
+  }
+
   componentDidMount() {
     //if status of backend hasn't been retrieved, check it
     if (!this.props.backendStatus.statusRetrieved) {
@@ -132,6 +141,7 @@ class App extends React.Component {
     const isBackendConnected = this.props.backendStatus.isConnected;
     const isBackendStatusRetrieved = this.props.backendStatus.statusRetrieved;
     const isApplicationSet = this.props.application && this.props.application.applicationId !== '' ? true : false;
+    console.log(this.props);
 
     //if an application doesn't exist and the tour hasn't been shown, show the tour
     if (this.props.noApplication.noApplication && !this.props.noApplication.firstTourShown && isBackendConnected) {
@@ -160,10 +170,6 @@ class App extends React.Component {
       let applicationId = this.props.application ? this.props.application.applicationId : '';
       let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
       return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user} />;
-    };
-
-    const getHome = () => {
-      return <Home />;
     };
 
     //steps for tour
@@ -267,7 +273,7 @@ class App extends React.Component {
               ) : (
                 <>
                   {/* Go through loading sequence, first check if backend is connected and report with proper message */}
-                  {!isBackendConnected || !this.props.authWithAzure || !this.props.user || !this.props.user.token ? (
+                  {!isBackendConnected || !this.props.user || !this.props.user.token ? (
                     <div
                       style={{
                         display: 'flex',
@@ -419,7 +425,6 @@ class App extends React.Component {
                                   path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
                                   component={ManualJobDetail}
                                 />
-                                {this.props.authWithAzure ? <Route exact path="*" component={getHome} /> : null}
                               </Switch>
                             </Suspense>
                           </ErrorBoundary>
@@ -440,7 +445,8 @@ class App extends React.Component {
 function mapStateToProps(state) {
   const { application, clusters, noApplication, noClusters } = state.applicationReducer;
   const backendStatus = state.backendReducer;
-  const { user } = state.authenticationReducer;
+  const user = state.authenticationReducer;
+  console.log('user', user);
   return { application, clusters, user, backendStatus, noApplication, noClusters };
 }
 
