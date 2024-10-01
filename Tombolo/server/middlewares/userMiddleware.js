@@ -190,6 +190,7 @@ const validateBulkUpdatePayload = [
   },
 ];
 
+
 module.exports = {
   validateNewUserPayload,
   validateUserId,

@@ -13,6 +13,8 @@ const User = models.user;
 const UserRoles = models.UserRoles;
 const RoleTypes = models.RoleTypes;
 const RefreshTokens = models.RefreshTokens;
+const NotificationQueue = models.notification_queue;
+const PasswordResetLinks = models.PasswordResetLinks;
 
 // Register basic user
 const createBasicUser = async (req, res) => {
@@ -151,6 +153,156 @@ const loginBasicUser = async (req, res) => {
   }
 };
 
+// Logout Basic user
+const logOutBasicUser = async (req, res) => {
+  try {
+    // Decode the token to get the tokenId (assuming token contains tokenId)
+    const decodedToken = jwt.decode(req.accessToken);
+
+    const { tokenId } = decodedToken;
+
+    // Remove refresh token from the database
+    await RefreshTokens.destroy({
+      where: { id: tokenId },
+    });
+
+    // TODO:  Add access token to the blacklist
+
+    res.status(200).json({ success: true, message: "User logged out" });
+  } catch (err) {
+    logger.error(`Logout user: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
+// Fulfill password reset request
+const handlePasswordResetRequest = async (req, res) => {
+  try {
+    // Get user email
+    const { email } = req.body;
+    console.log(email);
+
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+
+    // User with the given email does not exist
+    if (!user) {
+      logger.error(`Reset password: User with email ${email} does not exist`);
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Stop users form abusing this endpoint - allow 4 requests per hour
+    const passwordResetRequests = await PasswordResetLinks.findAll({
+      where: {
+        userId: user.id,
+        issuedAt: {[models.Sequelize.Op.gte]: new Date(new Date().getTime() - 60 * 60 * 1000)},
+      },
+    });
+
+    // Max requests per hour
+    if (passwordResetRequests.length >= 4) {
+      logger.error(`Reset password: User with email ${email} has exceeded the limit of password reset requests`);
+      return res.status(429).json({ success: false, message: "Too many requests" });
+    }
+    
+    // Generate a password reset token
+    const randomId = uuidv4();
+    const passwordRestLink = `${process.env.WEB_URL}/reset-password/${randomId}`;
+
+    // Notification subject
+    let subject = "Password Reset Link";
+    if (process.env.INSTANCE_NAME) {
+      subject = `${process.env.INSTANCE_NAME} - ${subject}`;
+    }
+
+    // Queue notification
+    await NotificationQueue.create({
+      type: "email",
+      templateName: "resetPasswordLink",
+      notificationOrigin: "Reset Password",
+      deliveryType: "immediate",
+      createdBy: "System",
+      updatedBy: "System",
+      metaData: {
+          mainRecipients: [email],
+          subject,
+          body: "Password reset link",
+          validForHours: 24,
+          passwordRestLink,
+      },
+    });
+
+    // Save the password reset token to the user object in the database
+    await PasswordResetLinks.create({
+      id: randomId,
+      userId: user.id,
+      resetLink: passwordRestLink,
+      issuedAt: new Date(),
+      expiresAt: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
+    });
+
+    // response
+    res.status(200).json({success: true, });
+  } catch (err) {
+    logger.error(`Reset password: ${err.message}`);
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+}
+
+// Reset password
+const resetPassword = async (req, res) => {
+  try {
+    // Get the password reset token
+    const { token, password } = req.body;
+
+    // Find the password reset token
+    const passwordResetLink = await PasswordResetLinks.findOne({
+      where: { id: token },
+    });
+
+    // Token does not exist
+    if (!passwordResetLink) {
+      logger.error(`Reset password: Token ${token} does not exist`);
+      return res.status(404).json({ success: false, message: "Password reset link Invalid or expired" });
+    }
+
+    // Token has expired
+    if (new Date() > passwordResetLink.expiresAt) {
+      logger.error(`Reset password: Token ${token} has expired`);
+      return res
+        .status(400)
+        .json({ success: false, message: "Token has expired" });
+    }
+
+    // Find the user
+    const user = await User.findOne({ where: { id: passwordResetLink.userId } });
+
+    // Hash the new password
+    const salt = bcrypt.genSaltSync(10);
+    user.hash = bcrypt.hashSync(password, salt);
+
+    // Save the user
+    await user.save();
+
+    // Delete the password link from
+    PasswordResetLinks.destroy({
+      where: { id: token },
+    });
+
+    // response
+    res.status(200) .json({success: true, message: "Password updated successfully"});
+  } catch (err) {
+    logger.error(`Reset password: ${err.message}`);
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+}
+
+
+
 // Register OAuth user
 
 // Login OAuth user
@@ -159,4 +311,7 @@ const loginBasicUser = async (req, res) => {
 module.exports = {
   createBasicUser,
   loginBasicUser,
+  logOutBasicUser,
+  handlePasswordResetRequest,
+  resetPassword,
 };

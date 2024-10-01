@@ -82,6 +82,18 @@ module.exports = (sequelize, DataTypes) => {
           await UserRoles.destroy({
             where: {userId: user.where.id,},
           });
+
+          // Delete user applications
+          const user_application = sequelize.models.user_application;
+          await user_application.destroy({
+            where: {user_id: user.where.id,},
+          });
+
+          // Delete password reset links
+          const PasswordResetLinks = sequelize.models.PasswordResetLinks;
+          await PasswordResetLinks.destroy({
+            where: {userId: user.where.id,},
+          });
         },
       },
     }
@@ -105,6 +117,13 @@ module.exports = (sequelize, DataTypes) => {
 
     // User to refresh token
     user.hasMany(models.RefreshTokens, {
+      foreignKey: "userId",
+      onDelete: "CASCADE",
+      hooks: true,
+    });
+
+    // User to password reset links
+    user.hasMany(models.PasswordResetLinks, {
       foreignKey: "userId",
       onDelete: "CASCADE",
       hooks: true,
