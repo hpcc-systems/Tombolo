@@ -5,6 +5,7 @@ export const authActions = {
   login,
   logout,
   registerBasicUser,
+  loadUserFromStorage,
 };
 
 function login(email, password) {
@@ -24,6 +25,19 @@ function logout(user) {
   };
 }
 
+function loadUserFromStorage() {
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  if (user) {
+    return {
+      type: Constants.LOGIN_SUCCESS,
+      payload: user,
+    };
+  }
+
+  return;
+}
+
 async function registerBasicUser(values) {
   const user = await registerBasicUserFunc(values);
 
@@ -34,7 +48,9 @@ async function registerBasicUser(values) {
     if (loginResponse) {
       let data = loginResponse.data;
       data.isAuthenticated = true;
-      console.log(data);
+
+      //set item in local storage
+      localStorage.setItem('user', JSON.stringify(data));
 
       return {
         type: Constants.LOGIN_SUCCESS,

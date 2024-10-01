@@ -1,13 +1,26 @@
-import React, { Suspense } from 'react';
-import { connect } from 'react-redux';
+//libraries and hooks
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { connect, useSelector } from 'react-redux';
 import { Layout, ConfigProvider, Spin, Card, Tour } from 'antd';
 import { Router, Route, Switch } from 'react-router-dom';
 import history from './components/common/History';
 import logo from './images/logo.png';
+import { useDispatch } from 'react-redux';
+
+// Shared layout, etc.
+import LeftNav from './components/layout/LeftNav.js';
+import { AppHeader } from './components/layout/Header';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import Fallback from './components/common/Fallback';
+import { PrivateRoute } from './components/common/PrivateRoute';
+// import { userActions } from './redux/actions/User';
+import { checkBackendStatus } from './redux/actions/Backend';
+import { applicationActions } from './redux/actions/Application';
+import { authActions } from './redux/actions/Auth';
+import BasicLayout from './components/common/BasicLayout.js';
 
 //home page
 import Home from './components/application/home/index.js';
-import Assets from './components/application/Assets';
 
 // Auth pages
 const Login = React.lazy(() => import('./components/login/login'));
@@ -15,7 +28,8 @@ const Register = React.lazy(() => import('./components/login/register'));
 const ResetPassword = React.lazy(() => import('./components/login/ResetPassword.js'));
 const ForgotPassword = React.lazy(() => import('./components/login/ForgotPassword.js'));
 
-//Dataflow pages
+//Dataflow & Asset pages
+const Assets = React.lazy(() => import('./components/application/Assets'));
 const Dataflow = React.lazy(() => import('./components/application/Dataflow'));
 const DataflowDetails = React.lazy(() => import('./components/application/Dataflow/DataflowDetails'));
 const DataflowInstances = React.lazy(() => import('./components/application/DataflowInstances/DataflowInstances'));
@@ -60,220 +74,214 @@ const IntegrationSettings = React.lazy(() => import('./components/admin/Integrat
 const TeamsNotification = React.lazy(() => import('./components/admin/notifications/MsTeams/Teams'));
 const UserManagement = React.lazy(() => import('./components/admin/userManagement/index.jsx'));
 
-// Shared layout, etc.
-import { LeftNav } from './components/layout/LeftNav';
-import { AppHeader } from './components/layout/Header';
-import ErrorBoundary from './components/common/ErrorBoundary';
-import Fallback from './components/common/Fallback';
-import { PrivateRoute } from './components/common/PrivateRoute';
-// import { userActions } from './redux/actions/User';
-import { checkBackendStatus } from './redux/actions/Backend';
-import { store } from './redux/store/Store';
-import { applicationActions } from './redux/actions/Application';
-import BasicLayout from './components/common/BasicLayout.js';
-
 const { Header, Content } = Layout;
 
-const BG_COLOR = '';
+const App = () => {
+  //left nav collapsed state
+  const [collapsed, setCollapsed] = useState(localStorage.getItem('collapsed') === 'true');
 
-class App extends React.Component {
-  state = {
-    collapsed: localStorage.getItem('collapsed') === 'true',
-    message: '',
-    tourOpen: false,
-    clusterTourOpen: false,
-    appLinkRef: React.createRef(),
-    clusterLinkRef: React.createRef(),
-  };
+  //loading message states
+  const [message, setMessage] = useState('');
 
-  //if user prop is updated, re-render
-  componentDidUpdate(prevProps) {
-    console.log(prevProps);
-    console.log(this.props);
-    if (this.props.user !== prevProps.user) {
-      this.forceUpdate();
+  //tour states
+  const [tourOpen, setTourOpen] = useState(false);
+  const [clusterTourOpen, setClusterTourOpen] = useState(false);
+  const appLinkRef = useRef(null);
+  const clusterLinkRef = useRef(null);
+
+  //get redux states
+  const { applicationReducer, authenticationReducer, backendReducer } = useSelector((state) => state);
+
+  //get child objects from redux states for ease of use
+  const { application, noApplication, noClusters } = applicationReducer;
+  const { isConnected, statusRetrieved } = backendReducer;
+
+  //redux dispatch
+  const dispatch = useDispatch();
+
+  //retrieve backend status on load to display message to user or application
+  useEffect(() => {
+    if (!statusRetrieved) {
+      setMessage('Connecting to...');
+      dispatch(checkBackendStatus());
     }
-  }
+  }, []);
 
-  componentDidMount() {
-    //if status of backend hasn't been retrieved, check it
-    if (!this.props.backendStatus.statusRetrieved) {
-      this.setState({ message: 'Connecting to...' });
-      store.dispatch(checkBackendStatus());
+  //add event listener to close tour on click
+  useEffect(() => {
+    document.addEventListener('click', handleClick);
+
+    return () => {
+      document.removeEventListener('click', handleClick);
+    };
+  }, []);
+
+  //Check if user is authenticated or is in local storage and redirect to login page if not
+  useEffect(() => {
+    if (authenticationReducer.isAuthenticated) return;
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.token) {
+      dispatch(authActions.loadUserFromStorage());
     } else {
-      // if (!this.props.authWithAzure) {
-      //   this.setState({ message: 'Authenticating...' });
-      //   store.dispatch(userActions.validateToken());
-      // }
+      history.push('/login');
+    }
+  }, [authenticationReducer]);
+
+  //useEffect to show tours for new users
+  useEffect(() => {
+    if (application?.applicationId && noApplication.noApplication && !noApplication.firstTourShown) {
+      if (window.location.pathname !== '/admin/applications') {
+        setTourOpen(true);
+      }
+      dispatch(applicationActions.updateApplicationLeftTourShown(true));
     }
 
-    //listen for clicks on the document to close tour if nav link is clicked
-    document.addEventListener('click', this.handleClick);
-  }
+    if (application?.applicationId && noClusters.noClusters && !noClusters.firstTourShown) {
+      if (window.location.pathname !== '/admin/clusters') {
+        setClusterTourOpen(true);
+      }
 
-  handleClick = (e) => {
-    if (this.state.appLinkRef.current && this.state.appLinkRef.current.contains(e.target)) {
-      this.setState({ tourOpen: false });
+      dispatch(applicationActions.updateClustersLeftTourShown(true));
+    }
+  }, [application, noApplication, noClusters]);
+
+  //click handler for tour closing
+  const handleClick = (e) => {
+    if (appLinkRef.current && appLinkRef.current.contains(e.target)) {
+      setTourOpen(false);
     }
 
-    if (this.state.clusterLinkRef.current && this.state.clusterLinkRef.current.contains(e.target)) {
-      this.setState({ clusterTourOpen: false });
+    if (clusterLinkRef.current && clusterLinkRef.current.contains(e.target)) {
+      setClusterTourOpen(false);
     }
   };
 
-  //function to handle tour shown close
-  handleTourShownClose = () => {
-    this.setState({ tourOpen: false });
+  //tour closing methods
+  const handleTourShownClose = () => {
+    setTourOpen(false);
   };
 
-  //function to handle tour shown close
-  handleClusterTourShownClose = () => {
-    this.setState({ clusterTourOpen: false });
+  const handleClusterTourShownClose = () => {
+    setClusterTourOpen(false);
   };
 
-  onCollapse = (collapsed) => {
-    this.setState({ collapsed });
-    //set collapsed into local storage
+  //left nav collapse method
+  const onCollapse = (collapsed) => {
+    setCollapsed(collapsed);
     localStorage.setItem('collapsed', collapsed);
   };
 
-  render() {
-    const isBackendConnected = this.props.backendStatus.isConnected;
-    const isBackendStatusRetrieved = this.props.backendStatus.statusRetrieved;
-    const isApplicationSet = this.props.application && this.props.application.applicationId !== '' ? true : false;
-    console.log(this.props);
+  const dataFlowComp = () => {
+    let applicationId = application ? application.applicationId : '';
+    let applicationTitle = application ? application.applicationTitle : '';
+    return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={authenticationReducer} />;
+  };
 
-    //if an application doesn't exist and the tour hasn't been shown, show the tour
-    if (this.props.noApplication.noApplication && !this.props.noApplication.firstTourShown && isBackendConnected) {
-      //if you're not already on the application page, show the left nav tour
-      if (window.location.pathname !== '/admin/applications') {
-        this.setState({ tourOpen: true });
-      }
-      this.props.dispatch(applicationActions.updateApplicationLeftTourShown(true));
-    }
+  //app tour steps
+  const steps = [
+    {
+      title: 'Welcome to Tombolo',
+      description:
+        'There is some setup that we need to complete before being able to fully utilize Tombolo. We will unlock features as we move through this interactive tutorial.',
+      target: null,
+    },
+    {
+      title: 'Applications',
+      description: (
+        <>
+          <p>
+            It looks like you have not set up an application yet. Applications are a necessary part of Tombolos basic
+            functions, and we must set one up before unlocking the rest of the application. Click on the navigation
+            element to head to the application management screen and set one up.
+          </p>
+          <br />
+          <p>
+            If youre interested to read more about applications, head to our documentation page at{' '}
+            <a
+              target="_blank"
+              rel="noreferrer"
+              href="https://hpcc-systems.github.io/Tombolo/docs/User-Guides/application">
+              our documentation site.
+            </a>
+          </p>
+        </>
+      ),
+      placement: 'right',
+      arrow: true,
+      target: appLinkRef.current,
+      nextButtonProps: { style: { display: 'none' }, disabled: true },
+      prevButtonProps: { style: { display: 'none' }, disabled: true },
+    },
+  ];
 
-    //if an application exists, but a cluster doesn't, show the cluster tour
-    if (
-      this.props.application?.applicationId &&
-      this.props.noClusters.noClusters &&
-      !this.props.noClusters.firstTourShown
-    ) {
-      //if you're not already on the cluster page, show the left nav tour
-      if (window.location.pathname !== '/admin/clusters') {
-        this.setState({ clusterTourOpen: true });
-      }
+  //cluster tour steps
+  const clusterSteps = [
+    {
+      title: 'Clusters',
+      description: (
+        <>
+          <p>
+            Now that we have an application set up, we can connect to an hpcc systems cluster to unlock the rest of the
+            application. Click the navigation element to head to the cluster management screen and set one up.
+          </p>
+          <br />
+          <p>
+            If youre interested to read more about Clusters, head to our documentation page at{' '}
+            <a target="_blank" rel="noreferrer" href="https://hpcc-systems.github.io/Tombolo/docs/User-Guides/cluster">
+              our documentation site.
+            </a>
+          </p>
+        </>
+      ),
+      placement: 'right',
+      arrrow: true,
+      target: clusterLinkRef.current,
+      nextButtonProps: { style: { display: 'none' }, disabled: true },
+    },
+  ];
 
-      this.props.dispatch(applicationActions.updateClustersLeftTourShown(true));
-    }
+  const loginSteps = [
+    {
+      url: 'login',
+    },
+    {
+      url: 'register',
+    },
+    {
+      url: 'reset-password',
+    },
+    {
+      url: 'forgot-password',
+    },
+  ];
 
-    const dataFlowComp = () => {
-      let applicationId = this.props.application ? this.props.application.applicationId : '';
-      let applicationTitle = this.props.application ? this.props.application.applicationTitle : '';
-      return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={this.props.user} />;
-    };
+  //check if the user is on a login page to decide which layout to show
+  const isLogin = loginSteps.some((step) => window.location.pathname.split('/')[1] === step.url);
 
-    //steps for tour
-    const steps = [
-      {
-        title: 'Welcome to Tombolo',
-        description:
-          'There is some setup that we need to complete before being able to fully utilize Tombolo. We will unlock features as we move through this interactive tutorial.',
-        target: null,
-      },
-      {
-        title: 'Applications',
-        description: (
-          <>
-            <p>
-              It looks like you have not set up an application yet. Applications are a necessary part of Tombolos basic
-              functions, and we must set one up before unlocking the rest of the application. Click on the navigation
-              element to head to the application management screen and set one up.
-            </p>
-            <br />
-            <p>
-              If youre interested to read more about applications, head to our documentation page at{' '}
-              <a
-                target="_blank"
-                rel="noreferrer"
-                href="https://hpcc-systems.github.io/Tombolo/docs/User-Guides/application">
-                our documentation site.
-              </a>
-            </p>
-          </>
-        ),
-        placement: 'right',
-        arrow: true,
-        target: () => this.state.appLinkRef?.current,
-        nextButtonProps: { style: { display: 'none' }, disabled: true },
-        prevButtonProps: { style: { display: 'none' }, disabled: true },
-      },
-    ];
-
-    const clusterSteps = [
-      {
-        title: 'Clusters',
-        description: (
-          <>
-            <p>
-              Now that we have an application set up, we can connect to an hpcc systems cluster to unlock the rest of
-              the application. Click the navigation element to head to the cluster management screen and set one up.
-            </p>
-            <br />
-            <p>
-              If youre interested to read more about Clusters, head to our documentation page at{' '}
-              <a
-                target="_blank"
-                rel="noreferrer"
-                href="https://hpcc-systems.github.io/Tombolo/docs/User-Guides/cluster">
-                our documentation site.
-              </a>
-            </p>
-          </>
-        ),
-        placement: 'right',
-        arrrow: true,
-        target: () => this.state.clusterLinkRef?.current,
-        nextButtonProps: { style: { display: 'none' }, disabled: true },
-      },
-    ];
-
-    const loginSteps = [
-      {
-        url: 'login',
-      },
-      {
-        url: 'register',
-      },
-      {
-        url: 'reset-password',
-      },
-      {
-        url: 'forgot-password',
-      },
-    ];
-
-    const isLogin = loginSteps.some((step) => window.location.pathname.split('/')[1] === step.url);
-
-    return (
-      <ConfigProvider>
-        <Suspense fallback={<Fallback />}>
-          <Router history={history}>
-            <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
-              {isLogin ? (
-                <BasicLayout
-                  content={
-                    <Switch>
-                      <Route path="/login" component={Login} />
-                      <Route path="/register" component={Register} />
-                      <Route path="/reset-password/:resetToken" component={ResetPassword} />
-                      <Route path="/forgot-password" component={ForgotPassword} />
-                    </Switch>
-                  }
-                />
-              ) : (
-                <>
-                  {/* Go through loading sequence, first check if backend is connected and report with proper message */}
-                  {!isBackendConnected || !this.props.user || !this.props.user.token ? (
+  return (
+    <ConfigProvider>
+      <Suspense fallback={<Fallback />}>
+        <Router history={history}>
+          <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
+            {/* Login/Authentication Page Loading */}
+            {isLogin ? (
+              <BasicLayout
+                content={
+                  <Switch>
+                    <Route path="/login" component={Login} />
+                    <Route path="/register" component={Register} />
+                    <Route path="/reset-password/:resetToken" component={ResetPassword} />
+                    <Route path="/forgot-password" component={ForgotPassword} />
+                  </Switch>
+                }
+              />
+            ) : (
+              <>
+                {/* Main Application Loading */}
+                {!isConnected || !authenticationReducer.id || !authenticationReducer.token ? (
+                  <>
+                    {/* Loading screens to communicate loading sequence */}
                     <div
                       style={{
                         display: 'flex',
@@ -282,7 +290,7 @@ class App extends React.Component {
                         height: '100vh',
                         backgroundColor: '#f0f2f5',
                       }}>
-                      {!isBackendConnected && isBackendStatusRetrieved ? (
+                      {!isConnected && statusRetrieved ? (
                         <Card title={<img src={logo} />} style={{ width: '50%', textAlign: 'center' }}>
                           <h2>
                             Tombolo has encountered a network issue, please refresh the page. If the issue persists,
@@ -303,153 +311,121 @@ class App extends React.Component {
                           </div>
                           <Spin size="large" />
                           <div style={{ width: '100%', marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
-                            <h2>{this.state.message}</h2>
+                            <h2>{message}</h2>
                           </div>
                         </div>
                       )}
                     </div>
-                  ) : (
-                    /* Now that everything is loaded, present the application */
-                    <>
-                      <Header
+                  </>
+                ) : (
+                  <>
+                    {/* Main Application, Only enters if user is authenticated and backend is connected */}
+                    <Header
+                      style={{
+                        maxHeight: '50px',
+                        position: 'fixed',
+                        zIndex: 100,
+                        width: '100%',
+                      }}>
+                      <AppHeader />
+                    </Header>
+                    <Tour steps={steps} open={tourOpen} onClose={handleTourShownClose} indicatorsRender={() => <></>} />
+                    <Tour steps={clusterSteps} open={clusterTourOpen} onClose={handleClusterTourShownClose} />
+                    <Layout>
+                      <LeftNav
+                        onCollapse={onCollapse}
+                        collapsed={collapsed}
+                        appLinkRef={appLinkRef}
+                        clusterLinkRef={clusterLinkRef}
+                      />
+
+                      <Content
                         style={{
-                          backgroundColor: BG_COLOR,
-                          maxHeight: '50px',
-                          position: 'fixed',
-                          zIndex: 100,
-                          width: '100%',
+                          transition: '.1s linear',
+                          margin: '55px 0px',
+                          marginLeft: collapsed ? '55px' : '200px',
                         }}>
-                        <AppHeader setLocale={this.setLocale} />
-                      </Header>
-                      <Tour
-                        steps={steps}
-                        open={this.state.tourOpen}
-                        onClose={this.handleTourShownClose}
-                        indicatorsRender={() => <></>}
-                      />
-                      <Tour
-                        steps={clusterSteps}
-                        open={this.state.clusterTourOpen}
-                        onClose={this.handleClusterTourShownClose}
-                      />
-                      <Layout>
-                        <LeftNav
-                          BG_COLOR={BG_COLOR}
-                          onCollapse={this.onCollapse}
-                          collapsed={this.state.collapsed}
-                          isApplicationSet={isApplicationSet}
-                          clusters={this.props.clusters}
-                          appLinkRef={this.state.appLinkRef}
-                          clusterLinkRef={this.state.clusterLinkRef}
-                        />
+                        <ErrorBoundary>
+                          <Suspense fallback={<Fallback />}>
+                            <Switch>
+                              <PrivateRoute exact path="/" component={Home} />
+                              <PrivateRoute path="/myAccount" component={MyAccount} />
+                              <PrivateRoute path="/:applicationId/assets/file/:assetId?" component={FileDetailsForm} />
+                              <PrivateRoute
+                                path="/:applicationId/assets/fileTemplate/:assetId?"
+                                component={FileTemplate}
+                              />
+                              <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
+                              <PrivateRoute
+                                path="/:applicationId/superfileMonitoring"
+                                component={SuperFileMonitoring}
+                              />
+                              <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
+                              <PrivateRoute path="/:applicationId/OrbitMonitoring" component={OrbitMonitoring} />
+                              <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />
+                              <PrivateRoute
+                                path="/:applicationId/directoryMonitoring"
+                                component={DirectoryMonitoring}
+                              />
+                              <PrivateRoute path="/:applicationId/dashboard/notifications" component={Notifications} />
+                              <PrivateRoute path="/:applicationId/dashboard/clusterUsage" component={ClusterUsage} />
+                              <PrivateRoute path="/:applicationId/dashboard/Orbit" component={Orbit} />
+                              <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
+                              <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
+                              <PrivateRoute
+                                path="/:applicationId/assets/index/:assetId?"
+                                component={IndexDetailsForm}
+                              />
+                              <PrivateRoute
+                                path="/:applicationId/assets/query/:assetId?"
+                                component={QueryDetailsForm}
+                              />
+                              <PrivateRoute path="/:applicationId/assets" component={Assets} />
+                              <PrivateRoute
+                                path="/:applicationId/dataflow/details/:dataflowId?"
+                                component={DataflowDetails}
+                              />
+                              <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
+                              <PrivateRoute path="/admin/applications" component={AdminApplications} />
+                              <PrivateRoute path="/admin/userManagement" component={UserManagement} />
+                              <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
+                              <PrivateRoute path="/admin/clusters" component={Clusters} />
+                              <PrivateRoute path="/admin/notification-settings/msTeams" component={TeamsNotification} />
+                              <PrivateRoute path="/admin/github" component={GitHubSettings} />
+                              <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} />
+                              <PrivateRoute path="/admin/users" component={Users} />
+                              <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
+                              <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
+                              <PrivateRoute
+                                path="/admin/integrations/:integrationName"
+                                component={IntegrationSettings}
+                              />
+                              <PrivateRoute path="/admin/integrations" component={Integrations} />
+                              <PrivateRoute
+                                path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
+                                component={DataflowInstanceDetails}
+                              />
+                              <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />{' '}
+                              <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
+                              <PrivateRoute path="/:applicationId/actions" component={Actions} />
+                              <PrivateRoute
+                                path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
+                                component={ManualJobDetail}
+                              />
+                            </Switch>
+                          </Suspense>
+                        </ErrorBoundary>
+                      </Content>
+                    </Layout>
+                  </>
+                )}
+              </>
+            )}
+          </Layout>
+        </Router>
+      </Suspense>
+    </ConfigProvider>
+  );
+};
 
-                        <Content
-                          style={{
-                            transition: '.1s linear',
-                            margin: '55px 0px',
-                            marginLeft: this.state.collapsed ? '55px' : '200px',
-                          }}>
-                          <ErrorBoundary>
-                            <Suspense fallback={<Fallback />}>
-                              <Switch>
-                                <PrivateRoute exact path="/" component={Home} />
-                                <PrivateRoute path="/myAccount" component={MyAccount} />
-                                <PrivateRoute
-                                  path="/:applicationId/assets/file/:assetId?"
-                                  component={FileDetailsForm}
-                                />
-                                <PrivateRoute
-                                  path="/:applicationId/assets/fileTemplate/:assetId?"
-                                  component={FileTemplate}
-                                />
-                                <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
-                                <PrivateRoute
-                                  path="/:applicationId/superfileMonitoring"
-                                  component={SuperFileMonitoring}
-                                />
-                                <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
-                                <PrivateRoute path="/:applicationId/OrbitMonitoring" component={OrbitMonitoring} />
-                                <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />
-                                <PrivateRoute
-                                  path="/:applicationId/directoryMonitoring"
-                                  component={DirectoryMonitoring}
-                                />
-                                <PrivateRoute
-                                  path="/:applicationId/dashboard/notifications"
-                                  component={Notifications}
-                                />
-                                <PrivateRoute path="/:applicationId/dashboard/clusterUsage" component={ClusterUsage} />
-                                <PrivateRoute path="/:applicationId/dashboard/Orbit" component={Orbit} />
-                                <PrivateRoute path="/:applicationId/assets/add-jobs" component={AddJobsForm} />
-                                <PrivateRoute path="/:applicationId/assets/job/:assetId?" component={JobDetailsForm} />
-                                <PrivateRoute
-                                  path="/:applicationId/assets/index/:assetId?"
-                                  component={IndexDetailsForm}
-                                />
-                                <PrivateRoute
-                                  path="/:applicationId/assets/query/:assetId?"
-                                  component={QueryDetailsForm}
-                                />
-                                <PrivateRoute path="/:applicationId/assets" component={Assets} />
-                                <PrivateRoute
-                                  path="/:applicationId/dataflow/details/:dataflowId?"
-                                  component={DataflowDetails}
-                                />
-                                <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
-                                <PrivateRoute path="/admin/applications" component={AdminApplications} />
-                                <PrivateRoute path="/admin/userManagement" component={UserManagement} />
-                                <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
-                                <PrivateRoute path="/admin/clusters" component={Clusters} />
-                                <PrivateRoute
-                                  path="/admin/notification-settings/msTeams"
-                                  component={TeamsNotification}
-                                />
-                                <PrivateRoute path="/admin/github" component={GitHubSettings} />
-                                <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} />
-                                <PrivateRoute path="/admin/users" component={Users} />
-                                <PrivateRoute path="/admin/consumers" component={AdminConsumers} />
-                                <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
-                                <PrivateRoute
-                                  path="/admin/integrations/:integrationName"
-                                  component={IntegrationSettings}
-                                />
-                                <PrivateRoute path="/admin/integrations" component={Integrations} />
-                                <PrivateRoute
-                                  path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
-                                  component={DataflowInstanceDetails}
-                                />
-                                <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />{' '}
-                                <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
-                                <PrivateRoute path="/:applicationId/actions" component={Actions} />
-                                <PrivateRoute
-                                  path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId"
-                                  component={ManualJobDetail}
-                                />
-                              </Switch>
-                            </Suspense>
-                          </ErrorBoundary>
-                        </Content>
-                      </Layout>
-                    </>
-                  )}
-                </>
-              )}
-            </Layout>
-          </Router>
-        </Suspense>
-      </ConfigProvider>
-    );
-  }
-}
-
-function mapStateToProps(state) {
-  const { application, clusters, noApplication, noClusters } = state.applicationReducer;
-  const backendStatus = state.backendReducer;
-  const user = state.authenticationReducer;
-  console.log('user', user);
-  return { application, clusters, user, backendStatus, noApplication, noClusters };
-}
-
-const connectedApp = connect(mapStateToProps)(App);
-export { connectedApp as App };
-//export default App;
+export default connect((state) => state)(App);
