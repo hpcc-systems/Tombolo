@@ -37,7 +37,8 @@ const createBasicUser = async (req, res) => {
     const tokenId = uuidv4();
 
     // Create access jwt
-    userObj.token = generateAccessToken({ ...userObj, tokenId });
+    const accessToken =  generateAccessToken({ ...userObj, tokenId });
+    userObj.token = `Bearer ${accessToken}`;
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });
@@ -119,7 +120,8 @@ const loginBasicUser = async (req, res) => {
     const tokenId = uuidv4();
 
     // Create access jwt
-    userObj.token = generateAccessToken({ ...userObj, tokenId });
+    const accessToken = generateAccessToken({ ...userObj, tokenId });
+    userObj.token = `Bearer ${accessToken}`;
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });

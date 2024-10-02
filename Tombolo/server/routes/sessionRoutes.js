@@ -1,11 +1,16 @@
 // Imports
 const router = require("express").Router();
 const { validateUserId, validateSessionId } = require("../middlewares/sessionMiddleWare");
+const { validateUserRole } = require("../middlewares/rbacMiddleware");
+const role = require("../config/roleTypes");
 
 //Import Controllers 
 const {  activeSessionsByUserId,
   destroyOneActiveSession,
   destroyActiveSessions,} = require("../controllers/sessionController");
+
+// All routes below is accessible only by users with role "owner" and "administrator"
+router.use(validateUserRole([role.OWNER, role.ADMIN]));
 
 // Router
 router.get("/getActiveSessions/:id", validateUserId, activeSessionsByUserId); // Get active sessions
