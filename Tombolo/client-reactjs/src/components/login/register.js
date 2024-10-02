@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Col, Row, Divider, Popover } from 'antd';
 import msLogo from '../../images/mslogo.png';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
-// import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-
 import { authActions } from '../../redux/actions/Auth';
 
 const Register = () => {
@@ -18,8 +16,7 @@ const Register = () => {
 
   const onFinish = async (values) => {
     try {
-      const test = await authActions.registerBasicUser(values);
-      console.log(test);
+      await authActions.registerBasicUser(values);
     } catch (e) {
       console.log(e);
     }

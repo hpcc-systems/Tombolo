@@ -1,3 +1,15 @@
+import { Button, Divider, notification, Popconfirm, Table, Tooltip, Tour } from 'antd';
+import download from 'downloadjs';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { applicationActions } from '../../../redux/actions/Application';
+import { authHeader, handleError } from '../../common/AuthHeader.js';
+import BreadCrumbs from '../../common/BreadCrumbs';
+import { Constants } from '../../common/Constants';
+import AddApplication from './AddApplication';
+import ShareApp from './ShareApp';
+import Text from '../../common/Text';
+
 import {
   DeleteOutlined,
   ExportOutlined,
@@ -5,57 +17,30 @@ import {
   GlobalOutlined,
   QuestionCircleOutlined,
   ShareAltOutlined,
-  UserOutlined,
 } from '@ant-design/icons';
-import { Button, Divider, notification, Popconfirm, Table, Tooltip, Tour } from 'antd';
-import download from 'downloadjs';
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
 
-import { applicationActions } from '../../../redux/actions/Application';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { hasAdminRole } from '../../common/AuthUtil.js';
-import BreadCrumbs from '../../common/BreadCrumbs';
-import { Constants } from '../../common/Constants';
-import AddApplication from './AddApplication';
-import ShareApp from './ShareApp';
-import Text from '../../common/Text';
+const Applications = () => {
+  //Redux tools
+  const user = useSelector((state) => state.authenticationReducer);
+  const { noApplication } = useSelector((state) => state.applicationReducer);
+  const dispatch = useDispatch();
 
-class Applications extends Component {
-  // REFERENCE TO THE FORM INSIDE MODAL
-  formRef = React.createRef();
+  //states and refs
+  const appAddButtonRef = useRef();
+  const [applications, setApplications] = useState([]);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [showAddApplicationModal, setShowAddApplicationModal] = useState(false);
+  const [isCreatingNewApp, setIsCreatingNewApp] = useState(false);
+  const [openShareAppDialog, setOpenShareAppDialog] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
-  state = {
-    applications: [],
-    selectedApplication: null,
-    removeDisabled: true,
-    showAddApplicationModal: false,
-    isCreatingNewApp: false,
-    openShareAppDialog: false,
-    showTour: false,
-    submitted: false,
-    appAddButtonRef: React.createRef(),
-  };
+  //get apps on load
+  useEffect(() => {
+    getApplications();
+  }, []);
 
-  componentDidMount() {
-    this.getApplications();
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.user !== this.props.user || this.state.showAddApplicationModal !== prevState.showAddApplicationModal)
-      this.getApplications();
-  }
-
-  setApplications(data) {
-    this.setState({
-      applications: data,
-    });
-  }
-
-  // GET ALL APPLICATIONS
-  getApplications() {
-    var url = `/api/app/read/appListByUsername?user_name=${this.props.user.username}`;
-    if (hasAdminRole(this.props.user)) url = '/api/app/read/app_list';
+  const getApplications = () => {
+    let url = '/api/app/read/app_list';
 
     fetch(url, {
       headers: authHeader(),
@@ -67,27 +52,25 @@ class Applications extends Component {
         handleError(response);
       })
       .then((data) => {
-        this.setApplications(data);
+        setApplications(data);
 
-        // SHOW TOUR IF NO APPLICATIONS
-        if (!this.props.noApplication.addButtonTourShown && data.length === 0) {
-          this.setState({ showTour: true });
-          this.props.dispatch(applicationActions.updateApplicationAddButtonTourShown(true));
+        if (!noApplication.addButtonTourShown && data?.length === 0) {
+          setShowTour(true);
+          dispatch(applicationActions.updateApplicationAddButtonTourShown(true));
         }
       })
       .catch((error) => {
         console.log(error);
       });
-  }
+  };
 
-  // HANDLE SHARE APPLICATION
-  handleShareApplication(record) {
-    this.setState({ selectedApplication: record, openShareAppDialog: true });
-  }
+  const handleShareApplication = (record) => {
+    setSelectedApplication(record);
+    setOpenShareAppDialog(true);
+  };
 
-  // REMOVE OR DELETE APPLICATION
-  handleRemove = (app_id) => {
-    var data = JSON.stringify({ appIdToDelete: app_id, user: this.props.user.username });
+  const handleRemove = (app_id) => {
+    const data = JSON.stringify({ appIdToDelete: app_id, user: user.username });
     fetch('/api/app/read/deleteApplication', {
       method: 'post',
       headers: authHeader(),
@@ -105,35 +88,31 @@ class Applications extends Component {
           description: 'The application has been removed.',
           onClick: () => {},
         });
-        this.getApplications();
+        getApplications();
 
-        this.props.dispatch(applicationActions.applicationDeleted(app_id));
+        dispatch(applicationActions.applicationDeleted(app_id));
       })
       .catch((error) => {
         console.log(error);
       });
   };
 
-  // ADD OR CREATE NEW APPLICATION
-  handleAddApplication = () => {
-    this.setState({
-      showAddApplicationModal: true,
-      selectedApplication: null,
-      isCreatingNewApp: true,
-      showTour: false,
-    });
+  const handleAddApplication = () => {
+    setShowAddApplicationModal(true);
+    setSelectedApplication(null);
+    setIsCreatingNewApp(true);
+    setShowTour(false);
   };
 
-  // CLOSE ADD APPLICATION MODAL
-  closeAddApplicationModal = () => this.setState({ showAddApplicationModal: false });
+  const closeAddApplicationModal = () => setShowAddApplicationModal(false);
 
-  // EDIT OR VIEW APPLICATION
-  handleApplicationEdit = (record) => {
-    this.setState({ isCreatingNewApp: false, selectedApplication: record, showAddApplicationModal: true });
+  const handleApplicationEdit = (record) => {
+    setIsCreatingNewApp(false);
+    setSelectedApplication(record);
+    setShowAddApplicationModal(true);
   };
 
-  // EXPORT APPLICATION
-  handleExportApplication = (id, title) => {
+  const handleExportApplication = (id, title) => {
     fetch('/api/app/read/export', {
       method: 'post',
       headers: authHeader(),
@@ -153,27 +132,24 @@ class Applications extends Component {
       });
   };
 
-  // WHEN CLOSE ON APP SHARE MODAL IS CLICKED
-  handleClose = () => {
-    this.setState({
-      openShareAppDialog: false,
-    });
+  const handleClose = () => {
+    setOpenShareAppDialog(false);
   };
 
-  // DISPLAY ICON THAT EXPLAINS - IF THE APP WAS SHARED , PUBLIC OR PRIVATE
-  renderAppVisibilityIcon = (record) => {
+  const renderAppVisibilityIcon = (record) => {
     if (record.visibility === 'Public') {
       return (
         <Tooltip title="Public">
           <GlobalOutlined />
         </Tooltip>
       );
-    } else if (record.visibility === 'Private' && record.creator === this.props.user.username) {
-      return (
-        <Tooltip title="Your Application">
-          <UserOutlined />
-        </Tooltip>
-      );
+      //TODO -- add this back in later
+      // } else if (record.visibility === 'Private' && record.creator === user.username) {
+      //   return (
+      //     <Tooltip title="Your Application">
+      //       <UserOutlined />
+      //     </Tooltip>
+      //   );
     } else {
       return (
         <Tooltip title="Shared to you">
@@ -183,168 +159,156 @@ class Applications extends Component {
     }
   };
 
-  allowShare = (record) => {
-    if (record.visibility !== 'Public' && record.creator === this.props.user.username) return true;
+  const handleTourClose = () => {
+    setShowTour(false);
   };
 
-  handleTourClose = () => {
-    this.setState({ showTour: false });
-  };
+  const steps = [
+    {
+      title: 'Add Application',
+      description: 'Click here to add an application. After adding an application, we can move on to the next step. ',
+      placement: 'bottom',
+      arrow: true,
+      target: () => appAddButtonRef?.current,
+      nextButtonProps: { style: { display: 'none' }, disabled: true },
+    },
+  ];
 
-  //JSX
-  render() {
-    const steps = [
-      {
-        title: 'Add Application',
-        description: 'Click here to add an application. After adding an application, we can move on to the next step. ',
-        placement: 'bottom',
-        arrow: true,
-        target: () => this.state.appAddButtonRef?.current,
-        nextButtonProps: { style: { display: 'none' }, disabled: true },
+  const applicationColumns = [
+    {
+      width: '2%',
+      title: '',
+      render: (record) => renderAppVisibilityIcon(record),
+    },
+    {
+      width: '10%',
+      title: <Text text="Title" />,
+      dataIndex: 'title',
+    },
+    {
+      width: '30%',
+      title: <Text text="Description" />,
+      dataIndex: 'description',
+      className: 'overflow-hidden',
+      ellipsis: true,
+    },
+    {
+      width: '8%',
+      title: <Text text="Created By" />,
+      dataIndex: 'creator',
+    },
+    {
+      width: '10%',
+      title: <Text text="Created" />,
+      dataIndex: 'createdAt',
+      render: (text, _record) => {
+        const createdAt = new Date(text);
+        return (
+          createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
+          ' @ ' +
+          createdAt.toLocaleTimeString('en-US')
+        );
       },
-    ];
-    const applicationColumns = [
-      {
-        width: '2%',
-        title: '',
-        render: (record) => this.renderAppVisibilityIcon(record),
-      },
-      {
-        width: '10%',
-        title: <Text text="Title" />,
-        dataIndex: 'title',
-      },
-      {
-        width: '30%',
-        title: <Text text="Description" />,
-        dataIndex: 'description',
-        className: 'overflow-hidden',
-        ellipsis: true,
-      },
-      {
-        width: '8%',
-        title: <Text text="Created By" />,
-        dataIndex: 'creator',
-      },
-      {
-        width: '10%',
-        title: <Text text="Created" />,
-        dataIndex: 'createdAt',
-        render: (text, _record) => {
-          let createdAt = new Date(text);
-          return (
-            createdAt.toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS) +
-            ' @ ' +
-            createdAt.toLocaleTimeString('en-US')
-          );
-        },
-      },
-      {
-        width: '15%',
-        title: 'Action',
-        dataIndex: '',
-        render: (text, record) => (
-          <span>
-            <React.Fragment>
-              {record.visibility !== 'Public' && record.creator === this.props.user.username ? (
-                <>
-                  <span onClick={() => this.handleShareApplication(record)}>
-                    <Tooltip placement="left" title={<Text text="Share" />}>
-                      <ShareAltOutlined />
+    },
+    {
+      width: '15%',
+      title: 'Action',
+      dataIndex: '',
+      render: (text, record) => (
+        <span>
+          <React.Fragment>
+            {record.visibility !== 'Public' && record.creator === user.username ? (
+              <>
+                <span onClick={() => handleShareApplication(record)}>
+                  <Tooltip placement="left" title={<Text text="Share" />}>
+                    <ShareAltOutlined />
+                  </Tooltip>
+                </span>
+                <Divider type="vertical" />
+              </>
+            ) : null}
+
+            <span onClick={() => handleApplicationEdit(record)}>
+              <Tooltip placement="right" title={<Text text="Edit" />}>
+                <EyeOutlined />
+              </Tooltip>
+            </span>
+            <Divider type="vertical" />
+
+            <span onClick={() => handleExportApplication(record.id, record.title)}>
+              <Tooltip placement="right" title={<Text text="Export" />}>
+                <ExportOutlined />
+              </Tooltip>
+            </span>
+            <Divider type="vertical" />
+
+            {record.creator === user.username ||
+            (record.creator !== user.username && record.visibility !== 'Public') ? (
+              <>
+                <Popconfirm
+                  title={<Text text="Are you sure you want to delete?" />}
+                  onConfirm={() => handleRemove(record.id)}
+                  icon={<QuestionCircleOutlined />}>
+                  <span>
+                    <Tooltip placement="right" title={<Text text="Delete" />}>
+                      <DeleteOutlined />
                     </Tooltip>
                   </span>
-                  <Divider type="vertical" />
-                </>
-              ) : null}
+                </Popconfirm>
+              </>
+            ) : null}
+          </React.Fragment>
+        </span>
+      ),
+    },
+  ];
 
-              <span onClick={() => this.handleApplicationEdit(record)}>
-                <Tooltip placement="right" title={<Text text="Edit" />}>
-                  <EyeOutlined />
-                </Tooltip>
-              </span>
-              <Divider type="vertical" />
+  return (
+    <React.Fragment>
+      <BreadCrumbs
+        extraContent={
+          <Tooltip placement="bottom" title={'Click to add a new Application'}>
+            <Button type="primary" ref={appAddButtonRef} onClick={handleAddApplication}>
+              {<Text text="Add Application" />}
+            </Button>
+          </Tooltip>
+        }
+      />
+      <Tour steps={steps} open={showTour} onClose={handleTourClose}></Tour>
 
-              <span onClick={() => this.handleExportApplication(record.id, record.title)}>
-                <Tooltip placement="right" title={<Text text="Export" />}>
-                  <ExportOutlined />
-                </Tooltip>
-              </span>
-              <Divider type="vertical" />
-
-              {record.creator === this.props.user.username ||
-              (record.creator !== this.props.username && record.visibility !== 'Public') ? (
-                <>
-                  <Popconfirm
-                    title={<Text text="Are you sure you want to delete?" />}
-                    onConfirm={() => this.handleRemove(record.id)}
-                    icon={<QuestionCircleOutlined />}>
-                    <span>
-                      <Tooltip placement="right" title={<Text text="Delete" />}>
-                        <DeleteOutlined />
-                      </Tooltip>
-                    </span>
-                  </Popconfirm>
-                </>
-              ) : null}
-            </React.Fragment>
-          </span>
-        ),
-      },
-    ];
-
-    return (
-      <React.Fragment>
-        <BreadCrumbs
-          extraContent={
-            <Tooltip placement="bottom" title={'Click to add a new Application'}>
-              <Button type="primary" ref={this.state.appAddButtonRef} onClick={() => this.handleAddApplication()}>
-                {<Text text="Add Application" />}
-              </Button>
-            </Tooltip>
-          }
+      <div style={{ padding: '15px' }}>
+        <Table
+          columns={applicationColumns}
+          rowKey={(record) => record.id}
+          dataSource={applications}
+          pagination={applications?.length > 10 ? { pageSize: 10 } : false}
         />
-        <Tour steps={steps} open={this.state.showTour} onClose={this.handleTourClose}></Tour>
+      </div>
 
-        <div style={{ padding: '15px' }}>
-          <Table
-            columns={applicationColumns}
-            rowKey={(record) => record.id}
-            dataSource={this.state.applications}
-            pagination={this.state.applications?.length > 10 ? { pageSize: 10 } : false}
-          />
-        </div>
+      {showAddApplicationModal ? (
+        <AddApplication
+          closeAddApplicationModal={closeAddApplicationModal}
+          showAddApplicationModal={showAddApplicationModal}
+          isCreatingNewApp={isCreatingNewApp}
+          selectedApplication={selectedApplication}
+          user={user}
+          applications={applications}
+          setApplications={setApplications}
+        />
+      ) : null}
 
-        {this.state.showAddApplicationModal ? (
-          <AddApplication
-            closeAddApplicationModal={this.closeAddApplicationModal}
-            showAddApplicationModal={this.state.showAddApplicationModal}
-            isCreatingNewApp={this.state.isCreatingNewApp}
-            selectedApplication={this.state.selectedApplication}
-            user={this.props.user}
-            applications={this.state.applications}
-            setApplications={this.setApplications}
+      <div>
+        {openShareAppDialog ? (
+          <ShareApp
+            appId={selectedApplication.id}
+            appTitle={selectedApplication.title}
+            user={user}
+            onClose={handleClose}
           />
         ) : null}
+      </div>
+    </React.Fragment>
+  );
+};
 
-        <div>
-          {this.state.openShareAppDialog ? (
-            <ShareApp
-              appId={this.state.selectedApplication.id}
-              appTitle={this.state.selectedApplication.title}
-              user={this.props.user}
-              onClose={this.handleClose}
-            />
-          ) : null}
-        </div>
-      </React.Fragment>
-    );
-  }
-}
-
-function mapStateToProps(state) {
-  const { user } = state.authenticationReducer;
-  const { noApplication } = state.applicationReducer;
-  return { user, noApplication };
-}
-let connectedApp = connect(mapStateToProps)(Applications);
-export default connectedApp;
+export default Applications;
