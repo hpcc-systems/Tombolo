@@ -79,6 +79,7 @@ const { Header, Content } = Layout;
 const App = () => {
   //left nav collapsed state
   const [collapsed, setCollapsed] = useState(localStorage.getItem('collapsed') === 'true');
+  const [isLogin, setIsLogin] = useState(false);
 
   //loading message states
   const [message, setMessage] = useState('');
@@ -95,6 +96,9 @@ const App = () => {
   //get child objects from redux states for ease of use
   const { application, noApplication, noClusters } = applicationReducer;
   const { isConnected, statusRetrieved } = backendReducer;
+
+  console.log('applicationReducer', applicationReducer);
+  console.log('authenticationReducer', authenticationReducer);
 
   //redux dispatch
   const dispatch = useDispatch();
@@ -259,7 +263,9 @@ const App = () => {
   ];
 
   //check if the user is on a login page to decide which layout to show
-  const isLogin = loginSteps.some((step) => window.location.pathname.split('/')[1] === step.url);
+  useEffect(() => {
+    setIsLogin(loginSteps.some((step) => window.location.pathname.split('/')[1] === step.url));
+  });
 
   return (
     <ConfigProvider>
@@ -267,7 +273,7 @@ const App = () => {
         <Router history={history}>
           <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
             {/* Login/Authentication Page Loading */}
-            {isLogin ? (
+            {isLogin || !authenticationReducer ? (
               <BasicLayout
                 content={
                   <Switch>

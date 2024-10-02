@@ -6,9 +6,8 @@ import { applicationActions } from '../../../redux/actions/Application.js';
 import { assetsActions } from '../../../redux/actions/Assets.js';
 import { expandGroups, selectGroup } from '../../../redux/actions/Groups.js';
 import { authActions } from '../../../redux/actions/Auth.js';
-import { AppstoreOutlined } from '@ant-design/icons';
-import { Dropdown, Space, Tooltip } from 'antd';
 import UserMenu from './UserMenu.js';
+import ApplicationMenu from './ApplicationMenu.js';
 
 const AppHeader = () => {
   //states needed
@@ -91,14 +90,6 @@ const AppHeader = () => {
     }
   };
 
-  //build application list for dropdown
-  const getApplicationItems = (applications) => {
-    if (applications && applications.length > 0) {
-      return applications.map((app) => ({ key: app.value, label: app.display }));
-    } else {
-      return [];
-    }
-  };
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', maxHeight: '100%', justifyContent: 'space-between' }}>
@@ -106,32 +97,7 @@ const AppHeader = () => {
           <Link to={'/'} style={{ marginRight: '70px' }}>
             <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
           </Link>
-
-          <Dropdown
-            menu={{
-              items: getApplicationItems(applications),
-              onClick: (e) => {
-                handleChange(e.key);
-              },
-            }}
-            placement="bottom"
-            trigger={['click']}>
-            <Tooltip title="Select an Application" placement="right">
-              <Space
-                style={{
-                  color: 'white',
-                  border: '1px solid white',
-                  cursor: 'pointer',
-                  padding: '0 4px',
-                  borderRadius: '3px',
-                  maxHeight: '32px',
-                  minWidth: '200px',
-                }}>
-                <AppstoreOutlined />
-                <span> {selected}</span>
-              </Space>
-            </Tooltip>
-          </Dropdown>
+          <ApplicationMenu applications={applications} handleChange={handleChange} selected={selected} />
         </div>
         <div>
           <UserMenu handleLogOut={handleLogOut} authenticationReducer={authenticationReducer} />

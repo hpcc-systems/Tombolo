@@ -29,6 +29,9 @@ async function login({ email, password }) {
 function logout() {
   //remove item from local storage
   localStorage.removeItem('user');
+
+  fetch('/api/auth/logout', { headers: authHeader() });
+
   return {
     type: Constants.LOGOUT_SUCCESS,
   };
