@@ -116,6 +116,24 @@ const App = () => {
     };
   }, []);
 
+  const loginPages = [
+    {
+      url: 'login',
+    },
+    {
+      url: 'register',
+    },
+    {
+      url: 'reset-password',
+    },
+    {
+      url: 'forgot-password',
+    },
+  ];
+
+  //check if the user is on a login page to decide which layout to show
+  const isLogin = loginPages.some((step) => window.location.pathname.split('/')[1] === step.url);
+
   //Check if user is authenticated or is in local storage and redirect to login page if not
   useEffect(() => {
     if (authenticationReducer.isAuthenticated) return;
@@ -124,7 +142,7 @@ const App = () => {
     if (user && user.token) {
       dispatch(authActions.loadUserFromStorage());
     } else {
-      history.push('/login');
+      if (!isLogin) history.push('/login');
     }
   }, [authenticationReducer]);
 
@@ -240,24 +258,6 @@ const App = () => {
       nextButtonProps: { style: { display: 'none' }, disabled: true },
     },
   ];
-
-  const loginSteps = [
-    {
-      url: 'login',
-    },
-    {
-      url: 'register',
-    },
-    {
-      url: 'reset-password',
-    },
-    {
-      url: 'forgot-password',
-    },
-  ];
-
-  //check if the user is on a login page to decide which layout to show
-  const isLogin = loginSteps.some((step) => window.location.pathname.split('/')[1] === step.url);
 
   return (
     <ConfigProvider>
