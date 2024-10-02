@@ -7,7 +7,8 @@ const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../utils/authUtil");
-const { session } = require("passport");
+const {isTokenBlacklisted} = require("../utils/tokenBlackListing");
+
 const RefreshTokens = model.RefreshTokens;
 const User = model.user;
 const UserRoles = model.UserRoles;
@@ -16,6 +17,8 @@ const RoleTypes = model.RoleTypes;
 // Main middleware function
 const tokenValidationMiddleware = async (req, res, next) => {
   const bearerToken = req.headers["authorization"];
+
+
 
   if (!bearerToken) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });
@@ -28,6 +31,12 @@ const tokenValidationMiddleware = async (req, res, next) => {
   try {
     decoded = await verifyToken(token, process.env.JWT_SECRET);
     req.user = decoded;
+
+    // If token is blacklisted - return unauthorized
+    if(isTokenBlacklisted(decoded.tokenId)){
+      return res.status(401).json({ message: "Unauthorized: Token no longer valid" });
+    }
+
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {

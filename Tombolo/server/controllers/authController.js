@@ -8,6 +8,7 @@ const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../utils/authUtil");
+const { blacklistToken } = require("../utils/tokenBlackListing");
 
 const User = models.user;
 const UserRoles = models.UserRoles;
@@ -168,7 +169,8 @@ const logOutBasicUser = async (req, res) => {
       where: { id: tokenId },
     });
 
-    // TODO:  Add access token to the blacklist
+    // Add access token to the blacklist
+    await blacklistToken({tokenId, exp: decodedToken.exp});
 
     res.status(200).json({ success: true, message: "User logged out" });
   } catch (err) {
