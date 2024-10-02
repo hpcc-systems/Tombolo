@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 
 // Shared layout, etc.
 import LeftNav from './components/layout/LeftNav.js';
-import { AppHeader } from './components/layout/Header';
+import AppHeader from './components/layout/Header/Header.js';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
 import { PrivateRoute } from './components/common/PrivateRoute';
@@ -119,8 +119,10 @@ const App = () => {
   //Check if user is authenticated or is in local storage and redirect to login page if not
   useEffect(() => {
     if (authenticationReducer.isAuthenticated) return;
+    console.log(authenticationReducer);
 
     const user = JSON.parse(localStorage.getItem('user'));
+    console.log('user', user);
     if (user && user.token) {
       dispatch(authActions.loadUserFromStorage());
     } else {
