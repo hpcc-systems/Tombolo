@@ -40,7 +40,6 @@ const tokenValidationMiddleware = async (req, res, next) => {
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
-      console.log("Token expired ....");
       const tokenDetails = await handleExpiredToken(token);
       if (tokenDetails.sessionExpired) {
         return res
