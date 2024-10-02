@@ -142,6 +142,7 @@ const App = () => {
     if (user && user.token) {
       dispatch(authActions.loadUserFromStorage());
     } else {
+      //if you're not on a login page and there is no user, redirect to login
       if (!isLogin) history.push('/login');
     }
   }, [authenticationReducer]);
