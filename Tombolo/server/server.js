@@ -13,7 +13,7 @@ process.env.TZ = "UTC";
 /* LIBRARIES */
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const tokenService = require("./utils/token_service");
+const {tokenValidationMiddleware: validateToken} = require("./middlewares/tokenValidationMiddleware");
 const passport = require("passport");
 const cors = require("cors");
 const compression = require("compression");
@@ -112,8 +112,8 @@ app.use("/api/status", status);
 //exposed API, requires api key for any routes
 app.use("/api/apikeys", api);
 
-//Authenticate token before proceeding to route
-app.use(tokenService.verifyToken);
+// Validate token before proceeding to route
+app.use(validateToken);
 
 // Authenticated routes
 app.use("/api/user", users);
