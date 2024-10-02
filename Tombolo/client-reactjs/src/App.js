@@ -97,9 +97,6 @@ const App = () => {
   const { application, noApplication, noClusters } = applicationReducer;
   const { isConnected, statusRetrieved } = backendReducer;
 
-  console.log('applicationReducer', applicationReducer);
-  console.log('authenticationReducer', authenticationReducer);
-
   //redux dispatch
   const dispatch = useDispatch();
 
