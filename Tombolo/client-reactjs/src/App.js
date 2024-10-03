@@ -135,10 +135,8 @@ const App = () => {
   //Check if user is authenticated or is in local storage and redirect to login page if not
   useEffect(() => {
     if (authenticationReducer.isAuthenticated) return;
-    console.log(authenticationReducer);
-
     const user = JSON.parse(localStorage.getItem('user'));
-    console.log('user', user);
+
     if (user && user.token) {
       dispatch(authActions.loadUserFromStorage());
     } else {
