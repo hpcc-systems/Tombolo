@@ -1,22 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Col, Row, Divider, Popover } from 'antd';
+import { Form, Input, Button, Col, Row, Divider, Popover, Spin } from 'antd';
 import msLogo from '../../images/mslogo.png';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
 import { authActions } from '../../redux/actions/Auth';
 
+import { Constants } from '../common/Constants';
+
 const Register = () => {
   const [popOverContent, setPopOverContent] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
   const validatePassword = (value) => {
     setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true }));
   };
 
-  useEffect(() => {}, [popOverContent]);
+  useEffect(() => {}, [popOverContent, loading]);
 
   const onFinish = async (values) => {
     try {
-      await authActions.registerBasicUser(values);
+      setLoading(true);
+      const result = await authActions.registerBasicUser(values);
+
+      if (result && result.type === Constants.LOGIN_SUCCESS) {
+        window.location.href = '/';
+      } else {
+        setLoading(false);
+      }
     } catch (e) {
       console.log(e);
     }
@@ -133,8 +143,8 @@ const Register = () => {
       </Form.Item>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Register
+        <Button type="primary" htmlType="submit" disabled={loading && true}>
+          Register {loading && <Spin style={{ marginLeft: '1rem' }} />}
         </Button>
       </Form.Item>
       <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>

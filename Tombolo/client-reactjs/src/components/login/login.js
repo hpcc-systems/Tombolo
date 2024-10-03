@@ -1,17 +1,21 @@
-import React, { useEffect } from 'react';
-import { Form, Input, Button, Divider } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Form, Input, Button, Divider, Spin } from 'antd';
 import msLogo from '../../images/mslogo.png';
 import { authActions } from '../../redux/actions/Auth';
 import { Constants } from '../common/Constants';
 
 const Login = () => {
+  const [loading, setLoading] = useState(false);
+
   const onFinish = async (values) => {
     const { email, password } = values;
-
+    setLoading(true);
     const test = await authActions.login({ email, password });
 
     if (test && test.type === Constants.LOGIN_SUCCESS) {
       window.location.href = '/';
+    } else {
+      setLoading(false);
     }
   };
 
@@ -63,8 +67,8 @@ const Login = () => {
       </Form.Item>
       <a href="/forgot-password">Forgot password?</a>
       <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Log in
+        <Button type="primary" htmlType="submit" disabled={loading && true}>
+          Log in {loading && <Spin style={{ marginLeft: '1rem' }} />}
         </Button>
       </Form.Item>
       <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
