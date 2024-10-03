@@ -117,6 +117,21 @@ const App = () => {
     };
   }, []);
 
+  const loginPages = [
+    {
+      url: 'login',
+    },
+    {
+      url: 'register',
+    },
+    {
+      url: 'reset-password',
+    },
+    {
+      url: 'forgot-password',
+    },
+  ];
+
   //Check if user is authenticated or is in local storage and redirect to login page if not
   useEffect(() => {
     if (authenticationReducer.isAuthenticated) return;
@@ -127,7 +142,8 @@ const App = () => {
     if (user && user.token) {
       dispatch(authActions.loadUserFromStorage());
     } else {
-      history.push('/login');
+      //if you're not on a login page and there is no user, redirect to login
+      if (!isLogin) history.push('/login');
     }
   }, [authenticationReducer]);
 
