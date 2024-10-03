@@ -104,7 +104,7 @@ function AddApplication(props) {
           }
         });
 
-        props.setApplications;
+        props.getApplications();
         updatedApplications;
       }
     } catch (err) {

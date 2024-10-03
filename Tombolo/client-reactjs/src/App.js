@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 
 // Shared layout, etc.
 import LeftNav from './components/layout/LeftNav.js';
-import { AppHeader } from './components/layout/Header';
+import AppHeader from './components/layout/Header/Header.js';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
 import { PrivateRoute } from './components/common/PrivateRoute';
@@ -80,6 +80,9 @@ const App = () => {
   //left nav collapsed state
   const [collapsed, setCollapsed] = useState(localStorage.getItem('collapsed') === 'true');
 
+  //login page states
+  const [user, setUser] = useState(null);
+
   //loading message states
   const [message, setMessage] = useState('');
 
@@ -116,6 +119,7 @@ const App = () => {
     };
   }, []);
 
+  //login page redirecting logic
   const loginPages = [
     {
       url: 'login',
@@ -131,19 +135,29 @@ const App = () => {
     },
   ];
 
-  //check if the user is on a login page to decide which layout to show
   const isLogin = loginPages.some((step) => window.location.pathname.split('/')[1] === step.url);
+
+  useEffect(() => {
+    //get user from storage and check if id's and tokens are matching
+    const storageUser = JSON.parse(localStorage.getItem('user'));
+    const matchingTokens = user && storageUser && user.token === storageUser.token;
+    const matchingIds = user && storageUser && user.id === storageUser.id;
+
+    if (!user || !matchingTokens || !matchingIds) {
+      setUser(JSON.parse(localStorage.getItem('user')));
+    }
+  }, [isLogin, user]);
 
   //Check if user is authenticated or is in local storage and redirect to login page if not
   useEffect(() => {
     if (authenticationReducer.isAuthenticated) return;
-
     const user = JSON.parse(localStorage.getItem('user'));
+
     if (user && user.token) {
       dispatch(authActions.loadUserFromStorage());
     } else {
       //if you're not on a login page and there is no user, redirect to login
-      if (!isLogin) history.push('/login');
+      if (!isLogin) window.location.href = '/login';
     }
   }, [authenticationReducer]);
 
@@ -266,7 +280,7 @@ const App = () => {
         <Router history={history}>
           <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
             {/* Login/Authentication Page Loading */}
-            {isLogin ? (
+            {isLogin && !user?.id ? (
               <BasicLayout
                 content={
                   <Switch>
@@ -280,7 +294,7 @@ const App = () => {
             ) : (
               <>
                 {/* Main Application Loading */}
-                {!isConnected || !authenticationReducer.id || !authenticationReducer.token ? (
+                {!isConnected || !user?.id || !user?.token ? (
                   <>
                     {/* Loading screens to communicate loading sequence */}
                     <div
