@@ -6,8 +6,8 @@ const {validateUserRole} = require('../middlewares/rbacMiddleware');
 const role = require("../config/roleTypes");
 
 
-// Middleware to to check access
-router.use(validateUserRole([role.OWNER, role.ADMIN]));
+// Middleware to get all roles
+router.use(validateUserRole([role.OWNER, role.ADMIN, role.READER, role.CONTRIBUTOR]));
 
 // Get all roles
 router.get("/", getAllRoles);
