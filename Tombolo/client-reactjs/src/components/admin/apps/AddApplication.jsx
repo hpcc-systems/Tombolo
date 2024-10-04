@@ -9,14 +9,11 @@ import Text from '../../common/Text';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../common/InfoDrawer';
 
-import { useHistory } from 'react-router';
-
 function AddApplication(props) {
   const [form] = Form.useForm();
   const { TextArea } = Input;
   const [isEditing, setIsEditing] = useState(false);
   const dispatch = useDispatch();
-  const history = useHistory();
   const [open, setOpen] = useState(false);
 
   const showDrawer = () => {
@@ -73,7 +70,6 @@ function AddApplication(props) {
       console.log('fieldValues', fieldValues);
       const user = JSON.parse(localStorage.getItem('user'));
 
-      console.log(user);
       let payload = {
         ...fieldValues,
         user_id: user.id,
@@ -98,7 +94,6 @@ function AddApplication(props) {
       if (props.isCreatingNewApp) {
         dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
         localStorage.setItem('activeProjectId', responseData.id);
-        history.push(`/${responseData.id}/assets`);
       }
 
       if (isEditing) {

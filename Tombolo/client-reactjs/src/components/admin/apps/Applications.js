@@ -23,7 +23,6 @@ const Applications = () => {
   //Redux tools
   const user = useSelector((state) => state.authenticationReducer);
   const { application, applications, noApplication } = useSelector((state) => state.applicationReducer);
-  console.log('applications', applications);
   const dispatch = useDispatch();
 
   //states and refs

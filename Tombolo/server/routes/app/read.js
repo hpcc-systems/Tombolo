@@ -154,6 +154,7 @@ router.post(
     }
     try {
       if (req.body.id == "") {
+        req.body.createdBy = req.body.creator;
         models.application
           .create({
             title: req.body.title,

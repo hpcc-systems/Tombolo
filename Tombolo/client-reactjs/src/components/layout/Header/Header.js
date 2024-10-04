@@ -15,23 +15,21 @@ const AppHeader = () => {
 
   //states needed from redux
   const applicationReducer = useSelector((state) => state.applicationReducer);
-  const { application, applications, clusters } = applicationReducer;
+  const { application, applications, applicationsRetrieved, clusters, noClusters } = applicationReducer;
   const authenticationReducer = useSelector((state) => state.authenticationReducer);
 
   //redux tools
   const dispatch = useDispatch();
 
-  //if there is an application from redux, set it as selected and save it to local storage
+  //if there is an application from local storage, set it as selected and dispatch application selected
   useEffect(() => {
-    if (application && application.applicationTitle !== '') {
-      setSelected(application.applicationTitle);
-      const currentAppId = application.applicationId;
-      if (currentAppId) {
-        let appList = applications;
-        const app = appList.find((app) => app.value === currentAppId);
-        if (!app) appList = [...appList, { value: application.applicationId, display: application.applicationTitle }];
-        dispatch(applicationActions.applicationSelected(application.applicationId, application.applicationTitle));
-        localStorage.setItem('activeApplicationId', application.applicationId);
+    const activeApplicationId = localStorage.getItem('activeApplicationId');
+
+    if (activeApplicationId && applications.length > 0 && activeApplicationId !== application?.applicationId) {
+      const app = applications.find((app) => app.id === activeApplicationId);
+      if (app) {
+        setSelected(app.title);
+        dispatch(applicationActions.applicationSelected(app.id, app.title));
       }
     }
   }, [application, applications, dispatch]);
@@ -39,23 +37,24 @@ const AppHeader = () => {
   //if there are no applications, get list from the server for selection
   useEffect(() => {
     //if applications is null, fetch list from server
-    if (!applications) {
+    if (!applicationsRetrieved) {
       dispatch(applicationActions.getApplications());
     }
 
-    //if there are applications, select the first one and save it to local storage
-    if (applications && applications.length > 0) {
-      dispatch(applicationActions.updateNoApplicationFound({ noApplication: false }));
-      dispatch(applicationActions.applicationSelected(applications[0].value, applications[0].display));
-      localStorage.setItem('activeApplicationId', applications[0].value);
-    } else {
-      dispatch(applicationActions.updateNoApplicationFound({ noApplication: true }));
-    }
+    // //if there are applications, select the first one and save it to local storage
+    // if (applications && applications.length > 0) {
+    //   console.log('applications founs!!!!', applications);
+    //   dispatch(applicationActions.updateNoApplicationFound({ noApplication: false }));
+    //   dispatch(applicationActions.applicationSelected(applications[0].id, applications[0].title));
+    //   localStorage.setItem('activeApplicationId', applications[0].title);
+    // } else {
+    //   dispatch(applicationActions.updateNoApplicationFound({ noApplication: true }));
+    // }
   }, [applications, dispatch]);
 
   //if application is selected in redux, get other relevant data into redux for use
   useEffect(() => {
-    if (application?.applicationId && !clusters.length) {
+    if (application?.applicationId && !clusters.length && !noClusters.noClusters) {
       dispatch(applicationActions.getClusters());
       dispatch(applicationActions.getAllActiveIntegrations());
     }
@@ -75,7 +74,7 @@ const AppHeader = () => {
   };
 
   //handle application change
-  const handleChange = (value) => {
+  const handleApplicationChange = (value) => {
     if (typeof value === 'object') {
       value = value?.value;
     }
@@ -97,7 +96,11 @@ const AppHeader = () => {
           <Link to={'/'} style={{ marginRight: '70px' }}>
             <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
           </Link>
-          <ApplicationMenu applications={applications} handleChange={handleChange} selected={selected} />
+          <ApplicationMenu
+            applications={applications}
+            handleApplicationChange={handleApplicationChange}
+            selected={selected}
+          />
         </div>
         <div>
           <UserMenu handleLogOut={handleLogOut} authenticationReducer={authenticationReducer} />

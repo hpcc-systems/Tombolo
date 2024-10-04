@@ -96,7 +96,7 @@ const App = () => {
   const { applicationReducer, authenticationReducer, backendReducer } = useSelector((state) => state);
 
   //get child objects from redux states for ease of use
-  const { application, noApplication, noClusters } = applicationReducer;
+  const { application, applicationsRetrieved, noApplication, noClusters } = applicationReducer;
   const { isConnected, statusRetrieved } = backendReducer;
 
   //redux dispatch
@@ -163,8 +163,12 @@ const App = () => {
 
   //useEffect to show tours for new users
   useEffect(() => {
-    console.log(application, noApplication, noClusters);
-    if (!application?.applicationId && !noApplication.noApplication && !noApplication.firstTourShown) {
+    if (
+      !application?.applicationId &&
+      !noApplication.noApplication &&
+      !noApplication.firstTourShown &&
+      applicationsRetrieved
+    ) {
       if (window.location.pathname !== '/admin/applications') {
         setTourOpen(true);
       }
