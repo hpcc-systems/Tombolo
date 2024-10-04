@@ -8,18 +8,30 @@ export const authActions = {
   loadUserFromStorage,
 };
 
-function login(email, password) {
-  console.log(email, password);
-  //   return {
-  //     type: Constants.LOGIN_SUCCESS,
-  //     payload: { token, refreshToken, user },
-  //   };
+async function login({ email, password }) {
+  const user = await loginBasicUserFunc(email, password);
+
+  if (user && user.data) {
+    user.data.isAuthenticated = true;
+
+    //set item in local storage
+    localStorage.setItem('user', JSON.stringify(user.data));
+
+    return {
+      type: Constants.LOGIN_SUCCESS,
+      payload: user,
+    };
+  }
 
   return;
 }
 
-function logout(user) {
-  console.log(user);
+function logout() {
+  //remove item from local storage
+  localStorage.removeItem('user');
+
+  fetch('/api/auth/logout', { headers: authHeader() });
+
   return {
     type: Constants.LOGOUT_SUCCESS,
   };

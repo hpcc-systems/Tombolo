@@ -22,12 +22,12 @@ import {
 const Applications = () => {
   //Redux tools
   const user = useSelector((state) => state.authenticationReducer);
-  const { noApplication } = useSelector((state) => state.applicationReducer);
+  const { applications } = useSelector((state) => state.applicationReducer);
   const dispatch = useDispatch();
 
   //states and refs
   const appAddButtonRef = useRef();
-  const [applications, setApplications] = useState([]);
+
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showAddApplicationModal, setShowAddApplicationModal] = useState(false);
   const [isCreatingNewApp, setIsCreatingNewApp] = useState(false);
@@ -40,28 +40,7 @@ const Applications = () => {
   }, []);
 
   const getApplications = () => {
-    let url = '/api/app/read/app_list';
-
-    fetch(url, {
-      headers: authHeader(),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {
-        setApplications(data);
-
-        if (!noApplication.addButtonTourShown && data?.length === 0) {
-          setShowTour(true);
-          dispatch(applicationActions.updateApplicationAddButtonTourShown(true));
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    dispatch(applicationActions.getApplications());
   };
 
   const handleShareApplication = (record) => {
@@ -293,7 +272,7 @@ const Applications = () => {
           selectedApplication={selectedApplication}
           user={user}
           applications={applications}
-          setApplications={setApplications}
+          getApplications={dispatch(applicationActions.getApplications)}
         />
       ) : null}
 
