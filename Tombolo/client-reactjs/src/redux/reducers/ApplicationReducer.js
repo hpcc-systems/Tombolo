@@ -2,7 +2,7 @@ import { Constants } from '../../components/common/Constants';
 
 const initialState = {
   application: {},
-  applications: null,
+  applications: [],
   noApplication: { firstTourShown: false, addButtonTourShown: false, noApplication: false },
   noClusters: { firstTourShown: false, addButtonTourShown: false, noClusters: false },
   clusters: [],

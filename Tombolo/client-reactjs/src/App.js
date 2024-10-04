@@ -163,7 +163,8 @@ const App = () => {
 
   //useEffect to show tours for new users
   useEffect(() => {
-    if (application?.applicationId && noApplication.noApplication && !noApplication.firstTourShown) {
+    console.log(application, noApplication, noClusters);
+    if (!application?.applicationId && !noApplication.noApplication && !noApplication.firstTourShown) {
       if (window.location.pathname !== '/admin/applications') {
         setTourOpen(true);
       }

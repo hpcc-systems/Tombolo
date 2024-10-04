@@ -22,7 +22,8 @@ import {
 const Applications = () => {
   //Redux tools
   const user = useSelector((state) => state.authenticationReducer);
-  const { applications } = useSelector((state) => state.applicationReducer);
+  const { application, applications, noApplication } = useSelector((state) => state.applicationReducer);
+  console.log('applications', applications);
   const dispatch = useDispatch();
 
   //states and refs
@@ -42,6 +43,13 @@ const Applications = () => {
   const getApplications = () => {
     dispatch(applicationActions.getApplications());
   };
+
+  useEffect(() => {
+    if (!application?.id && !noApplication.addButtonTourShown) {
+      dispatch(applicationActions.updateApplicationAddButtonTourShown(true));
+      setShowTour(true);
+    }
+  }, [application, noApplication]);
 
   const handleShareApplication = (record) => {
     setSelectedApplication(record);

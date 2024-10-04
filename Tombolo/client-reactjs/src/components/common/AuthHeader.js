@@ -26,6 +26,7 @@ export function handleError(response) {
 export function authHeader(action) {
   // return authorization header with jwt token
   let user = JSON.parse(localStorage.getItem('user'));
+
   if (user && user.token && action) {
     return {
       Authorization: user.token,
@@ -37,7 +38,7 @@ export function authHeader(action) {
       'Content-Type': 'application/json',
     };
   } else {
-    return {};
+    return { Accept: 'application/json', 'Content-Type': 'application/json' };
   }
 }
 
@@ -46,10 +47,9 @@ const { fetch: originalFetch } = window;
 window.fetch = async (...args) => {
   let [resource, config] = args;
   // request interceptor here
-  config.headers = authHeader(true);
+
   try {
     const response = await originalFetch(resource, config);
-    // response interceptor here
     return response;
   } catch (error) {
     // if an error is caught here, it means we cannot communicate with backend, return false to indicate that and log error

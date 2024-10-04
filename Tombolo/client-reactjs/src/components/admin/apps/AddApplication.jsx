@@ -60,6 +60,7 @@ function AddApplication(props) {
   // SAVE APPLICATION FUNCTION
   const saveApplication = async () => {
     if (props.isCreatingNewApp) {
+      console.log(props);
       const appWithSameTitleExists = props.applications.some((app) => app.title === form.getFieldValue('title'));
       if (appWithSameTitleExists) return message.error('App with same title already exists');
     }
@@ -69,12 +70,18 @@ function AddApplication(props) {
     try {
       const fieldValues = form.getFieldsValue();
 
+      console.log('fieldValues', fieldValues);
+      const user = JSON.parse(localStorage.getItem('user'));
+
+      console.log(user);
       let payload = {
         ...fieldValues,
-        user_id: props.user.username,
-        creator: props.user.username,
+        user_id: user.id,
+        creator: user.id,
         id: props?.selectedApplication?.id || '',
       };
+
+      console.log(payload);
 
       const response = await fetch('/api/app/read/saveApplication', {
         method: 'post',

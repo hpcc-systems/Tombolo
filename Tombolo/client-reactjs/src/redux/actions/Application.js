@@ -101,7 +101,11 @@ function getApplications() {
   return (dispatch) => {
     fetch('/api/app/read/app_list', { headers: authHeader() })
       .then((response) => (response.ok ? response.json() : handleError(response)))
-      .then((applications) => dispatch({ type: Constants.APPLICATIONS_RETRIEVED, applications }))
+      .then((applications) =>
+        applications?.length > 0
+          ? dispatch({ type: Constants.APPLICATIONS_RETRIEVED, applications })
+          : dispatch({ type: Constants.NO_APPLICATION_FOUND, noApplication: true })
+      )
       .catch(console.log);
   };
 }

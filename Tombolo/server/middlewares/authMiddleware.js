@@ -76,6 +76,7 @@ const validateLoginPayload = [
   body("password").isString().notEmpty().withMessage("Password is required"),
   (req, res, next) => {
     const errors = validationResult(req).array();
+    console.log(req.body);
     const errorString = errors.map((e) => e.msg).join(", ");
     if (errors.length > 0) {
       logger.error(`Login: ${errorString}`);
