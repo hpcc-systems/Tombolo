@@ -2,7 +2,8 @@ import { Constants } from '../../components/common/Constants';
 
 const initialState = {
   application: {},
-  applications: null,
+  applications: [],
+  applicationsRetrieved: false,
   noApplication: { firstTourShown: false, addButtonTourShown: false, noApplication: false },
   noClusters: { firstTourShown: false, addButtonTourShown: false, noClusters: false },
   clusters: [],
@@ -20,6 +21,7 @@ export function applicationReducer(state = initialState, action) {
       return {
         ...state,
         applications: action.payload,
+        applicationsRetrieved: true,
       };
     case Constants.NO_APPLICATION_FOUND:
       return {

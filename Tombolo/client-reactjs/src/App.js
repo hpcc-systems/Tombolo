@@ -96,7 +96,7 @@ const App = () => {
   const { applicationReducer, authenticationReducer, backendReducer } = useSelector((state) => state);
 
   //get child objects from redux states for ease of use
-  const { application, noApplication, noClusters } = applicationReducer;
+  const { application, applicationsRetrieved, noApplication, noClusters } = applicationReducer;
   const { isConnected, statusRetrieved } = backendReducer;
 
   //redux dispatch
@@ -105,7 +105,7 @@ const App = () => {
   //retrieve backend status on load to display message to user or application
   useEffect(() => {
     if (!statusRetrieved) {
-      setMessage('Connecting to...');
+      setMessage('Connecting to Server...');
       dispatch(checkBackendStatus());
     }
   }, []);
@@ -163,7 +163,12 @@ const App = () => {
 
   //useEffect to show tours for new users
   useEffect(() => {
-    if (application?.applicationId && noApplication.noApplication && !noApplication.firstTourShown) {
+    if (
+      !application?.applicationId &&
+      !noApplication.noApplication &&
+      !noApplication.firstTourShown &&
+      applicationsRetrieved
+    ) {
       if (window.location.pathname !== '/admin/applications') {
         setTourOpen(true);
       }
@@ -279,59 +284,58 @@ const App = () => {
       <Suspense fallback={<Fallback />}>
         <Router history={history}>
           <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
-            {/* Login/Authentication Page Loading */}
-            {isLogin && !user?.id ? (
-              <BasicLayout
-                content={
-                  <Switch>
-                    <Route path="/login" component={Login} />
-                    <Route path="/register" component={Register} />
-                    <Route path="/reset-password/:resetToken" component={ResetPassword} />
-                    <Route path="/forgot-password" component={ForgotPassword} />
-                  </Switch>
-                }
-              />
-            ) : (
+            {/* Backend Connection Loading */}
+            {!isConnected ? (
               <>
-                {/* Main Application Loading */}
-                {!isConnected || !user?.id || !user?.token ? (
-                  <>
-                    {/* Loading screens to communicate loading sequence */}
+                {/* Loading screens to communicate loading sequence */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100vh',
+                    backgroundColor: '#f0f2f5',
+                  }}>
+                  {!isConnected && statusRetrieved ? (
+                    <Card title={<img src={logo} />} style={{ width: '50%', textAlign: 'center' }}>
+                      <h2>
+                        Tombolo has encountered a network issue, please refresh the page. If the issue persists, contact
+                        your system administrator.
+                      </h2>
+                    </Card>
+                  ) : (
                     <div
                       style={{
                         display: 'flex',
+                        flexWrap: 'wrap',
                         justifyContent: 'center',
-                        alignItems: 'center',
-                        height: '100vh',
-                        backgroundColor: '#f0f2f5',
+                        width: '100%',
                       }}>
-                      {!isConnected && statusRetrieved ? (
-                        <Card title={<img src={logo} />} style={{ width: '50%', textAlign: 'center' }}>
-                          <h2>
-                            Tombolo has encountered a network issue, please refresh the page. If the issue persists,
-                            contact your system administrator.
-                          </h2>
-                        </Card>
-                      ) : (
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            justifyContent: 'center',
-                            width: '100%',
-                          }}>
-                          <div
-                            style={{ width: '100%', marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
-                            <img src={logo} />
-                          </div>
-                          <Spin size="large" />
-                          <div style={{ width: '100%', marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
-                            <h2>{message}</h2>
-                          </div>
-                        </div>
-                      )}
+                      <div style={{ width: '100%', marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
+                        <img src={logo} />
+                      </div>
+                      <Spin size="large" />
+                      <div style={{ width: '100%', marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
+                        <h2>{message}</h2>
+                      </div>
                     </div>
-                  </>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Application Loaded, server running, Login Pages */}
+                {isLogin && !user?.id ? (
+                  <BasicLayout
+                    content={
+                      <Switch>
+                        <Route path="/login" component={Login} />
+                        <Route path="/register" component={Register} />
+                        <Route path="/reset-password/:resetToken" component={ResetPassword} />
+                        <Route path="/forgot-password" component={ForgotPassword} />
+                      </Switch>
+                    }
+                  />
                 ) : (
                   <>
                     {/* Main Application, Only enters if user is authenticated and backend is connected */}

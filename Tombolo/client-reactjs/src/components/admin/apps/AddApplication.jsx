@@ -9,14 +9,11 @@ import Text from '../../common/Text';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../common/InfoDrawer';
 
-import { useHistory } from 'react-router';
-
 function AddApplication(props) {
   const [form] = Form.useForm();
   const { TextArea } = Input;
   const [isEditing, setIsEditing] = useState(false);
   const dispatch = useDispatch();
-  const history = useHistory();
   const [open, setOpen] = useState(false);
 
   const showDrawer = () => {
@@ -60,6 +57,7 @@ function AddApplication(props) {
   // SAVE APPLICATION FUNCTION
   const saveApplication = async () => {
     if (props.isCreatingNewApp) {
+      console.log(props);
       const appWithSameTitleExists = props.applications.some((app) => app.title === form.getFieldValue('title'));
       if (appWithSameTitleExists) return message.error('App with same title already exists');
     }
@@ -69,12 +67,17 @@ function AddApplication(props) {
     try {
       const fieldValues = form.getFieldsValue();
 
+      console.log('fieldValues', fieldValues);
+      const user = JSON.parse(localStorage.getItem('user'));
+
       let payload = {
         ...fieldValues,
-        user_id: props.user.username,
-        creator: props.user.username,
+        user_id: user.id,
+        creator: user.id,
         id: props?.selectedApplication?.id || '',
       };
+
+      console.log(payload);
 
       const response = await fetch('/api/app/read/saveApplication', {
         method: 'post',
@@ -91,7 +94,6 @@ function AddApplication(props) {
       if (props.isCreatingNewApp) {
         dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
         localStorage.setItem('activeProjectId', responseData.id);
-        history.push(`/${responseData.id}/assets`);
       }
 
       if (isEditing) {

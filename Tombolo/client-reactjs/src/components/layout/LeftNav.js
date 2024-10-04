@@ -36,10 +36,14 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
 
   //get states from redux
   const { applicationReducer } = useSelector((state) => state);
-  const { applicationId, integrations, clusters } = applicationReducer;
+  const { application, integrations, clusters } = applicationReducer;
 
   const clusterDisabled = clusters.length === 0;
-  const disabled = !applicationId;
+  const disabled = !(application?.id === undefined);
+
+  const applicationId = application?.id;
+
+  useEffect(() => {}, [application]);
 
   //adjust the current highlighted menu item based on the current path
   useEffect(() => {
@@ -330,7 +334,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       null,
       null,
       null,
-      clusterDisabled
+      disabled
     ),
     getItem(
       <>

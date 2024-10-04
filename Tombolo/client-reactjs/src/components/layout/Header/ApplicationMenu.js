@@ -6,7 +6,7 @@ const ApplicationMenu = ({ applications, selected, handleApplicationChange }) =>
   //build application list for dropdown
   const getApplicationItems = (applications) => {
     if (applications && applications.length > 0) {
-      return applications.map((app) => ({ key: app.value, label: app.display }));
+      return applications.map((app) => ({ key: app.id, label: app.title }));
     } else {
       return [];
     }
