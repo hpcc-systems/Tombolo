@@ -8,6 +8,9 @@ import { expandGroups, selectGroup } from '../../../redux/actions/Groups.js';
 import { authActions } from '../../../redux/actions/Auth.js';
 import UserMenu from './UserMenu.js';
 import ApplicationMenu from './ApplicationMenu.js';
+import { Layout } from 'antd';
+
+const { Header } = Layout;
 
 const AppHeader = () => {
   //states needed
@@ -90,23 +93,30 @@ const AppHeader = () => {
   };
 
   return (
-    <>
-      <div style={{ display: 'flex', alignItems: 'center', maxHeight: '100%', justifyContent: 'space-between' }}>
-        <div>
-          <Link to={'/'} style={{ marginRight: '70px' }}>
-            <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
-          </Link>
-          <ApplicationMenu
-            applications={applications}
-            handleApplicationChange={handleApplicationChange}
-            selected={selected}
-          />
-        </div>
-        <div>
-          <UserMenu handleLogOut={handleLogOut} authenticationReducer={authenticationReducer} />
-        </div>
+    <Header
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingRight: '10px',
+        position: 'fixed',
+        zIndex: 1,
+        width: '100%',
+      }}>
+      <div>
+        <Link to={'/'} style={{ marginRight: '70px' }}>
+          <img src={logo} alt="Tombolo logo" width="80px" height="19px" />
+        </Link>
+        <ApplicationMenu
+          applications={applications}
+          handleApplicationChange={handleApplicationChange}
+          selected={selected}
+        />
       </div>
-    </>
+      <div>
+        <UserMenu handleLogOut={handleLogOut} authenticationReducer={authenticationReducer} />
+      </div>
+    </Header>
   );
 };
 

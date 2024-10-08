@@ -74,7 +74,7 @@ const IntegrationSettings = React.lazy(() => import('./components/admin/Integrat
 const TeamsNotification = React.lazy(() => import('./components/admin/notifications/MsTeams/Teams'));
 const UserManagement = React.lazy(() => import('./components/admin/userManagement/index.jsx'));
 
-const { Header, Content } = Layout;
+const { Content } = Layout;
 
 const App = () => {
   //left nav collapsed state
@@ -339,18 +339,10 @@ const App = () => {
                 ) : (
                   <>
                     {/* Main Application, Only enters if user is authenticated and backend is connected */}
-                    <Header
-                      style={{
-                        maxHeight: '50px',
-                        position: 'fixed',
-                        zIndex: 100,
-                        width: '100%',
-                      }}>
-                      <AppHeader />
-                    </Header>
+                    <AppHeader />
                     <Tour steps={steps} open={tourOpen} onClose={handleTourShownClose} indicatorsRender={() => <></>} />
                     <Tour steps={clusterSteps} open={clusterTourOpen} onClose={handleClusterTourShownClose} />
-                    <Layout>
+                    <Layout style={{ marginTop: '69px' }}>
                       <LeftNav
                         onCollapse={onCollapse}
                         collapsed={collapsed}
@@ -361,7 +353,7 @@ const App = () => {
                       <Content
                         style={{
                           transition: '.1s linear',
-                          margin: '55px 0px',
+                          // margin: '55px 0px',
                           marginLeft: collapsed ? '55px' : '200px',
                         }}>
                         <ErrorBoundary>
