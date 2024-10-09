@@ -3,6 +3,7 @@ const models = require('../models');
 const bcrypt = require('bcryptjs');
 
 const User = models.user;
+const UserRoles = models.UserRoles;
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
@@ -206,6 +207,37 @@ const bulkDeleteUsers = async (req, res) => {
    }
  };
 
+// Update user roles
+const updateUserRoles = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { roles } = req.body;
+        const creator = req.user.id;
+
+        console.log(req.user);
+
+        // Find existing user details
+        const existingUser = await User.findOne({ where: { id } });
+
+        // If user not found
+        if (!existingUser) {
+            throw { status: 404, message: 'User not found' };
+        }
+        // Create id and role pair
+        const userRoles = roles.map(role => ({ userId: id, roleId: role, createdBy: creator }));
+
+        // Update roles
+        const updatedRoles = await UserRoles.bulkCreate(userRoles);
+
+        // Response
+        res.status(200).json({ success: true, message: 'User roles updated successfully', data: updatedRoles });
+    } catch (err) {
+      console.log(err);
+        logger.error(`Update user roles: ${err.message}`);
+        res.status(err.status || 500).json({ success: false, message: err.message });
+    }
+    }
+
 //Exports
 module.exports = {
   deleteUser,
@@ -215,4 +247,5 @@ module.exports = {
   changePassword,
   bulkDeleteUsers,
   bulkUpdateUsers,
+  updateUserRoles,
 };

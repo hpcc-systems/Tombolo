@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 
 const logger = require("../config/logger");
+const roleTypes = require("../config/roleTypes");
 const models = require("../models");
 const {
   generateAccessToken,
@@ -16,6 +17,94 @@ const RoleTypes = models.RoleTypes;
 const RefreshTokens = models.RefreshTokens;
 const NotificationQueue = models.notification_queue;
 const PasswordResetLinks = models.PasswordResetLinks;
+
+// Register application owner
+const createApplicationOwner = async (req, res) => {
+  try {
+    const { deviceInfo = {} } = req.body;
+    const payload = req.body;
+
+    // Find the role ID for the OWNER role type
+    const role = await RoleTypes.findOne({
+      where: { roleName: roleTypes.OWNER },
+    });
+
+    // If the OWNER role type is not found, return a 409 conflict response
+    if (!role || !role.id) {
+      return res.status(409).json({
+        success: false,
+        message: "Owner role not found in the system",
+      });
+    }
+
+    // Check if a user with the OWNER role already exists
+    const owner = await UserRoles.findOne({ where: { roleId: role.id } });
+
+    // If an owner is found, return a 409 conflict response
+    if (owner) {
+      return res.status(409).json({
+        success: false,
+        message: "An owner already exists in the system",
+      });
+    }
+
+    // Hash password
+    const salt = bcrypt.genSaltSync(10);
+    payload.hash = bcrypt.hashSync(req.body.password, salt);
+
+    // Save user to DB
+    const user = await User.create(payload);
+
+    // Remove hash from user object
+    const userObj = user.toJSON();
+    delete userObj.hash;
+
+    // Create token id
+    const tokenId = uuidv4();
+
+    // Create access jwt
+    const accessToken = generateAccessToken({ ...userObj, tokenId });
+    userObj.token = `Bearer ${accessToken}`;
+
+    // Generate refresh token
+    const refreshToken = generateRefreshToken({ tokenId });
+
+    // Save refresh token to DB
+    const { iat, exp } = jwt.decode(refreshToken);
+
+    // Save refresh token in DB
+    await RefreshTokens.create({
+      id: tokenId,
+      userId: user.id,
+      token: refreshToken,
+      deviceInfo,
+      metaData: {},
+      iat: new Date(iat * 1000),
+      exp: new Date(exp * 1000),
+    });
+
+    // Save user role
+    await UserRoles.create({
+      userId: user.id,
+      roleId: role.id,
+      createdBy: user.id,
+    });
+
+    // Send response
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      data: { ...userObj, UserRoles: [{ role_details: role }] },
+    });
+  } catch (err) {
+    logger.error(err);
+    logger.error(`Create user: ${err.message}`);
+
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
 
 // Register basic user
 const createBasicUser = async (req, res) => {
@@ -305,8 +394,6 @@ const resetPassword = async (req, res) => {
   }
 }
 
-
-
 // Register OAuth user
 
 // Login OAuth user
@@ -318,4 +405,5 @@ module.exports = {
   logOutBasicUser,
   handlePasswordResetRequest,
   resetPassword,
+  createApplicationOwner,
 };

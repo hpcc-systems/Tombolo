@@ -1,9 +1,14 @@
 // Validate add user inputs using express validator
 const { body, validationResult } = require("express-validator");
+const jwt = require("jsonwebtoken");
+
 const logger = require("../config/logger");
 const models = require("../models");
+const roleTypes = require("../config/roleTypes");
+
 const User = models.user;
-const jwt = require("jsonwebtoken");
+const RoleTypes = models.RoleTypes;
+const UserRoles = models.UserRoles;
 
 // Validate registration payload
 const validateNewUserPayload = [
@@ -104,6 +109,7 @@ const validateEmailDuplicate = [
     next();
   },
 ];
+
 // Validate valid access token is present in request header
 const verifyValidTokenExists = (req, res, next) => {
   const authHeader = req.headers.authorization;
