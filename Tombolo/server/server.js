@@ -18,7 +18,9 @@ const passport = require("passport");
 const cors = require("cors");
 const compression = require("compression");
 const { sequelize: dbConnection } = require("./models");
+
 const logger = require("./config/logger");
+require("./utils/tokenBlackListing");
 
 /* BREE JOB SCHEDULER */
 const JobScheduler = require("./jobSchedular/job-scheduler");
