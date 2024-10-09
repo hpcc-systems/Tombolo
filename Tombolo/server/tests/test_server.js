@@ -19,6 +19,7 @@ const auth = require("../routes/authRoutes");
 const user = require("../routes/userRoutes");
 const cluster = require("../routes/clusterRoutes");
 const session = require("../routes/sessionRoutes");
+const roles = require("../routes/roleTypesRoute");
 
 
 // Use routes
@@ -26,6 +27,7 @@ app.use("/api/auth", auth);
 app.use("/api/users", user);
 app.use("/api/cluster", cluster);
 app.use("/api/session", session);
+app.use("/api/roles", roles);
 
 
 // Function to start the server

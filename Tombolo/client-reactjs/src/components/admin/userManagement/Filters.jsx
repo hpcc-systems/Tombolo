@@ -116,8 +116,8 @@ const UserFilters = ({ setFilters, users, filtersVisible, setFiltersVisible }) =
     <div className="notifications__filters">
       {filtersVisible && (
         <Form form={form} onValuesChange={handleFormChange} className="notifications__filters_form">
-          <Row gutter={16}>
-            <Col span={4}>
+          <Row gutter={10}>
+            <Col span={5}>
               <div className="notifications__filter-label">Role</div>
               <Form.Item name="role">
                 <Select placeholder="Role" allowClear>
@@ -169,7 +169,7 @@ const UserFilters = ({ setFilters, users, filtersVisible, setFiltersVisible }) =
               </Form.Item>
             </Col>
 
-            <Col span={5}>
+            <Col span={6}>
               <div className="notifications__filter-label">Last Accessed Date</div>
               <Form.Item name="lastAccessed">
                 <DatePicker.RangePicker style={{ width: '100%' }} allowClear />

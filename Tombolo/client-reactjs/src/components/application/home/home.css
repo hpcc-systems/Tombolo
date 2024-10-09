@@ -1,5 +1,5 @@
 .container {
-  height: calc(100% + 55px);
+  height: 100vh;
   text-align: center;
   font-size: 1.5rem;
 }
@@ -50,11 +50,7 @@
 .footer {
   background: rgb(48, 56, 70);
   color: white;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 3rem 3rem 1rem 3rem;
+  padding: 2rem;
 }
 
 .footerRow {
@@ -67,18 +63,31 @@
 
 .footerRow a {
   color: white;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .footerRow p {
-  margin: 0 auto;
+  /* margin: 0 auto; */
   font-size: 1rem;
+}
+
+.footerRow a:hover {
+  border-bottom: 1px solid var(--light);
+}
+.footerRow a:focus {
+  text-decoration: 1px solid var(--light);
 }
 
 .sub {
   width: 30%;
   font-size: 1rem;
   margin-bottom: 1rem;
+  text-align: left;
+}
+
+.sub h4 {
+  font-weight: 800;
+  font-size: 1.1rem;
 }
 
 .container .ant-card-head {

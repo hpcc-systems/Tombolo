@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const models = require("../models");
+const { blacklistToken } = require("../utils/tokenBlackListing");
 
 const RefreshTokens = models.RefreshTokens;
 
@@ -40,12 +41,14 @@ const destroyOneActiveSession = async (req, res) => {
     // Get user id from the token
     const { sessionId } = req.params;
 
-    // Destroy all sessions for the user
+    // Destroy session/refresh token by Id
     const destroyedSessions = await RefreshTokens.destroy({
       where: { id: sessionId },
     });
 
-    //TODO - Blacklist associated access token
+    // Blacklist associated access token
+    const exp =  Date.now() + 15*60*1000; // Exact exp time for this token is unknown, therefore set to max life i.e - 15 mins
+    await blacklistToken({ tokenId: sessionId, exp });
 
     // response
     res.status(200).json({
@@ -66,12 +69,21 @@ const destroyActiveSessions = async (req, res) => {
     // Get user id from the token
     const { id } = req.params;
 
-    // Destroy all sessions for the user
+    // Find all sessions for the user
+    const sessions = await RefreshTokens.findAll({
+      where: { userId: id },
+    });
+
+    // Destroy all sessions
     const destroyedSessions = await RefreshTokens.destroy({
       where: { userId: id },
     });
 
-    //TODO - Blacklist all associated access tokens
+    //Blacklist all associated access tokens
+    const exp =  Date.now() + 15*60*1000; // Exact exp time for this token is unknown, therefore set to max life i.e - 15 mins
+    for (const session of sessions) {
+      await blacklistToken({ tokenId: session.id, exp });
+    }
 
     // response
     res.status(200).json({

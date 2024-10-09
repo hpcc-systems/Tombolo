@@ -18,7 +18,9 @@ const passport = require("passport");
 const cors = require("cors");
 const compression = require("compression");
 const { sequelize: dbConnection } = require("./models");
+
 const logger = require("./config/logger");
+require("./utils/tokenBlackListing");
 
 /* BREE JOB SCHEDULER */
 const JobScheduler = require("./jobSchedular/job-scheduler");
@@ -95,6 +97,7 @@ const auth = require("./routes/authRoutes");
 const users = require("./routes/userRoutes");
 const sessions = require("./routes/sessionRoutes");
 const cluster = require("./routes/clusterRoutes.js");
+const roles = require("./routes/roleTypesRoute.js");
 
 // Log all HTTP requests
 app.use((req, res, next) => {
@@ -152,6 +155,7 @@ app.use("/api/sent_notifications", sent_notifications);
 app.use("/api/monitorings", monitorings);
 app.use("/api/asr", asr);
 app.use("/api/directoryMonitoring", directoryMonitoring);
+app.use("/api/roles", roles);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {

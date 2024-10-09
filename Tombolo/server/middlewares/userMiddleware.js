@@ -190,6 +190,24 @@ const validateBulkUpdatePayload = [
   },
 ];
 
+// req.body must roles array and must be valid uuid
+const validatePatchUserRolesPayload = [
+  body("roles")
+    .isArray({ min: 1 })
+    .withMessage("At least one role ID is required"),
+  body("roles.*").isUUID(4).withMessage("All role IDs must be a valid UUIDs"),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      logger.error(`Patch user roles : ${errors.array()[0].msg}`);
+      return res
+        .status(400)
+        .json({ success: false, message: errors.array()[0].msg });
+    }
+    next();
+  },
+];
+
 
 module.exports = {
   validateNewUserPayload,
@@ -198,4 +216,5 @@ module.exports = {
   validateChangePasswordPayload,
   validateBulkDeletePayload,
   validateBulkUpdatePayload,
+  validatePatchUserRolesPayload,
 };
