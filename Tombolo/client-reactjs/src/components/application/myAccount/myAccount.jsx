@@ -18,8 +18,6 @@ const MyAccount = () => {
 
   const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
 
-  console.log(changePasswordModalVisible);
-
   return (
     <>
       <BreadCrumbs
