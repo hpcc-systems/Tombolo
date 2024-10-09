@@ -127,5 +127,8 @@ const loginBasicUserFunc = async (email, password) => {
   return data;
 };
 
-// const updateUser = async (values) => {
-//   //set
+const updateUser = async (values) => {
+  //set
+  console.log(values);
+  return true;
+};
