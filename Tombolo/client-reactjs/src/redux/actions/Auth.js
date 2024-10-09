@@ -6,7 +6,6 @@ export const authActions = {
   logout,
   registerBasicUser,
   loadUserFromStorage,
-  updateUser,
 };
 
 async function login({ email, password }) {
@@ -57,7 +56,7 @@ async function registerBasicUser(values) {
   if (user) {
     //log in user
     const loginResponse = await loginBasicUserFunc(values.email, values.password);
-    console.log(loginResponse);
+
     if (loginResponse) {
       let data = loginResponse.data;
       data.isAuthenticated = true;
@@ -125,10 +124,4 @@ const loginBasicUserFunc = async (email, password) => {
   const data = await response.json();
 
   return data;
-};
-
-const updateUser = async (values) => {
-  //set
-  console.log(values);
-  return true;
 };

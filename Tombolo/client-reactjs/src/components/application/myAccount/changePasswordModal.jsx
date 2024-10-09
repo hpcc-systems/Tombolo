@@ -1,33 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, Popover, message } from 'antd';
+import { Modal, Form, Input, Button, Popover, message, Spin } from 'antd';
 import passwordComplexityValidator from '../../common/passwordComplexityValidator';
 import { changeBasicUserPassword } from './utils';
 
 const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModalVisible }) => {
   const [form] = Form.useForm();
   const [popOverContent, setPopOverContent] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleOk = async () => {
+    setLoading(true);
+    // Validate from and set validForm to false if any field is invalid
+    let validForm = true;
     try {
       await form.validateFields();
+    } catch (err) {
+      validForm = false;
+    }
 
+    if (validForm) {
       const values = form.getFieldsValue();
 
       const data = await changeBasicUserPassword(values);
-      console.log(data);
+
       if (data) {
         message.success('Password changed successfully');
         setChangePasswordModalVisible(false);
         form.resetFields();
       }
-    } catch (e) {
-      if (e?.errorFields) {
-        message.error('Please correct the errors in the form');
-      } else {
-        message.error('An error occurred. Please try again later.');
-        console.log(e);
-      }
     }
+    setLoading(false);
   };
 
   const handleCancel = () => {
@@ -48,12 +50,12 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
       onCancel={handleCancel}
       footer={
         <>
-          <Button key="cancel" onClick={handleCancel}>
+          <Button key="cancel" onClick={handleCancel} disabled={loading && true}>
             Cancel
           </Button>
 
-          <Button key="modify" type="primary" onClick={() => handleOk()}>
-            Save
+          <Button key="modify" type="primary" onClick={() => handleOk()} disabled={loading && true}>
+            Save {loading && <Spin style={{ marginLeft: '1rem' }} />}
           </Button>
         </>
       }>
