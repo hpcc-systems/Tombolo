@@ -71,6 +71,13 @@
   font-size: 1rem;
 }
 
+.footerRow a:hover {
+  border-bottom: 1px solid var(--light);
+}
+.footerRow a:focus {
+  text-decoration: 1px solid var(--light);
+}
+
 .sub {
   width: 30%;
   font-size: 1rem;
