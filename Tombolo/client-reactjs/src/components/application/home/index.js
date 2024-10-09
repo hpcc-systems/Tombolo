@@ -104,45 +104,109 @@ const Home = () => {
 
           <div className="footerRow" style={{ marginBottom: '1rem' }}>
             <div className="sub" style={{ display: 'flex', alignItems: 'center' }}>
-              <a style={{ margin: '0 auto' }} href="https://solutionslab.hpccsystems.com/">
+              <a style={{ margin: '0 auto' }} href="https://hpccsystems.com/" target="_blank" rel="noopener noreferrer">
                 <img src={logo} alt="HPCC Systems" style={{ width: '10rem', margin: '0 auto' }} />
               </a>
             </div>
 
             <div className="sub">
-              <h2>Help</h2>
+              <h4>About</h4>
               <ul>
                 <li>
-                  <a href="https://hpcc-systems.github.io/Tombolo/">Docs</a>
+                  <a
+                    href="https://solutionslab.hpccsystems.com/solutions/tombolo/"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    Tombolo
+                  </a>
                 </li>
                 <li>
-                  <a href="https://github.com/hpcc-systems/Tombolo">Github</a>
+                  <a href="https://hpccsystems.com/" target="_blank" rel="noopener noreferrer">
+                    HPCC Systems
+                  </a>
                 </li>
                 <li>
-                  <a href="mailto:customer-solutions@hpcc.systems.com">Contact</a>
+                  <a href="https://risk.lexisnexis.com" target="_blank" rel="noopener noreferrer">
+                    LexisNexis Risk Solutions
+                  </a>
                 </li>
               </ul>
             </div>
             <div className="sub">
-              <h2>About</h2>
+              <h4>Documentation</h4>
               <ul>
                 <li>
-                  <a href="https://hpcc-systems.github.io/Tombolo/">Tombolo</a>
+                  <a
+                    href="https://hpcc-systems.github.io/Tombolo/docs/category/installation--configuration"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    Installation & Configurations
+                  </a>
                 </li>
                 <li>
-                  <a href="https://solutionslab.hpccsystems.com/">HPCC Systems</a>
+                  <a
+                    href="https://hpcc-systems.github.io/Tombolo/docs/category/user-guides"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    User Documentation
+                  </a>
                 </li>
                 <li>
-                  <a href="https://risk.lexisnexis.com/">LexisNexis Risk Solutions</a>
+                  <a
+                    href="https://hpcc-systems.github.io/Tombolo/docs/category/developer-resources"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    Developer Documentation
+                  </a>
                 </li>
               </ul>
             </div>
-          </div>
-          <div className="footerRow">
-            <p>
-              Tombolo is an open source project maintained by{' '}
-              <a href="https://solutionslab.hpccsystems.com/">HPCC Systems</a>.
-            </p>
+            <div className="sub">
+              <h4>Support</h4>
+              <ul>
+                <li>
+                  <a href="https://solutionslab.hpccsystems.com/about/" target="_blank" rel="noopener noreferrer">
+                    Contact
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hpcc-systems.github.io/Tombolo/faq" target="_blank" rel="noopener noreferrer">
+                    FAQ
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/hpcc-systems/Tombolo/discussions/904"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    Discussions
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div className="sub">
+              <h4>Project Resources</h4>
+              <ul>
+                <li>
+                  <a href="https://github.com/hpcc-systems/Tombolo" target="_blank" rel="noopener noreferrer">
+                    Code Base
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://hpcc-systems.github.io/Tombolo/release-notes"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    Release Notes
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hpcc-systems.github.io/Tombolo/contribute" target="_blank" rel="noopener noreferrer">
+                    Contribute to this project
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
