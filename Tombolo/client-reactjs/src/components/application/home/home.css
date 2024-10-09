@@ -1,5 +1,5 @@
 .container {
-  height: 100vh;
+  height: calc(100% + 5px);
   text-align: center;
   font-size: 1.5rem;
 }
@@ -27,7 +27,7 @@
   flex-direction: column;
   justify-content: space-between;
   margin-top: -5px;
-  height: calc(100% + 5px);
+  height: 100%;
 }
 
 .middle {

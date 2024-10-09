@@ -24,6 +24,7 @@ const {
   bulkUpdateUsers,
   updateUserRoles,
 } = require("../controllers/userController");
+
 const { validateUserRole } = require("../middlewares/rbacMiddleware");
 
 // TODO - Add guards so only users can change their own password
@@ -40,9 +41,7 @@ router.patch(
   updateBasicUserInfo
 ); // Update a user by id
 
-// All routes below is accessible only by users with role "owner" and "administrator"
-router.use(validateUserRole([role.OWNER, role.ADMIN]));
-
+router.use(validateUserRole([role.OWNER, role.ADMIN])); // All routes below this line will require the user to be an owner or admin
 // Routes
 router.get("/", getAllUsers); // Get all users
 router.get("/:id", validateUserId, getUser); // Get a user by id
