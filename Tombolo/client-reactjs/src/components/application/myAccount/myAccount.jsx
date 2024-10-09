@@ -8,17 +8,10 @@ import MyAccountInfo from './myAccountInfo';
 import BreadCrumbs from '../../common/BreadCrumbs';
 
 const MyAccount = () => {
-  const user = {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'johndoe@test.com',
-    roles: ['Admin', 'User'],
-    applications: ['Tombolo1', 'Dev2'],
-  };
+  //get user from local storage
+  const user = JSON.parse(localStorage.getItem('user'));
 
   const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
-
-  console.log(changePasswordModalVisible);
 
   return (
     <>

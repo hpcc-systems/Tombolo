@@ -6,6 +6,7 @@ export const authActions = {
   logout,
   registerBasicUser,
   loadUserFromStorage,
+  updateUser,
 };
 
 async function login({ email, password }) {
@@ -125,3 +126,6 @@ const loginBasicUserFunc = async (email, password) => {
 
   return data;
 };
+
+// const updateUser = async (values) => {
+//   //set

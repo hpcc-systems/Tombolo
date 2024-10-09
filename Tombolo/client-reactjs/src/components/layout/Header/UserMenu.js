@@ -1,11 +1,12 @@
 import React from 'react';
 import { Button, Dropdown } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
+import history from '../../common/History';
 
 const UserMenu = ({ handleLogOut, authenticationReducer }) => {
   const handleUserActionMenuClick = (e) => {
     if (e.key == 1) {
-      window.location.href = '/myaccount';
+      history.push('/myaccount');
     } else if (e.key == 2) {
       handleLogOut();
     }

@@ -1,16 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Row, Col, Input, Button } from 'antd';
-
+import { Card, Form, Row, Col, Input, Button, Spin, message } from 'antd';
+import { updateAccount } from './myAccountUtils';
 const MyAccountInfo = ({ user }) => {
   const [form] = Form.useForm();
   const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const { roles, applications } = user;
 
-  useEffect(() => {}, [editing]);
+  useEffect(() => {}, [editing, loading]);
 
-  const onSubmit = () => {
-    alert('save user code fires here');
+  const onSubmit = async () => {
+    setLoading(true);
+    // Validate from and set validForm to false if any field is invalid
+    let validForm = true;
+    try {
+      await form.validateFields();
+    } catch (err) {
+      validForm = false;
+    }
+
+    if (validForm) {
+      let values = form.getFieldsValue();
+
+      values.id = user.id;
+
+      const response = await updateAccount(values);
+
+      if (response.success) {
+        form.setFieldsValue(response.data);
+        setEditing(false);
+        message.success('Account updated successfully');
+      }
+
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,12 +80,14 @@ const MyAccountInfo = ({ user }) => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item label="Roles" name="roles">
-                <Input disabled value={roles.join(', ')}></Input>
+                <Input disabled value={roles?.length > 0 ? roles.join(', ') : 'No roles found.'}></Input>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item label="Applications" name="applications">
-                <Input disabled value={applications.join(', ')}></Input>
+                <Input
+                  disabled
+                  value={applications?.length > 0 ? applications.join(', ') : 'No Applications found.'}></Input>
               </Form.Item>
             </Col>
           </Row>
@@ -73,11 +99,11 @@ const MyAccountInfo = ({ user }) => {
               </Button>
             ) : (
               <>
-                <Button style={{ marginRight: '1rem' }} onClick={() => setEditing(false)}>
+                <Button style={{ marginRight: '1rem' }} onClick={() => setEditing(false)} disabled={loading && true}>
                   Cancel
                 </Button>
-                <Button type="primary" htmlType="submit" onClick={onSubmit}>
-                  Save
+                <Button type="primary" htmlType="submit" onClick={onSubmit} disabled={loading && true}>
+                  Save {loading && <Spin style={{ marginLeft: '1rem' }} />}
                 </Button>
               </>
             )}
