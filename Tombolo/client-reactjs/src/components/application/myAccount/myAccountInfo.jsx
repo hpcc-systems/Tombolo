@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Row, Col, Input, Button, Spin, message } from 'antd';
 import { updateAccount } from './myAccountUtils';
+import { useDispatch } from 'react-redux';
+import { authActions } from '../../../redux/actions/Auth';
+
 const MyAccountInfo = ({ user }) => {
   const [form] = Form.useForm();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { roles, applications } = user;
+  const dispatch = useDispatch();
 
   useEffect(() => {}, [editing, loading]);
 
@@ -31,6 +35,8 @@ const MyAccountInfo = ({ user }) => {
         form.setFieldsValue(response.data);
         setEditing(false);
         message.success('Account updated successfully');
+        //dispatch action to update user in redux store
+        dispatch(authActions.updateUser(response.data));
       }
 
       setLoading(false);
@@ -73,7 +79,7 @@ const MyAccountInfo = ({ user }) => {
                 },
                 { max: 64, message: 'Maximum of 64 characters allowed' },
               ]}>
-              <Input disabled={!editing} size="large" />
+              <Input disabled size="large" />
             </Form.Item>
           </>
 
