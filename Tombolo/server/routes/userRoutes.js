@@ -44,12 +44,7 @@ router.patch(
 router.use(validateUserRole([role.OWNER, role.ADMIN])); // All routes below this line will require the user to be an owner or admin
 // Routes
 router.get("/", getAllUsers); // Get all users
-router.get(
-  "/:id",
-  validateUserId,
-
-  getUser
-); // Get a user by id
+router.get("/:id", validateUserId, getUser); // Get a user by id
 router.delete("/bulk-delete", validateBulkDeletePayload, bulkDeleteUsers); // Bulk delete users
 router.delete("/:id", validateUserId, deleteUser); // Delete a user by id
 router.patch("/bulk-update", validateBulkUpdatePayload, bulkUpdateUsers); // Bulk update users

@@ -88,13 +88,6 @@ const validateUpdateUserPayload = [
     .optional()
     .isLength({ min: 2, max: 50 })
     .withMessage("Last name must be between 2 and 50 characters"),
-  body("email")
-    .isEmail()
-    .withMessage("Email address is not valid")
-    .optional()
-    .withMessage("Email is required")
-    .isLength({ max: 100 })
-    .withMessage("Email must be less than 100 characters"),
   (req, res, next) => {
     const errors = validationResult(req).array();
     const errorString = errors.map((e) => e.msg).join(", ");
@@ -160,9 +153,7 @@ const validateBulkUpdatePayload = [
   body("users")
     .isArray({ min: 1 })
     .withMessage("At least one user information is required"),
-  body("users.*.id")
-    .isUUID(4)
-    .withMessage("User ID must be a valid UUID"),
+  body("users.*.id").isUUID(4).withMessage("User ID must be a valid UUID"),
   body("users.*.verifiedUser")
     .optional()
     .isBoolean()
@@ -181,10 +172,11 @@ const validateBulkUpdatePayload = [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       logger.error(`Bulk update users : ${errors.array()[0].msg}`);
-      const errorString = errors.array().map((e) => e.msg).join(", ");
-      return res
-        .status(400)
-        .json({ success: false, message: errorString });
+      const errorString = errors
+        .array()
+        .map((e) => e.msg)
+        .join(", ");
+      return res.status(400).json({ success: false, message: errorString });
     }
     next();
   },
@@ -207,7 +199,6 @@ const validatePatchUserRolesPayload = [
     next();
   },
 ];
-
 
 module.exports = {
   validateNewUserPayload,

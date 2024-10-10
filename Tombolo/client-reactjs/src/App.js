@@ -156,6 +156,8 @@ const App = () => {
     if (user && user.token) {
       dispatch(authActions.loadUserFromStorage());
     } else {
+      console.log('redirecting to login');
+      console.log(isLogin);
       //if you're not on a login page and there is no user, redirect to login
       if (!isLogin) window.location.href = '/login';
     }
@@ -325,7 +327,7 @@ const App = () => {
             ) : (
               <>
                 {/* Application Loaded, server running, Login Pages */}
-                {isLogin && !user?.id ? (
+                {isLogin && !user?.token ? (
                   <BasicLayout
                     content={
                       <Switch>

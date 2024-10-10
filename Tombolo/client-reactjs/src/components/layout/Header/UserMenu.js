@@ -1,11 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button, Dropdown } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
+import history from '../../common/History';
 
-const UserMenu = ({ handleLogOut, authenticationReducer }) => {
+const UserMenu = ({ handleLogOut }) => {
+  //set user from local storage initially
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+
+  //listen for user storage event
+  window.addEventListener('userStorage', () => {
+    let newUser = JSON.parse(localStorage.getItem('user'));
+    if (newUser !== user) {
+      setUser(newUser);
+    }
+  });
+
   const handleUserActionMenuClick = (e) => {
     if (e.key == 1) {
-      window.location.href = '/myaccount';
+      history.push('/myaccount');
     } else if (e.key == 2) {
       handleLogOut();
     }
@@ -26,7 +38,7 @@ const UserMenu = ({ handleLogOut, authenticationReducer }) => {
       <Button shape="round">
         <i className="fa fa-lg fa-user-circle"></i>
         <span style={{ paddingLeft: '5px' }}>
-          {authenticationReducer.firstName + ' ' + authenticationReducer.lastName} <DownOutlined />
+          {user.firstName + ' ' + user.lastName} <DownOutlined />
         </span>
       </Button>
     </Dropdown>

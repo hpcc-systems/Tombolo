@@ -19,7 +19,6 @@ const AppHeader = () => {
   //states needed from redux
   const applicationReducer = useSelector((state) => state.applicationReducer);
   const { application, applications, applicationsRetrieved, clusters, noClusters } = applicationReducer;
-  const authenticationReducer = useSelector((state) => state.authenticationReducer);
 
   //redux tools
   const dispatch = useDispatch();
@@ -114,7 +113,7 @@ const AppHeader = () => {
         />
       </div>
       <div>
-        <UserMenu handleLogOut={handleLogOut} authenticationReducer={authenticationReducer} />
+        <UserMenu handleLogOut={handleLogOut} />
       </div>
     </Header>
   );

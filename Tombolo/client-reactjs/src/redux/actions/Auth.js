@@ -56,7 +56,7 @@ async function registerBasicUser(values) {
   if (user) {
     //log in user
     const loginResponse = await loginBasicUserFunc(values.email, values.password);
-    console.log(loginResponse);
+
     if (loginResponse) {
       let data = loginResponse.data;
       data.isAuthenticated = true;
