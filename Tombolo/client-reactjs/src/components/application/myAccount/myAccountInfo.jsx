@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Row, Col, Input, Button, Spin, message } from 'antd';
-import { updateAccount } from './myAccountUtils';
-import { applicationStringBuilder, roleStringBuilder } from './utils';
+import { applicationStringBuilder, roleStringBuilder, updateAccount } from './utils';
 
 const MyAccountInfo = ({ user }) => {
   const [form] = Form.useForm();

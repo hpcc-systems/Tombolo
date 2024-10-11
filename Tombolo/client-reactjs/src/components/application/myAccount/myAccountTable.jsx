@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Spin, message } from 'antd';
+import { Table, Spin, message } from 'antd';
 import { getSessions, deviceInfoStringBuilder, revokeSession } from './utils';
 
 const MyAccountTable = ({ user }) => {
@@ -30,6 +30,7 @@ const MyAccountTable = ({ user }) => {
       render: (deviceInfo) => {
         return deviceInfoStringBuilder(deviceInfo);
       },
+      width: '33rem',
     },
     {
       title: 'Revoke',
@@ -37,20 +38,17 @@ const MyAccountTable = ({ user }) => {
       key: 'id',
       render: (id) => {
         return (
-          <Button
-            type="primary"
-            onClick={async (e) => {
-              e.target.disabled = true;
+          <a
+            onClick={async () => {
               const response = await revokeSession(id);
               if (!response) {
-                e.target.disabled = false;
                 return;
               }
               setSessions(sessions.filter((s) => s.id !== id));
               message.success('Session revoked successfully');
             }}>
             Revoke
-          </Button>
+          </a>
         );
       },
     },
