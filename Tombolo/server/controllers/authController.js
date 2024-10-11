@@ -14,6 +14,8 @@ const { blacklistToken } = require("../utils/tokenBlackListing");
 const User = models.user;
 const UserRoles = models.UserRoles;
 const RoleTypes = models.RoleTypes;
+const user_application = models.user_application;
+const Application = models.application;
 const RefreshTokens = models.RefreshTokens;
 const NotificationQueue = models.notification_queue;
 const PasswordResetLinks = models.PasswordResetLinks;
@@ -127,7 +129,7 @@ const createBasicUser = async (req, res) => {
     const tokenId = uuidv4();
 
     // Create access jwt
-    const accessToken =  generateAccessToken({ ...userObj, tokenId });
+    const accessToken = generateAccessToken({ ...userObj, tokenId });
     userObj.token = `Bearer ${accessToken}`;
 
     // Generate refresh token
@@ -165,7 +167,9 @@ const createBasicUser = async (req, res) => {
 //Login Basic user
 const loginBasicUser = async (req, res) => {
   try {
-    const { email, password, deviceInfo = {} } = req.body;
+    const { email, password, deviceInfo } = req.body;
+
+    console.log(req.body);
 
     // find user - include user roles from UserRoles table
     const user = await User.findOne({
@@ -183,6 +187,17 @@ const loginBasicUser = async (req, res) => {
             },
           ],
         },
+        {
+          model: user_application,
+          attributes: ["id"],
+          as: "applications",
+          include: [
+            {
+              model: Application,
+              attributes: ["id", "title", "description"],
+            },
+          ],
+        },
       ],
     });
 
@@ -191,7 +206,10 @@ const loginBasicUser = async (req, res) => {
       logger.error(`Login : User with email ${email} does not exist`);
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({
+          success: false,
+          message: "Username and Password combination not found",
+        });
     }
 
     //Compare password
@@ -199,7 +217,10 @@ const loginBasicUser = async (req, res) => {
       logger.error(`Login : Invalid password for user with email ${email}`);
       return res
         .status(401)
-        .json({ success: false, message: "Invalid password" });
+        .json({
+          success: false,
+          message: "Username and Password combination not found",
+        });
     }
 
     // Remove hash from use object
@@ -218,6 +239,8 @@ const loginBasicUser = async (req, res) => {
 
     // Save refresh token to DB
     const { iat, exp } = jwt.decode(refreshToken);
+
+    //get device info from request
 
     // Save refresh token in DB
     await RefreshTokens.create({
@@ -259,7 +282,7 @@ const logOutBasicUser = async (req, res) => {
     });
 
     // Add access token to the blacklist
-    await blacklistToken({tokenId, exp: decodedToken.exp});
+    await blacklistToken({ tokenId, exp: decodedToken.exp });
 
     res.status(200).json({ success: true, message: "User logged out" });
   } catch (err) {
@@ -292,16 +315,24 @@ const handlePasswordResetRequest = async (req, res) => {
     const passwordResetRequests = await PasswordResetLinks.findAll({
       where: {
         userId: user.id,
-        issuedAt: {[models.Sequelize.Op.gte]: new Date(new Date().getTime() - 60 * 60 * 1000)},
+        issuedAt: {
+          [models.Sequelize.Op.gte]: new Date(
+            new Date().getTime() - 60 * 60 * 1000
+          ),
+        },
       },
     });
 
     // Max requests per hour
     if (passwordResetRequests.length >= 4) {
-      logger.error(`Reset password: User with email ${email} has exceeded the limit of password reset requests`);
-      return res.status(429).json({ success: false, message: "Too many requests" });
+      logger.error(
+        `Reset password: User with email ${email} has exceeded the limit of password reset requests`
+      );
+      return res
+        .status(429)
+        .json({ success: false, message: "Too many requests" });
     }
-    
+
     // Generate a password reset token
     const randomId = uuidv4();
     const passwordRestLink = `${process.env.WEB_URL}/reset-password/${randomId}`;
@@ -321,11 +352,11 @@ const handlePasswordResetRequest = async (req, res) => {
       createdBy: "System",
       updatedBy: "System",
       metaData: {
-          mainRecipients: [email],
-          subject,
-          body: "Password reset link",
-          validForHours: 24,
-          passwordRestLink,
+        mainRecipients: [email],
+        subject,
+        body: "Password reset link",
+        validForHours: 24,
+        passwordRestLink,
       },
     });
 
@@ -339,12 +370,14 @@ const handlePasswordResetRequest = async (req, res) => {
     });
 
     // response
-    res.status(200).json({success: true, });
+    res.status(200).json({ success: true });
   } catch (err) {
     logger.error(`Reset password: ${err.message}`);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
   }
-}
+};
 
 // Reset password
 const resetPassword = async (req, res) => {
@@ -360,7 +393,10 @@ const resetPassword = async (req, res) => {
     // Token does not exist
     if (!passwordResetLink) {
       logger.error(`Reset password: Token ${token} does not exist`);
-      return res.status(404).json({ success: false, message: "Password reset link Invalid or expired" });
+      return res.status(404).json({
+        success: false,
+        message: "Password reset link Invalid or expired",
+      });
     }
 
     // Token has expired
@@ -372,7 +408,9 @@ const resetPassword = async (req, res) => {
     }
 
     // Find the user
-    const user = await User.findOne({ where: { id: passwordResetLink.userId } });
+    const user = await User.findOne({
+      where: { id: passwordResetLink.userId },
+    });
 
     // Hash the new password
     const salt = bcrypt.genSaltSync(10);
@@ -387,12 +425,16 @@ const resetPassword = async (req, res) => {
     });
 
     // response
-    res.status(200) .json({success: true, message: "Password updated successfully"});
+    res
+      .status(200)
+      .json({ success: true, message: "Password updated successfully" });
   } catch (err) {
     logger.error(`Reset password: ${err.message}`);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
   }
-}
+};
 
 // Register OAuth user
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Row, Col, Input, Button, Spin, message } from 'antd';
 import { updateAccount } from './myAccountUtils';
+import { applicationStringBuilder, roleStringBuilder } from './utils';
 
 const MyAccountInfo = ({ user }) => {
   const [form] = Form.useForm();
@@ -8,6 +9,12 @@ const MyAccountInfo = ({ user }) => {
   const [loading, setLoading] = useState(false);
 
   const { roles, applications } = user;
+
+  //build role and app string for display
+  useEffect(() => {
+    form.setFieldValue('rolesString', roleStringBuilder(roles));
+    form.setFieldValue('applicationString', applicationStringBuilder(applications));
+  }, [roles, applications]);
 
   useEffect(() => {}, [editing, loading]);
 
@@ -87,15 +94,13 @@ const MyAccountInfo = ({ user }) => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="Roles" name="roles">
-                <Input disabled value={roles?.length > 0 ? roles.join(', ') : 'No roles found.'}></Input>
+              <Form.Item label="Roles" name="rolesString">
+                <Input disabled></Input>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Applications" name="applications">
-                <Input
-                  disabled
-                  value={applications?.length > 0 ? applications.join(', ') : 'No Applications found.'}></Input>
+              <Form.Item label="Applications" name="applicationString">
+                <Input disabled></Input>
               </Form.Item>
             </Col>
           </Row>

@@ -54,6 +54,5 @@ router.patch(
   validatePatchUserRolesPayload,
   updateUserRoles
 ); // Update a user by id
-
 //Export
 module.exports = router;

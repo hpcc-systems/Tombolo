@@ -35,7 +35,7 @@ const MyAccount = () => {
         <MyAccountInfo user={user} />
 
         <Divider>Session Management</Divider>
-        <MyAccountTable />
+        <MyAccountTable user={user} />
       </div>
     </>
   );

@@ -10,7 +10,18 @@ const Login = () => {
   const onFinish = async (values) => {
     const { email, password } = values;
     setLoading(true);
-    const test = await authActions.login({ email, password });
+
+    //get browser and os info and put in deviceInfo variable
+    const deviceInfo = {
+      os: window.navigator.userAgentData ? window.navigator.userAgentData.platform : navigator.userAgent,
+      ip: await fetch('https://ipapi.co/json/')
+        .then((response) => response.json())
+        .catch((error) => console.error('Error:', error))
+        .then((data) => data.ip)
+        .catch((error) => console.error('Error:', error)),
+    };
+
+    const test = await authActions.login({ email, password, deviceInfo });
 
     if (test && test.type === Constants.LOGIN_SUCCESS) {
       window.location.href = '/';
