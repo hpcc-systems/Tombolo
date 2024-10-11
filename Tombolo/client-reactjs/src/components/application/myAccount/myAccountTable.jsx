@@ -40,6 +40,7 @@ const MyAccountTable = ({ user }) => {
         return (
           <a
             onClick={async () => {
+              //TODO -- check if session is current active session and disabled revoke option
               const response = await revokeSession(id);
               if (!response) {
                 return;
