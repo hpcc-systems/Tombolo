@@ -96,7 +96,7 @@ export const deviceInfoStringBuilder = (deviceInfo) => {
   const returnString = (
     <>
       <p>Operating System - {deviceInfo.os ? deviceInfo.os : 'Unknown'}</p>
-      <p> Initial IP - {deviceInfo.ip ? deviceInfo.ip : 'Unknown'}</p>
+      <p>Initial IP - {deviceInfo.ip ? deviceInfo.ip : 'Unknown'}</p>
     </>
   );
 

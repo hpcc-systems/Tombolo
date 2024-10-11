@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Spin, message } from 'antd';
-import { getSessions } from './utils';
-import { deviceInfoStringBuilder, revokeSession } from './utils';
+import { getSessions, deviceInfoStringBuilder, revokeSession } from './utils';
 
 const MyAccountTable = ({ user }) => {
   const [sessions, setSessions] = useState([]);

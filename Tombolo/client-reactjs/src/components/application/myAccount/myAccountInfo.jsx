@@ -43,7 +43,6 @@ const MyAccountInfo = ({ user }) => {
         const oldUser = JSON.parse(localStorage.getItem('user'));
         const newUser = { ...oldUser, firstName: response.data.firstName, lastName: response.data.lastName };
 
-        console.log('newUser', newUser);
         localStorage.setItem('user', JSON.stringify(newUser));
         window.dispatchEvent(new Event('userStorage'));
       }

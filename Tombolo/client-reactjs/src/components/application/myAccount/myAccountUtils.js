@@ -2,7 +2,6 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 
 // Update a job monitoring
 export const updateAccount = async (values) => {
-  console.log(values);
   const { id } = values;
   const payload = {
     method: 'PATCH',
@@ -22,7 +21,6 @@ export const updateAccount = async (values) => {
 };
 
 export const updatePassword = async (values) => {
-  console.log(values);
   const { id } = values;
   const payload = {
     method: 'PATCH',

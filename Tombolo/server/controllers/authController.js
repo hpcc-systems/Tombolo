@@ -169,8 +169,6 @@ const loginBasicUser = async (req, res) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
-    console.log(req.body);
-
     // find user - include user roles from UserRoles table
     const user = await User.findOne({
       where: { email },
@@ -204,23 +202,19 @@ const loginBasicUser = async (req, res) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Username and Password combination not found",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Username and Password combination not found",
+      });
     }
 
     //Compare password
     if (!bcrypt.compareSync(password, user.hash)) {
       logger.error(`Login : Invalid password for user with email ${email}`);
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Username and Password combination not found",
-        });
+      return res.status(401).json({
+        success: false,
+        message: "Username and Password combination not found",
+      });
     }
 
     // Remove hash from use object
@@ -260,7 +254,6 @@ const loginBasicUser = async (req, res) => {
       data: userObj,
     });
   } catch (err) {
-    console.log(err);
     logger.error(`Login user: ${err.message}`);
     res
       .status(err.status || 500)
@@ -298,7 +291,6 @@ const handlePasswordResetRequest = async (req, res) => {
   try {
     // Get user email
     const { email } = req.body;
-    console.log(email);
 
     // Find user by email
     const user = await User.findOne({ where: { email } });
