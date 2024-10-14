@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const models = require("../models");
 const { blacklistToken } = require("../utils/tokenBlackListing");
+const logger = require("../config/logger");
 
 const RefreshTokens = models.RefreshTokens;
 
@@ -46,8 +47,13 @@ const destroyOneActiveSession = async (req, res) => {
       where: { id: sessionId },
     });
 
+    if (destroyedSessions === 0) {
+      throw { status: 404, message: "Session not found" };
+    }
     // Blacklist associated access token
-    const exp =  Date.now() + 15*60*1000; // Exact exp time for this token is unknown, therefore set to max life i.e - 15 mins
+    // Divide by 1000 to convert to seconds instead of MS. MS gives out of range as value is > 2^31. 2034 problem exists.
+    const exp = (Date.now() + 15 * 60 * 1000) / 1000; // Exact exp time for this token is unknown, therefore set to max life i.e - 15 mins
+
     await blacklistToken({ tokenId: sessionId, exp });
 
     // response
@@ -80,7 +86,7 @@ const destroyActiveSessions = async (req, res) => {
     });
 
     //Blacklist all associated access tokens
-    const exp =  Date.now() + 15*60*1000; // Exact exp time for this token is unknown, therefore set to max life i.e - 15 mins
+    const exp = Date.now() + 15 * 60 * 1000; // Exact exp time for this token is unknown, therefore set to max life i.e - 15 mins
     for (const session of sessions) {
       await blacklistToken({ tokenId: session.id, exp });
     }
@@ -97,7 +103,6 @@ const destroyActiveSessions = async (req, res) => {
       .json({ success: false, message: err.message });
   }
 };
-
 
 //Exports
 module.exports = {

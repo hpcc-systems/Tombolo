@@ -82,13 +82,11 @@ const getUser = async (req, res) => {
       throw { status: 404, message: "User not found" };
     }
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "User retrieved successfully",
-        data: user,
-      });
+    res.status(200).json({
+      success: true,
+      message: "User retrieved successfully",
+      data: user,
+    });
   } catch (err) {
     logger.error(`Get user: ${err.message}`);
     res
@@ -101,13 +99,11 @@ const getUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll();
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Users retrieved successfully",
-        data: users,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Users retrieved successfully",
+      data: users,
+    });
   } catch (err) {
     logger.error(`Get all users: ${err.message}`);
     res
@@ -142,13 +138,11 @@ const changePassword = async (req, res) => {
     // Save user with updated details
     const updatedUser = await existingUser.save();
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Password updated successfully",
-        data: updatedUser,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+      data: updatedUser,
+    });
   } catch (err) {
     logger.error(`Change password: ${err.message}`);
     res
@@ -169,12 +163,10 @@ const bulkDeleteUsers = async (req, res) => {
     }
 
     // Users successfully deleted
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: `${deletedCount} Users deleted successfully`,
-      });
+    res.status(200).json({
+      success: true,
+      message: `${deletedCount} Users deleted successfully`,
+    });
   } catch (err) {
     logger.error(`Delete users: ${err.message}`);
     res
@@ -241,8 +233,6 @@ const updateUserRoles = async (req, res) => {
     const { roles } = req.body;
     const creator = req.user.id;
 
-    console.log(req.user);
-
     // Find existing user details
     const existingUser = await User.findOne({ where: { id } });
 
@@ -261,15 +251,12 @@ const updateUserRoles = async (req, res) => {
     const updatedRoles = await UserRoles.bulkCreate(userRoles);
 
     // Response
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "User roles updated successfully",
-        data: updatedRoles,
-      });
+    res.status(200).json({
+      success: true,
+      message: "User roles updated successfully",
+      data: updatedRoles,
+    });
   } catch (err) {
-    console.log(err);
     logger.error(`Update user roles: ${err.message}`);
     res
       .status(err.status || 500)

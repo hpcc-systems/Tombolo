@@ -8,8 +8,8 @@ export const authActions = {
   loadUserFromStorage,
 };
 
-async function login({ email, password }) {
-  const user = await loginBasicUserFunc(email, password);
+async function login({ email, password, deviceInfo }) {
+  const user = await loginBasicUserFunc(email, password, deviceInfo);
 
   if (user && user.data) {
     user.data.isAuthenticated = true;
@@ -101,7 +101,7 @@ const registerBasicUserFunc = async (values) => {
   return data;
 };
 
-const loginBasicUserFunc = async (email, password) => {
+const loginBasicUserFunc = async (email, password, deviceInfo) => {
   const url = '/api/auth/loginBasicUser';
 
   const response = await fetch(
@@ -111,7 +111,7 @@ const loginBasicUserFunc = async (email, password) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, deviceInfo }),
     },
     { headers: authHeader() }
   );

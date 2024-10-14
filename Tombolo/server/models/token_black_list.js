@@ -22,3 +22,5 @@ module.exports = (sequelize, DataTypes) => {
 
   return TokenBlackList;
 };
+
+1, 728, 662, 207, 335;

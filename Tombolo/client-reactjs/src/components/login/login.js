@@ -10,13 +10,41 @@ const Login = () => {
   const onFinish = async (values) => {
     const { email, password } = values;
     setLoading(true);
-    const test = await authActions.login({ email, password });
+
+    //get browser and os info and put in deviceInfo variable
+    const deviceInfo = {
+      os: window.navigator.userAgentData ? window.navigator.userAgentData.platform : navigator.userAgent,
+      browser: getBrowserInfo(),
+    };
+
+    const test = await authActions.login({ email, password, deviceInfo });
 
     if (test && test.type === Constants.LOGIN_SUCCESS) {
       window.location.href = '/';
     } else {
       setLoading(false);
     }
+  };
+
+  const getBrowserInfo = () => {
+    const userAgent = navigator.userAgent;
+    let browserName = 'Unknown';
+
+    if (userAgent.indexOf('Firefox') > -1) {
+      browserName = 'Firefox';
+    } else if (userAgent.indexOf('Opera') > -1 || userAgent.indexOf('OPR') > -1) {
+      browserName = 'Opera';
+    } else if (userAgent.indexOf('Trident') > -1) {
+      browserName = 'Internet Explorer';
+    } else if (userAgent.indexOf('Edge') > -1) {
+      browserName = 'Edge';
+    } else if (userAgent.indexOf('Chrome') > -1) {
+      browserName = 'Chrome';
+    } else if (userAgent.indexOf('Safari') > -1) {
+      browserName = 'Safari';
+    }
+
+    return browserName;
   };
 
   // if user is logged in, redirect to home page
