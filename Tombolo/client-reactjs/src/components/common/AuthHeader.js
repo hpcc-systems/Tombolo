@@ -1,5 +1,6 @@
 // import { userActions } from '../../redux/actions/User';
 import { store } from '../../redux/store/Store';
+import { authActions } from '../../redux/actions/Auth';
 import { message } from 'antd';
 
 export function handleError(response) {
@@ -46,10 +47,30 @@ const { fetch: originalFetch } = window;
 
 window.fetch = async (...args) => {
   let [resource, config] = args;
-  // request interceptor here
 
   try {
     const response = await originalFetch(resource, config);
+
+    //if response.status is 401, it means the refresh token has expired, so we need to log the user out
+    if (response.status === 401) {
+      authActions.logout();
+      localStorage.setItem('sessionExpired', true);
+      window.location.href = '/login';
+
+      return;
+    }
+
+    //see if token is returned from the backend, if so, check it against local storage token and update if necessary
+    const token = response.headers.get('Authorization');
+
+    if (token) {
+      let user = await JSON.parse(localStorage.getItem('user'));
+      if (user.token !== token) {
+        user.token = token;
+        await localStorage.setItem('user', JSON.stringify(user));
+      }
+    }
+
     return response;
   } catch (error) {
     // if an error is caught here, it means we cannot communicate with backend, return false to indicate that and log error

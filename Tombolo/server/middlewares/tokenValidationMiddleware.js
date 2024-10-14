@@ -3,11 +3,8 @@ const { v4: uuidv4 } = require("uuid");
 
 const logger = require("../config/logger");
 const model = require("../models");
-const {
-  generateAccessToken,
-  generateRefreshToken,
-} = require("../utils/authUtil");
-const {isTokenBlacklisted} = require("../utils/tokenBlackListing");
+const { generateAccessToken } = require("../utils/authUtil");
+const { isTokenBlacklisted } = require("../utils/tokenBlackListing");
 
 const RefreshTokens = model.RefreshTokens;
 const User = model.user;
@@ -18,33 +15,36 @@ const RoleTypes = model.RoleTypes;
 const tokenValidationMiddleware = async (req, res, next) => {
   const bearerToken = req.headers["authorization"];
 
-
-
   if (!bearerToken) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });
   }
 
   // If bearer token is provided, extract the token
-    const tokenParts = bearerToken.split(" ");
-    const token = tokenParts[1];
+  const tokenParts = bearerToken.split(" ");
+  const token = tokenParts[1];
 
   try {
     decoded = await verifyToken(token, process.env.JWT_SECRET);
     req.user = decoded;
 
     // If token is blacklisted - return unauthorized
-    if(isTokenBlacklisted(decoded.tokenId)){
-      return res.status(401).json({ message: "Unauthorized: Token no longer valid" });
+    if (isTokenBlacklisted(decoded.tokenId)) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Token no longer valid" });
     }
+
+    // return original token in response header if it is still valid
+    res.setHeader("Authorization", bearerToken);
 
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       const tokenDetails = await handleExpiredToken(token);
       if (tokenDetails.sessionExpired) {
-        return res
-          .status(401)
-          .json({ message: "Unauthorized: Session expired" });
+        return res.status(401).json({
+          message: "Unauthorized: Session expired, Please Log in again.",
+        });
       } else {
         // Attach new access token to response header
         console.log("New access token attached to response header");
@@ -72,7 +72,7 @@ const verifyToken = (token, secret) => {
 
 // Function to handle expired tokens and refresh tokens
 const handleExpiredToken = async (token) => {
-  try{
+  try {
     const decodedToken = jwt.decode(token, process.env.JWT_SECRET);
     const { id: userId, tokenId } = decodedToken;
 
@@ -81,11 +81,11 @@ const handleExpiredToken = async (token) => {
       where: { id: tokenId },
     });
 
-    if(!refreshToken){
+    if (!refreshToken) {
       return {
         sessionExpired: true,
         newAccessToken: null,
-      }
+      };
     }
 
     // Get fresh user details
@@ -114,30 +114,15 @@ const handleExpiredToken = async (token) => {
       ...userObj,
       tokenId: newTokenId,
     });
-    const newRefreshToken = generateRefreshToken({ tokenId: newTokenId });
-
-    // Save new refresh token in DB
-    await RefreshTokens.create({
-      id: newTokenId,
-      userId: user.id,
-      token: newRefreshToken,
-      deviceInfo: refreshToken.deviceInfo,
-      iat : refreshToken.iat,
-      exp : refreshToken.exp,
-    });
-
-    // remove old refresh token from DB
-    await refreshToken.destroy();
 
     return {
-      sessionExpired: true,
+      sessionExpired: false,
       newAccessToken,
     };
-    
-  }catch(err){
+  } catch (err) {
     logger.error(err.message);
     return res.status(401).json({ message: "Unauthorized: Invalid token" });
   }
-}
+};
 
 module.exports = { tokenValidationMiddleware };
