@@ -57,7 +57,7 @@ window.fetch = async (...args) => {
       localStorage.setItem('sessionExpired', true);
       window.location.href = '/login';
 
-      return;
+      return {};
     }
 
     //see if token is returned from the backend, if so, check it against local storage token and update if necessary
@@ -68,6 +68,14 @@ window.fetch = async (...args) => {
       if (user.token !== token) {
         user.token = token;
         await localStorage.setItem('user', JSON.stringify(user));
+
+        //if new token is provided, we need to make a new fetch call with the new token
+        config.headers = {
+          ...config.headers,
+          Authorization: token,
+        };
+        const newTokenResponse = await originalFetch(resource, config);
+        return newTokenResponse;
       }
     }
 

@@ -3,7 +3,10 @@ const { v4: uuidv4 } = require("uuid");
 
 const logger = require("../config/logger");
 const model = require("../models");
-const { generateAccessToken } = require("../utils/authUtil");
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../utils/authUtil");
 const { isTokenBlacklisted } = require("../utils/tokenBlackListing");
 
 const RefreshTokens = model.RefreshTokens;
@@ -114,6 +117,21 @@ const handleExpiredToken = async (token) => {
       ...userObj,
       tokenId: newTokenId,
     });
+
+    const newRefreshToken = generateRefreshToken({ tokenId: newTokenId });
+
+    // Save new refresh token in DB
+    await RefreshTokens.create({
+      id: newTokenId,
+      userId: user.id,
+      token: newRefreshToken,
+      deviceInfo: refreshToken.deviceInfo,
+      iat: refreshToken.iat,
+      exp: refreshToken.exp,
+    });
+
+    // remove old refresh token from DB
+    await refreshToken.destroy();
 
     return {
       sessionExpired: false,
