@@ -44,6 +44,17 @@ const Login = () => {
     }
   });
 
+  //if session expired relay message to user what happened
+
+  useEffect(() => {
+    const sessionExpired = localStorage.getItem('sessionExpired');
+
+    if (sessionExpired) {
+      localStorage.removeItem('sessionExpired');
+      message.error('Session expired. Please log in again.');
+    }
+  });
+
   return (
     <Form onFinish={onFinish} layout="vertical">
       <Divider>Log In With</Divider>
