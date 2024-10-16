@@ -87,8 +87,11 @@ const App = () => {
               <LoadingScreen isConnected={isConnected} statusRetrieved={statusRetrieved} message={message} />
             ) : (
               <>
+                {/*No owner, force user to register one*/}
                 {!ownerExists ? <Wizard /> : null}
+                {/*User is not authenticated, show auth pages*/}
                 {!user?.token && ownerExists ? <AuthRoutes /> : null}
+                {/*User is authenticated, show application*/}
                 {user?.token && ownerExists ? (
                   <>
                     <AppHeader />
