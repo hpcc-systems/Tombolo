@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin, message } from 'antd';
 import msLogo from '../../images/mslogo.png';
+import { getDeviceInfo } from './utils';
 import { authActions } from '../../redux/actions/Auth';
 import { Constants } from '../common/Constants';
 
@@ -12,39 +13,15 @@ const Login = () => {
     setLoading(true);
 
     //get browser and os info and put in deviceInfo variable
-    const deviceInfo = {
-      os: window.navigator.userAgentData ? window.navigator.userAgentData.platform : navigator.userAgent,
-      browser: getBrowserInfo(),
-    };
-
+    const deviceInfo = getDeviceInfo();
     const test = await authActions.login({ email, password, deviceInfo });
 
     if (test && test.type === Constants.LOGIN_SUCCESS) {
+      //reload page if login is succesful
       window.location.href = '/';
     } else {
       setLoading(false);
     }
-  };
-
-  const getBrowserInfo = () => {
-    const userAgent = navigator.userAgent;
-    let browserName = 'Unknown';
-
-    if (userAgent.indexOf('Firefox') > -1) {
-      browserName = 'Firefox';
-    } else if (userAgent.indexOf('Opera') > -1 || userAgent.indexOf('OPR') > -1) {
-      browserName = 'Opera';
-    } else if (userAgent.indexOf('Trident') > -1) {
-      browserName = 'Internet Explorer';
-    } else if (userAgent.indexOf('Edge') > -1) {
-      browserName = 'Edge';
-    } else if (userAgent.indexOf('Chrome') > -1) {
-      browserName = 'Chrome';
-    } else if (userAgent.indexOf('Safari') > -1) {
-      browserName = 'Safari';
-    }
-
-    return browserName;
   };
 
   // if user is logged in, redirect to home page
@@ -52,8 +29,7 @@ const Login = () => {
     const user = JSON.parse(localStorage.getItem('user'));
 
     if (user && user.isAuthenticated) {
-      //need to validate token is still valid later
-      window.location.href = '/';
+      //user is authenticated
     }
   });
 

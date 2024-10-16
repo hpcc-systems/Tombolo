@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const User = models.user;
 const UserRoles = models.UserRoles;
+const Roles = models.Role_Types;
 
 // Delete user with ID
 const deleteUser = async (req, res) => {

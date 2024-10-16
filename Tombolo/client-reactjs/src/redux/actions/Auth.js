@@ -6,6 +6,7 @@ export const authActions = {
   logout,
   registerBasicUser,
   loadUserFromStorage,
+  registerOwner,
 };
 
 async function login({ email, password, deviceInfo }) {
@@ -27,8 +28,7 @@ async function login({ email, password, deviceInfo }) {
 }
 
 function logout() {
-  fetch('/api/auth/logout', { headers: authHeader() });
-
+  fetch('/api/auth/logoutBasicUser', { headers: authHeader(), method: 'POST' });
   //remove item from local storage
   localStorage.removeItem('user');
 
@@ -55,7 +55,31 @@ async function registerBasicUser(values) {
 
   if (user) {
     //log in user
-    const loginResponse = await loginBasicUserFunc(values.email, values.password);
+    const loginResponse = await loginBasicUserFunc(values.email, values.password, values.deviceInfo);
+
+    if (loginResponse) {
+      let data = loginResponse.data;
+      data.isAuthenticated = true;
+
+      //set item in local storage
+      localStorage.setItem('user', JSON.stringify(data));
+
+      return {
+        type: Constants.LOGIN_SUCCESS,
+        payload: data,
+      };
+    }
+  }
+
+  return;
+}
+
+async function registerOwner(values) {
+  const user = await registerOwnerFunc(values);
+
+  if (user) {
+    //log in user
+    const loginResponse = await loginBasicUserFunc(values.email, values.password, values.deviceInfo);
 
     if (loginResponse) {
       let data = loginResponse.data;
@@ -112,6 +136,33 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password, deviceInfo }),
+    },
+    { headers: authHeader() }
+  );
+
+  if (!response.ok) {
+    handleError(response);
+    return null;
+  }
+
+  const data = await response.json();
+
+  return data;
+};
+
+const registerOwnerFunc = async (values) => {
+  const url = '/api/auth/registerApplicationOwner';
+
+  values.registrationMethod = 'traditional';
+
+  const response = await fetch(
+    url,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(values),
     },
     { headers: authHeader() }
   );
