@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Divider, Spin } from 'antd';
+import { Form, Input, Button, Divider, Spin, message } from 'antd';
 import msLogo from '../../images/mslogo.png';
 import { authActions } from '../../redux/actions/Auth';
 import { Constants } from '../common/Constants';
@@ -54,6 +54,17 @@ const Login = () => {
     if (user && user.isAuthenticated) {
       //need to validate token is still valid later
       window.location.href = '/';
+    }
+  });
+
+  //if session expired relay message to user what happened
+
+  useEffect(() => {
+    const sessionExpired = localStorage.getItem('sessionExpired');
+
+    if (sessionExpired) {
+      localStorage.removeItem('sessionExpired');
+      message.error('Session expired. Please log in again.');
     }
   });
 
