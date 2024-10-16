@@ -27,10 +27,10 @@ async function login({ email, password, deviceInfo }) {
 }
 
 function logout() {
+  fetch('/api/auth/logout', { headers: authHeader() });
+
   //remove item from local storage
   localStorage.removeItem('user');
-
-  fetch('/api/auth/logout', { headers: authHeader() });
 
   return {
     type: Constants.LOGOUT_SUCCESS,
