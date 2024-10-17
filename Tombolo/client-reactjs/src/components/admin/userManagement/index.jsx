@@ -1,74 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, message } from 'react';
+
 import BreadCrumbs from '../../common/BreadCrumbs';
 import UserManagementActionButton from './ActionButton';
 import UserManagementTable from './Table';
 import UserFilters from './Filters';
 import './User.css';
+import { getAllUsers, getAllRoles } from './Utils';
+import UserDetailModal from './UserDetailModal';
+import EditUserModel from './EditUserModel';
 
 const UserManagement = () => {
   //general states
   const [selectedRows, setSelectedRows] = useState([]);
-  const [users, setUsers] = useState([
-    {
-      id: 0,
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john@doe.com',
-      roles: ['Admin'],
-      applications: ['test'],
-      verifiedUser: true,
-      registrationStatus: 'active',
-    },
-    {
-      id: 1,
-      firstName: 'Jane',
-      lastName: 'Doe',
-      email: 'jane@doe.com',
-      roles: [''],
-      applications: [''],
-      verifiedUser: false,
-      registrationStatus: 'pending',
-    },
-    {
-      id: 2,
-      firstName: 'Jim',
-      lastName: 'Doe',
-      email: 'jim@doe.com',
-      roles: ['Contributor'],
-      applications: ['test'],
-      verifiedUser: false,
-      registrationStatus: 'pending',
-    },
-  ]);
+  const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [editingData, setEditingData] = useState(null);
+  const [roles, setRoles] = useState([]);
 
   //filters
-  const [filtersVisible, setFiltersVisible] = useState(true);
   const [filteringUsers, setFilteringUsers] = useState(false);
   const [filters, setFilters] = useState({});
   const [filteredUsers, setFilteredUsers] = useState(users);
 
   //modal visibility states
-  const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
-  const [displayAddUserModal, setDisplayAddUserModal] = useState(false);
+  const [_bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
+  const [_displayAddUserModal, setDisplayAddUserModal] = useState(false);
   const [displayUserDetailsModal, setDisplayUserDetailsModal] = useState(false);
-  const [displayAddRejectModal, setDisplayAddRejectModal] = useState(false);
+  const [displayEditUserModal, setDisplayEditUserModal] = useState(false);
 
   //When add button new job monitoring button clicked
   const handleAddUserButtonClick = () => {
     setDisplayAddUserModal(true);
   };
-
-  //unused so far
-  console.log(
-    editingData,
-    bulkEditModalVisibility,
-    displayAddUserModal,
-    displayUserDetailsModal,
-    displayAddRejectModal,
-    setFilteringUsers
-  );
 
   useEffect(() => {
     //when filters change, calculate filtered users
@@ -77,13 +39,18 @@ const UserManagement = () => {
 
       const filtered = users.filter((user) => {
         if (filters.role) {
-          if (!user.roles.includes(filters.role)) {
+          const userRoleIds = user.roles.map((role) => role.roleId);
+          if (!userRoleIds.includes(filters.role)) {
             return false;
           }
         }
         if (filters.application) {
           if (!user.applications.includes(filters.application)) {
-            return false;
+            const userApplicationIds = user.applications.map((application) => application.application_id);
+
+            if (!userApplicationIds.includes(filters.application)) {
+              return false;
+            }
           }
         }
 
@@ -115,6 +82,31 @@ const UserManagement = () => {
     }
   }, [filters]);
 
+  // When component mounts, get all users
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await getAllUsers();
+        setUsers(data);
+        setFilteredUsers(data);
+      } catch (error) {
+        message.error('Failed to get users');
+      }
+    };
+    fetchUser();
+
+    // Get all roles when component mounts
+    const fetchRoles = async () => {
+      try {
+        const allRoles = await getAllRoles();
+        setRoles(allRoles);
+      } catch (error) {
+        message.warning('Failed to get roles');
+      }
+    };
+    fetchRoles();
+  }, []);
+
   return (
     <>
       <BreadCrumbs
@@ -125,29 +117,42 @@ const UserManagement = () => {
             setSelectedRows={setSelectedRows}
             setUsers={setUsers}
             setBulkEditModalVisibility={setBulkEditModalVisibility}
-            setFiltersVisible={setFiltersVisible}
-            filtersVisible={filtersVisible}
+            setFilteredUsers={setFilteredUsers}
           />
         }
       />
-      <UserFilters
-        users={users}
-        setFilters={setFilters}
-        filters={filters}
-        filtersVisible={filtersVisible}
-        setFiltersVisible={setFiltersVisible}
-      />
+      <UserFilters users={users} setFilters={setFilters} filters={filters} roles={roles} />
       <UserManagementTable
         users={filteredUsers}
         filteringUsers={filteringUsers}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
         setSelectedRows={setSelectedRows}
-        setEditingData={setEditingData}
+        setDisplayEditUserModal={setDisplayEditUserModal}
         setDisplayAddUserModal={setDisplayAddUserModal}
         setDisplayUserDetailsModal={setDisplayUserDetailsModal}
-        setDisplayAddRejectModal={setDisplayAddRejectModal}
+        setUsers={setUsers}
+        setFilteredUsers={setFilteredUsers}
+        roles={roles}
       />
+      <UserDetailModal
+        displayUserDetailsModal={displayUserDetailsModal}
+        setDisplayUserDetailsModal={setDisplayUserDetailsModal}
+        selectedUser={selectedUser}
+        roles={roles}
+      />
+
+      {selectedUser && (
+        <EditUserModel
+          displayEditUserModal={displayEditUserModal}
+          setDisplayEditUserModal={setDisplayEditUserModal}
+          selectedUser={selectedUser}
+          setSelectedUser={setSelectedUser}
+          setUsers={setUsers}
+          setFilteredUsers={setFilteredUsers}
+          roles={roles}
+        />
+      )}
     </>
   );
 };
