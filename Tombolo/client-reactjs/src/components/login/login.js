@@ -18,7 +18,7 @@ const Login = () => {
 
     if (test && test.type === Constants.LOGIN_SUCCESS) {
       //reload page if login is succesful
-      window.location.reload(false);
+      window.location.href = '/';
     } else {
       setLoading(false);
     }

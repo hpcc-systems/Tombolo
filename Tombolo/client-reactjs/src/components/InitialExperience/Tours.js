@@ -15,24 +15,23 @@ const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
   useEffect(() => {
     if (
       !application?.applicationId &&
-      !noApplication.noApplication &&
+      noApplication.noApplication &&
       !noApplication.firstTourShown &&
       applicationsRetrieved
     ) {
       if (window.location.pathname !== '/admin/applications') {
         setTourOpen(true);
+        dispatch(applicationActions.updateApplicationLeftTourShown(true));
       }
-      dispatch(applicationActions.updateApplicationLeftTourShown(true));
     }
 
     if (application?.applicationId && noClusters.noClusters && !noClusters.firstTourShown) {
       if (window.location.pathname !== '/admin/clusters') {
         setClusterTourOpen(true);
+        dispatch(applicationActions.updateClustersLeftTourShown(true));
       }
-
-      dispatch(applicationActions.updateClustersLeftTourShown(true));
     }
-  }, [application, noApplication, noClusters]);
+  }, [applicationReducer]);
 
   //click handler for tour closing
   const handleClick = (e) => {
@@ -41,7 +40,6 @@ const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
     }
 
     if (clusterLinkRef.current && clusterLinkRef.current.contains(e.target)) {
-      console.log('click detected on clusterLinkRef');
       setClusterTourOpen(false);
     }
   };

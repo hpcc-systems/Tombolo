@@ -69,7 +69,7 @@ const App = () => {
     if (user !== JSON.parse(localStorage.getItem('user'))) {
       setUser(JSON.parse(localStorage.getItem('user')));
     }
-  }, [user, authenticationReducer]);
+  }, [authenticationReducer]);
 
   //left nav collapse method
   const onCollapse = (collapsed) => {
