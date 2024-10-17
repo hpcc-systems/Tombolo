@@ -77,9 +77,6 @@ const AppHeader = () => {
 
   //handle application change
   const handleApplicationChange = (value) => {
-    console.log('application change');
-    console.log(value);
-
     const applicationId = value;
     const applicationTitle = applications.find((app) => app.id === applicationId)?.title || value;
 

@@ -12,7 +12,7 @@ const DashboardApiTable = ({ keys, getKeys, active }) => {
     try {
       const payload = {
         method: 'DELETE',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/key/${id}`, payload);

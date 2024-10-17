@@ -67,7 +67,7 @@ function FileMonitoringModal({
   // Get details of a file monitoring -----------------------------------------------
   const getFileMonitoringDetails = async (id) => {
     try {
-      const payload = { method: 'GET', header: authHeader() };
+      const payload = { method: 'GET', headers: authHeader() };
       setFetchingFileMonitoringDetails(true);
       const response = await fetch(`/api/filemonitoring/read/${id}`, payload);
       if (!response.ok) handleError(response);
@@ -87,7 +87,7 @@ function FileMonitoringModal({
     try {
       const payload = {
         method: selectedFileMonitoringDetails ? 'PUT' : 'POST',
-        header: authHeader(),
+        headers: authHeader(),
         body: JSON.stringify({ ...monitoringDetails }),
       };
 

@@ -27,7 +27,7 @@ function ClusterMonitoringTable({
     try {
       const payload = {
         method: 'DELETE',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/clustermonitoring/${id}`, payload);
@@ -44,7 +44,7 @@ function ClusterMonitoringTable({
     try {
       const payload = {
         method: 'PUT',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/clustermonitoring/clusterMonitoringStatus/${id}`, payload);
