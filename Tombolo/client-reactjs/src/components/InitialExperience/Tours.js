@@ -41,6 +41,7 @@ const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
     }
 
     if (clusterLinkRef.current && clusterLinkRef.current.contains(e.target)) {
+      console.log('click detected on clusterLinkRef');
       setClusterTourOpen(false);
     }
   };

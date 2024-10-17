@@ -8,7 +8,7 @@ import { useHistory } from 'react-router';
 
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { authHeader } from '../../common/AuthHeader.js';
-import { hasEditPermission } from '../../common/AuthUtil.js';
+// import { hasEditPermission } from '../../common/AuthUtil.js';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { getGroupsTree, selectGroup, expandGroups } from '../../../redux/actions/Groups';
 import AssetsTable from './AssetsTable';
@@ -25,15 +25,17 @@ const { Search } = Input;
 // const CheckboxGroup = Checkbox.Group;
 
 const Assets = () => {
-  const [groupsReducer, authReducer, assetReducer, applicationReducer] = useSelector((state) => [
+  const [groupsReducer, assetReducer, applicationReducer] = useSelector((state) => [
     state.groupsReducer,
-    state.authenticationReducer,
     state.assetReducer,
     state.applicationReducer,
   ]);
+
   const dispatch = useDispatch();
   const history = useHistory();
-  const editingAllowed = hasEditPermission(authReducer.user);
+  // const user = JSON.parse(localStorage.getItem('user'));
+  //TODO, get this from user roles to check if editing is allowed
+  const editingAllowed = true;
   // all data related to file explorer is in redux
   const { selectedKeys, expandedKeys, tree, dataList } = groupsReducer;
   const application = applicationReducer.application;
