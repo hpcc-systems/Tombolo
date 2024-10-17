@@ -23,6 +23,7 @@ const {
   bulkDeleteUsers,
   bulkUpdateUsers,
   updateUserRoles,
+  updateUserApplications
 } = require("../controllers/userController");
 
 const { validateUserRole } = require("../middlewares/rbacMiddleware");
@@ -54,5 +55,6 @@ router.patch(
   validatePatchUserRolesPayload,
   updateUserRoles
 ); // Update a user by id
+router.patch("/applications/:id",validateUserId, updateUserApplications); // Update a user's applications
 //Export
 module.exports = router;

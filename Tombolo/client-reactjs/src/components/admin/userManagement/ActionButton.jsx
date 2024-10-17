@@ -1,7 +1,7 @@
 import React from 'react';
 import { Menu, Dropdown, Button, message, Popconfirm } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import { handleDeleteUser } from './Utils';
+import { bulkDeleteUsers } from './Utils';
 
 const UserManagementActionButton = ({
   handleAddUserButtonClick,
@@ -9,16 +9,19 @@ const UserManagementActionButton = ({
   setSelectedRows,
   setUsers,
   setBulkEditModalVisibility,
-  setFiltersVisible,
-  filtersVisible,
+  setFilteredUsers,
 }) => {
   const deleteSelected = async () => {
     try {
-      //delete code fires here
-      alert('delete code fires here');
-      console.log(setSelectedRows, setUsers, handleDeleteUser);
+      const ids = selectedRows.map((row) => row.id);
+      await bulkDeleteUsers({ ids });
+      setSelectedRows([]);
+      setUsers((prev) => prev.filter((user) => !ids.includes(user.id)));
+      setFilteredUsers((prev) => prev.filter((user) => !ids.includes(user.id)));
+      message.success('Selected users deleted successfully');
     } catch (err) {
-      message.error('Unable to delete selected job monitorings');
+      message.error('Unable to delete selected users');
+      console.log(err);
     }
   };
 
@@ -27,15 +30,7 @@ const UserManagementActionButton = ({
       handleAddUserButtonClick();
     } else if (key === '2') {
       setBulkEditModalVisibility(true);
-    } else if (key === '4') {
-      changeFilterVisibility();
     }
-  };
-
-  //Change filter visibility
-  const changeFilterVisibility = () => {
-    localStorage.setItem('userFiltersVisible', !filtersVisible);
-    setFiltersVisible((prev) => !prev);
   };
 
   return (
@@ -49,7 +44,7 @@ const UserManagementActionButton = ({
           </Menu.Item>
           <Menu.Item key="3" disabled={selectedRows.length < 2}>
             <Popconfirm
-              title={`Are you sure you want to delete  selected ${selectedRows.length} monitorings?. `}
+              title={`Are you sure you want to delete  selected ${selectedRows.length} users?. `}
               okButtonProps={{ type: 'primary', danger: true }}
               okText="Delete"
               onConfirm={deleteSelected}>

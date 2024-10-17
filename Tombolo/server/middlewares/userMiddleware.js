@@ -88,6 +88,26 @@ const validateUpdateUserPayload = [
     .optional()
     .isLength({ min: 2, max: 50 })
     .withMessage("Last name must be between 2 and 50 characters"),
+  body("email")
+    .isEmail()
+    .withMessage("Email address is not valid")
+    .optional()
+    .withMessage("Email is required")
+    .isLength({ max: 100 })
+    .withMessage("Email must be less than 100 characters"),
+  body("registrationMethod")
+    .isString()
+    .optional()
+    .isIn(["traditional", "microsoft"])
+    .withMessage("Registration method must be either 'traditional' or 'microsoft'"),
+  body("verifiedUser")
+    .isBoolean()
+    .optional()
+    .withMessage("Verified user must be a boolean"),
+  body("registrationStatus")
+    .isIn(["pending", "active", "revoked"])
+    .optional()
+    .withMessage("Registration status must be one of 'pending', 'active', 'revoked'"),
   (req, res, next) => {
     const errors = validationResult(req).array();
     const errorString = errors.map((e) => e.msg).join(", ");

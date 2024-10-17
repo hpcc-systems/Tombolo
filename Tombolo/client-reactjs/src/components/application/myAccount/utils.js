@@ -1,5 +1,4 @@
 import { authHeader, handleError } from '../../common/AuthHeader';
-
 export const changeBasicUserPassword = async (values) => {
   const payload = {
     method: 'PATCH',
