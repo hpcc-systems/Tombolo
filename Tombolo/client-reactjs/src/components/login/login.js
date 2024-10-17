@@ -18,23 +18,13 @@ const Login = () => {
 
     if (test && test.type === Constants.LOGIN_SUCCESS) {
       //reload page if login is succesful
-      window.location.href = '/';
+      window.location.reload(false);
     } else {
       setLoading(false);
     }
   };
 
-  // if user is logged in, redirect to home page
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-
-    if (user && user.isAuthenticated) {
-      //user is authenticated
-    }
-  });
-
   //if session expired relay message to user what happened
-
   useEffect(() => {
     const sessionExpired = localStorage.getItem('sessionExpired');
 

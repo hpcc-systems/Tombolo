@@ -17,7 +17,7 @@ const Wizard = () => {
 
       if (result && result.type === Constants.LOGIN_SUCCESS) {
         //reload page
-        window.location.href = '/';
+        window.location.reload(false);
       }
     } catch (e) {
       console.log(e);

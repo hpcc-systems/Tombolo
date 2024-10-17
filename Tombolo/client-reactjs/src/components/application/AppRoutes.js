@@ -67,8 +67,6 @@ const AppRoutes = ({ application, authenticationReducer }) => {
       <PrivateRoute path="/:applicationId/actions" component={Actions} />
       <PrivateRoute path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId" component={ManualJobDetail} />
       <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
-      {/* redirect all other routes hit to home */}
-      <PrivateRoute path="*" component={Home} />
     </Switch>
   );
 };

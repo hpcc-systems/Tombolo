@@ -24,7 +24,7 @@ const Register = () => {
 
   return (
     <>
-      <RegisterUserForm form={form} onFinish={onFinish} msEnabled={false} />
+      <RegisterUserForm form={form} onFinish={onFinish} msEnabled={true} />
       <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
         <span>Already have an account?</span> <a href="/login">Login</a>
       </p>

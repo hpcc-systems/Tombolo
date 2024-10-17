@@ -13,9 +13,10 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
 import { checkBackendStatus, checkOwnerExists } from './redux/actions/Backend';
 
+// Loading screen
 import LoadingScreen from './components/layout/LoadingScreen.js';
 
-// // Auth pages
+// Auth pages
 import AuthRoutes from './components/login/AuthRoutes.js';
 
 // App Pages
@@ -25,7 +26,6 @@ import AppRoutes from './components/application/AppRoutes.js';
 import AdminRoutes from './components/admin/AdminRoutes.js';
 
 //initial Experience
-// import Wizard from './components/InitialExperience/Wizard.js';
 import Tours from './components/InitialExperience/Tours.js';
 import Wizard from './components/InitialExperience/Wizard.js';
 
