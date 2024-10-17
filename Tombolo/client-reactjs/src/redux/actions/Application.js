@@ -102,7 +102,16 @@ function getApplications() {
     fetch('/api/app/read/app_list', { headers: authHeader() })
       .then((response) => (response.ok ? response.json() : handleError(response)))
       .then((applications) => {
-        const applicationsFinal = applications ? applications : [];
+        let applicationsFinal = applications ? applications : [];
+
+        //filter out applications by what user has access too in local storage
+        const user = JSON.parse(localStorage.getItem('user'));
+        const userApplications = user.applications;
+
+        if (userApplications) {
+          const userApplicationIds = userApplications.map((app) => app.application.id);
+          applicationsFinal = applicationsFinal.filter((app) => userApplicationIds.includes(app.id));
+        }
 
         if (applicationsFinal.length === 0) {
           dispatch({ type: Constants.NO_APPLICATION_FOUND, noApplication: true });

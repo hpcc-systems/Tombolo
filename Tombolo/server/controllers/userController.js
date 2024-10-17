@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
+const Roles = models.Role_Types;
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
@@ -180,6 +181,25 @@ const bulkDeleteUsers = async (req, res) => {
       throw { status: 404, message: "Users not found" };
     }
 
+  }catch(err){
+    logger.error(`Update user applications: ${err.message}`);
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+}
+
+//Exports
+module.exports = {
+  deleteUser,
+  updateBasicUserInfo,
+  getUser,
+  getAllUsers,
+  changePassword,
+  bulkDeleteUsers,
+  bulkUpdateUsers,
+  updateUserRoles,
+  updateUserApplications,
+};
+
     // Users successfully deleted
     res.status(200).json({
       success: true,
@@ -303,22 +323,3 @@ const updateUserApplications = async (req, res) => {
 
     // Response
     res.status(200).json({ success: true, message: 'User applications updated successfully', data: newApplications });
-
-  }catch(err){
-    logger.error(`Update user applications: ${err.message}`);
-    res.status(err.status || 500).json({ success: false, message: err.message });
-  }
-}
-
-//Exports
-module.exports = {
-  deleteUser,
-  updateBasicUserInfo,
-  getUser,
-  getAllUsers,
-  changePassword,
-  bulkDeleteUsers,
-  bulkUpdateUsers,
-  updateUserRoles,
-  updateUserApplications,
-};

@@ -141,7 +141,7 @@ const SuperFileMonitoringModal = ({
   // Get details of a file monitoring -----------------------------------------------
   const getFileMonitoringDetails = async (id) => {
     try {
-      const payload = { method: 'GET', header: authHeader() };
+      const payload = { method: 'GET', headers: authHeader() };
       setFetchingFileMonitoringDetails(true);
       const response = await fetch(`/api/superfilemonitoring/read/${id}`, payload);
       if (!response.ok) handleError(response);

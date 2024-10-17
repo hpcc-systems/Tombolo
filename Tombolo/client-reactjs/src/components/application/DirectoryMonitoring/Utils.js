@@ -5,7 +5,7 @@ import { message } from 'antd';
 export const createDirectoryMonitoring = async ({ inputData }) => {
   const payload = {
     method: 'POST',
-    header: authHeader(),
+    headers: authHeader(),
     body: JSON.stringify(inputData),
   };
 
@@ -23,7 +23,7 @@ export const createDirectoryMonitoring = async ({ inputData }) => {
 export const getAllDirectoryMonitorings = async ({ applicationId }) => {
   const payload = {
     method: 'GET',
-    header: authHeader(),
+    headers: authHeader(),
   };
 
   const response = await fetch(`/api/DirectoryMonitoring/all/${applicationId}`, payload);
@@ -69,7 +69,7 @@ export const checkScheduleValidity = ({ intermittentScheduling, completeSchedule
 export const getAllTeamsHook = async () => {
   const payload = {
     method: 'GET',
-    header: authHeader(),
+    headers: authHeader(),
   };
 
   const response = await fetch(`/api/teamsHook/`, payload);
@@ -126,7 +126,7 @@ export const handleDeleteDirectoryMonitoring = async ({ id, directoryMonitorings
   try {
     const payload = {
       method: 'DELETE',
-      header: authHeader(),
+      headers: authHeader(),
     };
 
     const response = await fetch(`/api/DirectoryMonitoring/delete/${id}`, payload);

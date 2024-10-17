@@ -17,6 +17,7 @@ export function authenticationReducer(state = initialState, action) {
         isAuthenticated: true,
         token: action.payload.token,
         roles: action.payload.roles,
+        applications: action.payload.applications,
         firstName: action.payload.firstName,
         lastName: action.payload.lastName,
         id: action.payload.id,
@@ -27,6 +28,7 @@ export function authenticationReducer(state = initialState, action) {
         isAuthenticated: false,
         token: null,
         roles: [],
+        applications: [],
         user: null, // Reset user object
         firstName: '',
         lastName: '',
@@ -38,6 +40,7 @@ export function authenticationReducer(state = initialState, action) {
         isAuthenticated: false,
         token: null,
         roles: [],
+        applications: [],
         user: null, // Reset user object
         firstName: '',
         lastName: '',
@@ -49,6 +52,7 @@ export function authenticationReducer(state = initialState, action) {
         isAuthenticated: true,
         token: action.payload.token,
         roles: action.payload.roles,
+        applications: action.payload.applications,
         user: action.payload.user, // Set user object
         firstName: action.payload.firstName,
         lastName: action.payload.lastName,
