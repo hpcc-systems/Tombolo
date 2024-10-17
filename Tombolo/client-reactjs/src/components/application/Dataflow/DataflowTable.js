@@ -4,14 +4,14 @@ import ReactMarkdown from 'react-markdown';
 import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { hasEditPermission } from '../../common/AuthUtil.js';
+// import { hasEditPermission } from '../../common/AuthUtil.js';
 import { Constants } from '../../common/Constants';
 import Text from '../../common/Text.jsx';
-import { useSelector } from 'react-redux';
 
 function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdated, onEditDataFlow }) {
-  const authReducer = useSelector((state) => state.authenticationReducer);
-  const editingAllowed = hasEditPermission(authReducer.user);
+  // const user = JSON.parse(localStorage.getItem('user'));
+  //TODO, get this from user roles to check if editing is allowed
+  const editingAllowed = true;
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);

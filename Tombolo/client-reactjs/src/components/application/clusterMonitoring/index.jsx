@@ -89,7 +89,7 @@ function ClusterMonitoring() {
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/clustermonitoring/all/${applicationId}`, payload);
@@ -177,7 +177,7 @@ function ClusterMonitoring() {
 
       const payload = {
         method: selectedMonitoring ? 'PUT' : 'POST',
-        header: authHeader(),
+        headers: authHeader(),
         body: JSON.stringify(formData),
       };
 
@@ -232,7 +232,7 @@ function ClusterMonitoring() {
       setEngines([]);
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/hpcc/read/clusterMetaData?clusterId=${clusterId}`, payload);
