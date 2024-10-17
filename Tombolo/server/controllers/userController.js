@@ -59,15 +59,15 @@ const updateBasicUserInfo = async (req, res) => {
       existingUser.lastName = lastName;
     }
 
-    if(registrationMethod) {
+    if (registrationMethod) {
       existingUser.registrationMethod = registrationMethod;
     }
 
-    if(registrationStatus) {
+    if (registrationStatus) {
       existingUser.registrationStatus = registrationStatus;
     }
 
-    if(verifiedUser !== undefined || verifiedUser !== null) {
+    if (verifiedUser !== undefined || verifiedUser !== null) {
       existingUser.verifiedUser = verifiedUser;
     }
 
@@ -117,20 +117,28 @@ const getUser = async (req, res) => {
 
 // Get all users
 const getAllUsers = async (req, res) => {
-    try {
-        const users = await User.findAll({
-          include: [
-            { model: UserRoles, as: "roles" },
-            { model: user_application, as: "applications" },
-          ],
-        });
-        res.status(200).json({ success: true, message: 'Users retrieved successfully', data: users });
-    } catch (err) {
-        logger.error(`Get all users: ${err.message}`);
-        res.status(err.status || 500).json({ success: false, message: err.message });
-    }
-    };
-  
+  try {
+    const users = await User.findAll({
+      include: [
+        { model: UserRoles, as: "roles" },
+        { model: user_application, as: "applications" },
+      ],
+    });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Users retrieved successfully",
+        data: users,
+      });
+  } catch (err) {
+    logger.error(`Get all users: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 //Update password - Ensure current password provided is correct
 const changePassword = async (req, res) => {
   try {
@@ -180,33 +188,8 @@ const bulkDeleteUsers = async (req, res) => {
     if (deletedCount === 0) {
       throw { status: 404, message: "Users not found" };
     }
-
-  }catch(err){
-    logger.error(`Update user applications: ${err.message}`);
-    res.status(err.status || 500).json({ success: false, message: err.message });
-  }
-}
-
-//Exports
-module.exports = {
-  deleteUser,
-  updateBasicUserInfo,
-  getUser,
-  getAllUsers,
-  changePassword,
-  bulkDeleteUsers,
-  bulkUpdateUsers,
-  updateUserRoles,
-  updateUserApplications,
-};
-
-    // Users successfully deleted
-    res.status(200).json({
-      success: true,
-      message: `${deletedCount} Users deleted successfully`,
-    });
   } catch (err) {
-    logger.error(`Delete users: ${err.message}`);
+    logger.error(`Update user applications: ${err.message}`);
     res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
@@ -274,52 +257,108 @@ const updateUserRoles = async (req, res) => {
     // Find existing user details
     const existingUser = await User.findOne({ where: { id } });
 
-        // If user not found
-        if (!existingUser) {
-            throw { status: 404, message: 'User not found' };
-        }
-        // Create id and role pair
-        const userRoles = roles.map(role => ({ userId: id, roleId: role, createdBy: creator }));
-
-        // Get all existing roles for a user 
-        const existingRoles = await UserRoles.findAll({ where: { userId: id } });
-
-        // Delete existing roles that are not in the new list
-        const rolesToDelete = existingRoles.filter(role => !roles.includes(role.roleId));
-        await UserRoles.destroy({ where: { id: rolesToDelete.map(role => role.id) }});
-
-        // Crete new roles that are not in the existing list
-        const rolesToAdd = userRoles.filter(role => !existingRoles.map(role => role.roleId).includes(role.roleId));
-        const newRoles =  await UserRoles.bulkCreate(rolesToAdd);
-
-        // Response
-        res.status(200).json({ success: true, message: 'User roles updated successfully', data: newRoles });
-    } catch (err) {
-      console.log(err);
-        logger.error(`Update user roles: ${err.message}`);
-        res.status(err.status || 500).json({ success: false, message: err.message });
+    // If user not found
+    if (!existingUser) {
+      throw { status: 404, message: "User not found" };
     }
+    // Create id and role pair
+    const userRoles = roles.map((role) => ({
+      userId: id,
+      roleId: role,
+      createdBy: creator,
+    }));
+
+    // Get all existing roles for a user
+    const existingRoles = await UserRoles.findAll({ where: { userId: id } });
+
+    // Delete existing roles that are not in the new list
+    const rolesToDelete = existingRoles.filter(
+      (role) => !roles.includes(role.roleId)
+    );
+    await UserRoles.destroy({
+      where: { id: rolesToDelete.map((role) => role.id) },
+    });
+
+    // Crete new roles that are not in the existing list
+    const rolesToAdd = userRoles.filter(
+      (role) => !existingRoles.map((role) => role.roleId).includes(role.roleId)
+    );
+    const newRoles = await UserRoles.bulkCreate(rolesToAdd);
+
+    // Response
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "User roles updated successfully",
+        data: newRoles,
+      });
+  } catch (err) {
+    console.log(err);
+    logger.error(`Update user roles: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
 };
 
 const updateUserApplications = async (req, res) => {
-  try{
+  try {
     // Get user applications by id
     const { user } = req;
-    const { id : user_id } = req.params;
+    const { id: user_id } = req.params;
     const { applications } = req.body;
 
     // Find existing user details
-    const existing = await user_application.findAll({ where: { user_id} });
-    const existingApplications = existing.map(app => app.application_id);
+    const existing = await user_application.findAll({ where: { user_id } });
+    const existingApplications = existing.map((app) => app.application_id);
 
     // Delete applications  that are not in the new list
-    const applicationsToDelete = existingApplications.filter(app => !applications.includes(app));
-    await user_application.destroy({ where: { application_id: applicationsToDelete }});
+    const applicationsToDelete = existingApplications.filter(
+      (app) => !applications.includes(app)
+    );
+    await user_application.destroy({
+      where: { application_id: applicationsToDelete },
+    });
 
     // Create new applications that are not in the existing list
-    const applicationToCreate = applications.filter((app) => !existingApplications.includes(app));
-    const applicationUserPair = applicationToCreate.map(app => ({ user_id, application_id: app, createdBy: user.id }));
-    const newApplications = await user_application.bulkCreate(applicationUserPair);
+    const applicationToCreate = applications.filter(
+      (app) => !existingApplications.includes(app)
+    );
+    const applicationUserPair = applicationToCreate.map((app) => ({
+      user_id,
+      application_id: app,
+      createdBy: user.id,
+    }));
+    const newApplications = await user_application.bulkCreate(
+      applicationUserPair
+    );
 
     // Response
-    res.status(200).json({ success: true, message: 'User applications updated successfully', data: newApplications });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "User applications updated successfully",
+        data: newApplications,
+      });
+  } catch {
+    logger.error(`Update user applications: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
+//Exports
+module.exports = {
+  deleteUser,
+  updateBasicUserInfo,
+  getUser,
+  getAllUsers,
+  changePassword,
+  bulkDeleteUsers,
+  bulkUpdateUsers,
+  updateUserRoles,
+  updateUserApplications,
+};
