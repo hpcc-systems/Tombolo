@@ -65,7 +65,10 @@ window.fetch = async (...args) => {
 
     if (token) {
       let user = await JSON.parse(localStorage.getItem('user'));
-      if (user.token !== token) {
+
+      //if user doesn't exist, return
+      if (!user) return;
+      if (user?.token !== token) {
         user.token = token;
         await localStorage.setItem('user', JSON.stringify(user));
 
