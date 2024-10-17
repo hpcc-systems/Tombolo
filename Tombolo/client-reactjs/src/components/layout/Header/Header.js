@@ -77,17 +77,18 @@ const AppHeader = () => {
 
   //handle application change
   const handleApplicationChange = (value) => {
-    if (typeof value === 'object') {
-      value = value?.value;
-    }
+    console.log('application change');
+    console.log(value);
 
     const applicationId = value;
-    const applicationTitle = applications.find((app) => app.value === applicationId)?.display || value;
+    const applicationTitle = applications.find((app) => app.id === applicationId)?.title || value;
 
     if (application?.applicationId !== applicationId) {
       dispatch(applicationActions.applicationSelected(applicationId, applicationTitle));
       localStorage.setItem('activeApplicationId', applicationId);
       setSelected(applicationTitle);
+      //reload page
+      window.location.reload(false);
     }
   };
 
