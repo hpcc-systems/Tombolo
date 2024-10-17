@@ -122,6 +122,8 @@ const getAllUsers = async (req, res) => {
             { model: UserRoles, as: "roles" },
             { model: user_application, as: "applications" },
           ],
+          // descending order by date
+          order: [['createdAt', 'DESC']],
         });
         res.status(200).json({ success: true, message: 'Users retrieved successfully', data: users });
     } catch (err) {
@@ -310,8 +312,93 @@ const updateUserApplications = async (req, res) => {
   }
 }
 
+// Create new user
+const createUser = async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      registrationMethod = 'traditional',
+      registrationStatus = 'active',
+      verifiedUser = true,
+      roles,
+      applications,
+    } = req.body;
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ where: { email } });
+
+    if (existingUser) {
+      throw { status: 400, message: "Email already exists" };
+    }
+
+    // Generate random password - 12 characters - alpha numeric
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+  
+    // Hash password
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(password, salt);
+
+    // Create user
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      email,
+      hash,
+      registrationMethod,
+      registrationStatus,
+      verifiedUser,
+    });
+
+    // Create user roles
+    const userRoles = roles.map((role) => ({
+      userId: newUser.id,
+      roleId: role,
+      createdBy: req.user.id,
+    }));
+    await UserRoles.bulkCreate(userRoles);
+
+    // Create user applications
+    const userApplications = applications.map((application) => ({
+      user_id: newUser.id,
+      application_id: application,
+      createdBy: req.user.id,
+    }));
+    await user_application.bulkCreate(userApplications);
+
+    // Refetch user information
+    const newUserData = await User.findOne({
+      where: { id: newUser.id },
+      include: [
+        { model: UserRoles, as: "roles" },
+        { model: user_application, as: "applications" },
+      ],
+    });
+
+    // Remove hash
+    delete newUserData.dataValues.hash;
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      data: newUserData,
+    });
+  } catch (err) {
+    logger.error(`Create user: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 //Exports
 module.exports = {
+  createUser,
   deleteUser,
   updateBasicUserInfo,
   getUser,
