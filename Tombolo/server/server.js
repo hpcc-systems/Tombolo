@@ -13,7 +13,9 @@ process.env.TZ = "UTC";
 /* LIBRARIES */
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const {tokenValidationMiddleware: validateToken} = require("./middlewares/tokenValidationMiddleware");
+const {
+  tokenValidationMiddleware: validateToken,
+} = require("./middlewares/tokenValidationMiddleware");
 const passport = require("passport");
 const cors = require("cors");
 const compression = require("compression");
@@ -90,14 +92,16 @@ const sent_notifications = require("./routes/sent_notifications/read");
 const monitorings = require("./routes/monitorings/read");
 const asr = require("./routes/asr/read");
 const directoryMonitoring = require("./routes/directorymonitoring/read");
-const status = require("./routes/status/read");
 
 //MVC & TESTED
 const auth = require("./routes/authRoutes");
 const users = require("./routes/userRoutes");
 const sessions = require("./routes/sessionRoutes");
-const cluster = require("./routes/clusterRoutes.js");
-const roles = require("./routes/roleTypesRoute.js");
+const cluster = require("./routes/clusterRoutes");
+const roles = require("./routes/roleTypesRoute");
+const status = require("./routes/statusRoutes");
+console.log(auth);
+console.log(status);
 
 // Log all HTTP requests
 app.use((req, res, next) => {

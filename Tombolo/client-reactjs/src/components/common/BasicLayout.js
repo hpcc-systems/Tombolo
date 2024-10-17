@@ -2,9 +2,7 @@ import React from 'react';
 import { Card } from 'antd';
 import logo from '../../images/logo.png';
 
-const BasicLayout = ({ content }) => {
-  let width = null;
-  //if pathname is /register, make .basicLayout wider
+const BasicLayout = ({ content, width }) => {
   if (window.location.pathname === '/register') {
     width = '40rem';
   }
