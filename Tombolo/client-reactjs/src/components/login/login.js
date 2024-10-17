@@ -24,17 +24,7 @@ const Login = () => {
     }
   };
 
-  // if user is logged in, redirect to home page
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-
-    if (user && user.isAuthenticated) {
-      //user is authenticated
-    }
-  });
-
   //if session expired relay message to user what happened
-
   useEffect(() => {
     const sessionExpired = localStorage.getItem('sessionExpired');
 

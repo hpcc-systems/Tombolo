@@ -5,7 +5,7 @@ import { debounce } from 'lodash';
 import ReactMarkdown from 'react-markdown';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { hasEditPermission } from '../../common/AuthUtil.js';
+// import { hasEditPermission } from '../../common/AuthUtil.js';
 import AssociatedDataflows from '../AssociatedDataflows';
 import EditableTable from '../../common/EditableTable.js';
 import { eclTypes, omitDeep } from '../../common/CommonUtil.js';
@@ -462,7 +462,9 @@ class QueryDetails extends PureComponent {
   };
 
   render() {
-    const editingAllowed = hasEditPermission(this.props.user);
+    // const user = JSON.parse(localStorage.getItem('user'));
+    //TODO, get this from user roles to check if editing is allowed
+    const editingAllowed = true;
     const { confirmLoading } = this.state;
     const formItemLayout = {
       labelCol: { span: 2 },
@@ -827,14 +829,13 @@ class QueryDetails extends PureComponent {
 
 function mapStateToProps(state, ownProps) {
   let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
-  const { user } = state.authenticationReducer;
+
   const { application, clusters } = state.applicationReducer;
   const { isNew = false, groupId = '' } = newAsset;
 
   if (ownProps.selectedAsset) selectedAsset = ownProps.selectedAsset;
 
   return {
-    user,
     selectedAsset,
     application,
     isNew,
