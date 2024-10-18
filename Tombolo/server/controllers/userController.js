@@ -407,7 +407,7 @@ const createUser = async (req, res) => {
       createdBy: req.user.id,
     });
 
-    // Remove hash
+    // Remove hash from user data
     delete newUserData.dataValues.hash;
 
     res.status(201).json({
