@@ -32,18 +32,32 @@ const { Sider } = Layout;
 const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   //states and hooks needed
   const [current, setCurrent] = useState('0');
+  const [disabled, setDisabled] = useState(true);
+  const [clusterDisabled, setClusterDisabled] = useState(true);
   const history = useHistory();
 
   //get states from redux
   const { applicationReducer } = useSelector((state) => state);
   const { application, integrations, clusters } = applicationReducer;
 
-  const clusterDisabled = clusters.length === 0;
-  const disabled = !(application?.id === undefined);
-
   const applicationId = application?.applicationId;
 
-  useEffect(() => {}, [application]);
+  //control the disabled state of the menu items based on the application and cluster states
+  useEffect(() => {
+    if (applicationId && applicationId) {
+      setDisabled(false);
+    } else {
+      setDisabled(true);
+    }
+  }, [application]);
+
+  useEffect(() => {
+    if (clusters.length > 0 && applicationId) {
+      setClusterDisabled(false);
+    } else {
+      setClusterDisabled(true);
+    }
+  }, [clusters, application]);
 
   //adjust the current highlighted menu item based on the current path
   useEffect(() => {

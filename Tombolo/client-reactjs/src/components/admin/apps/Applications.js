@@ -1,5 +1,5 @@
 import { Button, Divider, notification, Popconfirm, Table, Tooltip, Tour } from 'antd';
-import download from 'downloadjs';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { applicationActions } from '../../../redux/actions/Application';
@@ -7,12 +7,11 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
 import AddApplication from './AddApplication';
-import ShareApp from './ShareApp';
+
 import Text from '../../common/Text';
 
 import {
   DeleteOutlined,
-  ExportOutlined,
   EyeOutlined,
   GlobalOutlined,
   QuestionCircleOutlined,
@@ -21,7 +20,8 @@ import {
 
 const Applications = () => {
   //Redux tools
-  const user = useSelector((state) => state.authenticationReducer);
+  const user = JSON.parse(localStorage.getItem('user'));
+  const applicationReducer = useSelector((state) => state.applicationReducer);
   const { application, applications, noApplication } = useSelector((state) => state.applicationReducer);
   const dispatch = useDispatch();
 
@@ -31,13 +31,15 @@ const Applications = () => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showAddApplicationModal, setShowAddApplicationModal] = useState(false);
   const [isCreatingNewApp, setIsCreatingNewApp] = useState(false);
-  const [openShareAppDialog, setOpenShareAppDialog] = useState(false);
   const [showTour, setShowTour] = useState(false);
 
   //get apps on load
   useEffect(() => {
     getApplications();
   }, []);
+
+  //refresh screen after application actions
+  useEffect(() => {}, [applicationReducer, user, applications, application]);
 
   const getApplications = () => {
     dispatch(applicationActions.getApplications());
@@ -50,13 +52,8 @@ const Applications = () => {
     }
   }, [application, noApplication]);
 
-  const handleShareApplication = (record) => {
-    setSelectedApplication(record);
-    setOpenShareAppDialog(true);
-  };
-
   const handleRemove = (app_id) => {
-    const data = JSON.stringify({ appIdToDelete: app_id, user: user.username });
+    const data = JSON.stringify({ appIdToDelete: app_id, user: user.id });
     fetch('/api/app/read/deleteApplication', {
       method: 'post',
       headers: authHeader(),
@@ -74,9 +71,18 @@ const Applications = () => {
           description: 'The application has been removed.',
           onClick: () => {},
         });
-        getApplications();
+        //remove it from users applications
+        const user = JSON.parse(localStorage.getItem('user'));
+        user.applications = user.applications.filter((app) => app.application.id !== app_id);
+        localStorage.setItem('user', JSON.stringify(user));
 
-        dispatch(applicationActions.applicationDeleted(app_id));
+        //if it is the active application, remove it from local storage
+        if (localStorage.getItem('activeProjectId') === app_id) {
+          localStorage.removeItem('activeProjectId');
+          dispatch(applicationActions.applicationSelected(null, null));
+        }
+
+        getApplications();
       })
       .catch((error) => {
         console.log(error);
@@ -98,30 +104,6 @@ const Applications = () => {
     setShowAddApplicationModal(true);
   };
 
-  const handleExportApplication = (id, title) => {
-    fetch('/api/app/read/export', {
-      method: 'post',
-      headers: authHeader(),
-      body: JSON.stringify({ id: id }),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.blob();
-        }
-        handleError(response);
-      })
-      .then((blob) => {
-        download(blob, title + '-schema.json');
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  const handleClose = () => {
-    setOpenShareAppDialog(false);
-  };
-
   const renderAppVisibilityIcon = (record) => {
     if (record.visibility === 'Public') {
       return (
@@ -129,13 +111,6 @@ const Applications = () => {
           <GlobalOutlined />
         </Tooltip>
       );
-      //TODO -- add this back in later
-      // } else if (record.visibility === 'Private' && record.creator === user.username) {
-      //   return (
-      //     <Tooltip title="Your Application">
-      //       <UserOutlined />
-      //     </Tooltip>
-      //   );
     } else {
       return (
         <Tooltip title="Shared to you">
@@ -203,33 +178,14 @@ const Applications = () => {
       render: (text, record) => (
         <span>
           <React.Fragment>
-            {record.visibility !== 'Public' && record.creator === user.username ? (
-              <>
-                <span onClick={() => handleShareApplication(record)}>
-                  <Tooltip placement="left" title={<Text text="Share" />}>
-                    <ShareAltOutlined />
-                  </Tooltip>
-                </span>
-                <Divider type="vertical" />
-              </>
-            ) : null}
-
             <span onClick={() => handleApplicationEdit(record)}>
-              <Tooltip placement="right" title={<Text text="Edit" />}>
+              <Tooltip placement="right" title={<Text text="View" />}>
                 <EyeOutlined />
               </Tooltip>
             </span>
             <Divider type="vertical" />
 
-            <span onClick={() => handleExportApplication(record.id, record.title)}>
-              <Tooltip placement="right" title={<Text text="Export" />}>
-                <ExportOutlined />
-              </Tooltip>
-            </span>
-            <Divider type="vertical" />
-
-            {record.creator === user.username ||
-            (record.creator !== user.username && record.visibility !== 'Public') ? (
+            {record.creator === user.id || (record.creator !== user.id && record.visibility !== 'Public') ? (
               <>
                 <Popconfirm
                   title={<Text text="Are you sure you want to delete?" />}
@@ -282,17 +238,6 @@ const Applications = () => {
           getApplications={dispatch(applicationActions.getApplications)}
         />
       ) : null}
-
-      <div>
-        {openShareAppDialog ? (
-          <ShareApp
-            appId={selectedApplication.id}
-            appTitle={selectedApplication.title}
-            user={user}
-            onClose={handleClose}
-          />
-        ) : null}
-      </div>
     </React.Fragment>
   );
 };

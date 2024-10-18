@@ -25,16 +25,24 @@ const AppHeader = () => {
 
   //if there is an application from local storage, set it as selected and dispatch application selected
   useEffect(() => {
-    const activeApplicationId = localStorage.getItem('activeApplicationId');
+    const activeApplicationId = localStorage.getItem('activeProjectId');
+    console.log(activeApplicationId);
 
     if (activeApplicationId && applications.length > 0 && activeApplicationId !== application?.applicationId) {
       const app = applications.find((app) => app.id === activeApplicationId);
-      if (app) {
+      if (app && selected !== app?.applicationTitle) {
         setSelected(app.title);
-        dispatch(applicationActions.applicationSelected(app.id, app.title));
       }
     }
-  }, [application, applications, dispatch]);
+
+    if (selected !== application?.applicationTitle) {
+      setSelected(application.applicationTitle);
+    }
+
+    if (!application?.applicationId && !applications.length > 0) {
+      setSelected('No Applications Available');
+    }
+  }, [application, applications, applicationReducer, dispatch]);
 
   //if there are no applications, get list from the server for selection
   useEffect(() => {
@@ -42,16 +50,6 @@ const AppHeader = () => {
     if (!applicationsRetrieved) {
       dispatch(applicationActions.getApplications());
     }
-
-    // //if there are applications, select the first one and save it to local storage
-    // if (applications && applications.length > 0) {
-    //   console.log('applications founs!!!!', applications);
-    //   dispatch(applicationActions.updateNoApplicationFound({ noApplication: false }));
-    //   dispatch(applicationActions.applicationSelected(applications[0].id, applications[0].title));
-    //   localStorage.setItem('activeApplicationId', applications[0].title);
-    // } else {
-    //   dispatch(applicationActions.updateNoApplicationFound({ noApplication: true }));
-    // }
   }, [applications, dispatch]);
 
   //if application is selected in redux, get other relevant data into redux for use
@@ -78,14 +76,12 @@ const AppHeader = () => {
   //handle application change
   const handleApplicationChange = (value) => {
     const applicationId = value;
-    const applicationTitle = applications.find((app) => app.id === applicationId)?.title || value;
+    const applicationTitle = applications.find((app) => app.id === value)?.title;
 
     if (application?.applicationId !== applicationId) {
       dispatch(applicationActions.applicationSelected(applicationId, applicationTitle));
-      localStorage.setItem('activeApplicationId', applicationId);
+      localStorage.setItem('activeProjectId', applicationId);
       setSelected(applicationTitle);
-      //reload page
-      window.location.reload(false);
     }
   };
 

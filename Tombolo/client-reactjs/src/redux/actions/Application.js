@@ -115,6 +115,7 @@ function getApplications() {
 
         if (applicationsFinal.length === 0) {
           dispatch({ type: Constants.NO_APPLICATION_FOUND, noApplication: true });
+          dispatch({ type: Constants.APPLICATIONS_RETRIEVED, payload: applicationsFinal });
           return;
         }
         dispatch({ type: Constants.APPLICATIONS_RETRIEVED, payload: applicationsFinal });

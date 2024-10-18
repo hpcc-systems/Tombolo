@@ -7,7 +7,7 @@ const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
   //tour states
   const [tourOpen, setTourOpen] = useState(false);
   const [clusterTourOpen, setClusterTourOpen] = useState(false);
-  const { application, applicationsRetrieved, noApplication, noClusters } = applicationReducer;
+  const { application, applicationsRetrieved, noApplication, noClusters, clusters } = applicationReducer;
 
   const dispatch = useDispatch();
 
@@ -25,7 +25,7 @@ const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
       }
     }
 
-    if (application?.applicationId && noClusters.noClusters && !noClusters.firstTourShown) {
+    if (application?.applicationId && noClusters.noClusters && !noClusters.firstTourShown && !clusters.length) {
       if (window.location.pathname !== '/admin/clusters') {
         setClusterTourOpen(true);
         dispatch(applicationActions.updateClustersLeftTourShown(true));

@@ -148,7 +148,6 @@ router.post(
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
-    console.log(errors);
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
@@ -177,6 +176,8 @@ router.post(
                     result: "success",
                     id: application.id,
                     title: application.title,
+                    description: application.description,
+                    user_app_id: userapp.id,
                   });
                 });
             } else {
