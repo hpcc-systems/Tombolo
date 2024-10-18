@@ -21,7 +21,8 @@ import {
 
 const Applications = () => {
   //Redux tools
-  const user = useSelector((state) => state.authenticationReducer);
+  const user = JSON.parse(localStorage.getItem('user'));
+  const applicationReducer = useSelector((state) => state.applicationReducer);
   const { application, applications, noApplication } = useSelector((state) => state.applicationReducer);
   const dispatch = useDispatch();
 
@@ -38,6 +39,11 @@ const Applications = () => {
   useEffect(() => {
     getApplications();
   }, []);
+
+  //refresh screen after application actions
+  useEffect(() => {
+    console.log(applicationReducer);
+  }, [applicationReducer, user, applications, application]);
 
   const getApplications = () => {
     dispatch(applicationActions.getApplications());
@@ -56,7 +62,7 @@ const Applications = () => {
   };
 
   const handleRemove = (app_id) => {
-    const data = JSON.stringify({ appIdToDelete: app_id, user: user.username });
+    const data = JSON.stringify({ appIdToDelete: app_id, user: user.id });
     fetch('/api/app/read/deleteApplication', {
       method: 'post',
       headers: authHeader(),
@@ -74,9 +80,18 @@ const Applications = () => {
           description: 'The application has been removed.',
           onClick: () => {},
         });
-        getApplications();
+        //remove it from users applications
+        const user = JSON.parse(localStorage.getItem('user'));
+        user.applications = user.applications.filter((app) => app.application.id !== app_id);
+        localStorage.setItem('user', JSON.stringify(user));
 
-        dispatch(applicationActions.applicationDeleted(app_id));
+        //if it is the active application, remove it from local storage
+        if (localStorage.getItem('activeProjectId') === app_id) {
+          localStorage.removeItem('activeProjectId');
+          dispatch(applicationActions.applicationSelected(null, null));
+        }
+
+        getApplications();
       })
       .catch((error) => {
         console.log(error);
