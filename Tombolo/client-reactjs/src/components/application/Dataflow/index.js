@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { message, Spin } from 'antd';
 import { withRouter } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -11,8 +11,7 @@ import { dataflowAction } from '../../../redux/actions/Dataflow';
 import InfoDrawer from '../../common/InfoDrawer';
 
 function Dataflow({ applicationId, history }) {
-  let componentMounted = true;
-
+  let flowsRetrieved = useRef(false);
   const [dataFlows, setDataFlows] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
   const [modalVisible, setModalVisibility] = useState(false);
@@ -31,10 +30,9 @@ function Dataflow({ applicationId, history }) {
 
   // Fetch all data flows when component mounts
   useEffect(() => {
-    getData();
-
-    //Clean up
-    return () => (componentMounted = false);
+    if (!flowsRetrieved.current) {
+      getData();
+    }
   }, []);
 
   //Get Data
@@ -51,14 +49,13 @@ function Dataflow({ applicationId, history }) {
           handleError(response);
         })
         .then(function (data) {
-          if (componentMounted) {
-            setDataFlows(data);
-          }
+          setDataFlows(data);
         })
         .catch((error) => {
           message.error(error.message);
         })
         .finally(() => {
+          flowsRetrieved.current = true;
           setLoadingData(false);
         });
     }

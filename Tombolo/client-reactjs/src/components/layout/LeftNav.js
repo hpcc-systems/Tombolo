@@ -41,7 +41,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   const clusterDisabled = clusters.length === 0;
   const disabled = !(application?.id === undefined);
 
-  const applicationId = application?.id;
+  const applicationId = application?.applicationId;
 
   useEffect(() => {}, [application]);
 

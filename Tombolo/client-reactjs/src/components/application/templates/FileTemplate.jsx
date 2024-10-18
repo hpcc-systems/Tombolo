@@ -11,7 +11,7 @@ import { authHeader } from '../../common/AuthHeader.js';
 import FileTemplateTable from './FileTemplate_filesTab';
 import FileTemplateLayout from './FileTemplate_layoutTab.jsx';
 import FileTemplatePermissablePurpose from './FileTemplate_permissablePurpose';
-import { hasEditPermission } from '../../common/AuthUtil.js';
+// import { hasEditPermission } from '../../common/AuthUtil.js';
 import DeleteAsset from '../../common/DeleteAsset/index.js';
 import LandingZoneFileExplorer from '../../common/LandingZoneFileExplorer';
 import Text from '../../common/Text';
@@ -33,9 +33,9 @@ const capitalizeString = (text) => {
 };
 
 function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose }) {
-  const { clusters, application, groupId, user, licenses } = useSelector((state) => ({
+  const { clusters, application, groupId, licenses } = useSelector((state) => ({
     groupId: state.groupsReducer?.selectedKeys?.id,
-    user: state.authenticationReducer.user,
+
     clusters: state.applicationReducer.clusters,
     application: state.applicationReducer.application,
     licenses: state.applicationReducer.licenses,
@@ -69,7 +69,9 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
 
   const [form] = Form.useForm();
 
-  const editingAllowed = hasEditPermission(user);
+  // const user = JSON.parse(localStorage.getItem('user'));
+  //TODO, get this from user roles to check if editing is allowed
+  const editingAllowed = true;
 
   //Use Effect
   useEffect(() => {

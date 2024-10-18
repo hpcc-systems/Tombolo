@@ -29,7 +29,7 @@ function FileMonitoring() {
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/filemonitoring/read/all/${applicationId}`, payload);

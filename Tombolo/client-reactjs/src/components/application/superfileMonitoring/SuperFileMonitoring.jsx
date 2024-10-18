@@ -28,7 +28,7 @@ function SuperFileMonitoring() {
     try {
       const payload = {
         method: selectedFileMonitoring ? 'PUT' : 'POST',
-        header: authHeader(),
+        headers: authHeader(),
         body: JSON.stringify({ ...monitoringDetails, id: selectedFileMonitoring }),
       };
 
@@ -53,7 +53,7 @@ function SuperFileMonitoring() {
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/superfilemonitoring/read/all/${applicationId}`, payload);

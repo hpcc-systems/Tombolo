@@ -63,7 +63,7 @@ const ApproveRejectModal = ({
       }
       const payload = {
         method: 'PATCH',
-        header: authHeader(),
+        headers: authHeader(),
         body: JSON.stringify(formData),
       };
 

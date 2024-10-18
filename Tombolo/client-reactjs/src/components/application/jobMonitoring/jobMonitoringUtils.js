@@ -5,7 +5,7 @@ import { message } from 'antd';
 export const createJobMonitoring = async ({ inputData }) => {
   const payload = {
     method: 'POST',
-    header: authHeader(),
+    headers: authHeader(),
     body: JSON.stringify(inputData),
   };
 
@@ -23,7 +23,7 @@ export const createJobMonitoring = async ({ inputData }) => {
 export const getAllJobMonitorings = async ({ applicationId }) => {
   const payload = {
     method: 'GET',
-    header: authHeader(),
+    headers: authHeader(),
   };
 
   const response = await fetch(`/api/jobmonitoring/all/${applicationId}`, payload);
@@ -88,7 +88,7 @@ export const handleDeleteJobMonitoring = async ({ id, jobMonitorings, setJobMoni
   try {
     const payload = {
       method: 'DELETE',
-      header: authHeader(),
+      headers: authHeader(),
     };
 
     const response = await fetch(`/api/jobmonitoring/${id}`, payload);

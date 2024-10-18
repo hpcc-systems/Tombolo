@@ -28,17 +28,24 @@ export function authHeader(action) {
   // return authorization header with jwt token
   let user = JSON.parse(localStorage.getItem('user'));
 
+  console.log(action);
+  console.log(user);
+
   if (user?.token && action) {
     return {
       Authorization: user.token,
     };
   } else if (user?.token) {
+    console.log('auth header returning token');
+    console.log(user.token);
     return {
       Authorization: user.token,
       Accept: 'application/json',
       'Content-Type': 'application/json',
     };
   } else {
+    console.log('auth header returning no token');
+    console.log(user);
     return { Accept: 'application/json', 'Content-Type': 'application/json' };
   }
 }
@@ -48,14 +55,20 @@ const { fetch: originalFetch } = window;
 window.fetch = async (...args) => {
   let [resource, config] = args;
 
+  console.log(resource, config);
+
   try {
     const response = await originalFetch(resource, config);
 
+    console.log(response);
+
     //if response.status is 401, it means the refresh token has expired, so we need to log the user out
     if (response.status === 401) {
-      authActions.logout();
-      localStorage.setItem('sessionExpired', true);
-      window.location.href = '/login';
+      // authActions.logout();
+      // localStorage.setItem('sessionExpired', true);
+      // window.location.href = '/login';
+      console.log('401 error');
+      console.log(authActions);
 
       return {};
     }
@@ -65,7 +78,10 @@ window.fetch = async (...args) => {
 
     if (token) {
       let user = await JSON.parse(localStorage.getItem('user'));
-      if (user.token !== token) {
+
+      //if user doesn't exist, return
+      if (!user) return;
+      if (user?.token !== token) {
         user.token = token;
         await localStorage.setItem('user', JSON.stringify(user));
 
