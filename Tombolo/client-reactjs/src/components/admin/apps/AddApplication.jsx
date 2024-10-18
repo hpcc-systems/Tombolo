@@ -56,7 +56,7 @@ function AddApplication(props) {
   // SAVE APPLICATION FUNCTION
   const saveApplication = async () => {
     const appWithSameTitleExists = props.applications.some((app) => app.title === form.getFieldValue('title'));
-    console.log(appWithSameTitleExists);
+
     if (appWithSameTitleExists) {
       message.error('App with same title already exists');
       return;
@@ -66,10 +66,7 @@ function AddApplication(props) {
     try {
       const fieldValues = form.getFieldsValue();
 
-      console.log('fieldValues', fieldValues);
       const user = JSON.parse(localStorage.getItem('user'));
-      console.log(user);
-      console.log(user.applications);
 
       let payload = {
         ...fieldValues,
@@ -77,8 +74,6 @@ function AddApplication(props) {
         creator: user.id,
         id: props?.selectedApplication?.id || '',
       };
-
-      console.log(payload);
 
       const response = await fetch('/api/app/read/saveApplication', {
         method: 'post',
@@ -102,17 +97,12 @@ function AddApplication(props) {
       user.applications.push({ id: user_app_id, application: { id, title, description } });
       await localStorage.setItem('user', JSON.stringify(user));
 
-      console.log('user', user);
-
       dispatch(applicationActions.applicationSelected(id, title));
       localStorage.setItem('activeProjectId', responseData.id);
-
-      console.log('local storage set and application selected set');
 
       dispatch(applicationActions.getApplications());
 
       if (isEditing) {
-        console.log('Edited', fieldValues);
         const updatedApplications = props.applications.map((application) => {
           if (application.id === props.selectedApplication.id) {
             return { ...application, fieldValues };

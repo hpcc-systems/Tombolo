@@ -41,9 +41,7 @@ const Applications = () => {
   }, []);
 
   //refresh screen after application actions
-  useEffect(() => {
-    console.log(applicationReducer);
-  }, [applicationReducer, user, applications, application]);
+  useEffect(() => {}, [applicationReducer, user, applications, application]);
 
   const getApplications = () => {
     dispatch(applicationActions.getApplications());
