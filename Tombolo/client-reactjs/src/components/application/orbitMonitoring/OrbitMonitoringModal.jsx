@@ -251,7 +251,7 @@ const OrbitMonitoringModal = ({
   // Get details of a orbit monitoring -----------------------------------------------
   const getOrbitBuildDetails = async (id) => {
     try {
-      const payload = { method: 'GET', header: authHeader() };
+      const payload = { method: 'GET', headers: authHeader() };
       setFetchingOrbitDetails(true);
       const response = await fetch(`/api/orbit/getOne/${applicationId}/${id}`, payload);
       if (!response.ok) handleError(response);

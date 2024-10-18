@@ -21,7 +21,7 @@ import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
 import ConstraintsTags from '../../admin/Compliance/Constraints/ConstraintsTags';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { canViewPII, hasEditPermission } from '../../common/AuthUtil.js';
+import { canViewPII } from '../../common/AuthUtil.js';
 import { formItemLayout } from '../../common/CommonUtil';
 // import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
 import DeleteAsset from '../../common/DeleteAsset';
@@ -631,7 +631,9 @@ class FileDetails extends Component {
     const { description, isSuperFile, layout, validations, superFileData } = this.state.file;
 
     const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
-    const editingAllowed = hasEditPermission(this.props.user) || !this.props.viewMode;
+    // const user = JSON.parse(localStorage.getItem('user'));
+    //TODO, get this from user roles to check if editing is allowed
+    const editingAllowed = true;
 
     const validationRuleColumns = [
       {

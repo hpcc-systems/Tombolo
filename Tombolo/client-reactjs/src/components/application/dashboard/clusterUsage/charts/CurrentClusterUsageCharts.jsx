@@ -23,7 +23,7 @@ function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/cluster/currentClusterUsage/${clusterId}`, payload);

@@ -17,7 +17,7 @@ function FileMonitoringTable({
     try {
       const payload = {
         method: 'DELETE',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/filemonitoring/read/${id}/${name}`, payload);
@@ -33,7 +33,7 @@ function FileMonitoringTable({
     try {
       const payload = {
         method: 'PUT',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/filemonitoring/read/fileMonitoringStatus/${id}`, payload);

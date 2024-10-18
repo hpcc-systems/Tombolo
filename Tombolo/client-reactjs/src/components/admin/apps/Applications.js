@@ -44,7 +44,7 @@ const Applications = () => {
   };
 
   useEffect(() => {
-    if (!application?.id && !noApplication.addButtonTourShown) {
+    if (noApplication.noApplication && !noApplication.addButtonTourShown) {
       dispatch(applicationActions.updateApplicationAddButtonTourShown(true));
       setShowTour(true);
     }

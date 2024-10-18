@@ -16,7 +16,7 @@ function SuperFileMonitoringTable({
     try {
       const payload = {
         method: 'DELETE',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/superfilemonitoring/read/${id}/${name}`, payload);
@@ -32,7 +32,7 @@ function SuperFileMonitoringTable({
     try {
       const payload = {
         method: 'PUT',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/superfilemonitoring/read/superfileMonitoringStatus/${id}`, payload);

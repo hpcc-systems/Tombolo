@@ -8,6 +8,7 @@ const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
 const NotificationQueue = models.notification_queue;
+const Roles = models.Role_Types;
 
 // Delete user with ID
 const deleteUser = async (req, res) => {

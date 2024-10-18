@@ -30,7 +30,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/key/all/${applicationId}`, payload);
@@ -75,7 +75,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
     try {
       const payload = {
         method: 'POST',
-        header: authHeader(),
+        headers: authHeader(),
         body: JSON.stringify({ applicationId, formData }),
       };
 
