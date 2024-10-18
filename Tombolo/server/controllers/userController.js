@@ -324,7 +324,7 @@ const createUser = async (req, res) => {
       email,
       registrationMethod = 'traditional',
       registrationStatus = 'active',
-      verifiedUser = true,
+      verifiedUser = false,
       roles,
       applications,
     } = req.body;
