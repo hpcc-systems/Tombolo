@@ -1,3 +1,5 @@
+const { v4: UUIDV4 } = require("uuid");
+  
 const logger = require("../config/logger");
 const models = require("../models");
 const bcrypt = require("bcryptjs");
@@ -5,6 +7,7 @@ const bcrypt = require("bcryptjs");
 const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
+const NotificationQueue = models.notification_queue;
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
@@ -378,6 +381,29 @@ const createUser = async (req, res) => {
         { model: UserRoles, as: "roles" },
         { model: user_application, as: "applications" },
       ],
+    });
+
+    // Searchable notification ID
+    const searchableNotificationId = UUIDV4();
+
+    // Add to notification queue
+    await NotificationQueue.create({
+      type: "email",
+      templateName: "completeRegistration",
+      notificationOrigin: "User Management",
+      deliveryType: "immediate",
+      metaData: {
+        notificationId: searchableNotificationId,
+        recipientName: `${newUserData.firstName}`,
+        registrationLink: `${process.env.WEB_URL}/complete-registration/${searchableNotificationId}`,
+        tempPassword: password,
+        notificationOrigin: "User Management",
+        subject: "Complete your registration",
+        mainRecipients: [newUserData.email],
+        notificationDescription: "Complete your Registration",
+        validForHours: 24,
+      },
+      createdBy: req.user.id,
     });
 
     // Remove hash

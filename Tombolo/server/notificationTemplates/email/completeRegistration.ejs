@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .main_body {
+      width: 100%;
+      border-bottom: 1px solid lightgray !important;
+    }
+
+    .section-footer-td {
+      color: #808080;
+      border-top: 1px solid #808080;
+    }
+
+    .section-header-td {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .list {
+      padding: 10px;
+    }
+
+    .tabbedText {
+      padding-left: 40px;
+    }
+
+    .bold-text {
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<table class="main_body">
+  <tbody>
+    <tr>
+      <td>
+        <table>
+          <tbody>
+            <tr>
+              <td class="section-header-td">
+                <div>
+                  Hello,
+                </div>
+                <div>
+                  An account has been created for you on <span class="bold-text">Tombolo</span>, but it requires your confirmation to complete the registration. To finalize your registration, please follow the registration link and update your temporary password.
+                </div>
+              </td>
+            </tr>
+
+
+            <tr>
+              <td class="section-header-td">
+                <div class="tabbedText"> Registration Link: <%= typeof registrationLink !== 'undefined' ? registrationLink : ""  %> </div>
+                <div class="tabbedText"> Temporary Password: <%= typeof tempPassword !== 'undefined' ? tempPassword : ""  %> </div>
+              </td>
+            </tr>
+
+
+            <tr>
+              <td>
+                <p>
+                  Please complete your registration within the next <%= typeof validForHours !== 'undefined' ? validForHours: "" %> hours. If this email was unexpected, you can safely disregard it.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <p> We look forward to having you on board! </p>
+              </td>
+            </tr>
+
+
+
+            <tr>
+              <td>
+                Best Regards,
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Tombolo
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</html>
