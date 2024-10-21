@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Input, Radio, message } from 'antd';
 import { useDispatch } from 'react-redux';
-
 import { applicationActions } from '../../../redux/actions/Application';
 import { emptyGroupTree } from '../../../redux/actions/Groups';
 import { authHeader } from '../../common/AuthHeader';
@@ -56,18 +55,17 @@ function AddApplication(props) {
 
   // SAVE APPLICATION FUNCTION
   const saveApplication = async () => {
-    if (props.isCreatingNewApp) {
-      console.log(props);
-      const appWithSameTitleExists = props.applications.some((app) => app.title === form.getFieldValue('title'));
-      if (appWithSameTitleExists) return message.error('App with same title already exists');
-    }
+    const appWithSameTitleExists = props.applications.some((app) => app.title === form.getFieldValue('title'));
 
+    if (appWithSameTitleExists) {
+      message.error('App with same title already exists');
+      return;
+    }
     await validateForms();
 
     try {
       const fieldValues = form.getFieldsValue();
 
-      console.log('fieldValues', fieldValues);
       const user = JSON.parse(localStorage.getItem('user'));
 
       let payload = {
@@ -77,27 +75,34 @@ function AddApplication(props) {
         id: props?.selectedApplication?.id || '',
       };
 
-      console.log(payload);
-
       const response = await fetch('/api/app/read/saveApplication', {
         method: 'post',
         headers: authHeader(),
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) return message.error('Error occurred while saving application');
+      if (!response.ok) {
+        message.error('Error occurred while saving application');
+        return;
+      }
       dispatch(emptyGroupTree());
       message.success('Application saved successfully');
       form.resetFields();
       props.closeAddApplicationModal();
+
       const responseData = await response.json();
-      if (props.isCreatingNewApp) {
-        dispatch(applicationActions.applicationSelected(responseData.id, responseData.title, responseData.title));
-        localStorage.setItem('activeProjectId', responseData.id);
-      }
+
+      //add application to user object in local storage so user has immediate access to it
+      const { user_app_id, id, title, description } = responseData;
+      user.applications.push({ id: user_app_id, application: { id, title, description } });
+      await localStorage.setItem('user', JSON.stringify(user));
+
+      dispatch(applicationActions.applicationSelected(id, title));
+      localStorage.setItem('activeProjectId', responseData.id);
+
+      dispatch(applicationActions.getApplications());
 
       if (isEditing) {
-        console.log('Edited', fieldValues);
         const updatedApplications = props.applications.map((application) => {
           if (application.id === props.selectedApplication.id) {
             return { ...application, fieldValues };
@@ -106,7 +111,7 @@ function AddApplication(props) {
           }
         });
 
-        props.getApplications();
+        dispatch(applicationActions.getApplications());
         updatedApplications;
       }
     } catch (err) {
@@ -157,11 +162,8 @@ function AddApplication(props) {
       footer={
         props?.selectedApplication?.creator === props.user.username || props.isCreatingNewApp
           ? [
-              <Button
-                key="back"
-                type="primary"
-                onClick={props.isCreatingNewApp || isEditing ? saveApplication : () => setIsEditing(true)}>
-                {props.isCreatingNewApp || isEditing ? <Text text="Save" /> : <Text text="Edit" />}
+              <Button key="back" type="primary" onClick={!isEditing ? saveApplication : () => setIsEditing(true)}>
+                {!isEditing ? <Text text="Save" /> : <Text text="Edit" />}
               </Button>,
               <Button key="submit" type="primary" ghost onClick={handleModalCancel}>
                 {<Text text="Cancel" />}
