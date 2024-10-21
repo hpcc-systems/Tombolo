@@ -1,8 +1,8 @@
 import React from 'react';
 import BasicLayout from '../common/BasicLayout';
 import { Route, Switch } from 'react-router-dom';
-const Login = React.lazy(() => import('./Login.js'));
-const Register = React.lazy(() => import('./Register.js'));
+const Login = React.lazy(() => import('./login.js'));
+const Register = React.lazy(() => import('./register.js'));
 const ResetPassword = React.lazy(() => import('./ResetPassword.js'));
 const ForgotPassword = React.lazy(() => import('./ForgotPassword.js'));
 
