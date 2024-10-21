@@ -12,6 +12,7 @@ import AppHeader from './components/layout/Header/Header.js';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
 import { checkBackendStatus, checkOwnerExists } from './redux/actions/Backend';
+import { getRoleNameArray } from './components/common/AuthUtil.js';
 
 // Loading screen
 import LoadingScreen from './components/layout/LoadingScreen.js';
@@ -77,6 +78,15 @@ const App = () => {
     localStorage.setItem('collapsed', collapsed);
   };
 
+  let roleArray = [];
+  let isOwnerOrAdmin = false;
+  if (user) {
+    roleArray = getRoleNameArray(user);
+    if (roleArray.includes('administrator') || roleArray.includes('owner')) {
+      isOwnerOrAdmin = true;
+    }
+  }
+
   return (
     <ConfigProvider>
       <Suspense fallback={<Fallback />}>
@@ -116,7 +126,7 @@ const App = () => {
                         <ErrorBoundary>
                           <Suspense fallback={<Fallback />}>
                             <AppRoutes application={application} authenticationReducer={authenticationReducer} />
-                            <AdminRoutes />
+                            {isOwnerOrAdmin && <AdminRoutes />}
                           </Suspense>
                         </ErrorBoundary>
                       </Content>
