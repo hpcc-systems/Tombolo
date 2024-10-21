@@ -18,6 +18,7 @@ export const checkOwnerExists = () => {
 async function fetchBackendStatus() {
   try {
     const response = await fetch('/api/status', { headers: authHeader() });
+    console.log(response);
 
     if (!response.ok) handleError(response);
     return response.ok;

@@ -2,7 +2,7 @@
 import { store } from '../../redux/store/Store';
 import { authActions } from '../../redux/actions/Auth';
 import { message } from 'antd';
-import { getRoleNameArray } from './AuthUtil';
+// import { getRoleNameArray } from './AuthUtil';
 
 export function handleError(response) {
   message.config({ top: 130 });
@@ -49,19 +49,6 @@ const { fetch: originalFetch } = window;
 window.fetch = async (...args) => {
   let [resource, config] = args;
 
-  let user = JSON.parse(localStorage.getItem('user'));
-  let roleArray = [];
-  if (user?.roles) {
-    roleArray = getRoleNameArray(user);
-  }
-
-  if (config?.method !== 'GET' || !config?.method) {
-    //this is an update/patch/delete request, check if user has permission to do so
-    if (roleArray.length === 1 && roleArray[0] === 'reader') {
-      message.error('You do not have permission to perform this action');
-      return {};
-    }
-  }
   try {
     const response = await originalFetch(resource, config);
 
