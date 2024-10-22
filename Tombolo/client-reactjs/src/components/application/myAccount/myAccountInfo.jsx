@@ -27,25 +27,32 @@ const MyAccountInfo = ({ user }) => {
       validForm = false;
     }
 
-    if (validForm) {
-      let values = form.getFieldsValue();
+    try {
+      if (validForm) {
+        let values = form.getFieldsValue();
 
-      values.id = user.id;
+        //put items in needed for backend verification
+        values.id = user.id;
+        values.verifiedUser = user.verifiedUser;
 
-      const response = await updateAccount(values);
+        const response = await updateAccount(values);
 
-      if (response.success) {
-        form.setFieldsValue(response.data);
-        setEditing(false);
-        message.success('Account updated successfully');
+        if (response.success) {
+          form.setFieldsValue(response.data);
+          setEditing(false);
+          message.success('Account updated successfully');
 
-        const oldUser = JSON.parse(localStorage.getItem('user'));
-        const newUser = { ...oldUser, firstName: response.data.firstName, lastName: response.data.lastName };
+          const oldUser = JSON.parse(localStorage.getItem('user'));
+          const newUser = { ...oldUser, firstName: response.data.firstName, lastName: response.data.lastName };
 
-        localStorage.setItem('user', JSON.stringify(newUser));
-        window.dispatchEvent(new Event('userStorage'));
+          localStorage.setItem('user', JSON.stringify(newUser));
+          window.dispatchEvent(new Event('userStorage'));
+        }
+
+        setLoading(false);
       }
-
+    } catch (err) {
+      console.log(err);
       setLoading(false);
     }
   };

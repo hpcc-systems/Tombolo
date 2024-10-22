@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import { Tabs, Form, Input, Select, Table, AutoComplete, message, Spin, Button, Row, Col } from 'antd';
 
 import { authHeader, handleError } from '../common/AuthHeader.js';
-import { hasEditPermission } from '../common/AuthUtil.js';
+// import { hasEditPermission } from '../common/AuthUtil.js';
 import { eclTypes } from '../common/CommonUtil.js';
 import { omitDeep } from '../common/CommonUtil.js';
 import AssociatedDataflows from './AssociatedDataflows';
@@ -449,7 +449,8 @@ class IndexDetails extends PureComponent {
   };
 
   render() {
-    const editingAllowed = hasEditPermission(this.props.user);
+    // const editingAllowed = hasEditPermission(this.props.user);
+    const editingAllowed = true;
     const { sourceFiles, indexSearchSuggestions, searchResultsLoaded, confirmLoading } = this.state;
     const formItemLayout = {
       labelCol: { span: 2 },

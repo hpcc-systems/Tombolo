@@ -16,6 +16,8 @@ import {
   FolderOutlined,
 } from '@ant-design/icons';
 
+import { getRoleNameArray } from '../common/AuthUtil';
+
 function getItem(label, key, icon, children, type, disabled) {
   return {
     key,
@@ -41,6 +43,12 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   const { application, integrations, clusters } = applicationReducer;
 
   const applicationId = application?.applicationId;
+
+  const user = JSON.parse(localStorage.getItem('user'));
+  let roleArray = [];
+  if (user) {
+    roleArray = getRoleNameArray(user);
+  }
 
   //control the disabled state of the menu items based on the application and cluster states
   useEffect(() => {
@@ -126,7 +134,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
 
   //TODO - check if user has edit permission
-  const canEdit = true;
+  const ownerOrAdmin = roleArray?.includes('administrator') || roleArray?.includes('owner');
 
   const urlPrefix = () => {
     if (applicationId) return '/' + applicationId;
@@ -482,10 +490,14 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       {menu(workflowItems)}
       {collapsed ? null : title('Monitoring')}
       {menu(monitoringItems)}
-      {canEdit && collapsed ? null : title('Connections')}
-      {menu(connectionItems)}
-      {canEdit && collapsed ? null : title('Admin')}
-      {canEdit && menu(adminItems)}
+      {ownerOrAdmin && (
+        <>
+          {collapsed ? null : title('Connections')}
+          {menu(connectionItems)}
+          {collapsed ? null : title('Admin')}
+          {menu(adminItems)}
+        </>
+      )}
     </Sider>
   );
 };

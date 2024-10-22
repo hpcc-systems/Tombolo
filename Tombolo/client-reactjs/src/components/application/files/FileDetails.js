@@ -21,7 +21,7 @@ import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
 import ConstraintsTags from '../../admin/Compliance/Constraints/ConstraintsTags';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { canViewPII } from '../../common/AuthUtil.js';
+// import { canViewPII } from '../../common/AuthUtil.js';
 import { formItemLayout } from '../../common/CommonUtil';
 // import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
 import DeleteAsset from '../../common/DeleteAsset';
@@ -476,7 +476,8 @@ class FileDetails extends Component {
   getFileData = async (fileName, clusterId) => {
     try {
       // do not reuest data if user has wrong permission
-      const canVIewData = canViewPII(this.props.user);
+      // const canVIewData = canViewPII(this.props.user);
+      const canVIewData = true;
       if (!canVIewData) return;
 
       if (!clusterId || !fileName) throw new Error('Filename or ClusterId is not provided');
@@ -630,7 +631,8 @@ class FileDetails extends Component {
       this.state;
     const { description, isSuperFile, layout, validations, superFileData } = this.state.file;
 
-    const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
+    // const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
+    const VIEW_DATA_PERMISSION = true;
     // const user = JSON.parse(localStorage.getItem('user'));
     //TODO, get this from user roles to check if editing is allowed
     const editingAllowed = true;
