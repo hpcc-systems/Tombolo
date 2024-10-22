@@ -9,6 +9,7 @@ import './User.css';
 import { getAllUsers, getAllRoles } from './Utils';
 import UserDetailModal from './UserDetailModal';
 import EditUserModel from './EditUserModel';
+import AddUserModal from './AddUserModal';
 
 const UserManagement = () => {
   //general states
@@ -24,7 +25,7 @@ const UserManagement = () => {
 
   //modal visibility states
   const [_bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
-  const [_displayAddUserModal, setDisplayAddUserModal] = useState(false);
+  const [displayAddUserModal, setDisplayAddUserModal] = useState(false);
   const [displayUserDetailsModal, setDisplayUserDetailsModal] = useState(false);
   const [displayEditUserModal, setDisplayEditUserModal] = useState(false);
 
@@ -81,7 +82,7 @@ const UserManagement = () => {
     } else {
       setFilteringUsers(false);
     }
-  }, [filters]);
+  }, [filters, users]);
 
   // When component mounts, get all users
   useEffect(() => {
@@ -154,6 +155,15 @@ const UserManagement = () => {
           roles={roles}
         />
       )}
+
+      <AddUserModal
+        roles={roles}
+        displayAddUserModal={displayAddUserModal}
+        setDisplayAddUserModal={setDisplayAddUserModal}
+        setUsers={setUsers}
+        filters={filters}
+        setFilteredUsers={setFilteredUsers}
+      />
     </>
   );
 };
