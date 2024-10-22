@@ -76,7 +76,7 @@ function EditUserBasicTab({ basicUserDetailsForm, selectedUser, setUnsavedFields
           </Col>
           <Col span={12}>
             <Form.Item
-              label="Registration Status"
+              label="Account Status"
               name="registrationStatus"
               rules={[{ required: true, message: 'Please input your registration status!' }]}>
               <Select placeholder="Registration Method">
@@ -93,7 +93,7 @@ function EditUserBasicTab({ basicUserDetailsForm, selectedUser, setUnsavedFields
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              label="E-mail verified"
+              label="Account verified"
               name="verifiedUser"
               rules={[{ required: true, message: 'Please input your verified user!' }]}>
               <Select>
