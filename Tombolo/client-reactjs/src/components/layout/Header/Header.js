@@ -43,6 +43,14 @@ const AppHeader = () => {
       setSelected('No Applications Available');
     }
 
+    //if there is an active project id, but id doesn't exist in their app list, reset it to the first application user has access too
+    if (activeApplicationId && applications.length > 0 && !applications.find((app) => app.id === activeApplicationId)) {
+      const app = applications[0];
+      setSelected(app.title);
+      dispatch(applicationActions.applicationSelected(app.id, app.title));
+      localStorage.setItem('activeProjectId', app.id);
+    }
+
     //if there is no active project id in local storage, and there is an applicaiton list, set the first application as active
     if (!activeApplicationId && applications.length > 0) {
       const app = applications[0];
@@ -76,7 +84,6 @@ const AppHeader = () => {
     dispatch(expandGroups(['0-0']));
     dispatch(selectGroup({ id: '', key: '0-0' }));
     dispatch(assetsActions.clusterSelected(''));
-    localStorage.removeItem('activeProjectId');
 
     //log user out
     dispatch(authActions.logout());
