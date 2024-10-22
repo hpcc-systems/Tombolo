@@ -38,8 +38,9 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
       //map through roles and applications and add them
       userRole.forEach((role) => {
         const { roleId } = role;
-        const { id, roleName } = roles.find((r) => r.id === roleId);
-        if (id) {
+        const currentRole = roles.find((r) => r.id === roleId);
+        if (currentRole) {
+          const { id, roleName } = currentRole;
           const indexOfRoleInFilter = filterOptions.role.findIndex((r) => r.id === id);
           if (indexOfRoleInFilter === -1) {
             filterOptions.role.push({ id, roleName });
@@ -47,17 +48,19 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
         }
       });
 
-      applications.forEach((application) => {
-        const { application_id } = application;
-        const { id, title } = allApplications.find((a) => a.id === application_id);
+      if (allApplications) {
+        applications.forEach((application) => {
+          const { application_id } = application;
+          const currentApp = allApplications.find((a) => a.id === application_id);
 
-        if (id) {
-          const indexOfApplicationInFilter = filterOptions.application.findIndex((a) => a.id === id);
-          if (indexOfApplicationInFilter === -1) {
-            filterOptions.application.push({ id, title });
+          if (currentApp?.id) {
+            const indexOfApplicationInFilter = filterOptions.application.findIndex((a) => a.id === currentApp.id);
+            if (indexOfApplicationInFilter === -1) {
+              filterOptions.application.push({ id: currentApp.id, title: currentApp.title });
+            }
           }
-        }
-      });
+        });
+      }
 
       if (verifiedUser === true && !filterOptions.verifiedUser.includes('True')) {
         filterOptions.verifiedUser.push('True');
@@ -75,7 +78,7 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
     setApplicationOptions(filterOptions.application);
     setVerifiedOptions(filterOptions.verifiedUser);
     setRegistrationStatusOptions(filterOptions.registrationStatus);
-  }, [users]);
+  }, [users, allApplications]);
 
   // When the filter item changes
   const handleFormChange = () => {
@@ -128,9 +131,9 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
           </Col>
 
           <Col span={4}>
-            <div className="notifications__filter-label">Registration Status</div>
+            <div className="notifications__filter-label">Account Status</div>
             <Form.Item name="registrationStatus">
-              <Select placeholder="Registration Status" allowClear>
+              <Select placeholder="Account Status" allowClear>
                 {registrationStatusOptions.map((r) => (
                   <Option key={r} value={r}>
                     {r}
