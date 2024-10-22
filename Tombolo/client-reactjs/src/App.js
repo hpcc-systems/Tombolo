@@ -80,13 +80,19 @@ const App = () => {
 
   let roleArray = [];
   let isOwnerOrAdmin = false;
+  let isReader = false;
+
   if (user) {
     roleArray = getRoleNameArray(user);
     if (roleArray.includes('administrator') || roleArray.includes('owner')) {
       isOwnerOrAdmin = true;
     }
+    if (roleArray.includes('reader') && roleArray.length === 1) {
+      isReader = true;
+    }
   }
 
+  console.log(isReader);
   return (
     <ConfigProvider>
       <Suspense fallback={<Fallback />}>
