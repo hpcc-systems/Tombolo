@@ -1,3 +1,5 @@
+const { v4: UUIDV4 } = require("uuid");
+  
 const logger = require("../config/logger");
 const models = require("../models");
 const bcrypt = require("bcryptjs");
@@ -5,6 +7,7 @@ const bcrypt = require("bcryptjs");
 const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
+const NotificationQueue = models.notification_queue;
 const Roles = models.Role_Types;
 
 // Delete user with ID
@@ -117,28 +120,22 @@ const getUser = async (req, res) => {
 
 // Get all users
 const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.findAll({
-      include: [
-        { model: UserRoles, as: "roles" },
-        { model: user_application, as: "applications" },
-      ],
-    });
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Users retrieved successfully",
-        data: users,
-      });
-  } catch (err) {
-    logger.error(`Get all users: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
-  }
-};
-
+    try {
+        const users = await User.findAll({
+          include: [
+            { model: UserRoles, as: "roles" },
+            { model: user_application, as: "applications" },
+          ],
+          // descending order by date
+          order: [['createdAt', 'DESC']],
+        });
+        res.status(200).json({ success: true, message: 'Users retrieved successfully', data: users });
+    } catch (err) {
+        logger.error(`Get all users: ${err.message}`);
+        res.status(err.status || 500).json({ success: false, message: err.message });
+    }
+    };
+  
 //Update password - Ensure current password provided is correct
 const changePassword = async (req, res) => {
   try {
@@ -350,8 +347,116 @@ const updateUserApplications = async (req, res) => {
   }
 };
 
+// Create new user
+const createUser = async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      registrationMethod = 'traditional',
+      registrationStatus = 'active',
+      verifiedUser = false,
+      roles,
+      applications,
+    } = req.body;
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ where: { email } });
+
+    if (existingUser) {
+      throw { status: 400, message: "Email already exists" };
+    }
+
+    // Generate random password - 12 characters - alpha numeric
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+  
+    // Hash password
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(password, salt);
+
+    // Create user
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      email,
+      hash,
+      registrationMethod,
+      registrationStatus,
+      verifiedUser,
+    });
+
+    // Create user roles
+    const userRoles = roles.map((role) => ({
+      userId: newUser.id,
+      roleId: role,
+      createdBy: req.user.id,
+    }));
+    await UserRoles.bulkCreate(userRoles);
+
+    // Create user applications
+    const userApplications = applications.map((application) => ({
+      user_id: newUser.id,
+      application_id: application,
+      createdBy: req.user.id,
+    }));
+    await user_application.bulkCreate(userApplications);
+
+    // Refetch user information
+    const newUserData = await User.findOne({
+      where: { id: newUser.id },
+      include: [
+        { model: UserRoles, as: "roles" },
+        { model: user_application, as: "applications" },
+      ],
+    });
+
+    // Searchable notification ID
+    const searchableNotificationId = UUIDV4();
+
+    // Add to notification queue
+    await NotificationQueue.create({
+      type: "email",
+      templateName: "completeRegistration",
+      notificationOrigin: "User Management",
+      deliveryType: "immediate",
+      metaData: {
+        notificationId: searchableNotificationId,
+        recipientName: `${newUserData.firstName}`,
+        registrationLink: `${process.env.WEB_URL}/complete-registration/${searchableNotificationId}`,
+        tempPassword: password,
+        notificationOrigin: "User Management",
+        subject: "Complete your registration",
+        mainRecipients: [newUserData.email],
+        notificationDescription: "Complete your Registration",
+        validForHours: 24,
+      },
+      createdBy: req.user.id,
+    });
+
+    // Remove hash
+    delete newUserData.dataValues.hash;
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      data: newUserData,
+    });
+  } catch (err) {
+    logger.error(`Create user: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 //Exports
 module.exports = {
+  createUser,
   deleteUser,
   updateBasicUserInfo,
   getUser,

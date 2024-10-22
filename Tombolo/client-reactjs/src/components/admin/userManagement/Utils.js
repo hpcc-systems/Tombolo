@@ -1,5 +1,23 @@
 import { authHeader } from '../../common/AuthHeader.js';
 
+// Create a new user
+const createUser = async (newUserData) => {
+  const payload = {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify(newUserData),
+  };
+
+  const response = await fetch('/api/user', payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to create user');
+  }
+
+  const jsonResponse = await response.json();
+  return jsonResponse.data;
+};
+
 // Get all users - using fetch make a get request to the server to get all users
 const getAllUsers = async () => {
   const payload = {
@@ -146,6 +164,7 @@ const bulkDeleteUsers = async ({ ids }) => {
 };
 
 export {
+  createUser,
   getAllUsers,
   deleteUser,
   updateUser,
