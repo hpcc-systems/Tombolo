@@ -31,6 +31,7 @@ const AppHeader = () => {
       const app = applications.find((app) => app.id === activeApplicationId);
       if (app && selected !== app?.title) {
         setSelected(app.title);
+        dispatch(applicationActions.applicationSelected(app.id, app.title));
       }
     }
 
