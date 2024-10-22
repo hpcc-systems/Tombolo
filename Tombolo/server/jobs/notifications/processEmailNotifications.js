@@ -26,8 +26,8 @@ const SentNotification = models.sent_notifications;
         },
         raw: true,
       });
-    } catch (err) {
-      logger.error(err);
+    } catch (error) {
+      logger.error(error.message);
       return;
     }
 
@@ -103,7 +103,7 @@ const SentNotification = models.sent_notifications;
         }
       } catch (error) {
         // If sending fails update the notification queue
-        logger.error(error);
+        logger.error(error.message);
 
         // Update notification queue
         await updateNotificationQueueOnError({
@@ -119,7 +119,7 @@ const SentNotification = models.sent_notifications;
     try {
       await NotificationQueue.update({ lastScanned: now }, { where: {} });
     } catch (error) {
-      logger.error(error);
+      logger.error(error.message);
     }
 
     //Update sent notifications table
@@ -143,7 +143,7 @@ const SentNotification = models.sent_notifications;
         await SentNotification.create(notificationCopy);
       }
     } catch (error) {
-      logger.error(error);
+      logger.error(error.message);
     }
 
     // Bulk delete the sent notifications form notification queue
@@ -155,12 +155,12 @@ const SentNotification = models.sent_notifications;
       await NotificationQueue.destroy({
         where: { id: successfulDeliveryIds },
       });
-    } catch (err) {
-      logger.error(err);
+    } catch (error) {
+      logger.error(error.message);
     }
     
   } catch (error) {
-    logger.error(error);
+    logger.error(error.message);
   }
 })();
 
