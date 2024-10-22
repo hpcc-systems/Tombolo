@@ -1,4 +1,5 @@
-import React, { useState, useEffect, message } from 'react';
+import React, { useState, useEffect } from 'react';
+import { message } from 'antd';
 
 import BreadCrumbs from '../../common/BreadCrumbs';
 import UserManagementActionButton from './ActionButton';
@@ -101,7 +102,7 @@ const UserManagement = () => {
         const allRoles = await getAllRoles();
         setRoles(allRoles);
       } catch (error) {
-        message.warning('Failed to get roles');
+        message.error('Failed to get roles');
       }
     };
     fetchRoles();
