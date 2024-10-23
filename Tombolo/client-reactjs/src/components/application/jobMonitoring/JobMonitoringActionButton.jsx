@@ -12,6 +12,7 @@ const JobMonitoringActionButton = ({
   setBulkEditModalVisibility,
   setFiltersVisible,
   filtersVisible,
+  isReader,
 }) => {
   const deleteSelected = async () => {
     try {
@@ -42,6 +43,7 @@ const JobMonitoringActionButton = ({
 
   return (
     <Dropdown
+      disabled={isReader}
       dropdownRender={() => (
         <Menu onClick={({ key }) => handleMenuSelection(key)}>
           <Menu.Item key="1">Add Job Monitoring</Menu.Item>

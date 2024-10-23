@@ -33,6 +33,7 @@ import SuperFileMeta from '../../common/SuperFileMeta';
 import AssociatedDataflows from '../AssociatedDataflows';
 import Text from '../../common/Text.jsx';
 import FileExplorerModal from './FileExplorerModal';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -633,9 +634,9 @@ class FileDetails extends Component {
 
     // const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
     const VIEW_DATA_PERMISSION = true;
-    // const user = JSON.parse(localStorage.getItem('user'));
-    //TODO, get this from user roles to check if editing is allowed
-    const editingAllowed = true;
+
+    const roleArray = getRoleNameArray();
+    const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
 
     const validationRuleColumns = [
       {

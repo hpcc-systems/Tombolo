@@ -42,8 +42,8 @@ const ExportMenu = () => {
 
   return (
     <>
-      <Dropdown menu={{ items: menuItems }} onClick={(e) => handleMenuClick(e)}>
-        <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />}>
+      <Dropdown menu={{ items: menuItems }} onClick={(e) => handleMenuClick(e)} disabled={false}>
+        <Button type="primary" icon={<DownOutlined style={{ marginRight: '5px' }} />} disabled={false}>
           {<Text text="Export Data" />}
         </Button>
       </Dropdown>

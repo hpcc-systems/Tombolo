@@ -21,6 +21,8 @@ import {
   getProductCategories,
   getAllProductCategories,
 } from '../../common/ASRTools.js';
+
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
 import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
 import ApproveRejectModal from './ApproveRejectModal.jsx';
@@ -37,9 +39,13 @@ function JobMonitoring() {
     applicationReducer: {
       application: { applicationId },
     },
-    authenticationReducer: { user },
     applicationReducer: { clusters },
   } = useSelector((state) => state);
+
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  const roleArray = getRoleNameArray();
+  const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   //Local States
   const [displayAddJobMonitoringModal, setDisplayAddJobMonitoringModal] = useState(false);
@@ -587,6 +593,7 @@ function JobMonitoring() {
             setBulkEditModalVisibility={setBulkEditModalVisibility}
             setFiltersVisible={setFiltersVisible}
             filtersVisible={filtersVisible}
+            isReader={isReader}
           />
         }
       />
@@ -602,6 +609,7 @@ function JobMonitoring() {
         setSelectedDomain={setSelectedDomain}
         filtersVisible={filtersVisible}
         setFiltersVisible={setFiltersVisible}
+        isReader={isReader}
       />
       <AddEditJobMonitoringModal
         displayAddJobMonitoringModal={displayAddJobMonitoringModal}
@@ -654,6 +662,7 @@ function JobMonitoring() {
         productCategories={productCategories}
         allProductCategories={allProductCategories}
         filteringJobs={filteringJobs}
+        isReader={isReader}
       />
       <MonitoringDetailsModal
         displayMonitoringDetailsModal={displayMonitoringDetailsModal}

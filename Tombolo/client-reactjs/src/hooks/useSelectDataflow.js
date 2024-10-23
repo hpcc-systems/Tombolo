@@ -4,6 +4,7 @@ import { useHistory, useParams } from 'react-router';
 import { authHeader, handleError } from '../components/common/AuthHeader';
 // import { hasEditPermission } from '../components/common/AuthUtil';
 import { dataflowAction } from '../redux/actions/Dataflow';
+import { getRoleNameArray } from '../components/common/AuthUtil';
 
 const useSelectDataflow = () => {
   const [dataflowReducer] = useSelector((state) => [state.dataflowReducer]);
@@ -12,9 +13,9 @@ const useSelectDataflow = () => {
   const dispatch = useDispatch();
   const history = useHistory();
   const params = useParams();
-  // const user = JSON.parse(localStorage.getItem('user'));
-  //TODO, get this from user roles to check if editing is allowed
-  const editingAllowed = true;
+
+  const roleArray = getRoleNameArray();
+  const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
 
   useEffect(() => {
     (async () => {

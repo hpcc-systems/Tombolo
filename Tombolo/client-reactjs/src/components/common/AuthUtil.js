@@ -40,10 +40,17 @@
 //   return hasPermissionToViewPII;
 // }
 
-export const getRoleNameArray = (user) => {
+export const getRoleNameArray = () => {
   try {
+    //get role Array to control options available in actions
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!user) {
+      return [];
+    }
+    let roles = [];
     //roleName is nested inside of role_details in the role array, build a list of roles
-    let roles = user?.roles.map((role) => role.role_details.roleName);
+    roles = user?.roles.map((role) => role.role_details.roleName);
 
     return roles;
   } catch (e) {

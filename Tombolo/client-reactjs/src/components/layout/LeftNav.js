@@ -44,11 +44,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
 
   const applicationId = application?.applicationId;
 
-  const user = JSON.parse(localStorage.getItem('user'));
-  let roleArray = [];
-  if (user) {
-    roleArray = getRoleNameArray(user);
-  }
+  const roleArray = getRoleNameArray();
 
   //control the disabled state of the menu items based on the application and cluster states
   useEffect(() => {

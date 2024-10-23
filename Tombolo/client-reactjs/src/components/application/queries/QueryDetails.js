@@ -3,6 +3,7 @@ import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, 
 import { connect } from 'react-redux';
 import { debounce } from 'lodash';
 import ReactMarkdown from 'react-markdown';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 // import { hasEditPermission } from '../../common/AuthUtil.js';
@@ -462,9 +463,8 @@ class QueryDetails extends PureComponent {
   };
 
   render() {
-    // const user = JSON.parse(localStorage.getItem('user'));
-    //TODO, get this from user roles to check if editing is allowed
-    const editingAllowed = true;
+    const roleArray = getRoleNameArray();
+    const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
     const { confirmLoading } = this.state;
     const formItemLayout = {
       labelCol: { span: 2 },

@@ -15,6 +15,7 @@ import InputOutoutFiles from './JobFiles/InputOutoutFiles';
 import JobForm from './JobForm.js';
 import ScheduleTab from './ScheduleTab.js';
 import ScriptTab from './ScriptTab.js';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 const TabPane = Tabs.TabPane;
 
@@ -430,9 +431,9 @@ class JobDetails extends Component {
   render() {
     const { application, displayingInModal, inTabView, isNew, selectedAsset, match, selectedDataflow } = this.props;
     const { job, enableEdit, selectedTabPaneKey } = this.state;
-    // const user = JSON.parse(localStorage.getItem('user'));
-    //TODO, get this from user roles to check if editing is allowed
-    const editingAllowed = true;
+
+    const roleArray = getRoleNameArray();
+    const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
     const { name, ecl, jobType } = job;
 
     const scheduleProps = {

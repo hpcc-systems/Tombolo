@@ -2,15 +2,15 @@
 import { store } from '../../redux/store/Store';
 import { authActions } from '../../redux/actions/Auth';
 import { message } from 'antd';
-// import { getRoleNameArray } from './AuthUtil';
+import { getRoleNameArray } from './AuthUtil';
 
 export function handleError(response) {
   message.config({ top: 130 });
 
-  // //if response is an empty object, simply return
-  // if (Object.keys(response).length === 0) {
-  //   return;
-  // }
+  //if response is an empty object, simply return
+  if (Object.keys(response).length === 0) {
+    return;
+  }
 
   //if response is false, it means that we cannot communicate with backend, set backend status to false so UI will show error message
   if (response === false) {
@@ -55,14 +55,12 @@ window.fetch = async (...args) => {
   let [resource, config] = args;
 
   try {
-    // let allowed = checkPermissions(resource, config);
+    let allowed = checkPermissions(resource, config);
 
-    // console.log('allowed', allowed);
-
-    // if (!allowed) {
-    //   message.error('You do not have permission to perform this action');
-    //   return {};
-    // }
+    if (!allowed) {
+      message.error('You do not have permission to perform this action');
+      return {};
+    }
 
     const response = await originalFetch(resource, config);
 
@@ -108,53 +106,45 @@ window.fetch = async (...args) => {
   }
 };
 
-// const checkPermissions = (resource, config) => {
-//   const user = JSON.parse(localStorage.getItem('user'));
+const checkPermissions = (resource, config) => {
+  const user = JSON.parse(localStorage.getItem('user'));
 
-//   console.log('checking permissions', user, resource, config);
+  //first, if there is no user, we need to check if the resource is a permitted resource without having a user
+  if (!user) {
+    const permittedResourcesWithoutUser = ['/api/status', '/api/auth'];
 
-//   //first, if there is no user, we need to check if the resource is a permitted resource without having a user
-//   if (!user) {
-//     console.log('no user, checking permitted resources');
-//     const permittedResourcesWithoutUser = ['/api/status', '/api/auth'];
+    //check if resource starts with any of the permitted resources
+    let permitted = false;
+    for (let i = 0; i < permittedResourcesWithoutUser.length; i++) {
+      if (resource.startsWith(permittedResourcesWithoutUser[i])) {
+        permitted = true;
+        break;
+      }
+    }
 
-//     //check if resource starts with any of the permitted resources
-//     let permitted = false;
-//     for (let i = 0; i < permittedResourcesWithoutUser.length; i++) {
-//       if (resource.startsWith(permittedResourcesWithoutUser[i])) {
-//         permitted = true;
-//         break;
-//       }
-//     }
+    return permitted;
+  } else {
+    //user exists, we need to check users roles and method to verify they can send this call
+    let method = null;
+    if (config?.method) {
+      method = config.method;
+    }
 
-//     console.log('permitted', permitted);
+    if (config?.headers?.method) {
+      method = config.headers.method;
+    }
 
-//     return permitted;
-//   } else {
-//     //user exists, we need to check users roles and method to verify they can send this call
-//     let method = null;
-//     if (config?.method) {
-//       method = config.method;
-//     }
+    if (method === null) {
+      method = 'GET';
+    }
 
-//     if (config?.headers?.method) {
-//       method = config.headers.method;
-//     }
+    let userRoles = getRoleNameArray();
 
-//     if (method === null) {
-//       method = 'GET';
-//     }
-
-//     console.log(method);
-
-//     let userRoles = getRoleNameArray(user);
-//     console.log(userRoles);
-
-//     //if user is only a reader, we don't want to make any fetch calls that are not GET
-//     if (userRoles.length === 1 && userRoles.includes('reader') && method !== 'GET') {
-//       return false;
-//     } else {
-//       return true;
-//     }
-//   }
-// };
+    //if user is only a reader, we don't want to make any fetch calls that are not GET
+    if (userRoles.length === 1 && userRoles.includes('reader') && method !== 'GET') {
+      return false;
+    } else {
+      return true;
+    }
+  }
+};

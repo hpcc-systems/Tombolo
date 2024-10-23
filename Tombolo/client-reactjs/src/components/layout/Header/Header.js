@@ -26,7 +26,6 @@ const AppHeader = () => {
   //if there is an application from local storage, set it as selected and dispatch application selected
   useEffect(() => {
     const activeApplicationId = localStorage.getItem('activeProjectId');
-    console.log(application, applications, activeApplicationId);
 
     if (activeApplicationId && applications.length > 0 && activeApplicationId !== application?.applicationId) {
       const app = applications.find((app) => app.id === activeApplicationId);

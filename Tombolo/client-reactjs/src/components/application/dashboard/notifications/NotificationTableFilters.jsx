@@ -68,6 +68,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
               <DatePicker.RangePicker
                 style={{ width: '100%' }}
                 allowClear
+                disabled={false}
                 disabledDate={(current) =>
                   !current || current.isBefore(past60Days) || current.isAfter(dayjs().endOf('day'))
                 }
@@ -78,7 +79,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
           <Col span={5}>
             <div className="notifications__filter-label">Origin</div>
             <Form.Item name="origin">
-              <Select placeholder="Origin" allowClear>
+              <Select placeholder="Origin" disabled={false} allowClear>
                 {originOptions.map((o) => (
                   <Option key={o} value={o}>
                     {o}
@@ -90,7 +91,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
           <Col span={4}>
             <div className="notifications__filter-label">Status</div>
             <Form.Item name="status">
-              <Select placeholder="Status" allowClear>
+              <Select placeholder="Status" disabled={false} allowClear>
                 {statusOptions.map((s) => (
                   <Option key={s} value={s}>
                     {s}
@@ -104,7 +105,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
               <Col span={5}>
                 <div className="notifications__filter-label">Domain</div>
                 <Form.Item name="domain">
-                  <Select placeholder="Domain" allowClear>
+                  <Select placeholder="Domain" disabled={false} allowClear>
                     {domainOptions.map((d) => (
                       <Option key={d} value={d}>
                         {d}
@@ -116,7 +117,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
               <Col span={5} name="product">
                 <div className="notifications__filter-label">Product</div>
                 <Form.Item name="product">
-                  <Select placeholder="Product" allowClear>
+                  <Select placeholder="Product" disabled={false} allowClear>
                     {productOptions.map((p) => (
                       <Option key={p} value={p}>
                         {p}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, message, Modal, Table, Tooltip } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 // import { hasEditPermission } from '../../common/AuthUtil.js';
 import { Constants } from '../../common/Constants';
@@ -8,9 +9,8 @@ import { Constants } from '../../common/Constants';
 function ExistingAssetListDialog({ show, applicationId, clusterId, assetType, onClose, nodes }) {
   const [assets, setAssets] = useState([]);
 
-  // const user = JSON.parse(localStorage.getItem('user'));
-  //TODO, get this from user roles to check if editing is allowed
-  const editingAllowed = true;
+  const roleArray = getRoleNameArray();
+  const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

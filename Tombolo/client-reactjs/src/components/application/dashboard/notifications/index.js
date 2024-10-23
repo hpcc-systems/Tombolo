@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tabs, Space, message } from 'antd';
+import { getRoleNameArray } from '../../../common/AuthUtil';
 
 import SentNotificationsTable from './NotificationsTable';
 import NotificationDashboard from './NotificationDashboard';
@@ -38,6 +39,11 @@ const Index = () => {
   });
   const [domains, setDomains] = useState([]);
   const [productCategories, setProductCategories] = useState([]);
+
+  //get user roles
+  const roleArray = getRoleNameArray();
+
+  const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   //Redux
   const { applicationId } = useSelector((state) => state.applicationReducer.application);
@@ -201,6 +207,7 @@ const Index = () => {
                   setDisplayUpdateModal={setDisplayUpdateModal}
                   setFiltersVisible={setFiltersVisible}
                   filtersVisible={filtersVisible}
+                  isReader={isReader}
                 />
               </>
             )}
@@ -239,6 +246,7 @@ const Index = () => {
                   filters={filters}
                   searchTerm={searchTerm}
                   monitorings={monitorings}
+                  isReader={isReader}
                 />
               </>
             ),

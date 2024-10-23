@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Popconfirm, Tooltip, Divider } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { DeleteOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 // import { hasEditPermission } from '../../common/AuthUtil.js';
@@ -9,9 +10,8 @@ import { Constants } from '../../common/Constants';
 import Text from '../../common/Text.jsx';
 
 function DataflowTable({ data, applicationId, onSelectDataflow, onDataFlowUpdated, onEditDataFlow }) {
-  // const user = JSON.parse(localStorage.getItem('user'));
-  //TODO, get this from user roles to check if editing is allowed
-  const editingAllowed = true;
+  const roleArray = getRoleNameArray();
+  const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
