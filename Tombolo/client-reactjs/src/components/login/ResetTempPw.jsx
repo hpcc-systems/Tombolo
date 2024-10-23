@@ -51,19 +51,21 @@ function ResetTempPassword() {
         required
         label="Temporary Password"
         name="tempPassword"
+        normalize={(value) => value.trim()}
         rules={[
           {
             required: true,
             message: 'Please input your temporary password!',
           },
         ]}>
-        <Input size="large" autoComplete="new-temp-password" />
+        <Input.Password size="large" autoComplete="new-temp-password" />
       </Form.Item>
       <Popover placement="right" trigger="focus" title="Password Complexity" content={popOverContent}>
         <Form.Item
           required
           label="New Password"
           name="password"
+          normalize={(value) => value.trim()}
           rules={[
             {
               required: true,
@@ -96,6 +98,7 @@ function ResetTempPassword() {
         required
         label="Confirm Password"
         name="confirmPassword"
+        normalize={(value) => value.trim()}
         rules={[
           {
             required: true,

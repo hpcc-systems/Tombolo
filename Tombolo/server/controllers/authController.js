@@ -200,7 +200,7 @@ const resetTempPassword = async (req, res) => {
     // Hash the new password
     const salt = bcrypt.genSaltSync(10);
     user.hash = bcrypt.hashSync(password, salt);
-    user.verified = true;
+    user.verifiedUser = true;
     user.verifiedAt = new Date();
     user.forcePasswordReset = false;
 
