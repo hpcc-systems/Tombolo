@@ -109,6 +109,7 @@ window.fetch = async (...args) => {
 const checkPermissions = (resource, config) => {
   const user = JSON.parse(localStorage.getItem('user'));
 
+  //if the resource is a logout call, we want to allow it
   const isLogout = resource.includes('/api/auth/logout');
   if (isLogout) {
     return true;
@@ -145,8 +146,20 @@ const checkPermissions = (resource, config) => {
 
     let userRoles = getRoleNameArray();
 
+    //create list of allowed routes that even readers can access
+    const allowedRoutesForReaders = [`/api/user/${user.id}`];
+
+    //check if resource starts with any of the allowed routes for readers
+    let allowed = false;
+    for (let i = 0; i < allowedRoutesForReaders.length; i++) {
+      if (resource.startsWith(allowedRoutesForReaders[i])) {
+        allowed = true;
+        break;
+      }
+    }
+
     //if user is only a reader, we don't want to make any fetch calls that are not GET
-    if (userRoles.length === 1 && userRoles.includes('reader') && method !== 'GET') {
+    if (userRoles.length === 1 && userRoles.includes('reader') && method !== 'GET' && !allowed) {
       return false;
     } else {
       return true;
