@@ -8,17 +8,17 @@ const models = require("../models");
 const {
   generateAccessToken,
   generateRefreshToken,
+  getAUser,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
 const User = models.user;
 const UserRoles = models.UserRoles;
 const RoleTypes = models.RoleTypes;
-const user_application = models.user_application;
-const Application = models.application;
 const RefreshTokens = models.RefreshTokens;
 const NotificationQueue = models.notification_queue;
 const PasswordResetLinks = models.PasswordResetLinks;
+const AccountVerificationCodes = models.AccountVerificationCodes;
 
 // Register application owner
 const createApplicationOwner = async (req, res) => {
@@ -164,40 +164,106 @@ const createBasicUser = async (req, res) => {
   }
 };
 
+//Reset Temp password
+const resetTempPassword = async (req, res) => {
+  try {
+    const { tempPassword, newPassword, resetToken, deviceInfo } = req.body;
+
+    // From AccountVerificationCodes table findUser ID by code, where code is resetToken
+    const accountVerificationCode = await AccountVerificationCodes.findOne({
+      where: { code: resetToken },
+    });
+
+    // If accountVerificationCode not found
+    if (!accountVerificationCode) {
+      throw { status: 404, message: "Invalid or expired reset token" };
+    }
+
+    // If accountVerificationCode has expired
+    if (new Date() > accountVerificationCode.expiresAt) {
+      throw { status: 400, message: "Reset token has expired" };
+    }
+
+    // Find user by ID
+    let user = await getAUser({ id: accountVerificationCode.userId });
+
+    // If user not found
+    if (!user) {
+      throw { status: 404, message: "User not found" };
+    }
+
+    // Compare temp password with hash.
+    if (!bcrypt.compareSync(tempPassword, user.hash)) {
+      throw { status: 500, message: "Invalid temporary password" };
+    }
+
+    // Hash the new password
+    const salt = bcrypt.genSaltSync(10);
+    user.hash = bcrypt.hashSync(newPassword, salt);
+    user.verified = true;
+    user.verifiedAt = new Date();
+    user.forcePasswordReset = false;
+
+    // Save user with updated details
+    await user.save();
+
+    // Delete the account verification code
+    await AccountVerificationCodes.destroy({
+      where: { code: resetToken },
+    });
+
+    // Create token id
+    const tokenId = uuidv4();
+
+    // Create access jwt
+    const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
+
+    // Generate refresh token
+    const refreshToken = generateRefreshToken({ tokenId });
+
+    // Save refresh token to DB
+    const { iat, exp } = jwt.decode(refreshToken);
+
+    // Save refresh token in DB
+    await RefreshTokens.create({
+      id: tokenId,
+      userId: user.id,
+      token: refreshToken,
+      deviceInfo,
+      metaData: {},
+      iat: new Date(iat * 1000),
+      exp: new Date(exp * 1000),
+    });
+
+    // User data obj to send to the client
+    const userObj = {
+      ...user.toJSON(),
+      token: `Bearer ${accessToken}`,
+    }
+
+    // remove hash from user object
+    delete userObj.hash;
+
+    // Success response
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+      data: userObj,
+    });
+  } catch (err) {
+    logger.error(`Reset Temp Password: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
 //Login Basic user
 const loginBasicUser = async (req, res) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
     // find user - include user roles from UserRoles table
-    const user = await User.findOne({
-      where: { email },
-      include: [
-        {
-          model: UserRoles,
-          attributes: ["id"],
-          as: "roles",
-          include: [
-            {
-              model: RoleTypes,
-              as: "role_details",
-              attributes: ["id", "roleName"],
-            },
-          ],
-        },
-        {
-          model: user_application,
-          attributes: ["id"],
-          as: "applications",
-          include: [
-            {
-              model: Application,
-              attributes: ["id", "title", "description"],
-            },
-          ],
-        },
-      ],
-    });
+   const user = await getAUser({ email });
 
     // User with the given email does not exist
     if (!user) {
@@ -435,6 +501,7 @@ const resetPassword = async (req, res) => {
 //Exports
 module.exports = {
   createBasicUser,
+  resetTempPassword,
   loginBasicUser,
   logOutBasicUser,
   handlePasswordResetRequest,
