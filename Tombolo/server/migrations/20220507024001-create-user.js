@@ -51,7 +51,16 @@ module.exports = {
           isIn: [["pending", "active", "revoked"]],
         },
       },
-      lastLoggedAt: {
+      forcePasswordReset: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      passwordExpiresAt : {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      lastAccessedAt: {
         type: Sequelize.DATE,
         allowNull: true,
       },
