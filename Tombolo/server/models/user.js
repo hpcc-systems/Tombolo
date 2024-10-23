@@ -54,7 +54,16 @@ module.exports = (sequelize, DataTypes) => {
           isIn: [["pending", "active", "revoked"]], // Must be one of these values
         },
       },
-      lastLoggedAt: {
+      forcePasswordReset: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      passwordExpiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      lastAccessedAt: {
         type: DataTypes.DATE,
         allowNull: true,
       },
@@ -94,6 +103,13 @@ module.exports = (sequelize, DataTypes) => {
           await PasswordResetLinks.destroy({
             where: {userId: user.where.id,},
           });
+
+          // Delete verification codes
+          const AccountVerificationCodes = sequelize.models.AccountVerificationCodes;
+          await AccountVerificationCodes.destroy({
+            where: {userId: user.where.id,},
+          });
+          
         },
       },
     }
@@ -127,6 +143,13 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "userId",
       onDelete: "CASCADE",
       hooks: true,
+    });
+
+    // User to verification codes
+    user.hasMany(models.AccountVerificationCodes, {
+      foreignKey: "userId",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     });
   };
 

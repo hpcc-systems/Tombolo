@@ -34,13 +34,13 @@ function UserDetailModal({ displayUserDetailsModal, setDisplayUserDetailsModal, 
         <Descriptions.Item label="Last Name">{selectedUser?.lastName}</Descriptions.Item>
         <Descriptions.Item label="Email">{selectedUser?.email}</Descriptions.Item>
         <Descriptions.Item label="Registration Method">{startCase(selectedUser?.registrationMethod)}</Descriptions.Item>
-        <Descriptions.Item label="Registration Status">{startCase(selectedUser?.registrationStatus)}</Descriptions.Item>
+        <Descriptions.Item label="Account Status">{startCase(selectedUser?.registrationStatus)}</Descriptions.Item>
         <Descriptions.Item label="Verified">{selectedUser?.verifiedUser === false ? 'No' : 'Yes'}</Descriptions.Item>
         {selectedUser?.verifiedAt && (
           <Descriptions.Item label="Verified At">{selectedUser?.verifiedAt}</Descriptions.Item>
         )}
-        {selectedUser?.lastLoggedAt && (
-          <Descriptions.Item label="Last Logged At">{selectedUser?.lastLoggedAt}</Descriptions.Item>
+        {selectedUser?.lastAccessedAt && (
+          <Descriptions.Item label="Last Logged At">{selectedUser?.lastAccessedAt}</Descriptions.Item>
         )}
         {selectedUser && (
           <Descriptions.Item label="Roles">
