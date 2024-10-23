@@ -8,8 +8,7 @@ const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
 const NotificationQueue = models.notification_queue;
-const Roles = models.Role_Types;
-
+const AccountVerificationCodes = models.AccountVerificationCodes;
 // Delete user with ID
 const deleteUser = async (req, res) => {
   try {
@@ -388,6 +387,7 @@ const createUser = async (req, res) => {
       registrationMethod,
       registrationStatus,
       verifiedUser,
+      forcePasswordReset: true,
     });
 
     // Create user roles
@@ -417,6 +417,14 @@ const createUser = async (req, res) => {
 
     // Searchable notification ID
     const searchableNotificationId = UUIDV4();
+    const verificationCode = UUIDV4();
+
+    // Create account verification code
+    await AccountVerificationCodes.create({
+      code: verificationCode,
+      userId: newUser.id,
+      expiresAt: new Date(Date.now() + 86400000),
+    });
 
     // Add to notification queue
     await NotificationQueue.create({
@@ -427,7 +435,7 @@ const createUser = async (req, res) => {
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${newUserData.firstName}`,
-        registrationLink: `${process.env.WEB_URL}/complete-registration/${searchableNotificationId}`,
+        registrationLink: `${process.env.WEB_URL}/reset-temporary-password/${verificationCode}`,
         tempPassword: password,
         notificationOrigin: "User Management",
         subject: "Complete your registration",
