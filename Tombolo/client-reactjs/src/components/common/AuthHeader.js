@@ -109,6 +109,11 @@ window.fetch = async (...args) => {
 const checkPermissions = (resource, config) => {
   const user = JSON.parse(localStorage.getItem('user'));
 
+  const isLogout = resource.includes('/api/auth/logout');
+  if (isLogout) {
+    return true;
+  }
+
   //first, if there is no user, we need to check if the resource is a permitted resource without having a user
   if (!user) {
     const permittedResourcesWithoutUser = ['/api/status', '/api/auth'];
