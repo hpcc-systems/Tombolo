@@ -100,8 +100,6 @@ const sessions = require("./routes/sessionRoutes");
 const cluster = require("./routes/clusterRoutes");
 const roles = require("./routes/roleTypesRoute");
 const status = require("./routes/statusRoutes");
-console.log(auth);
-console.log(status);
 
 // Log all HTTP requests
 app.use((req, res, next) => {
