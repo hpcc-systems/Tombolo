@@ -167,11 +167,11 @@ const createBasicUser = async (req, res) => {
 //Reset Temp password
 const resetTempPassword = async (req, res) => {
   try {
-    const { tempPassword, newPassword, resetToken, deviceInfo } = req.body;
+    const { tempPassword, password, token, deviceInfo } = req.body;
 
     // From AccountVerificationCodes table findUser ID by code, where code is resetToken
     const accountVerificationCode = await AccountVerificationCodes.findOne({
-      where: { code: resetToken },
+      where: { code: token },
     });
 
     // If accountVerificationCode not found
@@ -199,7 +199,7 @@ const resetTempPassword = async (req, res) => {
 
     // Hash the new password
     const salt = bcrypt.genSaltSync(10);
-    user.hash = bcrypt.hashSync(newPassword, salt);
+    user.hash = bcrypt.hashSync(password, salt);
     user.verified = true;
     user.verifiedAt = new Date();
     user.forcePasswordReset = false;
@@ -209,7 +209,7 @@ const resetTempPassword = async (req, res) => {
 
     // Delete the account verification code
     await AccountVerificationCodes.destroy({
-      where: { code: resetToken },
+      where: { code: token },
     });
 
     // Create token id

@@ -26,8 +26,13 @@ function ResetTempPassword() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const values = await form.validateFields();
-      values.resetToken = resetToken;
+      let values;
+      try {
+        values = await form.validateFields();
+      } catch (err) {
+        return;
+      }
+      values.token = resetToken;
       const result = await resetTempPassword(values);
 
       // Save user token to local storage
@@ -58,7 +63,7 @@ function ResetTempPassword() {
         <Form.Item
           required
           label="New Password"
-          name="newPassword"
+          name="password"
           rules={[
             {
               required: true,
@@ -98,7 +103,7 @@ function ResetTempPassword() {
           },
           {
             validator: async (_, value) => {
-              if (!value || value === form.getFieldValue('newPassword')) {
+              if (!value || value === form.getFieldValue('password')) {
                 return Promise.resolve();
               }
               return Promise.reject(new Error('The two passwords that you entered do not match!'));
