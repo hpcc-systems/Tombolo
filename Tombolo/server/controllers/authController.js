@@ -202,7 +202,7 @@ const loginBasicUser = async (req, res) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-      return res.status(404).json({
+      return res.status(401).json({
         success: false,
         message: "Username and Password combination not found",
       });

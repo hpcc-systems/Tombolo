@@ -65,7 +65,7 @@ window.fetch = async (...args) => {
     const response = await originalFetch(resource, config);
 
     //if response.status is 401, it means the refresh token has expired, so we need to log the user out
-    if (response.status === 401) {
+    if (response.status === 401 && resource !== '/api/auth/loginBasicUser') {
       authActions.logout();
       localStorage.setItem('sessionExpired', true);
       window.location.href = '/login';

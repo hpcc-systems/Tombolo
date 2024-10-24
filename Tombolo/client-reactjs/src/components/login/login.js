@@ -14,14 +14,28 @@ const Login = () => {
 
     //get browser and os info and put in deviceInfo variable
     const deviceInfo = getDeviceInfo();
+
     const test = await authActions.login({ email, password, deviceInfo });
 
-    if (test && test.type === Constants.LOGIN_SUCCESS) {
+    if (test?.type === Constants.LOGIN_SUCCESS) {
       //reload page if login is succesful
       window.location.href = '/';
-    } else {
+      return;
+    }
+
+    //handle login failed
+    if (test?.type === Constants.LOGIN_FAILED) {
+      message.error('Username and Password combination not found.');
+      setLoading(false);
+      return;
+    }
+
+    //handle all other errors
+    if (!test) {
+      message.error('An unexpected error occurred. Please try again.');
       setLoading(false);
     }
+    return;
   };
 
   //if session expired relay message to user what happened
