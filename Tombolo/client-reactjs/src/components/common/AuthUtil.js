@@ -39,3 +39,15 @@
 //   }
 //   return hasPermissionToViewPII;
 // }
+
+export const getRoleNameArray = (user) => {
+  try {
+    //roleName is nested inside of role_details in the role array, build a list of roles
+    let roles = user?.roles.map((role) => role.role_details.roleName);
+
+    return roles;
+  } catch (e) {
+    console.log(e);
+    return [];
+  }
+};

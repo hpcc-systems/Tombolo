@@ -26,12 +26,12 @@ const AppHeader = () => {
   //if there is an application from local storage, set it as selected and dispatch application selected
   useEffect(() => {
     const activeApplicationId = localStorage.getItem('activeProjectId');
-    console.log(activeApplicationId);
 
     if (activeApplicationId && applications.length > 0 && activeApplicationId !== application?.applicationId) {
       const app = applications.find((app) => app.id === activeApplicationId);
-      if (app && selected !== app?.applicationTitle) {
+      if (app && selected !== app?.title) {
         setSelected(app.title);
+        dispatch(applicationActions.applicationSelected(app.id, app.title));
       }
     }
 
@@ -41,6 +41,22 @@ const AppHeader = () => {
 
     if (!application?.applicationId && !applications.length > 0) {
       setSelected('No Applications Available');
+    }
+
+    //if there is an active project id, but id doesn't exist in their app list, reset it to the first application user has access too
+    if (activeApplicationId && applications.length > 0 && !applications.find((app) => app.id === activeApplicationId)) {
+      const app = applications[0];
+      setSelected(app.title);
+      dispatch(applicationActions.applicationSelected(app.id, app.title));
+      localStorage.setItem('activeProjectId', app.id);
+    }
+
+    //if there is no active project id in local storage, and there is an applicaiton list, set the first application as active
+    if (!activeApplicationId && applications.length > 0) {
+      const app = applications[0];
+      setSelected(app.title);
+      dispatch(applicationActions.applicationSelected(app.id, app.title));
+      localStorage.setItem('activeProjectId', app.id);
     }
   }, [application, applications, applicationReducer, dispatch]);
 
