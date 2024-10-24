@@ -42,9 +42,8 @@ export const getAllProductCategories = async () => {
     headers: authHeader(),
   };
   const response = await fetch(`/api/asr/productsOnly`, options);
-  console.log(response);
+
   if (!response.ok) {
-    console.log(response);
     throw new Error('Failed to get product categories');
   }
   const productCategories = await response.json();

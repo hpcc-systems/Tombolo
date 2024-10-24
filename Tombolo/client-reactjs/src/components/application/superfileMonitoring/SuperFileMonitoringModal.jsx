@@ -16,6 +16,7 @@ const SuperFileMonitoringModal = ({
   setSuccessAddingMonitoring,
   selectedFileMonitoring,
   superfileMonitoringList,
+  isReader,
 }) => {
   //adjust modal width and visibility and tabs
   const [modalWidth, setModalWidth] = useState(0);
@@ -287,7 +288,7 @@ const SuperFileMonitoringModal = ({
   );
 
   const saveBtn = (
-    <Button key="save" type="primary" onClick={handleSave} loading={confirmLoading}>
+    <Button key="save" type="primary" onClick={handleSave} loading={confirmLoading} disabled={isReader}>
       Save
     </Button>
   );

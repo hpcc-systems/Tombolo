@@ -13,7 +13,7 @@ import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../../common/DeleteAsset';
 import Text from '../../common/Text.jsx';
 
-function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
+function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed }) {
   const { applicationReducer, assetReducer, groupsReducer } = useSelector((state) => ({
     groupsReducer: state.groupsReducer,
     applicationReducer: state.applicationReducer,
@@ -23,9 +23,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const selectedGroup = groupsReducer;
   const history = useHistory();
   const dispatch = useDispatch();
-  // const user = JSON.parse(localStorage.getItem('user'));
-  //TODO, get this from user roles to check if editing is allowed
-  const editingAllowed = true;
+
   const applicationId = applicationReducer?.application?.applicationId || '';
 
   const { assetTypeFilter, keywords } = assetReducer.searchParams;

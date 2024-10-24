@@ -7,6 +7,7 @@ import { Tooltip, Button, message } from 'antd';
 import FileMonitoringTable from './FileMonitoringTable';
 import FileMonitoringModal from './FileMonitoringModal';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 function FileMonitoring() {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -17,6 +18,9 @@ function FileMonitoring() {
     clusters,
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
+
+  const roleArray = getRoleNameArray();
+  const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   useEffect(() => {
     if (applicationId && clusters) {
@@ -90,6 +94,7 @@ function FileMonitoring() {
         setIsModalVisible={setIsModalVisible}
         setSelectedFileMonitoring={setSelectedFileMonitoring}
         applicationId={applicationId}
+        isReader={isReader}
       />
 
       {isModalVisible ? (
@@ -100,6 +105,7 @@ function FileMonitoring() {
           fileMonitoringList={fileMonitoringList}
           selectedFileMonitoring={selectedFileMonitoring}
           setSelectedFileMonitoring={setSelectedFileMonitoring}
+          isReader={isReader}
         />
       ) : null}
     </>

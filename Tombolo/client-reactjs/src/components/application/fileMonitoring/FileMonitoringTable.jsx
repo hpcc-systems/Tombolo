@@ -11,6 +11,7 @@ function FileMonitoringTable({
   setIsModalVisible,
   setSelectedFileMonitoring,
   applicationId,
+  isReader,
 }) {
   // Delete file monitoring -----------------------------------------------------------------
   const deleteFileMonitoring = async ({ id, name }) => {
@@ -89,30 +90,34 @@ function FileMonitoringTable({
               <EyeOutlined onClick={() => viewExistingFileMonitoring(record.id)} />
             </Tooltip>
           </a>
-          {record.monitoringActive ? (
-            <a>
-              <Tooltip title="Pause Monitoring">
-                <PauseCircleOutlined onClick={() => changeFileMonitoringStatus(record.id)} />
-              </Tooltip>
-            </a>
-          ) : (
-            <a>
-              <Tooltip title="Resume Monitoring">
-                <PlayCircleOutlined onClick={() => changeFileMonitoringStatus(record.id)} />
-              </Tooltip>
-            </a>
-          )}
+          {!isReader && (
+            <>
+              {record.monitoringActive ? (
+                <a>
+                  <Tooltip title="Pause Monitoring">
+                    <PauseCircleOutlined onClick={() => changeFileMonitoringStatus(record.id)} />
+                  </Tooltip>
+                </a>
+              ) : (
+                <a>
+                  <Tooltip title="Resume Monitoring">
+                    <PlayCircleOutlined onClick={() => changeFileMonitoringStatus(record.id)} />
+                  </Tooltip>
+                </a>
+              )}
 
-          <a>
-            <Tooltip title="Delete Monitoring">
-              <DeleteOutlined
-                onClick={() => {
-                  console.log(record);
-                  deleteFileMonitoring({ id: record.id, name: record.displayName });
-                }}
-              />
-            </Tooltip>
-          </a>
+              <a>
+                <Tooltip title="Delete Monitoring">
+                  <DeleteOutlined
+                    onClick={() => {
+                      console.log(record);
+                      deleteFileMonitoring({ id: record.id, name: record.displayName });
+                    }}
+                  />
+                </Tooltip>
+              </a>
+            </>
+          )}
 
           <Tooltip title="Notifications">
             <Link to={`/${applicationId}/notifications?monitoringId=${record.id}`}>

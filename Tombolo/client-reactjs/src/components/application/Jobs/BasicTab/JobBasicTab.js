@@ -3,6 +3,7 @@ import { Col, Form, Row, Select } from 'antd';
 import Text from '../../../common/Text';
 import WithSpinner from '../../../common/WithSpinner';
 import ReadOnlyField from '../../../common/ReadOnlyField';
+import { getRoleNameArray } from '../../../common/AuthUtil';
 // import { hasEditPermission } from '../../../common/AuthUtil';
 
 import BasicsTabSpray from './BasicsTabSpray';
@@ -29,9 +30,9 @@ function JobBasicTab({ state, setState, form, props }) {
   const { clusters, application, inTabView } = props;
   const { addingNewAsset, enableEdit, initialDataLoading, job } = state;
   const { jobType } = job;
-  // const user = JSON.parse(localStorage.getItem('user'));
-  //TODO, get this from user roles to check if editing is allowed
-  const editingAllowed = true;
+
+  const roleArray = getRoleNameArray();
+  const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
 
   const onChange = (e) => setState({ job: { ...state.job, [e.target.name]: e.target.value } });
   const onJobTypeChange = (value) => setState({ job: { ...state.job, jobType: value } });

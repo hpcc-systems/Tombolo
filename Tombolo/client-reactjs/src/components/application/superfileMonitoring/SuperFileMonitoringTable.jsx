@@ -9,7 +9,9 @@ function SuperFileMonitoringTable({
   superfileMonitoringList,
   setSuperFileMonitoringList,
   applicationId,
+
   setSelectedFileMonitoring,
+  isReader,
 }) {
   // Delete record
   const deleteSuperFileMonitoring = async ({ id, name }) => {
@@ -78,28 +80,32 @@ function SuperFileMonitoringTable({
               <EyeOutlined onClick={() => viewExistingFileMonitoring(record.id)} />
             </Tooltip>
           </a>
-          {record.monitoringActive ? (
-            <a>
-              <Tooltip title="Pause Monitoring">
-                <PauseCircleOutlined onClick={() => changeFileMonitoringStatus(record.id)} />
-              </Tooltip>
-            </a>
-          ) : (
-            <a>
-              <Tooltip title="Resume Monitoring">
-                <PlayCircleOutlined onClick={() => changeFileMonitoringStatus(record.id)} />
-              </Tooltip>
-            </a>
+          {!isReader && (
+            <>
+              {record.monitoringActive ? (
+                <a>
+                  <Tooltip title="Pause Monitoring">
+                    <PauseCircleOutlined onClick={() => changeFileMonitoringStatus(record.id)} />
+                  </Tooltip>
+                </a>
+              ) : (
+                <a>
+                  <Tooltip title="Resume Monitoring">
+                    <PlayCircleOutlined onClick={() => changeFileMonitoringStatus(record.id)} />
+                  </Tooltip>
+                </a>
+              )}
+              <a>
+                <Tooltip title="Delete Monitoring">
+                  <DeleteOutlined
+                    onClick={() => {
+                      deleteSuperFileMonitoring({ id: record.id, name: record.name });
+                    }}
+                  />
+                </Tooltip>
+              </a>
+            </>
           )}
-          <a>
-            <Tooltip title="Delete Monitoring">
-              <DeleteOutlined
-                onClick={() => {
-                  deleteSuperFileMonitoring({ id: record.id, name: record.name });
-                }}
-              />
-            </Tooltip>
-          </a>
 
           <a>
             <Tooltip title="Notifications">

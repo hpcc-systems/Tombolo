@@ -6,6 +6,7 @@ import SuperFileMonitoringTable from './SuperFileMonitoringTable';
 import SuperFileMonitoringModal from './SuperFileMonitoringModal';
 import { Tooltip, Button, message } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 function SuperFileMonitoring() {
   const [superfileList, setSuperfileList] = useState([]);
@@ -17,6 +18,9 @@ function SuperFileMonitoring() {
     clusters,
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
+
+  const roleArray = getRoleNameArray();
+  const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   useEffect(() => {
     if (applicationId && clusters) {
@@ -150,7 +154,8 @@ function SuperFileMonitoring() {
         setSuperFileMonitoringList={setSuperfileList}
         sizeFormatter={sizeFormatter}
         applicationId={applicationId}
-        setSelectedFileMonitoring={setSelectedFileMonitoring}></SuperFileMonitoringTable>
+        setSelectedFileMonitoring={setSelectedFileMonitoring}
+        isReader={isReader}></SuperFileMonitoringTable>
 
       {modalVisible ? (
         <SuperFileMonitoringModal
@@ -160,6 +165,7 @@ function SuperFileMonitoring() {
           setSuccessAddingMonitoring={setSuccessAddingMonitoring}
           selectedFileMonitoring={selectedFileMonitoring}
           superfileMonitoringList={superfileList}
+          isReader={isReader}
         />
       ) : null}
     </>

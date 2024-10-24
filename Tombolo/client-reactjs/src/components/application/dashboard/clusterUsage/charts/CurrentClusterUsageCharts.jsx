@@ -70,6 +70,7 @@ function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
       <div>
         {clusters ? (
           <Select
+            disabled={false}
             onChange={handleClusterChange}
             value={selectedCluster}
             className="currentClusterUsageCharts_clusterSelector">

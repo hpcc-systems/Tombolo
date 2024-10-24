@@ -112,7 +112,7 @@ const MyAccountInfo = ({ user }) => {
 
           <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
             {!editing ? (
-              <Button type="primary" htmlType="submit" onClick={() => setEditing(true)}>
+              <Button type="primary" htmlType="submit" onClick={() => setEditing(true)} disabled={false}>
                 Edit
               </Button>
             ) : (

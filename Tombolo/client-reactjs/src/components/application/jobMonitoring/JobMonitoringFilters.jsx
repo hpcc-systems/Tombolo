@@ -171,7 +171,7 @@ function NotificationTableFilters({
             <Col span={4}>
               <div className="notifications__filter-label">Approval Status</div>
               <Form.Item name="approvalStatus">
-                <Select placeholder="Approval Status" allowClear>
+                <Select placeholder="Approval Status" allowClear disabled={false}>
                   {approvalStatusOptions.map((s) => (
                     <Option key={s} value={s}>
                       {s}
@@ -184,7 +184,7 @@ function NotificationTableFilters({
             <Col span={5}>
               <div className="notifications__filter-label">Active Status</div>
               <Form.Item name="activeStatus">
-                <Select placeholder="Active statues" allowClear>
+                <Select placeholder="Active statues" allowClear disabled={false}>
                   {activeStatusOptions.map((a) => (
                     <Option key={a} value={a}>
                       {a}
@@ -202,6 +202,7 @@ function NotificationTableFilters({
                     <Select
                       placeholder="Domain"
                       allowClear
+                      disabled={false}
                       onChange={(domainId) => {
                         handleDomainChange(domainId);
                       }}>
@@ -216,7 +217,7 @@ function NotificationTableFilters({
                 <Col span={5} name="product">
                   <div className="notifications__filter-label">Product</div>
                   <Form.Item name="product">
-                    <Select placeholder="Product" allowClear>
+                    <Select placeholder="Product" allowClear disabled={false}>
                       {productOptions.map((p) => (
                         <Option key={p.id} value={p.id}>
                           {p.name}
@@ -230,7 +231,7 @@ function NotificationTableFilters({
             <Col span={5}>
               <div className="notifications__filter-label">Frequency</div>
               <Form.Item name="frequency">
-                <Select placeholder="Frequency" allowClear>
+                <Select placeholder="Frequency" allowClear disabled={false}>
                   {frequencyOptions.map((f) => (
                     <Option key={f} value={f}>
                       {_.startCase(f)}

@@ -18,6 +18,7 @@ function FileMonitoringModal({
   fileMonitoringList,
   selectedFileMonitoring,
   setSelectedFileMonitoring,
+  isReader,
 }) {
   const [modalWidth, setModalWidth] = useState(0);
   const applicationReducer = useSelector((state) => state.applicationReducer);
@@ -264,7 +265,7 @@ function FileMonitoringModal({
   );
 
   const saveBtn = (
-    <Button key="save" type="primary" onClick={handleSave}>
+    <Button key="save" type="primary" onClick={handleSave} disabled={isReader}>
       Save
     </Button>
   );

@@ -17,6 +17,7 @@ function SentNotificationsTable({
   setDisplayUpdateModal,
   searchTerm,
   monitorings,
+  isReader,
 }) {
   // When row(s) are selected
   const rowSelection = {
@@ -168,36 +169,40 @@ function SentNotificationsTable({
               }
             />
           </Tooltip>
-          <Tooltip title="Edit">
-            <Button
-              size="small"
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => editNotification(record)}
-              disabled={
-                selectedNotificationsIds.length > 1 ||
-                (selectedNotificationsIds.length == 1 && selectedNotificationsIds[0] !== record.id)
-              }
-            />
-          </Tooltip>
-          <Popconfirm
-            title="Are you sure delete this notification?"
-            onConfirm={() => deleteSingleNotification(record.id)}
-            okText="Yes"
-            okButtonProps={{ type: 'primary', danger: true }}
-            cancelText="No">
-            <Tooltip title="Delete">
-              <Button
-                size="small"
-                type="link"
-                icon={<DeleteOutlined />}
-                disabled={
-                  selectedNotificationsIds.length > 1 ||
-                  (selectedNotificationsIds.length == 1 && selectedNotificationsIds[0] !== record.id)
-                }
-              />
-            </Tooltip>
-          </Popconfirm>
+          {!isReader && (
+            <>
+              <Tooltip title="Edit">
+                <Button
+                  size="small"
+                  type="link"
+                  icon={<EditOutlined />}
+                  onClick={() => editNotification(record)}
+                  disabled={
+                    selectedNotificationsIds.length > 1 ||
+                    (selectedNotificationsIds.length == 1 && selectedNotificationsIds[0] !== record.id)
+                  }
+                />
+              </Tooltip>
+              <Popconfirm
+                title="Are you sure delete this notification?"
+                onConfirm={() => deleteSingleNotification(record.id)}
+                okText="Yes"
+                okButtonProps={{ type: 'primary', danger: true }}
+                cancelText="No">
+                <Tooltip title="Delete">
+                  <Button
+                    size="small"
+                    type="link"
+                    icon={<DeleteOutlined />}
+                    disabled={
+                      selectedNotificationsIds.length > 1 ||
+                      (selectedNotificationsIds.length == 1 && selectedNotificationsIds[0] !== record.id)
+                    }
+                  />
+                </Tooltip>
+              </Popconfirm>
+            </>
+          )}
         </Space>
       ),
     },

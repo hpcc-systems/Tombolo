@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 //Local Imports
 import MonacoEditor from '../../common/MonacoEditor.js';
@@ -69,9 +70,8 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
 
   const [form] = Form.useForm();
 
-  // const user = JSON.parse(localStorage.getItem('user'));
-  //TODO, get this from user roles to check if editing is allowed
-  const editingAllowed = true;
+  const roleArray = getRoleNameArray();
+  const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
 
   //Use Effect
   useEffect(() => {

@@ -80,11 +80,14 @@ const App = () => {
 
   let roleArray = [];
   let isOwnerOrAdmin = false;
-  if (user) {
-    roleArray = getRoleNameArray(user);
-    if (roleArray.includes('administrator') || roleArray.includes('owner')) {
-      isOwnerOrAdmin = true;
-    }
+  let isReader = false;
+
+  roleArray = getRoleNameArray();
+  if (roleArray.includes('administrator') || roleArray.includes('owner')) {
+    isOwnerOrAdmin = true;
+  }
+  if (roleArray.includes('reader') && roleArray.length === 1) {
+    isReader = true;
   }
 
   return (
@@ -105,32 +108,34 @@ const App = () => {
                 {user?.token && ownerExists ? (
                   <>
                     <AppHeader />
-                    <Layout style={{ marginTop: '69px' }}>
-                      <LeftNav
-                        onCollapse={onCollapse}
-                        collapsed={collapsed}
-                        appLinkRef={appLinkRef}
-                        clusterLinkRef={clusterLinkRef}
-                      />
-                      <Tours
-                        appLinkRef={appLinkRef}
-                        clusterLinkRef={clusterLinkRef}
-                        applicationReducer={applicationReducer}
-                      />
-                      <Content
-                        style={{
-                          transition: '.1s linear',
-                          // margin: '55px 0px',
-                          marginLeft: collapsed ? '55px' : '200px',
-                        }}>
-                        <ErrorBoundary>
-                          <Suspense fallback={<Fallback />}>
-                            <AppRoutes application={application} authenticationReducer={authenticationReducer} />
-                            {isOwnerOrAdmin && <AdminRoutes />}
-                          </Suspense>
-                        </ErrorBoundary>
-                      </Content>
-                    </Layout>
+                    <ConfigProvider componentDisabled={isReader}>
+                      <Layout style={{ marginTop: '69px' }}>
+                        <LeftNav
+                          onCollapse={onCollapse}
+                          collapsed={collapsed}
+                          appLinkRef={appLinkRef}
+                          clusterLinkRef={clusterLinkRef}
+                        />
+                        <Tours
+                          appLinkRef={appLinkRef}
+                          clusterLinkRef={clusterLinkRef}
+                          applicationReducer={applicationReducer}
+                        />
+                        <Content
+                          style={{
+                            transition: '.1s linear',
+                            // margin: '55px 0px',
+                            marginLeft: collapsed ? '55px' : '200px',
+                          }}>
+                          <ErrorBoundary>
+                            <Suspense fallback={<Fallback />}>
+                              <AppRoutes application={application} authenticationReducer={authenticationReducer} />
+                              {isOwnerOrAdmin && <AdminRoutes />}
+                            </Suspense>
+                          </ErrorBoundary>
+                        </Content>
+                      </Layout>
+                    </ConfigProvider>
                   </>
                 ) : null}
               </>

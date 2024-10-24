@@ -6,6 +6,8 @@ import { DownOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
 
+import { getRoleNameArray } from '../../common/AuthUtil.js';
+
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { authHeader } from '../../common/AuthHeader.js';
 // import { hasEditPermission } from '../../common/AuthUtil.js';
@@ -31,11 +33,14 @@ const Assets = () => {
     state.applicationReducer,
   ]);
 
+  const roleArray = getRoleNameArray();
+  const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
+
   const dispatch = useDispatch();
   const history = useHistory();
   // const user = JSON.parse(localStorage.getItem('user'));
   //TODO, get this from user roles to check if editing is allowed
-  const editingAllowed = true;
+
   // all data related to file explorer is in redux
   const { selectedKeys, expandedKeys, tree, dataList } = groupsReducer;
   const application = applicationReducer.application;
@@ -317,6 +322,7 @@ const Assets = () => {
               placeholder={'Search assets'}
               onSearch={handleAssetSearch}
               onChange={handleSearchKeywordChange}
+              disabled={false}
             />
 
             <DirectoryTree
@@ -335,7 +341,12 @@ const Assets = () => {
             />
           </div>
           <div className="asset-table">
-            <AssetsTable openGroup={openGroup} refreshGroups={fetchGroups} handleEditGroup={handleEditGroup} />
+            <AssetsTable
+              openGroup={openGroup}
+              refreshGroups={fetchGroups}
+              handleEditGroup={handleEditGroup}
+              editingAllowed={editingAllowed}
+            />
           </div>
         </div>
       </div>
