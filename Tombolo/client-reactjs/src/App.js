@@ -22,6 +22,7 @@ import AuthRoutes from './components/login/AuthRoutes.js';
 
 // App Pages
 import AppRoutes from './components/application/AppRoutes.js';
+import NoAccessRoutes from './components/application/NoAccessRoutes.js';
 
 // Admin Pages
 import AdminRoutes from './components/admin/AdminRoutes.js';
@@ -90,6 +91,8 @@ const App = () => {
     isReader = true;
   }
 
+  const userHasRoleandApplication = user?.roles.length > 0 && user?.applications.length > 0;
+
   return (
     <ConfigProvider>
       <Suspense fallback={<Fallback />}>
@@ -129,7 +132,12 @@ const App = () => {
                           }}>
                           <ErrorBoundary>
                             <Suspense fallback={<Fallback />}>
-                              <AppRoutes application={application} authenticationReducer={authenticationReducer} />
+                              {!userHasRoleandApplication ? (
+                                <NoAccessRoutes />
+                              ) : (
+                                <AppRoutes application={application} authenticationReducer={authenticationReducer} />
+                              )}
+
                               {isOwnerOrAdmin && <AdminRoutes />}
                             </Suspense>
                           </ErrorBoundary>
