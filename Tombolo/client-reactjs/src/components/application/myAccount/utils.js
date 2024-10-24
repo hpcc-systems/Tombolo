@@ -46,7 +46,7 @@ export const changeBasicUserInfo = async (values) => {
   return data;
 };
 
-export const applicationStringBuilder = (applications) => {
+export const applicationStringBuilder = (applications = []) => {
   let applicationString = '';
   applications.forEach((application, index) => {
     applicationString += application.application.title;
@@ -58,7 +58,7 @@ export const applicationStringBuilder = (applications) => {
   return applicationString;
 };
 
-export const roleStringBuilder = (roles) => {
+export const roleStringBuilder = (roles = []) => {
   let roleString = '';
   roles.forEach((role, index) => {
     roleString += role.role_details.roleName;
