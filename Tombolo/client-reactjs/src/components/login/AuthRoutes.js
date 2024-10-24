@@ -16,7 +16,7 @@ const AuthRoutes = () => {
           <Route path="/register" component={Register} />
           <Route path="/reset-password/:resetToken" component={ResetPassword} />
           <Route path="/forgot-password" component={ForgotPassword} />
-          <Route path="/reset-temporary-password/:resetToken" component={resetTempPassword} />
+          <Route path="/reset-temporary-password" component={resetTempPassword} />
           {/* redirect all other routes hit to login */}
           <Route path="*" component={Login} />
         </Switch>
