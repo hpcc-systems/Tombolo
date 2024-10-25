@@ -19,6 +19,7 @@ const {
   handlePasswordResetRequest,
   resetPassword,
   createApplicationOwner,
+  resetTempPassword,
 } = require("../controllers/authController");
 
 // Basic User Routes
@@ -43,6 +44,7 @@ router.post(
   handlePasswordResetRequest
 ); // Reset password
 router.post("/resetPassword", validateResetPasswordPayload, resetPassword); // Reset password
+router.post("/resetTempPassword",validateResetPasswordPayload, resetTempPassword); // Complete registration by resetting temporary password
 
 // router.post("/registerOAuthUser" ); // Register  user ( OAuth )
 // router.post("/loginOAuthUser" ); // Login user ( OAuth )

@@ -29,6 +29,10 @@
     .bold-text {
       font-weight: bold;
     }
+
+    .important-text {
+      color: #FF0000;
+    }
   </style>
 </head>
 
@@ -44,7 +48,7 @@
                   Hello,
                 </div>
                 <div>
-                  An account has been created for you on <span class="bold-text">Tombolo</span>, but it requires your confirmation to complete the registration. To finalize your registration, please follow the registration link and update your temporary password.
+                  An account has been created for you on <span class="bold-text">Tombolo</span>. To finalize your registration, please follow the registration link and update your temporary password.
                 </div>
               </td>
             </tr>
@@ -52,8 +56,8 @@
 
             <tr>
               <td class="section-header-td">
-                <div class="tabbedText"> Registration Link: <%= typeof registrationLink !== 'undefined' ? registrationLink : ""  %> </div>
-                <div class="tabbedText"> Temporary Password: <%= typeof tempPassword !== 'undefined' ? tempPassword : ""  %> </div>
+                <div class="tabbedText"> <span class="bold-text"> Registration Link: </span> <%= typeof registrationLink !== 'undefined' ? registrationLink : ""  %> </div>
+                <div class="tabbedText"> <span class="bold-text">Temporary Password: </span> <%= typeof tempPassword !== 'undefined' ? tempPassword : ""  %> </div>
               </td>
             </tr>
 
@@ -61,13 +65,13 @@
             <tr>
               <td>
                 <p>
-                  Please complete your registration within the next <%= typeof validForHours !== 'undefined' ? validForHours: "" %> hours. If this email was unexpected, you can safely disregard it.
+                  <span class="important-text">Please take action within the next <%= typeof validForHours !== 'undefined' ? validForHours: "" %> hours.</span> If this email was unexpected, you can safely disregard it.
                 </p>
               </td>
             </tr>
 
             <tr>
-              <td>
+              <td class="section-header-td">
                 <p> We look forward to having you on board! </p>
               </td>
             </tr>
@@ -75,13 +79,13 @@
 
 
             <tr>
-              <td>
-                Best Regards,
-              </td>
-            </tr>
-            <tr>
-              <td>
-                Tombolo
+              <td class="section-header-td">
+                <div>
+                  Best Regards,
+                </div>
+                <div>
+                  Tombolo
+                </div>
               </td>
             </tr>
           </tbody>
