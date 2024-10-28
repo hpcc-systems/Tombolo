@@ -1,7 +1,5 @@
 "use strict";
 
-const { create } = require("lodash");
-
 module.exports = (sequelize, DataTypes) => {
   const instance_settings = sequelize.define(
     "instance_settings",
