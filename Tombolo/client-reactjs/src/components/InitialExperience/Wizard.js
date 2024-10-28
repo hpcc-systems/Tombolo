@@ -8,6 +8,8 @@ import BasicLayout from '../common/BasicLayout';
 import { Route, Switch } from 'react-router-dom';
 import { FormOutlined, LoadingOutlined } from '@ant-design/icons';
 import { CheckCircleOutlined, SolutionOutlined, UserOutlined } from '@ant-design/icons';
+import InstanceSettingsForm from './instanceSettings';
+import ReviewForm from './reviewForm';
 
 const Wizard = () => {
   const [form] = Form.useForm();
@@ -82,11 +84,11 @@ const Wizard = () => {
                   {current === 0 && (
                     <RegisterUserForm form={form} onFinish={onFinish} msEnabled={false} ownerRegistration={true} />
                   )}
-                  {current === 1 && <>Step 2</>}
-                  {current === 2 && <>Step 3</>}
+                  {current === 1 && <InstanceSettingsForm />}
+                  {current === 2 && <ReviewForm />}
                   {current === 3 && <>Step 4</>}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
                   {current > 0 && (
                     <Button
                       style={{
