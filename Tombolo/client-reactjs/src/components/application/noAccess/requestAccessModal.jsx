@@ -24,7 +24,7 @@ const RequestAccessModal = ({ form, isOpen, setIsOpen, onSubmit }) => {
     <Modal title="Request Access" open={isOpen} footer={null} onCancel={cancelRequest}>
       <Form form={form} layout="vertical" onFinish={handleSubmit} name="request">
         <Form.Item
-          label="Additonal Information"
+          label="Additional Information"
           name="comment"
           rules={[
             { required: false, message: 'Please enter your comment' },
