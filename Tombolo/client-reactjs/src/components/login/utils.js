@@ -42,3 +42,25 @@ export const resetTempPassword = async (resetData) => {
 
   return responseJson;
 };
+
+// Make POST request to api/auth/verifyEmail with token in body
+export const verifyEmail = async (token) => {
+  // eslint-disable-next-line no-unreachable
+  const payload = {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify({ token }),
+  };
+
+  const response = await fetch('/api/auth/verifyEmail', payload);
+
+  // Get the data from the response
+  const responseJson = await response.json();
+
+  // Check if the response is ok
+  if (!response.ok) {
+    throw new Error(responseJson.message);
+  }
+
+  return responseJson;
+};
