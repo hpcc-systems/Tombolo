@@ -132,7 +132,7 @@ const App = () => {
                           }}>
                           <ErrorBoundary>
                             <Suspense fallback={<Fallback />}>
-                              {!userHasRoleandApplication ? (
+                              {!userHasRoleandApplication && !isOwnerOrAdmin ? (
                                 <NoAccessRoutes />
                               ) : (
                                 <AppRoutes application={application} authenticationReducer={authenticationReducer} />

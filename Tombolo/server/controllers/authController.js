@@ -14,6 +14,8 @@ const { blacklistToken } = require("../utils/tokenBlackListing");
 
 const User = models.user;
 const UserRoles = models.UserRoles;
+const user_application = models.user_application;
+const Application = models.application;
 const RoleTypes = models.RoleTypes;
 const RefreshTokens = models.RefreshTokens;
 const NotificationQueue = models.notification_queue;
@@ -194,6 +196,31 @@ const verifyEmail = async (req, res) => {
     // Find the user
     const user = await User.findOne({
       where: { id: accountVerificationCode.userId },
+      include: [
+        {
+          model: UserRoles,
+          attributes: ["id"],
+          as: "roles",
+          include: [
+            {
+              model: RoleTypes,
+              as: "role_details",
+              attributes: ["id", "roleName"],
+            },
+          ],
+        },
+        {
+          model: user_application,
+          attributes: ["id"],
+          as: "applications",
+          include: [
+            {
+              model: Application,
+              attributes: ["id", "title", "description"],
+            },
+          ],
+        },
+      ],
     });
 
     // Update user
