@@ -28,7 +28,7 @@ const RequestAccessModal = ({ form, isOpen, setIsOpen, onSubmit }) => {
           name="comment"
           rules={[
             { required: false, message: 'Please enter your comment' },
-            { max: 256, message: 'Max Additonal Information Length is 256 characters' },
+            { max: 256, message: 'Max Additional Information Length is 256 characters' },
           ]}>
           <Input.TextArea placeholder={possiblePlaceholders[Math.floor(Math.random() * possiblePlaceholders.length)]} />
         </Form.Item>
