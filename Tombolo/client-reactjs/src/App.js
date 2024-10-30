@@ -84,7 +84,7 @@ const App = () => {
   let isReader = false;
 
   roleArray = getRoleNameArray();
-  if (roleArray.includes('administrator') || roleArray.includes('owner')) {
+  if (roleArray?.includes('administrator') || roleArray?.includes('owner')) {
     isOwnerOrAdmin = true;
   }
   if (roleArray.includes('reader') && roleArray.length === 1) {
