@@ -1,7 +1,11 @@
+// Import from libraries
 const { WorkunitsService } = require("@hpcc-js/comms");
+const { parentPort } = require("worker_threads");
+const _ = require("lodash");
+
+// Local imports
 const logger = require("../../config/logger");
 const { decryptString } = require("../../utils/cipher");
-const { parentPort } = require("worker_threads");
 const {
   calculateRunOrCompleteByTimes,
   generateJobName,
@@ -14,6 +18,7 @@ const {
 } = require("./monitorJobsUtil");
 const models = require("../../models");
 
+// Models
 const JobMonitoring = models.jobMonitoring;
 const Cluster = models.cluster;
 const NotificationQueue = models.notification_queue;
@@ -107,41 +112,18 @@ const Integrations = models.integrations;
         const clusterInfo = clustersObj[clusterId];
 
         // Find severity level (For ASR ) - based on that determine when to send out notifications
-        let severityThreshHold = 0;
+        let severityThreshHold = 0; // Domain specific severity threshold for ASR
         let severeEmailRecipients = null;
 
-        if (metaData.asrSpecificMetaData) {
+        if (asrSpecificMetaData) {
           try {
-            const { id: integrationId } = await Integrations.findOne({
-              where: { name: "ASR" },
-              raw: true,
-            });
-
-            if (integrationId) {
-              // Get integration mapping with integration details
-              const integrationMapping = await IntegrationMapping.findOne({
-                where: {
-                  integration_id: integrationId,
-                  application_id: applicationId,
-                },
-                raw: true,
-              });
-
-              if (integrationMapping) {
-                const {
-                  metaData: {
-                    nocAlerts: { severityLevelForNocAlerts, emailContacts },
-                  },
-                } = integrationMapping;
-                severityThreshHold = severityLevelForNocAlerts;
-                severeEmailRecipients = emailContacts;
-              }
+            const {domain: domainId} =  asrSpecificMetaData;
+            const domain = await getDomain(domainId);
+            if(domain) {
+              severityThreshHold = domain.severityThreshold;
+              severeEmailRecipients = domain.severityAlertRecipients;
             }
-          } catch (error) {
-            logger.error(
-              `Job Punctuality Monitoring : Error while getting integration level severity threshold: ${error.message}`
-            );
-          }
+          } catch (error) {logger.error(`Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}`);}
         }
 
         // Job level severity threshold
@@ -191,15 +173,16 @@ const Integrations = models.integrations;
 
         if (jobLevelSeverity < severityThreshHold || !severityThreshHold) {
           alertTimePassed = window.end < window.currentTime;
+
           lateByInMinutes = Math.floor(
             (window.currentTime - window.end) / 60000
           );
-        } else {
-          alertTimePassed = window.start < window.currentTime;
+        } else { 
           lateByInMinutes = Math.floor(
             (window.currentTime - window.start) / 60000
           );
         }
+
 
         // If the time has not passed, or with in grace period of 10 minutes, continue
         if (!alertTimePassed || lateByInMinutes < 10) {
@@ -315,12 +298,11 @@ const Integrations = models.integrations;
           // Notification payload
           const notificationPayload = createNotificationPayload({
             type: "email",
-            notificationDescription:
-              "Monitoring detected that a monitored job  did not started on time",
+            notificationDescription: `Monitoring ( ${monitoringName} ) detected that a monitored job  did not started on time`,
             templateName: "jobMonitoring",
             originationId: monitoringTypeDetails.id,
             applicationId: applicationId,
-            subject: `Job Monitoring Alert: Job not started on expected time`,
+            subject: `Job Monitoring Alert from ${process.env.INSTANCE_NAME} : Job not started on expected time`,
             recipients: {
               primaryContacts,
               secondaryContacts,
@@ -359,7 +341,7 @@ const Integrations = models.integrations;
 
           // NOC email notification
           if (jobLevelSeverity >= severityThreshHold && severeEmailRecipients) {
-            const notificationPayloadForNoc = { ...notificationPayload };
+            const notificationPayloadForNoc = _.cloneDeep(notificationPayload);
             notificationPayloadForNoc.metaData.notificationDescription =
               nocAlertDescription;
             notificationPayloadForNoc.metaData.mainRecipients =

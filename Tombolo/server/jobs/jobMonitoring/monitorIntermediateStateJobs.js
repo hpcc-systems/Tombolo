@@ -24,8 +24,6 @@ const cluster = models.cluster;
 const notification_queue = models.notification_queue;
 const monitoring_types = models.monitoring_types;
 const monitoring_logs = models.monitoring_logs;
-const IntegrationMapping = models.integration_mapping;
-const Integrations = models.integrations;
 
 (async () => {
   const now = new Date(); // UTC time
@@ -53,9 +51,19 @@ const Integrations = models.integrations;
       raw: true,
     });
 
+    // Monitoring logs with intermediate state Wus -> metaData.wuInIntermediateState length is greater than 0
+    const monitoringsWithIntermediateStateWus = monitoringLogs.filter(
+      (log) =>
+        log.metaData &&
+        log.metaData.wuInIntermediateState &&
+        log.metaData.wuInIntermediateState.length > 0
+    );
+
     // list of unique cluster IDs
     const clusterIds = [
-      ...new Set(monitoringLogs.map((log) => log.cluster_id)),
+      ...new Set(
+        monitoringsWithIntermediateStateWus.map((log) => log.cluster_id)
+      ),
     ];
 
     // Get cluster info for all unique clusters
@@ -83,183 +91,166 @@ const Integrations = models.integrations;
       }
     });
 
-    // Get array of monitoring logs which has the intermediate worUnits
-    const monitoringsWithIntermediateStateWus = [];
+    // Cluster info as object with cluster ID as key
+    const clustersInfoObj = clustersInfo.reduce((acc, cluster) => {
+      acc[cluster.id] = cluster;
+      return acc;
+    }, {});
 
-    monitoringLogs.forEach((log) => {
-      if (!log.metaData) return;
-      const {
-        metaData: { wuInIntermediateState },
-      } = log;
-      if (!wuInIntermediateState) return;
-      monitoringsWithIntermediateStateWus.push(log);
-    });
-
-    // copy the array to avoid mutation
-    const copyMonitoringsWithIntermediateStateWus = [
-      ...monitoringsWithIntermediateStateWus,
-    ];
+    // Combine all the intermediate wus in an array
+    const allIntermediateWus = monitoringsWithIntermediateStateWus.reduce(
+      (acc, log) => {
+        const { metaData } = log;
+        const { wuInIntermediateState = [] } = metaData;
+        acc.push(...wuInIntermediateState);
+        return acc;
+      },[]);
 
     const notificationsToBeQueued = [];
-    const wuNoLongerInIntermediateState = [];
+    const wuToStopMonitoring = [];
     const wuWithNewIntermediateState = {};
+    const wuToKeepMonitoring = [];
 
-    // Find severity level (For ASR ) - based on that determine when to send out notifications
-    let severityThreshHold = 0;
-    let severeEmailRecipients = null;
-    try {
-      const { id: integrationId } = await Integrations.findOne({
-        where: { name: "ASR" },
-        raw: true,
-      });
-
-      if (integrationId) {
-        // Get integration mapping with integration details
-        const integrationMapping = await IntegrationMapping.findOne({
-          where: { integration_id: integrationId },
-          raw: true,
-        });
-
-        if(integrationMapping){
-          const {
-            metaData: {
-              nocAlerts: { severityLevelForNocAlerts, emailContacts },
-            },
-          } = integrationMapping;
-          severityThreshHold = severityLevelForNocAlerts;
-          severeEmailRecipients = emailContacts;
-        }
-      }
-    } catch (error) {
-      logger.error(
-        `Intermediate State Job Monitoring : Error while getting integration level severity threshold: ${error.message}`
-      );
-    }
-
-    for (let [
-      monitoringIndex,
-      monitoring,
-    ] of monitoringsWithIntermediateStateWus.entries()) {
-      const { cluster_id } = monitoring;
-      const clusterDetail = clustersInfo.find(
-        (cluster) => cluster.id === cluster_id
-      );
-
-      try {
-        // create a new instance of WorkunitsService
-        const wuService = new WorkunitsService({
-          baseUrl: `${clusterDetail.thor_host}:${clusterDetail.thor_port}/`,
-          userID: clusterDetail.username || "",
-          password: clusterDetail.password || "",
-        });
-
-        const {
-          metaData: { wuInIntermediateState },
-        } = monitoring;
-
-        // Iterate through all the intermediate state WUs
-        for (let wu of wuInIntermediateState) {
-          const {
-            jobMonitoringData: {
+    // Iterate through all the monitoring logs with intermediate state WUs
+    for (wuData of allIntermediateWus) {
+         try {
+            const { clusterId } = wuData;
+            const clusterDetail = clustersInfoObj[clusterId];
+            const {
               applicationId,
-              monitoringName,
-              clusterId,
-              jobName: jobNamePattern,
-              metaData: {
-                notificationMetaData: {
-                  notificationCondition,
-                  primaryContacts = [],
-                  secondaryContacts = [],
-                  notifyContacts = [],
+              jobName,
+              jobMonitoringData: {
+                monitoringName,
+                metaData: {
+                  notificationMetaData,
+                  asrSpecificMetaData,
+                  requireComplete,
+                  expectedStartTime,
+                  expectedCompletionTime,
                 },
-                asrSpecificMetaData,
-                requireComplete = [],
-                expectedStartTime,
-                expectedCompletionTime,
               },
-            },
-          } = wu;
+            } = wuData;
 
-          // Cluster details
-          const clusterDetail = clustersInfo.find(
-            (cluster) => cluster.id === clusterId
-          );
+            // create a new instance of WorkunitsService
+            const wuService = new WorkunitsService({
+              baseUrl: `${clusterDetail.thor_host}:${clusterDetail.thor_port}/`,
+              userID: clusterDetail.username || "",
+              password: clusterDetail.password || "",
+            });
 
-          // Notification ID prefix
-          let notificationPrefix = "JM";
-          let product;
-          let domain;
-          let severity;
-
-          if (asrSpecificMetaData && asrSpecificMetaData.productCategory) {
-            // Product
-            const { name: productName, shortCode } = await getProductCategory(
-              asrSpecificMetaData.productCategory
-            );
-            notificationPrefix = shortCode;
-            product = productName;
-
-            //Domain
-            const { name: domainName } = await getDomain(
-              asrSpecificMetaData.domain
-            );
-            domain = domainName;
-
-            //Severity
-            severity = asrSpecificMetaData.severity;
-          }
-
-          // Notification condition in lower case. ex - failed, aborted, completed
-          const notificationConditionLowerCase = notificationCondition.map(
-            (condition) => condition.toLowerCase()
-          );
-
-          try {
-            const info = await wuService.WUInfo({ Wuid: wu.Wuid });
-            const {Workunit: { State }} = info;
-
-            // Check if current time is before, after, within the window
-            const currentTimeToWindowRelation =
-              checkIfCurrentTimeIsWithinRunWindow({
-                start: expectedStartTime,
-                end: expectedCompletionTime,
-                currentTime: clusterDetail.localTime,
-              });
+            // Make call to HPCC to get the state of the WU
+            let newWuDetails = null;
+            try{
+              newWuDetails = (await wuService.WUInfo({ Wuid: wuData.Wuid })).Workunit;
+            }catch(err){
+              logger.error(`Intermediate JM : Error getting WU details for ${wuData.Wuid} on cluster ${clusterDetail.id}: ${err.message}`);
+              continue;
+            }
             
-     
-            const sendAlertToNoc = severity >= severityThreshHold && severeEmailRecipients;
+            const currentWuState = newWuDetails.State;
+            const currentStateLowerCase = currentWuState.toLowerCase();
+
+            // Notification condition in lower case
+            const notificationConditionLowerCase =
+              notificationMetaData.notificationCondition.map((condition) =>
+                condition.toLowerCase()
+              );
+
+            let sendAlert = false;
+            let keepWu = true;
+            let notificationDescription;
             
 
-            // WU now in state such as failed, aborted etc
-            if (notificationConditionLowerCase.includes(State)) {
-              console.log('------------------------------------------');
-              console.dir("Intermediate job failed")
-              console.log('------------------------------------------');
-              // Add new State to the WU
-              wu.State = _.capitalize(State);
+            const currentTimeToWindowRelation =  checkIfCurrentTimeIsWithinRunWindow({
+                   start: expectedStartTime,
+                   end: expectedCompletionTime,
+                   currentTime: findLocalDateTimeAtCluster(clusterDetail.timezone_offset || 0),
+                 });
+            // Check if the job is completed
+            if (currentStateLowerCase === 'completed') {
+              //TODO - There is a gap, if the job is completed but immediately  after the expected time, notification won't be sent, although users might want to know that the job was completed after the expected time
+              keepWu = false;
+            } else if (notificationConditionLowerCase.includes(currentStateLowerCase)) {
+              // Check if the job state is included in the notification condition
+              sendAlert = true;
+              notificationDescription = `job is in  ${wuData.State} state.`;
+              keepWu = false;
+            } else if (intermediateStates.includes(currentStateLowerCase)) {
+              // Check if the job state is in intermediate states
+              if (!requireComplete) {
+                keepWu = false;
+              } else if (requireComplete && currentTimeToWindowRelation === 'within') {
+                keepWu = true;
+              } else if (requireComplete &&  currentTimeToWindowRelation === "after") {
+                notificationDescription = `job in ${wuData.State} state and has not been completed by the expected time.`;
+                sendAlert = true;
+                keepWu = false;
+              } else {
+                logger.verbose(`Intermediate JM : ${wuData.Wuid} on cluster ${clusterDetail.id} is in intermediate state ${currentWuState} not covered by any condition`);
+              }
+            }
 
-              // notification object
+            // If monitoring to be kept, add to wuToKeepMonitoring
+            if (keepWu) {
+              wuToKeepMonitoring.push(wuData);
+            }else {
+              wuToStopMonitoring.push(wuData.Wuid);
+            }
+
+            // If alert to be sent, create notification payload
+            if (sendAlert) {
+              // Notification ID prefix
+              let notificationPrefix = "JM";
+              let product;
+              let domain;
+              let region;
+              let domainLevelSeverity;
+              let jobLevelSeverity;
+              let severeEmailRecipients;
+
+              if (asrSpecificMetaData && asrSpecificMetaData.productCategory) {
+                const { name: productName, shortCode } =
+                  await getProductCategory(asrSpecificMetaData.productCategory);
+
+                notificationPrefix = shortCode;
+                product = productName;
+
+                const {
+                  name: domainName,
+                  region: domainRegion,
+                  severityThreshold,
+                  severityAlertRecipients,
+                } = await getDomain(asrSpecificMetaData.domain);
+                domain = domainName;
+                region = domainRegion;
+                domainLevelSeverity = severityThreshold;
+                jobLevelSeverity = asrSpecificMetaData.severity;
+                severeEmailRecipients = severityAlertRecipients;
+              }
+
+              // Generate notification payload
               const notificationPayload = createNotificationPayload({
                 type: "email",
-                notificationDescription: `Analysis detected a monitored job in ${State} state`,
+                notificationDescription: `Analysis (${monitoringName}) detected that a  monitored ${notificationDescription}`,
                 templateName: "jobMonitoring",
                 originationId: monitoringTypeId,
                 applicationId: applicationId,
-                subject: `Job Monitoring Alert: Job in ${State} state`,
+                subject: `Job Monitoring Alert from ${process.env.INSTANCE_NAME} : Job not completed by expected time`,
                 recipients: {
-                  primaryContacts,
-                  secondaryContacts,
-                  notifyContacts,
+                  primaryContacts: notificationMetaData.primaryContacts || [],
+                  secondaryContacts:
+                    notificationMetaData.secondaryContacts || [],
+                  notifyContacts: notificationMetaData.notifyContacts || [],
                 },
-                jobName: jobNamePattern,
-                wuState: wu.State,
+                jobName: jobName,
+                wuState: wuData.State,
                 monitoringName,
                 issue: {
-                  Issue: `Job in ${wu.State} state`,
+                  Issue: _.startCase(notificationDescription),
                   Cluster: clusterDetail.name,
-                  "Job Name/Filter": jobNamePattern,
-                  "Returned Job": wu.Jobname,
-                  State: wu.State,
+                  "Job Name/Filter": wuData.jobNamePattern,
+                  "Returned Job": wuData.Jobname,
+                  State: wuData.State,
                   "Discovered at": findLocalDateTimeAtCluster(
                     clusterDetail.timezone_offset
                   ),
@@ -269,10 +260,10 @@ const Integrations = models.integrations;
                   timezoneOffset: clusterDetail.timezone_offset || 0,
                 }),
                 asrSpecificMetaData: {
-                  region: "USA",
+                  region,
                   product,
                   domain,
-                  severity,
+                  severity: jobLevelSeverity,
                 }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
                 firstLogged: findLocalDateTimeAtCluster(
                   clusterDetail.timezone_offset
@@ -282,153 +273,32 @@ const Integrations = models.integrations;
                 ),
               });
 
-              notificationPayload.wuId = wu.Wuid;
+              // Add notification payload to notificationsToBeQueued
               notificationsToBeQueued.push(notificationPayload);
 
-              // NOC email notification if severity is high
-              if (sendAlertToNoc) {
-                const notificationPayloadForNoc = { ...notificationPayload}
-                notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;
-                notificationPayloadForNoc.metaData.mainRecipients = severeEmailRecipients;
-                notificationPayloadForNoc.metaData.notificationId = generateNotificationId({
-                  notificationPrefix,
-                  timezoneOffset: clusterDetail.timezone_offset || 0,
-                }),
-                delete notificationPayloadForNoc.metaData.cc;
-                notificationsToBeQueued.push(notificationPayloadForNoc);
-              }
-
-              wuNoLongerInIntermediateState.push(wu.Wuid);
-            }
-            // Still in intermediate state but window is passed an the job is required to be completed
-            else if (
-              intermediateStates.includes(State) &&
-              currentTimeToWindowRelation === "after" &&
-              requireComplete === true
-            ) {
-              console.log('------------------------------------------');
-              console.dir("Intermediate job passed time")
-              console.log('------------------------------------------');
-
-              // Add new State to the WU
-              wu.State = _.capitalize(State);
-
-              // notification object
-              const notificationPayload = createNotificationPayload({
-                type: "email",
-                notificationDescription: `Analysis detected that a  monitored job has not completed by the expected time. The job is currently in the ${State} state.`,
-                templateName: "jobMonitoring",
-                originationId: monitoringTypeId,
-                applicationId: applicationId,
-                subject: `Job Monitoring Alert: Job not completed by expected time`,
-                recipients: {
-                  primaryContacts,
-                  secondaryContacts,
-                  notifyContacts,
-                },
-                jobName: jobNamePattern,
-                wuState: wu.State,
-                monitoringName,
-                issue: {
-                  Issue: `Job in ${wu.State} state`,
-                  Cluster: clusterDetail.name,
-                  "Job Name/Filter": jobNamePattern,
-                  "Returned Job": wu.Jobname,
-                  State: wu.State,
-                  "Discovered at": findLocalDateTimeAtCluster(
-                    clusterDetail.timezone_offset
-                  ),
-                },
-                notificationId: generateNotificationId({
-                  notificationPrefix,
-                  timezoneOffset: clusterDetail.timezone_offset || 0,
-                }),
-                asrSpecificMetaData: {
-                  region: "USA",
-                  product,
-                  domain,
-                  severity,
-                }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
-                firstLogged: findLocalDateTimeAtCluster(
-                  clusterDetail.timezone_offset
-                ),
-                lastLogged: findLocalDateTimeAtCluster(
-                  clusterDetail.timezone_offset
-                ),
-              });
-
-              // console.log('-----------Payload 1----------------------');
-              // console.dir(notificationPayload)
-              // console.log('------------------------------------------');
-              notificationsToBeQueued.push(notificationPayload);
-
-              // NOC email notification if severity is high
-              if (sendAlertToNoc) {
-                const notificationPayloadForNoc = { ...notificationPayload}
-                notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;
-                notificationPayloadForNoc.metaData.mainRecipients = severeEmailRecipients;
-                notificationPayloadForNoc.metaData.notificationId = generateNotificationId({
-                  notificationPrefix,
-                  timezoneOffset: clusterDetail.timezone_offset || 0,
-                }),
-                delete notificationPayloadForNoc.metaData.cc;
-
-                
-              // console.log("-----------Payload 2----------------------");
-              // console.dir(notificationPayload);
-              // console.log("------------------------------------------");
-
-                notificationsToBeQueued.push(notificationPayloadForNoc);
-              }
-
-              console.log('----------To be queued -------------------');
-              console.dir(notificationsToBeQueued)
-              console.log('------------------------------------------');
-
-              wuNoLongerInIntermediateState.push(wu.Wuid);
-            }
-            // IF the job is still in intermediate state and the current time is within the run  window
-            else if (
-              intermediateStates.includes(State) &&
-              currentTimeToWindowRelation === "within"
-            ) {
-              console.log('------------------------------------------');
-              console.dir("STILL IN INTERMEDIATE STATE")
-              console.log('------------------------------------------');
-
-              // If the State has changed from last time it was checked, update monitoring needs to be updated with new state
-              if (wu.State !== State) {
-                wuWithNewIntermediateState[wu.Wuid] = State;
-              }
-            } else {
-              console.log('------------------------------------------');
-              console.dir("COMPLETED")
-              console.log('------------------------------------------');
-              // WU in completed state - Remove the WU from the intermediate state
-              wuNoLongerInIntermediateState.push(wu.Wuid);
+              //  If job level severity is greater than or equal to  domain level severity, send alert to NOC
+              if (jobLevelSeverity >= domainLevelSeverity && severeEmailRecipients) {
+                    const notificationPayloadForNoc = _.cloneDeep(notificationPayload);
+                    notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;
+                    notificationPayloadForNoc.metaData.mainRecipients =  severeEmailRecipients;
+                    notificationPayloadForNoc.metaData.notificationId =  generateNotificationId({ notificationPrefix, timezoneOffset: clusterDetail.timezone_offset || 0}),
+                    delete notificationPayloadForNoc.metaData.cc;
+                    notificationsToBeQueued.push(notificationPayloadForNoc);
+                }
             }
           } catch (err) {
-            logger.error(
-              `Monitor Intermediate Jobs. WUId - ${wu.Wuid} - Cluster ${cluster_id}: ${err.message}`
-            );
+              logger.error(`Monitoring Intermediate state jobs : ${err.message}`);
           }
-        }
-      } catch (err) {
-        logger.error(err);
-      }
     }
 
     // Insert notification in queue
     for (let notification of notificationsToBeQueued) {
-      // console.log('-NOTIFICATION LOOP ------------------------');
-      // console.dir(notification);
-      // console.log('------------------------------------------');
       await notification_queue.create(notification);
     }
 
-    // if wuNoLongerInIntermediateState is empty, or state of intermediate wu has not changed return
+    // if wuToStopMonitoring is empty, or state of intermediate wu has not changed return
     if (
-      wuNoLongerInIntermediateState.length === 0 &&
+      wuToStopMonitoring.length === 0 &&
       Object.keys(wuWithNewIntermediateState).length === 0
     ) {
       logger.debug(
@@ -445,7 +315,7 @@ const Integrations = models.integrations;
 
         // Remove completed jobs
         let wuStillInIntermediateState = wuInIntermediateState.filter(
-          (wu) => !wuNoLongerInIntermediateState.includes(wu.Wuid)
+          (wu) => !wuToStopMonitoring.includes(wu.Wuid)
         );
 
         // If state of intermediate WU has changed, update
@@ -463,11 +333,14 @@ const Integrations = models.integrations;
           { where: { id } }
         );
       } catch (error) {
-        logger.error(`Intermediate State Jobs - Error updating log with id ${log.id}:`, error);
+        logger.error(
+          `Intermediate State Jobs - Error updating log with id ${log.id}:`,
+          error
+        );
       }
     }
   } catch (err) {
-    logger.error(err);
+    logger.error(`Monitoring Intermediate state jobs : ${err.message}`);
   } finally {
     if (parentPort) parentPort.postMessage("done");
     else process.exit(0);
