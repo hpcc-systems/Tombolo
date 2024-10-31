@@ -14,6 +14,8 @@ const { blacklistToken } = require("../utils/tokenBlackListing");
 
 const User = models.user;
 const UserRoles = models.UserRoles;
+const user_application = models.user_application;
+const Application = models.application;
 const RoleTypes = models.RoleTypes;
 const RefreshTokens = models.RefreshTokens;
 const NotificationQueue = models.notification_queue;
@@ -99,7 +101,6 @@ const createApplicationOwner = async (req, res) => {
       success: true,
       message: "User created successfully",
     });
-
   } catch (err) {
     logger.error(err);
     logger.error(`Create user: ${err.message}`);
@@ -195,6 +196,31 @@ const verifyEmail = async (req, res) => {
     // Find the user
     const user = await User.findOne({
       where: { id: accountVerificationCode.userId },
+      include: [
+        {
+          model: UserRoles,
+          attributes: ["id"],
+          as: "roles",
+          include: [
+            {
+              model: RoleTypes,
+              as: "role_details",
+              attributes: ["id", "roleName"],
+            },
+          ],
+        },
+        {
+          model: user_application,
+          attributes: ["id"],
+          as: "applications",
+          include: [
+            {
+              model: Application,
+              attributes: ["id", "title", "description"],
+            },
+          ],
+        },
+      ],
     });
 
     // Update user
@@ -238,14 +264,13 @@ const verifyEmail = async (req, res) => {
       message: "Email verified successfully",
       data: { ...user.toJSON(), token: `Bearer ${accessToken}` },
     });
-  }
-  catch (err) {
+  } catch (err) {
     logger.error(`Verify email: ${err.message}`);
     res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
-}
+};
 
 //Reset Temp password
 const resetTempPassword = async (req, res) => {
@@ -322,7 +347,7 @@ const resetTempPassword = async (req, res) => {
     const userObj = {
       ...user.toJSON(),
       token: `Bearer ${accessToken}`,
-    }
+    };
 
     // remove hash from user object
     delete userObj.hash;
@@ -347,23 +372,21 @@ const loginBasicUser = async (req, res) => {
     const { email, password, deviceInfo } = req.body;
 
     // find user - include user roles from UserRoles table
-   const user = await getAUser({ email });
+    const user = await getAUser({ email });
 
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-
-      // Throw error with status code and message
-      const userNotFoundErr = new Error("User not found");
-      userNotFoundErr.status = 404;
-      throw userNotFoundErr;
-  
+      return res.status(401).json({
+        success: false,
+        message: "Username and Password combination not found",
+      });
     }
 
     // If not verified user return error
     if (!user.verifiedUser) {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
-     
+
       // Throw unverified user error
       const unverifiedUserErr = new Error("User not verified");
       unverifiedUserErr.status = 403;
@@ -373,7 +396,7 @@ const loginBasicUser = async (req, res) => {
     //Compare password
     if (!bcrypt.compareSync(password, user.hash)) {
       logger.error(`Login : Invalid password for user with email ${email}`);
-      
+
       // Incorrect E-mail password combination error
       const invalidCredentialsErr = new Error("Invalid credentials");
       invalidCredentialsErr.status = 403;
@@ -418,7 +441,7 @@ const loginBasicUser = async (req, res) => {
     });
   } catch (err) {
     // If err.status is present - it is logged already
-    if(!err.status){
+    if (!err.status) {
       logger.error(`Login user: ${err.message}`);
     }
     res

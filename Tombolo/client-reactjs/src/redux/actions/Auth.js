@@ -14,9 +14,12 @@ async function login({ email, password, deviceInfo }) {
       type: Constants.LOGIN_SUCCESS,
       payload: user,
     };
+  } else {
+    return {
+      type: Constants.LOGIN_FAILED,
+      payload: user,
+    };
   }
-
-  return;
 }
 
 function logout() {
@@ -90,6 +93,9 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
   }
 
   const data = await response.json();
+
+  console.log(response);
+  console.log(data);
 
   return data;
 };

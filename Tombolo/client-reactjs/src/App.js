@@ -22,6 +22,7 @@ import AuthRoutes from './components/login/AuthRoutes.js';
 
 // App Pages
 import AppRoutes from './components/application/AppRoutes.js';
+import NoAccessRoutes from './components/application/NoAccessRoutes.js';
 
 // Admin Pages
 import AdminRoutes from './components/admin/AdminRoutes.js';
@@ -83,12 +84,14 @@ const App = () => {
   let isReader = false;
 
   roleArray = getRoleNameArray();
-  if (roleArray.includes('administrator') || roleArray.includes('owner')) {
+  if (roleArray?.includes('administrator') || roleArray?.includes('owner')) {
     isOwnerOrAdmin = true;
   }
   if (roleArray.includes('reader') && roleArray.length === 1) {
     isReader = true;
   }
+
+  const userHasRoleandApplication = user?.roles.length > 0 && user?.applications.length > 0;
 
   return (
     <ConfigProvider>
@@ -129,7 +132,12 @@ const App = () => {
                           }}>
                           <ErrorBoundary>
                             <Suspense fallback={<Fallback />}>
-                              <AppRoutes application={application} authenticationReducer={authenticationReducer} />
+                              {!userHasRoleandApplication && !isOwnerOrAdmin ? (
+                                <NoAccessRoutes />
+                              ) : (
+                                <AppRoutes application={application} authenticationReducer={authenticationReducer} />
+                              )}
+
                               {isOwnerOrAdmin && <AdminRoutes />}
                             </Suspense>
                           </ErrorBoundary>

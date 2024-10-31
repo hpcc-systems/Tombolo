@@ -50,7 +50,7 @@ export const getRoleNameArray = () => {
     }
     let roles = [];
     //roleName is nested inside of role_details in the role array, build a list of roles
-    roles = user?.roles.map((role) => role.role_details.roleName);
+    roles = user?.roles?.map((role) => role.role_details.roleName);
 
     return roles;
   } catch (e) {
