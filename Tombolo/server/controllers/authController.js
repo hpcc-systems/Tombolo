@@ -14,6 +14,8 @@ const { blacklistToken } = require("../utils/tokenBlackListing");
 
 const User = models.user;
 const UserRoles = models.UserRoles;
+const user_application = models.user_application;
+const Application = models.application;
 const RoleTypes = models.RoleTypes;
 const RefreshTokens = models.RefreshTokens;
 const NotificationQueue = models.notification_queue;
@@ -194,6 +196,31 @@ const verifyEmail = async (req, res) => {
     // Find the user
     const user = await User.findOne({
       where: { id: accountVerificationCode.userId },
+      include: [
+        {
+          model: UserRoles,
+          attributes: ["id"],
+          as: "roles",
+          include: [
+            {
+              model: RoleTypes,
+              as: "role_details",
+              attributes: ["id", "roleName"],
+            },
+          ],
+        },
+        {
+          model: user_application,
+          attributes: ["id"],
+          as: "applications",
+          include: [
+            {
+              model: Application,
+              attributes: ["id", "title", "description"],
+            },
+          ],
+        },
+      ],
     });
 
     // Update user
@@ -350,11 +377,10 @@ const loginBasicUser = async (req, res) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-
-      // Throw error with status code and message
-      const userNotFoundErr = new Error("User not found");
-      userNotFoundErr.status = 404;
-      throw userNotFoundErr;
+      return res.status(401).json({
+        success: false,
+        message: "Username and Password combination not found",
+      });
     }
 
     // If not verified user return error

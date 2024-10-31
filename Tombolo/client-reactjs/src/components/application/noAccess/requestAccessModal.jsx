@@ -24,11 +24,11 @@ const RequestAccessModal = ({ form, isOpen, setIsOpen, onSubmit }) => {
     <Modal title="Request Access" open={isOpen} footer={null} onCancel={cancelRequest}>
       <Form form={form} layout="vertical" onFinish={handleSubmit} name="request">
         <Form.Item
-          label="Additonal Information"
+          label="Additional Information"
           name="comment"
           rules={[
             { required: false, message: 'Please enter your comment' },
-            { max: 256, message: 'Max Additonal Information Length is 256 characters' },
+            { max: 256, message: 'Max Additional Information Length is 256 characters' },
           ]}>
           <Input.TextArea placeholder={possiblePlaceholders[Math.floor(Math.random() * possiblePlaceholders.length)]} />
         </Form.Item>

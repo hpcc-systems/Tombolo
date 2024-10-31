@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Tour } from 'antd';
 import { applicationActions } from '../../redux/actions/Application';
 import { useDispatch } from 'react-redux';
-import { getRoleNameArray } from '../common/AuthUtil';
 
 const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
   //tour states
@@ -12,17 +11,9 @@ const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
 
   const dispatch = useDispatch();
 
-  const user = JSON.parse(localStorage.getItem('user'));
-  let roleArray = [];
-  if (user?.roles) {
-    roleArray = getRoleNameArray(user);
-  }
-
   //useEffect to show tours for new users
   useEffect(() => {
-    if (!roleArray.includes('owner') || !roleArray.includes('administrator')) {
-      return;
-    }
+    console.log(applicationReducer);
     if (
       !application?.applicationId &&
       noApplication.noApplication &&
