@@ -20,7 +20,6 @@ let Query = models.query;
 let QueryField = models.query_field;
 let Dataflow = models.dataflow;
 
-
 const { io } = require("../../server");
 const validatorUtil = require("../../utils/validator");
 const { body, query, validationResult } = require("express-validator");
@@ -134,16 +133,14 @@ router.post(
   [
     body("user_id")
       .optional({ checkFalsy: true })
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/)
+      .isUUID(4)
       .withMessage("Invalid user_id"),
     body("title")
       .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/)
       .withMessage("Invalid title"),
     body("description").optional({ checkFalsy: true }),
-    body("creator")
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/)
-      .withMessage("Invalid creator"),
-    body("creator")
+    body("creator").isUUID(4).withMessage("Invalid creator"),
+    body("visibility")
       .matches(/^[a-zA-Z]/)
       .withMessage("Invalid visibility"),
   ],
@@ -156,12 +153,14 @@ router.post(
     }
     try {
       if (req.body.id == "") {
+        req.body.createdBy = req.body.creator;
         models.application
           .create({
             title: req.body.title,
             description: req.body.description,
             creator: req.body.creator,
             visibility: req.body.visibility,
+            createdBy: req.body.createdBy,
           })
           .then(function (application) {
             if (req.body.user_id) {
@@ -169,12 +168,16 @@ router.post(
                 .create({
                   user_id: req.body.user_id,
                   application_id: application.id,
+                  createdBy: req.body.createdBy,
+                  user_app_relation: "created",
                 })
                 .then(function (userapp) {
                   res.json({
                     result: "success",
                     id: application.id,
                     title: application.title,
+                    description: application.description,
+                    user_app_id: userapp.id,
                   });
                 });
             } else {
