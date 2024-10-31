@@ -100,6 +100,7 @@ const sessions = require("./routes/sessionRoutes");
 const cluster = require("./routes/clusterRoutes");
 const roles = require("./routes/roleTypesRoute");
 const status = require("./routes/statusRoutes");
+const instanceSettings = require("./routes/instanceRoutes.js");
 
 // Log all HTTP requests
 app.use((req, res, next) => {
@@ -158,6 +159,7 @@ app.use("/api/monitorings", monitorings);
 app.use("/api/asr", asr);
 app.use("/api/directoryMonitoring", directoryMonitoring);
 app.use("/api/roles", roles);
+app.use("/api/instanceSettings", instanceSettings);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
