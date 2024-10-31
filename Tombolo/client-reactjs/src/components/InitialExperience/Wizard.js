@@ -3,7 +3,7 @@ import { Form, Steps, Button, Divider, Badge, message } from 'antd';
 import RegisterUserForm from '../login/registerUserForm';
 import { getDeviceInfo } from '../login/utils';
 import { authActions } from '../../redux/actions/Auth';
-import { Constants } from '../common/Constants';
+// import { Constants } from '../common/Constants';
 import BasicLayout from '../common/BasicLayout';
 import { Route, Switch } from 'react-router-dom';
 import { FormOutlined, LoadingOutlined } from '@ant-design/icons';
@@ -23,6 +23,9 @@ const Wizard = () => {
   //error indicators
   const [userErrors, setUserErrors] = useState(false);
   const [instanceErrors, setInstanceErrors] = useState(false);
+
+  //state to relay message
+  const [stepMessage, setStepMessage] = useState({ step: 0, message: 'Registering owner account.' });
 
   //need to have the form instances always exist so we need to control visibility based on current with states
   //if we try and just load them dynamically we lose the form data upon switching the screen
@@ -81,20 +84,6 @@ const Wizard = () => {
     },
   ];
 
-  const onFinish = async (values) => {
-    try {
-      values.deviceInfo = getDeviceInfo();
-      const result = await authActions.registerOwner(values);
-
-      if (result && result.type === Constants.LOGIN_SUCCESS) {
-        //reload page
-        window.location.reload(false);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
   const onSubmit = async () => {
     try {
       setSubmitting(true);
@@ -102,6 +91,15 @@ const Wizard = () => {
       //check for errors in fields
       await userForm.validateFields();
       await instanceForm.validateFields();
+
+      //first try to submit the user form
+      let userValues = userForm.getFieldsValue();
+      userValues.deviceInfo = getDeviceInfo();
+
+      const userResult = await authActions.registerOwner(userValues);
+      console.log(userResult);
+      console.log(setStepMessage);
+      console.log(stepMessage);
 
       setSubmitting(false);
     } catch (e) {
@@ -128,7 +126,7 @@ const Wizard = () => {
               <div style={{ width: '75%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ display: userformVisible ? 'block' : 'none' }}>
-                    <RegisterUserForm form={userForm} onFinish={onFinish} msEnabled={false} ownerRegistration={true} />
+                    <RegisterUserForm form={userForm} msEnabled={false} ownerRegistration={true} />
                   </div>
                   <div style={{ display: instanceFormVisible ? 'block' : 'none' }}>
                     <InstanceSettingsForm instanceForm={instanceForm} />
