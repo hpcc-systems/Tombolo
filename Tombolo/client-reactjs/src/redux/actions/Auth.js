@@ -1,14 +1,6 @@
 import { Constants } from '../../components/common/Constants';
 import { authHeader, handleError } from '../../components/common/AuthHeader';
 
-export const authActions = {
-  login,
-  logout,
-  registerBasicUser,
-  loadUserFromStorage,
-  registerOwner,
-};
-
 async function login({ email, password, deviceInfo }) {
   const user = await loginBasicUserFunc(email, password, deviceInfo);
 
@@ -53,55 +45,7 @@ function loadUserFromStorage() {
   return;
 }
 
-async function registerBasicUser(values) {
-  const user = await registerBasicUserFunc(values);
-
-  if (user) {
-    //log in user
-    const loginResponse = await loginBasicUserFunc(values.email, values.password, values.deviceInfo);
-
-    if (loginResponse) {
-      let data = loginResponse.data;
-      data.isAuthenticated = true;
-
-      //set item in local storage
-      localStorage.setItem('user', JSON.stringify(data));
-
-      return {
-        type: Constants.LOGIN_SUCCESS,
-        payload: data,
-      };
-    }
-  }
-
-  return;
-}
-
-async function registerOwner(values) {
-  const user = await registerOwnerFunc(values);
-
-  if (user) {
-    //log in user
-    const loginResponse = await loginBasicUserFunc(values.email, values.password, values.deviceInfo);
-
-    if (loginResponse) {
-      let data = loginResponse.data;
-      data.isAuthenticated = true;
-
-      //set item in local storage
-      localStorage.setItem('user', JSON.stringify(data));
-
-      return {
-        type: Constants.LOGIN_SUCCESS,
-        payload: data,
-      };
-    }
-  }
-
-  return;
-}
-
-const registerBasicUserFunc = async (values) => {
+const registerBasicUser = async (values) => {
   const url = '/api/auth/registerBasicUser';
 
   values.registrationMethod = 'traditional';
@@ -156,7 +100,7 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
   return data;
 };
 
-const registerOwnerFunc = async (values) => {
+const registerOwner = async (values) => {
   const url = '/api/auth/registerApplicationOwner';
 
   values.registrationMethod = 'traditional';
@@ -181,4 +125,12 @@ const registerOwnerFunc = async (values) => {
   const data = await response.json();
 
   return data;
+};
+
+export const authActions = {
+  login,
+  logout,
+  registerBasicUser,
+  loadUserFromStorage,
+  registerOwner,
 };

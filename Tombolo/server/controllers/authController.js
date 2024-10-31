@@ -57,34 +57,6 @@ const createApplicationOwner = async (req, res) => {
     // Save user to DB
     const user = await User.create(payload);
 
-    // Remove hash from user object
-    const userObj = user.toJSON();
-    delete userObj.hash;
-
-    // Create token id
-    const tokenId = uuidv4();
-
-    // Create access jwt
-    const accessToken = generateAccessToken({ ...userObj, tokenId });
-    userObj.token = `Bearer ${accessToken}`;
-
-    // Generate refresh token
-    const refreshToken = generateRefreshToken({ tokenId });
-
-    // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
-
-    // Save refresh token in DB
-    await RefreshTokens.create({
-      id: tokenId,
-      userId: user.id,
-      token: refreshToken,
-      deviceInfo,
-      metaData: {},
-      iat: new Date(iat * 1000),
-      exp: new Date(exp * 1000),
-    });
-
     // Save user role
     await UserRoles.create({
       userId: user.id,
@@ -92,11 +64,40 @@ const createApplicationOwner = async (req, res) => {
       createdBy: user.id,
     });
 
+    // Send verification email
+    const searchableNotificationId = uuidv4();
+    const verificationCode = uuidv4();
+
+    // Create account verification code
+    await AccountVerificationCodes.create({
+      code: verificationCode,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 86400000),
+    });
+
+    // Add to notification queue
+    await NotificationQueue.create({
+      type: "email",
+      templateName: "verifyEmail",
+      notificationOrigin: "User Registration",
+      deliveryType: "immediate",
+      metaData: {
+        notificationId: searchableNotificationId,
+        recipientName: `${user.firstName}`,
+        verificationLink: `${process.env.WEB_URL}/register?regId=${verificationCode}`,
+        notificationOrigin: "User Registration",
+        subject: "Verify your email",
+        mainRecipients: [user.email],
+        notificationDescription: "Verify email",
+        validForHours: 24,
+      },
+      createdBy: user.id,
+    });
+
     // Send response
     res.status(201).json({
       success: true,
       message: "User created successfully",
-      data: { ...userObj, UserRoles: [{ role_details: role }] },
     });
   } catch (err) {
     logger.error(err);
@@ -108,10 +109,9 @@ const createApplicationOwner = async (req, res) => {
   }
 };
 
-// Register basic user
+// Register basic user [ Self registration by user ]
 const createBasicUser = async (req, res) => {
   try {
-    const { deviceInfo = {} } = req.body;
     const payload = req.body;
 
     // Hash password
@@ -121,16 +121,98 @@ const createBasicUser = async (req, res) => {
     // Save user to DB
     const user = await User.create(payload);
 
-    // remove hash from user object
-    const userObj = user.toJSON();
-    delete userObj.hash;
+    // Send verification email
+    const searchableNotificationId = uuidv4();
+    const verificationCode = uuidv4();
+
+    // Create account verification code
+    await AccountVerificationCodes.create({
+      code: verificationCode,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 86400000),
+    });
+
+    // Add to notification queue
+    await NotificationQueue.create({
+      type: "email",
+      templateName: "verifyEmail",
+      notificationOrigin: "User Registration",
+      deliveryType: "immediate",
+      metaData: {
+        notificationId: searchableNotificationId,
+        recipientName: `${user.firstName}`,
+        verificationLink: `${process.env.WEB_URL}/register?regId=${verificationCode}`,
+        notificationOrigin: "User Registration",
+        subject: "Verify your email",
+        mainRecipients: [user.email],
+        notificationDescription: "Verify email",
+        validForHours: 24,
+      },
+      createdBy: user.id,
+    });
+
+    // Send response
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+    });
+  } catch (err) {
+    logger.error(`Create user: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
+// Verify email
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    // Find the account verification code
+    const accountVerificationCode = await AccountVerificationCodes.findOne({
+      where: { code: token },
+    });
+
+    // Token does not exist
+    if (!accountVerificationCode) {
+      logger.error(`Verify email: Token ${token} does not exist`);
+      return res.status(404).json({
+        success: false,
+        message: "Invalid or expired verification token",
+      });
+    }
+
+    // Token has expired
+    if (new Date() > accountVerificationCode.expiresAt) {
+      logger.error(`Verify email: Token ${token} has expired`);
+      return res
+        .status(400)
+        .json({ success: false, message: "Verification token has expired" });
+    }
+
+    // Find the user
+    const user = await User.findOne({
+      where: { id: accountVerificationCode.userId },
+    });
+
+    // Update user
+    user.verifiedUser = true;
+    user.verifiedAt = new Date();
+
+    // Save user
+    await user.save();
+
+    // Delete the account verification code
+    await AccountVerificationCodes.destroy({
+      where: { code: token },
+    });
 
     // Create token id
     const tokenId = uuidv4();
 
     // Create access jwt
-    const accessToken = generateAccessToken({ ...userObj, tokenId });
-    userObj.token = `Bearer ${accessToken}`;
+    const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });
@@ -143,21 +225,20 @@ const createBasicUser = async (req, res) => {
       id: tokenId,
       userId: user.id,
       token: refreshToken,
-      deviceInfo,
+      deviceInfo: {},
       metaData: {},
       iat: new Date(iat * 1000),
       exp: new Date(exp * 1000),
     });
 
     // Send response
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: "User created successfully",
-      data: { ...userObj, UserRoles: [] },
+      message: "Email verified successfully",
+      data: { ...user.toJSON(), token: `Bearer ${accessToken}` },
     });
   } catch (err) {
-    logger.error(err);
-    logger.error(`Create user: ${err.message}`);
+    logger.error(`Verify email: ${err.message}`);
     res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
@@ -239,7 +320,7 @@ const resetTempPassword = async (req, res) => {
     const userObj = {
       ...user.toJSON(),
       token: `Bearer ${accessToken}`,
-    }
+    };
 
     // remove hash from user object
     delete userObj.hash;
@@ -257,30 +338,43 @@ const resetTempPassword = async (req, res) => {
       .json({ success: false, message: err.message });
   }
 };
+
 //Login Basic user
 const loginBasicUser = async (req, res) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
     // find user - include user roles from UserRoles table
-   const user = await getAUser({ email });
+    const user = await getAUser({ email });
 
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-      return res.status(401).json({
-        success: false,
-        message: "Username and Password combination not found",
-      });
+
+      // Throw error with status code and message
+      const userNotFoundErr = new Error("User not found");
+      userNotFoundErr.status = 404;
+      throw userNotFoundErr;
+    }
+
+    // If not verified user return error
+    if (!user.verifiedUser) {
+      logger.error(`Login : Login attempt by unverified user - ${user.id}`);
+
+      // Throw unverified user error
+      const unverifiedUserErr = new Error("User not verified");
+      unverifiedUserErr.status = 403;
+      throw unverifiedUserErr;
     }
 
     //Compare password
     if (!bcrypt.compareSync(password, user.hash)) {
       logger.error(`Login : Invalid password for user with email ${email}`);
-      return res.status(401).json({
-        success: false,
-        message: "Username and Password combination not found",
-      });
+
+      // Incorrect E-mail password combination error
+      const invalidCredentialsErr = new Error("Invalid credentials");
+      invalidCredentialsErr.status = 403;
+      throw invalidCredentialsErr;
     }
 
     // Remove hash from use object
@@ -320,7 +414,10 @@ const loginBasicUser = async (req, res) => {
       data: userObj,
     });
   } catch (err) {
-    logger.error(`Login user: ${err.message}`);
+    // If err.status is present - it is logged already
+    if (!err.status) {
+      logger.error(`Login user: ${err.message}`);
+    }
     res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
@@ -501,6 +598,7 @@ const resetPassword = async (req, res) => {
 //Exports
 module.exports = {
   createBasicUser,
+  verifyEmail,
   resetTempPassword,
   loginBasicUser,
   logOutBasicUser,

@@ -62,7 +62,7 @@ const Wizard = () => {
       }
       setCurrent(current + 1);
     } catch (e) {
-      console.log(e);
+      message.error(e.message);
     }
   };
   const prev = () => {
@@ -110,6 +110,26 @@ const Wizard = () => {
     }
   };
 
+  // Page content
+  const pageContent = (
+    <>
+      {registrationComplete ? (
+        <div>
+          <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem', fontSize: '1.1rem' }}>
+            <CheckCircleFilled style={{ marginRight: '1rem', color: 'green' }} twoToneColor="#eb2f96" fill="green" />
+            Registration complete. Please check your email to verify your account.
+          </p>
+        </div>
+      ) : (
+        <>
+          <h3>Welcome to Tombolo, to get started, please register your ownership account.</h3>
+          <RegisterUserForm form={form} onFinish={onFinish} msEnabled={false} />
+        </>
+      )}
+    </>
+  );
+
+  // Wizard content
   const WizardContent = () => {
     return (
       <BasicLayout
