@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Steps, Button, Divider, Badge, message } from 'antd';
+import { Form, Steps, Button, Divider, message } from 'antd';
 import RegisterUserForm from '../login/registerUserForm';
+import { authHeader } from '../common/AuthHeader';
 import { getDeviceInfo } from '../login/utils';
 import { authActions } from '../../redux/actions/Auth';
-// import { Constants } from '../common/Constants';
 import BasicLayout from '../common/BasicLayout';
 import { Route, Switch } from 'react-router-dom';
-import { FormOutlined, LoadingOutlined } from '@ant-design/icons';
-import { SolutionOutlined, UserOutlined } from '@ant-design/icons';
+import { FormOutlined, LoadingOutlined, SolutionOutlined, UserOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import InstanceSettingsForm from './instanceSettings';
 import ReviewForm from './reviewForm';
 
@@ -20,49 +19,45 @@ const Wizard = () => {
   const [current, setCurrent] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  //error indicators
-  const [userErrors, setUserErrors] = useState(false);
-  const [instanceErrors, setInstanceErrors] = useState(false);
-
   //state to relay message
-  const [stepMessage, setStepMessage] = useState({ step: 0, message: 'Registering owner account.' });
+  const [stepMessage, setStepMessage] = useState([]);
 
   //need to have the form instances always exist so we need to control visibility based on current with states
   //if we try and just load them dynamically we lose the form data upon switching the screen
   const [userformVisible, setUserFormVisible] = useState(true);
   const [instanceFormVisible, setInstanceFormVisible] = useState(false);
   const [reviewFormVisible, setReviewFormVisible] = useState(false);
+  const [progressVisible, setProgressVisible] = useState(false);
+  const [complete, setComplete] = useState(false);
 
   useEffect(() => {
     if (current === 0) {
-      setUserFormVisible(true);
-      setInstanceFormVisible(false);
-      setReviewFormVisible(false);
-    } else if (current === 1) {
       setUserFormVisible(false);
       setInstanceFormVisible(true);
+      setReviewFormVisible(false);
+    } else if (current === 1) {
+      setUserFormVisible(true);
+      setInstanceFormVisible(false);
       setReviewFormVisible(false);
     } else if (current === 2) {
       setUserFormVisible(false);
       setInstanceFormVisible(false);
       setReviewFormVisible(true);
     }
-  }, [current, userErrors, instanceErrors]);
+  }, [current]);
 
   const next = async () => {
     try {
       //dont allow to go to next step if there are errors
       if (current === 0) {
-        await userForm.validateFields();
-        await setUserErrors(false);
+        await instanceForm.validateFields();
       }
       if (current === 1) {
-        await instanceForm.validateFields();
-        await setInstanceErrors(false);
+        await userForm.validateFields();
       }
       setCurrent(current + 1);
     } catch (e) {
-      message.error(e.message);
+      message.error('Error validating form fields, please check and try again');
     }
   };
   const prev = () => {
@@ -71,13 +66,14 @@ const Wizard = () => {
 
   const steps = [
     {
-      title: <>Owner Settings {userErrors && <Badge color="red" />}</>,
-      icon: <UserOutlined />,
-    },
-    {
-      title: <>Instance Settings {instanceErrors && <Badge color="red" />}</>,
+      title: <>Instance Settings</>,
       icon: <FormOutlined />,
     },
+    {
+      title: <>Owner Settings</>,
+      icon: <UserOutlined />,
+    },
+
     {
       title: 'Review & Submit',
       icon: !submitting ? <SolutionOutlined /> : <LoadingOutlined />,
@@ -86,48 +82,83 @@ const Wizard = () => {
 
   const onSubmit = async () => {
     try {
-      setSubmitting(true);
+      await setSubmitting(true);
+      await setReviewFormVisible(false);
+      await setProgressVisible(true);
+
+      let newStepMessage = [];
+      newStepMessage.push({ step: 1, message: 'Saving instance settings', icon: null });
+      await setStepMessage(newStepMessage);
 
       //check for errors in fields
       await userForm.validateFields();
       await instanceForm.validateFields();
 
-      //first try to submit the user form
+      //first, submit the instance settings
+      //then try to submit the instance form
+      let instanceValues = instanceForm.getFieldsValue();
+
+      const url = '/api/wizard/firstRun';
+
+      const response = await fetch(
+        url,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ instanceValues }),
+        },
+        { headers: authHeader() }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to create instance settings');
+      }
+      //update step 1 icon to checkoutlined
+      newStepMessage[0].icon = (
+        <CheckCircleOutlined style={{ marginLeft: '1rem', color: 'green' }} twoToneColor="#eb2f96" fill="green" />
+      );
+      newStepMessage.push({ step: 2, message: 'Creating Owner Account', icon: null });
+      await setStepMessage(newStepMessage);
+
+      //Now try to submit the user form
       let userValues = userForm.getFieldsValue();
       userValues.deviceInfo = getDeviceInfo();
 
       const userResult = await authActions.registerOwner(userValues);
-      console.log(userResult);
-      console.log(setStepMessage);
-      console.log(stepMessage);
+
+      if (userResult?.success === true) {
+        newStepMessage[1].icon = (
+          <CheckCircleOutlined style={{ marginLeft: '1rem', color: 'green' }} twoToneColor="#eb2f96" fill="green" />
+        );
+        newStepMessage.push({
+          step: 3,
+          message: 'Success!',
+          icon: (
+            <CheckCircleOutlined style={{ marginLeft: '1rem', color: 'green' }} twoToneColor="#eb2f96" fill="green" />
+          ),
+        });
+        setStepMessage(newStepMessage);
+        setComplete(true);
+      } else {
+        setReviewFormVisible(true);
+        setProgressVisible(false);
+        setSubmitting(false);
+        return;
+      }
 
       setSubmitting(false);
     } catch (e) {
       console.log(e);
       message.error('Error validating form fields, please check and try again');
+      setSubmitting(false);
+      setReviewFormVisible(true);
+      setProgressVisible(false);
     } finally {
       setSubmitting(false);
     }
   };
-
-  // Page content
-  const pageContent = (
-    <>
-      {registrationComplete ? (
-        <div>
-          <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem', fontSize: '1.1rem' }}>
-            <CheckCircleFilled style={{ marginRight: '1rem', color: 'green' }} twoToneColor="#eb2f96" fill="green" />
-            Registration complete. Please check your email to verify your account.
-          </p>
-        </div>
-      ) : (
-        <>
-          <h3>Welcome to Tombolo, to get started, please register your ownership account.</h3>
-          <RegisterUserForm form={form} onFinish={onFinish} msEnabled={false} />
-        </>
-      )}
-    </>
-  );
 
   // Wizard content
   const WizardContent = () => {
@@ -145,40 +176,58 @@ const Wizard = () => {
               </div>
               <div style={{ width: '75%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ display: userformVisible ? 'block' : 'none' }}>
-                    <RegisterUserForm form={userForm} msEnabled={false} ownerRegistration={true} />
-                  </div>
                   <div style={{ display: instanceFormVisible ? 'block' : 'none' }}>
                     <InstanceSettingsForm instanceForm={instanceForm} />
                   </div>
+                  <div style={{ display: userformVisible ? 'block' : 'none' }}>
+                    <RegisterUserForm form={userForm} msEnabled={false} ownerRegistration={true} />
+                  </div>
+
                   <div style={{ display: reviewFormVisible ? 'block' : 'none' }}>
                     <ReviewForm userForm={userForm} instanceForm={instanceForm} current={current} />
                   </div>
+                  <div className="wizardSteps" style={{ display: progressVisible ? 'block' : 'none' }}>
+                    {stepMessage.map((step, index) => (
+                      <>
+                        <div key={index}>
+                          Step {step.step}: {step.message} {step.icon}
+                        </div>
+                        <br />
+                      </>
+                    ))}
+
+                    {complete && (
+                      <p>
+                        Registration complete, please check your owner account email to verify your account and log in!
+                      </p>
+                    )}
+                  </div>
                 </div>
+
                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
-                  {current > 0 && (
-                    <Button
-                      style={{
-                        margin: '0 8px',
-                      }}
-                      onClick={() => prev()}
-                      size="large">
-                      Previous
-                    </Button>
-                  )}
-                  {current < steps.length - 1 && (
-                    <Button type="primary" onClick={() => next()} size="large">
-                      Next
-                    </Button>
-                  )}
-                  {current === steps.length - 1 && (
-                    <Button
-                      type="primary"
-                      onClick={onSubmit}
-                      size="large"
-                      disabled={userErrors || instanceErrors || submitting}>
-                      Submit {submitting && <LoadingOutlined style={{ marginLeft: '1rem' }} />}
-                    </Button>
+                  {!complete && (
+                    <>
+                      {current > 0 && (
+                        <Button
+                          style={{
+                            margin: '0 8px',
+                          }}
+                          onClick={() => prev()}
+                          size="large">
+                          Previous
+                        </Button>
+                      )}
+                      {current < steps.length - 1 && (
+                        <Button type="primary" onClick={() => next()} size="large">
+                          Next
+                        </Button>
+                      )}
+                      {current === steps.length - 1 && (
+                        <Button type="primary" onClick={onSubmit} size="large" disabled={submitting}>
+                          Submit {submitting && <LoadingOutlined style={{ marginLeft: '1rem' }} />}
+                        </Button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

@@ -7,7 +7,7 @@ const InstanceSettings = ({ instanceForm }) => {
     <Form form={instanceForm} layout="vertical">
       <Form.Item
         label="Instance Name"
-        name="instanceName"
+        name="name"
         rules={[
           { required: true, message: 'Please enter your instance name' },
           { max: 64, message: 'Maximum of 256 characters allowed' },
@@ -16,7 +16,7 @@ const InstanceSettings = ({ instanceForm }) => {
       </Form.Item>
       <Form.Item
         label="Instance Description"
-        name="instanceDescription"
+        name="description"
         rules={[
           { required: true, message: 'Please enter your instance description' },
           { max: 256, message: 'Maximum of 256 characters allowed' },

@@ -1192,3 +1192,16 @@ main > div {
   width: 80%;
   max-width: 25rem;
 }
+
+.wizardSteps {
+  display: block;
+
+  top: 0;
+  left: 0;
+  background: black;
+  opacity: 0.9;
+  padding: 2rem;
+  color: white;
+  font-size: 1.25rem;
+  border-radius: 0.5rem;
+}

@@ -117,7 +117,7 @@ const checkPermissions = (resource, config) => {
 
   //first, if there is no user, we need to check if the resource is a permitted resource without having a user
   if (!user) {
-    const permittedResourcesWithoutUser = ['/api/status', '/api/auth'];
+    const permittedResourcesWithoutUser = ['/api/status', '/api/auth', '/api/wizard'];
 
     //check if resource starts with any of the permitted resources
     let permitted = false;

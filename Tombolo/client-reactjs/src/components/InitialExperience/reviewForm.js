@@ -13,8 +13,8 @@ const ReviewForm = ({ instanceForm, userForm, current }) => {
   return (
     <>
       <h2>Instance Information</h2>
-      <p>Instance Name: {instanceFormValues?.instanceName}</p>
-      <p>Instance Description: {instanceFormValues?.instanceDescription}</p>
+      <p>Instance Name: {instanceFormValues?.name}</p>
+      <p>Instance Description: {instanceFormValues?.description}</p>
       <p>Contact Email: {instanceFormValues?.contactEmail}</p>
 
       <h2>Owner Account Information</h2>
