@@ -4,6 +4,7 @@ const {
   validateInstanceId,
   validateInstanceSetting,
   validateInstanceUpdate,
+  validateAccessRequest,
 } = require("../middlewares/instanceMiddleware");
 const {
   getInstanceSetting,
@@ -11,6 +12,7 @@ const {
   createInstanceSetting,
   updateInstanceSetting,
   deleteInstanceSetting,
+  requestAccess,
 } = require("../controllers/instanceController");
 const role = require("../config/roleTypes");
 
@@ -23,6 +25,8 @@ router.get("/one/:name", getInstanceSetting);
 
 // Get all instance settings
 router.get("/all", getAllInstanceSettings);
+
+router.post("/requestAccess", validateAccessRequest, requestAccess);
 
 // All routes below is accessible only by users with role "owner"
 router.use(validateUserRole([role.OWNER]));

@@ -6,8 +6,33 @@ import RequestAccessModal from './requestAccessModal';
 const NoAccess = () => {
   const [form] = Form.useForm();
   const [isOpen, setIsOpen] = useState(false);
+
   const onSubmit = async (values) => {
-    console.log(values);
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!user) {
+      message.error('User not found');
+      return;
+    }
+
+    values.id = user.id;
+    values.roles = user.roles;
+    values.applications = user.applications;
+    const response = await fetch('/api/requestAccess', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: user.token,
+      },
+      body: JSON.stringify(values),
+    });
+    console.log(response);
+
+    if (!response.ok) {
+      message.error('Failed to request access');
+      return;
+    }
+
     message.success('A request has been sent to your administration team to grant you access');
     setIsOpen(false);
   };

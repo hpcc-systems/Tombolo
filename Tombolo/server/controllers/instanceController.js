@@ -1,3 +1,4 @@
+const { rest } = require("lodash");
 const Models = require("../models");
 const instance_settings = Models.instance_settings;
 
@@ -82,10 +83,26 @@ const deleteInstanceSetting = async (req, res) => {
   }
 };
 
+const requestAccess = async (req, res) => {
+  try {
+    const { id, comment, roles, applications } = req.body;
+
+    const user = await User.findOne({ where: { id } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    console.log(id, comment, roles, applications);
+    rest.status(200).json({ message: "Access requested successfully" });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
 module.exports = {
   getInstanceSetting,
   getAllInstanceSettings,
   createInstanceSetting,
   updateInstanceSetting,
   deleteInstanceSetting,
+  requestAccess,
 };
