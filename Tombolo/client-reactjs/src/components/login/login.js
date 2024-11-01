@@ -63,7 +63,7 @@ const Login = () => {
     <Form onFinish={onFinish} layout="vertical">
       <Divider>Log In With</Divider>
       <Form.Item>
-        <Button style={{ background: 'black', color: 'white' }}>
+        <Button size="large" style={{ background: 'black', color: 'white' }} className="fullWidth">
           <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
         </Button>
       </Form.Item>
@@ -97,7 +97,7 @@ const Login = () => {
       </Form.Item>
       <a href="/forgot-password">Forgot password?</a>
       <Form.Item>
-        <Button type="primary" htmlType="submit" disabled={loading && true}>
+        <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">
           Log in {loading && <Spin style={{ marginLeft: '1rem' }} />}
         </Button>
       </Form.Item>

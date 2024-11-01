@@ -31,7 +31,7 @@ const RegisterUserForm = ({ form, onFinish, msEnabled = false }) => {
         <>
           <Divider>Sign up With</Divider>
           <Form.Item>
-            <Button style={{ background: 'black', color: 'white' }}>
+            <Button style={{ background: 'black', color: 'white' }} className="fullWidth">
               <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
             </Button>
           </Form.Item>
@@ -142,7 +142,7 @@ const RegisterUserForm = ({ form, onFinish, msEnabled = false }) => {
       </Form.Item>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit" disabled={loading && true}>
+        <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">
           Register {loading && <Spin style={{ marginLeft: '1rem' }} />}
         </Button>
       </Form.Item>
