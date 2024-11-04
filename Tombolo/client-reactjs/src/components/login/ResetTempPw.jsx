@@ -115,7 +115,7 @@ function ResetTempPassword() {
         ]}>
         <Input.Password size="large" autoComplete="confirm-new-password" />
       </Form.Item>
-      <Button type="primary" htmlType="submit" disabled={loading && true} onClick={handleSubmit}>
+      <Button type="primary" htmlType="submit" disabled={loading && true} onClick={handleSubmit} className="fullWidth">
         Reset Password {loading && <Spin style={{ marginLeft: '1rem' }} />}
       </Button>
     </Form>
