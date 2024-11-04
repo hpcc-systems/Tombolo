@@ -2,11 +2,6 @@ import React from 'react';
 import { Modal, Form, Input, Button } from 'antd';
 
 const RequestAccessModal = ({ form, isOpen, setIsOpen, onSubmit }) => {
-  const handleSubmit = (values) => {
-    onSubmit(values.comment);
-    form.resetFields();
-  };
-
   const cancelRequest = () => {
     form.resetFields();
     setIsOpen(false);
@@ -22,7 +17,7 @@ const RequestAccessModal = ({ form, isOpen, setIsOpen, onSubmit }) => {
 
   return (
     <Modal title="Request Access" open={isOpen} footer={null} onCancel={cancelRequest}>
-      <Form form={form} layout="vertical" onFinish={handleSubmit} name="request">
+      <Form form={form} layout="vertical" onFinish={onSubmit} name="request">
         <Form.Item
           label="Additional Information"
           name="comment"
