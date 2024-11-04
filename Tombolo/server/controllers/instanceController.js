@@ -137,7 +137,7 @@ const requestAccess = async (req, res) => {
         notificationOrigin: "No Access Page",
         email: `${user.email}`,
         comment: comment,
-        userManagementLink: `${process.env.WEB_URL}/admin/userManagement`,
+        userManagementLink: `${process.env.WEB_URL}admin/userManagement`,
         subject: `User Access Request from ${user.email}`,
         mainRecipients: [instance_setting.value],
         notificationDescription: "User Access Request",
