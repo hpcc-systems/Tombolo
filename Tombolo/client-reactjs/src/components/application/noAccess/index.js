@@ -1,15 +1,47 @@
 import React, { useState } from 'react';
 import { Button, message, Form } from 'antd';
+import { handleError } from '../../common/AuthHeader';
 import { LockOutlined } from '@ant-design/icons';
 import RequestAccessModal from './requestAccessModal';
 
 const NoAccess = () => {
   const [form] = Form.useForm();
   const [isOpen, setIsOpen] = useState(false);
-  const onSubmit = async (values) => {
-    console.log(values);
+
+  const onSubmit = async () => {
+    let values = form.getFieldsValue();
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!user) {
+      message.error('User not found');
+      return;
+    }
+
+    values.id = user.id;
+    values.roles = user.roles;
+    values.applications = user.applications;
+    if (!values.comment) {
+      values.comment = 'No comment provided';
+    }
+
+    const response = await fetch('/api/instanceSettings/requestAccess', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: user.token,
+      },
+      body: JSON.stringify(values),
+    });
+    console.log(response);
+
+    if (!response.ok) {
+      handleError(response);
+      return;
+    }
+
     message.success('A request has been sent to your administration team to grant you access');
     setIsOpen(false);
+    form.resetFields();
   };
 
   return (

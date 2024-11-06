@@ -119,11 +119,13 @@ const App = () => {
                           appLinkRef={appLinkRef}
                           clusterLinkRef={clusterLinkRef}
                         />
-                        <Tours
-                          appLinkRef={appLinkRef}
-                          clusterLinkRef={clusterLinkRef}
-                          applicationReducer={applicationReducer}
-                        />
+                        {isOwnerOrAdmin && (
+                          <Tours
+                            appLinkRef={appLinkRef}
+                            clusterLinkRef={clusterLinkRef}
+                            applicationReducer={applicationReducer}
+                          />
+                        )}
                         <Content
                           style={{
                             transition: '.1s linear',
