@@ -4,7 +4,7 @@ import msLogo from '../../images/mslogo.png';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
 
 //TODO, msenabled should check if microsoft login is enabled
-const RegisterUserForm = ({ form, onFinish, msEnabled = false }) => {
+const RegisterUserForm = ({ form, onFinish, msEnabled = false, ownerRegistration }) => {
   const [popOverContent, setPopOverContent] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -39,7 +39,7 @@ const RegisterUserForm = ({ form, onFinish, msEnabled = false }) => {
           <Divider>Or use your Email</Divider>{' '}
         </>
       ) : (
-        <Divider />
+        <>{!ownerRegistration ? <Divider /> : null}</>
       )}
       <Row gutter={16}>
         <Col span={12}>
@@ -141,11 +141,13 @@ const RegisterUserForm = ({ form, onFinish, msEnabled = false }) => {
         <Input.Password size="large" autoComplete="new-password" />
       </Form.Item>
 
-      <Form.Item>
-        <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">
-          Register {loading && <Spin style={{ marginLeft: '1rem' }} />}
-        </Button>
-      </Form.Item>
+      {!ownerRegistration && (
+        <Form.Item>
+          <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">
+            Register {loading && <Spin style={{ marginLeft: '1rem' }} />}
+          </Button>
+        </Form.Item>
+      )}
     </Form>
   );
 };

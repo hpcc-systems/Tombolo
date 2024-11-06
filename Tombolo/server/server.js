@@ -92,6 +92,7 @@ const sent_notifications = require("./routes/sent_notifications/read");
 const monitorings = require("./routes/monitorings/read");
 const asr = require("./routes/asr/read");
 const directoryMonitoring = require("./routes/directorymonitoring/read");
+const wizard = require("./routes/wizardRoutes");
 
 //MVC & TESTED
 const auth = require("./routes/authRoutes");
@@ -114,6 +115,7 @@ app.use(compression());
 app.use("/api/auth", auth);
 app.use("/api/updateNotification", updateNotifications);
 app.use("/api/status", status);
+app.use("/api/wizard", wizard);
 
 //exposed API, requires api key for any routes
 app.use("/api/apikeys", api);

@@ -40,7 +40,7 @@ function passwordComplexityValidator({ password, generateContent }) {
   if (!hasSpecialChar) {
     errors.push({ type: 'special' });
   }
-  if (password.length < minLength) {
+  if (!password || (password && password.length < minLength)) {
     errors.push({ type: 'length' });
   }
 

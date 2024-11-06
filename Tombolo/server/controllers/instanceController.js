@@ -1,4 +1,3 @@
-const { where } = require("sequelize");
 const Models = require("../models");
 const instance_settings = Models.instance_settings;
 

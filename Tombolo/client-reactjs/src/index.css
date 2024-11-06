@@ -1193,6 +1193,17 @@ main > div {
   max-width: 25rem;
 }
 
+.wizardSteps {
+  display: block;
+
+  top: 0;
+  left: 0;
+  background: black;
+  opacity: 0.9;
+  padding: 2rem;
+  color: white;
+}
+
 .basicLayoutCard .fullWidth {
   width: 100%;
   margin-top: 1rem;
@@ -1200,6 +1211,7 @@ main > div {
   height: fit-content;
   min-height: 3.5rem;
   font-size: 1.25rem;
+  border-radius: 0.5rem;
 }
 
 .wizardSteps {
