@@ -1,5 +1,6 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect } from 'react';
-import { Form, Steps, Button, Divider, message } from 'antd';
+import { Form, Steps, Button, Divider, message, Card } from 'antd';
 import RegisterUserForm from '../login/registerUserForm';
 import { authHeader } from '../common/AuthHeader';
 import { getDeviceInfo } from '../login/utils';
@@ -169,69 +170,68 @@ const Wizard = () => {
             <h3 style={{ textAlign: 'center' }}>
               Welcome to Tombolo, to get started, we need to register an owner account, and set some instance settings.
             </h3>
-            <Divider />
-            <div style={{ width: '100%', display: 'flex', flexWrap: 'nowrap' }}>
-              <div style={{ width: '25%', minHeight: '25rem' }}>
-                <Steps current={current} items={steps} direction="vertical" style={{ height: '100%' }} size="large" />
+            {/* <Divider /> */}
+            <Card style={{ marginTop: '2rem' }}>
+              <div>
+                <Steps current={current} items={steps} direction="horizontal" style={{ marginBottom: '2rem' }} />
               </div>
-              <div style={{ width: '75%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: instanceFormVisible ? 'block' : 'none' }}>
-                    <InstanceSettingsForm instanceForm={instanceForm} />
-                  </div>
-                  <div style={{ display: userformVisible ? 'block' : 'none' }}>
-                    <RegisterUserForm form={userForm} msEnabled={false} ownerRegistration={true} />
-                  </div>
-
-                  <div style={{ display: reviewFormVisible ? 'block' : 'none' }}>
-                    <ReviewForm userForm={userForm} instanceForm={instanceForm} current={current} />
-                  </div>
-                  <div className="wizardSteps" style={{ display: progressVisible ? 'block' : 'none' }}>
-                    {stepMessage.map((step, index) => (
-                      <>
-                        <div key={index}>
-                          Step {step.step}: {step.message} {step.icon}
-                        </div>
-                        <br />
-                      </>
-                    ))}
-
-                    {complete && (
-                      <p>
-                        Registration complete, please check your owner account email to verify your account and log in!
-                      </p>
-                    )}
-                  </div>
+              <Divider />
+              <div>
+                <div style={{ display: instanceFormVisible ? 'block' : 'none' }}>
+                  <InstanceSettingsForm instanceForm={instanceForm} />
+                </div>
+                <div style={{ display: userformVisible ? 'block' : 'none' }}>
+                  <RegisterUserForm form={userForm} msEnabled={false} ownerRegistration={true} />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
-                  {!complete && (
+                <div style={{ display: reviewFormVisible ? 'block' : 'none' }}>
+                  <ReviewForm userForm={userForm} instanceForm={instanceForm} current={current} />
+                </div>
+                <div className="wizardSteps" style={{ display: progressVisible ? 'block' : 'none' }}>
+                  {stepMessage.map((step, index) => (
                     <>
-                      {current > 0 && (
-                        <Button
-                          style={{
-                            margin: '0 8px',
-                          }}
-                          onClick={() => prev()}
-                          size="large">
-                          Previous
-                        </Button>
-                      )}
-                      {current < steps.length - 1 && (
-                        <Button type="primary" onClick={() => next()} size="large">
-                          Next
-                        </Button>
-                      )}
-                      {current === steps.length - 1 && (
-                        <Button type="primary" onClick={onSubmit} size="large" disabled={submitting}>
-                          Submit {submitting && <LoadingOutlined style={{ marginLeft: '1rem' }} />}
-                        </Button>
-                      )}
+                      <div key={index}>
+                        Step {step.step}: {step.message} {step.icon}
+                      </div>
+                      <br />
                     </>
+                  ))}
+
+                  {complete && (
+                    <p>
+                      Registration complete, please check your owner account email to verify your account and log in!
+                    </p>
                   )}
                 </div>
               </div>
-            </div>
+
+              <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
+                {!complete && (
+                  <>
+                    {current > 0 && (
+                      <Button
+                        style={{
+                          margin: '0 8px',
+                        }}
+                        onClick={() => prev()}
+                        size="large">
+                        Previous
+                      </Button>
+                    )}
+                    {current < steps.length - 1 && (
+                      <Button type="primary" onClick={() => next()} size="large">
+                        Next
+                      </Button>
+                    )}
+                    {current === steps.length - 1 && (
+                      <Button type="primary" onClick={onSubmit} size="large" disabled={submitting}>
+                        Submit {submitting && <LoadingOutlined style={{ marginLeft: '1rem' }} />}
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            </Card>
           </>
         }
         width="55rem"></BasicLayout>

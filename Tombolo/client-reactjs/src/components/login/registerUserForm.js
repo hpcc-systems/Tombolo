@@ -143,7 +143,7 @@ const RegisterUserForm = ({ form, onFinish, msEnabled = false, ownerRegistration
 
       {!ownerRegistration && (
         <Form.Item>
-          <Button type="primary" htmlType="submit" disabled={loading && true}>
+          <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">
             Register {loading && <Spin style={{ marginLeft: '1rem' }} />}
           </Button>
         </Form.Item>

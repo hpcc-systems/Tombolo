@@ -8,7 +8,9 @@ const validateNoUsersExist = () => {
     const users = await User.findAll();
 
     if (users.length > 0) {
-      return res.status(403).json({ message: "Insufficient Privileges" });
+      return res
+        .status(403)
+        .json({ message: "Users Exist - Route not Available" });
     }
 
     next();
