@@ -119,7 +119,7 @@ const ResetPassword = () => {
         <Input.Password size="large" autoComplete="new-password" />
       </Form.Item>
       <Form.Item>
-        <Button type="primary" htmlType="submit" disabled={!user?.id}>
+        <Button type="primary" htmlType="submit" disabled={!user?.id} className="fullWidth">
           Reset Password
         </Button>
       </Form.Item>

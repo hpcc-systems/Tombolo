@@ -31,7 +31,7 @@ const RegisterUserForm = ({ form, onFinish, msEnabled = false, ownerRegistration
         <>
           <Divider>Sign up With</Divider>
           <Form.Item>
-            <Button style={{ background: 'black', color: 'white' }}>
+            <Button style={{ background: 'black', color: 'white' }} className="fullWidth">
               <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
             </Button>
           </Form.Item>
