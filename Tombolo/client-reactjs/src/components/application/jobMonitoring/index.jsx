@@ -634,7 +634,7 @@ function JobMonitoring() {
         setSelectedCluster={setSelectedCluster}
         resetStates={resetStates}
         domains={domains}
-        productCategories={productCategories}
+        productCategories={allProductCategories}
         setSelectedDomain={setSelectedDomain}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
