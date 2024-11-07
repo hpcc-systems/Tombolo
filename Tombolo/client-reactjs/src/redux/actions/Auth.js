@@ -1,5 +1,6 @@
 import { Constants } from '../../components/common/Constants';
 import { authHeader, handleError } from '../../components/common/AuthHeader';
+import { message } from 'antd';
 
 async function login({ email, password, deviceInfo }) {
   const user = await loginBasicUserFunc(email, password, deviceInfo);
@@ -127,10 +128,36 @@ const registerOwner = async (values) => {
   return data;
 };
 
+const loginMSUser = (id_token) => {
+  //TODO - send to backend when backend is finished
+  console.log('MS Login user fired, with token below:');
+  console.log(id_token);
+};
+
+const msLoginRedirect = () => {
+  try {
+    const response_type = 'id_token';
+    const response_mode = 'fragment';
+    const redirect_uri = process.env.REACT_APP_AZURE_REDIRECT_URI;
+    const scope = 'openid profile email';
+    const client_id = process.env.REACT_APP_AZURE_CLIENT_ID;
+    const tenant_id = process.env.REACT_APP_AZURE_TENENT_ID;
+    const nonce = process.env.REACT_APP_AZURE_NONCE;
+
+    const url = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}&nonce=${nonce}`;
+    window.location.href = url;
+  } catch (e) {
+    console.log(e);
+    message.error('An error occurred while trying to login with Microsoft.');
+  }
+};
+
 export const authActions = {
   login,
   logout,
   registerBasicUser,
   loadUserFromStorage,
   registerOwner,
+  msLoginRedirect,
+  loginMSUser,
 };
