@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Col, Row, Divider, Popover, Spin } from 'antd';
+
 import msLogo from '../../images/mslogo.png';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
+import { authActions } from '../../redux/actions/Auth';
 
 //TODO, msenabled should check if microsoft login is enabled
-const RegisterUserForm = ({ form, onFinish, msEnabled = false, ownerRegistration }) => {
+const RegisterUserForm = ({ form, onFinish, msEnabled, ownerRegistration }) => {
   const [popOverContent, setPopOverContent] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,13 +27,22 @@ const RegisterUserForm = ({ form, onFinish, msEnabled = false, ownerRegistration
     }
   };
 
+  const msRegister = () => {
+    authActions.msLoginRedirect();
+  };
+
   return (
     <Form onFinish={onSubmit} layout="vertical" form={form}>
       {msEnabled ? (
         <>
           <Divider>Sign up With</Divider>
           <Form.Item>
-            <Button style={{ background: 'black', color: 'white' }} className="fullWidth">
+            <Button
+              style={{ background: 'black', color: 'white' }}
+              className="fullWidth"
+              onClick={() => {
+                msRegister();
+              }}>
               <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
             </Button>
           </Form.Item>

@@ -65,6 +65,8 @@ const Register = () => {
     }
   };
 
+  const msEnabled = process.env.REACT_APP_OAUTH_ENABLED;
+
   return (
     <>
       {regId ? (
@@ -93,7 +95,7 @@ const Register = () => {
         </div>
       ) : (
         <>
-          <RegisterUserForm form={form} onFinish={onFinish} msEnabled={true} />
+          <RegisterUserForm form={form} onFinish={onFinish} msEnabled={msEnabled} />
           <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
             <span>Already have an account?</span> <a href="/login">Login</a>
           </p>

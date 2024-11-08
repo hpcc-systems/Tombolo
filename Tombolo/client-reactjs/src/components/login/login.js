@@ -59,15 +59,41 @@ const Login = () => {
     }
   });
 
+  const msLogin = () => {
+    authActions.msLoginRedirect();
+  };
+
+  useEffect(() => {
+    //get url and check for id token
+    const url = new URL(window.location.href);
+    const id_token = url.searchParams.get('id_token');
+
+    if (id_token) {
+      authActions.loginMSUser({ id_token });
+    }
+  });
+
+  const msEnabled = process.env.REACT_APP_OAUTH_ENABLED;
+
   return (
     <Form onFinish={onFinish} layout="vertical">
-      <Divider>Log In With</Divider>
-      <Form.Item>
-        <Button size="large" style={{ background: 'black', color: 'white' }} className="fullWidth">
-          <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
-        </Button>
-      </Form.Item>
-      <Divider>Or</Divider>
+      {msEnabled ? (
+        <>
+          <Divider>Log In With</Divider>
+          <Form.Item>
+            <Button
+              size="large"
+              style={{ background: 'black', color: 'white' }}
+              className="fullWidth"
+              onClick={() => msLogin()}>
+              <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
+            </Button>
+          </Form.Item>
+          <Divider>Or</Divider>
+        </>
+      ) : (
+        <Divider>Log in</Divider>
+      )}
       <Form.Item
         label="Email"
         name="email"
