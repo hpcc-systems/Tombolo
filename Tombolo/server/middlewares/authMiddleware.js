@@ -4,11 +4,8 @@ const jwt = require("jsonwebtoken");
 
 const logger = require("../config/logger");
 const models = require("../models");
-const roleTypes = require("../config/roleTypes");
 
 const User = models.user;
-const RoleTypes = models.RoleTypes;
-const UserRoles = models.UserRoles;
 
 // Validate registration payload
 const validateNewUserPayload = [
@@ -191,6 +188,20 @@ const validateResetPasswordPayload = [
   },
 ];
 
+// Verify if the request body has code -> Auth code from azure
+const validateAzureAuthCode = [
+  body("code").isString().notEmpty().withMessage("Code is required"),
+  (req, res, next) => {
+    const errors = validationResult(req).array();
+    const errorString = errors.map((e) => e.msg).join(", ");
+    if (errors.length > 0) {
+      logger.error(`Azure auth code: ${errorString}`);
+      return res.status(400).json({ success: false, message: errorString });
+    }
+    next();
+  },
+];
+
 // Exports
 module.exports = {
   validateNewUserPayload,
@@ -199,4 +210,5 @@ module.exports = {
   verifyValidTokenExists,
   validatePasswordResetRequestPayload,
   validateResetPasswordPayload,
+  validateAzureAuthCode,
 };
