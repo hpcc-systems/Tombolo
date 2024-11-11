@@ -3,7 +3,7 @@ import { Card } from 'antd';
 import logo from '../../images/logo.png';
 
 const BasicLayout = ({ content, width }) => {
-  if (window.location.pathname === '/register') {
+  if (window.location.pathname === '/register' || window.location.pathname === '/') {
     width = '40rem';
   }
   return (

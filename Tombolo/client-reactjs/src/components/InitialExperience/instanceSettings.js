@@ -21,7 +21,7 @@ const InstanceSettings = ({ instanceForm }) => {
           { required: true, message: 'Please enter your instance description' },
           { max: 256, message: 'Maximum of 256 characters allowed' },
         ]}>
-        <Input />
+        <Input.TextArea />
       </Form.Item>
       <Form.Item
         label={

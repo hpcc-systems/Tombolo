@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          isIn: [["traditional", "microsoft"]],
+          isIn: [["traditional", "azure"]],
         },
       },
       verifiedUser: {
@@ -83,33 +83,33 @@ module.exports = (sequelize, DataTypes) => {
           // Delete refresh tokens
           const RefreshTokens = sequelize.models.RefreshTokens;
           await RefreshTokens.destroy({
-            where: {userId: user.where.id,},
+            where: { userId: user.where.id },
           });
 
           // Delete user roles
           const UserRoles = sequelize.models.UserRoles;
           await UserRoles.destroy({
-            where: {userId: user.where.id,},
+            where: { userId: user.where.id },
           });
 
           // Delete user applications
           const user_application = sequelize.models.user_application;
           await user_application.destroy({
-            where: {user_id: user.where.id,},
+            where: { user_id: user.where.id },
           });
 
           // Delete password reset links
           const PasswordResetLinks = sequelize.models.PasswordResetLinks;
           await PasswordResetLinks.destroy({
-            where: {userId: user.where.id,},
+            where: { userId: user.where.id },
           });
 
           // Delete verification codes
-          const AccountVerificationCodes = sequelize.models.AccountVerificationCodes;
+          const AccountVerificationCodes =
+            sequelize.models.AccountVerificationCodes;
           await AccountVerificationCodes.destroy({
-            where: {userId: user.where.id,},
+            where: { userId: user.where.id },
           });
-          
         },
       },
     }
