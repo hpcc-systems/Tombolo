@@ -9,6 +9,7 @@ const {
   verifyValidTokenExists,
   validatePasswordResetRequestPayload,
   validateResetPasswordPayload,
+  validateAzureAuthCode,
 } = require("../middlewares/authMiddleware");
 
 // Import user controller
@@ -21,15 +22,16 @@ const {
   createApplicationOwner,
   resetTempPassword,
   verifyEmail,
+  loginOrRegisterAzureUser,
 } = require("../controllers/authController");
 
-// Basic User Routes
+// Basic (Traditional) User Routes ----------------------------------------------------------------------------
 router.post(
   "/registerApplicationOwner",
   validateNewUserPayload,
   validateEmailDuplicate,
   createApplicationOwner
-); // Create a new user ( Traditional )
+); // Create an owner ( Traditional )
 router.post(
   "/registerBasicUser",
   validateNewUserPayload,
@@ -47,9 +49,11 @@ router.post(
 router.post("/resetPassword", validateResetPasswordPayload, resetPassword); // Reset password
 router.post("/resetTempPassword",validateResetPasswordPayload, resetTempPassword); // Complete registration by resetting temporary password
 router.post("/verifyEmail", verifyEmail); // Verify email
+// TODO - Forgot password route
 
-// router.post("/registerOAuthUser" ); // Register  user ( OAuth )
-// router.post("/loginOAuthUser" ); // Login user ( OAuth )
-// Forgot password route
+// OAuth 2.0 User Routes ----------------------------------------------------------------------------
+//Login or register with azure user
+router.post("/loginOrRegisterAzureUser",validateAzureAuthCode, loginOrRegisterAzureUser);
+
 
 module.exports = router;

@@ -173,7 +173,13 @@ const Wizard = () => {
             {/* <Divider /> */}
             <Card style={{ marginTop: '2rem' }}>
               <div>
-                <Steps current={current} items={steps} direction="horizontal" style={{ marginBottom: '2rem' }} />
+                <Steps
+                  current={current}
+                  items={steps}
+                  direction="horizontal"
+                  style={{ marginBottom: '2rem' }}
+                  size="small"
+                />
               </div>
               <Divider />
               <div>
