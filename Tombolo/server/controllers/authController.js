@@ -675,7 +675,7 @@ const loginOrRegisterAzureUser = async (req, res) => {
       return res.status(409).json({
         success: false,
         message:
-          "This account is already registered but not using Azure as login. Please provide password to login",
+          "This account was created with a different login method. Please sign in with your username and password instead of using Microsoft",
       });
     }
 
@@ -695,6 +695,10 @@ const loginOrRegisterAzureUser = async (req, res) => {
         verifiedAt: new Date(),
       });
 
+      const newUserPlain = newUser.toJSON();
+      newUserPlain.roles = [];
+      newUserPlain.applications =[];
+
       // Create a new refresh token
       const tokenId = uuidv4();
       const refreshToken = generateRefreshToken({ tokenId });
@@ -705,7 +709,7 @@ const loginOrRegisterAzureUser = async (req, res) => {
       // Save refresh token in DB
       await RefreshTokens.create({
         id: tokenId,
-        userId: newUser.id,
+        userId: newUserPlain.id,
         token: refreshToken,
         deviceInfo: {},
         metaData: {},
@@ -714,13 +718,13 @@ const loginOrRegisterAzureUser = async (req, res) => {
       });
 
       // Create a new access token
-      const accessToken = generateAccessToken({ ...newUser.toJSON(), tokenId });
+      const accessToken = generateAccessToken({ ...newUserPlain, tokenId });
 
       // Send response
       return res.status(201).json({
         success: true,
         message: "User created successfully",
-        data: { ...newUser.toJSON(), token: `Bearer ${accessToken}` },
+        data: { ...newUserPlain, token: `Bearer ${accessToken}` },
       });
     }
 
@@ -753,7 +757,6 @@ const loginOrRegisterAzureUser = async (req, res) => {
       data: { ...user.toJSON(), token: `Bearer ${accessToken}` },
     });
   } catch (err) {
-    console.log(err);
     logger.error(`Login or Register Azure User: ${err.message}`);
     res
       .status(err.status || 500)

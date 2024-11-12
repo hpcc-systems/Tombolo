@@ -126,41 +126,38 @@ const registerOwner = async (values) => {
 };
 
 const loginOrRegisterAzureUser = async (code) => {
-  const url = '/api/auth/loginOrRegisterAzureUser';
-  const response = await fetch(
-    url,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+  try {
+    const url = '/api/auth/loginOrRegisterAzureUser';
+    const response = await fetch(
+      url,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(code),
       },
-      body: JSON.stringify(code),
-    },
-    { headers: authHeader() }
-  );
+      { headers: authHeader() }
+    );
 
-  console.log(response);
+    console.log(response);
+    const data = await response.json();
 
-  if (!response.ok) {
-    handleError(response);
-    return null;
-  }
+    if (!response.ok) {
+      throw new Error(data.message);
+    }
 
-  const data = await response.json();
-
-  if (data.success) {
-    data.data.isAuthenticated = true;
-    //set item in local storage
-    localStorage.setItem('user', JSON.stringify(data.data));
-    return {
-      type: Constants.LOGIN_SUCCESS,
-      payload: data.data,
-    };
-  } else {
-    return {
-      type: Constants.LOGIN_FAILED,
-      payload: data.data,
-    };
+    if (data.success) {
+      data.data.isAuthenticated = true;
+      //set item in local storage
+      localStorage.setItem('user', JSON.stringify(data.data));
+      return {
+        type: Constants.LOGIN_SUCCESS,
+        payload: data.data,
+      };
+    }
+  } catch (err) {
+    throw Error(err.message || 'An error occurred while trying to login with Microsoft.');
   }
 };
 

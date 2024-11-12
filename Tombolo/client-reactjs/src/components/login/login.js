@@ -7,6 +7,7 @@ import { Constants } from '../common/Constants';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const [azureLoginAttempted, setAzureLoginAttempted] = useState(false);
 
   const onFinish = async (values) => {
     const { email, password } = values;
@@ -64,17 +65,21 @@ const Login = () => {
   };
 
   const azureLoginFunc = async (code) => {
-    setLoading(true);
-    const res = await authActions.loginOrRegisterAzureUser({ code });
+    try {
+      setLoading(true);
+      const res = await authActions.loginOrRegisterAzureUser({ code });
 
-    if (res?.type === Constants.LOGIN_SUCCESS) {
-      //reload page if login is succesful
-      window.location.href = '/';
-      return;
-    } else if (res?.type === Constants.LOGIN_FAILED || !res) {
-      message.error('Azure Login Failed');
+      if (res?.type === Constants.LOGIN_SUCCESS) {
+        //reload page if login is succesful
+        window.location.href = '/';
+        return;
+      }
+    } catch (err) {
+      message.error(err.message);
       setLoading(false);
       return;
+    } finally {
+      setAzureLoginAttempted(true);
     }
   };
 
@@ -83,10 +88,10 @@ const Login = () => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get('code');
 
-    if (code && !loading) {
+    if (code && !loading && !azureLoginAttempted) {
       azureLoginFunc(code);
     }
-  });
+  }, [azureLoginAttempted, loading]);
 
   const authMethods = process.env.REACT_APP_AUTH_METHODS;
   let azureEnabled = false;
