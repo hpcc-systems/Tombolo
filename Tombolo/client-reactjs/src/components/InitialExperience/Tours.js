@@ -13,7 +13,6 @@ const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
 
   //useEffect to show tours for new users
   useEffect(() => {
-    console.log(applicationReducer);
     if (
       !application?.applicationId &&
       noApplication.noApplication &&

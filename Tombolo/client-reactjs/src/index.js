@@ -9,10 +9,6 @@ import './index.css';
 
 import { Provider } from 'react-redux';
 import { store } from './redux/store/Store';
-import { PublicClientApplication } from '@azure/msal-browser';
-import { msalConfig } from './components/azureSso/azureAuthConfig';
-
-export const msalInstance = new PublicClientApplication(msalConfig);
 
 const container = document.getElementById('root');
 const root = createRoot(container);

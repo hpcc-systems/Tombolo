@@ -620,8 +620,9 @@ const resetPassword = async (req, res) => {
 
 // Login or register with azure user - loginOrRegisterAzureUser [ `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/token`]
 const loginOrRegisterAzureUser = async (req, res) => {
-  try{
+  try {
     const msEndPoint = `https://login.microsoftonline.com/${process.env.TENENT_ID}/oauth2/v2.0/token`;
+
     const { code } = req.body;
 
     // Parameters to be appended
@@ -630,8 +631,8 @@ const loginOrRegisterAzureUser = async (req, res) => {
       client_secret: process.env.CLIENT_SECRET,
       grant_type: "authorization_code",
       code: code,
-      redirect_uri: process.env.REDIRCET_URI,
-      scope: "openid profile email"
+      redirect_uri: process.env.REDIRECT_URI,
+      scope: "openid profile email",
     };
 
     // Construct the x-www-form-urlencoded string using a loop
@@ -648,52 +649,86 @@ const loginOrRegisterAzureUser = async (req, res) => {
     });
 
     // Get user info from azure
-    const { access_token : azureAccessToken, id_token } = response.data;
+    const { access_token: azureAccessToken, id_token } = response.data;
 
-    // Decode ID token 
+    // Decode ID token
     const decodedIdToken = jwt.decode(id_token);
     const { email } = decodedIdToken;
 
     // Check if user exists in the db
     const userExists = {
-      exists : false,
-      registrationMethod: null
-    }
+      exists: false,
+      registrationMethod: null,
+    };
 
-   // Find user by email - includes user roles from UserRoles table
+    // Find user by email - includes user roles from UserRoles table
     const user = await getAUser({ email });
 
-  // If user exists update userExists object
-  if (user) {
-    userExists.exists = true;
-    userExists.registrationMethod = user.registrationMethod;
-  }
+    // If user exists update userExists object
+    if (user) {
+      userExists.exists = true;
+      userExists.registrationMethod = user.registrationMethod;
+    }
 
-  // If user exists and is not an azure user
-  if (userExists.exists && userExists.registrationMethod !== "azure") {
-    return res.status(409).json({
-      success: false,
-      message: "This account is already registered but not using Azure as login. Please provide password to login",
-    });
-  }
+    // If user exists and is not an azure user
+    if (userExists.exists && userExists.registrationMethod !== "azure") {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This account was created with a different login method. Please sign in with your username and password instead of using Microsoft",
+      });
+    }
 
-  // If user does not exist create user - issues necessary tokens etc just like registering  traditional user
-  if (!userExists.exists) {
-    // Decode access token and get fist and last name
-    const decodedAccessToken = jwt.decode(azureAccessToken);
-    const { given_name, family_name } = decodedAccessToken;
+    // If user does not exist create user - issues necessary tokens etc just like registering  traditional user
+    if (!userExists.exists) {
+      // Decode access token and get fist and last name
+      const decodedAccessToken = jwt.decode(azureAccessToken);
+      const { given_name, family_name } = decodedAccessToken;
 
-    // Create a new user
-    const newUser = await User.create({
-      email,
-      firstName: given_name,
-      lastName: family_name,
-      registrationMethod: "azure",
-      verifiedUser: true,
-      verifiedAt: new Date(),
-    });
+      // Create a new user
+      const newUser = await User.create({
+        email,
+        firstName: given_name,
+        lastName: family_name,
+        registrationMethod: "azure",
+        verifiedUser: true,
+        verifiedAt: new Date(),
+      });
 
+      const newUserPlain = newUser.toJSON();
+      newUserPlain.roles = [];
+      newUserPlain.applications =[];
 
+      // Create a new refresh token
+      const tokenId = uuidv4();
+      const refreshToken = generateRefreshToken({ tokenId });
+
+      // Save refresh token to DB
+      const { iat, exp } = jwt.decode(refreshToken);
+
+      // Save refresh token in DB
+      await RefreshTokens.create({
+        id: tokenId,
+        userId: newUserPlain.id,
+        token: refreshToken,
+        deviceInfo: {},
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      });
+
+      // Create a new access token
+      const accessToken = generateAccessToken({ ...newUserPlain, tokenId });
+
+      // Send response
+      return res.status(201).json({
+        success: true,
+        message: "User created successfully",
+        data: { ...newUserPlain, token: `Bearer ${accessToken}` },
+      });
+    }
+
+    // If user exists and is azure user
     // Create a new refresh token
     const tokenId = uuidv4();
     const refreshToken = generateRefreshToken({ tokenId });
@@ -704,7 +739,7 @@ const loginOrRegisterAzureUser = async (req, res) => {
     // Save refresh token in DB
     await RefreshTokens.create({
       id: tokenId,
-      userId: newUser.id,
+      userId: user.id,
       token: refreshToken,
       deviceInfo: {},
       metaData: {},
@@ -713,50 +748,21 @@ const loginOrRegisterAzureUser = async (req, res) => {
     });
 
     // Create a new access token
-    const accessToken = generateAccessToken({ ...newUser.toJSON(), tokenId });
+    const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
 
     // Send response
-    return res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: "User created successfully",
-      data: { ...newUser.toJSON(), token: `Bearer ${accessToken}` },
+      message: "User logged in successfully",
+      data: { ...user.toJSON(), token: `Bearer ${accessToken}` },
     });
-  }
-
-  // If user exists and is azure user
-  // Create a new refresh token
-  const tokenId = uuidv4();
-  const refreshToken = generateRefreshToken({ tokenId });
-
-  // Save refresh token to DB
-  const { iat, exp } = jwt.decode(refreshToken);
-
-  // Save refresh token in DB
-  await RefreshTokens.create({
-    id: tokenId,
-    userId: user.id,
-    token: refreshToken,
-    deviceInfo: {},
-    metaData: {},
-    iat: new Date(iat * 1000),
-    exp: new Date(exp * 1000),
-  });
-
-  // Create a new access token
-  const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
-
-  // Send response
-  res.status(200).json({
-    success: true,
-    message: "User logged in successfully",
-    data: { ...user.toJSON(), token: `Bearer ${accessToken}` },
-  });
-
-  }catch(err){
+  } catch (err) {
     logger.error(`Login or Register Azure User: ${err.message}`);
-    res.status(err.status || 500) .json({ success: false, message: err.message });
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
   }
-}
+};
 
 //Exports
 module.exports = {
