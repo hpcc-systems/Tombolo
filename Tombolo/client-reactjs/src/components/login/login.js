@@ -83,7 +83,7 @@ const Login = () => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get('code');
 
-    if (code) {
+    if (code && !loading) {
       azureLoginFunc(code);
     }
   });
