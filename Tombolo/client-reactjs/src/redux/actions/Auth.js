@@ -95,9 +95,6 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
 
   const data = await response.json();
 
-  console.log(response);
-  console.log(data);
-
   return data;
 };
 
@@ -128,13 +125,46 @@ const registerOwner = async (values) => {
   return data;
 };
 
-const loginMSUser = (id_token) => {
-  //TODO - send to backend when backend is finished
-  console.log('MS Login user fired, with token below:');
-  console.log(id_token);
+const loginOrRegisterAzureUser = async (code) => {
+  const url = '/api/auth/loginOrRegisterAzureUser';
+  const response = await fetch(
+    url,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(code),
+    },
+    { headers: authHeader() }
+  );
+
+  console.log(response);
+
+  if (!response.ok) {
+    handleError(response);
+    return null;
+  }
+
+  const data = await response.json();
+
+  if (data.success) {
+    data.data.isAuthenticated = true;
+    //set item in local storage
+    localStorage.setItem('user', JSON.stringify(data.data));
+    return {
+      type: Constants.LOGIN_SUCCESS,
+      payload: data.data,
+    };
+  } else {
+    return {
+      type: Constants.LOGIN_FAILED,
+      payload: data.data,
+    };
+  }
 };
 
-const msLoginRedirect = () => {
+const azureLoginRedirect = () => {
   try {
     const response_type = 'code';
     const response_mode = 'query';
@@ -158,6 +188,6 @@ export const authActions = {
   registerBasicUser,
   loadUserFromStorage,
   registerOwner,
-  msLoginRedirect,
-  loginMSUser,
+  azureLoginRedirect,
+  loginOrRegisterAzureUser,
 };
