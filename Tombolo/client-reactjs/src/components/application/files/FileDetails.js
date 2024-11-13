@@ -19,7 +19,7 @@ import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
-import ConstraintsTags from '../../admin/Compliance/Constraints/ConstraintsTags';
+// import ConstraintsTags from '../../admin/Compliance/Constraints/ConstraintsTags';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 // import { canViewPII } from '../../common/AuthUtil.js';
 import { formItemLayout } from '../../common/CommonUtil';
@@ -771,25 +771,35 @@ class FileDetails extends Component {
       </div>
     );
 
-    const { selectedConsumer, selectedSupplier, selectedOwner, consumers, suppliers, owners } =
-      this.props.consumers.reduce(
-        (acc, el) => {
-          if (el.assetType === 'Consumer') {
-            acc.consumers.push(el);
-            if (el.id === this.state.file.consumer) acc.selectedConsumer = el.name;
-          }
-          if (el.assetType === 'Supplier') {
-            acc.suppliers.push(el);
-            if (el.id === this.state.file.supplier) acc.selectedSupplier = el.name;
-          }
-          if (el.assetType === 'Owner') {
-            acc.owners.push(el);
-            if (el.id === this.state.file.owner) acc.selectedOwner = el.name;
-          }
-          return acc;
-        },
-        { selectedConsumer: '', selectedSupplier: '', selectedOwner: '', consumers: [], suppliers: [], owners: [] }
-      );
+    // console.log(this.props.consumers);
+    // const { selectedConsumer, selectedSupplier, selectedOwner, consumers, suppliers, owners } =
+    //   this.props.consumers.reduce(
+    //     (acc, el) => {
+    //       if (el.assetType === 'Consumer') {
+    //         acc.consumers.push(el);
+    //         if (el.id === this.state.file.consumer) acc.selectedConsumer = el.name;
+    //       }
+    //       if (el.assetType === 'Supplier') {
+    //         acc.suppliers.push(el);
+    //         if (el.id === this.state.file.supplier) acc.selectedSupplier = el.name;
+    //       }
+    //       if (el.assetType === 'Owner') {
+    //         acc.owners.push(el);
+    //         if (el.id === this.state.file.owner) acc.selectedOwner = el.name;
+    //       }
+    //       return acc;
+    //     },
+    //     { selectedConsumer: '', selectedSupplier: '', selectedOwner: '', consumers: [], suppliers: [], owners: [] }
+    //   );
+
+    const { selectedConsumer, selectedSupplier, selectedOwner, consumers, suppliers, owners } = {
+      selectedConsumer: '',
+      selectedSupplier: '',
+      selectedOwner: '',
+      consumers: [],
+      suppliers: [],
+      owners: [],
+    };
 
     const clusterName = this.props.clusters?.find(
       (cluster) => cluster.id === this.formRef.current?.getFieldValue('clusters')
@@ -1070,7 +1080,7 @@ class FileDetails extends Component {
                       </Select>
                     )}
                   </Form.Item>
-
+                  {/* 
                   <Form.Item noStyle shouldUpdate>
                     {() => (
                       <Form.Item name="constraints" label={<Text>File Constraints</Text>}>
@@ -1093,7 +1103,7 @@ class FileDetails extends Component {
 
                   <Form.Item label="Fields Constraints" hidden={enableEdit}>
                     <ConstraintsTags list={this.getConstraints('field')} />
-                  </Form.Item>
+                  </Form.Item> */}
 
                   <Form.Item label={<Text>Description</Text>} name="description">
                     {enableEdit ? (
