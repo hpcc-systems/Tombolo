@@ -211,6 +211,7 @@ If you have any integrations enabled and they have environment variables, they c
 
 - **REACT_APP_AUTH_METHODS**  
   Specifies the authentication method to be used by the application. Available options are `traditional` and `azure`. For more details, refer to the `APP_AUTH_METHOD` variable in the server configuration. These values should be entered in a CSV format. You can use any combination of methods, but at least one must always be present to be able to authenticate to the application.
+
   _Example:_ `traditional,azure`
 
 ### Azure Configuration (only if using Azure AD for authentication)
