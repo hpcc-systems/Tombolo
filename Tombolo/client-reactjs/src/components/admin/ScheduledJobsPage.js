@@ -3,18 +3,11 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { authHeader, handleError } from '../common/AuthHeader';
 import { Table, Button, message, Space } from 'antd';
-import { useAccount } from '@azure/msal-react';
-import { useHistory } from 'react-router';
 
 function ScheduledJobsPage() {
   const [jobs, setJobs] = useState({ loading: false, error: '', data: [] });
-  const account = useAccount();
-  const history = useHistory();
 
   useEffect(() => {
-    if (!account?.idTokenClaims?.roles?.includes('Tombolo_Admin')) {
-      return history.replace('/');
-    }
     // defining polling function
     const getScheduledJobs = async (stopPolling) => {
       try {

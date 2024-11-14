@@ -82,8 +82,9 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       github: '8',
       consumers: '9',
       applications: '10',
-      integrations: '11',
-      msTeams: '12a',
+      userManagement: '11',
+      integrations: '12',
+      msTeams: '13a',
     };
 
     // on init we check pathname if it contains options key in name, if it does => highlight that menu item
@@ -114,8 +115,9 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       github: '8',
       consumers: '9',
       applications: '10',
-      integrations: '11',
-      msTeams: '12a',
+      userManagement: '11',
+      integrations: '12',
+      msTeams: '13a',
     };
 
     // on init we check pathname if it contains options key in name, if it does => highlight that menu item
