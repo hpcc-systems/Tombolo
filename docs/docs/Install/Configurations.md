@@ -114,22 +114,9 @@ These configurations are required if you're using SSL/TLS. Ignore if not using S
 
 ### 5. Authentication Configuration
 
-Tombolo does not include built-in authentication. You can choose to use **Auth Service** or **Azure AD**.
+Tombolo has two authentication methods available, traditional, and Azure AD. Traditional authentication is on by default, and is required for your ownership account.
 
-**Auth Service** is an authentication service developed by the LNRS Solution Labs Team. For setup information, please visit the [Auth Service repository](https://github.com/hpcc-systems/Auth-Service).
-
-The preferred method, however, is **Microsoft Entra ID** (formerly Azure Active Directory). The first step to using Microsoft Entra ID for authentication is to register an application in Azure. Once registered, you will receive a Client ID and Tenant ID, which are crucial for this to work. You can also configure a redirect URI, which is a URL to be routed to when a user is authenticated.
-
-- **APP_AUTH_METHOD**  
-  Defines the method of authentication. Available options: `auth_service` or `azure_ad`.
-
-- **AUTH_SERVICE_URL**  
-  The URL of the Auth Service. Ignore if using Microsoft Entra ID for authentication.  
-  _Example:_ `http://auth-service-url.com`
-
-- **AUTHSERVICE_TOMBOLO_CLIENT_ID**  
-  The client ID for Tombolo within the Auth Service. Ignore if using Microsoft Entra ID for authentication.  
-  _Example:_ `your_client_id`
+The preferred method, however, is **Azure AD** (formerly Azure Active Directory). The first step to using Microsoft Entra ID for authentication is to register an application in Azure. Once registered, you will receive a Client ID and Tenant ID, which are crucial for this to work. You can also configure a redirect URI, which is a URL to be routed to when a user is authenticated.
 
 - **TENANT_ID**  
   The tenant ID from Azure AD. You obtain this after registering your application in Azure AD.  
@@ -138,6 +125,14 @@ The preferred method, however, is **Microsoft Entra ID** (formerly Azure Active 
 - **CLIENT_ID**  
   The client ID from Azure AD. You obtain this after registering your application in Azure AD.  
   _Example:_ `your_client_id`
+
+- **CLIENT_SECRET**  
+  The client secret from Azure AD. You obtain this after registering your application in Azure AD.  
+  _Example:_ `your_client_secret`
+
+- **REDIRECT_URI=http://localhost:3001**
+  The redirect URI from Azure AD. You obtain this after registering your application in Azure AD.  
+  _Example:_ `http://localhost:3001`
 
 ---
 
@@ -214,9 +209,9 @@ If you have any integrations enabled and they have environment variables, they c
 
 ### Authentication Configuration
 
-- **REACT_APP_APP_AUTH_METHOD**  
-  Specifies the authentication method to be used by the application. Available options are `auth_service` and `azure_ad`. For more details, refer to the `APP_AUTH_METHOD` variable in the server configuration.  
-  _Example:_ `auth_service`
+- **REACT_APP_AUTH_METHODS**  
+  Specifies the authentication method to be used by the application. Available options are `traditional` and `azure`. For more details, refer to the `APP_AUTH_METHOD` variable in the server configuration. These values should be entered in a CSV format. You can use any combination of methods, but at least one must always be present to be able to authenticate to the application.
+  _Example:_ `traditional,azure`
 
 ### Azure Configuration (only if using Azure AD for authentication)
 
