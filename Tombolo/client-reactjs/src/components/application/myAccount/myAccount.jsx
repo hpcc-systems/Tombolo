@@ -16,7 +16,9 @@ const MyAccount = () => {
   return (
     <>
       <BreadCrumbs
-        extraContent={<EditAccountActionButton setChangePasswordModalVisible={setChangePasswordModalVisible} />}
+        extraContent={
+          <EditAccountActionButton setChangePasswordModalVisible={setChangePasswordModalVisible} user={user} />
+        }
       />
       <div
         style={{
