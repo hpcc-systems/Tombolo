@@ -244,6 +244,7 @@ const monitoring_logs = models.monitoring_logs;
                 },
                 jobName: jobName,
                 wuState: wuData.State,
+                wuId: wuData.Wuid,
                 monitoringName,
                 issue: {
                   Issue: _.startCase(notificationDescription),

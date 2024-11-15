@@ -364,6 +364,7 @@ const monitoring_name = "Job Monitoring";
         recipients: { primaryContacts, secondaryContacts, notifyContacts },
         jobName: jobName,
         wuState: wu.State,
+        wuId : wu.Wuid,
         monitoringName,
         issue: {
           Issue: `Job in ${wu.State} state`,
