@@ -311,14 +311,7 @@ const monitoring_logs = models.monitoring_logs;
     for (let log of monitoringLogs) {
       try {
         const { id, metaData } = log;
-        console.log('----MetaData--------------------------------------');
-        console.dir(metaData);
-        console.log('------------------------------------------');
         const { wuInIntermediateState = [] } = metaData;
-
-        console.log('------------------------------------------');
-        console.dir(wuInIntermediateState);
-        console.log('------------------------------------------');
 
         // Remove completed jobs
         let wuStillInIntermediateState = wuInIntermediateState.filter(
