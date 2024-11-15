@@ -253,7 +253,7 @@ const monitoring_logs = models.monitoring_logs;
                   State: wuData.State,
                   "Discovered at": findLocalDateTimeAtCluster(
                     clusterDetail.timezone_offset
-                  ),
+                  ).toLocaleString(),
                 },
                 notificationId: generateNotificationId({
                   notificationPrefix,
@@ -267,10 +267,10 @@ const monitoring_logs = models.monitoring_logs;
                 }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
                 firstLogged: findLocalDateTimeAtCluster(
                   clusterDetail.timezone_offset
-                ),
+                ).toLocaleString(),
                 lastLogged: findLocalDateTimeAtCluster(
                   clusterDetail.timezone_offset
-                ),
+                ).toLocaleString(),
               });
 
               // Add notification payload to notificationsToBeQueued
@@ -311,7 +311,14 @@ const monitoring_logs = models.monitoring_logs;
     for (let log of monitoringLogs) {
       try {
         const { id, metaData } = log;
+        console.log('----MetaData--------------------------------------');
+        console.dir(metaData);
+        console.log('------------------------------------------');
         const { wuInIntermediateState = [] } = metaData;
+
+        console.log('------------------------------------------');
+        console.dir(wuInIntermediateState);
+        console.log('------------------------------------------');
 
         // Remove completed jobs
         let wuStillInIntermediateState = wuInIntermediateState.filter(

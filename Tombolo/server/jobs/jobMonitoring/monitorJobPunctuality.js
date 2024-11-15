@@ -315,8 +315,8 @@ const Integrations = models.integrations;
               Issue: `Job not started on expected time`,
               Cluster: clusterInfo.name,
               "Job Name/Filter": jobNamePattern,
-              "Expected Start": window.start,
-              "Current Time": window.currentTime,
+              "Expected Start": (window.start).toLocaleString(),
+              "Current Time": (window.currentTime).toLocaleString(),
             },
             notificationId: generateNotificationId({
               notificationPrefix,
@@ -330,10 +330,10 @@ const Integrations = models.integrations;
             }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
             firstLogged: new Date(
               now.getTime() + offSet * 60 * 1000
-            ).toISOString(),
+            ).toLocaleString(),
             lastLogged: new Date(
               now.getTime() + offSet * 60 * 1000
-            ).toISOString(),
+            ).toLocaleString(),
           });
 
           // Queue email notification
@@ -373,6 +373,7 @@ const Integrations = models.integrations;
           );
         }
       } catch (error) {
+        console.log(error);
         logger.error(
           `Error while processing jobs for  punctuality check ${jobMonitoring.id}: ${error.message}`
         );
