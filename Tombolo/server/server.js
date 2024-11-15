@@ -16,7 +16,7 @@ const rateLimit = require("express-rate-limit");
 const {
   tokenValidationMiddleware: validateToken,
 } = require("./middlewares/tokenValidationMiddleware");
-const passport = require("passport");
+
 const cors = require("cors");
 const compression = require("compression");
 const { sequelize: dbConnection } = require("./models");
@@ -49,12 +49,6 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json());
 app.use(limiter);
-
-if (process.env.APP_AUTH_METHOD === "azure_ad") {
-  const bearerStrategy = require("./utils/passportStrategies/passport-azure");
-  app.use(passport.initialize()); // For azure SSO
-  passport.use(bearerStrategy);
-}
 
 /*  ROUTES */
 const job = require("./routes/job/read");
@@ -179,6 +173,9 @@ process.env["NODE_TLS_REJECT_UNAUTHORIZED"] =
 /* Start server */
 server.listen(port, "0.0.0.0", async () => {
   try {
+    logger.info("-----------------------------");
+    logger.info("Server is initializing...");
+    logger.info("-----------------------------");
     logger.info("Server listening on port " + port + "!");
     /* Check DB connection */
     await dbConnection.authenticate();

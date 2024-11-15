@@ -56,7 +56,9 @@ const {
   startJobPunctualityMonitoring,
 } = require("../jobSchedularMethods/jobMonitoring.js");
 
-const {checkClusterReachability} = require("../jobSchedularMethods/checkClusterReachability.js");
+const {
+  checkClusterReachability,
+} = require("../jobSchedularMethods/checkClusterReachability.js");
 
 class JobScheduler {
   constructor() {
@@ -133,6 +135,9 @@ class JobScheduler {
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
       await this.checkClusterReachability();
+      logger.info("-----------------------------");
+      logger.info("Server is finished intializing, and is now running");
+      logger.info("-----------------------------");
     })();
   }
 
@@ -360,7 +365,7 @@ class JobScheduler {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
   }
 
-  checkClusterReachability(){
+  checkClusterReachability() {
     return checkClusterReachability.call(this);
   }
 }
