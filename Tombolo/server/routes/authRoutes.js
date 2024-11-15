@@ -39,7 +39,6 @@ router.post(
   createBasicUser
 ); // Create a new user ( Traditional )
 router.post("/loginBasicUser", validateLoginPayload, loginBasicUser); // Login user ( Traditional )
-router.post("/registerBasicUser", validateNewUserPayload, createBasicUser); // Create a new user ( Traditional )
 router.post("/logoutBasicUser", verifyValidTokenExists, logOutBasicUser); // Logout user
 router.post(
   "/handlePasswordResetRequest",
@@ -47,13 +46,20 @@ router.post(
   handlePasswordResetRequest
 ); // Reset password
 router.post("/resetPassword", validateResetPasswordPayload, resetPassword); // Reset password
-router.post("/resetTempPassword",validateResetPasswordPayload, resetTempPassword); // Complete registration by resetting temporary password
+router.post(
+  "/resetTempPassword",
+  validateResetPasswordPayload,
+  resetTempPassword
+); // Complete registration by resetting temporary password
 router.post("/verifyEmail", verifyEmail); // Verify email
 // TODO - Forgot password route
 
 // OAuth 2.0 User Routes ----------------------------------------------------------------------------
 //Login or register with azure user
-router.post("/loginOrRegisterAzureUser",validateAzureAuthCode, loginOrRegisterAzureUser);
-
+router.post(
+  "/loginOrRegisterAzureUser",
+  validateAzureAuthCode,
+  loginOrRegisterAzureUser
+);
 
 module.exports = router;
