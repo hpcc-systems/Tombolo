@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { body, check, param } = require("express-validator");
+const Sequelize = require("sequelize");
+const { Op } = Sequelize;
 
 //Local imports
 const logger = require("../../config/logger");
@@ -172,11 +174,19 @@ router.patch(
       .withMessage(
         "Approval comment must be between 4 and 200 characters long"
       ),
-    body("id").isUUID().withMessage("Invalid id"),
+    body("ids")
+    .isArray()
+    .withMessage("IDs must be an array"),
+    body("ids.*")
+      .isUUID()
+      .withMessage("Invalid id"),
     body("approvalStatus")
       .notEmpty()
       .isString()
       .withMessage("Accepted must be a string"),
+    body("isActive")
+      .isBoolean()
+      .withMessage("isActive must be a boolean"),
     body("approvedBy")
       .notEmpty()
       .isString()
@@ -189,18 +199,20 @@ router.patch(
     }
 
     try {
-      const { id, approverComment, approvalStatus, approvedBy } = req.body;
-      let isActive = false;
-      if (approvalStatus === "Approved") {
-        toggleActive = true;
-      }
+      const { ids, approverComment, approvalStatus, approvedBy, isActive } = req.body;
       await JobMonitoring.update(
-        { approvalStatus, approverComment, approvedBy, approvedAt: new Date(), isActive },
-        { where: { id } }
+        {
+          approvalStatus,
+          approverComment,
+          approvedBy,
+          approvedAt: new Date(),
+          isActive,
+        },
+        { where: { id: { [Op.in]: ids } } }
       );
       res.status(200).send("Successfully saved your evaluation");
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       res.status(500).send("Failed to evaluate job monitoring");
     }
   }
