@@ -39,6 +39,7 @@ function MonitoringDetailsModal({
     clusterId,
     approverComment,
   } = selectedMonitoring;
+
   const { requireComplete } = metaData;
   const { asrSpecificMetaData, notificationMetaData, schedule } = metaData;
   return (
@@ -173,11 +174,11 @@ function MonitoringDetailsModal({
             <Tooltip
               title={
                 <>
-                  <div>User ID : {JSON.parse(approvedBy).id}</div>
-                  <div>Email : {JSON.parse(approvedBy).email}</div>
+                  <div>User ID : {approvedBy.id}</div>
+                  <div>Email : {approvedBy.email}</div>
                 </>
               }>
-              <span style={{ color: 'var(--primary)' }}>{JSON.parse(approvedBy).name}</span>
+              <span style={{ color: 'var(--primary)' }}>{approvedBy.name}</span>
             </Tooltip>
             on {new Date(approvedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
           </Descriptions.Item>
