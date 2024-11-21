@@ -560,6 +560,7 @@ const createNotificationPayload = ({
   recipients,
   notificationId,
   asrSpecificMetaData = {}, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
+  wuId,
   issue,
   firstLogged,
   lastLogged,
@@ -583,6 +584,7 @@ const createNotificationPayload = ({
       issue,
       firstLogged,
       lastLogged,
+      wuId,
       remedy: {
         Instruction:
           "Please contact one of the following to facilitate issue resolution:",

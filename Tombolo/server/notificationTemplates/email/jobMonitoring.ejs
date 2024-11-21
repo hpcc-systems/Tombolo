@@ -93,6 +93,14 @@
             </tr>
             <% }%>
 
+            <% if(typeof wuId !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td"> WUID</td>
+              <td class="section-table-td"><%= wuId %> </td>
+            </tr>
+            <% }%>
+
+
             <% if(typeof severity !== 'undefined'){ %>
             <tr class="section-table-td">
               <td class="section-table-td"> Severity</td>
