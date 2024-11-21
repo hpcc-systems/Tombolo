@@ -7,24 +7,24 @@ import { getRoleNameArray } from './AuthUtil';
 export function handleError(response) {
   message.config({ top: 130 });
 
-  //if response is an empty object, simply return
-  if (Object.keys(response).length === 0) {
-    return;
-  }
-
   //if response is false, it means that we cannot communicate with backend, set backend status to false so UI will show error message
   if (response === false) {
     store.dispatch({ type: 'SET_BACKEND_STATUS', payload: false });
     return;
   }
 
-  response.json().then((data) => {
-    if (data.message) {
-      message.error(data.message);
-    } else {
-      message.error('An undefined error occurred. Please try again later');
-    }
-  });
+  //check if response has a body and it is not used
+  if (response.body && !response.bodyUsed) {
+    response.json().then((data) => {
+      if (data.message) {
+        message.error(data.message);
+      } else {
+        message.error('An undefined error occurred. Please try again later');
+      }
+    });
+  } else {
+    message.error('An undefined error occurred. Please try again later');
+  }
 }
 
 // When the client sends a fetch request the header requires an auth token.

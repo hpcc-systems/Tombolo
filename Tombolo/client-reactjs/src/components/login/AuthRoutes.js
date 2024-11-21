@@ -39,7 +39,7 @@ const AuthRoutes = () => {
     );
   };
 
-  return <BasicLayout content={content()} />;
+  return <BasicLayout content={content()} width={'40rem'} />;
 };
 
 export default AuthRoutes;

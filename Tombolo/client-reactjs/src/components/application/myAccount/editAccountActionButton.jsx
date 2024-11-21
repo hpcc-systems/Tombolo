@@ -1,7 +1,10 @@
 import React from 'react';
 import { Button } from 'antd';
 
-const EditAccountActionButton = ({ setChangePasswordModalVisible }) => {
+const EditAccountActionButton = ({ setChangePasswordModalVisible, user }) => {
+  if (user.registrationMethod === 'azure') {
+    return null;
+  }
   return (
     <Button
       type="primary"

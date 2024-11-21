@@ -57,7 +57,11 @@ const Register = () => {
   const onFinish = async (values) => {
     try {
       values.deviceInfo = getDeviceInfo();
-      authActions.registerBasicUser(values);
+      const res = await authActions.registerBasicUser(values);
+
+      if (!res.success) {
+        return;
+      }
 
       setRegistrationComplete(true);
     } catch (e) {
