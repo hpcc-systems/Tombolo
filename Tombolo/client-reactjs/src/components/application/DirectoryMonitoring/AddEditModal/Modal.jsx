@@ -16,8 +16,8 @@ const AddEditModal = ({
   setCompleteSchedule,
   completeSchedule,
   cron,
-  setCron,
-  cronMessage,
+  // setCron,
+  // cronMessage,
   setCronMessage,
   erroneousScheduling,
   form,
@@ -83,8 +83,8 @@ const AddEditModal = ({
           setCompleteSchedule={setCompleteSchedule}
           completeSchedule={completeSchedule}
           cron={cron}
-          setCron={setCron}
-          cronMessage={cronMessage}
+          // setCron={setCron}
+          // cronMessage={cronMessage}
           setCronMessage={setCronMessage}
           erroneousScheduling={erroneousScheduling}
           selectedCluster={selectedCluster}
