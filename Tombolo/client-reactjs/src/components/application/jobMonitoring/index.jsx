@@ -650,6 +650,7 @@ function JobMonitoring() {
         setDisplayAddRejectModal={setDisplayAddRejectModal}
         applicationId={applicationId}
         setSelectedRows={setSelectedRows}
+        selectedRows={selectedRows}
         domains={domains}
         productCategories={productCategories}
         allProductCategories={allProductCategories}

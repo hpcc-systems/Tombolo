@@ -1,9 +1,10 @@
 import React from 'react';
-import { Menu, Dropdown, Button, message, Popconfirm } from 'antd';
+import { Menu, Dropdown, Button, message, Popconfirm, Popover, Form, Select, Card, Badge } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
-import { handleBulkDeleteJobMonitorings } from './jobMonitoringUtils';
+import { handleBulkDeleteJobMonitorings, toggleJobMonitoringStatus } from './jobMonitoringUtils';
 
+const { Option } = Select;
 const JobMonitoringActionButton = ({
   handleAddJobMonitoringButtonClick,
   selectedRows,
@@ -13,6 +14,9 @@ const JobMonitoringActionButton = ({
   setFiltersVisible,
   filtersVisible,
 }) => {
+  const [bulkStartPauseForm] = Form.useForm(); // Form Instance
+
+  // Handle bulk delete
   const deleteSelected = async () => {
     try {
       const selectedRowIds = selectedRows.map((row) => row.id);
@@ -24,6 +28,22 @@ const JobMonitoringActionButton = ({
     }
   };
 
+  // Bulk start/pause job monitorings
+  const bulkStartPauseJobMonitorings = async () => {
+    try {
+      const action = bulkStartPauseForm.getFieldValue('action'); // Ensure correct usage of bulkStartPauseForm
+      const selectedRowIds = selectedRows.map((row) => row.id);
+      const updatedMonitorings = await toggleJobMonitoringStatus({ ids: selectedRowIds, action });
+      setJobMonitorings((prev) =>
+        prev.map((monitoring) => updatedMonitorings.find((updated) => updated.id === monitoring.id) || monitoring)
+      );
+      message.success(`Selected ${action === 'start' ? 'Job Monitorings started' : 'Job Monitorings paused'}`);
+    } catch (err) {
+      message.error('Unable to start/pause selected job monitorings');
+    }
+  };
+
+  // Handle menu selection
   const handleMenuSelection = (key) => {
     if (key === '1') {
       handleAddJobMonitoringButtonClick();
@@ -48,6 +68,36 @@ const JobMonitoringActionButton = ({
 
           <Menu.Item key="2" disabled={selectedRows.length < 2}>
             Bulk Edit
+          </Menu.Item>
+          <Menu.Item disabled={selectedRows.length < 2}>
+            <Popover
+              placement="left"
+              content={
+                <Card size="small">
+                  <Form layout="vertical" form={bulkStartPauseForm}>
+                    <Form.Item label="Select Action" name="action" required>
+                      <Select style={{ width: '18rem' }}>
+                        <Option value="start">
+                          <Badge color="green" style={{ marginRight: '1rem' }}></Badge>
+                          {`Start selected ${selectedRows.length} Job Monitoring`}
+                        </Option>
+                        <Option value="pause">
+                          <Badge color="red" style={{ marginRight: '1rem' }}></Badge>
+                          {`Pause selected ${selectedRows.length} Job Monitoring`}
+                        </Option>
+                      </Select>
+                    </Form.Item>
+                    <Form.Item>
+                      <Button type="primary" style={{ width: '100%' }} onClick={bulkStartPauseJobMonitorings}>
+                        Apply
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                </Card>
+              }
+              trigger="hover">
+              <a>Bulk start/pause</a>
+            </Popover>
           </Menu.Item>
           <Menu.Item key="3" disabled={selectedRows.length < 2}>
             <Popconfirm
