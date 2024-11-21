@@ -79,8 +79,8 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
             <div className="notifications__filter-label">Origin</div>
             <Form.Item name="origin">
               <Select placeholder="Origin" allowClear>
-                {originOptions.map((o) => (
-                  <Option key={o} value={o}>
+                {originOptions.map((o, i) => (
+                  <Option key={i} value={o}>
                     {o}
                   </Option>
                 ))}

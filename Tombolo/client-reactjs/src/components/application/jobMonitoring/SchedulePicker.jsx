@@ -51,8 +51,8 @@ function SchedulePicker({
   completeSchedule,
   setCompleteSchedule,
   cron,
-  setCron,
-  cronMessage,
+  // setCron,
+  // cronMessage,
   setCronMessage,
 }) {
   const [yearlyRadio, setYearlyRadio] = useState(null);
@@ -385,35 +385,35 @@ function SchedulePicker({
     </div>
   );
   // handle corn input change
-  const handleCronInputChange = (e) => {
-    const v = e.target.value;
-    setCron(v);
-    setIntermittentScheduling((prev) => ({ frequency: prev.frequency, cron: v }));
-  };
+  // const handleCronInputChange = (e) => {
+  //   const v = e.target.value;
+  //   setCron(v);
+  //   setIntermittentScheduling((prev) => ({ frequency: prev.frequency, cron: v }));
+  // };
 
   //Cron Input and validation
-  const cronInputAndValidation = (
-    <>
-      <Input placeholder="*/5 * * * *" onChange={(e) => handleCronInputChange(e)} allowClear value={cron} />
-      {cronMessage == null ? (
-        <div>
-          Click{' '}
-          <a
-            href="https://crontab.cronhub.io/"
-            style={{ textDecoration: 'underline' }}
-            target="_blank"
-            rel="noreferrer">
-            Here
-          </a>{' '}
-          to create cron expression
-        </div>
-      ) : null}
-      {cronMessage && cronMessage?.valid ? (
-        <div style={{ color: 'var(--primary' }}>Runs {cronMessage.message.toLowerCase()} </div>
-      ) : null}
-      {cronMessage && !cronMessage?.valid ? <div style={{ color: 'var(--danger' }}>{cronMessage.message} </div> : null}
-    </>
-  );
+  // const cronInputAndValidation = (
+  //   <>
+  //     <Input placeholder="*/5 * * * *" onChange={(e) => handleCronInputChange(e)} allowClear value={cron} />
+  //     {cronMessage == null ? (
+  //       <div>
+  //         Click{' '}
+  //         <a
+  //           href="https://crontab.cronhub.io/"
+  //           style={{ textDecoration: 'underline' }}
+  //           target="_blank"
+  //           rel="noreferrer">
+  //           Here
+  //         </a>{' '}
+  //         to create cron expression
+  //       </div>
+  //     ) : null}
+  //     {cronMessage && cronMessage?.valid ? (
+  //       <div style={{ color: 'var(--primary' }}>Runs {cronMessage.message.toLowerCase()} </div>
+  //     ) : null}
+  //     {cronMessage && !cronMessage?.valid ? <div style={{ color: 'var(--danger' }}>{cronMessage.message} </div> : null}
+  //   </>
+  // );
 
   //Schedule options
   const schedulingOptions = [
@@ -421,7 +421,7 @@ function SchedulePicker({
     { label: 'Weekly', value: 'weekly', component: weeklyBreakDown },
     { label: 'Monthly', value: 'monthly', component: monthlyBreakDown },
     { label: 'Yearly', value: 'yearly', component: yearlyBreakDown },
-    { label: 'Cron', value: 'cron', component: cronInputAndValidation },
+    // { label: 'Cron', value: 'cron', component: cronInputAndValidation },
   ];
 
   const selectedComponent = schedulingOptions.find(

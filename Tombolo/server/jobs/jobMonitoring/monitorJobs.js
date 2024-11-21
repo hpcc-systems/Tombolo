@@ -364,6 +364,7 @@ const monitoring_name = "Job Monitoring";
         recipients: { primaryContacts, secondaryContacts, notifyContacts },
         jobName: jobName,
         wuState: wu.State,
+        wuId : wu.Wuid,
         monitoringName,
         issue: {
           Issue: `Job in ${wu.State} state`,
@@ -372,7 +373,7 @@ const monitoring_name = "Job Monitoring";
           "Returned Job": wu.Jobname,
           "Discovered at": findLocalDateTimeAtCluster(
             clusterInfoObj[clusterId].timezone_offset
-          ),
+          ).toLocaleString(),
           State: wu.State,
         },
         notificationId: generateNotificationId({
@@ -387,10 +388,10 @@ const monitoring_name = "Job Monitoring";
         }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
         firstLogged: findLocalDateTimeAtCluster(
           clusterInfoObj[clusterId].timezone_offset
-        ),
+        ).toLocaleString(),
         lastLogged: findLocalDateTimeAtCluster(
           clusterInfoObj[clusterId].timezone_offset
-        ),
+        ).toLocaleString(),
       });
 
       //Create notification queue

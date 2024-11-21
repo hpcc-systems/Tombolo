@@ -587,6 +587,8 @@ function JobMonitoring() {
             setBulkEditModalVisibility={setBulkEditModalVisibility}
             setFiltersVisible={setFiltersVisible}
             filtersVisible={filtersVisible}
+            displayAddRejectModal={displayAddRejectModal}
+            setDisplayAddRejectModal={setDisplayAddRejectModal}
           />
         }
       />
@@ -656,24 +658,30 @@ function JobMonitoring() {
         allProductCategories={allProductCategories}
         filteringJobs={filteringJobs}
       />
-      <MonitoringDetailsModal
-        displayMonitoringDetailsModal={displayMonitoringDetailsModal}
-        setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
-        selectedMonitoring={selectedMonitoring}
-        setSelectedMonitoring={setSelectedMonitoring}
-        clusters={clusters}
-        domains={domains}
-        productCategories={productCategories}
-      />
-      <ApproveRejectModal
-        id={selectedMonitoring?.id}
-        displayAddRejectModal={displayAddRejectModal}
-        setDisplayAddRejectModal={setDisplayAddRejectModal}
-        selectedMonitoring={selectedMonitoring}
-        setSelectedMonitoring={setSelectedMonitoring}
-        user={user}
-        setJobMonitorings={setJobMonitorings}
-      />
+      {displayMonitoringDetailsModal && (
+        <MonitoringDetailsModal
+          displayMonitoringDetailsModal={displayMonitoringDetailsModal}
+          setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
+          selectedMonitoring={selectedMonitoring}
+          setSelectedMonitoring={setSelectedMonitoring}
+          clusters={clusters}
+          domains={domains}
+          productCategories={productCategories}
+        />
+      )}
+      {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
+      {displayAddRejectModal && (
+        <ApproveRejectModal
+          id={selectedMonitoring?.id}
+          selectedRows={selectedRows}
+          displayAddRejectModal={displayAddRejectModal}
+          setDisplayAddRejectModal={setDisplayAddRejectModal}
+          selectedMonitoring={selectedMonitoring}
+          setSelectedMonitoring={setSelectedMonitoring}
+          user={user}
+          setJobMonitorings={setJobMonitorings}
+        />
+      )}
       {bulkEditModalVisibility && (
         <BulkUpdateModal
           bulkEditModalVisibility={bulkEditModalVisibility}

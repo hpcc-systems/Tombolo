@@ -244,6 +244,7 @@ const monitoring_logs = models.monitoring_logs;
                 },
                 jobName: jobName,
                 wuState: wuData.State,
+                wuId: wuData.Wuid,
                 monitoringName,
                 issue: {
                   Issue: _.startCase(notificationDescription),
@@ -253,7 +254,7 @@ const monitoring_logs = models.monitoring_logs;
                   State: wuData.State,
                   "Discovered at": findLocalDateTimeAtCluster(
                     clusterDetail.timezone_offset
-                  ),
+                  ).toLocaleString(),
                 },
                 notificationId: generateNotificationId({
                   notificationPrefix,
@@ -267,10 +268,10 @@ const monitoring_logs = models.monitoring_logs;
                 }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
                 firstLogged: findLocalDateTimeAtCluster(
                   clusterDetail.timezone_offset
-                ),
+                ).toLocaleString(),
                 lastLogged: findLocalDateTimeAtCluster(
                   clusterDetail.timezone_offset
-                ),
+                ).toLocaleString(),
               });
 
               // Add notification payload to notificationsToBeQueued

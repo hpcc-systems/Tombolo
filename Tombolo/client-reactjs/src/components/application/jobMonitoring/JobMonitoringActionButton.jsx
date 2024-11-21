@@ -13,6 +13,7 @@ const JobMonitoringActionButton = ({
   setBulkEditModalVisibility,
   setFiltersVisible,
   filtersVisible,
+  setDisplayAddRejectModal,
 }) => {
   const [bulkStartPauseForm] = Form.useForm(); // Form Instance
 
@@ -51,6 +52,8 @@ const JobMonitoringActionButton = ({
       setBulkEditModalVisibility(true);
     } else if (key === '4') {
       changeFilterVisibility();
+    } else if (key === '5') {
+      setDisplayAddRejectModal(true);
     }
   };
 
@@ -98,6 +101,9 @@ const JobMonitoringActionButton = ({
               trigger="hover">
               <a>Bulk start/pause</a>
             </Popover>
+          </Menu.Item>
+          <Menu.Item key="5" disabled={selectedRows.length < 2}>
+            Bulk Approve / Reject
           </Menu.Item>
           <Menu.Item key="3" disabled={selectedRows.length < 2}>
             <Popconfirm
