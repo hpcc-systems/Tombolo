@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Menu, Dropdown, Button, message, Popconfirm, Popover, Form, Select, Card, Badge } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
@@ -16,6 +16,8 @@ const JobMonitoringActionButton = ({
   setDisplayAddRejectModal,
 }) => {
   const [bulkStartPauseForm] = Form.useForm(); // Form Instance
+
+  const [expandActionsDrawer, setExpandActionsDrawer] = useState(false); // Drawer state
 
   // Handle bulk delete
   const deleteSelected = async () => {
@@ -48,12 +50,16 @@ const JobMonitoringActionButton = ({
   const handleMenuSelection = (key) => {
     if (key === '1') {
       handleAddJobMonitoringButtonClick();
+      setExpandActionsDrawer(false);
     } else if (key === '2') {
       setBulkEditModalVisibility(true);
+      setExpandActionsDrawer(false);
     } else if (key === '4') {
       changeFilterVisibility();
+      setExpandActionsDrawer(false);
     } else if (key === '5') {
       setDisplayAddRejectModal(true);
+      setExpandActionsDrawer(false);
     }
   };
 
@@ -63,8 +69,17 @@ const JobMonitoringActionButton = ({
     setFiltersVisible((prev) => !prev);
   };
 
+  // Handle dropdown open change
+  const handleDropDownOpenChange = (nextOpen, info) => {
+    if (info.source === 'trigger' || nextOpen) {
+      setExpandActionsDrawer(nextOpen);
+    }
+  };
   return (
     <Dropdown
+      trigger={['click']}
+      onOpenChange={handleDropDownOpenChange}
+      open={expandActionsDrawer}
       dropdownRender={() => (
         <Menu onClick={({ key }) => handleMenuSelection(key)}>
           <Menu.Item key="1">Add Job Monitoring</Menu.Item>
@@ -98,7 +113,7 @@ const JobMonitoringActionButton = ({
                   </Form>
                 </Card>
               }
-              trigger="hover">
+              trigger="click">
               <a>Bulk start/pause</a>
             </Popover>
           </Menu.Item>
