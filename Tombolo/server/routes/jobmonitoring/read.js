@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { body, check, param } = require("express-validator");
 const Sequelize = require("sequelize");
-const { Op } = Sequelize;
+const { body, check, param } = require("express-validator");
 
 //Local imports
 const logger = require("../../config/logger");
@@ -11,6 +10,7 @@ const { validationResult } = require("express-validator");
 
 //Constants
 const JobMonitoring = models.jobMonitoring;
+const Op = Sequelize.Op;
 
 // Create new job monitoring
 router.post(
@@ -265,40 +265,91 @@ router.delete(
 router.patch(
   "/toggleIsActive",
   [
-    body("id").isUUID().withMessage("ID must be a valid UUID"),
+    body("ids").isArray().withMessage("Invalid ids"), // Ensure ids is an array
+    body("ids.*").isUUID().withMessage("Invalid id"), // Ensure each id is a valid UUID
+    // make action optional and when provided must be either start or pause
+    body("action")
+      .optional()
+      .isIn(["start", "pause"])
+      .withMessage("Action must be either start or pause"),
   ],
   async (req, res) => {
-
     // Handle the PATCH request here
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(503).send("Failed to toggle");
+      return res.status(400).send("Failed to toggle"); // Use a valid status code
     }
 
-    try {
-      const { id } = req.body;
-      // Get and toggle
-      const jobMonitoring = await JobMonitoring.findByPk(id);
-      if (!jobMonitoring) {
-        logger.error("Toggle Job monitoring - Job monitoring not found");
-        return res.status(404).send("Job monitoring not found");
-      }
-      const isApproved = jobMonitoring.approvalStatus === "Approved";
-      if (!isApproved) {
-        logger.error("Toggle Job monitoring - Job monitoring not approved");
-        return res.status(503).send("Can't toggle job monitoring that is not in approved state");
-      }
-      const currentStatus = jobMonitoring.isActive;
-      const data = await jobMonitoring.update({ isActive: !currentStatus });
+    let transaction;
 
-      res.status(200).send(data);
+    try {
+      transaction = await JobMonitoring.sequelize.transaction();
+      const { ids, action } = req.body; // Expecting an array of IDs
+
+      // Find all job monitorings with the given IDs
+      const jobMonitorings = await JobMonitoring.findAll({
+        where: { id: { [Op.in]: ids } },
+      });
+
+      if (jobMonitorings.length === 0) {
+        logger.error("Toggle Job monitoring - Job monitorings not found");
+        return res.status(404).send("Job monitorings not found");
+      }
+
+      // Filter out the job monitorings that are not approved
+      const approvedJobMonitorings = jobMonitorings.filter(
+        (jobMonitoring) => jobMonitoring.approvalStatus === "Approved"
+      );
+
+      if (approvedJobMonitorings.length === 0) {
+        logger.error(
+          "Toggle Job monitoring - No approved job monitorings found"
+        );
+        return res.status(400).send("No approved job monitorings to toggle"); // Use a valid status code
+      }
+
+      // Get the IDs of the approved job monitorings
+      const approvedIds = approvedJobMonitorings.map(
+        (jobMonitoring) => jobMonitoring.id
+      );
+
+      if(action){
+        // If action is start or pause change isActive to true or false respectively
+        await JobMonitoring.update(
+          { isActive: action === "start" },
+          {
+            where: { id: { [Op.in]: approvedIds } },
+            transaction,
+          }
+        );
+      }else{
+      // Toggle the isActive status for all approved job monitorings
+      await JobMonitoring.update(
+        { isActive: Sequelize.literal("NOT isActive") },
+        {
+          where: { id: { [Op.in]: approvedIds } },
+          transaction,
+        }
+      );
+    }
+  
+      await transaction.commit();
+
+      // Get all updated job monitorings
+      const updatedJobMonitorings = await JobMonitoring.findAll({
+        where: { id: { [Op.in]: approvedIds } },
+      });
+
+      res.status(200).send({ success: true, message: "Toggled successfully",  updatedJobMonitorings }); // Send the updated job monitorings
     } catch (err) {
-      logger.error(err);
+      await transaction.rollback();
+      logger.error(err.message);
       res.status(500).send("Failed to toggle job monitoring");
     }
   }
 );
 
+module.exports = router;
 // Bulk update - only primary, secondary and notify contact are part of bulk update for now
 router.patch(
   "/bulkUpdate",

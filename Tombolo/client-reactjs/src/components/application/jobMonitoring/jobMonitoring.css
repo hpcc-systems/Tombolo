@@ -111,6 +111,9 @@
   background-color: var(--secondary-light);
 }
 
+.jobMonitoringTable__selected-row > .ant-table-cell {
+  background-color: rgba(255, 255, 0, 0.1) !important;
+}
 /* Filters ------------------------------------------------------------------ */
 
 .notifications__filter-label {

@@ -37,10 +37,10 @@ const JobMonitoringTable = ({
   setDisplayMonitoringDetailsModal,
   setDisplayAddRejectModal,
   setSelectedRows,
+  selectedRows,
   domains,
   allProductCategories,
   filteringJobs,
-  selectedRows,
 }) => {
   //Redux
   const {
@@ -273,8 +273,17 @@ const JobMonitoringTable = ({
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }
-      const updatedData = await toggleJobMonitoringStatus({ id: record.id });
-      setJobMonitorings((prev) => prev.map((monitoring) => (monitoring.id === record.id ? updatedData : monitoring)));
+
+      const updatedData = await toggleJobMonitoringStatus({ ids: [record.id] });
+      const updatedMonitoringIds = updatedData.map((monitoring) => monitoring.id);
+
+      setJobMonitorings((prev) =>
+        prev.map((monitoring) =>
+          updatedMonitoringIds.includes(monitoring.id)
+            ? updatedData.find((updated) => updated.id === monitoring.id)
+            : monitoring
+        )
+      );
     } catch (err) {
       message.error('Failed to toggle monitoring status');
     }
@@ -285,6 +294,7 @@ const JobMonitoringTable = ({
       loading={filteringJobs}
       columns={columns}
       rowKey="id"
+      rowSelectedBgColor="var(--danger)"
       size="small"
       rowSelection={{
         type: 'checkbox',
@@ -293,9 +303,16 @@ const JobMonitoringTable = ({
         },
       }}
       pagination={{ pageSize: 20 }}
-      rowClassName={(record) =>
-        record?.isActive ? 'jobMonitoringTable__active-monitoring' : 'jobMonitoringTable__inactive-monitoring'
-      }
+      rowClassName={(record) => {
+        let className = record?.isActive
+          ? 'jobMonitoringTable__active-monitoring'
+          : 'jobMonitoringTable__inactive-monitoring';
+        const idsOfSelectedRows = selectedRows.map((row) => row.id);
+        if (idsOfSelectedRows.includes(record.id)) {
+          className += ' jobMonitoringTable__selected-row';
+        }
+        return className;
+      }}
     />
   );
 };
