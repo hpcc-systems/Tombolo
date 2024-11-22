@@ -38,8 +38,8 @@ function AsrSpecificMonitoringDetails({ form, domains, productCategories, setSel
             rules={[{ required: true, message: 'Please select an option' }]}>
             <Select placeholder="Product Category">
               {productCategories.map((c, i) => (
-                <Option key={i} value={c.value}>
-                  {c.label}
+                <Option key={i} value={c.id}>
+                  {`${c.name} (${c.shortCode})`}
                 </Option>
               ))}
             </Select>

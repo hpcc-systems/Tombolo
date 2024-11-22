@@ -452,9 +452,34 @@ function calculateRunOrCompleteByTimeForCronJobs({
 
 }
 
-// check if current time is before, within or after the run window
-function checkIfCurrentTimeIsWithinRunWindow({start, end, currentTime}) {
-  if (currentTime > start && currentTime < end) {
+
+function checkIfCurrentTimeIsWithinRunWindow({ start, end, currentTime }) {
+  // Ensure currentTime is a Date object
+  if (!(currentTime instanceof Date)) {
+    throw new Error("Invalid input: currentTime must be a Date object");
+  }
+
+  // Extract the date part from currentTime
+  const currentDate = currentTime.toISOString().split("T")[0]; // Get the date part of currentTime
+
+  // Combine the date part with the start and end times to create Date objects
+  start = new Date(`${currentDate}T${start}:00.000Z`);
+  end = new Date(`${currentDate}T${end}:00.000Z`);
+
+
+  // Validate input parameters
+  if (
+    !(start instanceof Date) ||
+    !(end instanceof Date) ||
+    !(currentTime instanceof Date)
+  ) {
+    throw new Error(
+      "Invalid input: start, end, and currentTime must be Date objects"
+    );
+  }
+
+  // Adjust conditions to include start and end in the "within" range
+  if (currentTime >= start && currentTime <= end) {
     return "within";
   } else if (currentTime < start) {
     return "before";
@@ -535,6 +560,7 @@ const createNotificationPayload = ({
   recipients,
   notificationId,
   asrSpecificMetaData = {}, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
+  wuId,
   issue,
   firstLogged,
   lastLogged,
@@ -558,6 +584,7 @@ const createNotificationPayload = ({
       issue,
       firstLogged,
       lastLogged,
+      wuId,
       remedy: {
         Instruction:
           "Please contact one of the following to facilitate issue resolution:",

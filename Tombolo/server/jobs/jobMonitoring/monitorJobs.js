@@ -1,7 +1,10 @@
-const monitoring_name = "Job Monitoring";
+// Imports from libraries
 const { parentPort } = require("worker_threads");
 const { WorkunitsService } = require("@hpcc-js/comms");
+const _ = require("lodash");
 
+
+// Local imports
 const logger = require("../../config/logger");
 const models = require("../../models");
 const { decryptString } = require("../../utils/cipher");
@@ -17,15 +20,16 @@ const {
   findLocalDateTimeAtCluster,
   nocAlertDescription,
 } = require("./monitorJobsUtil");
-const e = require("express");
 
+// Models
 const JobMonitoring = models.jobMonitoring;
 const cluster = models.cluster;
 const MonitoringTypes = models.monitoring_types;
 const MonitoringLogs = models.monitoring_logs;
 const NotificationQueue = models.notification_queue;
-const IntegrationMapping = models.integration_mapping;
-const Integrations = models.integrations;
+
+// Variables
+const monitoring_name = "Job Monitoring";
 
 (async () => {
   const now = new Date(); // UTC time
@@ -51,40 +55,6 @@ const Integrations = models.integrations;
     if (jobMonitorings.length < 1) {
       logger.debug("No active job monitorings found.");
       return;
-    }
-
-    // Find severity level (For ASR ) - based on that determine when to send out notifications
-    let severityThreshHold = 0;
-    let severeEmailRecipients = null;
-
-    try {
-      const { id: integrationId } = await Integrations.findOne({
-        where: { name: "ASR" },
-        raw: true,
-      });
-
-      if (integrationId) {
-        // Get integration mapping with integration details
-        const integrationMapping = await IntegrationMapping.findOne({
-          where: { integration_id: integrationId },
-          raw: true,
-        });
-
-    
-        if(integrationMapping){
-          const {
-            metaData: {
-              nocAlerts: { severityLevelForNocAlerts, emailContacts },
-            },
-          } = integrationMapping;
-          severityThreshHold = severityLevelForNocAlerts;
-          severeEmailRecipients = emailContacts;
-        }
-      }
-    } catch (error) {
-      logger.error(
-        `Job Monitoring : Error while getting integration level severity threshold: ${error.message}`
-      );
     }
 
     /* Organize job monitoring based on cluster ID. This approach simplifies interaction with 
@@ -136,6 +106,7 @@ const Integrations = models.integrations;
       where: { monitoring_type_id: monitoringTypeId, cluster_id: clusterIds },
       raw: true,
     });
+
 
     // Cluster  last scan info (Scan logs)
     clustersInfo.forEach((clusterInfo) => {
@@ -220,7 +191,7 @@ const Integrations = models.integrations;
         }
 
         try {
-          const x = await MonitoringLogs.upsert(
+          await MonitoringLogs.upsert(
             {
               cluster_id: id,
               monitoring_type_id: monitoringTypeId,
@@ -246,6 +217,7 @@ const Integrations = models.integrations;
       );
       return;
     }
+     
     // Clusters with new work units - Done to minimize the number of calls to db later
     const clusterIdsWithNewWUs = Object.keys(wuBasicInfoByCluster);
 
@@ -364,17 +336,35 @@ const Integrations = models.integrations;
         severity = asrSpecificMetaData.severity;
       }
 
+      // Find severity level (For ASR ) - based on that determine weather to send NOC notification
+      let severityThreshHold = 0;
+      let severeEmailRecipients = null;
+
+      if (asrSpecificMetaData) {
+        try {
+          const { domain: domainId } = asrSpecificMetaData;
+          const domain = await getDomain(domainId);
+          if (domain) {
+            severityThreshHold = domain.severityThreshold;
+            severeEmailRecipients = domain.severityAlertRecipients;
+          }
+        } catch (error) {
+          logger.error(`Job Monitoring : Error while getting Domain level severity : ${error.message}` );
+        }
+      }
+
       //Notification payload
       const notificationPayload = createNotificationPayload({
         type: "email",
-        notificationDescription: `Monitoring detected that a monitored job is in ${wu.State} state`,
+        notificationDescription: `Monitoring (${jobMonitoring.monitoringName}) detected that a monitored job is in ${wu.State} state`,
         templateName: "jobMonitoring",
         originationId: monitoringTypeId,
         applicationId: jobMonitoring.applicationId,
-        subject: `Job Monitoring Alert: Job in ${wu.State} state`,
+        subject: `Job Monitoring Alert from ${process.env.INSTANCE_NAME} : Job in ${wu.State} state`,
         recipients: { primaryContacts, secondaryContacts, notifyContacts },
         jobName: jobName,
         wuState: wu.State,
+        wuId : wu.Wuid,
         monitoringName,
         issue: {
           Issue: `Job in ${wu.State} state`,
@@ -383,7 +373,7 @@ const Integrations = models.integrations;
           "Returned Job": wu.Jobname,
           "Discovered at": findLocalDateTimeAtCluster(
             clusterInfoObj[clusterId].timezone_offset
-          ),
+          ).toLocaleString(),
           State: wu.State,
         },
         notificationId: generateNotificationId({
@@ -398,10 +388,10 @@ const Integrations = models.integrations;
         }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
         firstLogged: findLocalDateTimeAtCluster(
           clusterInfoObj[clusterId].timezone_offset
-        ),
+        ).toLocaleString(),
         lastLogged: findLocalDateTimeAtCluster(
           clusterInfoObj[clusterId].timezone_offset
-        ),
+        ).toLocaleString(),
       });
 
       //Create notification queue
@@ -409,13 +399,16 @@ const Integrations = models.integrations;
 
       // If severity is above threshold, send out NOC notification
       if (severity >= severityThreshHold && severeEmailRecipients) {
-        const notificationPayloadForNoc = { ...notificationPayload };
-        notificationPayloadForNoc.metaData.notificationDescription = nocAlertDescription;
-        notificationPayloadForNoc.metaData.mainRecipients = severeEmailRecipients;
-        notificationPayload.metaData.notificationId = generateNotificationId({
-          notificationPrefix,
-          timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
-        }),
+        const notificationPayloadForNoc = _.cloneDeep(notificationPayload);
+        notificationPayloadForNoc.metaData.notificationDescription =
+          nocAlertDescription;
+        notificationPayloadForNoc.metaData.mainRecipients =
+          severeEmailRecipients;
+        notificationPayloadForNoc.metaData.notificationId =
+          generateNotificationId({
+            notificationPrefix,
+            timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
+          }),
         delete notificationPayloadForNoc.metaData.cc;
         await NotificationQueue.create(notificationPayloadForNoc);
       }
@@ -435,10 +428,6 @@ const Integrations = models.integrations;
           raw: true,
         });
 
-        if (!log) {
-          continue;
-        }
-
         // Filter intermediate state jobs for the cluster
         const intermediateStateJobsForCluster = intermediateStateJobs.filter(
           (job) => job.clusterId === id
@@ -447,7 +436,7 @@ const Integrations = models.integrations;
         let existingIntermediateStateJobs = [];
         let existingMetaData = {};
 
-        existingMetaData = log.metaData || {};
+        existingMetaData = log?.metaData || {};
         existingIntermediateStateJobs =
           existingMetaData?.wuInIntermediateState || [];
 
@@ -475,7 +464,7 @@ const Integrations = models.integrations;
     }
 
   } catch (err) {
-    logger.error(err);
+    logger.error(`Job Monitoring - Error while monitoring jobs: ${err.message}`);
   } finally {
     if (parentPort) parentPort.postMessage("done");
     else process.exit(0);

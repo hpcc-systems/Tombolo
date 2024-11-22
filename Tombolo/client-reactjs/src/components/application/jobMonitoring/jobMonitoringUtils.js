@@ -127,11 +127,11 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
 };
 
 //Toggle job monitoring status, just post the id of the job monitoring to  /toggle in the req body
-export const toggleJobMonitoringStatus = async ({ id }) => {
+export const toggleJobMonitoringStatus = async ({ ids, action }) => {
   const payload = {
     method: 'PATCH',
     headers: authHeader(),
-    body: JSON.stringify({ id }),
+    body: JSON.stringify({ ids, action }),
   };
 
   const response = await fetch(`/api/jobmonitoring/toggleIsActive`, payload);
@@ -140,7 +140,8 @@ export const toggleJobMonitoringStatus = async ({ id }) => {
   }
 
   const data = await response.json();
-  return data;
+
+  return data.updatedJobMonitorings;
 };
 
 // Bulk delete job monitorings

@@ -594,6 +594,8 @@ function JobMonitoring() {
             setFiltersVisible={setFiltersVisible}
             filtersVisible={filtersVisible}
             isReader={isReader}
+            displayAddRejectModal={displayAddRejectModal}
+            setDisplayAddRejectModal={setDisplayAddRejectModal}
           />
         }
       />
@@ -642,7 +644,7 @@ function JobMonitoring() {
         setSelectedCluster={setSelectedCluster}
         resetStates={resetStates}
         domains={domains}
-        productCategories={productCategories}
+        productCategories={allProductCategories}
         setSelectedDomain={setSelectedDomain}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -658,30 +660,37 @@ function JobMonitoring() {
         setDisplayAddRejectModal={setDisplayAddRejectModal}
         applicationId={applicationId}
         setSelectedRows={setSelectedRows}
+        selectedRows={selectedRows}
         domains={domains}
         productCategories={productCategories}
         allProductCategories={allProductCategories}
         filteringJobs={filteringJobs}
         isReader={isReader}
       />
-      <MonitoringDetailsModal
-        displayMonitoringDetailsModal={displayMonitoringDetailsModal}
-        setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
-        selectedMonitoring={selectedMonitoring}
-        setSelectedMonitoring={setSelectedMonitoring}
-        clusters={clusters}
-        domains={domains}
-        productCategories={productCategories}
-      />
-      <ApproveRejectModal
-        id={selectedMonitoring?.id}
-        displayAddRejectModal={displayAddRejectModal}
-        setDisplayAddRejectModal={setDisplayAddRejectModal}
-        selectedMonitoring={selectedMonitoring}
-        setSelectedMonitoring={setSelectedMonitoring}
-        user={user}
-        setJobMonitorings={setJobMonitorings}
-      />
+      {displayMonitoringDetailsModal && (
+        <MonitoringDetailsModal
+          displayMonitoringDetailsModal={displayMonitoringDetailsModal}
+          setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
+          selectedMonitoring={selectedMonitoring}
+          setSelectedMonitoring={setSelectedMonitoring}
+          clusters={clusters}
+          domains={domains}
+          productCategories={productCategories}
+        />
+      )}
+      {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
+      {displayAddRejectModal && (
+        <ApproveRejectModal
+          id={selectedMonitoring?.id}
+          selectedRows={selectedRows}
+          displayAddRejectModal={displayAddRejectModal}
+          setDisplayAddRejectModal={setDisplayAddRejectModal}
+          selectedMonitoring={selectedMonitoring}
+          setSelectedMonitoring={setSelectedMonitoring}
+          user={user}
+          setJobMonitorings={setJobMonitorings}
+        />
+      )}
       {bulkEditModalVisibility && (
         <BulkUpdateModal
           bulkEditModalVisibility={bulkEditModalVisibility}

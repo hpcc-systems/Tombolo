@@ -11,8 +11,8 @@ function MonitoringTab({
   setCompleteSchedule,
   form,
   cron,
-  setCron,
-  cronMessage,
+  // setCron,
+  // cronMessage,
   setCronMessage,
   erroneousScheduling,
   selectedCluster,
@@ -53,8 +53,8 @@ function MonitoringTab({
           completeSchedule={completeSchedule}
           setCompleteSchedule={setCompleteSchedule}
           cron={cron}
-          setCron={setCron}
-          cronMessage={cronMessage}
+          // setCron={setCron}
+          // cronMessage={cronMessage}
           setCronMessage={setCronMessage}
         />
         {erroneousScheduling && (
