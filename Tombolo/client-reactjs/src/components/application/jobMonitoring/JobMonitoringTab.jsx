@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Card, Form, TimePicker, Row, Col, Select } from 'antd';
 
@@ -26,6 +26,7 @@ function JobMonitoringTab({
   setSelectedDomain,
 }) {
   const [clusterOffset, setClusterOffset] = useState(null);
+  const isFirstRender = useRef(true);
 
   // Generating cluster offset string to display in time picker
   useEffect(() => {
@@ -38,9 +39,13 @@ function JobMonitoringTab({
     }
   }, [selectedCluster]);
 
-  // When intermediate scheduling is changed clear Expected start and end time
+  // When intermittent scheduling is changed, clear Expected start and end time
   useEffect(() => {
-    form.setFieldsValue({ expectedStartTime: null, expectedCompletionTime: null });
+    if (isFirstRender.current) {
+      isFirstRender.current = false; // Set to false after the first render
+    } else {
+      form.setFieldsValue({ expectedStartTime: null, expectedCompletionTime: null });
+    }
   }, [intermittentScheduling]);
 
   // Function to disable specific hours
