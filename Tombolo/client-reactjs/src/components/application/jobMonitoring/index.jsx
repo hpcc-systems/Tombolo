@@ -29,6 +29,7 @@ import ApproveRejectModal from './ApproveRejectModal.jsx';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import JobMonitoringFilters from './JobMonitoringFilters.jsx';
+import { getUser } from '../../common/userStorage.js';
 
 // Constants
 const monitoringTypeName = 'Job Monitoring';
@@ -42,7 +43,7 @@ function JobMonitoring() {
     applicationReducer: { clusters },
   } = useSelector((state) => state);
 
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getUser();
 
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;

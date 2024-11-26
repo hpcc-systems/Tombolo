@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { Button, Dropdown } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import history from '../../common/History';
+import { getUser } from '../../common/userStorage';
 
 const UserMenu = ({ handleLogOut }) => {
   //set user from local storage initially
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+  const [user, setUser] = useState(getUser());
 
   //listen for user storage event
   window.addEventListener('userStorage', () => {
-    let newUser = JSON.parse(localStorage.getItem('user'));
+    let newUser = getUser();
     if (newUser !== user) {
       setUser(newUser);
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Spin, message, Popover } from 'antd';
 import { resetTempPassword } from './utils';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
+import { setUser } from '../common/userStorage';
 
 function ResetTempPassword() {
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,7 @@ function ResetTempPassword() {
       const result = await resetTempPassword(values);
 
       // Save user token to local storage
-      localStorage.setItem('user', JSON.stringify(result.data));
+      setUser(JSON.stringify(result.data));
       window.location.href = '/';
     } catch (err) {
       message.error(err.message);

@@ -38,7 +38,7 @@ const Assets = () => {
 
   const dispatch = useDispatch();
   const history = useHistory();
-  // const user = JSON.parse(localStorage.getItem('user'));
+  // const user = getUser();
   //TODO, get this from user roles to check if editing is allowed
 
   // all data related to file explorer is in redux

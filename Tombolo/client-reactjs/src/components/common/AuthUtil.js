@@ -39,11 +39,12 @@
 //   }
 //   return hasPermissionToViewPII;
 // }
+import { getUser } from './userStorage';
 
 export const getRoleNameArray = () => {
   try {
     //get role Array to control options available in actions
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = getUser();
 
     if (!user) {
       return [];

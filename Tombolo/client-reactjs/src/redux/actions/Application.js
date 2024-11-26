@@ -1,5 +1,6 @@
 import { Constants } from '../../components/common/Constants';
 import { authHeader, handleError } from '../../components/common/AuthHeader.js';
+import { getUser } from '../../components/common/userStorage.js';
 
 export const applicationActions = {
   applicationSelected,
@@ -105,7 +106,7 @@ function getApplications() {
         let applicationsFinal = applications ? applications : [];
 
         //filter out applications by what user has access too in local storage
-        const user = JSON.parse(localStorage.getItem('user'));
+        const user = getUser();
         const userApplications = user.applications;
 
         if (userApplications) {

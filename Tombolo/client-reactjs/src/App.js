@@ -13,6 +13,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
 import { checkBackendStatus, checkOwnerExists } from './redux/actions/Backend';
 import { getRoleNameArray } from './components/common/AuthUtil.js';
+import { getUser } from './components/common/userStorage.js';
 
 // Loading screen
 import LoadingScreen from './components/layout/LoadingScreen.js';
@@ -38,7 +39,7 @@ const App = () => {
   const [collapsed, setCollapsed] = useState(localStorage.getItem('collapsed') === 'true');
 
   //login page states
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+  const [user, setUser] = useState(getUser());
 
   //loading message states
   const [message, setMessage] = useState('');
@@ -68,8 +69,9 @@ const App = () => {
 
   //Check if user matches what is currently in storage after authentiationReducer runs
   useEffect(() => {
-    if (user !== JSON.parse(localStorage.getItem('user'))) {
-      setUser(JSON.parse(localStorage.getItem('user')));
+    const newUser = getUser();
+    if (user !== newUser) {
+      setUser(newUser);
     }
   }, [authenticationReducer]);
 
@@ -87,11 +89,11 @@ const App = () => {
   if (roleArray?.includes('administrator') || roleArray?.includes('owner')) {
     isOwnerOrAdmin = true;
   }
-  if (roleArray.includes('reader') && roleArray.length === 1) {
+  if (roleArray?.includes('reader') && roleArray.length === 1) {
     isReader = true;
   }
 
-  const userHasRoleandApplication = user?.roles.length > 0 && user?.applications.length > 0;
+  const userHasRoleandApplication = user?.roles?.length > 0 && user?.applications?.length > 0;
 
   return (
     <ConfigProvider>

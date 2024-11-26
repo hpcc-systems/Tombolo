@@ -4,6 +4,7 @@ import { isEmail } from 'validator';
 
 import { pingCluster, addCluster } from './clusterUtils';
 import AddClusterSteps from './AddClusterSteps';
+import { getUser } from '../../common/userStorage';
 
 // Constants
 const { Option } = Select;
@@ -21,7 +22,7 @@ function AddClusterModal({
   const [form] = Form.useForm();
 
   //Redux
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getUser();
 
   // States
   const [requireCredentials, setRequireCredentials] = useState(false);

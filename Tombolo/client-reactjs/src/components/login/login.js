@@ -26,7 +26,6 @@ const Login = () => {
 
     //handle login failed
     if (test?.type === Constants.LOGIN_FAILED) {
-      message.error('Username and Password combination not found.');
       setLoading(false);
       return;
     }
