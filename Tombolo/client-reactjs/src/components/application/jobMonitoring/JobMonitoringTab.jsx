@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Card, Form, TimePicker, Row, Col, Select } from 'antd';
 
@@ -26,7 +26,7 @@ function JobMonitoringTab({
   setSelectedDomain,
 }) {
   const [clusterOffset, setClusterOffset] = useState(null);
-  const isMounted = useRef(false); // Track if the component has mounted
+  const [firstTimeLoading, setFirstTimeLoading] = useState(true);
 
   // Generating cluster offset string to display in time picker
   useEffect(() => {
@@ -39,12 +39,11 @@ function JobMonitoringTab({
     }
   }, [selectedCluster]);
 
-  // When intermediate scheduling is changed clear Expected start and end time
   useEffect(() => {
-    if (isMounted.current) {
+    if (!firstTimeLoading) {
       form.setFieldsValue({ expectedStartTime: null, expectedCompletionTime: null });
     } else {
-      isMounted.current = true; // Set to true after the first render
+      setFirstTimeLoading(false); // Set to true after the first render
     }
   }, [intermittentScheduling]);
 
