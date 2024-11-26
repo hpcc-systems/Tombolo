@@ -1,4 +1,4 @@
-const getUser = async () => {
+const getUser = () => {
   try {
     return JSON.parse(localStorage.getItem('user'));
   } catch (e) {
@@ -7,13 +7,13 @@ const getUser = async () => {
   }
 };
 
-const setUser = async (user) => {
+const setUser = (user) => {
   try {
     //if typeof user is json, convert to string
     if (typeof user === 'object') {
       user = JSON.stringify(user);
     }
-    await localStorage.setItem('user', user);
+    localStorage.setItem('user', user);
     return true;
   } catch (e) {
     console.log(e);

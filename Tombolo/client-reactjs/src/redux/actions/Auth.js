@@ -77,6 +77,8 @@ const registerBasicUser = async (values) => {
 const loginBasicUserFunc = async (email, password, deviceInfo) => {
   const url = '/api/auth/loginBasicUser';
 
+  console.log('loginBasicUserFunc', email, password, deviceInfo);
+
   const response = await fetch(
     url,
     {

@@ -372,6 +372,8 @@ const loginBasicUser = async (req, res) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
+    const genericError = "Username and Password combination not found";
+
     // find user - include user roles from UserRoles table
     const user = await getAUser({ email });
 
@@ -380,7 +382,7 @@ const loginBasicUser = async (req, res) => {
       logger.error(`Login : User with email ${email} does not exist`);
       return res.status(401).json({
         success: false,
-        message: "Username and Password combination not found",
+        message: genericError,
       });
     }
 
@@ -389,17 +391,30 @@ const loginBasicUser = async (req, res) => {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
 
       // Throw unverified user error
-      const unverifiedUserErr = new Error("User not verified");
+      const unverifiedUserErr = new Error(genericError);
       unverifiedUserErr.status = 403;
       throw unverifiedUserErr;
     }
 
+    // If user is an registered to azure, throw error
+    if (user.registrationMethod === "azure") {
+      logger.error(
+        `Login : Login attempt by azure user - ${user.id} - ${user.email}`
+      );
+
+      // Incorrect E-mail password combination error
+      const azureError = new Error(
+        "Email is registered with a Microsoft account. Please sign in with Microsoft"
+      );
+      azureError.status = 403;
+      throw azureError;
+    }
     //Compare password
     if (!bcrypt.compareSync(password, user.hash)) {
       logger.error(`Login : Invalid password for user with email ${email}`);
 
       // Incorrect E-mail password combination error
-      const invalidCredentialsErr = new Error("Invalid credentials");
+      const invalidCredentialsErr = new Error(genericError);
       invalidCredentialsErr.status = 403;
       throw invalidCredentialsErr;
     }
@@ -697,7 +712,7 @@ const loginOrRegisterAzureUser = async (req, res) => {
 
       const newUserPlain = newUser.toJSON();
       newUserPlain.roles = [];
-      newUserPlain.applications =[];
+      newUserPlain.applications = [];
 
       // Create a new refresh token
       const tokenId = uuidv4();

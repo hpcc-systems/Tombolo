@@ -89,11 +89,11 @@ const App = () => {
   if (roleArray?.includes('administrator') || roleArray?.includes('owner')) {
     isOwnerOrAdmin = true;
   }
-  if (roleArray.includes('reader') && roleArray.length === 1) {
+  if (roleArray?.includes('reader') && roleArray.length === 1) {
     isReader = true;
   }
 
-  const userHasRoleandApplication = user?.roles.length > 0 && user?.applications.length > 0;
+  const userHasRoleandApplication = user?.roles?.length > 0 && user?.applications?.length > 0;
 
   return (
     <ConfigProvider>

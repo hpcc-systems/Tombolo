@@ -97,7 +97,7 @@ function AddApplication(props) {
       //add application to user object in local storage so user has immediate access to it
       const { user_app_id, id, title, description } = responseData;
       user.applications.push({ id: user_app_id, application: { id, title, description } });
-      await setUser(JSON.stringify(user));
+      setUser(JSON.stringify(user));
 
       dispatch(applicationActions.applicationSelected(id, title));
       localStorage.setItem('activeProjectId', responseData.id);
