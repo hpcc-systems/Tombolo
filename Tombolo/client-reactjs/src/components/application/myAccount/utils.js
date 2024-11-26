@@ -1,4 +1,6 @@
 import { authHeader, handleError } from '../../common/AuthHeader';
+import { setUser, getUser } from '../../common/userStorage';
+
 export const changeBasicUserPassword = async (values) => {
   const payload = {
     method: 'PATCH',
@@ -7,7 +9,7 @@ export const changeBasicUserPassword = async (values) => {
   };
 
   //get user from local storage
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getUser();
 
   const response = await fetch(`/api/user/change-password/${user?.id}`, payload);
   if (!response.ok) {
@@ -28,7 +30,7 @@ export const changeBasicUserInfo = async (values) => {
   };
 
   //get user from local storage
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getUser();
 
   const response = await fetch(`/api/user/update/${user?.id}`, payload);
   if (!response.ok) {
@@ -40,7 +42,7 @@ export const changeBasicUserInfo = async (values) => {
 
   if (data) {
     //update user in local storage
-    localStorage.setItem('user', JSON.stringify(data));
+    setUser(JSON.stringify(data));
   }
 
   return data;

@@ -23,6 +23,7 @@ import ApproveRejectModal from './ApproveRejectModal';
 import dayjs from 'dayjs';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import ViewDetailsModal from './ViewDetailsModal';
+import { getUser } from '../../common/userStorage.js';
 
 const monitoringTypeName = 'Directory Monitoring';
 
@@ -38,7 +39,7 @@ const DirectoryMonitoring = () => {
   const [form] = Form.useForm();
 
   //get user
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getUser();
 
   //get user roles
   const roleArray = getRoleNameArray();

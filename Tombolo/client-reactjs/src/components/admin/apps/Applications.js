@@ -7,6 +7,7 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
 import AddApplication from './AddApplication';
+import { setUser, getUser } from '../../common/userStorage.js';
 
 import Text from '../../common/Text';
 
@@ -20,7 +21,7 @@ import {
 
 const Applications = () => {
   //Redux tools
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getUser();
   const applicationReducer = useSelector((state) => state.applicationReducer);
   const { application, applications, noApplication } = useSelector((state) => state.applicationReducer);
   const dispatch = useDispatch();
@@ -72,9 +73,9 @@ const Applications = () => {
           onClick: () => {},
         });
         //remove it from users applications
-        const user = JSON.parse(localStorage.getItem('user'));
+        const user = getUser();
         user.applications = user.applications.filter((app) => app.application.id !== app_id);
-        localStorage.setItem('user', JSON.stringify(user));
+        setUser(JSON.stringify(user));
 
         //if it is the active application, remove it from local storage
         if (localStorage.getItem('activeProjectId') === app_id) {

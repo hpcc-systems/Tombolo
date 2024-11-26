@@ -3,6 +3,7 @@ import { Button, message, Form } from 'antd';
 import { handleError } from '../../common/AuthHeader';
 import { LockOutlined } from '@ant-design/icons';
 import RequestAccessModal from './requestAccessModal';
+import { getUser } from '../../common/userStorage';
 
 const NoAccess = () => {
   const [form] = Form.useForm();
@@ -10,7 +11,7 @@ const NoAccess = () => {
 
   const onSubmit = async () => {
     let values = form.getFieldsValue();
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = getUser();
 
     if (!user) {
       message.error('User not found');

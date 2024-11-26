@@ -1,6 +1,7 @@
 import { Constants } from '../../components/common/Constants';
 import { authHeader, handleError } from '../../components/common/AuthHeader';
 import { message } from 'antd';
+import { setUser, getUser } from '../../components/common/userStorage';
 
 async function login({ email, password, deviceInfo }) {
   const user = await loginBasicUserFunc(email, password, deviceInfo);
@@ -9,7 +10,7 @@ async function login({ email, password, deviceInfo }) {
     user.data.isAuthenticated = true;
 
     //set item in local storage
-    localStorage.setItem('user', JSON.stringify(user.data));
+    setUser(JSON.stringify(user.data));
 
     return {
       type: Constants.LOGIN_SUCCESS,
@@ -34,7 +35,7 @@ function logout() {
 }
 
 function loadUserFromStorage() {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getUser();
 
   if (user) {
     return {
@@ -149,7 +150,7 @@ const loginOrRegisterAzureUser = async (code) => {
   if (data.success) {
     data.data.isAuthenticated = true;
     //set item in local storage
-    localStorage.setItem('user', JSON.stringify(data.data));
+    setUser(JSON.stringify(data.data));
     return {
       type: Constants.LOGIN_SUCCESS,
       payload: data.data,

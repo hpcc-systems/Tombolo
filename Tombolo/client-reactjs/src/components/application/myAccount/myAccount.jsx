@@ -6,10 +6,11 @@ import EditAccountActionButton from './editAccountActionButton';
 import MyAccountTable from './myAccountTable';
 import MyAccountInfo from './myAccountInfo';
 import BreadCrumbs from '../../common/BreadCrumbs';
+import { getUser } from '../../common/userStorage';
 
 const MyAccount = () => {
   //get user from local storage
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getUser();
 
   const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
 

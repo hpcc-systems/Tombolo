@@ -7,6 +7,7 @@ import RegisterUserForm from './registerUserForm';
 import { getDeviceInfo } from './utils';
 import { authActions } from '../../redux/actions/Auth';
 import { verifyEmail } from './utils';
+import { setUser } from '../common/userStorage';
 
 const Register = () => {
   const [form] = Form.useForm();
@@ -41,7 +42,7 @@ const Register = () => {
           message.success('Verification completed successfully');
           setRegistrationComplete(true);
           setVerifying(false);
-          localStorage.setItem('user', JSON.stringify(response.data));
+          setUser(JSON.stringify(response.data));
           window.location.href = '/';
         } catch (err) {
           setVerifying(false);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Row, Col, Input, Button, Spin, message } from 'antd';
 import { applicationStringBuilder, roleStringBuilder, updateAccount } from './utils';
+import { setUser, getUser } from '../../common/userStorage';
 
 const MyAccountInfo = ({ user }) => {
   const [form] = Form.useForm();
@@ -42,10 +43,10 @@ const MyAccountInfo = ({ user }) => {
           setEditing(false);
           message.success('Account updated successfully');
 
-          const oldUser = JSON.parse(localStorage.getItem('user'));
+          const oldUser = getUser();
           const newUser = { ...oldUser, firstName: response.data.firstName, lastName: response.data.lastName };
 
-          localStorage.setItem('user', JSON.stringify(newUser));
+          setUser(JSON.stringify(newUser));
           window.dispatchEvent(new Event('userStorage'));
         }
 

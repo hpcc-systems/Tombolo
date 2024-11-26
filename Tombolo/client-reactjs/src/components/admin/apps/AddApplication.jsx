@@ -8,6 +8,8 @@ import Text from '../../common/Text';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../common/InfoDrawer';
 
+import { setUser, getUser } from '../../common/userStorage';
+
 function AddApplication(props) {
   const [form] = Form.useForm();
   const { TextArea } = Input;
@@ -66,7 +68,7 @@ function AddApplication(props) {
     try {
       const fieldValues = form.getFieldsValue();
 
-      const user = JSON.parse(localStorage.getItem('user'));
+      const user = getUser();
 
       let payload = {
         ...fieldValues,
@@ -95,7 +97,7 @@ function AddApplication(props) {
       //add application to user object in local storage so user has immediate access to it
       const { user_app_id, id, title, description } = responseData;
       user.applications.push({ id: user_app_id, application: { id, title, description } });
-      await localStorage.setItem('user', JSON.stringify(user));
+      await setUser(JSON.stringify(user));
 
       dispatch(applicationActions.applicationSelected(id, title));
       localStorage.setItem('activeProjectId', responseData.id);
