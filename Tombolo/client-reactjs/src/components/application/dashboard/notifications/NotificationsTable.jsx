@@ -34,6 +34,7 @@ function SentNotificationsTable({
   const editNotification = (record) => {
     setSelectedNotificationsIds([record.id]);
     setDisplayUpdateModal(true);
+    setSelectedNotification(record);
   };
 
   // Delete notification

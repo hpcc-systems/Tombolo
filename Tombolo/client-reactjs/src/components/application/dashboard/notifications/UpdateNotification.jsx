@@ -2,7 +2,21 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { DownOutlined } from '@ant-design/icons';
-import { Modal, Form, Select, Input, DatePicker, Button, message, Dropdown, Menu, Alert, List, Space } from 'antd';
+import {
+  Modal,
+  Form,
+  Select,
+  Input,
+  DatePicker,
+  Button,
+  message,
+  Dropdown,
+  Menu,
+  Alert,
+  List,
+  Space,
+  Card,
+} from 'antd';
 import dayjs from 'dayjs';
 
 //Local Imports
@@ -16,9 +30,11 @@ const UpdateNotificationModal = ({
   displayUpdateModal,
   setDisplayUpdateModal,
   selectedNotificationsIds,
+  setSelectedNotificationsIds,
   setSentNotifications,
   sentNotifications,
-  setSelectedNotificationsIds,
+  selectedNotification,
+  setSelectedNotification,
 }) => {
   const [form] = Form.useForm();
   const [actions, setActions] = useState({
@@ -181,7 +197,7 @@ const UpdateNotificationModal = ({
     form.resetFields();
     setActions(defaultActions());
     setUpdateStep(1);
-    // setSelectedNotification(null);
+    setSelectedNotification(null);
     setDisplayUpdateModal(false);
     // If more than 1 selected don't clear, user may want to take additional actions
     if (selectedNotificationsIds.length === 1) {
@@ -225,7 +241,7 @@ const UpdateNotificationModal = ({
 
   // update step 1 - get user inputs
   const updateStep1 = (
-    <div>
+    <Card>
       <Form form={form} layout="vertical">
         <Form.Item
           name="status"
@@ -322,7 +338,7 @@ const UpdateNotificationModal = ({
           />
         </Form.Item>
       </Form>
-    </div>
+    </Card>
   );
 
   // update step 2 - confirm update
@@ -334,7 +350,7 @@ const UpdateNotificationModal = ({
       message = `You are about to update 1 notification. This action is irreversible. Review before proceeding`;
     }
     return (
-      <div>
+      <Card>
         <Alert message={message} type="warning" showIcon />
         {warningMessages?.length > 0 && (
           <List
@@ -344,7 +360,7 @@ const UpdateNotificationModal = ({
             renderItem={(item, index) => <List.Item>{`${index + 1}. ${item}`}</List.Item>}
           />
         )}
-      </div>
+      </Card>
     );
   };
 
@@ -396,8 +412,8 @@ const UpdateNotificationModal = ({
     if (updateStep === 1) {
       return (
         <Space>
-          <Button key="cancel" onClick={handleUpdateCancel}>
-            Cancel
+          <Button key="cancel" type="primary" ghost onClick={handleUpdateCancel}>
+            Close
           </Button>
           <Button key="continue" type="primary" onClick={() => handleStepChange(2)}>
             Continue
@@ -418,10 +434,16 @@ const UpdateNotificationModal = ({
     }
   };
 
+  // Determine the title based on the number of selected notifications
+  const title =
+    selectedNotificationsIds.length === 1
+      ? `Update  (${selectedNotification.searchableNotificationId})`
+      : `Update ${selectedNotificationsIds.length} Notifications`;
+
   return (
     <Modal
       open={displayUpdateModal}
-      title={`Update ${selectedNotificationsIds.length} Notifications`}
+      title={title}
       maskClosable={false}
       width={700}
       onCancel={handleUpdateCancel}
