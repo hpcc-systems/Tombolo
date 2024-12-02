@@ -9,12 +9,11 @@ const getUser = () => {
 
 const setUser = (user) => {
   try {
+    //if typeof user is json, convert to string
     if (typeof user === 'object') {
       user = JSON.stringify(user);
     }
-
     localStorage.setItem('user', user);
-
     return true;
   } catch (e) {
     console.log(e);
