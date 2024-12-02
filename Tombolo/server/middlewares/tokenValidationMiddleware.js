@@ -16,15 +16,11 @@ const RoleTypes = model.RoleTypes;
 
 // Main middleware function
 const tokenValidationMiddleware = async (req, res, next) => {
-  const bearerToken = req.headers["authorization"];
+  const token = req.cookies.token;
 
-  if (!bearerToken) {
+  if (!token) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });
   }
-
-  // If bearer token is provided, extract the token
-  const tokenParts = bearerToken.split(" ");
-  const token = tokenParts[1];
 
   try {
     decoded = await verifyToken(token, process.env.JWT_SECRET);
@@ -37,21 +33,38 @@ const tokenValidationMiddleware = async (req, res, next) => {
         .json({ message: "Unauthorized: Token no longer valid" });
     }
 
-    // return original token in response header if it is still valid
-    res.setHeader("Authorization", bearerToken);
+    // return orignal cookie if it is still valid
+    res.cookie("token", token, {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
+    });
 
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       const tokenDetails = await handleExpiredToken(token);
       if (tokenDetails.sessionExpired) {
+        // Remove cookie
+        res.clearCookie("token", {
+          httpOnly: true,
+          secure: true,
+          sameSite: "Strict",
+        });
         return res.status(401).json({
           message: "Unauthorized: Session expired, Please Log in again.",
         });
       } else {
         // Attach new access token to response header
-        console.log("New access token attached to response header");
-        res.setHeader("Authorization", `Bearer ${tokenDetails.newAccessToken}`);
+
+        res.cookie("token", tokenDetails.newAccessToken, {
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+          httpOnly: true,
+          secure: true,
+          sameSite: "Strict",
+        });
+        // res.setHeader("Authorization", `Bearer ${tokenDetails.newAccessToken}`);
         next();
       }
     } else {

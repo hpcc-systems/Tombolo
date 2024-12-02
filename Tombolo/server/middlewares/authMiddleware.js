@@ -109,16 +109,14 @@ const validateEmailDuplicate = [
 
 // Validate valid access token is present in request header
 const verifyValidTokenExists = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  const accessToken = req.cookies.token;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!accessToken) {
     logger.error("Authorization: Access token not provided");
     return res
       .status(401)
       .json({ success: false, message: "Access token not provided" });
   }
-
-  const accessToken = authHeader.split(" ")[1];
 
   try {
     // Verify the token (checks for tampering and expiration)
@@ -128,6 +126,7 @@ const verifyValidTokenExists = (req, res, next) => {
     req.accessToken = accessToken;
     next(); // Proceed to the controller
   } catch (err) {
+    console.log(err);
     logger.error("Authorization: Invalid or expired access token");
     return res
       .status(401)

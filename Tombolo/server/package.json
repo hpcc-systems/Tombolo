@@ -20,6 +20,7 @@
     "bcryptjs": "^2.4.3",
     "bree": "^8.0.3",
     "compression": "^1.7.4",
+    "cookie-parser": "^1.4.7",
     "cron-parser": "^4.9.0",
     "dotenv": "^8.6.0",
     "ejs": "^3.1.10",

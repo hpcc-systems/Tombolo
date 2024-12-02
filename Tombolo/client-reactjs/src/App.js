@@ -108,9 +108,9 @@ const App = () => {
                 {/*No owner, force user to register one*/}
                 {!ownerExists ? <Wizard /> : null}
                 {/*User is not authenticated, show auth pages*/}
-                {!user?.token && ownerExists ? <AuthRoutes /> : null}
+                {!user?.isAuthenticated && ownerExists ? <AuthRoutes /> : null}
                 {/*User is authenticated, show application*/}
-                {user?.token && ownerExists ? (
+                {user?.isAuthenticated && ownerExists ? (
                   <>
                     <AppHeader />
                     <ConfigProvider componentDisabled={isReader}>

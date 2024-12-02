@@ -259,11 +259,19 @@ const verifyEmail = async (req, res) => {
       exp: new Date(exp * 1000),
     });
 
+    //put access token in cooke
+    res.cookie("token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    });
+
     // Send response
     res.status(200).json({
       success: true,
       message: "Email verified successfully",
-      data: { ...user.toJSON(), token: `Bearer ${accessToken}` },
+      data: { ...user.toJSON() },
     });
   } catch (err) {
     logger.error(`Verify email: ${err.message}`);
@@ -344,10 +352,17 @@ const resetTempPassword = async (req, res) => {
       exp: new Date(exp * 1000),
     });
 
+    //put access token in cooke
+    res.cookie("token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    });
+
     // User data obj to send to the client
     const userObj = {
       ...user.toJSON(),
-      token: `Bearer ${accessToken}`,
     };
 
     // remove hash from user object
@@ -428,7 +443,14 @@ const loginBasicUser = async (req, res) => {
 
     // Create access jwt
     const accessToken = generateAccessToken({ ...userObj, tokenId });
-    userObj.token = `Bearer ${accessToken}`;
+
+    //send token in a cookie
+    res.cookie("token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    });
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });
@@ -470,7 +492,7 @@ const loginBasicUser = async (req, res) => {
 const logOutBasicUser = async (req, res) => {
   try {
     // Decode the token to get the tokenId (assuming token contains tokenId)
-    const decodedToken = jwt.decode(req.accessToken);
+    const decodedToken = jwt.decode(req.cookies.token);
 
     const { tokenId } = decodedToken;
 
@@ -735,11 +757,19 @@ const loginOrRegisterAzureUser = async (req, res) => {
       // Create a new access token
       const accessToken = generateAccessToken({ ...newUserPlain, tokenId });
 
+      // set token in cookie
+      res.cookie("token", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict",
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+      });
+
       // Send response
       return res.status(201).json({
         success: true,
         message: "User created successfully",
-        data: { ...newUserPlain, token: `Bearer ${accessToken}` },
+        data: { ...newUserPlain },
       });
     }
 
@@ -765,11 +795,19 @@ const loginOrRegisterAzureUser = async (req, res) => {
     // Create a new access token
     const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
 
+    // set token in cookie
+    res.cookie("token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    });
+
     // Send response
     res.status(200).json({
       success: true,
       message: "User logged in successfully",
-      data: { ...user.toJSON(), token: `Bearer ${accessToken}` },
+      data: { ...user.toJSON() },
     });
   } catch (err) {
     logger.error(`Login or Register Azure User: ${err.message}`);
