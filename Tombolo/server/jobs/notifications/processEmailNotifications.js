@@ -5,7 +5,8 @@ const { Op } = require("sequelize");
 const models = require("../../models");
 const logger = require("../../config/logger");
 const { sendEmail, retryOptions: { maxRetries },} = require("../../config/emailConfig");
-const {renderEmailBody, updateNotificationQueueOnError} = require("./notificationsHelperFunctions");
+const {updateNotificationQueueOnError} = require("./notificationsHelperFunctions");
+const emailNotificationHtmlCode = require("../../utils/emailNotificationHtmlCode");
 
 const NotificationQueue = models.notification_queue;
 const SentNotification = models.sent_notifications;
@@ -27,7 +28,7 @@ const SentNotification = models.sent_notifications;
         raw: true,
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       return;
     }
 
@@ -84,9 +85,9 @@ const SentNotification = models.sent_notifications;
           };
         } else {
           // If notification origin is not manual, render email body with template
-          const emailBody = renderEmailBody({
+          const emailBody = emailNotificationHtmlCode({
             templateName,
-            emailData: metaData,
+            data: metaData,
           });
           emailPayload = {
             notificationQueueId,
@@ -99,11 +100,11 @@ const SentNotification = models.sent_notifications;
           const  emailResponse = await sendEmail({ ...emailPayload });
 
           // Assume success - if no error is thrown
-          successfulDelivery.push(emailPayload);
+          successfulDelivery.push({...emailPayload, templateName});
         }
       } catch (error) {
         // If sending fails update the notification queue
-        logger.error(error);
+        logger.error(error.message);
 
         // Update notification queue
         await updateNotificationQueueOnError({
@@ -119,7 +120,7 @@ const SentNotification = models.sent_notifications;
     try {
       await NotificationQueue.update({ lastScanned: now }, { where: {} });
     } catch (error) {
-      logger.error(error);
+      logger.error(error.message);
     }
 
     //Update sent notifications table
@@ -128,7 +129,6 @@ const SentNotification = models.sent_notifications;
       for(let notification of successfulDelivery) {
         const notificationCopy = { ...notification };
         delete notificationCopy.htmlBody;
-        delete notificationCopy.plainTextBody;
         delete notificationCopy.notificationQueueId;
 
         notificationCopy.searchableNotificationId = notification.notificationId;
@@ -139,11 +139,13 @@ const SentNotification = models.sent_notifications;
         notificationCopy.createdBy= { name:  "System" },
         notificationCopy.createdAt= now,
         notificationCopy.updatedAt= now,
+        notificationCopy.metaData= {notificationDetails: notification},
+        
 
         await SentNotification.create(notificationCopy);
       }
     } catch (error) {
-      logger.error(error);
+      logger.error(error.message);
     }
 
     // Bulk delete the sent notifications form notification queue
@@ -156,11 +158,11 @@ const SentNotification = models.sent_notifications;
         where: { id: successfulDeliveryIds },
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
     
   } catch (error) {
-    logger.error(error);
+    logger.error(error.message);
   }
 })();
 

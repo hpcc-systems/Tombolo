@@ -326,10 +326,6 @@ function JobMonitoring() {
         }
       });
 
-      console.log('Trimmed all values ', allInputs);
-
-      return;
-
       //If monitoring scope is cluster-wide jobName should be * -  As it is required field in DB
       const { monitoringScope } = allInputs;
       if (monitoringScope === 'ClusterWideMonitoring') {

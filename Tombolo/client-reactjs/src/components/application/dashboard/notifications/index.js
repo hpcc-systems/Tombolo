@@ -263,31 +263,42 @@ const Index = () => {
           },
         ]}></Tabs>
 
-      <NotificationDetailsModal
-        selectedNotification={selectedNotification}
-        displayNotificationDetailsModal={displayNotificationDetailsModal}
-        setDisplayNotificationDetailsModal={setDisplayNotificationDetailsModal}
-        setSelectedNotification={setSelectedNotification}
-        monitorings={monitorings}
-        domains={domains}
-        productCategories={productCategories}
-      />
-      <CreateNotificationModal
-        displayCreateNotificationModal={displayCreateNotificationModal}
-        setDisplayCreateNotificationModal={setDisplayCreateNotificationModal}
-        setNotifications={setSentNotifications}
-        setSentNotifications={setSentNotifications}
-        monitorings={monitorings}
-      />
-      <UpdateNotificationModal
-        displayUpdateModal={displayUpdateModal}
-        setDisplayUpdateModal={setDisplayUpdateModal}
-        selectedNotificationsIds={selectedNotificationsIds}
-        setSelectedNotification={setSelectedNotification}
-        setSentNotifications={setSentNotifications}
-        sentNotifications={sentNotifications}
-        setSelectedNotificationsIds={setSelectedNotificationsIds}
-      />
+      {displayNotificationDetailsModal && (
+        <NotificationDetailsModal
+          selectedNotification={selectedNotification}
+          displayNotificationDetailsModal={displayNotificationDetailsModal}
+          setDisplayNotificationDetailsModal={setDisplayNotificationDetailsModal}
+          setSelectedNotification={setSelectedNotification}
+          monitorings={monitorings}
+          domains={domains}
+          productCategories={productCategories}
+          setDisplayUpdateModal={setDisplayUpdateModal}
+          setSelectedNotificationsIds={setSelectedNotificationsIds}
+        />
+      )}
+
+      {displayCreateNotificationModal && (
+        <CreateNotificationModal
+          displayCreateNotificationModal={displayCreateNotificationModal}
+          setDisplayCreateNotificationModal={setDisplayCreateNotificationModal}
+          setNotifications={setSentNotifications}
+          setSentNotifications={setSentNotifications}
+          monitorings={monitorings}
+        />
+      )}
+
+      {displayUpdateModal && (
+        <UpdateNotificationModal
+          displayUpdateModal={displayUpdateModal}
+          setDisplayUpdateModal={setDisplayUpdateModal}
+          selectedNotificationsIds={selectedNotificationsIds}
+          setSelectedNotification={setSelectedNotification}
+          setSentNotifications={setSentNotifications}
+          sentNotifications={sentNotifications}
+          setSelectedNotificationsIds={setSelectedNotificationsIds}
+          selectedNotification={selectedNotification}
+        />
+      )}
     </div>
   );
 };
