@@ -10,6 +10,7 @@ const {
   generateAccessToken,
   generateRefreshToken,
   getAUser,
+  setTokenCookie,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -259,13 +260,9 @@ const verifyEmail = async (req, res) => {
       exp: new Date(exp * 1000),
     });
 
-    //put access token in cooke
-    res.cookie("token", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-    });
+    setTokenCookie(res, accessToken);
+    // //put access token in cookie
+    // res.cookie("token", accessToken, options);
 
     // Send response
     res.status(200).json({
@@ -352,13 +349,12 @@ const resetTempPassword = async (req, res) => {
       exp: new Date(exp * 1000),
     });
 
-    //put access token in cooke
-    res.cookie("token", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-    });
+    setTokenCookie(res, accessToken);
+
+    // const options = getCookieOptions();
+
+    // //put access token in cookie
+    // res.cookie("token", accessToken, options);
 
     // User data obj to send to the client
     const userObj = {
@@ -444,13 +440,12 @@ const loginBasicUser = async (req, res) => {
     // Create access jwt
     const accessToken = generateAccessToken({ ...userObj, tokenId });
 
-    //send token in a cookie
-    res.cookie("token", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-    });
+    setTokenCookie(res, accessToken);
+
+    // const options = getCookieOptions();
+
+    // //put access token in cookie
+    // res.cookie("token", accessToken, options);
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });
@@ -757,13 +752,12 @@ const loginOrRegisterAzureUser = async (req, res) => {
       // Create a new access token
       const accessToken = generateAccessToken({ ...newUserPlain, tokenId });
 
-      // set token in cookie
-      res.cookie("token", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Strict",
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-      });
+      setTokenCookie(res, accessToken);
+
+      // const options = getCookieOptions();
+
+      // //put access token in cookie
+      // res.cookie("token", accessToken, options);
 
       // Send response
       return res.status(201).json({
@@ -795,13 +789,12 @@ const loginOrRegisterAzureUser = async (req, res) => {
     // Create a new access token
     const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
 
-    // set token in cookie
-    res.cookie("token", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-    });
+    setTokenCookie(res, accessToken);
+
+    // const options = getCookieOptions();
+
+    // //put access token in cookie
+    // res.cookie("token", accessToken, options);
 
     // Send response
     res.status(200).json({

@@ -6,6 +6,7 @@ const model = require("../models");
 const {
   generateAccessToken,
   generateRefreshToken,
+  setTokenCookie,
 } = require("../utils/authUtil");
 const { isTokenBlacklisted } = require("../utils/tokenBlackListing");
 
@@ -33,13 +34,16 @@ const tokenValidationMiddleware = async (req, res, next) => {
         .json({ message: "Unauthorized: Token no longer valid" });
     }
 
+    //put access token in cookie
+    setTokenCookie(res, token);
+
     // return orignal cookie if it is still valid
-    res.cookie("token", token, {
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      httpOnly: true,
-      secure: true,
-      sameSite: "Strict",
-    });
+    // res.cookie("token", token, {
+    //   maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "Strict",
+    // });
 
     next();
   } catch (err) {
@@ -58,12 +62,15 @@ const tokenValidationMiddleware = async (req, res, next) => {
       } else {
         // Attach new access token to response header
 
-        res.cookie("token", tokenDetails.newAccessToken, {
-          maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-          httpOnly: true,
-          secure: true,
-          sameSite: "Strict",
-        });
+        //put access token in cookie
+        setTokenCookie(res, tokenDetails.newAccessToken);
+
+        // res.cookie("token", tokenDetails.newAccessToken, {
+        //   maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+        //   httpOnly: true,
+        //   secure: true,
+        //   sameSite: "Strict",
+        // });
         // res.setHeader("Authorization", `Bearer ${tokenDetails.newAccessToken}`);
         next();
       }
