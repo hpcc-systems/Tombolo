@@ -24,6 +24,8 @@ const { sequelize: dbConnection } = require("./models");
 const logger = require("./config/logger");
 require("./utils/tokenBlackListing");
 
+const cookieParser = require("cookie-parser");
+
 /* BREE JOB SCHEDULER */
 const JobScheduler = require("./jobSchedular/job-scheduler");
 
@@ -49,6 +51,7 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json());
 app.use(limiter);
+app.use(cookieParser());
 
 /*  ROUTES */
 const job = require("./routes/job/read");

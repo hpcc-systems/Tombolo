@@ -30,23 +30,8 @@ export function handleError(response) {
 // When the client sends a fetch request the header requires an auth token.
 // This function grabs the token from the Local Storage. The returned value is palaced in the header of the API calls
 // If the application is using Azure sso, the fetch request are intercepted and the headers are modified with fresh azure token
-export function authHeader(action) {
-  // return authorization header with jwt token
-  let user = JSON.parse(localStorage.getItem('user'));
-
-  if (user?.token && action) {
-    return {
-      Authorization: user.token,
-    };
-  } else if (user?.token) {
-    return {
-      Authorization: user.token,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    };
-  } else {
-    return { Accept: 'application/json', 'Content-Type': 'application/json' };
-  }
+export function authHeader() {
+  return { Accept: 'application/json', 'Content-Type': 'application/json' };
 }
 
 const { fetch: originalFetch } = window;
@@ -71,27 +56,6 @@ window.fetch = async (...args) => {
       window.location.href = '/login';
 
       return {};
-    }
-    const user = JSON.parse(localStorage.getItem('user'));
-
-    //see if token is returned from the backend, if so, check it against local storage token and update if necessary
-    const token = response.headers.get('Authorization');
-
-    if (token) {
-      //if user doesn't exist, return
-      if (!user) return;
-      if (user?.token !== token) {
-        user.token = token;
-        await localStorage.setItem('user', JSON.stringify(user));
-
-        //if new token is provided, we need to make a new fetch call with the new token
-        config.headers = {
-          ...config.headers,
-          Authorization: token,
-        };
-        const newTokenResponse = await originalFetch(resource, config);
-        return newTokenResponse;
-      }
     }
 
     return response;
