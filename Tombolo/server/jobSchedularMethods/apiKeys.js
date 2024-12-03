@@ -29,7 +29,7 @@ async function scheduleKeyCheck() {
     });
 
     this.bree.start(jobName);
-    logger.info("📺 KEY MONITORING STARTED ...");
+    logger.info("API key monitoring initialized ...");
   } catch (err) {
     logger.error(err);
   }

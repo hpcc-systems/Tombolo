@@ -4,7 +4,6 @@ const { WorkunitsService } = require("@hpcc-js/comms");
 const _ = require("lodash");
 
 // Local imports
-const logger = require("../../config/logger");
 const models = require("../../models");
 const { decryptString } = require("../../utils/cipher");
 
@@ -26,6 +25,7 @@ const monitoring_types = models.monitoring_types;
 const monitoring_logs = models.monitoring_logs;
 
 (async () => {
+  parentPort && parentPort.postMessage({level: "info", text: "Intermediate state JM: Monitoring started ..."});
   const now = new Date(); // UTC time
 
   try {
@@ -85,9 +85,7 @@ const monitoring_logs = models.monitoring_logs;
           clusterInfo.timezone_offset || 0
         );
       } catch (error) {
-        logger.error(
-          `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`
-        );
+        parentPort && parentPort.postMessage({level: "error", text: `Intermediate State Job Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`});
       }
     });
 
@@ -143,7 +141,7 @@ const monitoring_logs = models.monitoring_logs;
             try{
               newWuDetails = (await wuService.WUInfo({ Wuid: wuData.Wuid })).Workunit;
             }catch(err){
-              logger.error(`Intermediate JM : Error getting WU details for ${wuData.Wuid} on cluster ${clusterDetail.id}: ${err.message}`);
+              parentPort && parentPort.postMessage({level: "error", text: `Intermediate state JM : Error getting WU details for ${wuData.Wuid} on cluster ${clusterDetail.id}: ${err.message}`});
               continue;
             }
             
@@ -173,7 +171,8 @@ const monitoring_logs = models.monitoring_logs;
             } else if (notificationConditionLowerCase.includes(currentStateLowerCase)) {
               // Check if the job state is included in the notification condition
               sendAlert = true;
-              notificationDescription = `job is in  ${wuData.State} state.`;
+              wuData.State = currentWuState;
+              notificationDescription = `job is in  ${currentWuState} state.`;
               keepWu = false;
             } else if (intermediateStates.includes(currentStateLowerCase)) {
               // Check if the job state is in intermediate states
@@ -186,7 +185,11 @@ const monitoring_logs = models.monitoring_logs;
                 sendAlert = true;
                 keepWu = false;
               } else {
-                logger.verbose(`Intermediate JM : ${wuData.Wuid} on cluster ${clusterDetail.id} is in intermediate state ${currentWuState} not covered by any condition`);
+              parentPort &&
+                parentPort.postMessage({
+                  level: "verbose",
+                  text: `Intermediate state JM : ${wuData.Wuid} on cluster ${clusterDetail.id} is in intermediate state ${currentWuState} not covered by any condition`,
+                });
               }
             }
 
@@ -255,6 +258,8 @@ const monitoring_logs = models.monitoring_logs;
                   "Discovered at": findLocalDateTimeAtCluster(
                     clusterDetail.timezone_offset
                   ).toLocaleString(),
+                  "Expected Start Time": expectedStartTime,
+                  "Expected Completion Time": expectedCompletionTime,
                 },
                 notificationId: generateNotificationId({
                   notificationPrefix,
@@ -288,7 +293,7 @@ const monitoring_logs = models.monitoring_logs;
                 }
             }
           } catch (err) {
-              logger.error(`Monitoring Intermediate state jobs : ${err.message}`);
+              parentPort && parentPort.postMessage({level: "error", text: `Intermediate State Job Monitoring: ${err.message}`});
           }
     }
 
@@ -302,9 +307,11 @@ const monitoring_logs = models.monitoring_logs;
       wuToStopMonitoring.length === 0 &&
       Object.keys(wuWithNewIntermediateState).length === 0
     ) {
-      logger.debug(
-        "Intermediate state job Monitoring -  No WU to remove from intermediate state and no intermediate workunit with updated state Exiting..."
-      );
+      parentPort &&
+        parentPort.postMessage({
+          level: "info",
+          text: "Intermediate state JM: No WU to remove or update. Exiting...",
+        });
       return;
     }
 
@@ -334,16 +341,19 @@ const monitoring_logs = models.monitoring_logs;
           { where: { id } }
         );
       } catch (error) {
-        logger.error(
-          `Intermediate State Jobs - Error updating log with id ${log.id}:`,
-          error
-        );
+        parentPort &&
+          parentPort.postMessage({
+            level: "error",
+            text: `Intermediate state JM: Error updating log with id ${log.id}: ${error.message}`,
+          });
       }
     }
   } catch (err) {
-    logger.error(`Monitoring Intermediate state jobs : ${err.message}`);
+    parentPort && parentPort.postMessage({level: "error", text: `Intermediate state JM: ${err.message}`});
   } finally {
-    if (parentPort) parentPort.postMessage("done");
-    else process.exit(0);
+    if (parentPort){
+      parentPort.postMessage({level: "info", text: `Intermediate state JM: Job completed successfully in ${new Date() - now} ms`});
+    }
+    else{ process.exit(0)};
   }
 })();

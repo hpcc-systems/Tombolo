@@ -29,7 +29,7 @@ async function checkClusterReachability() {
       },
     });
     this.bree.start(jobName);
-    logger.info("🕗 CHECKING CLUSTER REACHABILITY ... ");
+    logger.info("Cluster reachability checker job initialized ...");
   } catch (err) {
     logger.error(err);
   }

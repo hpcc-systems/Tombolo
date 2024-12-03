@@ -6,7 +6,7 @@ const logger = require("../config/logger");
 const JOB_STATUS_POLLER = "statusPoller.js";
 
 async function scheduleJobStatusPolling() {
-  logger.info("📢 STATUS POLLING SCHEDULER STARTED...");
+  logger.info("Status puller for dataflow jobs initialized ...");
 
   try {
     let jobName = "job-status-poller-" + new Date().getTime();
