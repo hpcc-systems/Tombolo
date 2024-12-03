@@ -16,7 +16,7 @@ function createOrbitMegaphoneJob() {
   };
   this.bree.add(job);
   this.bree.start(uniqueJobName);
-  logger.info("📈 ORBIT MEGAPHONE JOB STARTED ...");
+  logger.info("Orbit megaphone job initialized ...");
 }
 
 function createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
@@ -35,7 +35,7 @@ function createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
 
 async function scheduleOrbitMonitoringOnServerStart() {
   try {
-    logger.info("📺 ORBIT MONITORING STARTED ...");
+    logger.info("Orbit monitoring initialized ...");
     const orbitMonitorings = await orbitMonitoring.findAll({ raw: true });
     for (let monitoring of orbitMonitorings) {
       const { id, cron, isActive } = monitoring;

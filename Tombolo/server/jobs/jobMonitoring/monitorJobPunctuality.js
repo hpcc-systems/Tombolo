@@ -4,7 +4,6 @@ const { parentPort } = require("worker_threads");
 const _ = require("lodash");
 
 // Local imports
-const logger = require("../../config/logger");
 const { decryptString } = require("../../utils/cipher");
 const {
   calculateRunOrCompleteByTimes,
@@ -29,6 +28,7 @@ const Integrations = models.integrations;
 
 
 (async () => {
+  parentPort && parentPort.postMessage({level: "info", text: "Job Punctuality Monitoring: Monitoring started" });
   const now = new Date(); // UTC time
   
   try {
@@ -42,6 +42,9 @@ const Integrations = models.integrations;
     if (jobMonitorings.length < 1) {
       return;
     }
+
+    // Log info saying how many job monitorings are being processed
+    parentPort && parentPort.postMessage({level: "info", text: `Job Punctuality Monitoring: Processing  ${jobMonitorings.length} job monitoring(s)`});
 
     // Get all unique clusters for the job monitorings
     const clusterIds = jobMonitorings.map(
@@ -63,9 +66,7 @@ const Integrations = models.integrations;
           clusterInfo.password = null;
         }
       } catch (error) {
-        logger.error(
-          `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`
-        );
+        parentPort && parentPort.postMessage({ level: "error",  text: `Job Punctuality Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`});
       }
     });
 
@@ -115,7 +116,7 @@ const Integrations = models.integrations;
         let severityThreshHold = 0; // Domain specific severity threshold for ASR
         let severeEmailRecipients = null;
 
-        if (asrSpecificMetaData) {
+        if (asrSpecificMetaData && asrSpecificMetaData.domain) {
           try {
             const {domain: domainId} =  asrSpecificMetaData;
             const domain = await getDomain(domainId);
@@ -123,7 +124,9 @@ const Integrations = models.integrations;
               severityThreshHold = domain.severityThreshold;
               severeEmailRecipients = domain.severityAlertRecipients;
             }
-          } catch (error) {logger.error(`Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}`);}
+          } catch (error) {
+            parentPort && parentPort.postMessage({level: "error", text: `Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}` });
+          }
         }
 
         // Job level severity threshold
@@ -139,16 +142,12 @@ const Integrations = models.integrations;
         // Calculate the back date in ms
         if (runWindowForJob === "overnight") {
           backDateInMs = differenceInMs({
-            startTime: expectedCompletionTime,
-            endTime: expectedStartTime,
+            startTime: expectedStartTime,
+            endTime: expectedCompletionTime,
             daysDifference: 1,
           });
         } else {
-          backDateInMs = differenceInMs({
-            startTime: expectedCompletionTime,
-            endTime: expectedStartTime,
-            daysDifference: 0,
-          });
+          backDateInMs = 0;
         }
 
         // Calculate the run window for the job
@@ -183,13 +182,13 @@ const Integrations = models.integrations;
         //     (window.currentTime - window.start) / 60000
         //   );
         // }
-        // -----------------------------------------------------
+        // ----------------------------------------------------
 
-           alertTimePassed = window.end < window.currentTime;
+        alertTimePassed = window.start < window.currentTime;
 
-           lateByInMinutes = Math.floor(
-             (window.currentTime - window.end) / 60000
-           );
+        lateByInMinutes = Math.floor(
+          (window.currentTime - window.start) / 60000
+        );
 
         // If the time has not passed, or with in grace period of 10 minutes, continue
         if (!alertTimePassed || lateByInMinutes < 10) {
@@ -303,6 +302,13 @@ const Integrations = models.integrations;
 
         // If no workunits are found, send out notifications
         if (ECLWorkunit.length === 0) {
+          // Log which job did not start on time
+          parentPort &&
+            parentPort.postMessage({
+              level: "info",
+              text: `Job Punctuality Monitoring:  ( ${monitoringName} ) is unpunctual. Expected start time: ${window.start.toLocaleString()}`,
+            });
+
           // Notification payload
           const notificationPayload = createNotificationPayload({
             type: "email",
@@ -346,6 +352,11 @@ const Integrations = models.integrations;
 
           // Queue email notification
           await NotificationQueue.create(notificationPayload);
+          parentPort &&
+            parentPort.postMessage({
+              level: "verbose",
+              text: `Job Punctuality Monitoring: Notification queued for ${monitoringName},  job not started on time`,
+            });
 
           // NOC email notification
           if (jobLevelSeverity >= severityThreshHold && severeEmailRecipients) {
@@ -361,6 +372,11 @@ const Integrations = models.integrations;
               });
             delete notificationPayloadForNoc.metaData.cc;
             await NotificationQueue.create(notificationPayloadForNoc);
+            parentPort &&
+              parentPort.postMessage({
+                level: "verbose",
+                text: `Job Punctuality Monitoring: NOC Notification queued for ${monitoringName},  job not started on time`,
+              });
           }
           // Update the job monitoring
           await JobMonitoring.update(
@@ -379,20 +395,35 @@ const Integrations = models.integrations;
             },
             { where: { id } }
           );
+          parentPort &&
+            parentPort.postMessage({
+              level: "verbose",
+              text: `Job Punctuality Monitoring: Last run details updated for ${monitoringName}`,
+            });
         }
       } catch (error) {
-        console.log(error);
-        logger.error(
-          `Error while processing jobs for  punctuality check ${jobMonitoring.id}: ${error.message}`
-        );
+        parentPort &&
+          parentPort.postMessage({
+            level: "error",
+            text: `Job Punctuality Monitoring: Error while processing jobs for  punctuality check ${jobMonitoring.id}: ${error.message}`,
+          });
       }
     }
   } catch (error) {
-    logger.error(
-      `Error in job punctuality monitoring script: ${error.message}`
-    );
+    parentPort &&
+      parentPort.postMessage({
+        level: "error",
+        text: `Job Punctuality Monitoring: Error in job punctuality monitoring script: ${error.message}`,
+      });
   } finally {
-    if (parentPort) parentPort.postMessage("done");
+    if (parentPort){ 
+      parentPort.postMessage({
+        level: "info",
+        text: `Job Punctuality Monitoring: monitoring completed in ${(
+          new Date().getTime() - now.getTime()
+        ).toLocaleString()} ms`,
+      });
+    }
     else process.exit(0);
   }
 })();

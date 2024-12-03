@@ -9,7 +9,7 @@ const CLUSTER_USAGE_HISTORY_TRACKER = "submitClusterUsageTracker.js";
 const SUBMIT_CLUSTER_MONITORING_JOB = "submitClusterMonitoring.js";
 
 async function scheduleClusterTimezoneOffset() {
-  logger.info("☸ CLUSTER TIMEZONE OFFSET STARTED ...");
+  logger.info("Cluster timezone offset checker job initialized ...");
   try {
     let jobName = "cluster-timezone-offset-" + new Date().getTime();
     this.bree.add({
@@ -39,7 +39,7 @@ async function createClusterUsageHistoryJob() {
   };
   this.bree.add(job);
   this.bree.start(uniqueJobName);
-  logger.info("📈 CLUSTER USAGE HISTORY TRACKER JOB STARTED ...");
+  logger.info("Cluster usage monitoring job initialized ...");
 }
 
 function createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
@@ -58,7 +58,7 @@ function createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
 
 async function scheduleClusterMonitoringOnServerStart() {
   try {
-    logger.info("📺 CLUSTER MONITORING STARTED ...");
+    logger.info("Cluster monitoring initialized ...");
     const clusterMonitoring = await ClusterMonitoring.findAll({ raw: true });
     for (let monitoring of clusterMonitoring) {
       const { id, cron, isActive } = monitoring;

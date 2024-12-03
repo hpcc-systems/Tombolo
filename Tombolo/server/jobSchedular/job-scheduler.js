@@ -87,23 +87,26 @@ class JobScheduler {
           workerName = "File monitoring";
 
         if (message === "done") {
-          logger.verbose(`${workerName} signaled 'done'`);
+          // Handle this is in Finally block
         }
-        if (message?.level === "verbose") {
-          logger.verbose(`[${workerName}]:`);
-          logger.verbose(message.text);
+
+        if (
+          message?.level === "warn" ||
+          message?.level === "info" ||
+          message?.level === "verbose" ||
+          message?.level === "debug" ||
+          message?.level === "silly"
+        ) {
+          logger[message.level](message.text);
         }
-        if (message?.level === "info") {
-          logger.info(`[${workerName}]:`);
-          logger.info(message.text);
-        }
+
         if (message?.level === "error") {
-          logger.error(`[${workerName}]:`);
           logger.error(`${message.text}`, message.error);
         }
+
         if (message?.action === "remove") {
           this.bree.remove(worker.name);
-          logger.info(`👷 JOB REMOVED:  ${workerName}`);
+          logger.info(`Job removed:  ${workerName}`);
         }
         if (message?.action == "scheduleNext") {
           await this.scheduleCheckForJobsWithSingleDependency({
@@ -135,11 +138,12 @@ class JobScheduler {
       await this.checkClusterReachability();
     })();
   }
-
+  
   //Bree related methods
   logBreeJobs() {
     return logBreeJobs.call(this);
   }
+
   createNewBreeJob({
     uniqueJobName,
     cron,
@@ -360,7 +364,7 @@ class JobScheduler {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
   }
 
-  checkClusterReachability(){
+  checkClusterReachability() {
     return checkClusterReachability.call(this);
   }
 }
