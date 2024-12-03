@@ -119,6 +119,9 @@ const addCluster = async (req, res) => {
 
     // Create cluster
     const newCluster = await Cluster.create(clusterPayload);
+    console.log('------------------------------------------');
+    console.dir(clusterPayload);
+    console.log('------------------------------------------');
     res.status(201).json({ success: true, data: newCluster });
   } catch (err) {
     logger.error(`Add cluster: ${err.message}`);

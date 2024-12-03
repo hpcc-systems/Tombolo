@@ -83,7 +83,7 @@ function ClusterUsage() {
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       //Query data

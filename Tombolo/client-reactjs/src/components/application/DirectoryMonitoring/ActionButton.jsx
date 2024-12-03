@@ -11,6 +11,7 @@ const ActionButton = ({
   setDirectoryMonitorings,
   setBulkEditModalVisibility,
   setBulkApprovalModalVisibility,
+  isReader,
 }) => {
   const deleteSelected = async () => {
     try {
@@ -41,6 +42,7 @@ const ActionButton = ({
 
   return (
     <Dropdown
+      disabled={isReader}
       dropdownRender={() => (
         <Menu onClick={({ key }) => handleMenuSelection(key)}>
           <Menu.Item key="1">Add Directory Monitoring</Menu.Item>

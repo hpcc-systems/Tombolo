@@ -23,6 +23,7 @@ function NotificationsSearch({ width, setSearchTerm, matchCount, searchTerm }) {
         setSearchTerm(e.target.value.toLocaleLowerCase());
       }}
       allowClear
+      disabled={false}
     />
   );
 }

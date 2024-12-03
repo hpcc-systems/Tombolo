@@ -58,6 +58,7 @@ function Filters({ setSelectedCluster, selectedCluster, setHistoryDateRange, his
           style={{ display: 'inline-block', width: '200px' }}
           rules={[{ required: true }]}>
           <Select
+            disabled={false}
             options={clusterOptions}
             onChange={(value) => handleClusterSelection(value)}
             value={selectedCluster}
@@ -66,6 +67,7 @@ function Filters({ setSelectedCluster, selectedCluster, setHistoryDateRange, his
 
         <Form.Item name="dateRange" style={{ display: 'inline-block' }} rules={[{ required: true }]}>
           <DatePicker.RangePicker
+            disabled={false}
             disabledDate={disabledDate}
             allowClear={true}
             onChange={(value) => handleDateRangeSelection(value)}
@@ -73,7 +75,7 @@ function Filters({ setSelectedCluster, selectedCluster, setHistoryDateRange, his
         </Form.Item>
 
         <Form.Item className="hide_formItem_label" style={{ display: 'inline-block' }}>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" disabled={false}>
             Go
           </Button>
         </Form.Item>

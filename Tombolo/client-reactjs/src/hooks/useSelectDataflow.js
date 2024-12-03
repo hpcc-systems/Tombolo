@@ -2,16 +2,20 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory, useParams } from 'react-router';
 import { authHeader, handleError } from '../components/common/AuthHeader';
-import { hasEditPermission } from '../components/common/AuthUtil';
+// import { hasEditPermission } from '../components/common/AuthUtil';
 import { dataflowAction } from '../redux/actions/Dataflow';
+import { getRoleNameArray } from '../components/common/AuthUtil';
 
 const useSelectDataflow = () => {
-  const [dataflowReducer, user] = useSelector((state) => [state.dataflowReducer, state.authenticationReducer?.user]);
+  const [dataflowReducer] = useSelector((state) => [state.dataflowReducer]);
   const [isDataflowReady, setIsDataflowReady] = useState(false);
 
   const dispatch = useDispatch();
   const history = useHistory();
   const params = useParams();
+
+  const roleArray = getRoleNameArray();
+  const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
 
   useEffect(() => {
     (async () => {
@@ -44,7 +48,7 @@ const useSelectDataflow = () => {
 
   return {
     isDataflowReady,
-    canEdit: hasEditPermission(user),
+    canEdit: editingAllowed,
   };
 };
 

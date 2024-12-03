@@ -56,6 +56,7 @@ The admin section contains all of application management tools including:
 
 <ul>
 <li>Applications</li>
+<li>[User Management](/docs/User-Guides/users)</li>
 <li>Integrations</li>
 <li>Notifications</li>
 </ul>

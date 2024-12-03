@@ -4,8 +4,13 @@ const { Op } = require("sequelize");
 //Local Imports
 const models = require("../../models");
 const logger = require("../../config/logger");
-const { sendEmail, retryOptions: { maxRetries },} = require("../../config/emailConfig");
-const {updateNotificationQueueOnError} = require("./notificationsHelperFunctions");
+const {
+  sendEmail,
+  retryOptions: { maxRetries },
+} = require("../../config/emailConfig");
+const {
+  updateNotificationQueueOnError,
+} = require("./notificationsHelperFunctions");
 const emailNotificationHtmlCode = require("../../utils/emailNotificationHtmlCode");
 
 const NotificationQueue = models.notification_queue;
@@ -97,10 +102,10 @@ const SentNotification = models.sent_notifications;
           };
 
           // Send email
-          const  emailResponse = await sendEmail({ ...emailPayload });
+          const emailResponse = await sendEmail({ ...emailPayload });
 
           // Assume success - if no error is thrown
-          successfulDelivery.push({...emailPayload, templateName});
+          successfulDelivery.push({ ...emailPayload, templateName });
         }
       } catch (error) {
         // If sending fails update the notification queue
@@ -126,23 +131,21 @@ const SentNotification = models.sent_notifications;
     //Update sent notifications table
     try {
       // clean successfully delivered notifications
-      for(let notification of successfulDelivery) {
+      for (let notification of successfulDelivery) {
         const notificationCopy = { ...notification };
         delete notificationCopy.htmlBody;
         delete notificationCopy.notificationQueueId;
 
         notificationCopy.searchableNotificationId = notification.notificationId;
-        notificationCopy.notificationChannel= "email",
-        notificationCopy.notificationTitle= notification.subject,
-        notificationCopy.applicationId= notification.applicationId,
-        notificationCopy.status= "Pending Review",
-        notificationCopy.createdBy= { name:  "System" },
-        notificationCopy.createdAt= now,
-        notificationCopy.updatedAt= now,
-        notificationCopy.metaData= {notificationDetails: notification},
-        
-
-        await SentNotification.create(notificationCopy);
+        (notificationCopy.notificationChannel = "email"),
+          (notificationCopy.notificationTitle = notification.subject),
+          (notificationCopy.applicationId = notification.applicationId),
+          (notificationCopy.status = "Pending Review"),
+          (notificationCopy.createdBy = { name: "System" }),
+          (notificationCopy.createdAt = now),
+          (notificationCopy.updatedAt = now),
+          (notificationCopy.metaData = { notificationDetails: notification }),
+          await SentNotification.create(notificationCopy);
       }
     } catch (error) {
       logger.error(error.message);
@@ -160,7 +163,6 @@ const SentNotification = models.sent_notifications;
     } catch (err) {
       logger.error(err.message);
     }
-    
   } catch (error) {
     logger.error(error.message);
   }
@@ -174,4 +176,3 @@ const SentNotification = models.sent_notifications;
 5. Gotcha - If you console.log new Date() in node.js environment, It will log UTC time in ISO 8601 format. 
    It is because node.js internally calls .toISOString() on the date object before logging it.
 */
-

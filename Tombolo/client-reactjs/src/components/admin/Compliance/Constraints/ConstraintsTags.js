@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Modal, Space, Tag, Tooltip } from 'antd';
 import { useSelector } from 'react-redux';
 import ConstraintDescription from './ConstraintDescription';
-import { i18n } from '../../../common/Text';
 
 /**
  * ConstraintsTags - pass [] of { id: string} // constraint id;  and receive a clickable tag
@@ -12,7 +11,10 @@ import { i18n } from '../../../common/Text';
  */
 
 const ConstraintsTags = ({ list, file, showAll }) => {
-  const constraints = useSelector((state) => state.applicationReducer.constraints);
+  // const constraints = useSelector((state) => state.applicationReducer.constraints);
+  let constraints = [];
+  const constraintsFromRedux = useSelector((state) => state.applicationReducer.constraints);
+  if (constraintsFromRedux) constraints = constraintsFromRedux;
   // if no value is passed return list of all constraints
   if (showAll) return constraints.map((record) => <TagWithPopUp key={record.id} showAll={showAll} record={record} />);
 
@@ -47,7 +49,7 @@ const TagWithPopUp = ({ record, file, showAll }) => {
     return 'green';
   };
 
-  const getTitle = () => (record.inherited ? `${i18n('Inherited from')}: ${record.inherited}` : null);
+  const getTitle = () => (record.inherited ? `${'Inherited from'}: ${record.inherited}` : null);
 
   return (
     <>

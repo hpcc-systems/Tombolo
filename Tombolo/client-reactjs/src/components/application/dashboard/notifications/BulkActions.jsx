@@ -15,6 +15,7 @@ const NotificationActions = ({
   setDisplayUpdateModal,
   setFiltersVisible,
   filtersVisible,
+  isReader,
 }) => {
   //Redux
   const {
@@ -99,6 +100,7 @@ const NotificationActions = ({
   // Returning JSX
   return (
     <Dropdown
+      disabled={isReader}
       menu={{
         items,
       }}>

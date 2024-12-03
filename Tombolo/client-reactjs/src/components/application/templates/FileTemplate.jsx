@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { useHistory } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 //Local Imports
 import MonacoEditor from '../../common/MonacoEditor.js';
@@ -11,10 +12,10 @@ import { authHeader } from '../../common/AuthHeader.js';
 import FileTemplateTable from './FileTemplate_filesTab';
 import FileTemplateLayout from './FileTemplate_layoutTab.jsx';
 import FileTemplatePermissablePurpose from './FileTemplate_permissablePurpose';
-import { hasEditPermission } from '../../common/AuthUtil.js';
+// import { hasEditPermission } from '../../common/AuthUtil.js';
 import DeleteAsset from '../../common/DeleteAsset/index.js';
 import LandingZoneFileExplorer from '../../common/LandingZoneFileExplorer';
-import Text, { i18n } from '../../common/Text';
+import Text from '../../common/Text';
 
 //Local variables
 const { Option } = Select;
@@ -33,9 +34,9 @@ const capitalizeString = (text) => {
 };
 
 function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose }) {
-  const { clusters, application, groupId, user, licenses } = useSelector((state) => ({
+  const { clusters, application, groupId, licenses } = useSelector((state) => ({
     groupId: state.groupsReducer?.selectedKeys?.id,
-    user: state.authenticationReducer.user,
+
     clusters: state.applicationReducer.clusters,
     application: state.applicationReducer.application,
     licenses: state.applicationReducer.licenses,
@@ -69,7 +70,8 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
 
   const [form] = Form.useForm();
 
-  const editingAllowed = hasEditPermission(user);
+  const roleArray = getRoleNameArray();
+  const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
 
   //Use Effect
   useEffect(() => {
@@ -475,7 +477,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
                   name="fileTemplatePattern"
                   defaultValue="22"
                   className="read-only-input">
-                  <Input placeholder={i18n('No file pattern provided')} />
+                  <Input placeholder={'No file pattern provided'} />
                 </Form.Item>
               ) : null}
 

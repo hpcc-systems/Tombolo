@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Select, Input, Cascader, message } from 'antd';
 
 import { authHeader } from './AuthHeader';
-import Text, { i18n } from '../../components/common/Text';
+import Text from '../../components/common/Text';
 
 const { Option } = Select;
 
@@ -217,7 +217,7 @@ function LandingZoneFileExplorer({
               name="landingZone"
               rules={[{ required: true, message: 'Please select landing zone !' }]}>
               <Select
-                placeholder={i18n('Landing Zone')}
+                placeholder={'Landing Zone'}
                 allowClear
                 style={{ width: '100%' }}
                 loading={landingZoneDetails.fetchingLandingZone}
@@ -233,7 +233,7 @@ function LandingZoneFileExplorer({
               style={{ width: '50%' }}
               name="machine"
               rules={[{ required: true, message: 'Please select Machine !' }]}>
-              <Select placeholder={i18n('Machine')} allowClear onChange={handleMachineChange} style={{ width: '100%' }}>
+              <Select placeholder={'Machine'} allowClear onChange={handleMachineChange} style={{ width: '100%' }}>
                 {landingZoneDetails.selectedLandingZone.machines.map((machine) => (
                   <Option key={machine.Netaddress}> {machine.Netaddress}</Option>
                 ))}
@@ -262,7 +262,7 @@ function LandingZoneFileExplorer({
           <Cascader
             options={landingZoneDetails.directories}
             loadData={loadCascaderData}
-            placeholder={i18n('Directory')}
+            placeholder={'Directory'}
             allowClear
             changeOnSelect={true}
             onChange={(value, selectedOptions) =>

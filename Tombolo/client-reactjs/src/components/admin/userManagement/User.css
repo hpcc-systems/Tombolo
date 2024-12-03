@@ -1,0 +1,57 @@
+.notifications__filter-label {
+  font-weight: 500;
+  padding-bottom: 5px;
+}
+
+.notifications__filters {
+  margin-bottom: 5px;
+  padding: 4px 10px;
+}
+
+.notifications_filters__form {
+  background-color: var(--light);
+}
+
+.notification__filters_count {
+  display: flex;
+  justify-content: right;
+  color: var(--primary);
+  background: none;
+  font-weight: 600;
+}
+
+/* User Details model */
+.userManageMent_tiny-description {
+  margin-top: 30px;
+}
+
+.userManageMent_tiny-description * {
+  padding: 2px 4px !important;
+}
+
+.userManageMent_tiny-description .ant-descriptions-item-label {
+  width: 200px;
+  font-weight: 500;
+}
+
+.editUser__modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(246, 243, 243);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  border: 1px solid var(--primary);
+}
+
+.editUser__modal-overlay-content {
+  color: var(--danger);
+  font-size: 18px;
+  padding: 50px;
+  text-align: center;
+  font-weight: 600;
+}

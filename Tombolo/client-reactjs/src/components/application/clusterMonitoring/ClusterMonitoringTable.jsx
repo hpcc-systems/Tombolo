@@ -19,6 +19,7 @@ function ClusterMonitoringTable({
   setSelectedEngines,
   notificationDetails,
   setNotificationDetails,
+  isReader,
 }) {
   const { clusters } = useSelector((state) => state.applicationReducer);
 
@@ -27,7 +28,7 @@ function ClusterMonitoringTable({
     try {
       const payload = {
         method: 'DELETE',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/clustermonitoring/${id}`, payload);
@@ -44,7 +45,7 @@ function ClusterMonitoringTable({
     try {
       const payload = {
         method: 'PUT',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/clustermonitoring/clusterMonitoringStatus/${id}`, payload);
@@ -170,36 +171,46 @@ function ClusterMonitoringTable({
               <EyeOutlined onClick={() => viewExistingClusterMonitoring(record.id)} />
             </Tooltip>
           </a>
-          {record.isActive ? (
-            <a>
-              <Tooltip title="Pause Monitoring">
-                <PauseCircleOutlined onClick={() => changeClusterMonitoringStatus(record.id)} />
+          {!isReader ? (
+            <>
+              {record.isActive ? (
+                <a>
+                  <Tooltip title="Pause Monitoring">
+                    <PauseCircleOutlined onClick={() => changeClusterMonitoringStatus(record.id)} />
+                  </Tooltip>
+                </a>
+              ) : (
+                <a>
+                  <Tooltip title="Resume Monitoring">
+                    <PlayCircleOutlined onClick={() => changeClusterMonitoringStatus(record.id)} />
+                  </Tooltip>
+                </a>
+              )}
+
+              <a>
+                <Tooltip title="Delete Monitoring">
+                  <DeleteOutlined
+                    onClick={() => {
+                      console.log(record);
+                      deleteClusterMonitoring(record.id);
+                    }}
+                  />
+                </Tooltip>
+              </a>
+
+              <Tooltip title="Notifications">
+                <Link to={`/${applicationId}/notifications?monitoringId=${record.id}`}>
+                  <BellOutlined />
+                </Link>
               </Tooltip>
-            </a>
+            </>
           ) : (
-            <a>
-              <Tooltip title="Resume Monitoring">
-                <PlayCircleOutlined onClick={() => changeClusterMonitoringStatus(record.id)} />
-              </Tooltip>
-            </a>
-          )}
-
-          <a>
-            <Tooltip title="Delete Monitoring">
-              <DeleteOutlined
-                onClick={() => {
-                  console.log(record);
-                  deleteClusterMonitoring(record.id);
-                }}
-              />
+            <Tooltip title="Notifications">
+              <Link to={`/${applicationId}/notifications?monitoringId=${record.id}`}>
+                <BellOutlined />
+              </Link>
             </Tooltip>
-          </a>
-
-          <Tooltip title="Notifications">
-            <Link to={`/${applicationId}/notifications?monitoringId=${record.id}`}>
-              <BellOutlined />
-            </Link>
-          </Tooltip>
+          )}
         </Space>
       ),
     },

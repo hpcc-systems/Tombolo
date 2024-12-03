@@ -16,6 +16,7 @@ const SuperFileMonitoringModal = ({
   setSuccessAddingMonitoring,
   selectedFileMonitoring,
   superfileMonitoringList,
+  isReader,
 }) => {
   //adjust modal width and visibility and tabs
   const [modalWidth, setModalWidth] = useState(0);
@@ -141,7 +142,7 @@ const SuperFileMonitoringModal = ({
   // Get details of a file monitoring -----------------------------------------------
   const getFileMonitoringDetails = async (id) => {
     try {
-      const payload = { method: 'GET', header: authHeader() };
+      const payload = { method: 'GET', headers: authHeader() };
       setFetchingFileMonitoringDetails(true);
       const response = await fetch(`/api/superfilemonitoring/read/${id}`, payload);
       if (!response.ok) handleError(response);
@@ -287,7 +288,7 @@ const SuperFileMonitoringModal = ({
   );
 
   const saveBtn = (
-    <Button key="save" type="primary" onClick={handleSave} loading={confirmLoading}>
+    <Button key="save" type="primary" onClick={handleSave} loading={confirmLoading} disabled={isReader}>
       Save
     </Button>
   );

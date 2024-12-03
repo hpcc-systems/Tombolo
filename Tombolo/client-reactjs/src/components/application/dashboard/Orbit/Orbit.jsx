@@ -66,7 +66,7 @@ function Orbit() {
       setLoading(true);
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       if (applicationId === undefined) return;

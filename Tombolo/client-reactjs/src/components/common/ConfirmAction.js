@@ -1,6 +1,5 @@
 import { Popconfirm, message, Tooltip } from 'antd';
 import React, { useState, useEffect, useRef } from 'react';
-import { i18n } from './Text';
 
 const ConfirmAction = ({
   onConfirm,
@@ -36,8 +35,8 @@ const ConfirmAction = ({
       placement="top"
       title={confirm.title}
       open={prompt.visible}
-      okText={confirm.okText || i18n('Yes')}
-      cancelText={confirm.okText || i18n('No')}
+      okText={confirm.okText || 'Yes'}
+      cancelText={confirm.okText || 'No'}
       onConfirm={action}
       onCancel={() => setPrompt({ visible: false, loading: false })}
       okButtonProps={{ loading: prompt.loading }}

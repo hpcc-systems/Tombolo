@@ -19,7 +19,7 @@ If you have chosen to build and run Tombolo inside of a Docker, you will need to
 Run the following commands from the root directory of your installation in your preferred terminal or integrated IDE
 
 ```bash
-cd tombolo
+cd Tombolo
 ```
 
 ```bash
@@ -55,7 +55,7 @@ If you still have your local copy of the Tombolo Git Repository in your system, 
 Run the following commands from the root directory of your git repository in your preferred terminal or integrated IDE
 
 ```bash
-cd tombolo/server
+cd Tombolo/server
 ```
 
 ```bash

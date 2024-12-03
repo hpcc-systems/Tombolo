@@ -7,13 +7,12 @@ import JobDetailsForm from './Jobs/JobDetails';
 import IndexDetailsForm from './IndexDetails';
 import QueryDetailsForm from './queries/QueryDetails';
 import SubProcessDetails from './SubProcessDetails';
-import { i18n } from '../common/Text';
 
 function AssetDetailsDialog(props) {
   const getAssetType = (assetType) => {
     if (!assetType || typeof assetType !== 'string') return '';
-    if (assetType === 'FileTemplate') return i18n('File Template');
-    return i18n(assetType[0].toUpperCase() + assetType.slice(1));
+    if (assetType === 'FileTemplate') return 'File Template';
+    return assetType[0].toUpperCase() + assetType.slice(1);
   };
 
   return (

@@ -1,5 +1,4 @@
 import { Stencil as StencilUtil } from '@antv/x6-plugin-stencil';
-import { i18n } from '../../common/Text';
 
 export default class Stencil {
   static init(stencilContainer, graph) {
@@ -45,11 +44,11 @@ export default class Stencil {
 
   static addShape(graph, stencil) {
     const assets = [
-      { type: 'Job', title: i18n('Job') },
-      { type: 'File', title: i18n('File') },
-      { type: 'Monitor', title: i18n('Monitoring') },
-      { type: 'Index', title: i18n('Index') },
-      { type: 'Sub-Process', title: i18n('Sub-Process') },
+      { type: 'Job', title: 'Job' },
+      { type: 'File', title: 'File' },
+      { type: 'Monitor', title: 'Monitoring' },
+      { type: 'Index', title: 'Index' },
+      { type: 'Sub-Process', title: 'Sub-Process' },
     ];
 
     const assetsNodes = assets.map((asset) => {

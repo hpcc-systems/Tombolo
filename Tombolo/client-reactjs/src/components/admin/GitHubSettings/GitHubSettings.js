@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import useGitHubProjectList from '../../../hooks/useGitHubProjectList';
 import { authHeader, handleError } from '../../common/AuthHeader';
-import Text, { i18n } from '../../common/Text';
+import Text from '../../common/Text';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../common/InfoDrawer';
 
@@ -305,7 +305,7 @@ const EditableCell = ({
           onSearch={onSearch}
           loading={branchAndTagList.loading}
           enterButton={editing ? true : false}
-          placeholder={i18n('Provide a link to GitHub repo')}
+          placeholder={'Provide a link to GitHub repo'}
         />
       ),
       ghBranchOrTag: (

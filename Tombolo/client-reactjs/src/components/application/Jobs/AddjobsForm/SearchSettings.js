@@ -6,7 +6,7 @@ import { UpOutlined } from '@ant-design/icons';
 
 import './AddJobsForm.css';
 import DebounceSelect from './DebounceSelect';
-import Text, { i18n } from '../../../common/Text';
+import Text from '../../../common/Text';
 
 const { Option } = Select;
 
@@ -117,7 +117,7 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
               <DebounceSelect
                 mode="multiple"
                 style={{ width: '100%' }}
-                placeholder={i18n("Search by job's name")}
+                placeholder={"Search by job's name"}
                 formValues={{ clusterId, jobType, search }}
                 onDeselect={(_, { key: wuid }) => removeTab(wuid)}
                 onSelect={(_, { key, value }) => addTab({ key, value, clusterId, jobType, isStoredOnGithub })}

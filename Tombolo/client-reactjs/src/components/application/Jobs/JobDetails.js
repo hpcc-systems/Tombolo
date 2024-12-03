@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { hasEditPermission } from '../../common/AuthUtil.js';
+// import { hasEditPermission } from '../../common/AuthUtil.js';
 import MonacoEditor from '../../common/MonacoEditor.js';
 import Text from '../../common/Text.jsx';
 import { handleJobDelete } from '../../common/WorkflowUtil';
@@ -15,6 +15,7 @@ import InputOutoutFiles from './JobFiles/InputOutoutFiles';
 import JobForm from './JobForm.js';
 import ScheduleTab from './ScheduleTab.js';
 import ScriptTab from './ScriptTab.js';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 const TabPane = Tabs.TabPane;
 
@@ -430,7 +431,9 @@ class JobDetails extends Component {
   render() {
     const { application, displayingInModal, inTabView, isNew, selectedAsset, match, selectedDataflow } = this.props;
     const { job, enableEdit, selectedTabPaneKey } = this.state;
-    const editingAllowed = hasEditPermission(this.props.user);
+
+    const roleArray = getRoleNameArray();
+    const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
     const { name, ecl, jobType } = job;
 
     const scheduleProps = {

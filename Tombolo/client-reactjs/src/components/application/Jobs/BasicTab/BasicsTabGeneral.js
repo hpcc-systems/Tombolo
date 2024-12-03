@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 
 import debounce from 'lodash/debounce';
 import { authHeader, handleError } from '../../../common/AuthHeader';
-import Text, { i18n } from '../../../common/Text';
+import Text from '../../../common/Text';
 import MonacoEditor from '../../../common/MonacoEditor';
 import OverwriteAssetModal from '../../../common/OverWriteAssetModal';
 
@@ -273,7 +273,7 @@ function BasicsTabGeneral({
                     style={{ width: '100%' }}
                     onSearch={(value) => searchJobs({ searchString: value, clusterId: clusterId })}
                     onSelect={(value, option) => onJobSelected(option)}
-                    placeholder={i18n('Search jobs')}
+                    placeholder={'Search jobs'}
                     disabled={!editingAllowed}
                     notFoundContent={search.loading ? <Spin /> : 'Not Found'}>
                     {search.data.map((suggestion) => (
@@ -325,7 +325,7 @@ function BasicsTabGeneral({
             <Input
               id="job_name"
               onChange={onChange}
-              placeholder={enableEdit ? i18n('Name') : i18n('Name is not provided')}
+              placeholder={enableEdit ? 'Name' : 'Name is not provided'}
               disabled={!editingAllowed || !addingNewAsset || job.disableFields}
             />
           ) : (
@@ -352,7 +352,7 @@ function BasicsTabGeneral({
           <Input
             id="job_title"
             onChange={onChange}
-            placeholder={enableEdit ? i18n('Title') : i18n('Title is not provided')}
+            placeholder={enableEdit ? 'Title' : 'Title is not provided'}
             disabled={!editingAllowed}
           />
         </Form.Item>
@@ -368,7 +368,7 @@ function BasicsTabGeneral({
             <Input
               id="job_gitRepo"
               onChange={onChange}
-              placeholder={enableEdit ? i18n('Git Repo') : i18n('Git Repo is not provided')}
+              placeholder={enableEdit ? 'Git Repo' : 'Git Repo is not provided'}
               value={localState.gitRepo}
               disabled={!editingAllowed}
             />
@@ -387,7 +387,7 @@ function BasicsTabGeneral({
               <Input
                 id="job_entryBWR"
                 onChange={onChange}
-                placeholder={enableEdit ? i18n('Entry BWR') : i18n('Entry BWR is not provided')}
+                placeholder={enableEdit ? 'Entry BWR' : 'Entry BWR is not provided'}
                 value={localState.entryBWR}
                 disabled={!editingAllowed}
               />
@@ -408,7 +408,7 @@ function BasicsTabGeneral({
               <Input
                 id="job_author"
                 onChange={onChange}
-                placeholder={enableEdit ? i18n('Author') : i18n('Author is not provided')}
+                placeholder={enableEdit ? 'Author' : 'Author is not provided'}
                 value={localState.author}
                 disabled={!editingAllowed}
               />
@@ -431,7 +431,7 @@ function BasicsTabGeneral({
               <Input
                 id="job_bkp_svc"
                 onChange={onChange}
-                placeholder={enableEdit ? i18n('Contact') : i18n('Contact is not provided')}
+                placeholder={enableEdit ? 'Contact' : 'Contact is not provided'}
                 value={localState.contact}
                 disabled={!editingAllowed}
                 validateTrigger={['onChange', 'onBlur']}

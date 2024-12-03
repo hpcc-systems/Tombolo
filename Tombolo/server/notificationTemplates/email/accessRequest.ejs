@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .main_body {
+        width: 100%;
+        border-bottom: 1px solid lightgray !important;
+      }
+
+      .section-footer-td {
+        color: #808080;
+        border-top: 1px solid #808080;
+      }
+
+      .section-header-td {
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+
+      .list {
+        padding: 10px;
+      }
+
+      .tabbedText {
+        padding-left: 40px;
+      }
+
+      .bold-text {
+        font-weight: bold;
+      }
+
+      .important-text {
+        color: #ff0000;
+      }
+    </style>
+  </head>
+
+  <table class="main_body">
+    <tbody>
+      <tr>
+        <td>
+          <table>
+            <tbody>
+              <tr>
+                <td class="section-header-td">
+                  <div>Hello,</div>
+                  <div>
+                    An access request has come on behalf of
+                    <span class="bold-text"
+                      ><%= typeof email !== 'undefined' ? email : "unknown"
+                      %></span
+                    >. Please review the request and take action, the user needs
+                    both an application and a role to access Tombolo.
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="section-header-td">
+                  <div class="tabbedText">
+                    <span class="bold-text">Comment: </span> <%= typeof comment
+                    !== 'undefined' ? comment : "" %>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <p>
+                    <span class="important-text"
+                      >Link to the User Management Page
+                    </span>
+                    <%= typeof userManagementLink !== 'undefined' ?
+                    userManagementLink : "" %>
+                  </p>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="section-header-td">
+                  <div>Best Regards,</div>
+                  <div>Tombolo</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</html>

@@ -35,7 +35,7 @@ git clone https://github.com/hpcc-systems/Tombolo.git
 
 ### Step 2 - Update Configuration Files
 
-There are two configuration files that need to be modified. The one at the root of the project is for the backend service, and the one inside `client-react.js` is for the front-end React application.
+There are two configuration files that need to be modified. The one at the root of the project is for the backend service, and the one inside `client-reactjs` is for the front-end React application.
 
 <div class="important_block">
 > Please carefully review each variable before making any changes. Detailed explanations can be found in the [Configurations](./Configurations).

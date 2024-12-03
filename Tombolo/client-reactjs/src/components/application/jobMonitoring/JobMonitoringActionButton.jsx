@@ -13,6 +13,7 @@ const JobMonitoringActionButton = ({
   setBulkEditModalVisibility,
   setFiltersVisible,
   filtersVisible,
+  isReader,
   setDisplayAddRejectModal,
 }) => {
   const [bulkStartPauseForm] = Form.useForm(); // Form Instance
@@ -77,6 +78,7 @@ const JobMonitoringActionButton = ({
   };
   return (
     <Dropdown
+      disabled={isReader}
       trigger={['click']}
       onOpenChange={handleDropDownOpenChange}
       open={expandActionsDrawer}

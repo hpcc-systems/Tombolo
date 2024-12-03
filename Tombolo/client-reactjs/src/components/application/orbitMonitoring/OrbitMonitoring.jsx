@@ -50,7 +50,7 @@ const OrbitMonitoring = () => {
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/orbit/allMonitorings/${applicationId}`, payload);
@@ -68,7 +68,7 @@ const OrbitMonitoring = () => {
     try {
       const payload = {
         method: editing ? 'PUT' : 'POST',
-        header: authHeader(),
+        headers: authHeader(),
         body: JSON.stringify({
           ...monitoringDetails,
           id: editing ? editing : selectedOrbitBuild,
