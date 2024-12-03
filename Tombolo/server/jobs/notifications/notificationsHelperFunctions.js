@@ -9,19 +9,6 @@ const {
   retryOptions: { maxRetries, retryDelays },
 } = require("../../config/emailConfig");
 
-// Renders HTML template for email notification
-const renderEmailBody = ({ templateName, emailData }) => {
-    const templatePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "notificationTemplates",
-      "email",
-      `${templateName}.ejs`
-    );
-    const template = fs.readFileSync(templatePath, "utf-8");
-    return ejs.render(template, emailData);
-};
 
 // Function to calculate the retryAfter time
 const calculateRetryAfter = ({
@@ -64,7 +51,6 @@ async function updateNotificationQueueOnError({
 }
 
 module.exports = {
-  renderEmailBody,
   calculateRetryAfter,
   updateNotificationQueueOnError,
 };

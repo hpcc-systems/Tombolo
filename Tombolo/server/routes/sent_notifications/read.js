@@ -10,7 +10,7 @@ const { Op } = sequelize;
 const logger = require("../../config/logger");
 const models = require("../../models");
 const { validationResult } = require("express-validator");
-const { forEach } = require("lodash");
+const emailNotificationHtmlCode  = require("../../utils/emailNotificationHtmlCode");
 
 //Constants
 const SentNotifications = models.sent_notifications;
@@ -242,6 +242,42 @@ router.patch(
     } catch (err) {
       logger.error(err);
       res.status(500).send("Failed to update sent notifications");
+    }
+  }
+);
+
+// Get notification html code
+router.post(
+  "/getNotificationHtmlCode",
+  [body("id").isUUID().withMessage("ID must be a valid UUID")],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        logger.error(errors);
+        return res.status(400).send("Validation error occurred");
+      }
+
+      const notification = await SentNotifications.findByPk(req.body.id);
+      if (!notification) {
+        return res.status(404).send("Sent notification not found");
+      }
+
+
+      if (!notification.metaData || !notification.metaData.notificationDetails) {
+        return res.status(404).send({message: "No details for this notification", data: null});
+      }
+
+      const templateName = notification.metaData.notificationDetails.templateName;
+      if (!templateName) {
+        return res.status(404).send({message: "Notification template not found", data: null});
+      }
+
+      const htmlCode = emailNotificationHtmlCode({templateName, data: notification.metaData.notificationDetails});
+      res.status(200).send({message: 'Successfully fetched notification details', data: htmlCode});
+    } catch (err) {
+      logger.error(err.message);
+      res.status(500).send("Failed to get notification html code");
     }
   }
 );

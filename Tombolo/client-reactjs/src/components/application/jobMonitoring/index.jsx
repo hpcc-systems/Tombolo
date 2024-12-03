@@ -1,3 +1,4 @@
+/* eslint-disable no-unreachable */
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
@@ -324,6 +325,13 @@ function JobMonitoring() {
     try {
       //All inputs
       let allInputs = form.getFieldsValue();
+
+      // Trim the input values
+      Object.entries(allInputs).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+          allInputs[key] = value.trim();
+        }
+      });
 
       //If monitoring scope is cluster-wide jobName should be * -  As it is required field in DB
       const { monitoringScope } = allInputs;
