@@ -381,6 +381,7 @@ const resetTempPassword = async (req, res) => {
 //Login Basic user
 const loginBasicUser = async (req, res) => {
   try {
+    console.log('made it here');
     const { email, password, deviceInfo } = req.body;
     const csrfToken = generateToken(res, req);
     console.log("csrfToken", csrfToken);
