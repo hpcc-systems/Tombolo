@@ -1,13 +1,14 @@
-const { parentPort, workerData } = require("worker_threads");
+const { parentPort} = require("worker_threads");
 
-const hpccUtil = require("../utils/hpcc-util");
-const models = require("../models");
-const logger = require("../config/logger");
+const hpccUtil = require("../../utils/hpcc-util");
+const models = require("../../models");
+const logger = require("../../config/logger");
 const cluster = models.cluster;
 
-const { log, dispatch } = require("./workerUtils")(parentPort);
+const { log, dispatch } = require("../workerUtils")(parentPort);
 
 (async () => {
+  parentPort && parentPort.postMessage({level: "info", message: "Starting Cluster Timezone Offset Job"});
   //grab all clusters
   const clusters = await cluster.findAll();
 

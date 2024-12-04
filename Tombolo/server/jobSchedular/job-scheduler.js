@@ -24,6 +24,7 @@ const {
   createClusterUsageHistoryJob,
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
+  checkClusterReachability,
 } = require("../jobSchedularMethods/clusterJobs.js");
 const {
   scheduleJobStatusPolling,
@@ -55,8 +56,6 @@ const {
   startIntermediateJobsMonitoring,
   startJobPunctualityMonitoring,
 } = require("../jobSchedularMethods/jobMonitoring.js");
-
-const {checkClusterReachability} = require("../jobSchedularMethods/checkClusterReachability.js");
 
 class JobScheduler {
   constructor() {

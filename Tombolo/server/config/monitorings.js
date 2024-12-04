@@ -9,7 +9,7 @@ const jobMonitoringConfig = {
 
 // Cluster reachability monitoring configuration
 const cluster_reachability_monitoring = {
-  clusterReachabilityMonitoringInterval: "at 00:10 am also at 11:50pm",
+  clusterReachabilityMonitoringInterval: '10m', // in minutes
   passwordExpiryAlertDaysForCluster: [10, 5, 4, 3, 2, 1],
 };
 

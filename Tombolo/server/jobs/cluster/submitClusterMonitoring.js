@@ -2,16 +2,16 @@ const { parentPort, workerData } = require("worker_threads");
 const axios = require("axios");
 const { v4: uuidv4 } = require("uuid");
 
-const hpccUtil = require("../utils/hpcc-util");
+const hpccUtil = require("../../utils/hpcc-util");
 const hpccJSComms = require("@hpcc-js/comms")
-const models = require("../models");
+const models = require("../../models");
 const ClusterMonitoring = models.clusterMonitoring;
 const monitoring_notifications = models.monitoring_notifications;
-const notificationTemplate = require("./messageCards/notificationTemplate")
-const { notify } = require("../routes/notifications/email-notification");
-const logger = require("../config/logger");
+const notificationTemplate = require("../messageCards/notificationTemplate")
+const { notify } = require("../../routes/notifications/email-notification");
+const logger = require("../../config/logger");
 
-const { log } = require("./workerUtils")(parentPort);
+const { log } = require("../workerUtils")(parentPort);
 
 (async () => {
   try {
