@@ -14,6 +14,8 @@ const {
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
+const { generateToken } = require("../middlewares/csrfMiddleware");
+
 const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
@@ -261,8 +263,6 @@ const verifyEmail = async (req, res) => {
     });
 
     setTokenCookie(res, accessToken);
-    // //put access token in cookie
-    // res.cookie("token", accessToken, options);
 
     // Send response
     res.status(200).json({
@@ -382,6 +382,8 @@ const resetTempPassword = async (req, res) => {
 const loginBasicUser = async (req, res) => {
   try {
     const { email, password, deviceInfo } = req.body;
+    const csrfToken = generateToken(res, req);
+    console.log("csrfToken", csrfToken);
 
     const genericError = "Username and Password combination not found";
 

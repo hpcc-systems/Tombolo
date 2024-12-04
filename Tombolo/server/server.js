@@ -26,6 +26,8 @@ require("./utils/tokenBlackListing");
 
 const cookieParser = require("cookie-parser");
 
+const { doubleCsrfProtection } = require("./middlewares/csrfMiddleware");
+
 /* BREE JOB SCHEDULER */
 const JobScheduler = require("./jobSchedular/job-scheduler");
 
@@ -106,7 +108,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Use compression  to reduce the size of the response body and increase the speed of a web application
+// Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
 
 app.use("/api/auth", auth);
@@ -117,6 +119,8 @@ app.use("/api/wizard", wizard);
 //exposed API, requires api key for any routes
 app.use("/api/apikeys", api);
 
+//need to enable doubelCSRF protection first so it's available in token validation routes
+app.use(doubleCsrfProtection);
 // Validate token before proceeding to route
 app.use(validateToken);
 
