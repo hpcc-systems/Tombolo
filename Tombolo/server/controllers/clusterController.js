@@ -322,7 +322,14 @@ const getClusters = async (req, res) => {
       },
       order: [["name", "ASC"]],
     });
-    res.status(200).json({ success: true, data: clusters });
+    // Parse the JSON string into a JavaScript object
+    const parsedClusters = clusters.map((cluster) => {
+      const clusterData = cluster.get({ plain: true });
+      clusterData.reachabilityInfo = JSON.parse(clusterData.reachabilityInfo);
+      return clusterData;
+    });
+
+    res.status(200).json({ success: true, data: parsedClusters });
   } catch (err) {
     logger.error(`Get clusters: ${err.message}`);
     res
