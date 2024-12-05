@@ -337,10 +337,7 @@ const getCluster = async (req, res) => {
     // Get one cluster by id
     const cluster = await Cluster.findOne({
       where: { id: req.params.id },
-      attributes: {
-        exclude: ["hash"],
-
-      },
+      attributes: { exclude: ["hash"] },
     });
     if (!cluster) throw new CustomError("Cluster not found", 404);
     res.status(200).json({ success: true, data: cluster });
