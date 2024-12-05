@@ -1,4 +1,5 @@
 const { clusters } = require("../cluster-whitelist.js");
+const { Sequelize } = require("sequelize");
 const {
   AccountService,
   TopologyService,
@@ -304,10 +305,31 @@ const getClusters = async (req, res) => {
   try {
     // Get clusters ASC by name
     const clusters = await Cluster.findAll({
-      attributes: { exclude: ["hash"] },
+      attributes: {
+        exclude: ["hash", "metaData"],
+        include: [
+          [
+            Sequelize.literal(`
+              CASE
+                WHEN metaData IS NOT NULL AND JSON_EXTRACT(metaData, '$.reachabilityInfo') IS NOT NULL
+                THEN JSON_EXTRACT(metaData, '$.reachabilityInfo')
+                ELSE '{}'
+              END
+            `),
+            "reachabilityInfo",
+          ],
+        ],
+      },
       order: [["name", "ASC"]],
     });
-    res.status(200).json({ success: true, data: clusters });
+    // Parse the JSON string into a JavaScript object
+    const parsedClusters = clusters.map((cluster) => {
+      const clusterData = cluster.get({ plain: true });
+      clusterData.reachabilityInfo = JSON.parse(clusterData.reachabilityInfo);
+      return clusterData;
+    });
+
+    res.status(200).json({ success: true, data: parsedClusters });
   } catch (err) {
     logger.error(`Get clusters: ${err.message}`);
     res
