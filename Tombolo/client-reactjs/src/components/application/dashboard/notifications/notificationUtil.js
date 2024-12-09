@@ -200,3 +200,24 @@ export const getAllMonitorings = async () => {
 export const getActivityTypes = async () => {
   return [];
 };
+
+// Get notification HTML code
+export const getNotificationHtmlCode = async (id) => {
+  const payload = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeader(),
+    },
+    body: JSON.stringify({ id }),
+  };
+
+  const response = await fetch('/api/sent_notifications/getNotificationHtmlCode', payload);
+
+  if (!response.ok) {
+    throw new Error('Error fetching notification HTML code');
+  }
+
+  const responseJson = await response.json();
+  return responseJson.data;
+};

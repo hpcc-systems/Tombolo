@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Card, Form, TimePicker, Row, Col, Select } from 'antd';
 
@@ -26,7 +26,9 @@ function JobMonitoringTab({
   setSelectedDomain,
 }) {
   const [clusterOffset, setClusterOffset] = useState(null);
+  const isFirstRender = useRef(true);
 
+  // Generating cluster offset string to display in time picker
   useEffect(() => {
     if (selectedCluster?.timezone_offset === null || selectedCluster?.timezone_offset === undefined) return;
     const offSet = selectedCluster.timezone_offset / 60;
@@ -36,6 +38,34 @@ function JobMonitoringTab({
       setClusterOffset(`UTC ${offSet}`);
     }
   }, [selectedCluster]);
+
+  // When intermittent scheduling is changed, clear Expected start and end time
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false; // Set to false after the first render
+    } else {
+      form.setFieldsValue({ expectedStartTime: null, expectedCompletionTime: null });
+    }
+  }, [intermittentScheduling]);
+
+  // Function to disable specific hours
+  const getDisabledTime = (type) => {
+    if (type === 'morning') {
+      return {
+        disabledHours: () => [...Array(24).keys()].filter((hour) => hour >= 12), // Disable afternoon hours
+        disabledMinutes: () => [], // No minutes are disabled
+      };
+    } else if (type === 'afternoon') {
+      return {
+        disabledHours: () => [...Array(24).keys()].filter((hour) => hour < 12), // Disable morning hours
+        disabledMinutes: () => [], // No minutes are disabled
+      };
+    }
+    return {
+      disabledHours: () => [], // Enable all hours
+      disabledMinutes: () => [], // No minutes are disabled
+    };
+  };
 
   //Redux
   const {
@@ -48,6 +78,19 @@ function JobMonitoringTab({
   const asrIntegration = integrations.some(
     (integration) => integration.name === 'ASR' && integration.application_id === applicationId
   );
+
+  // Custom validation rule to compare times
+  // Higher-order validation function to compare times with additional parameters
+  const validateCompletionTime = (runWindow) => (_, value) => {
+    const startTime = form.getFieldValue('expectedStartTime');
+
+    if (runWindow !== 'overnight') {
+      if (startTime && value && value.isBefore(startTime)) {
+        return Promise.reject(new Error(`Completion time cannot be earlier than start time.`));
+      }
+    }
+    return Promise.resolve();
+  };
 
   return (
     <div>
@@ -89,15 +132,43 @@ function JobMonitoringTab({
                 label="Expected Start Time (HH:MM) "
                 name="expectedStartTime"
                 rules={[{ required: true, message: 'Expected start time is a required' }]}>
-                <TimePicker style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
+                <TimePicker
+                  placeholder={intermittentScheduling?.runWindow === 'overnight' ? 'Previous Day' : 'Select Time'}
+                  disabledTime={() =>
+                    getDisabledTime(
+                      intermittentScheduling?.runWindow === 'overnight'
+                        ? 'afternoon'
+                        : intermittentScheduling?.runWindow
+                    )
+                  }
+                  style={{ width: '100%' }}
+                  format="HH:mm"
+                  suffixIcon={clusterOffset}
+                  addon={() => (intermittentScheduling?.runWindow === 'overnight' ? <div>Previous Day</div> : null)}
+                  showNow={false}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 label="Expected Completion Time (HH:MM) "
                 name="expectedCompletionTime"
-                rules={[{ required: true, message: 'Expected completion time is a required' }]}>
-                <TimePicker style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
+                rules={[
+                  { required: true, message: 'Expected completion time is a required' },
+                  { validator: (_, value) => validateCompletionTime(intermittentScheduling?.runWindow)(_, value) },
+                ]}>
+                <TimePicker
+                  disabledTime={() =>
+                    getDisabledTime(
+                      intermittentScheduling?.runWindow === 'overnight' ? 'morning' : intermittentScheduling?.runWindow
+                    )
+                  }
+                  style={{ width: '100%' }}
+                  format="HH:mm"
+                  suffixIcon={clusterOffset}
+                  showNow={false}
+                  addon={() => (intermittentScheduling?.runWindow === 'overnight' ? <div>Current Day</div> : null)}
+                />
               </Form.Item>
             </Col>
           </Row>

@@ -165,24 +165,31 @@ const Integrations = models.integrations;
           continue;
         }
 
-        let alertTimePassed = false;
-        let lateByInMinutes = 0;
+        // --------------------------------------------------
+        // let alertTimePassed = false;
+        // let lateByInMinutes = 0;
 
         /* jobLevelSeverity < severityThreshHold means the job is not so severe. 
         We can wait until expected completion time before notifying about unpunctuality */
 
-        if (jobLevelSeverity < severityThreshHold || !severityThreshHold) {
-          alertTimePassed = window.end < window.currentTime;
+        // if (jobLevelSeverity < severityThreshHold || !severityThreshHold) {
+        //   alertTimePassed = window.end < window.currentTime;
 
-          lateByInMinutes = Math.floor(
-            (window.currentTime - window.end) / 60000
-          );
-        } else { 
-          lateByInMinutes = Math.floor(
-            (window.currentTime - window.start) / 60000
-          );
-        }
+        //   lateByInMinutes = Math.floor(
+        //     (window.currentTime - window.end) / 60000
+        //   );
+        // } else { 
+        //   lateByInMinutes = Math.floor(
+        //     (window.currentTime - window.start) / 60000
+        //   );
+        // }
+        // -----------------------------------------------------
 
+           alertTimePassed = window.end < window.currentTime;
+
+           lateByInMinutes = Math.floor(
+             (window.currentTime - window.end) / 60000
+           );
 
         // If the time has not passed, or with in grace period of 10 minutes, continue
         if (!alertTimePassed || lateByInMinutes < 10) {
@@ -196,6 +203,7 @@ const Integrations = models.integrations;
 
         if (jobPunctualityDetails) {
           const { windowStartTime, windowEndTime } = jobPunctualityDetails;
+          
           if (
             windowStartTime === window.start.toISOString() &&
             windowEndTime === window.end.toISOString()
