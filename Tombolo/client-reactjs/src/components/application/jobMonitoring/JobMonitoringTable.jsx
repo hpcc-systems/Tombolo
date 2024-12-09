@@ -1,5 +1,5 @@
-import React from 'react';
-import { Table, Tooltip, Popconfirm, message, Popover } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Tooltip, Popconfirm, message, Popover, Tag } from 'antd';
 import {
   EyeOutlined,
   EditOutlined,
@@ -10,6 +10,7 @@ import {
   PauseCircleOutlined,
   CopyOutlined,
   DownOutlined,
+  WarningFilled,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -41,7 +42,10 @@ const JobMonitoringTable = ({
   domains,
   allProductCategories,
   filteringJobs,
+  clusters,
 }) => {
+  // States
+  const [unreachableClusters, setUnreachableClusters] = useState([]);
   //Redux
   const {
     applicationReducer: {
@@ -53,6 +57,14 @@ const JobMonitoringTable = ({
   const asrIntegration = integrations.some(
     (integration) => integration.name === 'ASR' && integration.application_id === applicationId
   );
+
+  // Cluster that is not able to establish connection
+  useEffect(() => {
+    if (clusters.length > 0) {
+      const ids = clusters.filter((c) => c.reachabilityInfo && c.reachabilityInfo.reachable === false).map((c) => c.id);
+      setUnreachableClusters(ids);
+    }
+  }, [clusters]);
 
   // Columns for the table
   const columns = [
@@ -181,6 +193,18 @@ const JobMonitoringTable = ({
             </Popover>
           </>
         ),
+    },
+    {
+      key: (_, record) => record.id,
+      width: 80,
+      render: (_, record) => {
+        return unreachableClusters.includes(record.clusterId) ? (
+          <Tag color="black">
+            <WarningFilled style={{ color: 'yellow', fontSize: '0.8rem', marginRight: '5px' }} />
+            Cluster not reachable
+          </Tag>
+        ) : null;
+      },
     },
   ];
 

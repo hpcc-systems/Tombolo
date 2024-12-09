@@ -665,6 +665,7 @@ function JobMonitoring() {
         productCategories={productCategories}
         allProductCategories={allProductCategories}
         filteringJobs={filteringJobs}
+        clusters={clusters}
       />
       {displayMonitoringDetailsModal && (
         <MonitoringDetailsModal
