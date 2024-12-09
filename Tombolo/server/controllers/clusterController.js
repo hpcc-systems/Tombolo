@@ -322,10 +322,34 @@ const getCluster = async (req, res) => {
     // Get one cluster by id
     const cluster = await Cluster.findOne({
       where: { id: req.params.id },
-      attributes: { exclude: ["hash"] },
+      attributes: {
+        exclude: ["hash", "metaData"],
+        include: [
+          [
+            Sequelize.literal(`
+              CASE
+                WHEN metaData IS NOT NULL AND JSON_EXTRACT(metaData, '$.reachabilityInfo') IS NOT NULL
+                THEN JSON_EXTRACT(metaData, '$.reachabilityInfo')
+                ELSE '{}'
+              END
+            `),
+            "reachabilityInfoString",
+          ],
+        ],
+      },
     });
+
     if (!cluster) throw new CustomError("Cluster not found", 404);
-    res.status(200).json({ success: true, data: cluster });
+
+  // Plain cluster data
+  const clusterPlainData = cluster.get({ plain: true });
+  if (clusterPlainData.reachabilityInfoString) {
+    clusterPlainData.reachabilityInfo = JSON.parse(
+      clusterPlainData.reachabilityInfoString
+    );
+  }
+
+    res.status(200).json({ success: true, data: clusterPlainData });
   } catch (err) {
     logger.error(`Get cluster: ${err.message}`);
     res
@@ -412,6 +436,34 @@ const pingCluster = async (req, res) => {
       statusCode = 401;
     }
     res.status(statusCode).json({ success: false, message: errMessage });
+  }
+};
+
+// Ping HPCC cluster that is already saved in the database
+const pingExistingCluster = async (req, res) => {
+  const { id } = req.params;
+  try{
+    await hpccUtil.getCluster(id);
+    // Update the reachability info for the cluster
+    await Cluster.update(
+      {
+        metaData: Sequelize.literal(
+          `JSON_SET(metaData, '$.reachabilityInfo.reachable', true, '$.reachabilityInfo.lastMonitored', NOW(), '$.reachabilityInfo.lastReachableAt', NOW())`
+        ),
+      },
+      { where: { id } }
+    );
+    res.status(200).json({ success: true, message: "Reachable" }); // Success Response
+  }catch(err){
+    await Cluster.update(
+      {
+        metaData: Sequelize.literal(
+          `JSON_SET(metaData, '$.reachabilityInfo.reachable', false, '$.reachabilityInfo.lastMonitored', NOW())`
+        ),
+      },
+      { where: { id } }
+    );
+    res.status(503).json({ success: false, message: err });
   }
 };
 
@@ -502,6 +554,7 @@ module.exports = {
   updateCluster,
   getClusterWhiteList,
   pingCluster,
+  pingExistingCluster,
   clusterUsage,
   clusterStorageHistory,
 };

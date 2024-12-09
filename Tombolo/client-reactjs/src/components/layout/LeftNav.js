@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { Layout, Menu, Typography } from 'antd';
+import { Layout, Menu, Tooltip, Typography } from 'antd';
 import {
   DashboardOutlined,
   FileSearchOutlined,
@@ -14,6 +14,7 @@ import {
   ApiOutlined,
   BellOutlined,
   FolderOutlined,
+  WarningFilled,
 } from '@ant-design/icons';
 
 import { hasEditPermission } from '../common/AuthUtil.js';
@@ -106,8 +107,8 @@ class LeftNav extends Component {
     const integrations = this.props?.integrations || [];
     const disabled = applicationId === '' ? true : false;
     const clusterDisabled = this.props?.clusters?.length === 0 ? true : false;
-
     const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
+    const clusterConnectionIssue = this.props?.clusters?.some((c) => c.reachabilityInfo?.reachable === false);
 
     if (!this.props.loggedIn || !this.props.user || Object.getOwnPropertyNames(this.props.user).length == 0) {
       return null;
@@ -331,8 +332,16 @@ class LeftNav extends Component {
             </span>
           ) : (
             <Link ref={this.props.clusterLinkRef} style={{ color: 'rgba(255, 255, 255, .65)' }} to={'/admin/clusters'}>
-              <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
+              <Tooltip
+                placement="right"
+                arrow={false}
+                overlayStyle={{ left: 35 }}
+                open={this.props.collapsed && clusterConnectionIssue ? true : false}
+                title={<WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}>
+                <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
+              </Tooltip>
               <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>Clusters</span>
+              {clusterConnectionIssue && <WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}
             </Link>
           )}
         </>,
