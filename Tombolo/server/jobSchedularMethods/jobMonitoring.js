@@ -1,12 +1,14 @@
-
 const path = require("path");
 const {
   job_monitoring_interval,
   intermediate_job_monitoring_interval,
   job_punctuality_monitoring_interval,
 } = require("../config/monitorings");
-const logger = require('../config/logger');
-const {generateTimeSlotsForJobMonitoring,generateIntervalString} = require("./jobSchedularUtils.js");
+const logger = require("../config/logger");
+const {
+  generateTimeSlotsForJobMonitoring,
+  generateIntervalString,
+} = require("./jobSchedularUtils.js");
 
 // Constants
 const MONITOR_JOBS_FILE_NAME = "monitorJobs.js";
@@ -15,9 +17,11 @@ const MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME = "monitorJobPunctuality.js";
 
 // Job monitoring
 // Job monitoring interval
-const jobMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({ interval: job_monitoring_interval });
+const jobMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({
+  interval: job_monitoring_interval,
+});
 const humanReadableIntervalForJobMonitoring = generateIntervalString({
-  timeSlots : jobMonitoringTimeSlots,
+  timeSlots: jobMonitoringTimeSlots,
 });
 
 // Job monitoring bree job
@@ -26,7 +30,7 @@ async function startJobMonitoring() {
     let jobName = "job-monitoring" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      // interval: "10s", // For development
+      // interval: "1m", // For development
       interval: humanReadableIntervalForJobMonitoring,
       path: path.join(
         __dirname,
@@ -49,7 +53,7 @@ async function startJobMonitoring() {
   }
 }
 
-// Intermediate jobs monitoring 
+// Intermediate jobs monitoring
 // Intermediate jobs monitoring interval
 const intermediateJobMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({
   interval: intermediate_job_monitoring_interval,
@@ -88,14 +92,16 @@ async function startIntermediateJobsMonitoring() {
   }
 }
 
-// Job punctuality monitoring 
+// Job punctuality monitoring
 // Job punctuality monitoring interval
 const jobPunctualityMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({
   interval: job_punctuality_monitoring_interval,
 });
-const humanReadableIntervalForJobPunctualityMonitoring = generateIntervalString({
+const humanReadableIntervalForJobPunctualityMonitoring = generateIntervalString(
+  {
     timeSlots: jobPunctualityMonitoringTimeSlots,
-  });
+  }
+);
 
 // Job punctuality monitoring bree job
 async function startJobPunctualityMonitoring() {
@@ -104,7 +110,7 @@ async function startJobPunctualityMonitoring() {
     this.bree.add({
       name: jobName,
       // interval: "10s", // For development
-      interval: humanReadableIntervalForJobPunctualityMonitoring,
+       interval: humanReadableIntervalForJobPunctualityMonitoring,
       path: path.join(
         __dirname,
         "..",
@@ -121,8 +127,7 @@ async function startJobPunctualityMonitoring() {
     });
     this.bree.start(jobName);
     logger.info("🕗 JOB PUNCTUALITY MONITORING STARTED ...");
-  }
-  catch (err) {
+  } catch (err) {
     logger.error(err);
   }
 }

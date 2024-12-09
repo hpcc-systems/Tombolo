@@ -60,15 +60,6 @@ const getAUser = async (identifier) => {
   });
 };
 
-// const getCookieOptions = () => {
-//   return {
-//     httpOnly: true,
-//     secure: process.env.NODE_ENV === "production",
-//     sameSite: "Strict",
-//     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-//   };
-// };
-
 const setTokenCookie = (res, token) => {
   res.cookie("token", token, {
     httpOnly: true,

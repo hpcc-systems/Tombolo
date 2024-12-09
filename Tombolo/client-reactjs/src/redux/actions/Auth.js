@@ -28,6 +28,7 @@ function logout() {
   fetch('/api/auth/logoutBasicUser', { headers: authHeader(), method: 'POST' });
   //remove item from local storage
   localStorage.removeItem('user');
+  localStorage.removeItem('csrfToken');
 
   return {
     type: Constants.LOGOUT_SUCCESS,
@@ -77,8 +78,6 @@ const registerBasicUser = async (values) => {
 const loginBasicUserFunc = async (email, password, deviceInfo) => {
   const url = '/api/auth/loginBasicUser';
 
-  console.log('loginBasicUserFunc', email, password, deviceInfo);
-
   const response = await fetch(
     url,
     {
@@ -97,6 +96,10 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
   }
 
   const data = await response.json();
+
+  if (data.csrfToken) {
+    localStorage.setItem('csrfToken', data.csrfToken);
+  }
 
   return data;
 };
@@ -153,6 +156,11 @@ const loginOrRegisterAzureUser = async (code) => {
     data.data.isAuthenticated = true;
     //set item in local storage
     setUser(JSON.stringify(data.data));
+    //set csrf token
+    if (data.csrfToken) {
+      localStorage.setItem('csrfToken', data.csrfToken);
+    }
+
     return {
       type: Constants.LOGIN_SUCCESS,
       payload: data.data,
