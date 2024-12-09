@@ -65,6 +65,21 @@ export const pingCluster = async ({ clusterInfo, abortController }) => {
   return response.status;
 };
 
+//Ping existing cluster
+export const pingExistingCluster = async ({ clusterId }) => {
+  const payload = {
+    method: 'Get',
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/cluster/pingExistingCluster/${clusterId}`, payload);
+
+  if (response.status !== 200 && response.status !== 401) {
+    throw new Error('Failed to establish connection with cluster');
+  }
+  return response.status;
+};
+
 //Add cluster
 export const addCluster = async ({ clusterInfo, abortController }) => {
   const payload = {
@@ -111,6 +126,23 @@ export const getConfigurationDetails = async () => {
 
   const responseJson = await response.json();
   return responseJson.data; // {instanceName: 'Tombolo', environment: 'production'}
+};
+
+// Get cluster details by ID
+export const getCluster = async (id) => {
+  const payload = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/cluster/${id}`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch cluster details');
+  }
+
+  const responseJson = await response.json();
+  return responseJson.data;
 };
 
 export const allStepsToAddCluster = [

@@ -15,3 +15,16 @@
   color: var(--primary);
   font-weight: 600;
 }
+
+.Clusters__statusText {
+  color: var(--primary);
+}
+
+.Clusters__statusText:hover {
+  cursor: pointer;
+}
+
+.clustersTable__toolTip_reachabilityStatus {
+  min-width: 320px;
+  max-width: 400px;
+}
