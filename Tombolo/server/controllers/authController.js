@@ -264,11 +264,14 @@ const verifyEmail = async (req, res) => {
 
     setTokenCookie(res, accessToken);
 
+    const csrfToken = generateToken(req, res, true);
+
     // Send response
     res.status(200).json({
       success: true,
       message: "Email verified successfully",
       data: { ...user.toJSON() },
+      csrfToken: csrfToken,
     });
   } catch (err) {
     logger.error(`Verify email: ${err.message}`);
@@ -351,10 +354,7 @@ const resetTempPassword = async (req, res) => {
 
     setTokenCookie(res, accessToken);
 
-    // const options = getCookieOptions();
-
-    // //put access token in cookie
-    // res.cookie("token", accessToken, options);
+    const csrfToken = generateToken(req, res, true);
 
     // User data obj to send to the client
     const userObj = {
@@ -369,6 +369,7 @@ const resetTempPassword = async (req, res) => {
       success: true,
       message: "Password updated successfully",
       data: userObj,
+      csrfToken: csrfToken,
     });
   } catch (err) {
     logger.error(`Reset Temp Password: ${err.message}`);
@@ -381,10 +382,7 @@ const resetTempPassword = async (req, res) => {
 //Login Basic user
 const loginBasicUser = async (req, res) => {
   try {
-    console.log('made it here');
     const { email, password, deviceInfo } = req.body;
-    const csrfToken = generateToken(res, req);
-    console.log("csrfToken", csrfToken);
 
     const genericError = "Username and Password combination not found";
 
@@ -443,12 +441,10 @@ const loginBasicUser = async (req, res) => {
     // Create access jwt
     const accessToken = generateAccessToken({ ...userObj, tokenId });
 
+    //set cookies
     setTokenCookie(res, accessToken);
 
-    // const options = getCookieOptions();
-
-    // //put access token in cookie
-    // res.cookie("token", accessToken, options);
+    const csrfToken = generateToken(req, res, true);
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });
@@ -474,8 +470,10 @@ const loginBasicUser = async (req, res) => {
       success: true,
       message: "User logged in successfully",
       data: userObj,
+      csrfToken: csrfToken,
     });
   } catch (err) {
+    console.log(err);
     // If err.status is present - it is logged already
     if (!err.status) {
       logger.error(`Login user: ${err.message}`);
@@ -757,16 +755,14 @@ const loginOrRegisterAzureUser = async (req, res) => {
 
       setTokenCookie(res, accessToken);
 
-      // const options = getCookieOptions();
-
-      // //put access token in cookie
-      // res.cookie("token", accessToken, options);
+      const csrfToken = generateToken(req, res, true);
 
       // Send response
       return res.status(201).json({
         success: true,
         message: "User created successfully",
         data: { ...newUserPlain },
+        csrfToken: csrfToken,
       });
     }
 
@@ -794,16 +790,14 @@ const loginOrRegisterAzureUser = async (req, res) => {
 
     setTokenCookie(res, accessToken);
 
-    // const options = getCookieOptions();
-
-    // //put access token in cookie
-    // res.cookie("token", accessToken, options);
+    const csrfToken = generateToken(req, res, true);
 
     // Send response
     res.status(200).json({
       success: true,
       message: "User logged in successfully",
       data: { ...user.toJSON() },
+      csrfToken: csrfToken,
     });
   } catch (err) {
     logger.error(`Login or Register Azure User: ${err.message}`);

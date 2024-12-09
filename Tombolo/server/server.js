@@ -121,6 +121,7 @@ app.use("/api/apikeys", api);
 
 //need to enable doubelCSRF protection first so it's available in token validation routes
 app.use(doubleCsrfProtection);
+
 // Validate token before proceeding to route
 app.use(validateToken);
 

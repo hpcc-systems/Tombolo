@@ -31,6 +31,10 @@ export function handleError(response) {
 // This function grabs the token from the Local Storage. The returned value is palaced in the header of the API calls
 // If the application is using Azure sso, the fetch request are intercepted and the headers are modified with fresh azure token
 export function authHeader() {
+  const csrfToken = localStorage.getItem('csrfToken');
+  if (csrfToken) {
+    return { Accept: 'application/json', 'Content-Type': 'application/json', 'x-csrf-token': csrfToken };
+  }
   return { Accept: 'application/json', 'Content-Type': 'application/json' };
 }
 
