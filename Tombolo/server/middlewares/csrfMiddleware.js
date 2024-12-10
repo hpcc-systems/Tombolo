@@ -11,6 +11,7 @@ const csrf = doubleCsrf({
     sameSite: process.env.NODE_ENV === "production" ? "Strict" : "Lax",
     secure: process.env.NODE_ENV === "production", // Enable for HTTPS in production
     httpOnly: false, //client needs to be able to read and set the cookie
+    maxAge: 1000 * 60 * 15, // only valid for 15 minutes
   },
 });
 
