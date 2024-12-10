@@ -792,6 +792,8 @@ const loginOrRegisterAzureUser = async (req, res) => {
 
     const csrfToken = generateToken(req, res, true);
 
+    console.log(csrfToken);
+
     // Send response
     res.status(200).json({
       success: true,

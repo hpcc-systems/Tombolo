@@ -33,7 +33,9 @@ export function handleError(response) {
 export function authHeader() {
   const csrfToken = localStorage.getItem('csrfToken');
   if (csrfToken) {
-    return { Accept: 'application/json', 'Content-Type': 'application/json', 'x-csrf-token': csrfToken };
+    let csrfObj =
+      process.env.NODE_ENV === 'production' ? { '__Host-prod.x-csrf-token': csrfToken } : { 'x-csrf-token': csrfToken };
+    return { Accept: 'application/json', 'Content-Type': 'application/json', csrfObj };
   }
   return { Accept: 'application/json', 'Content-Type': 'application/json' };
 }
