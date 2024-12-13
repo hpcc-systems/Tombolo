@@ -4,6 +4,8 @@ import { authActions } from '../../redux/actions/Auth';
 import { message } from 'antd';
 import { getRoleNameArray } from './AuthUtil';
 
+const csrfHeaderName = process.env.NODE_ENV === 'production' ? '__Host-prod.x-csrf-token' : 'x-csrf-token';
+
 export function handleError(response) {
   message.config({ top: 130 });
 
@@ -32,10 +34,9 @@ export function handleError(response) {
 // If the application is using Azure sso, the fetch request are intercepted and the headers are modified with fresh azure token
 export function authHeader() {
   const csrfToken = localStorage.getItem('csrfToken');
+
   if (csrfToken) {
-    let csrfObj =
-      process.env.NODE_ENV === 'production' ? { '__Host-prod.x-csrf-token': csrfToken } : { 'x-csrf-token': csrfToken };
-    return { Accept: 'application/json', 'Content-Type': 'application/json', csrfObj };
+    return { Accept: 'application/json', 'Content-Type': 'application/json', [csrfHeaderName]: csrfToken };
   }
   return { Accept: 'application/json', 'Content-Type': 'application/json' };
 }
@@ -54,6 +55,14 @@ window.fetch = async (...args) => {
     }
 
     const response = await originalFetch(resource, config);
+
+    const newToken = response.headers.get(csrfHeaderName);
+    const oldToken = localStorage.getItem('csrfToken');
+
+    //check if the csrf token has changed, and if it was a not a get request
+    if (newToken && !(resource === '/api/app/read/app_list') && oldToken !== newToken) {
+      localStorage.setItem('csrfToken', newToken);
+    }
 
     //if response.status is 401, it means the refresh token has expired, so we need to log the user out
     if (response.status === 401 && resource !== '/api/auth/loginBasicUser') {

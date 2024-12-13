@@ -119,11 +119,9 @@ app.use("/api/wizard", wizard);
 //exposed API, requires api key for any routes
 app.use("/api/apikeys", api);
 
-//need to enable doubelCSRF protection first so it's available in token validation routes
-app.use(doubleCsrfProtection);
-
-// Validate token before proceeding to route
+// Validate access token and csrf tokens, all routes below require these
 app.use(validateToken);
+app.use(doubleCsrfProtection);
 
 // Authenticated routes
 app.use("/api/user", users);

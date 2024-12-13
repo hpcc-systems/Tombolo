@@ -41,7 +41,6 @@ const Option = Select.Option;
 message.config({ top: 130 });
 class FileDetails extends Component {
   formRef = React.createRef();
-
   state = {
     visible: true,
     confirmLoading: false,

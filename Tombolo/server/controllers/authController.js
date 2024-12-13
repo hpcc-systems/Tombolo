@@ -14,7 +14,7 @@ const {
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
-const { generateToken } = require("../middlewares/csrfMiddleware");
+const { generateAndSetCSRFToken } = require("../utils/authUtil");
 
 const User = models.user;
 const UserRoles = models.UserRoles;
@@ -262,16 +262,15 @@ const verifyEmail = async (req, res) => {
       exp: new Date(exp * 1000),
     });
 
-    setTokenCookie(res, accessToken);
+    await setTokenCookie(res, accessToken);
 
-    const csrfToken = generateToken(req, res, true);
+    await generateAndSetCSRFToken(req, res, accessToken);
 
     // Send response
     res.status(200).json({
       success: true,
       message: "Email verified successfully",
       data: { ...user.toJSON() },
-      csrfToken: csrfToken,
     });
   } catch (err) {
     logger.error(`Verify email: ${err.message}`);
@@ -352,9 +351,9 @@ const resetTempPassword = async (req, res) => {
       exp: new Date(exp * 1000),
     });
 
-    setTokenCookie(res, accessToken);
+    await setTokenCookie(res, accessToken);
 
-    const csrfToken = generateToken(req, res, true);
+    await generateAndSetCSRFToken(req, res, accessToken);
 
     // User data obj to send to the client
     const userObj = {
@@ -369,7 +368,6 @@ const resetTempPassword = async (req, res) => {
       success: true,
       message: "Password updated successfully",
       data: userObj,
-      csrfToken: csrfToken,
     });
   } catch (err) {
     logger.error(`Reset Temp Password: ${err.message}`);
@@ -380,7 +378,7 @@ const resetTempPassword = async (req, res) => {
 };
 
 //Login Basic user
-const loginBasicUser = async (req, res) => {
+const loginBasicUser = async (req, res, next) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
@@ -441,11 +439,6 @@ const loginBasicUser = async (req, res) => {
     // Create access jwt
     const accessToken = generateAccessToken({ ...userObj, tokenId });
 
-    //set cookies
-    setTokenCookie(res, accessToken);
-
-    const csrfToken = generateToken(req, res, true);
-
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });
 
@@ -465,12 +458,15 @@ const loginBasicUser = async (req, res) => {
       exp: new Date(exp * 1000),
     });
 
+    //set cookies
+    await setTokenCookie(res, accessToken);
+    await generateAndSetCSRFToken(req, res, accessToken);
+
     // Success response
     res.status(200).json({
       success: true,
       message: "User logged in successfully",
       data: userObj,
-      csrfToken: csrfToken,
     });
   } catch (err) {
     console.log(err);
@@ -487,6 +483,9 @@ const loginBasicUser = async (req, res) => {
 // Logout Basic user
 const logOutBasicUser = async (req, res) => {
   try {
+    // Clear the token cookie
+    res.clearCookie("token");
+    res.clearCookie("x-csrf-token");
     // Decode the token to get the tokenId (assuming token contains tokenId)
     const decodedToken = jwt.decode(req.cookies.token);
 
@@ -652,7 +651,7 @@ const resetPassword = async (req, res) => {
 };
 
 // Login or register with azure user - loginOrRegisterAzureUser [ `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/token`]
-const loginOrRegisterAzureUser = async (req, res) => {
+const loginOrRegisterAzureUser = async (req, res, next) => {
   try {
     const msEndPoint = `https://login.microsoftonline.com/${process.env.TENENT_ID}/oauth2/v2.0/token`;
 
@@ -753,16 +752,15 @@ const loginOrRegisterAzureUser = async (req, res) => {
       // Create a new access token
       const accessToken = generateAccessToken({ ...newUserPlain, tokenId });
 
-      setTokenCookie(res, accessToken);
+      await setTokenCookie(res, accessToken);
 
-      const csrfToken = generateToken(req, res, true);
+      await generateAndSetCSRFToken(req, res, accessToken, next);
 
       // Send response
       return res.status(201).json({
         success: true,
         message: "User created successfully",
         data: { ...newUserPlain },
-        csrfToken: csrfToken,
       });
     }
 
@@ -788,20 +786,18 @@ const loginOrRegisterAzureUser = async (req, res) => {
     // Create a new access token
     const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
 
-    setTokenCookie(res, accessToken);
+    await setTokenCookie(res, accessToken);
 
-    const csrfToken = generateToken(req, res, true);
-
-    console.log(csrfToken);
+    await generateAndSetCSRFToken(req, res, accessToken);
 
     // Send response
     res.status(200).json({
       success: true,
       message: "User logged in successfully",
       data: { ...user.toJSON() },
-      csrfToken: csrfToken,
     });
   } catch (err) {
+    console.log(err);
     logger.error(`Login or Register Azure User: ${err.message}`);
     res
       .status(err.status || 500)

@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const logger = require("../config/logger");
 
 const model = require("../models");
 const User = model.user;
@@ -6,6 +7,11 @@ const UserRoles = model.UserRoles;
 const RoleTypes = model.RoleTypes;
 const user_application = model.user_application;
 const Application = model.application;
+const { generateToken } = require("../middlewares/csrfMiddleware");
+const csrfHeaderName =
+  process.env.NODE_ENV === "production"
+    ? "__Host-prod.x-csrf-token"
+    : "x-csrf-token";
 
 // Generate access token
 const generateAccessToken = (user) => {
@@ -60,13 +66,31 @@ const getAUser = async (identifier) => {
   });
 };
 
-const setTokenCookie = (res, token) => {
+const setTokenCookie = async (res, token) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "Strict",
     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
   });
+  return true;
+};
+
+const generateAndSetCSRFToken = async (req, res, accessToken) => {
+  try {
+    //set token in req as well so csrf token can be generated
+    req.cookies.token = accessToken;
+
+    const csrfToken = generateToken(req, res, true);
+
+    //attach csrfToken to x-csrf-token header
+    res.setHeader(csrfHeaderName, csrfToken);
+
+    return true;
+  } catch (e) {
+    logger.error("Error while generating csrf token:" + e);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 };
 
 //Exports
@@ -77,4 +101,5 @@ module.exports = {
   verifyRefreshToken,
   getAUser,
   setTokenCookie,
+  generateAndSetCSRFToken,
 };
