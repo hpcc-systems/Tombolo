@@ -6,7 +6,6 @@ import { setUser, getUser } from '../../components/common/userStorage';
 //function to centralize storage clearing
 const clearStorage = () => {
   localStorage.removeItem('user');
-  localStorage.removeItem('x-csrf-token');
 };
 
 async function login({ email, password, deviceInfo }) {

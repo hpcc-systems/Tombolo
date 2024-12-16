@@ -33,9 +33,11 @@ export function handleError(response) {
 // This function grabs the token from the Local Storage. The returned value is palaced in the header of the API calls
 // If the application is using Azure sso, the fetch request are intercepted and the headers are modified with fresh azure token
 export function authHeader() {
-  const csrfToken = localStorage.getItem('csrfToken');
+  //grab csrf token directly from cookie and echo it back in proper header name
+  let csrfToken = document.cookie.split(';').find((cookie) => cookie.trim().startsWith(csrfHeaderName + '='));
 
   if (csrfToken) {
+    csrfToken = csrfToken.split('=')[1].split('%')[0];
     return { Accept: 'application/json', 'Content-Type': 'application/json', [csrfHeaderName]: csrfToken };
   }
   return { Accept: 'application/json', 'Content-Type': 'application/json' };
@@ -55,14 +57,6 @@ window.fetch = async (...args) => {
     }
 
     const response = await originalFetch(resource, config);
-
-    const newToken = response.headers.get(csrfHeaderName);
-    const oldToken = localStorage.getItem('csrfToken');
-
-    //check if the csrf token has changed, and if it was a not a get request
-    if (newToken && !(resource === '/api/app/read/app_list') && oldToken !== newToken) {
-      localStorage.setItem('csrfToken', newToken);
-    }
 
     //if response.status is 401, it means the refresh token has expired, so we need to log the user out
     if (response.status === 401 && resource !== '/api/auth/loginBasicUser') {
