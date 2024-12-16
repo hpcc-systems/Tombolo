@@ -1,10 +1,10 @@
 const hpccJSComms = require("@hpcc-js/comms");
 const { parentPort } = require("worker_threads");
 
-const models = require("../models");
+const models = require("../../models");
 const Cluster = models.cluster;  
-const logger = require("../config/logger");
-const hpccUtil = require("../utils/hpcc-util");
+const logger = require("../../config/logger");
+const hpccUtil = require("../../utils/hpcc-util");
 
 
 (async () => {

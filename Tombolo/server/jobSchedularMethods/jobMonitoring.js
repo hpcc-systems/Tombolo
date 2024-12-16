@@ -47,9 +47,9 @@ async function startJobMonitoring() {
       },
     });
     this.bree.start(jobName);
-    logger.info("🕗 JOB MONITORING STARTED ");
+    logger.info("Job Monitoring initialized ...");
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message);
   }
 }
 
@@ -86,9 +86,9 @@ async function startIntermediateJobsMonitoring() {
       },
     });
     this.bree.start(jobName);
-    logger.info("🕗 INTERMEDIATE JOB MONITORING STARTED ");
+    logger.info("Intermediate job monitoring initialized ...");
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message);
   }
 }
 
@@ -110,7 +110,7 @@ async function startJobPunctualityMonitoring() {
     this.bree.add({
       name: jobName,
       // interval: "10s", // For development
-       interval: humanReadableIntervalForJobPunctualityMonitoring,
+      interval: humanReadableIntervalForJobPunctualityMonitoring,
       path: path.join(
         __dirname,
         "..",
@@ -126,9 +126,9 @@ async function startJobPunctualityMonitoring() {
       },
     });
     this.bree.start(jobName);
-    logger.info("🕗 JOB PUNCTUALITY MONITORING STARTED ...");
+    logger.info("Job punctuality monitoring initialized ...");
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message);
   }
 }
 

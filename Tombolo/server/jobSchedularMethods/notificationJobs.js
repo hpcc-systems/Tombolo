@@ -20,7 +20,7 @@ async function scheduleEmailNotificationProcessing() {
     });
 
     this.bree.start(jobName);
-    logger.info("🔔 E-MAIL NOTIFICATION PROCESSING STARTED ...");
+    logger.info("E-mail Notification processing job initialized ...");
   } catch (err) {
     console.error(err);
   }
@@ -42,7 +42,7 @@ async function scheduleTeamsNotificationProcessing() {
     });
 
     this.bree.start(jobName);
-    logger.info("🔔 TEAMS NOTIFICATION PROCESSING STARTED ...");
+    logger.info("Teams notification processing job initialized ...");
   } catch (err) {
     console.error(err);
   }

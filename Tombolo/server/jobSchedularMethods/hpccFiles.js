@@ -93,7 +93,7 @@ function createSuperFileMonitoringBreeJob({ filemonitoring_id, cron }) {
 
 async function scheduleSuperFileMonitoringOnServerStart() {
   try {
-    logger.info("📺 SUPER FILE MONITORING STARTED ...");
+    logger.info("Super file monitoring initialized ...");
     const superfileMonitoring = await filemonitoring_superfile.findAll({
       raw: true,
     });
@@ -164,7 +164,7 @@ async function scheduleFileMonitoringOnServerStart() {
 }
 
 async function scheduleFileMonitoring() {
-  logger.info("📂 FILE MONITORING STARTED ...");
+  logger.info("File monitoring initialized ...");
   try {
     let jobName = "file-monitoring-" + new Date().getTime();
     this.bree.add({
