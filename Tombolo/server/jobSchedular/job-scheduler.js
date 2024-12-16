@@ -24,6 +24,7 @@ const {
   createClusterUsageHistoryJob,
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
+  checkClusterReachability,
 } = require("../jobSchedularMethods/clusterJobs.js");
 const {
   scheduleJobStatusPolling,
@@ -56,10 +57,6 @@ const {
   startJobPunctualityMonitoring,
 } = require("../jobSchedularMethods/jobMonitoring.js");
 
-const {
-  checkClusterReachability,
-} = require("../jobSchedularMethods/checkClusterReachability.js");
-
 class JobScheduler {
   constructor() {
     this.bree = new Bree({
@@ -89,23 +86,26 @@ class JobScheduler {
           workerName = "File monitoring";
 
         if (message === "done") {
-          logger.verbose(`${workerName} signaled 'done'`);
+          // Handle this is in Finally block
         }
-        if (message?.level === "verbose") {
-          logger.verbose(`[${workerName}]:`);
-          logger.verbose(message.text);
+
+        if (
+          message?.level === "warn" ||
+          message?.level === "info" ||
+          message?.level === "verbose" ||
+          message?.level === "debug" ||
+          message?.level === "silly"
+        ) {
+          logger[message.level](message.text);
         }
-        if (message?.level === "info") {
-          logger.info(`[${workerName}]:`);
-          logger.info(message.text);
-        }
+
         if (message?.level === "error") {
-          logger.error(`[${workerName}]:`);
           logger.error(`${message.text}`, message.error);
         }
+
         if (message?.action === "remove") {
           this.bree.remove(worker.name);
-          logger.info(`👷 JOB REMOVED:  ${workerName}`);
+          logger.info(`Job removed:  ${workerName}`);
         }
         if (message?.action == "scheduleNext") {
           await this.scheduleCheckForJobsWithSingleDependency({
@@ -145,6 +145,7 @@ class JobScheduler {
   logBreeJobs() {
     return logBreeJobs.call(this);
   }
+
   createNewBreeJob({
     uniqueJobName,
     cron,

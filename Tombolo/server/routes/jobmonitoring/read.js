@@ -364,12 +364,13 @@ router.patch(
     }
 
     try {
-
       const {metaData: payload} = req.body;
 
       for(const data of payload){
         await JobMonitoring.update({
           metaData: data.metaData,
+          isActive: false,
+          approvalStatus: "Pending",
         },{
           where: {id: data.id}
         });

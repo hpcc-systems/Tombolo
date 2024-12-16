@@ -36,17 +36,16 @@ function updateApplicationAddButtonTourShown(shown) {
 
 function getClusters() {
   return (dispatch) => {
-    fetch('/api/hpcc/read/getClusters', { headers: authHeader() })
+    fetch('/api/cluster', { headers: authHeader() })
       .then((response) => (response.ok ? response.json() : handleError(response)))
       .then((clusters) => {
         //if there are no clusters, set this to null for later checks
-
-        if (clusters.length === 0) {
+        if (clusters.data.length === 0) {
           dispatch({ type: Constants.NO_CLUSTERS_FOUND, noClusters: true });
           return;
         }
 
-        dispatch({ type: Constants.CLUSTERS_FOUND, clusters });
+        dispatch({ type: Constants.CLUSTERS_FOUND, clusters: clusters.data });
       })
       .catch(console.log);
   };

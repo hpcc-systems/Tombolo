@@ -1,0 +1,8 @@
+{
+  "label": "Monitoring",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Tombolo allows you to monitor four types of assets: Files, Clusters, Jobs, and Superfiles. For each, you can set up notification conditions and choose notification recipients. Click on a card below to learn more about each monitoring option and how to configure it."
+  }
+}

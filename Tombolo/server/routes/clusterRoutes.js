@@ -14,10 +14,11 @@ const {
   addClusterWithProgress,
   getClusters,
   getCluster,
-  deleteCluster,
   updateCluster,
+  deleteCluster,
   getClusterWhiteList,
   pingCluster,
+  pingExistingCluster,
   clusterUsage,
   clusterStorageHistory,
 } = require("../controllers/clusterController");
@@ -30,6 +31,7 @@ router.use(validateUserRole([role.OWNER, role.ADMIN]));
 
 
 router.post("/ping", validateClusterPingPayload, pingCluster); // GET - Ping cluster
+router.get("/pingExistingCluster/:id", validateClusterId, pingExistingCluster); // GET - Ping existing cluster
 router.get("/whiteList", getClusterWhiteList); // GET - cluster white list
 router.post("/", validateAddClusterInputs, addCluster); // CREATE - one cluster
 router.post(

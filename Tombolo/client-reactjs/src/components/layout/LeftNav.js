@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, withRouter, useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Layout, Menu, Typography } from 'antd';
+import { Layout, Menu, Typography, Tooltip } from 'antd';
 import {
   DashboardOutlined,
   FileSearchOutlined,
@@ -14,6 +14,7 @@ import {
   ApiOutlined,
   BellOutlined,
   FolderOutlined,
+  WarningFilled,
 } from '@ant-design/icons';
 
 import { getRoleNameArray } from '../common/AuthUtil';
@@ -43,6 +44,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   const { application, integrations, clusters } = applicationReducer;
 
   const applicationId = application?.applicationId;
+  const clusterConnectionIssue = this.props?.clusters?.some((c) => c.reachabilityInfo?.reachable === false);
 
   const roleArray = getRoleNameArray();
 
@@ -66,39 +68,6 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   //adjust the current highlighted menu item based on the current path
   useEffect(() => {
     const options = {
-      assets: '1',
-      dataflow: '2',
-      dataflowinstances: '3',
-      fileMonitoring: '4a',
-      directoryMonitoring: '4b',
-      clustermonitoring: '4c',
-      jobmonitoring: '4d',
-      superfileMonitoring: '4e',
-      orbitMonitoring: '4f',
-      notifications: '5a',
-      clusterUsage: '5b',
-      Orbit: '5c',
-      clusters: '6',
-      github: '8',
-      consumers: '9',
-      applications: '10',
-      userManagement: '11',
-      integrations: '12',
-      msTeams: '13a',
-    };
-
-    // on init we check pathname if it contains options key in name, if it does => highlight that menu item
-    for (const key in options) {
-      let path = history.location.pathname;
-      if (path.includes(key)) {
-        setCurrent(options[key]);
-      }
-    }
-  }, [history.location.pathname]);
-
-  useEffect(() => {
-    const options = {
-      '/': '0',
       assets: '1',
       dataflow: '2',
       dataflowinstances: '3',
@@ -344,9 +313,17 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
             <span style={{ marginLeft: '1rem' }}>Clusters</span>
           </span>
         ) : (
-          <Link ref={clusterLinkRef} style={{ color: 'rgba(255, 255, 255, .65)' }} to={'/admin/clusters'}>
-            <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
+          <Link ref={this.props.clusterLinkRef} style={{ color: 'rgba(255, 255, 255, .65)' }} to={'/admin/clusters'}>
+            <Tooltip
+              placement="right"
+              arrow={false}
+              overlayStyle={{ left: 35 }}
+              open={this.props.collapsed && clusterConnectionIssue ? true : false}
+              title={<WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}>
+              <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
+            </Tooltip>
             <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>Clusters</span>
+            {clusterConnectionIssue && <WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}
           </Link>
         )}
       </>,
