@@ -3,7 +3,13 @@ import { authHeader, handleError } from '../../components/common/AuthHeader';
 import { message } from 'antd';
 import { setUser, getUser } from '../../components/common/userStorage';
 
+//function to centralize storage clearing
+const clearStorage = () => {
+  localStorage.removeItem('user');
+};
+
 async function login({ email, password, deviceInfo }) {
+  clearStorage();
   const user = await loginBasicUserFunc(email, password, deviceInfo);
 
   if (user && user.data) {
@@ -27,8 +33,8 @@ async function login({ email, password, deviceInfo }) {
 function logout() {
   fetch('/api/auth/logoutBasicUser', { headers: authHeader(), method: 'POST' });
   //remove item from local storage
-  localStorage.removeItem('user');
-  localStorage.removeItem('csrfToken');
+
+  clearStorage();
 
   return {
     type: Constants.LOGOUT_SUCCESS,
@@ -76,6 +82,7 @@ const registerBasicUser = async (values) => {
 };
 
 const loginBasicUserFunc = async (email, password, deviceInfo) => {
+  clearStorage();
   const url = '/api/auth/loginBasicUser';
 
   const response = await fetch(
@@ -96,10 +103,6 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
   }
 
   const data = await response.json();
-
-  if (data.csrfToken) {
-    localStorage.setItem('csrfToken', data.csrfToken);
-  }
 
   return data;
 };
@@ -132,6 +135,7 @@ const registerOwner = async (values) => {
 };
 
 const loginOrRegisterAzureUser = async (code) => {
+  clearStorage();
   const url = '/api/auth/loginOrRegisterAzureUser';
   const response = await fetch(
     url,
@@ -156,10 +160,6 @@ const loginOrRegisterAzureUser = async (code) => {
     data.data.isAuthenticated = true;
     //set item in local storage
     setUser(JSON.stringify(data.data));
-    //set csrf token
-    if (data.csrfToken) {
-      localStorage.setItem('csrfToken', data.csrfToken);
-    }
 
     return {
       type: Constants.LOGIN_SUCCESS,

@@ -9,6 +9,7 @@ const {
   setTokenCookie,
 } = require("../utils/authUtil");
 const { isTokenBlacklisted } = require("../utils/tokenBlackListing");
+const { generateAndSetCSRFToken } = require("../utils/authUtil");
 
 const RefreshTokens = model.RefreshTokens;
 const User = model.user;
@@ -37,20 +38,13 @@ const tokenValidationMiddleware = async (req, res, next) => {
     //put access token in cookie
     setTokenCookie(res, token);
 
-    // return orignal cookie if it is still valid
-    // res.cookie("token", token, {
-    //   maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "Strict",
-    // });
-
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       const tokenDetails = await handleExpiredToken(token);
       if (tokenDetails.sessionExpired) {
-        // Remove cookie
+        //session expired block so refresh token has expired meaning user needs to log in again
+
         res.clearCookie("token", {
           httpOnly: true,
           secure: true,
@@ -60,18 +54,11 @@ const tokenValidationMiddleware = async (req, res, next) => {
           message: "Unauthorized: Session expired, Please Log in again.",
         });
       } else {
-        // Attach new access token to response header
+        //token expired, but session is still valid block so we need to refresh the token cookie and the csrf token
+        await setTokenCookie(res, tokenDetails.newAccessToken);
 
-        //put access token in cookie
-        setTokenCookie(res, tokenDetails.newAccessToken);
+        await generateAndSetCSRFToken(req, res, tokenDetails.newAccessToken);
 
-        // res.cookie("token", tokenDetails.newAccessToken, {
-        //   maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-        //   httpOnly: true,
-        //   secure: true,
-        //   sameSite: "Strict",
-        // });
-        // res.setHeader("Authorization", `Bearer ${tokenDetails.newAccessToken}`);
         next();
       }
     } else {

@@ -4,6 +4,8 @@ import { authActions } from '../../redux/actions/Auth';
 import { message } from 'antd';
 import { getRoleNameArray } from './AuthUtil';
 
+const csrfHeaderName = process.env.NODE_ENV === 'production' ? '__Host-prod.x-csrf-token' : 'x-csrf-token';
+
 export function handleError(response) {
   message.config({ top: 130 });
 
@@ -31,11 +33,12 @@ export function handleError(response) {
 // This function grabs the token from the Local Storage. The returned value is palaced in the header of the API calls
 // If the application is using Azure sso, the fetch request are intercepted and the headers are modified with fresh azure token
 export function authHeader() {
-  const csrfToken = localStorage.getItem('csrfToken');
+  //grab csrf token directly from cookie and echo it back in proper header name
+  let csrfToken = document.cookie.split(';').find((cookie) => cookie.trim().startsWith(csrfHeaderName + '='));
+
   if (csrfToken) {
-    let csrfObj =
-      process.env.NODE_ENV === 'production' ? { '__Host-prod.x-csrf-token': csrfToken } : { 'x-csrf-token': csrfToken };
-    return { Accept: 'application/json', 'Content-Type': 'application/json', csrfObj };
+    csrfToken = csrfToken.split('=')[1].split('%')[0];
+    return { Accept: 'application/json', 'Content-Type': 'application/json', [csrfHeaderName]: csrfToken };
   }
   return { Accept: 'application/json', 'Content-Type': 'application/json' };
 }

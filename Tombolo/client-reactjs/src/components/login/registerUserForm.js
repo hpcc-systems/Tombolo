@@ -27,7 +27,6 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
   return (
     <Form onFinish={onSubmit} layout="vertical" form={form}>
       <>{!ownerRegistration ? <Divider /> : null}</>
-
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item
