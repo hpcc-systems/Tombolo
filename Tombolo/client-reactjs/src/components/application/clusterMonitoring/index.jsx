@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tooltip, Button, message, Form, Tabs, Modal } from 'antd';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 import ClusterMonitoringTable from './ClusterMonitoringTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
@@ -20,6 +21,11 @@ function ClusterMonitoring() {
     clusters,
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
+
+  //get user roles
+  const roleArray = getRoleNameArray();
+
+  const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   //Local State
   const [clusterMonitorings, setClusterMonitorings] = useState([]);
@@ -89,7 +95,7 @@ function ClusterMonitoring() {
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/clustermonitoring/all/${applicationId}`, payload);
@@ -177,7 +183,7 @@ function ClusterMonitoring() {
 
       const payload = {
         method: selectedMonitoring ? 'PUT' : 'POST',
-        header: authHeader(),
+        headers: authHeader(),
         body: JSON.stringify(formData),
       };
 
@@ -232,7 +238,7 @@ function ClusterMonitoring() {
       setEngines([]);
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/hpcc/read/clusterMetaData?clusterId=${clusterId}`, payload);
@@ -276,7 +282,7 @@ function ClusterMonitoring() {
   );
 
   const saveBtn = (
-    <Button key="save" type="primary" onClick={handleOk}>
+    <Button key="save" type="primary" onClick={() => handleOk()} disabled={isReader}>
       Save
     </Button>
   );
@@ -308,6 +314,7 @@ function ClusterMonitoring() {
         setSelectedEngines={setSelectedEngines}
         notificationDetails={notificationDetails}
         setNotificationDetails={setNotificationDetails}
+        isReader={isReader}
       />
 
       <Modal

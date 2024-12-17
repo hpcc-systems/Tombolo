@@ -4,7 +4,7 @@ import { authHeader } from '../../../common/AuthHeader.js';
 export const getAllSentNotifications = async ({ applicationId }) => {
   const payload = {
     method: 'GET',
-    header: authHeader(),
+    headers: authHeader(),
   };
 
   const response = await fetch(`/api/sent_notifications/${applicationId}`, payload);
@@ -21,7 +21,7 @@ export const getAllSentNotifications = async ({ applicationId }) => {
 export const deleteNotification = async (id) => {
   const payload = {
     method: 'DELETE',
-    header: authHeader(),
+    headers: authHeader(),
   };
 
   const response = await fetch(`/api/sent_notifications/${id}`, payload);
@@ -37,7 +37,7 @@ export const deleteNotification = async (id) => {
 export const deleteMultipleNotifications = async (ids) => {
   const payload = {
     method: 'DELETE',
-    header: authHeader(),
+    headers: authHeader(),
     body: JSON.stringify({ ids }),
   };
 
@@ -54,7 +54,7 @@ export const deleteMultipleNotifications = async (ids) => {
 export const createNotification = async ({ notificationPayload }) => {
   const payload = {
     method: 'POST',
-    header: authHeader(),
+    headers: authHeader(),
     body: JSON.stringify(notificationPayload),
   };
 
@@ -71,7 +71,7 @@ export const createNotification = async ({ notificationPayload }) => {
 export const updateMultipleNotifications = async ({ data }) => {
   const payload = {
     method: 'PATCH',
-    header: authHeader(),
+    headers: authHeader(),
     body: JSON.stringify(data),
   };
 

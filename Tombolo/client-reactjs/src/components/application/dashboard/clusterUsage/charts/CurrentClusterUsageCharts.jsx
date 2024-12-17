@@ -23,7 +23,7 @@ function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/cluster/currentClusterUsage/${clusterId}`, payload);
@@ -70,6 +70,7 @@ function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
       <div>
         {clusters ? (
           <Select
+            disabled={false}
             onChange={handleClusterChange}
             value={selectedCluster}
             className="currentClusterUsageCharts_clusterSelector">

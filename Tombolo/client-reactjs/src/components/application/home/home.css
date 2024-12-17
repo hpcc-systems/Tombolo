@@ -1,9 +1,5 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 100%;
-  height: calc(100% + 55px);
+  height: calc(100% + 5px);
   text-align: center;
   font-size: 1.5rem;
 }
@@ -23,16 +19,15 @@
   color: white;
   padding: 3rem;
   width: 100%;
-  margin-bottom: 3rem;
 }
 
-.top {
+.innerContainer {
   width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   margin-top: -5px;
-  margin-bottom: 3rem;
+  height: 100%;
 }
 
 .middle {
@@ -42,6 +37,8 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .middle .ant-card {
@@ -54,14 +51,10 @@
   background: rgb(48, 56, 70);
   color: white;
   padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 }
 
 .footerRow {
   width: 100%;
-  margin-bottom: 2rem;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -70,18 +63,31 @@
 
 .footerRow a {
   color: white;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .footerRow p {
-  margin: 0 auto;
+  /* margin: 0 auto; */
   font-size: 1rem;
+}
+
+.footerRow a:hover {
+  border-bottom: 1px solid var(--light);
+}
+.footerRow a:focus {
+  text-decoration: 1px solid var(--light);
 }
 
 .sub {
   width: 30%;
   font-size: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.sub h4 {
+  font-weight: 800;
+  font-size: 1.1rem;
 }
 
 .container .ant-card-head {

@@ -13,19 +13,27 @@ process.env.TZ = "UTC";
 /* LIBRARIES */
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const tokenService = require("./utils/token_service");
-const passport = require("passport");
+const {
+  tokenValidationMiddleware: validateToken,
+} = require("./middlewares/tokenValidationMiddleware");
+
 const cors = require("cors");
 const compression = require("compression");
 const { sequelize: dbConnection } = require("./models");
+
 const logger = require("./config/logger");
+require("./utils/tokenBlackListing");
+
+const cookieParser = require("cookie-parser");
+
+const { doubleCsrfProtection } = require("./middlewares/csrfMiddleware");
 
 /* BREE JOB SCHEDULER */
 const JobScheduler = require("./jobSchedular/job-scheduler");
 
 /* Initialize express app */
 const app = express();
-const port = process.env.SERVER_PORT || 3000;
+const port = process.env.PORT || 3000;
 
 /* Initialize Socket IO */
 const server = require("http").Server(app);
@@ -45,12 +53,7 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json());
 app.use(limiter);
-
-if (process.env.APP_AUTH_METHOD === "azure_ad") {
-  const bearerStrategy = require("./utils/passportStrategies/passport-azure");
-  app.use(passport.initialize()); // For azure SSO
-  passport.use(bearerStrategy);
-}
+app.use(cookieParser());
 
 /*  ROUTES */
 const job = require("./routes/job/read");
@@ -60,7 +63,6 @@ const appRead = require("./routes/app/read");
 const query = require("./routes/query/read");
 const hpccRead = require("./routes/hpcc/read");
 const fileRead = require("./routes/file/read");
-const userRead = require("./routes/user/read");
 const groups = require("./routes/groups/group");
 const indexRead = require("./routes/index/read");
 const reportRead = require("./routes/report/read");
@@ -80,7 +82,6 @@ const key = require("./routes/key/read");
 const api = require("./routes/api/read");
 const jobmonitoring = require("./routes/jobmonitoring/read");
 const superfileMonitoring = require("./routes/superfilemonitoring/read");
-const cluster = require("./routes/clusterRoutes.js");
 const configurations = require("./routes/configRoutes.js");
 const orbit = require("./routes/orbit/read");
 const integrations = require("./routes/integrations/read");
@@ -90,7 +91,16 @@ const sent_notifications = require("./routes/sent_notifications/read");
 const monitorings = require("./routes/monitorings/read");
 const asr = require("./routes/asr/read");
 const directoryMonitoring = require("./routes/directorymonitoring/read");
-const status = require("./routes/status/read");
+const wizard = require("./routes/wizardRoutes");
+
+//MVC & TESTED
+const auth = require("./routes/authRoutes");
+const users = require("./routes/userRoutes");
+const sessions = require("./routes/sessionRoutes");
+const cluster = require("./routes/clusterRoutes");
+const roles = require("./routes/roleTypesRoute");
+const status = require("./routes/statusRoutes");
+const instanceSettings = require("./routes/instanceRoutes.js");
 
 // Log all HTTP requests
 app.use((req, res, next) => {
@@ -98,19 +108,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// Use compression  to reduce the size of the response body and increase the speed of a web application
+// Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
 
-app.use("/api/user", userRead);
+app.use("/api/auth", auth);
 app.use("/api/updateNotification", updateNotifications);
 app.use("/api/status", status);
+app.use("/api/wizard", wizard);
 
 //exposed API, requires api key for any routes
 app.use("/api/apikeys", api);
 
-// Authenticate token before proceeding to route
-app.use(tokenService.verifyToken);
+// Validate access token and csrf tokens, all routes below require these
+app.use(validateToken);
+app.use(doubleCsrfProtection);
 
+// Authenticated routes
+app.use("/api/user", users);
+app.use("/api/session", sessions);
 app.use("/api/job", job);
 app.use("/api/bree", bree);
 app.use("/api/ldap", ldap);
@@ -145,6 +160,8 @@ app.use("/api/sent_notifications", sent_notifications);
 app.use("/api/monitorings", monitorings);
 app.use("/api/asr", asr);
 app.use("/api/directoryMonitoring", directoryMonitoring);
+app.use("/api/roles", roles);
+app.use("/api/instanceSettings", instanceSettings);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
@@ -162,6 +179,9 @@ process.env["NODE_TLS_REJECT_UNAUTHORIZED"] =
 /* Start server */
 server.listen(port, "0.0.0.0", async () => {
   try {
+    logger.info("-----------------------------");
+    logger.info("Server is initializing...");
+    logger.info("-----------------------------");
     logger.info("Server listening on port " + port + "!");
     /* Check DB connection */
     await dbConnection.authenticate();

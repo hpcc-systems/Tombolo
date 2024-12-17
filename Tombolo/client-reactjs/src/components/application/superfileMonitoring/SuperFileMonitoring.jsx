@@ -6,6 +6,7 @@ import SuperFileMonitoringTable from './SuperFileMonitoringTable';
 import SuperFileMonitoringModal from './SuperFileMonitoringModal';
 import { Tooltip, Button, message } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 function SuperFileMonitoring() {
   const [superfileList, setSuperfileList] = useState([]);
@@ -18,6 +19,9 @@ function SuperFileMonitoring() {
     application: { applicationId },
   } = useSelector((state) => state.applicationReducer);
 
+  const roleArray = getRoleNameArray();
+  const isReader = roleArray.includes('reader') && roleArray.length === 1;
+
   useEffect(() => {
     if (applicationId && clusters) {
       getSuperFileMonitoring(applicationId);
@@ -28,7 +32,7 @@ function SuperFileMonitoring() {
     try {
       const payload = {
         method: selectedFileMonitoring ? 'PUT' : 'POST',
-        header: authHeader(),
+        headers: authHeader(),
         body: JSON.stringify({ ...monitoringDetails, id: selectedFileMonitoring }),
       };
 
@@ -53,7 +57,7 @@ function SuperFileMonitoring() {
     try {
       const payload = {
         method: 'GET',
-        header: authHeader(),
+        headers: authHeader(),
       };
 
       const response = await fetch(`/api/superfilemonitoring/read/all/${applicationId}`, payload);
@@ -150,7 +154,8 @@ function SuperFileMonitoring() {
         setSuperFileMonitoringList={setSuperfileList}
         sizeFormatter={sizeFormatter}
         applicationId={applicationId}
-        setSelectedFileMonitoring={setSelectedFileMonitoring}></SuperFileMonitoringTable>
+        setSelectedFileMonitoring={setSelectedFileMonitoring}
+        isReader={isReader}></SuperFileMonitoringTable>
 
       {modalVisible ? (
         <SuperFileMonitoringModal
@@ -160,6 +165,7 @@ function SuperFileMonitoring() {
           setSuccessAddingMonitoring={setSuccessAddingMonitoring}
           selectedFileMonitoring={selectedFileMonitoring}
           superfileMonitoringList={superfileList}
+          isReader={isReader}
         />
       ) : null}
     </>

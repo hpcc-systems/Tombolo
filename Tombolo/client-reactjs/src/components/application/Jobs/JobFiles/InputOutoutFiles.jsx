@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Table, message, Form, Select, Button, Tag } from 'antd';
 
 import { authHeader } from '../../../common/AuthHeader';
-import Text, { i18n } from '../../../common/Text';
+import Text from '../../../common/Text';
 
 const { Option } = Select;
 
@@ -162,7 +162,7 @@ function InputOutputFiles({ state, setState, editingAllowed, type, label }) {
         {enableEdit ? (
           <div style={{ display: 'flex' }}>
             <Form.Item label={<Text text={label} />} rules={[{ required: true }]}>
-              <Select placeholder={i18n(label)} onChange={onChange} style={{ width: 290 }} disabled={!editingAllowed}>
+              <Select placeholder={label} onChange={onChange} style={{ width: 290 }} disabled={!editingAllowed}>
                 {sourceFiles.map((d) => (
                   <Option value={d.id} key={d.id}>
                     {d.title ? d.title : d.name}

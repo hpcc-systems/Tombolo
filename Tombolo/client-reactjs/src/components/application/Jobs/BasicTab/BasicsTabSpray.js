@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { assetsActions } from '../../../../redux/actions/Assets';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { formItemLayout } from '../../../common/CommonUtil.js';
-import Text, { i18n } from '../../../common/Text';
+import Text from '../../../common/Text';
 const { Option, OptGroup } = Select;
 
 function BasicsTabSpray({
@@ -128,7 +128,7 @@ function BasicsTabSpray({
       {addingNewAsset ? (
         <Form.Item {...formItemLayout} label={<Text>Cluster</Text>} name="clusters">
           <Select
-            placeholder={i18n('Select a Cluster')}
+            placeholder={'Select a Cluster'}
             disabled={!editingAllowed}
             onChange={onClusterSelection}
             style={{ width: 190 }}>
@@ -141,7 +141,7 @@ function BasicsTabSpray({
       <Form.Item label={<Text>Dropzone</Text>} name="sprayDropZone">
         {enableEdit ? (
           <Select
-            placeholder={i18n('Drop Zone')}
+            placeholder={'Drop Zone'}
             style={{ width: 190 }}
             defaultValue={selectedDropZoneName}
             onChange={onDropZoneChange}
@@ -168,7 +168,7 @@ function BasicsTabSpray({
         <Input
           id="job_name"
           onChange={onChange}
-          placeholder={i18n('Name')}
+          placeholder={'Name'}
           disabled={!editingAllowed}
           className={enableEdit ? null : 'read-only-input'}
         />
@@ -188,7 +188,7 @@ function BasicsTabSpray({
         <Input
           id="job_title"
           onChange={onChange}
-          placeholder={i18n('Title')}
+          placeholder={'Title'}
           disabled={!editingAllowed}
           className={enableEdit ? null : 'read-only-input'}
         />
@@ -201,7 +201,7 @@ function BasicsTabSpray({
               <Select
                 showSearch
                 value={sprayFileName}
-                placeholder={i18n('Search dropzone files')}
+                placeholder={'Search dropzone files'}
                 defaultActiveFirstOption={false}
                 showArrow={false}
                 filterOption={false}
@@ -231,7 +231,7 @@ function BasicsTabSpray({
           <Input
             id="sprayedFileScope"
             onChange={onChange}
-            placeholder={i18n('Scope')}
+            placeholder={'Scope'}
             value={sprayedFileScope}
             disabled={!editingAllowed}
           />

@@ -19,9 +19,9 @@ import { debounce } from 'lodash';
 import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
-import ConstraintsTags from '../../admin/Compliance/Constraints/ConstraintsTags';
+// import ConstraintsTags from '../../admin/Compliance/Constraints/ConstraintsTags';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import { canViewPII, hasEditPermission } from '../../common/AuthUtil.js';
+// import { canViewPII } from '../../common/AuthUtil.js';
 import { formItemLayout } from '../../common/CommonUtil';
 // import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
 import DeleteAsset from '../../common/DeleteAsset';
@@ -31,8 +31,9 @@ import MonacoEditor from '../../common/MonacoEditor.js';
 import OverwriteAssetModal from '../../common/OverWriteAssetModal';
 import SuperFileMeta from '../../common/SuperFileMeta';
 import AssociatedDataflows from '../AssociatedDataflows';
-import Text, { i18n } from '../../common/Text.jsx';
+import Text from '../../common/Text.jsx';
 import FileExplorerModal from './FileExplorerModal';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -40,7 +41,6 @@ const Option = Select.Option;
 message.config({ top: 130 });
 class FileDetails extends Component {
   formRef = React.createRef();
-
   state = {
     visible: true,
     confirmLoading: false,
@@ -476,7 +476,8 @@ class FileDetails extends Component {
   getFileData = async (fileName, clusterId) => {
     try {
       // do not reuest data if user has wrong permission
-      const canVIewData = canViewPII(this.props.user);
+      // const canVIewData = canViewPII(this.props.user);
+      const canVIewData = true;
       if (!canVIewData) return;
 
       if (!clusterId || !fileName) throw new Error('Filename or ClusterId is not provided');
@@ -630,8 +631,11 @@ class FileDetails extends Component {
       this.state;
     const { description, isSuperFile, layout, validations, superFileData } = this.state.file;
 
-    const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
-    const editingAllowed = hasEditPermission(this.props.user) || !this.props.viewMode;
+    // const VIEW_DATA_PERMISSION = canViewPII(this.props.user);
+    const VIEW_DATA_PERMISSION = true;
+
+    const roleArray = getRoleNameArray();
+    const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
 
     const validationRuleColumns = [
       {
@@ -766,25 +770,35 @@ class FileDetails extends Component {
       </div>
     );
 
-    const { selectedConsumer, selectedSupplier, selectedOwner, consumers, suppliers, owners } =
-      this.props.consumers.reduce(
-        (acc, el) => {
-          if (el.assetType === 'Consumer') {
-            acc.consumers.push(el);
-            if (el.id === this.state.file.consumer) acc.selectedConsumer = el.name;
-          }
-          if (el.assetType === 'Supplier') {
-            acc.suppliers.push(el);
-            if (el.id === this.state.file.supplier) acc.selectedSupplier = el.name;
-          }
-          if (el.assetType === 'Owner') {
-            acc.owners.push(el);
-            if (el.id === this.state.file.owner) acc.selectedOwner = el.name;
-          }
-          return acc;
-        },
-        { selectedConsumer: '', selectedSupplier: '', selectedOwner: '', consumers: [], suppliers: [], owners: [] }
-      );
+    // console.log(this.props.consumers);
+    // const { selectedConsumer, selectedSupplier, selectedOwner, consumers, suppliers, owners } =
+    //   this.props.consumers.reduce(
+    //     (acc, el) => {
+    //       if (el.assetType === 'Consumer') {
+    //         acc.consumers.push(el);
+    //         if (el.id === this.state.file.consumer) acc.selectedConsumer = el.name;
+    //       }
+    //       if (el.assetType === 'Supplier') {
+    //         acc.suppliers.push(el);
+    //         if (el.id === this.state.file.supplier) acc.selectedSupplier = el.name;
+    //       }
+    //       if (el.assetType === 'Owner') {
+    //         acc.owners.push(el);
+    //         if (el.id === this.state.file.owner) acc.selectedOwner = el.name;
+    //       }
+    //       return acc;
+    //     },
+    //     { selectedConsumer: '', selectedSupplier: '', selectedOwner: '', consumers: [], suppliers: [], owners: [] }
+    //   );
+
+    const { selectedConsumer, selectedSupplier, selectedOwner, consumers, suppliers, owners } = {
+      selectedConsumer: '',
+      selectedSupplier: '',
+      selectedOwner: '',
+      consumers: [],
+      suppliers: [],
+      owners: [],
+    };
 
     const clusterName = this.props.clusters?.find(
       (cluster) => cluster.id === this.formRef.current?.getFieldValue('clusters')
@@ -875,7 +889,7 @@ class FileDetails extends Component {
                           onClear={this.clearState}
                           value={this.state.fileSearchValue}
                           onChange={(value) => this.setState({ fileSearchValue: value })}
-                          placeholder={i18n('Search files')}
+                          placeholder={'Search files'}
                           disabled={!editingAllowed}
                           notFoundContent={this.state.fileSearch.loading ? <Spin /> : 'Not Found'}>
                           {this.state.fileSearch.data.map((suggestion) => (
@@ -883,7 +897,6 @@ class FileDetails extends Component {
                               {suggestion.text}
                             </Option>
                           ))}
-                          {/* <Input.Search placeholder={i18n('Search files')} /> */}
                         </AutoComplete>
                       </Col>
                       <Col span={4}>
@@ -912,7 +925,7 @@ class FileDetails extends Component {
                       <Input
                         disabled={disableReadOnlyFields || !editingAllowed}
                         className={!enableEdit ? 'read-only-input' : ''}
-                        placeholder={enableEdit ? i18n('Name') : i18n('Name is not provided')}
+                        placeholder={enableEdit ? 'Name' : 'Name is not provided'}
                       />
                     )}
                   </Form.Item>
@@ -934,7 +947,7 @@ class FileDetails extends Component {
                     ]}>
                     <Input
                       name="title"
-                      placeholder={enableEdit ? i18n('Title') : i18n('Title is not provided')}
+                      placeholder={enableEdit ? 'Title' : 'Title is not provided'}
                       disabled={!editingAllowed}
                       className={!enableEdit ? 'read-only-input' : ''}
                     />
@@ -953,7 +966,7 @@ class FileDetails extends Component {
                     <Input
                       disabled={isAssociated}
                       className={!enableEdit ? 'read-only-input' : ''}
-                      placeholder={enableEdit ? i18n('Scope') : i18n('Scope is not provided')}
+                      placeholder={enableEdit ? 'Scope' : 'Scope is not provided'}
                     />
                   </Form.Item>
                   <Form.Item
@@ -963,7 +976,7 @@ class FileDetails extends Component {
                     rules={[{ type: 'url', message: 'Please enter a valid URL' }]}>
                     <Input
                       disabled={!editingAllowed}
-                      placeholder={enableEdit ? i18n('Service URL') : i18n('Service URL is not provided')}
+                      placeholder={enableEdit ? 'Service URL' : 'Service URL is not provided'}
                     />
                   </Form.Item>
 
@@ -977,10 +990,7 @@ class FileDetails extends Component {
                         message: 'Please enter a valid path',
                       },
                     ]}>
-                    <Input
-                      disabled={!editingAllowed}
-                      placeholder={enableEdit ? i18n('Path') : i18n('Path is not provided')}
-                    />
+                    <Input disabled={!editingAllowed} placeholder={enableEdit ? 'Path' : 'Path is not provided'} />
                   </Form.Item>
                   <Form.Item
                     label={<Text text="Is Super File" />}
@@ -1014,7 +1024,7 @@ class FileDetails extends Component {
                         disabled={!editingAllowed}
                         onChange={this.onSupplierSelection}
                         value={this.state.file.supplier || ''}
-                        placeholder={enableEdit ? i18n('Select a supplier') : i18n('Supplier is not provided')}>
+                        placeholder={enableEdit ? 'Select a supplier' : 'Supplier is not provided'}>
                         {suppliers.map((supplier) => (
                           <Option key={supplier.id} value={supplier.id}>
                             {supplier.name}
@@ -1037,7 +1047,7 @@ class FileDetails extends Component {
                         disabled={!editingAllowed}
                         onChange={this.onConsumerSelection}
                         value={this.state.file.consumer || ''}
-                        placeholder={enableEdit ? i18n('Select a consumer') : i18n('Consumer is not provided')}>
+                        placeholder={enableEdit ? 'Select a consumer' : 'Consumer is not provided'}>
                         {consumers.map((consumer) => (
                           <Option key={consumer.id} value={consumer.id}>
                             {consumer.name}
@@ -1060,7 +1070,7 @@ class FileDetails extends Component {
                         disabled={!editingAllowed}
                         onChange={this.onOwnerSelection}
                         value={this.state.file.owner || ''}
-                        placeholder={enableEdit ? i18n('Select a owner') : i18n('Owner is not provided')}>
+                        placeholder={enableEdit ? 'Select a owner' : 'Owner is not provided'}>
                         {owners.map((owner) => (
                           <Option key={owner.id} value={owner.id}>
                             {owner.name}
@@ -1069,12 +1079,12 @@ class FileDetails extends Component {
                       </Select>
                     )}
                   </Form.Item>
-
+                  {/* 
                   <Form.Item noStyle shouldUpdate>
                     {() => (
                       <Form.Item name="constraints" label={<Text>File Constraints</Text>}>
                         {enableEdit ? (
-                          <Select mode="multiple" placeholder={i18n('Please select constraints')}>
+                          <Select mode="multiple" placeholder={'Please select constraints'}>
                             {this.props.constraints.map((el) => {
                               return (
                                 <Option key={el.id} value={el.id}>
@@ -1092,7 +1102,7 @@ class FileDetails extends Component {
 
                   <Form.Item label="Fields Constraints" hidden={enableEdit}>
                     <ConstraintsTags list={this.getConstraints('field')} />
-                  </Form.Item>
+                  </Form.Item> */}
 
                   <Form.Item label={<Text>Description</Text>} name="description">
                     {enableEdit ? (

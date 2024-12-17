@@ -22,12 +22,15 @@ import {
   getProductCategories,
   getAllProductCategories,
 } from '../../common/ASRTools.js';
+
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
 import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
 import ApproveRejectModal from './ApproveRejectModal.jsx';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import JobMonitoringFilters from './JobMonitoringFilters.jsx';
+import { getUser } from '../../common/userStorage.js';
 
 // Constants
 const monitoringTypeName = 'Job Monitoring';
@@ -38,9 +41,13 @@ function JobMonitoring() {
     applicationReducer: {
       application: { applicationId },
     },
-    authenticationReducer: { user },
     applicationReducer: { clusters },
   } = useSelector((state) => state);
+
+  const user = getUser();
+
+  const roleArray = getRoleNameArray();
+  const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   //Local States
   const [displayAddJobMonitoringModal, setDisplayAddJobMonitoringModal] = useState(false);
@@ -595,6 +602,7 @@ function JobMonitoring() {
             setBulkEditModalVisibility={setBulkEditModalVisibility}
             setFiltersVisible={setFiltersVisible}
             filtersVisible={filtersVisible}
+            isReader={isReader}
             displayAddRejectModal={displayAddRejectModal}
             setDisplayAddRejectModal={setDisplayAddRejectModal}
           />
@@ -612,6 +620,7 @@ function JobMonitoring() {
         setSelectedDomain={setSelectedDomain}
         filtersVisible={filtersVisible}
         setFiltersVisible={setFiltersVisible}
+        isReader={isReader}
       />
       <AddEditJobMonitoringModal
         displayAddJobMonitoringModal={displayAddJobMonitoringModal}
@@ -665,6 +674,7 @@ function JobMonitoring() {
         productCategories={productCategories}
         allProductCategories={allProductCategories}
         filteringJobs={filteringJobs}
+        isReader={isReader}
         clusters={clusters}
       />
       {displayMonitoringDetailsModal && (

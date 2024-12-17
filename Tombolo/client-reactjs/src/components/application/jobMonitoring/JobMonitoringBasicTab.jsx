@@ -88,7 +88,7 @@ function JobMonitoringBasicTab({
       setFetchingJobs(true);
       const payload = {
         method: 'POST',
-        header: authHeader(),
+        headers: authHeader(),
         body: JSON.stringify({ keyword: value, clusterId: selectedCluster.id }),
       };
 

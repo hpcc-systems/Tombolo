@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Form, Select, Space, Tag, Typography } from 'antd';
 
 import { CheckCircleOutlined } from '@ant-design/icons';
-import TText, { i18n } from '../../../common/Text'; // Importing Text with alias because there is existing Text var. TTest -> Translate text
 
 const { Text } = Typography;
 
@@ -64,13 +63,13 @@ const GHRepoSelect = ({ form, enableEdit, projects, setGhBrachOrTag }) => {
 
   return (
     <Form.Item
-      label={<TText>GitHub Projects</TText>}
+      label={<>GitHub Projects</>}
       required={enableEdit}
       name={['gitHubFiles', 'selectedProjects']}
       // className={!enableEdit && 'read-only-input'}
       help={enableEdit ? <Text type="warning">Adding or Removing projects will reset "Main File" fields</Text> : null}>
       {enableEdit ? (
-        <Select mode="multiple" placeholder={i18n('GitHub Projects')} onChange={handleChange} optionLabelProp="label">
+        <Select mode="multiple" placeholder={'GitHub Projects'} onChange={handleChange} optionLabelProp="label">
           {projects.map((project) => (
             <Select.Option key={project.id} value={project.id} label={project.ghProject}>
               <Tag color="geekblue">{project.ghBranchOrTag}</Tag> - {project.ghProject} - {project.ghLink}

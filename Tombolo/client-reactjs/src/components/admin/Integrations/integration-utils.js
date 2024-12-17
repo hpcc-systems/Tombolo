@@ -5,7 +5,7 @@ import { authHeader } from '../../common/AuthHeader.js';
 export const getAllIntegrations = async () => {
   const payload = {
     method: 'GET',
-    header: authHeader(),
+    headers: authHeader(),
   };
   const response = await fetch('/api/integrations/all', payload);
 
@@ -22,7 +22,7 @@ export const getAllIntegrations = async () => {
 export const getIntegrationDetailsByRelationId = async ({ relationId }) => {
   const payload = {
     method: 'GET',
-    header: authHeader(),
+    headers: authHeader(),
   };
   const response = await fetch(`/api/integrations/integrationDetails/${relationId}`, payload);
 
@@ -43,7 +43,7 @@ export const getIntegrationDetailsByRelationId = async ({ relationId }) => {
 export const toggleIntegration = async ({ integrationId, application_id, active }) => {
   const payload = {
     method: 'POST',
-    header: authHeader(),
+    headers: authHeader(),
     body: JSON.stringify({ integrationId, application_id, active }),
   };
   const response = await fetch(`/api/integrations/toggleStatus`, payload);

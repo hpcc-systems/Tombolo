@@ -6,17 +6,16 @@ import { DeleteOutlined, EditOutlined, FolderOpenOutlined } from '@ant-design/ic
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
-import { hasEditPermission } from '../../common/AuthUtil.js';
+// import { hasEditPermission } from '../../common/AuthUtil.js';
 import { Constants } from '../../common/Constants';
 import { assetsActions } from '../../../redux/actions/Assets';
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../../common/DeleteAsset';
 import Text from '../../common/Text.jsx';
 
-function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
-  const { authReducer, applicationReducer, assetReducer, groupsReducer } = useSelector((state) => ({
+function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed }) {
+  const { applicationReducer, assetReducer, groupsReducer } = useSelector((state) => ({
     groupsReducer: state.groupsReducer,
-    authReducer: state.authenticationReducer,
     applicationReducer: state.applicationReducer,
     assetReducer: state.assetReducer,
   }));
@@ -24,7 +23,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups }) {
   const selectedGroup = groupsReducer;
   const history = useHistory();
   const dispatch = useDispatch();
-  const editingAllowed = hasEditPermission(authReducer.user);
+
   const applicationId = applicationReducer?.application?.applicationId || '';
 
   const { assetTypeFilter, keywords } = assetReducer.searchParams;

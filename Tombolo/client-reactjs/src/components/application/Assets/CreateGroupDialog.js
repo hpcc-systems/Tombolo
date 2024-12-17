@@ -6,7 +6,7 @@ import MonacoEditor from '../../common/MonacoEditor.js';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector, useDispatch } from 'react-redux';
 import { expandGroups } from '../../../redux/actions/Groups.js';
-import Text, { i18n } from '../../common/Text';
+import Text from '../../common/Text';
 
 export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle }) => {
   const [groupsReducer] = useSelector((state) => [state.groupsReducer]);
@@ -133,7 +133,7 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle 
               message: 'Please enter a valid Name',
             },
           ]}>
-          <Input id="name" name="name" placeholder={i18n('Name')} onChange={formInputChange} />
+          <Input id="name" name="name" placeholder={'Name'} onChange={formInputChange} />
         </Form.Item>
 
         <Form.Item label={<Text>Description</Text>} name="description">

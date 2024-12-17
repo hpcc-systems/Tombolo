@@ -6,9 +6,11 @@ import { DownOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
 
+import { getRoleNameArray } from '../../common/AuthUtil.js';
+
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { authHeader } from '../../common/AuthHeader.js';
-import { hasEditPermission } from '../../common/AuthUtil.js';
+// import { hasEditPermission } from '../../common/AuthUtil.js';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { getGroupsTree, selectGroup, expandGroups } from '../../../redux/actions/Groups';
 import AssetsTable from './AssetsTable';
@@ -16,7 +18,7 @@ import TitleRenderer from './TitleRenderer.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
 import useModal from '../../../hooks/useModal';
 import { CreateGroupDialog } from './CreateGroupDialog';
-import Text, { i18n } from '../../common/Text';
+import Text from '../../common/Text';
 import InfoDrawer from '../../common/InfoDrawer';
 
 const { DirectoryTree } = Tree;
@@ -25,15 +27,20 @@ const { Search } = Input;
 // const CheckboxGroup = Checkbox.Group;
 
 const Assets = () => {
-  const [groupsReducer, authReducer, assetReducer, applicationReducer] = useSelector((state) => [
+  const [groupsReducer, assetReducer, applicationReducer] = useSelector((state) => [
     state.groupsReducer,
-    state.authenticationReducer,
     state.assetReducer,
     state.applicationReducer,
   ]);
+
+  const roleArray = getRoleNameArray();
+  const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
+
   const dispatch = useDispatch();
   const history = useHistory();
-  const editingAllowed = hasEditPermission(authReducer.user);
+  // const user = getUser();
+  //TODO, get this from user roles to check if editing is allowed
+
   // all data related to file explorer is in redux
   const { selectedKeys, expandedKeys, tree, dataList } = groupsReducer;
   const application = applicationReducer.application;
@@ -312,9 +319,10 @@ const Assets = () => {
               allowClear
               value={searchKeyword}
               // addonBefore={selectBefore}
-              placeholder={i18n('Search assets')}
+              placeholder={'Search assets'}
               onSearch={handleAssetSearch}
               onChange={handleSearchKeywordChange}
+              disabled={false}
             />
 
             <DirectoryTree
@@ -333,7 +341,12 @@ const Assets = () => {
             />
           </div>
           <div className="asset-table">
-            <AssetsTable openGroup={openGroup} refreshGroups={fetchGroups} handleEditGroup={handleEditGroup} />
+            <AssetsTable
+              openGroup={openGroup}
+              refreshGroups={fetchGroups}
+              handleEditGroup={handleEditGroup}
+              editingAllowed={editingAllowed}
+            />
           </div>
         </div>
       </div>

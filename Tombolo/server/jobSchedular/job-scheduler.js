@@ -135,9 +135,12 @@ class JobScheduler {
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
       await this.checkClusterReachability();
+      logger.info("-----------------------------");
+      logger.info("Server is finished intializing, and is now running");
+      logger.info("-----------------------------");
     })();
   }
-  
+
   //Bree related methods
   logBreeJobs() {
     return logBreeJobs.call(this);

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message, Alert, Typography } from 'antd';
 import { isEmail } from 'validator';
-const { useSelector } = require('react-redux');
 
 import { pingCluster, addCluster } from './clusterUtils';
 import AddClusterSteps from './AddClusterSteps';
+import { getUser } from '../../common/userStorage';
 
 // Constants
 const { Option } = Select;
@@ -22,9 +22,7 @@ function AddClusterModal({
   const [form] = Form.useForm();
 
   //Redux
-  const {
-    authenticationReducer: { user },
-  } = useSelector((state) => state);
+  const user = getUser();
 
   // States
   const [requireCredentials, setRequireCredentials] = useState(false);

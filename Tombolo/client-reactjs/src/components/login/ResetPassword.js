@@ -1,135 +1,130 @@
-import React from 'react';
-import { withRouter } from 'react-router';
-import { Alert, Button, Form, Input, message } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Form, Input, Button, Divider, message, Popover } from 'antd';
+import { useParams } from 'react-router-dom';
+import passwordComplexityValidator from '../common/passwordComplexityValidator';
+const ResetPassword = () => {
+  const [user, setUser] = useState(null);
+  const [popOverContent, setPopOverContent] = useState(null);
 
-class ResetPassword extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      id: '',
-      password: '',
-      confirmPassword: '',
-      submitted: false,
-      matched: true,
-      error: false,
-      success: false,
-    };
-  }
+  //we will get the reset token from the url and test if it is valid to get the user information
+  const { resetToken } = useParams();
+  const [form] = Form.useForm();
 
-  componentDidMount() {
-    this.setState({ id: this.props.match.params.id });
-  }
-
-  handleChange = (e) => {
-    const { name, value } = e.target;
-    this.setState({ [name]: value });
+  const [messageApi, contextHolder] = message.useMessage();
+  const invalidToken = () => {
+    messageApi.open({
+      type: 'error',
+      content: (
+        <>
+          <span>
+            The reset token provided is either expired or invalid, please go to the{' '}
+            <a href="/forgot-password">Forgot Password</a> page to get a new one.
+          </span>
+        </>
+      ),
+      duration: 100,
+      style: {
+        marginTop: '20vh',
+      },
+    });
   };
 
-  handleSubmit = (e) => {
-    e.preventDefault();
-    if (this.state.confirmPassword !== this.state.password) {
-      message.error('Passwords don’t match.');
-      return this.setState({ matched: false });
+  useEffect(() => {
+    //check if reset token is valid, if it is, we will get the user ID and store it, if not, we will redirect to the login page
+    if (user === null && resetToken !== undefined) {
+      //get user information by reset token
+
+      // get user by reset token route
+
+      //if user is found, set user and return
+      console.log(setUser);
+
+      //if user is not found, message
+      invalidToken();
     }
 
-    const strongRegex = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})');
-    if (!strongRegex.test(this.state.password)) {
-      message.error(
-        'Weak Password. To make passwords stronger, it must be minimum 8 characters long, contain upper and lower case letters, numbers, and special characters.'
-      );
-      return;
+    if (resetToken === undefined) {
+      //redirect to login page
     }
+  }, []);
 
-    if (this.state.id && this.state.password) {
-      this.setState({ submitted: true, success: false, error: false });
-      fetch('/api/user/resetPassword', {
-        method: 'post',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: this.state.id, password: this.state.password }),
-      })
-        .then((response) => {
-          console.log(response);
-          message.config({ top: 110 });
-          if (response.ok) {
-            message.success('Password has been reset successfully.');
-            this.setState({ success: true, submitted: false });
-            setTimeout(() => {
-              this.props.history.replace('/login');
-            }, 2000);
-          } else {
-            message.error('Invalid or expired reset link');
-            this.setState({ error: true, submitted: false });
-            response.text().then((text) => {
-              console.log('error message: ' + JSON.stringify(JSON.parse(text)));
-            });
+  const onFinish = (values) => {
+    console.log('Received values:', values);
+    alert('reset password code fires here');
+  };
+
+  useEffect(() => {}, [popOverContent]);
+  const validatePassword = (value) => {
+    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true }));
+  };
+
+  return (
+    <Form onFinish={onFinish} layout="vertical" form={form}>
+      {contextHolder}
+      <Divider>Reset Password</Divider>
+      <Popover content={popOverContent} title="Password Complexity" trigger="focus" placement="right">
+        <Form.Item
+          label={
+            <>
+              <span>New Password&nbsp;</span>
+            </>
           }
-        })
-        .catch((error) => {
-          console.log('error', error);
-          this.setState({ error: true, submitted: false });
-        });
-    }
-  };
+          name="newPassword"
+          rules={[
+            { required: true, message: 'Please input your new password!' },
+            { max: 64, message: 'Maximum of 64 characters allowed' },
+            () => ({
+              validator(_, value) {
+                //passwordComplexityValidator always returns an array with at least one attributes element
+                const errors = passwordComplexityValidator({ password: value });
+                if (!value || errors.length === 1) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Password does not meet complexity requirements!'));
+              },
+            }),
+          ]}>
+          <Input.Password
+            size="large"
+            autoComplete="new-password"
+            onChange={(e) => {
+              validatePassword(e.target.value);
+            }}
+            onFocus={(e) => {
+              validatePassword(e.target.value);
+            }}
+          />
+        </Form.Item>
+      </Popover>
+      <Form.Item
+        label={
+          <>
+            <span>Confirm Password&nbsp;</span>
+          </>
+        }
+        name="confirmPassword"
+        dependencies={['newPassword']}
+        rules={[
+          { required: true, message: 'Please confirm your new password!' },
+          ({ getFieldValue }) => ({
+            validator(_, value) {
+              if (!value || getFieldValue('newPassword') === value) {
+                return Promise.resolve();
+              }
+              return Promise.reject(new Error('The two passwords do not match!'));
+            },
+          }),
+          { max: 64, message: 'Maximum of 64 characters allowed' },
+        ]}>
+        <Input.Password size="large" autoComplete="new-password" />
+      </Form.Item>
+      <Form.Item>
+        <Button type="primary" htmlType="submit" disabled={!user?.id} className="fullWidth">
+          Reset Password
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+};
 
-  render() {
-    const { password, success, error, confirmPassword } = this.state;
-    return (
-      <>
-        <Form className="login-form" layout="vertical">
-          <h2 className="login-logo">Tombolo</h2>
-
-          <Form.Item
-            label="New password"
-            name="password"
-            rules={[{ required: true, message: 'Please provide password!' }]}>
-            <Input.Password value={password} name="password" onChange={this.handleChange} placeholder="New Password" />
-          </Form.Item>
-
-          <Form.Item
-            label="Confirm new password"
-            name="confirmPassword"
-            rules={[{ required: true, message: 'Please confirm password!' }]}>
-            <Input.Password
-              value={confirmPassword}
-              name="confirmPassword"
-              onChange={this.handleChange}
-              placeholder="Confirm New Password"
-            />
-          </Form.Item>
-
-          {success && (
-            <Form.Item>
-              <Alert
-                message="Success"
-                description="You will be redirected to login page shortly"
-                type="success"
-                showIcon
-              />
-            </Form.Item>
-          )}
-
-          {error && (
-            <Form.Item>
-              <Alert message="Error" description="Failed to reset password." type="error" showIcon />
-            </Form.Item>
-          )}
-
-          <Form.Item>
-            <Button
-              loading={this.state.submitted}
-              onClick={this.handleSubmit}
-              type="primary"
-              block
-              className="login-form-button">
-              {this.state.submitted ? 'Processing...' : 'Reset Password'}
-            </Button>
-          </Form.Item>
-        </Form>
-      </>
-    );
-  }
-}
-export default withRouter(ResetPassword);
+export default ResetPassword;

@@ -8,6 +8,7 @@ const {
   validateClusterPingPayload,
   validateQueryData,
 } = require("../middlewares/clusterMiddleware");
+
 const {
   addCluster,
   addClusterWithProgress,
@@ -21,6 +22,13 @@ const {
   clusterUsage,
   clusterStorageHistory,
 } = require("../controllers/clusterController");
+const role = require("../config/roleTypes");
+
+const { validateUserRole } = require("../middlewares/rbacMiddleware");
+
+// All routes below is accessible only by users with role "owner" and "administrator"
+router.use(validateUserRole([role.OWNER, role.ADMIN]));
+
 
 router.post("/ping", validateClusterPingPayload, pingCluster); // GET - Ping cluster
 router.get("/pingExistingCluster/:id", validateClusterId, pingExistingCluster); // GET - Ping existing cluster

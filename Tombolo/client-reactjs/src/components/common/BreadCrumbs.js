@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Breadcrumb } from 'antd';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { withTranslation } from 'react-i18next';
 
 class BreadCrumbs extends Component {
   render() {
@@ -77,6 +76,5 @@ function mapStateToProps(state) {
 }
 
 let connectedBreadCrumbs = connect(mapStateToProps)(withRouter(BreadCrumbs));
-connectedBreadCrumbs = withTranslation('common')(connectedBreadCrumbs);
 
 export default connectedBreadCrumbs;

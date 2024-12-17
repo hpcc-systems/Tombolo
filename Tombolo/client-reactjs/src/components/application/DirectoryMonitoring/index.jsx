@@ -14,6 +14,7 @@ import {
 } from './Utils.js';
 
 import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools.js';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 import AddEditModal from './AddEditModal/Modal';
 import ActionButton from './ActionButton';
@@ -22,6 +23,7 @@ import ApproveRejectModal from './ApproveRejectModal';
 import dayjs from 'dayjs';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import ViewDetailsModal from './ViewDetailsModal';
+import { getUser } from '../../common/userStorage.js';
 
 const monitoringTypeName = 'Directory Monitoring';
 
@@ -30,12 +32,19 @@ const DirectoryMonitoring = () => {
     applicationReducer: {
       application: { applicationId },
     },
-    authenticationReducer: { user },
     applicationReducer: { clusters },
   } = useSelector((state) => state);
 
   //form
   const [form] = Form.useForm();
+
+  //get user
+  const user = getUser();
+
+  //get user roles
+  const roleArray = getRoleNameArray();
+
+  const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   //Local States
   const [displayAddEditModal, setDisplayAddEditModal] = useState(false);
@@ -316,6 +325,7 @@ const DirectoryMonitoring = () => {
       resetStates();
       setDisplayAddEditModal(false);
     } catch (err) {
+      console.log(err);
       message.error(err.message);
     } finally {
       setSavingDirectoryMonitoring(false);
@@ -519,6 +529,7 @@ const DirectoryMonitoring = () => {
             setDirectoryMonitorings={setDirectoryMonitorings}
             setBulkEditModalVisibility={setBulkEditModalVisibility}
             setBulkApprovalModalVisibility={setDisplayAddRejectModal}
+            isReader={isReader}
           />
         }
       />
@@ -572,6 +583,7 @@ const DirectoryMonitoring = () => {
         applicationId={applicationId}
         setSelectedRows={setSelectedRows}
         setCopying={setCopying}
+        isReader={isReader}
       />
       <ViewDetailsModal
         displayViewDetailsModal={displayViewDetailsModal}
