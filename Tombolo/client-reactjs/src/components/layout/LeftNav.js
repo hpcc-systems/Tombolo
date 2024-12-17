@@ -44,7 +44,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   const { application, integrations, clusters } = applicationReducer;
 
   const applicationId = application?.applicationId;
-  const clusterConnectionIssue = this.props?.clusters?.some((c) => c.reachabilityInfo?.reachable === false);
+  const clusterConnectionIssue = clusters?.some((c) => c.reachabilityInfo?.reachable === false);
 
   const roleArray = getRoleNameArray();
 
@@ -313,12 +313,12 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
             <span style={{ marginLeft: '1rem' }}>Clusters</span>
           </span>
         ) : (
-          <Link ref={this.props.clusterLinkRef} style={{ color: 'rgba(255, 255, 255, .65)' }} to={'/admin/clusters'}>
+          <Link ref={clusterLinkRef} style={{ color: 'rgba(255, 255, 255, .65)' }} to={'/admin/clusters'}>
             <Tooltip
               placement="right"
               arrow={false}
               overlayStyle={{ left: 35 }}
-              open={this.props.collapsed && clusterConnectionIssue ? true : false}
+              open={collapsed && clusterConnectionIssue ? true : false}
               title={<WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}>
               <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
             </Tooltip>
