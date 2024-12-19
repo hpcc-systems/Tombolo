@@ -23,6 +23,7 @@ Local installation requires a few dependencies to be installed directly on your 
 - [Git](https://git-scm.com/downloads) latest version recommended.
 - [MySQL Database](https://dev.mysql.com/downloads/) latest version recommended (URL, and port number, must be accessible from the installation environment).
 - [HPCC cluster](https://hpccsystems.com/getting-started/) latest version recommended.
+- Email Provider - Required to verify user accounts.
 
 ### Recommended Software and Skills
 

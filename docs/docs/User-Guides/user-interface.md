@@ -36,7 +36,10 @@ The workflows section contains all of Tombolo's functionalities for setting up, 
 The monitoring section contain's a set of tools to monitor assets within HPCC.
 
 <ul>
-    <li>[Monitorings](/docs/User-Guides/monitoring)</li>
+    <li>[Cluster Monitoring](/docs/User-Guides/monitoring/ClusterMonitoring)</li>
+    <li>[DirectoryMonitoring](/docs/User-Guides/monitoring/DirectoryMonitoring)</li>
+    <li>[Job Monitoring](/docs/User-Guides/monitoring/jobMonitoring)</li>
+    <li>[Superfile Monitoring](/docs/User-Guides/monitoring/SuperFilesMonitoring)</li>
     <li>[Dashboards](/docs/User-Guides/dashboards)</li>
 
 </ul>
