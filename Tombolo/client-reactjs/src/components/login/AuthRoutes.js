@@ -5,7 +5,6 @@ const Login = React.lazy(() => import('./login.js'));
 const Register = React.lazy(() => import('./register.js'));
 const ResetPassword = React.lazy(() => import('./ResetPassword.js'));
 const ForgotPassword = React.lazy(() => import('./ForgotPassword.js'));
-const resetTempPassword = React.lazy(() => import('./ResetTempPw'));
 
 const AuthRoutes = () => {
   //if traditional login isn't enabled, redirect user to login page
@@ -32,7 +31,6 @@ const AuthRoutes = () => {
         <Route path="/register" component={Register} />
         <Route path="/reset-password/:resetToken" component={ResetPassword} />
         <Route path="/forgot-password" component={ForgotPassword} />
-        <Route path="/reset-temporary-password" component={resetTempPassword} />
         {/* redirect all other routes hit to login */}
         <Route path="*" component={Login} />
       </Switch>

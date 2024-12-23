@@ -18,9 +18,8 @@ const {
   loginBasicUser,
   logOutBasicUser,
   handlePasswordResetRequest,
-  resetPassword,
   createApplicationOwner,
-  resetTempPassword,
+  resetPasswordWithToken,
   verifyEmail,
   loginOrRegisterAzureUser,
 } = require("../controllers/authController");
@@ -45,11 +44,10 @@ router.post(
   validatePasswordResetRequestPayload,
   handlePasswordResetRequest
 ); // Reset password
-router.post("/resetPassword", validateResetPasswordPayload, resetPassword); // Reset password
 router.post(
-  "/resetTempPassword",
+  "/resetPasswordWithToken",
   validateResetPasswordPayload,
-  resetTempPassword
+  resetPasswordWithToken
 ); // Complete registration by resetting temporary password
 router.post("/verifyEmail", verifyEmail); // Verify email
 // TODO - Forgot password route

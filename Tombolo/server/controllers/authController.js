@@ -281,7 +281,7 @@ const verifyEmail = async (req, res) => {
 };
 
 //Reset Temp password
-const resetTempPassword = async (req, res) => {
+const resetPasswordWithToken = async (req, res) => {
   try {
     const { password, token, deviceInfo } = req.body;
 
@@ -326,6 +326,11 @@ const resetTempPassword = async (req, res) => {
     //delete password reset link
     await PasswordResetLinks.destroy({
       where: { id: token },
+    });
+
+    //remove all sessions for user before initiating new session
+    await RefreshTokens.destroy({
+      where: { userId: user.id },
     });
 
     // Create token id
@@ -613,63 +618,6 @@ const handlePasswordResetRequest = async (req, res) => {
   }
 };
 
-// Reset password
-const resetPassword = async (req, res) => {
-  try {
-    // Get the password reset token
-    const { token, password } = req.body;
-
-    // Find the password reset token
-    const passwordResetLink = await PasswordResetLinks.findOne({
-      where: { id: token },
-    });
-
-    // Token does not exist
-    if (!passwordResetLink) {
-      logger.error(`Reset password: Token ${token} does not exist`);
-      return res.status(404).json({
-        success: false,
-        message: "Password reset link Invalid or expired",
-      });
-    }
-
-    // Token has expired
-    if (new Date() > passwordResetLink.expiresAt) {
-      logger.error(`Reset password: Token ${token} has expired`);
-      return res
-        .status(400)
-        .json({ success: false, message: "Token has expired" });
-    }
-
-    // Find the user
-    const user = await User.findOne({
-      where: { id: passwordResetLink.userId },
-    });
-
-    // Hash the new password
-    const salt = bcrypt.genSaltSync(10);
-    user.hash = bcrypt.hashSync(password, salt);
-
-    // Save the user
-    await user.save();
-
-    // Delete the password link from
-    PasswordResetLinks.destroy({
-      where: { id: token },
-    });
-
-    // response
-    res
-      .status(200)
-      .json({ success: true, message: "Password updated successfully" });
-  } catch (err) {
-    logger.error(`Reset password: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
-  }
-};
-
 // Login or register with azure user - loginOrRegisterAzureUser [ `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/token`]
 const loginOrRegisterAzureUser = async (req, res, next) => {
   try {
@@ -829,11 +777,10 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 module.exports = {
   createBasicUser,
   verifyEmail,
-  resetTempPassword,
+  resetPasswordWithToken,
   loginBasicUser,
   logOutBasicUser,
   handlePasswordResetRequest,
-  resetPassword,
   createApplicationOwner,
   loginOrRegisterAzureUser,
 };

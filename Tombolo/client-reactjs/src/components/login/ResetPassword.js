@@ -42,7 +42,7 @@ const ResetPassword = () => {
 
   const onFinish = async (values) => {
     try {
-      const url = '/api/auth/resetTempPassword';
+      const url = '/api/auth/resetPasswordWithToken';
       const password = values.newPassword;
       const deviceInfo = getDeviceInfo();
 
