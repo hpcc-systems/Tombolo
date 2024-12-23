@@ -283,7 +283,7 @@ const verifyEmail = async (req, res) => {
 //Reset Temp password
 const resetTempPassword = async (req, res) => {
   try {
-    const { tempPassword, password, token, deviceInfo } = req.body;
+    const { password, token, deviceInfo } = req.body;
 
     // From AccountVerificationCodes table findUser ID by code, where code is resetToken
     const accountVerificationCode = await AccountVerificationCodes.findOne({
@@ -308,11 +308,6 @@ const resetTempPassword = async (req, res) => {
       throw { status: 404, message: "User not found" };
     }
 
-    // Compare temp password with hash.
-    if (!bcrypt.compareSync(tempPassword, user.hash)) {
-      throw { status: 500, message: "Invalid temporary password" };
-    }
-
     // Hash the new password
     const salt = bcrypt.genSaltSync(10);
     user.hash = bcrypt.hashSync(password, salt);
@@ -326,6 +321,11 @@ const resetTempPassword = async (req, res) => {
     // Delete the account verification code
     await AccountVerificationCodes.destroy({
       where: { code: token },
+    });
+
+    //delete password reset link
+    await PasswordResetLinks.destroy({
+      where: { id: token },
     });
 
     // Create token id
@@ -549,13 +549,23 @@ const handlePasswordResetRequest = async (req, res) => {
 
     // Generate a password reset token
     const randomId = uuidv4();
-    const passwordRestLink = `${process.env.WEB_URL}/reset-password/${randomId}`;
+    let webUrl = process.env.WEB_URL;
+
+    //cut off last character if it is a slash
+    if (webUrl[webUrl.length - 1] === "/") {
+      webUrl = webUrl.slice(0, -1);
+    }
+
+    const passwordRestLink = `${webUrl}/reset-password/${randomId}`;
 
     // Notification subject
     let subject = "Password Reset Link";
     if (process.env.INSTANCE_NAME) {
       subject = `${process.env.INSTANCE_NAME} - ${subject}`;
     }
+
+    //include searchableNotificationId in the notification meta data
+    const searchableNotificationId = uuidv4();
 
     // Queue notification
     await NotificationQueue.create({
@@ -566,9 +576,12 @@ const handlePasswordResetRequest = async (req, res) => {
       createdBy: "System",
       updatedBy: "System",
       metaData: {
-        mainRecipients: [email],
-        subject,
-        body: "Password reset link",
+        notificationId: searchableNotificationId,
+        recipientName: `${user.firstName}`,
+        notificationOrigin: "Reset Password",
+        subject: "PasswordResetLink",
+        mainRecipients: [user.email],
+        notificationDescription: "Password Reset Link",
         validForHours: 24,
         passwordRestLink,
       },
@@ -580,6 +593,13 @@ const handlePasswordResetRequest = async (req, res) => {
       userId: user.id,
       resetLink: passwordRestLink,
       issuedAt: new Date(),
+      expiresAt: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
+    });
+
+    // Create account verification code
+    await AccountVerificationCodes.create({
+      code: randomId,
+      userId: user.id,
       expiresAt: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
     });
 

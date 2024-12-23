@@ -1,10 +1,17 @@
 import React from 'react';
 import { Form, Input, Button, Divider, message } from 'antd';
+import { authHeader } from '../common/AuthHeader';
 
 const ForgotPassword = () => {
-  const onFinish = (values) => {
-    console.log('Received values:', values);
-    success();
+  const onFinish = async (values) => {
+    try {
+      const url = '/api/auth/handlePasswordResetRequest';
+      await fetch(url, { headers: authHeader(), method: 'POST', body: JSON.stringify(values) });
+
+      success();
+    } catch (err) {
+      message.error(err.message);
+    }
   };
 
   const [messageApi, contextHolder] = message.useMessage();
