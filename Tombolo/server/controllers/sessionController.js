@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const models = require("../models");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 const logger = require("../config/logger");
+const { verifyToken } = require("../utils/authUtil");
 
 const RefreshTokens = models.RefreshTokens;
 
@@ -24,6 +25,16 @@ const activeSessionsByUserId = async (req, res) => {
       } catch (err) {
         return false;
       }
+    });
+
+    //grab current session token id from the request
+    const token = req.cookies.token;
+    let decoded = await verifyToken(token, process.env.JWT_SECRET);
+    const currentTokenId = decoded.tokenId;
+
+    // Mark the current token
+    activeSessions.forEach((session) => {
+      session.dataValues.current = session.id === currentTokenId;
     });
 
     // response
