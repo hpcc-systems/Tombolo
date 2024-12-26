@@ -50,7 +50,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
 
   //control the disabled state of the menu items based on the application and cluster states
   useEffect(() => {
-    if (applicationId && applicationId) {
+    if (application && applicationId) {
       setDisabled(false);
     } else {
       setDisabled(true);
