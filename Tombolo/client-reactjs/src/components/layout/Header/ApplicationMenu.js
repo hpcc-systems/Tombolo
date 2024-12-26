@@ -17,7 +17,6 @@ const ApplicationMenu = ({ applications, selected, handleApplicationChange }) =>
       menu={{
         items: getApplicationItems(applications),
         onClick: (e) => {
-          console.log(e);
           handleApplicationChange(e.key);
         },
       }}

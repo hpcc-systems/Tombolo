@@ -366,23 +366,23 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
     ),
     getItem(
       <>
-        {disabled || clusterDisabled ? (
+        {/* {disabled || clusterDisabled ? (
           <>
             <i className="fa fa-fw fa-users" />
             <span style={{ marginLeft: '1rem' }}>Users</span>
           </>
-        ) : (
-          <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/userManagement'}>
-            <i className="fa fa-fw fa-users" />
-            <span style={{ marginLeft: '1rem' }}>Users</span>
-          </Link>
-        )}
+        ) : ( */}
+        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/userManagement'}>
+          <i className="fa fa-fw fa-users" />
+          <span style={{ marginLeft: '1rem' }}>Users</span>
+        </Link>
+        {/* )} */}
       </>,
       '11',
       null,
       null,
-      null,
-      clusterDisabled
+      null
+      // clusterDisabled
     ),
     getItem(
       <>
