@@ -54,10 +54,15 @@ const tokenValidationMiddleware = async (req, res, next) => {
           message: "Unauthorized: Session expired, Please Log in again.",
         });
       } else {
+        console.log("token expired, refreshing");
         //token expired, but session is still valid block so we need to refresh the token cookie and the csrf token
         await setTokenCookie(res, tokenDetails.newAccessToken);
 
         await generateAndSetCSRFToken(req, res, tokenDetails.newAccessToken);
+
+        //we need to update the req.user object with the new token details, so that when we pass it to the next middleware it has the correct details
+        //if we don't do this and a verifyUserRole middleware is used after this one, it will fail as the user details won't be there and end user will receive errors
+        req.user = await jwt.decode(tokenDetails.newAccessToken);
 
         next();
       }
