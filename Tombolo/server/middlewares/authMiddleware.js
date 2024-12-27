@@ -201,6 +201,20 @@ const validateAzureAuthCode = [
   },
 ];
 
+const validateAccessRequest = [
+  body("id").isUUID(4).withMessage("Invalid user id"),
+  body("comment").notEmpty().withMessage("Comment is required"),
+  body("roles").isArray().withMessage("Roles must be an array"),
+  body("applications").isArray().withMessage("Applications must be an array"),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+];
+
 // Exports
 module.exports = {
   validateNewUserPayload,
@@ -210,4 +224,5 @@ module.exports = {
   validatePasswordResetRequestPayload,
   validateResetPasswordPayload,
   validateAzureAuthCode,
+  validateAccessRequest,
 };

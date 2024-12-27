@@ -10,6 +10,7 @@ const {
   validatePasswordResetRequestPayload,
   validateResetPasswordPayload,
   validateAzureAuthCode,
+  validateAccessRequest,
 } = require("../middlewares/authMiddleware");
 
 // Import user controller
@@ -22,6 +23,7 @@ const {
   resetPasswordWithToken,
   verifyEmail,
   loginOrRegisterAzureUser,
+  requestAccess,
 } = require("../controllers/authController");
 
 // Basic (Traditional) User Routes ----------------------------------------------------------------------------
@@ -59,5 +61,8 @@ router.post(
   validateAzureAuthCode,
   loginOrRegisterAzureUser
 );
+
+//access request
+router.post("/requestAccess", validateAccessRequest, requestAccess);
 
 module.exports = router;
