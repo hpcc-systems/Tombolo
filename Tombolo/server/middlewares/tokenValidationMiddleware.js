@@ -54,7 +54,6 @@ const tokenValidationMiddleware = async (req, res, next) => {
           message: "Unauthorized: Session expired, Please Log in again.",
         });
       } else {
-        console.log("token expired, refreshing");
         //token expired, but session is still valid block so we need to refresh the token cookie and the csrf token
         await setTokenCookie(res, tokenDetails.newAccessToken);
 
