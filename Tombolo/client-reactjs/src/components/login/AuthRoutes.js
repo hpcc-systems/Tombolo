@@ -34,7 +34,7 @@ const AuthRoutes = () => {
         <Route path="/reset-password/:resetToken" component={ResetPassword} />
         <Route path="/forgot-password" component={ForgotPassword} />
         {/* reset password with temp password from owner/admin registration */}
-        <Route path="/reset-temp-password/:resetToken" component={resetTempPassword} />
+        <Route path="/reset-temporary-password/:resetToken" component={resetTempPassword} />
         {/* redirect all other routes hit to login */}
         <Route path="*" component={Login} />
       </Switch>

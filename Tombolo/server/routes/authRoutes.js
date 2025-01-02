@@ -51,7 +51,7 @@ router.post(
   resetPasswordWithToken
 ); // Reset Password - Self Requested
 router.post(
-  "/resetPasswordWithToken",
+  "/resetTempPassword",
   validateResetPasswordPayload,
   resetTempPassword
 ); // Reset Password - Owner/Admin requested through registration flow
