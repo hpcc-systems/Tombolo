@@ -12,6 +12,7 @@ const MyAccountTable = ({ user }) => {
       if (!sessions?.success) {
         return;
       }
+
       setSessions(sessions.data);
       return;
     };
@@ -36,7 +37,10 @@ const MyAccountTable = ({ user }) => {
       title: 'Revoke',
       dataIndex: 'id',
       key: 'id',
-      render: (id) => {
+      render: (id, current) => {
+        if (current.current) {
+          return <span>Active Session</span>;
+        }
         return (
           <a
             onClick={async () => {
