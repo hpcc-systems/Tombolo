@@ -130,9 +130,14 @@ The preferred method, however, is **Azure AD** (formerly Azure Active Directory)
   The client secret from Azure AD. You obtain this after registering your application in Azure AD.  
   _Example:_ `your_client_secret`
 
-- **REDIRECT_URI=http://localhost:3001**
+- **REDIRECT_URI**
   The redirect URI from Azure AD. You obtain this after registering your application in Azure AD.  
   _Example:_ `http://localhost:3001`
+
+- **CSRF_SECRET**
+  A string or value utilized to verify secure exchanges between client and server.
+
+  _Example:_ `123e4567-e89b-12d3-a456-426655440000`
 
 ---
 

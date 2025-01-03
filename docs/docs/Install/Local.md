@@ -23,6 +23,7 @@ Local installation requires a few dependencies to be installed directly on your 
 - [Git](https://git-scm.com/downloads) latest version recommended.
 - [MySQL Database](https://dev.mysql.com/downloads/) latest version recommended (URL, and port number, must be accessible from the installation environment).
 - [HPCC cluster](https://hpccsystems.com/getting-started/) latest version recommended.
+- Email Provider - Required to verify user accounts.
 
 ### Recommended Software and Skills
 
@@ -90,7 +91,16 @@ Save the file when finished.
 
 ---
 
-## Step 3 - Run the application
+## Step 3 - Whitelist Clusters
+
+Clusters need to be whitelisted to allow Tombolo to communicate with them. Any clusters that will be used in Tombolo must be whitelisted for security reasons. None are required to start the software, but at least one is required to access the featureset available.
+
+Inside the Tombolo/server directory, create a new file called cluster-whitelist.js.
+Use cluster-whitelist.sample.js as a template to add the clusters that you would like to whitelist.
+
+---
+
+## Step 4 - Run the application
 
 ### Server
 
@@ -144,7 +154,7 @@ npm run start
 
 ---
 
-## Step 4 - Open the application
+## Step 5 - Open the application
 
 Depending on your environment, your browser may have been opened to the start page of Tombolo already, after running the
 `npm start` command for the client. If not, you can reach your new installation at [http://localhost:3001/](http://localhost:3001/). If you need any further assistance, check out our [user guides](/docs/category/user-guides).

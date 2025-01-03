@@ -21,6 +21,10 @@ Before setting up Tombolo with Docker, ensure your system meets the following re
 - **Docker**: Ensure Docker is installed and running on your machine, preferably the latest version. You can download the most recent version from [Docker's official site](https://www.docker.com/get-started).
 - **Git**: Preferably latest version
 
+### Other Prerequisites
+
+- **Email Provider** - Required to verify user accounts.
+
 ---
 
 ### Step 1- Clone the Repository
