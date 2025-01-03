@@ -22,6 +22,27 @@ export const getDeviceInfo = () => {
   return { os, browser: browserName };
 };
 
+// Make a request to the server to reset the temporary password - OWNER REGISTRATION
+export const resetTempPassword = async (resetData) => {
+  const payload = {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify({ ...resetData, deviceInfo: getDeviceInfo() }),
+  };
+
+  const response = await fetch('/api/auth/resetTempPassword', payload);
+
+  // Get the data from the response
+  const responseJson = await response.json();
+
+  // Check if the response is ok
+  if (!response.ok) {
+    throw new Error(responseJson.message);
+  }
+
+  return responseJson;
+};
+
 // Make POST request to api/auth/verifyEmail with token in body
 export const verifyEmail = async (token) => {
   // eslint-disable-next-line no-unreachable
