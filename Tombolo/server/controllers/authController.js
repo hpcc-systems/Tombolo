@@ -281,8 +281,110 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-//Reset Temp password
+//Reset Password With Token - Self Requested
 const resetPasswordWithToken = async (req, res) => {
+  try {
+    const { password, token, deviceInfo } = req.body;
+
+    // From AccountVerificationCodes table findUser ID by code, where code is resetToken
+    const accountVerificationCode = await AccountVerificationCodes.findOne({
+      where: { code: token },
+    });
+
+    // If accountVerificationCode not found
+    if (!accountVerificationCode) {
+      throw { status: 404, message: "Invalid or expired reset token" };
+    }
+
+    // If accountVerificationCode has expired
+    if (new Date() > accountVerificationCode.expiresAt) {
+      throw { status: 400, message: "Reset token has expired" };
+    }
+
+    // Find user by ID
+    let user = await getAUser({ id: accountVerificationCode.userId });
+
+    // If user not found
+    if (!user) {
+      throw { status: 404, message: "User not found" };
+    }
+
+    // Hash the new password
+    const salt = bcrypt.genSaltSync(10);
+    user.hash = bcrypt.hashSync(password, salt);
+    user.verifiedUser = true;
+    user.verifiedAt = new Date();
+    user.forcePasswordReset = false;
+
+    // Save user with updated details
+    await user.save();
+
+    // Delete the account verification code
+    await AccountVerificationCodes.destroy({
+      where: { code: token },
+    });
+
+    //delete password reset link
+    await PasswordResetLinks.destroy({
+      where: { id: token },
+    });
+
+    //remove all sessions for user before initiating new session
+    await RefreshTokens.destroy({
+      where: { userId: user.id },
+    });
+
+    // Create token id
+    const tokenId = uuidv4();
+
+    // Create access jwt
+    const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
+
+    // Generate refresh token
+    const refreshToken = generateRefreshToken({ tokenId });
+
+    // Save refresh token to DB
+    const { iat, exp } = jwt.decode(refreshToken);
+
+    // Save refresh token in DB
+    await RefreshTokens.create({
+      id: tokenId,
+      userId: user.id,
+      token: refreshToken,
+      deviceInfo,
+      metaData: {},
+      iat: new Date(iat * 1000),
+      exp: new Date(exp * 1000),
+    });
+
+    await setTokenCookie(res, accessToken);
+
+    await generateAndSetCSRFToken(req, res, accessToken);
+
+    // User data obj to send to the client
+    const userObj = {
+      ...user.toJSON(),
+    };
+
+    // remove hash from user object
+    delete userObj.hash;
+
+    // Success response
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+      data: userObj,
+    });
+  } catch (err) {
+    logger.error(`Reset Temp Password: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
+//Reset Password with Temp Password - Owner/Admin requested
+const resetTempPassword = async (req, res) => {
   try {
     const { password, token, deviceInfo } = req.body;
 
@@ -514,7 +616,7 @@ const logOutBasicUser = async (req, res) => {
   }
 };
 
-// Fulfill password reset request
+// Fulfill password reset request - Self Requested
 const handlePasswordResetRequest = async (req, res) => {
   try {
     // Get user email
@@ -844,6 +946,7 @@ module.exports = {
   createBasicUser,
   verifyEmail,
   resetPasswordWithToken,
+  resetTempPassword,
   loginBasicUser,
   logOutBasicUser,
   handlePasswordResetRequest,

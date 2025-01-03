@@ -10,7 +10,9 @@ const csrf = doubleCsrf({
 
       const decoded = verifyToken(token, process.env.JWT_SECRET);
 
-      const secret = process.env.CSRF_SECRET + decoded.id;
+      const secret = process.env.CSRF_SECRET
+        ? process.env.CSRF_SECRET
+        : "secret" + decoded.id;
 
       return secret;
     } catch (e) {
