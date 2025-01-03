@@ -280,10 +280,10 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-//Reset Temp password
-const resetTempPassword = async (req, res) => {
+//Reset Password With Token - Self Requested
+const resetPasswordWithToken = async (req, res) => {
   try {
-    const { tempPassword, password, token, deviceInfo } = req.body;
+    const { password, token, deviceInfo } = req.body;
 
     // From AccountVerificationCodes table findUser ID by code, where code is resetToken
     const accountVerificationCode = await AccountVerificationCodes.findOne({
@@ -308,9 +308,106 @@ const resetTempPassword = async (req, res) => {
       throw { status: 404, message: "User not found" };
     }
 
-    // Compare temp password with hash.
-    if (!bcrypt.compareSync(tempPassword, user.hash)) {
-      throw { status: 500, message: "Invalid temporary password" };
+    // Hash the new password
+    const salt = bcrypt.genSaltSync(10);
+    user.hash = bcrypt.hashSync(password, salt);
+    user.verifiedUser = true;
+    user.verifiedAt = new Date();
+    user.forcePasswordReset = false;
+
+    // Save user with updated details
+    await user.save();
+
+    // Delete the account verification code
+    await AccountVerificationCodes.destroy({
+      where: { code: token },
+    });
+
+    //delete password reset link
+    await PasswordResetLinks.destroy({
+      where: { id: token },
+    });
+
+    //remove all sessions for user before initiating new session
+    await RefreshTokens.destroy({
+      where: { userId: user.id },
+    });
+
+    // Create token id
+    const tokenId = uuidv4();
+
+    // Create access jwt
+    const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
+
+    // Generate refresh token
+    const refreshToken = generateRefreshToken({ tokenId });
+
+    // Save refresh token to DB
+    const { iat, exp } = jwt.decode(refreshToken);
+
+    // Save refresh token in DB
+    await RefreshTokens.create({
+      id: tokenId,
+      userId: user.id,
+      token: refreshToken,
+      deviceInfo,
+      metaData: {},
+      iat: new Date(iat * 1000),
+      exp: new Date(exp * 1000),
+    });
+
+    await setTokenCookie(res, accessToken);
+
+    await generateAndSetCSRFToken(req, res, accessToken);
+
+    // User data obj to send to the client
+    const userObj = {
+      ...user.toJSON(),
+    };
+
+    // remove hash from user object
+    delete userObj.hash;
+
+    // Success response
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+      data: userObj,
+    });
+  } catch (err) {
+    logger.error(`Reset Temp Password: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
+//Reset Password with Temp Password - Owner/Admin requested
+const resetTempPassword = async (req, res) => {
+  try {
+    const { password, token, deviceInfo } = req.body;
+
+    // From AccountVerificationCodes table findUser ID by code, where code is resetToken
+    const accountVerificationCode = await AccountVerificationCodes.findOne({
+      where: { code: token },
+    });
+
+    // If accountVerificationCode not found
+    if (!accountVerificationCode) {
+      throw { status: 404, message: "Invalid or expired reset token" };
+    }
+
+    // If accountVerificationCode has expired
+    if (new Date() > accountVerificationCode.expiresAt) {
+      throw { status: 400, message: "Reset token has expired" };
+    }
+
+    // Find user by ID
+    let user = await getAUser({ id: accountVerificationCode.userId });
+
+    // If user not found
+    if (!user) {
+      throw { status: 404, message: "User not found" };
     }
 
     // Hash the new password
@@ -326,6 +423,16 @@ const resetTempPassword = async (req, res) => {
     // Delete the account verification code
     await AccountVerificationCodes.destroy({
       where: { code: token },
+    });
+
+    //delete password reset link
+    await PasswordResetLinks.destroy({
+      where: { id: token },
+    });
+
+    //remove all sessions for user before initiating new session
+    await RefreshTokens.destroy({
+      where: { userId: user.id },
     });
 
     // Create token id
@@ -508,7 +615,7 @@ const logOutBasicUser = async (req, res) => {
   }
 };
 
-// Fulfill password reset request
+// Fulfill password reset request - Self Requested
 const handlePasswordResetRequest = async (req, res) => {
   try {
     // Get user email
@@ -549,13 +656,23 @@ const handlePasswordResetRequest = async (req, res) => {
 
     // Generate a password reset token
     const randomId = uuidv4();
-    const passwordRestLink = `${process.env.WEB_URL}/reset-password/${randomId}`;
+    let webUrl = process.env.WEB_URL;
+
+    //cut off last character if it is a slash
+    if (webUrl[webUrl.length - 1] === "/") {
+      webUrl = webUrl.slice(0, -1);
+    }
+
+    const passwordRestLink = `${webUrl}/reset-password/${randomId}`;
 
     // Notification subject
     let subject = "Password Reset Link";
     if (process.env.INSTANCE_NAME) {
       subject = `${process.env.INSTANCE_NAME} - ${subject}`;
     }
+
+    //include searchableNotificationId in the notification meta data
+    const searchableNotificationId = uuidv4();
 
     // Queue notification
     await NotificationQueue.create({
@@ -566,9 +683,12 @@ const handlePasswordResetRequest = async (req, res) => {
       createdBy: "System",
       updatedBy: "System",
       metaData: {
-        mainRecipients: [email],
-        subject,
-        body: "Password reset link",
+        notificationId: searchableNotificationId,
+        recipientName: `${user.firstName}`,
+        notificationOrigin: "Reset Password",
+        subject: "PasswordResetLink",
+        mainRecipients: [user.email],
+        notificationDescription: "Password Reset Link",
         validForHours: 24,
         passwordRestLink,
       },
@@ -583,65 +703,15 @@ const handlePasswordResetRequest = async (req, res) => {
       expiresAt: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
     });
 
+    // Create account verification code
+    await AccountVerificationCodes.create({
+      code: randomId,
+      userId: user.id,
+      expiresAt: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
+    });
+
     // response
     res.status(200).json({ success: true });
-  } catch (err) {
-    logger.error(`Reset password: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
-  }
-};
-
-// Reset password
-const resetPassword = async (req, res) => {
-  try {
-    // Get the password reset token
-    const { token, password } = req.body;
-
-    // Find the password reset token
-    const passwordResetLink = await PasswordResetLinks.findOne({
-      where: { id: token },
-    });
-
-    // Token does not exist
-    if (!passwordResetLink) {
-      logger.error(`Reset password: Token ${token} does not exist`);
-      return res.status(404).json({
-        success: false,
-        message: "Password reset link Invalid or expired",
-      });
-    }
-
-    // Token has expired
-    if (new Date() > passwordResetLink.expiresAt) {
-      logger.error(`Reset password: Token ${token} has expired`);
-      return res
-        .status(400)
-        .json({ success: false, message: "Token has expired" });
-    }
-
-    // Find the user
-    const user = await User.findOne({
-      where: { id: passwordResetLink.userId },
-    });
-
-    // Hash the new password
-    const salt = bcrypt.genSaltSync(10);
-    user.hash = bcrypt.hashSync(password, salt);
-
-    // Save the user
-    await user.save();
-
-    // Delete the password link from
-    PasswordResetLinks.destroy({
-      where: { id: token },
-    });
-
-    // response
-    res
-      .status(200)
-      .json({ success: true, message: "Password updated successfully" });
   } catch (err) {
     logger.error(`Reset password: ${err.message}`);
     res
@@ -809,11 +879,11 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 module.exports = {
   createBasicUser,
   verifyEmail,
+  resetPasswordWithToken,
   resetTempPassword,
   loginBasicUser,
   logOutBasicUser,
   handlePasswordResetRequest,
-  resetPassword,
   createApplicationOwner,
   loginOrRegisterAzureUser,
 };

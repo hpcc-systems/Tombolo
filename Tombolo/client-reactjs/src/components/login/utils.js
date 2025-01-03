@@ -22,7 +22,7 @@ export const getDeviceInfo = () => {
   return { os, browser: browserName };
 };
 
-// Make a request to the server to reset the temporary password
+// Make a request to the server to reset the temporary password - OWNER REGISTRATION
 export const resetTempPassword = async (resetData) => {
   const payload = {
     method: 'POST',

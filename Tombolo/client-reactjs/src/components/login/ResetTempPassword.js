@@ -36,9 +36,18 @@ function ResetTempPassword() {
       values.token = resetToken;
       const result = await resetTempPassword(values);
 
-      // Save user token to local storage
-      setUser(JSON.stringify(result.data));
-      window.location.href = '/';
+      if (result?.data) {
+        let user = result.data;
+
+        //set isAuthenticated to true so application loads
+        user.isAuthenticated = true;
+
+        // Save user token to local storage
+        setUser(JSON.stringify(user));
+        window.location.href = '/';
+      } else {
+        message.error(result.message);
+      }
     } catch (err) {
       message.error(err.message);
     } finally {

@@ -18,8 +18,8 @@ const {
   loginBasicUser,
   logOutBasicUser,
   handlePasswordResetRequest,
-  resetPassword,
   createApplicationOwner,
+  resetPasswordWithToken,
   resetTempPassword,
   verifyEmail,
   loginOrRegisterAzureUser,
@@ -45,12 +45,16 @@ router.post(
   validatePasswordResetRequestPayload,
   handlePasswordResetRequest
 ); // Reset password
-router.post("/resetPassword", validateResetPasswordPayload, resetPassword); // Reset password
+router.post(
+  "/resetPasswordWithToken",
+  validateResetPasswordPayload,
+  resetPasswordWithToken
+); // Reset Password - Self Requested
 router.post(
   "/resetTempPassword",
   validateResetPasswordPayload,
   resetTempPassword
-); // Complete registration by resetting temporary password
+); // Reset Password - Owner/Admin requested through registration flow
 router.post("/verifyEmail", verifyEmail); // Verify email
 // TODO - Forgot password route
 

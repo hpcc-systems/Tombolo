@@ -2,8 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, message, Popover } from 'antd';
 import { useParams } from 'react-router-dom';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
+import { authHeader } from '../common/AuthHeader';
+
+import { getDeviceInfo } from './utils';
+import { setUser } from '../common/userStorage';
+
 const ResetPassword = () => {
-  const [user, setUser] = useState(null);
   const [popOverContent, setPopOverContent] = useState(null);
 
   //we will get the reset token from the url and test if it is valid to get the user information
@@ -29,28 +33,49 @@ const ResetPassword = () => {
     });
   };
 
+  //if there is no token, we will show an error message to the user
   useEffect(() => {
-    //check if reset token is valid, if it is, we will get the user ID and store it, if not, we will redirect to the login page
-    if (user === null && resetToken !== undefined) {
-      //get user information by reset token
-
-      // get user by reset token route
-
-      //if user is found, set user and return
-      console.log(setUser);
-
-      //if user is not found, message
-      invalidToken();
-    }
-
     if (resetToken === undefined) {
-      //redirect to login page
+      invalidToken();
     }
   }, []);
 
-  const onFinish = (values) => {
-    console.log('Received values:', values);
-    alert('reset password code fires here');
+  const onFinish = async (values) => {
+    try {
+      const url = '/api/auth/resetPasswordWithToken';
+      const password = values.newPassword;
+      const deviceInfo = getDeviceInfo();
+
+      const response = await fetch(url, {
+        headers: authHeader(),
+        method: 'POST',
+        body: JSON.stringify({ password, token: resetToken, deviceInfo }),
+      });
+
+      if (!response.ok) {
+        let json = await response.json();
+
+        if (json.message) {
+          message.error(json.message);
+        } else {
+          message.error('An undefined error occurred. Please try again later');
+        }
+        return;
+      }
+
+      if (response.ok) {
+        message.success('Password reset successfully.');
+        let json = await response.json();
+        if (json.success === true) {
+          json.data.isAuthenticated = true;
+          setUser(json.data);
+          //reload window
+          window.location.href = '/';
+        }
+      }
+    } catch (err) {
+      message.error(err.message);
+    }
   };
 
   useEffect(() => {}, [popOverContent]);
@@ -119,7 +144,7 @@ const ResetPassword = () => {
         <Input.Password size="large" autoComplete="new-password" />
       </Form.Item>
       <Form.Item>
-        <Button type="primary" htmlType="submit" disabled={!user?.id} className="fullWidth">
+        <Button type="primary" htmlType="submit" className="fullWidth">
           Reset Password
         </Button>
       </Form.Item>
