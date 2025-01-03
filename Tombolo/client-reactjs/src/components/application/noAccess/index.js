@@ -25,7 +25,7 @@ const NoAccess = () => {
       values.comment = 'No comment provided';
     }
 
-    const response = await fetch('/api/instanceSettings/requestAccess', {
+    const response = await fetch('/api/auth/requestAccess', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
