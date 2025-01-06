@@ -79,6 +79,7 @@ const Login = () => {
       return;
     } finally {
       setAzureLoginAttempted(true);
+      setLoading(false);
     }
   };
 
