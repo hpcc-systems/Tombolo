@@ -1,6 +1,5 @@
 // Packages
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { DownOutlined } from '@ant-design/icons';
 import {
   Modal,
@@ -47,7 +46,8 @@ const UpdateNotificationModal = ({
   const [warningMessages, setWarningMessages] = useState([]);
 
   //Redux
-  const { user } = useSelector((state) => state.authenticationReducer);
+  // Get user from local stroage
+  const user = JSON.parse(localStorage.getItem('user'));
 
   // Effects
   useEffect(() => {
@@ -185,8 +185,7 @@ const UpdateNotificationModal = ({
         setSelectedNotificationsIds([]);
       }
     } catch (err) {
-      console.error(err);
-      message.error('Enter updated information');
+      message.error('Failed to save updated notification(s)');
     } finally {
       form.resetFields();
     }
