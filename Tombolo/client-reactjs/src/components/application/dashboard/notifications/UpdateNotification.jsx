@@ -21,6 +21,7 @@ import dayjs from 'dayjs';
 //Local Imports
 import { statuses } from './notificationUtil';
 import { updateMultipleNotifications } from './notificationUtil';
+import { getUser } from '../../../common/userStorage';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -47,7 +48,7 @@ const UpdateNotificationModal = ({
 
   //Redux
   // Get user from local stroage
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getUser();
 
   // Effects
   useEffect(() => {
