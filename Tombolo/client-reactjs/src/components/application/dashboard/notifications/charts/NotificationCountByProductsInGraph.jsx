@@ -6,8 +6,8 @@ function NotificationCountByProductsInGraph({ sentNotifications, productCategori
   // Prepare the data
   let chartData = [];
   sentNotifications.forEach((notification) => {
-    if (notification.metaData && notification.metaData.asrSpecificMetaData) {
-      const category = notification.metaData.asrSpecificMetaData.productCode || 'ACU';
+    if (notification.metaData && notification.metaData.notificationDetails?.product) {
+      const category = notification.metaData.notificationDetails?.product;
       const status = notification.status;
       chartData.push({ category, status, count: 1 });
     }

@@ -1,5 +1,6 @@
 // Package imports
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { Empty } from 'antd';
 
 // Local Imports
@@ -10,6 +11,9 @@ import NotificationCountByOriginDonut from './charts/NotificationCountByOriginDo
 
 function NotificationDashboard({ sentNotifications, dashBoardFilter, monitorings, productCategories }) {
   const [filteredNotifications, setFilteredNotifications] = useState([]);
+  const { applicationReducer } = useSelector((state) => state);
+  const { integrations: allIntegrations = [] } = applicationReducer;
+  const integrationCodes = allIntegrations.map((integration) => integration.name);
 
   useEffect(() => {
     console.log('Loading ...');
@@ -67,13 +71,15 @@ function NotificationDashboard({ sentNotifications, dashBoardFilter, monitorings
             <NotificationCountOnLineGraph sentNotifications={filteredNotifications} dashBoardFilter={dashBoardFilter} />
           </div>
 
-          <div className="notifications_chart_card">
-            <div className="notifications_chart_title">Notifications by Product with Status Count</div>
-            <NotificationCountByProductsInGraph
-              sentNotifications={filteredNotifications}
-              productCategories={productCategories}
-            />
-          </div>
+          {integrationCodes.includes('ASR') && (
+            <div className="notifications_chart_card">
+              <div className="notifications_chart_title">Notifications by Product with Status Count</div>
+              <NotificationCountByProductsInGraph
+                sentNotifications={filteredNotifications}
+                productCategories={productCategories}
+              />
+            </div>
+          )}
         </>
       )}
     </div>
