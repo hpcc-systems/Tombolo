@@ -57,6 +57,8 @@ const {
   startJobPunctualityMonitoring,
 } = require("../jobSchedularMethods/jobMonitoring.js");
 
+const {removeUnverifiedUser} = require("../jobSchedularMethods/userManagementJobs.js");
+
 class JobScheduler {
   constructor() {
     this.bree = new Bree({
@@ -135,6 +137,7 @@ class JobScheduler {
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
       await this.checkClusterReachability();
+      await removeUnverifiedUser.call(this);
       logger.info("-----------------------------");
       logger.info("Server is finished intializing, and is now running");
       logger.info("-----------------------------");
@@ -368,6 +371,11 @@ class JobScheduler {
 
   checkClusterReachability() {
     return checkClusterReachability.call(this);
+  }
+
+  // User management jobs
+  removeUnverifiedUser() {
+    return removeUnverifiedUser.call(this);
   }
 }
 
