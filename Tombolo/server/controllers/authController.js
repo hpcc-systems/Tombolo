@@ -507,11 +507,11 @@ const loginBasicUser = async (req, res, next) => {
     // If not verified user return error
     if (!user.verifiedUser) {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
-
-      // Throw unverified user error
-      const unverifiedUserErr = new Error(genericError);
-      unverifiedUserErr.status = 403;
-      throw unverifiedUserErr;
+      res.status(403).json({
+        success: false,
+        message: "User not verified",
+      });
+      return;
     }
 
     // If user is an registered to azure, throw error

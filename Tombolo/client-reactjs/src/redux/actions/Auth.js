@@ -9,6 +9,7 @@ const clearStorage = () => {
 };
 
 async function login({ email, password, deviceInfo }) {
+  console.log('Loggin in with emails: ' + email);
   clearStorage();
   const user = await loginBasicUserFunc(email, password, deviceInfo);
 
