@@ -1,6 +1,5 @@
 // Packages
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { DownOutlined } from '@ant-design/icons';
 import {
   Modal,
@@ -22,6 +21,7 @@ import dayjs from 'dayjs';
 //Local Imports
 import { statuses } from './notificationUtil';
 import { updateMultipleNotifications } from './notificationUtil';
+import { getUser } from '../../../common/userStorage';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -47,7 +47,8 @@ const UpdateNotificationModal = ({
   const [warningMessages, setWarningMessages] = useState([]);
 
   //Redux
-  const { user } = useSelector((state) => state.authenticationReducer);
+  // Get user from local stroage
+  const user = getUser();
 
   // Effects
   useEffect(() => {
@@ -185,8 +186,7 @@ const UpdateNotificationModal = ({
         setSelectedNotificationsIds([]);
       }
     } catch (err) {
-      console.error(err);
-      message.error('Enter updated information');
+      message.error('Failed to save updated notification(s)');
     } finally {
       form.resetFields();
     }

@@ -92,8 +92,8 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
             <div className="notifications__filter-label">Status</div>
             <Form.Item name="status">
               <Select placeholder="Status" disabled={false} allowClear>
-                {statusOptions.map((s) => (
-                  <Option key={s} value={s}>
+                {statusOptions.map((s, i) => (
+                  <Option key={i} value={s}>
                     {s}
                   </Option>
                 ))}
@@ -106,8 +106,8 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
                 <div className="notifications__filter-label">Domain</div>
                 <Form.Item name="domain">
                   <Select placeholder="Domain" disabled={false} allowClear>
-                    {domainOptions.map((d) => (
-                      <Option key={d} value={d}>
+                    {domainOptions.map((d, i) => (
+                      <Option key={i} value={d}>
                         {d}
                       </Option>
                     ))}
@@ -118,8 +118,8 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
                 <div className="notifications__filter-label">Product</div>
                 <Form.Item name="product">
                   <Select placeholder="Product" disabled={false} allowClear>
-                    {productOptions.map((p) => (
-                      <Option key={p} value={p}>
+                    {productOptions.map((p, i) => (
+                      <Option key={i} value={p}>
                         {p}
                       </Option>
                     ))}
