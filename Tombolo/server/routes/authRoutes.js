@@ -11,6 +11,7 @@ const {
   validateResetPasswordPayload,
   validateAzureAuthCode,
   validateAccessRequest,
+  validateEmailInBody,
 } = require("../middlewares/authMiddleware");
 
 // Import user controller
@@ -25,6 +26,7 @@ const {
   verifyEmail,
   loginOrRegisterAzureUser,
   requestAccess,
+  resendVerificationCode,
 } = require("../controllers/authController");
 
 // Basic (Traditional) User Routes ----------------------------------------------------------------------------
@@ -58,7 +60,8 @@ router.post(
   resetTempPassword
 ); // Reset Password - Owner/Admin requested through registration flow
 router.post("/verifyEmail", verifyEmail); // Verify email
-// TODO - Forgot password route
+// Resend verification code
+router.post("/resendVerificationCode",validateEmailInBody, resendVerificationCode); // Resend verification code to user
 
 // OAuth 2.0 User Routes ----------------------------------------------------------------------------
 //Login or register with azure user

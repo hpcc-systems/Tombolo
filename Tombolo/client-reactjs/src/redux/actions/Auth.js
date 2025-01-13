@@ -9,11 +9,15 @@ const clearStorage = () => {
 };
 
 async function login({ email, password, deviceInfo }) {
-  console.log('Loggin in with emails: ' + email);
   clearStorage();
   const user = await loginBasicUserFunc(email, password, deviceInfo);
 
-  if (user && user.data) {
+  if (user && user?.message === 'unverified') {
+    return {
+      type: 'unverified',
+      payload: null,
+    };
+  } else if (user && user.data) {
     user.data.isAuthenticated = true;
 
     //set item in local storage
@@ -98,12 +102,19 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
     { headers: authHeader() }
   );
 
-  if (!response.ok) {
+  const data = await response.json();
+
+  if (response.status === 401) {
+    if (data.message === 'unverified') {
+      return data;
+    } else {
+      handleError(response);
+      return;
+    }
+  } else if (!response.ok) {
     handleError(response);
     return null;
   }
-
-  const data = await response.json();
 
   return data;
 };
