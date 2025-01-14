@@ -1,13 +1,17 @@
+// Libraries
 import React, { useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { Modal, Form, Input, Button, message } from 'antd';
 
+// Local Imports
 import { authHeader } from '../../../common/AuthHeader';
+import { getUser } from '../../../common/userStorage';
 
 const AddEditModel = ({ visible, setModalVisibility, hooks, setHooks, isEditing, selectedHook }) => {
   const [form] = Form.useForm();
 
-  const user = useSelector((state) => state.authenticationReducer.user);
+  // Get user from Local Storage
+  const user = getUser();
+
   const title = isEditing ? 'Edit Teams Hook' : 'Add Teams Hook';
 
   //When save btn is clicked

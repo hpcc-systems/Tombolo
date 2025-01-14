@@ -1,11 +1,11 @@
 // Package imports
 import React, { useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { Modal, Form, Input, Select, message, Row, Col } from 'antd';
 import { isEmail } from 'validator';
 
 //Local Imports
 import { createNewDomain, getDomains, updateDomain } from './asr-integration-util.js';
+import { getUser } from '../../../common/userStorage';
 
 // Constants
 const { Option } = Select;
@@ -38,12 +38,9 @@ const DomainModal = ({
     }
   }, [selectedDomain]);
 
-  //Redux
-  const {
-    authenticationReducer: {
-      user: { firstName, lastName, email },
-    },
-  } = useSelector((state) => state);
+  // Get user from Local Storage
+  const user = getUser();
+  const { firstName, lastName, email } = user;
 
   // Update Domain
   const saveUpdatedDomain = async () => {
