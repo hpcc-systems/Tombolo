@@ -18,7 +18,6 @@ const JobDetailsForm = React.lazy(() => import('./Jobs/JobDetails'));
 const IndexDetailsForm = React.lazy(() => import('./IndexDetails'));
 const QueryDetailsForm = React.lazy(() => import('./queries/QueryDetails'));
 const ManualJobDetail = React.lazy(() => import('./Jobs/ManualJobDetail'));
-const Actions = React.lazy(() => import('./actions/actions'));
 const AddJobsForm = React.lazy(() => import('./Jobs/AddjobsForm/AddJobsForm'));
 const FileMonitoring = React.lazy(() => import('./fileMonitoring/FileMonitoring'));
 const OrbitMonitoring = React.lazy(() => import('./orbitMonitoring/OrbitMonitoring'));
@@ -64,7 +63,6 @@ const AppRoutes = ({ application, authenticationReducer }) => {
       />
       <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />{' '}
       <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
-      <PrivateRoute path="/:applicationId/actions" component={Actions} />
       <PrivateRoute path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId" component={ManualJobDetail} />
       <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
     </Switch>
