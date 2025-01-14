@@ -1,13 +1,19 @@
+// Libraries
 import React from 'react';
 import { Form, Button, Input, message } from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { useSelector } from 'react-redux';
+
+// Local imports
+import { getUser } from '../../../common/userStorage';
 
 const KeyForm = ({ createKey }) => {
   const [keyForm] = Form.useForm();
   const { TextArea } = Input;
-  const authReducer = useSelector((state) => state.authenticationReducer);
-  const email = authReducer.user.email;
+
+  // Get user from local storage
+  const {
+    user: { email },
+  } = getUser();
 
   //save data
   const handleSave = async () => {

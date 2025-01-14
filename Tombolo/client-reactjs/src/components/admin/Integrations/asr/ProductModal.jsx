@@ -1,10 +1,10 @@
 // Package imports
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Select, message } from 'antd';
-import { useSelector } from 'react-redux';
 
 // Local imports
 import { createNewProduct, getProducts, updateProduct } from './asr-integration-util';
+import { getUser } from '../../../common/userStorage';
 
 // Product tiers
 const tiers = [
@@ -24,10 +24,8 @@ const ProductModal = ({
 }) => {
   const [form] = Form.useForm();
 
-  // Redux
-  const {
-    authenticationReducer: { user },
-  } = useSelector((state) => state);
+  // Get user from local storage
+  const user = getUser();
 
   //Effects
   useEffect(() => {

@@ -21,8 +21,8 @@ router.get('/', async(req, res) => {
 router.post('/',  [
         body('name').isString().matches(/^[a-zA-Z0-9_ ()-]+$/).withMessage('Name is required and must be a string containing a-z, A-Z, 0-9, _'),
         body('url').isString().withMessage('URL is required and must be a string'),
-        body('createdBy').isString().matches(/^[a-zA-Z0-9_ ]+$/).withMessage('CreatedBy is required and must be a string containing a-z, A-Z, 0-9, _'),
-        body('lastModifiedBy').isString().matches(/^[a-zA-Z0-9_ ]+$/).withMessage('LastModified is required and must be a string containing a-z, A-Z, 0-9, _'),
+        body('createdBy').isUUID().withMessage('CreatedBy is required and must be a UUID'),
+        body('lastModifiedBy').isUUID().withMessage('LastModified is required and must be a UUID'),
         body('approved').optional().isBoolean().withMessage('Approved  must be a boolean'),
         body('approvedBy').optional().isString().matches(/^[a-zA-Z0-9_]+$/).withMessage('ApprovedBy  must be a string containing a-z, A-Z, 0-9, _'),
         body('metaData').optional({ nullable: true }).isJSON().withMessage('MetaData must be a valid JSON or null')
@@ -37,7 +37,7 @@ router.post('/',  [
         res.status(200).send(response);
         
     }catch(err){
-        logger.error(err);
+        logger.error(err.message);
         res.status(500).send('Error while creating teams hook. Try again later.');
     }
 });

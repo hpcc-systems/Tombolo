@@ -8,6 +8,7 @@ import moment from 'moment';
 import { getDomains, getProductCategories } from './notificationUtil';
 import { createNotification } from './notificationUtil';
 import { statuses } from './notificationUtil';
+import { getUser } from '../../../common/userStorage';
 
 //Constants
 const { Option } = Select;
@@ -43,8 +44,10 @@ const CreateNotificationModal = ({
     applicationReducer: {
       application: { applicationId },
     },
-    authenticationReducer: { user },
   } = useSelector((state) => state);
+
+  // Get user from local storage
+  const { user } = getUser();
 
   // Effect - Get related domains when activity type is changed
   useEffect(() => {

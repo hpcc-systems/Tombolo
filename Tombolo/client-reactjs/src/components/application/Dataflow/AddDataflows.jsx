@@ -35,7 +35,6 @@ function AddDataflow({
   const [application, clusters] = useSelector((state) => [
     state.applicationReducer?.application,
     state.applicationReducer?.clusters,
-    state.authenticationReducer?.user,
   ]);
   const [notifyStatus, setNotifyStatus] = useState('Never');
   const [showDetails, setShowDetails] = useState(false);

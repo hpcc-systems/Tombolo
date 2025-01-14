@@ -1,18 +1,19 @@
+// Libraries
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Modal, Card, Form, Button, Row, Col, Input, Select, Checkbox, message } from 'antd';
 import { isEmail } from 'validator';
+
+// Local Imports
 import { pingCluster, updateCluster } from './clusterUtils';
 import './clusters.css';
+import { getUser } from '../../common/userStorage';
 
 function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal, selectedCluster, setClusters }) {
   // Hooks
   const [form] = Form.useForm();
 
-  //Redux
-  const {
-    authenticationReducer: { user },
-  } = useSelector((state) => state);
+  //Get user from Local Storage
+  const user = getUser();
 
   // States
   const [updateCredentials, setUpdateCredentials] = useState(false);
