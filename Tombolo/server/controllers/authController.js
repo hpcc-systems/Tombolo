@@ -91,7 +91,9 @@ const createApplicationOwner = async (req, res) => {
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
-        verificationLink: `${process.env.WEB_URL}/register?regId=${verificationCode}`,
+        verificationLink: `${trimURL(
+          process.env.WEB_URL
+        )}/register?regId=${verificationCode}`,
         notificationOrigin: "User Registration",
         subject: "Verify your email",
         mainRecipients: [user.email],
@@ -148,7 +150,9 @@ const createBasicUser = async (req, res) => {
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
-        verificationLink: `${process.env.WEB_URL}/register?regId=${verificationCode}`,
+        verificationLink: `${trimURL(
+          process.env.WEB_URL
+        )}/register?regId=${verificationCode}`,
         notificationOrigin: "User Registration",
         subject: "Verify your email",
         mainRecipients: [user.email],
@@ -657,14 +661,10 @@ const handlePasswordResetRequest = async (req, res) => {
 
     // Generate a password reset token
     const randomId = uuidv4();
-    let webUrl = process.env.WEB_URL;
 
-    //cut off last character if it is a slash
-    if (webUrl[webUrl.length - 1] === "/") {
-      webUrl = webUrl.slice(0, -1);
-    }
-
-    const passwordRestLink = `${webUrl}/reset-password/${randomId}`;
+    const passwordRestLink = `${trimURL(
+      process.env.WEB_URL
+    )}/reset-password/${randomId}`;
 
     // Notification subject
     let subject = "Password Reset Link";
@@ -687,7 +687,7 @@ const handlePasswordResetRequest = async (req, res) => {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
         notificationOrigin: "Reset Password",
-        subject: "PasswordResetLink",
+        subject: "Password Reset Link",
         mainRecipients: [user.email],
         notificationDescription: "Password Reset Link",
         validForHours: 24,
@@ -926,7 +926,9 @@ const requestAccess = async (req, res) => {
         notificationOrigin: "No Access Page",
         email: `${user.email}`,
         comment: comment,
-        userManagementLink: `${process.env.WEB_URL}admin/userManagement`,
+        userManagementLink: `${trimURL(
+          process.env.WEB_URL
+        )}/admin/userManagement`,
         subject: `User Access Request from ${user.email}`,
         mainRecipients: [instance_setting.value],
         notificationDescription: "User Access Request",
@@ -940,6 +942,15 @@ const requestAccess = async (req, res) => {
     console.log(e);
     res.status(500).json({ message: e.message });
   }
+};
+
+//function to trim url so we can have consistent links without //
+const trimURL = (url) => {
+  //cut off last character if it is a slash
+  if (url[url.length - 1] === "/") {
+    url = url.slice(0, -1);
+  }
+  return url;
 };
 //Exports
 module.exports = {
