@@ -4,16 +4,12 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable("instance_settings", {
       id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
+        type: Sequelize.INTEGER,
+        defaultValue: 1,
         primaryKey: true,
         allowNull: false,
       },
       name: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      value: {
         type: Sequelize.STRING,
         allowNull: false,
       },
@@ -22,12 +18,24 @@ module.exports = {
         allowNull: true,
       },
       createdBy: {
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
         allowNull: false,
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "NO ACTION",
       },
       updatedBy: {
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
         allowNull: false,
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "NO ACTION",
       },
       createdAt: {
         type: Sequelize.DATE,
