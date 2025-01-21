@@ -151,6 +151,18 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: "CASCADE",
       onUpdate: "CASCADE",
     });
+
+    // User to instance settings
+    user.hasOne(models.instance_settings, {
+      foreignKey: "createdBy",
+      as: "createdInstance", 
+      onDelete: "NO ACTION", 
+    });
+    user.hasOne(models.instance_settings, {
+      foreignKey: "updatedBy", 
+      as: "updatedInstance", 
+      onDelete: "NO ACTION", 
+    });
   };
 
 
