@@ -135,7 +135,7 @@ export const getCluster = async (id) => {
     headers: authHeader(),
   };
 
-  const response = await fetch(`/api/cluster/${id}`, payload);
+  const response = await fetch(`/api/cluster/getOne/${id}`, payload);
 
   if (!response.ok) {
     throw new Error('Failed to fetch cluster details');
