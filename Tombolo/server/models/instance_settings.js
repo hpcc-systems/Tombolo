@@ -15,15 +15,9 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       metaData: {
-<<<<<<< HEAD
-        type: DataTypes.JSON,
-        allowNull: false,
-        defaultValue: {},
-=======
           type: DataTypes.JSON,
           allowNull: false,
           defaultValue: {},
->>>>>>> dev
       },
       createdBy: {
         type: DataTypes.UUID,
