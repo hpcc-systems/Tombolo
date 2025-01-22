@@ -15,7 +15,6 @@ const ReviewForm = ({ instanceForm, userForm, current }) => {
       <h2>Instance Information</h2>
       <p>Instance Name: {instanceFormValues?.name}</p>
       <p>Instance Description: {instanceFormValues?.description}</p>
-      <p>Contact Email: {instanceFormValues?.contactEmail}</p>
 
       <h2>Owner Account Information</h2>
       <p>First Name: {userFormValues?.firstName}</p>

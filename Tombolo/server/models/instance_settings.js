@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
       },
       metaData: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: false,
+        defaultValue: {},
       },
       createdBy: {
         type: DataTypes.UUID,
