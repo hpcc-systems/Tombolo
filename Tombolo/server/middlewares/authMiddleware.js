@@ -215,6 +215,26 @@ const validateAccessRequest = [
   },
 ];
 
+// Validate login payload
+const validateEmailInBody = [
+  body("email")
+    .isEmail()
+    .withMessage("Email address is not valid")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isLength({ max: 100 })
+    .withMessage("Email must be less than 100 characters"),
+  (req, res, next) => {
+    const errors = validationResult(req).array();
+    const errorString = errors.map((e) => e.msg).join(", ");
+    if (errors.length > 0) {
+      logger.error(`Login: ${errorString}`);
+      return res.status(400).json({ success: false, message: errorString });
+    }
+    next();
+  },
+];
+
 // Exports
 module.exports = {
   validateNewUserPayload,
@@ -225,4 +245,5 @@ module.exports = {
   validateResetPasswordPayload,
   validateAzureAuthCode,
   validateAccessRequest,
+  validateEmailInBody,
 };
