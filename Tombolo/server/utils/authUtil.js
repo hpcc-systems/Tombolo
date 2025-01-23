@@ -93,6 +93,26 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
   }
 };
 
+//function to trim url so we can have consistent links without //
+const trimURL = (url) => {
+  //cut off last character if it is a slash
+  if (url[url.length - 1] === "/") {
+    url = url.slice(0, -1);
+  }
+  return url;
+};
+
+const setPasswordExpiry = (user) => {
+  //set forcePasswordReset to 0
+  user.forcePasswordReset = 0;
+  //set passwordExpiry to 90 days
+  user.passwordExpiresAt = new Date(
+    new Date().setDate(new Date().getDate() + 90)
+  );
+  console.log(user.passwordExpiresAt);
+  return user;
+};
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -102,4 +122,6 @@ module.exports = {
   getAUser,
   setTokenCookie,
   generateAndSetCSRFToken,
+  trimURL,
+  setPasswordExpiry,
 };

@@ -10,6 +10,8 @@ const {
   generateRefreshToken,
   getAUser,
   setTokenCookie,
+  trimURL,
+  setPasswordExpiry,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -57,9 +59,10 @@ const createApplicationOwner = async (req, res) => {
       });
     }
 
-    // Hash password
+    // Hash password and set expiry
     const salt = bcrypt.genSaltSync(10);
     payload.hash = bcrypt.hashSync(req.body.password, salt);
+    setPasswordExpiry(payload);
 
     // Save user to DB
     const user = await User.create(payload);
@@ -123,9 +126,10 @@ const createBasicUser = async (req, res) => {
   try {
     const payload = req.body;
 
-    // Hash password
+    // Hash password and set expiry
     const salt = bcrypt.genSaltSync(10);
     payload.hash = bcrypt.hashSync(req.body.password, salt);
+    setPasswordExpiry(payload);
 
     // Save user to DB
     const user = await User.create(payload);
@@ -313,12 +317,13 @@ const resetPasswordWithToken = async (req, res) => {
       throw { status: 404, message: "User not found" };
     }
 
-    // Hash the new password
+    // Hash the new password and set expiry
     const salt = bcrypt.genSaltSync(10);
     user.hash = bcrypt.hashSync(password, salt);
     user.verifiedUser = true;
     user.verifiedAt = new Date();
     user.forcePasswordReset = false;
+    setPasswordExpiry(user);
 
     // Save user with updated details
     await user.save();
@@ -415,12 +420,13 @@ const resetTempPassword = async (req, res) => {
       throw { status: 404, message: "User not found" };
     }
 
-    // Hash the new password
+    // Hash the new password and set expiry
     const salt = bcrypt.genSaltSync(10);
     user.hash = bcrypt.hashSync(password, salt);
     user.verifiedUser = true;
     user.verifiedAt = new Date();
     user.forcePasswordReset = false;
+    setPasswordExpiry(user);
 
     // Save user with updated details
     await user.save();
@@ -517,6 +523,17 @@ const loginBasicUser = async (req, res, next) => {
         message: "unverified",
       });
       return;
+    }
+
+    //if forcePasswordReset is true, return error
+    if (user.forcePasswordReset) {
+      logger.error(
+        `Login : Login attempt by user with expired password - ${user.id}`
+      );
+      res.status(401).json({
+        success: false,
+        message: "Password expired, please reset",
+      });
     }
 
     // If user is an registered to azure, throw error
@@ -945,14 +962,6 @@ const requestAccess = async (req, res) => {
   }
 };
 
-//function to trim url so we can have consistent links without //
-const trimURL = (url) => {
-  //cut off last character if it is a slash
-  if (url[url.length - 1] === "/") {
-    url = url.slice(0, -1);
-  }
-  return url;
-};
 // Resend verification code - user provides email
 const resendVerificationCode = async (req, res) => {
   try {
