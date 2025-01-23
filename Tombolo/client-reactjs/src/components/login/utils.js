@@ -64,3 +64,24 @@ export const verifyEmail = async (token) => {
 
   return responseJson;
 };
+
+// Make Post request to /resend-verification-code with id in body
+export const resendVerificationCode = async (email) => {
+  const payload = {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify({ email }),
+  };
+
+  const response = await fetch('/api/auth/resendVerificationCode', payload);
+
+  // Get the data from the response
+  const responseJson = await response.json();
+
+  // Check if the response is ok
+  if (!response.ok) {
+    throw new Error(responseJson.message);
+  }
+
+  return responseJson;
+};

@@ -490,6 +490,7 @@ const resetTempPassword = async (req, res) => {
 };
 
 //Login Basic user
+// 401 - User not verified | 403 - Incorrect E-mail password combination | 500 - Internal server error | 200 - Success
 const loginBasicUser = async (req, res, next) => {
   try {
     const { email, password, deviceInfo } = req.body;
@@ -502,7 +503,7 @@ const loginBasicUser = async (req, res, next) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
         message: genericError,
       });
@@ -511,11 +512,11 @@ const loginBasicUser = async (req, res, next) => {
     // If not verified user return error
     if (!user.verifiedUser) {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
-
-      // Throw unverified user error
-      const unverifiedUserErr = new Error(genericError);
-      unverifiedUserErr.status = 403;
-      throw unverifiedUserErr;
+      res.status(401).json({
+        success: false,
+        message: "unverified",
+      });
+      return;
     }
 
     // If user is an registered to azure, throw error
@@ -952,6 +953,77 @@ const trimURL = (url) => {
   }
   return url;
 };
+// Resend verification code - user provides email
+const resendVerificationCode = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      throw { status: 404, message: "User not found" };
+    }
+
+    // Check if the verification code is there, if so delete it
+    const existingCode = await AccountVerificationCodes.findOne({
+      where: { userId: user.id },
+    });
+
+    if (existingCode) {
+      await existingCode.destroy();
+    }
+
+    // If the code was created in last 90 seconds, throw an error
+    if (user.lastVerificationCodeSentAt > Date.now() - 90000) {
+      throw {
+        status: 429,
+        message: "Please wait 90 seconds before requesting a new code",
+      };
+    }
+
+    // Send verification email
+    const searchableNotificationId = uuidv4();
+    const verificationCode = uuidv4();
+
+    // Create account verification code
+    await AccountVerificationCodes.create({
+      code: verificationCode,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 86400000),
+    });
+
+    // Add to notification queue
+    await NotificationQueue.create({
+      type: "email",
+      templateName: "verifyEmail",
+      notificationOrigin: "User Registration",
+      deliveryType: "immediate",
+      metaData: {
+        notificationId: searchableNotificationId,
+        recipientName: `${user.firstName}`,
+        verificationLink: `${process.env.WEB_URL}/register?regId=${verificationCode}`,
+        notificationOrigin: "User Registration",
+        subject: "Verify your email",
+        mainRecipients: [user.email],
+        notificationDescription: "Verify email",
+        validForHours: 24,
+      },
+      createdBy: user.id,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Verification code sent successfully",
+    });
+  } catch (err) {
+    logger.error(`Resend verification code: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 //Exports
 module.exports = {
   createBasicUser,
@@ -964,4 +1036,5 @@ module.exports = {
   createApplicationOwner,
   loginOrRegisterAzureUser,
   requestAccess,
+  resendVerificationCode,
 };

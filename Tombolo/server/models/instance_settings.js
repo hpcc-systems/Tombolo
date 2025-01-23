@@ -6,29 +6,38 @@ module.exports = (sequelize, DataTypes) => {
     {
       id: {
         primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
+        defaultValue: 1,
         allowNull: false,
       },
       name: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      value: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
       metaData: {
-        type: DataTypes.JSON,
-        allowNull: true,
+          type: DataTypes.JSON,
+          allowNull: false,
+          defaultValue: {},
       },
       createdBy: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "NO ACTION",
       },
       updatedBy: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "NO ACTION",
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -46,9 +55,9 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: DataTypes.NOW,
       },
     },
-    { freezeTableName: true },
     {
-      tableName: "instance_settings",
+      freezeTableName: true,
+      tableName: "instance_settings", // Table name for this model
     }
   );
 
