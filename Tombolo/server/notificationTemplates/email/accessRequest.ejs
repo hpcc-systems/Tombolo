@@ -70,8 +70,10 @@
                     <span class="important-text"
                       >Link to the User Management Page
                     </span>
-                    <%= typeof userManagementLink !== 'undefined' ?
-                    userManagementLink : "" %>
+                    <a href=<%= typeof userManagementLink !== 'undefined' ?
+                    userManagementLink : "" %>>
+                      <%= typeof userManagementLink !== 'undefined' ?
+                      userManagementLink : "" %> </a>
                   </p>
                 </td>
               </tr>
