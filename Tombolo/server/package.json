@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@hpcc-js/comms": "^2.92.0",
+    "@hpcc-js/comms": "^3.4.0",
     "activedirectory": "^0.7.2",
     "axios": "^1.1.3",
     "bcryptjs": "^2.4.3",
