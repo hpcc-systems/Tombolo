@@ -9,12 +9,13 @@ const user = models.user;
 const NotificationQueue = models.notification_queue;
 
 const { v4: uuidv4 } = require("uuid");
-const { trimURL } = require("../../utils/authUtil");
+const { trimURL, getContactDetails } = require("../../utils/authUtil");
 
 const passwordResetLink = `${trimURL(process.env.WEB_URL)}/myaccount`;
+const passwordExpiryAlertDaysForUser =
+  require("../../config/monitorings.js").passwordExpiryAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
-  console.log(version);
   // Queue notification
   await NotificationQueue.create({
     type: "email",
@@ -31,6 +32,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       mainRecipients: [user.dataValues.email],
       notificationDescription: "Password Expiry Warning",
       daysToExpiry: daysToExpiry,
+      expiryDate: new Date(user.dataValues.passwordExpiresAt).toDateString(),
       passwordResetLink: passwordResetLink,
     },
   });
@@ -69,56 +71,112 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       //pull out the internal user object for easier use below
       let userInternal = user.dataValues;
 
-      const daysToExpiry = Math.floor(
-        (userInternal.passwordExpiresAt - now) / (1000 * 60 * 60 * 24)
-      );
+      const daysToExpiry =
+        Math.floor(
+          (userInternal.passwordExpiresAt - now) / (1000 * 60 * 60 * 24)
+        ) + 1;
 
       if (
-        daysToExpiry <= 10 &&
-        daysToExpiry > 3 &&
-        !userInternal.metaData?.passwordExpiryEmailSent?.tenDay
+        daysToExpiry <= passwordExpiryAlertDaysForUser[0] &&
+        daysToExpiry > passwordExpiryAlertDaysForUser[1] &&
+        !userInternal.metaData?.passwordExpiryEmailSent?.first
       ) {
-        logger.verbose(
-          "User with email " +
-            userInternal.email +
-            " is within " +
-            daysToExpiry +
-            " days of password expiry."
-        );
+        parentPort &&
+          parentPort.postMessage({
+            level: "verbose",
+            text:
+              "User with email " +
+              userInternal.email +
+              " is within " +
+              daysToExpiry +
+              " days of password expiry.",
+          });
 
-        let version = "tenDay";
+        let version = "first";
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
 
       if (
-        daysToExpiry <= 3 &&
-        daysToExpiry > 1 &&
-        !userInternal.metaData?.passwordExpiryEmailSent?.threeDay
+        daysToExpiry <= passwordExpiryAlertDaysForUser[1] &&
+        daysToExpiry > passwordExpiryAlertDaysForUser[2] &&
+        !userInternal.metaData?.passwordExpiryEmailSent?.second
       ) {
-        logger.verbose(
-          "User with email " +
-            userInternal.email +
-            " is within " +
-            daysToExpiry +
-            " days of password expiry."
-        );
-        let version = "threeDay";
+        parentPort &&
+          parentPort.postMessage({
+            level: "verbose",
+            text:
+              "User with email " +
+              userInternal.email +
+              " is within " +
+              daysToExpiry +
+              " days of password expiry.",
+          });
+        let version = "second";
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
       if (
-        daysToExpiry <= 1 &&
-        !userInternal.metaData?.passwordExpiryEmailSent?.oneDay
+        daysToExpiry <= passwordExpiryAlertDaysForUser[2] &&
+        daysToExpiry > 0 &&
+        !userInternal.metaData?.passwordExpiryEmailSent?.third
       ) {
-        logger.verbose(
-          "User with email " +
-            userInternal.email +
-            " is within " +
-            daysToExpiry +
-            " days of password expiry."
-        );
+        parentPort &&
+          parentPort.postMessage({
+            level: "verbose",
+            text:
+              "User with email " +
+              userInternal.email +
+              " is within " +
+              daysToExpiry +
+              " days of password expiry.",
+          });
 
-        let version = "oneDay";
+        let version = "third";
         await updateUserAndSendNotification(user, daysToExpiry, version);
+      }
+
+      if (
+        daysToExpiry <= 0 &&
+        !userInternal.metaData?.passwordExpiryEmailSent?.final
+      ) {
+        parentPort &&
+          parentPort.postMessage({
+            level: "verbose",
+            text:
+              "User with email " +
+              userInternal.email +
+              " has an expired password.",
+          });
+
+        let emails = "mailto:" + (await getContactDetails());
+
+        // Queue notification
+        await NotificationQueue.create({
+          type: "email",
+          templateName: "passwordExpired",
+          notificationOrigin: "Password Expired",
+          deliveryType: "immediate",
+          createdBy: "System",
+          updatedBy: "System",
+          metaData: {
+            notificationId: uuidv4(),
+            recipientName: `${userInternal.firstName}`,
+            notificationOrigin: "Password Expired",
+            subject: "Password Expired",
+            mainRecipients: [userInternal.email],
+            notificationDescription: "Password Expired",
+            contactEmails: emails,
+          },
+        });
+
+        await user.update({
+          metaData: {
+            ...user.metaData,
+            passwordExpiryEmailSent: {
+              ...user.metaData.passwordExpiryEmailSent,
+              final: true,
+            },
+          },
+        });
       }
     }
 

@@ -7,6 +7,7 @@ const UserRoles = model.UserRoles;
 const RoleTypes = model.RoleTypes;
 const user_application = model.user_application;
 const Application = model.application;
+const InstanceSettings = model.instance_settings;
 const { generateToken } = require("../middlewares/csrfMiddleware");
 const csrfHeaderName =
   process.env.NODE_ENV === "production"
@@ -109,8 +110,48 @@ const setPasswordExpiry = (user) => {
   user.passwordExpiresAt = new Date(
     new Date().setDate(new Date().getDate() + 90)
   );
-  console.log(user.passwordExpiresAt);
   return user;
+};
+
+const getContactDetails = async () => {
+  //we need to check if contact email is in instance settings first
+  const instanceSetting = await InstanceSettings.findOne({});
+
+  //if it exists, return it here
+  if (instanceSetting?.dataValues?.metaData?.supportEmailRecipientsEmail) {
+    return instanceSetting?.dataValues?.metaData?.supportEmailRecipientsEmail;
+  }
+
+  //if there is no contact email, get a list of all owner and admin emails
+  const ownerAndAdminEmails = await User.findAll({
+    include: [
+      {
+        model: UserRoles,
+        attributes: ["id"],
+        as: "roles",
+        include: [
+          {
+            model: RoleTypes,
+            as: "role_details",
+            attributes: ["id", "roleName"],
+            where: { roleName: ["owner", "admin"] },
+          },
+        ],
+      },
+    ],
+  });
+
+  let emails = "";
+
+  ownerAndAdminEmails.forEach((user) => {
+    emails += user.email + ", ";
+  });
+
+  //remove last comma and space
+  emails = emails.slice(0, -2);
+
+  //return them
+  return emails;
 };
 
 //Exports
@@ -124,4 +165,5 @@ module.exports = {
   generateAndSetCSRFToken,
   trimURL,
   setPasswordExpiry,
+  getContactDetails,
 };
