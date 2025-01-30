@@ -1,6 +1,6 @@
 // Libraries
 import React, { useState, useEffect } from 'react';
-import { Layout, message, Card } from 'antd';
+import { Layout, message } from 'antd';
 
 // Local Imports
 const GeneralSettings = React.lazy(() => import('./GeneralSettings'));
@@ -74,9 +74,9 @@ function Settings() {
           </div>
         </Sider>
         <Content className="settings-content">
-          <Card style={{ height: '82vh' }} size="small">
+          <div style={{ height: '82vh' }} size="small">
             {settings[selectedSetting].component}
-          </Card>
+          </div>
         </Content>
       </Layout>
       <EditSettingsModel

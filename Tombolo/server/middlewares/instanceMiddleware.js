@@ -15,11 +15,11 @@ const validateInstancePayload = [
     .withMessage("Description must be less than 500 characters"),
   body("supportEmailRecipientsEmail")
     .optional()
-    .isEmail()
+    .isArray()
     .withMessage("Support email recipients email must be a valid email"),
   body("accessRequestEmailRecipientsEmail")
     .optional()
-    .isEmail()
+    .isArray()
     .withMessage("Access request email recipients email must be a valid email"),
   body("supportEmailRecipientsRoles")
     .optional()

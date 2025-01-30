@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Checkbox, Divider } from 'antd';
+import { Form, Checkbox, Divider, Select } from 'antd';
 
 function SupportSettingsForm({ supportSettingsForm, instanceSettings }) {
   return (
@@ -19,21 +19,28 @@ function SupportSettingsForm({ supportSettingsForm, instanceSettings }) {
         </Checkbox.Group>
       </Form.Item>
       <Form.Item
-        name="supportEmailRecipientsEmail"
+        name="supportEmailRecipients"
         label="Custom Email Address"
         rules={[
-          { type: 'email', message: 'Please enter a valid email address' },
           {
             validator: (_, value) => {
               const roles = supportSettingsForm.getFieldValue('supportEmailRecipientsRoles');
-              if (!roles?.length && !value) {
+              if (!roles?.length && (!value || !value.length)) {
                 return Promise.reject('Please provide either a role or a custom email address');
+              }
+              if (value && value.some((email) => !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email))) {
+                return Promise.reject('Please enter valid email addresses');
               }
               return Promise.resolve();
             },
           },
         ]}>
-        <Input placeholder="Enter email (e.g., support@example.com)" style={{ width: '60%' }} />
+        <Select
+          mode="tags"
+          style={{ width: '60%' }}
+          placeholder="Separate with comma (,)"
+          tokenSeparators={[',', ' ']}
+        />
       </Form.Item>
 
       <Divider />
@@ -56,18 +63,25 @@ function SupportSettingsForm({ supportSettingsForm, instanceSettings }) {
         name="accessRequestEmailRecipientsEmail"
         label="Custom Email Address"
         rules={[
-          { type: 'email', message: 'Please enter a valid email address' },
           {
             validator: (_, value) => {
-              const roles = supportSettingsForm.getFieldValue('accessRequestEmailRecipientsRoles');
-              if (!roles?.length && !value) {
+              const roles = supportSettingsForm.getFieldValue('supportEmailRecipientsRoles');
+              if (!roles?.length && (!value || !value.length)) {
                 return Promise.reject('Please provide either a role or a custom email address');
+              }
+              if (value && value.some((email) => !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email))) {
+                return Promise.reject('Please enter valid email addresses');
               }
               return Promise.resolve();
             },
           },
         ]}>
-        <Input placeholder="Enter email (e.g., access@example.com)" style={{ width: '60%' }} />
+        <Select
+          mode="tags"
+          style={{ width: '60%' }}
+          placeholder="Separate with comma (,)"
+          tokenSeparators={[',', ' ']}
+        />
       </Form.Item>
     </Form>
   );

@@ -42,11 +42,11 @@ function SupportSettings({ instanceSettings }) {
           <Space direction="vertical" size="small">
             <Text>
               <strong>Roles:</strong>{' '}
-              {supportEmailRecipientsRoles.length > 0 ? supportEmailRecipientsRoles.join(', ') : ' N/A'}
+              {metaData?.supportEmailRecipientsRoles.length > 0 ? supportEmailRecipientsRoles.join(', ') : ' N/A'}
             </Text>
             <Text>
               <strong>Email:</strong>{' '}
-              {metaData?.supportEmailRecipientsEmail ? metaData.supportEmailRecipientsEmail : ' N/A'}
+              {metaData?.supportEmailRecipients ? metaData.supportEmailRecipients.join(', ') : ' N/A'}
             </Text>
           </Space>
         </Card>
@@ -64,11 +64,15 @@ function SupportSettings({ instanceSettings }) {
           <Space direction="vertical" size="small">
             <Text>
               <strong>Roles:</strong>{' '}
-              {accessRequestEmailRecipientsRoles.length > 0 ? accessRequestEmailRecipientsRoles.join(', ') : ' N/A'}
+              {metaData?.accessRequestEmailRecipientsRoles.length > 0
+                ? accessRequestEmailRecipientsRoles.join(', ')
+                : ' N/A'}
             </Text>
             <Text>
-              <strong>Custom Emails:</strong>{' '}
-              {metaData?.accessRequestEmailRecipientsEmail ? metaData.accessRequestEmailRecipientsEmail : ' N/A'}
+              <strong>Email:</strong>{' '}
+              {metaData?.accessRequestEmailRecipientsEmail
+                ? metaData.accessRequestEmailRecipientsEmail.join(', ')
+                : ' N/A'}
             </Text>
           </Space>
         </Card>
