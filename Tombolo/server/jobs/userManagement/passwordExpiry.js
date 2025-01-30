@@ -169,6 +169,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
         });
 
         await user.update({
+          forcePasswordReset: true,
           metaData: {
             ...user.metaData,
             passwordExpiryEmailSent: {

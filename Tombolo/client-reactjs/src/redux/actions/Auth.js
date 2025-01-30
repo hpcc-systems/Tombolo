@@ -108,7 +108,8 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
     if (data.message === 'unverified') {
       return data;
     } else {
-      handleError(response);
+      message.error(data.message);
+
       return;
     }
   } else if (!response.ok) {

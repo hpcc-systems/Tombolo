@@ -34,7 +34,7 @@ async function sendPasswordExpiryEmails() {
     let jobName = "password-expiry-" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "30s",
+      interval: "12h",
       path: path.join(
         __dirname,
         "..",

@@ -110,6 +110,17 @@ const setPasswordExpiry = (user) => {
   user.passwordExpiresAt = new Date(
     new Date().setDate(new Date().getDate() + 90)
   );
+
+  //reset password Expiry email sent flags
+  user.metaData = {
+    ...user.metaData,
+    passwordExpiryEmailSent: {
+      first: false,
+      second: false,
+      third: false,
+      final: false,
+    },
+  };
   return user;
 };
 
@@ -141,14 +152,11 @@ const getContactDetails = async () => {
     ],
   });
 
-  let emails = "";
+  let emails = [];
 
   ownerAndAdminEmails.forEach((user) => {
-    emails += user.email + ", ";
+    emails.push(user.email);
   });
-
-  //remove last comma and space
-  emails = emails.slice(0, -2);
 
   //return them
   return emails;

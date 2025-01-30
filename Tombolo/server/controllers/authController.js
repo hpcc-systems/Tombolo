@@ -12,6 +12,7 @@ const {
   setTokenCookie,
   trimURL,
   setPasswordExpiry,
+  getContactDetails,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -526,14 +527,94 @@ const loginBasicUser = async (req, res, next) => {
     }
 
     //if forcePasswordReset is true, return error
-    if (user.forcePasswordReset) {
+    if (user.forcePasswordReset || user.passwordExpiresAt < new Date()) {
       logger.error(
         `Login : Login attempt by user with expired password - ${user.id}`
       );
+
+      //if the forcePasswordReset flag isn't set but the password has expired, set the flag
+      if (user.passwordExpiresAt < new Date() && !user.forcePasswordReset) {
+        user.forcePasswordReset = true;
+      }
+      //check that lastAdminNotification was more than 24 hours ago to avoid spamming the admin
+      if (user?.metaData?.passwordExpiryEmailSent?.lastAdminNotification) {
+      }
+      const currentTime = new Date();
+      const lastAdminNotification = new Date(
+        user.metaData.passwordExpiryEmailSent.lastAdminNotification
+      );
+      const timeSinceLastNotification =
+        (currentTime - lastAdminNotification) / 1000 / 60 / 60;
+
+      if (timeSinceLastNotification > 24) {
+        //get contact email
+        const contactEmail = await getContactDetails();
+
+        //send notification to contact email
+        await NotificationQueue.create({
+          type: "email",
+          templateName: "passwordExpiredAdmin",
+          notificationOrigin: "Password Expiry",
+          deliveryType: "immediate",
+          metaData: {
+            notificationId: uuidv4(),
+            recipientName: "Admin",
+            notificationOrigin: "Password Expiry",
+            subject: "User password has expired - Requesting reset",
+            mainRecipients: contactEmail,
+            notificationDescription:
+              "User password has expired - Requesting reset",
+            passwordResetLink: `${trimURL(
+              process.env.WEB_URL
+            )}}/admin/usermanagement`,
+            userName: user.firstName + " " + user.lastName,
+            userEmail: user.email,
+          },
+          createdBy: user.id,
+        });
+      } else {
+        //else just send it and mark user
+        //get contact email
+        const contactEmail = await getContactDetails();
+
+        //send notification to contact email
+        await NotificationQueue.create({
+          type: "email",
+          templateName: "passwordExpiredAdmin",
+          notificationOrigin: "Password Expiry",
+          deliveryType: "immediate",
+          metaData: {
+            notificationId: uuidv4(),
+            recipientName: "Admin",
+            notificationOrigin: "Password Expiry",
+            subject: "User password has expired - Requesting reset",
+            mainRecipients: contactEmail,
+            notificationDescription:
+              "User password has expired - Requesting reset",
+            passwordResetLink: `${trimURL(
+              process.env.WEB_URL
+            )}/admin/usermanagement`,
+            userName: user.firstName + " " + user.lastName,
+            userEmail: user.email,
+          },
+          createdBy: user.id,
+        });
+      }
+      await user.update({
+        metaData: {
+          ...user.metaData,
+          passwordExpiryEmailSent: {
+            ...user.metaData.passwordExpiryEmailSent,
+            lastAdminNotification: currentTime,
+          },
+        },
+      });
       res.status(401).json({
         success: false,
-        message: "Password expired, please reset",
+        message:
+          "Password expired, If you are a regular user an email has been sent to the administration team requesting a reset.",
       });
+      return;
     }
 
     // If user is an registered to azure, throw error
