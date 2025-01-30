@@ -35,12 +35,7 @@ function SupportSettingsForm({ supportSettingsForm, instanceSettings }) {
             },
           },
         ]}>
-        <Select
-          mode="tags"
-          style={{ width: '60%' }}
-          placeholder="Separate with comma (,)"
-          tokenSeparators={[',', ' ']}
-        />
+        <Select mode="tags" placeholder="Separate with comma (,)" tokenSeparators={[',', ' ']} />
       </Form.Item>
 
       <Divider />
@@ -76,12 +71,7 @@ function SupportSettingsForm({ supportSettingsForm, instanceSettings }) {
             },
           },
         ]}>
-        <Select
-          mode="tags"
-          style={{ width: '60%' }}
-          placeholder="Separate with comma (,)"
-          tokenSeparators={[',', ' ']}
-        />
+        <Select mode="tags" placeholder="Separate with comma (,)" tokenSeparators={[',', ' ']} />
       </Form.Item>
     </Form>
   );
