@@ -6,12 +6,10 @@ const {
   createInstanceSettingFirstRun,
 } = require("../controllers/wizardController");
 
-const { validateNoUsersExist } = require("../middlewares/wizardMiddleware");
+const { validateWizardPayload } = require("../middlewares/wizardMiddleware");
 
-//always run validate no user exists middleware
-router.use(validateNoUsersExist());
 
-// Create a new instance setting -- only accesible when no users exist for wizard
-router.post("/firstRun", createInstanceSettingFirstRun);
+// Create a new instance setting -- only accessible when no users exist for wizard
+router.post("/firstRun",validateWizardPayload, createInstanceSettingFirstRun);
 
 module.exports = router;
