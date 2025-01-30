@@ -164,7 +164,11 @@ const manageInstanceSettings = async (
   await instance_settings.create(
     {
       name,
-      metaData: { description },
+      metaData: {
+        description,
+        supportEmailRecipientsRoles: ["owner", "administrator"],
+        accessRequestEmailRecipientsRoles: ["owner", "administrator"],
+      },
       createdBy: userId,
       updatedBy: userId,
     },
