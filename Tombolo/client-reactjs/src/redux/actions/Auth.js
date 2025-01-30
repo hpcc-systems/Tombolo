@@ -5,7 +5,9 @@ import { setUser, getUser } from '../../components/common/userStorage';
 
 //function to centralize storage clearing
 const clearStorage = () => {
-  localStorage.removeItem('user');
+  //localStorage.removeItem('user');
+  //clear whole storage on login and logout to ensure nothing is kept unecessarily
+  localStorage.clear();
 };
 
 async function login({ email, password, deviceInfo }) {

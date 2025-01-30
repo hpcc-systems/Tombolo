@@ -12,7 +12,8 @@ import {
   BarChartOutlined,
   CloudServerOutlined,
   ApiOutlined,
-  BellOutlined,
+  // BellOutlined,
+  SettingOutlined,
   FolderOutlined,
   WarningFilled,
 } from '@ant-design/icons';
@@ -86,6 +87,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       applications: '10',
       userManagement: '11',
       integrations: '12',
+      settings: '13',
       msTeams: '13a',
     };
 
@@ -404,25 +406,39 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       null,
       clusterDisabled
     ),
+    // getItem(
+    //   <>
+    //     <BellOutlined />
+    //     <span style={{ marginLeft: '1rem' }}>Notifications</span>
+    //   </>,
+    //   '13',
+    //   null,
+    //   [
+    //     getItem(
+    //       <Link to={'/admin/notification-settings/msTeams'}>
+    //         <span>
+    //           <i className="fa fa-windows" /> MS Teams
+    //         </span>
+    //       </Link>,
+    //       '13a',
+    //       null,
+    //       null
+    //     ),
+    //   ],
+    //   null,
+    //   clusterDisabled
+    // ),
+
     getItem(
-      <>
-        <BellOutlined />
-        <span style={{ marginLeft: '1rem' }}>Notifications</span>
-      </>,
+      <Link to={'/admin/settings'}>
+        <span>
+          <SettingOutlined />
+          <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>Settings</span>
+        </span>
+      </Link>,
       '13',
       null,
-      [
-        getItem(
-          <Link to={'/admin/notification-settings/msTeams'}>
-            <span>
-              <i className="fa fa-windows" /> MS Teams
-            </span>
-          </Link>,
-          '13a',
-          null,
-          null
-        ),
-      ],
+      null,
       null,
       clusterDisabled
     ),
