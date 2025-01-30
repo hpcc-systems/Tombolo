@@ -15,11 +15,9 @@ export function handleError(response) {
     return;
   }
 
-  console.log(response);
   //check if response has a body and it is not used
   if (response.body && !response.bodyUsed) {
     response.json().then((data) => {
-      console.log(data);
       if (data.message) {
         message.error(data.message);
       } else {
