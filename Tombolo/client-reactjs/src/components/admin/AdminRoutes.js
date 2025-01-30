@@ -16,6 +16,7 @@ const Integrations = React.lazy(() => import('./Integrations'));
 const IntegrationSettings = React.lazy(() => import('./Integrations/IntegrationSettings'));
 const TeamsNotification = React.lazy(() => import('./notifications/MsTeams/Teams'));
 const UserManagement = React.lazy(() => import('./userManagement/index.jsx'));
+const Settings = React.lazy(() => import('./settings'));
 
 const AdminRoutes = () => {
   return (
@@ -32,6 +33,7 @@ const AdminRoutes = () => {
       <PrivateRoute path="/admin/controlsAndRegulations" component={Regulations} />
       <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
       <PrivateRoute path="/admin/integrations" component={Integrations} />
+      <PrivateRoute path="/admin/settings" component={Settings} />
     </Switch>
   );
 };

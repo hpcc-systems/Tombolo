@@ -155,12 +155,12 @@ module.exports = (sequelize, DataTypes) => {
     // User to instance settings
     user.hasOne(models.instance_settings, {
       foreignKey: "createdBy",
-      as: "createdInstance", 
+      as: "creator", 
       onDelete: "NO ACTION", 
     });
     user.hasOne(models.instance_settings, {
       foreignKey: "updatedBy", 
-      as: "updatedInstance", 
+      as: "updater", 
       onDelete: "NO ACTION", 
     });
   };
