@@ -1,0 +1,41 @@
+.settings {
+  margin: 1rem;
+}
+
+.settings-layout {
+  margin-top: 1rem;
+  border: 1px solid var(--secondary-light);
+  padding: 1rem;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  height: 82vh;
+}
+.settings-sider {
+  border-right: 1px solid var(--secondary-light);
+  background-color: var(--light);
+  padding: 1rem;
+  border-radius: 1%;
+}
+
+.settings-content {
+  max-height: 82vh;
+  margin-left: 0.5rem;
+}
+
+.setting-item {
+  padding: 0.4rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.setting-item:hover {
+  font-weight: 700;
+}
+.selected-setting {
+  background-color: var(--secondary-light);
+}
+
+.settings_edit_button {
+  margin-right: 0.7rem;
+}
