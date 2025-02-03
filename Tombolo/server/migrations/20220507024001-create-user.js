@@ -56,7 +56,7 @@ module.exports = {
         allowNull: false,
         defaultValue: false,
       },
-      passwordExpiresAt : {
+      passwordExpiresAt: {
         type: Sequelize.DATE,
         allowNull: true,
       },
@@ -66,6 +66,7 @@ module.exports = {
       },
       metaData: {
         type: Sequelize.JSON,
+        defaultValue: {},
         allowNull: true,
       },
       createdAt: {

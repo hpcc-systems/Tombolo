@@ -1,5 +1,5 @@
 const { v4: UUIDV4 } = require("uuid");
-  
+
 const logger = require("../config/logger");
 const models = require("../models");
 const bcrypt = require("bcryptjs");
@@ -9,6 +9,9 @@ const UserRoles = models.UserRoles;
 const user_application = models.user_application;
 const NotificationQueue = models.notification_queue;
 const AccountVerificationCodes = models.AccountVerificationCodes;
+
+const { setPasswordExpiry } = require("../utils/authUtil");
+
 // Delete user with ID
 const deleteUser = async (req, res) => {
   try {
@@ -119,22 +122,28 @@ const getUser = async (req, res) => {
 
 // Get all users
 const getAllUsers = async (req, res) => {
-    try {
-        const users = await User.findAll({
-          include: [
-            { model: UserRoles, as: "roles" },
-            { model: user_application, as: "applications" },
-          ],
-          // descending order by date
-          order: [['createdAt', 'DESC']],
-        });
-        res.status(200).json({ success: true, message: 'Users retrieved successfully', data: users });
-    } catch (err) {
-        logger.error(`Get all users: ${err.message}`);
-        res.status(err.status || 500).json({ success: false, message: err.message });
-    }
-    };
-  
+  try {
+    const users = await User.findAll({
+      include: [
+        { model: UserRoles, as: "roles" },
+        { model: user_application, as: "applications" },
+      ],
+      // descending order by date
+      order: [["createdAt", "DESC"]],
+    });
+    res.status(200).json({
+      success: true,
+      message: "Users retrieved successfully",
+      data: users,
+    });
+  } catch (err) {
+    logger.error(`Get all users: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 //Update password - Ensure current password provided is correct
 const changePassword = async (req, res) => {
   try {
@@ -157,6 +166,9 @@ const changePassword = async (req, res) => {
     // Update password
     const salt = bcrypt.genSaltSync(10);
     existingUser.hash = bcrypt.hashSync(newPassword, salt);
+
+    //set password expiry
+    setPasswordExpiry(existingUser);
 
     // Save user with updated details
     const updatedUser = await existingUser.save();
@@ -282,13 +294,11 @@ const updateUserRoles = async (req, res) => {
     const newRoles = await UserRoles.bulkCreate(rolesToAdd);
 
     // Response
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "User roles updated successfully",
-        data: newRoles,
-      });
+    res.status(200).json({
+      success: true,
+      message: "User roles updated successfully",
+      data: newRoles,
+    });
   } catch (err) {
     console.log(err);
     logger.error(`Update user roles: ${err.message}`);
@@ -331,13 +341,11 @@ const updateUserApplications = async (req, res) => {
     );
 
     // Response
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "User applications updated successfully",
-        data: newApplications,
-      });
+    res.status(200).json({
+      success: true,
+      message: "User applications updated successfully",
+      data: newApplications,
+    });
   } catch {
     logger.error(`Update user applications: ${err.message}`);
     res
@@ -353,8 +361,8 @@ const createUser = async (req, res) => {
       firstName,
       lastName,
       email,
-      registrationMethod = 'traditional',
-      registrationStatus = 'active',
+      registrationMethod = "traditional",
+      registrationStatus = "active",
       verifiedUser = false,
       roles,
       applications,
@@ -368,12 +376,13 @@ const createUser = async (req, res) => {
     }
 
     // Generate random password - 12 characters - alpha numeric
-    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let password = '';
+    const charset =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let password = "";
     for (let i = 0; i < 12; i++) {
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
-  
+
     // Hash password
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(password, salt);

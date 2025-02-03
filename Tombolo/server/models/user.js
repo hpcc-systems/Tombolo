@@ -69,6 +69,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       metaData: {
         type: DataTypes.JSON,
+        defaultValue: {}, //put default value to avoid null conflicts
         allowNull: true,
       },
     },
@@ -155,16 +156,15 @@ module.exports = (sequelize, DataTypes) => {
     // User to instance settings
     user.hasOne(models.instance_settings, {
       foreignKey: "createdBy",
-      as: "creator", 
-      onDelete: "NO ACTION", 
+      as: "creator",
+      onDelete: "NO ACTION",
     });
     user.hasOne(models.instance_settings, {
-      foreignKey: "updatedBy", 
-      as: "updater", 
-      onDelete: "NO ACTION", 
+      foreignKey: "updatedBy",
+      as: "updater",
+      onDelete: "NO ACTION",
     });
   };
-
 
   return user;
 };

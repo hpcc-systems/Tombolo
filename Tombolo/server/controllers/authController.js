@@ -10,6 +10,9 @@ const {
   generateRefreshToken,
   getAUser,
   setTokenCookie,
+  trimURL,
+  setPasswordExpiry,
+  getContactDetails,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -57,9 +60,10 @@ const createApplicationOwner = async (req, res) => {
       });
     }
 
-    // Hash password
+    // Hash password and set expiry
     const salt = bcrypt.genSaltSync(10);
     payload.hash = bcrypt.hashSync(req.body.password, salt);
+    setPasswordExpiry(payload);
 
     // Save user to DB
     const user = await User.create(payload);
@@ -123,9 +127,10 @@ const createBasicUser = async (req, res) => {
   try {
     const payload = req.body;
 
-    // Hash password
+    // Hash password and set expiry
     const salt = bcrypt.genSaltSync(10);
     payload.hash = bcrypt.hashSync(req.body.password, salt);
+    setPasswordExpiry(payload);
 
     // Save user to DB
     const user = await User.create(payload);
@@ -313,12 +318,13 @@ const resetPasswordWithToken = async (req, res) => {
       throw { status: 404, message: "User not found" };
     }
 
-    // Hash the new password
+    // Hash the new password and set expiry
     const salt = bcrypt.genSaltSync(10);
     user.hash = bcrypt.hashSync(password, salt);
     user.verifiedUser = true;
     user.verifiedAt = new Date();
     user.forcePasswordReset = false;
+    setPasswordExpiry(user);
 
     // Save user with updated details
     await user.save();
@@ -415,12 +421,13 @@ const resetTempPassword = async (req, res) => {
       throw { status: 404, message: "User not found" };
     }
 
-    // Hash the new password
+    // Hash the new password and set expiry
     const salt = bcrypt.genSaltSync(10);
     user.hash = bcrypt.hashSync(password, salt);
     user.verifiedUser = true;
     user.verifiedAt = new Date();
     user.forcePasswordReset = false;
+    setPasswordExpiry(user);
 
     // Save user with updated details
     await user.save();
@@ -515,6 +522,97 @@ const loginBasicUser = async (req, res, next) => {
       res.status(401).json({
         success: false,
         message: "unverified",
+      });
+      return;
+    }
+
+    //if forcePasswordReset is true, return error
+    if (user.forcePasswordReset || user.passwordExpiresAt < new Date()) {
+      logger.error(
+        `Login : Login attempt by user with expired password - ${user.id}`
+      );
+
+      //if the forcePasswordReset flag isn't set but the password has expired, set the flag
+      if (user.passwordExpiresAt < new Date() && !user.forcePasswordReset) {
+        user.forcePasswordReset = true;
+      }
+      //check that lastAdminNotification was more than 24 hours ago to avoid spamming the admin
+      if (user?.metaData?.passwordExpiryEmailSent?.lastAdminNotification) {
+      }
+      const currentTime = new Date();
+      const lastAdminNotification = new Date(
+        user.metaData.passwordExpiryEmailSent.lastAdminNotification
+      );
+      const timeSinceLastNotification =
+        (currentTime - lastAdminNotification) / 1000 / 60 / 60;
+
+      if (timeSinceLastNotification > 24) {
+        //get contact email
+        const contactEmail = await getContactDetails();
+
+        //send notification to contact email
+        await NotificationQueue.create({
+          type: "email",
+          templateName: "passwordExpiredAdmin",
+          notificationOrigin: "Password Expiry",
+          deliveryType: "immediate",
+          metaData: {
+            notificationId: uuidv4(),
+            recipientName: "Admin",
+            notificationOrigin: "Password Expiry",
+            subject: "User password has expired - Requesting reset",
+            mainRecipients: contactEmail,
+            notificationDescription:
+              "User password has expired - Requesting reset",
+            passwordResetLink: `${trimURL(
+              process.env.WEB_URL
+            )}}/admin/usermanagement`,
+            userName: user.firstName + " " + user.lastName,
+            userEmail: user.email,
+          },
+          createdBy: user.id,
+        });
+      } else {
+        //else just send it and mark user
+        //get contact email
+        const contactEmail = await getContactDetails();
+
+        //send notification to contact email
+        await NotificationQueue.create({
+          type: "email",
+          templateName: "passwordExpiredAdmin",
+          notificationOrigin: "Password Expiry",
+          deliveryType: "immediate",
+          metaData: {
+            notificationId: uuidv4(),
+            recipientName: "Admin",
+            notificationOrigin: "Password Expiry",
+            subject: "User password has expired - Requesting reset",
+            mainRecipients: contactEmail,
+            notificationDescription:
+              "User password has expired - Requesting reset",
+            passwordResetLink: `${trimURL(
+              process.env.WEB_URL
+            )}/admin/usermanagement`,
+            userName: user.firstName + " " + user.lastName,
+            userEmail: user.email,
+          },
+          createdBy: user.id,
+        });
+      }
+      await user.update({
+        metaData: {
+          ...user.metaData,
+          passwordExpiryEmailSent: {
+            ...user.metaData.passwordExpiryEmailSent,
+            lastAdminNotification: currentTime,
+          },
+        },
+      });
+      res.status(401).json({
+        success: false,
+        message:
+          "Password expired, If you are a regular user an email has been sent to the administration team requesting a reset.",
       });
       return;
     }
@@ -945,14 +1043,6 @@ const requestAccess = async (req, res) => {
   }
 };
 
-//function to trim url so we can have consistent links without //
-const trimURL = (url) => {
-  //cut off last character if it is a slash
-  if (url[url.length - 1] === "/") {
-    url = url.slice(0, -1);
-  }
-  return url;
-};
 // Resend verification code - user provides email
 const resendVerificationCode = async (req, res) => {
   try {

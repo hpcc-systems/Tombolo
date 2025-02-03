@@ -57,7 +57,10 @@ const {
   startJobPunctualityMonitoring,
 } = require("../jobSchedularMethods/jobMonitoring.js");
 
-const {removeUnverifiedUser} = require("../jobSchedularMethods/userManagementJobs.js");
+const {
+  removeUnverifiedUser,
+  sendPasswordExpiryEmails,
+} = require("../jobSchedularMethods/userManagementJobs.js");
 
 class JobScheduler {
   constructor() {
@@ -138,6 +141,7 @@ class JobScheduler {
       await this.startJobPunctualityMonitoring();
       await this.checkClusterReachability();
       await removeUnverifiedUser.call(this);
+      await sendPasswordExpiryEmails.call(this);
       logger.info("-----------------------------");
       logger.info("Server is finished intializing, and is now running");
       logger.info("-----------------------------");
