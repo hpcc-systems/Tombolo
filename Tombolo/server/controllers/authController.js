@@ -12,7 +12,7 @@ const {
   setTokenCookie,
   trimURL,
   setPasswordExpiry,
-  getContactDetails,
+  setAndSendPasswordExpiredEmail,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -532,84 +532,10 @@ const loginBasicUser = async (req, res, next) => {
         `Login : Login attempt by user with expired password - ${user.id}`
       );
 
-      //if the forcePasswordReset flag isn't set but the password has expired, set the flag
-      if (user.passwordExpiresAt < new Date() && !user.forcePasswordReset) {
-        user.forcePasswordReset = true;
-      }
-      //check that lastAdminNotification was more than 24 hours ago to avoid spamming the admin
-      if (user?.metaData?.passwordExpiryEmailSent?.lastAdminNotification) {
-      }
-      const currentTime = new Date();
-      const lastAdminNotification = new Date(
-        user.metaData.passwordExpiryEmailSent.lastAdminNotification
-      );
-      const timeSinceLastNotification =
-        (currentTime - lastAdminNotification) / 1000 / 60 / 60;
+      //send password expired email
+      await setAndSendPasswordExpiredEmail(user);
 
-      if (timeSinceLastNotification > 24) {
-        //get contact email
-        const contactEmail = await getContactDetails();
-
-        //send notification to contact email
-        await NotificationQueue.create({
-          type: "email",
-          templateName: "passwordExpiredAdmin",
-          notificationOrigin: "Password Expiry",
-          deliveryType: "immediate",
-          metaData: {
-            notificationId: uuidv4(),
-            recipientName: "Admin",
-            notificationOrigin: "Password Expiry",
-            subject: "User password has expired - Requesting reset",
-            mainRecipients: contactEmail,
-            notificationDescription:
-              "User password has expired - Requesting reset",
-            passwordResetLink: `${trimURL(
-              process.env.WEB_URL
-            )}}/admin/usermanagement`,
-            userName: user.firstName + " " + user.lastName,
-            userEmail: user.email,
-          },
-          createdBy: user.id,
-        });
-      } else {
-        //else just send it and mark user
-        //get contact email
-        const contactEmail = await getContactDetails();
-
-        //send notification to contact email
-        await NotificationQueue.create({
-          type: "email",
-          templateName: "passwordExpiredAdmin",
-          notificationOrigin: "Password Expiry",
-          deliveryType: "immediate",
-          metaData: {
-            notificationId: uuidv4(),
-            recipientName: "Admin",
-            notificationOrigin: "Password Expiry",
-            subject: "User password has expired - Requesting reset",
-            mainRecipients: contactEmail,
-            notificationDescription:
-              "User password has expired - Requesting reset",
-            passwordResetLink: `${trimURL(
-              process.env.WEB_URL
-            )}/admin/usermanagement`,
-            userName: user.firstName + " " + user.lastName,
-            userEmail: user.email,
-          },
-          createdBy: user.id,
-        });
-      }
-      await user.update({
-        metaData: {
-          ...user.metaData,
-          passwordExpiryEmailSent: {
-            ...user.metaData.passwordExpiryEmailSent,
-            lastAdminNotification: currentTime,
-          },
-        },
-      });
-      res.status(401).json({
+      res.status(403).json({
         success: false,
         message:
           "Password expired, If you are a regular user an email has been sent to the administration team requesting a reset.",
@@ -726,14 +652,51 @@ const handlePasswordResetRequest = async (req, res) => {
     const { email } = req.body;
 
     // Find user by email
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+      where: { email },
+      include: [
+        {
+          model: UserRoles,
+          attributes: ["id"],
+          as: "roles",
+          include: [
+            {
+              model: RoleTypes,
+              as: "role_details",
+              attributes: ["id", "roleName"],
+            },
+          ],
+        },
+      ],
+    });
 
     // User with the given email does not exist
     if (!user) {
       logger.error(`Reset password: User with email ${email} does not exist`);
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false });
+    }
+
+    //need to check if user is an owner or admin to see if they are allowed to reset password without admin assistance
+    const isOwnerOrAdmin = user.roles.some(
+      (role) =>
+        role.role_details.roleName === roleTypes.OWNER ||
+        role.role_details.roleName === roleTypes.ADMIN
+    );
+
+    //check if users password is expired
+    if (
+      (user.passwordExpiresAt < new Date() || user.forcePasswordReset) &&
+      !isOwnerOrAdmin
+    ) {
+      logger.error(
+        `Reset password: User with email ${email} has an expired password`
+      );
+      //send password expired email
+      await setAndSendPasswordExpiredEmail(user);
+
+      return res.status(403).json({
+        success: false,
+      });
     }
 
     // Stop users form abusing this endpoint - allow 4 requests per hour
@@ -753,9 +716,7 @@ const handlePasswordResetRequest = async (req, res) => {
       logger.error(
         `Reset password: User with email ${email} has exceeded the limit of password reset requests`
       );
-      return res
-        .status(429)
-        .json({ success: false, message: "Too many requests" });
+      return res.status(429).json({ success: false });
     }
 
     // Generate a password reset token
@@ -1045,6 +1006,7 @@ const requestAccess = async (req, res) => {
 
 // Resend verification code - user provides email
 const resendVerificationCode = async (req, res) => {
+  t;
   try {
     const { email } = req.body;
 
