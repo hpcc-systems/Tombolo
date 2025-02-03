@@ -184,7 +184,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
     parentPort &&
       parentPort.postMessage({
         level: "info",
-        text: "Job to remove unverified user completed ...",
+        text: "Password expiry check job completed ...",
       });
   } catch (error) {
     parentPort &&
