@@ -1,13 +1,17 @@
 import React from 'react';
 import { CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 
-function passwordComplexityValidator({ password, generateContent }) {
+function passwordComplexityValidator({ password, generateContent, user }) {
   // Define your password complexity rules here
   const minLength = 8;
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
+  const isNotUserInfo =
+    !password.trim().toLowerCase().includes(user?.firstName.trim().toLowerCase()) &&
+    !password.includes(user?.lastName.trim().toLowerCase()) &&
+    !password.includes(user?.email.trim().toLowerCase());
 
   // Define your error messages here
   const uppercaseMessage = 'Password must contain at least one uppercase letter';
@@ -15,6 +19,7 @@ function passwordComplexityValidator({ password, generateContent }) {
   const numberMessage = 'Password must contain at least one number';
   const specialMessage = 'Password must contain at least one special character';
   const lengthMessage = `Password must be at least ${minLength} characters long`;
+  const userInfoMessage = 'Password cannot contain your name or email address';
 
   let errors = [];
   errors.push({
@@ -24,6 +29,7 @@ function passwordComplexityValidator({ password, generateContent }) {
       { name: 'number', message: numberMessage },
       { name: 'special', message: specialMessage },
       { name: 'length', message: lengthMessage },
+      { name: 'userInfo', message: userInfoMessage },
     ],
   });
 
@@ -43,6 +49,9 @@ function passwordComplexityValidator({ password, generateContent }) {
   if (!password || (password && password.length < minLength)) {
     errors.push({ type: 'length' });
   }
+  if (!isNotUserInfo) {
+    errors.push({ type: 'userInfo' });
+  }
 
   if (generateContent) {
     const passwordComplexityContent = errors[0].attributes.map((error) => {
@@ -60,7 +69,9 @@ function passwordComplexityValidator({ password, generateContent }) {
     });
 
     const finalContent = (
-      <ul style={{ listStyle: 'none', marginLeft: 0, paddingInlineStart: 0 }}>{passwordComplexityContent}</ul>
+      <>
+        <ul style={{ listStyle: 'none', marginLeft: 0, paddingInlineStart: 0 }}>{passwordComplexityContent}</ul>
+      </>
     );
 
     return finalContent;

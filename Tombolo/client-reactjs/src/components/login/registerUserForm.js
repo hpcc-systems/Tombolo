@@ -8,7 +8,17 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
   const [loading, setLoading] = useState(false);
 
   const validatePassword = (value) => {
-    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true }));
+    setPopOverContent(
+      passwordComplexityValidator({
+        password: value,
+        generateContent: true,
+        user: {
+          firstName: form.getFieldValue('firstName'),
+          lastName: form.getFieldValue('lastName'),
+          email: form.getFieldValue('email'),
+        },
+      })
+    );
   };
 
   useEffect(() => {}, [popOverContent, loading]);
@@ -89,7 +99,14 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
             () => ({
               validator(_, value) {
                 //passwordComplexityValidator always returns an array with at least one attributes element
-                const errors = passwordComplexityValidator({ password: value });
+                const errors = passwordComplexityValidator({
+                  password: value,
+                  user: {
+                    firstName: form.getFieldValue('firstName'),
+                    lastName: form.getFieldValue('lastName'),
+                    email: form.getFieldValue('email'),
+                  },
+                });
                 if (!value || errors.length === 1) {
                   return Promise.resolve();
                 }

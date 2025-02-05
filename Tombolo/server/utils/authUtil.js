@@ -222,6 +222,33 @@ const setAndSendPasswordExpiredEmail = async (user) => {
   return;
 };
 
+const checkPasswordSecurityViolations = ({ password, user }) => {
+  //check password for user.email, user.firstName, user.lastName
+  const passwordViolations = [];
+
+  const email = user.email;
+  const firstName = user.firstName;
+  const lastName = user.lastName;
+
+  if (password.includes(email)) {
+    passwordViolations.push("Password contains email address");
+  }
+
+  //check if password contains first name
+  if (password.includes(firstName)) {
+    passwordViolations.push("Password contains first name");
+  }
+
+  //check if password contains last name
+  if (password.includes(lastName)) {
+    passwordViolations.push("Password contains last name");
+  }
+
+  //TODO -- check if password contains any of previous 12 passwords
+
+  return passwordViolations;
+};
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -235,4 +262,5 @@ module.exports = {
   setPasswordExpiry,
   getContactDetails,
   setAndSendPasswordExpiredEmail,
+  checkPasswordSecurityViolations,
 };

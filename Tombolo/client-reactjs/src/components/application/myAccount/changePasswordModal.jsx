@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Button, Popover, message, Spin } from 'antd';
 import passwordComplexityValidator from '../../common/passwordComplexityValidator';
 import { changeBasicUserPassword } from './utils';
+import { getUser } from '../../common/userStorage';
 
 const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModalVisible }) => {
   const [form] = Form.useForm();
   const [popOverContent, setPopOverContent] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const user = getUser();
 
   const handleOk = async () => {
     setLoading(true);
@@ -39,7 +42,7 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
   useEffect(() => {}, [popOverContent]);
 
   const validatePassword = (value) => {
-    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true }));
+    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true, user }));
   };
 
   return (
@@ -87,7 +90,7 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
                     return Promise.reject(new Error('New password cannot be the same as the current password!'));
                   }
                   //passwordComplexityValidator always returns an array with at least one attributes element
-                  const errors = passwordComplexityValidator({ password: value });
+                  const errors = passwordComplexityValidator({ password: value, user });
                   if (!value || errors.length === 1) {
                     return Promise.resolve();
                   } else {

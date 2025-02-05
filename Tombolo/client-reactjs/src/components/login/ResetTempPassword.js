@@ -3,16 +3,18 @@ import { Form, Input, Button, Spin, message, Popover } from 'antd';
 import { resetTempPassword } from './utils';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
 import { setUser } from '../common/userStorage';
+import { authHeader } from '../common/AuthHeader';
 
 function ResetTempPassword() {
   const [loading, setLoading] = useState(false);
   const [popOverContent, setPopOverContent] = useState(null);
   const [resetToken, setResetToken] = useState(null);
+  const [userDetails, setUserDetails] = useState(null);
   const [form] = Form.useForm();
 
   // For password validator pop over
   const validatePassword = (value) => {
-    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true }));
+    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true, user: userDetails }));
   };
 
   // On component load, get the token from the URL
@@ -22,6 +24,41 @@ function ResetTempPassword() {
     const token = urlParts[urlParts.length - 1];
     setResetToken(token);
   }, []);
+
+  const onLoad = async () => {
+    //get user details from /api/auth//getUserDetailsWithToken/:token
+    try {
+      const url = '/api/auth/getUserDetailsWithVerificationCode/' + resetToken;
+
+      const response = await fetch(url, {
+        headers: authHeader(),
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        let json = await response.json();
+        if (json.message) {
+          message.error(json.message);
+        } else {
+          message.error('An undefined error occurred. Please try again later');
+        }
+        return;
+      }
+
+      if (response.ok) {
+        let json = await response.json();
+        setUserDetails(json?.user);
+      }
+    } catch (err) {
+      message.error(err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (userDetails === null && resetToken !== null) {
+      onLoad();
+    }
+  }, [resetToken, userDetails]);
 
   // Handle form submission
   const handleSubmit = async () => {
@@ -84,7 +121,7 @@ function ResetTempPassword() {
             () => ({
               validator(_, value) {
                 //passwordComplexityValidator always returns an array with at least one attributes element
-                const errors = passwordComplexityValidator({ password: value });
+                const errors = passwordComplexityValidator({ password: value, user: userDetails });
                 if (!value || errors.length === 1) {
                   return Promise.resolve();
                 }
