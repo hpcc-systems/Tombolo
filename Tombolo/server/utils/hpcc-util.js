@@ -637,7 +637,7 @@ exports.getCluster = (clusterId) => {
 /*
 response :  undefined -> cluster not reached network issue or cluster not available
 response.status : 200 -> Cluster reachable 
-response.status : 401 -> Cluster reachable but Unauthorized
+response.status : 403 -> Cluster reachable but Unauthorized
 */
 
 exports.isClusterReachable = (clusterHost, port, username, password) => {

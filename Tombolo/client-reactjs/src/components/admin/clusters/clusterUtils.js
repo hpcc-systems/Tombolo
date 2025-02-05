@@ -58,7 +58,7 @@ export const pingCluster = async ({ clusterInfo, abortController }) => {
 
   const response = await fetch(`/api/cluster/ping`, payload);
 
-  if (response.status !== 200 && response.status !== 401) {
+  if (response.status !== 200 && response.status !== 403) {
     throw new Error('Failed to establish connection with cluster');
   }
 
@@ -74,7 +74,7 @@ export const pingExistingCluster = async ({ clusterId }) => {
 
   const response = await fetch(`/api/cluster/pingExistingCluster/${clusterId}`, payload);
 
-  if (response.status !== 200 && response.status !== 401) {
+  if (response.status !== 200 && response.status !== 403) {
     throw new Error('Failed to establish connection with cluster');
   }
   return response.status;

@@ -457,8 +457,8 @@ const pingCluster = async (req, res) => {
     let statusCode = err.statusCode || 500;
 
     if (err.message.includes("Unauthorized")) {
-      errMessage = "Unauthorized";
-      statusCode = 401;
+      errMessage = "Invalid credentials";
+      statusCode = 403;
     }
     res.status(statusCode).json({ success: false, message: errMessage });
   }

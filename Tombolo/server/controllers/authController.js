@@ -13,6 +13,7 @@ const {
   trimURL,
   setPasswordExpiry,
   setAndSendPasswordExpiredEmail,
+  getContactDetails,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
