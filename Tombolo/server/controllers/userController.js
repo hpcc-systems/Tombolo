@@ -354,7 +354,7 @@ const updateUserApplications = async (req, res) => {
   }
 };
 
-// Create new user
+// Create new user - User Created by Admin/Owner
 const createUser = async (req, res) => {
   try {
     const {
@@ -397,6 +397,17 @@ const createUser = async (req, res) => {
       registrationStatus,
       verifiedUser,
       forcePasswordReset: true,
+      passwordExpiresAt: new Date(
+        new Date().setDate(new Date().getDate() + 90)
+      ),
+      metaData: {
+        passwordExpiryEmailSent: {
+          first: false,
+          second: false,
+          third: false,
+          final: false,
+        },
+      },
     });
 
     // Create user roles
