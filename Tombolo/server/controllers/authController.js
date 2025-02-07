@@ -13,11 +13,12 @@ const {
   trimURL,
   setPasswordExpiry,
   setAndSendPasswordExpiredEmail,
-  getContactDetails,
+  checkPasswordSecurityViolations,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
 const { generateAndSetCSRFToken } = require("../utils/authUtil");
+const { get } = require("lodash");
 
 const User = models.user;
 const UserRoles = models.UserRoles;
@@ -58,6 +59,23 @@ const createApplicationOwner = async (req, res) => {
       return res.status(409).json({
         success: false,
         message: "An owner already exists in the system",
+      });
+    }
+
+    // Check if the password meets the security requirements
+    const passwordSecurityViolations = checkPasswordSecurityViolations({
+      password: req.body.password,
+      user: {
+        email: req.body.email,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+      },
+    });
+
+    if (passwordSecurityViolations.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Password does not meet security requirements",
       });
     }
 
@@ -127,6 +145,23 @@ const createApplicationOwner = async (req, res) => {
 const createBasicUser = async (req, res) => {
   try {
     const payload = req.body;
+
+    // Check if the password meets the security requirements
+    const passwordSecurityViolations = checkPasswordSecurityViolations({
+      password: payload.password,
+      user: {
+        email: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+      },
+    });
+
+    if (passwordSecurityViolations.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Password does not meet security requirements",
+      });
+    }
 
     // Hash password and set expiry
     const salt = bcrypt.genSaltSync(10);
@@ -319,6 +354,19 @@ const resetPasswordWithToken = async (req, res) => {
       throw { status: 404, message: "User not found" };
     }
 
+    // check if password meets security requirements
+    const passwordSecurityViolations = checkPasswordSecurityViolations({
+      password,
+      user,
+    });
+
+    if (passwordSecurityViolations.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Password does not meet security requirements",
+      });
+    }
+
     // Hash the new password and set expiry
     const salt = bcrypt.genSaltSync(10);
     user.hash = bcrypt.hashSync(password, salt);
@@ -420,6 +468,19 @@ const resetTempPassword = async (req, res) => {
     // If user not found
     if (!user) {
       throw { status: 404, message: "User not found" };
+    }
+
+    // check if password meets security requirements
+    const passwordSecurityViolations = checkPasswordSecurityViolations({
+      password,
+      user,
+    });
+
+    if (passwordSecurityViolations.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Password does not meet security requirements",
+      });
     }
 
     // Hash the new password and set expiry
@@ -566,7 +627,6 @@ const loginBasicUser = async (req, res, next) => {
       invalidCredentialsErr.status = 403;
       throw invalidCredentialsErr;
     }
-
     // Remove hash from use object
     const userObj = user.toJSON();
     delete userObj.hash;
@@ -1077,6 +1137,87 @@ const resendVerificationCode = async (req, res) => {
   }
 };
 
+const getUserDetailsWithToken = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    //get the user id by the password reset link
+    const userId = await PasswordResetLinks.findOne({
+      where: { id: token },
+
+      attributes: ["userId"],
+    });
+
+    if (!userId) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const id = userId.userId;
+
+    const user = await User.findOne({
+      where: { id: id },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    //only grab the details we need
+    const userObj = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    };
+
+    res.status(200).json({ user: userObj });
+  } catch (err) {
+    logger.error(`getUserDetailsWithToken: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
+const getUserDetailsWithVerificationCode = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    //get the user id by the password reset link
+    const userId = await AccountVerificationCodes.findOne({
+      where: { code: token },
+
+      attributes: ["userId"],
+    });
+
+    if (!userId) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const id = userId.userId;
+
+    const user = await User.findOne({
+      where: { id: id },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    //only grab the details we need
+    const userObj = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    };
+
+    res.status(200).json({ user: userObj });
+  } catch (err) {
+    logger.error(`getUserDetailsWithToken: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
 //Exports
 module.exports = {
   createBasicUser,
@@ -1090,4 +1231,6 @@ module.exports = {
   loginOrRegisterAzureUser,
   requestAccess,
   resendVerificationCode,
+  getUserDetailsWithToken,
+  getUserDetailsWithVerificationCode,
 };

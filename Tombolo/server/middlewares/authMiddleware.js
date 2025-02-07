@@ -1,5 +1,5 @@
 // Validate add user inputs using express validator
-const { body, validationResult } = require("express-validator");
+const { body, param, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 
 const logger = require("../config/logger");
@@ -235,6 +235,23 @@ const validateEmailInBody = [
   },
 ];
 
+const validateResetToken = [
+  param("token")
+    .notEmpty()
+    .withMessage("Token is required")
+    .isUUID()
+    .withMessage("Invalid token"),
+  (req, res, next) => {
+    const errors = validationResult(req).array();
+    const errorString = errors.map((e) => e.msg).join(", ");
+    if (errors.length > 0) {
+      logger.error(`Reset password: ${errorString}`);
+      return res.status(400).json({ success: false, message: errorString });
+    }
+    next();
+  },
+];
+
 // Exports
 module.exports = {
   validateNewUserPayload,
@@ -246,4 +263,5 @@ module.exports = {
   validateAzureAuthCode,
   validateAccessRequest,
   validateEmailInBody,
+  validateResetToken,
 };

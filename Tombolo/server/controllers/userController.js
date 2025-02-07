@@ -455,7 +455,9 @@ const createUser = async (req, res) => {
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${newUserData.firstName}`,
-        registrationLink: `${process.env.WEB_URL}/reset-temporary-password/${verificationCode}`,
+        registrationLink: `${trimURL(
+          process.env.WEB_URL
+        )}/reset-temporary-password/${verificationCode}`,
         tempPassword: password,
         notificationOrigin: "User Management",
         subject: "Complete your registration",

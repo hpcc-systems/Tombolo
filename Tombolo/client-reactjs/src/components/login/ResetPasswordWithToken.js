@@ -9,12 +9,49 @@ import { setUser } from '../common/userStorage';
 
 const ResetPassword = () => {
   const [popOverContent, setPopOverContent] = useState(null);
+  const [userDetails, setUserDetails] = useState(null);
 
   //we will get the reset token from the url and test if it is valid to get the user information
   const { resetToken } = useParams();
   const [form] = Form.useForm();
 
   const [messageApi, contextHolder] = message.useMessage();
+
+  const onLoad = async () => {
+    //get user details from /api/auth//getUserDetailsWithToken/:token
+    try {
+      const url = '/api/auth/getUserDetailsWithToken/' + resetToken;
+
+      const response = await fetch(url, {
+        headers: authHeader(),
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        let json = await response.json();
+        if (json.message) {
+          message.error(json.message);
+        } else {
+          message.error('An undefined error occurred. Please try again later');
+        }
+        return;
+      }
+
+      if (response.ok) {
+        let json = await response.json();
+        setUserDetails(json?.user);
+      }
+    } catch (err) {
+      message.error(err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (userDetails === null && resetToken !== undefined) {
+      onLoad();
+    }
+  }, [resetToken, userDetails]);
+
   const invalidToken = () => {
     messageApi.open({
       type: 'error',
@@ -80,7 +117,7 @@ const ResetPassword = () => {
 
   useEffect(() => {}, [popOverContent]);
   const validatePassword = (value) => {
-    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true }));
+    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true, user: userDetails }));
   };
 
   return (
@@ -101,7 +138,7 @@ const ResetPassword = () => {
             () => ({
               validator(_, value) {
                 //passwordComplexityValidator always returns an array with at least one attributes element
-                const errors = passwordComplexityValidator({ password: value });
+                const errors = passwordComplexityValidator({ password: value, user: userDetails });
                 if (!value || errors.length === 1) {
                   return Promise.resolve();
                 }
