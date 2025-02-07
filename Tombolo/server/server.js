@@ -35,6 +35,16 @@ const JobScheduler = require("./jobSchedular/job-scheduler");
 const app = express();
 const port = process.env.SERVER_PORT || 3001;
 
+// Log all requests
+app.disable("etag"); // Don't send etags so that the client does not cache the response
+app.use((req, res, next) => {
+  res.on("finish", () => {
+    logger.http(`[${req.ip}] [${req.method}] [${req.baseUrl}] [${res.statusCode}]`);
+  });
+  next();
+});
+
+
 /* Initialize Socket IO */
 const server = require("http").Server(app);
 const socketIo = require("socket.io")(server);
@@ -101,12 +111,6 @@ const cluster = require("./routes/clusterRoutes");
 const roles = require("./routes/roleTypesRoute");
 const status = require("./routes/statusRoutes");
 const instanceSettings = require("./routes/instanceRoutes.js");
-
-// Log all HTTP requests
-app.use((req, res, next) => {
-  logger.http(`[${req.ip}] [${req.method}] [${req.url}]`);
-  next();
-});
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
