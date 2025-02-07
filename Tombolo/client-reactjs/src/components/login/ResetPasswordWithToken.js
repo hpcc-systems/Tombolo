@@ -21,7 +21,7 @@ const ResetPassword = () => {
     //get user details from /api/auth//getUserDetailsWithToken/:token
     try {
       const url = '/api/auth/getUserDetailsWithToken/' + resetToken;
-      console.log(url);
+
       const response = await fetch(url, {
         headers: authHeader(),
         method: 'GET',
