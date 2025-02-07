@@ -72,7 +72,7 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
         const response = await pingCluster({ clusterInfo, abortController });
 
         // Invalid credentials provided
-        if (response === 401) {
+        if (response === 403) {
           form.setFields([
             {
               name: 'username',
