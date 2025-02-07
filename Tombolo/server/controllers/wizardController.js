@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const { sequelize } = require("../models");
 const models = require("../models");
+const { trimURL } = require("../utils/authUtil");
 const {
   user,
   RoleTypes,
@@ -23,25 +24,47 @@ const createInstanceSettingFirstRun = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { name, description, firstName, lastName, email, password } = req.body;
+    const { name, description, firstName, lastName, email, password } =
+      req.body;
 
     // Step 1: Check if user already exists
-    sendUpdate(res, {event: "info", step: 1 , message: "Verifying if the email is already in use ...",
+    sendUpdate(res, {
+      event: "info",
+      step: 1,
+      message: "Verifying if the email is already in use ...",
     });
     const existingUser = await user.findOne({ where: { email } });
     if (existingUser) {
-      sendUpdate(res, {event: "error", message: "A user with the provided email already exists."});
+      sendUpdate(res, {
+        event: "error",
+        message: "A user with the provided email already exists.",
+      });
       return res.end();
-    }else{
-      sendUpdate(res, {event: "success",message: "No existing account is associated with the email provided."});
+    } else {
+      sendUpdate(res, {
+        event: "success",
+        message: "No existing account is associated with the email provided.",
+      });
     }
 
     // Step 2: Create new user
     let newUser = null;
     try {
-      sendUpdate(res, { event: "info" ,  step: 2,  message: "Creating user ..." });
-      newUser = await createUser({ firstName, lastName, email, password },transaction);
-      sendUpdate(res, { event: "success", message: "User created successfully." });
+      sendUpdate(res, { event: "info", step: 2, message: "Creating user ..." });
+      newUser = await createUser(
+        {
+          firstName,
+          lastName,
+          email,
+          password,
+        },
+        transaction
+      );
+
+      sendUpdate(res, {
+        event: "success",
+        message: "User created successfully.",
+      });
     } catch (err) {
       logger.error(err.message);
       sendUpdate(res, { event: "error", message: "Failed to create user." });
@@ -50,10 +73,14 @@ const createInstanceSettingFirstRun = async (req, res) => {
     }
 
     // Step 3: Assign owner role
-    sendUpdate(res, { event: "info",  step: 3, message: "Assigning owner role ..." });
+    sendUpdate(res, {
+      event: "info",
+      step: 3,
+      message: "Assigning owner role ...",
+    });
     try {
       await assignOwnerRole(newUser.id, transaction);
-      sendUpdate(res, {event: "success", message: "Owner role assigned." });
+      sendUpdate(res, { event: "success", message: "Owner role assigned." });
     } catch (err) {
       logger.error(err.message);
       sendUpdate(res, {
@@ -66,12 +93,19 @@ const createInstanceSettingFirstRun = async (req, res) => {
 
     // Step 4: Create instance settings
     try {
-      sendUpdate(res, { event: "info", step: 4, message: "Creating instance settings ..." });
+      sendUpdate(res, {
+        event: "info",
+        step: 4,
+        message: "Creating instance settings ...",
+      });
       await manageInstanceSettings(
         { name, userId: newUser.id, description },
         transaction
       );
-      sendUpdate(res, { event: 'success', message: "Instance settings created." });
+      sendUpdate(res, {
+        event: "success",
+        message: "Instance settings created.",
+      });
     } catch (err) {
       logger.error(err.message);
       sendUpdate(res, {
@@ -84,9 +118,16 @@ const createInstanceSettingFirstRun = async (req, res) => {
 
     // Step 5: Send verification email
     try {
-      sendUpdate(res, { event: "info", step: 5, message: "Sending verification email ..." });
+      sendUpdate(res, {
+        event: "info",
+        step: 5,
+        message: "Sending verification email ...",
+      });
       await sendVerificationEmail(newUser, transaction);
-      sendUpdate(res, {event: 'success', message: "Verification email sent." });
+      sendUpdate(res, {
+        event: "success",
+        message: "Verification email sent.",
+      });
     } catch (err) {
       logger.error(err.message);
       sendUpdate(res, {
@@ -101,18 +142,25 @@ const createInstanceSettingFirstRun = async (req, res) => {
     await transaction.commit();
 
     // Final response
-    sendUpdate(res, {event: "success", step: 999, message: "Setup complete. Please check your email for the verification link." });
+    sendUpdate(res, {
+      event: "success",
+      step: 999,
+      message:
+        "Setup complete. Please check your email for the verification link.",
+    });
 
     // Close SSE connection after sending the final update
     res.end();
   } catch (err) {
     await transaction.rollback();
     logger.error(err.message);
-    sendUpdate(res, { event: "error", message: `Setup failed due to a server error` });
+    sendUpdate(res, {
+      event: "error",
+      message: `Setup failed due to a server error`,
+    });
     res.end();
   }
 };
-
 
 // Helper: Send SSE updates to the client
 const sendUpdate = (res, data) => {
@@ -135,6 +183,17 @@ const createUser = async (
       hash,
       registrationMethod: "traditional",
       forcePasswordReset: false,
+      passwordExpiresAt: new Date(
+        new Date().setDate(new Date().getDate() + 90)
+      ),
+      metaData: {
+        passwordExpiryEmailSent: {
+          first: false,
+          second: false,
+          third: false,
+          final: false,
+        },
+      },
     },
     { transaction }
   );
@@ -199,7 +258,9 @@ const sendVerificationEmail = async (user, transaction) => {
       metaData: {
         notificationId,
         recipientName: `${user.firstName}`,
-        verificationLink: `${process.env.WEB_URL}/register?regId=${verificationCode}`,
+        verificationLink: `${trimURL(
+          process.env.WEB_URL
+        )}/register?regId=${verificationCode}`,
         notificationOrigin: "User Registration",
         subject: "Verify your email",
         mainRecipients: [user.email],

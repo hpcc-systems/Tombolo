@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const logger = require("../config/logger");
-
+const { v4: uuidv4 } = require("uuid");
 const model = require("../models");
 const User = model.user;
 const UserRoles = model.UserRoles;
@@ -8,6 +8,7 @@ const RoleTypes = model.RoleTypes;
 const user_application = model.user_application;
 const Application = model.application;
 const InstanceSettings = model.instance_settings;
+const NotificationQueue = model.notification_queue;
 const { generateToken } = require("../middlewares/csrfMiddleware");
 const csrfHeaderName =
   process.env.NODE_ENV === "production"
@@ -162,6 +163,65 @@ const getContactDetails = async () => {
   return emails;
 };
 
+const setAndSendPasswordExpiredEmail = async (user) => {
+  //if the forcePasswordReset flag isn't set but the password has expired, set the flag
+  if (user.passwordExpiresAt < new Date() && !user.forcePasswordReset) {
+    user.forcePasswordReset = true;
+  }
+
+  //check that lastAdminNotification was more than 24 hours ago to avoid spamming the admin
+  const currentTime = new Date();
+  const lastAdminNotification = new Date(
+    user.metaData.passwordExpiryEmailSent.lastAdminNotification
+  );
+
+  const timeSinceLastNotification =
+    (currentTime - lastAdminNotification) / 1000 / 60 / 60;
+
+  if (timeSinceLastNotification > 24 || isNaN(timeSinceLastNotification)) {
+    //get contact email
+    const contactEmail = await getContactDetails();
+
+    //send notification to contact email
+    await NotificationQueue.create({
+      type: "email",
+      templateName: "passwordExpiredAdmin",
+      notificationOrigin: "Password Expiry",
+      deliveryType: "immediate",
+      metaData: {
+        notificationId: uuidv4(),
+        recipientName: "Admin",
+        notificationOrigin: "Password Expiry",
+        subject: "User password has expired - Requesting reset",
+        mainRecipients: contactEmail,
+        notificationDescription: "User password has expired - Requesting reset",
+        passwordResetLink: `${trimURL(
+          process.env.WEB_URL
+        )}}/admin/usermanagement`,
+        userName: user.firstName + " " + user.lastName,
+        userEmail: user.email,
+      },
+      createdBy: user.id,
+    });
+  } else {
+    logger.verbose(
+      "Password expiry email not sent for " +
+        user.email +
+        " as last email was sent less than 24 hours ago"
+    );
+  }
+  await user.update({
+    metaData: {
+      ...user.metaData,
+      passwordExpiryEmailSent: {
+        ...user.metaData.passwordExpiryEmailSent,
+        lastAdminNotification: currentTime,
+      },
+    },
+  });
+  return;
+};
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -174,4 +234,5 @@ module.exports = {
   trimURL,
   setPasswordExpiry,
   getContactDetails,
+  setAndSendPasswordExpiredEmail,
 };
