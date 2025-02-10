@@ -1,7 +1,14 @@
+// Imports from node modules
 const jwt = require("jsonwebtoken");
-const logger = require("../config/logger");
 const { v4: uuidv4 } = require("uuid");
+const { Op } = require("sequelize");
+
+// Local Imports
+const logger = require("../config/logger");
 const model = require("../models");
+const { generateToken } = require("../middlewares/csrfMiddleware");
+
+// Constants
 const User = model.user;
 const UserRoles = model.UserRoles;
 const RoleTypes = model.RoleTypes;
@@ -9,7 +16,6 @@ const user_application = model.user_application;
 const Application = model.application;
 const InstanceSettings = model.instance_settings;
 const NotificationQueue = model.notification_queue;
-const { generateToken } = require("../middlewares/csrfMiddleware");
 const csrfHeaderName =
   process.env.NODE_ENV === "production"
     ? "__Host-prod.x-csrf-token"
@@ -125,13 +131,19 @@ const setPasswordExpiry = (user) => {
   return user;
 };
 
-const getContactDetails = async () => {
-  //we need to check if contact email is in instance settings first
-  const instanceSetting = await InstanceSettings.findOne({});
 
-  //if it exists, return it here
-  if (instanceSetting?.dataValues?.metaData?.supportEmailRecipientsEmail) {
-    return instanceSetting?.dataValues?.metaData?.supportEmailRecipientsEmail;
+// Get Support Notification Recipient's Emails
+const getSupportContactEmails = async () => {
+  // Get Instance Setting
+  const instanceSetting = await InstanceSettings.findOne({ raw: true });
+
+  let supportEmailRecipientsEmail = instanceSetting.metaData.supportEmailRecipients || [];
+  let supportEmailRecipientsRoles = instanceSetting.metaData.supportEmailRecipientsRoles || [];
+  const supportRolesEmail = [];
+
+  // If support email recipients exist and no support email recipients roles
+ if(supportEmailRecipientsEmail.length > 0 && supportEmailRecipientsRoles.length === 0){
+    return supportEmailRecipientsEmail;
   }
 
   //if there is no contact email, get a list of all owner and admin emails
@@ -141,27 +153,72 @@ const getContactDetails = async () => {
         model: UserRoles,
         attributes: ["id"],
         as: "roles",
+        required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).
         include: [
           {
             model: RoleTypes,
             as: "role_details",
             attributes: ["id", "roleName"],
-            where: { roleName: ["owner", "admin"] },
+            where: { roleName: { [Op.in]: supportEmailRecipientsRoles } },
           },
         ],
       },
     ],
   });
 
-  let emails = [];
 
+
+  // Get the e-mail addresses
   ownerAndAdminEmails.forEach((user) => {
-    emails.push(user.email);
+    supportRolesEmail.push(user.email);
   });
 
   //return them
-  return emails;
+  return [...supportEmailRecipientsEmail, ...supportRolesEmail];
 };
+
+// Get Access Request Notification Recipient's Emails
+const getAccessRequestContactEmails = async () => {
+  // Get Instance Setting
+  const instanceSetting = await InstanceSettings.findOne({ raw: true });
+
+  let accessRequestEmailRecipientsEmail = instanceSetting.metaData.accessRequestEmailRecipientsEmail || [];
+  let accessRequestEmailRecipientsRoles = instanceSetting.metaData.accessRequestEmailRecipientsRoles || [];
+  const accessRequestRolesEmail = [];
+
+  // If access email recipients exist and no support email recipients roles
+  if(accessRequestEmailRecipientsEmail.length > 0 && accessRequestEmailRecipientsRoles.length === 0){
+    return accessRequestEmailRecipientsEmail;
+  }
+
+  //if access email recipients do not exist, get emails for the roles specified to receive access request emails
+  const ownerAndAdminEmails = await User.findAll({
+    include: [
+      {
+        model: UserRoles,
+        attributes: ["id"],
+        as: "roles",
+        required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).
+        include: [
+          {
+            model: RoleTypes,
+            as: "role_details",
+            attributes: ["id", "roleName"],
+            where: { roleName: { [Op.in]: accessRequestEmailRecipientsRoles } },
+          },
+        ],
+      },
+    ],
+  });
+
+  // Get the e-mail addresses
+  ownerAndAdminEmails.forEach((user) => {
+    accessRequestRolesEmail.push(user.email);
+  });
+
+  return [...accessRequestEmailRecipientsEmail, ...accessRequestRolesEmail];
+};
+
 
 const setAndSendPasswordExpiredEmail = async (user) => {
   //if the forcePasswordReset flag isn't set but the password has expired, set the flag
@@ -180,7 +237,7 @@ const setAndSendPasswordExpiredEmail = async (user) => {
 
   if (timeSinceLastNotification > 24 || isNaN(timeSinceLastNotification)) {
     //get contact email
-    const contactEmail = await getContactDetails();
+    const contactEmail = await getSupportContactEmails();
 
     //send notification to contact email
     await NotificationQueue.create({
@@ -197,7 +254,7 @@ const setAndSendPasswordExpiredEmail = async (user) => {
         notificationDescription: "User password has expired - Requesting reset",
         passwordResetLink: `${trimURL(
           process.env.WEB_URL
-        )}}/admin/usermanagement`,
+        )}/admin/usermanagement`,
         userName: user.firstName + " " + user.lastName,
         userEmail: user.email,
       },
@@ -260,7 +317,8 @@ module.exports = {
   generateAndSetCSRFToken,
   trimURL,
   setPasswordExpiry,
-  getContactDetails,
   setAndSendPasswordExpiredEmail,
   checkPasswordSecurityViolations,
+  getSupportContactEmails,
+  getAccessRequestContactEmails,
 };
