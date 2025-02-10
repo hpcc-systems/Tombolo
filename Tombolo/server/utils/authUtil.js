@@ -155,6 +155,7 @@ const getContactDetails = async () => {
 
   let emails = [];
 
+  // Get the e-mail addresses
   ownerAndAdminEmails.forEach((user) => {
     emails.push(user.email);
   });
