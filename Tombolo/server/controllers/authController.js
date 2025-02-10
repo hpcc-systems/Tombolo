@@ -1012,8 +1012,12 @@ const requestAccess = async (req, res) => {
     }
 
 
+    const notificationDescription = `Access request from ${user.email}`;
+
     const existingNotification = await sent_notifications.findOne({
-      where: { notificationTitle: `User Access Request from ${user.email}` },
+      where: {
+        notificationDescription: `Access request from ${user.email}`,
+      },
     });
 
     //check if existingNotification.createdAt is within 24 hours
@@ -1050,7 +1054,7 @@ const requestAccess = async (req, res) => {
         )}/admin/userManagement`,
         subject: `Access Request`,
         mainRecipients: accessRequestRecipients,
-        notificationDescription: "Access Request",
+        notificationDescription,
         validForHours: 24,
       },
       createdBy: user.id,
