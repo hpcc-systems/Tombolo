@@ -11,6 +11,7 @@ const NotificationQueue = models.notification_queue;
 const AccountVerificationCodes = models.AccountVerificationCodes;
 
 const {
+  checkPasswordSecurityViolations,
   setPasswordExpiry,
   setPreviousPasswords,
 } = require("../utils/authUtil");
@@ -164,6 +165,16 @@ const changePassword = async (req, res) => {
     // Check if current password is correct
     if (!bcrypt.compareSync(currentPassword, existingUser.hash)) {
       throw { status: 400, message: "Current password is incorrect" };
+    }
+
+    //check for password security violations
+    const errors = checkPasswordSecurityViolations({
+      password: newPassword,
+      user: existingUser,
+    });
+
+    if (errors.length > 0) {
+      throw { status: 400, message: errors };
     }
 
     // Update password

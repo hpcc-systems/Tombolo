@@ -7,6 +7,7 @@ const { Op } = require("sequelize");
 const logger = require("../config/logger");
 const model = require("../models");
 const { generateToken } = require("../middlewares/csrfMiddleware");
+const bcrypt = require("bcryptjs");
 
 // Constants
 const User = model.user;
@@ -286,12 +287,14 @@ const setAndSendPasswordExpiredEmail = async (user) => {
 };
 
 const checkPasswordSecurityViolations = ({ password, user }) => {
+  console.log("checkPasswordSecurityViolations", password, user);
   //check password for user.email, user.firstName, user.lastName
   const passwordViolations = [];
 
   const email = user.email;
   const firstName = user.firstName;
   const lastName = user.lastName;
+  const previousPasswords = user.metaData.previousPasswords || [];
 
   if (password.includes(email)) {
     passwordViolations.push("Password contains email address");
@@ -308,6 +311,14 @@ const checkPasswordSecurityViolations = ({ password, user }) => {
   }
 
   //TODO -- check if password contains any of previous 12 passwords
+  previousPasswords.forEach((oldPassword) => {
+    console.log("checking oldPassword", oldPassword);
+    if (bcrypt.compareSync(password, oldPassword)) {
+      passwordViolations.push(
+        "Password cannot be the same as one of the previous passwords"
+      );
+    }
+  });
 
   return passwordViolations;
 };
