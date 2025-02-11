@@ -10,7 +10,11 @@ const user_application = models.user_application;
 const NotificationQueue = models.notification_queue;
 const AccountVerificationCodes = models.AccountVerificationCodes;
 
-const { setPasswordExpiry } = require("../utils/authUtil");
+const {
+  checkPasswordSecurityViolations,
+  setPasswordExpiry,
+  setPreviousPasswords,
+} = require("../utils/authUtil");
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
@@ -163,6 +167,16 @@ const changePassword = async (req, res) => {
       throw { status: 400, message: "Current password is incorrect" };
     }
 
+    //check for password security violations
+    const errors = checkPasswordSecurityViolations({
+      password: newPassword,
+      user: existingUser,
+    });
+
+    if (errors.length > 0) {
+      throw { status: 400, message: errors };
+    }
+
     // Update password
     const salt = bcrypt.genSaltSync(10);
     existingUser.hash = bcrypt.hashSync(newPassword, salt);
@@ -170,8 +184,21 @@ const changePassword = async (req, res) => {
     //set password expiry
     setPasswordExpiry(existingUser);
 
+    //set previous passwords
+    setPreviousPasswords(existingUser);
+
     // Save user with updated details
-    const updatedUser = await existingUser.save();
+    const updatedUser = await User.update(
+      {
+        hash: existingUser.hash,
+        metaData: existingUser.metaData,
+        passwordExpiresAt: existingUser.passwordExpiresAt,
+        forcePasswordReset: existingUser.forcePasswordReset,
+      },
+      {
+        where: { id },
+      }
+    );
 
     res.status(200).json({
       success: true,
