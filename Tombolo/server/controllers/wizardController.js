@@ -193,6 +193,7 @@ const createUser = async (
           third: false,
           final: false,
         },
+        previousPasswords: [hash],
       },
     },
     { transaction }

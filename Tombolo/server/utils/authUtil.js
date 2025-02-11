@@ -131,18 +131,22 @@ const setPasswordExpiry = (user) => {
   return user;
 };
 
-
 // Get Support Notification Recipient's Emails
 const getSupportContactEmails = async () => {
   // Get Instance Setting
   const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
-  let supportEmailRecipientsEmail = instanceSetting.metaData.supportEmailRecipients || [];
-  let supportEmailRecipientsRoles = instanceSetting.metaData.supportEmailRecipientsRoles || [];
+  let supportEmailRecipientsEmail =
+    instanceSetting.metaData.supportEmailRecipients || [];
+  let supportEmailRecipientsRoles =
+    instanceSetting.metaData.supportEmailRecipientsRoles || [];
   const supportRolesEmail = [];
 
   // If support email recipients exist and no support email recipients roles
- if(supportEmailRecipientsEmail.length > 0 && supportEmailRecipientsRoles.length === 0){
+  if (
+    supportEmailRecipientsEmail.length > 0 &&
+    supportEmailRecipientsRoles.length === 0
+  ) {
     return supportEmailRecipientsEmail;
   }
 
@@ -166,8 +170,6 @@ const getSupportContactEmails = async () => {
     ],
   });
 
-
-
   // Get the e-mail addresses
   ownerAndAdminEmails.forEach((user) => {
     supportRolesEmail.push(user.email);
@@ -182,12 +184,17 @@ const getAccessRequestContactEmails = async () => {
   // Get Instance Setting
   const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
-  let accessRequestEmailRecipientsEmail = instanceSetting.metaData.accessRequestEmailRecipientsEmail || [];
-  let accessRequestEmailRecipientsRoles = instanceSetting.metaData.accessRequestEmailRecipientsRoles || [];
+  let accessRequestEmailRecipientsEmail =
+    instanceSetting.metaData.accessRequestEmailRecipientsEmail || [];
+  let accessRequestEmailRecipientsRoles =
+    instanceSetting.metaData.accessRequestEmailRecipientsRoles || [];
   const accessRequestRolesEmail = [];
 
   // If access email recipients exist and no support email recipients roles
-  if(accessRequestEmailRecipientsEmail.length > 0 && accessRequestEmailRecipientsRoles.length === 0){
+  if (
+    accessRequestEmailRecipientsEmail.length > 0 &&
+    accessRequestEmailRecipientsRoles.length === 0
+  ) {
     return accessRequestEmailRecipientsEmail;
   }
 
@@ -218,7 +225,6 @@ const getAccessRequestContactEmails = async () => {
 
   return [...accessRequestEmailRecipientsEmail, ...accessRequestRolesEmail];
 };
-
 
 const setAndSendPasswordExpiredEmail = async (user) => {
   //if the forcePasswordReset flag isn't set but the password has expired, set the flag
@@ -306,6 +312,23 @@ const checkPasswordSecurityViolations = ({ password, user }) => {
   return passwordViolations;
 };
 
+const setPreviousPasswords = async (user) => {
+  //get existing previous passwords
+  let previousPasswords = user.metaData.previousPasswords || [];
+
+  //add current password to the list
+  previousPasswords.push(user.hash);
+
+  //if there are more than 12 previous passwords, remove the oldest one
+  if (previousPasswords.length > 12) {
+    previousPasswords.shift();
+  }
+
+  user.metaData.previousPasswords = previousPasswords;
+
+  return user;
+};
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -321,4 +344,5 @@ module.exports = {
   checkPasswordSecurityViolations,
   getSupportContactEmails,
   getAccessRequestContactEmails,
+  setPreviousPasswords,
 };

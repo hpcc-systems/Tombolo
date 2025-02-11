@@ -10,7 +10,10 @@ const user_application = models.user_application;
 const NotificationQueue = models.notification_queue;
 const AccountVerificationCodes = models.AccountVerificationCodes;
 
-const { setPasswordExpiry } = require("../utils/authUtil");
+const {
+  setPasswordExpiry,
+  setPreviousPasswords,
+} = require("../utils/authUtil");
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
@@ -170,8 +173,21 @@ const changePassword = async (req, res) => {
     //set password expiry
     setPasswordExpiry(existingUser);
 
+    //set previous passwords
+    setPreviousPasswords(existingUser);
+
     // Save user with updated details
-    const updatedUser = await existingUser.save();
+    const updatedUser = await User.update(
+      {
+        hash: existingUser.hash,
+        metaData: existingUser.metaData,
+        passwordExpiresAt: existingUser.passwordExpiresAt,
+        forcePasswordReset: existingUser.forcePasswordReset,
+      },
+      {
+        where: { id },
+      }
+    );
 
     res.status(200).json({
       success: true,
