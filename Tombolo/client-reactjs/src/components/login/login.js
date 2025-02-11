@@ -5,12 +5,14 @@ import { getDeviceInfo } from './utils';
 import { authActions } from '../../redux/actions/Auth';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
+import ExpiredPassword from './ExpiredPassword';
 
 const Login = () => {
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
+  const [expiredPassword, setExpiredPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [azureLoginAttempted, setAzureLoginAttempted] = useState(false);
-  const [email, setEmail] = useState(null);
+  const [email, setEmail] = useState('apple@lexisnexisrisk.com');
 
   // When the form is submitted, this function is called
   const onFinish = async (values) => {
@@ -26,6 +28,12 @@ const Login = () => {
     if (test?.type === 'unverified') {
       setUnverifiedUserLoginAttempt(true);
       setLoading(false);
+      return;
+    }
+
+    if (test?.type === 'password-expired') {
+      // window.location.href = '/expired-password';
+      setExpiredPassword(true);
       return;
     }
 
@@ -105,9 +113,11 @@ const Login = () => {
 
   return (
     <>
-      {unverifiedUserLoginAttempt ? (
+      {unverifiedUserLoginAttempt && (
         <UnverifiedUser setUnverifiedUserLoginAttempt={setUnverifiedUserLoginAttempt} email={email} />
-      ) : (
+      )}
+      {expiredPassword && <ExpiredPassword email={email} />}
+      {!unverifiedUserLoginAttempt && !expiredPassword && (
         <>
           <Form onFinish={onFinish} layout="vertical">
             {loading && (

@@ -85,3 +85,24 @@ export const resendVerificationCode = async (email) => {
 
   return responseJson;
 };
+
+// Make post request to request a password reset
+export const requestPasswordReset = async ({ email }) => {
+  const payload = {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify({ email }),
+  };
+
+  const response = await fetch('/api/auth/requestPasswordReset', payload);
+
+  // Get the data from the response
+  const responseJson = await response.json();
+
+  // Check if the response is ok
+  if (!response.ok) {
+    throw new Error(responseJson.message);
+  }
+
+  return responseJson;
+};
