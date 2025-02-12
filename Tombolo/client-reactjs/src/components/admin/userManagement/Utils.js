@@ -163,6 +163,21 @@ const bulkDeleteUsers = async ({ ids }) => {
   }
 };
 
+// Reset user password
+const resetUserPassword = async ({ id }) => {
+  const payload = {
+    method: 'POST',
+    body: JSON.stringify({ id }),
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/user/reset-password-for-user`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to reset password');
+  }
+};
+
 export {
   createUser,
   getAllUsers,
@@ -173,4 +188,5 @@ export {
   updateUserRoles,
   updateUserApplications,
   bulkDeleteUsers,
+  resetUserPassword,
 };

@@ -2,13 +2,28 @@
 const { body, param, validationResult } = require("express-validator");
 const logger = require("../config/logger");
 
-// Validate user ID
+// Validate user ID in params
 const validateUserId = [
   param("id").isUUID(4).withMessage("User ID must be a valid UUID"),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      logger.error(`Delete user : ${errors.array()[0].msg}`);
+      logger.error(`User Management : ${errors.array()[0].msg}`);
+      return res
+        .status(400)
+        .json({ success: false, message: errors.array()[0].msg });
+    }
+    next();
+  },
+];
+
+// Validate user ID in body
+const validateUserIdInBody = [
+  body("id").isUUID(4).withMessage("User ID must be a valid UUID"),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      logger.error(`User Management : ${errors.array()[0].msg}`);
       return res
         .status(400)
         .json({ success: false, message: errors.array()[0].msg });
@@ -198,6 +213,7 @@ const validatePatchUserRolesPayload = [
 module.exports = {
   validateManuallyCreatedUserPayload,
   validateUserId,
+  validateUserIdInBody,
   validateUpdateUserPayload,
   validateChangePasswordPayload,
   validateBulkDeletePayload,
