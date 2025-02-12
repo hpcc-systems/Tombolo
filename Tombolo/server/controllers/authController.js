@@ -70,6 +70,7 @@ const createApplicationOwner = async (req, res) => {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
       },
+      newUser: true,
     });
 
     if (passwordSecurityViolations.length > 0) {
@@ -155,6 +156,7 @@ const createBasicUser = async (req, res) => {
         firstName: payload.firstName,
         lastName: payload.lastName,
       },
+      newUser: true,
     });
 
     if (passwordSecurityViolations.length > 0) {

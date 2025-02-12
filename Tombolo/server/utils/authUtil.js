@@ -286,7 +286,7 @@ const setAndSendPasswordExpiredEmail = async (user) => {
   return;
 };
 
-const checkPasswordSecurityViolations = ({ password, user }) => {
+const checkPasswordSecurityViolations = ({ password, user, newUser }) => {
   //check password for user.email, user.firstName, user.lastName
   const passwordViolations = [];
 
@@ -309,14 +309,17 @@ const checkPasswordSecurityViolations = ({ password, user }) => {
     passwordViolations.push("Password contains last name");
   }
 
-  //TODO -- check if password contains any of previous 12 passwords
-  previousPasswords.forEach((oldPassword) => {
-    if (bcrypt.compareSync(password, oldPassword)) {
-      passwordViolations.push(
-        "Password cannot be the same as one of the previous passwords"
-      );
-    }
-  });
+  //dont do previous password check if it is a new user being registered
+  if (!newUser) {
+    //TODO -- check if password contains any of previous 12 passwords
+    previousPasswords.forEach((oldPassword) => {
+      if (bcrypt.compareSync(password, oldPassword)) {
+        passwordViolations.push(
+          "Password cannot be the same as one of the previous passwords"
+        );
+      }
+    });
+  }
 
   return passwordViolations;
 };

@@ -17,6 +17,7 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
           lastName: form.getFieldValue('lastName'),
           email: form.getFieldValue('email'),
         },
+        newUser: true, //disable old password check
       })
     );
   };
@@ -30,7 +31,6 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
       setLoading(false);
     } catch (e) {
       setLoading(false);
-      console.log(e);
     }
   };
 
