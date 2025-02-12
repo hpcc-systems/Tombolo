@@ -12,6 +12,7 @@
     "@antv/x6-react-shape": "^2.2.3",
     "@monaco-editor/react": "^4.4.5",
     "antd": "^5.13.2",
+    "bcryptjs-react": "^2.4.6",
     "cronstrue": "^2.14.0",
     "dayjs": "^1.11.10",
     "font-awesome": "^4.7.0",

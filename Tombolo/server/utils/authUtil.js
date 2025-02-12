@@ -7,6 +7,7 @@ const { Op } = require("sequelize");
 const logger = require("../config/logger");
 const model = require("../models");
 const { generateToken } = require("../middlewares/csrfMiddleware");
+const bcrypt = require("bcryptjs");
 
 // Constants
 const User = model.user;
@@ -292,6 +293,7 @@ const checkPasswordSecurityViolations = ({ password, user }) => {
   const email = user.email;
   const firstName = user.firstName;
   const lastName = user.lastName;
+  const previousPasswords = user.metaData.previousPasswords || [];
 
   if (password.includes(email)) {
     passwordViolations.push("Password contains email address");
@@ -308,8 +310,32 @@ const checkPasswordSecurityViolations = ({ password, user }) => {
   }
 
   //TODO -- check if password contains any of previous 12 passwords
+  previousPasswords.forEach((oldPassword) => {
+    if (bcrypt.compareSync(password, oldPassword)) {
+      passwordViolations.push(
+        "Password cannot be the same as one of the previous passwords"
+      );
+    }
+  });
 
   return passwordViolations;
+};
+
+const setPreviousPasswords = async (user) => {
+  //get existing previous passwords
+  let previousPasswords = user.metaData.previousPasswords || [];
+
+  //add current password to the list
+  previousPasswords.push(user.hash);
+
+  //if there are more than 12 previous passwords, remove the oldest one
+  if (previousPasswords.length > 12) {
+    previousPasswords.shift();
+  }
+
+  user.metaData.previousPasswords = previousPasswords;
+
+  return user;
 };
 
 //Exports
@@ -327,4 +353,5 @@ module.exports = {
   checkPasswordSecurityViolations,
   getSupportContactEmails,
   getAccessRequestContactEmails,
+  setPreviousPasswords,
 };

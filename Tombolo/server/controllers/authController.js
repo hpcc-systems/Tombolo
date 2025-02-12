@@ -20,6 +20,7 @@ const {
   checkPasswordSecurityViolations,
   getAccessRequestContactEmails,
   generateAndSetCSRFToken,
+  setPreviousPasswords
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -87,6 +88,7 @@ const createApplicationOwner = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     payload.hash = bcrypt.hashSync(req.body.password, salt);
     setPasswordExpiry(payload);
+    setPreviousPasswords(payload);
 
     // Save user to DB
     const user = await User.create(payload);
@@ -171,6 +173,7 @@ const createBasicUser = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     payload.hash = bcrypt.hashSync(req.body.password, salt);
     setPasswordExpiry(payload);
+    setPreviousPasswords(payload);
 
     // Save user to DB
     const user = await User.create(payload);
@@ -378,9 +381,20 @@ const resetPasswordWithToken = async (req, res) => {
     user.verifiedAt = new Date();
     user.forcePasswordReset = false;
     setPasswordExpiry(user);
+    setPreviousPasswords(user);
 
     // Save user with updated details
-    await user.save();
+    await User.update(
+      {
+        hash: user.hash,
+        metaData: user.metaData,
+        passwordExpiresAt: user.passwordExpiresAt,
+        forcePasswordReset: user.forcePasswordReset,
+      },
+      {
+        where: { id: user.id },
+      }
+    );
 
     // Delete the account verification code
     await AccountVerificationCodes.destroy({
@@ -494,9 +508,20 @@ const resetTempPassword = async (req, res) => {
     user.verifiedAt = new Date();
     user.forcePasswordReset = false;
     setPasswordExpiry(user);
+    setPreviousPasswords(user);
 
     // Save user with updated details
-    await user.save();
+    await User.update(
+      {
+        hash: user.hash,
+        metaData: user.metaData,
+        passwordExpiresAt: user.passwordExpiresAt,
+        forcePasswordReset: user.forcePasswordReset,
+      },
+      {
+        where: { id: user.id },
+      }
+    );
 
     // Delete the account verification code
     await AccountVerificationCodes.destroy({
