@@ -1,7 +1,11 @@
+// Imports from node modules
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
+const moment = require("moment");
+
+// Local imports
 const logger = require("../config/logger");
 const roleTypes = require("../config/roleTypes");
 const models = require("../models");
@@ -14,12 +18,13 @@ const {
   setPasswordExpiry,
   setAndSendPasswordExpiredEmail,
   checkPasswordSecurityViolations,
-  setPreviousPasswords,
+  getAccessRequestContactEmails,
+  generateAndSetCSRFToken,
+  setPreviousPasswords
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
-const { generateAndSetCSRFToken } = require("../utils/authUtil");
-
+// Constants
 const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
@@ -30,8 +35,8 @@ const NotificationQueue = models.notification_queue;
 const PasswordResetLinks = models.PasswordResetLinks;
 const AccountVerificationCodes = models.AccountVerificationCodes;
 const sent_notifications = models.sent_notifications;
-const instance_settings = models.instance_settings;
 
+// Controllers
 // Register application owner
 const createApplicationOwner = async (req, res) => {
   try {
@@ -1021,6 +1026,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
   }
 };
 
+// Request access to application / Role
 const requestAccess = async (req, res) => {
   try {
     const { id, comment } = req.body;
@@ -1030,16 +1036,13 @@ const requestAccess = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const instance_setting = await instance_settings.findOne({
-      where: { name: "contactEmail" },
-    });
 
-    if (!instance_setting) {
-      return res.status(404).json({ message: "No contact email found." });
-    }
+    const notificationDescription = `Access request from ${user.email}`;
 
     const existingNotification = await sent_notifications.findOne({
-      where: { notificationTitle: `User Access Request from ${user.email}` },
+      where: {
+        notificationDescription: `Access request from ${user.email}`,
+      },
     });
 
     //check if existingNotification.createdAt is within 24 hours
@@ -1050,33 +1053,33 @@ const requestAccess = async (req, res) => {
       const diffHours = Math.ceil(diff / (1000 * 60 * 60));
 
       if (diffHours < 24) {
-        logger.info(
-          "Access request from user already sent within 24 hours. User: " +
-            user.email
-        );
+        logger.info("Access request from user already sent within 24 hours. User: " + user.email);
         return res.status(200).json({ message: "Access request already sent" });
       }
     }
 
-    const searchableNotificationId = uuidv4();
+    const searchableNotificationId = `ACC_RQ_${moment().format('YYYYMMDD_HHmmss_SSS')}`
+
+    // Get recipient for this notification
+    const accessRequestRecipients = await getAccessRequestContactEmails();
 
     // Add to notification queue
     await NotificationQueue.create({
       type: "email",
       templateName: "accessRequest",
-      notificationOrigin: "No Access Page",
+      notificationOrigin: "Access Request",
       deliveryType: "immediate",
       metaData: {
         notificationId: searchableNotificationId,
-        notificationOrigin: "No Access Page",
+        notificationOrigin: "Access Request",
         email: `${user.email}`,
         comment: comment,
         userManagementLink: `${trimURL(
           process.env.WEB_URL
         )}/admin/userManagement`,
-        subject: `User Access Request from ${user.email}`,
-        mainRecipients: [instance_setting.value],
-        notificationDescription: "User Access Request",
+        subject: `Access Request`,
+        mainRecipients: accessRequestRecipients,
+        notificationDescription,
         validForHours: 24,
       },
       createdBy: user.id,

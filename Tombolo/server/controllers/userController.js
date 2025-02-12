@@ -1,20 +1,24 @@
+// Imports from node modules
 const { v4: UUIDV4 } = require("uuid");
 
+// Local imports
 const logger = require("../config/logger");
 const models = require("../models");
 const bcrypt = require("bcryptjs");
+const {
+  setPasswordExpiry,
+  trimURL,
+  checkPasswordSecurityViolations,
+  setPreviousPasswords,
+} = require("../utils/authUtil");
 
+// Constants
 const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
 const NotificationQueue = models.notification_queue;
 const AccountVerificationCodes = models.AccountVerificationCodes;
 
-const {
-  checkPasswordSecurityViolations,
-  setPasswordExpiry,
-  setPreviousPasswords,
-} = require("../utils/authUtil");
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
