@@ -18,7 +18,7 @@ function passwordComplexityValidator({ password, generateContent, user, oldPassw
   //need to only check for old passwords if oldPasswordCheck flag is passed,
   //this is to avoid performance issues when checking password complexity on the client side
   let isNotOldPassword = 'loading';
-  if (oldPasswordCheck) {
+  if (oldPasswordCheck && !newUser) {
     isNotOldPassword = user?.metaData?.previousPasswords?.every((oldPassword) => {
       return !bcrypt.compareSync(password, oldPassword);
     });
