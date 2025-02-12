@@ -5,7 +5,12 @@ const { v4: UUIDV4 } = require("uuid");
 const logger = require("../config/logger");
 const models = require("../models");
 const bcrypt = require("bcryptjs");
-const { setPasswordExpiry, trimURL } = require("../utils/authUtil");
+const {
+  setPasswordExpiry,
+  trimURL,
+  checkPasswordSecurityViolations,
+  setPreviousPasswords,
+} = require("../utils/authUtil");
 
 // Constants
 const User = models.user;
@@ -166,6 +171,16 @@ const changePassword = async (req, res) => {
       throw { status: 400, message: "Current password is incorrect" };
     }
 
+    //check for password security violations
+    const errors = checkPasswordSecurityViolations({
+      password: newPassword,
+      user: existingUser,
+    });
+
+    if (errors.length > 0) {
+      throw { status: 400, message: errors };
+    }
+
     // Update password
     const salt = bcrypt.genSaltSync(10);
     existingUser.hash = bcrypt.hashSync(newPassword, salt);
@@ -173,8 +188,21 @@ const changePassword = async (req, res) => {
     //set password expiry
     setPasswordExpiry(existingUser);
 
+    //set previous passwords
+    setPreviousPasswords(existingUser);
+
     // Save user with updated details
-    const updatedUser = await existingUser.save();
+    const updatedUser = await User.update(
+      {
+        hash: existingUser.hash,
+        metaData: existingUser.metaData,
+        passwordExpiresAt: existingUser.passwordExpiresAt,
+        forcePasswordReset: existingUser.forcePasswordReset,
+      },
+      {
+        where: { id },
+      }
+    );
 
     res.status(200).json({
       success: true,
