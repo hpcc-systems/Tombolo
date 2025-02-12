@@ -1191,6 +1191,7 @@ const getUserDetailsWithToken = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      metaData: user.metaData,
     };
 
     res.status(200).json({ user: userObj });
@@ -1232,6 +1233,7 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      metaData: user.metaData,
     };
 
     res.status(200).json({ user: userObj });
