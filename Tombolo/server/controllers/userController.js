@@ -9,7 +9,6 @@ const {
   setPasswordExpiry,
   trimURL,
   checkPasswordSecurityViolations,
-  setPasswordExpiry,
   setPreviousPasswords,
 } = require("../utils/authUtil");
 
