@@ -1,11 +1,7 @@
-// Imports from node modules
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
-const moment = require("moment");
-
-// Local imports
 const logger = require("../config/logger");
 const roleTypes = require("../config/roleTypes");
 const models = require("../models");
@@ -16,15 +12,13 @@ const {
   setTokenCookie,
   trimURL,
   setPasswordExpiry,
-  setAndSendPasswordExpiredEmail,
+  sendPasswordExpiredEmail,
   checkPasswordSecurityViolations,
-  getAccessRequestContactEmails,
   generateAndSetCSRFToken,
   setPreviousPasswords
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
-// Constants
 const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
@@ -35,8 +29,8 @@ const NotificationQueue = models.notification_queue;
 const PasswordResetLinks = models.PasswordResetLinks;
 const AccountVerificationCodes = models.AccountVerificationCodes;
 const sent_notifications = models.sent_notifications;
+const instance_settings = models.instance_settings;
 
-// Controllers
 // Register application owner
 const createApplicationOwner = async (req, res) => {
   try {
@@ -588,7 +582,7 @@ const resetTempPassword = async (req, res) => {
 };
 
 //Login Basic user
-// 401 - User not verified | 403 - Incorrect E-mail password combination | 500 - Internal server error | 200 - Success
+// 401 - Unverified , Temp PW, Expired PW | 403 - Incorrect E-mail password combination | 500 - Internal server error | 200 - Success
 const loginBasicUser = async (req, res, next) => {
   try {
     const { email, password, deviceInfo } = req.body;
@@ -617,19 +611,25 @@ const loginBasicUser = async (req, res, next) => {
       return;
     }
 
-    //if forcePasswordReset is true, return error
-    if (user.forcePasswordReset || user.passwordExpiresAt < new Date()) {
-      logger.error(
-        `Login : Login attempt by user with expired password - ${user.id}`
-      );
+    //if password has expired
+    if (user.passwordExpiresAt <= new Date()) {
+      logger.error(`Login : Login attempt by user with expired password - ${user.id}`);
 
       //send password expired email
-      await setAndSendPasswordExpiredEmail(user);
+      // await sendPasswordExpiredEmail(user);
 
-      res.status(403).json({
+      res.status(401).json({
         success: false,
-        message:
-          "Password expired, If you are a regular user an email has been sent to the administration team requesting a reset.",
+        message:"password-expired"});
+      return;
+    }
+
+    // If force password reset is true it  means user is issued a temp password and must reset password
+    if (user.forcePasswordReset) {
+      logger.error(`Login : Login attempt by user with temp password - ${user.id}`);
+      res.status(401).json({
+        success: false,
+        message: "temp-password",
       });
       return;
     }
@@ -641,9 +641,7 @@ const loginBasicUser = async (req, res, next) => {
       );
 
       // Incorrect E-mail password combination error
-      const azureError = new Error(
-        "Email is registered with a Microsoft account. Please sign in with Microsoft"
-      );
+      const azureError = new Error("Email is registered with a Microsoft account. Please sign in with Microsoft");
       azureError.status = 403;
       throw azureError;
     }
@@ -782,7 +780,7 @@ const handlePasswordResetRequest = async (req, res) => {
         `Reset password: User with email ${email} has an expired password`
       );
       //send password expired email
-      await setAndSendPasswordExpiredEmail(user);
+      await sendPasswordExpiredEmail(user);
 
       return res.status(403).json({
         success: false,
@@ -1026,7 +1024,6 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
   }
 };
 
-// Request access to application / Role
 const requestAccess = async (req, res) => {
   try {
     const { id, comment } = req.body;
@@ -1036,13 +1033,16 @@ const requestAccess = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const instance_setting = await instance_settings.findOne({
+      where: { name: "contactEmail" },
+    });
 
-    const notificationDescription = `Access request from ${user.email}`;
+    if (!instance_setting) {
+      return res.status(404).json({ message: "No contact email found." });
+    }
 
     const existingNotification = await sent_notifications.findOne({
-      where: {
-        notificationDescription: `Access request from ${user.email}`,
-      },
+      where: { notificationTitle: `User Access Request from ${user.email}` },
     });
 
     //check if existingNotification.createdAt is within 24 hours
@@ -1053,33 +1053,33 @@ const requestAccess = async (req, res) => {
       const diffHours = Math.ceil(diff / (1000 * 60 * 60));
 
       if (diffHours < 24) {
-        logger.info("Access request from user already sent within 24 hours. User: " + user.email);
+        logger.info(
+          "Access request from user already sent within 24 hours. User: " +
+            user.email
+        );
         return res.status(200).json({ message: "Access request already sent" });
       }
     }
 
-    const searchableNotificationId = `ACC_RQ_${moment().format('YYYYMMDD_HHmmss_SSS')}`
-
-    // Get recipient for this notification
-    const accessRequestRecipients = await getAccessRequestContactEmails();
+    const searchableNotificationId = uuidv4();
 
     // Add to notification queue
     await NotificationQueue.create({
       type: "email",
       templateName: "accessRequest",
-      notificationOrigin: "Access Request",
+      notificationOrigin: "No Access Page",
       deliveryType: "immediate",
       metaData: {
         notificationId: searchableNotificationId,
-        notificationOrigin: "Access Request",
+        notificationOrigin: "No Access Page",
         email: `${user.email}`,
         comment: comment,
         userManagementLink: `${trimURL(
           process.env.WEB_URL
         )}/admin/userManagement`,
-        subject: `Access Request`,
-        mainRecipients: accessRequestRecipients,
-        notificationDescription,
+        subject: `User Access Request from ${user.email}`,
+        mainRecipients: [instance_setting.value],
+        notificationDescription: "User Access Request",
         validForHours: 24,
       },
       createdBy: user.id,
@@ -1245,6 +1245,29 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       .json({ success: false, message: err.message });
   }
 };
+
+// Request password reset
+const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send E-mail to access request email
+    const response = await sendPasswordExpiredEmail(user);
+
+    res.status(200).json({ message: response.message });
+  }catch(err){
+    logger.error(`Request password reset: ${err.message}`);
+    res.status(err.status || 500).json({ success: false, message: err.message });
+  }
+};
+
 //Exports
 module.exports = {
   createBasicUser,
@@ -1260,4 +1283,5 @@ module.exports = {
   resendVerificationCode,
   getUserDetailsWithToken,
   getUserDetailsWithVerificationCode,
+  requestPasswordReset,
 };
