@@ -12,7 +12,7 @@ const Login = () => {
   const [expiredPassword, setExpiredPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [azureLoginAttempted, setAzureLoginAttempted] = useState(false);
-  const [email, setEmail] = useState('apple@lexisnexisrisk.com');
+  const [email, setEmail] = useState(null);
 
   // When the form is submitted, this function is called
   const onFinish = async (values) => {
