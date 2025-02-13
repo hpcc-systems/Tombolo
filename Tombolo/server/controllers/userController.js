@@ -1,5 +1,9 @@
 // Imports from node modules
 const { v4: UUIDV4 } = require("uuid");
+const bcrypt = require("bcryptjs");
+const moment = require("moment");
+const { v4: uuidv4 } = require("uuid");
+const sequelize = require("../models").sequelize;
 
 // Local imports
 const logger = require("../config/logger");
@@ -18,7 +22,14 @@ const UserRoles = models.UserRoles;
 const user_application = models.user_application;
 const NotificationQueue = models.notification_queue;
 const AccountVerificationCodes = models.AccountVerificationCodes;
+const PasswordResetLinks = models.PasswordResetLinks;
 
+const {
+  checkPasswordSecurityViolations,
+  setPasswordExpiry,
+  setPreviousPasswords,
+  generatePassword,
+} = require("../utils/authUtil");
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
@@ -407,12 +418,7 @@ const createUser = async (req, res) => {
     }
 
     // Generate random password - 12 characters - alpha numeric
-    const charset =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let password = "";
-    for (let i = 0; i < 12; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
-    }
+    const password = generatePassword();
 
     // Hash password
     const salt = bcrypt.genSaltSync(10);
@@ -467,7 +473,7 @@ const createUser = async (req, res) => {
     });
 
     // Searchable notification ID
-    const searchableNotificationId = UUIDV4();
+    const searchableNotificationId = `USR_REG__${moment().format('YYYYMMDD_HHmmss_SSS')}`;
     const verificationCode = UUIDV4();
 
     // Create account verification code
@@ -515,6 +521,90 @@ const createUser = async (req, res) => {
   }
 };
 
+// Reset password for user
+const resetPasswordForUser = async (req, res) => {
+  const transaction = await sequelize.transaction(); // Start a transaction
+
+  try {
+    const { id } = req.body;
+
+    // Get user by ID
+    const user = await User.findOne({ where: { id }, transaction });
+
+    // If user not found
+    if (!user) {
+      await transaction.rollback(); // Rollback if user is not found
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Generate a password reset token
+    const randomId = uuidv4();
+    const passwordRestLink = `${trimURL(process.env.WEB_URL)}/reset-password/${randomId}`;
+
+    // Searchable notification ID
+    const searchableNotificationId = `USR_PWD_RST__${moment().format("YYYYMMDD_HHmmss_SSS")}`;
+
+    // Queue notification
+    await NotificationQueue.create(
+      {
+        type: "email",
+        templateName: "resetPasswordLink",
+        notificationOrigin: "Reset Password",
+        deliveryType: "immediate",
+        createdBy: "System",
+        updatedBy: "System",
+        metaData: {
+          notificationId: searchableNotificationId,
+          recipientName: `${user.firstName}`,
+          notificationOrigin: "Reset Password",
+          subject: "Password Reset Link",
+          mainRecipients: [user.email],
+          notificationDescription: "Password Reset Link",
+          validForHours: 24,
+          passwordRestLink,
+        },
+      },
+      { transaction }
+    );
+
+    // Save the password reset token to the user object in the database
+    await PasswordResetLinks.create(
+      {
+        id: randomId,
+        userId: user.id,
+        resetLink: passwordRestLink,
+        issuedAt: new Date(),
+        expiresAt: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
+      },
+      { transaction }
+    );
+
+    // Create account verification code
+    await AccountVerificationCodes.create(
+      {
+        code: randomId,
+        userId: user.id,
+        expiresAt: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
+      },
+      { transaction }
+    );
+
+    // Commit transaction if everything is successful
+    await transaction.commit();
+
+    // Response
+    res.status(200).json({ success: true, message: "Password reset successfully" });
+  } catch (err) {
+    await transaction.rollback(); // Rollback transaction in case of error
+    logger.error(`Reset password for user: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 //Exports
 module.exports = {
   createUser,
@@ -527,4 +617,5 @@ module.exports = {
   bulkUpdateUsers,
   updateUserRoles,
   updateUserApplications,
+  resetPasswordForUser,
 };

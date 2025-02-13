@@ -332,6 +332,29 @@ const setPreviousPasswords = async (user) => {
   return user;
 };
 
+// Generate a random password - 12 chars
+function generatePassword(length = 12) {
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const allChars = lowercase + uppercase + numbers;
+
+  let password = "";
+
+  // Ensure at least one of each category
+  password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+  password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+  password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+
+  // Fill the rest randomly
+  for (let i = 3; i < length; i++) {
+    password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+  }
+
+  // Shuffle password to mix guaranteed characters
+  return password.split("").sort(() => Math.random() - 0.5).join("");
+}
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -348,4 +371,5 @@ module.exports = {
   getSupportContactEmails,
   getAccessRequestContactEmails,
   setPreviousPasswords,
+  generatePassword,
 };
