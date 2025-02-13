@@ -1,13 +1,22 @@
+// Imports from node modules
 const { v4: UUIDV4 } = require("uuid");
 const bcrypt = require("bcryptjs");
 const moment = require("moment");
 const { v4: uuidv4 } = require("uuid");
 const sequelize = require("../models").sequelize;
 
+// Local imports
 const logger = require("../config/logger");
 const models = require("../models");
-const { trimURL } = require("../utils/authUtil");
+const bcrypt = require("bcryptjs");
+const {
+  setPasswordExpiry,
+  trimURL,
+  checkPasswordSecurityViolations,
+  setPreviousPasswords,
+} = require("../utils/authUtil");
 
+// Constants
 const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;

@@ -1,19 +1,18 @@
-// imports
+// imports from node modules
 const { parentPort } = require("worker_threads");
 const { Op } = require("sequelize");
-const logger = require("../../config/logger");
+const { v4: uuidv4 } = require("uuid");
 
 //Local Imports
 const models = require("../../models");
+const logger = require("../../config/logger");
+const { trimURL, getSupportContactEmails } = require("../../utils/authUtil");
+
+// Constants
 const user = models.user;
 const NotificationQueue = models.notification_queue;
-
-const { v4: uuidv4 } = require("uuid");
-const { trimURL, getContactDetails } = require("../../utils/authUtil");
-
 const passwordResetLink = `${trimURL(process.env.WEB_URL)}/myaccount`;
-const passwordExpiryAlertDaysForUser =
-  require("../../config/monitorings.js").passwordExpiryAlertDaysForUser;
+const passwordExpiryAlertDaysForUser = require("../../config/monitorings.js").passwordExpiryAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   // Queue notification
@@ -147,7 +146,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
               " has an expired password.",
           });
 
-        let emails = "mailto:" + (await getContactDetails());
+        let emails = "mailto:" + (await getSupportContactEmails());
 
         // Queue notification
         await NotificationQueue.create({

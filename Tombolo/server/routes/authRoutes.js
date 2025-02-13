@@ -30,6 +30,7 @@ const {
   resendVerificationCode,
   getUserDetailsWithToken,
   getUserDetailsWithVerificationCode,
+  requestPasswordReset,
 } = require("../controllers/authController");
 
 // Basic (Traditional) User Routes ----------------------------------------------------------------------------
@@ -69,7 +70,7 @@ router.post(
   validateEmailInBody,
   resendVerificationCode
 ); // Resend verification code to user
-
+router.post("/requestPasswordReset", validateEmailInBody, requestPasswordReset);
 // OAuth 2.0 User Routes ----------------------------------------------------------------------------
 //Login or register with azure user
 router.post(
