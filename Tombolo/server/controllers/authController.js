@@ -15,7 +15,8 @@ const {
   sendPasswordExpiredEmail,
   checkPasswordSecurityViolations,
   generateAndSetCSRFToken,
-  setPreviousPasswords
+  setPreviousPasswords,
+  setLastLogin,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -313,6 +314,8 @@ const verifyEmail = async (req, res) => {
 
     await generateAndSetCSRFToken(req, res, accessToken);
 
+    await setLastLogin(user);
+
     // Send response
     res.status(200).json({
       success: true,
@@ -431,6 +434,9 @@ const resetPasswordWithToken = async (req, res) => {
     await setTokenCookie(res, accessToken);
 
     await generateAndSetCSRFToken(req, res, accessToken);
+
+    //set last login
+    await setLastLogin(user);
 
     // User data obj to send to the client
     const userObj = {
@@ -559,6 +565,10 @@ const resetTempPassword = async (req, res) => {
 
     await generateAndSetCSRFToken(req, res, accessToken);
 
+    //set last login
+
+    await setLastLogin(newUser);
+
     // User data obj to send to the client
     const userObj = {
       ...user.toJSON(),
@@ -613,20 +623,25 @@ const loginBasicUser = async (req, res, next) => {
 
     //if password has expired
     if (user.passwordExpiresAt <= new Date()) {
-      logger.error(`Login : Login attempt by user with expired password - ${user.id}`);
+      logger.error(
+        `Login : Login attempt by user with expired password - ${user.id}`
+      );
 
       //send password expired email
       // await sendPasswordExpiredEmail(user);
 
       res.status(401).json({
         success: false,
-        message:"password-expired"});
+        message: "password-expired",
+      });
       return;
     }
 
     // If force password reset is true it  means user is issued a temp password and must reset password
     if (user.forcePasswordReset) {
-      logger.error(`Login : Login attempt by user with temp password - ${user.id}`);
+      logger.error(
+        `Login : Login attempt by user with temp password - ${user.id}`
+      );
       res.status(401).json({
         success: false,
         message: "temp-password",
@@ -641,7 +656,9 @@ const loginBasicUser = async (req, res, next) => {
       );
 
       // Incorrect E-mail password combination error
-      const azureError = new Error("Email is registered with a Microsoft account. Please sign in with Microsoft");
+      const azureError = new Error(
+        "Email is registered with a Microsoft account. Please sign in with Microsoft"
+      );
       azureError.status = 403;
       throw azureError;
     }
@@ -686,6 +703,9 @@ const loginBasicUser = async (req, res, next) => {
     //set cookies
     await setTokenCookie(res, accessToken);
     await generateAndSetCSRFToken(req, res, accessToken);
+
+    //set last login
+    await setLastLogin(user);
 
     // Success response
     res.status(200).json({
@@ -975,6 +995,9 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
       await generateAndSetCSRFToken(req, res, accessToken, next);
 
+      // Set last login
+      await setLastLogin(newUser);
+
       // Send response
       return res.status(201).json({
         success: true,
@@ -1008,6 +1031,9 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     await setTokenCookie(res, accessToken);
 
     await generateAndSetCSRFToken(req, res, accessToken);
+
+    // Set last login
+    await setLastLogin(newUser);
 
     // Send response
     res.status(200).json({
@@ -1262,9 +1288,11 @@ const requestPasswordReset = async (req, res) => {
     const response = await sendPasswordExpiredEmail(user);
 
     res.status(200).json({ message: response.message });
-  }catch(err){
+  } catch (err) {
     logger.error(`Request password reset: ${err.message}`);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
   }
 };
 
