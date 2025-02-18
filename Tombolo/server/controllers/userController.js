@@ -8,12 +8,12 @@ const sequelize = require("../models").sequelize;
 // Local imports
 const logger = require("../config/logger");
 const models = require("../models");
-const bcrypt = require("bcryptjs");
 const {
   setPasswordExpiry,
   trimURL,
   checkPasswordSecurityViolations,
   setPreviousPasswords,
+  generatePassword,
 } = require("../utils/authUtil");
 
 // Constants
@@ -23,13 +23,6 @@ const user_application = models.user_application;
 const NotificationQueue = models.notification_queue;
 const AccountVerificationCodes = models.AccountVerificationCodes;
 const PasswordResetLinks = models.PasswordResetLinks;
-
-const {
-  checkPasswordSecurityViolations,
-  setPasswordExpiry,
-  setPreviousPasswords,
-  generatePassword,
-} = require("../utils/authUtil");
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
