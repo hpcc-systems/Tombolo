@@ -8,18 +8,40 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
   const [form] = Form.useForm();
   const [popOverContent, setPopOverContent] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  //ref to track if user is finished typing
   const finishedTypingRef = useRef(false);
+  const isFirstLoad = useRef(true);
 
   //need to detect when user is finished typing to run check previous password validator, otherwise perofrmance is too slow
   useEffect(() => {
     const timer = setTimeout(() => {
-      validatePassword(form.getFieldValue('newPassword'), true);
-      finishedTypingRef.current = true;
-      form.validateFields(['newPassword']);
+      if (!isFirstLoad.current) {
+        validatePassword(form.getFieldValue('newPassword'), true);
+        finishedTypingRef.current = true;
+        form.validateFields(['newPassword']);
+      } else {
+        isFirstLoad.current = false;
+      }
     }, 1000);
 
     return () => clearTimeout(timer);
   }, [form.getFieldValue('newPassword')]);
+
+  const validatePassword = (value, checkOldPassword) => {
+    let pw = value;
+    if (!value) {
+      pw = '';
+    }
+
+    if (checkOldPassword) {
+      setPopOverContent(
+        passwordComplexityValidator({ password: pw, generateContent: true, user, oldPasswordCheck: true })
+      );
+    } else {
+      setPopOverContent(passwordComplexityValidator({ password: pw, generateContent: true, user }));
+    }
+  };
 
   const user = getUser();
 
@@ -52,21 +74,6 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
   };
 
   useEffect(() => {}, [popOverContent]);
-
-  const validatePassword = (value, checkOldPassword) => {
-    let pw = value;
-    if (!value) {
-      pw = '';
-    }
-
-    if (checkOldPassword) {
-      setPopOverContent(
-        passwordComplexityValidator({ password: pw, generateContent: true, user, oldPasswordCheck: true })
-      );
-    } else {
-      setPopOverContent(passwordComplexityValidator({ password: pw, generateContent: true, user }));
-    }
-  };
 
   return (
     <Modal

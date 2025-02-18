@@ -14,13 +14,18 @@ function ResetTempPassword() {
 
   //ref to track if user is finished typing
   const finishedTypingRef = useRef(false);
+  const isFirstLoad = useRef(true);
 
   //need to detect when user is finished typing to run check previous password validator, otherwise perofrmance is too slow
   useEffect(() => {
     const timer = setTimeout(() => {
-      validatePassword(form.getFieldValue('password'), true);
-      finishedTypingRef.current = true;
-      form.validateFields(['password']);
+      if (!isFirstLoad.current) {
+        validatePassword(form.getFieldValue('password'), true);
+        finishedTypingRef.current = true;
+        form.validateFields(['password']);
+      } else {
+        isFirstLoad.current = false;
+      }
     }, 1000);
 
     return () => clearTimeout(timer);
