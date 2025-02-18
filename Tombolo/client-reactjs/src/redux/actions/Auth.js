@@ -108,17 +108,13 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
     },
     { headers: authHeader() }
   );
-
   const data = await response.json();
 
-  if (response.status === 401) {
-    if (data.message === 'password-expired') {
-      return data;
-    } else if (data.message === 'unverified') {
+  if (response.status === 401 || response.status === 403) {
+    if (data.message === 'unverified') {
       return data;
     } else {
       message.error(data.message);
-
       return;
     }
   } else if (!response.ok) {

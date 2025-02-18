@@ -14,6 +14,8 @@ const Login = () => {
   const [azureLoginAttempted, setAzureLoginAttempted] = useState(false);
   const [email, setEmail] = useState(null);
 
+  const [loginForm] = Form.useForm();
+
   // When the form is submitted, this function is called
   const onFinish = async (values) => {
     const { email, password } = values;
@@ -45,6 +47,7 @@ const Login = () => {
 
     //handle login failed
     if (test?.type === Constants.LOGIN_FAILED) {
+      loginForm.resetFields();
       setLoading(false);
       return;
     }
@@ -119,7 +122,7 @@ const Login = () => {
       {expiredPassword && <ExpiredPassword email={email} />}
       {!unverifiedUserLoginAttempt && !expiredPassword && (
         <>
-          <Form onFinish={onFinish} layout="vertical">
+          <Form onFinish={onFinish} layout="vertical" form={loginForm}>
             {loading && (
               <div
                 style={{
