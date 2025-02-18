@@ -230,14 +230,17 @@ const getAccessRequestContactEmails = async () => {
 const sendPasswordExpiredEmail = async (user) => {
   //check that lastAdminNotification was more than 24 hours ago to avoid spamming the admin
   const currentTime = new Date();
-  const lastAdminNotification = new Date(user.metaData.passwordExpiryEmailSent.lastAdminNotification);
+  const lastAdminNotification = new Date(
+    user.metaData.passwordExpiryEmailSent.lastAdminNotification
+  );
 
-  const timeSinceLastNotification = (currentTime - lastAdminNotification) / 1000 / 60 / 60;
+  const timeSinceLastNotification =
+    (currentTime - lastAdminNotification) / 1000 / 60 / 60;
 
   if (timeSinceLastNotification < 24 || !isNaN(timeSinceLastNotification)) {
     return {
       success: false,
-      message:"Password reset request is pending",
+      message: "Password reset request is pending",
     };
   }
 
@@ -257,9 +260,7 @@ const sendPasswordExpiredEmail = async (user) => {
       subject: "User password has expired - Requesting reset",
       mainRecipients: contactEmail,
       notificationDescription: "User password has expired - Requesting reset",
-      passwordResetLink: `${trimURL(
-        process.env.WEB_URL
-      )}/admin/usermanagement`,
+      passwordResetLink: `${trimURL(process.env.WEB_URL)}/admin/usermanagement`,
       userName: user.firstName + " " + user.lastName,
       userEmail: user.email,
     },
@@ -287,7 +288,7 @@ const checkPasswordSecurityViolations = ({ password, user, newUser }) => {
   const email = user.email;
   const firstName = user.firstName;
   const lastName = user.lastName;
-  const previousPasswords = user.metaData.previousPasswords || [];
+  const previousPasswords = user?.metaData?.previousPasswords || [];
 
   if (password.includes(email)) {
     passwordViolations.push("Password contains email address");
@@ -355,7 +356,10 @@ function generatePassword(length = 12) {
   }
 
   // Shuffle password to mix guaranteed characters
-  return password.split("").sort(() => Math.random() - 0.5).join("");
+  return password
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
 }
 
 //Exports

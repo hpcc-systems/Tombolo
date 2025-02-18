@@ -179,7 +179,7 @@ const createUser = async (
   const errors = checkPasswordSecurityViolations({
     password: password,
     user: { email, firstName, lastName },
-    newUser,
+    newUser: true,
   });
   if (errors.length > 0) {
     throw new Error("Password does not meet security requirements");
