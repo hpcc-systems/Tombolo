@@ -14,7 +14,12 @@ async function login({ email, password, deviceInfo }) {
   clearStorage();
   const user = await loginBasicUserFunc(email, password, deviceInfo);
 
-  if (user && user?.message === 'unverified') {
+  if (user && user?.message === 'password-expired') {
+    return {
+      type: 'password-expired',
+      payload: null,
+    };
+  } else if (user && user?.message === 'unverified') {
     return {
       type: 'unverified',
       payload: null,
@@ -103,15 +108,13 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
     },
     { headers: authHeader() }
   );
-
   const data = await response.json();
 
-  if (response.status === 401) {
+  if (response.status === 401 || response.status === 403) {
     if (data.message === 'unverified') {
       return data;
     } else {
       message.error(data.message);
-
       return;
     }
   } else if (!response.ok) {

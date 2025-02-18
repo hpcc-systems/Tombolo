@@ -1,8 +1,8 @@
 import React from 'react';
-import { Table, Tooltip, Popconfirm, message, Tag } from 'antd';
-import { EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Tooltip, Popconfirm, message, Tag, Popover } from 'antd';
+import { EyeOutlined, EditOutlined, DeleteOutlined, LockOutlined, DownOutlined } from '@ant-design/icons';
 
-import { deleteUser } from './Utils.js';
+import { deleteUser, resetUserPassword } from './Utils.js';
 
 const UserManagementTable = ({
   users,
@@ -15,6 +15,16 @@ const UserManagementTable = ({
   setFilteredUsers,
   roles,
 }) => {
+  // Rest password
+  const handlePasswordReset = async ({ id }) => {
+    try {
+      await resetUserPassword({ id });
+      message.success('Password reset successfully');
+    } catch (err) {
+      message.error('Failed to reset password');
+    }
+  };
+
   // Const handle user deletion - display message and setUsers and filteredUsers
   const handleDeleteUser = async ({ id }) => {
     try {
@@ -26,6 +36,7 @@ const UserManagementTable = ({
       message.error('Failed to delete user');
     }
   };
+
   // Columns for the table
   const columns = [
     {
@@ -94,6 +105,43 @@ const UserManagementTable = ({
               <DeleteOutlined style={{ color: 'var(--primary)', marginRight: 15 }} />
             </Tooltip>
           </Popconfirm>
+
+          <Popover
+            placement="bottom"
+            content={
+              <div
+                style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }}
+                className="jobMonitoringTable__hidden_actions">
+                <div style={{ color: 'var(--primary)' }}>
+                  <Popconfirm
+                    title={
+                      <>
+                        <div style={{ fontWeight: 'bold' }}>{`Reset Password`} </div>
+                        <div style={{ maxWidth: 460 }}>
+                          {`Clicking "Yes" will send a password reset link to `}
+                          <Tooltip title={`${record.firstName} ${record.lastName}`}>
+                            <span style={{ color: 'var(--primary)' }}>{record.email}</span>
+                          </Tooltip>{' '}
+                          via email. Do you want to continue?`
+                        </div>
+                      </>
+                    }
+                    onConfirm={() => handlePasswordReset({ id: record.id })}
+                    okText="Yes"
+                    okButtonProps={{ danger: true }}
+                    cancelText="No"
+                    cancelButtonProps={{ type: 'primary', ghost: true }}
+                    style={{ width: '500px !important' }}>
+                    <LockOutlined style={{ marginRight: 15 }} />
+                    Reset Password
+                  </Popconfirm>
+                </div>
+              </div>
+            }>
+            <span style={{ color: 'var(--secondary)' }}>
+              More <DownOutlined style={{ fontSize: '10px' }} />
+            </span>
+          </Popover>
         </>
       ),
     },

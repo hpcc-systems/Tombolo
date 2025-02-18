@@ -227,53 +227,44 @@ const getAccessRequestContactEmails = async () => {
   return [...accessRequestEmailRecipientsEmail, ...accessRequestRolesEmail];
 };
 
-const setAndSendPasswordExpiredEmail = async (user) => {
-  //if the forcePasswordReset flag isn't set but the password has expired, set the flag
-  if (user.passwordExpiresAt < new Date() && !user.forcePasswordReset) {
-    user.forcePasswordReset = true;
-  }
-
+const sendPasswordExpiredEmail = async (user) => {
   //check that lastAdminNotification was more than 24 hours ago to avoid spamming the admin
   const currentTime = new Date();
-  const lastAdminNotification = new Date(
-    user.metaData.passwordExpiryEmailSent.lastAdminNotification
-  );
+  const lastAdminNotification = new Date(user.metaData.passwordExpiryEmailSent.lastAdminNotification);
 
-  const timeSinceLastNotification =
-    (currentTime - lastAdminNotification) / 1000 / 60 / 60;
+  const timeSinceLastNotification = (currentTime - lastAdminNotification) / 1000 / 60 / 60;
 
-  if (timeSinceLastNotification > 24 || isNaN(timeSinceLastNotification)) {
-    //get contact email
-    const contactEmail = await getSupportContactEmails();
-
-    //send notification to contact email
-    await NotificationQueue.create({
-      type: "email",
-      templateName: "passwordExpiredAdmin",
-      notificationOrigin: "Password Expiry",
-      deliveryType: "immediate",
-      metaData: {
-        notificationId: uuidv4(),
-        recipientName: "Admin",
-        notificationOrigin: "Password Expiry",
-        subject: "User password has expired - Requesting reset",
-        mainRecipients: contactEmail,
-        notificationDescription: "User password has expired - Requesting reset",
-        passwordResetLink: `${trimURL(
-          process.env.WEB_URL
-        )}/admin/usermanagement`,
-        userName: user.firstName + " " + user.lastName,
-        userEmail: user.email,
-      },
-      createdBy: user.id,
-    });
-  } else {
-    logger.verbose(
-      "Password expiry email not sent for " +
-        user.email +
-        " as last email was sent less than 24 hours ago"
-    );
+  if (timeSinceLastNotification < 24 || !isNaN(timeSinceLastNotification)) {
+    return {
+      success: false,
+      message:"Password reset request is pending",
+    };
   }
+
+  //get contact email
+  const contactEmail = await getSupportContactEmails();
+
+  //send notification to contact email
+  await NotificationQueue.create({
+    type: "email",
+    templateName: "passwordExpiredAdmin",
+    notificationOrigin: "Password Expiry",
+    deliveryType: "immediate",
+    metaData: {
+      notificationId: uuidv4(),
+      recipientName: "Admin",
+      notificationOrigin: "Password Expiry",
+      subject: "User password has expired - Requesting reset",
+      mainRecipients: contactEmail,
+      notificationDescription: "User password has expired - Requesting reset",
+      passwordResetLink: `${trimURL(
+        process.env.WEB_URL
+      )}/admin/usermanagement`,
+      userName: user.firstName + " " + user.lastName,
+      userEmail: user.email,
+    },
+    createdBy: user.id,
+  });
   await user.update({
     metaData: {
       ...user.metaData,
@@ -283,7 +274,10 @@ const setAndSendPasswordExpiredEmail = async (user) => {
       },
     },
   });
-  return;
+  return {
+    success: true,
+    message: "Request submitted",
+  };
 };
 
 const checkPasswordSecurityViolations = ({ password, user, newUser }) => {
@@ -341,6 +335,29 @@ const setPreviousPasswords = async (user) => {
   return user;
 };
 
+// Generate a random password - 12 chars
+function generatePassword(length = 12) {
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const allChars = lowercase + uppercase + numbers;
+
+  let password = "";
+
+  // Ensure at least one of each category
+  password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+  password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+  password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+
+  // Fill the rest randomly
+  for (let i = 3; i < length; i++) {
+    password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+  }
+
+  // Shuffle password to mix guaranteed characters
+  return password.split("").sort(() => Math.random() - 0.5).join("");
+}
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -352,9 +369,10 @@ module.exports = {
   generateAndSetCSRFToken,
   trimURL,
   setPasswordExpiry,
-  setAndSendPasswordExpiredEmail,
+  sendPasswordExpiredEmail,
   checkPasswordSecurityViolations,
   getSupportContactEmails,
   getAccessRequestContactEmails,
   setPreviousPasswords,
+  generatePassword,
 };
