@@ -60,6 +60,7 @@ const {
 const {
   removeUnverifiedUser,
   sendPasswordExpiryEmails,
+  sendAccountDeleteEmails,
 } = require("../jobSchedularMethods/userManagementJobs.js");
 
 class JobScheduler {
@@ -142,6 +143,7 @@ class JobScheduler {
       await this.checkClusterReachability();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
+      await sendAccountDeleteEmails.call(this);
       logger.info("-----------------------------");
       logger.info("Server is finished intializing, and is now running");
       logger.info("-----------------------------");

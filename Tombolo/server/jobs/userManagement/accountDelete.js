@@ -8,39 +8,46 @@ const models = require("../../models");
 const { trimURL, getSupportContactEmails } = require("../../utils/authUtil");
 
 // Constants
-const user = models.user;
+const User = models.user;
+const UserRoles = models.UserRoles;
+const RoleTypes = models.RoleTypes;
 const NotificationQueue = models.notification_queue;
-const passwordResetLink = `${trimURL(process.env.WEB_URL)}/myaccount`;
-const passwordExpiryAlertDaysForUser =
-  require("../../config/monitorings.js").passwordExpiryAlertDaysForUser;
+const accountUnlockLink = `${trimURL(process.env.WEB_URL)}`;
+
+const accountDeleteAlertDaysForUser =
+  require("../../config/monitorings.js").accountDeleteAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
+  const expiryDate = new Date(
+    Date.now() + 1000 * 60 * 60 * 24 * daysToExpiry
+  ).toDateString();
+
   // Queue notification
   await NotificationQueue.create({
     type: "email",
-    templateName: "passwordExpiryWarning",
-    notificationOrigin: "Password Expiry Warning",
+    templateName: "accountDeleteWarning",
+    notificationOrigin: "Account Delete Warning",
     deliveryType: "immediate",
     createdBy: "System",
     updatedBy: "System",
     metaData: {
       notificationId: uuidv4(),
       recipientName: `${user.dataValues.firstName}`,
-      notificationOrigin: "Password Expiry Warning",
-      subject: "Password Expiry Warning",
+      notificationOrigin: "Account Delete Warning",
+      subject: "Account Deletion Warning",
       mainRecipients: [user.dataValues.email],
-      notificationDescription: "Password Expiry Warning",
+      notificationDescription: "Account Delete Warning",
       daysToExpiry: daysToExpiry,
-      expiryDate: new Date(user.dataValues.passwordExpiresAt).toDateString(),
-      passwordResetLink: passwordResetLink,
+      expiryDate: expiryDate,
+      accountUnlockLink: accountUnlockLink,
     },
   });
 
   await user.update({
     metaData: {
       ...user.metaData,
-      passwordExpiryEmailSent: {
-        ...user.metaData.passwordExpiryEmailSent,
+      accountDeleteEmailSent: {
+        ...user.metaData.accountDeleteEmailSent,
         [version]: true,
       },
     },
@@ -52,33 +59,59 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
     parentPort &&
       parentPort.postMessage({
         level: "info",
-        text: "Password Expiry Job started ...",
+        text: "Account Deletion Job started ...",
       });
 
+    //get all relevant dates in easy to understand variables
     const now = Date.now();
+    const deletionDate = now - 1000 * 60 * 60 * 24 * 180; // 180 days
+    const firstDeleteWarningDate =
+      deletionDate + 1000 * 60 * 60 * 24 * accountDeleteAlertDaysForUser[0]; // first accountDeleteAlertDaysForUser[0] days
 
-    // get all users where passwordExpiresAt is within 10 days
-    const users = await user.findAll({
+    //get all users where lastLoginAt is older than firstDeleteWarningDate
+    const users = await User.findAll({
       where: {
-        passwordExpiresAt: {
-          [Op.lt]: now + 10 * 24 * 60 * 60 * 1000,
+        lastLoginAt: {
+          [Op.lt]: firstDeleteWarningDate,
         },
       },
+      include: [
+        {
+          model: UserRoles,
+          attributes: ["id"],
+          as: "roles",
+          include: [
+            {
+              model: RoleTypes,
+              as: "role_details",
+              attributes: ["id", "roleName"],
+            },
+          ],
+        },
+      ],
     });
 
-    for (const user of users) {
+    //filter out admins and owners
+    const filteredUsers = users.filter((user) => {
+      return !user.roles.some((role) => {
+        return (
+          role?.role_details?.roleName === "administrator" ||
+          role?.role_details?.roleName === "owner"
+        );
+      });
+    });
+
+    for (const user of filteredUsers) {
       //pull out the internal user object for easier use below
       let userInternal = user.dataValues;
-
+      const lastLoginAt = userInternal.lastLoginAt;
       const daysToExpiry =
-        Math.floor(
-          (userInternal.passwordExpiresAt - now) / (1000 * 60 * 60 * 24)
-        ) + 1;
+        Math.floor((lastLoginAt - deletionDate) / (1000 * 60 * 60 * 24)) + 1;
 
       if (
-        daysToExpiry <= passwordExpiryAlertDaysForUser[0] &&
-        daysToExpiry > passwordExpiryAlertDaysForUser[1] &&
-        !userInternal.metaData?.passwordExpiryEmailSent?.first
+        daysToExpiry <= accountDeleteAlertDaysForUser[0] &&
+        daysToExpiry > accountDeleteAlertDaysForUser[1] &&
+        !userInternal.metaData?.accountDeleteEmailSent?.first
       ) {
         parentPort &&
           parentPort.postMessage({
@@ -88,7 +121,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
               userInternal.email +
               " is within " +
               daysToExpiry +
-              " days of password expiry.",
+              " days of account deletion due to inactivity.",
           });
 
         let version = "first";
@@ -96,9 +129,9 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       }
 
       if (
-        daysToExpiry <= passwordExpiryAlertDaysForUser[1] &&
-        daysToExpiry > passwordExpiryAlertDaysForUser[2] &&
-        !userInternal.metaData?.passwordExpiryEmailSent?.second
+        daysToExpiry <= accountDeleteAlertDaysForUser[1] &&
+        daysToExpiry > accountDeleteAlertDaysForUser[2] &&
+        !userInternal.metaData?.accountDeleteEmailSent?.second
       ) {
         parentPort &&
           parentPort.postMessage({
@@ -108,15 +141,15 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
               userInternal.email +
               " is within " +
               daysToExpiry +
-              " days of password expiry.",
+              " days of account deletion due to inactivity.",
           });
         let version = "second";
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
       if (
-        daysToExpiry <= passwordExpiryAlertDaysForUser[2] &&
+        daysToExpiry <= accountDeleteAlertDaysForUser[2] &&
         daysToExpiry > 0 &&
-        !userInternal.metaData?.passwordExpiryEmailSent?.third
+        !userInternal.metaData?.accountDeleteEmailSent?.third
       ) {
         parentPort &&
           parentPort.postMessage({
@@ -126,7 +159,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
               userInternal.email +
               " is within " +
               daysToExpiry +
-              " days of password expiry.",
+              " days of account deletion due to inactivity",
           });
 
         let version = "third";
@@ -135,7 +168,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
 
       if (
         daysToExpiry <= 0 &&
-        !userInternal.metaData?.passwordExpiryEmailSent?.final
+        !userInternal.metaData?.accountDeleteEmailSent?.final
       ) {
         parentPort &&
           parentPort.postMessage({
@@ -143,7 +176,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
             text:
               "User with email " +
               userInternal.email +
-              " has an expired password.",
+              " has been removed due to inactivity.",
           });
 
         let emails = "mailto:" + (await getSupportContactEmails());
@@ -151,39 +184,31 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
         // Queue notification
         await NotificationQueue.create({
           type: "email",
-          templateName: "passwordExpired",
-          notificationOrigin: "Password Expired",
+          templateName: "accountDeleteed",
+          notificationOrigin: "Account Deleted",
           deliveryType: "immediate",
           createdBy: "System",
           updatedBy: "System",
           metaData: {
             notificationId: uuidv4(),
             recipientName: `${userInternal.firstName}`,
-            notificationOrigin: "Password Expired",
-            subject: "Password Expired",
+            notificationOrigin: "Account Deleted",
+            subject: "Account Deleted",
             mainRecipients: [userInternal.email],
-            notificationDescription: "Password Expired",
+            notificationDescription: "Account Deleted",
             contactEmails: emails,
           },
         });
 
-        await user.update({
-          forcePasswordReset: true,
-          metaData: {
-            ...user.metaData,
-            passwordExpiryEmailSent: {
-              ...user.metaData.passwordExpiryEmailSent,
-              final: true,
-            },
-          },
-        });
+        // delete user account
+        await user.destroy();
       }
     }
 
     parentPort &&
       parentPort.postMessage({
         level: "info",
-        text: "Password expiry check job completed ...",
+        text: "Account lock check job completed ...",
       });
   } catch (error) {
     parentPort &&
