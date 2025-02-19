@@ -132,6 +132,22 @@ const setPasswordExpiry = (user) => {
   return user;
 };
 
+const setLastLoginAndReturn = (user) => {
+  user.lastLoginAt = new Date();
+
+  //reset password Expiry email sent flags
+  user.metaData = {
+    ...user.metaData,
+    accountDeleteEmailSent: {
+      first: false,
+      second: false,
+      third: false,
+      final: false,
+    },
+  };
+  return user;
+};
+
 // Get Support Notification Recipient's Emails
 const getSupportContactEmails = async () => {
   // Get Instance Setting
@@ -368,6 +384,15 @@ const setLastLogin = async (user) => {
   const updatedUser = await User.update(
     {
       lastLoginAt: date,
+      metaData: {
+        ...user.metaData,
+        accountDeleteEmailSent: {
+          first: false,
+          second: false,
+          third: false,
+          final: false,
+        },
+      },
     },
     {
       where: {
@@ -401,4 +426,5 @@ module.exports = {
   setPreviousPasswords,
   generatePassword,
   setLastLogin,
+  setLastLoginAndReturn,
 };

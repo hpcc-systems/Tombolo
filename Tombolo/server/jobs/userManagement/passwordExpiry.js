@@ -5,14 +5,14 @@ const { v4: uuidv4 } = require("uuid");
 
 //Local Imports
 const models = require("../../models");
-const logger = require("../../config/logger");
 const { trimURL, getSupportContactEmails } = require("../../utils/authUtil");
 
 // Constants
 const user = models.user;
 const NotificationQueue = models.notification_queue;
 const passwordResetLink = `${trimURL(process.env.WEB_URL)}/myaccount`;
-const passwordExpiryAlertDaysForUser = require("../../config/monitorings.js").passwordExpiryAlertDaysForUser;
+const passwordExpiryAlertDaysForUser =
+  require("../../config/monitorings.js").passwordExpiryAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   // Queue notification

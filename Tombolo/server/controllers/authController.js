@@ -12,6 +12,7 @@ const {
   setTokenCookie,
   trimURL,
   setPasswordExpiry,
+  setLastLoginAndReturn,
   sendPasswordExpiredEmail,
   checkPasswordSecurityViolations,
   generateAndSetCSRFToken,
@@ -85,6 +86,7 @@ const createApplicationOwner = async (req, res) => {
     payload.hash = bcrypt.hashSync(req.body.password, salt);
     setPasswordExpiry(payload);
     setPreviousPasswords(payload);
+    setLastLoginAndReturn(payload);
 
     // Save user to DB
     const user = await User.create(payload);
@@ -171,6 +173,7 @@ const createBasicUser = async (req, res) => {
     payload.hash = bcrypt.hashSync(req.body.password, salt);
     setPasswordExpiry(payload);
     setPreviousPasswords(payload);
+    setLastLoginAndReturn(payload);
 
     // Save user to DB
     const user = await User.create(payload);
@@ -381,6 +384,7 @@ const resetPasswordWithToken = async (req, res) => {
     user.forcePasswordReset = false;
     setPasswordExpiry(user);
     setPreviousPasswords(user);
+    setLastLoginAndReturn(user);
 
     // Save user with updated details
     await User.update(
@@ -389,6 +393,7 @@ const resetPasswordWithToken = async (req, res) => {
         metaData: user.metaData,
         passwordExpiresAt: user.passwordExpiresAt,
         forcePasswordReset: user.forcePasswordReset,
+        lastLoginAt: user.lastLoginAt,
       },
       {
         where: { id: user.id },
@@ -511,6 +516,7 @@ const resetTempPassword = async (req, res) => {
     user.forcePasswordReset = false;
     setPasswordExpiry(user);
     setPreviousPasswords(user);
+    setLastLoginAndReturn(user);
 
     // Save user with updated details
     await User.update(
@@ -519,6 +525,7 @@ const resetTempPassword = async (req, res) => {
         metaData: user.metaData,
         passwordExpiresAt: user.passwordExpiresAt,
         forcePasswordReset: user.forcePasswordReset,
+        lastLoginAt: user.lastLoginAt,
       },
       {
         where: { id: user.id },

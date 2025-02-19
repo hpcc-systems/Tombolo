@@ -59,7 +59,36 @@ async function sendPasswordExpiryEmails() {
   }
 }
 
+async function sendAccountDeleteEmails() {
+  try {
+    let jobName = "account-delete-" + new Date().getTime();
+    this.bree.add({
+      name: jobName,
+      interval: "12h",
+      path: path.join(
+        __dirname,
+        "..",
+        "jobs",
+        "userManagement",
+        "accountDelete.js"
+      ),
+      worker: {
+        workerData: {
+          jobName: jobName,
+          WORKER_CREATED_AT: Date.now(),
+        },
+      },
+    });
+
+    this.bree.start(jobName);
+    logger.info("User management (account inactivity emails) initialized ...");
+  } catch (err) {
+    logger.error(err);
+  }
+}
+
 module.exports = {
   removeUnverifiedUser,
   sendPasswordExpiryEmails,
+  sendAccountDeleteEmails,
 };

@@ -437,6 +437,12 @@ const createUser = async (req, res) => {
           third: false,
           final: false,
         },
+        accountDeleteEmailSent: {
+          first: false,
+          second: false,
+          third: false,
+          final: false,
+        },
       },
     });
 

@@ -204,6 +204,12 @@ const createUser = async (
           third: false,
           final: false,
         },
+        accountDeleteEmailSent: {
+          first: false,
+          second: false,
+          third: false,
+          final: false,
+        },
         previousPasswords: [hash],
       },
     },
