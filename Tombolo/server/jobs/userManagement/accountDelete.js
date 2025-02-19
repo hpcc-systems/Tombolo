@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 //Local Imports
 const models = require("../../models");
 const { trimURL, getSupportContactEmails } = require("../../utils/authUtil");
+const { trim } = require("lodash");
 
 // Constants
 const User = models.user;
@@ -179,12 +180,11 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
               " has been removed due to inactivity.",
           });
 
-        let emails = "mailto:" + (await getSupportContactEmails());
-
+        const accountUnlockLink = `${trimURL(process.env.WEB_URL)}/register`;
         // Queue notification
         await NotificationQueue.create({
           type: "email",
-          templateName: "accountDeleteed",
+          templateName: "accountDeleted",
           notificationOrigin: "Account Deleted",
           deliveryType: "immediate",
           createdBy: "System",
@@ -196,11 +196,12 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
             subject: "Account Deleted",
             mainRecipients: [userInternal.email],
             notificationDescription: "Account Deleted",
-            contactEmails: emails,
+            accountUnlockLink: accountUnlockLink,
           },
         });
 
         // delete user account
+        // TODO -- Move user to archive table
         await user.destroy();
       }
     }
