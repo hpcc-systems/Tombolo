@@ -185,9 +185,9 @@ const ResetPassword = () => {
                 let errors = [];
 
                 if (finishedTypingRef.current) {
-                  errors = passwordComplexityValidator({ password: value, userDetails, oldPasswordCheck: true });
+                  errors = passwordComplexityValidator({ password: value, user: userDetails, oldPasswordCheck: true });
                 } else {
-                  errors = passwordComplexityValidator({ password: value, userDetails });
+                  errors = passwordComplexityValidator({ password: value, user: userDetails });
                 }
 
                 finishedTypingRef.current = false;
