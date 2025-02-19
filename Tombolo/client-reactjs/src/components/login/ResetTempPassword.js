@@ -39,10 +39,23 @@ function ResetTempPassword() {
 
     if (checkOldPassword) {
       setPopOverContent(
-        passwordComplexityValidator({ password: pw, generateContent: true, userDetails, oldPasswordCheck: true })
+        passwordComplexityValidator({
+          password: pw,
+          generateContent: true,
+          user: userDetails,
+          oldPasswordCheck: true,
+          newUser: userDetails.newUser,
+        })
       );
     } else {
-      setPopOverContent(passwordComplexityValidator({ password: pw, generateContent: true, userDetails }));
+      setPopOverContent(
+        passwordComplexityValidator({
+          password: pw,
+          generateContent: true,
+          user: userDetails,
+          newUser: userDetails.newUser,
+        })
+      );
     }
   };
   // On component load, get the token from the URL
@@ -158,9 +171,18 @@ function ResetTempPassword() {
                 let errors = [];
 
                 if (finishedTypingRef.current) {
-                  errors = passwordComplexityValidator({ password: value, user: userDetails, oldPasswordCheck: true });
+                  errors = passwordComplexityValidator({
+                    password: value,
+                    user: userDetails,
+                    oldPasswordCheck: true,
+                    newUser: userDetails.newUser,
+                  });
                 } else {
-                  errors = passwordComplexityValidator({ password: value, user: userDetails });
+                  errors = passwordComplexityValidator({
+                    password: value,
+                    user: userDetails,
+                    newUser: userDetails.newUser,
+                  });
                 }
 
                 finishedTypingRef.current = false;
