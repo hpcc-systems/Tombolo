@@ -132,7 +132,7 @@ const setPasswordExpiry = (user) => {
   return user;
 };
 
-const setAccountDelete = (user) => {
+const setLastLoginAndReturn = (user) => {
   user.lastLoginAt = new Date();
 
   //reset password Expiry email sent flags
@@ -423,5 +423,5 @@ module.exports = {
   setPreviousPasswords,
   generatePassword,
   setLastLogin,
-  setAccountDelete,
+  setLastLoginAndReturn,
 };
