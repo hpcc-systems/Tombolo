@@ -16,6 +16,7 @@ const {
   checkPasswordSecurityViolations,
   generateAndSetCSRFToken,
   setPreviousPasswords,
+  setLastLogin,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -315,6 +316,8 @@ const verifyEmail = async (req, res) => {
 
     await generateAndSetCSRFToken(req, res, accessToken);
 
+    await setLastLogin(user);
+
     // Send response
     res.status(200).json({
       success: true,
@@ -433,6 +436,9 @@ const resetPasswordWithToken = async (req, res) => {
     await setTokenCookie(res, accessToken);
 
     await generateAndSetCSRFToken(req, res, accessToken);
+
+    //set last login
+    await setLastLogin(user);
 
     // User data obj to send to the client
     const userObj = {
@@ -560,6 +566,10 @@ const resetTempPassword = async (req, res) => {
     await setTokenCookie(res, accessToken);
 
     await generateAndSetCSRFToken(req, res, accessToken);
+
+    //set last login
+
+    await setLastLogin(newUser);
 
     // User data obj to send to the client
     const userObj = {
@@ -695,6 +705,9 @@ const loginBasicUser = async (req, res, next) => {
     //set cookies
     await setTokenCookie(res, accessToken);
     await generateAndSetCSRFToken(req, res, accessToken);
+
+    //set last login
+    await setLastLogin(user);
 
     // Success response
     res.status(200).json({
@@ -984,6 +997,9 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
       await generateAndSetCSRFToken(req, res, accessToken, next);
 
+      // Set last login
+      await setLastLogin(newUser);
+
       // Send response
       return res.status(201).json({
         success: true,
@@ -1017,6 +1033,9 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     await setTokenCookie(res, accessToken);
 
     await generateAndSetCSRFToken(req, res, accessToken);
+
+    // Set last login
+    await setLastLogin(newUser);
 
     // Send response
     res.status(200).json({

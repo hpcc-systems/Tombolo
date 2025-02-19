@@ -60,6 +60,10 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
       },
+      lastLoginAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
       lastAccessedAt: {
         type: Sequelize.DATE,
         allowNull: true,

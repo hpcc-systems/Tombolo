@@ -466,7 +466,9 @@ const createUser = async (req, res) => {
     });
 
     // Searchable notification ID
-    const searchableNotificationId = `USR_REG__${moment().format('YYYYMMDD_HHmmss_SSS')}`;
+    const searchableNotificationId = `USR_REG__${moment().format(
+      "YYYYMMDD_HHmmss_SSS"
+    )}`;
     const verificationCode = UUIDV4();
 
     // Create account verification code
@@ -534,10 +536,14 @@ const resetPasswordForUser = async (req, res) => {
 
     // Generate a password reset token
     const randomId = uuidv4();
-    const passwordRestLink = `${trimURL(process.env.WEB_URL)}/reset-password/${randomId}`;
+    const passwordRestLink = `${trimURL(
+      process.env.WEB_URL
+    )}/reset-password/${randomId}`;
 
     // Searchable notification ID
-    const searchableNotificationId = `USR_PWD_RST__${moment().format("YYYYMMDD_HHmmss_SSS")}`;
+    const searchableNotificationId = `USR_PWD_RST__${moment().format(
+      "YYYYMMDD_HHmmss_SSS"
+    )}`;
 
     // Queue notification
     await NotificationQueue.create(
@@ -588,7 +594,9 @@ const resetPasswordForUser = async (req, res) => {
     await transaction.commit();
 
     // Response
-    res.status(200).json({ success: true, message: "Password reset successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Password reset successfully" });
   } catch (err) {
     await transaction.rollback(); // Rollback transaction in case of error
     logger.error(`Reset password for user: ${err.message}`);

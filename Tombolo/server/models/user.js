@@ -63,6 +63,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      lastLoginAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
       lastAccessedAt: {
         type: DataTypes.DATE,
         allowNull: true,

@@ -362,6 +362,27 @@ function generatePassword(length = 12) {
     .join("");
 }
 
+const setLastLogin = async (user) => {
+  const date = new Date();
+
+  const updatedUser = await User.update(
+    {
+      lastLoginAt: date,
+    },
+    {
+      where: {
+        id: user.id,
+      },
+    }
+  );
+
+  if (updatedUser.length !== 1) {
+    logger.error("Failed to update last login time for user: " + user.id);
+  }
+
+  return;
+};
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -379,4 +400,5 @@ module.exports = {
   getAccessRequestContactEmails,
   setPreviousPasswords,
   generatePassword,
+  setLastLogin,
 };
