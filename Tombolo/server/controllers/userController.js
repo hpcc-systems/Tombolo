@@ -50,6 +50,8 @@ const deleteUser = async (req, res) => {
 
 // Patch user with ID - not password
 const updateBasicUserInfo = async (req, res) => {
+  const t = await sequelize.transaction(); // Start a transaction
+
   try {
     const { id } = req.params;
     const {
@@ -60,20 +62,24 @@ const updateBasicUserInfo = async (req, res) => {
       verifiedUser,
     } = req.body;
 
-    // Find existing user details
-    const existingUser = await User.findOne({ where: { id } });
+    // Find existing user details within the transaction
+    const existingUser = await User.findOne({ where: { id }, transaction: t });
 
     // If user not found
     if (!existingUser) {
       throw { status: 404, message: "User not found" };
     }
 
+    const changedInfo = [];
+
     if (firstName) {
       existingUser.firstName = firstName;
+      changedInfo.push("firstName");
     }
 
     if (lastName) {
       existingUser.lastName = lastName;
+      changedInfo.push("lastName");
     }
 
     if (registrationMethod) {
@@ -84,7 +90,7 @@ const updateBasicUserInfo = async (req, res) => {
       existingUser.registrationStatus = registrationStatus;
     }
 
-    if (verifiedUser !== undefined || verifiedUser !== null) {
+    if (verifiedUser !== undefined && verifiedUser !== null) {
       existingUser.verifiedUser = verifiedUser;
     }
 
@@ -93,8 +99,35 @@ const updateBasicUserInfo = async (req, res) => {
       throw { status: 400, message: "No update payload provided" };
     }
 
-    // Save user with updated details
-    const updatedUser = await existingUser.save();
+    // Save user with updated details within the transaction
+    const updatedUser = await existingUser.save({ transaction: t });
+
+    // Queue notification within the same transaction
+    const readable_notification = `ACC_CNG_${moment().format(
+      "YYYYMMDD_HHmmss_SSS"
+    )}`;
+    await NotificationQueue.create(
+      {
+        type: "email",
+        templateName: "accountChange",
+        notificationOrigin: "User Management",
+        deliveryType: "immediate",
+        metaData: {
+          notificationId: readable_notification,
+          recipientName: `${updatedUser.firstName} ${updatedUser.lastName}`,
+          notificationOrigin: "User Management",
+          subject: "Account Change",
+          mainRecipients: [updatedUser.email],
+          notificationDescription: "Account Change",
+          changedInfo,
+        },
+        createdBy: req.user.id,
+      },
+      { transaction: t }
+    );
+
+    // Commit the transaction
+    await t.commit();
 
     res.status(200).json({
       success: true,
@@ -102,6 +135,8 @@ const updateBasicUserInfo = async (req, res) => {
       data: updatedUser,
     });
   } catch (err) {
+    // Rollback transaction if anything goes wrong
+    await t.rollback();
     logger.error(`Update user: ${err.message}`);
     res
       .status(err.status || 500)
@@ -158,14 +193,15 @@ const getAllUsers = async (req, res) => {
 
 //Update password - Ensure current password provided is correct
 const changePassword = async (req, res) => {
+  const t = await sequelize.transaction(); // Start transaction
+
   try {
     const { id } = req.params;
     const { currentPassword, newPassword } = req.body;
 
     // Find existing user details
-    const existingUser = await User.findOne({ where: { id } });
+    const existingUser = await User.findOne({ where: { id }, transaction: t });
 
-    // If user not found
     if (!existingUser) {
       throw { status: 404, message: "User not found" };
     }
@@ -175,7 +211,7 @@ const changePassword = async (req, res) => {
       throw { status: 400, message: "Current password is incorrect" };
     }
 
-    //check for password security violations
+    // Check for password security violations
     const errors = checkPasswordSecurityViolations({
       password: newPassword,
       user: existingUser,
@@ -189,31 +225,54 @@ const changePassword = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     existingUser.hash = bcrypt.hashSync(newPassword, salt);
 
-    //set password expiry
+    // Set password expiry and previous passwords
     setPasswordExpiry(existingUser);
-
-    //set previous passwords
     setPreviousPasswords(existingUser);
 
     // Save user with updated details
-    const updatedUser = await User.update(
+    await User.update(
       {
         hash: existingUser.hash,
         metaData: existingUser.metaData,
         passwordExpiresAt: existingUser.passwordExpiresAt,
         forcePasswordReset: existingUser.forcePasswordReset,
       },
-      {
-        where: { id },
-      }
+      { where: { id }, transaction: t }
     );
+
+    // Queue notification
+    const readable_notification = `ACC_CNG_${moment().format(
+      "YYYYMMDD_HHmmss_SSS"
+    )}`;
+    await NotificationQueue.create(
+      {
+        type: "email",
+        templateName: "accountChange",
+        notificationOrigin: "User Management",
+        deliveryType: "immediate",
+        metaData: {
+          notificationId: readable_notification,
+          recipientName: `${existingUser.firstName} ${existingUser.lastName}`,
+          notificationOrigin: "User Management",
+          subject: "Account Change",
+          mainRecipients: [existingUser.email],
+          notificationDescription: "Account Change",
+          changedInfo: ["password"],
+        },
+        createdBy: req.user.id,
+      },
+      { transaction: t }
+    );
+
+    // Commit transaction
+    await t.commit();
 
     res.status(200).json({
       success: true,
       message: "Password updated successfully",
-      data: updatedUser,
     });
   } catch (err) {
+    await t.rollback(); // Rollback on failure
     logger.error(`Change password: ${err.message}`);
     res
       .status(err.status || 500)
