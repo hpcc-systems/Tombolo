@@ -15,7 +15,7 @@ const {
   sendPasswordExpiredEmail,
   checkPasswordSecurityViolations,
   generateAndSetCSRFToken,
-  setPreviousPasswords
+  setPreviousPasswords,
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -69,6 +69,7 @@ const createApplicationOwner = async (req, res) => {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
       },
+      newUser: true,
     });
 
     if (passwordSecurityViolations.length > 0) {
@@ -154,6 +155,7 @@ const createBasicUser = async (req, res) => {
         firstName: payload.firstName,
         lastName: payload.lastName,
       },
+      newUser: true,
     });
 
     if (passwordSecurityViolations.length > 0) {
@@ -613,20 +615,25 @@ const loginBasicUser = async (req, res, next) => {
 
     //if password has expired
     if (user.passwordExpiresAt <= new Date()) {
-      logger.error(`Login : Login attempt by user with expired password - ${user.id}`);
+      logger.error(
+        `Login : Login attempt by user with expired password - ${user.id}`
+      );
 
       //send password expired email
       // await sendPasswordExpiredEmail(user);
 
       res.status(401).json({
         success: false,
-        message:"password-expired"});
+        message: "password-expired",
+      });
       return;
     }
 
     // If force password reset is true it  means user is issued a temp password and must reset password
     if (user.forcePasswordReset) {
-      logger.error(`Login : Login attempt by user with temp password - ${user.id}`);
+      logger.error(
+        `Login : Login attempt by user with temp password - ${user.id}`
+      );
       res.status(401).json({
         success: false,
         message: "temp-password",
@@ -641,7 +648,9 @@ const loginBasicUser = async (req, res, next) => {
       );
 
       // Incorrect E-mail password combination error
-      const azureError = new Error("Email is registered with a Microsoft account. Please sign in with Microsoft");
+      const azureError = new Error(
+        "Email is registered with a Microsoft account. Please sign in with Microsoft"
+      );
       azureError.status = 403;
       throw azureError;
     }
@@ -1194,6 +1203,8 @@ const getUserDetailsWithToken = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      metaData: user.metaData,
+      newUser: user.newUser,
     };
 
     res.status(200).json({ user: userObj });
@@ -1230,11 +1241,23 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    //check if it is a new user
+    if (
+      !user.metaData?.previousPasswords ||
+      user.metaData?.previousPasswords.length === 0
+    ) {
+      user.newUser = true;
+    } else {
+      user.newUser = false;
+    }
+
     //only grab the details we need
     const userObj = {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      metaData: user.metaData,
+      newUser: user.newUser,
     };
 
     res.status(200).json({ user: userObj });
@@ -1262,9 +1285,11 @@ const requestPasswordReset = async (req, res) => {
     const response = await sendPasswordExpiredEmail(user);
 
     res.status(200).json({ message: response.message });
-  }catch(err){
+  } catch (err) {
     logger.error(`Request password reset: ${err.message}`);
-    res.status(err.status || 500).json({ success: false, message: err.message });
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
   }
 };
 

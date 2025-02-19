@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Button, Spin, message, Popover } from 'antd';
 import { resetTempPassword } from './utils';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
@@ -12,11 +12,52 @@ function ResetTempPassword() {
   const [userDetails, setUserDetails] = useState(null);
   const [form] = Form.useForm();
 
-  // For password validator pop over
-  const validatePassword = (value) => {
-    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true, user: userDetails }));
-  };
+  //ref to track if user is finished typing
+  const finishedTypingRef = useRef(false);
+  const isFirstLoad = useRef(true);
 
+  //need to detect when user is finished typing to run check previous password validator, otherwise perofrmance is too slow
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isFirstLoad.current) {
+        validatePassword(form.getFieldValue('password'), true);
+        finishedTypingRef.current = true;
+        form.validateFields(['password']);
+      } else {
+        isFirstLoad.current = false;
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [form.getFieldValue('password')]);
+
+  const validatePassword = (value, checkOldPassword) => {
+    let pw = value;
+    if (!value) {
+      pw = '';
+    }
+
+    if (checkOldPassword) {
+      setPopOverContent(
+        passwordComplexityValidator({
+          password: pw,
+          generateContent: true,
+          user: userDetails,
+          oldPasswordCheck: true,
+          newUser: userDetails.newUser,
+        })
+      );
+    } else {
+      setPopOverContent(
+        passwordComplexityValidator({
+          password: pw,
+          generateContent: true,
+          user: userDetails,
+          newUser: userDetails.newUser,
+        })
+      );
+    }
+  };
   // On component load, get the token from the URL
   useEffect(() => {
     const url = window.location.href;
@@ -120,12 +161,38 @@ function ResetTempPassword() {
             },
             () => ({
               validator(_, value) {
+                if (!value) {
+                  return Promise.reject();
+                }
+                //make sure it doesn't equal current password
+                if (form.getFieldValue('currentPassword') === value) {
+                  return Promise.reject(new Error('New password cannot be the same as the current password!'));
+                }
+                let errors = [];
+
+                if (finishedTypingRef.current) {
+                  errors = passwordComplexityValidator({
+                    password: value,
+                    user: userDetails,
+                    oldPasswordCheck: true,
+                    newUser: userDetails.newUser,
+                  });
+                } else {
+                  errors = passwordComplexityValidator({
+                    password: value,
+                    user: userDetails,
+                    newUser: userDetails.newUser,
+                  });
+                }
+
+                finishedTypingRef.current = false;
+
                 //passwordComplexityValidator always returns an array with at least one attributes element
-                const errors = passwordComplexityValidator({ password: value, user: userDetails });
                 if (!value || errors.length === 1) {
                   return Promise.resolve();
+                } else {
+                  return Promise.reject(new Error('Password does not meet complexity requirements!'));
                 }
-                return Promise.reject(new Error('Password does not meet complexity requirements!'));
               },
             }),
           ]}>
@@ -136,7 +203,10 @@ function ResetTempPassword() {
               validatePassword(e.target.value);
             }}
             onFocus={(e) => {
-              validatePassword(e.target.value);
+              validatePassword(e.target.value, true);
+            }}
+            onBlur={(e) => {
+              validatePassword(e.target.value, true);
             }}
           />
         </Form.Item>

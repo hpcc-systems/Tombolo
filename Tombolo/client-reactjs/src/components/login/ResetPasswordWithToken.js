@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Form, Input, Button, Divider, message, Popover } from 'antd';
 import { useParams } from 'react-router-dom';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
@@ -16,6 +16,47 @@ const ResetPassword = () => {
   const [form] = Form.useForm();
 
   const [messageApi, contextHolder] = message.useMessage();
+
+  //ref to track if user is finished typing
+  const finishedTypingRef = useRef(false);
+  const isFirstLoad = useRef(true);
+
+  //need to detect when user is finished typing to run check previous password validator, otherwise perofrmance is too slow
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isFirstLoad.current) {
+        validatePassword(form.getFieldValue('newPassword'), true);
+        finishedTypingRef.current = true;
+        form.validateFields(['newPassword']);
+      } else {
+        isFirstLoad.current = false;
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [form.getFieldValue('newPassword')]);
+
+  const validatePassword = (value, checkOldPassword) => {
+    let pw = value;
+    if (!value) {
+      pw = '';
+    }
+
+    if (userDetails) {
+      if (checkOldPassword) {
+        setPopOverContent(
+          passwordComplexityValidator({
+            password: pw,
+            generateContent: true,
+            user: userDetails,
+            oldPasswordCheck: true,
+          })
+        );
+      } else {
+        setPopOverContent(passwordComplexityValidator({ password: pw, generateContent: true, user: userDetails }));
+      }
+    }
+  };
 
   const onLoad = async () => {
     //get user details from /api/auth//getUserDetailsWithToken/:token
@@ -116,9 +157,6 @@ const ResetPassword = () => {
   };
 
   useEffect(() => {}, [popOverContent]);
-  const validatePassword = (value) => {
-    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true, user: userDetails }));
-  };
 
   return (
     <Form onFinish={onFinish} layout="vertical" form={form}>
@@ -137,12 +175,29 @@ const ResetPassword = () => {
             { max: 64, message: 'Maximum of 64 characters allowed' },
             () => ({
               validator(_, value) {
+                if (!value) {
+                  return Promise.reject();
+                }
+                //make sure it doesn't equal current password
+                if (form.getFieldValue('currentPassword') === value) {
+                  return Promise.reject(new Error('New password cannot be the same as the current password!'));
+                }
+                let errors = [];
+
+                if (finishedTypingRef.current) {
+                  errors = passwordComplexityValidator({ password: value, user: userDetails, oldPasswordCheck: true });
+                } else {
+                  errors = passwordComplexityValidator({ password: value, user: userDetails });
+                }
+
+                finishedTypingRef.current = false;
+
                 //passwordComplexityValidator always returns an array with at least one attributes element
-                const errors = passwordComplexityValidator({ password: value, user: userDetails });
                 if (!value || errors.length === 1) {
                   return Promise.resolve();
+                } else {
+                  return Promise.reject(new Error('Password does not meet complexity requirements!'));
                 }
-                return Promise.reject(new Error('Password does not meet complexity requirements!'));
               },
             }),
           ]}>
@@ -153,7 +208,10 @@ const ResetPassword = () => {
               validatePassword(e.target.value);
             }}
             onFocus={(e) => {
-              validatePassword(e.target.value);
+              validatePassword(e.target.value, true);
+            }}
+            onBlur={(e) => {
+              validatePassword(e.target.value, true);
             }}
           />
         </Form.Item>

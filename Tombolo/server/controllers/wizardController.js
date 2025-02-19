@@ -3,7 +3,10 @@ const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const { sequelize } = require("../models");
 const models = require("../models");
-const { trimURL } = require("../utils/authUtil");
+const {
+  trimURL,
+  checkPasswordSecurityViolations,
+} = require("../utils/authUtil");
 const {
   user,
   RoleTypes,
@@ -173,6 +176,14 @@ const createUser = async (
   { firstName, lastName, email, password },
   transaction
 ) => {
+  const errors = checkPasswordSecurityViolations({
+    password: password,
+    user: { email, firstName, lastName },
+    newUser: true,
+  });
+  if (errors.length > 0) {
+    throw new Error("Password does not meet security requirements");
+  }
   const salt = bcrypt.genSaltSync(10);
   const hash = bcrypt.hashSync(password, salt);
   return user.create(

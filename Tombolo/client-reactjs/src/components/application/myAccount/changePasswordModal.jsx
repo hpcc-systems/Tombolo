@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Form, Input, Button, Popover, message, Spin } from 'antd';
 import passwordComplexityValidator from '../../common/passwordComplexityValidator';
 import { changeBasicUserPassword } from './utils';
@@ -8,6 +8,40 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
   const [form] = Form.useForm();
   const [popOverContent, setPopOverContent] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  //ref to track if user is finished typing
+  const finishedTypingRef = useRef(false);
+  const isFirstLoad = useRef(true);
+
+  //need to detect when user is finished typing to run check previous password validator, otherwise perofrmance is too slow
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isFirstLoad.current) {
+        validatePassword(form.getFieldValue('newPassword'), true);
+        finishedTypingRef.current = true;
+        form.validateFields(['newPassword']);
+      } else {
+        isFirstLoad.current = false;
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [form.getFieldValue('newPassword')]);
+
+  const validatePassword = (value, checkOldPassword) => {
+    let pw = value;
+    if (!value) {
+      pw = '';
+    }
+
+    if (checkOldPassword) {
+      setPopOverContent(
+        passwordComplexityValidator({ password: pw, generateContent: true, user, oldPasswordCheck: true })
+      );
+    } else {
+      setPopOverContent(passwordComplexityValidator({ password: pw, generateContent: true, user }));
+    }
+  };
 
   const user = getUser();
 
@@ -40,10 +74,6 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
   };
 
   useEffect(() => {}, [popOverContent]);
-
-  const validatePassword = (value) => {
-    setPopOverContent(passwordComplexityValidator({ password: value, generateContent: true, user }));
-  };
 
   return (
     <Modal
@@ -89,8 +119,17 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
                   if (form.getFieldValue('currentPassword') === value) {
                     return Promise.reject(new Error('New password cannot be the same as the current password!'));
                   }
+                  let errors = [];
+
+                  if (finishedTypingRef.current) {
+                    errors = passwordComplexityValidator({ password: value, user, oldPasswordCheck: true });
+                  } else {
+                    errors = passwordComplexityValidator({ password: value, user });
+                  }
+
+                  finishedTypingRef.current = false;
+
                   //passwordComplexityValidator always returns an array with at least one attributes element
-                  const errors = passwordComplexityValidator({ password: value, user });
                   if (!value || errors.length === 1) {
                     return Promise.resolve();
                   } else {
@@ -106,7 +145,10 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
                 validatePassword(e.target.value);
               }}
               onFocus={(e) => {
-                validatePassword(e.target.value);
+                validatePassword(e.target.value, true);
+              }}
+              onBlur={(e) => {
+                validatePassword(e.target.value, true);
               }}
             />
           </Form.Item>
