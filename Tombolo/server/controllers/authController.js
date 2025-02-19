@@ -70,6 +70,7 @@ const createApplicationOwner = async (req, res) => {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
       },
+      newUser: true,
     });
 
     if (passwordSecurityViolations.length > 0) {
@@ -155,6 +156,7 @@ const createBasicUser = async (req, res) => {
         firstName: payload.firstName,
         lastName: payload.lastName,
       },
+      newUser: true,
     });
 
     if (passwordSecurityViolations.length > 0) {
@@ -1220,6 +1222,8 @@ const getUserDetailsWithToken = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      metaData: user.metaData,
+      newUser: user.newUser,
     };
 
     res.status(200).json({ user: userObj });
@@ -1256,11 +1260,23 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    //check if it is a new user
+    if (
+      !user.metaData?.previousPasswords ||
+      user.metaData?.previousPasswords.length === 0
+    ) {
+      user.newUser = true;
+    } else {
+      user.newUser = false;
+    }
+
     //only grab the details we need
     const userObj = {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      metaData: user.metaData,
+      newUser: user.newUser,
     };
 
     res.status(200).json({ user: userObj });
