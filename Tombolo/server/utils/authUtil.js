@@ -13,7 +13,7 @@ const bcrypt = require("bcryptjs");
 const User = model.user;
 const UserRoles = model.UserRoles;
 const RoleTypes = model.RoleTypes;
-const userArchive = model.user_archive;
+const userArchive = model.userArchive;
 const user_application = model.user_application;
 const Application = model.application;
 const InstanceSettings = model.instance_settings;
@@ -410,37 +410,47 @@ const setLastLogin = async (user) => {
 };
 
 const deleteUser = async (id, reason) => {
-  if (!reason || reason === "") {
-    throw new Error("Reason for deletion is required");
+  try {
+    if (!reason || reason === "") {
+      throw new Error("Reason for deletion is required");
+    }
+
+    //get user
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const removedAt = Date.now();
+    const removedBy = reason;
+
+    //remove hash from user
+    user.dataValues.hash = null;
+
+    const archivedUser = await userArchive.create({
+      ...user.dataValues,
+      removedAt,
+      removedBy,
+    });
+
+    if (!archivedUser) {
+      throw new Error("Failed to archive user");
+    }
+
+    //hard delete without paranoid
+    await User.destroy({
+      where: {
+        id: id,
+      },
+      force: true,
+    });
+
+    return true;
+  } catch (e) {
+    logger.error("Error while deleting user:" + e);
+    return false;
   }
-
-  //get user
-  const user = await User.findByPk(id);
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  const removedAt = Date.now();
-  const removedBy = reason;
-
-  //remove hash from user
-  user.dataValues.hash = null;
-
-  const archivedUser = await userArchive.create({
-    ...user.dataValues,
-    removedAt,
-    removedBy,
-  });
-
-  if (!archivedUser) {
-    throw new Error("Failed to archive user");
-  }
-
-  //hard delete without paranoid
-  await user.destroy({ force: true });
-
-  return;
 };
 
 //Exports

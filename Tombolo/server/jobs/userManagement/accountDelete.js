@@ -200,8 +200,17 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
         });
 
         // delete user account
-
-        await deleteUser(userInternal.id, "Inactivity");
+        const deleted = await deleteUser(userInternal.id, "Inactivity");
+        if (!deleted) {
+          parentPort &&
+            parentPort.postMessage({
+              level: "error",
+              text:
+                "Failed to delete userwith email " +
+                userInternal.email +
+                ", due to inactivity.",
+            });
+        }
       }
     }
 

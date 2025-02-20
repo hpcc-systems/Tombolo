@@ -44,7 +44,7 @@ const UserManagementActionButton = ({
           </Menu.Item>
           <Menu.Item key="3" disabled={selectedRows.length < 2}>
             <Popconfirm
-              title={`Are you sure you want to delete  selected ${selectedRows.length} users?. `}
+              title={`Are you sure you want to delete  selected ${selectedRows.length} users? `}
               okButtonProps={{ type: 'primary', danger: true }}
               okText="Delete"
               onConfirm={deleteSelected}>
