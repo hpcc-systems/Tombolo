@@ -34,10 +34,6 @@ module.exports = (sequelize, DataTypes) => {
           isEmail: true,
         },
       },
-      hash: {
-        type: DataTypes.STRING,
-        allowNull: true, // For OAuth users - no password is stored
-      },
       registrationMethod: {
         type: DataTypes.STRING,
         allowNull: false,
