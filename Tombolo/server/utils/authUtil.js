@@ -13,6 +13,7 @@ const bcrypt = require("bcryptjs");
 const User = model.user;
 const UserRoles = model.UserRoles;
 const RoleTypes = model.RoleTypes;
+const userArchive = model.user_archive;
 const user_application = model.user_application;
 const Application = model.application;
 const InstanceSettings = model.instance_settings;
@@ -408,6 +409,40 @@ const setLastLogin = async (user) => {
   return;
 };
 
+const deleteUser = async (id, reason) => {
+  if (!reason || reason === "") {
+    throw new Error("Reason for deletion is required");
+  }
+
+  //get user
+  const user = await User.findByPk(id);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const removedAt = Date.now();
+  const removedBy = reason;
+
+  //remove hash from user
+  user.dataValues.hash = null;
+
+  const archivedUser = await userArchive.create({
+    ...user.dataValues,
+    removedAt,
+    removedBy,
+  });
+
+  if (!archivedUser) {
+    throw new Error("Failed to archive user");
+  }
+
+  //hard delete without paranoid
+  await user.destroy({ force: true });
+
+  return;
+};
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -427,4 +462,5 @@ module.exports = {
   generatePassword,
   setLastLogin,
   setLastLoginAndReturn,
+  deleteUser,
 };

@@ -5,8 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 
 //Local Imports
 const models = require("../../models");
-const { trimURL, getSupportContactEmails } = require("../../utils/authUtil");
-const { trim } = require("lodash");
+const { trimURL, deleteUser } = require("../../utils/authUtil");
 
 // Constants
 const User = models.user;
@@ -201,15 +200,15 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
         });
 
         // delete user account
-        // TODO -- Move user to archive table
-        await user.destroy();
+
+        await deleteUser(userInternal.id, "Inactivity");
       }
     }
 
     parentPort &&
       parentPort.postMessage({
         level: "info",
-        text: "Account lock check job completed ...",
+        text: "Account Delete check job completed ...",
       });
   } catch (error) {
     parentPort &&
