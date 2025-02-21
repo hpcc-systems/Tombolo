@@ -576,8 +576,7 @@ const resetTempPassword = async (req, res) => {
     await generateAndSetCSRFToken(req, res, accessToken);
 
     //set last login
-
-    await setLastLogin(newUser);
+    await setLastLogin(user);
 
     // User data obj to send to the client
     const userObj = {

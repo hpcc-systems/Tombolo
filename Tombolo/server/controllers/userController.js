@@ -14,6 +14,7 @@ const {
   checkPasswordSecurityViolations,
   setPreviousPasswords,
   generatePassword,
+  sendAccountUnlockedEmail,
 } = require("../utils/authUtil");
 
 // Constants
@@ -612,6 +613,58 @@ const resetPasswordForUser = async (req, res) => {
   }
 };
 
+// unlockAccount
+const unlockAccount = async (req, res) => {
+  try {
+    // Get user by ID
+    const { id } = req.body;
+    const user = await User.findOne({ where: { id } });
+
+    // If user not found
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Generate temporary password/hash
+    const tempPassword = generatePassword();
+    const salt = bcrypt.genSaltSync(10);
+
+    // Add updated user details
+    user.hash = bcrypt.hashSync(tempPassword, salt);
+    user.forcePasswordReset = true;
+    user.passwordExpiresAt = new Date(
+      new Date().setDate(new Date().getDate() + 2) // 48 hours
+    );
+    user.loginAttempts = 0;
+    user.accountLocked = {isLocked : false,lockedReason: []};
+
+    // Save user with updated details
+    await user.save();
+
+    // Send notification to the user
+      const verificationCode = UUIDV4();
+
+    // Create account verification code
+    await AccountVerificationCodes.create({
+      code: verificationCode,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 172800000),
+    });
+
+    await sendAccountUnlockedEmail({ user, tempPassword, verificationCode });
+
+    // Response
+    res.status(200).json({ success: true, message: "User account unlocked successfully" });
+  } catch (err) {
+    logger.error(`Unlock account: ${err.message}`);
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 //Exports
 module.exports = {
   createUser,
@@ -625,4 +678,5 @@ module.exports = {
   updateUserRoles,
   updateUserApplications,
   resetPasswordForUser,
+  unlockAccount,
 };

@@ -28,6 +28,7 @@ const {
   updateUserRoles,
   updateUserApplications,
   resetPasswordForUser,
+  unlockAccount,
 } = require("../controllers/userController");
 
 const { validateUserRole } = require("../middlewares/rbacMiddleware");
@@ -62,5 +63,6 @@ router.patch(
 ); // Update a user by id
 router.patch("/applications/:id",validateUserId, updateUserApplications); // Update a user's applications
 router.post("/reset-password-for-user", validateUserIdInBody, resetPasswordForUser); // Reset password for user
+router.post("/unlock-account", validateUserIdInBody, unlockAccount); // Unlock account
 //Export
 module.exports = router;

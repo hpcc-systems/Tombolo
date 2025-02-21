@@ -1,8 +1,16 @@
 import React from 'react';
 import { Table, Tooltip, Popconfirm, message, Tag, Popover } from 'antd';
-import { EyeOutlined, EditOutlined, DeleteOutlined, LockOutlined, DownOutlined } from '@ant-design/icons';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  LockFilled,
+  UnlockOutlined,
+  KeyOutlined,
+  DownOutlined,
+} from '@ant-design/icons';
 
-import { deleteUser, resetUserPassword } from './Utils.js';
+import { deleteUser, resetUserPassword, unlockUserAccount } from './Utils.js';
 
 const UserManagementTable = ({
   users,
@@ -25,6 +33,16 @@ const UserManagementTable = ({
     }
   };
 
+  // Unlock user account
+  const handleAccountUnlock = async ({ id }) => {
+    try {
+      await unlockUserAccount({ id });
+      message.success('User account unlocked successfully');
+    } catch (err) {
+      message.error('Failed to unlock user account');
+    }
+  };
+
   // Const handle user deletion - display message and setUsers and filteredUsers
   const handleDeleteUser = async ({ id }) => {
     try {
@@ -40,11 +58,23 @@ const UserManagementTable = ({
   // Columns for the table
   const columns = [
     {
+      title: '',
+      key: (record) => record.id,
+      width: 1,
+      render: (record) =>
+        record.accountLocked &&
+        record.accountLocked.isLocked && (
+          <Tooltip title="Account Locked">
+            <LockFilled style={{ color: 'var(--danger)' }} />{' '}
+          </Tooltip>
+        ),
+    },
+    Table.SELECTION_COLUMN,
+    {
       title: 'First Name',
       dataIndex: 'firstName',
       key: 'firstName',
     },
-
     {
       title: 'Last Name',
       dataIndex: 'lastName',
@@ -132,9 +162,35 @@ const UserManagementTable = ({
                     cancelText="No"
                     cancelButtonProps={{ type: 'primary', ghost: true }}
                     style={{ width: '500px !important' }}>
-                    <LockOutlined style={{ marginRight: 15 }} />
-                    Reset Password
+                    <div style={{ marginBottom: '8px' }}>
+                      <KeyOutlined style={{ marginRight: 7 }} /> Reset Password
+                    </div>
                   </Popconfirm>
+
+                  {record.accountLocked && record.accountLocked.isLocked && (
+                    <Popconfirm
+                      title={
+                        <>
+                          <div style={{ fontWeight: 'bold' }}>{`Unlock Account`} </div>
+                          <div style={{ maxWidth: 460 }}>
+                            {`Clicking 'Yes' will unlock the user's account and send them a password reset link. Do you want to continue?`}
+                          </div>
+                        </>
+                      }
+                      onConfirm={() => {
+                        handleAccountUnlock({ id: record.id });
+                      }}
+                      okText="Yes"
+                      okButtonProps={{ danger: true }}
+                      cancelText="No"
+                      cancelButtonProps={{ type: 'primary', ghost: true }}
+                      style={{ width: '500px !important' }}>
+                      <div>
+                        <UnlockOutlined style={{ marginRight: 10 }} />
+                        Unlock Account
+                      </div>
+                    </Popconfirm>
+                  )}
                 </div>
               </div>
             }>
