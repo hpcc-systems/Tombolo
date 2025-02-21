@@ -63,6 +63,19 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      loginAttempts: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      accountLocked: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: {
+          isLocked: false,
+          lockedReason: [],
+        },
+      },
       lastLoginAt: {
         type: DataTypes.DATE,
         allowNull: true,

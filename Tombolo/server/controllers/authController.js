@@ -18,6 +18,7 @@ const {
   generateAndSetCSRFToken,
   setPreviousPasswords,
   setLastLogin,
+  handleInvalidLoginAttempt
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
 
@@ -620,6 +621,21 @@ const loginBasicUser = async (req, res, next) => {
       });
     }
 
+    // If the accountLocked.isLocked is true, return generic error
+    if (user.accountLocked.isLocked) {
+      logger.error(`Login : Login Attempt by user with locked account ${email}`);
+      return res.status(403).json({
+        success: false,
+        message: genericError,
+      });
+    }
+    
+    //Compare password
+    if (!bcrypt.compareSync(password, user.hash)) {
+      logger.error(`Login : Invalid password for user with email ${email}`); 
+      await handleInvalidLoginAttempt({user, errMessage: genericError})
+    }
+
     // If not verified user return error
     if (!user.verifiedUser) {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
@@ -635,9 +651,6 @@ const loginBasicUser = async (req, res, next) => {
       logger.error(
         `Login : Login attempt by user with expired password - ${user.id}`
       );
-
-      //send password expired email
-      // await sendPasswordExpiredEmail(user);
 
       res.status(401).json({
         success: false,
@@ -671,15 +684,7 @@ const loginBasicUser = async (req, res, next) => {
       azureError.status = 403;
       throw azureError;
     }
-    //Compare password
-    if (!bcrypt.compareSync(password, user.hash)) {
-      logger.error(`Login : Invalid password for user with email ${email}`);
 
-      // Incorrect E-mail password combination error
-      const invalidCredentialsErr = new Error(genericError);
-      invalidCredentialsErr.status = 403;
-      throw invalidCredentialsErr;
-    }
     // Remove hash from use object
     const userObj = user.toJSON();
     delete userObj.hash;
@@ -730,7 +735,7 @@ const loginBasicUser = async (req, res, next) => {
     }
     res
       .status(err.status || 500)
-      .json({ success: false, message: err.message });
+      .json({ success: false, message: err.message});
   }
 };
 
