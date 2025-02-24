@@ -575,8 +575,7 @@ const resetTempPassword = async (req, res) => {
     await generateAndSetCSRFToken(req, res, accessToken);
 
     //set last login
-
-    await setLastLogin(newUser);
+    await setLastLogin(user);
 
     // User data obj to send to the client
     const userObj = {
@@ -1129,7 +1128,6 @@ const requestAccess = async (req, res) => {
 
 // Resend verification code - user provides email
 const resendVerificationCode = async (req, res) => {
-  t;
   try {
     const { email } = req.body;
 

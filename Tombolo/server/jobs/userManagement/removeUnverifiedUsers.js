@@ -1,6 +1,7 @@
 // imports
 const { parentPort } = require("worker_threads");
 const { Op } = require("sequelize");
+const { deleteUser } = require("../../utils/authUtil");
 
 
 //Local Imports
@@ -27,7 +28,7 @@ const { user} = models;
     parentPort && parentPort.postMessage({level: "info", text : `Number of unverified users to be removed: ${unverifiedUsers.length}`});
 
     for (const user of unverifiedUsers) {
-      await user.destroy();
+      await deleteUser(user.id, "unverified user deleted by system");
     }
 
     parentPort && parentPort.postMessage({level: "info", text : "Job to remove unverified user completed ..."});
