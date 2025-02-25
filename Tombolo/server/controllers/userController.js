@@ -15,6 +15,7 @@ const {
   setPreviousPasswords,
   generatePassword,
   sendAccountUnlockedEmail,
+  deleteUser: deleteUserUtil,
 } = require("../utils/authUtil");
 
 // Constants
@@ -30,11 +31,11 @@ const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedCount = await User.destroy({ where: { id } });
+    const deleted = await deleteUserUtil(id, "Admin Removal");
 
     // If deleted count is 0, user not found
-    if (deletedCount === 0) {
-      throw { status: 404, message: "User not found" };
+    if (!deleted) {
+      throw { status: 404, message: "Error Removing User." };
     }
 
     // User successfully deleted
@@ -226,14 +227,32 @@ const changePassword = async (req, res) => {
 const bulkDeleteUsers = async (req, res) => {
   try {
     const { ids } = req.body;
-    const deletedCount = await User.destroy({ where: { id: ids } });
 
-    // If deleted count is 0, user not found
-    if (deletedCount === 0) {
-      throw { status: 404, message: "Users not found" };
+    let deletedCount = 0;
+    let idsCount = ids.length;
+    // Loop through each user and delete
+    for (let id of ids) {
+      const deleted = await deleteUserUtil(id, "Admin Removal");
+      if (deleted) {
+        deletedCount++;
+      }
     }
+
+    if (deletedCount !== idsCount) {
+      res.status(207).json({
+        success: false,
+        message: "Some users could not be deleted",
+        data: { deletedCount, idsCount },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Users deleted successfully",
+      data: { deletedCount },
+    });
   } catch (err) {
-    logger.error(`Update user applications: ${err.message}`);
+    logger.error(`Bulk Delete Users: ${err.message}`);
     res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
