@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .main_body {
+      width: 100%;
+      border-bottom: 1px solid lightgray !important;
+    }
+
+    .section-footer-td {
+      color: #808080;
+      border-top: 1px solid #808080;
+    }
+
+    .section-header-td {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .list {
+      padding: 10px;
+    }
+
+    .tabbedText {
+      padding-left: 40px;
+    }
+
+    .bold-text {
+      font-weight: bold;
+    }
+
+    .important-text {
+      color: #FF0000;
+    }
+  </style>
+</head>
+
+<table class="main_body">
+  <tbody>
+    <tr>
+      <td>
+        <table>
+          <tbody>
+            <tr>
+              <td class="section-header-td">
+                <div>
+                  Hello,
+                </div>
+                <div>
+                  Your account has been unlocked, and a temporary password has been issued.
+                  <div>
+                    You must change this temporary password <span class="bold-text"> within 48 hours </span> to maintain account security. Below are the details:
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+
+            <tr>
+              <td class="section-header-td">
+                <div class="tabbedText"> <span class="bold-text">Password Reset Link: </span><a href=<%= typeof passwordResetLink !== 'undefined' ? passwordResetLink : ""  %>><%= typeof passwordResetLink !== 'undefined' ? passwordResetLink : ""  %></a> </div>
+                <div class="tabbedText"> <span class="bold-text">Temporary Password: </span> <%= typeof tempPassword !== 'undefined' ? tempPassword : ""  %> </div>
+              </td>
+            </tr>
+
+
+            <tr>
+              <td>
+                <p class="important-text">
+                  If you did not request your account to be unlocked or if this notification is unexpected, please contact your administrator immediately.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="section-header-td">
+                <div>
+                  Best Regards,
+                </div>
+                <div>
+                  Tombolo
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</html>

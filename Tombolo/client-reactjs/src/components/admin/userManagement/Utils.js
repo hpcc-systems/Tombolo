@@ -178,6 +178,21 @@ const resetUserPassword = async ({ id }) => {
   }
 };
 
+// Unlock user account
+const unlockUserAccount = async ({ id }) => {
+  const payload = {
+    method: 'POST',
+    body: JSON.stringify({ id }),
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/user/unlock-account`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to unlock user account');
+  }
+};
+
 export {
   createUser,
   getAllUsers,
@@ -189,4 +204,5 @@ export {
   updateUserApplications,
   bulkDeleteUsers,
   resetUserPassword,
+  unlockUserAccount,
 };

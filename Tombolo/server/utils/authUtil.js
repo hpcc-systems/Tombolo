@@ -472,6 +472,35 @@ const sendAccountLockedEmail = async (user) => {
   });
 };
 
+// Send account unlocked email
+const sendAccountUnlockedEmail = async ({
+  user,
+  tempPassword,
+  verificationCode,
+}) => {
+  await NotificationQueue.create({
+    type: "email",
+    templateName: "accountUnlocked",
+    notificationOrigin: "User Authentication",
+    deliveryType: "immediate",
+    metaData: {
+      notificationId: `ACC_UNLOCKED_${moment().format("YYYYMMDD_HHmmss_SSS")}`,
+      recipientName: user.firstName,
+      notificationOrigin: "User Authentication",
+      subject: "Your Account Has Been Unlocked – Action Required",
+      mainRecipients: [user.email],
+      notificationDescription: "Account unlocked by admin",
+      userName: user.firstName + " " + user.lastName,
+      userEmail: user.email,
+      tempPassword,
+      passwordResetLink: `${trimURL(
+        process.env.WEB_URL
+      )}/reset-temporary-password/${verificationCode}`,
+    },
+    createdBy: user.id,
+  });
+};
+
 const deleteUser = async (id, reason) => {
   try {
     if (!reason || reason === "") {
@@ -536,5 +565,6 @@ module.exports = {
   setLastLogin,
   setLastLoginAndReturn,
   handleInvalidLoginAttempt,
+  sendAccountUnlockedEmail,
   deleteUser,
 };
