@@ -5,6 +5,7 @@ const axios = require("axios");
 const logger = require("../config/logger");
 const roleTypes = require("../config/roleTypes");
 const models = require("../models");
+const moment = require("moment");
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -18,8 +19,9 @@ const {
   setPreviousPasswords
 } = require("../utils/authUtil");
 const { blacklistToken } = require("../utils/tokenBlackListing");
+const sequelize = require("../models").sequelize;
 
-const User = models.user;
+const User = models.user
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
 const Application = models.application;
@@ -329,13 +331,17 @@ const verifyEmail = async (req, res) => {
 
 //Reset Password With Token - Self Requested
 const resetPasswordWithToken = async (req, res) => {
+  const transaction = await sequelize.transaction();
   try {
     const { password, token, deviceInfo } = req.body;
 
     // From AccountVerificationCodes table findUser ID by code, where code is resetToken
-    const accountVerificationCode = await AccountVerificationCodes.findOne({
-      where: { code: token },
-    });
+    const accountVerificationCode = await AccountVerificationCodes.findOne(
+      {
+        where: { code: token },
+      },
+      { transaction }
+    );
 
     // If accountVerificationCode not found
     if (!accountVerificationCode) {
@@ -387,22 +393,26 @@ const resetPasswordWithToken = async (req, res) => {
       },
       {
         where: { id: user.id },
+        transaction,
       }
     );
 
     // Delete the account verification code
     await AccountVerificationCodes.destroy({
       where: { code: token },
+      transaction,
     });
 
     //delete password reset link
     await PasswordResetLinks.destroy({
       where: { id: token },
+      transaction,
     });
 
     //remove all sessions for user before initiating new session
     await RefreshTokens.destroy({
       where: { userId: user.id },
+      transaction,
     });
 
     // Create token id
@@ -418,15 +428,18 @@ const resetPasswordWithToken = async (req, res) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create({
-      id: tokenId,
-      userId: user.id,
-      token: refreshToken,
-      deviceInfo,
-      metaData: {},
-      iat: new Date(iat * 1000),
-      exp: new Date(exp * 1000),
-    });
+    await RefreshTokens.create(
+      {
+        id: tokenId,
+        userId: user.id,
+        token: refreshToken,
+        deviceInfo,
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      },
+      { transaction }
+    );
 
     await setTokenCookie(res, accessToken);
 
@@ -440,6 +453,34 @@ const resetPasswordWithToken = async (req, res) => {
     // remove hash from user object
     delete userObj.hash;
 
+    // Send notification informing user that password has been reset
+    const readable_notification = `ACC_CNG_${moment().format(
+      "YYYYMMDD_HHmmss_SSS"
+    )}`;
+
+    await NotificationQueue.create(
+      {
+        type: "email",
+        templateName: "accountChange",
+        notificationOrigin: "Password Reset",
+        deliveryType: "immediate",
+        metaData: {
+          notificationId: readable_notification,
+          recipientName: `${userObj.firstName} ${userObj.lastName}`,
+          notificationOrigin: "Password Reset",
+          subject: "Your password has been changed",
+          mainRecipients: [userObj.email],
+          notificationDescription: "Password Reset",
+          changedInfo: ["password"],
+        },
+        createdBy: user.id,
+      },
+      { transaction }
+    );
+
+    // Commit the transaction
+    await transaction.commit();
+
     // Success response
     res.status(200).json({
       success: true,
@@ -447,6 +488,8 @@ const resetPasswordWithToken = async (req, res) => {
       data: userObj,
     });
   } catch (err) {
+    // Rollback the transaction
+    await transaction.rollback();
     logger.error(`Reset Temp Password: ${err.message}`);
     res
       .status(err.status || 500)
