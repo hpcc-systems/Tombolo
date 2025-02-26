@@ -466,6 +466,8 @@ const sendAccountLockedEmail = async (user) => {
     },
     createdBy: user.id,
   });
+};
+
 const deleteUser = async (id, reason) => {
   try {
     if (!reason || reason === "") {
