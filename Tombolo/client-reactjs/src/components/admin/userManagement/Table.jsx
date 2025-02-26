@@ -37,6 +37,38 @@ const UserManagementTable = ({
   const handleAccountUnlock = async ({ id }) => {
     try {
       await unlockUserAccount({ id });
+
+      // Update the user in the table
+      setUsers((prev) =>
+        prev.map((user) => {
+          if (user.id === id) {
+            return {
+              ...user,
+              accountLocked: {
+                isLocked: false,
+                lockedReason: [],
+              },
+            };
+          }
+          return user;
+        })
+      );
+
+      // If filters are applied, update the filtered users as well
+      setFilteredUsers((prev) =>
+        prev.map((user) => {
+          if (user.id === id) {
+            return {
+              ...user,
+              accountLocked: {
+                isLocked: false,
+                lockedReason: [],
+              },
+            };
+          }
+          return user;
+        })
+      );
       message.success('User account unlocked successfully');
     } catch (err) {
       message.error('Failed to unlock user account');
