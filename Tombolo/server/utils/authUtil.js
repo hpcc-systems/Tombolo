@@ -2,6 +2,7 @@
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { Op } = require("sequelize");
+const moment = require("moment");
 
 // Local Imports
 const logger = require("../config/logger");
@@ -384,6 +385,7 @@ const setLastLogin = async (user) => {
 
   const updatedUser = await User.update(
     {
+      loginAttempts: 0,
       lastLoginAt: date,
       metaData: {
         ...user.metaData,
@@ -407,6 +409,67 @@ const setLastLogin = async (user) => {
   }
 
   return;
+};
+
+// Record failed login attempt
+const handleInvalidLoginAttempt = async ({user, errMessage}) => {
+  const loginAttempts = user.loginAttempts + 1;
+  const accountLocked = user.accountLocked;
+
+  if (loginAttempts === 5) {
+    const newAccLockedData = {
+      isLocked: true,
+      lockedReason: [...new Set([...accountLocked.lockedReason, "reachedMaxLoginAttempts"])],
+    };
+
+    // Update user record
+    await User.update(
+      {
+        loginAttempts: loginAttempts,
+        accountLocked: newAccLockedData,
+      },
+      { where: { id: user.id } }
+    );
+
+    // Queue notification
+    await sendAccountLockedEmail(user);
+  }else{
+    // Update user record
+    await User.update({loginAttempts: loginAttempts},
+      { where: { id: user.id } }
+    );
+  }
+
+  // Incorrect E-mail password combination error
+  const invalidCredentialsErr = new Error(errMessage);
+  invalidCredentialsErr.status = 403;
+  throw invalidCredentialsErr;
+};
+
+// Function to send account locked email
+const sendAccountLockedEmail = async (user) => {
+  // Get support email recipients
+  const supportEmailRecipients = await getSupportContactEmails();
+
+  await NotificationQueue.create({
+    type: "email",
+    templateName: "accountLocked",
+    notificationOrigin: "User Authentication",
+    deliveryType: "immediate",
+    metaData: {
+      notificationId: `ACC_LOCKED_${moment().format("YYYYMMDD_HHmmss_SSS")}`,
+      recipientName: user.firstName,
+      notificationOrigin: "User Authentication",
+      subject: "Your account has been locked",
+      mainRecipients: [user.email],
+      notificationDescription:
+        "Account locked because of too many failed login attempts",
+      userName: user.firstName,
+      userEmail: user.email,
+      supportEmailRecipients,
+    },
+    createdBy: user.id,
+  });
 };
 
 const deleteUser = async (id, reason) => {
@@ -472,5 +535,6 @@ module.exports = {
   generatePassword,
   setLastLogin,
   setLastLoginAndReturn,
+  handleInvalidLoginAttempt,
   deleteUser,
 };

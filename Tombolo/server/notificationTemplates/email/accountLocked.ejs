@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .main_body {
+      width: 100%;
+      border-bottom: 1px solid lightgray !important;
+    }
+
+    .section-footer-td {
+      color: #808080;
+      border-top: 1px solid #808080;
+    }
+
+    .section-header-td {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .list {
+      padding: 10px;
+    }
+
+    .tabbedText {
+      padding-left: 40px;
+    }
+
+    .bold-text {
+      font-weight: bold;
+    }
+
+    .important-text {
+      color: #ff0000;
+    }
+  </style>
+</head>
+
+<body>
+  <table class="main_body">
+    <tbody>
+      <tr>
+        <td>
+          <table>
+            <tbody>
+              <tr>
+                <td class="section-header-td">
+                  <div>Hello <%= userName %>,</div>
+                  <div>
+                    <p>
+                      Your <span class="important-text">account has been locked </span> due to exceeding the maximum number of <span class="important-text"> unsuccessful login attempts</span>. For security reasons, access to your account has been temporarily restricted.
+                    </p>
+                    <p>
+                      To restore access, please reach out to your administrator for assistance. You can contact the following for support: </p>
+                    <div class="tabbedText">
+                      <% if (typeof supportEmailRecipients !== 'undefined') { %>
+                      <% supportEmailRecipients.forEach(function(e) { %>
+                      <div class="tabbedText"><%= e %></div>
+                      <% }); %>
+                    </div>
+                  </div>
+                  <% } %>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="section-header-td">
+                  <div>Best Regards,</div>
+                  <div>Tombolo</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+
+</html>

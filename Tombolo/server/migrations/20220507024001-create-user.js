@@ -60,6 +60,18 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
       },
+      loginAttempts: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      accountLocked: {
+        type: Sequelize.JSON,
+        defaultValue: {
+          isLocked: false,
+          lockedReason: [],
+        },
+      },
       lastLoginAt: {
         type: Sequelize.DATE,
         allowNull: true,
