@@ -47,7 +47,7 @@ const Login = () => {
 
     //handle login failed
     if (test?.type === Constants.LOGIN_FAILED) {
-      loginForm.resetFields();
+      loginForm.setFieldsValue({ password: null });
       setLoading(false);
       return;
     }

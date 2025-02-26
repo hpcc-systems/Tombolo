@@ -36,37 +36,45 @@
   </style>
 </head>
 
-<table class="main_body">
-  <tbody>
-    <tr>
-      <td>
-        <table>
-          <tbody>
-            <tr>
-              <td class="section-header-td">
-                <div>Hello,</div>
-                <div>
-                  <p class="important-text">
-                    Your account has been locked due to exceeding the maximum number of unsuccessful login attempts. For security reasons, access to your account has been temporarily restricted.
-                  </p>
-                  <p>
-                    To regain access, please contact your administrator to have your account unlocked.
-                  </p>
-                </div>
-              </td>
-            </tr>
+<body>
+  <table class="main_body">
+    <tbody>
+      <tr>
+        <td>
+          <table>
+            <tbody>
+              <tr>
+                <td class="section-header-td">
+                  <div>Hello <%= userName %>,</div>
+                  <div>
+                    <p>
+                      Your <span class="important-text">account has been locked </span> due to exceeding the maximum number of <span class="important-text"> unsuccessful login attempts</span>. For security reasons, access to your account has been temporarily restricted.
+                    </p>
+                    <p>
+                      To restore access, please reach out to your administrator for assistance. You can contact the following for support: </p>
+                    <div class="tabbedText">
+                      <% if (typeof supportEmailRecipients !== 'undefined') { %>
+                      <% supportEmailRecipients.forEach(function(e) { %>
+                      <div class="tabbedText"><%= e %></div>
+                      <% }); %>
+                    </div>
+                  </div>
+                  <% } %>
+                </td>
+              </tr>
 
-            <tr>
-              <td class="section-header-td">
-                <div>Best Regards,</div>
-                <div>Tombolo</div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </td>
-    </tr>
-  </tbody>
-</table>
+              <tr>
+                <td class="section-header-td">
+                  <div>Best Regards,</div>
+                  <div>Tombolo</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</body>
 
 </html>

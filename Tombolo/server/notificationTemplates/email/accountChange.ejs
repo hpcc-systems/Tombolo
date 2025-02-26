@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .main_body {
+      width: 100%;
+      border-bottom: 1px solid lightgray !important;
+    }
+
+    .section-footer-td {
+      color: #808080;
+      border-top: 1px solid #808080;
+    }
+
+    .section-header-td {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .list {
+      padding: 10px;
+    }
+
+    .tabbedText {
+      padding-left: 40px;
+    }
+
+    .bold-text {
+      font-weight: bold;
+    }
+
+    .important-text {
+      color: #ff0000;
+    }
+  </style>
+</head>
+
+<body>
+  <table class="main_body">
+    <tbody>
+      <tr>
+        <td>
+          <table>
+            <tbody>
+              <tr>
+                <td class="section-header-td">
+                  <div>Hello,</div>
+                  <div>
+                    Your account information has been updated. Below are the details of the changes:
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="section-header-td tabbedText">
+                  <ul>
+                    <% if (typeof changedInfo !== 'undefined' && changedInfo.includes('firstName')) { %>
+                    <li>First name has been changed</li>
+                    <% } %>
+
+                    <% if (typeof changedInfo !== 'undefined' && changedInfo.includes('lastName')) { %>
+                    <li>Last name has been changed</li>
+                    <% } %>
+
+                    <% if (typeof changedInfo !== 'undefined' && changedInfo.includes('password')) { %>
+                    <li>Password has been changed</li>
+                    <% } %>
+                  </ul>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="important-text section-footer-td">
+                  <div>
+                    If you did not make this change, please contact your administrator immediately.
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="section-header-td">
+                  <div>Best Regards,</div>
+                  <div>Tombolo</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+
+</html>
