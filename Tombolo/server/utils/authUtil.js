@@ -448,7 +448,9 @@ const handleInvalidLoginAttempt = async ({user, errMessage}) => {
 
 // Function to send account locked email
 const sendAccountLockedEmail = async (user) => {
-  //send notification to contact email
+  // Get support email recipients
+  const supportEmailRecipients = await getSupportContactEmails();
+
   await NotificationQueue.create({
     type: "email",
     templateName: "accountLocked",
@@ -460,9 +462,11 @@ const sendAccountLockedEmail = async (user) => {
       notificationOrigin: "User Authentication",
       subject: "Your account has been locked",
       mainRecipients: [user.email],
-      notificationDescription: "Account locked because of too many failed login attempts",
-      userName: user.firstName + " " + user.lastName,
+      notificationDescription:
+        "Account locked because of too many failed login attempts",
+      userName: user.firstName,
       userEmail: user.email,
+      supportEmailRecipients,
     },
     createdBy: user.id,
   });

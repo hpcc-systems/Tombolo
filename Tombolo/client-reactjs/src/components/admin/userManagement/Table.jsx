@@ -15,9 +15,6 @@ const UserManagementTable = ({
   setFilteredUsers,
   roles,
 }) => {
-  console.log('------------------------------------------');
-  console.log(users);
-  console.log('------------------------------------------');
   // Rest password
   const handlePasswordReset = async ({ id }) => {
     try {
