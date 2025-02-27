@@ -27,6 +27,17 @@ const Login = () => {
 
     const test = await authActions.login({ email, password, deviceInfo });
 
+    if (test?.type === 'temp-pw') {
+      setLoading(false);
+
+      if (test.resetLink) {
+        window.location.href = test.resetLink;
+      } else {
+        message.error('Please check your email for link to reset you temporary password.');
+      }
+      return;
+    }
+
     if (test?.type === 'unverified') {
       setUnverifiedUserLoginAttempt(true);
       setLoading(false);
