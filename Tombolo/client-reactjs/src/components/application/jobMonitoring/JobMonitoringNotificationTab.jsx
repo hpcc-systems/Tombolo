@@ -15,6 +15,7 @@ const jobStatuses = [
   { label: 'Unknown', value: 'Unknown' },
   { label: 'Not started on time', value: 'NotStarted', disabled: true },
   { label: 'Not completed on time', value: 'NotCompleted' },
+  { label: 'Time Series Analysis', value: 'TimeSeriesAnalysis' },
 ];
 
 function JobMonitoringNotificationTab({ form }) {
