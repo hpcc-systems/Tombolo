@@ -19,6 +19,7 @@ const user_application = model.user_application;
 const Application = model.application;
 const InstanceSettings = model.instance_settings;
 const NotificationQueue = model.notification_queue;
+const AccountVerificationCodes = model.AccountVerificationCodes;
 const csrfHeaderName =
   process.env.NODE_ENV === "production"
     ? "__Host-prod.x-csrf-token"
@@ -72,6 +73,11 @@ const getAUser = async (identifier) => {
             attributes: ["id", "title", "description"],
           },
         ],
+      },
+      {
+        model: AccountVerificationCodes,
+        attributes: ["code"],
+        as: "AccountVerificationCodes",
       },
     ],
   });

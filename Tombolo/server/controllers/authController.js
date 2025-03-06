@@ -663,6 +663,24 @@ const loginBasicUser = async (req, res, next) => {
       });
     }
 
+    if(user?.forcePasswordReset) {
+      logger.error(`Login : Login attempt by user with Temp PW - ${user.id}`);
+      let resetUrl = null;
+      
+      if(user?.AccountVerificationCodes[0]?.code){
+        resetUrl = `${trimURL(process.env.WEB_URL)}/reset-temporary-password/${
+          user.AccountVerificationCodes[0].code
+        }`;
+      }
+
+      res.status(401).json({
+        success: false,
+        message: "temp-pw",
+        resetLink: resetUrl ? resetUrl : null,
+      });
+      return;
+    }
+
     // If the accountLocked.isLocked is true, return generic error
     if (user.accountLocked.isLocked) {
       logger.error(`Login : Login Attempt by user with locked account ${email}`);
