@@ -21,11 +21,10 @@ router.delete(
   destroyOneActiveSession
 ); // Destroy single active session
 
-// All routes below is accessible only by users with role "owner" and "administrator"
-router.use(validateUserRole([role.OWNER, role.ADMIN]));
-
 // Router
 router.get("/getActiveSessions/:id", validateUserId, activeSessionsByUserId); // Get active sessions
+// All routes below is accessible only by users with role "owner" and "administrator"
+router.use(validateUserRole([role.OWNER, role.ADMIN]));
 router.delete(
   "/destroyActivateSessions/all/:id",
   validateUserId,
