@@ -1,5 +1,8 @@
 "use strict";
-module.exports = (sequelize, DataTypes) => {
+const JobMonitoringData = (module.exports = (sequelize, DataTypes) => {
+  const {
+    timeSeriesAnalysisAndAlert,
+  } = require("../jobs/jobMonitoring/monitorJobsUtil");
   const JobMonitoringData = sequelize.define(
     "jobMonitoring_Data",
     {
@@ -53,6 +56,10 @@ module.exports = (sequelize, DataTypes) => {
       onUpdate: "CASCADE",
     });
   };
+  JobMonitoringData.addHook("afterCreate", async (instance, options) => {
+    timeSeriesAnalysisAndAlert({ data: instance });
+  });
 
   return JobMonitoringData;
-};
+});
+module.exports = JobMonitoringData;
