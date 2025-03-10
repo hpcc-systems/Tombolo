@@ -24,6 +24,7 @@ const cluster = models.cluster;
 const notification_queue = models.notification_queue;
 const monitoring_types = models.monitoring_types;
 const monitoring_logs = models.monitoring_logs;
+const JobMonitoringData = models.jobMonitoring_Data;
 
 (async () => {
   parentPort && parentPort.postMessage({level: "info", text: "Intermediate state JM: Monitoring started ..."});
@@ -119,6 +120,7 @@ const monitoring_logs = models.monitoring_logs;
               applicationId,
               jobName,
               jobMonitoringData: {
+                id: jobMonitoringId,
                 monitoringName,
                 metaData: {
                   notificationMetaData,
@@ -175,14 +177,16 @@ const monitoring_logs = models.monitoring_logs;
               if ( notificationConditionLowerCase.includes("timeseriesanalysis")) {
                 try{
                      await JobMonitoringData.create({
-                       monitoringId: jobMonitoringData.id,
+                       monitoringId: jobMonitoringId,
                        wuId: newWuDetails.Wuid,
+                       wuState: currentWuState,
                        wuTopLevelInfo: shallowCopyWithOutNested(newWuDetails),
                        wuDetailInfo: { ...newWuDetails },
                        date: now,
                      });
                 }catch(err){
                   parentPort && parentPort.postMessage({level: "error", text: `Monitoring Intermediate State Job: Error while trying to save wuInfo for ${err.message} : ${err.message}`});
+                  continue;
                 }
               }
               keepWu = false;
@@ -196,8 +200,9 @@ const monitoring_logs = models.monitoring_logs;
               // Store data 
                 try {
                   await JobMonitoringData.create({
-                    monitoringId: jobMonitoringData.id,
+                    monitoringId: jobMonitoringId,
                     wuId: newWuDetails.Wuid,
+                    wuState: currentWuState,
                     wuTopLevelInfo: shallowCopyWithOutNested(newWuDetails),
                     wuDetailInfo: { ...newWuDetails },
                     date: now,
@@ -208,6 +213,7 @@ const monitoring_logs = models.monitoring_logs;
                       level: "error",
                       text: `Monitoring Intermediate State Job: Error while trying to save wuInfo for ${err.message} : ${err.message}`,
                     });
+                    continue;
                 }
 
             } else if (intermediateStates.includes(currentStateLowerCase)) {
