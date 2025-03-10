@@ -299,6 +299,7 @@ const monitoring_name = "Job Monitoring";
               await JobMonitoringData.create({
                 monitoringId: jmId,
                 wuId: Wuid,
+                wuState: Workunit.State,
                 wuTopLevelInfo : shallowCopyWithOutNested(Workunit),
                 wuDetailInfo: { ...Workunit },
                 date: now,
