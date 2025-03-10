@@ -8,6 +8,10 @@ module.exports = {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
+      wuId: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
       monitoringId: {
         type: Sequelize.UUID,
         allowNull: false,
@@ -22,8 +26,16 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       },
-      metaData: {
+      wuTopLevelInfo: {
         allowNull: false,
+        type: Sequelize.JSON,
+      },
+      wuDetailInfo: {
+        allowNull: false,
+        type: Sequelize.JSON,
+      },
+      metaData: {
+        allowNull: true,
         type: Sequelize.JSON,
       },
       createdAt: {
