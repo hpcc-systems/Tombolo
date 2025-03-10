@@ -12,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
       },
+      wuId: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
       monitoringId: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -26,8 +30,16 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.DATE,
       },
-      metaData: {
+      wuTopLevelInfo:{
         allowNull: false,
+        type: DataTypes.JSON,
+      },
+      wuDetailInfo:{
+        allowNull: false,
+        type: DataTypes.JSON,
+      },
+      metaData: {
+        allowNull: true,
         type: DataTypes.JSONB,
       },
       createdAt: {
