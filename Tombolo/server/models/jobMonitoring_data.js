@@ -9,6 +9,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
       },
+      applicationId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "application",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+      },
       monitoringId: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -46,13 +56,17 @@ module.exports = (sequelize, DataTypes) => {
       paranoid: true,
     }
   );
-  JobMonitoringData.associate = function (models) {
-    JobMonitoringData.belongsTo(models.application, {
-      foreignKey: "jobMonitoring",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
-    });
-  };
 
+  // Associations
+  JobMonitoringData.associate = (models) => {
+    JobMonitoringData.belongsTo(models.application, {
+      foreignKey: "applicationId",
+      as: "application",
+    });
+    JobMonitoringData.belongsTo(models.jobMonitoring, {
+      foreignKey: "monitoringId",
+      as: "jobMonitoring",
+    });
+  }
   return JobMonitoringData;
 };
