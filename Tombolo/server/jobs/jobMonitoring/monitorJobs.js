@@ -19,6 +19,7 @@ const {
   findLocalDateTimeAtCluster,
   nocAlertDescription,
 } = require("./monitorJobsUtil");
+const shallowCopyWithOutNested = require("../../utils/shallowCopyWithOutNested");
 
 // Models
 const JobMonitoring = models.jobMonitoring;
@@ -26,6 +27,7 @@ const cluster = models.cluster;
 const MonitoringTypes = models.monitoring_types;
 const MonitoringLogs = models.monitoring_logs;
 const NotificationQueue = models.notification_queue;
+const JobMonitoringData = models.jobMonitoring_Data;
 
 // Variables
 const monitoring_name = "Job Monitoring";
@@ -220,6 +222,7 @@ const monitoring_name = "Job Monitoring";
 
     const jmWithNewWUs = {};
     let lowerCaseNotificationCondition = [];
+    const historyStoringConditions = ["TimeSeriesAnalysis"];
     const jobMonitoringObj = {}; // For easy access late
 
     for (let monitoring of jobMonitorings) {
@@ -269,9 +272,45 @@ const monitoring_name = "Job Monitoring";
     const intermediateStateJobs = [];
     // Check if any jobs are in undesired state
     for (let jmId in jmWithNewWUs) {
+      const notificationConditions = jobMonitoringObj[jmId]?.metaData?.notificationMetaData?.notificationCondition || [];
       // Iterating over an object
       const wus = jmWithNewWUs[jmId];
       for (let wu of wus) {
+        const isJobInIntermediateState = intermediateStates.includes(wu.State.toLowerCase());
+        const deepMonitoring = notificationConditions.some((item) =>
+          historyStoringConditions.includes(item)
+        );
+        
+        // if wu is not in intermediate state and notification condition include historyStoringConditions
+        if (!isJobInIntermediateState && deepMonitoring) {
+            try{
+              const { Wuid, clusterId } = wu;
+
+              // Get wuInfo from cluster
+              const wuService = new WorkunitsService({
+                baseUrl: `${clusterInfoObj[clusterId].thor_host}:${clusterInfoObj[clusterId].thor_port}/`,
+                userID: clusterInfoObj[clusterId].username || "",
+                password: clusterInfoObj[clusterId].password || "",
+              });
+
+              const wuInfo = await wuService.WUInfo({ Wuid });
+              const { Workunit = {} } = wuInfo;
+
+              await JobMonitoringData.create({
+                monitoringId: jmId,
+                wuId: Wuid,
+                wuState: Workunit.State,
+                wuTopLevelInfo : shallowCopyWithOutNested(Workunit),
+                wuDetailInfo: { ...Workunit },
+                date: now,
+              });
+            }catch(err){
+              parentPort && parentPort.postMessage({level: "error", text: `Job monitoring: Error while trying to retrieve/save wuInfo for ${wu.Wuid} : ${err.message}`});
+            }finally{
+              continue;
+            }
+          }
+
         // Separate failed state jobs
         if (lowerCaseNotificationCondition.includes(wu.State.toLowerCase())) {
           failedStateJobs.push({ ...wu, jmId });
@@ -280,9 +319,13 @@ const monitoring_name = "Job Monitoring";
 
         // Separate intermediate state jobs
         if (intermediateStates.includes(wu.State.toLowerCase())) {
+          const jmDetailsToInclude = jobMonitoringObj[jmId];
+          if(jmDetailsToInclude.lastJobRunDetails){
+            delete jmDetailsToInclude.lastJobRunDetails;
+          }
           intermediateStateJobs.push({
             ...wu,
-            jobMonitoringData: jobMonitoringObj[jmId],
+            jobMonitoringData: jmDetailsToInclude,
           });
           continue;
         }

@@ -17,12 +17,14 @@ const {
   createNotificationPayload,
   nocAlertDescription,
 } = require("./monitorJobsUtil");
+const shallowCopyWithOutNested = require("../../utils/shallowCopyWithOutNested");
 
 // Constants
 const cluster = models.cluster;
 const notification_queue = models.notification_queue;
 const monitoring_types = models.monitoring_types;
 const monitoring_logs = models.monitoring_logs;
+const JobMonitoringData = models.jobMonitoring_Data;
 
 (async () => {
   parentPort && parentPort.postMessage({level: "info", text: "Intermediate state JM: Monitoring started ..."});
@@ -118,6 +120,7 @@ const monitoring_logs = models.monitoring_logs;
               applicationId,
               jobName,
               jobMonitoringData: {
+                id: jobMonitoringId,
                 monitoringName,
                 metaData: {
                   notificationMetaData,
@@ -136,12 +139,22 @@ const monitoring_logs = models.monitoring_logs;
               password: clusterDetail.password || "",
             });
 
+            let sendAlert = false;
+            let keepWu = true;
+            let notificationDescription;
+
             // Make call to HPCC to get the state of the WU
             let newWuDetails = null;
             try{
               newWuDetails = (await wuService.WUInfo({ Wuid: wuData.Wuid })).Workunit;
             }catch(err){
               parentPort && parentPort.postMessage({level: "error", text: `Intermediate state JM : Error getting WU details for ${wuData.Wuid} on cluster ${clusterDetail.id}: ${err.message}`});
+
+              // If  err.message include Invalid Workunit ID", remove the WU from monitoring
+              if (err.message.includes("Invalid Workunit ID")) {
+                wuToStopMonitoring.push(wuData.Wuid);
+                keepWu = false;
+              }
               continue;
             }
             
@@ -154,11 +167,6 @@ const monitoring_logs = models.monitoring_logs;
                 condition.toLowerCase()
               );
 
-            let sendAlert = false;
-            let keepWu = true;
-            let notificationDescription;
-            
-
             const currentTimeToWindowRelation =  checkIfCurrentTimeIsWithinRunWindow({
                    start: expectedStartTime,
                    end: expectedCompletionTime,
@@ -166,7 +174,21 @@ const monitoring_logs = models.monitoring_logs;
                  });
             // Check if the job is completed
             if (currentStateLowerCase === 'completed') {
-              //TODO - There is a gap, if the job is completed but immediately  after the expected time, notification won't be sent, although users might want to know that the job was completed after the expected time
+              if ( notificationConditionLowerCase.includes("timeseriesanalysis")) {
+                try{
+                     await JobMonitoringData.create({
+                       monitoringId: jobMonitoringId,
+                       wuId: newWuDetails.Wuid,
+                       wuState: currentWuState,
+                       wuTopLevelInfo: shallowCopyWithOutNested(newWuDetails),
+                       wuDetailInfo: { ...newWuDetails },
+                       date: now,
+                     });
+                }catch(err){
+                  parentPort && parentPort.postMessage({level: "error", text: `Monitoring Intermediate State Job: Error while trying to save wuInfo for ${err.message} : ${err.message}`});
+                  continue;
+                }
+              }
               keepWu = false;
             } else if (notificationConditionLowerCase.includes(currentStateLowerCase)) {
               // Check if the job state is included in the notification condition
@@ -174,6 +196,26 @@ const monitoring_logs = models.monitoring_logs;
               wuData.State = currentWuState;
               notificationDescription = `job is in  ${currentWuState} state.`;
               keepWu = false;
+
+              // Store data 
+                try {
+                  await JobMonitoringData.create({
+                    monitoringId: jobMonitoringId,
+                    wuId: newWuDetails.Wuid,
+                    wuState: currentWuState,
+                    wuTopLevelInfo: shallowCopyWithOutNested(newWuDetails),
+                    wuDetailInfo: { ...newWuDetails },
+                    date: now,
+                  });
+                } catch (err) {
+                  parentPort &&
+                    parentPort.postMessage({
+                      level: "error",
+                      text: `Monitoring Intermediate State Job: Error while trying to save wuInfo for ${err.message} : ${err.message}`,
+                    });
+                    continue;
+                }
+
             } else if (intermediateStates.includes(currentStateLowerCase)) {
               // Check if the job state is in intermediate states
               if (!requireComplete) {

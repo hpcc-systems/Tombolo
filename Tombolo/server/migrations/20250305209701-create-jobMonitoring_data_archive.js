@@ -18,6 +18,14 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
+      wuId: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
+      wuState:{
+        allowNull: false,
+        type: Sequelize.STRING
+      },
       monitoringId: {
         type: Sequelize.UUID,
         allowNull: false,
@@ -32,8 +40,16 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       },
-      metaData: {
+      wuTopLevelInfo: {
         allowNull: false,
+        type: Sequelize.JSON,
+      },
+      wuDetailInfo: {
+        allowNull: false,
+        type: Sequelize.JSON,
+      },
+      metaData: {
+        allowNull: true,
         type: Sequelize.JSON,
       },
       archiveDate: {
