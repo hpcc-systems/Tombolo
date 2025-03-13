@@ -12,6 +12,12 @@ module.exports = (sequelize, DataTypes) => {
       applicationId: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: "application",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
       monitoringName: {
         allowNull: false,
@@ -90,15 +96,31 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
+  // Associations
   JobMonitoring.associate = function (models) {
     JobMonitoring.belongsTo(models.application, {
       foreignKey: "applicationId",
       onDelete: "CASCADE",
       onUpdate: "CASCADE",
     });
+
     JobMonitoring.belongsTo(models.cluster, {
       foreignKey: "clusterId",
       onDelete: "NO ACTION",
+      onUpdate: "CASCADE",
+    });
+
+    JobMonitoring.hasMany(models.jobMonitoring_Data, {
+      foreignKey: "monitoringId",
+      as: "jobMonitoringData",
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    });
+
+    JobMonitoring.hasMany(models.jobMonitoring_Data_Archive, {
+      foreignKey: "monitoringId",
+      as: "jobMonitoringDataArchive",
+      onDelete: "CASCADE",
       onUpdate: "CASCADE",
     });
   };

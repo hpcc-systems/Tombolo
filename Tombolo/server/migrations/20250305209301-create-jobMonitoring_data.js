@@ -8,6 +8,16 @@ module.exports = {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
+      applicationId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: "application",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+      },
       wuId: {
         allowNull: false,
         type: Sequelize.STRING,

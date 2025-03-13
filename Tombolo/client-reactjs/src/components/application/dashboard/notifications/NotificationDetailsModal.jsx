@@ -34,7 +34,7 @@ function NotificationDetailsModal({
       open={displayNotificationDetailsModal}
       onCancel={handleCancel}
       size="small"
-      width="800px"
+      width={1280}
       maskClosable={false}
       footer={[
         <Button key="1" size="small" type="primary" onClick={() => editNotification(selectedNotification)}>
