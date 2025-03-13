@@ -12,7 +12,21 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
       },
+      applicationId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "application",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+      },
       wuId: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      wuState: {
         allowNull: false,
         type: DataTypes.STRING,
       },
@@ -61,13 +75,20 @@ module.exports = (sequelize, DataTypes) => {
       paranoid: true,
     }
   );
-  JobMonitoringData.associate = function (models) {
+
+  // Associations
+  JobMonitoringData.associate = (models) => {
     JobMonitoringData.belongsTo(models.application, {
-      foreignKey: "jobMonitoring",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      foreignKey: "applicationId",
+      as: "application",
+    });
+    JobMonitoringData.belongsTo(models.jobMonitoring, {
+      foreignKey: "monitoringId",
+      as: "jobMonitoring",
     });
   };
+
+  // hooks
   JobMonitoringData.addHook("afterCreate", async (instance, options) => {
     const logger = require("../config/logger");
     //grab the last runs for analysis
@@ -98,6 +119,5 @@ module.exports = (sequelize, DataTypes) => {
 
     return;
   });
-
   return JobMonitoringData;
 };

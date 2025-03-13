@@ -100,6 +100,17 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "application_id",
       onDelete: "CASCADE",
     });
+    // JOB MONITORING DATA
+    application.hasMany(models.jobMonitoring_Data, {
+      foreignKey: "applicationId",
+      onDelete: "CASCADE",
+    });
+
+    // JOB MONITORING DATA ARCHIVE
+    application.hasMany(models.jobMonitoring_Data_Archive, {
+      foreignKey: "applicationId",
+      onDelete: "CASCADE",
+    });
   };
 
   return application;

@@ -11,6 +11,7 @@ import {
   CopyOutlined,
   DownOutlined,
   WarningFilled,
+  DashboardOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -193,6 +194,10 @@ const JobMonitoringTable = ({
                         <CopyOutlined style={{ marginRight: 15 }} />
                         Duplicate
                       </div>
+                      <div onClick={() => routeToTimeSeriesAnalysis(record)}>
+                        <DashboardOutlined style={{ marginRight: 15 }} />
+                        Time Series Analysis
+                      </div>
                     </div>
                   }>
                   <span style={{ color: 'var(--secondary)' }}>
@@ -322,6 +327,12 @@ const JobMonitoringTable = ({
       message.error('Failed to toggle monitoring status');
     }
   };
+
+  // Take to time series analysis page
+  const routeToTimeSeriesAnalysis = (record) => {
+    window.open(`/tombolo/${applicationId}/timeseriesAnaylis?monitoringId=${record.id}`, '_blank');
+  };
+
   return (
     <Table
       dataSource={jobMonitorings}

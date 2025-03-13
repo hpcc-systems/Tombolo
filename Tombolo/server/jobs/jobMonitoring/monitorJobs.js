@@ -332,12 +332,13 @@ const monitoring_name = "Job Monitoring";
               password: clusterInfoObj[clusterId].password || "",
             });
 
-            const wuInfo = await wuService.WUInfo(WUInfoOptions(Wuid));
+            const wuInfo = await wuService.WUInfo({ Wuid });
             const { Workunit = {} } = wuInfo;
 
             await JobMonitoringData.create({
               monitoringId: jmId,
               wuId: Wuid,
+              wuState: Workunit.State,
               wuTopLevelInfo: shallowCopyWithOutNested(Workunit),
               wuDetailInfo: { ...Workunit },
               date: now,
