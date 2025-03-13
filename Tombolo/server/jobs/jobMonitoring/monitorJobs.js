@@ -335,21 +335,20 @@ const monitoring_name = "Job Monitoring";
             const wuInfo = await wuService.WUInfo(WUInfoOptions(Wuid));
             const { Workunit = {} } = wuInfo;
 
-            await JobMonitoringData.create({
-              monitoringId: jmId,
-              wuId: Wuid,
-              wuTopLevelInfo: shallowCopyWithOutNested(Workunit),
-              wuDetailInfo: { ...Workunit },
-              date: now,
-            });
-          } catch (err) {
-            parentPort &&
-              parentPort.postMessage({
-                level: "error",
-                text: `Job monitoring: Error while trying to retrieve/save wuInfo for ${wu.Wuid} : ${err.message}`,
+
+              await JobMonitoringData.create({
+                monitoringId: jmId,
+                wuId: Wuid,
+                wuState: Workunit.State,
+                wuTopLevelInfo : shallowCopyWithOutNested(Workunit),
+                wuDetailInfo: { ...Workunit },
+                date: now,
               });
-          } finally {
-            continue;
+            }catch(err){
+              parentPort && parentPort.postMessage({level: "error", text: `Job monitoring: Error while trying to retrieve/save wuInfo for ${wu.Wuid} : ${err.message}`});
+            }finally{
+              continue;
+            }
           }
         }
 
