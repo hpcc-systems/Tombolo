@@ -13,10 +13,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.STRING,
       },
-      wuState: {
-        allowNull: false,
-        type: DataTypes.STRING,
-      },
       monitoringId: {
         type: DataTypes.UUID,
         allowNull: false,

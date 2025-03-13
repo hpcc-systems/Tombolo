@@ -12,10 +12,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      wuState:{
-        allowNull: false,
-        type: Sequelize.STRING
-      },
       monitoringId: {
         type: Sequelize.UUID,
         allowNull: false,
