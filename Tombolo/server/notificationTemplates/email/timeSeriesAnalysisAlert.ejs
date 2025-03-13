@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    /* Keep only the styles that must be here */
+    .boldText {
+      font-weight: bold;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <table width="100%">
+    <tbody>
+      <tr>
+        <td>
+          <table width="1280" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; font-size: 14px; margin-top: 1rem;  margin-bottom: 1rem;">
+            <tbody>
+              <tr>
+                <td style="margin-bottom: 30px;">
+                  Time Series Analysis has detected a significant deviation in the latest work unit for this job compared to expected metrics.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table width="1080" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+            <tr>
+              <td>
+                <span style="font-weight: bold;">Job Name:</span> <%= jobName %></br>
+                <span style="font-weight: bold;">Cluster:</span> <%= cluster %>
+              </td>
+            </tr>
+          </table>
+      </tr>
+    </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+
+  <table width="1080" cellpadding="5" cellspacing="0" border="1" style="border-collapse: collapse;">
+    <tbody>
+      <tr style="background-color: #FFBF00; font-weight: bold;">
+        <td>Metric</td>
+        <td>Delta</td>
+        <td>Current</td>
+        <td>Average</td>
+        <% historical.forEach((run, index) => { %>
+        <td>Run <%= index + 1 %></td>
+        <% }); %>
+      </tr>
+
+      <% Object.keys(average).forEach(key => { %>
+      <tr>
+        <td style="background-color: #eeeeee; font-weight: bold;"><%= key %></td>
+        <td><%= isNaN(average[key] - current[key]) ? " " : average[key] - current[key] %></td>
+        <td style="background: #ffd6d7;"><%= current[key] %></td>
+        <td style="background: #efffe8"><%= average[key] %></td>
+        <% historical.forEach(run => { %>
+        <td><%= run[key] %></td>
+        <% }); %>
+      </tr>
+      <% }); %>
+    </tbody>
+  </table>
+
+  <table width="1080" cellpadding="0" cellspacing="0">
+    <tbody>
+      <tr>
+        <td style="padding-top: 30px;">
+          <div style="font-weight: bold;">
+            Click the link below to view detailed analysis results.
+          </div>
+          <div>
+            <a href="<%= dashboard %>">
+              <%= dashboard %>
+            </a>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+</body>
+
+</html>
