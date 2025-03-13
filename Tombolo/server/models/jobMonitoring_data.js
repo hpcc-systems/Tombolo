@@ -30,11 +30,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.DATE,
       },
-      wuTopLevelInfo:{
+      wuTopLevelInfo: {
         allowNull: false,
         type: DataTypes.JSON,
       },
-      wuDetailInfo:{
+      wuDetailInfo: {
         allowNull: false,
         type: DataTypes.JSON,
       },
@@ -69,15 +69,15 @@ module.exports = (sequelize, DataTypes) => {
     });
   };
   JobMonitoringData.addHook("afterCreate", async (instance, options) => {
+    const logger = require("../config/logger");
     //grab the last runs for analysis
     const lastRuns = await JobMonitoringData.findAll({
       where: {
         monitoringId: instance.monitoringId,
-        id: !instance.id,
       },
-      attributes: ["date", "metaData"],
+      attributes: ["date", "wuTopLevelInfo"],
       order: [["date", "DESC"]],
-      limit: 5,
+      limit: 10,
     });
 
     //if there are less than 2 records, we can't do time series analysis
@@ -88,11 +88,15 @@ module.exports = (sequelize, DataTypes) => {
       );
       return;
     }
-    //pass last 5 records and current run to timeSeriesAnalysisunction
+
+    //pass last records and current run to timeSeriesAnalysisunction
     const result = timeSeriesAnalysis({ currentRun: instance, lastRuns });
 
-    //check if result is indicating an alert
-    const notificationQueue = require("../models/notificationQueue");
+    logger.info("result: " + JSON.stringify(result));
+
+    //if result.length, then we will send an email. That will be a seperate PR.
+
+    return;
   });
 
   return JobMonitoringData;

@@ -3,7 +3,6 @@ const { parentPort } = require("worker_threads");
 const { WorkunitsService } = require("@hpcc-js/comms");
 const _ = require("lodash");
 
-
 // Local imports
 const models = require("../../models");
 const { decryptString } = require("../../utils/cipher");
@@ -18,6 +17,7 @@ const {
   getDomain,
   findLocalDateTimeAtCluster,
   nocAlertDescription,
+  WUInfoOptions,
 } = require("./monitorJobsUtil");
 const shallowCopyWithOutNested = require("../../utils/shallowCopyWithOutNested");
 
@@ -33,7 +33,11 @@ const JobMonitoringData = models.jobMonitoring_Data;
 const monitoring_name = "Job Monitoring";
 
 (async () => {
-  parentPort && parentPort.postMessage({level: "info", text : "Job Monitoring:  Monitoring started"});
+  parentPort &&
+    parentPort.postMessage({
+      level: "info",
+      text: "Job Monitoring:  Monitoring started",
+    });
   const now = new Date(); // UTC time
 
   try {
@@ -55,12 +59,20 @@ const monitoring_name = "Job Monitoring";
 
     /* if no job monitorings are found - return */
     if (jobMonitorings.length < 1) {
-        parentPort && parentPort.postMessage({level: "info",text: "Job Monitoring: No active job monitorings found."});
+      parentPort &&
+        parentPort.postMessage({
+          level: "info",
+          text: "Job Monitoring: No active job monitorings found.",
+        });
 
       return;
     }
 
-    parentPort && parentPort.postMessage({level: "info", text: `Job Monitoring: Found ${jobMonitorings.length} active job monitorings.`});
+    parentPort &&
+      parentPort.postMessage({
+        level: "info",
+        text: `Job Monitoring: Found ${jobMonitorings.length} active job monitorings.`,
+      });
 
     /* Organize job monitoring based on cluster ID. This approach simplifies interaction with 
     the HPCC cluster and minimizes the number of necessary API calls. */
@@ -69,7 +81,11 @@ const monitoring_name = "Job Monitoring";
       const clusterId = jobMonitoring.clusterId;
 
       if (!clusterId) {
-        parentPort && parentPort.postMessage({level: "error", text: "Job monitoring missing cluster ID. Skipping..."});
+        parentPort &&
+          parentPort.postMessage({
+            level: "error",
+            text: "Job monitoring missing cluster ID. Skipping...",
+          });
         return;
       }
 
@@ -100,7 +116,11 @@ const monitoring_name = "Job Monitoring";
           clusterInfo.password = null;
         }
       } catch (error) {
-        parentPort && parentPort.postMessage({level: "error", text: `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`});
+        parentPort &&
+          parentPort.postMessage({
+            level: "error",
+            text: `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
+          });
       }
     });
 
@@ -109,7 +129,6 @@ const monitoring_name = "Job Monitoring";
       where: { monitoring_type_id: monitoringTypeId, cluster_id: clusterIds },
       raw: true,
     });
-
 
     // Cluster  last scan info (Scan logs)
     clustersInfo.forEach((clusterInfo) => {
@@ -147,7 +166,7 @@ const monitoring_name = "Job Monitoring";
 
         let {
           Workunits: { ECLWorkunit },
-        } = await wuService.WUQuery({ StartDate: startTime });
+        } = await wuService.WUQuery({ StartTime: startTime });
         const wuWithClusterIds = ECLWorkunit.map((wu) => {
           return { ...wu, clusterId: clusterInfo.id };
         });
@@ -155,7 +174,11 @@ const monitoring_name = "Job Monitoring";
         wuBasicInfoByCluster[clusterInfo.id] = [...wuWithClusterIds];
       } catch (err) {
         failedToReachClusters.push(clusterInfo.id);
-        parentPort && parentPort.postMessage({level: "error", text: `Job monitoring: Error while reaching out to cluster ${clusterInfo.id} : ${err}`});
+        parentPort &&
+          parentPort.postMessage({
+            level: "error",
+            text: `Job monitoring: Error while reaching out to cluster ${clusterInfo.id} : ${err}`,
+          });
       }
     }
 
@@ -210,13 +233,21 @@ const monitoring_name = "Job Monitoring";
             }
           );
         } catch (err) {
-          parentPort && parentPort.postMessage({level: "error", text: `Job monitoring:  Error while updating last cluster scanned time stamp`});
+          parentPort &&
+            parentPort.postMessage({
+              level: "error",
+              text: `Job monitoring:  Error while updating last cluster scanned time stamp`,
+            });
         }
       }
-      parentPort && parentPort.postMessage({level: "info", text: "Job Monitoring: No new work units found for any clusters."});
+      parentPort &&
+        parentPort.postMessage({
+          level: "info",
+          text: "Job Monitoring: No new work units found for any clusters.",
+        });
       return;
     }
-     
+
     // Clusters with new work units - Done to minimize the number of calls to db later
     const clusterIdsWithNewWUs = Object.keys(wuBasicInfoByCluster);
 
@@ -263,7 +294,11 @@ const monitoring_name = "Job Monitoring";
 
         jmWithNewWUs[id] = matchedWus;
       } catch (err) {
-        parentPort && parentPort.postMessage({level: "error", text: `Job monitoring. Looping job monitorings ${monitoringName}. id:  ${id}. ERR -  ${err.message}`});
+        parentPort &&
+          parentPort.postMessage({
+            level: "error",
+            text: `Job monitoring. Looping job monitorings ${monitoringName}. id:  ${id}. ERR -  ${err.message}`,
+          });
       }
     }
 
@@ -272,43 +307,51 @@ const monitoring_name = "Job Monitoring";
     const intermediateStateJobs = [];
     // Check if any jobs are in undesired state
     for (let jmId in jmWithNewWUs) {
-      const notificationConditions = jobMonitoringObj[jmId]?.metaData?.notificationMetaData?.notificationCondition || [];
+      const notificationConditions =
+        jobMonitoringObj[jmId]?.metaData?.notificationMetaData
+          ?.notificationCondition || [];
       // Iterating over an object
       const wus = jmWithNewWUs[jmId];
       for (let wu of wus) {
-        const isJobInIntermediateState = intermediateStates.includes(wu.State.toLowerCase());
+        const isJobInIntermediateState = intermediateStates.includes(
+          wu.State.toLowerCase()
+        );
         const deepMonitoring = notificationConditions.some((item) =>
           historyStoringConditions.includes(item)
         );
-        
+
         // if wu is not in intermediate state and notification condition include historyStoringConditions
         if (!isJobInIntermediateState && deepMonitoring) {
-            try{
-              const { Wuid, clusterId } = wu;
+          try {
+            const { Wuid, clusterId } = wu;
 
-              // Get wuInfo from cluster
-              const wuService = new WorkunitsService({
-                baseUrl: `${clusterInfoObj[clusterId].thor_host}:${clusterInfoObj[clusterId].thor_port}/`,
-                userID: clusterInfoObj[clusterId].username || "",
-                password: clusterInfoObj[clusterId].password || "",
+            // Get wuInfo from cluster
+            const wuService = new WorkunitsService({
+              baseUrl: `${clusterInfoObj[clusterId].thor_host}:${clusterInfoObj[clusterId].thor_port}/`,
+              userID: clusterInfoObj[clusterId].username || "",
+              password: clusterInfoObj[clusterId].password || "",
+            });
+
+            const wuInfo = await wuService.WUInfo(WUInfoOptions(Wuid));
+            const { Workunit = {} } = wuInfo;
+
+            await JobMonitoringData.create({
+              monitoringId: jmId,
+              wuId: Wuid,
+              wuTopLevelInfo: shallowCopyWithOutNested(Workunit),
+              wuDetailInfo: { ...Workunit },
+              date: now,
+            });
+          } catch (err) {
+            parentPort &&
+              parentPort.postMessage({
+                level: "error",
+                text: `Job monitoring: Error while trying to retrieve/save wuInfo for ${wu.Wuid} : ${err.message}`,
               });
-
-              const wuInfo = await wuService.WUInfo({ Wuid });
-              const { Workunit = {} } = wuInfo;
-
-              await JobMonitoringData.create({
-                monitoringId: jmId,
-                wuId: Wuid,
-                wuTopLevelInfo : shallowCopyWithOutNested(Workunit),
-                wuDetailInfo: { ...Workunit },
-                date: now,
-              });
-            }catch(err){
-              parentPort && parentPort.postMessage({level: "error", text: `Job monitoring: Error while trying to retrieve/save wuInfo for ${wu.Wuid} : ${err.message}`});
-            }finally{
-              continue;
-            }
+          } finally {
+            continue;
           }
+        }
 
         // Separate failed state jobs
         if (lowerCaseNotificationCondition.includes(wu.State.toLowerCase())) {
@@ -319,7 +362,7 @@ const monitoring_name = "Job Monitoring";
         // Separate intermediate state jobs
         if (intermediateStates.includes(wu.State.toLowerCase())) {
           const jmDetailsToInclude = jobMonitoringObj[jmId];
-          if(jmDetailsToInclude.lastJobRunDetails){
+          if (jmDetailsToInclude.lastJobRunDetails) {
             delete jmDetailsToInclude.lastJobRunDetails;
           }
           intermediateStateJobs.push({
@@ -386,7 +429,11 @@ const monitoring_name = "Job Monitoring";
             severeEmailRecipients = domain.severityAlertRecipients;
           }
         } catch (error) {
-          parentPort && parentPort.postMessage({level: "error", text: `Job Monitoring : Error while getting Domain level severity : ${error.message}`});
+          parentPort &&
+            parentPort.postMessage({
+              level: "error",
+              text: `Job Monitoring : Error while getting Domain level severity : ${error.message}`,
+            });
         }
       }
 
@@ -401,7 +448,7 @@ const monitoring_name = "Job Monitoring";
         recipients: { primaryContacts, secondaryContacts, notifyContacts },
         jobName: jobName,
         wuState: wu.State,
-        wuId : wu.Wuid,
+        wuId: wu.Wuid,
         monitoringName,
         issue: {
           Issue: `Job in ${wu.State} state`,
@@ -441,12 +488,12 @@ const monitoring_name = "Job Monitoring";
           nocAlertDescription;
         notificationPayloadForNoc.metaData.mainRecipients =
           severeEmailRecipients;
-        notificationPayloadForNoc.metaData.notificationId =
+        (notificationPayloadForNoc.metaData.notificationId =
           generateNotificationId({
             notificationPrefix,
             timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
-          }),
-        delete notificationPayloadForNoc.metaData.cc;
+          })),
+          delete notificationPayloadForNoc.metaData.cc;
         await NotificationQueue.create(notificationPayloadForNoc);
       }
     }
@@ -493,17 +540,28 @@ const monitoring_name = "Job Monitoring";
           conflictTarget: ["cluster_id", "monitoring_type_id"],
         });
       } catch (err) {
-        parentPort && parentPort.postMessage({level: "error", text: `Job monitoring - Error while updating last cluster scanned time stamp`, error : err});
+        parentPort &&
+          parentPort.postMessage({
+            level: "error",
+            text: `Job monitoring - Error while updating last cluster scanned time stamp`,
+            error: err,
+          });
       }
     }
-
   } catch (err) {
-    parentPort && parentPort.postMessage({level: "error", text: `Job Monitoring:  Error while monitoring jobs: ${err.message}`, error : err});
+    parentPort &&
+      parentPort.postMessage({
+        level: "error",
+        text: `Job Monitoring:  Error while monitoring jobs: ${err.message}`,
+        error: err,
+      });
   } finally {
-    if(parentPort){
-      parentPort.postMessage({level: "info",text: `Job Monitoring: Monitoring completed in ${ new Date() - now} ms`});
-    }
-    else{
+    if (parentPort) {
+      parentPort.postMessage({
+        level: "info",
+        text: `Job Monitoring: Monitoring completed in ${new Date() - now} ms`,
+      });
+    } else {
       process.exit(0);
     }
   }

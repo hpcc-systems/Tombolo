@@ -1,3 +1,41 @@
+const { time } = require("console");
+const logger = require("../../config/logger");
+
+const WUAlertDataPoints = () => {
+  return [
+    "Wuid",
+    "WarningCount",
+    "ErrorCount",
+    "GraphCount",
+    "SourceFileCount",
+    "ResultCount",
+    "TotalClusterTime",
+    "FileAccessCost",
+    "CompileCost",
+    "ExecuteCost",
+  ];
+};
+
+const convertTotalClusterTimeToSeconds = (totalClusterTime) => {
+  //take off the milliseconds
+  const cleanedTime = totalClusterTime.split(".")[0];
+  //split on colon
+  const timeParts = cleanedTime.split(":");
+
+  const multipliers = [1, 60, 3600, 86400]; //seconds, minutes, hours, days
+
+  //reverse order of timeParts so seconds are first
+  timeParts.reverse();
+
+  let total = 0;
+
+  timeParts.forEach((part, index) => {
+    total += parseInt(part) * multipliers[index];
+  });
+
+  return total;
+};
+
 const timeSeriesAnalysis = ({ currentRun, lastRuns }) => {
   if (!currentRun.monitoringId) {
     //this should never happen, but throw an error if it does
@@ -8,51 +46,89 @@ const timeSeriesAnalysis = ({ currentRun, lastRuns }) => {
     return;
   }
 
-  //calculate the average of the last 10 records for important stuff - PLACEHOLDER
-  let average = [];
+  //get the alert data points inside an array of named objects
+  const alertDataPoints = WUAlertDataPoints();
+  logger.info(alertDataPoints);
+  let data = [];
 
-  lastRuns.forEach((record) => {
-    //add each desired calculation point to the average array - PLACEHOLDER
-    //e.g. average.cost += record.metaData.cost;
-  });
-
-  //divide each point by the number of records to get the average - PLACEHOLDER
-  //average.cost = average.cost / last10.length;
-
-  let alertAttributes = [];
-  //compare the current record to the average - PLACEHOLDER
-  average.forEach((point) => {
-    //if the current record is more than 20% higher than the average, send an alert - PLACEHOLDER
-    //e.g. if (data.metaData.cost > point.cost * 1.2) {
-    //  alertAttributes.push({'cost'});
-    //}
-  });
-
-  if (!alertAttributes.length) {
-    logger.verbose("No alerts needed for monitoring ID " + data.monitoringId);
-    return;
-  }
-
-  //Build the data that will build the data table for the last 10 and current
-  let dataTable = [];
-
-  alertAttributes.forEach((attribute) => {
-    dataTable.push({
-      attribute: attribute,
-      current: currentRun.metaData[attribute],
-      average: average[attribute],
-      last5: last5.map((record) => record.metaData[attribute]),
+  alertDataPoints.forEach((point) => {
+    data.push({
+      name: point,
     });
   });
 
-  //send the alert
-  //notificationQueue create
+  //put current run into data array
+  data.forEach((point) => {
+    if (point.name === "TotalClusterTime") {
+      point.current = convertTotalClusterTimeToSeconds(
+        currentRun.wuTopLevelInfo[point.name]
+      );
+    } else {
+      point.current = currentRun.wuTopLevelInfo[point.name];
+    }
+  });
 
-  logger.info("finished monitoring");
+  let i = 1;
 
-  return;
+  //place all of the data points from the recent runs into data array
+  lastRuns.forEach((run) => {
+    data.forEach((point) => {
+      //if it is TotalClusterTime, run it through convert function
+      if (point.name === "TotalClusterTime") {
+        point["run" + i] = convertTotalClusterTimeToSeconds(
+          run.wuTopLevelInfo[point.name]
+        );
+      } else {
+        point["run" + i] = run.wuTopLevelInfo[point.name];
+      }
+    });
+    i++;
+  });
+
+  //get standard deviation, expected min (2.5 standard deviations), expected max (2.5 standard deviations)
+  //push any values outside of the range to an array of alerts
+  let alertPoints = [];
+  data.forEach((point) => {
+    //don't need to analyze wuid
+    if (point.name === "Wuid") {
+      return;
+    }
+    //get total
+    let total = 0;
+    for (let i = 1; i <= lastRuns.length; i++) {
+      total += point["run" + i];
+    }
+    //get standard deviation
+    let mean = total / lastRuns.length;
+    let sum = 0;
+    for (let i = 1; i <= lastRuns.length; i++) {
+      sum += Math.pow(point["run" + i] - mean, 2);
+    }
+    point.standardDeviation = Math.sqrt(sum / lastRuns.length);
+    point.expectedMin = mean - 3 * point.standardDeviation;
+    point.expectedMax = mean + 3 * point.standardDeviation;
+
+    //check if current run is outside of the expected range for any of the data points
+    if (
+      point.current < point.expectedMin ||
+      point.current > point.expectedMax
+    ) {
+      alertPoints.push(point);
+    }
+  });
+
+  logger.info("alert points: " + JSON.stringify(alertPoints));
+  logger.info("data after adding standard deviation: " + JSON.stringify(data));
+
+  //check if current run is outside of the expected range for any of the data points
+
+  logger.info("finished analyzing");
+
+  return alertPoints;
 };
 
 module.exports = {
   timeSeriesAnalysis,
+  WUAlertDataPoints,
+  convertTotalClusterTimeToSeconds,
 };
