@@ -1,5 +1,8 @@
 "use strict";
 module.exports = (sequelize, DataTypes) => {
+  const {
+    timeSeriesAnalysis,
+  } = require("../jobs/jobMonitoring/monitorJobsTimeSeriesAnalysis");
   const JobMonitoringData = sequelize.define(
     "jobMonitoring_Data",
     {
@@ -83,6 +86,46 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "monitoringId",
       as: "jobMonitoring",
     });
-  }
+  };
+
+  // hooks
+  JobMonitoringData.addHook("afterCreate", async (instance, options) => {
+    const logger = require("../config/logger");
+    //grab the last runs for analysis
+    const lastRuns = await JobMonitoringData.findAll({
+      where: {
+        monitoringId: instance.monitoringId,
+        id: !instance.id,
+      },
+      attributes: ["date", "wuTopLevelInfo"],
+      order: [["date", "DESC"]],
+      limit: 10,
+    });
+
+    //if there are less than 2 records, we can't do time series analysis
+    if (lastRuns.length < 2) {
+      logger.verbose(
+        "Not enough data to perform time series analysis for monitoring ID " +
+          instance.monitoringId
+      );
+      return;
+    }
+
+    //pass last records and current run to timeSeriesAnalysisunction
+    const result = timeSeriesAnalysis({ currentRun: instance, lastRuns });
+
+    instance.metaData = result;
+
+    logger.info("saving result: " + JSON.stringify(result));
+
+    // save the result in metaData
+    await instance.save();
+
+    logger.info("result: " + JSON.stringify(result));
+
+    //if result.length, then we will send an email. That will be a seperate PR.
+
+    return;
+  });
   return JobMonitoringData;
 };
