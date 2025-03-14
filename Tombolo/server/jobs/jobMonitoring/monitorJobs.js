@@ -166,7 +166,7 @@ const monitoring_name = "Job Monitoring";
 
         let {
           Workunits: { ECLWorkunit },
-        } = await wuService.WUQuery({ StartTime: startTime });
+        } = await wuService.WUQuery({ StartDate: startTime });
         const wuWithClusterIds = ECLWorkunit.map((wu) => {
           return { ...wu, clusterId: clusterInfo.id };
         });

@@ -1,4 +1,3 @@
-const { time } = require("console");
 const logger = require("../../config/logger");
 
 const WUAlertDataPoints = () => {
@@ -48,7 +47,7 @@ const timeSeriesAnalysis = ({ currentRun, lastRuns }) => {
 
   //get the alert data points inside an array of named objects
   const alertDataPoints = WUAlertDataPoints();
-  logger.info(alertDataPoints);
+
   let data = [];
 
   alertDataPoints.forEach((point) => {
@@ -68,6 +67,8 @@ const timeSeriesAnalysis = ({ currentRun, lastRuns }) => {
     }
   });
 
+  //AT THIS POINT ----> [{name: "Cost", current: 2}, {}]
+
   let i = 1;
 
   //place all of the data points from the recent runs into data array
@@ -85,7 +86,9 @@ const timeSeriesAnalysis = ({ currentRun, lastRuns }) => {
     i++;
   });
 
-  //get standard deviation, expected min (2.5 standard deviations), expected max (2.5 standard deviations)
+  //AT THIS POINT ----> [{name: "Cost", current: 2, run1: 4, run2: 5}, {}]
+
+  let standardDev = 3;
   //push any values outside of the range to an array of alerts
   let alertPoints = [];
   data.forEach((point) => {
@@ -105,8 +108,8 @@ const timeSeriesAnalysis = ({ currentRun, lastRuns }) => {
       sum += Math.pow(point["run" + i] - mean, 2);
     }
     point.standardDeviation = Math.sqrt(sum / lastRuns.length);
-    point.expectedMin = mean - 3 * point.standardDeviation;
-    point.expectedMax = mean + 3 * point.standardDeviation;
+    point.expectedMin = mean - standardDev * point.standardDeviation;
+    point.expectedMax = mean + standardDev * point.standardDeviation;
 
     //check if current run is outside of the expected range for any of the data points
     if (
@@ -117,14 +120,13 @@ const timeSeriesAnalysis = ({ currentRun, lastRuns }) => {
     }
   });
 
-  logger.info("alert points: " + JSON.stringify(alertPoints));
-  logger.info("data after adding standard deviation: " + JSON.stringify(data));
+  //AT THIS POINT ----> [{name: "Cost", current: 2, run1: 4, run2: 5, standardDeviation: 4, expectedMin: 6, expectedMax: 10}, {Time: 2, run1: 4, run2: 5, standardDeviation: 4, expectedMin: 6, expectedMax: 10}]
 
   //check if current run is outside of the expected range for any of the data points
 
   logger.info("finished analyzing");
 
-  return alertPoints;
+  return [{ alertPoints, data }];
 };
 
 module.exports = {

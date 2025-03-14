@@ -95,6 +95,7 @@ module.exports = (sequelize, DataTypes) => {
     const lastRuns = await JobMonitoringData.findAll({
       where: {
         monitoringId: instance.monitoringId,
+        id: !instance.id,
       },
       attributes: ["date", "wuTopLevelInfo"],
       order: [["date", "DESC"]],
@@ -112,6 +113,13 @@ module.exports = (sequelize, DataTypes) => {
 
     //pass last records and current run to timeSeriesAnalysisunction
     const result = timeSeriesAnalysis({ currentRun: instance, lastRuns });
+
+    instance.metaData = result;
+
+    logger.info("saving result: " + JSON.stringify(result));
+
+    // save the result in metaData
+    await instance.save();
 
     logger.info("result: " + JSON.stringify(result));
 
