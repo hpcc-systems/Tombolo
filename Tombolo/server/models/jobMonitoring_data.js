@@ -52,6 +52,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.JSON,
       },
+      analyzed: {
+        allowNull: false,
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
       metaData: {
         allowNull: true,
         type: DataTypes.JSONB,
