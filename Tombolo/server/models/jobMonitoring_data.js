@@ -91,16 +91,19 @@ module.exports = (sequelize, DataTypes) => {
   // hooks
   JobMonitoringData.addHook("afterCreate", async (instance, options) => {
     const logger = require("../config/logger");
+
     //grab the last runs for analysis
-    const lastRuns = await JobMonitoringData.findAll({
+    let lastRuns = await JobMonitoringData.findAll({
       where: {
         monitoringId: instance.monitoringId,
-        id: !instance.id,
       },
-      attributes: ["date", "wuTopLevelInfo"],
+      attributes: ["id", "date", "wuTopLevelInfo"],
       order: [["date", "DESC"]],
       limit: 10,
     });
+
+    //strip current instance from last runs, don't have access to sequelize.op.ne operator so this is necessary instead of including it in query
+    lastRuns = lastRuns.filter((run) => run.id !== instance.id);
 
     //if there are less than 2 records, we can't do time series analysis
     if (lastRuns.length < 2) {

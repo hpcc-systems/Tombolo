@@ -166,7 +166,9 @@ const monitoring_name = "Job Monitoring";
 
         let {
           Workunits: { ECLWorkunit },
-        } = await wuService.WUQuery({ StartDate: startTime });
+        } = await wuService.WUQuery({
+          StartDate: startTime,
+        });
         const wuWithClusterIds = ECLWorkunit.map((wu) => {
           return { ...wu, clusterId: clusterInfo.id };
         });
@@ -305,6 +307,7 @@ const monitoring_name = "Job Monitoring";
     //Wus in failed state failed, aborted, unknown
     const failedStateJobs = [];
     const intermediateStateJobs = [];
+
     // Check if any jobs are in undesired state
     for (let jmId in jmWithNewWUs) {
       const notificationConditions =
@@ -332,11 +335,12 @@ const monitoring_name = "Job Monitoring";
               password: clusterInfoObj[clusterId].password || "",
             });
 
-            const wuInfo = await wuService.WUInfo({ Wuid });
+            const wuInfo = await wuService.WUInfo(WUInfoOptions(Wuid));
             const { Workunit = {} } = wuInfo;
 
             await JobMonitoringData.create({
               monitoringId: jmId,
+              applicationId: jobMonitoringObj[jmId].applicationId,
               wuId: Wuid,
               wuState: Workunit.State,
               wuTopLevelInfo: shallowCopyWithOutNested(Workunit),

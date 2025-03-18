@@ -30,8 +30,8 @@ async function startJobMonitoring() {
     let jobName = "job-monitoring" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      // interval: "1m", // For development
-      interval: humanReadableIntervalForJobMonitoring,
+      interval: "1m", // For development
+      // interval: humanReadableIntervalForJobMonitoring,
       path: path.join(
         __dirname,
         "..",
@@ -109,8 +109,8 @@ async function startJobPunctualityMonitoring() {
     let jobName = "job-punctuality-monitoring" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      // interval: "10s", // For development
-      interval: humanReadableIntervalForJobPunctualityMonitoring,
+      interval: "30s", // For development
+      // interval: humanReadableIntervalForJobPunctualityMonitoring,
       path: path.join(
         __dirname,
         "..",

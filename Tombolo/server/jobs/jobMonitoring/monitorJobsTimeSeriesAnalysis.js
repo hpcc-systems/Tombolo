@@ -16,6 +16,9 @@ const WUAlertDataPoints = () => {
 };
 
 const convertTotalClusterTimeToSeconds = (totalClusterTime) => {
+  if (!totalClusterTime) {
+    return 0;
+  }
   //take off the milliseconds
   const cleanedTime = totalClusterTime.split(".")[0];
   //split on colon
@@ -126,7 +129,7 @@ const timeSeriesAnalysis = ({ currentRun, lastRuns }) => {
 
   logger.info("finished analyzing");
 
-  return [{ alertPoints, data }];
+  return { alertPoints, analysis: data };
 };
 
 module.exports = {
