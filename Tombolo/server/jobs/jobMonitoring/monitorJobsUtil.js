@@ -834,6 +834,44 @@ const WUInfoOptions = (Wuid) => {
   };
 };
 
+const convertTotalClusterTimeToSeconds = (totalClusterTime) => {
+  if (!totalClusterTime) {
+    return 0;
+  }
+  //take off the milliseconds
+  const cleanedTime = totalClusterTime.split(".")[0];
+  //split on colon
+  const timeParts = cleanedTime.split(":");
+
+  const multipliers = [1, 60, 3600, 86400]; //seconds, minutes, hours, days
+
+  //reverse order of timeParts so seconds are first
+  timeParts.reverse();
+
+  let total = 0;
+
+  timeParts.forEach((part, index) => {
+    total += parseInt(part) * multipliers[index];
+  });
+
+  return total;
+};
+
+const WUAlertDataPoints = () => {
+  return [
+    "Wuid",
+    "WarningCount",
+    "ErrorCount",
+    "GraphCount",
+    "SourceFileCount",
+    "ResultCount",
+    "TotalClusterTime",
+    "FileAccessCost",
+    "CompileCost",
+    "ExecuteCost",
+  ];
+};
+
 module.exports = {
   matchJobName,
   findStartAndEndTimes,
@@ -851,4 +889,6 @@ module.exports = {
   nocAlertDescription,
   differenceInMs,
   WUInfoOptions,
+  convertTotalClusterTimeToSeconds,
+  WUAlertDataPoints,
 };

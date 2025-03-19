@@ -55,6 +55,7 @@ const {
   startJobMonitoring,
   startIntermediateJobsMonitoring,
   startJobPunctualityMonitoring,
+  startTimeSeriesAnalysisMonitoring,
 } = require("../jobSchedularMethods/jobMonitoring.js");
 
 const {
@@ -140,6 +141,7 @@ class JobScheduler {
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
+      await this.startTimeSeriesAnalysisMonitoring();
       await this.checkClusterReachability();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
@@ -354,6 +356,10 @@ class JobScheduler {
 
   startJobPunctualityMonitoring() {
     return startJobPunctualityMonitoring.call(this);
+  }
+
+  startTimeSeriesAnalysisMonitoring() {
+    return startTimeSeriesAnalysisMonitoring.call(this);
   }
 
   //Process notification queue

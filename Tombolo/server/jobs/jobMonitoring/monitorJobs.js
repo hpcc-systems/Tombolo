@@ -345,6 +345,7 @@ const monitoring_name = "Job Monitoring";
               wuState: Workunit.State,
               wuTopLevelInfo: shallowCopyWithOutNested(Workunit),
               wuDetailInfo: { ...Workunit },
+              analzyed: false,
               date: now,
             });
           } catch (err) {
