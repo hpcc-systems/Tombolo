@@ -111,7 +111,7 @@ async function startJobPunctualityMonitoring() {
     let jobName = "job-punctuality-monitoring" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      // interval: "60s", // For development
+      // interval: "30s", // For development
       interval: humanReadableIntervalForJobPunctualityMonitoring,
       path: path.join(
         __dirname,
