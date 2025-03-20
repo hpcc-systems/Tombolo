@@ -2,12 +2,13 @@ const logger = require("../../config/logger");
 const { parentPort } = require("worker_threads");
 const Sequelize = require("sequelize");
 const { v4: uuidv4 } = require("uuid");
-
 const models = require("../../models");
 const {
   WUAlertDataPoints,
   convertTotalClusterTimeToSeconds,
 } = require("./monitorJobsUtil");
+
+const { trimURL } = require("../../utils/authUtil");
 
 // Models
 const NotificationQueue = models.notification_queue;
@@ -28,7 +29,13 @@ const JobMonitoringData = models.jobMonitoring_Data;
         analyzed: false,
       },
       order: [["date", "DESC"]],
-      attributes: ["id", "monitoringId", "date", "wuTopLevelInfo"],
+      attributes: [
+        "id",
+        "applicationId",
+        "monitoringId",
+        "date",
+        "wuTopLevelInfo",
+      ],
     });
 
     if (instances.length === 0) {
@@ -199,6 +206,14 @@ const JobMonitoringData = models.jobMonitoring_Data;
         const humanReadableDate = new Date(currentRun.date).toLocaleString(
           "gmt"
         );
+
+        const link =
+          trimURL(process.env.WEB_URL) +
+          "/" +
+          currentRun.applicationId +
+          "/jobMonitoring/timeSeriesAnalysis?id=" +
+          currentRun.monitoringId;
+
         await NotificationQueue.create({
           type: "email",
           templateName: "timeSeriesAnalysisAlert",
@@ -216,7 +231,7 @@ const JobMonitoringData = models.jobMonitoring_Data;
             mainRecipients: ["fancma01@risk.regn.net"],
             Wuid: currentRun.wuTopLevelInfo["Wuid"],
             date: humanReadableDate,
-            link: process.env.WEB_URL, // TODO: Update with actual URL
+            link,
           },
           createdBy: "system",
         });
