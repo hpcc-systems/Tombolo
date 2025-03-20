@@ -1,5 +1,7 @@
 const logger = require("../../config/logger");
 const { parentPort } = require("worker_threads");
+const Sequelize = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
 
 const models = require("../../models");
 const {
@@ -19,7 +21,43 @@ const JobMonitoringData = models.jobMonitoring_Data;
     });
   const now = new Date(); // UTC time
   try {
-    if (1 === 2) {
+    //get all job monitoring data that has not been analyzed
+    //only select the fields we need to reduce memory usage
+    const instances = await JobMonitoringData.findAll({
+      where: {
+        analyzed: false,
+      },
+      order: [["date", "DESC"]],
+      attributes: ["id", "monitoringId", "date", "wuTopLevelInfo"],
+    });
+
+    if (instances.length === 0) {
+      parentPort &&
+        parentPort.postMessage({
+          level: "info",
+          text: "Job Monitoring Time Series Analysis:  No new jobs to analyze",
+        });
+      return;
+    }
+
+    for (const instance of instances) {
+      const currentRun = instance;
+      //get the last 10 runs for the monitoring ID
+      const lastRuns = await JobMonitoringData.findAll({
+        where: {
+          monitoringId: instance.monitoringId,
+          id: {
+            [Sequelize.Op.ne]: instance.id,
+          },
+        },
+        attributes: ["id", "date", "wuTopLevelInfo"],
+        order: [["date", "DESC"]],
+        limit: 10,
+      });
+
+      //get length of last runs
+      const lastRunsLength = lastRuns.length;
+
       if (!currentRun.monitoringId) {
         //this should never happen, but throw an error if it does
         logger.error(
@@ -91,9 +129,29 @@ const JobMonitoringData = models.jobMonitoring_Data;
         for (let i = 1; i <= lastRuns.length; i++) {
           sum += Math.pow(point["run" + i] - mean, 2);
         }
-        point.standardDeviation = Math.sqrt(sum / lastRuns.length);
-        point.expectedMin = mean - standardDev * point.standardDeviation;
-        point.expectedMax = mean + standardDev * point.standardDeviation;
+
+        point.standardDeviation =
+          Math.round(Math.sqrt(sum / lastRuns.length) * 100) / 100;
+        point.expectedMin =
+          Math.round((mean - standardDev * point.standardDeviation) * 100) /
+          100;
+        if (point.expectedMin < 0) {
+          point.expectedMin = 0;
+        }
+        point.expectedMax =
+          Math.round((mean + standardDev * point.standardDeviation) * 100) /
+          100;
+
+        //add z score
+        point.zScore = (point.current - mean) / point.standardDeviation;
+
+        point.zScore = Math.round(point.zScore * 100) / 100;
+
+        if (point.standardDeviation === 0) {
+          point.zScore = "--";
+        }
+
+        point.delta = Math.round((point.current - mean) * 100) / 100;
 
         //check if current run is outside of the expected range for any of the data points
         if (
@@ -104,11 +162,70 @@ const JobMonitoringData = models.jobMonitoring_Data;
         }
       });
 
-      //AT THIS POINT ----> [{name: "Cost", current: 2, run1: 4, run2: 5, standardDeviation: 4, expectedMin: 6, expectedMax: 10}, {Time: 2, run1: 4, run2: 5, standardDeviation: 4, expectedMin: 6, expectedMax: 10}]
+      //if any of the data points are outside of the expected range, send an alert
+      if (alertPoints.length > 0) {
+        //create an alert
+        const alert = `Job Monitoring Time Series Analysis:  Job ${currentRun.wuTopLevelInfo["Wuid"]} has a data point that is outside of the expected range`;
+        if (parentPort) {
+          parentPort.postMessage({
+            level: "info",
+            text: alert,
+          });
+        }
+        //create a notification
+        const notificationId = uuidv4();
+        alertPoints.forEach((point) => {
+          //if the key is like run1, run2, move it into "historical" object
+          let historical = [];
+          //limit it to 3 historical runs
+          let i = 1;
 
-      //check if current run is outside of the expected range for any of the data points
+          if (point.name === "TotalClusterTime") {
+            point.name = "Total Cluster Time (seconds)";
+          }
+          Object.keys(point).forEach((key) => {
+            if (i > 3) {
+              return;
+            }
+            if (key.startsWith("run")) {
+              historical.push(point[key]);
+              delete point[key];
+              i++;
+            }
+          });
+          point.historical = historical;
+        });
 
-      logger.info("finished analyzing");
+        const humanReadableDate = new Date(currentRun.date).toLocaleString(
+          "gmt"
+        );
+        await NotificationQueue.create({
+          type: "email",
+          templateName: "timeSeriesAnalysisAlert",
+          notificationOrigin: "Job Monitoring - Time Series Analysis",
+          deliveryType: "immediate",
+          metaData: {
+            notificationId,
+            alertPoints,
+            notificationOrigin: "Time Series Analysis",
+            notificationDescription: "Time Series Analysis",
+            subject:
+              "Tombolo - Work Unit Time Series Analysis Alert - " +
+              currentRun.wuTopLevelInfo["Wuid"],
+            lastRunsLength,
+            mainRecipients: ["fancma01@risk.regn.net"],
+            Wuid: currentRun.wuTopLevelInfo["Wuid"],
+            date: humanReadableDate,
+            link: process.env.WEB_URL, // TODO: Update with actual URL
+          },
+          createdBy: "system",
+        });
+      }
+
+      //save the result in metaData
+      instance.metaData = data;
+      instance.analyzed = true;
+      await instance.save();
     }
   } catch (err) {
     parentPort &&
@@ -128,42 +245,3 @@ const JobMonitoringData = models.jobMonitoring_Data;
     }
   }
 })();
-
-// //grab the last runs for analysis
-// let lastRuns = await JobMonitoringData.findAll({
-//   where: {
-//     monitoringId: instance.monitoringId,
-//   },
-//   attributes: ["id", "date", "wuTopLevelInfo"],
-//   order: [["date", "DESC"]],
-//   limit: 10,
-// });
-
-// //strip current instance from last runs, don't have access to sequelize.op.ne operator so this is necessary instead of including it in query
-// lastRuns = lastRuns.filter((run) => run.id !== instance.id);
-
-// //if there are less than 2 records, we can't do time series analysis
-// if (lastRuns.length < 2) {
-//   logger.verbose(
-//     "Not enough data to perform time series analysis for monitoring ID " +
-//       instance.monitoringId
-//   );
-//   return;
-// }
-
-// //pass last records and current run to timeSeriesAnalysisunction
-// const result = timeSeriesAnalysis({ currentRun: instance, lastRuns });
-
-// instance.metaData = result;
-
-// logger.info("saving result: " + JSON.stringify(result));
-// instance.analyzed = true;
-
-// // save the result in metaData
-// await instance.save();
-
-// logger.info("result: " + JSON.stringify(result));
-
-// //if result.length, then we will send an email. That will be a seperate PR.
-
-// return;

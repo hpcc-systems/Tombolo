@@ -139,8 +139,8 @@ async function startTimeSeriesAnalysisMonitoring() {
     let jobName = "job-time-series-analysis-monitoring" + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "60s", // For development
-      // interval: "1h",
+      // interval: "60s", // For development
+      interval: "1h",
       path: path.join(
         __dirname,
         "..",
