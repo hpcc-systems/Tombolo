@@ -74,6 +74,13 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    // Add a composite unique constraint on clusterId, monitoringId, and wuId
+    await queryInterface.addConstraint("jobMonitoring_Data", {
+      fields: [ "monitoringId", "wuId"],
+      type: "unique",
+      name: "jm_data_archive_unique_monitoringId_wuId", // Custom name for the constraint
+    });
   },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable("jobMonitoring_Data_Archive");
