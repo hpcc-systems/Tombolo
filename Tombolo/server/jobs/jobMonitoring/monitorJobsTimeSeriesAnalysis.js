@@ -229,6 +229,13 @@ const JobMonitoring = models.jobMonitoring;
 
           //need to convert TotalClusterTime to human readable time
           if (point.name === "TotalClusterTime") {
+            if (point.current > 0) {
+              point.current =
+                point.current +
+                " (" +
+                convertSecondsToHumanReadableTime(point.current) +
+                ")";
+            }
             //put human readable time in here
             point.current =
               point.current +
@@ -237,7 +244,14 @@ const JobMonitoring = models.jobMonitoring;
               ")";
 
             point.historical = historical.map((h) => {
-              return h + " (" + convertSecondsToHumanReadableTime(h) + ")";
+              let returnString = "";
+              if (h > 0) {
+                returnString =
+                  h + " (" + convertSecondsToHumanReadableTime(h) + ")";
+              } else {
+                returnString = h;
+              }
+              return returnString;
             });
           }
         });
