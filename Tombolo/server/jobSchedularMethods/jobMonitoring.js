@@ -172,9 +172,34 @@ async function startTimeSeriesAnalysisMonitoring() {
   }
 }
 
+
+// Bree job that gets wu Info
+function createWuInfoFetchingJob(data={}) {
+  try {
+    let jobName = "fetch-wu-info" + new Date().getTime();
+      this.bree.add({
+        name: jobName,
+        data,
+        timeout: 0,
+        path: path.join(
+          __dirname,
+          "..",
+          "jobs",
+          "jobMonitoring",
+          "fetchWus.js"
+        ),
+      });
+    this.bree.start(jobName);
+  } catch (err) {
+    logger.error(err.message);
+  }
+}
+
+
 module.exports = {
   startJobMonitoring,
   startIntermediateJobsMonitoring,
   startJobPunctualityMonitoring,
   startTimeSeriesAnalysisMonitoring,
+  createWuInfoFetchingJob,
 };
