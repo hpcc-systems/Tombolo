@@ -49,6 +49,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.JSON,
       },
+      analyzed: {
+        allowNull: false,
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
       metaData: {
         allowNull: true,
         type: DataTypes.JSONB,
@@ -73,7 +78,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-
   // Associations
   JobMonitoringDataArchive.associate = (models) => {
     JobMonitoringDataArchive.belongsTo(models.application, {
@@ -84,7 +88,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "monitoringId",
       as: "jobMonitoring",
     });
-  }
+  };
 
   return JobMonitoringDataArchive;
 };

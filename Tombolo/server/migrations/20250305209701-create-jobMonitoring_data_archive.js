@@ -22,9 +22,9 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      wuState:{
+      wuState: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       monitoringId: {
         type: Sequelize.UUID,
@@ -47,6 +47,11 @@ module.exports = {
       wuDetailInfo: {
         allowNull: false,
         type: Sequelize.JSON,
+      },
+      analyzed: {
+        allowNull: false,
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
       },
       metaData: {
         allowNull: true,

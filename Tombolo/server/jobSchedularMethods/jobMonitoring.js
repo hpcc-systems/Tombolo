@@ -3,6 +3,7 @@ const {
   job_monitoring_interval,
   intermediate_job_monitoring_interval,
   job_punctuality_monitoring_interval,
+  job_time_series_analysis_interval,
 } = require("../config/monitorings");
 const logger = require("../config/logger");
 const {
@@ -14,6 +15,8 @@ const {
 const MONITOR_JOBS_FILE_NAME = "monitorJobs.js";
 const MONITOR_INTERMEDIATE_JOBS_FILE_NAME = "monitorIntermediateStateJobs.js";
 const MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME = "monitorJobPunctuality.js";
+const MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME =
+  "monitorJobsTimeSeriesAnalysis.js";
 
 // Job monitoring
 // Job monitoring interval
@@ -132,8 +135,46 @@ async function startJobPunctualityMonitoring() {
   }
 }
 
+// Intermediate jobs monitoring
+// Intermediate jobs monitoring interval
+const timeSeriesJobMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({
+  interval: job_time_series_analysis_interval,
+});
+const humanReadableIntervalForTimeSeriesJobMonitoring = generateIntervalString({
+  timeSlots: timeSeriesJobMonitoringTimeSlots,
+});
+
+async function startTimeSeriesAnalysisMonitoring() {
+  try {
+    let jobName = "job-time-series-analysis-monitoring" + new Date().getTime();
+    this.bree.add({
+      name: jobName,
+      // interval: "60s", // For development
+      interval: humanReadableIntervalForTimeSeriesJobMonitoring,
+      path: path.join(
+        __dirname,
+        "..",
+        "jobs",
+        "jobMonitoring",
+        MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME
+      ),
+      worker: {
+        workerData: {
+          jobName: jobName,
+          WORKER_CREATED_AT: Date.now(),
+        },
+      },
+    });
+    this.bree.start(jobName);
+    logger.info("Job time series analysis monitoring initialized ...");
+  } catch (err) {
+    logger.error(err.message);
+  }
+}
+
 module.exports = {
   startJobMonitoring,
   startIntermediateJobsMonitoring,
   startJobPunctualityMonitoring,
+  startTimeSeriesAnalysisMonitoring,
 };

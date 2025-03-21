@@ -16,6 +16,7 @@ const {
   getDomain,
   createNotificationPayload,
   nocAlertDescription,
+  WUInfoOptions,
 } = require("./monitorJobsUtil");
 const shallowCopyWithOutNested = require("../../utils/shallowCopyWithOutNested");
 
@@ -117,10 +118,10 @@ const JobMonitoringData = models.jobMonitoring_Data;
             const { clusterId } = wuData;
             const clusterDetail = clustersInfoObj[clusterId];
             const {
-              applicationId,
               jobName,
               jobMonitoringData: {
                 id: jobMonitoringId,
+                applicationId,
                 monitoringName,
                 metaData: {
                   notificationMetaData,
@@ -146,7 +147,7 @@ const JobMonitoringData = models.jobMonitoring_Data;
             // Make call to HPCC to get the state of the WU
             let newWuDetails = null;
             try{
-              newWuDetails = (await wuService.WUInfo({ Wuid: wuData.Wuid })).Workunit;
+              newWuDetails = (await wuService.WUInfo(WUInfoOptions(wuData.Wuid))).Workunit;
             }catch(err){
               parentPort && parentPort.postMessage({level: "error", text: `Intermediate state JM : Error getting WU details for ${wuData.Wuid} on cluster ${clusterDetail.id}: ${err.message}`});
 
@@ -176,13 +177,16 @@ const JobMonitoringData = models.jobMonitoring_Data;
             if (currentStateLowerCase === 'completed') {
               if ( notificationConditionLowerCase.includes("timeseriesanalysis")) {
                 try{
+                  console.log("==== appid ===", applicationId);
                      await JobMonitoringData.create({
                        monitoringId: jobMonitoringId,
+                       applicationId,
                        wuId: newWuDetails.Wuid,
                        wuState: currentWuState,
                        wuTopLevelInfo: shallowCopyWithOutNested(newWuDetails),
                        wuDetailInfo: { ...newWuDetails },
                        date: now,
+                       analyzed: false,
                      });
                 }catch(err){
                   parentPort && parentPort.postMessage({level: "error", text: `Monitoring Intermediate State Job: Error while trying to save wuInfo for ${err.message} : ${err.message}`});
@@ -201,11 +205,13 @@ const JobMonitoringData = models.jobMonitoring_Data;
                 try {
                   await JobMonitoringData.create({
                     monitoringId: jobMonitoringId,
+                    applicationId: applicationId,
                     wuId: newWuDetails.Wuid,
                     wuState: currentWuState,
                     wuTopLevelInfo: shallowCopyWithOutNested(newWuDetails),
                     wuDetailInfo: { ...newWuDetails },
                     date: now,
+                    analyzed: false,
                   });
                 } catch (err) {
                   parentPort &&
