@@ -110,8 +110,6 @@ const JobMonitoring = models.jobMonitoring;
         i++;
       });
 
-      //AT THIS POINT ----> [{name: "Cost", current: 2, run1: 4, run2: 5}, {}]
-
       let standardDev = 3;
       //push any values outside of the range to an array of alerts
       let alertPoints = [];
@@ -137,28 +135,56 @@ const JobMonitoring = models.jobMonitoring;
           sum += Math.pow(point["run" + i] - mean, 2);
         }
 
+        //TODO --- Dynamically adjust decimal places based on the data.
+        let decimalPlaces = 0;
+
+        //look at the sum and determine a proper number of decimal places necessary to convey information
+        if (sum < 0.01) {
+          decimalPlaces = 6;
+        } else if (sum < 0.1) {
+          decimalPlaces = 5;
+        } else if (sum < 1) {
+          decimalPlaces = 4;
+        } else if (sum < 10) {
+          decimalPlaces = 3;
+        } else if (sum < 100) {
+          decimalPlaces = 2;
+        } else if (sum < 1000) {
+          decimalPlaces = 1; //cant go less than 1 or otherwise math won't work with rounding math due to exponent
+        }
+
+        //add metrics to point
         point.standardDeviation =
-          Math.round(Math.sqrt(sum / lastRuns.length) * 100) / 100;
+          Math.round(
+            Math.sqrt(sum / lastRuns.length) * Math.Pow(10, decimalPlaces)
+          ) / Math.Pow(10, decimalPlaces);
         point.expectedMin =
-          Math.round((mean - standardDev * point.standardDeviation) * 100) /
-          100;
+          Math.round(
+            (mean - standardDev * point.standardDeviation) *
+              Math.Pow(10, decimalPlaces)
+          ) / Math.Pow(10, decimalPlaces);
         if (point.expectedMin < 0) {
           point.expectedMin = 0;
         }
         point.expectedMax =
-          Math.round((mean + standardDev * point.standardDeviation) * 100) /
-          100;
+          Math.round(
+            (mean + standardDev * point.standardDeviation) *
+              Math.Pow(10, decimalPlaces)
+          ) / Math.Pow(10, decimalPlaces);
 
-        //add z score
         point.zScore = (point.current - mean) / point.standardDeviation;
 
-        point.zScore = Math.round(point.zScore * 100) / 100;
+        point.zScore =
+          Math.round(point.zScore * Math.Pow(10, decimalPlaces)) /
+          Math.Pow(10, decimalPlaces);
 
         if (point.standardDeviation === 0) {
           point.zScore = "--";
         }
 
-        point.delta = Math.round((point.current - mean) * 100) / 100;
+        point.delta =
+          Math.round((point.current - mean) * Math.Pow(10, decimalPlaces)) /
+          Math.Pow(10, decimalPlaces);
 
         //check if current run is outside of the expected range for any of the data points
         if (
