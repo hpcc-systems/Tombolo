@@ -75,6 +75,13 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "jobMonitoring_Data",
       timestamps: true,
       paranoid: true,
+      indexes: [
+        {
+          unique: true,
+          fields: [ "monitoringId", "wuId"],
+          name: "unique_monitoringId_wuId", // Match the migration constraint name
+        },
+      ],
     }
   );
 
