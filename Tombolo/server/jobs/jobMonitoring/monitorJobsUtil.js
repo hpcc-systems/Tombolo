@@ -857,6 +857,32 @@ const convertTotalClusterTimeToSeconds = (totalClusterTime) => {
   return total;
 };
 
+const convertSecondsToHumanReadableTime = (seconds) => {
+  const days = Math.floor(seconds / 86400);
+  seconds -= days * 86400;
+  const hours = Math.floor(seconds / 3600);
+  seconds -= hours * 3600;
+  const minutes = Math.floor(seconds / 60);
+  seconds -= minutes * 60;
+
+  let returnString = "";
+
+  if (days > 0) {
+    returnString += `${days}d `;
+  }
+  if (hours > 0) {
+    returnString += `${hours}h `;
+  }
+  if (minutes > 0) {
+    returnString += `${minutes}m `;
+  }
+  if (seconds > 0) {
+    returnString += `${seconds}s`;
+  }
+
+  return returnString;
+};
+
 const WUAlertDataPoints = () => {
   return [
     "Wuid",
@@ -891,4 +917,5 @@ module.exports = {
   WUInfoOptions,
   convertTotalClusterTimeToSeconds,
   WUAlertDataPoints,
+  convertSecondsToHumanReadableTime,
 };

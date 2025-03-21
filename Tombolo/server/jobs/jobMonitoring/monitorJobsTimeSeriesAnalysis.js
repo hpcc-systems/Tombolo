@@ -6,6 +6,7 @@ const models = require("../../models");
 const {
   WUAlertDataPoints,
   convertTotalClusterTimeToSeconds,
+  convertSecondsToHumanReadableTime,
 } = require("./monitorJobsUtil");
 
 const { trimURL } = require("../../utils/authUtil");
@@ -13,6 +14,7 @@ const { trimURL } = require("../../utils/authUtil");
 // Models
 const NotificationQueue = models.notification_queue;
 const JobMonitoringData = models.jobMonitoring_Data;
+const JobMonitoring = models.jobMonitoring;
 
 (async () => {
   parentPort &&
@@ -80,6 +82,7 @@ const JobMonitoringData = models.jobMonitoring_Data;
       //put current run into data array
       data.forEach((point) => {
         if (point.name === "TotalClusterTime") {
+          //save it into humanReadableTotalClusterTime
           point.current = convertTotalClusterTimeToSeconds(
             currentRun.wuTopLevelInfo[point.name]
           );
@@ -121,7 +124,7 @@ const JobMonitoringData = models.jobMonitoring_Data;
         let total = 0;
         for (let i = 1; i <= lastRuns.length; i++) {
           // Protection against NaN values
-          if(isNaN(point["run" + i])) {
+          if (isNaN(point["run" + i])) {
             continue;
           }
           total += point["run" + i];
@@ -181,12 +184,10 @@ const JobMonitoringData = models.jobMonitoring_Data;
         alertPoints.forEach((point) => {
           //if the key is like run1, run2, move it into "historical" object
           let historical = [];
+
           //limit it to 3 historical runs
           let i = 1;
 
-          if (point.name === "TotalClusterTime") {
-            point.name = "Total Cluster Time (seconds)";
-          }
           Object.keys(point).forEach((key) => {
             if (i > 3) {
               return;
@@ -197,7 +198,22 @@ const JobMonitoringData = models.jobMonitoring_Data;
               i++;
             }
           });
+
           point.historical = historical;
+
+          //need to convert TotalClusterTime to human readable time
+          if (point.name === "TotalClusterTime") {
+            //put human readable time in here
+            point.current =
+              point.current +
+              " (" +
+              convertSecondsToHumanReadableTime(point.current) +
+              ")";
+
+            point.historical = historical.map((h) => {
+              return h + " (" + convertSecondsToHumanReadableTime(h) + ")";
+            });
+          }
         });
 
         const humanReadableDate = new Date(currentRun.date).toLocaleString(
@@ -210,6 +226,17 @@ const JobMonitoringData = models.jobMonitoring_Data;
           currentRun.applicationId +
           "/jobMonitoring/timeSeriesAnalysis?id=" +
           currentRun.monitoringId;
+
+        //get recipients from the monitoring
+        const monitoring = await JobMonitoring.findByPk(
+          currentRun.monitoringId
+        );
+
+        const {
+          primaryContacts = [],
+          secondaryContacts = [],
+          notifyContacts = [],
+        } = monitoring.metaData?.notificationMetaData;
 
         await NotificationQueue.create({
           type: "email",
@@ -225,7 +252,8 @@ const JobMonitoringData = models.jobMonitoring_Data;
               "Tombolo - Work Unit Time Series Analysis Alert - " +
               currentRun.wuTopLevelInfo["Wuid"],
             lastRunsLength,
-            mainRecipients: ["fancma01@risk.regn.net"],
+            mainRecipients: primaryContacts,
+            cc: [...secondaryContacts, ...notifyContacts],
             Wuid: currentRun.wuTopLevelInfo["Wuid"],
             date: humanReadableDate,
             link,
