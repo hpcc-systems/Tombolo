@@ -156,35 +156,35 @@ const JobMonitoring = models.jobMonitoring;
         //add metrics to point
         point.standardDeviation =
           Math.round(
-            Math.sqrt(sum / lastRuns.length) * Math.Pow(10, decimalPlaces)
-          ) / Math.Pow(10, decimalPlaces);
+            Math.sqrt(sum / lastRuns.length) * Math.pow(10, decimalPlaces)
+          ) / Math.pow(10, decimalPlaces);
         point.expectedMin =
           Math.round(
             (mean - standardDev * point.standardDeviation) *
-              Math.Pow(10, decimalPlaces)
-          ) / Math.Pow(10, decimalPlaces);
+              Math.pow(10, decimalPlaces)
+          ) / Math.pow(10, decimalPlaces);
         if (point.expectedMin < 0) {
           point.expectedMin = 0;
         }
         point.expectedMax =
           Math.round(
             (mean + standardDev * point.standardDeviation) *
-              Math.Pow(10, decimalPlaces)
-          ) / Math.Pow(10, decimalPlaces);
+              Math.pow(10, decimalPlaces)
+          ) / Math.pow(10, decimalPlaces);
 
         point.zScore = (point.current - mean) / point.standardDeviation;
 
         point.zScore =
-          Math.round(point.zScore * Math.Pow(10, decimalPlaces)) /
-          Math.Pow(10, decimalPlaces);
+          Math.round(point.zScore * Math.pow(10, decimalPlaces)) /
+          Math.pow(10, decimalPlaces);
 
         if (point.standardDeviation === 0) {
           point.zScore = "--";
         }
 
         point.delta =
-          Math.round((point.current - mean) * Math.Pow(10, decimalPlaces)) /
-          Math.Pow(10, decimalPlaces);
+          Math.round((point.current - mean) * Math.pow(10, decimalPlaces)) /
+          Math.pow(10, decimalPlaces);
 
         //check if current run is outside of the expected range for any of the data points
         if (
