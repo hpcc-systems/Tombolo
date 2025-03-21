@@ -38,15 +38,7 @@ const JobMonitoringData = models.jobMonitoring_Data;
       ],
     });
 
-    if (instances.length === 0) {
-      parentPort &&
-        parentPort.postMessage({
-          level: "info",
-          text: "Job Monitoring Time Series Analysis:  No new jobs to analyze",
-        });
-      return;
-    }
-
+    // loop through each instance and analyze the data
     for (const instance of instances) {
       const currentRun = instance;
       //get the last 10 runs for the monitoring ID
@@ -128,8 +120,13 @@ const JobMonitoringData = models.jobMonitoring_Data;
         //get total
         let total = 0;
         for (let i = 1; i <= lastRuns.length; i++) {
+          // Protection against NaN values
+          if(isNaN(point["run" + i])) {
+            continue;
+          }
           total += point["run" + i];
         }
+
         //get standard deviation
         let mean = total / lastRuns.length;
         let sum = 0;
