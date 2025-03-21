@@ -3,6 +3,7 @@ const {
   job_monitoring_interval,
   intermediate_job_monitoring_interval,
   job_punctuality_monitoring_interval,
+  job_time_series_analysis_interval,
 } = require("../config/monitorings");
 const logger = require("../config/logger");
 const {
@@ -134,13 +135,22 @@ async function startJobPunctualityMonitoring() {
   }
 }
 
+// Intermediate jobs monitoring
+// Intermediate jobs monitoring interval
+const timeSeriesJobMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({
+  interval: job_time_series_analysis_interval,
+});
+const humanReadableIntervalForTimeSeriesJobMonitoring = generateIntervalString({
+  timeSlots: timeSeriesJobMonitoringTimeSlots,
+});
+
 async function startTimeSeriesAnalysisMonitoring() {
   try {
     let jobName = "job-time-series-analysis-monitoring" + new Date().getTime();
     this.bree.add({
       name: jobName,
       // interval: "60s", // For development
-      interval: "1h",
+      interval: humanReadableIntervalForTimeSeriesJobMonitoring,
       path: path.join(
         __dirname,
         "..",
