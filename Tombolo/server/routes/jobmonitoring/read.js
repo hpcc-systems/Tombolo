@@ -7,9 +7,11 @@ const { body, check, param } = require("express-validator");
 const logger = require("../../config/logger");
 const models = require("../../models");
 const { validationResult } = require("express-validator");
+const JobScheduler = require("../../jobSchedular/job-scheduler");
 
 //Constants
 const JobMonitoring = models.jobMonitoring;
+const jobMonitoring_Data = models.jobMonitoring_Data;
 const Op = Sequelize.Op;
 
 // Create new job monitoring
@@ -50,9 +52,22 @@ router.post(
         { ...req.body, approvalStatus: "Pending" },
         { raw: true }
       );
+
+      // If TimeSeriesAnalysis is part of the notification condition, create a job to fetch WU info (Runs in background)
+      const {metaData: {notificationMetaData: { notificationCondition }}} = req.body;
+
+      if (notificationCondition.includes("TimeSeriesAnalysis")) {
+        JobScheduler.createWuInfoFetchingJob({
+          clusterId: req.body.clusterId,
+          jobName: req.body.jobName,
+          monitoringId: response.id,
+          applicationId: req.body.applicationId,
+        });
+      }
+
       res.status(200).send(response);
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       res.status(500).send("Failed to save job monitoring");
     }
   }
@@ -131,6 +146,17 @@ router.patch(
         return res.status(400).json({ errors: errors.array() });
       }
 
+      // Get existing monitoring
+      const existingMonitoring = await JobMonitoring.findByPk(req.body.id);
+      if (!existingMonitoring) {
+        return res.status(404).send("Job monitoring not found");
+      }
+
+      const { clusterId: existingClusterId, jobName: existingJobName } =
+        existingMonitoring;
+      const clusterIdIsDifferent = req.body.clusterId !== existingClusterId;
+      const jobNameIsDifferent = req.body.jobName !== existingJobName;
+
       //Payload
       const payload = req.body;
       payload.approvalStatus = "Pending";
@@ -152,6 +178,22 @@ router.patch(
 
       //If updated - Get the updated job monitoring
       const updatedJob = await JobMonitoring.findByPk(req.body.id);
+
+      // If the clusterId or jobName has changed, update the jobMonitoring_Data table ( Happens in background)
+      const { metaData: { notificationMetaData: { notificationCondition }  }} = req.body;
+
+      if (
+        (clusterIdIsDifferent || jobNameIsDifferent) &&
+        notificationCondition.includes("TimeSeriesAnalysis")
+      ) {
+        JobScheduler.createWuInfoFetchingJob({
+          clusterId: req.body.clusterId,
+          jobName: req.body.jobName,
+          monitoringId: req.body.id,
+          applicationId: req.body.applicationId,
+        });
+      }
+
       res.status(200).send(updatedJob);
     } catch (err) {
       console.log(err);
@@ -349,7 +391,6 @@ router.patch(
   }
 );
 
-module.exports = router;
 // Bulk update - only primary, secondary and notify contact are part of bulk update for now
 router.patch(
   "/bulkUpdate",
@@ -385,8 +426,41 @@ router.patch(
   }
 );
 
+// Get Job Monitoring Data by JM ID
+router.get(
+  "/data/:id",
+  [param("id").isUUID().withMessage("ID must be a valid UUID")],
+  async (req, res) => {
+    const { id } = req.params;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      logger.error(errors);
+      return res.status(503).send("Failed to get job monitoring data");
+    }
 
+    try {
+      const jobMonitoringData = await jobMonitoring_Data.findAll({
+        where: { monitoringId: id },
+        // latest ones first
+        order: [["createdAt", "DESC"]],
+        attributes: [ "wuTopLevelInfo"],
+        raw: true
+      });
 
+      const topLevelInfo = jobMonitoringData.map(data => JSON.parse(data.wuTopLevelInfo));
+  
+      topLevelInfo.forEach(i =>{
+        i.sequenceNumber = parseInt(i.Wuid.replace(/W|-/g, ""), 10);
+      })
 
+      // sort by sequence number
+      const sortedTopLevelInfo = topLevelInfo.sort((a, b) => b.sequenceNumber - a.sequenceNumber);
+      res.status(200).json(sortedTopLevelInfo);
+    } catch (err) {
+      logger.error(err.message);
+      res.status(500).send("Failed to get job monitoring data");
+    }
+  }
+);
 // Export the router
 module.exports = router;
