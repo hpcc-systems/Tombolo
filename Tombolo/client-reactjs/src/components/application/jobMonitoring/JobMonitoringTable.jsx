@@ -330,7 +330,7 @@ const JobMonitoringTable = ({
 
   // Take to time series analysis page
   const routeToTimeSeriesAnalysis = (record) => {
-    window.open(`/tombolo/${applicationId}/timeseriesAnaylis?monitoringId=${record.id}`, '_blank');
+    window.open(`/${applicationId}/jobMonitoring/timeSeriesAnalysis?id=${record.id}`, '_blank');
   };
 
   return (

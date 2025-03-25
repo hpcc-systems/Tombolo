@@ -186,6 +186,13 @@ router.patch(
         (clusterIdIsDifferent || jobNameIsDifferent) &&
         notificationCondition.includes("TimeSeriesAnalysis")
       ) {
+        // Delete existing job monitoring data permanently
+        await jobMonitoring_Data.destroy({
+          where: { monitoringId: req.body.id },
+          force: true,
+        });
+
+        // Re-fetch must happen
         JobScheduler.createWuInfoFetchingJob({
           clusterId: req.body.clusterId,
           jobName: req.body.jobName,
@@ -444,6 +451,7 @@ router.get(
         // latest ones first
         order: [["createdAt", "DESC"]],
         attributes: [ "wuTopLevelInfo"],
+        limit: 10,
         raw: true
       });
 
