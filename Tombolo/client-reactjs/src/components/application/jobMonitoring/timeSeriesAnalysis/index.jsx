@@ -78,7 +78,7 @@ const TimeSeriesAnalysis = () => {
   const [data, setData] = useState([]);
   const [middleColumns, setMiddleColumns] = useState([]);
   const [selectedLeftWuid, setSelectedLeftWuid] = useState(null);
-  const [outLierColumns, setOutLierColumns] = useState([]);
+  const [outlierColumns, setOutlierColumns] = useState([]);
   const [leftColumns, setLeftColumns] = useState([
     {
       title: 'Metrics',
@@ -119,7 +119,7 @@ const TimeSeriesAnalysis = () => {
       const rightData = wus.slice(1);
       const analysis1 = performTimeSeriesAnalysis({ leftData, rightData });
       const { delta, expectedMinMax, outliers, zIndex } = analysis1;
-      setOutLierColumns(outliers);
+      setOutlierColumns(outliers);
 
       // existing wus and delta and expected value
       const allWus = [
@@ -250,7 +250,7 @@ const TimeSeriesAnalysis = () => {
       fixed: 'left',
       width: 150,
       onCell: (record) => {
-        if (record.metric && outLierColumns.includes(record.metric.toLowerCase())) {
+        if (record.metric && outlierColumns.includes(record.metric.toLowerCase())) {
           return {
             style: {
               backgroundColor: 'var(--paused)',
