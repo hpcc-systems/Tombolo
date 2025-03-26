@@ -100,8 +100,8 @@ const JobMonitoringData = models.jobMonitoring_Data;
           wuState: wu.State,
           monitoringId,
           date: startTime,
-          wuTopLevelInfo: JSON.stringify(wu),
-          wuDetailInfo: JSON.stringify(allWuInfo.find(wuInfo => wuInfo.Wuid === wu.Wuid)),
+          wuTopLevelInfo: wu,
+          wuDetailInfo: allWuInfo.find(wuInfo => wuInfo.Wuid === wu.Wuid),
           metaData: JSON.stringify({}),
           analyzed: true
         }

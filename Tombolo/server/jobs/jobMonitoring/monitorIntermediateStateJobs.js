@@ -18,7 +18,7 @@ const {
   nocAlertDescription,
   WUInfoOptions,
 } = require("./monitorJobsUtil");
-const shallowCopyWithOutNested = require("../../utils/shallowCopyWithOutNested");
+const shallowCopyWithOutNested = require("../../utils/shallowCopyWithoutNested");
 
 // Constants
 const cluster = models.cluster;
