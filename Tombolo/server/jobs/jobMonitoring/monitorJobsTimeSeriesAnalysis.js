@@ -236,12 +236,6 @@ const JobMonitoring = models.jobMonitoring;
                 convertSecondsToHumanReadableTime(point.current) +
                 ")";
             }
-            //put human readable time in here
-            point.current =
-              point.current +
-              " (" +
-              convertSecondsToHumanReadableTime(point.current) +
-              ")";
 
             point.historical = historical.map((h) => {
               let returnString = "";
