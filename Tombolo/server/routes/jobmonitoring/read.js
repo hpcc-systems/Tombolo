@@ -152,10 +152,14 @@ router.patch(
         return res.status(404).send("Job monitoring not found");
       }
 
-      const { clusterId: existingClusterId, jobName: existingJobName } =
+      const { clusterId: existingClusterId, jobName: existingJobName, metaData: { notificationMetaData: { notificationCondition : existingNotificationConditions } } } =
         existingMonitoring;
+      const {metaData: {notificationMetaData: { notificationCondition }, }} = req.body;
+
+
       const clusterIdIsDifferent = req.body.clusterId !== existingClusterId;
       const jobNameIsDifferent = req.body.jobName !== existingJobName;
+      const timeSeriesAnalysisAdded  = !existingNotificationConditions.includes("TimeSeriesAnalysis") && req.body.metaData.notificationMetaData.notificationCondition.includes("TimeSeriesAnalysis");
 
       //Payload
       const payload = req.body;
@@ -180,12 +184,20 @@ router.patch(
       const updatedJob = await JobMonitoring.findByPk(req.body.id);
 
       // If the clusterId or jobName has changed, update the jobMonitoring_Data table ( Happens in background)
-      const { metaData: { notificationMetaData: { notificationCondition }  }} = req.body;
 
       if (
-        (clusterIdIsDifferent || jobNameIsDifferent) &&
+        (clusterIdIsDifferent ||
+          jobNameIsDifferent ||
+          timeSeriesAnalysisAdded) &&
         notificationCondition.includes("TimeSeriesAnalysis")
       ) {
+        // Delete existing job monitoring data permanently
+        await jobMonitoring_Data.destroy({
+          where: { monitoringId: req.body.id },
+          force: true,
+        });
+
+        // Re-fetch must happen
         JobScheduler.createWuInfoFetchingJob({
           clusterId: req.body.clusterId,
           jobName: req.body.jobName,
@@ -444,10 +456,19 @@ router.get(
         // latest ones first
         order: [["createdAt", "DESC"]],
         attributes: [ "wuTopLevelInfo"],
+        limit: 10,
         raw: true
       });
 
-      const topLevelInfo = jobMonitoringData.map(data => JSON.parse(data.wuTopLevelInfo));
+      console.log('------------------------------------------');
+      console.dir(jobMonitoringData, { depth: null });
+      console.log('------------------------------------------');
+
+      const topLevelInfo = jobMonitoringData.map(data => data.wuTopLevelInfo);
+
+      console.log('---------TLI---------------------------------');
+      console.dir(topLevelInfo, { depth: null });
+      console.log('------------------------------------------');
   
       topLevelInfo.forEach(i =>{
         i.sequenceNumber = parseInt(i.Wuid.replace(/W|-/g, ""), 10);

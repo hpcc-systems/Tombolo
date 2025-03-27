@@ -2,6 +2,7 @@
 :root {
   /* some colors from bootstrap */
   --primary: #007bff;
+  --hyperLinkBlue: #0000ff;
   --secondary: #6c757d;
   --secondary-light: #d3d3d3;
   --success: #28a745;

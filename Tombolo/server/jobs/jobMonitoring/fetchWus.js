@@ -1,10 +1,18 @@
+// Imports
 const { parentPort, workerData } = require("worker_threads");
+const { decryptString } = require("../../utils/cipher");
+
+// Local Imports
 const models = require("../../models");
+const { WorkunitsService } = require("@hpcc-js/comms");
+const shallowCopyWithoutNested = require("../../utils/shallowCopyWithoutNested.js");
+const { WUInfoOptions} = require('./monitorJobsUtil');
+
+// Local Variables
 const cluster = models.cluster;
 const JobMonitoringData = models.jobMonitoring_Data;
-const { decryptString } = require("../../utils/cipher");
-const { WorkunitsService } = require("@hpcc-js/comms");
 
+// Self Invoking function
 (async() =>{
   const { job } = workerData;
   const { clusterId, jobName, monitoringId, applicationId } = job.data;
@@ -50,6 +58,7 @@ const { WorkunitsService } = require("@hpcc-js/comms");
       } = await wuService.WUQuery({
         Jobname: jobName,
         Count:10,
+        State: "completed",
       });
 
       // If no workunits found, return
@@ -69,41 +78,21 @@ const { WorkunitsService } = require("@hpcc-js/comms");
 
       // Iterate over workunits and get wuInfo
       const allWuInfo = [];
+
       for (const wu of workUnits) {
+        const wuInfoParams = WUInfoOptions(wu);
         const wuInfo = await wuService.WUInfo({
-          Wuid: wu,
-          TruncateEclTo64k: false,
-          IncludeECL: false,
-          IncludeTotalClusterTime: true,
+          ...wuInfoParams,
         });
         allWuInfo.push(wuInfo.Workunit || {});
       }   
 
-      // Iterate over allWuInfo and create wuTopLevelInfo array // TODO - use Matt's func to pass params
+      // Iterate over allWuInfo and create wuTopLevelInfo array
       const wuTopLevelInfo = allWuInfo.map(wu =>{
-        return {
-          Wuid: wu.Wuid,
-          Owner: wu.Owner,
-          Cluster: wu.Cluster,
-          Jobname: wu.Jobname,
-          State: wu.State,
-          Description: wu.Description,
-          Protected: wu.Protected,
-          DateTimeScheduled: wu.DateTimeScheduled,
-          WarningCount : wu.WarningCount,
-          ErrorCount : wu.ErrorCount,
-          GraphCount : wu.GraphCount,
-          SourceFileCount : wu.SourceFileCount,
-          ResultCount : wu.ResultCount,
-          TotalClusterTime : wu.TotalClusterTime,
-          FileAccessCost : wu.FileAccessCost,
-          CompileCost: wu.CompileCost,
-          ExecuteCost: wu.ExecuteCost,
-        };
+        return shallowCopyWithoutNested(wu);
       });
 
       // Create rows for job Monitoring data
-      // {applicationId, wuId, wuState, monitoringId, date ( now() ),wuTopLevelInfo, wuDetailInfo,metaData {}, }
       const jmDataRows = wuTopLevelInfo.map(wu =>{
         return {
           applicationId,
@@ -111,8 +100,8 @@ const { WorkunitsService } = require("@hpcc-js/comms");
           wuState: wu.State,
           monitoringId,
           date: startTime,
-          wuTopLevelInfo: JSON.stringify(wu),
-          wuDetailInfo: JSON.stringify(allWuInfo.find(wuInfo => wuInfo.Wuid === wu.Wuid)),
+          wuTopLevelInfo: wu,
+          wuDetailInfo: allWuInfo.find(wuInfo => wuInfo.Wuid === wu.Wuid),
           metaData: JSON.stringify({}),
           analyzed: true
         }

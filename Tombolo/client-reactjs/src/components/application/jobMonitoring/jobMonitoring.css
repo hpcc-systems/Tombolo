@@ -137,3 +137,26 @@
   background: none;
   font-weight: 600;
 }
+
+/* Time Series Analysis */
+.time-series-analysis-table .ant-table-thead > tr > th {
+  background-color: var(--warning) !important;
+}
+
+/* style={{ height: '100vh', border: '1px solid #d9d9d9', margin: '0.rem', padding: '0.8rem' }} */
+.jm_time_series_analysis {
+  height: calc(100vh - 7rem);
+  border: 1px solid #d9d9d9;
+  margin: 0rem;
+  padding: 0.8rem;
+}
+
+.timeSeriesAnalysis_selectedWu_info {
+  display: flex;
+  padding: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  background: var(--light);
+  margin-bottom: 0.5rem;
+}
