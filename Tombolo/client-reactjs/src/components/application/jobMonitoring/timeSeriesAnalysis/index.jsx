@@ -22,7 +22,7 @@ const averageColumn = [
     key: 'expectedMinMax',
     dataIndex: 'expectedMinMax',
     fixed: 'left',
-    width: 150,
+    width: 160,
     render: (text, record) => {
       return (
         <div style={{}}>
@@ -35,17 +35,6 @@ const averageColumn = [
     onCell: () => ({
       style: { backgroundColor: 'var(--active)' },
     }),
-  },
-];
-
-// Z index column
-const zIndexColumn = [
-  {
-    title: 'Z-Index',
-    dataIndex: 'Z-Index',
-    key: 'Z-Index',
-    fixed: 'left',
-    width: 150,
   },
 ];
 
@@ -90,6 +79,15 @@ const TimeSeriesAnalysis = () => {
       onCell: () => ({
         style: { backgroundColor: 'var(--secondary-light)' },
       }),
+    },
+  ]);
+  const [zIndexColumn, setZIndexColumn] = useState([
+    {
+      title: 'Z-Score',
+      dataIndex: 'Z-Index',
+      key: 'Z-Index',
+      fixed: 'left',
+      width: 150,
     },
   ]);
 
@@ -214,9 +212,15 @@ const TimeSeriesAnalysis = () => {
             <span>{selectedColumn.title}</span>
           </div>
         ),
-        onCell: () => ({
-          style: { backgroundColor: 'var(--paused)' },
-        }),
+        onCell: (record) => {
+          if (outlierColumns.length > 0 && record.metric && outlierColumns.includes(record.metric.toLowerCase())) {
+            return {
+              style: {
+                backgroundColor: 'var(--paused)',
+              },
+            };
+          }
+        },
       };
 
       // Replace the additional left column (keep only METRICS + one wuid)
@@ -235,7 +239,28 @@ const TimeSeriesAnalysis = () => {
         ),
       }));
     setMiddleColumns(middleDynamicColumns);
-  }, [selectedLeftWuid]);
+
+    // Z index column
+    setZIndexColumn([
+      {
+        title: 'Z-Score',
+        dataIndex: 'Z-Index',
+        key: 'Z-Index',
+        fixed: 'left',
+        width: 150,
+        // if outlier add back ground color
+        onCell: (record) => {
+          if (record.metric && outlierColumns.includes(record.metric.toLowerCase())) {
+            return {
+              style: {
+                backgroundColor: 'var(--paused)',
+              },
+            };
+          }
+        },
+      },
+    ]);
+  }, [selectedLeftWuid, outlierColumns]);
 
   // Delta Column
   const deltaColumn = [

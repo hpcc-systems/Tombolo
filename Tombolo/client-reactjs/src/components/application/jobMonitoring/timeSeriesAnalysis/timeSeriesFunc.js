@@ -13,7 +13,11 @@ const alertDataPoints = [
 
 // Function to get the decimal places based on the sum
 function getDecimalPlaces(sum) {
-  if (sum < 0.01) {
+  // Make sum positive to handle negative cases
+  sum = Math.abs(sum);
+  if (sum === 0) {
+    return 0;
+  } else if (sum < 0.01) {
     return 6;
   } else if (sum < 0.1) {
     return 5;
@@ -73,7 +77,6 @@ function performTimeSeriesAnalysis({ leftData, rightData }) {
 
   // Constants for calculation
   const standardDev = 3;
-  const factor = 2; // 2 standard deviations for min/max range
 
   // Step 1: Calculate averages from rightData
   const average = {};
@@ -83,26 +86,62 @@ function performTimeSeriesAnalysis({ leftData, rightData }) {
     average[point] = sum / rightData.length;
   });
 
+  // Calculate  differences (Mean - Current value) and square them
+  const rightDataCopy = structuredClone(rightData);
+  alertDataPoints.forEach((point) => {
+    rightDataCopy.forEach((run) => {
+      const value = run[point] ?? 0; // Treat missing as 0
+      const diff = value - average[point];
+      const squared = diff ** 2;
+      run[point] = squared;
+    });
+  });
+
+  // Standard deviation
+  const standardDeviationForEachDataPoint = {};
+  alertDataPoints.forEach((point) => {
+    const values = rightDataCopy.map((item) => item[point] ?? 0); // Treat missing as 0
+    const sum = values.reduce((acc, val) => acc + val, 0);
+    const avg = sum / rightData.length;
+    // calculate std deviation by getting the sqrt
+    standardDeviationForEachDataPoint[point] = Math.sqrt(avg, getDecimalPlaces(avg));
+  });
+
   // Step 2: Calculate expected min/max (min capped at 0)
   const expectedMinMax = {};
   alertDataPoints.forEach((point) => {
     const mean = average[point];
-    const min = mean - standardDev * factor;
-    const max = mean + standardDev * factor;
-    const rawMin = Math.max(0, min);
+    const min =
+      Math.round(
+        (mean - standardDev * standardDeviationForEachDataPoint[point]) * Math.pow(10, getDecimalPlaces(mean))
+      ) / Math.pow(10, getDecimalPlaces(mean));
+    const max =
+      Math.round(
+        (mean + standardDev * standardDeviationForEachDataPoint[point]) * Math.pow(10, getDecimalPlaces(mean))
+      ) / Math.pow(10, getDecimalPlaces(mean));
+
     expectedMinMax[point] = {
-      min: rawMin.toFixed(getDecimalPlaces(rawMin)),
-      max: max.toFixed(getDecimalPlaces(max)),
+      min,
+      max,
     };
   });
 
   // Step 3: Calculate Z-scores for leftData
   const zIndex = {};
   alertDataPoints.forEach((point) => {
-    const mean = average[point];
-    const value = leftData[point] ?? 0; // Treat missing as 0
-    const rawZIndex = (value - mean) / standardDev;
-    zIndex[point] = rawZIndex.toFixed(getDecimalPlaces(rawZIndex));
+    const mean = Number(average[point]) || 0;
+    const value = Number(leftData[point] ?? 0);
+    const stdDev = Number(standardDeviationForEachDataPoint[point]) || 0;
+
+    let rawZIndex;
+    if (stdDev === 0 || !isFinite(stdDev) || !isFinite(value - mean)) {
+      rawZIndex = 0;
+    } else {
+      rawZIndex = (value - mean) / stdDev;
+    }
+
+    const finalZIndex = isFinite(rawZIndex) ? rawZIndex : 0;
+    zIndex[point] = Math.round(finalZIndex * 100) / 100;
   });
 
   // Step 4: Calculate delta (mean - current)
