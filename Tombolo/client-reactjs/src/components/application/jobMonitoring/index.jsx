@@ -1,4 +1,3 @@
-/* eslint-disable no-unreachable */
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
@@ -82,6 +81,8 @@ function JobMonitoring() {
   const [filters, setFilters] = useState({});
   const [filtersVisible, setFiltersVisible] = useState(true);
   const [filteringJobs, setFilteringJobs] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [matchCount, setMatchCount] = useState(0);
 
   // Create form instance
   const [form] = Form.useForm();
@@ -221,7 +222,7 @@ function JobMonitoring() {
       activeStatusBool = false;
     }
 
-    const filteredJm = jobMonitorings.filter((jobMonitoring) => {
+    let filteredJm = jobMonitorings.filter((jobMonitoring) => {
       let include = true;
       const currentDomain = jobMonitoring?.metaData?.asrSpecificMetaData?.domain;
       const currentProduct = jobMonitoring?.metaData?.asrSpecificMetaData?.productCategory;
@@ -248,9 +249,40 @@ function JobMonitoring() {
       return include;
     });
 
+    const matchedJobIds = [];
+
+    // Calculate the number of matched string instances
+    if (searchTerm) {
+      let instanceCount = 0;
+      filteredJm.forEach((job) => {
+        const jobName = job.jobName.toLowerCase();
+        const monitoringName = job.monitoringName.toLowerCase();
+
+        if (jobName.includes(searchTerm)) {
+          matchedJobIds.push(job.id);
+          instanceCount++;
+        }
+
+        if (monitoringName.includes(searchTerm)) {
+          matchedJobIds.push(job.id);
+          instanceCount++;
+        }
+      });
+
+      setMatchCount(instanceCount);
+    } else {
+      setMatchCount(0);
+    }
+
+    if (matchedJobIds.length > 0) {
+      filteredJm = filteredJm.filter((job) => matchedJobIds.includes(job.id));
+    } else if (matchedJobIds.length === 0 && searchTerm) {
+      filteredJm = [];
+    }
+
     setFilteredJobMonitoring(filteredJm);
     setFilteringJobs(false);
-  }, [filters, jobMonitorings]);
+  }, [filters, jobMonitorings, searchTerm]);
 
   // Function reset states when modal is closed
   const resetStates = () => {
@@ -621,6 +653,9 @@ function JobMonitoring() {
         filtersVisible={filtersVisible}
         setFiltersVisible={setFiltersVisible}
         isReader={isReader}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        matchCount={matchCount}
       />
       <AddEditJobMonitoringModal
         displayAddJobMonitoringModal={displayAddJobMonitoringModal}
@@ -676,6 +711,7 @@ function JobMonitoring() {
         filteringJobs={filteringJobs}
         isReader={isReader}
         clusters={clusters}
+        searchTerm={searchTerm}
       />
       {displayMonitoringDetailsModal && (
         <MonitoringDetailsModal

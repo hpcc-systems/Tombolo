@@ -44,6 +44,7 @@ const JobMonitoringTable = ({
   filteringJobs,
   isReader,
   clusters,
+  searchTerm,
 }) => {
   // States
   const [unreachableClusters, setUnreachableClusters] = useState([]);
@@ -73,12 +74,38 @@ const JobMonitoringTable = ({
       title: 'Monitoring Name',
       dataIndex: 'monitoringName',
       key: 'monitoringName',
+      render: (text) => {
+        return (
+          <span
+            style={{
+              background:
+                searchTerm.length > 0 && text.toLocaleLowerCase().includes(searchTerm)
+                  ? 'var(--highlight)'
+                  : 'transparent',
+            }}>
+            {text}
+          </span>
+        );
+      },
     },
 
     {
       title: 'Job Name/Pattern',
       dataIndex: 'jobName',
       key: 'jobName',
+      render: (text) => {
+        return (
+          <span
+            style={{
+              background:
+                searchTerm.length > 0 && text.toLocaleLowerCase().includes(searchTerm)
+                  ? 'var(--highlight)'
+                  : 'transparent',
+            }}>
+            {text}
+          </span>
+        );
+      },
     },
     {
       title: 'Created By',

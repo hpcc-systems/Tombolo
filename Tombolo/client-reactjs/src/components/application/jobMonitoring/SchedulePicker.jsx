@@ -6,10 +6,10 @@ import cronstrue from 'cronstrue';
 
 // Daily schedule options
 const dailyRunWindowAndIntervals = [
-  { label: 'Any time (00:00 - 23:59)', value: 'daily' },
+  { label: 'All day (00:00 - 23:59)', value: 'daily' },
   { label: 'Morning (00:00 - 11:59)', value: 'morning' },
   { label: 'Afternoon (12:00 - 23:59)', value: 'afternoon' },
-  { label: 'Overnight (Prev 12:00 - Current day 12:00)', value: 'overnight' },
+  { label: 'Overnight (Prev day 12:00 - Current day 12:00)', value: 'overnight' },
   // { label: 'Every 2 Days', value: 'every2Days' },
 ];
 
@@ -114,7 +114,7 @@ function SchedulePicker({
   // Daily Break down - When daily option is selected
   const dailyBreakDown = (
     <div>
-      <Radio checked>Daily run window/interval</Radio>
+      <Radio checked>Daily run window</Radio>
       <div style={{ margin: '5px 0 0 20px', color: 'var(--secondary)', width: '100%' }}>
         <Select
           size="small"
