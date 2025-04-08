@@ -209,7 +209,7 @@ function NotificationTableFilters({
             <Col span={4}>
               <div className="notifications__filter-label">Active Status</div>
               <Form.Item name="activeStatus">
-                <Select placeholder="Active statues" allowClear disabled={false}>
+                <Select placeholder="Active statuses" allowClear disabled={false}>
                   {activeStatusOptions.map((a) => (
                     <Option key={a} value={a}>
                       {a}
