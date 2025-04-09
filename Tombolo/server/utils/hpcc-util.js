@@ -1044,114 +1044,70 @@ MonitorFileAction();`;
 };
 
 exports.getClusterTimezoneOffset = async (clusterId) => {
-  console.log("cluster timezone offset running");
-  try {
-    // Create empty WU, will give wuID
-    const wuId = await module.exports.createWorkUnit(clusterId, {
-      jobname: `timezone_offset`,
-    });
+  try{
+      const cluster = await module.exports.getCluster(clusterId);
+      const { defaultEngine } = cluster;
 
-    //code that will run on cluster's ECL
-    const code = `IMPORT Std;
-                now := Std.Date.LocalTimeZoneOffset();
-                OUTPUT(now);`;
-    const parentDir = path.join(process.cwd(), "eclDir");
-    date = new Date().getTime().toString();
-    filename = "timezone" + date + ".ecl";
-    const pathToEclFile = path.join(process.cwd(), "eclDir", filename);
-    fs.writeFileSync(pathToEclFile, code);
-    // update the wu with ecl archive
-    const args = ["-E", pathToEclFile, "-I", parentDir];
-    const archived = await module.exports.createEclArchive(args, parentDir);
-    const updateBody = {
-      Wuid: wuId,
-      QueryText: archived.stdout,
-      Jobname: `timezone_offset`,
-    };
+      const wuService = await module.exports.getWorkunitsService(clusterId);
 
-    const workUnitService = await module.exports.getWorkunitsService(clusterId);
+      const  jobname = `timezone-offset-${process.env.INSTANCE_NAME}`;
 
-    //update WU
-    await workUnitService.WUUpdate(updateBody);
+      // Create empty WU, will give wuID
+      const workUnit = await wuService.WUCreate(clusterId, {
+        jobname,
+      });
 
-    //Submit the wu
-    const submitBody = {
-      Wuid: wuId,
-      Cluster: "hthor",
-    };
+      const  { Workunit: { Wuid}} = workUnit;
 
-    await workUnitService.WUSubmit(submitBody);
+      // Timezone offset ECL code
+      const timezoneOffsetEcl = `IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);`;
 
-    //check if WU is finished before grabbing the output by checking the state given by WUUpdate
-    let stateCheck = await workUnitService.WUUpdate(updateBody);
-    let complete = false;
+      // Update the WU with ECL code
+      await wuService.WUUpdate({
+        QueryText: timezoneOffsetEcl,
+        Wuid,
+        JobnameOrig: jobname,
+      });
 
-    //continue checking state until it is not compiled or running
-    while (!complete) {
-      stateCheck = await workUnitService.WUUpdate(updateBody);
-      //status' are running, completed, compiled, failed, unknown
-      if (
-        stateCheck.Workunit.State !== "compiled" &&
-        stateCheck.Workunit.State !== "running"
-      ) {
-        complete = true;
+      // Submit the WU
+      await wuService.WUSubmit({
+        Wuid,
+        Cluster: defaultEngine
+      });
+
+      // Get the WU result
+      const result = await wuService.WUWaitComplete({
+        Wuid,
+        Wait: -1, // 3 minutes timeout
+      });
+
+      const { StateID } = result;
+
+      if(StateID !== 3){
+        throw new Error(`Timezone offset job failed with state: ${StateID}`);
       }
-    }
 
-    //if workunit failed or is unknown, throw error message
-    if (
-      stateCheck.Workunit.State == "failed" ||
-      stateCheck.Workunit.State == "unknown"
-    ) {
-      throw new Error(
-        "Work unit to get timezone offset for cluster has failed \n wuId:" +
-          wuId
-      );
-    }
+      // Get the WU result
+      const wuResult = await wuService.WUResult({
+        Wuid,
+        SuppressXmlSchema: true,
+      });
 
-    //grab output
-    let result = await module.exports.workUnitOutput({
-      wuid: wuId,
-      clusterId: clusterId,
-    });
+      const {  Result: { Row }} = wuResult;
+      const timeZoneOffsetInMinutes = (Number(Row[0].Result_1))/60;
 
-    if (!result) {
-      throw new Error("Failed to output from work unit for timezone offset");
-    }
+      // if NaN throw error
+      if (isNaN(timeZoneOffsetInMinutes)) {
+        throw new Error('Invalid timezone offset result');
+      }
 
-    //Offset is given in seconds from GMT, divide by 60 to get offset in minutes
-    //1/20/23 mfancher - adjusted to minutes to store, floor result to avoid floating point.
-    const clusterUtcOffset = Math.floor(result.Result?.Row[0]?.Result_1 / 60);
+      return timeZoneOffsetInMinutes;
 
-    //1/20/23 mfancher - add second check to make sure it's not 0 because JS throws error when it's null, undef, or 0 with just ! comparison
-    if (!clusterUtcOffset && clusterUtcOffset !== 0) {
-      throw new Error(
-        "Error reading response from work unit for timezone offset"
-      );
-    }
-    //delete file
-    fs.unlinkSync(pathToEclFile);
-
-    // ------------------------------ NEED TO FIGURE OUT HOW TO DELETE
-    //delete work unit
-    // const wuService = await module.exports.getWorkunitsService(clusterId);
-    // let wuids = [wuId];
-    // const respond = await wuService.WUAction(Wuids = wuids, WUActionType = );
-
-    // console.log(respond)
-
-    //-------------------------------
-
-    //return result
-    return clusterUtcOffset;
-  } catch (err) {
-    console.log("ERROR ADDING OFFSET----------------------------------------");
-    console.log(err);
-    console.log("----------------------------------------");
+      }catch(err){
+        throw new Error(err.message)
+      }
   }
-};
 
-//get superfile info
 exports.getSuperFile = async (clusterId, fileName) => {
   try {
     const dfuService = await exports.getDFUService(clusterId);
