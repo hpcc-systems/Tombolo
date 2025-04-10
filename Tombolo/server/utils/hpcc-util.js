@@ -1102,7 +1102,7 @@ exports.getClusterTimezoneOffset = async (clusterId) => {
         throw new Error('Invalid timezone offset result');
       }
 
-      return timeZoneOffsetInMinutes;
+      return Math.floor(timeZoneOffsetInMinutes);
 
       }catch(err){
         throw new Error(err.message)
