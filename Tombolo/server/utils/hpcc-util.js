@@ -1082,8 +1082,9 @@ exports.getClusterTimezoneOffset = async (clusterId) => {
       });
 
       const { StateID } = result;
+      const successState = 3;
 
-      if(StateID !== 3){
+      if(StateID !== successState) {
         throw new Error(`Timezone offset job failed with state: ${StateID}`);
       }
 
