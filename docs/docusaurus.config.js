@@ -1,9 +1,4 @@
 // @ts-check
-// `@type` JSDoc annotations allow editor autocompletion and type checking
-// (when paired with `@ts-check`).
-// There are various equivalent ways to declare your Docusaurus config.
-// See: https://docusaurus.io/docs/api/docusaurus-config
-
 import { themes as prismThemes } from "prism-react-renderer";
 
 /** @type {import('@docusaurus/types').Config} */
@@ -12,28 +7,22 @@ const config = {
   tagline: "Easy Interaction with HPCC Clusters",
   favicon: "img/favicon.ico",
 
-  // Set the production url of your site here
   url: "https://hpcc-systems.github.io",
-  // Set the /<baseUrl>/ pathname under which your site is served
-  baseUrl: "/Tombolo/",
+  baseUrl: "/",
 
-  // GitHub pages deployment config
-  organizationName: "hpcc-systems", // Correct GitHub organization
-  projectName: "Tombolo", // Repository name
+  organizationName: "hpcc-systems",
+  projectName: "Tombolo",
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
 
-  // Set HTML language
   i18n: {
     defaultLocale: "en",
-    locales: ["en"], // Only English
+    locales: ["en"],
   },
 
-  // Disable pagination globally
   markdown: {
     parseFrontMatter: async (params) => {
-      // Reuse the default parser
       const result = await params.defaultParseFrontMatter(params);
       result.frontMatter.pagination_prev = null;
       result.frontMatter.pagination_next = null;
