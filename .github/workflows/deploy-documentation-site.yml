@@ -23,6 +23,9 @@ jobs:
           cache: npm
           cache-dependency-path: docs
 
+      - name: Clear npm cache
+        run: npm cache clean --force
+        working-directory: ./docs
       - name: Install dependencies
         run: npm ci
         working-directory: ./docs
@@ -31,6 +34,10 @@ jobs:
         working-directory: ./docs
       - name: List build directory contents
         run: ls -R ./docs/build
+      - name: Check publish directory
+        run: |
+          echo "Publish directory: $GITHUB_WORKSPACE/docs/build"
+          ls -R $GITHUB_WORKSPACE/docs/build
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -39,3 +46,4 @@ jobs:
           user_name: github-actions[bot]
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
           allow_empty_commit: true
+          keep_files: false # Clear existing files to avoid stale assets
