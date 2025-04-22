@@ -6,7 +6,6 @@ const config = {
   title: "Tombolo Documentation",
   tagline: "Easy Interaction with HPCC Clusters",
   favicon: "img/favicon.ico",
-
   url: "https://hpcc-systems.github.io",
   baseUrl: "/tombolo/",
   organizationName: "hpcc-systems",
