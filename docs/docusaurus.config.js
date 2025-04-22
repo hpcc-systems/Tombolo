@@ -8,11 +8,12 @@ const config = {
   favicon: "img/favicon.ico",
 
   url: "https://hpcc-systems.github.io",
-  baseUrl: "/",
-
+  baseUrl: "/Tombolo/",
   organizationName: "hpcc-systems",
   projectName: "Tombolo",
-
+  trailingSlash: false,
+  deploymentBranch: "gh-pages",
+  
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
 
