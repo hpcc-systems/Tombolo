@@ -1,7 +1,8 @@
 // Packages
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Form, Row, Col, Select } from 'antd';
+import { Form, Row, Col, Select, Input } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import _ from 'lodash';
 
 // Local imports
@@ -20,6 +21,9 @@ function NotificationTableFilters({
   allProductCategories,
   filtersVisible,
   setFiltersVisible,
+  setSearchTerm,
+  matchCount,
+  searchTerm,
 }) {
   //Redux
   const {
@@ -167,7 +171,28 @@ function NotificationTableFilters({
     <div className="notifications__filters">
       {filtersVisible && (
         <Form form={form} onValuesChange={handleFormChange} className="notifications__filters_form">
-          <Row gutter={16}>
+          <Row gutter={8}>
+            <Col span={4}>
+              <div className="notifications__filter-label">Job Name / Monitoring Name</div>
+              <Input
+                placeholder="Search by job name or monitoring name"
+                prefix={<SearchOutlined />}
+                suffix={
+                  searchTerm ? (
+                    <span style={{ color: matchCount > 0 ? 'var(--primary)' : 'var(--danger)' }}>
+                      {matchCount} match{matchCount > 1 ? 'es' : ''}{' '}
+                    </span>
+                  ) : (
+                    ''
+                  )
+                }
+                onChange={(e) => {
+                  setSearchTerm(e.target.value.toLocaleLowerCase());
+                }}
+                allowClear
+                disabled={false}
+              />
+            </Col>
             <Col span={4}>
               <div className="notifications__filter-label">Approval Status</div>
               <Form.Item name="approvalStatus">
@@ -181,10 +206,10 @@ function NotificationTableFilters({
               </Form.Item>
             </Col>
 
-            <Col span={5}>
+            <Col span={4}>
               <div className="notifications__filter-label">Active Status</div>
               <Form.Item name="activeStatus">
-                <Select placeholder="Active statues" allowClear disabled={false}>
+                <Select placeholder="Active statuses" allowClear disabled={false}>
                   {activeStatusOptions.map((a) => (
                     <Option key={a} value={a}>
                       {a}
@@ -196,7 +221,7 @@ function NotificationTableFilters({
 
             {integrations.some((i) => i.name === 'ASR') && (
               <>
-                <Col span={5}>
+                <Col span={4}>
                   <div className="notifications__filter-label">Domain</div>
                   <Form.Item name="domain">
                     <Select
@@ -214,7 +239,7 @@ function NotificationTableFilters({
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col span={5} name="product">
+                <Col span={4} name="product">
                   <div className="notifications__filter-label">Product</div>
                   <Form.Item name="product">
                     <Select placeholder="Product" allowClear disabled={false}>
@@ -228,7 +253,7 @@ function NotificationTableFilters({
                 </Col>
               </>
             )}
-            <Col span={5}>
+            <Col span={4}>
               <div className="notifications__filter-label">Frequency</div>
               <Form.Item name="frequency">
                 <Select placeholder="Frequency" allowClear disabled={false}>
