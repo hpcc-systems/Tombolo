@@ -7,7 +7,7 @@ const config = {
   tagline: "Easy Interaction with HPCC Clusters",
   favicon: "img/favicon.ico",
   url: "https://hpcc-systems.github.io",
-  baseUrl: "/Tombolo/",
+  baseUrl: "/tombolo/",
   organizationName: "hpcc-systems",
   projectName: "Tombolo",
   trailingSlash: false,
@@ -77,7 +77,7 @@ const config = {
           label: "FAQ",
         },
         {
-          href: "https://github.com/hpcc-systems/Tombolo",
+          href: "https://github.com/hpcc-systems/tombolo",
           label: "GitHub",
           position: "right",
         },
@@ -121,7 +121,7 @@ const config = {
           items: [
             {
               label: "GitHub",
-              href: "https://github.com/hpcc-systems/Tombolo",
+              href: "https://github.com/hpcc-systems/tombolo",
             },
           ],
         },
