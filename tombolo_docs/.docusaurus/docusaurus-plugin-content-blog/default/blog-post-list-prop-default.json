@@ -3,25 +3,25 @@
   "items": [
     {
       "title": "Welcome",
-      "permalink": "/ping_pong/blog/welcome",
+      "permalink": "/tombolo/blog/welcome",
       "unlisted": false,
       "date": "2021-08-26T00:00:00.000Z"
     },
     {
       "title": "MDX Blog Post",
-      "permalink": "/ping_pong/blog/mdx-blog-post",
+      "permalink": "/tombolo/blog/mdx-blog-post",
       "unlisted": false,
       "date": "2021-08-01T00:00:00.000Z"
     },
     {
       "title": "Long Blog Post",
-      "permalink": "/ping_pong/blog/long-blog-post",
+      "permalink": "/tombolo/blog/long-blog-post",
       "unlisted": false,
       "date": "2019-05-29T00:00:00.000Z"
     },
     {
       "title": "First Blog Post",
-      "permalink": "/ping_pong/blog/first-blog-post",
+      "permalink": "/tombolo/blog/first-blog-post",
       "unlisted": false,
       "date": "2019-05-28T00:00:00.000Z"
     }

@@ -1,5 +1,5 @@
 {
-  "blogBasePath": "/ping_pong/blog",
+  "blogBasePath": "/tombolo/blog",
   "blogTitle": "Blog",
-  "authorsListPath": "/ping_pong/blog/authors"
+  "authorsListPath": "/tombolo/blog/authors"
 }
