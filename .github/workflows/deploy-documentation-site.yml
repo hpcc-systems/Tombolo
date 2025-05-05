@@ -27,18 +27,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd docs
+          cd tombolo_docs
           npm ci
 
       - name: Build Docusaurus site
         run: |
-          cd docs
+          cd tombolo_docs
           npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/build
+          path: tombolo_docs/build
 
   deploy:
     environment:
