@@ -8,8 +8,7 @@ on:
       - yadhap/fix-doc-site-deployment
       - yadhap/docs-deployment-issue
     paths:
-      - "doc/**" # Only trigger if changes are in the doc directory
-
+      - "doc/**"
   workflow_dispatch:
 
 jobs:
@@ -18,28 +17,29 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: doc # Set working directory to the doc folder
+        working-directory: doc
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Debug - Check for package-lock.json
+        run: ls -la package-lock.json || echo "No package-lock.json in doc"
+      - name: Debug - Check for yarn.lock
+        run: ls -la yarn.lock || echo "No yarn.lock in doc"
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: yarn
-
+          cache: npm # Use npm caching
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci # Use npm ci for CI environments
       - name: Build Docusaurus site
-        run: yarn build
+        run: npm run build # Use npm for consistency
         env:
-          # Ensure the build output is in doc/build
           BUILD_PATH: build
-
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: doc/build # Path to the Docusaurus build output
+          path: doc/build
 
   deploy:
     name: Deploy to GitHub Pages
