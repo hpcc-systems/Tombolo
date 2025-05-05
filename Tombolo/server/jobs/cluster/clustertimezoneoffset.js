@@ -2,63 +2,65 @@ const { parentPort} = require("worker_threads");
 
 const hpccUtil = require("../../utils/hpcc-util");
 const models = require("../../models");
-const logger = require("../../config/logger");
 const cluster = models.cluster;
 
-const { log, dispatch } = require("../workerUtils")(parentPort);
+const { log } = require("../workerUtils")(parentPort);
 
 (async () => {
-  parentPort && parentPort.postMessage({level: "info", message: "Starting Cluster Timezone Offset Job"});
+  const startTime = new Date();
+  parentPort && parentPort.postMessage({
+      level: "info",
+      text: "Starting Cluster Timezone Offset Job",
+    });
+
   //grab all clusters
   const clusters = await cluster.findAll();
 
   //If no clusters, log so to the console and return
   if (clusters.length === 0) {
-    log("verbose", `NO CLUSTERS TO FIND OFFSET FOR FOUND`);
+    log("verbose", `No clusters to get timezone offset for`);
+    parentPort && parentPort.postMessage({level: "info", text: "No clusters to get timezone offset for"});
     return;
   }
 
-  //if clusters are found, iterate through them and set timezone offset for each one
-  await setClusterTimezoneOffset(clusters);
+  parentPort && parentPort.postMessage({level: "info", text: `Getting timezone offset for ${clusters.length} cluster(s)`});
 
-  //once function is done, exit and report finished
-  if (parentPort) parentPort.postMessage("done");
-  else process.exit(0);
-})();
-
-async function setClusterTimezoneOffset(clusters) {
   //loop through clusters
-  for (i = 0; i < clusters.length; i++) {
+  for (const c of clusters) {
     try {
       //get offset for cluster
       const offset = await hpccUtil.getClusterTimezoneOffset(
-        clusters[i].dataValues.id
+        c.id
       );
 
       //get cluster
       let newCluster = await cluster.findOne({
-        where: { id: clusters[i].dataValues.id },
+        where: { id: c.id },
+        raw: true,
       });
 
       //compare if clusters timezone is the same as the retrieved
-      if (newCluster.dataValues.timezone_offset === offset) {
-        log("verbose", `CLUSTER TIMEZONE OFFSET NOT NEEDED TO BE UPDATED`);
+      if (newCluster.timezone_offset === offset) {
+        parentPort && parentPort.postMessage({level: "info", text: `Cluster timezone offset is up to date`}); 
       } else {
         newCluster.timezone_offset = offset;
 
         // flipping isActive
         await cluster.update(
           { timezone_offset: offset },
-          { where: { id: clusters[i].dataValues.id } }
+          { where: { id: c.id } }
         );
-        log(
-          "verbose",
-          `CLUSTER TIMEZONE  OFFSET UPDATED FOR CLUSTERID: ` +
-            clusters[i].dataValues.id
-        );
+
+        parentPort && parentPort.postMessage({level: "info", text: `Cluster timezone offset updated for ${c.id}`});
       }
     } catch (err) {
-      log("error", "ERROR CHECKING CLUSTER TIMEZONE OFFSETS: " + err);
+      parentPort && parentPort.postMessage({level: "error", text: `Error checking cluster timezone offset: ${err}, cid:  ${c.id}`});
     }
   }
-}
+
+  //once function is done, exit and report finished
+  parentPort && parentPort.postMessage({level: "info", text: `Cluster Timezone Offset Job completed in ${(new Date() - startTime) / 1000} seconds`});
+  if (parentPort) parentPort.postMessage("done");
+  else process.exit(0);
+})();
+
