@@ -7,8 +7,10 @@ on:
       - dev
       - yadhap/fix-doc-site-deployment
       - yadhap/docs-deployment-issue
-    paths:
-      - "doc/**" # Only trigger if changes are in the doc directory
+    # paths:
+    #   - "doc/**" # Only trigger if changes are in the doc directory
+
+  workflow_dispatch:
 
 jobs:
   build:
