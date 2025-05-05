@@ -1,0 +1,22 @@
+{
+  "id": "User-Guides/user-interface",
+  "title": "User Interface",
+  "description": "Tombolo's user interface is divded into three major zones.",
+  "source": "@site/docs/User-Guides/user-interface.md",
+  "sourceDirName": "User-Guides",
+  "slug": "/User-Guides/user-interface",
+  "permalink": "/ping_pong/docs/User-Guides/user-interface",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 8,
+  "frontMatter": {
+    "sidebar_position": 8,
+    "label": "User Interface",
+    "title": "User Interface",
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "sidebar": "tutorialSidebar"
+}

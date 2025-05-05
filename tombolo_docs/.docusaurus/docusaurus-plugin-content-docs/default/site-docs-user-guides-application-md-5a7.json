@@ -1,0 +1,20 @@
+{
+  "id": "User-Guides/application",
+  "title": "Applications",
+  "description": "Applications provide a way to seperate groups of data and settings inside of Tombolo. Each application has its own set of Assets, Dataflows, Jobs, Monitorings, and Notifications as well as administration settings. You can switch application instances at any time by utilizing the selector in the top left corner of the navigation bar, by the Tombolo logo.",
+  "source": "@site/docs/User-Guides/application.md",
+  "sourceDirName": "User-Guides",
+  "slug": "/User-Guides/application",
+  "permalink": "/ping_pong/docs/User-Guides/application",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "sidebar": "tutorialSidebar"
+}

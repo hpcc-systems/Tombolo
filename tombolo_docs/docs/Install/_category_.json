@@ -1,0 +1,8 @@
+{
+  "label": "Installation & Configuration",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Pick your installation type and configure the application."
+  }
+}

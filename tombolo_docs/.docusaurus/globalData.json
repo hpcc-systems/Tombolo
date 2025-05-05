@@ -1,0 +1,148 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/ping_pong/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/ping_pong/docs",
+          "mainDocId": "Install/Local",
+          "docs": [
+            {
+              "id": "Developer/Integrations",
+              "path": "/ping_pong/docs/Developer/Integrations",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Developer/Testing",
+              "path": "/ping_pong/docs/Developer/Testing",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Install/Configurations",
+              "path": "/ping_pong/docs/Install/Configurations",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Install/Docker",
+              "path": "/ping_pong/docs/Install/Docker",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Install/Local",
+              "path": "/ping_pong/docs/Install/Local",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Install/Uninstall",
+              "path": "/ping_pong/docs/Install/Uninstall",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/application",
+              "path": "/ping_pong/docs/User-Guides/application",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/assets",
+              "path": "/ping_pong/docs/User-Guides/assets",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/cluster",
+              "path": "/ping_pong/docs/User-Guides/cluster",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/dashboards",
+              "path": "/ping_pong/docs/User-Guides/dashboards",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/github",
+              "path": "/ping_pong/docs/User-Guides/github",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/monitoring/ClusterMonitoring",
+              "path": "/ping_pong/docs/User-Guides/monitoring/ClusterMonitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/monitoring/DirectoryMonitoring",
+              "path": "/ping_pong/docs/User-Guides/monitoring/DirectoryMonitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/monitoring/jobMonitoring",
+              "path": "/ping_pong/docs/User-Guides/monitoring/jobMonitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/monitoring/SuperFilesMonitoring",
+              "path": "/ping_pong/docs/User-Guides/monitoring/SuperFilesMonitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/teams-webhook",
+              "path": "/ping_pong/docs/User-Guides/teams-webhook",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/user-interface",
+              "path": "/ping_pong/docs/User-Guides/user-interface",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/users",
+              "path": "/ping_pong/docs/User-Guides/users",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/Wildcards",
+              "path": "/ping_pong/docs/User-Guides/Wildcards",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/workflows",
+              "path": "/ping_pong/docs/User-Guides/workflows",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/installation--configuration",
+              "path": "/ping_pong/docs/category/installation--configuration",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/user-guides",
+              "path": "/ping_pong/docs/category/user-guides",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/monitoring",
+              "path": "/ping_pong/docs/category/monitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/developer-resources",
+              "path": "/ping_pong/docs/category/developer-resources",
+              "sidebar": "tutorialSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "tutorialSidebar": {
+              "link": {
+                "path": "/ping_pong/docs/category/installation--configuration",
+                "label": "Installation & Configuration"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

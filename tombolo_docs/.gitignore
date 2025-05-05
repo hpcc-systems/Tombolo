@@ -1,0 +1,47 @@
+# Root-Level Ignores
+node_modules/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment Variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Build Outputs
+/backend/dist/
+/backend/build/
+/frontend/build/
+/frontend/dist/
+*.min.js
+*.map
+
+# Logs (Backend-Specific)
+/backend/logs/
+
+# OS and Editor Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+
+# Testing
+/coverage/
+/*.lcov
+/test-results/
+
+# Misc
+*.bak
+*.tmp
+*.temp
+dump.rdb

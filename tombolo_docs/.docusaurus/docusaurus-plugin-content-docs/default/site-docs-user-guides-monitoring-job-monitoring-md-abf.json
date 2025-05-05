@@ -1,0 +1,22 @@
+{
+  "id": "User-Guides/monitoring/jobMonitoring",
+  "title": "Job Monitoring",
+  "description": "Job monitoring in Tombolo allows you to track Work Units (WU) running on HPCC clusters. Tombolo checks the clusters every 30 minutes and monitors work units based on a specified name or name pattern. It can send notifications if a work unit enters an undesired state, deviates from the expected state, or violates punctuality rules, such as failing to start or complete within the expected time.",
+  "source": "@site/docs/User-Guides/monitoring/jobMonitoring.md",
+  "sourceDirName": "User-Guides/monitoring",
+  "slug": "/User-Guides/monitoring/jobMonitoring",
+  "permalink": "/ping_pong/docs/User-Guides/monitoring/jobMonitoring",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "label": "Job Monitoring",
+    "title": "Job Monitoring",
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "sidebar": "tutorialSidebar"
+}
