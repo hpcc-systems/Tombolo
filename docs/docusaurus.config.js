@@ -12,7 +12,7 @@ const config = {
   projectName: "Tombolo",
   trailingSlash: false,
   deploymentBranch: "gh-pages",
-  
+
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
 
