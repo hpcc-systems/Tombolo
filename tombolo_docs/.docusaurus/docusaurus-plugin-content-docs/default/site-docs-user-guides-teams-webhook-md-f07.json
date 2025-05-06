@@ -1,0 +1,22 @@
+{
+  "id": "User-Guides/teams-webhook",
+  "title": "MS Teams Webhooks",
+  "description": "Webhooks in Microsoft Teams allow Tombolo to deliver notifications and updates directly into a Teams channel. Webhooks post these updates directly into the chat stream which can be handled and responded to in order to keep your team on top of important notifications.",
+  "source": "@site/docs/User-Guides/teams-webhook.md",
+  "sourceDirName": "User-Guides",
+  "slug": "/User-Guides/teams-webhook",
+  "permalink": "/tombolo/docs/User-Guides/teams-webhook",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "sidebar_position": 7,
+    "label": "MS Teams Webhooks",
+    "title": "MS Teams Webhooks",
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "sidebar": "tutorialSidebar"
+}

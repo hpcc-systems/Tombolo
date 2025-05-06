@@ -1,0 +1,22 @@
+{
+  "id": "User-Guides/dashboards",
+  "title": "Dashboards",
+  "description": "Our Dashboards give great insight into how you and your teams tasks are being handled. Tombolo currently offers two dashboards",
+  "source": "@site/docs/User-Guides/dashboards.md",
+  "sourceDirName": "User-Guides",
+  "slug": "/User-Guides/dashboards",
+  "permalink": "/tombolo/docs/User-Guides/dashboards",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "label": "Dashboards",
+    "title": "Dashboards",
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "sidebar": "tutorialSidebar"
+}

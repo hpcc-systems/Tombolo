@@ -1,0 +1,22 @@
+{
+  "id": "User-Guides/workflows",
+  "title": "Workflows",
+  "description": "Workflows are Tombolo's way of setting up a method for running a set of HPCC workunits, or jobs in a logical workflow.",
+  "source": "@site/docs/User-Guides/workflows.md",
+  "sourceDirName": "User-Guides",
+  "slug": "/User-Guides/workflows",
+  "permalink": "/tombolo/docs/User-Guides/workflows",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 11,
+  "frontMatter": {
+    "sidebar_position": 11,
+    "label": "Workflows",
+    "title": "Workflows",
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "sidebar": "tutorialSidebar"
+}

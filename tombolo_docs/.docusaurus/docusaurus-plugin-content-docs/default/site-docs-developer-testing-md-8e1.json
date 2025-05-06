@@ -1,0 +1,21 @@
+{
+  "id": "Developer/Testing",
+  "title": "Backend Testing",
+  "description": "Tombolo uses Jest and Supertest for its testing framework. Jest provides a flexible environment for writing and running tests, while Supertest allows us to easily test our API endpoints. By combining these tools, we ensure our tests are both reliable and effective.",
+  "source": "@site/docs/Developer/Testing.md",
+  "sourceDirName": "Developer",
+  "slug": "/Developer/Testing",
+  "permalink": "/tombolo/docs/Developer/Testing",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "pagination_next": null,
+    "pagination_prev": null,
+    "title": "Backend Testing"
+  },
+  "sidebar": "tutorialSidebar"
+}

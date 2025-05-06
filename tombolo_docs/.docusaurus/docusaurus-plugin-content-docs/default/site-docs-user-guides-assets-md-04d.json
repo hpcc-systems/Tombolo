@@ -1,0 +1,22 @@
+{
+  "id": "User-Guides/assets",
+  "title": "Assets",
+  "description": "The \"Add Asset\" feature in Tombolo allows you to import assets and their metadata from an HPCC cluster. You can",
+  "source": "@site/docs/User-Guides/assets.md",
+  "sourceDirName": "User-Guides",
+  "slug": "/User-Guides/assets",
+  "permalink": "/tombolo/docs/User-Guides/assets",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "label": "Assets",
+    "title": "Assets",
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "sidebar": "tutorialSidebar"
+}

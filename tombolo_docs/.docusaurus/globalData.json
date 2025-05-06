@@ -1,0 +1,148 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/tombolo/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/tombolo/docs",
+          "mainDocId": "Install/Local",
+          "docs": [
+            {
+              "id": "Developer/Integrations",
+              "path": "/tombolo/docs/Developer/Integrations",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Developer/Testing",
+              "path": "/tombolo/docs/Developer/Testing",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Install/Configurations",
+              "path": "/tombolo/docs/Install/Configurations",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Install/Docker",
+              "path": "/tombolo/docs/Install/Docker",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Install/Local",
+              "path": "/tombolo/docs/Install/Local",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "Install/Uninstall",
+              "path": "/tombolo/docs/Install/Uninstall",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/application",
+              "path": "/tombolo/docs/User-Guides/application",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/assets",
+              "path": "/tombolo/docs/User-Guides/assets",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/cluster",
+              "path": "/tombolo/docs/User-Guides/cluster",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/dashboards",
+              "path": "/tombolo/docs/User-Guides/dashboards",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/github",
+              "path": "/tombolo/docs/User-Guides/github",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/monitoring/ClusterMonitoring",
+              "path": "/tombolo/docs/User-Guides/monitoring/ClusterMonitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/monitoring/DirectoryMonitoring",
+              "path": "/tombolo/docs/User-Guides/monitoring/DirectoryMonitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/monitoring/jobMonitoring",
+              "path": "/tombolo/docs/User-Guides/monitoring/jobMonitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/monitoring/SuperFilesMonitoring",
+              "path": "/tombolo/docs/User-Guides/monitoring/SuperFilesMonitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/teams-webhook",
+              "path": "/tombolo/docs/User-Guides/teams-webhook",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/user-interface",
+              "path": "/tombolo/docs/User-Guides/user-interface",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/users",
+              "path": "/tombolo/docs/User-Guides/users",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/Wildcards",
+              "path": "/tombolo/docs/User-Guides/Wildcards",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "User-Guides/workflows",
+              "path": "/tombolo/docs/User-Guides/workflows",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/installation--configuration",
+              "path": "/tombolo/docs/category/installation--configuration",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/user-guides",
+              "path": "/tombolo/docs/category/user-guides",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/monitoring",
+              "path": "/tombolo/docs/category/monitoring",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/developer-resources",
+              "path": "/tombolo/docs/category/developer-resources",
+              "sidebar": "tutorialSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "tutorialSidebar": {
+              "link": {
+                "path": "/tombolo/docs/category/installation--configuration",
+                "label": "Installation & Configuration"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

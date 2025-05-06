@@ -1,0 +1,20 @@
+{
+  "id": "User-Guides/cluster",
+  "title": "Clusters",
+  "description": "Tombolo can speak directly to HPCC clusters to run ECL code, monitor jobs, files, or cluster usage states, and schedule user-defined dataflows.",
+  "source": "@site/docs/User-Guides/cluster.md",
+  "sourceDirName": "User-Guides",
+  "slug": "/User-Guides/cluster",
+  "permalink": "/tombolo/docs/User-Guides/cluster",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "sidebar": "tutorialSidebar"
+}

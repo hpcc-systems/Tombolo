@@ -1,0 +1,22 @@
+{
+  "id": "User-Guides/monitoring/SuperFilesMonitoring",
+  "title": "Superfiles Monitoring",
+  "description": "Superfiles are collections of files inside of an HPCC cluster, and can be thought of as similar to a folder inside of an operating system. Tombolo currently provides a few different monitoring paramters for these collections of files.",
+  "source": "@site/docs/User-Guides/monitoring/SuperFilesMonitoring.md",
+  "sourceDirName": "User-Guides/monitoring",
+  "slug": "/User-Guides/monitoring/SuperFilesMonitoring",
+  "permalink": "/tombolo/docs/User-Guides/monitoring/SuperFilesMonitoring",
+  "draft": false,
+  "unlisted": false,
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "label": "Superfiles Monitoring",
+    "title": "Superfiles Monitoring",
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "sidebar": "tutorialSidebar"
+}

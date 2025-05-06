@@ -1,0 +1,13 @@
+{
+  "type": "mdx",
+  "permalink": "/tombolo/markdown-page",
+  "source": "@site/src/pages/markdown-page.md",
+  "title": "Markdown page example",
+  "description": "You don't need React to write simple standalone pages.",
+  "frontMatter": {
+    "title": "Markdown page example",
+    "pagination_prev": null,
+    "pagination_next": null
+  },
+  "unlisted": false
+}
