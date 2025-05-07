@@ -2,15 +2,14 @@ const hpccJSComms = require("@hpcc-js/comms");
 const { parentPort } = require("worker_threads");
 
 const models = require("../../models");
-const Cluster = models.cluster;  
+const Cluster = models.cluster;
 const logger = require("../../config/logger");
 const hpccUtil = require("../../utils/hpcc-util");
-
 
 (async () => {
   try {
     const allClusters = await Cluster.findAll({
-      attributes: ["id", "metaData"],
+      attributes: ["id", "storageUsageHistory"],
       raw: true,
     });
 
@@ -24,7 +23,6 @@ const hpccUtil = require("../../utils/hpcc-util");
           userID: username || "",
           password: hash || "",
           id: cl.id,
-          metaData: cl.metaData,
           name,
         };
         allClusterDetails.push(clusterDetails);
@@ -35,58 +33,59 @@ const hpccUtil = require("../../utils/hpcc-util");
 
     for (const detail of allClusterDetails) {
       const currentTimeStamp = Date.now();
-      const { metaData,  name , id } = detail;
+      const { storageUsageHistory, id } = detail;
       try {
         // Try catch on each iteration coz the loop needs to complete even if some  request fails
         const machineService = new hpccJSComms.MachineService(detail);
         const targetClusterUsage =
-        await machineService.GetTargetClusterUsageEx();
-        
+          await machineService.GetTargetClusterUsageEx();
+
         // 1. No storageUsageHistory
-        if (!metaData?.storageUsageHistory) {
-              const usageHistory = {};
-              targetClusterUsage.forEach(target => {
-                usageHistory[target.Name] = [{
-                  date: currentTimeStamp,
-                  maxUsage: target.max,
-                  meanUsage: target.mean
-                }]
-              })
-            await Cluster.update(
-              { metaData: { ...metaData, storageUsageHistory: usageHistory } },
-              { where: { id } }
-            );
-        }else{
+        if (!storageUsageHistory) {
+          const usageHistory = {};
+          targetClusterUsage.forEach((target) => {
+            usageHistory[target.Name] = [
+              {
+                date: currentTimeStamp,
+                maxUsage: target.max,
+                meanUsage: target.mean,
+              },
+            ];
+          });
+          await Cluster.update(
+            { storageUsageHistory: usageHistory },
+            { where: { id } }
+          );
+        } else {
           // Some history already in DB
-          const {storageUsageHistory} = metaData;
-          const machines = Object.keys(storageUsageHistory)
-          targetClusterUsage.forEach(target =>{
+          const machines = Object.keys(storageUsageHistory);
+          targetClusterUsage.forEach((target) => {
             const newData = {
               date: currentTimeStamp,
               maxUsage: target.max.toFixed(2),
               meanUsage: target.mean.toFixed(2),
             };
 
-            if(machines.includes(target.Name)){
-              storageUsageHistory[target.Name].unshift(newData)
-            }else{
-              storageUsageHistory[target.Name] = [newData]
+            if (machines.includes(target.Name)) {
+              storageUsageHistory[target.Name].unshift(newData);
+            } else {
+              storageUsageHistory[target.Name] = [newData];
             }
-          })
-            await Cluster.update(
-              { metaData: { ...metaData, storageUsageHistory } },
-              { where: { id } }
-            );
+          });
+          await Cluster.update({ storageUsageHistory }, { where: { id } });
         }
-   
       } catch (err) {
-        logger.error(new Error( `Unable to get cluster storage usage for ${detail.name} cluster.`));
+        logger.error(
+          new Error(
+            `Unable to get cluster storage usage for ${detail.name} cluster.`
+          )
+        );
       }
     }
-  }catch (err) {
-        logger.error("Error in Cluster Monitoring Poller", err);
+  } catch (err) {
+    logger.error("Error in Cluster Monitoring Poller", err);
   } finally {
-        if (parentPort) parentPort.postMessage("done")
-        else process.exit(0);
+    if (parentPort) parentPort.postMessage("done");
+    else process.exit(0);
   }
 })();

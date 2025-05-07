@@ -120,9 +120,6 @@ const addCluster = async (req, res) => {
 
     // Create cluster
     const newCluster = await Cluster.create(clusterPayload);
-    console.log('------------------------------------------');
-    console.dir(clusterPayload);
-    console.log('------------------------------------------');
     res.status(201).json({ success: true, data: newCluster });
   } catch (err) {
     logger.error(`Add cluster: ${err.message}`);
@@ -309,30 +306,12 @@ const getClusters = async (req, res) => {
     // Get clusters ASC by name
     const clusters = await Cluster.findAll({
       attributes: {
-        exclude: ["hash", "metaData"],
-        include: [
-          [
-            Sequelize.literal(`
-              CASE
-                WHEN metaData IS NOT NULL AND JSON_EXTRACT(metaData, '$.reachabilityInfo') IS NOT NULL
-                THEN JSON_EXTRACT(metaData, '$.reachabilityInfo')
-                ELSE '{}'
-              END
-            `),
-            "reachabilityInfo",
-          ],
-        ],
+        exclude: ["hash", "metaData", "storageUsageHistory"],
       },
       order: [["name", "ASC"]],
     });
-    // Parse the JSON string into a JavaScript object
-    const parsedClusters = clusters.map((cluster) => {
-      const clusterData = cluster.get({ plain: true });
-      clusterData.reachabilityInfo = JSON.parse(clusterData.reachabilityInfo);
-      return clusterData;
-    });
 
-    res.status(200).json({ success: true, data: parsedClusters });
+    res.status(200).json({ success: true, data: clusters });
   } catch (err) {
     logger.error(`Get clusters: ${err.message}`);
     res
@@ -366,13 +345,13 @@ const getCluster = async (req, res) => {
 
     if (!cluster) throw new CustomError("Cluster not found", 404);
 
-  // Plain cluster data
-  const clusterPlainData = cluster.get({ plain: true });
-  if (clusterPlainData.reachabilityInfoString) {
-    clusterPlainData.reachabilityInfo = JSON.parse(
-      clusterPlainData.reachabilityInfoString
-    );
-  }
+    // Plain cluster data
+    const clusterPlainData = cluster.get({ plain: true });
+    if (clusterPlainData.reachabilityInfoString) {
+      clusterPlainData.reachabilityInfo = JSON.parse(
+        clusterPlainData.reachabilityInfoString
+      );
+    }
 
     res.status(200).json({ success: true, data: clusterPlainData });
   } catch (err) {
@@ -467,7 +446,7 @@ const pingCluster = async (req, res) => {
 // Ping HPCC cluster that is already saved in the database
 const pingExistingCluster = async (req, res) => {
   const { id } = req.params;
-  try{
+  try {
     await hpccUtil.getCluster(id);
     // Update the reachability info for the cluster
     await Cluster.update(
@@ -479,7 +458,7 @@ const pingExistingCluster = async (req, res) => {
       { where: { id } }
     );
     res.status(200).json({ success: true, message: "Reachable" }); // Success Response
-  }catch(err){
+  } catch (err) {
     await Cluster.update(
       {
         metaData: Sequelize.literal(
@@ -540,7 +519,7 @@ const clusterStorageHistory = async (req, res) => {
     const start_date = moment(query.historyDateRange[0]).valueOf();
     const end_date = moment(query.historyDateRange[1]).valueOf();
 
-    const storageUsageHistory = data.metaData?.storageUsageHistory || {};
+    const storageUsageHistory = data?.storageUsageHistory || {};
 
     const filtered_data = {};
 

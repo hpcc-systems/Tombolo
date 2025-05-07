@@ -36,13 +36,13 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      defaultEngine:{
+      defaultEngine: {
         type: Sequelize.STRING,
         allowNull: false,
       },
       timezone_offset: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
       },
       accountMetaData: {
         type: Sequelize.JSON,
@@ -52,6 +52,16 @@ module.exports = {
         type: Sequelize.JSON,
         allowNull: false,
       },
+      reachabilityInfo: {
+        type: Sequelize.JSON,
+        allowNull: false,
+        defaultValue: {},
+      },
+      storageUsageHistory: {
+        type: Sequelize.JSON,
+        allowNull: false,
+        defaultValue: {},
+      },
       metaData: {
         type: Sequelize.JSON,
         defaultValue: {},
@@ -60,7 +70,7 @@ module.exports = {
         type: Sequelize.JSON,
         allowNull: false,
       },
-      updatedBy:{
+      updatedBy: {
         type: Sequelize.JSON,
         allowNull: true,
       },

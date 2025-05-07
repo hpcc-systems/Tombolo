@@ -54,6 +54,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.JSON,
         allowNull: true,
       },
+      reachabilityInfo: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: {},
+      },
+      storageUsageHistory: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: {},
+      },
       metaData: {
         type: DataTypes.JSON,
         defaultValue: {},
