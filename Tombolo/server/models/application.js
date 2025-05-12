@@ -10,10 +10,36 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         autoIncrement: false,
       },
-      title: DataTypes.STRING,
-      description: DataTypes.TEXT,
-      creator: DataTypes.STRING,
-      visibility: DataTypes.STRING,
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      description: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      creator: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      visibility: {
+        type: DataTypes.ENUM("Public", "Private"),
+        allowNull: false,
+        defaultValue: "Private",
+      },
+      createdAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
+      deletedAt: {
+        allowNull: true,
+        type: DataTypes.DATE,
+      },
     },
     { paranoid: true, freezeTableName: true }
   );
@@ -98,6 +124,13 @@ module.exports = (sequelize, DataTypes) => {
     });
     application.hasMany(models.integration_mapping, {
       foreignKey: "application_id",
+      onDelete: "CASCADE",
+    });
+
+    // User relationship
+    application.belongsTo(models.user, {
+      foreignKey: "creator",
+      as: "application_creator",
       onDelete: "CASCADE",
     });
   };

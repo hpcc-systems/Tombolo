@@ -181,6 +181,13 @@ module.exports = (sequelize, DataTypes) => {
       as: "updater",
       onDelete: "NO ACTION",
     });
+
+    // User to applications
+    user.hasMany(models.application, {
+      foreignKey: "creator",
+      as: "apps",
+      onDelete: "CASCADE",
+    });
   };
 
   return user;

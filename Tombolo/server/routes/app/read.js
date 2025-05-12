@@ -56,6 +56,13 @@ router.get("/app_list", async (req, res) => {
       where: {
         [Op.or]: [{ id: userAppIds }, { visibility: "Public" }],
       },
+      include: [
+        {
+          model: models.user,
+          as: "application_creator", // use the alias from your association
+          attributes: { exclude: ["hash"] }, // exclude the hash field
+        },
+      ],
       order: [["updatedAt", "DESC"]],
     });
 
