@@ -25,7 +25,8 @@ const tokenValidationMiddleware = async (req, res, next) => {
   }
 
   try {
-    decoded = await verifyToken(token, process.env.JWT_SECRET);
+    // Declare decoded variable properly
+    const decoded = await verifyToken(token, process.env.JWT_SECRET);
     req.user = decoded;
 
     // If token is blacklisted - return unauthorized
@@ -35,7 +36,7 @@ const tokenValidationMiddleware = async (req, res, next) => {
         .json({ message: "Unauthorized: Token no longer valid" });
     }
 
-    //put access token in cookie
+    // Put access token in cookie
     setTokenCookie(res, token);
 
     next();
@@ -43,8 +44,7 @@ const tokenValidationMiddleware = async (req, res, next) => {
     if (err.name === "TokenExpiredError") {
       const tokenDetails = await handleExpiredToken(token);
       if (tokenDetails.sessionExpired) {
-        //session expired block so refresh token has expired meaning user needs to log in again
-
+        // Session expired block so refresh token has expired meaning user needs to log in again
         res.clearCookie("token", {
           httpOnly: true,
           secure: true,
@@ -55,13 +55,12 @@ const tokenValidationMiddleware = async (req, res, next) => {
         });
       } else {
         console.log("token expired, refreshing");
-        //token expired, but session is still valid block so we need to refresh the token cookie and the csrf token
+        // Token expired, but session is still valid block so we need to refresh the token cookie and the csrf token
         await setTokenCookie(res, tokenDetails.newAccessToken);
 
         await generateAndSetCSRFToken(req, res, tokenDetails.newAccessToken);
 
-        //we need to update the req.user object with the new token details, so that when we pass it to the next middleware it has the correct details
-        //if we don't do this and a verifyUserRole middleware is used after this one, it will fail as the user details won't be there and end user will receive errors
+        // Update req.user with new token details
         req.user = await jwt.decode(tokenDetails.newAccessToken);
 
         next();
@@ -142,7 +141,7 @@ const handleExpiredToken = async (token) => {
       exp: refreshToken.exp,
     });
 
-    // remove old refresh token from DB
+    // Remove old refresh token from DB
     await refreshToken.destroy();
 
     return {
@@ -150,8 +149,12 @@ const handleExpiredToken = async (token) => {
       newAccessToken,
     };
   } catch (err) {
-    logger.error(err.message);
-    return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    // Log error and return error object instead of using res directly
+    logger.error(`Error in handleExpiredToken: ${err.message}`);
+    return {
+      sessionExpired: true,
+      newAccessToken: null,
+    };
   }
 };
 
