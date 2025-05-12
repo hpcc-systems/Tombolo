@@ -36,7 +36,7 @@ function ClusterActionBtn({ setDisplayAddClusterModal, tourOpen, setTourOpen, ad
         <Button
           type="primary"
           ref={addClusterButtonRef}
-          onMouseOver={() => {
+          onClick={() => {
             //add mouseOver handler to close tour if it is open, otherwise tour will fly to the middle of the screen on mouseover
             if (tourOpen) {
               setTourOpen(false);

@@ -1,6 +1,5 @@
 import { Constants } from '../../components/common/Constants';
 import { authHeader, handleError } from '../../components/common/AuthHeader.js';
-import { getUser } from '../../components/common/userStorage.js';
 
 export const applicationActions = {
   applicationSelected,
@@ -98,32 +97,33 @@ function getAllActiveIntegrations() {
 }
 
 function getApplications() {
-  return (dispatch) => {
-    fetch('/api/app/read/app_list', { headers: authHeader() })
-      .then((response) => (response.ok ? response.json() : handleError(response)))
-      .then((applications) => {
-        let applicationsFinal = applications ? applications : [];
+  return async (dispatch) => {
+    try {
+      const response = await fetch('/api/app/read/app_list', { headers: authHeader() });
+      if (!response.ok) {
+        throw await handleError(response);
+      }
+      const applications = await response.json();
 
-        //filter out applications by what user has access too in local storage
-        const user = getUser();
-        const userApplications = user.applications;
+      if (!applications || applications.length === 0) {
+        dispatch({ type: Constants.NO_APPLICATION_FOUND, noApplication: true });
+        dispatch({ type: Constants.APPLICATIONS_RETRIEVED, payload: [] });
+        dispatch({
+          type: Constants.APPLICATION_SELECTED,
+          application: { applicationId: null, applicationTitle: null },
+        });
+        return;
+      }
 
-        if (userApplications) {
-          const userApplicationIds = userApplications.map((app) => app.application.id);
-          applicationsFinal = applicationsFinal.filter((app) => userApplicationIds.includes(app.id));
-        }
-
-        if (applicationsFinal.length === 0) {
-          dispatch({ type: Constants.NO_APPLICATION_FOUND, noApplication: true });
-          dispatch({ type: Constants.APPLICATIONS_RETRIEVED, payload: applicationsFinal });
-          dispatch({
-            type: Constants.APPLICATION_SELECTED,
-            application: { applicationId: null, applicationTitle: null },
-          });
-          return;
-        }
-        dispatch({ type: Constants.APPLICATIONS_RETRIEVED, payload: applicationsFinal });
-      })
-      .catch(console.log);
+      dispatch({ type: Constants.APPLICATIONS_RETRIEVED, payload: applications });
+    } catch (err) {
+      console.log(err);
+      dispatch({ type: Constants.NO_APPLICATION_FOUND, noApplication: true });
+      dispatch({ type: Constants.APPLICATIONS_RETRIEVED, payload: [] });
+      dispatch({
+        type: Constants.APPLICATION_SELECTED,
+        application: { applicationId: null, applicationTitle: null },
+      });
+    }
   };
 }

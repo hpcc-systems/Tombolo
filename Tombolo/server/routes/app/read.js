@@ -1,59 +1,74 @@
+// Library Imports
 const express = require("express");
-const router = express.Router();
+const path = require("path");
+const fs = require("fs");
+const Sequelize = require("sequelize");
+const { body, query, validationResult } = require("express-validator");
+const multer = require("multer");
+const { includes } = require("lodash");
+const sanitize = require("sanitize-filename");
 
-var path = require("path");
-var fs = require("fs");
-var models = require("../../models");
-let UserApplication = models.user_application;
-let Application = models.application;
-
-let Groups = models.groups;
-let File = models.file;
-let FileValidation = models.file_validation;
-let Index = models.indexes;
-let IndexKey = models.index_key;
-let IndexPayload = models.index_payload;
-let Job = models.job;
-let JobFile = models.jobfile;
-let JobParam = models.jobparam;
-let Query = models.query;
-let QueryField = models.query_field;
-let Dataflow = models.dataflow;
-
+// Local Imports
+const models = require("../../models");
 const { io } = require("../../server");
 const validatorUtil = require("../../utils/validator");
-const { body, query, validationResult } = require("express-validator");
 const NotificationModule = require("../notifications/email-notification");
 const authServiceUtil = require("../../utils/auth-service-utils");
-let Sequelize = require("sequelize");
-const Op = Sequelize.Op;
-const multer = require("multer");
 const jobScheduler = require("../../jobSchedular/job-scheduler");
-const sanitize = require("sanitize-filename");
+const logger = require("../../config/logger");
+
+// Constants & Config
+const router = express.Router();
+const Op = Sequelize.Op;
+
+// Model Shortcuts
+const UserApplication = models.user_application;
+const Application = models.application;
+const Groups = models.groups;
+const File = models.file;
+const FileValidation = models.file_validation;
+const Index = models.indexes;
+const IndexKey = models.index_key;
+const IndexPayload = models.index_payload;
+const Job = models.job;
+const JobFile = models.jobfile;
+const JobParam = models.jobparam;
+const Query = models.query;
+const QueryField = models.query_field;
+const Dataflow = models.dataflow;
 const AssetGroups = models.assets_groups;
 
-router.get("/app_list", (req, res) => {
+// Get all public apps and the ones that are associated with the user
+router.get("/app_list", async (req, res) => {
   try {
-    models.application
-      .findAll({ order: [["updatedAt", "DESC"]] })
-      .then(function (applications) {
-        res.status(200).json(applications);
-      })
-      .catch(function (err) {
-        console.log(err);
-        return res.status(500).json({
-          success: false,
-          message: "Error occurred while getting application list",
-        });
-      });
+    const { id: userId } = req.user;
+
+    // 1. Get application IDs linked to the user
+    const userApps = await models.user_application.findAll({
+      where: { user_id: userId },
+      attributes: ["application_id"],
+      raw: true,
+    });
+    const userAppIds = userApps.map((app) => app.application_id);
+
+    // 2. Get all applications that are either linked to the user or are public
+    const applications = await models.application.findAll({
+      where: {
+        [Op.or]: [{ id: userAppIds }, { visibility: "Public" }],
+      },
+      order: [["updatedAt", "DESC"]],
+    });
+
+    res.status(200).json(applications);
   } catch (err) {
-    console.log("err", err);
+    logger.error(`Error occurred while getting application list: ${err}`);
     return res.status(500).json({
       success: false,
       message: "Error occurred while getting application list",
     });
   }
 });
+
 router.get(
   "/appListByUsername",
   [query("user_name").notEmpty().withMessage("Invalid username")],
