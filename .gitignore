@@ -20,3 +20,4 @@ dev/
 https/**
 cert.pem
 key.pem
+tombolo_docs/.docusaurus/*
