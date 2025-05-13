@@ -328,32 +328,13 @@ const getCluster = async (req, res) => {
       where: { id: req.params.id },
       attributes: {
         exclude: ["hash", "metaData"],
-        include: [
-          [
-            Sequelize.literal(`
-              CASE
-                WHEN metaData IS NOT NULL AND JSON_EXTRACT(metaData, '$.reachabilityInfo') IS NOT NULL
-                THEN JSON_EXTRACT(metaData, '$.reachabilityInfo')
-                ELSE '{}'
-              END
-            `),
-            "reachabilityInfoString",
-          ],
-        ],
       },
+      raw: true,
     });
 
     if (!cluster) throw new CustomError("Cluster not found", 404);
 
-    // Plain cluster data
-    const clusterPlainData = cluster.get({ plain: true });
-    if (clusterPlainData.reachabilityInfoString) {
-      clusterPlainData.reachabilityInfo = JSON.parse(
-        clusterPlainData.reachabilityInfoString
-      );
-    }
-
-    res.status(200).json({ success: true, data: clusterPlainData });
+    res.status(200).json({ success: true, data: cluster });
   } catch (err) {
     logger.error(`Get cluster: ${err.message}`);
     res
@@ -451,23 +432,31 @@ const pingExistingCluster = async (req, res) => {
     // Update the reachability info for the cluster
     await Cluster.update(
       {
-        metaData: Sequelize.literal(
-          `JSON_SET(metaData, '$.reachabilityInfo.reachable', true, '$.reachabilityInfo.lastMonitored', NOW(), '$.reachabilityInfo.lastReachableAt', NOW())`
-        ),
+        reachabilityInfo: {
+          reachable: true,
+          lastMonitored: new Date(),
+          lastReachableAt: new Date(),
+        },
       },
-      { where: { id } }
+      {
+        where: { id },
+      }
     );
     res.status(200).json({ success: true, message: "Reachable" }); // Success Response
   } catch (err) {
     await Cluster.update(
       {
-        metaData: Sequelize.literal(
-          `JSON_SET(metaData, '$.reachabilityInfo.reachable', false, '$.reachabilityInfo.lastMonitored', NOW())`
-        ),
+        reachabilityInfo: {
+          reachable: false,
+          lastMonitored: new Date(),
+          lastReachableAt: new Date(),
+        },
       },
-      { where: { id } }
+      {
+        where: { id },
+      }
     );
-    res.status(503).json({ success: false, message: err });
+    res.status(503).json({ success: false, message: err.message }); // Service Unavailable
   }
 };
 
@@ -512,7 +501,7 @@ const clusterStorageHistory = async (req, res) => {
     const data = await Cluster.findOne({
       where: { id: query.clusterId },
       raw: true,
-      attributes: ["metaData"],
+      attributes: ["storageUsageHistory"],
     });
 
     // Filter data before sending to client

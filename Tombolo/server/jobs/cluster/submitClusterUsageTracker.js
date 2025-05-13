@@ -7,6 +7,16 @@ const logger = require("../../config/logger");
 const hpccUtil = require("../../utils/hpcc-util");
 
 (async () => {
+  const startTime = Date.now();
+
+  // Log job start
+  if (parentPort) {
+    parentPort.postMessage({
+      level: "info",
+      text: "Cluster usage tracker job started...",
+    });
+  }
+
   try {
     const allClusters = await Cluster.findAll({
       attributes: ["id", "storageUsageHistory"],
@@ -16,7 +26,7 @@ const hpccUtil = require("../../utils/hpcc-util");
     const allClusterDetails = [];
     for (const cl of allClusters) {
       try {
-        let cluster = await hpccUtil.getCluster(cl.id); // Checks if cluster is reachable and decrypts cluster credentials if any
+        let cluster = await hpccUtil.getCluster(cl.id);
         const { name, thor_host, thor_port, username, hash } = cluster;
         const clusterDetails = {
           baseUrl: `${thor_host}:${thor_port}`,
@@ -27,7 +37,12 @@ const hpccUtil = require("../../utils/hpcc-util");
         };
         allClusterDetails.push(clusterDetails);
       } catch (err) {
-        logger.error(err);
+        if (parentPort) {
+          parentPort.postMessage({
+            level: "error",
+            text: `Error getting cluster details for cluster ID ${cl.id}: ${err.message}`,
+          });
+        }
       }
     }
 
@@ -68,6 +83,10 @@ const hpccUtil = require("../../utils/hpcc-util");
 
             if (machines.includes(target.Name)) {
               storageUsageHistory[target.Name].unshift(newData);
+              // Keep only the latest 360 records
+              storageUsageHistory[target.Name] = storageUsageHistory[
+                target.Name
+              ].slice(0, 360);
             } else {
               storageUsageHistory[target.Name] = [newData];
             }
@@ -75,17 +94,32 @@ const hpccUtil = require("../../utils/hpcc-util");
           await Cluster.update({ storageUsageHistory }, { where: { id } });
         }
       } catch (err) {
-        logger.error(
-          new Error(
-            `Unable to get cluster storage usage for ${detail.name} cluster.`
-          )
-        );
+        if (parentPort) {
+          parentPort.postMessage({
+            level: "error",
+            text: `Unable to get cluster storage usage for ${detail.name} cluster: ${err.message}`,
+          });
+        }
       }
     }
   } catch (err) {
-    logger.error("Error in Cluster Monitoring Poller", err);
+    if (parentPort) {
+      parentPort.postMessage({
+        level: "error",
+        text: `Error in Cluster Monitoring Poller: ${err.message}`,
+      });
+    }
   } finally {
-    if (parentPort) parentPort.postMessage("done");
-    else process.exit(0);
+    const endTime = Date.now();
+    const durationSec = ((endTime - startTime) / 1000).toFixed(2);
+    if (parentPort) {
+      parentPort.postMessage({
+        level: "info",
+        text: `Cluster usage tracker job completed in ${durationSec} seconds.`,
+      });
+      parentPort.postMessage("done");
+    } else {
+      process.exit(0);
+    }
   }
 })();
