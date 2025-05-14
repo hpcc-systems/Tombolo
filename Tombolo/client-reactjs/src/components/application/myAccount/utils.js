@@ -82,7 +82,7 @@ export const deviceInfoStringBuilder = (deviceInfo) => {
     return 'Unknown';
   }
 
-  const returnString = `OS/Browser - ${deviceInfo.os ? deviceInfo.os : 'Unknown'}/${
+  const returnString = ` ${deviceInfo.os ? deviceInfo.os : 'Unknown'}/${
     deviceInfo.browser ? deviceInfo.browser : 'Unknown'
   }`;
 
