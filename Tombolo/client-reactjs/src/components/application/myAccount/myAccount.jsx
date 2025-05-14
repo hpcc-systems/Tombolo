@@ -7,37 +7,36 @@ import MyAccountTable from './myAccountTable';
 import MyAccountInfo from './myAccountInfo';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { getUser } from '../../common/userStorage';
+import './myAccount.css';
 
 const MyAccount = () => {
   //get user from local storage
   const user = getUser();
 
   const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   return (
     <>
       <BreadCrumbs
         extraContent={
-          <EditAccountActionButton setChangePasswordModalVisible={setChangePasswordModalVisible} user={user} />
+          <EditAccountActionButton
+            setChangePasswordModalVisible={setChangePasswordModalVisible}
+            user={user}
+            setEditing={setEditing}
+          />
         }
       />
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          width: '80%',
-          margin: '0 auto',
-          textAlign: 'center',
-          justifyContent: 'center',
-        }}>
-        <h1>My Account</h1>
+      <div className="my-account">
+        <Divider orientation="left"> Personal Information </Divider>
+
         <ChangePasswordModal
           changePasswordModalVisible={changePasswordModalVisible}
           setChangePasswordModalVisible={setChangePasswordModalVisible}
         />
-        <MyAccountInfo user={user} />
+        <MyAccountInfo user={user} editing={editing} setEditing={setEditing} />
 
-        <Divider>Session Management</Divider>
+        <Divider orientation="left"> Active Sessions </Divider>
         <MyAccountTable user={user} />
       </div>
     </>

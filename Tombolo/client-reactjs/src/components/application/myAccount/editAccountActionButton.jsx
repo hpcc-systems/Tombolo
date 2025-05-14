@@ -1,18 +1,29 @@
 import React from 'react';
-import { Button } from 'antd';
+import { Dropdown, Button, Menu } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
 
-const EditAccountActionButton = ({ setChangePasswordModalVisible, user }) => {
+const EditAccountActionButton = ({ setChangePasswordModalVisible, user, setEditing }) => {
   if (user.registrationMethod === 'azure') {
     return null;
   }
+
+  const menu = (
+    <Menu>
+      <Menu.Item key="changePassword" onClick={() => setChangePasswordModalVisible(true)}>
+        Change Password
+      </Menu.Item>
+      <Menu.Item key="updatePersonalInfo" onClick={() => setEditing(true)}>
+        Update Personal Info
+      </Menu.Item>
+    </Menu>
+  );
+
   return (
-    <Button
-      type="primary"
-      onClick={() => {
-        setChangePasswordModalVisible(true);
-      }}>
-      Change Password
-    </Button>
+    <Dropdown overlay={menu} placement="bottomRight" trigger={['click']}>
+      <Button type="primary" icon={<DownOutlined />}>
+        Account Actions
+      </Button>
+    </Dropdown>
   );
 };
 

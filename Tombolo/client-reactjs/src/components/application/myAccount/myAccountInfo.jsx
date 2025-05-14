@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Row, Col, Input, Button, Spin, message } from 'antd';
+import { Form, Row, Col, Input, Button, Spin, message } from 'antd';
 import { roleStringBuilder, updateAccount } from './utils';
 import { setUser, getUser } from '../../common/userStorage';
 
-const MyAccountInfo = ({ user }) => {
+const MyAccountInfo = ({ user, editing, setEditing }) => {
   const [form] = Form.useForm();
-  const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { roles } = user;
@@ -56,71 +55,65 @@ const MyAccountInfo = ({ user }) => {
   };
 
   return (
-    <div style={{ width: '100%' }}>
-      <Card style={{ width: '50%', margin: '0 auto', textAlign: 'left' }}>
-        <Form form={form} layout="vertical" initialValues={user}>
-          <>
-            {/* first name, last name, password, confirm password fields */}
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="First Name"
-                  name="firstName"
-                  rules={[{ max: 64, message: 'Maximum of 64 characters allowed' }]}>
-                  <Input disabled={!editing} size="large" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Last Name"
-                  name="lastName"
-                  rules={[{ max: 64, message: 'Maximum of 64 characters allowed' }]}>
-                  <Input disabled={!editing} size="large" />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item
-              label="Email"
-              name="email"
-              rules={[
-                {
-                  whitespace: true,
-                  type: 'email',
-                  message: 'Invalid e-mail address.',
-                },
-                { max: 64, message: 'Maximum of 64 characters allowed' },
-              ]}>
-              <Input disabled size="large" />
-            </Form.Item>
-          </>
-
+    <div>
+      <Form form={form} layout="vertical" initialValues={user}>
+        <>
+          {/* first name, last name, password, confirm password fields */}
           <Row gutter={16}>
-            <Col span={24}>
-              <Form.Item label="Roles" name="rolesString">
-                <Input disabled></Input>
+            <Col span={12}>
+              <Form.Item
+                label="First Name"
+                name="firstName"
+                rules={[{ max: 64, message: 'Maximum of 64 characters allowed' }]}>
+                <Input disabled={!editing} size="large" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Last Name"
+                name="lastName"
+                rules={[{ max: 64, message: 'Maximum of 64 characters allowed' }]}>
+                <Input disabled={!editing} size="large" />
               </Form.Item>
             </Col>
           </Row>
 
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-            {!editing ? (
-              <Button type="primary" htmlType="submit" onClick={() => setEditing(true)} disabled={false}>
-                Edit
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              {
+                whitespace: true,
+                type: 'email',
+                message: 'Invalid e-mail address.',
+              },
+              { max: 64, message: 'Maximum of 64 characters allowed' },
+            ]}>
+            <Input disabled size="large" />
+          </Form.Item>
+        </>
+
+        <Row gutter={16}>
+          <Col span={24}>
+            <Form.Item label="Roles" name="rolesString">
+              <Input disabled></Input>
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+          {editing && (
+            <>
+              <Button style={{ marginRight: '1rem' }} onClick={() => setEditing(false)} disabled={loading && true}>
+                Cancel
               </Button>
-            ) : (
-              <>
-                <Button style={{ marginRight: '1rem' }} onClick={() => setEditing(false)} disabled={loading && true}>
-                  Cancel
-                </Button>
-                <Button type="primary" htmlType="submit" onClick={onSubmit} disabled={loading && true}>
-                  Save {loading && <Spin style={{ marginLeft: '1rem' }} />}
-                </Button>
-              </>
-            )}
-          </div>
-        </Form>
-      </Card>
+              <Button type="primary" htmlType="submit" onClick={onSubmit} disabled={loading && true}>
+                Save {loading && <Spin style={{ marginLeft: '1rem' }} />}
+              </Button>
+            </>
+          )}
+        </div>
+      </Form>
     </div>
   );
 };
