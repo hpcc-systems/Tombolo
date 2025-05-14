@@ -8,14 +8,12 @@ const MyAccountInfo = ({ user }) => {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { roles, applications } = user;
+  const { roles } = user;
 
   //build role and app string for display
   useEffect(() => {
     form.setFieldValue('rolesString', roleStringBuilder(roles));
-  }, [roles, applications]);
-
-  useEffect(() => {}, [editing, loading]);
+  }, [roles]);
 
   const onSubmit = async () => {
     setLoading(true);
