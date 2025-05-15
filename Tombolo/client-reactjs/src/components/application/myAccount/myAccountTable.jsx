@@ -61,7 +61,11 @@ const MyAccountTable = ({ user }) => {
 
   return (
     <>
-      {!sessionsFetched ? <Spin /> : <Table columns={columns} dataSource={sessions} rowKey={(record) => record.id} />}
+      {!sessionsFetched ? (
+        <Spin />
+      ) : (
+        <Table columns={columns} size="small" dataSource={sessions} rowKey={(record) => record.id} pagination={false} />
+      )}
     </>
   );
 };
