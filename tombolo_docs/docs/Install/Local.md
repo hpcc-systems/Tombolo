@@ -45,53 +45,39 @@ git clone https://github.com/hpcc-systems/Tombolo.git
 
 ---
 
-## Step 2 - Configure Environment Variables
+## Step 2 - Editor Setup (Recommended: Visual Studio Code)
 
-### Server
+For consistency across the team, we recommend using [Visual Studio Code](https://code.visualstudio.com/) as your editor for this project.
+
+- This repository includes a `.vscode/settings.json` file. These workspace settings will **override your personal VS Code settings** for this project only.
+- The workspace settings are intended to ensure a consistent development environment for all contributors.
+
+**Required Extensions:**
+
+- [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
+
+Please make sure both extensions are **installed and enabled** in your VS Code environment.
+
+---
+
+## Step 3 - Configure Environment Variables
 
 <div class="important_block">
 Please carefully review each variable before making any changes. Detailed explanations can be found in [Configurations](./Configurations)
 </div>
 
-Navigate to the Tombolo folder inside of the root directory of your git installation, and create a new .env file. Paste the code below and set your variables accordingly. These variables are the minimum requirements, for more options use the [Configurations](./Configurations) documentation as a guide.
+### Server
 
-```bash
-HOST_HOSTNAME=localhost
-PORT=3000
-WEB_URL=http://localhost:3001/
-DB_USERNAME={your db username, typically root}
-DB_PASSWORD={your db user password}
-DB_PORT={your db port, typically 3306}
-DB_NAME=tombolo
-DB_HOSTNAME={your db host, typically localhost}
-EMAIL_SMTP_HOST=
-EMAIL_PORT=
-EMAIL_SENDER=
-```
-
-Save the file when finished.
+Navigate to the Tombolo folder inside the root directory of your git installation, and create a new `.env` file. Paste the contents of the `.env.sample` file into this newly created `.env` file. Carefully review the description of each variable, as they may differ depending on the environment. A detailed description of each variable can be found here: [Configurations](./Configurations).
 
 ### Client
 
-From the root directory of your git installation, navigate to the Tombolo Folder, and then the Client-reactjs folder, and create a new .env file. Paste the code below and set your variables accordingly. These variables are the minimum requirements, for more options use the [Configurations](./Configurations) documentation as a guide.
-
-```bash
-PORT=3001
-## PROXY URL ------------------------------------
-# Make sure this url is pointing to the backend server URL. This is used by the UI to interact with backend (Eg : http://localhost:3000)
-REACT_APP_PROXY_URL=http://localhost:3000
-## APPLICATION VERSION ----------------------------
-# This grabs the application version fron package.json to display on front end
-REACT_APP_VERSION=$npm_package_version
-# Authentication Methods, traditional, azure available.
-REACT_APP_AUTH_METHODS="traditional"
-```
-
-Save the file when finished.
+From the root directory of your git installation, navigate to the Tombolo folder, then to the `client-reactjs` folder, and create a new `.env` file. Copy and paste the contents of the `.env.sample` file from the same level and update the variables as needed. Again, please refer to [Configurations](./Configurations) for a detailed explanation of what each variable is.
 
 ---
 
-## Step 3 - Whitelist Clusters
+## Step 4 - Whitelist Clusters
 
 Clusters need to be whitelisted to allow Tombolo to communicate with them. Any clusters that will be used in Tombolo must be whitelisted for security reasons. None are required to start the software, but at least one is required to access the featureset available.
 
@@ -100,7 +86,7 @@ Use cluster-whitelist.sample.js as a template to add the clusters that you would
 
 ---
 
-## Step 4 - Run the application
+## Step 5 - Run the application
 
 ### Server
 
@@ -154,7 +140,9 @@ npm run start
 
 ---
 
-## Step 5 - Open the application
+## Step 6 - Open the application
 
 Depending on your environment, your browser may have been opened to the start page of Tombolo already, after running the
-`npm start` command for the client. If not, you can reach your new installation at [http://localhost:3001/](http://localhost:3001/). If you need any further assistance, check out our [user guides](/docs/category/user-guides).
+`npm start` command for the client. If not, you can reach your new installation at [http://localhost:3000/](http://localhost:3000/). If you need any further assistance, check out our [user guides](/docs/category/user-guides).
+
+---
