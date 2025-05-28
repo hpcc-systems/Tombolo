@@ -4,7 +4,7 @@ sidebar_position: -99
 
 # System Architecture
 
-Tombolo’s architecture integrates a React frontend, Node.js backend, and external services like MySQL and HPCC, with notification support via a mail server. The diagram below illustrates the system’s components and their interactions.
+Tombolo’s architecture integrates a React frontend, Node.js backend, MySQL and and external services like HPCC, with notification support via a mail server. The diagram below illustrates the system’s components and their interactions.
 
 ![Tombolo System Architecture](/img/system-architecture.jpg)
 
