@@ -1,4 +1,5 @@
 const { body, param, validationResult } = require("express-validator");
+const { log } = require("../config/logger");
 
 // Validate the input for creating a cluster
 const validateAddClusterInputs = [
@@ -117,6 +118,7 @@ const validateClusterPingPayload = [
     const errors = validationResult(req).array();
     const errorString = errors.map((e) => e.msg).join(", ");
     if (errors.length > 0) {
+      log.error(`Cluster ping payload validation failed: ${errorString}`);
       return res.status(400).json({ success: false, message: errorString });
     }
     next();
