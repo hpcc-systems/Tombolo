@@ -26,7 +26,7 @@ services:
     volumes:
       - /tmp/pm2:/tmp/pm2
       - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
-      - /var/log/tombolo-server:/app/logs
+      - ./logs/server:/app/logs
     networks:
       - tombolo-network
     ports:
