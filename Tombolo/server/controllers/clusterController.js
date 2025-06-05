@@ -4,6 +4,7 @@ const {
   AccountService,
   TopologyService,
   WorkunitsService,
+  Connection,
 } = require("@hpcc-js/comms");
 const logger = require("../config/logger");
 const models = require("../models");
@@ -52,7 +53,7 @@ const addCluster = async (req, res) => {
       // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
       // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
       defaultEngine = TpLogicalCluster.find(
-        (engine) => engine.Name === "hthor" && !engine.QueriesOnly
+        (engine) => engine.Name === "hthor" && !engine.QueriesOnly,
       );
       if (!defaultEngine) {
         defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
@@ -64,7 +65,7 @@ const addCluster = async (req, res) => {
 
     // Execute ECL code to get timezone offset
     logger.verbose(
-      "Adding new cluster: Executing ECL code to get timezone offset"
+      "Adding new cluster: Executing ECL code to get timezone offset",
     );
 
     const eclCode =
@@ -194,7 +195,7 @@ const addClusterWithProgress = async (req, res) => {
       // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
       // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
       defaultEngine = TpLogicalCluster.find(
-        (engine) => engine.Name === "hthor" && !engine.QueriesOnly
+        (engine) => engine.Name === "hthor" && !engine.QueriesOnly,
       );
       if (!defaultEngine) {
         defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
@@ -217,7 +218,7 @@ const addClusterWithProgress = async (req, res) => {
       message: "Getting timezone offset ..",
     });
     logger.verbose(
-      "Adding new cluster: Executing ECL code to get timezone offset"
+      "Adding new cluster: Executing ECL code to get timezone offset",
     );
 
     const eclCode =
@@ -393,34 +394,46 @@ const getClusterWhiteList = async (req, res) => {
   }
 };
 
-// Ping HPCC cluster to find if it is reachable
+// Ping HPCC cluster to check if it is reachable
 const pingCluster = async (req, res) => {
   try {
+    logger.verbose(`Pinging HPCC cluster: ${req.body.name}`);
     const { name, username, password } = req.body;
+
+    // Validate cluster
     const cluster = clusters.find((c) => c.name === name);
 
-    // If bogus cluster name is provided, return error
-    if (!cluster) throw new CustomError("Cluster not whitelisted", 400);
+    if (!cluster) {
+      logger.error(`Cluster not whitelisted: ${name}`);
+      throw new CustomError("Cluster not whitelisted", 400);
+    }
 
-    // construct base url
+    // Construct base URL
     const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
 
-    // Ping cluster
-    await new AccountService({
-      baseUrl,
-      userID: username,
-      password,
-    }).MyAccount();
-    res.status(200).json({ success: true, message: "Authorized" });
-  } catch (err) {
-    let errMessage = "Unable to reach cluster";
-    let statusCode = err.statusCode || 500;
+    // Attempt to ping cluster
+    const connection = new Connection({ baseUrl, userID: username, password });
+    await connection.send("GetClusterInfo", {});
 
-    if (err.message.includes("Unauthorized")) {
+    return res
+      .status(200)
+      .json({ success: true, message: "Cluster reachable" });
+  } catch (err) {
+    logger.error(`Ping cluster: ${err.message}`);
+    let errMessage = err.message;
+    let statusCode = 500;
+
+    if (err.message.includes("Unauthorized") || err.message.includes("401")) {
       errMessage = "Invalid credentials";
       statusCode = 403;
+    } else if (
+      err.message.includes("ECONNREFUSED") ||
+      err.message.includes("ENOTFOUND")
+    ) {
+      errMessage = "Cluster unreachable";
+      statusCode = 503;
     }
-    res.status(statusCode).json({ success: false, message: errMessage });
+    return res.status(statusCode).json({ success: false, message: errMessage });
   }
 };
 
@@ -440,7 +453,7 @@ const pingExistingCluster = async (req, res) => {
       },
       {
         where: { id },
-      }
+      },
     );
     res.status(200).json({ success: true, message: "Reachable" }); // Success Response
   } catch (err) {
@@ -454,7 +467,7 @@ const pingExistingCluster = async (req, res) => {
       },
       {
         where: { id },
-      }
+      },
     );
     res.status(503).json({ success: false, message: err.message }); // Service Unavailable
   }

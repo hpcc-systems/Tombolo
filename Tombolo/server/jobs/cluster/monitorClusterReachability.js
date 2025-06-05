@@ -41,7 +41,7 @@ const NotificationQueue = models.notification_queue;
         accountMetaData,
         name: clusterName,
         adminEmails,
-        reachabilityInfo: lastReachabilityInfo,
+        metaData = {},
       } = cluster;
 
       try {
@@ -105,15 +105,16 @@ const NotificationQueue = models.notification_queue;
             text: `Cluster reachability:  ${cluster.name} is reachable`,
           });
         // Update accountMetaData
-        const reachabilityInfo = {
+        const newMetaData = { ...metaData };
+        newMetaData.reachabilityInfo = {
           lastReachableAt: now,
           reachable: true,
           unReachableMessage: null,
           lastMonitored: now,
         };
         await Cluster.update(
-          { accountMetaData: newAccountMetaData, reachabilityInfo },
-          { where: { id: cluster.id } }
+          { accountMetaData: newAccountMetaData, metaData: newMetaData },
+          { where: { id: cluster.id } },
         );
       } catch (err) {
         parentPort &&
@@ -121,15 +122,15 @@ const NotificationQueue = models.notification_queue;
             level: "error",
             text: `Cluster reachability:  ${cluster.name} is not reachable -  ${err.message}`,
           });
-        const newReachabilityInfo = {
-          lastReachableAt: lastReachabilityInfo.lastReachableAt,
-          reachable: false,
-          unReachableMessage: err.message,
-          lastMonitored: now,
-        };
+        const newMetaData = { ...metaData };
+        let lastReachabilityInfo = { ...newMetaData.reachabilityInfo };
+        lastReachabilityInfo.reachable = false;
+        lastReachabilityInfo.unReachableMessage = err.message;
+        newMetaData.reachabilityInfo = lastReachabilityInfo;
+        newMetaData.lastMonitored = now;
         await Cluster.update(
-          { reachabilityInfo: newReachabilityInfo },
-          { where: { id: cluster.id } }
+          { metaData: newMetaData },
+          { where: { id: cluster.id } },
         );
       }
     }
@@ -144,9 +145,7 @@ const NotificationQueue = models.notification_queue;
       parentPort &&
         parentPort.postMessage({
           level: "info",
-          text: `Cluster reachability:  monitoring completed in ${
-            new Date() - now
-          } ms`,
+          text: `Cluster reachability:  monitoring completed in ${new Date() - now} ms`,
         });
     } else {
       process.exit(0);
