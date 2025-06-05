@@ -1,19 +1,21 @@
-const { clusters } = require("../cluster-whitelist.js");
-const { Sequelize } = require("sequelize");
+const { clusters } = require('../cluster-whitelist.js');
+const { Sequelize } = require('sequelize');
 const {
   AccountService,
   TopologyService,
   WorkunitsService,
   Connection,
-} = require("@hpcc-js/comms");
-const logger = require("../config/logger");
-const models = require("../models");
-const { encryptString } = require("../utils/cipher.js");
-const CustomError = require("../utils/customError.js");
-const hpccUtil = require("../utils/hpcc-util.js");
-const hpccJSComms = require("@hpcc-js/comms");
+} = require('@hpcc-js/comms');
+const axios = require('axios');
+
+const logger = require('../config/logger');
+const models = require('../models');
+const { encryptString } = require('../utils/cipher.js');
+const CustomError = require('../utils/customError.js');
+const hpccUtil = require('../utils/hpcc-util.js');
+const hpccJSComms = require('@hpcc-js/comms');
 const Cluster = models.cluster;
-const moment = require("moment");
+const moment = require('moment');
 
 // Add a cluster - Without sending progress updates to client
 const addCluster = async (req, res) => {
@@ -28,7 +30,7 @@ const addCluster = async (req, res) => {
       updatedBy,
     } = req.body;
     // Make sure cluster is whitelisted
-    const cluster = clusters.find((c) => c.name === clusterName);
+    const cluster = clusters.find(c => c.name === clusterName);
 
     if (!cluster) {
       return;
@@ -53,29 +55,29 @@ const addCluster = async (req, res) => {
       // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
       // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
       defaultEngine = TpLogicalCluster.find(
-        (engine) => engine.Name === "hthor" && !engine.QueriesOnly,
+        engine => engine.Name === 'hthor' && !engine.QueriesOnly
       );
       if (!defaultEngine) {
-        defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
+        defaultEngine = TpLogicalCluster.find(engine => !engine.QueriesOnly);
       }
     }
 
     // if default cluster is not found, return error
-    if (!defaultEngine) throw new CustomError("Default engine not found", 400);
+    if (!defaultEngine) throw new CustomError('Default engine not found', 400);
 
     // Execute ECL code to get timezone offset
     logger.verbose(
-      "Adding new cluster: Executing ECL code to get timezone offset",
+      'Adding new cluster: Executing ECL code to get timezone offset'
     );
 
     const eclCode =
-      "IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);";
+      'IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);';
     // Create timezone offset in default engine
     const wus = new WorkunitsService({ baseUrl, userID, password });
     const {
       Workunit: { Wuid },
     } = await wus.WUCreateAndUpdate({
-      Jobname: "Get Timezone Offset",
+      Jobname: 'Get Timezone Offset',
       QueryText: eclCode,
       ClusterSelection: defaultEngine.Name,
     });
@@ -83,11 +85,11 @@ const addCluster = async (req, res) => {
     // Submit the recently created workunit
     await wus.WUSubmit({ Wuid, Cluster: defaultEngine.Name });
 
-    let wuState = "submitted";
-    const finalStates = ["unknown", "completed", "failed", "aborted"];
+    let wuState = 'submitted';
+    const finalStates = ['unknown', 'completed', 'failed', 'aborted'];
     while (!finalStates.includes(wuState)) {
       // Delay for 2 seconds before checking the state again
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
       const {
         Workunits: { ECLWorkunit },
       } = await wus.WUQuery({ Wuid });
@@ -133,13 +135,13 @@ const addCluster = async (req, res) => {
 // Add a cluster and continuously send progress updates
 const addClusterWithProgress = async (req, res) => {
   // Set headers for SSE
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.setHeader("Transfer-Encoding", "chunked");
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Transfer-Encoding', 'chunked');
 
   // Function to send updates
-  const sendUpdate = (data) => {
+  const sendUpdate = data => {
     res.write(`data: ${JSON.stringify(data)}\n\n`);
     res.flush();
   };
@@ -155,7 +157,7 @@ const addClusterWithProgress = async (req, res) => {
       updatedBy,
     } = req.body;
     // Make sure cluster is whitelisted
-    const cluster = clusters.find((c) => c.name === clusterName);
+    const cluster = clusters.find(c => c.name === clusterName);
 
     if (!cluster) {
       return;
@@ -167,20 +169,20 @@ const addClusterWithProgress = async (req, res) => {
     sendUpdate({
       step: 1,
       success: true,
-      message: "Authenticating cluster ..",
+      message: 'Authenticating cluster ..',
     });
     await new AccountService({ baseUrl, userID, password }).MyAccount();
     sendUpdate({
       step: 1,
       success: true,
-      message: "Cluster authentication complete",
+      message: 'Cluster authentication complete',
     });
 
     // Get default cluster (engine) if exists - if not pick the first one
     sendUpdate({
       step: 2,
       success: true,
-      message: "Selecting default engine ..",
+      message: 'Selecting default engine ..',
     });
     const {
       TpLogicalClusters: { TpLogicalCluster },
@@ -195,40 +197,40 @@ const addClusterWithProgress = async (req, res) => {
       // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
       // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
       defaultEngine = TpLogicalCluster.find(
-        (engine) => engine.Name === "hthor" && !engine.QueriesOnly,
+        engine => engine.Name === 'hthor' && !engine.QueriesOnly
       );
       if (!defaultEngine) {
-        defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
+        defaultEngine = TpLogicalCluster.find(engine => !engine.QueriesOnly);
       }
     }
 
     // if default cluster is not found, return error
-    if (!defaultEngine) throw new CustomError("Default engine not found", 400);
+    if (!defaultEngine) throw new CustomError('Default engine not found', 400);
 
     sendUpdate({
       step: 2,
       success: true,
-      message: "Default engine selection complete",
+      message: 'Default engine selection complete',
     });
 
     // Execute ECL code to get timezone offset
     sendUpdate({
       step: 3,
       success: true,
-      message: "Getting timezone offset ..",
+      message: 'Getting timezone offset ..',
     });
     logger.verbose(
-      "Adding new cluster: Executing ECL code to get timezone offset",
+      'Adding new cluster: Executing ECL code to get timezone offset'
     );
 
     const eclCode =
-      "IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);";
+      'IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);';
     // Create timezone offset in default engine
     const wus = new WorkunitsService({ baseUrl, userID, password });
     const {
       Workunit: { Wuid },
     } = await wus.WUCreateAndUpdate({
-      Jobname: "Get Timezone Offset",
+      Jobname: 'Get Timezone Offset',
       QueryText: eclCode,
       ClusterSelection: defaultEngine.Name,
     });
@@ -236,11 +238,11 @@ const addClusterWithProgress = async (req, res) => {
     // Submit the recently created workunit
     await wus.WUSubmit({ Wuid, Cluster: defaultEngine.Name });
 
-    let wuState = "submitted";
-    const finalStates = ["unknown", "completed", "failed", "aborted"];
+    let wuState = 'submitted';
+    const finalStates = ['unknown', 'completed', 'failed', 'aborted'];
     while (!finalStates.includes(wuState)) {
       // Delay for 2 seconds before checking the state again
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
       const {
         Workunits: { ECLWorkunit },
       } = await wus.WUQuery({ Wuid });
@@ -255,12 +257,12 @@ const addClusterWithProgress = async (req, res) => {
     sendUpdate({
       step: 3,
       success: true,
-      message: "Getting timezone offset complete",
+      message: 'Getting timezone offset complete',
     });
     sendUpdate({
       step: 4,
       success: true,
-      message: "Preparing to save cluster ...",
+      message: 'Preparing to save cluster ...',
     });
 
     // Payload
@@ -288,7 +290,7 @@ const addClusterWithProgress = async (req, res) => {
     sendUpdate({
       step: 4,
       success: true,
-      message: "Cluster added successfully",
+      message: 'Cluster added successfully',
       cluster: newCluster,
     });
     res.end();
@@ -307,9 +309,9 @@ const getClusters = async (req, res) => {
     // Get clusters ASC by name
     const clusters = await Cluster.findAll({
       attributes: {
-        exclude: ["hash", "metaData", "storageUsageHistory"],
+        exclude: ['hash', 'metaData', 'storageUsageHistory'],
       },
-      order: [["name", "ASC"]],
+      order: [['name', 'ASC']],
     });
 
     res.status(200).json({ success: true, data: clusters });
@@ -328,12 +330,12 @@ const getCluster = async (req, res) => {
     const cluster = await Cluster.findOne({
       where: { id: req.params.id },
       attributes: {
-        exclude: ["hash", "metaData"],
+        exclude: ['hash', 'metaData'],
       },
       raw: true,
     });
 
-    if (!cluster) throw new CustomError("Cluster not found", 404);
+    if (!cluster) throw new CustomError('Cluster not found', 404);
 
     res.status(200).json({ success: true, data: cluster });
   } catch (err) {
@@ -349,7 +351,7 @@ const deleteCluster = async (req, res) => {
   try {
     // Delete a cluster by id
     const cluster = await Cluster.destroy({ where: { id: req.params.id } });
-    if (!cluster) throw new CustomError("Cluster not found", 404);
+    if (!cluster) throw new CustomError('Cluster not found', 404);
     res.status(200).json({ success: true, data: cluster });
   } catch (err) {
     logger.error(`Delete cluster: ${err.message}`);
@@ -365,7 +367,7 @@ const updateCluster = async (req, res) => {
   try {
     const { username, password, adminEmails, updatedBy } = req.body;
     const cluster = await Cluster.findOne({ where: { id: req.params.id } });
-    if (!cluster) throw new CustomError("Cluster not found", 404);
+    if (!cluster) throw new CustomError('Cluster not found', 404);
     if (username) cluster.username = username;
     if (password) cluster.hash = encryptString(password);
     if (adminEmails) cluster.adminEmails = adminEmails;
@@ -384,7 +386,7 @@ const updateCluster = async (req, res) => {
 // Retrieve all whitelisted clusters
 const getClusterWhiteList = async (req, res) => {
   try {
-    if (!clusters) throw new CustomError("Cluster whitelist not found", 404);
+    if (!clusters) throw new CustomError('Cluster whitelist not found', 404);
     res.status(200).json({ success: true, data: clusters });
   } catch (err) {
     logger.error(`Get cluster white list: ${err.message}`);
@@ -396,44 +398,50 @@ const getClusterWhiteList = async (req, res) => {
 
 // Ping HPCC cluster to check if it is reachable
 const pingCluster = async (req, res) => {
+  let baseUrl;
   try {
     logger.verbose(`Pinging HPCC cluster: ${req.body.name}`);
     const { name, username, password } = req.body;
 
-    // Validate cluster
-    const cluster = clusters.find((c) => c.name === name);
+    //   // Validate cluster
+    const cluster = clusters.find(c => c.name === name);
 
     if (!cluster) {
       logger.error(`Cluster not whitelisted: ${name}`);
-      throw new CustomError("Cluster not whitelisted", 400);
+      throw new CustomError('Cluster not whitelisted', 400);
     }
 
     // Construct base URL
-    const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
+    baseUrl = `${cluster.thor}:${cluster.thor_port}`;
 
     // Attempt to ping cluster
-    const connection = new Connection({ baseUrl, userID: username, password });
-    await connection.send("GetClusterInfo", {});
+    const response = await axios.get(`${baseUrl}`, {
+      auth: {
+        username,
+        password,
+      },
+    });
 
     return res
       .status(200)
-      .json({ success: true, message: "Cluster reachable" });
+      .json({ success: true, message: 'Cluster reachable' });
   } catch (err) {
-    logger.error(`Ping cluster: ${err.message}`);
-    let errMessage = err.message;
-    let statusCode = 500;
-
-    if (err.message.includes("Unauthorized") || err.message.includes("401")) {
-      errMessage = "Invalid credentials";
-      statusCode = 403;
-    } else if (
-      err.message.includes("ECONNREFUSED") ||
-      err.message.includes("ENOTFOUND")
-    ) {
-      errMessage = "Cluster unreachable";
-      statusCode = 503;
+    if (err?.response?.status) {
+      const statusCode =
+        err.response.status === 401 ? 403 : err.response.status; //401 is reacheable but invalid credentials
+      logger.error(
+        `Ping cluster: ${err?.response?.status === 401 ? `${baseUrl} Reachable but invalid credentials` : err.message}`
+      );
+      return res
+        .status(statusCode)
+        .json({ success: false, message: err.message });
+    } else {
+      logger.error(`Pinging  cluster ${baseUrl}: ${err.message}`);
+      return res.status(503).json({
+        success: false,
+        message: `Cluster unreachable ${err.message}`,
+      });
     }
-    return res.status(statusCode).json({ success: false, message: errMessage });
   }
 };
 
@@ -453,10 +461,11 @@ const pingExistingCluster = async (req, res) => {
       },
       {
         where: { id },
-      },
+      }
     );
-    res.status(200).json({ success: true, message: "Reachable" }); // Success Response
+    res.status(200).json({ success: true, message: 'Reachable' }); // Success Response
   } catch (err) {
+    logger.error(`Ping existing cluster: ${err}`);
     await Cluster.update(
       {
         reachabilityInfo: {
@@ -467,7 +476,7 @@ const pingExistingCluster = async (req, res) => {
       },
       {
         where: { id },
-      },
+      }
     );
     res.status(503).json({ success: false, message: err.message }); // Service Unavailable
   }
@@ -482,15 +491,15 @@ const clusterUsage = async (req, res) => {
     const { thor_host, thor_port, username, hash } = cluster;
     const clusterDetails = {
       baseUrl: `${thor_host}:${thor_port}`,
-      userID: username || "",
-      password: hash || "",
+      userID: username || '',
+      password: hash || '',
     };
 
     //Use JS comms library to fetch current usage
     const machineService = new hpccJSComms.MachineService(clusterDetails);
     const targetClusterUsage = await machineService.GetTargetClusterUsageEx();
 
-    const maxUsage = targetClusterUsage.map((target) => ({
+    const maxUsage = targetClusterUsage.map(target => ({
       name: target.Name,
       maxUsage: target.max.toFixed(2),
       meanUsage: target.mean.toFixed(2),
@@ -500,7 +509,7 @@ const clusterUsage = async (req, res) => {
     console.log(err);
     res.status(503).json({
       success: false,
-      message: "Failed to fetch current cluster usage",
+      message: 'Failed to fetch current cluster usage',
     });
     logger.error(err);
   }
@@ -514,7 +523,7 @@ const clusterStorageHistory = async (req, res) => {
     const data = await Cluster.findOne({
       where: { id: query.clusterId },
       raw: true,
-      attributes: ["storageUsageHistory"],
+      attributes: ['storageUsageHistory'],
     });
 
     // Filter data before sending to client
@@ -546,7 +555,7 @@ const clusterStorageHistory = async (req, res) => {
     logger.error(err);
     res.status(503).json({
       success: false,
-      message: "Failed to fetch current cluster usage",
+      message: 'Failed to fetch current cluster usage',
     });
   }
 };

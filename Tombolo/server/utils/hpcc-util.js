@@ -1,18 +1,18 @@
-var request = require("request");
-const path = require("path");
-var requestPromise = require("request-promise");
-var models = require("../models");
+var request = require('request');
+const path = require('path');
+var requestPromise = require('request-promise');
+var models = require('../models');
 var Cluster = models.cluster;
 var SuperFileMonitoring = models.filemonitoring_superfiles;
 const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
-const { github_repo_settings: GHprojects } = require("../models");
-let hpccJSComms = require("@hpcc-js/comms");
-const { decryptString } = require("./cipher");
+const { github_repo_settings: GHprojects } = require('../models');
+let hpccJSComms = require('@hpcc-js/comms');
+const { decryptString } = require('./cipher');
 
-const simpleGit = require("simple-git");
-const cp = require("child_process");
-const fs = require("fs");
-const logger = require("../config/logger");
+const simpleGit = require('simple-git');
+const cp = require('child_process');
+const fs = require('fs');
+const logger = require('../config/logger');
 
 exports.fileInfo = async (fileName, clusterId) => {
   try {
@@ -35,22 +35,22 @@ exports.fileInfo = async (fileName, clusterId) => {
         description: fileInfo.FileDetail.Description,
         scope: fileInfo.FileDetail.Name.substring(
           0,
-          fileInfo.FileDetail.Name.lastIndexOf("::")
+          fileInfo.FileDetail.Name.lastIndexOf('::')
         ),
         pathMask: fileInfo.FileDetail.PathMask,
         isSuperfile: fileInfo.FileDetail.isSuperfile,
         fileType:
           fileInfo.FileDetail.ContentType ||
           fileInfo.FileDetail.Format ||
-          "thor_file",
+          'thor_file',
         metaData: { layout },
       },
       file_validations: [],
     };
   } catch (error) {
-    console.log("-error fileInfo---------------------------");
+    console.log('-error fileInfo---------------------------');
     console.dir({ error }, { depth: null });
-    console.log("------------------------------------------");
+    console.log('------------------------------------------');
     throw error;
   }
 };
@@ -79,9 +79,9 @@ function getIndexColumns(cluster, indexName) {
     .get({
       url:
         cluster.thor_host +
-        ":" +
+        ':' +
         cluster.thor_port +
-        "/WsDfu/DFUGetFileMetaData.json?LogicalFileName=" +
+        '/WsDfu/DFUGetFileMetaData.json?LogicalFileName=' +
         indexName,
       auth: module.exports.getClusterAuth(cluster),
     })
@@ -117,7 +117,7 @@ function getIndexColumns(cluster, indexName) {
       return columns;
     })
     .catch(function (err) {
-      console.log("error occured: " + err);
+      console.log('error occured: ' + err);
     });
 }
 
@@ -127,11 +127,11 @@ exports.indexInfo = (clusterId, indexName) => {
       module.exports.getCluster(clusterId).then(function (cluster) {
         let clusterAuth = module.exports.getClusterAuth(cluster);
         let dfuService = new hpccJSComms.DFUService({
-          baseUrl: cluster.thor_host + ":" + cluster.thor_port,
-          userID: clusterAuth ? clusterAuth.user : "",
-          password: clusterAuth ? clusterAuth.password : "",
+          baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+          userID: clusterAuth ? clusterAuth.user : '',
+          password: clusterAuth ? clusterAuth.password : '',
         });
-        dfuService.DFUInfo({ Name: indexName }).then((response) => {
+        dfuService.DFUInfo({ Name: indexName }).then(response => {
           if (response.FileDetail) {
             let indexInfo = {};
             getIndexColumns(cluster, indexName).then(function (indexColumns) {
@@ -158,12 +158,12 @@ exports.indexInfo = (clusterId, indexName) => {
   });
 };
 
-const getConnection = async (clusterId) => {
+const getConnection = async clusterId => {
   const cluster = await this.getCluster(clusterId);
   return {
-    baseUrl: cluster.thor_host + ":" + cluster.thor_port,
-    userID: cluster.username || "",
-    password: cluster.hash || "",
+    baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+    userID: cluster.username || '',
+    password: cluster.hash || '',
   };
 };
 
@@ -191,25 +191,25 @@ exports.getDirectories = async ({
   });
 };
 
-exports.executeSprayJob = (job) => {
+exports.executeSprayJob = job => {
   // try {
   return new Promise((resolve, reject) => {
     let cluster = module.exports
       .getCluster(job.cluster_id)
       .then(async function (cluster) {
         let sprayPayload = {
-          destGroup: "mythor",
-          DFUServerQueue: "dfuserver_queue",
+          destGroup: 'mythor',
+          DFUServerQueue: 'dfuserver_queue',
           namePrefix: job.sprayedFileScope,
           targetName: job.sprayFileName,
-          overwrite: "on",
+          overwrite: 'on',
           sourceIP: job.sprayDropZone,
-          sourcePath: "/var/lib/HPCCSystems/mydropzone/" + job.sprayFileName,
-          destLogicalName: job.sprayedFileScope + "::" + job.sprayFileName,
+          sourcePath: '/var/lib/HPCCSystems/mydropzone/' + job.sprayFileName,
+          destLogicalName: job.sprayedFileScope + '::' + job.sprayFileName,
           rawxml_: 1,
           sourceFormat: 1,
-          sourceCsvSeparate: ",",
-          sourceCsvTerminate: "\n,\r\n",
+          sourceCsvSeparate: ',',
+          sourceCsvTerminate: '\n,\r\n',
           sourceCsvQuote: '"',
         };
         console.log(sprayPayload);
@@ -217,18 +217,18 @@ exports.executeSprayJob = (job) => {
           {
             url:
               cluster.thor_host +
-              ":" +
+              ':' +
               cluster.thor_port +
-              "/FileSpray/SprayVariable.json",
+              '/FileSpray/SprayVariable.json',
             auth: module.exports.getClusterAuth(cluster),
-            headers: { "content-type": "application/x-www-form-urlencoded" },
+            headers: { 'content-type': 'application/x-www-form-urlencoded' },
             formData: sprayPayload,
             resolveWithFullResponse: true,
           },
           function (err, response, body) {
             if (err) {
-              console.log("ERROR - ", err);
-              reject("Error occured during dropzone file search");
+              console.log('ERROR - ', err);
+              reject('Error occured during dropzone file search');
             } else {
               var result = JSON.parse(body);
               resolve(result);
@@ -236,7 +236,7 @@ exports.executeSprayJob = (job) => {
           }
         );
       })
-      .catch((error) => reject("Error occured during dropzone file search"));
+      .catch(error => reject('Error occured during dropzone file search'));
   });
 };
 
@@ -249,28 +249,28 @@ exports.queryInfo = (clusterId, queryName) => {
       module.exports.getCluster(clusterId).then(function (cluster) {
         let clusterAuth = module.exports.getClusterAuth(cluster);
         let eclService = new hpccJSComms.EclService({
-          baseUrl: cluster.roxie_host + ":" + cluster.roxie_port,
-          userID: clusterAuth ? clusterAuth.user : "",
-          password: clusterAuth ? clusterAuth.password : "",
+          baseUrl: cluster.roxie_host + ':' + cluster.roxie_port,
+          userID: clusterAuth ? clusterAuth.user : '',
+          password: clusterAuth ? clusterAuth.password : '',
         });
         eclService
-          .requestJson("roxie", queryName)
-          .then((response) => {
+          .requestJson('roxie', queryName)
+          .then(response => {
             if (response) {
               response.forEach((requestParam, idx) => {
                 requestObj.push({
                   id: idx,
                   name: requestParam.id,
                   type: requestParam.type,
-                  field_type: "input",
+                  field_type: 'input',
                 });
               });
             }
             //resultObj.basic.request = requestObj;
 
             eclService
-              .responseJson("roxie", queryName)
-              .then((response) => {
+              .responseJson('roxie', queryName)
+              .then(response => {
                 if (response) {
                   let firstKey = Object.keys(response)[0];
                   response[firstKey].forEach((responseParam, idx) => {
@@ -278,7 +278,7 @@ exports.queryInfo = (clusterId, queryName) => {
                       id: idx,
                       name: responseParam.id,
                       type: responseParam.type,
-                      field_type: "output",
+                      field_type: 'output',
                     });
                   });
                 }
@@ -289,19 +289,19 @@ exports.queryInfo = (clusterId, queryName) => {
                 resolve(resultObj);
               })
               .catch(function (err) {
-                console.log("error occured: " + err);
+                console.log('error occured: ' + err);
                 reject(err);
               });
           })
           .catch(function (err) {
-            console.log("error occured: " + err);
+            console.log('error occured: ' + err);
             reject(err);
           });
       });
     });
   } catch (err) {
     model;
-    console.log("err", err);
+    console.log('err', err);
   }
 };
 
@@ -327,54 +327,52 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
       name: wu.Jobname,
       title: wu.Jobname,
       entryBWR: wu.Jobname,
-      ecl: wu?.Query?.Text || "",
+      ecl: wu?.Query?.Text || '',
       description: wu.Description,
       jobfiles: sortFiles(files),
     });
 
-    if (jobType === "Query Build") {
+    if (jobType === 'Query Build') {
       const wuListQueries = await wuService.WUListQueries({ WUID: jobWuid });
       // if QuerySetQuery has nothing then return empty jobInfo;
       if (!wuListQueries.QuerysetQueries?.QuerySetQuery?.length) return {};
 
       const queryDetails = await wuService.WUQueryDetails({
         QueryId: wuListQueries.QuerysetQueries.QuerySetQuery[0].Id,
-        QuerySet: "roxie",
+        QuerySet: 'roxie',
       });
 
-      const sourceFiles = queryDetails.LogicalFiles?.Item?.map(
-        (logicalFile) => ({
-          name: logicalFile,
-          file_type: "input",
-        })
-      );
+      const sourceFiles = queryDetails.LogicalFiles?.Item?.map(logicalFile => ({
+        name: logicalFile,
+        file_type: 'input',
+      }));
 
       return createJobInfoObj(wuInfo.Workunit, sourceFiles);
     } else {
       const sourceFiles = [];
 
-      wuInfo.Workunit?.SourceFiles?.ECLSourceFile?.forEach((sourceFile) => {
+      wuInfo.Workunit?.SourceFiles?.ECLSourceFile?.forEach(sourceFile => {
         sourceFiles.push({
           name: sourceFile.Name,
-          file_type: "input",
+          file_type: 'input',
           isSuperFile: sourceFile.IsSuperFile ? true : false,
         });
       });
 
-      wuInfo.Workunit?.Results?.ECLResult?.forEach((file) => {
+      wuInfo.Workunit?.Results?.ECLResult?.forEach(file => {
         if (file.FileName)
           sourceFiles.push({
             name: file.FileName,
-            file_type: "output",
+            file_type: 'output',
             isSuperFile: file.IsSuperFile ? true : false,
           });
       });
       return createJobInfoObj(wuInfo.Workunit, sourceFiles);
     }
   } catch (error) {
-    console.log("-error getJobInfo--------------------------");
+    console.log('-error getJobInfo--------------------------');
     console.dir({ error }, { depth: null });
-    console.log("------------------------------------------");
+    console.log('------------------------------------------');
     throw error;
   }
 };
@@ -383,7 +381,7 @@ exports.getJobWuDetails = async (
   clusterId,
   jobName,
   dataflowId,
-  clusterType = ""
+  clusterType = ''
 ) => {
   try {
     let wuService;
@@ -395,12 +393,12 @@ exports.getJobWuDetails = async (
         where: { dataflow_id: dataflowId },
         include: [Cluster],
       });
-      if (!clusterCredentials) throw new Error("Failed to get dataflow creds");
+      if (!clusterCredentials) throw new Error('Failed to get dataflow creds');
 
       const { thor_host, thor_port } = clusterCredentials.cluster.dataValues;
 
       const connectionSettings = {
-        baseUrl: thor_host + ":" + thor_port,
+        baseUrl: thor_host + ':' + thor_port,
         userID: clusterCredentials.cluster_username,
         password: decryptString(clusterCredentials.cluster_hash),
       };
@@ -408,7 +406,7 @@ exports.getJobWuDetails = async (
       wuService = new hpccJSComms.WorkunitsService(connectionSettings);
     }
 
-    if (!wuService) throw new Error("Failed to get WorkunitsService");
+    if (!wuService) throw new Error('Failed to get WorkunitsService');
 
     const WUQuery = await wuService.WUQuery({
       Jobname: jobName,
@@ -422,9 +420,9 @@ exports.getJobWuDetails = async (
       ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster, wuService }
       : null;
   } catch (error) {
-    console.log("-ERROR getJobWuDetails--------------------");
+    console.log('-ERROR getJobWuDetails--------------------');
     console.dir({ error }, { depth: null });
-    console.log("------------------------------------------");
+    console.log('------------------------------------------');
     throw error;
   }
 };
@@ -462,18 +460,18 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
         {
           url:
             cluster.thor_host +
-            ":" +
+            ':' +
             cluster.thor_port +
-            "/WsWorkunits/WURun.json?ver_=1.8",
+            '/WsWorkunits/WURun.json?ver_=1.8',
           auth: dataflowId
             ? cluster_auth
             : module.exports.getClusterAuth(cluster),
           body: JSON.stringify(body),
-          headers: { "content-type": "application/json" },
+          headers: { 'content-type': 'application/json' },
         },
         function (err, response, body) {
           if (err) {
-            console.log("ERROR - ", err);
+            console.log('ERROR - ', err);
             reject(err);
           } else {
             try {
@@ -481,9 +479,9 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
               const result = JSON.parse(body);
               resolve(result);
             } catch (err) {
-              if (body.indexOf("Access Denied") > -1) {
+              if (body.indexOf('Access Denied') > -1) {
                 reject(
-                  "Access Denied -- Valid username and password required!"
+                  'Access Denied -- Valid username and password required!'
                 );
                 console.log(err);
               }
@@ -519,23 +517,23 @@ exports.workUnitOutput = async ({ wuid, clusterId }) => {
     const wuService = await module.exports.getWorkunitsService(clusterId);
     return await wuService.WUResult({ Wuid: wuid });
   } catch (err) {
-    console.log("-- Error -----------------------------------------");
+    console.log('-- Error -----------------------------------------');
     console.dir({ err }, { depth: null });
-    console.log("---------------------------------------------------");
+    console.log('---------------------------------------------------');
   }
 };
 
 const getFileLayout = async (cluster, fileName, format) => {
   try {
     const auth = module.exports.getClusterAuth(cluster);
-    if (format == "csv") {
+    if (format == 'csv') {
       const response = await requestPromise.get({
         auth,
         url:
           cluster.thor_host +
-          ":" +
+          ':' +
           cluster.thor_port +
-          "/WsDfu/DFURecordTypeInfo.json?Name=" +
+          '/WsDfu/DFURecordTypeInfo.json?Name=' +
           fileName,
       });
       const result = JSON.parse(response);
@@ -543,9 +541,9 @@ const getFileLayout = async (cluster, fileName, format) => {
       return fields.map((field, idx) => ({
         id: idx,
         name: field.name,
-        type: "",
-        eclType: "",
-        description: "",
+        type: '',
+        eclType: '',
+        description: '',
         constraints: { inherited: [], own: [] },
       }));
     }
@@ -554,9 +552,9 @@ const getFileLayout = async (cluster, fileName, format) => {
       auth,
       url:
         cluster.thor_host +
-        ":" +
+        ':' +
         cluster.thor_port +
-        "/WsDfu/DFUGetFileMetaData.json?LogicalFileName=" +
+        '/WsDfu/DFUGetFileMetaData.json?LogicalFileName=' +
         fileName,
     });
     const result = JSON.parse(response);
@@ -568,12 +566,12 @@ const getFileLayout = async (cluster, fileName, format) => {
       name: column.ColumnLabel,
       type: column.ColumnType,
       eclType: column.ColumnEclType,
-      description: "",
+      description: '',
       constraints: { inherited: [], own: [] },
     });
 
     const layoutResults = fileInfoResponse.reduce((acc, column, idx) => {
-      if (column.ColumnLabel !== "__fileposition__") {
+      if (column.ColumnLabel !== '__fileposition__') {
         const layout = createLayoutObj(column, idx);
         if (column.DataColumns)
           layout.children = column.DataColumns.DFUDataColumn.map(
@@ -586,13 +584,13 @@ const getFileLayout = async (cluster, fileName, format) => {
 
     return layoutResults;
   } catch (error) {
-    console.log("-Error getFileLayout----------------------");
+    console.log('-Error getFileLayout----------------------');
     console.dir({ error }, { depth: null });
-    console.log("------------------------------------------");
+    console.log('------------------------------------------');
   }
 };
 
-exports.getClusterAuth = (cluster) => {
+exports.getClusterAuth = cluster => {
   let auth = {};
   if (cluster.username && cluster.hash) {
     (auth.user = cluster.username), (auth.password = cluster.hash);
@@ -602,7 +600,7 @@ exports.getClusterAuth = (cluster) => {
   }
 };
 
-exports.getCluster = (clusterId) => {
+exports.getCluster = clusterId => {
   return new Promise(async (resolve, reject) => {
     try {
       let cluster = await Cluster.findOne({ where: { id: clusterId } });
@@ -623,12 +621,12 @@ exports.getCluster = (clusterId) => {
       if (reached && statusCode === 200) {
         resolve(cluster);
       } else if (reached && statusCode === 403) {
-        reject("Invalid cluster credentials");
+        reject('Invalid cluster credentials');
       } else {
         reject(`${cluster.name} is  not reachable...`);
       }
     } catch (err) {
-      console.log("Error occured while getting Cluster info....." + err);
+      console.log('Error occured while getting Cluster info.....' + err);
       reject(err);
     }
   });
@@ -642,14 +640,14 @@ response.status : 403 -> Cluster reachable but Unauthorized
 
 exports.isClusterReachable = (clusterHost, port, username, password) => {
   let auth = {
-    user: username || "",
-    password: password || "",
+    user: username || '',
+    password: password || '',
   };
 
   return new Promise((resolve, reject) => {
     request.get(
       {
-        url: clusterHost + ":" + port,
+        url: clusterHost + ':' + port,
         auth: auth,
         timeout: 3000,
       },
@@ -660,7 +658,7 @@ exports.isClusterReachable = (clusterHost, port, username, password) => {
           logger.error(`${clusterHost} - Access denied`);
           resolve({ reached: true, statusCode: 403 });
         } else {
-          logger.error(error);
+          logger.error(`Checking cluster reachability - ${error.message}`);
           resolve({ reached: false, statusCode: 503 });
         }
       }
@@ -679,27 +677,27 @@ exports.updateCommonData = (objArray, fields) => {
   return objArray;
 };
 
-exports.getWorkunitsService = async (clusterId) => {
+exports.getWorkunitsService = async clusterId => {
   const cluster = await module.exports.getCluster(clusterId);
   const { hash, username } = cluster;
 
   const connectionSettings = {
-    baseUrl: cluster.thor_host + ":" + cluster.thor_port,
-    userID: username ? username : "",
-    password: hash ? hash : "",
+    baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+    userID: username ? username : '',
+    password: hash ? hash : '',
   };
 
   return new hpccJSComms.WorkunitsService(connectionSettings);
 };
 
-exports.getDFUService = async (clusterId) => {
+exports.getDFUService = async clusterId => {
   const cluster = await module.exports.getCluster(clusterId);
   const clusterAuth = module.exports.getClusterAuth(cluster);
 
   const connectionSettings = {
-    baseUrl: cluster.thor_host + ":" + cluster.thor_port,
-    userID: clusterAuth ? clusterAuth.user : "",
-    password: clusterAuth ? clusterAuth.password : "",
+    baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+    userID: clusterAuth ? clusterAuth.user : '',
+    password: clusterAuth ? clusterAuth.password : '',
   };
 
   return new hpccJSComms.DFUService(connectionSettings);
@@ -713,9 +711,9 @@ exports.createWorkUnit = async (clusterId, WUbody = {}) => {
     if (!wuid) throw respond;
     return wuid;
   } catch (error) {
-    console.log("create workunit error------------------------------------");
+    console.log('create workunit error------------------------------------');
     console.dir(error, { depth: null });
-    const customError = new Error("Failed to create new Work Unit.");
+    const customError = new Error('Failed to create new Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
   }
@@ -728,9 +726,9 @@ exports.updateWorkUnit = async (clusterId, WUupdateBody) => {
     if (!respond.Workunit?.Wuid) throw respond; // assume that Wuid field is always gonna be in "happy" response
     return respond;
   } catch (error) {
-    console.log("update workunit error------------------------------------");
+    console.log('update workunit error------------------------------------');
     console.dir(error, { depth: null });
-    const customError = new Error("Failed to update Work Unit.");
+    const customError = new Error('Failed to update Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
   }
@@ -743,9 +741,9 @@ exports.submitWU = async (clusterId, WUsubmitBody) => {
     if (respond.Exceptions) throw respond;
     return respond;
   } catch (error) {
-    console.log("submit workunit error-----------------------------------");
+    console.log('submit workunit error-----------------------------------');
     console.dir(error, { depth: null });
-    const customError = new Error("Failed to submit Work Unit.");
+    const customError = new Error('Failed to submit Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
   }
@@ -756,20 +754,20 @@ exports.updateWUAction = async (clusterId, WUactionBody) => {
     const wuService = await module.exports.getWorkunitsService(clusterId);
     const respond = await wuService.WUAction(WUactionBody);
     const result = respond.ActionResults?.WUActionResult?.[0]?.Result;
-    if (!result || result !== "Success") throw respond;
+    if (!result || result !== 'Success') throw respond;
     console.dir(respond, { depth: null });
-    console.log("------------------------------------------");
+    console.log('------------------------------------------');
     return respond;
   } catch (error) {
-    console.log("update workunit action error----------------------------");
+    console.log('update workunit action error----------------------------');
     console.dir(error, { depth: null });
-    const customError = new Error("Failed to update Work Unit action");
+    const customError = new Error('Failed to update Work Unit action');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
   }
 };
 
-exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
+exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
   const tasks = {
     repoCloned: false,
     repoDeleted: false,
@@ -792,10 +790,10 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
     wuid = createRespond.Workunit?.Wuid;
     if (!wuid) {
       console.log(
-        "❌ pullFilesFromGithub: WUCreate error-----------------------------------------"
+        '❌ pullFilesFromGithub: WUCreate error-----------------------------------------'
       );
       console.dir(createRespond, { depth: null });
-      throw new Error("Failed to update Work Unit.");
+      throw new Error('Failed to update Work Unit.');
     }
     tasks.WUCreated = true;
     console.log(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
@@ -809,9 +807,9 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
     //    }
 
     // Create one master folder that is going to hold all cloned repos, name of folder is newly created WUID number;
-    masterFolder = path.join(process.cwd(), "..", "gitClones", wuid);
+    masterFolder = path.join(process.cwd(), '..', 'gitClones', wuid);
     const dir = await fs.promises.mkdir(masterFolder, { recursive: true });
-    console.log("--dir created----------------------------------------");
+    console.log('--dir created----------------------------------------');
     console.dir({ dir });
     const git = simpleGit({ baseDir: masterFolder });
 
@@ -820,7 +818,7 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
     //Loop through the reposList(contains GHprojects ids that has all gh project data including tokens) and clone each repo into master folder;
     for (const repoId of selectedProjects) {
       let project = await GHprojects.findOne({ where: { id: repoId } });
-      if (!project) throw new Error("Failed to find GitHub project");
+      if (!project) throw new Error('Failed to find GitHub project');
 
       project = project.toJSON();
 
@@ -830,7 +828,7 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
 
       let { ghLink, ghBranchOrTag, ghUserName, ghToken } = project;
 
-      const ghProjectName = ghLink.split("/")[4];
+      const ghProjectName = ghLink.split('/')[4];
 
       const clonePath = path.join(masterFolder, ghProjectName);
       // Add credentials to git request if they are present
@@ -838,17 +836,17 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
         ghLink =
           ghLink.slice(0, 8) +
           ghUserName +
-          ":" +
+          ':' +
           ghToken +
-          "@" +
+          '@' +
           ghLink.slice(8);
 
       console.log(
         `✔️  pullFilesFromGithub: CLONING STARTED-${ghLink}, branch/tag: ${ghBranchOrTag}`
       );
       await git.clone(ghLink, clonePath, {
-        "--branch": ghBranchOrTag,
-        "--single-branch": true,
+        '--branch': ghBranchOrTag,
+        '--single-branch': true,
       });
       console.log(
         `✔️  pullFilesFromGithub: CLONING FINISHED-${ghLink}, branch/tag: ${ghBranchOrTag}`
@@ -858,13 +856,13 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
       try {
         await git
           .cwd({ path: clonePath, root: true })
-          .submoduleUpdate(["--init", "--recursive"]);
+          .submoduleUpdate(['--init', '--recursive']);
         console.log(
           `✔️  pullFilesFromGithub: SUBMODULES UPDATED ${ghLink}, branch/tag: ${ghBranchOrTag}`
         );
       } catch (error) {
         console.log(
-          "❌  pullFilesFromGithub: git submodule update error----------------------------------------"
+          '❌  pullFilesFromGithub: git submodule update error----------------------------------------'
         );
         console.dir(error, { depth: null });
       } finally {
@@ -879,11 +877,11 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
 
     const startFilePath = path.join(masterFolder, ghProjectName, filePath);
 
-    let args = ["-E", startFilePath, "-I", masterFolder];
+    let args = ['-E', startFilePath, '-I', masterFolder];
     const archived = await this.createEclArchive(args, masterFolder);
 
     tasks.archiveCreated = true;
-    console.log("✔️  pullFilesFromGithub: Archive Created");
+    console.log('✔️  pullFilesFromGithub: Archive Created');
     // console.dir(archived);
 
     // Update the Workunit with Archive XML
@@ -896,23 +894,23 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
     if (!updateRespond.Workunit?.Wuid) {
       // assume that Wuid field is always gonna be in "happy" response
       console.log(
-        "❌  pullFilesFromGithub: WUupdate error----------------------------------------"
+        '❌  pullFilesFromGithub: WUupdate error----------------------------------------'
       );
       console.dir(updateRespond, { depth: null });
-      throw new Error("Failed to update Work Unit.");
+      throw new Error('Failed to update Work Unit.');
     }
     tasks.WUupdated = true;
     console.log(`✔️  pullFilesFromGithub: WUupdated-  ${wuid}`);
 
     // Submit the Workunit to HPCC
-    const submitBody = { Wuid: wuid, Cluster: "thor" };
+    const submitBody = { Wuid: wuid, Cluster: 'thor' };
     const submitRespond = await wuService.WUSubmit(submitBody);
     if (submitRespond.Exceptions) {
       console.log(
-        "❌  pullFilesFromGithub: WUsubmit error---------------------------------------"
+        '❌  pullFilesFromGithub: WUsubmit error---------------------------------------'
       );
       console.dir(submitRespond, { depth: null });
-      throw new Error("Failed to submit Work Unit.");
+      throw new Error('Failed to submit Work Unit.');
     }
     tasks.WUsubmitted = true;
     console.log(`✔️  pullFilesFromGithub: WUsubmitted-  ${wuid}`);
@@ -921,13 +919,13 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
     try {
       const WUactionBody = {
         Wuids: { Item: [wuid] },
-        WUActionType: "SetToFailed",
+        WUActionType: 'SetToFailed',
       };
       const actionRespond = await wuService.WUAction(WUactionBody);
       const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result;
-      if (!result || result !== "Success") {
+      if (!result || result !== 'Success') {
         console.log(
-          "❌  pullFilesFromGithub: WUaction error-------------------------------------"
+          '❌  pullFilesFromGithub: WUaction error-------------------------------------'
         );
         console.dir(actionRespond, { depth: null });
         throw actionRespond;
@@ -941,7 +939,7 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
 
     tasks.error = error;
     console.log(
-      "❌  pullFilesFromGithub: ERROR IN MAIN CATCH------------------------------------"
+      '❌  pullFilesFromGithub: ERROR IN MAIN CATCH------------------------------------'
     );
     console.dir(error, { depth: null });
   } finally {
@@ -956,13 +954,13 @@ exports.pullFilesFromGithub = async (jobName = "", clusterId, gitHubFiles) => {
   }
 };
 
-const deleteRepo = (masterFolder) => {
+const deleteRepo = masterFolder => {
   let isRepoDeleted;
   try {
     fs.rmSync(masterFolder, { recursive: true, maxRetries: 5, force: true });
     isRepoDeleted = true;
   } catch (err) {
-    console.log("------------------------------------------");
+    console.log('------------------------------------------');
     console.log(
       `❌  pullFilesFromGithub: Failed to delete a repo ${masterFolder}`
     );
@@ -972,26 +970,26 @@ const deleteRepo = (masterFolder) => {
   return isRepoDeleted;
 };
 
-let sortFiles = (files) => {
+let sortFiles = files => {
   return files.sort((a, b) => (a.name > b.name ? 1 : -1));
 };
 
 exports.createEclArchive = (args, cwd) => {
   return new Promise((resolve, reject) => {
-    const child = cp.spawn("eclcc", args, { cwd: cwd });
-    child.on("error", (error) => {
-      error.message = "Failed to create ECL Archive.  " + error;
+    const child = cp.spawn('eclcc', args, { cwd: cwd });
+    child.on('error', error => {
+      error.message = 'Failed to create ECL Archive.  ' + error;
       reject(error);
     });
-    let stdOut = "",
-      stdErr = "";
-    child.stdout.on("data", (data) => {
+    let stdOut = '',
+      stdErr = '';
+    child.stdout.on('data', data => {
       stdOut += data.toString();
     });
-    child.stderr.on("data", (data) => {
+    child.stderr.on('data', data => {
       stdErr += data.toString();
     });
-    child.on("close", (_code, _signal) => {
+    child.on('close', (_code, _signal) => {
       resolve({
         stdout: stdOut.trim(),
         stderr: stdErr.trim(),
@@ -1043,83 +1041,86 @@ HandleFoundFileEvent(EVENTEXTRA) : WHEN(EVENT(FOUND_FILE_EVENT_NAME, '*'));
 MonitorFileAction();`;
 };
 
-exports.getClusterTimezoneOffset = async (clusterId) => {
-  try{
-      const cluster = await module.exports.getCluster(clusterId);
-      const { defaultEngine } = cluster;
+exports.getClusterTimezoneOffset = async clusterId => {
+  try {
+    const cluster = await module.exports.getCluster(clusterId);
+    const { defaultEngine } = cluster;
 
-      const wuService = await module.exports.getWorkunitsService(clusterId);
+    const wuService = await module.exports.getWorkunitsService(clusterId);
 
-      const  jobname = `timezone-offset-${process.env.INSTANCE_NAME}`;
+    const jobname = `timezone-offset-${process.env.INSTANCE_NAME}`;
 
-      // Create empty WU, will give wuID
-      const workUnit = await wuService.WUCreate(clusterId, {
-        jobname,
-      });
+    // Create empty WU, will give wuID
+    const workUnit = await wuService.WUCreate(clusterId, {
+      jobname,
+    });
 
-      const  { Workunit: { Wuid}} = workUnit;
+    const {
+      Workunit: { Wuid },
+    } = workUnit;
 
-      // Timezone offset ECL code
-      const timezoneOffsetEcl = `IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);`;
+    // Timezone offset ECL code
+    const timezoneOffsetEcl = `IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);`;
 
-      // Update the WU with ECL code
-      await wuService.WUUpdate({
-        QueryText: timezoneOffsetEcl,
-        Wuid,
-        JobnameOrig: jobname,
-      });
+    // Update the WU with ECL code
+    await wuService.WUUpdate({
+      QueryText: timezoneOffsetEcl,
+      Wuid,
+      JobnameOrig: jobname,
+    });
 
-      // Submit the WU
-      await wuService.WUSubmit({
-        Wuid,
-        Cluster: defaultEngine
-      });
+    // Submit the WU
+    await wuService.WUSubmit({
+      Wuid,
+      Cluster: defaultEngine,
+    });
 
-      // Get the WU result
-      const result = await wuService.WUWaitComplete({
-        Wuid,
-        Wait: -1, // 3 minutes timeout
-      });
+    // Get the WU result
+    const result = await wuService.WUWaitComplete({
+      Wuid,
+      Wait: -1, // 3 minutes timeout
+    });
 
-      const { StateID } = result;
-      const successState = 3;
+    const { StateID } = result;
+    const successState = 3;
 
-      if(StateID !== successState) {
-        throw new Error(`Timezone offset job failed with state: ${StateID}`);
-      }
+    if (StateID !== successState) {
+      throw new Error(`Timezone offset job failed with state: ${StateID}`);
+    }
 
-      // Get the WU result
-      const wuResult = await wuService.WUResult({
-        Wuid,
-        SuppressXmlSchema: true,
-      });
+    // Get the WU result
+    const wuResult = await wuService.WUResult({
+      Wuid,
+      SuppressXmlSchema: true,
+    });
 
-      const {  Result: { Row }} = wuResult;
-      const timeZoneOffsetInMinutes = (Number(Row[0].Result_1))/60;
+    const {
+      Result: { Row },
+    } = wuResult;
+    const timeZoneOffsetInMinutes = Number(Row[0].Result_1) / 60;
 
-      // if NaN throw error
-      if (isNaN(timeZoneOffsetInMinutes)) {
-        throw new Error('Invalid timezone offset result');
-      }
+    // if NaN throw error
+    if (isNaN(timeZoneOffsetInMinutes)) {
+      throw new Error('Invalid timezone offset result');
+    }
 
-      return Math.floor(timeZoneOffsetInMinutes);
-
-      }catch(err){
-        throw new Error(err.message)
-      }
+    return Math.floor(timeZoneOffsetInMinutes);
+  } catch (err) {
+    throw new Error(err.message);
   }
+};
 
 exports.getSuperFile = async (clusterId, fileName) => {
   try {
     const dfuService = await exports.getDFUService(clusterId);
     if (!dfuService) {
       throw new Error(
-        "Error connecting to cluster when getting superfile information"
+        'Error connecting to cluster when getting superfile information'
       );
     }
     //gets superfile, with size and count of subfiles
     let superFileList = await dfuService.DFUQuery({
-      FileType: "Superfiles only",
+      FileType: 'Superfiles only',
       LogicalName: fileName,
     });
 
@@ -1167,17 +1168,17 @@ exports.getSuperFile = async (clusterId, fileName) => {
       output = newSuperFileMonitoring;
     } else {
       //return no file found
-      output = "No file found";
-      throw new Error("No file found with that name");
+      output = 'No file found';
+      throw new Error('No file found with that name');
     }
 
     return output;
   } catch (err) {
     console.log(
-      "ERROR GETTING SUPERFILE---------------------------------------"
+      'ERROR GETTING SUPERFILE---------------------------------------'
     );
     console.log(err);
-    console.log("----------------------------------------");
+    console.log('----------------------------------------');
   }
 };
 
@@ -1187,20 +1188,20 @@ exports.getSuperFiles = async (clusterId, fileName) => {
     const dfuService = await exports.getDFUService(clusterId);
     if (!dfuService) {
       throw new Error(
-        "Error connecting to cluster when getting superfile information"
+        'Error connecting to cluster when getting superfile information'
       );
     }
 
     //if no filename was passed in, just pass wildcard
     if (fileName) {
-      searchName = fileName + "*";
+      searchName = fileName + '*';
     } else {
-      searchName = "*";
+      searchName = '*';
     }
 
     //gets superfile, with size and count of subfiles
     let superFileList = await dfuService.DFUQuery({
-      FileType: "Superfiles only",
+      FileType: 'Superfiles only',
       LogicalName: searchName,
       FirstN: 100000000, //without this it will only grab the first 100
     });
@@ -1212,7 +1213,7 @@ exports.getSuperFiles = async (clusterId, fileName) => {
       superFileList.DFULogicalFiles.DFULogicalFile.length > 0
     ) {
       let results = superFileList.DFULogicalFiles.DFULogicalFile;
-      results.forEach((superFile) => {
+      results.forEach(superFile => {
         output.push({
           text: superFile.Name,
           value: superFile.Name,
@@ -1221,16 +1222,16 @@ exports.getSuperFiles = async (clusterId, fileName) => {
       });
     } else {
       //return no file found
-      output = "No file found";
-      throw new Error("No file found with that name");
+      output = 'No file found';
+      throw new Error('No file found with that name');
     }
     return output;
   } catch (err) {
     console.log(
-      "ERROR GETTING SUPERFILE---------------------------------------"
+      'ERROR GETTING SUPERFILE---------------------------------------'
     );
     console.log(err);
-    console.log("----------------------------------------");
+    console.log('----------------------------------------');
   }
 };
 
@@ -1240,7 +1241,7 @@ exports.getAllSubFiles = async (clusterId, fileName) => {
     const dfuService = await exports.getDFUService(clusterId);
     if (!dfuService) {
       throw new Error(
-        "Error connecting to cluster when getting superfile information"
+        'Error connecting to cluster when getting superfile information'
       );
     }
 
@@ -1260,9 +1261,9 @@ exports.getAllSubFiles = async (clusterId, fileName) => {
         let tempFileName = superFile.subfiles.Item[i];
 
         //remove last piece to get scope
-        let split = tempFileName.split("::");
+        let split = tempFileName.split('::');
 
-        let scope = split.splice(0, split.length - 1).join("::");
+        let scope = split.splice(0, split.length - 1).join('::');
 
         scopes.push(scope);
       }
@@ -1302,17 +1303,17 @@ exports.getAllSubFiles = async (clusterId, fileName) => {
 
     return output;
   } catch (err) {
-    console.log("ERROR GETTING SUPERFILE SUBFILES------------------");
+    console.log('ERROR GETTING SUPERFILE SUBFILES------------------');
     console.log(err);
-    console.log("----------------------------------------");
+    console.log('----------------------------------------');
   }
 };
 
 //get most recent sub file and sub file count (logical files only)
 exports.getRecentSubFile = async (clusterId, fileName) => {
   try {
-    let mostRecentSubFile = "";
-    let recentDate = new Date("1970-01-01");
+    let mostRecentSubFile = '';
+    let recentDate = new Date('1970-01-01');
     let logicalFileCount = 0;
 
     //get all subfiles
@@ -1359,8 +1360,8 @@ exports.getRecentSubFile = async (clusterId, fileName) => {
       subfileCount: logicalFileCount,
     };
   } catch (err) {
-    console.log("ERROR GETTING MOST RECENT SUBFILE-----------------");
+    console.log('ERROR GETTING MOST RECENT SUBFILE-----------------');
     console.log(err);
-    console.log("----------------------------------------");
+    console.log('----------------------------------------');
   }
 };

@@ -4,6 +4,7 @@ const jobMonitoringConfig = {
   job_monitoring_interval,
   intermediate_job_monitoring_interval: 15, // in minutes
   job_punctuality_monitoring_interval: 10, // in minutes
+  job_time_series_analysis_interval: 10, //in minutes
 };
 
 // Cluster reachability monitoring configuration

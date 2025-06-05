@@ -191,3 +191,20 @@ export function isScheduleUpdated({ existingSchedule, newSchedule }) {
 export function doesNameExist({ jobMonitorings, newName }) {
   return jobMonitorings.some((job) => job.monitoringName === newName);
 }
+
+/// Get job monitoring data
+export const getJobMonitoringData = async ({ id }) => {
+  const payload = {
+    method: 'GET',
+    headers: authHeader(),
+  };
+
+  const response = await fetch(`/api/jobmonitoring/data/${id}`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to get job monitoring data');
+  }
+
+  const data = await response.json();
+  return data;
+};

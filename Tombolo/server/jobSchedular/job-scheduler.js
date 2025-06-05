@@ -55,6 +55,8 @@ const {
   startJobMonitoring,
   startIntermediateJobsMonitoring,
   startJobPunctualityMonitoring,
+  startTimeSeriesAnalysisMonitoring,
+  createWuInfoFetchingJob,
 } = require("../jobSchedularMethods/jobMonitoring.js");
 
 const {
@@ -69,17 +71,19 @@ class JobScheduler {
       root: false,
       logger: false,
       errorHandler: (error, workerMetadata) => {
-        if (workerMetadata.threadId) {
-          logger.error(
-            `There was an error while running a worker ${workerMetadata.name} with thread ID: ${workerMetadata.threadId}`,
-            error
-          );
-        } else {
-          logger.error(
-            `There was an error while running a worker ${workerMetadata.name}`,
-            error
-          );
-        }
+        const baseMessage = `Error in worker ${workerMetadata.name}${
+          workerMetadata.threadId
+            ? ` (thread ID: ${workerMetadata.threadId})`
+            : ""
+        }`;
+        logger.error(
+          `${baseMessage}: ${error.message || "Worker exited unexpectedly"}`,
+          {
+            errorStack: error.stack,
+            workerMetadata,
+            exitCode: error.code, // If available
+          }
+        );
       },
       workerMessageHandler: async (worker) => {
         // message type is <any>, when worker exits message ='done' by default.
@@ -140,6 +144,7 @@ class JobScheduler {
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
+      await this.startTimeSeriesAnalysisMonitoring();
       await this.checkClusterReachability();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
@@ -244,6 +249,11 @@ class JobScheduler {
 
   executeJob(jobData) {
     return executeJob.call(this, jobData);
+  }
+
+  // Job that fetches workunit info
+  createWuInfoFetchingJob(data) {
+    return createWuInfoFetchingJob.call(this, data);
   }
 
   scheduleActiveCronJobs() {
@@ -354,6 +364,10 @@ class JobScheduler {
 
   startJobPunctualityMonitoring() {
     return startJobPunctualityMonitoring.call(this);
+  }
+
+  startTimeSeriesAnalysisMonitoring() {
+    return startTimeSeriesAnalysisMonitoring.call(this);
   }
 
   //Process notification queue
