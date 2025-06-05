@@ -4,6 +4,7 @@ const {
   AccountService,
   TopologyService,
   WorkunitsService,
+  Connection,
 } = require("@hpcc-js/comms");
 const logger = require("../config/logger");
 const models = require("../models");
@@ -52,7 +53,7 @@ const addCluster = async (req, res) => {
       // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
       // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
       defaultEngine = TpLogicalCluster.find(
-        (engine) => engine.Name === "hthor" && !engine.QueriesOnly
+        (engine) => engine.Name === "hthor" && !engine.QueriesOnly,
       );
       if (!defaultEngine) {
         defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
@@ -64,7 +65,7 @@ const addCluster = async (req, res) => {
 
     // Execute ECL code to get timezone offset
     logger.verbose(
-      "Adding new cluster: Executing ECL code to get timezone offset"
+      "Adding new cluster: Executing ECL code to get timezone offset",
     );
 
     const eclCode =
@@ -120,9 +121,6 @@ const addCluster = async (req, res) => {
 
     // Create cluster
     const newCluster = await Cluster.create(clusterPayload);
-    console.log('------------------------------------------');
-    console.dir(clusterPayload);
-    console.log('------------------------------------------');
     res.status(201).json({ success: true, data: newCluster });
   } catch (err) {
     logger.error(`Add cluster: ${err.message}`);
@@ -197,7 +195,7 @@ const addClusterWithProgress = async (req, res) => {
       // If it contains cluster with Name "hthor", set and QueriesOnly is not set to true, make that the default engine
       // If no engine with above conditions is found, set the first engine as default but QueriesOnly should not be set to true
       defaultEngine = TpLogicalCluster.find(
-        (engine) => engine.Name === "hthor" && !engine.QueriesOnly
+        (engine) => engine.Name === "hthor" && !engine.QueriesOnly,
       );
       if (!defaultEngine) {
         defaultEngine = TpLogicalCluster.find((engine) => !engine.QueriesOnly);
@@ -220,7 +218,7 @@ const addClusterWithProgress = async (req, res) => {
       message: "Getting timezone offset ..",
     });
     logger.verbose(
-      "Adding new cluster: Executing ECL code to get timezone offset"
+      "Adding new cluster: Executing ECL code to get timezone offset",
     );
 
     const eclCode =
@@ -309,30 +307,12 @@ const getClusters = async (req, res) => {
     // Get clusters ASC by name
     const clusters = await Cluster.findAll({
       attributes: {
-        exclude: ["hash", "metaData"],
-        include: [
-          [
-            Sequelize.literal(`
-              CASE
-                WHEN metaData IS NOT NULL AND JSON_EXTRACT(metaData, '$.reachabilityInfo') IS NOT NULL
-                THEN JSON_EXTRACT(metaData, '$.reachabilityInfo')
-                ELSE '{}'
-              END
-            `),
-            "reachabilityInfo",
-          ],
-        ],
+        exclude: ["hash", "metaData", "storageUsageHistory"],
       },
       order: [["name", "ASC"]],
     });
-    // Parse the JSON string into a JavaScript object
-    const parsedClusters = clusters.map((cluster) => {
-      const clusterData = cluster.get({ plain: true });
-      clusterData.reachabilityInfo = JSON.parse(clusterData.reachabilityInfo);
-      return clusterData;
-    });
 
-    res.status(200).json({ success: true, data: parsedClusters });
+    res.status(200).json({ success: true, data: clusters });
   } catch (err) {
     logger.error(`Get clusters: ${err.message}`);
     res
@@ -349,32 +329,13 @@ const getCluster = async (req, res) => {
       where: { id: req.params.id },
       attributes: {
         exclude: ["hash", "metaData"],
-        include: [
-          [
-            Sequelize.literal(`
-              CASE
-                WHEN metaData IS NOT NULL AND JSON_EXTRACT(metaData, '$.reachabilityInfo') IS NOT NULL
-                THEN JSON_EXTRACT(metaData, '$.reachabilityInfo')
-                ELSE '{}'
-              END
-            `),
-            "reachabilityInfoString",
-          ],
-        ],
       },
+      raw: true,
     });
 
     if (!cluster) throw new CustomError("Cluster not found", 404);
 
-  // Plain cluster data
-  const clusterPlainData = cluster.get({ plain: true });
-  if (clusterPlainData.reachabilityInfoString) {
-    clusterPlainData.reachabilityInfo = JSON.parse(
-      clusterPlainData.reachabilityInfoString
-    );
-  }
-
-    res.status(200).json({ success: true, data: clusterPlainData });
+    res.status(200).json({ success: true, data: cluster });
   } catch (err) {
     logger.error(`Get cluster: ${err.message}`);
     res
@@ -433,62 +394,82 @@ const getClusterWhiteList = async (req, res) => {
   }
 };
 
-// Ping HPCC cluster to find if it is reachable
+// Ping HPCC cluster to check if it is reachable
 const pingCluster = async (req, res) => {
   try {
+    logger.verbose(`Pinging HPCC cluster: ${req.body.name}`);
     const { name, username, password } = req.body;
+
+    // Validate cluster
     const cluster = clusters.find((c) => c.name === name);
 
-    // If bogus cluster name is provided, return error
-    if (!cluster) throw new CustomError("Cluster not whitelisted", 400);
+    if (!cluster) {
+      logger.error(`Cluster not whitelisted: ${name}`);
+      throw new CustomError("Cluster not whitelisted", 400);
+    }
 
-    // construct base url
+    // Construct base URL
     const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
 
-    // Ping cluster
-    await new AccountService({
-      baseUrl,
-      userID: username,
-      password,
-    }).MyAccount();
-    res.status(200).json({ success: true, message: "Authorized" });
-  } catch (err) {
-    let errMessage = "Unable to reach cluster";
-    let statusCode = err.statusCode || 500;
+    // Attempt to ping cluster
+    const connection = new Connection({ baseUrl, userID: username, password });
+    await connection.send("GetClusterInfo", {});
 
-    if (err.message.includes("Unauthorized")) {
+    return res
+      .status(200)
+      .json({ success: true, message: "Cluster reachable" });
+  } catch (err) {
+    logger.error(`Ping cluster: ${err.message}`);
+    let errMessage = err.message;
+    let statusCode = 500;
+
+    if (err.message.includes("Unauthorized") || err.message.includes("401")) {
       errMessage = "Invalid credentials";
       statusCode = 403;
+    } else if (
+      err.message.includes("ECONNREFUSED") ||
+      err.message.includes("ENOTFOUND")
+    ) {
+      errMessage = "Cluster unreachable";
+      statusCode = 503;
     }
-    res.status(statusCode).json({ success: false, message: errMessage });
+    return res.status(statusCode).json({ success: false, message: errMessage });
   }
 };
 
 // Ping HPCC cluster that is already saved in the database
 const pingExistingCluster = async (req, res) => {
   const { id } = req.params;
-  try{
+  try {
     await hpccUtil.getCluster(id);
     // Update the reachability info for the cluster
     await Cluster.update(
       {
-        metaData: Sequelize.literal(
-          `JSON_SET(metaData, '$.reachabilityInfo.reachable', true, '$.reachabilityInfo.lastMonitored', NOW(), '$.reachabilityInfo.lastReachableAt', NOW())`
-        ),
+        reachabilityInfo: {
+          reachable: true,
+          lastMonitored: new Date(),
+          lastReachableAt: new Date(),
+        },
       },
-      { where: { id } }
+      {
+        where: { id },
+      },
     );
     res.status(200).json({ success: true, message: "Reachable" }); // Success Response
-  }catch(err){
+  } catch (err) {
     await Cluster.update(
       {
-        metaData: Sequelize.literal(
-          `JSON_SET(metaData, '$.reachabilityInfo.reachable', false, '$.reachabilityInfo.lastMonitored', NOW())`
-        ),
+        reachabilityInfo: {
+          reachable: false,
+          lastMonitored: new Date(),
+          lastReachableAt: new Date(),
+        },
       },
-      { where: { id } }
+      {
+        where: { id },
+      },
     );
-    res.status(503).json({ success: false, message: err });
+    res.status(503).json({ success: false, message: err.message }); // Service Unavailable
   }
 };
 
@@ -533,14 +514,14 @@ const clusterStorageHistory = async (req, res) => {
     const data = await Cluster.findOne({
       where: { id: query.clusterId },
       raw: true,
-      attributes: ["metaData"],
+      attributes: ["storageUsageHistory"],
     });
 
     // Filter data before sending to client
     const start_date = moment(query.historyDateRange[0]).valueOf();
     const end_date = moment(query.historyDateRange[1]).valueOf();
 
-    const storageUsageHistory = data.metaData?.storageUsageHistory || {};
+    const storageUsageHistory = data?.storageUsageHistory || {};
 
     const filtered_data = {};
 

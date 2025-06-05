@@ -1,17 +1,35 @@
-'use strict';
+"use strict";
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('application', {
+    return queryInterface.createTable("application", {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      title: Sequelize.STRING,
-      description: Sequelize.STRING,
-      creator: Sequelize.STRING,
-      visibility: Sequelize.STRING,
+      title: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      description: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      creator: {
+        type: Sequelize.UUID,
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        allowNull: true,
+      },
+      visibility: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        defaultValue: "private",
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -26,7 +44,9 @@ module.exports = {
       },
     });
   },
+
+  // Drop table
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('application');
+    return queryInterface.dropTable("application");
   },
 };

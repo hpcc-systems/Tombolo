@@ -26,11 +26,14 @@ const MonitoringTypes = models.monitoring_types;
 const IntegrationMapping = models.integration_mapping;
 const Integrations = models.integrations;
 
-
 (async () => {
-  parentPort && parentPort.postMessage({level: "info", text: "Job Punctuality Monitoring: Monitoring started" });
+  parentPort &&
+    parentPort.postMessage({
+      level: "info",
+      text: "Job Punctuality Monitoring: Monitoring started",
+    });
   const now = new Date(); // UTC time
-  
+
   try {
     // Find all active job monitorings.
     const jobMonitorings = await JobMonitoring.findAll({
@@ -44,16 +47,24 @@ const Integrations = models.integrations;
     }
 
     // Log info saying how many job monitorings are being processed
-    parentPort && parentPort.postMessage({level: "info", text: `Job Punctuality Monitoring: Processing  ${jobMonitorings.length} job monitoring(s)`});
+    parentPort &&
+      parentPort.postMessage({
+        level: "info",
+        text: `Job Punctuality Monitoring: Processing  ${jobMonitorings.length} job monitoring(s)`,
+      });
 
     // Get all unique clusters for the job monitorings
     const clusterIds = jobMonitorings.map(
-      (jobMonitoring) => jobMonitoring.clusterId
+      (jobMonitoring) => jobMonitoring.clusterId,
     );
 
     // All clusters that are associated with the job monitorings
     const clusters = await Cluster.findAll({
       where: { id: clusterIds },
+      // exclude storageUsageHistory
+      attributes: {
+        exclude: ["storageUsageHistory"],
+      },
       raw: true,
     });
 
@@ -66,7 +77,11 @@ const Integrations = models.integrations;
           clusterInfo.password = null;
         }
       } catch (error) {
-        parentPort && parentPort.postMessage({ level: "error",  text: `Job Punctuality Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`});
+        parentPort &&
+          parentPort.postMessage({
+            level: "error",
+            text: `Job Punctuality Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
+          });
       }
     });
 
@@ -109,8 +124,18 @@ const Integrations = models.integrations;
           continue;
         }
 
-        const { schedule, expectedStartTime, expectedCompletionTime } = metaData;
+        const { schedule, expectedStartTime, expectedCompletionTime } =
+          metaData;
         const clusterInfo = clustersObj[clusterId];
+
+        if (!clusterInfo) {
+          parentPort &&
+            parentPort.postMessage({
+              level: "error",
+              text: `Job Punctuality Monitoring: No cluster found for clusterId ${clusterId} in jobMonitoring ${id}`,
+            });
+          continue;
+        }
 
         // Find severity level (For ASR ) - based on that determine when to send out notifications
         let severityThreshHold = 0; // Domain specific severity threshold for ASR
@@ -118,14 +143,18 @@ const Integrations = models.integrations;
 
         if (asrSpecificMetaData && asrSpecificMetaData.domain) {
           try {
-            const {domain: domainId} =  asrSpecificMetaData;
+            const { domain: domainId } = asrSpecificMetaData;
             const domain = await getDomain(domainId);
-            if(domain) {
+            if (domain) {
               severityThreshHold = domain.severityThreshold;
               severeEmailRecipients = domain.severityAlertRecipients;
             }
           } catch (error) {
-            parentPort && parentPort.postMessage({level: "error", text: `Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}` });
+            parentPort &&
+              parentPort.postMessage({
+                level: "error",
+                text: `Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}`,
+              });
           }
         }
 
@@ -177,7 +206,7 @@ const Integrations = models.integrations;
         //   lateByInMinutes = Math.floor(
         //     (window.currentTime - window.end) / 60000
         //   );
-        // } else { 
+        // } else {
         //   lateByInMinutes = Math.floor(
         //     (window.currentTime - window.start) / 60000
         //   );
@@ -187,7 +216,7 @@ const Integrations = models.integrations;
         alertTimePassed = window.start < window.currentTime;
 
         lateByInMinutes = Math.floor(
-          (window.currentTime - window.start) / 60000
+          (window.currentTime - window.start) / 60000,
         );
 
         // If the time has not passed, or with in grace period of 10 minutes, continue
@@ -202,7 +231,7 @@ const Integrations = models.integrations;
 
         if (jobPunctualityDetails) {
           const { windowStartTime, windowEndTime } = jobPunctualityDetails;
-          
+
           if (
             windowStartTime === window.start.toISOString() &&
             windowEndTime === window.end.toISOString()
@@ -272,7 +301,7 @@ const Integrations = models.integrations;
                 },
               },
             },
-            { where: { id } }
+            { where: { id } },
           );
           continue;
         }
@@ -286,14 +315,14 @@ const Integrations = models.integrations;
 
         if (asrSpecificMetaData && asrSpecificMetaData.productCategory) {
           const { name: productName, shortCode } = await getProductCategory(
-            asrSpecificMetaData.productCategory
+            asrSpecificMetaData.productCategory,
           );
 
           notificationPrefix = shortCode;
           prodName = productName;
 
           const { name: domainName } = await getDomain(
-            asrSpecificMetaData.domain
+            asrSpecificMetaData.domain,
           );
           domain = domainName;
 
@@ -329,8 +358,8 @@ const Integrations = models.integrations;
               Issue: `Job not started on expected time`,
               Cluster: clusterInfo.name,
               "Job Name/Filter": jobNamePattern,
-              "Expected Start": (window.start).toLocaleString(),
-              "Current Time": (window.currentTime).toLocaleString(),
+              "Expected Start": window.start.toLocaleString(),
+              "Current Time": window.currentTime.toLocaleString(),
             },
             notificationId: generateNotificationId({
               notificationPrefix,
@@ -343,10 +372,10 @@ const Integrations = models.integrations;
               severity,
             }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
             firstLogged: new Date(
-              now.getTime() + offSet * 60 * 1000
+              now.getTime() + offSet * 60 * 1000,
             ).toLocaleString(),
             lastLogged: new Date(
-              now.getTime() + offSet * 60 * 1000
+              now.getTime() + offSet * 60 * 1000,
             ).toLocaleString(),
           });
 
@@ -393,7 +422,7 @@ const Integrations = models.integrations;
                 },
               },
             },
-            { where: { id } }
+            { where: { id } },
           );
           parentPort &&
             parentPort.postMessage({
@@ -416,14 +445,13 @@ const Integrations = models.integrations;
         text: `Job Punctuality Monitoring: Error in job punctuality monitoring script: ${error.message}`,
       });
   } finally {
-    if (parentPort){ 
+    if (parentPort) {
       parentPort.postMessage({
         level: "info",
         text: `Job Punctuality Monitoring: monitoring completed in ${(
           new Date().getTime() - now.getTime()
         ).toLocaleString()} ms`,
       });
-    }
-    else process.exit(0);
+    } else process.exit(0);
   }
 })();

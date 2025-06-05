@@ -16,6 +16,11 @@
   --highlight: #fffb8f;
 }
 
+.link-text {
+  color: var(--primary);
+  cursor: pointer;
+}
+
 body {
   margin: 0;
   overflow: hidden;
