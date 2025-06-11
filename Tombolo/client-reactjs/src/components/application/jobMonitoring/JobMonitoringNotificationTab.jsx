@@ -13,9 +13,10 @@ const jobStatuses = [
   { label: 'Failed', value: 'Failed' },
   { label: 'Aborted', value: 'Aborted' },
   { label: 'Unknown', value: 'Unknown' },
+  { label: 'Time Series Analysis', value: 'TimeSeriesAnalysis' },
   { label: 'Not started on time', value: 'NotStarted', disabled: true },
   { label: 'Not completed on time', value: 'NotCompleted' },
-  { label: 'Time Series Analysis', value: 'TimeSeriesAnalysis' },
+  { label: 'Job running too long', value: 'JobRunningTooLong' },
 ];
 
 function JobMonitoringNotificationTab({ form }) {

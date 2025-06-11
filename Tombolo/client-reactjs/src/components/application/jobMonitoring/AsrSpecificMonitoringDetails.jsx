@@ -17,7 +17,7 @@ function AsrSpecificMonitoringDetails({ form, domains, productCategories, setSel
   return (
     <Form layout="vertical" form={form}>
       <Row gutter={16}>
-        <Col span={12}>
+        <Col span={8}>
           <Form.Item label="Domain" name="domain" rules={[{ required: true, message: 'Please select an option' }]}>
             <Select onChange={(value) => handleDomainChange(value)} placeholder="Domain">
               {domains.length > 0 &&
@@ -31,24 +31,22 @@ function AsrSpecificMonitoringDetails({ form, domains, productCategories, setSel
             </Select>
           </Form.Item>
         </Col>
-        <Col span={12}>
+        <Col span={8}>
           <Form.Item
             label="Product Category"
             name="productCategory"
             rules={[{ required: true, message: 'Please select an option' }]}>
             <Select placeholder="Product Category">
               {productCategories.map((c, i) => (
-                <Option key={i} value={c.id}>
-                  {`${c.name} (${c.shortCode})`}
+                <Option key={i} value={c.value}>
+                  {`${c.label}`}
                 </Option>
               ))}
             </Select>
           </Form.Item>
         </Col>
-      </Row>
 
-      <Row gutter={16}>
-        <Col span={12}>
+        <Col span={8}>
           <Form.Item
             label="Severity"
             name="severity"
@@ -59,21 +57,6 @@ function AsrSpecificMonitoringDetails({ form, domains, productCategories, setSel
                   {level}
                 </Option>
               ))}
-            </Select>
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            label="Require Complete"
-            name="requireComplete"
-            rules={[{ required: true, message: 'Please select one option' }]}>
-            <Select placeholder="Require complete">
-              <Option key="yes" value={true}>
-                Yes
-              </Option>
-              <Option key="no" value={false}>
-                No
-              </Option>
             </Select>
           </Form.Item>
         </Col>
