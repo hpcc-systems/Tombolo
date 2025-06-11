@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import { Card, Form, TimePicker, Row, Col, Select, Input, InputNumber } from 'antd';
+import { Card, Form, TimePicker, Row, Col, Select, InputNumber } from 'antd';
 
 import './jobMonitoring.css';
 import SchedulePicker from './SchedulePicker';
