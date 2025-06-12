@@ -1,14 +1,14 @@
 // Imports from node modules
-const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require("uuid");
-const { Op } = require("sequelize");
-const moment = require("moment");
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const { Op } = require('sequelize');
+const moment = require('moment');
 
 // Local Imports
-const logger = require("../config/logger");
-const model = require("../models");
-const { generateToken } = require("../middlewares/csrfMiddleware");
-const bcrypt = require("bcryptjs");
+const logger = require('../config/logger');
+const model = require('../models');
+const { generateToken } = require('../middlewares/csrfMiddleware');
+const bcrypt = require('bcryptjs');
 
 // Constants
 const User = model.user;
@@ -20,74 +20,71 @@ const Application = model.application;
 const InstanceSettings = model.instance_settings;
 const NotificationQueue = model.notification_queue;
 const AccountVerificationCodes = model.AccountVerificationCodes;
-const csrfHeaderName =
-  process.env.NODE_ENV === "production"
-    ? "__Host-prod.x-csrf-token"
-    : "x-csrf-token";
+const csrfHeaderName = 'x-csrf-token';
 
 // Generate access token
-const generateAccessToken = (user) => {
-  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "15m" });
+const generateAccessToken = user => {
+  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '15m' });
 };
 
 // Generate refresh token
-const generateRefreshToken = (tokenId) => {
-  return jwt.sign(tokenId, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+const generateRefreshToken = tokenId => {
+  return jwt.sign(tokenId, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 };
 
 // Verify token
-const verifyToken = (token) => {
+const verifyToken = token => {
   return jwt.verify(token, process.env.JWT_SECRET);
 };
 
 // Verify refresh token
-const verifyRefreshToken = (token) => {
+const verifyRefreshToken = token => {
   return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 };
 
 // Get user by E-mail or ID
 // identifier is either email or id , example : getAUser({id: 'xyz'}) or getAUser({email: 'xyz@xyz.com'})
-const getAUser = async (identifier) => {
+const getAUser = async identifier => {
   return await User.findOne({
     where: { ...identifier },
     include: [
       {
         model: UserRoles,
-        attributes: ["id"],
-        as: "roles",
+        attributes: ['id'],
+        as: 'roles',
         include: [
           {
             model: RoleTypes,
-            as: "role_details",
-            attributes: ["id", "roleName"],
+            as: 'role_details',
+            attributes: ['id', 'roleName'],
           },
         ],
       },
       {
         model: user_application,
-        attributes: ["id"],
-        as: "applications",
+        attributes: ['id'],
+        as: 'applications',
         include: [
           {
             model: Application,
-            attributes: ["id", "title", "description"],
+            attributes: ['id', 'title', 'description'],
           },
         ],
       },
       {
         model: AccountVerificationCodes,
-        attributes: ["code"],
-        as: "AccountVerificationCodes",
+        attributes: ['code'],
+        as: 'AccountVerificationCodes',
       },
     ],
   });
 };
 
 const setTokenCookie = async (res, token) => {
-  res.cookie("token", token, {
+  res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
   });
   return true;
@@ -105,21 +102,21 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
 
     return true;
   } catch (e) {
-    logger.error("Error while generating csrf token:" + e);
-    return res.status(500).json({ message: "Internal Server Error" });
+    logger.error('Error while generating csrf token:' + e);
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 
 //function to trim url so we can have consistent links without //
-const trimURL = (url) => {
+const trimURL = url => {
   //cut off last character if it is a slash
-  if (url[url.length - 1] === "/") {
+  if (url[url.length - 1] === '/') {
     url = url.slice(0, -1);
   }
   return url;
 };
 
-const setPasswordExpiry = (user) => {
+const setPasswordExpiry = user => {
   //set forcePasswordReset to 0
   user.forcePasswordReset = 0;
   //set passwordExpiry to 90 days
@@ -140,7 +137,7 @@ const setPasswordExpiry = (user) => {
   return user;
 };
 
-const setLastLoginAndReturn = (user) => {
+const setLastLoginAndReturn = user => {
   user.lastLoginAt = new Date();
 
   //reset password Expiry email sent flags
@@ -180,14 +177,14 @@ const getSupportContactEmails = async () => {
     include: [
       {
         model: UserRoles,
-        attributes: ["id"],
-        as: "roles",
+        attributes: ['id'],
+        as: 'roles',
         required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).
         include: [
           {
             model: RoleTypes,
-            as: "role_details",
-            attributes: ["id", "roleName"],
+            as: 'role_details',
+            attributes: ['id', 'roleName'],
             where: { roleName: { [Op.in]: supportEmailRecipientsRoles } },
           },
         ],
@@ -196,7 +193,7 @@ const getSupportContactEmails = async () => {
   });
 
   // Get the e-mail addresses
-  ownerAndAdminEmails.forEach((user) => {
+  ownerAndAdminEmails.forEach(user => {
     supportRolesEmail.push(user.email);
   });
 
@@ -228,14 +225,14 @@ const getAccessRequestContactEmails = async () => {
     include: [
       {
         model: UserRoles,
-        attributes: ["id"],
-        as: "roles",
+        attributes: ['id'],
+        as: 'roles',
         required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).
         include: [
           {
             model: RoleTypes,
-            as: "role_details",
-            attributes: ["id", "roleName"],
+            as: 'role_details',
+            attributes: ['id', 'roleName'],
             where: { roleName: { [Op.in]: accessRequestEmailRecipientsRoles } },
           },
         ],
@@ -244,14 +241,14 @@ const getAccessRequestContactEmails = async () => {
   });
 
   // Get the e-mail addresses
-  ownerAndAdminEmails.forEach((user) => {
+  ownerAndAdminEmails.forEach(user => {
     accessRequestRolesEmail.push(user.email);
   });
 
   return [...accessRequestEmailRecipientsEmail, ...accessRequestRolesEmail];
 };
 
-const sendPasswordExpiredEmail = async (user) => {
+const sendPasswordExpiredEmail = async user => {
   //check that lastAdminNotification was more than 24 hours ago to avoid spamming the admin
   const currentTime = new Date();
   const lastAdminNotification = new Date(
@@ -264,7 +261,7 @@ const sendPasswordExpiredEmail = async (user) => {
   if (timeSinceLastNotification < 24 || !isNaN(timeSinceLastNotification)) {
     return {
       success: false,
-      message: "Password reset request is pending",
+      message: 'Password reset request is pending',
     };
   }
 
@@ -273,19 +270,19 @@ const sendPasswordExpiredEmail = async (user) => {
 
   //send notification to contact email
   await NotificationQueue.create({
-    type: "email",
-    templateName: "passwordExpiredAdmin",
-    notificationOrigin: "Password Expiry",
-    deliveryType: "immediate",
+    type: 'email',
+    templateName: 'passwordExpiredAdmin',
+    notificationOrigin: 'Password Expiry',
+    deliveryType: 'immediate',
     metaData: {
       notificationId: uuidv4(),
-      recipientName: "Admin",
-      notificationOrigin: "Password Expiry",
-      subject: "User password has expired - Requesting reset",
+      recipientName: 'Admin',
+      notificationOrigin: 'Password Expiry',
+      subject: 'User password has expired - Requesting reset',
       mainRecipients: contactEmail,
-      notificationDescription: "User password has expired - Requesting reset",
+      notificationDescription: 'User password has expired - Requesting reset',
       passwordResetLink: `${trimURL(process.env.WEB_URL)}/admin/usermanagement`,
-      userName: user.firstName + " " + user.lastName,
+      userName: user.firstName + ' ' + user.lastName,
       userEmail: user.email,
     },
     createdBy: user.id,
@@ -301,7 +298,7 @@ const sendPasswordExpiredEmail = async (user) => {
   });
   return {
     success: true,
-    message: "Request submitted",
+    message: 'Request submitted',
   };
 };
 
@@ -315,26 +312,26 @@ const checkPasswordSecurityViolations = ({ password, user, newUser }) => {
   const previousPasswords = user?.metaData?.previousPasswords || [];
 
   if (password.includes(email)) {
-    passwordViolations.push("Password contains email address");
+    passwordViolations.push('Password contains email address');
   }
 
   //check if password contains first name
   if (password.includes(firstName)) {
-    passwordViolations.push("Password contains first name");
+    passwordViolations.push('Password contains first name');
   }
 
   //check if password contains last name
   if (password.includes(lastName)) {
-    passwordViolations.push("Password contains last name");
+    passwordViolations.push('Password contains last name');
   }
 
   //dont do previous password check if it is a new user being registered
   if (!newUser) {
     //TODO -- check if password contains any of previous 12 passwords
-    previousPasswords.forEach((oldPassword) => {
+    previousPasswords.forEach(oldPassword => {
       if (bcrypt.compareSync(password, oldPassword)) {
         passwordViolations.push(
-          "Password cannot be the same as one of the previous passwords"
+          'Password cannot be the same as one of the previous passwords'
         );
       }
     });
@@ -343,7 +340,7 @@ const checkPasswordSecurityViolations = ({ password, user, newUser }) => {
   return passwordViolations;
 };
 
-const setPreviousPasswords = async (user) => {
+const setPreviousPasswords = async user => {
   //get existing previous passwords
   let previousPasswords = user.metaData.previousPasswords || [];
 
@@ -362,12 +359,12 @@ const setPreviousPasswords = async (user) => {
 
 // Generate a random password - 12 chars
 function generatePassword(length = 12) {
-  const lowercase = "abcdefghijklmnopqrstuvwxyz";
-  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const numbers = "0123456789";
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numbers = '0123456789';
   const allChars = lowercase + uppercase + numbers;
 
-  let password = "";
+  let password = '';
 
   // Ensure at least one of each category
   password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
@@ -381,12 +378,12 @@ function generatePassword(length = 12) {
 
   // Shuffle password to mix guaranteed characters
   return password
-    .split("")
+    .split('')
     .sort(() => Math.random() - 0.5)
-    .join("");
+    .join('');
 }
 
-const setLastLogin = async (user) => {
+const setLastLogin = async user => {
   const date = new Date();
 
   const updatedUser = await User.update(
@@ -411,21 +408,23 @@ const setLastLogin = async (user) => {
   );
 
   if (updatedUser.length !== 1) {
-    logger.error("Failed to update last login time for user: " + user.id);
+    logger.error('Failed to update last login time for user: ' + user.id);
   }
 
   return;
 };
 
 // Record failed login attempt
-const handleInvalidLoginAttempt = async ({user, errMessage}) => {
+const handleInvalidLoginAttempt = async ({ user, errMessage }) => {
   const loginAttempts = user.loginAttempts + 1;
   const accountLocked = user.accountLocked;
 
   if (loginAttempts === 5) {
     const newAccLockedData = {
       isLocked: true,
-      lockedReason: [...new Set([...accountLocked.lockedReason, "reachedMaxLoginAttempts"])],
+      lockedReason: [
+        ...new Set([...accountLocked.lockedReason, 'reachedMaxLoginAttempts']),
+      ],
     };
 
     // Update user record
@@ -439,9 +438,10 @@ const handleInvalidLoginAttempt = async ({user, errMessage}) => {
 
     // Queue notification
     await sendAccountLockedEmail(user);
-  }else{
+  } else {
     // Update user record
-    await User.update({loginAttempts: loginAttempts},
+    await User.update(
+      { loginAttempts: loginAttempts },
       { where: { id: user.id } }
     );
   }
@@ -453,23 +453,23 @@ const handleInvalidLoginAttempt = async ({user, errMessage}) => {
 };
 
 // Function to send account locked email
-const sendAccountLockedEmail = async (user) => {
+const sendAccountLockedEmail = async user => {
   // Get support email recipients
   const supportEmailRecipients = await getSupportContactEmails();
 
   await NotificationQueue.create({
-    type: "email",
-    templateName: "accountLocked",
-    notificationOrigin: "User Authentication",
-    deliveryType: "immediate",
+    type: 'email',
+    templateName: 'accountLocked',
+    notificationOrigin: 'User Authentication',
+    deliveryType: 'immediate',
     metaData: {
-      notificationId: `ACC_LOCKED_${moment().format("YYYYMMDD_HHmmss_SSS")}`,
+      notificationId: `ACC_LOCKED_${moment().format('YYYYMMDD_HHmmss_SSS')}`,
       recipientName: user.firstName,
-      notificationOrigin: "User Authentication",
-      subject: "Your account has been locked",
+      notificationOrigin: 'User Authentication',
+      subject: 'Your account has been locked',
       mainRecipients: [user.email],
       notificationDescription:
-        "Account locked because of too many failed login attempts",
+        'Account locked because of too many failed login attempts',
       userName: user.firstName,
       userEmail: user.email,
       supportEmailRecipients,
@@ -485,18 +485,18 @@ const sendAccountUnlockedEmail = async ({
   verificationCode,
 }) => {
   await NotificationQueue.create({
-    type: "email",
-    templateName: "accountUnlocked",
-    notificationOrigin: "User Authentication",
-    deliveryType: "immediate",
+    type: 'email',
+    templateName: 'accountUnlocked',
+    notificationOrigin: 'User Authentication',
+    deliveryType: 'immediate',
     metaData: {
-      notificationId: `ACC_UNLOCKED_${moment().format("YYYYMMDD_HHmmss_SSS")}`,
+      notificationId: `ACC_UNLOCKED_${moment().format('YYYYMMDD_HHmmss_SSS')}`,
       recipientName: user.firstName,
-      notificationOrigin: "User Authentication",
-      subject: "Your Account Has Been Unlocked – Action Required",
+      notificationOrigin: 'User Authentication',
+      subject: 'Your Account Has Been Unlocked – Action Required',
       mainRecipients: [user.email],
-      notificationDescription: "Account unlocked by admin",
-      userName: user.firstName + " " + user.lastName,
+      notificationDescription: 'Account unlocked by admin',
+      userName: user.firstName + ' ' + user.lastName,
       userEmail: user.email,
       tempPassword,
       passwordResetLink: `${trimURL(
@@ -509,15 +509,15 @@ const sendAccountUnlockedEmail = async ({
 
 const deleteUser = async (id, reason) => {
   try {
-    if (!reason || reason === "") {
-      throw new Error("Reason for deletion is required");
+    if (!reason || reason === '') {
+      throw new Error('Reason for deletion is required');
     }
 
     //get user
     const user = await User.findByPk(id);
 
     if (!user) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
 
     const removedAt = Date.now();
@@ -533,7 +533,7 @@ const deleteUser = async (id, reason) => {
     });
 
     if (!archivedUser) {
-      throw new Error("Failed to archive user");
+      throw new Error('Failed to archive user');
     }
 
     //hard delete without paranoid
@@ -546,7 +546,7 @@ const deleteUser = async (id, reason) => {
 
     return true;
   } catch (e) {
-    logger.error("Error while deleting user:" + e);
+    logger.error('Error while deleting user:' + e);
     return false;
   }
 };
