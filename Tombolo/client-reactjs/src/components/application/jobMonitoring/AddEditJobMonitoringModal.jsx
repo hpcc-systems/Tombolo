@@ -63,6 +63,9 @@ const AddEditJobMonitoringModal = ({
           isDuplicating={isDuplicating}
           selectedCluster={selectedCluster}
           setSelectedCluster={setSelectedCluster}
+          domains={domains}
+          productCategories={productCategories}
+          setSelectedDomain={setSelectedDomain}
         />
       ),
       id: 1,

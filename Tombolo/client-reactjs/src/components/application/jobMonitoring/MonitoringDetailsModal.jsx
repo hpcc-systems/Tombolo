@@ -86,6 +86,9 @@ function MonitoringDetailsModal({
         {metaData?.expectedCompletionTime && (
           <Descriptions.Item label="Expected Completion Time">{metaData.expectedCompletionTime}</Descriptions.Item>
         )}
+        {metaData?.maxExecutionTime && (
+          <Descriptions.Item label="Max Execution Time ( in mins ) ">{metaData.maxExecutionTime}</Descriptions.Item>
+        )}
         <Descriptions.Item label="Require complete">{requireComplete ? 'Yes' : 'No'}</Descriptions.Item>
         {/* ----------------- ASR SPECIFIC ------------------------------------------------------- */}
         {asrSpecificMetaData?.jobMonitorType && (

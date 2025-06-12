@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Form, Select, AutoComplete, Input, Card } from 'antd';
+import { Form, Select, AutoComplete, Input, Card, Row, Col } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { debounce } from 'lodash';
+import { useSelector } from 'react-redux';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import InfoDrawer from '../../common/InfoDrawer';
 import { doesNameExist } from './jobMonitoringUtils';
+import AsrSpecificMonitoringDetails from './AsrSpecificMonitoringDetails';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -32,13 +34,40 @@ function JobMonitoringBasicTab({
   isDuplicating,
   selectedCluster,
   setSelectedCluster,
+  domains,
+  productCategories,
+  setSelectedDomain,
 }) {
   //Local State
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [selectedUserGuideName, setSelectedUserGuideName] = useState('');
   const [jobs, setJobs] = useState([]);
   const [fetchingJobs, setFetchingJobs] = useState(false);
+  const [clusterOffset, setClusterOffset] = useState(null);
+
   const monitoringNameInputRef = useRef(null);
+
+  // Redux
+  const {
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
+  } = useSelector((state) => state);
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
+
+  // Generating cluster offset string to display in time picker
+  useEffect(() => {
+    if (selectedCluster?.timezone_offset === null || selectedCluster?.timezone_offset === undefined) return;
+    const offSet = selectedCluster.timezone_offset / 60;
+    if (offSet == 0) {
+      setClusterOffset('UTC');
+    } else {
+      setClusterOffset(`UTC ${offSet}`);
+    }
+  }, [selectedCluster]);
 
   // If duplicating focus on monitoring name input, empty monitoring name field and show warning message
   useEffect(() => {
@@ -134,7 +163,7 @@ function JobMonitoringBasicTab({
         <Form.Item
           label="Monitoring Name"
           name="monitoringName"
-          validateTrigger="onBlur"
+          // validateTrigger="onBlur"
           rules={[
             { required: true, message: 'Required field' },
             { max: 100, message: 'Maximum of 100 characters allowed' },
@@ -171,44 +200,49 @@ function JobMonitoringBasicTab({
           />
         </Form.Item>
 
-        <Form.Item
-          label={
-            <>
-              Monitoring Scope
-              <InfoCircleOutlined
-                style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
-                onClick={() => {
-                  setShowUserGuide(true);
-                  setSelectedUserGuideName('jobMonitoringScopeTypes');
-                }}
-              />
-            </>
-          }
-          name="monitoringScope"
-          rules={[{ required: true, message: 'Required field' }]}>
-          <Select
-            onChange={(value) => {
-              setMonitoringScope(value);
-            }}>
-            {monitoringScopeOptions.map((option) => (
-              <Option key={option.value} value={option.value}>
-                {option.label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required field' }]}>
-          <Select onChange={(value) => handleClusterChange(value)}>
-            {clusters.map((cluster) => {
-              return (
-                <Option key={cluster.id} value={cluster.id}>
-                  {cluster.name}
-                </Option>
-              );
-            })}
-          </Select>
-        </Form.Item>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required field' }]}>
+              <Select onChange={(value) => handleClusterChange(value)}>
+                {clusters.map((cluster) => {
+                  return (
+                    <Option key={cluster.id} value={cluster.id}>
+                      {cluster.name}
+                    </Option>
+                  );
+                })}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label={
+                <>
+                  Monitoring Scope
+                  <InfoCircleOutlined
+                    style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
+                    onClick={() => {
+                      setShowUserGuide(true);
+                      setSelectedUserGuideName('jobMonitoringScopeTypes');
+                    }}
+                  />
+                </>
+              }
+              name="monitoringScope"
+              rules={[{ required: true, message: 'Required field' }]}>
+              <Select
+                onChange={(value) => {
+                  setMonitoringScope(value);
+                }}>
+                {monitoringScopeOptions.map((option) => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
 
         {monitoringScope === 'SpecificJob' && selectedCluster ? (
           <Form.Item
@@ -265,6 +299,16 @@ function JobMonitoringBasicTab({
             <Input placeholder="Enter a pattern" />
           </Form.Item>
         ) : null}
+
+        {asrIntegration && (
+          <AsrSpecificMonitoringDetails
+            form={form}
+            clusterOffset={clusterOffset}
+            domains={domains}
+            productCategories={productCategories}
+            setSelectedDomain={setSelectedDomain}
+          />
+        )}
       </Form>
 
       <InfoDrawer

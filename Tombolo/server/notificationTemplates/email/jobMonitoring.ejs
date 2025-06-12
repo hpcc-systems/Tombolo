@@ -21,6 +21,10 @@
       padding: 5px;
     }
 
+    .section-table-td-label{
+      width: 120px !important;
+    }
+
     .section-footer {
       background: none;
       text-align: center;
@@ -67,7 +71,7 @@
 
             <% if (typeof notificationId !== 'undefined') { %>
             <tr class="section-table-td">
-              <td class="section-table-td">Notification ID</td>
+              <td class="section-table-td section-table-td-label">Notification ID</td>
               <td class="section-table-td"><%= notificationId %></td>
             </tr>
             <% } %>
