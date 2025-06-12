@@ -168,7 +168,11 @@ function JobMonitoringTab({
                 label=" Max execution time (in minutes)"
                 name="maxExecutionTime"
                 rules={[{ required: false, message: 'Please select one option' }]}>
-                <InputNumber type="number" style={{ width: '100%' }} min={1}></InputNumber>
+                <InputNumber
+                  type="number"
+                  style={{ width: '100%' }}
+                  min={1}
+                  placeholder="Max execution time"></InputNumber>
               </Form.Item>
             </Col>
           </Row>
