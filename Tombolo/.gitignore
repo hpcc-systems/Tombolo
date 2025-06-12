@@ -19,3 +19,5 @@ dev/
 https/**
 cert.pem
 key.pem
+certs/*.pem
+certs/*.crt
