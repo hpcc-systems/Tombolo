@@ -15,7 +15,7 @@ function AsrSpecificMonitoringDetails({ form, domains, productCategories, setSel
   };
 
   return (
-    <Form layout="vertical" form={form}>
+    <>
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item label="Domain" name="domain" rules={[{ required: true, message: 'Please select an option' }]}>
@@ -78,7 +78,7 @@ function AsrSpecificMonitoringDetails({ form, domains, productCategories, setSel
           </Form.Item>
         </Col>
       </Row>
-    </Form>
+    </>
   );
 }
 
