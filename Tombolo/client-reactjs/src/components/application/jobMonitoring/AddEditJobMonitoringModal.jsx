@@ -100,6 +100,19 @@ const AddEditJobMonitoringModal = ({
     },
   ];
 
+  // Define tab items for Tabs component
+  const tabItems = tabs.map((tab, index) => ({
+    key: index.toString(),
+    label: erroneousTabs.includes(index.toString()) ? (
+      <span>
+        <Badge color="var(--danger)" /> {`${tab.label}`}
+      </span>
+    ) : (
+      `${tab.label}`
+    ),
+    children: tab.component(),
+  }));
+
   // When next button is clicked, go to next tab
   const handleNext = () => {
     const nextTab = (parseInt(activeTab) + 1).toString();
@@ -177,23 +190,7 @@ const AddEditJobMonitoringModal = ({
       footer={renderFooter()}
       destroyOnClose={true}
       maskClosable={false}>
-      <Tabs type="card" activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)}>
-        {tabs.map((tab, index) => (
-          <Tabs.TabPane
-            key={index}
-            tab={
-              erroneousTabs.includes(index.toString()) ? (
-                <span>
-                  <Badge color="var(--danger)" /> {`${tab.label}`}
-                </span>
-              ) : (
-                `${tab.label}`
-              )
-            }>
-            {tab.component()}
-          </Tabs.TabPane>
-        ))}
-      </Tabs>
+      <Tabs type="card" activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)} items={tabItems} />
     </Modal>
   );
 };

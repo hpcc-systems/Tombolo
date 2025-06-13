@@ -117,7 +117,9 @@ function JobMonitoringTab({
                   style={{ width: '100%' }}
                   format="HH:mm"
                   suffixIcon={clusterOffset}
-                  addon={() => (intermittentScheduling?.runWindow === 'overnight' ? <div>Previous Day</div> : null)}
+                  renderExtraFooter={() =>
+                    intermittentScheduling?.runWindow === 'overnight' ? <div>Previous Day</div> : null
+                  }
                   showNow={false}
                 />
               </Form.Item>
@@ -139,8 +141,10 @@ function JobMonitoringTab({
                   style={{ width: '100%' }}
                   format="HH:mm"
                   suffixIcon={clusterOffset}
+                  renderExtraFooter={() =>
+                    intermittentScheduling?.runWindow === 'overnight' ? <div>Current Day</div> : null
+                  }
                   showNow={false}
-                  addon={() => (intermittentScheduling?.runWindow === 'overnight' ? <div>Current Day</div> : null)}
                 />
               </Form.Item>
             </Col>

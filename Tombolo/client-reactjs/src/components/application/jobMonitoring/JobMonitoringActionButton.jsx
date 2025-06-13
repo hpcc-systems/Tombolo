@@ -76,64 +76,83 @@ const JobMonitoringActionButton = ({
       setExpandActionsDrawer(nextOpen);
     }
   };
+
+  // Define menu items
+  const menuItems = [
+    {
+      key: '1',
+      label: 'Add Job Monitoring',
+    },
+    {
+      key: '2',
+      label: 'Bulk Edit',
+      disabled: selectedRows.length < 2,
+    },
+    {
+      key: 'bulkStartPause',
+      label: (
+        <Popover
+          placement="left"
+          content={
+            <Card size="small">
+              <Form layout="vertical" form={bulkStartPauseForm}>
+                <Form.Item label="Select Action" name="action" required>
+                  <Select style={{ width: '18rem' }}>
+                    <Option value="start">
+                      <Badge color="green" style={{ marginRight: '1rem' }}></Badge>
+                      {`Start selected ${selectedRows.length} Job Monitoring`}
+                    </Option>
+                    <Option value="pause">
+                      <Badge color="red" style={{ marginRight: '1rem' }}></Badge>
+                      {`Pause selected ${selectedRows.length} Job Monitoring`}
+                    </Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" style={{ width: '100%' }} onClick={bulkStartPauseJobMonitorings}>
+                    Apply
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Card>
+          }
+          trigger="click">
+          <a>Bulk start/pause</a>
+        </Popover>
+      ),
+      disabled: selectedRows.length < 2,
+    },
+    {
+      key: '5',
+      label: 'Bulk Approve / Reject',
+      disabled: selectedRows.length < 2,
+    },
+    {
+      key: '3',
+      label: (
+        <Popconfirm
+          title={`Are you sure you want to delete selected ${selectedRows.length} monitorings?. `}
+          okButtonProps={{ type: 'primary', danger: true }}
+          okText="Delete"
+          onConfirm={deleteSelected}>
+          Bulk Delete
+        </Popconfirm>
+      ),
+      disabled: selectedRows.length < 2,
+    },
+    {
+      key: '4',
+      label: filtersVisible ? 'Hide filters' : 'Show filters',
+    },
+  ];
+
   return (
     <Dropdown
       disabled={isReader}
       trigger={['click']}
       onOpenChange={handleDropDownOpenChange}
       open={expandActionsDrawer}
-      dropdownRender={() => (
-        <Menu onClick={({ key }) => handleMenuSelection(key)}>
-          <Menu.Item key="1">Add Job Monitoring</Menu.Item>
-
-          <Menu.Item key="2" disabled={selectedRows.length < 2}>
-            Bulk Edit
-          </Menu.Item>
-          <Menu.Item disabled={selectedRows.length < 2}>
-            <Popover
-              placement="left"
-              content={
-                <Card size="small">
-                  <Form layout="vertical" form={bulkStartPauseForm}>
-                    <Form.Item label="Select Action" name="action" required>
-                      <Select style={{ width: '18rem' }}>
-                        <Option value="start">
-                          <Badge color="green" style={{ marginRight: '1rem' }}></Badge>
-                          {`Start selected ${selectedRows.length} Job Monitoring`}
-                        </Option>
-                        <Option value="pause">
-                          <Badge color="red" style={{ marginRight: '1rem' }}></Badge>
-                          {`Pause selected ${selectedRows.length} Job Monitoring`}
-                        </Option>
-                      </Select>
-                    </Form.Item>
-                    <Form.Item>
-                      <Button type="primary" style={{ width: '100%' }} onClick={bulkStartPauseJobMonitorings}>
-                        Apply
-                      </Button>
-                    </Form.Item>
-                  </Form>
-                </Card>
-              }
-              trigger="click">
-              <a>Bulk start/pause</a>
-            </Popover>
-          </Menu.Item>
-          <Menu.Item key="5" disabled={selectedRows.length < 2}>
-            Bulk Approve / Reject
-          </Menu.Item>
-          <Menu.Item key="3" disabled={selectedRows.length < 2}>
-            <Popconfirm
-              title={`Are you sure you want to delete  selected ${selectedRows.length} monitorings?. `}
-              okButtonProps={{ type: 'primary', danger: true }}
-              okText="Delete"
-              onConfirm={deleteSelected}>
-              Bulk Delete
-            </Popconfirm>
-          </Menu.Item>
-          <Menu.Item key="4">{filtersVisible ? 'Hide filters' : 'Show filters'}</Menu.Item>
-        </Menu>
-      )}>
+      dropdownRender={() => <Menu items={menuItems} onClick={({ key }) => handleMenuSelection(key)} />}>
       <Button type="primary">
         Job Monitoring Actions <DownOutlined />
       </Button>
