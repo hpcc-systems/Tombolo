@@ -26,6 +26,7 @@ const addCluster = async (req, res) => {
       password,
       adminEmails,
       metaData = {},
+      allowSelfSigned,
       createdBy,
       updatedBy,
     } = req.body;
@@ -112,6 +113,7 @@ const addCluster = async (req, res) => {
       timezone_offset: offSetInMinutes,
       adminEmails,
       createdBy,
+      allowSelfSigned,
       updatedBy,
       metaData,
     };
@@ -153,6 +155,7 @@ const addClusterWithProgress = async (req, res) => {
       password,
       adminEmails,
       metaData = {},
+      allowSelfSigned,
       createdBy,
       updatedBy,
     } = req.body;
@@ -277,6 +280,7 @@ const addClusterWithProgress = async (req, res) => {
       timezone_offset: offSetInMinutes,
       adminEmails,
       createdBy,
+      allowSelfSigned,
       updatedBy,
       metaData,
     };
@@ -365,9 +369,11 @@ const deleteCluster = async (req, res) => {
 const updateCluster = async (req, res) => {
   // Only username, password, adminEmails can be updated. only update that if it is present in the request body
   try {
-    const { username, password, adminEmails, updatedBy } = req.body;
+    const { username, password, adminEmails, updatedBy, allowSelfSigned } =
+      req.body;
     const cluster = await Cluster.findOne({ where: { id: req.params.id } });
     if (!cluster) throw new CustomError('Cluster not found', 404);
+    if (allowSelfSigned) cluster.allowSelfSigned = allowSelfSigned;
     if (username) cluster.username = username;
     if (password) cluster.hash = encryptString(password);
     if (adminEmails) cluster.adminEmails = adminEmails;
@@ -506,7 +512,6 @@ const clusterUsage = async (req, res) => {
     }));
     res.status(200).send(maxUsage);
   } catch (err) {
-    console.log(err);
     res.status(503).json({
       success: false,
       message: 'Failed to fetch current cluster usage',
@@ -551,7 +556,6 @@ const clusterStorageHistory = async (req, res) => {
 
     res.status(200).send(filtered_data);
   } catch (err) {
-    console.log(err);
     logger.error(err);
     res.status(503).json({
       success: false,
