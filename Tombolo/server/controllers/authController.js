@@ -1,11 +1,11 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require("uuid");
-const axios = require("axios");
-const logger = require("../config/logger");
-const roleTypes = require("../config/roleTypes");
-const models = require("../models");
-const moment = require("moment");
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
+const logger = require('../config/logger');
+const roleTypes = require('../config/roleTypes');
+const models = require('../models');
+const moment = require('moment');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -19,12 +19,12 @@ const {
   generateAndSetCSRFToken,
   setPreviousPasswords,
   setLastLogin,
-  handleInvalidLoginAttempt
-} = require("../utils/authUtil");
-const { blacklistToken } = require("../utils/tokenBlackListing");
-const sequelize = require("../models").sequelize;
+  handleInvalidLoginAttempt,
+} = require('../utils/authUtil');
+const { blacklistToken } = require('../utils/tokenBlackListing');
+const sequelize = require('../models').sequelize;
 
-const User = models.user
+const User = models.user;
 const UserRoles = models.UserRoles;
 const user_application = models.user_application;
 const Application = models.application;
@@ -39,7 +39,6 @@ const instance_settings = models.instance_settings;
 // Register application owner
 const createApplicationOwner = async (req, res) => {
   try {
-    const { deviceInfo = {} } = req.body;
     const payload = req.body;
 
     // Find the role ID for the OWNER role type
@@ -51,7 +50,7 @@ const createApplicationOwner = async (req, res) => {
     if (!role || !role.id) {
       return res.status(409).json({
         success: false,
-        message: "Owner role not found in the system",
+        message: 'Owner role not found in the system',
       });
     }
 
@@ -62,7 +61,7 @@ const createApplicationOwner = async (req, res) => {
     if (owner) {
       return res.status(409).json({
         success: false,
-        message: "An owner already exists in the system",
+        message: 'An owner already exists in the system',
       });
     }
 
@@ -80,7 +79,7 @@ const createApplicationOwner = async (req, res) => {
     if (passwordSecurityViolations.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Password does not meet security requirements",
+        message: 'Password does not meet security requirements',
       });
     }
 
@@ -114,20 +113,20 @@ const createApplicationOwner = async (req, res) => {
 
     // Add to notification queue
     await NotificationQueue.create({
-      type: "email",
-      templateName: "verifyEmail",
-      notificationOrigin: "User Registration",
-      deliveryType: "immediate",
+      type: 'email',
+      templateName: 'verifyEmail',
+      notificationOrigin: 'User Registration',
+      deliveryType: 'immediate',
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
         verificationLink: `${trimURL(
           process.env.WEB_URL
         )}/register?regId=${verificationCode}`,
-        notificationOrigin: "User Registration",
-        subject: "Verify your email",
+        notificationOrigin: 'User Registration',
+        subject: 'Verify your email',
         mainRecipients: [user.email],
-        notificationDescription: "Verify email",
+        notificationDescription: 'Verify email',
         validForHours: 24,
       },
       createdBy: user.id,
@@ -136,7 +135,7 @@ const createApplicationOwner = async (req, res) => {
     // Send response
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: 'User created successfully',
     });
   } catch (err) {
     logger.error(err);
@@ -167,7 +166,7 @@ const createBasicUser = async (req, res) => {
     if (passwordSecurityViolations.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Password does not meet security requirements",
+        message: 'Password does not meet security requirements',
       });
     }
 
@@ -194,20 +193,20 @@ const createBasicUser = async (req, res) => {
 
     // Add to notification queue
     await NotificationQueue.create({
-      type: "email",
-      templateName: "verifyEmail",
-      notificationOrigin: "User Registration",
-      deliveryType: "immediate",
+      type: 'email',
+      templateName: 'verifyEmail',
+      notificationOrigin: 'User Registration',
+      deliveryType: 'immediate',
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
         verificationLink: `${trimURL(
           process.env.WEB_URL
         )}/register?regId=${verificationCode}`,
-        notificationOrigin: "User Registration",
-        subject: "Verify your email",
+        notificationOrigin: 'User Registration',
+        subject: 'Verify your email',
         mainRecipients: [user.email],
-        notificationDescription: "Verify email",
+        notificationDescription: 'Verify email',
         validForHours: 24,
       },
       createdBy: user.id,
@@ -216,7 +215,7 @@ const createBasicUser = async (req, res) => {
     // Send response
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: 'User created successfully',
     });
   } catch (err) {
     logger.error(`Create user: ${err.message}`);
@@ -241,7 +240,7 @@ const verifyEmail = async (req, res) => {
       logger.error(`Verify email: Token ${token} does not exist`);
       return res.status(404).json({
         success: false,
-        message: "Invalid or expired verification token",
+        message: 'Invalid or expired verification token',
       });
     }
 
@@ -250,7 +249,7 @@ const verifyEmail = async (req, res) => {
       logger.error(`Verify email: Token ${token} has expired`);
       return res
         .status(400)
-        .json({ success: false, message: "Verification token has expired" });
+        .json({ success: false, message: 'Verification token has expired' });
     }
 
     // Find the user
@@ -259,24 +258,24 @@ const verifyEmail = async (req, res) => {
       include: [
         {
           model: UserRoles,
-          attributes: ["id"],
-          as: "roles",
+          attributes: ['id'],
+          as: 'roles',
           include: [
             {
               model: RoleTypes,
-              as: "role_details",
-              attributes: ["id", "roleName"],
+              as: 'role_details',
+              attributes: ['id', 'roleName'],
             },
           ],
         },
         {
           model: user_application,
-          attributes: ["id"],
-          as: "applications",
+          attributes: ['id'],
+          as: 'applications',
           include: [
             {
               model: Application,
-              attributes: ["id", "title", "description"],
+              attributes: ['id', 'title', 'description'],
             },
           ],
         },
@@ -327,7 +326,7 @@ const verifyEmail = async (req, res) => {
     // Send response
     res.status(200).json({
       success: true,
-      message: "Email verified successfully",
+      message: 'Email verified successfully',
       data: { ...user.toJSON() },
     });
   } catch (err) {
@@ -354,12 +353,12 @@ const resetPasswordWithToken = async (req, res) => {
 
     // If accountVerificationCode not found
     if (!accountVerificationCode) {
-      throw { status: 404, message: "Invalid or expired reset token" };
+      throw { status: 404, message: 'Invalid or expired reset token' };
     }
 
     // If accountVerificationCode has expired
     if (new Date() > accountVerificationCode.expiresAt) {
-      throw { status: 400, message: "Reset token has expired" };
+      throw { status: 400, message: 'Reset token has expired' };
     }
 
     // Find user by ID
@@ -367,7 +366,7 @@ const resetPasswordWithToken = async (req, res) => {
 
     // If user not found
     if (!user) {
-      throw { status: 404, message: "User not found" };
+      throw { status: 404, message: 'User not found' };
     }
 
     // check if password meets security requirements
@@ -379,7 +378,7 @@ const resetPasswordWithToken = async (req, res) => {
     if (passwordSecurityViolations.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Password does not meet security requirements",
+        message: 'Password does not meet security requirements',
       });
     }
 
@@ -469,23 +468,23 @@ const resetPasswordWithToken = async (req, res) => {
 
     // Send notification informing user that password has been reset
     const readable_notification = `ACC_CNG_${moment().format(
-      "YYYYMMDD_HHmmss_SSS"
+      'YYYYMMDD_HHmmss_SSS'
     )}`;
 
     await NotificationQueue.create(
       {
-        type: "email",
-        templateName: "accountChange",
-        notificationOrigin: "Password Reset",
-        deliveryType: "immediate",
+        type: 'email',
+        templateName: 'accountChange',
+        notificationOrigin: 'Password Reset',
+        deliveryType: 'immediate',
         metaData: {
           notificationId: readable_notification,
           recipientName: `${userObj.firstName} ${userObj.lastName}`,
-          notificationOrigin: "Password Reset",
-          subject: "Your password has been changed",
+          notificationOrigin: 'Password Reset',
+          subject: 'Your password has been changed',
           mainRecipients: [userObj.email],
-          notificationDescription: "Password Reset",
-          changedInfo: ["password"],
+          notificationDescription: 'Password Reset',
+          changedInfo: ['password'],
         },
         createdBy: user.id,
       },
@@ -498,7 +497,7 @@ const resetPasswordWithToken = async (req, res) => {
     // Success response
     res.status(200).json({
       success: true,
-      message: "Password updated successfully",
+      message: 'Password updated successfully',
       data: userObj,
     });
   } catch (err) {
@@ -523,12 +522,12 @@ const resetTempPassword = async (req, res) => {
 
     // If accountVerificationCode not found
     if (!accountVerificationCode) {
-      throw { status: 404, message: "Invalid or expired reset token" };
+      throw { status: 404, message: 'Invalid or expired reset token' };
     }
 
     // If accountVerificationCode has expired
     if (new Date() > accountVerificationCode.expiresAt) {
-      throw { status: 400, message: "Reset token has expired" };
+      throw { status: 400, message: 'Reset token has expired' };
     }
 
     // Find user by ID
@@ -536,7 +535,7 @@ const resetTempPassword = async (req, res) => {
 
     // If user not found
     if (!user) {
-      throw { status: 404, message: "User not found" };
+      throw { status: 404, message: 'User not found' };
     }
 
     // check if password meets security requirements
@@ -548,7 +547,7 @@ const resetTempPassword = async (req, res) => {
     if (passwordSecurityViolations.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Password does not meet security requirements",
+        message: 'Password does not meet security requirements',
       });
     }
 
@@ -632,7 +631,7 @@ const resetTempPassword = async (req, res) => {
     // Success response
     res.status(200).json({
       success: true,
-      message: "Password updated successfully",
+      message: 'Password updated successfully',
       data: userObj,
     });
   } catch (err) {
@@ -645,11 +644,11 @@ const resetTempPassword = async (req, res) => {
 
 //Login Basic user
 // 401 - Unverified , Temp PW, Expired PW | 403 - Incorrect E-mail password combination | 500 - Internal server error | 200 - Success
-const loginBasicUser = async (req, res, next) => {
+const loginBasicUser = async (req, res) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
-    const genericError = "Username and Password combination not found";
+    const genericError = 'Username and Password combination not found';
 
     // find user - include user roles from UserRoles table
     const user = await getAUser({ email });
@@ -663,11 +662,11 @@ const loginBasicUser = async (req, res, next) => {
       });
     }
 
-    if(user?.forcePasswordReset) {
+    if (user?.forcePasswordReset) {
       logger.error(`Login : Login attempt by user with Temp PW - ${user.id}`);
       let resetUrl = null;
-      
-      if(user?.AccountVerificationCodes[0]?.code){
+
+      if (user?.AccountVerificationCodes[0]?.code) {
         resetUrl = `${trimURL(process.env.WEB_URL)}/reset-temporary-password/${
           user.AccountVerificationCodes[0].code
         }`;
@@ -675,7 +674,7 @@ const loginBasicUser = async (req, res, next) => {
 
       res.status(401).json({
         success: false,
-        message: "temp-pw",
+        message: 'temp-pw',
         resetLink: resetUrl ? resetUrl : null,
       });
       return;
@@ -683,17 +682,19 @@ const loginBasicUser = async (req, res, next) => {
 
     // If the accountLocked.isLocked is true, return generic error
     if (user.accountLocked.isLocked) {
-      logger.error(`Login : Login Attempt by user with locked account ${email}`);
+      logger.error(
+        `Login : Login Attempt by user with locked account ${email}`
+      );
       return res.status(403).json({
         success: false,
         message: genericError,
       });
     }
-    
+
     //Compare password
     if (!bcrypt.compareSync(password, user.hash)) {
-      logger.error(`Login : Invalid password for user with email ${email}`); 
-      await handleInvalidLoginAttempt({user, errMessage: genericError})
+      logger.error(`Login : Invalid password for user with email ${email}`);
+      await handleInvalidLoginAttempt({ user, errMessage: genericError });
     }
 
     // If not verified user return error
@@ -701,7 +702,7 @@ const loginBasicUser = async (req, res, next) => {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
       res.status(401).json({
         success: false,
-        message: "unverified",
+        message: 'unverified',
       });
       return;
     }
@@ -714,7 +715,7 @@ const loginBasicUser = async (req, res, next) => {
 
       res.status(401).json({
         success: false,
-        message: "password-expired",
+        message: 'password-expired',
       });
       return;
     }
@@ -726,20 +727,20 @@ const loginBasicUser = async (req, res, next) => {
       );
       res.status(401).json({
         success: false,
-        message: "temp-password",
+        message: 'temp-password',
       });
       return;
     }
 
     // If user is an registered to azure, throw error
-    if (user.registrationMethod === "azure") {
+    if (user.registrationMethod === 'azure') {
       logger.error(
         `Login : Login attempt by azure user - ${user.id} - ${user.email}`
       );
 
       // Incorrect E-mail password combination error
       const azureError = new Error(
-        "Email is registered with a Microsoft account. Please sign in with Microsoft"
+        'Email is registered with a Microsoft account. Please sign in with Microsoft'
       );
       azureError.status = 403;
       throw azureError;
@@ -784,18 +785,18 @@ const loginBasicUser = async (req, res, next) => {
     // Success response
     res.status(200).json({
       success: true,
-      message: "User logged in successfully",
+      message: 'User logged in successfully',
       data: userObj,
     });
   } catch (err) {
-    console.log(err);
+    logger.error(`Login user: ${err.message}`);
     // If err.status is present - it is logged already
     if (!err.status) {
       logger.error(`Login user: ${err.message}`);
     }
     res
       .status(err.status || 500)
-      .json({ success: false, message: err.message});
+      .json({ success: false, message: err.message });
   }
 };
 
@@ -803,8 +804,8 @@ const loginBasicUser = async (req, res, next) => {
 const logOutBasicUser = async (req, res) => {
   try {
     // Clear the token cookie
-    res.clearCookie("token");
-    res.clearCookie("x-csrf-token");
+    res.clearCookie('token');
+    res.clearCookie('x-csrf-token');
     // Decode the token to get the tokenId (assuming token contains tokenId)
     const decodedToken = jwt.decode(req.cookies.token);
 
@@ -818,7 +819,7 @@ const logOutBasicUser = async (req, res) => {
     // Add access token to the blacklist
     await blacklistToken({ tokenId, exp: decodedToken.exp });
 
-    res.status(200).json({ success: true, message: "User logged out" });
+    res.status(200).json({ success: true, message: 'User logged out' });
   } catch (err) {
     logger.error(`Logout user: ${err.message}`);
     res
@@ -839,13 +840,13 @@ const handlePasswordResetRequest = async (req, res) => {
       include: [
         {
           model: UserRoles,
-          attributes: ["id"],
-          as: "roles",
+          attributes: ['id'],
+          as: 'roles',
           include: [
             {
               model: RoleTypes,
-              as: "role_details",
-              attributes: ["id", "roleName"],
+              as: 'role_details',
+              attributes: ['id', 'roleName'],
             },
           ],
         },
@@ -860,7 +861,7 @@ const handlePasswordResetRequest = async (req, res) => {
 
     //need to check if user is an owner or admin to see if they are allowed to reset password without admin assistance
     const isOwnerOrAdmin = user.roles.some(
-      (role) =>
+      role =>
         role.role_details.roleName === roleTypes.OWNER ||
         role.role_details.roleName === roleTypes.ADMIN
     );
@@ -909,7 +910,7 @@ const handlePasswordResetRequest = async (req, res) => {
     )}/reset-password/${randomId}`;
 
     // Notification subject
-    let subject = "Password Reset Link";
+    let subject = 'Tombolo Password Reset Link';
     if (process.env.INSTANCE_NAME) {
       subject = `${process.env.INSTANCE_NAME} - ${subject}`;
     }
@@ -919,19 +920,19 @@ const handlePasswordResetRequest = async (req, res) => {
 
     // Queue notification
     await NotificationQueue.create({
-      type: "email",
-      templateName: "resetPasswordLink",
-      notificationOrigin: "Reset Password",
-      deliveryType: "immediate",
-      createdBy: "System",
-      updatedBy: "System",
+      type: 'email',
+      templateName: 'resetPasswordLink',
+      notificationOrigin: 'Reset Password',
+      deliveryType: 'immediate',
+      createdBy: 'System',
+      updatedBy: 'System',
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
-        notificationOrigin: "Reset Password",
-        subject: "Password Reset Link",
+        notificationOrigin: 'Reset Password',
+        subject,
         mainRecipients: [user.email],
-        notificationDescription: "Password Reset Link",
+        notificationDescription: 'Password Reset Link',
         validForHours: 24,
         passwordRestLink,
       },
@@ -974,10 +975,10 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     const paramsObj = {
       client_id: process.env.CLIENT_ID,
       client_secret: process.env.CLIENT_SECRET,
-      grant_type: "authorization_code",
+      grant_type: 'authorization_code',
       code: code,
       redirect_uri: process.env.REDIRECT_URI,
-      scope: "openid profile email",
+      scope: 'openid profile email',
     };
 
     // Construct the x-www-form-urlencoded string using a loop
@@ -989,7 +990,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     // Get access token from Azure
     const response = await axios.post(msEndPoint, params.toString(), {
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
 
@@ -1016,11 +1017,11 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     }
 
     // If user exists and is not an azure user
-    if (userExists.exists && userExists.registrationMethod !== "azure") {
+    if (userExists.exists && userExists.registrationMethod !== 'azure') {
       return res.status(409).json({
         success: false,
         message:
-          "This account was created with a different login method. Please sign in with your username and password instead of using Microsoft",
+          'This account was created with a different login method. Please sign in with your username and password instead of using Microsoft',
       });
     }
 
@@ -1035,7 +1036,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
         email,
         firstName: given_name,
         lastName: family_name,
-        registrationMethod: "azure",
+        registrationMethod: 'azure',
         verifiedUser: true,
         verifiedAt: new Date(),
       });
@@ -1075,7 +1076,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       // Send response
       return res.status(201).json({
         success: true,
-        message: "User created successfully",
+        message: 'User created successfully',
         data: { ...newUserPlain },
       });
     }
@@ -1107,16 +1108,15 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     await generateAndSetCSRFToken(req, res, accessToken);
 
     // Set last login
-    await setLastLogin(newUser);
+    await setLastLogin(user);
 
     // Send response
     res.status(200).json({
       success: true,
-      message: "User logged in successfully",
+      message: 'User logged in successfully',
       data: { ...user.toJSON() },
     });
   } catch (err) {
-    console.log(err);
     logger.error(`Login or Register Azure User: ${err.message}`);
     res
       .status(err.status || 500)
@@ -1130,15 +1130,15 @@ const requestAccess = async (req, res) => {
 
     const user = await User.findOne({ where: { id } });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     const instance_setting = await instance_settings.findOne({
-      where: { name: "contactEmail" },
+      where: { name: 'contactEmail' },
     });
 
     if (!instance_setting) {
-      return res.status(404).json({ message: "No contact email found." });
+      return res.status(404).json({ message: 'No contact email found.' });
     }
 
     const existingNotification = await sent_notifications.findOne({
@@ -1154,10 +1154,10 @@ const requestAccess = async (req, res) => {
 
       if (diffHours < 24) {
         logger.info(
-          "Access request from user already sent within 24 hours. User: " +
+          'Access request from user already sent within 24 hours. User: ' +
             user.email
         );
-        return res.status(200).json({ message: "Access request already sent" });
+        return res.status(200).json({ message: 'Access request already sent' });
       }
     }
 
@@ -1165,13 +1165,13 @@ const requestAccess = async (req, res) => {
 
     // Add to notification queue
     await NotificationQueue.create({
-      type: "email",
-      templateName: "accessRequest",
-      notificationOrigin: "No Access Page",
-      deliveryType: "immediate",
+      type: 'email',
+      templateName: 'accessRequest',
+      notificationOrigin: 'No Access Page',
+      deliveryType: 'immediate',
       metaData: {
         notificationId: searchableNotificationId,
-        notificationOrigin: "No Access Page",
+        notificationOrigin: 'No Access Page',
         email: `${user.email}`,
         comment: comment,
         userManagementLink: `${trimURL(
@@ -1179,15 +1179,15 @@ const requestAccess = async (req, res) => {
         )}/admin/userManagement`,
         subject: `User Access Request from ${user.email}`,
         mainRecipients: [instance_setting.value],
-        notificationDescription: "User Access Request",
+        notificationDescription: 'User Access Request',
         validForHours: 24,
       },
       createdBy: user.id,
     });
 
-    res.status(200).json({ message: "Access requested successfully" });
+    res.status(200).json({ message: 'Access requested successfully' });
   } catch (e) {
-    console.log(e);
+    logger.error(`Request Access: ${e.message}`);
     res.status(500).json({ message: e.message });
   }
 };
@@ -1201,7 +1201,7 @@ const resendVerificationCode = async (req, res) => {
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      throw { status: 404, message: "User not found" };
+      throw { status: 404, message: 'User not found' };
     }
 
     // Check if the verification code is there, if so delete it
@@ -1217,7 +1217,7 @@ const resendVerificationCode = async (req, res) => {
     if (user.lastVerificationCodeSentAt > Date.now() - 90000) {
       throw {
         status: 429,
-        message: "Please wait 90 seconds before requesting a new code",
+        message: 'Please wait 90 seconds before requesting a new code',
       };
     }
 
@@ -1234,18 +1234,18 @@ const resendVerificationCode = async (req, res) => {
 
     // Add to notification queue
     await NotificationQueue.create({
-      type: "email",
-      templateName: "verifyEmail",
-      notificationOrigin: "User Registration",
-      deliveryType: "immediate",
+      type: 'email',
+      templateName: 'verifyEmail',
+      notificationOrigin: 'User Registration',
+      deliveryType: 'immediate',
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
         verificationLink: `${process.env.WEB_URL}/register?regId=${verificationCode}`,
-        notificationOrigin: "User Registration",
-        subject: "Verify your email",
+        notificationOrigin: 'User Registration',
+        subject: 'Verify your email',
         mainRecipients: [user.email],
-        notificationDescription: "Verify email",
+        notificationDescription: 'Verify email',
         validForHours: 24,
       },
       createdBy: user.id,
@@ -1253,7 +1253,7 @@ const resendVerificationCode = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Verification code sent successfully",
+      message: 'Verification code sent successfully',
     });
   } catch (err) {
     logger.error(`Resend verification code: ${err.message}`);
@@ -1271,11 +1271,11 @@ const getUserDetailsWithToken = async (req, res) => {
     const userId = await PasswordResetLinks.findOne({
       where: { id: token },
 
-      attributes: ["userId"],
+      attributes: ['userId'],
     });
 
     if (!userId) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     const id = userId.userId;
@@ -1285,7 +1285,7 @@ const getUserDetailsWithToken = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     //only grab the details we need
@@ -1314,11 +1314,11 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
     const userId = await AccountVerificationCodes.findOne({
       where: { code: token },
 
-      attributes: ["userId"],
+      attributes: ['userId'],
     });
 
     if (!userId) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     const id = userId.userId;
@@ -1328,7 +1328,7 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     //check if it is a new user
@@ -1368,7 +1368,7 @@ const requestPasswordReset = async (req, res) => {
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Send E-mail to access request email
