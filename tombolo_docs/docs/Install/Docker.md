@@ -64,6 +64,10 @@ Nginx is required to serve the frontend and reverse proxy requests to the backen
 
 ### Step 4 - Whitelist Clusters
 
+<div class="important_block">
+> If your cluster uses self signed certificates you must add the certificate to Tombolo. Instructions can be found in [Self Signed certs](/docs/User-Guides/self-signed-certs).
+</div>
+
 Clusters need to be whitelisted to allow Tombolo to communicate with them. Any clusters that will be used in Tombolo must be whitelisted for security reasons.
 
 1. Inside the `/server` directory, create a new file called `cluster-whitelist.js`.

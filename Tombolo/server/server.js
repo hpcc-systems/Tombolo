@@ -28,8 +28,12 @@ const cookieParser = require('cookie-parser');
 
 const { doubleCsrfProtection } = require('./middlewares/csrfMiddleware');
 
+const { readSelfSignedCerts } = require('./utils/readSelfSignedCerts');
+
 /* BREE JOB SCHEDULER */
 const JobScheduler = require('./jobSchedular/job-scheduler');
+
+readSelfSignedCerts();
 
 /* Initialize express app */
 const app = express();
