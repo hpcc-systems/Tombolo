@@ -25,6 +25,7 @@ const path = require('path');
 var sanitize = require('sanitize-filename');
 const logger = require('../../config/logger');
 const moment = require('moment');
+const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 let ClusterWhitelist = { clusters: [] };
 
@@ -59,12 +60,16 @@ router.post(
         try {
           let clusterAuth = hpccUtil.getClusterAuth(cluster);
           let contentType = req.body.indexSearch ? 'key' : '';
-          console.log('contentType: ' + contentType);
-          let dfuService = new hpccJSComms.DFUService({
-            baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-            userID: clusterAuth ? clusterAuth.user : '',
-            password: clusterAuth ? clusterAuth.password : '',
-          });
+          let dfuService = new hpccJSComms.DFUService(
+            getClusterOptions(
+              {
+                baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+                userID: clusterAuth ? clusterAuth.user : '',
+                password: clusterAuth ? clusterAuth.password : '',
+              },
+              cluster.allowSelfSigned
+            )
+          );
           const { fileNamePattern } = req.body;
           let logicalFileName;
           if (fileNamePattern === 'startsWith') {
@@ -105,7 +110,7 @@ router.post(
               res.json(results);
             });
         } catch (err) {
-          console.log(err);
+          logger.error(err);
           res.status(500).send({
             success: 'false',
             message: 'Error occured during search.',
@@ -113,9 +118,9 @@ router.post(
         }
       })
       .catch(err => {
-        console.log('------------------------------------------');
-        console.log('Cluster not reachable', +JSON.stringify(err));
-        console.log('------------------------------------------');
+        logger.error.log('------------------------------------------');
+        logger.error('Cluster not reachable', +JSON.stringify(err));
+        logger.error('------------------------------------------');
         res.status(500).send({
           success: 'false',
           message: 'Search failed. Please check if the cluster is running.',
@@ -166,7 +171,7 @@ router.post(
 
           res.json(superfile);
         } catch (err) {
-          console.log(err);
+          logger.error(err);
           res.status(500).send({
             success: 'false',
             message: 'Error occured during search.',
@@ -175,9 +180,9 @@ router.post(
         }
       })
       .catch(err => {
-        console.log('------------------------------------------');
-        console.log('Cluster not reachable', +JSON.stringify(err));
-        console.log('------------------------------------------');
+        logger.error('------------------------------------------');
+        logger.error('Cluster not reachable', +JSON.stringify(err));
+        logger.error('------------------------------------------');
         res.status(500).send({
           success: 'false',
           message: 'Search failed. Please check if the cluster is running.',
@@ -203,12 +208,17 @@ router.post(
       .getCluster(req.body.clusterid)
       .then(function (cluster) {
         let clusterAuth = hpccUtil.getClusterAuth(cluster);
-        let wsWorkunits = new hpccJSComms.WorkunitsService({
-            baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-            userID: clusterAuth ? clusterAuth.user : '',
-            password: clusterAuth ? clusterAuth.password : '',
-            type: 'get',
-          }),
+        let wsWorkunits = new hpccJSComms.WorkunitsService(
+            getClusterOptions(
+              {
+                baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+                userID: clusterAuth ? clusterAuth.user : '',
+                password: clusterAuth ? clusterAuth.password : '',
+                type: 'get',
+              },
+              cluster.allowSelfSigned
+            )
+          ),
           querySearchAutoComplete = [];
         wsWorkunits
           .WUListQueries({
@@ -217,10 +227,10 @@ router.post(
             Activated: true,
           })
           .then(response => {
-            console.log(response);
+            // console.log(response);
             if (response.QuerysetQueries) {
               querySearchResult = response.QuerysetQueries.QuerySetQuery;
-              querySearchResult.forEach((querySet, index) => {
+              querySearchResult.forEach(querySet => {
                 querySearchAutoComplete.push({
                   id: querySet.Id,
                   text: querySet.Name,
@@ -237,7 +247,7 @@ router.post(
             res.json(querySearchAutoComplete);
           })
           .catch(err => {
-            console.log(
+            logger.error(
               'Error occured while querying : ' + JSON.stringify(err)
             );
             res.status(500).send({
@@ -247,7 +257,7 @@ router.post(
           });
       })
       .catch(err => {
-        console.log('Cluster not reachable: ' + JSON.stringify(err));
+        logger.error('Cluster not reachable: ' + JSON.stringify(err));
         res.status(500).send({
           success: 'false',
           message: 'Search failed. Please check if the cluster is running.',
@@ -336,21 +346,20 @@ router.get('/getClusterWhitelist', function (req, res) {
   try {
     res.json(ClusterWhitelist.clusters);
   } catch (err) {
-    console.log('err', err);
+    logger.error('err', err);
   }
 });
 router.get('/getCluster', function (req, res) {
-  console.log('in /getCluster');
   try {
     Cluster.findOne({ where: { id: req.query.cluster_id } })
       .then(function (clusters) {
         res.json(clusters);
       })
       .catch(function (err) {
-        console.log(err);
+        logger.error(err);
       });
   } catch (err) {
-    console.log('err', err);
+    logger.error('err', err);
   }
 });
 router.post(
@@ -452,15 +461,17 @@ router.post(
   }
 );
 router.post('/removecluster', function (req, res) {
-  console.log(req.body.clusterIdsToDelete);
+  logger.info(`Deleting clusters: ${req.body.clusterIdsToDelete}`);
   try {
     Cluster.destroy(
       { where: { id: req.body.clusterIdsToDelete } },
-      function (err) {}
+      function (err) {
+        logger.error(err);
+      }
     );
     return res.status(200).send({ result: 'success' });
   } catch (err) {
-    console.log('err', err);
+    logger.error('err', err);
   }
 });
 router.get(
@@ -490,7 +501,7 @@ router.get(
         : await hpccUtil.fileInfo(fileName, clusterid);
       res.status(200).json(data);
     } catch (error) {
-      console.log('error', error);
+      logger.error(error);
       return res.status(500).send('Error occurred while getting file details');
     }
   }
@@ -522,7 +533,7 @@ router.get(
       details.Stat ? delete details.Stat : null;
       res.status(200).json(details);
     } catch (error) {
-      console.log('error', error);
+      logger.error(error);
       return res.status(500).send('Error occurred while getting file details');
     }
   }
@@ -563,7 +574,7 @@ router.get(
               res.json(indexInfo);
             })
             .catch(err => {
-              console.log('err', err);
+              logger.error(err);
               return res
                 .status(500)
                 .send('Error occured while getting file details');
@@ -571,7 +582,7 @@ router.get(
         }
       });
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
       return res.status(500).send('Error occured while getting file details');
     }
   }
@@ -620,7 +631,7 @@ function getIndexColumns(cluster, indexName) {
       return columns;
     })
     .catch(function (err) {
-      console.log('error occured: ' + err);
+      logger.error(err);
     });
 }
 router.get(
@@ -641,11 +652,16 @@ router.get(
     try {
       hpccUtil.getCluster(req.query.clusterid).then(function (cluster) {
         let clusterAuth = hpccUtil.getClusterAuth(cluster);
-        let wuService = new hpccJSComms.WorkunitsService({
-          baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-          userID: clusterAuth ? clusterAuth.user : '',
-          password: clusterAuth ? clusterAuth.password : '',
-        });
+        let wuService = new hpccJSComms.WorkunitsService(
+          getClusterOptions(
+            {
+              baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+              userID: clusterAuth ? clusterAuth.user : '',
+              password: clusterAuth ? clusterAuth.password : '',
+            },
+            cluster.allowSelfSigned
+          )
+        );
         wuService
           .WUResult({
             LogicalName: req.query.fileName,
@@ -671,14 +687,14 @@ router.get(
             }
           })
           .catch(err => {
-            console.log('err', err);
+            logger.error(err);
             return res
               .status(500)
               .send('Error occured while getting file data');
           });
       });
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
       return res.status(500).send('Error occured while getting file data');
     }
   }
@@ -700,7 +716,7 @@ router.get('/getFileProfile', function (req, res) {
         },
         function (err, response, body) {
           if (err) {
-            console.log('ERROR - ', err);
+            logger.error(err);
             return response.status(500).send('Error');
           } else {
             var result = JSON.parse(body);
@@ -715,7 +731,7 @@ router.get('/getFileProfile', function (req, res) {
               var rows = result.WUResultResponse.Result.Row,
                 indexInfo = {};
               if (rows.length > 0) {
-                rows.forEach(function (row, index) {
+                rows.forEach(function (row) {
                   Object.keys(row).forEach(function (key) {
                     if (row[key] instanceof Object) {
                       if (row[key].Row) {
@@ -734,7 +750,7 @@ router.get('/getFileProfile', function (req, res) {
       );
     });
   } catch (err) {
-    console.log('err', err);
+    logger.error(err);
   }
 });
 router.get('/getFileProfileHTML', function (req, res) {
@@ -760,7 +776,7 @@ router.get('/getFileProfileHTML', function (req, res) {
         },
         function (err, response, body) {
           if (err) {
-            console.log('ERROR - ', err);
+            logger.error(err);
             return response.status(500).send('Error');
           } else {
             var result = JSON.parse(body);
@@ -778,14 +794,15 @@ router.get('/getFileProfileHTML', function (req, res) {
                   url.replace('./report', 'report')
                 );
               });
-            console.log("URL's: " + JSON.stringify(filterdUrl));
+            // eslint-disable-next-line quotes
+            logger.info("URL's: " + JSON.stringify(filterdUrl));
             res.json(filterdUrl);
           }
         }
       );
     });
   } catch (err) {
-    console.log('err', err);
+    logger.error(err);
   }
 });
 router.get(
@@ -822,7 +839,7 @@ router.get(
             res.json(queryInfo);
           })
           .catch(err => {
-            console.log('err', err);
+            logger.error(err);
             return res
               .status(500)
               .send('Error occured while getting file details');
@@ -907,7 +924,7 @@ router.get(
               res.json(jobInfo);
             })
             .catch(err => {
-              console.log('err', err);
+              logger.error(err);
               return res
                 .status(500)
                 .send('Error occured while getting file details');
@@ -915,7 +932,7 @@ router.get(
         }
       });
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
     }
   }
 );
@@ -946,7 +963,7 @@ router.get(
             },
             function (err, response, body) {
               if (err) {
-                console.log('ERROR - ', err);
+                logger.error(err);
                 return response.status(500).send('Error');
               } else {
                 let result = JSON.parse(body);
@@ -984,7 +1001,7 @@ router.get(
           res.status(500).json({ success: false, message: err });
         });
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
       return res.status(500).send('Error occured while getting dropzones');
     }
   }
@@ -1032,7 +1049,7 @@ router.get(
             },
             function (err, response, body) {
               if (err) {
-                console.log('ERROR - ', err);
+                logger.error(err);
                 return response.status(500).send('Error');
               } else {
                 let result = JSON.parse(body);
@@ -1071,7 +1088,7 @@ router.get(
           res.status(500).json({ success: false, message: err });
         });
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
       return res.status(500).send('Error occured while getting dropzones');
     }
   }
@@ -1097,7 +1114,7 @@ router.get(
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
-    console.log('Cluster id etc', clusterId, Netaddr, Path, DirectoryOnly);
+    logger.info('Cluster id etc', clusterId, Netaddr, Path, DirectoryOnly);
     try {
       const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
 
@@ -1136,7 +1153,7 @@ router.get(
             }
           }
         }
-        console.log(assets);
+        logger.info(assets);
       }
       const directoryDetails = {
         fileCount,
@@ -1146,7 +1163,7 @@ router.get(
       };
       res.status(200).json(directoryDetails);
     } catch (err) {
-      console.log(err);
+      logger.error(err);
       res.status(503).json({ success: false, message: err.message });
     }
   }
@@ -1199,7 +1216,7 @@ router.post(
           },
           function (err, response, body) {
             if (err) {
-              console.log('ERROR - ', err);
+              logger.error(err);
               return response
                 .status(500)
                 .send('Error occured during dropzone file search');
@@ -1223,7 +1240,7 @@ router.post(
         );
       });
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
       return response
         .status(500)
         .send('Error occured during dropzone file search');
@@ -1254,7 +1271,7 @@ router.get(
 
       res.status(200).json(details);
     } catch (error) {
-      console.log('error', error);
+      logger.error(error);
       return res.status(500).send('Error occurred while getting file details');
     }
   }
@@ -1275,53 +1292,51 @@ router.post(
         where: { id: req.body.jobId },
         attributes: { exclude: ['assetId'] },
       });
-      let cluster = hpccUtil
-        .getCluster(job.cluster_id)
-        .then(async function (cluster) {
-          let sprayPayload = {
-            destGroup: 'mythor',
-            DFUServerQueue: 'dfuserver_queue',
-            namePrefix: job.sprayedFileScope,
-            targetName: job.sprayFileName,
-            overwrite: 'on',
-            sourceIP: job.sprayDropZone,
-            sourcePath: '/var/lib/HPCCSystems/mydropzone/' + job.sprayFileName,
-            destLogicalName: job.sprayedFileScope + '::' + job.sprayFileName,
-            rawxml_: 1,
-            sourceFormat: 1,
-            sourceCsvSeparate: ',',
-            sourceCsvTerminate: '\n,\r\n',
-            sourceCsvQuote: '"',
-          };
-          console.log(sprayPayload);
-          request.post(
-            {
-              url:
-                cluster.thor_host +
-                ':' +
-                cluster.thor_port +
-                '/FileSpray/SprayVariable.json',
-              auth: hpccUtil.getClusterAuth(cluster),
-              headers: { 'content-type': 'application/x-www-form-urlencoded' },
-              formData: sprayPayload,
-              resolveWithFullResponse: true,
-              agent: https.globalAgent,
-            },
-            function (err, response, body) {
-              if (err) {
-                console.log('ERROR - ', err);
-                return response
-                  .status(500)
-                  .send('Error occured during dropzone file search');
-              } else {
-                var result = JSON.parse(body);
-                return res.status(200).send(result);
-              }
+      hpccUtil.getCluster(job.cluster_id).then(async function (cluster) {
+        let sprayPayload = {
+          destGroup: 'mythor',
+          DFUServerQueue: 'dfuserver_queue',
+          namePrefix: job.sprayedFileScope,
+          targetName: job.sprayFileName,
+          overwrite: 'on',
+          sourceIP: job.sprayDropZone,
+          sourcePath: '/var/lib/HPCCSystems/mydropzone/' + job.sprayFileName,
+          destLogicalName: job.sprayedFileScope + '::' + job.sprayFileName,
+          rawxml_: 1,
+          sourceFormat: 1,
+          sourceCsvSeparate: ',',
+          sourceCsvTerminate: '\n,\r\n',
+          sourceCsvQuote: '"',
+        };
+        logger.info(sprayPayload);
+        request.post(
+          {
+            url:
+              cluster.thor_host +
+              ':' +
+              cluster.thor_port +
+              '/FileSpray/SprayVariable.json',
+            auth: hpccUtil.getClusterAuth(cluster),
+            headers: { 'content-type': 'application/x-www-form-urlencoded' },
+            formData: sprayPayload,
+            resolveWithFullResponse: true,
+            agent: https.globalAgent,
+          },
+          function (err, response, body) {
+            if (err) {
+              logger.error(err);
+              return response
+                .status(500)
+                .send('Error occured during dropzone file search');
+            } else {
+              var result = JSON.parse(body);
+              return res.status(200).send(result);
             }
-          );
-        });
+          }
+        );
+      });
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
       return response
         .status(500)
         .send('Error occured during dropzone file search');
@@ -1386,7 +1401,7 @@ io.of('/landingZoneFileUpload').on('connection', socket => {
       });
       fs.unlink(filePath, err => {
         if (err) {
-          console.log(`Failed to remove ${sanitizedFileName} from FS - `, err);
+          logger.error(`Failed to remove ${sanitizedFileName} from FS - `, err);
         }
       });
       return;
@@ -1412,7 +1427,8 @@ io.of('/landingZoneFileUpload').on('connection', socket => {
         function (err, httpResponse, body) {
           const response = JSON.parse(body);
           if (err) {
-            return console.log(err);
+            logger.error(err);
+            return;
           }
           if (response.Exceptions) {
             socket.emit('file-upload-response', {
@@ -1433,7 +1449,7 @@ io.of('/landingZoneFileUpload').on('connection', socket => {
           }
           fs.unlink(filePath, err => {
             if (err) {
-              console.log(
+              logger.error(
                 `Failed to remove ${sanitizedFileName} from FS - `,
                 err
               );
@@ -1442,37 +1458,9 @@ io.of('/landingZoneFileUpload').on('connection', socket => {
         }
       );
     } catch (err) {
-      console.log(err);
+      logger.error(err);
     }
   };
-  //When whole file is supplied by the client
-  socket.on('upload-file', message => {
-    let { id, fileName, data } = message;
-    const sanitizedFileName = sanitize(fileName);
-    const filePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      'tempFiles',
-      sanitizedFileName
-    );
-    fs.writeFile(filePath, data, function (err) {
-      if (err) {
-        console.log(
-          `Error occured while saving ${sanitizedFileName} in FS`,
-          err
-        );
-        socket.emit('file-upload-response', {
-          fileName,
-          id,
-          success: false,
-          message: 'Unknown error occured during upload',
-        });
-      } else {
-        upload(cluster, destinationFolder, id, sanitizedFileName);
-      }
-    });
-  });
   //Ask for more
   const supplySlice = file => {
     if (file.fileSize - file.received <= 0) {
@@ -1482,7 +1470,7 @@ io.of('/landingZoneFileUpload').on('connection', socket => {
       const filePath = path.join(__dirname, '..', '..', 'tempFiles', fileName);
       fs.writeFile(filePath, fileBuffer, function (err) {
         if (err) {
-          console.log('Error writing file to the FS', error);
+          logger.error('Error writing file to the FS', error);
           socket.emit('file-upload-response', {
             fileName,
             success: false,
@@ -1539,12 +1527,15 @@ router.get(
       //If cluster id is valid ->      const { clusterId } = req.query;
       //Get cluster details
       let cluster = await hpccUtil.getCluster(clusterId);
-      const { thor_host, thor_port, username, hash } = cluster;
-      const clusterDetails = {
-        baseUrl: `${thor_host}:${thor_port}`,
-        userID: username || '',
-        password: hash || '',
-      };
+      const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
+      const clusterDetails = getClusterOptions(
+        {
+          baseUrl: `${thor_host}:${thor_port}`,
+          userID: username || '',
+          password: hash || '',
+        },
+        allowSelfSigned
+      );
       const topologyService = new hpccJSComms.TopologyService(clusterDetails);
       const tpServiceQuery = await topologyService.TpServiceQuery({
         Type: 'ALLSERVICES',
