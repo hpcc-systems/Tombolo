@@ -126,6 +126,7 @@ function JobMonitoring() {
         ...selectedMonitoring?.metaData?.asrSpecificMetaData,
         ...selectedMonitoring?.metaData?.notificationMetaData,
         requireComplete: selectedMonitoring.metaData.requireComplete,
+        maxExecutionTime: selectedMonitoring.metaData.maxExecutionTime,
         expectedCompletionTime,
         expectedStartTime,
       });
@@ -195,7 +196,7 @@ function JobMonitoring() {
       try {
         const productCategories = await getProductCategories({ domainId: selectedDomain });
         const formattedProductCategories = productCategories.map((c) => ({
-          label: `${c.name} (${c.shortCode})`,
+          label: `${c.shortCode}  - ${c.name}`,
           value: c.id,
         }));
         setProductCategories(formattedProductCategories);
@@ -410,6 +411,8 @@ function JobMonitoring() {
       delete allInputs.expectedCompletionTime;
       metaData.expectedStartTime = expectedStartTime.format('HH:mm');
       delete allInputs.expectedStartTime;
+      metaData.maxExecutionTime = allInputs.maxExecutionTime;
+      delete allInputs.maxExecutionTime;
 
       // Add schedule to metaData if entered,
       // Note: cluster wide monitoring should not have schedule because work units can have varying schedules
@@ -567,6 +570,11 @@ function JobMonitoring() {
           const requireComplete = form.getFieldValue('requireComplete');
           updatedData.metaData.requireComplete = requireComplete;
         }
+
+        if (touchedMetaDataFields.includes('maxExecutionTime')) {
+          const maxExecutionTime = form.getFieldValue('maxExecutionTime');
+          updatedData.metaData.maxExecutionTime = maxExecutionTime;
+        }
       }
 
       // update selected monitoring with notificationMetaData fields that are nested inside metaData
@@ -688,7 +696,7 @@ function JobMonitoring() {
         setSelectedCluster={setSelectedCluster}
         resetStates={resetStates}
         domains={domains}
-        productCategories={allProductCategories}
+        productCategories={productCategories}
         setSelectedDomain={setSelectedDomain}
         activeTab={activeTab}
         setActiveTab={setActiveTab}

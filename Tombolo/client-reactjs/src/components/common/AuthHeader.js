@@ -4,7 +4,7 @@ import { authActions } from '../../redux/actions/Auth';
 import { message } from 'antd';
 import { getRoleNameArray } from './AuthUtil';
 
-const csrfHeaderName = process.env.NODE_ENV === 'production' ? '__Host-prod.x-csrf-token' : 'x-csrf-token';
+const csrfHeaderName = 'x-csrf-token';
 
 export function handleError(response) {
   message.config({ top: 130 });

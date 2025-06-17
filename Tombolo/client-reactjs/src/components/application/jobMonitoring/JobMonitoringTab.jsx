@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import { Card, Form, TimePicker, Row, Col, Select } from 'antd';
+import { Card, Form, TimePicker, Row, Col, Select, InputNumber } from 'antd';
 
 import './jobMonitoring.css';
 import SchedulePicker from './SchedulePicker';
-import AsrSpecificMonitoringDetails from './AsrSpecificMonitoringDetails';
 
 const { Option } = Select;
 
@@ -21,9 +19,6 @@ function JobMonitoringTab({
   erroneousScheduling,
   monitoringScope,
   selectedCluster,
-  domains,
-  productCategories,
-  setSelectedDomain,
 }) {
   const [clusterOffset, setClusterOffset] = useState(null);
   const isFirstRender = useRef(true);
@@ -66,19 +61,6 @@ function JobMonitoringTab({
       disabledMinutes: () => [], // No minutes are disabled
     };
   };
-
-  //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      integrations,
-    },
-  } = useSelector((state) => state);
-
-  const asrIntegration = integrations.some(
-    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
-  );
-
   // Custom validation rule to compare times
   // Higher-order validation function to compare times with additional parameters
   const validateCompletionTime = (runWindow) => (_, value) => {
@@ -114,15 +96,6 @@ function JobMonitoringTab({
       )}
 
       <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
-        {asrIntegration && (
-          <AsrSpecificMonitoringDetails
-            form={form}
-            clusterOffset={clusterOffset}
-            domains={domains}
-            productCategories={productCategories}
-            setSelectedDomain={setSelectedDomain}
-          />
-        )}
         <Form form={form} layout="vertical">
           {/* Always render below fields*/}
 
@@ -144,7 +117,9 @@ function JobMonitoringTab({
                   style={{ width: '100%' }}
                   format="HH:mm"
                   suffixIcon={clusterOffset}
-                  addon={() => (intermittentScheduling?.runWindow === 'overnight' ? <div>Previous Day</div> : null)}
+                  renderExtraFooter={() =>
+                    intermittentScheduling?.runWindow === 'overnight' ? <div>Previous Day</div> : null
+                  }
                   showNow={false}
                 />
               </Form.Item>
@@ -166,14 +141,16 @@ function JobMonitoringTab({
                   style={{ width: '100%' }}
                   format="HH:mm"
                   suffixIcon={clusterOffset}
+                  renderExtraFooter={() =>
+                    intermittentScheduling?.runWindow === 'overnight' ? <div>Current Day</div> : null
+                  }
                   showNow={false}
-                  addon={() => (intermittentScheduling?.runWindow === 'overnight' ? <div>Current Day</div> : null)}
                 />
               </Form.Item>
             </Col>
           </Row>
 
-          {!asrIntegration && (
+          <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 label="Require Complete"
@@ -189,7 +166,20 @@ function JobMonitoringTab({
                 </Select>
               </Form.Item>
             </Col>
-          )}
+
+            <Col span={12}>
+              <Form.Item
+                label=" Max execution time (in minutes)"
+                name="maxExecutionTime"
+                rules={[{ required: false, message: 'Please select one option' }]}>
+                <InputNumber
+                  type="number"
+                  style={{ width: '100%' }}
+                  min={1}
+                  placeholder="Max execution time"></InputNumber>
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Card>
     </div>
