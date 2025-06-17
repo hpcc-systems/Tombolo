@@ -1,4 +1,5 @@
 var request = require('request');
+const https = require('https');
 const path = require('path');
 var requestPromise = require('request-promise');
 var models = require('../models');
@@ -126,11 +127,16 @@ exports.indexInfo = (clusterId, indexName) => {
     try {
       module.exports.getCluster(clusterId).then(function (cluster) {
         let clusterAuth = module.exports.getClusterAuth(cluster);
-        let dfuService = new hpccJSComms.DFUService({
-          baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-          userID: clusterAuth ? clusterAuth.user : '',
-          password: clusterAuth ? clusterAuth.password : '',
-        });
+        let dfuService = new hpccJSComms.DFUService(
+          getClusterOptions(
+            {
+              baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+              userID: clusterAuth ? clusterAuth.user : '',
+              password: clusterAuth ? clusterAuth.password : '',
+            },
+            cluster.allowSelfSigned
+          )
+        );
         dfuService.DFUInfo({ Name: indexName }).then(response => {
           if (response.FileDetail) {
             let indexInfo = {};
@@ -158,15 +164,6 @@ exports.indexInfo = (clusterId, indexName) => {
   });
 };
 
-const getConnection = async clusterId => {
-  const cluster = await this.getCluster(clusterId);
-  return {
-    baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-    userID: cluster.username || '',
-    password: cluster.hash || '',
-  };
-};
-
 exports.getDirectories = async ({
   clusterId,
   Netaddr,
@@ -175,7 +172,15 @@ exports.getDirectories = async ({
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const clusterDetails = await getConnection(clusterId);
+      const cluster = await this.getCluster(clusterId);
+      const clusterDetails = await getClusterOptions(
+        {
+          baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+          userID: cluster.username || '',
+          password: cluster.hash || '',
+        },
+        cluster.allowSelfSigned
+      );
       const fileSprayService = new hpccJSComms.FileSprayService(clusterDetails);
 
       const fileList = await fileSprayService.FileList({
@@ -224,6 +229,7 @@ exports.executeSprayJob = job => {
             headers: { 'content-type': 'application/x-www-form-urlencoded' },
             formData: sprayPayload,
             resolveWithFullResponse: true,
+            agent: https.globalAgent,
           },
           function (err, response, body) {
             if (err) {
@@ -248,11 +254,16 @@ exports.queryInfo = (clusterId, queryName) => {
     return new Promise((resolve, reject) => {
       module.exports.getCluster(clusterId).then(function (cluster) {
         let clusterAuth = module.exports.getClusterAuth(cluster);
-        let eclService = new hpccJSComms.EclService({
-          baseUrl: cluster.roxie_host + ':' + cluster.roxie_port,
-          userID: clusterAuth ? clusterAuth.user : '',
-          password: clusterAuth ? clusterAuth.password : '',
-        });
+        let eclService = new hpccJSComms.EclService(
+          getClusterOptions(
+            {
+              baseUrl: cluster.roxie_host + ':' + cluster.roxie_port,
+              userID: clusterAuth ? clusterAuth.user : '',
+              password: clusterAuth ? clusterAuth.password : '',
+            },
+            cluster.allowSelfSigned
+          )
+        );
         eclService
           .requestJson('roxie', queryName)
           .then(response => {
@@ -395,13 +406,17 @@ exports.getJobWuDetails = async (
       });
       if (!clusterCredentials) throw new Error('Failed to get dataflow creds');
 
-      const { thor_host, thor_port } = clusterCredentials.cluster.dataValues;
+      const { thor_host, thor_port, allowSelfSigned } =
+        clusterCredentials.cluster.dataValues;
 
-      const connectionSettings = {
-        baseUrl: thor_host + ':' + thor_port,
-        userID: clusterCredentials.cluster_username,
-        password: decryptString(clusterCredentials.cluster_hash),
-      };
+      const connectionSettings = getClusterOptions(
+        {
+          baseUrl: thor_host + ':' + thor_port,
+          userID: clusterCredentials.cluster_username,
+          password: decryptString(clusterCredentials.cluster_hash),
+        },
+        allowSelfSigned
+      );
 
       wuService = new hpccJSComms.WorkunitsService(connectionSettings);
     }
@@ -468,6 +483,7 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
             : module.exports.getClusterAuth(cluster),
           body: JSON.stringify(body),
           headers: { 'content-type': 'application/json' },
+          agent: https.globalAgent,
         },
         function (err, response, body) {
           if (err) {
@@ -650,6 +666,7 @@ exports.isClusterReachable = (clusterHost, port, username, password) => {
         url: clusterHost + ':' + port,
         auth: auth,
         timeout: 3000,
+        agent: https.globalAgent,
       },
       function (error, response, body) {
         if (!error && response.statusCode === 200) {
@@ -679,13 +696,16 @@ exports.updateCommonData = (objArray, fields) => {
 
 exports.getWorkunitsService = async clusterId => {
   const cluster = await module.exports.getCluster(clusterId);
-  const { hash, username } = cluster;
+  const { hash, username, allowSelfSigned, thor_host, thor_port } = cluster;
 
-  const connectionSettings = {
-    baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-    userID: username ? username : '',
-    password: hash ? hash : '',
-  };
+  const connectionSettings = getClusterOptions(
+    {
+      baseUrl: thor_host + ':' + thor_port,
+      userID: username ? username : '',
+      password: hash ? hash : '',
+    },
+    allowSelfSigned
+  );
 
   return new hpccJSComms.WorkunitsService(connectionSettings);
 };
@@ -694,11 +714,14 @@ exports.getDFUService = async clusterId => {
   const cluster = await module.exports.getCluster(clusterId);
   const clusterAuth = module.exports.getClusterAuth(cluster);
 
-  const connectionSettings = {
-    baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-    userID: clusterAuth ? clusterAuth.user : '',
-    password: clusterAuth ? clusterAuth.password : '',
-  };
+  const connectionSettings = getClusterOptions(
+    {
+      baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+      userID: clusterAuth ? clusterAuth.user : '',
+      password: clusterAuth ? clusterAuth.password : '',
+    },
+    cluster.allowSelfSigned
+  );
 
   return new hpccJSComms.DFUService(connectionSettings);
 };

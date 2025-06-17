@@ -45,11 +45,16 @@ const addCluster = async (req, res) => {
     // Get default cluster (engine) if exists - if not pick the first one
     const {
       TpLogicalClusters: { TpLogicalCluster },
-    } = await new TopologyService({
-      baseUrl,
-      userID,
-      password,
-    }).TpLogicalClusterQuery();
+    } = await new TopologyService(
+      getClusterOptions(
+        {
+          baseUrl,
+          userID,
+          password,
+        },
+        allowSelfSigned
+      )
+    ).TpLogicalClusterQuery();
 
     let defaultEngine = null;
     if (TpLogicalCluster.length > 0) {
@@ -174,7 +179,16 @@ const addClusterWithProgress = async (req, res) => {
       success: true,
       message: 'Authenticating cluster ..',
     });
-    await new AccountService({ baseUrl, userID, password }).MyAccount();
+    await new AccountService(
+      getClusterOptions(
+        {
+          baseUrl,
+          userID,
+          password,
+        },
+        allowSelfSigned
+      )
+    ).MyAccount();
     sendUpdate({
       step: 1,
       success: true,
@@ -189,11 +203,16 @@ const addClusterWithProgress = async (req, res) => {
     });
     const {
       TpLogicalClusters: { TpLogicalCluster },
-    } = await new TopologyService({
-      baseUrl,
-      userID,
-      password,
-    }).TpLogicalClusterQuery();
+    } = await new TopologyService(
+      getClusterOptions(
+        {
+          baseUrl,
+          userID,
+          password,
+        },
+        allowSelfSigned
+      )
+    ).TpLogicalClusterQuery();
 
     let defaultEngine = null;
     if (TpLogicalCluster.length > 0) {
@@ -229,7 +248,16 @@ const addClusterWithProgress = async (req, res) => {
     const eclCode =
       'IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);';
     // Create timezone offset in default engine
-    const wus = new WorkunitsService({ baseUrl, userID, password });
+    const wus = new WorkunitsService(
+      getClusterOptions(
+        {
+          baseUrl,
+          userID,
+          password,
+        },
+        allowSelfSigned
+      )
+    );
     const {
       Workunit: { Wuid },
     } = await wus.WUCreateAndUpdate({
@@ -495,11 +523,14 @@ const clusterUsage = async (req, res) => {
     //Get cluster details
     let cluster = await hpccUtil.getCluster(id); // Checks if cluster is reachable and decrypts cluster credentials if any
     const { thor_host, thor_port, username, hash } = cluster;
-    const clusterDetails = {
-      baseUrl: `${thor_host}:${thor_port}`,
-      userID: username || '',
-      password: hash || '',
-    };
+    const clusterDetails = getClusterOptions(
+      {
+        baseUrl: `${thor_host}:${thor_port}`,
+        userID: username || '',
+        password: hash || '',
+      },
+      allowSelfSigned
+    );
 
     //Use JS comms library to fetch current usage
     const machineService = new hpccJSComms.MachineService(clusterDetails);
