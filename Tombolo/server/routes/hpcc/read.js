@@ -17,15 +17,17 @@ let hpccJSComms = require('@hpcc-js/comms');
 const { body, query, validationResult } = require('express-validator');
 
 let lodash = require('lodash');
-const { io } = require('../../server');
 const fs = require('fs');
 const { response } = require('express');
-const userService = require('../user/userservice');
 const path = require('path');
-var sanitize = require('sanitize-filename');
+
 const logger = require('../../config/logger');
 const moment = require('moment');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
+
+// const userService = require('../user/userservice');
+// var sanitize = require('sanitize-filename');
+// const { io } = require('../../server');
 
 let ClusterWhitelist = { clusters: [] };
 
@@ -1343,174 +1345,6 @@ router.post(
     }
   }
 );
-// Drop Zone file upload namespace
-io.of('/landingZoneFileUpload').on('connection', socket => {
-  if (socket.handshake.auth) {
-    userService
-      .verifyToken(socket.handshake.auth.token)
-      .then(response => {
-        return response;
-      })
-      .catch(err => {
-        socket.emit('error', err);
-        socket.disconnect();
-      });
-  }
-  let cluster, destinationFolder, machine;
-  //Receive cluster and destination folder info when client clicks upload
-  socket.on('start-upload', message => {
-    cluster = message.cluster;
-    destinationFolder = message.pathToAsset;
-    machine = message.machine;
-  });
-
-  //check if cluster exists in db before continuing to verify input
-  let clusterExists = Cluster.findOne({ where: { id: cluster.id } });
-  if (!clusterExists) {
-    socket.emit('file-upload-response', {
-      id: null,
-      fileName: null,
-      success: false,
-      message: 'Cluster does not exist',
-    });
-    return;
-  }
-
-  //Upload File
-  const upload = async (cluster, destinationFolder, id, fileName) => {
-    //Check file ext
-    const acceptableFileTypes = ['xls', 'xlsm', 'xlsx', 'txt', 'json', 'csv'];
-    const sanitizedFileName = sanitize(fileName);
-    const filePath = path.join(
-      __dirname,
-      '..',
-      '..',
-      'tempFiles',
-      sanitizedFileName
-    );
-    let fileExtension = fileName
-      .substr(fileName.lastIndexOf('.') + 1)
-      .toLowerCase();
-    if (!acceptableFileTypes.includes(fileExtension)) {
-      socket.emit('file-upload-response', {
-        id,
-        fileName,
-        success: false,
-        message:
-          'Invalid file type, Acceptable filetypes are xls, xlsm, xlsx, txt, json and csv',
-      });
-      fs.unlink(filePath, err => {
-        if (err) {
-          logger.error(`Failed to remove ${sanitizedFileName} from FS - `, err);
-        }
-      });
-      return;
-    }
-    try {
-      const selectedCluster = await hpccUtil.getCluster(cluster.id);
-      //codeql fix 1
-      let url = `${cluster.thor_host}:${cluster.thor_port}/FileSpray/UploadFile.json?upload_&rawxml_=1&NetAddress=${machine}&OS=2&Path=${destinationFolder}`;
-      request(
-        {
-          url: url,
-          method: 'POST',
-          auth: hpccUtil.getClusterAuth(selectedCluster),
-          formData: {
-            'UploadedFiles[]': {
-              value: fs.createReadStream(filePath),
-              options: {
-                filename: fileName,
-              },
-            },
-          },
-        },
-        function (err, httpResponse, body) {
-          const response = JSON.parse(body);
-          if (err) {
-            logger.error(err);
-            return;
-          }
-          if (response.Exceptions) {
-            socket.emit('file-upload-response', {
-              id,
-              fileName,
-              success: false,
-              message: response.Exceptions.Exception[0].Message,
-            });
-          } else {
-            socket.emit('file-upload-response', {
-              id,
-              fileName,
-              success: true,
-              message:
-                response.UploadFilesResponse.UploadFileResults
-                  .DFUActionResult[0].Result,
-            });
-          }
-          fs.unlink(filePath, err => {
-            if (err) {
-              logger.error(
-                `Failed to remove ${sanitizedFileName} from FS - `,
-                err
-              );
-            }
-          });
-        }
-      );
-    } catch (err) {
-      logger.error(err);
-    }
-  };
-  //Ask for more
-  const supplySlice = file => {
-    if (file.fileSize - file.received <= 0) {
-      let fileData = file.data.join('');
-      let fileBuffer = Buffer.from(fileData);
-      const fileName = sanitize(file.fileName);
-      const filePath = path.join(__dirname, '..', '..', 'tempFiles', fileName);
-      fs.writeFile(filePath, fileBuffer, function (err) {
-        if (err) {
-          logger.error('Error writing file to the FS', error);
-          socket.emit('file-upload-response', {
-            fileName,
-            success: false,
-            message: err,
-          });
-        } else {
-          upload(cluster, destinationFolder, file.id, fileName);
-        }
-      });
-    } else if (file.fileSize - file.received >= 100000) {
-      socket.emit('supply-slice', {
-        id: file.id,
-        chunkStart: file.received,
-        chunkSize: 100000,
-      });
-    } else if (file.fileSize - file.received < 100000) {
-      socket.emit('supply-slice', {
-        id: file.id,
-        chunkStart: file.received,
-        chunkSize: file.fileSize - file.received,
-      });
-    }
-  };
-  //when a slice of file is supplied by the client
-  let files = [{}];
-  socket.on('upload-slice', message => {
-    let { id, fileName, data, fileSize, chunkSize } = message;
-    let indexOfCurrentItem = files.findIndex(item => item.id === id);
-    if (indexOfCurrentItem < 0) {
-      files.push({ id, fileName, data: [data], fileSize, received: chunkSize });
-      let i = files.findIndex(item => item.id === id);
-      supplySlice(files[i]);
-    } else {
-      let i = files.findIndex(item => item.id === id);
-      files[i].data.push(data);
-      files[i].received = files[i].received + chunkSize;
-      supplySlice(files[i]);
-    }
-  });
-});
 router.get(
   '/clusterMetaData',
   [query('clusterId').isUUID(4).withMessage('Invalid cluster Id')],
