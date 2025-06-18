@@ -12,6 +12,7 @@ const logger = require('../config/logger');
 const models = require('../models');
 const { encryptString } = require('../utils/cipher.js');
 const CustomError = require('../utils/customError.js');
+const { getClusterOptions } = require('../utils/getClusterOptions');
 const hpccUtil = require('../utils/hpcc-util.js');
 const hpccJSComms = require('@hpcc-js/comms');
 const Cluster = models.cluster;
