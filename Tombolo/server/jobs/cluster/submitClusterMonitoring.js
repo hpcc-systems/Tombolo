@@ -1,17 +1,18 @@
-const { parentPort, workerData } = require("worker_threads");
-const axios = require("axios");
-const { v4: uuidv4 } = require("uuid");
+const { parentPort, workerData } = require('worker_threads');
+const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
 
-const hpccUtil = require("../../utils/hpcc-util");
-const hpccJSComms = require("@hpcc-js/comms")
-const models = require("../../models");
+const hpccUtil = require('../../utils/hpcc-util');
+const hpccJSComms = require('@hpcc-js/comms');
+const models = require('../../models');
 const ClusterMonitoring = models.clusterMonitoring;
 const monitoring_notifications = models.monitoring_notifications;
-const notificationTemplate = require("../messageCards/notificationTemplate")
-const { notify } = require("../../routes/notifications/email-notification");
-const logger = require("../../config/logger");
+const notificationTemplate = require('../messageCards/notificationTemplate');
+const { notify } = require('../../routes/notifications/email-notification');
+const { getClusterOptions } = require('../../utils/getClusterOptions');
+const logger = require('../../config/logger');
 
-const { log } = require("../workerUtils")(parentPort);
+const { log } = require('../workerUtils')(parentPort);
 
 (async () => {
   try {
@@ -36,28 +37,31 @@ const { log } = require("../workerUtils")(parentPort);
 
     // Get cluster details
     let cluster = await hpccUtil.getCluster(cluster_id);
-    const { thor_host, thor_port, username, hash } = cluster;
-    const clusterDetails = {
-      baseUrl: `${thor_host}:${thor_port}`,
-      userID: username || "",
-      password: hash || "",
-    };
+    const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
+    const clusterDetails = getClusterOptions(
+      {
+        baseUrl: `${thor_host}:${thor_port}`,
+        userID: username || '',
+        password: hash || '',
+      },
+      allowSelfSigned
+    );
 
     // Notification
     const notificationDetails = {
       facts: [],
       channels: [],
       engines: [],
-      notificationReason: "",
+      notificationReason: '',
     }; //TODO - Notification reason could be multiple, take that under consideration
 
     const notificationRecipients = {};
-    notifications.forEach((notification) => {
-      if (notification.channel === "eMail") {
+    notifications.forEach(notification => {
+      if (notification.channel === 'eMail') {
         notificationRecipients.email = notification.recipients;
       }
 
-      if (notification.channel === "msTeams") {
+      if (notification.channel === 'msTeams') {
         notificationRecipients.msTeams = notification.recipients;
       }
     });
@@ -69,25 +73,24 @@ const { log } = require("../workerUtils")(parentPort);
     //If user wants to monitor engine size
     if (monitorEngineSize) {
       const machineService = new hpccJSComms.MachineService(clusterDetails);
-      const targetClusterUsage = await machineService.GetTargetClusterUsageEx(
-        monitoring_engines
-      );
+      const targetClusterUsage =
+        await machineService.GetTargetClusterUsageEx(monitoring_engines);
 
       const clusterUsage = {};
       targetClusterUsage.forEach(function (details) {
         clusterUsage[details.Name] = details.max;
       });
 
-      monitorEngineSize.forEach((monitoring) => {
+      monitorEngineSize.forEach(monitoring => {
         let shouldNotify = false;
         if (monitoring.maxSize <= clusterUsage[monitoring.engine]) {
           const { notified, engine, maxSize } = monitoring;
-          notificationChannels.forEach((channel) => {
+          notificationChannels.forEach(channel => {
             if (!notified.includes(channel)) {
               shouldNotify = true;
               notificationDetails.engines.push(engine);
               notificationDetails.notificationReason =
-                "Maximum capacity reached";
+                'Maximum capacity reached';
               if (!notificationDetails.channels.includes(channel)) {
                 notificationDetails.channels.push(channel);
               }
@@ -95,13 +98,13 @@ const { log } = require("../workerUtils")(parentPort);
           });
 
           if (shouldNotify) {
-            notificationDetails.title = "Urgent : Storage Capacity Reached";
+            notificationDetails.title = 'Urgent : Storage Capacity Reached';
             notificationDetails.facts = [
               ...notificationDetails.facts,
               {
                 engine,
-                "Maximum Capacity": `${maxSize}%`,
-                "Actual Size": `${clusterUsage[monitoring.engine]}%`,
+                'Maximum Capacity': `${maxSize}%`,
+                'Actual Size': `${clusterUsage[monitoring.engine]}%`,
               },
             ];
           }
@@ -111,12 +114,12 @@ const { log } = require("../workerUtils")(parentPort);
 
     //Once notification sent, record on notification table
     const sentNotifications = [];
-    
+
     // Notify via email
     if (
       notificationDetails.title &&
       notificationRecipients.email &&
-      notificationDetails.channels.includes("email")
+      notificationDetails.channels.includes('email')
     ) {
       try {
         const { facts, title } = notificationDetails;
@@ -134,9 +137,9 @@ const { log } = require("../workerUtils")(parentPort);
         logger.verbose(notificationResponse);
 
         if (notificationResponse.accepted) {
-          monitorEngineSize.forEach((monitoring) => {
+          monitorEngineSize.forEach(monitoring => {
             if (notificationDetails.engines.includes(monitoring.engine)) {
-              monitoring.notified = [...monitoring.notified, "email"];
+              monitoring.notified = [...monitoring.notified, 'email'];
             }
           });
         }
@@ -145,14 +148,14 @@ const { log } = require("../workerUtils")(parentPort);
 
         sentNotifications.push({
           id: notification_id,
-          status: "notified",
+          status: 'notified',
           notifiedTo: notificationRecipients.email,
-          notification_channel: "eMail",
+          notification_channel: 'eMail',
           application_id,
           notification_reason: notificationDetails.title,
           clusterMonitoring_id,
           monitoring_id: clusterMonitoring_id,
-          monitoring_type: "cluster",
+          monitoring_type: 'cluster',
         });
       } catch (err) {
         logger.error(err);
@@ -163,74 +166,77 @@ const { log } = require("../workerUtils")(parentPort);
     if (
       notificationDetails.title &&
       notificationRecipients.msTeams &&
-      notificationDetails.channels.includes("msTeams")
+      notificationDetails.channels.includes('msTeams')
     ) {
-        const { facts, title } = notificationDetails;
-        const recipients = notificationRecipients.msTeams;
+      const { facts, title } = notificationDetails;
+      const recipients = notificationRecipients.msTeams;
 
-         for(let recipient of recipients){
-          try{
-             const notification_id = uuidv4();
-             const cardBody = notificationTemplate.clusterMonitoringMessageCard(
-               title,
-               [...facts],
-               notification_id
-             );
-             await axios.post(recipient, cardBody);
-             monitorEngineSize.forEach((monitoring) => {
-               if (notificationDetails.engines.includes(monitoring.engine)) {
-                 monitoring.notified = [...monitoring.notified, "msTeams"];
-               }
-             });
+      for (let recipient of recipients) {
+        try {
+          const notification_id = uuidv4();
+          const cardBody = notificationTemplate.clusterMonitoringMessageCard(
+            title,
+            [...facts],
+            notification_id
+          );
+          await axios.post(recipient, cardBody);
+          monitorEngineSize.forEach(monitoring => {
+            if (notificationDetails.engines.includes(monitoring.engine)) {
+              monitoring.notified = [...monitoring.notified, 'msTeams'];
+            }
+          });
 
-            sentNotifications.push({
-              id: notification_id,
-              status: "notified",
-              notifiedTo: notificationRecipients.email,
-              notification_channel: "msTeams",
-              application_id,
-              notification_reason: notificationDetails.title,
-              clusterMonitoring_id,
-              monitoring_id: clusterMonitoring_id,
-              monitoring_type: "cluster",
-            });
-          }catch(err){
-            logger.error(err)
-          }    
-         }
+          sentNotifications.push({
+            id: notification_id,
+            status: 'notified',
+            notifiedTo: notificationRecipients.email,
+            notification_channel: 'msTeams',
+            application_id,
+            notification_reason: notificationDetails.title,
+            clusterMonitoring_id,
+            monitoring_id: clusterMonitoring_id,
+            monitoring_type: 'cluster',
+          });
+        } catch (err) {
+          logger.error(err);
+        }
+      }
     }
 
     // Record notification and update cluster monitoring
     if (sentNotifications.length > 0) {
       await monitoring_notifications.bulkCreate(sentNotifications);
 
-    // Successfully notified channels
-    sentNotifications.forEach(notification =>{
-      monitorEngineSize.forEach(monitoring =>{
-       if (
-          notificationDetails.engines.includes(monitoring.engine) &&
-          !monitoring.notified.includes(notification.notification_channel)
-        ) {
-          monitoring.notified.push(notification.notification_channel);
-        }
-      })
-    })
-  }  
+      // Successfully notified channels
+      sentNotifications.forEach(notification => {
+        monitorEngineSize.forEach(monitoring => {
+          if (
+            notificationDetails.engines.includes(monitoring.engine) &&
+            !monitoring.notified.includes(notification.notification_channel)
+          ) {
+            monitoring.notified.push(notification.notification_channel);
+          }
+        });
+      });
+    }
 
-      const currentTimeStamp = Date.now();
-      await ClusterMonitoring.update(
-        {
-          ...monitoring_details,
-          metaData : { ...monitoring_details.metaData, last_monitored: currentTimeStamp },
+    const currentTimeStamp = Date.now();
+    await ClusterMonitoring.update(
+      {
+        ...monitoring_details,
+        metaData: {
+          ...monitoring_details.metaData,
+          last_monitored: currentTimeStamp,
         },
-        { where: { id: clusterMonitoring_id } }
-      );
+      },
+      { where: { id: clusterMonitoring_id } }
+    );
 
     // Reset notified flag
   } catch (err) {
-    log("error", "Error in Cluster Monitoring Poller", err);
+    log('error', 'Error in Cluster Monitoring Poller', err);
   } finally {
-    if (parentPort) parentPort.postMessage("done");
+    if (parentPort) parentPort.postMessage('done');
     else process.exit(0);
   }
 })();

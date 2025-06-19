@@ -9,6 +9,7 @@ const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
 const { github_repo_settings: GHprojects } = require('../models');
 let hpccJSComms = require('@hpcc-js/comms');
 const { decryptString } = require('./cipher');
+const { getClusterOptions } = require('../utils/getClusterOptions');
 
 const simpleGit = require('simple-git');
 const cp = require('child_process');
@@ -49,9 +50,9 @@ exports.fileInfo = async (fileName, clusterId) => {
       file_validations: [],
     };
   } catch (error) {
-    console.log('-error fileInfo---------------------------');
-    console.dir({ error }, { depth: null });
-    console.log('------------------------------------------');
+    logger.error('-error fileInfo---------------------------');
+    logger.error(error);
+    logger.error('------------------------------------------');
     throw error;
   }
 };
@@ -118,7 +119,7 @@ function getIndexColumns(cluster, indexName) {
       return columns;
     })
     .catch(function (err) {
-      console.log('error occured: ' + err);
+      logger.error('error occured: ' + err);
     });
 }
 
@@ -173,7 +174,7 @@ exports.getDirectories = async ({
   return new Promise(async (resolve, reject) => {
     try {
       const cluster = await this.getCluster(clusterId);
-      const clusterDetails = await getClusterOptions(
+      const clusterDetails = getClusterOptions(
         {
           baseUrl: cluster.thor_host + ':' + cluster.thor_port,
           userID: cluster.username || '',
@@ -217,7 +218,7 @@ exports.executeSprayJob = job => {
           sourceCsvTerminate: '\n,\r\n',
           sourceCsvQuote: '"',
         };
-        console.log(sprayPayload);
+        // logger.info(sprayPayload);
         request.post(
           {
             url:
@@ -233,7 +234,7 @@ exports.executeSprayJob = job => {
           },
           function (err, response, body) {
             if (err) {
-              console.log('ERROR - ', err);
+              logger.error('ERROR - ', err);
               reject('Error occured during dropzone file search');
             } else {
               var result = JSON.parse(body);
@@ -300,19 +301,19 @@ exports.queryInfo = (clusterId, queryName) => {
                 resolve(resultObj);
               })
               .catch(function (err) {
-                console.log('error occured: ' + err);
+                logger.error('error occured: ' + err);
                 reject(err);
               });
           })
           .catch(function (err) {
-            console.log('error occured: ' + err);
+            logger.error('error occured: ' + err);
             reject(err);
           });
       });
     });
   } catch (err) {
-    model;
-    console.log('err', err);
+    model; // TODO: What is this
+    logger.error('err', err);
   }
 };
 
@@ -381,9 +382,9 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
       return createJobInfoObj(wuInfo.Workunit, sourceFiles);
     }
   } catch (error) {
-    console.log('-error getJobInfo--------------------------');
-    console.dir({ error }, { depth: null });
-    console.log('------------------------------------------');
+    logger.error('-error getJobInfo--------------------------');
+    logger.error(error);
+    logger.error('------------------------------------------');
     throw error;
   }
 };
@@ -435,9 +436,9 @@ exports.getJobWuDetails = async (
       ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster, wuService }
       : null;
   } catch (error) {
-    console.log('-ERROR getJobWuDetails--------------------');
-    console.dir({ error }, { depth: null });
-    console.log('------------------------------------------');
+    logger.error('-ERROR getJobWuDetails--------------------');
+    logger.error(error);
+    logger.error('------------------------------------------');
     throw error;
   }
 };
@@ -456,7 +457,7 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
         password: decryptString(clusterCred.dataValues.cluster_hash),
       };
     } catch (error) {
-      console.log(error);
+      logger.error(error);
     }
   }
 
@@ -487,7 +488,7 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
         },
         function (err, response, body) {
           if (err) {
-            console.log('ERROR - ', err);
+            logger.error('ERROR - ', err);
             reject(err);
           } else {
             try {
@@ -499,7 +500,7 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
                 reject(
                   'Access Denied -- Valid username and password required!'
                 );
-                console.log(err);
+                logger.error(err);
               }
             }
           }
@@ -533,9 +534,9 @@ exports.workUnitOutput = async ({ wuid, clusterId }) => {
     const wuService = await module.exports.getWorkunitsService(clusterId);
     return await wuService.WUResult({ Wuid: wuid });
   } catch (err) {
-    console.log('-- Error -----------------------------------------');
-    console.dir({ err }, { depth: null });
-    console.log('---------------------------------------------------');
+    logger.error('-- Error -----------------------------------------');
+    logger.error(err);
+    logger.error('---------------------------------------------------');
   }
 };
 
@@ -600,9 +601,9 @@ const getFileLayout = async (cluster, fileName, format) => {
 
     return layoutResults;
   } catch (error) {
-    console.log('-Error getFileLayout----------------------');
-    console.dir({ error }, { depth: null });
-    console.log('------------------------------------------');
+    logger.error('-Error getFileLayout----------------------');
+    logger.error(error);
+    logger.error('------------------------------------------');
   }
 };
 
@@ -642,7 +643,7 @@ exports.getCluster = clusterId => {
         reject(`${cluster.name} is  not reachable...`);
       }
     } catch (err) {
-      console.log('Error occured while getting Cluster info.....' + err);
+      logger.error('Error occured while getting Cluster info.....' + err);
       reject(err);
     }
   });
@@ -734,8 +735,8 @@ exports.createWorkUnit = async (clusterId, WUbody = {}) => {
     if (!wuid) throw respond;
     return wuid;
   } catch (error) {
-    console.log('create workunit error------------------------------------');
-    console.dir(error, { depth: null });
+    logger.error('create workunit error------------------------------------');
+    logger.error(error);
     const customError = new Error('Failed to create new Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
@@ -749,8 +750,8 @@ exports.updateWorkUnit = async (clusterId, WUupdateBody) => {
     if (!respond.Workunit?.Wuid) throw respond; // assume that Wuid field is always gonna be in "happy" response
     return respond;
   } catch (error) {
-    console.log('update workunit error------------------------------------');
-    console.dir(error, { depth: null });
+    logger.error('update workunit error------------------------------------');
+    logger.error(error);
     const customError = new Error('Failed to update Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
@@ -764,8 +765,8 @@ exports.submitWU = async (clusterId, WUsubmitBody) => {
     if (respond.Exceptions) throw respond;
     return respond;
   } catch (error) {
-    console.log('submit workunit error-----------------------------------');
-    console.dir(error, { depth: null });
+    logger.error('submit workunit error-----------------------------------');
+    logger.error(error);
     const customError = new Error('Failed to submit Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
@@ -778,12 +779,12 @@ exports.updateWUAction = async (clusterId, WUactionBody) => {
     const respond = await wuService.WUAction(WUactionBody);
     const result = respond.ActionResults?.WUActionResult?.[0]?.Result;
     if (!result || result !== 'Success') throw respond;
-    console.dir(respond, { depth: null });
-    console.log('------------------------------------------');
+    logger.verbose('updateWuAction response: ', respond);
+    logger.verbose('------------------------------------------');
     return respond;
   } catch (error) {
-    console.log('update workunit action error----------------------------');
-    console.dir(error, { depth: null });
+    logger.error('update workunit action error----------------------------');
+    logger.error(error);
     const customError = new Error('Failed to update Work Unit action');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
@@ -812,14 +813,14 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     const createRespond = await wuService.WUCreate({});
     wuid = createRespond.Workunit?.Wuid;
     if (!wuid) {
-      console.log(
+      logger.error(
         '❌ pullFilesFromGithub: WUCreate error-----------------------------------------'
       );
-      console.dir(createRespond, { depth: null });
+      logger.error(createRespond);
       throw new Error('Failed to update Work Unit.');
     }
     tasks.WUCreated = true;
-    console.log(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
+    logger.info(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
 
     // CLONING OPERATIONS
     // gitHubFiles = {
@@ -832,8 +833,8 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     // Create one master folder that is going to hold all cloned repos, name of folder is newly created WUID number;
     masterFolder = path.join(process.cwd(), '..', 'gitClones', wuid);
     const dir = await fs.promises.mkdir(masterFolder, { recursive: true });
-    console.log('--dir created----------------------------------------');
-    console.dir({ dir });
+    logger.info('--dir created----------------------------------------');
+    logger.info(dir);
     const git = simpleGit({ baseDir: masterFolder });
 
     const { selectedProjects } = gitHubFiles;
@@ -864,14 +865,14 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
           '@' +
           ghLink.slice(8);
 
-      console.log(
+      logger.info(
         `✔️  pullFilesFromGithub: CLONING STARTED-${ghLink}, branch/tag: ${ghBranchOrTag}`
       );
       await git.clone(ghLink, clonePath, {
         '--branch': ghBranchOrTag,
         '--single-branch': true,
       });
-      console.log(
+      logger.info(
         `✔️  pullFilesFromGithub: CLONING FINISHED-${ghLink}, branch/tag: ${ghBranchOrTag}`
       );
 
@@ -880,14 +881,14 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
         await git
           .cwd({ path: clonePath, root: true })
           .submoduleUpdate(['--init', '--recursive']);
-        console.log(
+        logger.info(
           `✔️  pullFilesFromGithub: SUBMODULES UPDATED ${ghLink}, branch/tag: ${ghBranchOrTag}`
         );
       } catch (error) {
-        console.log(
+        logger.error(
           '❌  pullFilesFromGithub: git submodule update error----------------------------------------'
         );
-        console.dir(error, { depth: null });
+        logger.error(error);
       } finally {
         // Switch back to root folder after updating submodules
         await git.cwd({ path: masterFolder, root: true });
@@ -904,8 +905,8 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     const archived = await this.createEclArchive(args, masterFolder);
 
     tasks.archiveCreated = true;
-    console.log('✔️  pullFilesFromGithub: Archive Created');
-    // console.dir(archived);
+    logger.info('✔️  pullFilesFromGithub: Archive Created');
+    // logger.info(archived);
 
     // Update the Workunit with Archive XML
     const updateBody = {
@@ -916,27 +917,27 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     const updateRespond = await wuService.WUUpdate(updateBody);
     if (!updateRespond.Workunit?.Wuid) {
       // assume that Wuid field is always gonna be in "happy" response
-      console.log(
+      logger.error(
         '❌  pullFilesFromGithub: WUupdate error----------------------------------------'
       );
-      console.dir(updateRespond, { depth: null });
+      logger.error(updateRespond);
       throw new Error('Failed to update Work Unit.');
     }
     tasks.WUupdated = true;
-    console.log(`✔️  pullFilesFromGithub: WUupdated-  ${wuid}`);
+    logger.info(`✔️  pullFilesFromGithub: WUupdated-  ${wuid}`);
 
     // Submit the Workunit to HPCC
     const submitBody = { Wuid: wuid, Cluster: 'thor' };
     const submitRespond = await wuService.WUSubmit(submitBody);
     if (submitRespond.Exceptions) {
-      console.log(
+      logger.error(
         '❌  pullFilesFromGithub: WUsubmit error---------------------------------------'
       );
-      console.dir(submitRespond, { depth: null });
+      logger.error(submitRespond);
       throw new Error('Failed to submit Work Unit.');
     }
     tasks.WUsubmitted = true;
-    console.log(`✔️  pullFilesFromGithub: WUsubmitted-  ${wuid}`);
+    logger.info(`✔️  pullFilesFromGithub: WUsubmitted-  ${wuid}`);
   } catch (error) {
     // Error going to have messages related to where in process error happened, it will end up in router.post('/executeJob' catch block.
     try {
@@ -947,10 +948,10 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
       const actionRespond = await wuService.WUAction(WUactionBody);
       const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result;
       if (!result || result !== 'Success') {
-        console.log(
+        logger.error(
           '❌  pullFilesFromGithub: WUaction error-------------------------------------'
         );
-        console.dir(actionRespond, { depth: null });
+        logger.error(actionRespond);
         throw actionRespond;
       }
       tasks.WUaction = actionRespond.ActionResults.WUActionResult;
@@ -961,14 +962,14 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     }
 
     tasks.error = error;
-    console.log(
+    logger.error(
       '❌  pullFilesFromGithub: ERROR IN MAIN CATCH------------------------------------'
     );
-    console.dir(error, { depth: null });
+    logger.error(error);
   } finally {
     // Delete repo;
     const isDeleted = deleteRepo(masterFolder);
-    console.log(
+    logger.info(
       `✔️  pullFilesFromGithub: CLEANUP, REPO DELETED SUCCESSFULLY-  ${masterFolder}`
     );
     tasks.repoDeleted = isDeleted;
@@ -983,11 +984,11 @@ const deleteRepo = masterFolder => {
     fs.rmSync(masterFolder, { recursive: true, maxRetries: 5, force: true });
     isRepoDeleted = true;
   } catch (err) {
-    console.log('------------------------------------------');
-    console.log(
+    logger.error('------------------------------------------');
+    logger.error(
       `❌  pullFilesFromGithub: Failed to delete a repo ${masterFolder}`
     );
-    console.dir(err);
+    logger.error(err);
     isRepoDeleted = false;
   }
   return isRepoDeleted;
@@ -1197,11 +1198,11 @@ exports.getSuperFile = async (clusterId, fileName) => {
 
     return output;
   } catch (err) {
-    console.log(
+    logger.error(
       'ERROR GETTING SUPERFILE---------------------------------------'
     );
-    console.log(err);
-    console.log('----------------------------------------');
+    logger.error(err);
+    logger.error('----------------------------------------');
   }
 };
 
@@ -1250,11 +1251,11 @@ exports.getSuperFiles = async (clusterId, fileName) => {
     }
     return output;
   } catch (err) {
-    console.log(
+    logger.error(
       'ERROR GETTING SUPERFILE---------------------------------------'
     );
-    console.log(err);
-    console.log('----------------------------------------');
+    logger.error(err);
+    loggger.error('----------------------------------------');
   }
 };
 
@@ -1326,9 +1327,9 @@ exports.getAllSubFiles = async (clusterId, fileName) => {
 
     return output;
   } catch (err) {
-    console.log('ERROR GETTING SUPERFILE SUBFILES------------------');
-    console.log(err);
-    console.log('----------------------------------------');
+    logger.error('ERROR GETTING SUPERFILE SUBFILES------------------');
+    logger.error(err);
+    logger.error('----------------------------------------');
   }
 };
 
@@ -1383,8 +1384,8 @@ exports.getRecentSubFile = async (clusterId, fileName) => {
       subfileCount: logicalFileCount,
     };
   } catch (err) {
-    console.log('ERROR GETTING MOST RECENT SUBFILE-----------------');
-    console.log(err);
-    console.log('----------------------------------------');
+    logger.error('ERROR GETTING MOST RECENT SUBFILE-----------------');
+    logger.error(err);
+    logger.error('----------------------------------------');
   }
 };

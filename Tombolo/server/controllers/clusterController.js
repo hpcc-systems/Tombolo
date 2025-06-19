@@ -41,7 +41,9 @@ const addCluster = async (req, res) => {
     const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
 
     // Check if cluster is reachable
-    await new AccountService({ baseUrl, userID, password }).MyAccount();
+    await new AccountService(
+      getClusterOptions({ baseUrl, userID, password }, allowSelfSigned)
+    ).MyAccount();
 
     // Get default cluster (engine) if exists - if not pick the first one
     const {
@@ -80,7 +82,9 @@ const addCluster = async (req, res) => {
     const eclCode =
       'IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);';
     // Create timezone offset in default engine
-    const wus = new WorkunitsService({ baseUrl, userID, password });
+    const wus = new WorkunitsService(
+      getClusterOptions({ baseUrl, userID, password }, allowSelfSigned)
+    );
     const {
       Workunit: { Wuid },
     } = await wus.WUCreateAndUpdate({

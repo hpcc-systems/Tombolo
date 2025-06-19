@@ -1,10 +1,10 @@
 // Import from libraries
-const { WorkunitsService } = require("@hpcc-js/comms");
-const { parentPort } = require("worker_threads");
-const _ = require("lodash");
+const { WorkunitsService } = require('@hpcc-js/comms');
+const { parentPort } = require('worker_threads');
+const _ = require('lodash');
 
 // Local imports
-const { decryptString } = require("../../utils/cipher");
+const { decryptString } = require('../../utils/cipher');
 const {
   calculateRunOrCompleteByTimes,
   generateJobName,
@@ -14,14 +14,15 @@ const {
   generateNotificationId,
   differenceInMs,
   nocAlertDescription,
-} = require("./monitorJobsUtil");
-const models = require("../../models");
+} = require('./monitorJobsUtil');
+const models = require('../../models');
+const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 // Models
 const JobMonitoring = models.jobMonitoring;
 const Cluster = models.cluster;
 const NotificationQueue = models.notification_queue;
-const monitoringTypeName = "Job Monitoring";
+const monitoringTypeName = 'Job Monitoring';
 const MonitoringTypes = models.monitoring_types;
 const IntegrationMapping = models.integration_mapping;
 const Integrations = models.integrations;
@@ -29,15 +30,15 @@ const Integrations = models.integrations;
 (async () => {
   parentPort &&
     parentPort.postMessage({
-      level: "info",
-      text: "Job Punctuality Monitoring: Monitoring started",
+      level: 'info',
+      text: 'Job Punctuality Monitoring: Monitoring started',
     });
   const now = new Date(); // UTC time
 
   try {
     // Find all active job monitorings.
     const jobMonitorings = await JobMonitoring.findAll({
-      where: { isActive: 1, approvalStatus: "Approved" },
+      where: { isActive: 1, approvalStatus: 'Approved' },
       raw: true,
     });
 
@@ -49,13 +50,13 @@ const Integrations = models.integrations;
     // Log info saying how many job monitorings are being processed
     parentPort &&
       parentPort.postMessage({
-        level: "info",
+        level: 'info',
         text: `Job Punctuality Monitoring: Processing  ${jobMonitorings.length} job monitoring(s)`,
       });
 
     // Get all unique clusters for the job monitorings
     const clusterIds = jobMonitorings.map(
-      (jobMonitoring) => jobMonitoring.clusterId,
+      jobMonitoring => jobMonitoring.clusterId
     );
 
     // All clusters that are associated with the job monitorings
@@ -63,13 +64,13 @@ const Integrations = models.integrations;
       where: { id: clusterIds },
       // exclude storageUsageHistory
       attributes: {
-        exclude: ["storageUsageHistory"],
+        exclude: ['storageUsageHistory'],
       },
       raw: true,
     });
 
     // Decrypt cluster passwords if they exist
-    clusters.forEach((clusterInfo) => {
+    clusters.forEach(clusterInfo => {
       try {
         if (clusterInfo.hash) {
           clusterInfo.password = decryptString(clusterInfo.hash);
@@ -79,7 +80,7 @@ const Integrations = models.integrations;
       } catch (error) {
         parentPort &&
           parentPort.postMessage({
-            level: "error",
+            level: 'error',
             text: `Job Punctuality Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
           });
       }
@@ -120,7 +121,7 @@ const Integrations = models.integrations;
         } = metaData;
 
         // If monitoring does not care about job punctuality, continue
-        if (!notificationCondition.includes("NotStarted")) {
+        if (!notificationCondition.includes('NotStarted')) {
           continue;
         }
 
@@ -131,7 +132,7 @@ const Integrations = models.integrations;
         if (!clusterInfo) {
           parentPort &&
             parentPort.postMessage({
-              level: "error",
+              level: 'error',
               text: `Job Punctuality Monitoring: No cluster found for clusterId ${clusterId} in jobMonitoring ${id}`,
             });
           continue;
@@ -152,7 +153,7 @@ const Integrations = models.integrations;
           } catch (error) {
             parentPort &&
               parentPort.postMessage({
-                level: "error",
+                level: 'error',
                 text: `Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}`,
               });
           }
@@ -169,7 +170,7 @@ const Integrations = models.integrations;
         }
 
         // Calculate the back date in ms
-        if (runWindowForJob === "overnight") {
+        if (runWindowForJob === 'overnight') {
           backDateInMs = differenceInMs({
             startTime: expectedStartTime,
             endTime: expectedCompletionTime,
@@ -216,7 +217,7 @@ const Integrations = models.integrations;
         alertTimePassed = window.start < window.currentTime;
 
         lateByInMinutes = Math.floor(
-          (window.currentTime - window.start) / 60000,
+          (window.currentTime - window.start) / 60000
         );
 
         // If the time has not passed, or with in grace period of 10 minutes, continue
@@ -252,11 +253,16 @@ const Integrations = models.integrations;
         });
 
         // Create a new instance of WorkunitsService
-        const wuService = new WorkunitsService({
-          baseUrl: `${clusterInfo.thor_host}:${clusterInfo.thor_port}/`,
-          userID: clusterInfo.username || "",
-          password: clusterInfo.password || "",
-        });
+        const wuService = new WorkunitsService(
+          getClusterOptions(
+            {
+              baseUrl: `${clusterInfo.thor_host}:${clusterInfo.thor_port}/`,
+              userID: clusterInfo.username || '',
+              password: clusterInfo.password || '',
+            },
+            clusterInfo.allowSelfSigned
+          )
+        );
 
         // Query HPCC for the workunits
         const {
@@ -268,7 +274,7 @@ const Integrations = models.integrations;
         });
 
         // If a job is overnight, it could potentially have 2 translatedJobName as it can run on 2 different days
-        if (schedule[0]?.runWindow === "overnight") {
+        if (schedule[0]?.runWindow === 'overnight') {
           const translatedJobNameNextDay = generateJobName({
             pattern: jobNamePattern,
             timezone_offset: clusterInfo.timezone_offset,
@@ -301,13 +307,13 @@ const Integrations = models.integrations;
                 },
               },
             },
-            { where: { id } },
+            { where: { id } }
           );
           continue;
         }
 
         // Notification ID prefix
-        let notificationPrefix = "JM";
+        let notificationPrefix = 'JM';
         let prodName;
         let domain;
         let severity;
@@ -315,14 +321,14 @@ const Integrations = models.integrations;
 
         if (asrSpecificMetaData && asrSpecificMetaData.productCategory) {
           const { name: productName, shortCode } = await getProductCategory(
-            asrSpecificMetaData.productCategory,
+            asrSpecificMetaData.productCategory
           );
 
           notificationPrefix = shortCode;
           prodName = productName;
 
           const { name: domainName } = await getDomain(
-            asrSpecificMetaData.domain,
+            asrSpecificMetaData.domain
           );
           domain = domainName;
 
@@ -334,15 +340,15 @@ const Integrations = models.integrations;
           // Log which job did not start on time
           parentPort &&
             parentPort.postMessage({
-              level: "info",
+              level: 'info',
               text: `Job Punctuality Monitoring:  ( ${monitoringName} ) is unpunctual. Expected start time: ${window.start.toLocaleString()}`,
             });
 
           // Notification payload
           const notificationPayload = createNotificationPayload({
-            type: "email",
+            type: 'email',
             notificationDescription: `Monitoring ( ${monitoringName} ) detected that a monitored job  did not started on time`,
-            templateName: "jobMonitoring",
+            templateName: 'jobMonitoring',
             originationId: monitoringTypeDetails.id,
             applicationId: applicationId,
             subject: `Job Monitoring Alert from ${process.env.INSTANCE_NAME} : Job not started on expected time`,
@@ -357,25 +363,25 @@ const Integrations = models.integrations;
             issue: {
               Issue: `Job not started on expected time`,
               Cluster: clusterInfo.name,
-              "Job Name/Filter": jobNamePattern,
-              "Expected Start": window.start.toLocaleString(),
-              "Current Time": window.currentTime.toLocaleString(),
+              'Job Name/Filter': jobNamePattern,
+              'Expected Start': window.start.toLocaleString(),
+              'Current Time': window.currentTime.toLocaleString(),
             },
             notificationId: generateNotificationId({
               notificationPrefix,
               timezoneOffset: offSet || 0,
             }),
             asrSpecificMetaData: {
-              region: "USA",
+              region: 'USA',
               product: prodName,
               domain,
               severity,
             }, // region: "USA",  product: "Telematics",  domain: "Insurance", severity: 3,
             firstLogged: new Date(
-              now.getTime() + offSet * 60 * 1000,
+              now.getTime() + offSet * 60 * 1000
             ).toLocaleString(),
             lastLogged: new Date(
-              now.getTime() + offSet * 60 * 1000,
+              now.getTime() + offSet * 60 * 1000
             ).toLocaleString(),
           });
 
@@ -383,7 +389,7 @@ const Integrations = models.integrations;
           await NotificationQueue.create(notificationPayload);
           parentPort &&
             parentPort.postMessage({
-              level: "verbose",
+              level: 'verbose',
               text: `Job Punctuality Monitoring: Notification queued for ${monitoringName},  job not started on time`,
             });
 
@@ -403,7 +409,7 @@ const Integrations = models.integrations;
             await NotificationQueue.create(notificationPayloadForNoc);
             parentPort &&
               parentPort.postMessage({
-                level: "verbose",
+                level: 'verbose',
                 text: `Job Punctuality Monitoring: NOC Notification queued for ${monitoringName},  job not started on time`,
               });
           }
@@ -422,18 +428,18 @@ const Integrations = models.integrations;
                 },
               },
             },
-            { where: { id } },
+            { where: { id } }
           );
           parentPort &&
             parentPort.postMessage({
-              level: "verbose",
+              level: 'verbose',
               text: `Job Punctuality Monitoring: Last run details updated for ${monitoringName}`,
             });
         }
       } catch (error) {
         parentPort &&
           parentPort.postMessage({
-            level: "error",
+            level: 'error',
             text: `Job Punctuality Monitoring: Error while processing jobs for  punctuality check ${jobMonitoring.id}: ${error.message}`,
           });
       }
@@ -441,13 +447,13 @@ const Integrations = models.integrations;
   } catch (error) {
     parentPort &&
       parentPort.postMessage({
-        level: "error",
+        level: 'error',
         text: `Job Punctuality Monitoring: Error in job punctuality monitoring script: ${error.message}`,
       });
   } finally {
     if (parentPort) {
       parentPort.postMessage({
-        level: "info",
+        level: 'info',
         text: `Job Punctuality Monitoring: monitoring completed in ${(
           new Date().getTime() - now.getTime()
         ).toLocaleString()} ms`,
