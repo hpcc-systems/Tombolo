@@ -1,13 +1,13 @@
 // Imports from node modules
-const { v4: UUIDV4 } = require("uuid");
-const bcrypt = require("bcryptjs");
-const moment = require("moment");
-const { v4: uuidv4 } = require("uuid");
-const sequelize = require("../models").sequelize;
+const { v4: UUIDV4 } = require('uuid');
+const bcrypt = require('bcryptjs');
+const moment = require('moment');
+const { v4: uuidv4 } = require('uuid');
+const sequelize = require('../models').sequelize;
 
 // Local imports
-const logger = require("../config/logger");
-const models = require("../models");
+const logger = require('../config/logger');
+const models = require('../models');
 const {
   setPasswordExpiry,
   trimURL,
@@ -16,7 +16,7 @@ const {
   generatePassword,
   sendAccountUnlockedEmail,
   deleteUser: deleteUserUtil,
-} = require("../utils/authUtil");
+} = require('../utils/authUtil');
 
 // Constants
 const User = models.user;
@@ -31,17 +31,17 @@ const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleted = await deleteUserUtil(id, "Admin Removal");
+    const deleted = await deleteUserUtil(id, 'Admin Removal');
 
     // If deleted count is 0, user not found
     if (!deleted) {
-      throw { status: 404, message: "Error Removing User." };
+      throw { status: 404, message: 'Error Removing User.' };
     }
 
     // User successfully deleted
     res
       .status(200)
-      .json({ success: true, message: "User deleted successfully" });
+      .json({ success: true, message: 'User deleted successfully' });
   } catch (err) {
     logger.error(`Delete user: ${err.message}`);
     res
@@ -69,19 +69,19 @@ const updateBasicUserInfo = async (req, res) => {
 
     // If user not found
     if (!existingUser) {
-      throw { status: 404, message: "User not found" };
+      throw { status: 404, message: 'User not found' };
     }
 
     const changedInfo = [];
 
     if (firstName) {
       existingUser.firstName = firstName;
-      changedInfo.push("firstName");
+      changedInfo.push('firstName');
     }
 
     if (lastName) {
       existingUser.lastName = lastName;
-      changedInfo.push("lastName");
+      changedInfo.push('lastName');
     }
 
     if (registrationMethod) {
@@ -98,7 +98,7 @@ const updateBasicUserInfo = async (req, res) => {
 
     // If update payload is empty
     if (Object.keys(req.body).length === 0) {
-      throw { status: 400, message: "No update payload provided" };
+      throw { status: 400, message: 'No update payload provided' };
     }
 
     // Save user with updated details within the transaction
@@ -106,21 +106,21 @@ const updateBasicUserInfo = async (req, res) => {
 
     // Queue notification within the same transaction
     const readable_notification = `ACC_CNG_${moment().format(
-      "YYYYMMDD_HHmmss_SSS"
+      'YYYYMMDD_HHmmss_SSS'
     )}`;
     await NotificationQueue.create(
       {
-        type: "email",
-        templateName: "accountChange",
-        notificationOrigin: "User Management",
-        deliveryType: "immediate",
+        type: 'email',
+        templateName: 'accountChange',
+        notificationOrigin: 'User Management',
+        deliveryType: 'immediate',
         metaData: {
           notificationId: readable_notification,
           recipientName: `${updatedUser.firstName} ${updatedUser.lastName}`,
-          notificationOrigin: "User Management",
-          subject: "Account Change",
+          notificationOrigin: 'User Management',
+          subject: 'Account Change',
           mainRecipients: [updatedUser.email],
-          notificationDescription: "Account Change",
+          notificationDescription: 'Account Change',
           changedInfo,
         },
         createdBy: req.user.id,
@@ -133,7 +133,7 @@ const updateBasicUserInfo = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "User updated successfully",
+      message: 'User updated successfully',
       data: updatedUser,
     });
   } catch (err) {
@@ -153,12 +153,12 @@ const getUser = async (req, res) => {
     const user = await User.findOne({ where: { id } });
 
     if (!user) {
-      throw { status: 404, message: "User not found" };
+      throw { status: 404, message: 'User not found' };
     }
 
     res.status(200).json({
       success: true,
-      message: "User retrieved successfully",
+      message: 'User retrieved successfully',
       data: user,
     });
   } catch (err) {
@@ -174,15 +174,15 @@ const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
       include: [
-        { model: UserRoles, as: "roles" },
-        { model: user_application, as: "applications" },
+        { model: UserRoles, as: 'roles' },
+        { model: user_application, as: 'applications' },
       ],
       // descending order by date
-      order: [["createdAt", "DESC"]],
+      order: [['createdAt', 'DESC']],
     });
     res.status(200).json({
       success: true,
-      message: "Users retrieved successfully",
+      message: 'Users retrieved successfully',
       data: users,
     });
   } catch (err) {
@@ -205,12 +205,12 @@ const changePassword = async (req, res) => {
     const existingUser = await User.findOne({ where: { id }, transaction: t });
 
     if (!existingUser) {
-      throw { status: 404, message: "User not found" };
+      throw { status: 404, message: 'User not found' };
     }
 
     // Check if current password is correct
     if (!bcrypt.compareSync(currentPassword, existingUser.hash)) {
-      throw { status: 400, message: "Current password is incorrect" };
+      throw { status: 400, message: 'Current password is incorrect' };
     }
 
     // Check for password security violations
@@ -244,24 +244,42 @@ const changePassword = async (req, res) => {
 
     // Queue notification
     const readable_notification = `ACC_CNG_${moment().format(
-      "YYYYMMDD_HHmmss_SSS"
+      'YYYYMMDD_HHmmss_SSS'
     )}`;
+
+    console.log('------------------------');
+    console.dir({
+      type: 'email',
+      templateName: 'accountChange',
+      notificationOrigin: 'User Management',
+      deliveryType: 'immediate',
+      metaData: {
+        notificationId: readable_notification,
+        recipientName: `${existingUser.firstName} ${existingUser.lastName}`,
+        notificationOrigin: 'User Management',
+        subject: 'Account Change',
+        mainRecipients: [existingUser.email],
+        notificationDescription: 'Account Change',
+        changedInfo: ['password'],
+      },
+      createdBy: id,
+    });
     await NotificationQueue.create(
       {
-        type: "email",
-        templateName: "accountChange",
-        notificationOrigin: "User Management",
-        deliveryType: "immediate",
+        type: 'email',
+        templateName: 'accountChange',
+        notificationOrigin: 'User Management',
+        deliveryType: 'immediate',
         metaData: {
           notificationId: readable_notification,
           recipientName: `${existingUser.firstName} ${existingUser.lastName}`,
-          notificationOrigin: "User Management",
-          subject: "Account Change",
+          notificationOrigin: 'User Management',
+          subject: 'Account Change',
           mainRecipients: [existingUser.email],
-          notificationDescription: "Account Change",
-          changedInfo: ["password"],
+          notificationDescription: 'Account Change',
+          changedInfo: ['password'],
         },
-        createdBy: req.user.id,
+        createdBy: id,
       },
       { transaction: t }
     );
@@ -271,7 +289,7 @@ const changePassword = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Password updated successfully",
+      message: 'Password updated successfully',
     });
   } catch (err) {
     await t.rollback(); // Rollback on failure
@@ -291,7 +309,7 @@ const bulkDeleteUsers = async (req, res) => {
     let idsCount = ids.length;
     // Loop through each user and delete
     for (let id of ids) {
-      const deleted = await deleteUserUtil(id, "Admin Removal");
+      const deleted = await deleteUserUtil(id, 'Admin Removal');
       if (deleted) {
         deletedCount++;
       }
@@ -300,14 +318,14 @@ const bulkDeleteUsers = async (req, res) => {
     if (deletedCount !== idsCount) {
       res.status(207).json({
         success: false,
-        message: "Some users could not be deleted",
+        message: 'Some users could not be deleted',
         data: { deletedCount, idsCount },
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Users deleted successfully",
+      message: 'Users deleted successfully',
       data: { deletedCount },
     });
   } catch (err) {
@@ -331,13 +349,13 @@ const bulkUpdateUsers = async (req, res) => {
         const existing = await User.findOne({ where: { id } });
 
         if (!existing) {
-          errors.push({ id, status: 404, message: "User not found" });
+          errors.push({ id, status: 404, message: 'User not found' });
           continue; // Skip to the next user
         }
 
         // Update fields provided
         for (let key in user) {
-          if (key !== "id") {
+          if (key !== 'id') {
             existing[key] = user[key];
           }
         }
@@ -353,13 +371,13 @@ const bulkUpdateUsers = async (req, res) => {
     if (errors.length > 0) {
       res.status(207).json({
         success: false,
-        message: "Some users could not be updated",
+        message: 'Some users could not be updated',
         errors,
       });
     } else {
       res
         .status(200)
-        .json({ success: true, message: "Users updated successfully" });
+        .json({ success: true, message: 'Users updated successfully' });
     }
   } catch (err) {
     logger.error(`Bulk update users: ${err.message}`);
@@ -381,10 +399,10 @@ const updateUserRoles = async (req, res) => {
 
     // If user not found
     if (!existingUser) {
-      throw { status: 404, message: "User not found" };
+      throw { status: 404, message: 'User not found' };
     }
     // Create id and role pair
-    const userRoles = roles.map((role) => ({
+    const userRoles = roles.map(role => ({
       userId: id,
       roleId: role,
       createdBy: creator,
@@ -395,22 +413,22 @@ const updateUserRoles = async (req, res) => {
 
     // Delete existing roles that are not in the new list
     const rolesToDelete = existingRoles.filter(
-      (role) => !roles.includes(role.roleId)
+      role => !roles.includes(role.roleId)
     );
     await UserRoles.destroy({
-      where: { id: rolesToDelete.map((role) => role.id) },
+      where: { id: rolesToDelete.map(role => role.id) },
     });
 
     // Crete new roles that are not in the existing list
     const rolesToAdd = userRoles.filter(
-      (role) => !existingRoles.map((role) => role.roleId).includes(role.roleId)
+      role => !existingRoles.map(role => role.roleId).includes(role.roleId)
     );
     const newRoles = await UserRoles.bulkCreate(rolesToAdd);
 
     // Response
     res.status(200).json({
       success: true,
-      message: "User roles updated successfully",
+      message: 'User roles updated successfully',
       data: newRoles,
     });
   } catch (err) {
@@ -431,11 +449,11 @@ const updateUserApplications = async (req, res) => {
 
     // Find existing user details
     const existing = await user_application.findAll({ where: { user_id } });
-    const existingApplications = existing.map((app) => app.application_id);
+    const existingApplications = existing.map(app => app.application_id);
 
     // Delete applications  that are not in the new list
     const applicationsToDelete = existingApplications.filter(
-      (app) => !applications.includes(app)
+      app => !applications.includes(app)
     );
     await user_application.destroy({
       where: { application_id: applicationsToDelete },
@@ -443,21 +461,20 @@ const updateUserApplications = async (req, res) => {
 
     // Create new applications that are not in the existing list
     const applicationToCreate = applications.filter(
-      (app) => !existingApplications.includes(app)
+      app => !existingApplications.includes(app)
     );
-    const applicationUserPair = applicationToCreate.map((app) => ({
+    const applicationUserPair = applicationToCreate.map(app => ({
       user_id,
       application_id: app,
       createdBy: user.id,
     }));
-    const newApplications = await user_application.bulkCreate(
-      applicationUserPair
-    );
+    const newApplications =
+      await user_application.bulkCreate(applicationUserPair);
 
     // Response
     res.status(200).json({
       success: true,
-      message: "User applications updated successfully",
+      message: 'User applications updated successfully',
       data: newApplications,
     });
   } catch {
@@ -475,8 +492,8 @@ const createUser = async (req, res) => {
       firstName,
       lastName,
       email,
-      registrationMethod = "traditional",
-      registrationStatus = "active",
+      registrationMethod = 'traditional',
+      registrationStatus = 'active',
       verifiedUser = false,
       roles,
       applications,
@@ -486,7 +503,7 @@ const createUser = async (req, res) => {
     const existingUser = await User.findOne({ where: { email } });
 
     if (existingUser) {
-      throw { status: 400, message: "Email already exists" };
+      throw { status: 400, message: 'Email already exists' };
     }
 
     // Generate random password - 12 characters - alpha numeric
@@ -526,7 +543,7 @@ const createUser = async (req, res) => {
     });
 
     // Create user roles
-    const userRoles = roles.map((role) => ({
+    const userRoles = roles.map(role => ({
       userId: newUser.id,
       roleId: role,
       createdBy: req.user.id,
@@ -534,7 +551,7 @@ const createUser = async (req, res) => {
     await UserRoles.bulkCreate(userRoles);
 
     // Create user applications
-    const userApplications = applications.map((application) => ({
+    const userApplications = applications.map(application => ({
       user_id: newUser.id,
       application_id: application,
       createdBy: req.user.id,
@@ -545,14 +562,14 @@ const createUser = async (req, res) => {
     const newUserData = await User.findOne({
       where: { id: newUser.id },
       include: [
-        { model: UserRoles, as: "roles" },
-        { model: user_application, as: "applications" },
+        { model: UserRoles, as: 'roles' },
+        { model: user_application, as: 'applications' },
       ],
     });
 
     // Searchable notification ID
     const searchableNotificationId = `USR_REG__${moment().format(
-      "YYYYMMDD_HHmmss_SSS"
+      'YYYYMMDD_HHmmss_SSS'
     )}`;
     const verificationCode = UUIDV4();
 
@@ -565,10 +582,10 @@ const createUser = async (req, res) => {
 
     // Add to notification queue
     await NotificationQueue.create({
-      type: "email",
-      templateName: "completeRegistration",
-      notificationOrigin: "User Management",
-      deliveryType: "immediate",
+      type: 'email',
+      templateName: 'completeRegistration',
+      notificationOrigin: 'User Management',
+      deliveryType: 'immediate',
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${newUserData.firstName}`,
@@ -576,10 +593,10 @@ const createUser = async (req, res) => {
           process.env.WEB_URL
         )}/reset-temporary-password/${verificationCode}`,
         tempPassword: password,
-        notificationOrigin: "User Management",
-        subject: "Complete your registration",
+        notificationOrigin: 'User Management',
+        subject: 'Complete your registration',
         mainRecipients: [newUserData.email],
-        notificationDescription: "Complete your Registration",
+        notificationDescription: 'Complete your Registration',
         validForHours: 24,
       },
       createdBy: req.user.id,
@@ -590,7 +607,7 @@ const createUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: 'User created successfully',
       data: newUserData,
     });
   } catch (err) {
@@ -616,7 +633,7 @@ const resetPasswordForUser = async (req, res) => {
       await transaction.rollback(); // Rollback if user is not found
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: 'User not found' });
     }
 
     // Generate a password reset token
@@ -627,25 +644,25 @@ const resetPasswordForUser = async (req, res) => {
 
     // Searchable notification ID
     const searchableNotificationId = `USR_PWD_RST__${moment().format(
-      "YYYYMMDD_HHmmss_SSS"
+      'YYYYMMDD_HHmmss_SSS'
     )}`;
 
     // Queue notification
     await NotificationQueue.create(
       {
-        type: "email",
-        templateName: "resetPasswordLink",
-        notificationOrigin: "Reset Password",
-        deliveryType: "immediate",
-        createdBy: "System",
-        updatedBy: "System",
+        type: 'email',
+        templateName: 'resetPasswordLink',
+        notificationOrigin: 'Reset Password',
+        deliveryType: 'immediate',
+        createdBy: 'System',
+        updatedBy: 'System',
         metaData: {
           notificationId: searchableNotificationId,
           recipientName: `${user.firstName}`,
-          notificationOrigin: "Reset Password",
-          subject: "Password Reset Link",
+          notificationOrigin: 'Reset Password',
+          subject: 'Password Reset Link',
           mainRecipients: [user.email],
-          notificationDescription: "Password Reset Link",
+          notificationDescription: 'Password Reset Link',
           validForHours: 24,
           passwordRestLink,
         },
@@ -681,7 +698,7 @@ const resetPasswordForUser = async (req, res) => {
     // Response
     res
       .status(200)
-      .json({ success: true, message: "Password reset successfully" });
+      .json({ success: true, message: 'Password reset successfully' });
   } catch (err) {
     await transaction.rollback(); // Rollback transaction in case of error
     logger.error(`Reset password for user: ${err.message}`);
@@ -702,7 +719,7 @@ const unlockAccount = async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: 'User not found' });
     }
 
     // Generate temporary password/hash
@@ -716,13 +733,13 @@ const unlockAccount = async (req, res) => {
       new Date().setDate(new Date().getDate() + 2) // 48 hours
     );
     user.loginAttempts = 0;
-    user.accountLocked = {isLocked : false,lockedReason: []};
+    user.accountLocked = { isLocked: false, lockedReason: [] };
 
     // Save user with updated details
     await user.save();
 
     // Send notification to the user
-      const verificationCode = UUIDV4();
+    const verificationCode = UUIDV4();
 
     // Create account verification code
     await AccountVerificationCodes.create({
@@ -734,7 +751,9 @@ const unlockAccount = async (req, res) => {
     await sendAccountUnlockedEmail({ user, tempPassword, verificationCode });
 
     // Response
-    res.status(200).json({ success: true, message: "User account unlocked successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: 'User account unlocked successfully' });
   } catch (err) {
     logger.error(`Unlock account: ${err.message}`);
     res
