@@ -132,7 +132,7 @@ function SchedulePicker({
     }
   };
 
-  // ANytime - When anytime option is selected
+  // Anytime - When anytime option is selected
   const anytime = (
     <div style={{ margin: '0px 0 0 20px', color: 'var(--secondary)' }}>
       This job does not have a fixed schedule and can run at any time.{' '}
