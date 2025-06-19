@@ -518,6 +518,11 @@ function calculateRunOrCompleteByTimeForCronJobs({
 }
 
 function checkIfCurrentTimeIsWithinRunWindow({ start, end, currentTime }) {
+  // Return null if any input is null or undefined
+  if (!start || !end) {
+    return null;
+  }
+
   // Ensure currentTime is a Date object
   if (!(currentTime instanceof Date)) {
     throw new Error('Invalid input: currentTime must be a Date object');
@@ -529,10 +534,6 @@ function checkIfCurrentTimeIsWithinRunWindow({ start, end, currentTime }) {
   // Combine the date part with the start and end times to create Date objects
   start = new Date(`${currentDate}T${start}:00.000Z`);
   end = new Date(`${currentDate}T${end}:00.000Z`);
-
-  if (!start || !end) {
-    return null;
-  }
 
   // Validate input parameters
   if (
