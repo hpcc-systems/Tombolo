@@ -22,25 +22,24 @@ function JobMonitoringNotificationTab({ form, intermittentScheduling }) {
     (integration) => integration.name === 'ASR' && integration.application_id === applicationId
   );
 
-  const [jobStatuses, setJobStatuses] = useState([
+  const BASE_JOB_STATUSES = [
     { label: 'Failed', value: 'Failed' },
     { label: 'Aborted', value: 'Aborted' },
     { label: 'Unknown', value: 'Unknown' },
     { label: 'Time Series Analysis', value: 'TimeSeriesAnalysis' },
     { label: 'Job running too long', value: 'JobRunningTooLong' },
-  ]);
+    { label: 'Not started on time', value: 'NotStarted', disabled: true },
+    { label: 'Not completed on time', value: 'NotCompleted' },
+  ];
 
-  // When comonent loads
+  const [jobStatuses, setJobStatuses] = useState([]);
+
+  // When component loads
   useEffect(() => {
     if (intermittentScheduling.frequency !== 'anytime') {
-      setJobStatuses((prev) => [
-        ...prev,
-
-        { label: 'Not started on time', value: 'NotStarted', disabled: true },
-        { label: 'Not completed on time', value: 'NotCompleted' },
-      ]);
+      setJobStatuses(BASE_JOB_STATUSES);
     } else {
-      const filteredJobStatuses = jobStatuses.filter(
+      const filteredJobStatuses = BASE_JOB_STATUSES.filter(
         (status) => status.value !== 'NotStarted' && status.value !== 'NotCompleted'
       );
       setJobStatuses(filteredJobStatuses);
