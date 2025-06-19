@@ -247,23 +247,6 @@ const changePassword = async (req, res) => {
       'YYYYMMDD_HHmmss_SSS'
     )}`;
 
-    console.log('------------------------');
-    console.dir({
-      type: 'email',
-      templateName: 'accountChange',
-      notificationOrigin: 'User Management',
-      deliveryType: 'immediate',
-      metaData: {
-        notificationId: readable_notification,
-        recipientName: `${existingUser.firstName} ${existingUser.lastName}`,
-        notificationOrigin: 'User Management',
-        subject: 'Account Change',
-        mainRecipients: [existingUser.email],
-        notificationDescription: 'Account Change',
-        changedInfo: ['password'],
-      },
-      createdBy: id,
-    });
     await NotificationQueue.create(
       {
         type: 'email',
