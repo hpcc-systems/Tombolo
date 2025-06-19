@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message, Alert, Typography } from 'antd';
+import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message, Alert, Typography, Checkbox } from 'antd';
 import { isEmail } from 'validator';
 
 import { pingCluster, addCluster } from './clusterUtils';
@@ -30,6 +30,7 @@ function AddClusterModal({
   const [clusterReachable, setClusterReachable] = useState(false);
   const [addingCluster, setAddingCluster] = useState(false);
   const [abortController, setAbortController] = useState(null);
+  const [allowSelfSigned, setAllowSelfSigned] = useState(false);
   // For displaying cluster saving updates
   const [completedSteps, setCompletedSteps] = useState([]);
   const [displaySteps, setDisplaySteps] = useState(false);
@@ -276,6 +277,21 @@ function AddClusterModal({
                     ))}
                   </Select>
                 </Form.Item>
+
+                <Form.Item label={null} name="allowSelfSigned" valuePropName="checked">
+                  <Checkbox name="allowSelfSigned" onChange={() => setAllowSelfSigned(!allowSelfSigned)}>
+                    Allow Self Signed Certificates
+                  </Checkbox>
+                </Form.Item>
+
+                {allowSelfSigned && (
+                  <a
+                    href="https://hpcc-systems.github.io/Tombolo/docs/User-Guides/self-signed-certs"
+                    target="_blank"
+                    rel="noreferrer">
+                    See instructions for self signed certificates
+                  </a>
+                )}
 
                 <Form.Item
                   label="Admin Emails"

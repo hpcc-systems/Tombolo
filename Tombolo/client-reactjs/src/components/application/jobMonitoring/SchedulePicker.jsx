@@ -1,7 +1,6 @@
-/* eslint-disable unused-imports/no-unused-imports */
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Radio, Space, Checkbox, Select, Tag, Input, Form } from 'antd';
+import { Radio, Space, Checkbox, Select, Tag, Form } from 'antd';
 import cronstrue from 'cronstrue';
 
 // Daily schedule options
@@ -54,10 +53,30 @@ function SchedulePicker({
   // setCron,
   // cronMessage,
   setCronMessage,
+  isEditing,
 }) {
   const [yearlyRadio, setYearlyRadio] = useState(null);
   const [monthlyRadio, setMonthlyRadio] = useState(null);
   const [individualValues, setIndividualValues] = useState({}); // Individual input fields such as month, year, day
+
+  // Use effect
+  useEffect(() => {
+    if (isEditing) {
+      if (completeSchedule.length < 1) return;
+      const existingSchedule = completeSchedule[0];
+
+      if (existingSchedule.scheduleBy === 'dates') {
+        setIndividualValues((prev) => ({ ...prev, dates: existingSchedule.dates }));
+        setMonthlyRadio('1');
+      } else if (existingSchedule.scheduleBy === 'weeks-day') {
+        setMonthlyRadio('2');
+      } else if (existingSchedule.scheduleBy === 'month-date') {
+        setYearlyRadio('1');
+      } else if (existingSchedule.scheduleBy === 'week-day-month') {
+        setYearlyRadio('2');
+      }
+    }
+  }, [isEditing]);
 
   useEffect(() => {
     // clean up - reset the local state when modal is closed
@@ -106,10 +125,19 @@ function SchedulePicker({
     setIndividualValues({});
     if (selected === 'cron') {
       setIntermittentScheduling({ frequency: selected });
+    } else if (selected === 'anytime') {
+      setIntermittentScheduling({ frequency: selected, runWindow: null });
     } else {
       setIntermittentScheduling({ frequency: selected, runWindow: 'daily' });
     }
   };
+
+  // Anytime - When anytime option is selected
+  const anytime = (
+    <div style={{ margin: '0px 0 0 20px', color: 'var(--secondary)' }}>
+      This job does not have a fixed schedule and can run at any time.{' '}
+    </div>
+  );
 
   // Daily Break down - When daily option is selected
   const dailyBreakDown = (
@@ -417,6 +445,7 @@ function SchedulePicker({
 
   //Schedule options
   const schedulingOptions = [
+    { label: 'Anytime', value: 'anytime', component: anytime },
     { label: 'Daily', value: 'daily', component: dailyBreakDown },
     { label: 'Weekly', value: 'weekly', component: weeklyBreakDown },
     { label: 'Monthly', value: 'monthly', component: monthlyBreakDown },
@@ -459,7 +488,7 @@ function SchedulePicker({
         <div className="selected-component">
           {selectedComponent}
 
-          {completeSchedule.length > 0 ? (
+          {completeSchedule.length > 0 && completeSchedule[0].scheduleBy !== 'dates' ? (
             <div style={{ marginTop: '10px', borderTop: '1px solid  #dadada', paddingTop: '10px' }}>
               {completeSchedule.map((schedule) => (
                 <Tag

@@ -1,10 +1,11 @@
-const hpccJSComms = require("@hpcc-js/comms");
-const { parentPort } = require("worker_threads");
+const hpccJSComms = require('@hpcc-js/comms');
+const { parentPort } = require('worker_threads');
 
-const models = require("../../models");
+const models = require('../../models');
 const Cluster = models.cluster;
-const logger = require("../../config/logger");
-const hpccUtil = require("../../utils/hpcc-util");
+// const logger = require('../../config/logger');
+const hpccUtil = require('../../utils/hpcc-util');
+const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 (async () => {
   const startTime = Date.now();
@@ -12,14 +13,14 @@ const hpccUtil = require("../../utils/hpcc-util");
   // Log job start
   if (parentPort) {
     parentPort.postMessage({
-      level: "info",
-      text: "Cluster usage tracker job started...",
+      level: 'info',
+      text: 'Cluster usage tracker job started...',
     });
   }
 
   try {
     const allClusters = await Cluster.findAll({
-      attributes: ["id", "storageUsageHistory"],
+      attributes: ['id', 'storageUsageHistory'],
       raw: true,
     });
 
@@ -27,19 +28,21 @@ const hpccUtil = require("../../utils/hpcc-util");
     for (const cl of allClusters) {
       try {
         let cluster = await hpccUtil.getCluster(cl.id);
-        const { name, thor_host, thor_port, username, hash } = cluster;
+        const { name, thor_host, thor_port, username, hash, allowSelfSigned } =
+          cluster;
         const clusterDetails = {
           baseUrl: `${thor_host}:${thor_port}`,
-          userID: username || "",
-          password: hash || "",
+          userID: username || '',
+          password: hash || '',
           id: cl.id,
           name,
+          allowSelfSigned,
         };
         allClusterDetails.push(clusterDetails);
       } catch (err) {
         if (parentPort) {
           parentPort.postMessage({
-            level: "error",
+            level: 'error',
             text: `Error getting cluster details for cluster ID ${cl.id}: ${err.message}`,
           });
         }
@@ -50,15 +53,19 @@ const hpccUtil = require("../../utils/hpcc-util");
       const currentTimeStamp = Date.now();
       const { storageUsageHistory, id } = detail;
       try {
-        // Try catch on each iteration coz the loop needs to complete even if some  request fails
-        const machineService = new hpccJSComms.MachineService(detail);
+        // Try catch on each iteration because the loop needs to complete even if some  request fails
+        // Get cluster detail with allowSelfSigned removed to ensure no side effect of passing the prop into MachineService
+        const { allowSelfSigned, ...detailWOAllowSelfSigned } = detail;
+        const machineService = new hpccJSComms.MachineService(
+          getClusterOptions(detailWOAllowSelfSigned, allowSelfSigned)
+        );
         const targetClusterUsage =
           await machineService.GetTargetClusterUsageEx();
 
         // 1. No storageUsageHistory
         if (!storageUsageHistory) {
           const usageHistory = {};
-          targetClusterUsage.forEach((target) => {
+          targetClusterUsage.forEach(target => {
             usageHistory[target.Name] = [
               {
                 date: currentTimeStamp,
@@ -74,7 +81,7 @@ const hpccUtil = require("../../utils/hpcc-util");
         } else {
           // Some history already in DB
           const machines = Object.keys(storageUsageHistory);
-          targetClusterUsage.forEach((target) => {
+          targetClusterUsage.forEach(target => {
             const newData = {
               date: currentTimeStamp,
               maxUsage: target.max.toFixed(2),
@@ -96,7 +103,7 @@ const hpccUtil = require("../../utils/hpcc-util");
       } catch (err) {
         if (parentPort) {
           parentPort.postMessage({
-            level: "error",
+            level: 'error',
             text: `Unable to get cluster storage usage for ${detail.name} cluster: ${err.message}`,
           });
         }
@@ -105,7 +112,7 @@ const hpccUtil = require("../../utils/hpcc-util");
   } catch (err) {
     if (parentPort) {
       parentPort.postMessage({
-        level: "error",
+        level: 'error',
         text: `Error in Cluster Monitoring Poller: ${err.message}`,
       });
     }
@@ -114,10 +121,10 @@ const hpccUtil = require("../../utils/hpcc-util");
     const durationSec = ((endTime - startTime) / 1000).toFixed(2);
     if (parentPort) {
       parentPort.postMessage({
-        level: "info",
+        level: 'info',
         text: `Cluster usage tracker job completed in ${durationSec} seconds.`,
       });
-      parentPort.postMessage("done");
+      parentPort.postMessage('done');
     } else {
       process.exit(0);
     }

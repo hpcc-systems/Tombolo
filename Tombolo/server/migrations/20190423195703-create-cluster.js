@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("cluster", {
+    return queryInterface.createTable('cluster', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -42,6 +42,11 @@ module.exports = {
       },
       timezone_offset: {
         type: Sequelize.INTEGER,
+        allowNull: false,
+      },
+      allowSelfSigned: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
         allowNull: false,
       },
       accountMetaData: {
@@ -90,6 +95,6 @@ module.exports = {
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("cluster");
+    return queryInterface.dropTable('cluster');
   },
 };

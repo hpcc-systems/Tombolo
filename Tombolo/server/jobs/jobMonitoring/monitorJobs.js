@@ -20,6 +20,7 @@ const {
   WUInfoOptions,
 } = require('./monitorJobsUtil');
 const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested');
+const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 // Models
 const JobMonitoring = models.jobMonitoring;
@@ -155,11 +156,16 @@ const monitoring_name = 'Job Monitoring';
     const failedToReachClusters = [];
     for (let clusterInfo of clustersInfo) {
       try {
-        const wuService = new WorkunitsService({
-          baseUrl: `${clusterInfo.thor_host}:${clusterInfo.thor_port}/`,
-          userID: clusterInfo.username || '',
-          password: clusterInfo.password || '',
-        });
+        const wuService = new WorkunitsService(
+          getClusterOptions(
+            {
+              baseUrl: `${clusterInfo.thor_host}:${clusterInfo.thor_port}/`,
+              userID: clusterInfo.username || '',
+              password: clusterInfo.password || '',
+            },
+            clusterInfo.allowSelfSigned
+          )
+        );
 
         // Date to string
         const startTime = clusterInfo.startTime.toISOString();
@@ -327,11 +333,16 @@ const monitoring_name = 'Job Monitoring';
             const { Wuid, clusterId } = wu;
 
             // Get wuInfo from cluster
-            const wuService = new WorkunitsService({
-              baseUrl: `${clusterInfoObj[clusterId].thor_host}:${clusterInfoObj[clusterId].thor_port}/`,
-              userID: clusterInfoObj[clusterId].username || '',
-              password: clusterInfoObj[clusterId].password || '',
-            });
+            const wuService = new WorkunitsService(
+              getClusterOptions(
+                {
+                  baseUrl: `${clusterInfoObj[clusterId].thor_host}:${clusterInfoObj[clusterId].thor_port}/`,
+                  userID: clusterInfoObj[clusterId].username || '',
+                  password: clusterInfoObj[clusterId].password || '',
+                },
+                clusterInfoObj[clusterId].allowSelfSigned
+              )
+            );
 
             const wuInfo = await wuService.WUInfo(WUInfoOptions(Wuid));
             const { Workunit = {} } = wuInfo;
@@ -547,7 +558,7 @@ const monitoring_name = 'Job Monitoring';
         parentPort &&
           parentPort.postMessage({
             level: 'error',
-            text: `Job monitoring - ${error.message}`,
+            text: `Job monitoring - ${err.message}`,
             error: err,
           });
       }
