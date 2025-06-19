@@ -1,43 +1,45 @@
-const path = require("path");
-const pathToEnv = path.join(process.cwd(), "..", "..", ".env");
-require("dotenv").config({ path: pathToEnv });
-const express = require("express");
-const db = require("../models");
-const logger = require("../config/logger");
+const path = require('path');
+const pathToEnv = path.join(process.cwd(), '..', '..', '.env');
+require('dotenv').config({ path: pathToEnv });
+const express = require('express');
+// const db = require('../models');
+const logger = require('../config/logger');
+const cookieParser = require('cookie-parser');
 
 // Change the NODE_ENV to test
-process.env.NODE_ENV = "test";
+process.env.NODE_ENV = 'test';
 
 const app = express();
 const port = process.env.TEST_SERVER_PORT;
 
 // Middlewares
 app.use(express.json());
+app.use(cookieParser());
 
 // Import routes
-const auth = require("../routes/authRoutes");
-const user = require("../routes/userRoutes");
-const cluster = require("../routes/clusterRoutes");
-const session = require("../routes/sessionRoutes");
-const roles = require("../routes/roleTypesRoute");
-
+const auth = require('../routes/authRoutes');
+const user = require('../routes/userRoutes');
+const instance = require('../routes/instanceRoutes');
+const cluster = require('../routes/clusterRoutes');
+const session = require('../routes/sessionRoutes');
+const roles = require('../routes/roleTypesRoute');
 
 // Use routes
-app.use("/api/auth", auth);
-app.use("/api/users", user);
-app.use("/api/cluster", cluster);
-app.use("/api/session", session);
-app.use("/api/roles", roles);
-
+app.use('/api/auth', auth);
+app.use('/api/users', user);
+app.use('/api/instance', instance);
+app.use('/api/cluster', cluster);
+app.use('/api/session', session);
+app.use('/api/roles', roles);
 
 // Function to start the server
 let server;
 const startServer = async () => {
   try {
-    await db.sequelize.authenticate();
+    // await db.sequelize.authenticate();
     server = app.listen(port);
   } catch (err) {
-    logger.error("Failed to establish connection to test DB", err);
+    logger.error('Failed to establish connection to test DB', err);
   }
 };
 
@@ -53,4 +55,4 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = { app, db, startServer, closeServer };
+module.exports = { app, startServer, closeServer };
