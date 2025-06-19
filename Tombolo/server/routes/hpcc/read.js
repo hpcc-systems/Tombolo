@@ -1,4 +1,5 @@
 const express = require('express');
+const https = require('https');
 const router = express.Router();
 var request = require('request');
 var requestPromise = require('request-promise');
@@ -16,14 +17,17 @@ let hpccJSComms = require('@hpcc-js/comms');
 const { body, query, validationResult } = require('express-validator');
 
 let lodash = require('lodash');
-const { io } = require('../../server');
 const fs = require('fs');
 const { response } = require('express');
-const userService = require('../user/userservice');
 const path = require('path');
-var sanitize = require('sanitize-filename');
+
 const logger = require('../../config/logger');
 const moment = require('moment');
+const { getClusterOptions } = require('../../utils/getClusterOptions');
+
+// const userService = require('../user/userservice');
+// var sanitize = require('sanitize-filename');
+// const { io } = require('../../server');
 
 let ClusterWhitelist = { clusters: [] };
 
@@ -58,11 +62,16 @@ router.post(
         try {
           let clusterAuth = hpccUtil.getClusterAuth(cluster);
           let contentType = req.body.indexSearch ? 'key' : '';
-          let dfuService = new hpccJSComms.DFUService({
-            baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-            userID: clusterAuth ? clusterAuth.user : '',
-            password: clusterAuth ? clusterAuth.password : '',
-          });
+          let dfuService = new hpccJSComms.DFUService(
+            getClusterOptions(
+              {
+                baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+                userID: clusterAuth ? clusterAuth.user : '',
+                password: clusterAuth ? clusterAuth.password : '',
+              },
+              cluster.allowSelfSigned
+            )
+          );
           const { fileNamePattern } = req.body;
           let logicalFileName;
           if (fileNamePattern === 'startsWith') {
@@ -201,12 +210,17 @@ router.post(
       .getCluster(req.body.clusterid)
       .then(function (cluster) {
         let clusterAuth = hpccUtil.getClusterAuth(cluster);
-        let wsWorkunits = new hpccJSComms.WorkunitsService({
-            baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-            userID: clusterAuth ? clusterAuth.user : '',
-            password: clusterAuth ? clusterAuth.password : '',
-            type: 'get',
-          }),
+        let wsWorkunits = new hpccJSComms.WorkunitsService(
+            getClusterOptions(
+              {
+                baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+                userID: clusterAuth ? clusterAuth.user : '',
+                password: clusterAuth ? clusterAuth.password : '',
+                type: 'get',
+              },
+              cluster.allowSelfSigned
+            )
+          ),
           querySearchAutoComplete = [];
         wsWorkunits
           .WUListQueries({
@@ -640,11 +654,16 @@ router.get(
     try {
       hpccUtil.getCluster(req.query.clusterid).then(function (cluster) {
         let clusterAuth = hpccUtil.getClusterAuth(cluster);
-        let wuService = new hpccJSComms.WorkunitsService({
-          baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-          userID: clusterAuth ? clusterAuth.user : '',
-          password: clusterAuth ? clusterAuth.password : '',
-        });
+        let wuService = new hpccJSComms.WorkunitsService(
+          getClusterOptions(
+            {
+              baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+              userID: clusterAuth ? clusterAuth.user : '',
+              password: clusterAuth ? clusterAuth.password : '',
+            },
+            cluster.allowSelfSigned
+          )
+        );
         wuService
           .WUResult({
             LogicalName: req.query.fileName,
@@ -695,6 +714,7 @@ router.get('/getFileProfile', function (req, res) {
             req.query.fileName +
             '.profile',
           auth: hpccUtil.getClusterAuth(cluster),
+          agent: https.globalAgent,
         },
         function (err, response, body) {
           if (err) {
@@ -754,6 +774,7 @@ router.get('/getFileProfileHTML', function (req, res) {
             'Wuid=' +
             wuid +
             '&TruncateEclTo64k=true&IncludeResourceURLs=true&IncludeExceptions=false&IncludeGraphs=false&IncludeSourceFiles=false&IncludeResults=false&IncludeResultsViewNames=false&IncludeVariables=false&IncludeTimers=false&IncludeDebugValues=false&IncludeApplicationValues=false&IncludeWorkflows=false&IncludeXmlSchemas=false&SuppressResultSchemas',
+          agent: https.globalAgent,
         },
         function (err, response, body) {
           if (err) {
@@ -940,6 +961,7 @@ router.get(
             {
               url: url,
               auth: hpccUtil.getClusterAuth(cluster),
+              agent: https.globalAgent,
             },
             function (err, response, body) {
               if (err) {
@@ -1025,6 +1047,7 @@ router.get(
             {
               url: url,
               auth: hpccUtil.getClusterAuth(cluster),
+              agent: https.globalAgent,
             },
             function (err, response, body) {
               if (err) {
@@ -1191,6 +1214,7 @@ router.post(
               '&__dropZoneMachine.value=' +
               req.body.server +
               '&__dropZoneMachine.selected=true&rawxml_=true',
+            agent: https.globalAgent,
           },
           function (err, response, body) {
             if (err) {
@@ -1298,6 +1322,7 @@ router.post(
             headers: { 'content-type': 'application/x-www-form-urlencoded' },
             formData: sprayPayload,
             resolveWithFullResponse: true,
+            agent: https.globalAgent,
           },
           function (err, response, body) {
             if (err) {
@@ -1320,7 +1345,6 @@ router.post(
     }
   }
 );
-
 router.get(
   '/clusterMetaData',
   [query('clusterId').isUUID(4).withMessage('Invalid cluster Id')],
@@ -1337,12 +1361,15 @@ router.get(
       //If cluster id is valid ->      const { clusterId } = req.query;
       //Get cluster details
       let cluster = await hpccUtil.getCluster(clusterId);
-      const { thor_host, thor_port, username, hash } = cluster;
-      const clusterDetails = {
-        baseUrl: `${thor_host}:${thor_port}`,
-        userID: username || '',
-        password: hash || '',
-      };
+      const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
+      const clusterDetails = getClusterOptions(
+        {
+          baseUrl: `${thor_host}:${thor_port}`,
+          userID: username || '',
+          password: hash || '',
+        },
+        allowSelfSigned
+      );
       const topologyService = new hpccJSComms.TopologyService(clusterDetails);
       const tpServiceQuery = await topologyService.TpServiceQuery({
         Type: 'ALLSERVICES',

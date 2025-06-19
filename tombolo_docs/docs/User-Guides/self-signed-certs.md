@@ -19,3 +19,10 @@ The filename of `customCert.pem` is not required, you can name it whatever you l
 ## Move the file into Tomobolo's `customCerts` folder
 
 The `.pem` file you created with the above step needs to be placed in `Tombolo/Tombolo/customCerts`. This folder should already exist.
+
+## Allow self signed certificates on the cluster in Tombolo
+
+On the add cluster modal there will be a check box to allow self signed certificates directly below the cluster dropdown. Ensure you have checked this box. If you've already added the cluster you can edit the cluster and check the box in that modal.
+See the outlined checkbox in the image below.
+
+![Self Signed Certs Checkbox](/img/self-signed-cert-checkbox.png)
