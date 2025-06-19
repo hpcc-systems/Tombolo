@@ -96,7 +96,7 @@ const AddEditJobMonitoringModal = ({
     {
       label: 'Notifications',
       id: 3,
-      component: () => <JobMonitoringNotificationTab form={form} />,
+      component: () => <JobMonitoringNotificationTab form={form} intermittentScheduling={intermittentScheduling} />,
     },
   ];
 
