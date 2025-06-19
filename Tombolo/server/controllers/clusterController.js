@@ -12,6 +12,7 @@ const logger = require('../config/logger');
 const models = require('../models');
 const { encryptString } = require('../utils/cipher.js');
 const CustomError = require('../utils/customError.js');
+const { getClusterOptions } = require('../utils/getClusterOptions');
 const hpccUtil = require('../utils/hpcc-util.js');
 const hpccJSComms = require('@hpcc-js/comms');
 const Cluster = models.cluster;
@@ -26,6 +27,7 @@ const addCluster = async (req, res) => {
       password,
       adminEmails,
       metaData = {},
+      allowSelfSigned,
       createdBy,
       updatedBy,
     } = req.body;
@@ -39,16 +41,23 @@ const addCluster = async (req, res) => {
     const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
 
     // Check if cluster is reachable
-    await new AccountService({ baseUrl, userID, password }).MyAccount();
+    await new AccountService(
+      getClusterOptions({ baseUrl, userID, password }, allowSelfSigned)
+    ).MyAccount();
 
     // Get default cluster (engine) if exists - if not pick the first one
     const {
       TpLogicalClusters: { TpLogicalCluster },
-    } = await new TopologyService({
-      baseUrl,
-      userID,
-      password,
-    }).TpLogicalClusterQuery();
+    } = await new TopologyService(
+      getClusterOptions(
+        {
+          baseUrl,
+          userID,
+          password,
+        },
+        allowSelfSigned
+      )
+    ).TpLogicalClusterQuery();
 
     let defaultEngine = null;
     if (TpLogicalCluster.length > 0) {
@@ -73,7 +82,9 @@ const addCluster = async (req, res) => {
     const eclCode =
       'IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);';
     // Create timezone offset in default engine
-    const wus = new WorkunitsService({ baseUrl, userID, password });
+    const wus = new WorkunitsService(
+      getClusterOptions({ baseUrl, userID, password }, allowSelfSigned)
+    );
     const {
       Workunit: { Wuid },
     } = await wus.WUCreateAndUpdate({
@@ -112,6 +123,7 @@ const addCluster = async (req, res) => {
       timezone_offset: offSetInMinutes,
       adminEmails,
       createdBy,
+      allowSelfSigned,
       updatedBy,
       metaData,
     };
@@ -153,6 +165,7 @@ const addClusterWithProgress = async (req, res) => {
       password,
       adminEmails,
       metaData = {},
+      allowSelfSigned,
       createdBy,
       updatedBy,
     } = req.body;
@@ -171,7 +184,16 @@ const addClusterWithProgress = async (req, res) => {
       success: true,
       message: 'Authenticating cluster ..',
     });
-    await new AccountService({ baseUrl, userID, password }).MyAccount();
+    await new AccountService(
+      getClusterOptions(
+        {
+          baseUrl,
+          userID,
+          password,
+        },
+        allowSelfSigned
+      )
+    ).MyAccount();
     sendUpdate({
       step: 1,
       success: true,
@@ -186,11 +208,16 @@ const addClusterWithProgress = async (req, res) => {
     });
     const {
       TpLogicalClusters: { TpLogicalCluster },
-    } = await new TopologyService({
-      baseUrl,
-      userID,
-      password,
-    }).TpLogicalClusterQuery();
+    } = await new TopologyService(
+      getClusterOptions(
+        {
+          baseUrl,
+          userID,
+          password,
+        },
+        allowSelfSigned
+      )
+    ).TpLogicalClusterQuery();
 
     let defaultEngine = null;
     if (TpLogicalCluster.length > 0) {
@@ -226,7 +253,16 @@ const addClusterWithProgress = async (req, res) => {
     const eclCode =
       'IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);';
     // Create timezone offset in default engine
-    const wus = new WorkunitsService({ baseUrl, userID, password });
+    const wus = new WorkunitsService(
+      getClusterOptions(
+        {
+          baseUrl,
+          userID,
+          password,
+        },
+        allowSelfSigned
+      )
+    );
     const {
       Workunit: { Wuid },
     } = await wus.WUCreateAndUpdate({
@@ -277,6 +313,7 @@ const addClusterWithProgress = async (req, res) => {
       timezone_offset: offSetInMinutes,
       adminEmails,
       createdBy,
+      allowSelfSigned,
       updatedBy,
       metaData,
     };
@@ -365,9 +402,11 @@ const deleteCluster = async (req, res) => {
 const updateCluster = async (req, res) => {
   // Only username, password, adminEmails can be updated. only update that if it is present in the request body
   try {
-    const { username, password, adminEmails, updatedBy } = req.body;
+    const { username, password, adminEmails, updatedBy, allowSelfSigned } =
+      req.body;
     const cluster = await Cluster.findOne({ where: { id: req.params.id } });
     if (!cluster) throw new CustomError('Cluster not found', 404);
+    if (allowSelfSigned) cluster.allowSelfSigned = allowSelfSigned;
     if (username) cluster.username = username;
     if (password) cluster.hash = encryptString(password);
     if (adminEmails) cluster.adminEmails = adminEmails;
@@ -489,11 +528,14 @@ const clusterUsage = async (req, res) => {
     //Get cluster details
     let cluster = await hpccUtil.getCluster(id); // Checks if cluster is reachable and decrypts cluster credentials if any
     const { thor_host, thor_port, username, hash } = cluster;
-    const clusterDetails = {
-      baseUrl: `${thor_host}:${thor_port}`,
-      userID: username || '',
-      password: hash || '',
-    };
+    const clusterDetails = getClusterOptions(
+      {
+        baseUrl: `${thor_host}:${thor_port}`,
+        userID: username || '',
+        password: hash || '',
+      },
+      allowSelfSigned
+    );
 
     //Use JS comms library to fetch current usage
     const machineService = new hpccJSComms.MachineService(clusterDetails);
@@ -506,7 +548,6 @@ const clusterUsage = async (req, res) => {
     }));
     res.status(200).send(maxUsage);
   } catch (err) {
-    console.log(err);
     res.status(503).json({
       success: false,
       message: 'Failed to fetch current cluster usage',
@@ -551,7 +592,6 @@ const clusterStorageHistory = async (req, res) => {
 
     res.status(200).send(filtered_data);
   } catch (err) {
-    console.log(err);
     logger.error(err);
     res.status(503).json({
       success: false,

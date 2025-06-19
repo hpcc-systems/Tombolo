@@ -1,14 +1,15 @@
-const { parentPort } = require("worker_threads");
-const { AccountService } = require("@hpcc-js/comms");
+const { parentPort } = require('worker_threads');
+const { AccountService } = require('@hpcc-js/comms');
 
 const {
   passwordExpiryAlertDaysForCluster,
-} = require("../../config/monitorings.js");
+} = require('../../config/monitorings.js');
 const {
   passwordExpiryInProximityNotificationPayload,
-} = require("./clusterReachabilityMonitoringUtils.js");
-const { decryptString } = require("../../utils/cipher");
-const models = require("../../models");
+} = require('./clusterReachabilityMonitoringUtils.js');
+const { decryptString } = require('../../utils/cipher');
+const models = require('../../models');
+const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 const Cluster = models.cluster;
 const NotificationQueue = models.notification_queue;
@@ -18,14 +19,14 @@ const NotificationQueue = models.notification_queue;
   const now = new Date();
   parentPort &&
     parentPort.postMessage({
-      level: "info",
-      text: `Cluster reachability monitoring started ...`,
+      level: 'info',
+      text: 'Cluster reachability monitoring started ...',
     });
 
   try {
     // Get clusters and decrypt passwords
     const allClusters = await Cluster.findAll({ raw: true });
-    allClusters.forEach((cluster) => {
+    allClusters.forEach(cluster => {
       if (cluster.hash) {
         const password = decryptString(cluster.hash);
         cluster.password = password;
@@ -49,11 +50,16 @@ const NotificationQueue = models.notification_queue;
         const newAccountMetaData = { ...accountMetaData, lastMonitored: now };
 
         //Create an instance
-        const accountService = new AccountService({
-          baseUrl: `${cluster.thor_host}:${cluster.thor_port}`,
-          userID: cluster.username,
-          password: cluster.password,
-        });
+        const accountService = new AccountService(
+          getClusterOptions(
+            {
+              baseUrl: `${cluster.thor_host}:${cluster.thor_port}`,
+              userID: cluster.username,
+              password: cluster.password,
+            },
+            cluster.allowSelfSigned
+          )
+        );
 
         // Get account information
         const myAccount = await accountService.MyAccount();
@@ -75,7 +81,7 @@ const NotificationQueue = models.notification_queue;
               //Queue notification
               const payload = passwordExpiryInProximityNotificationPayload({
                 clusterName,
-                templateName: "hpccPasswordExpiryAlert",
+                templateName: 'hpccPasswordExpiryAlert',
                 passwordDaysRemaining,
                 recipients: adminEmails || [],
                 notificationId: `PWD_EXPIRY_${now.getTime()}`,
@@ -89,7 +95,7 @@ const NotificationQueue = models.notification_queue;
             } catch (err) {
               parentPort &&
                 parentPort.postMessage({
-                  level: "error",
+                  level: 'error',
                   text: `Cluster reachability:  ${cluster.name} failed to queue notification - ${err.message}`,
                 });
             }
@@ -101,7 +107,7 @@ const NotificationQueue = models.notification_queue;
 
         parentPort &&
           parentPort.postMessage({
-            level: "info",
+            level: 'info',
             text: `Cluster reachability:  ${cluster.name} is reachable`,
           });
         // Update accountMetaData
@@ -114,12 +120,12 @@ const NotificationQueue = models.notification_queue;
         };
         await Cluster.update(
           { accountMetaData: newAccountMetaData, metaData: newMetaData },
-          { where: { id: cluster.id } },
+          { where: { id: cluster.id } }
         );
       } catch (err) {
         parentPort &&
           parentPort.postMessage({
-            level: "error",
+            level: 'error',
             text: `Cluster reachability:  ${cluster.name} is not reachable -  ${err.message}`,
           });
         const newMetaData = { ...metaData };
@@ -130,21 +136,21 @@ const NotificationQueue = models.notification_queue;
         newMetaData.lastMonitored = now;
         await Cluster.update(
           { metaData: newMetaData },
-          { where: { id: cluster.id } },
+          { where: { id: cluster.id } }
         );
       }
     }
   } catch (err) {
     parentPort &&
       parentPort.postMessage({
-        level: "error",
+        level: 'error',
         text: `Cluster reachability:  monitoring failed - ${err.message}`,
       });
   } finally {
     if (parentPort) {
       parentPort &&
         parentPort.postMessage({
-          level: "info",
+          level: 'info',
           text: `Cluster reachability:  monitoring completed in ${new Date() - now} ms`,
         });
     } else {
