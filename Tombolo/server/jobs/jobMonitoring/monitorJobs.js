@@ -244,7 +244,7 @@ const monitoring_name = 'Job Monitoring';
           parentPort &&
             parentPort.postMessage({
               level: 'error',
-              text: `Job monitoring:  Error while updating last cluster scanned time stamp`,
+              text: `Job monitoring:  ${err.message}`,
             });
         }
       }
@@ -558,7 +558,7 @@ const monitoring_name = 'Job Monitoring';
         parentPort &&
           parentPort.postMessage({
             level: 'error',
-            text: `Job monitoring - Error while updating last cluster scanned time stamp`,
+            text: `Job monitoring - ${err.message}`,
             error: err,
           });
       }

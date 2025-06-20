@@ -291,8 +291,8 @@ const JobMonitoringData = models.jobMonitoring_Data;
           if (!requireComplete) {
             keepWu = false;
           } else if (
-            requireComplete &&
-            currentTimeToWindowRelation === 'within'
+            (requireComplete && currentTimeToWindowRelation === 'within') ||
+            !currentTimeToWindowRelation
           ) {
             keepWu = true;
           } else if (
