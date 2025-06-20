@@ -58,9 +58,11 @@ describe('Cluster Routes', () => {
     const cluster = getCluster();
     cluster.name = 'Not whitelisted Cluster';
 
-    const res = await request(app).post('/api/clusters').send(cluster);
+    const res = await request(app).post('/api/cluster').send(cluster);
 
     expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Cluster not whitelisted');
+    expect(res.body.success).toBe(false);
     expect(Cluster.create).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalled();
   });

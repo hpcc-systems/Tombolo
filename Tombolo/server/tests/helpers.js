@@ -171,6 +171,11 @@ function getLoginPayload(user) {
   };
 }
 
+function fakeValidateTokenMiddleware(req, res, next) {
+  req.user = getUsers()[0];
+  next();
+}
+
 const nonExistentID = uuidv4();
 
 module.exports = {
@@ -179,5 +184,6 @@ module.exports = {
   getCluster,
   getSentNotification,
   getLoginPayload,
+  fakeValidateTokenMiddleware,
   nonExistentID,
 };

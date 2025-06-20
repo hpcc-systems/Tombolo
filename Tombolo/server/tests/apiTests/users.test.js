@@ -16,6 +16,7 @@ describe('User Routes', () => {
   beforeEach(() => {
     jest.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
+
     // Used for mocking express validator, not functioning
     // jest.mock('express-validator', () => ({
     //   body: jest.fn().mockReturnValue({
@@ -78,7 +79,7 @@ describe('User Routes', () => {
     const user = users[0];
     const reqBody = {
       firstName: 'Johnny',
-      ...user,
+      id: user.id,
     };
 
     User.findOne.mockResolvedValue({

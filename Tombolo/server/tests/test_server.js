@@ -5,6 +5,7 @@ const express = require('express');
 // const db = require('../models');
 const logger = require('../config/logger');
 const cookieParser = require('cookie-parser');
+const { fakeValidateTokenMiddleware } = require('./helpers');
 
 // Change the NODE_ENV to test
 process.env.NODE_ENV = 'test';
@@ -26,7 +27,7 @@ const roles = require('../routes/roleTypesRoute');
 
 // Use routes
 app.use('/api/auth', auth);
-app.use('/api/users', user);
+app.use('/api/users', fakeValidateTokenMiddleware, user);
 app.use('/api/instance', instance);
 app.use('/api/cluster', cluster);
 app.use('/api/session', session);
