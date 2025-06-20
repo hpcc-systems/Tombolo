@@ -47,9 +47,7 @@ describe('Cluster Routes', () => {
 
     const res = await request(app).get(`/api/cluster/getOne/${nonExistentID}`);
 
-    // TODO: Not found error isn't correctly setting status for catch
-    // expect(res.status).toBe(404);
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe('Cluster not found');
     expect(Cluster.findOne).toHaveBeenCalledTimes(1);
@@ -61,11 +59,10 @@ describe('Cluster Routes', () => {
     cluster.name = 'Not whitelisted Cluster';
 
     const res = await request(app).post('/api/clusters').send(cluster);
-    expect(res.status).toBe(404);
-    expect(Cluster.create).not.toHaveBeenCalled();
 
-    // TODO: Uncomment line below when return is correct
-    // expect(logger.error).toHaveBeenCalled();
+    expect(res.status).toBe(400);
+    expect(Cluster.create).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalled();
   });
 
   it('update-cluster should update a cluster by ID', async () => {
@@ -99,9 +96,7 @@ describe('Cluster Routes', () => {
         updatedBy: { name: 'Admin', email: 'admin@example.com' },
       });
 
-    // TODO: Update when correct return type
-    // expect(res.status).toBe(404);
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe('Cluster not found');
     expect(logger.error).toHaveBeenCalled();
@@ -131,9 +126,7 @@ describe('Cluster Routes', () => {
 
     const res = await request(app).delete(`/api/cluster/${nonExistentID}`);
 
-    // TODO: Update when status code bug fixed
-    // expect(res.status).toBe(404);
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe('Cluster not found');
     expect(Cluster.destroy).toHaveBeenCalledWith({

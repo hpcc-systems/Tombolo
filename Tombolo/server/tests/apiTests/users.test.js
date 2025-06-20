@@ -123,59 +123,6 @@ describe('User Routes', () => {
     expect(logger.error).toHaveBeenCalled();
   });
 
-  // // TODO: Bulk update call throws error on middlware UUID check
-  // it('bulk-update should update user info', async () => {
-  //   const users = getUsers();
-  //   const user1Mock = {
-  //     ...users[0],
-  //     save: jest.fn().mockResolvedValue({ ...users[0], firstName: 'Johnny' }),
-  //   };
-  //   const user2Mock = {
-  //     ...users[1],
-  //     save: jest.fn().mockResolvedValue({ ...users[1], firstName: 'Janet' }),
-  //   };
-  //   User.findOne
-  //     .mockResolvedValueOnce(user1Mock)
-  //     .mockResolvedValueOnce(user2Mock);
-
-  //   const res = await request(app)
-  //     .patch(`/api/users/bulk-update`)
-  //     .send({
-  //       users: [
-  //         { firstName: 'Johnny', ...users[0] },
-  //         { firstName: 'Janet', ...users[1] },
-  //       ],
-  //     });
-
-  //   console.warn(res.body);
-  //   expect(res.status).toBe(200);
-  //   expect(res.body.success).toBe(true);
-  //   expect(res.body.data[0].firstName).toBe('Johnny');
-  //   expect(res.body.data[1].firstName).toBe('Janet');
-  //   expect(User.findOne).toHaveBeenCalledTimes(2);
-  //   expect(User.save).toHaveBeenCalledTimes(2);
-  //   expect(user1Mock.save).toHaveBeenCalled();
-  //   expect(user2Mock.save).toHaveBeenCalled();
-  // });
-
-  // // TODO: Bulk update call throws error on middlware UUID check
-  // it('bulk-update should return 207 if a user to update not found', async () => {
-  //   User.findOne.mockResolvedValue(null);
-
-  //   const res = await request(app)
-  //     .patch(`/api/users/bulk-update`)
-  //     .send({ users: [{ id: nonExistentID, firstName: 'Johnny' }] });
-
-  //   expect(res.status).toBe(207);
-  //   expect(res.body.success).toBe(false);
-  //   expect(res.errors.length).toBe(1);
-  //   const failedObject = res.errors[0];
-  //   expect(failedObject.status).toBe(404);
-  //   expect(failedObject.id).toEqual(nonExistentID);
-  //   expect(User.findOne).toHaveBeenCalled();
-  //   expect(User.save).not.toHaveBeenCalled();
-  // });
-
   it('delete-user should delete a user by ID', async () => {
     const users = getUsers();
     const user = users[0];
@@ -277,34 +224,6 @@ describe('User Routes', () => {
   it('reset-password-for-user should return 404 if user not found for password reset', async () => {
     // TODO: Create this test
   });
-
-  // TODO: middleware/userMiddleware.js/validateBulkUpdatePayload:166
-  // Throwing error on uuid parsing, not sure if this is intentional
-
-  // it('should bulk update users', async () => {
-  //   User.findOne.mockReturnValueOnce(users[0]).mockReturnValueOnce(users[1]);
-
-  //   const updates = users.map(user => {
-  //     return {
-  //       id: user.id,
-  //       firstName: `Updated${user.firstName}`,
-  //     };
-  //   });
-
-  //   console.warn({ users: updates });
-
-  //   const res = await request(app)
-  //     .patch('/api/users/bulk-update')
-  //     .send({ users: updates });
-
-  //   expect(res.status).toBe(200);
-  //   expect(res.body.success).toBe(true);
-  //   expect(res.body.message).toBe('Users updated successfully');
-  //   expect(User.findOne).toHaveBeenCalledTimes(2);
-  //   expect(User.save).toHaveBeenCalledTimes(2);
-  //   expect(User.findOne).toHaveBeenCalledWith({ where: { id: users[0].id } });
-  //   expect(User.findOne).toHaveBeenCalledWith({ where: { id: users[1].id } });
-  // });
 
   it('bulk-delete should bulk delete users', async () => {
     const users = getUsers();
