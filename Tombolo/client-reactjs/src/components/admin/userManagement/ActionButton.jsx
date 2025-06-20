@@ -39,9 +39,9 @@ const UserManagementActionButton = ({
         <Menu onClick={({ key }) => handleMenuSelection(key)}>
           <Menu.Item key="1">Add User </Menu.Item>
 
-          <Menu.Item key="2" disabled={selectedRows.length < 2}>
+          {/* <Menu.Item key="2" disabled={selectedRows.length < 2}>
             Bulk Edit
-          </Menu.Item>
+          </Menu.Item> */}
           <Menu.Item key="3" disabled={selectedRows.length < 2}>
             <Popconfirm
               title={`Are you sure you want to delete  selected ${selectedRows.length} users? `}

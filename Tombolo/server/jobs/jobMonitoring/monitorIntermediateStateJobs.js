@@ -20,6 +20,7 @@ const {
   inferWuStartTime,
 } = require('./monitorJobsUtil');
 const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested');
+const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 // Constants
 const cluster = models.cluster;
@@ -147,11 +148,16 @@ const JobMonitoringData = models.jobMonitoring_Data;
         } = wuData;
 
         // create a new instance of WorkunitsService
-        const wuService = new WorkunitsService({
-          baseUrl: `${clusterDetail.thor_host}:${clusterDetail.thor_port}/`,
-          userID: clusterDetail.username || '',
-          password: clusterDetail.password || '',
-        });
+        const wuService = new WorkunitsService(
+          getClusterOptions(
+            {
+              baseUrl: `${clusterDetail.thor_host}:${clusterDetail.thor_port}/`,
+              userID: clusterDetail.username || '',
+              password: clusterDetail.password || '',
+            },
+            clusterDetail.allowSelfSigned
+          )
+        );
 
         let sendAlert = false;
         let keepWu = true;
@@ -285,8 +291,8 @@ const JobMonitoringData = models.jobMonitoring_Data;
           if (!requireComplete) {
             keepWu = false;
           } else if (
-            requireComplete &&
-            currentTimeToWindowRelation === 'within'
+            (requireComplete && currentTimeToWindowRelation === 'within') ||
+            !currentTimeToWindowRelation
           ) {
             keepWu = true;
           } else if (

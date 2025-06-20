@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Form, TimePicker, Row, Col, Select, InputNumber } from 'antd';
 
 import './jobMonitoring.css';
@@ -19,9 +19,9 @@ function JobMonitoringTab({
   erroneousScheduling,
   monitoringScope,
   selectedCluster,
+  isEditing,
 }) {
   const [clusterOffset, setClusterOffset] = useState(null);
-  const isFirstRender = useRef(true);
 
   // Generating cluster offset string to display in time picker
   useEffect(() => {
@@ -33,15 +33,6 @@ function JobMonitoringTab({
       setClusterOffset(`UTC ${offSet}`);
     }
   }, [selectedCluster]);
-
-  // When intermittent scheduling is changed, clear Expected start and end time
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false; // Set to false after the first render
-    } else {
-      form.setFieldsValue({ expectedStartTime: null, expectedCompletionTime: null });
-    }
-  }, [intermittentScheduling]);
 
   // Function to disable specific hours
   const getDisabledTime = (type) => {
@@ -88,6 +79,7 @@ function JobMonitoringTab({
             setCron={setCron}
             cronMessage={cronMessage}
             setCronMessage={setCronMessage}
+            isEditing={isEditing}
           />
           {erroneousScheduling && (
             <div style={{ color: '#ff4d4f', textAlign: 'center' }}>Please select schedule for the job</div>
@@ -99,56 +91,60 @@ function JobMonitoringTab({
         <Form form={form} layout="vertical">
           {/* Always render below fields*/}
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="Expected Start Time (HH:MM) "
-                name="expectedStartTime"
-                rules={[{ required: true, message: 'Expected start time is a required' }]}>
-                <TimePicker
-                  placeholder={intermittentScheduling?.runWindow === 'overnight' ? 'Previous Day' : 'Select Time'}
-                  disabledTime={() =>
-                    getDisabledTime(
-                      intermittentScheduling?.runWindow === 'overnight'
-                        ? 'afternoon'
-                        : intermittentScheduling?.runWindow
-                    )
-                  }
-                  style={{ width: '100%' }}
-                  format="HH:mm"
-                  suffixIcon={clusterOffset}
-                  renderExtraFooter={() =>
-                    intermittentScheduling?.runWindow === 'overnight' ? <div>Previous Day</div> : null
-                  }
-                  showNow={false}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="Expected Completion Time (HH:MM) "
-                name="expectedCompletionTime"
-                rules={[
-                  { required: true, message: 'Expected completion time is a required' },
-                  { validator: (_, value) => validateCompletionTime(intermittentScheduling?.runWindow)(_, value) },
-                ]}>
-                <TimePicker
-                  disabledTime={() =>
-                    getDisabledTime(
-                      intermittentScheduling?.runWindow === 'overnight' ? 'morning' : intermittentScheduling?.runWindow
-                    )
-                  }
-                  style={{ width: '100%' }}
-                  format="HH:mm"
-                  suffixIcon={clusterOffset}
-                  renderExtraFooter={() =>
-                    intermittentScheduling?.runWindow === 'overnight' ? <div>Current Day</div> : null
-                  }
-                  showNow={false}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          {intermittentScheduling.frequency !== 'anytime' && (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Expected Start Time (HH:MM) "
+                  name="expectedStartTime"
+                  rules={[{ required: true, message: 'Expected start time is a required' }]}>
+                  <TimePicker
+                    placeholder={intermittentScheduling?.runWindow === 'overnight' ? 'Previous Day' : 'Select Time'}
+                    disabledTime={() =>
+                      getDisabledTime(
+                        intermittentScheduling?.runWindow === 'overnight'
+                          ? 'afternoon'
+                          : intermittentScheduling?.runWindow
+                      )
+                    }
+                    style={{ width: '100%' }}
+                    format="HH:mm"
+                    suffixIcon={clusterOffset}
+                    renderExtraFooter={() =>
+                      intermittentScheduling?.runWindow === 'overnight' ? <div>Previous Day</div> : null
+                    }
+                    showNow={false}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Expected Completion Time (HH:MM) "
+                  name="expectedCompletionTime"
+                  rules={[
+                    { required: true, message: 'Expected completion time is a required' },
+                    { validator: (_, value) => validateCompletionTime(intermittentScheduling?.runWindow)(_, value) },
+                  ]}>
+                  <TimePicker
+                    disabledTime={() =>
+                      getDisabledTime(
+                        intermittentScheduling?.runWindow === 'overnight'
+                          ? 'morning'
+                          : intermittentScheduling?.runWindow
+                      )
+                    }
+                    style={{ width: '100%' }}
+                    format="HH:mm"
+                    suffixIcon={clusterOffset}
+                    renderExtraFooter={() =>
+                      intermittentScheduling?.runWindow === 'overnight' ? <div>Current Day</div> : null
+                    }
+                    showNow={false}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          )}
 
           <Row gutter={16}>
             <Col span={12}>

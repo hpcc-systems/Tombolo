@@ -18,6 +18,7 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
   // States
   const [updateCredentials, setUpdateCredentials] = useState(false);
   const [abortController, setAbortController] = useState(null);
+  const [allowSelfSigned, setAllowSelfSigned] = useState(selectedCluster?.allowSelfSigned);
 
   // Effects
   useEffect(() => {
@@ -40,6 +41,7 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
       clusterName: `${selectedCluster?.name} [ ${selectedCluster?.thor_host} ]`,
       username: selectedCluster?.username,
       adminEmails: selectedCluster?.adminEmails,
+      allowSelfSigned: selectedCluster?.allowSelfSigned,
     });
   }, [selectedCluster]);
 
@@ -136,6 +138,21 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
           <Form.Item name="clusterName" label="Cluster">
             <Input disabled />
           </Form.Item>
+
+          <Form.Item label={null} name="allowSelfSigned" valuePropName="checked">
+            <Checkbox name="allowSelfSigned" onChange={() => setAllowSelfSigned(!allowSelfSigned)}>
+              Allow Self Signed Certificates
+            </Checkbox>
+          </Form.Item>
+
+          {allowSelfSigned && (
+            <a
+              href="https://hpcc-systems.github.io/Tombolo/docs/User-Guides/self-signed-certs"
+              target="_blank"
+              rel="noreferrer">
+              See instructions for self signed certificates
+            </a>
+          )}
 
           <Form.Item
             label="Admin Emails"

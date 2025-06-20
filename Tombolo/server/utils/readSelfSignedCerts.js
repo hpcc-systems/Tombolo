@@ -24,9 +24,10 @@ const extractPemCertificates = filePath => {
  * Reads all .crt and .pem files in the customCerts folder and appends them to the global http.Agent
  */
 const readSelfSignedCerts = () => {
-  const customCertFiles = [];
   const certsFolder = '../customCerts';
   if (fs.existsSync(certsFolder) && fs.lstatSync(certsFolder).isDirectory()) {
+    const customCertFiles = [];
+
     fs.readdirSync(certsFolder).forEach(certFileName => {
       if (certFileName.endsWith('.crt') || certFileName.endsWith('.pem')) {
         try {
@@ -60,9 +61,11 @@ const readSelfSignedCerts = () => {
       },
     });
     https.globalAgent = customAgent;
-  }
 
-  logger.info(`Read ${customCertFiles.length} custom certificate(s).`);
+    logger.info(`Read ${customCertFiles.length} custom certificate(s).`);
+  } else {
+    logger.info('No customCerts directory found');
+  }
 };
 
 module.exports = {

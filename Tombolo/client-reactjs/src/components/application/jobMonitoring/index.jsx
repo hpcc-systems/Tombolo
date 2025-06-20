@@ -137,11 +137,11 @@ function JobMonitoring() {
           if (frequency === 'cron') {
             setCron(schedule[0].cron);
             setIntermittentScheduling({ frequency: schedule[0].frequency });
-          } else if (frequency === 'daily' || frequency === 'weekly') {
+          } else if (frequency === 'daily' || frequency === 'weekly' || frequency === 'anytime') {
             setIntermittentScheduling(schedule[0]);
           } else {
             setCompleteSchedule(schedule);
-            setIntermittentScheduling({ frequency: schedule[0].frequency });
+            setIntermittentScheduling({ frequency: schedule[0].frequency, scheduleBy: schedule[0].scheduleBy });
           }
         }
       }
@@ -407,10 +407,14 @@ function JobMonitoring() {
       delete allInputs.requireComplete;
 
       // Format expectedCompletionTime and expectedStartTime
-      metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
-      delete allInputs.expectedCompletionTime;
-      metaData.expectedStartTime = expectedStartTime.format('HH:mm');
-      delete allInputs.expectedStartTime;
+      if (expectedCompletionTime) {
+        metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
+        delete allInputs.expectedCompletionTime;
+      }
+      if (expectedStartTime) {
+        metaData.expectedStartTime = expectedStartTime.format('HH:mm');
+        delete allInputs.expectedStartTime;
+      }
       metaData.maxExecutionTime = allInputs.maxExecutionTime;
       delete allInputs.maxExecutionTime;
 

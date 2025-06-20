@@ -43,7 +43,7 @@ router.post(
       // Validate the req.body
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        logger.log(errors);
+        logger.error(JSON.stringify(errors.array()));
         return res.status(422).json({ errors: errors.array() });
       }
 
@@ -90,7 +90,7 @@ router.get(
       // Validate the application ID
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        logger.error(errors);
+        logger.error(JSON.stringify(errors.array()));
         return res.status(400).json({ errors: errors.array() });
       }
 
@@ -100,7 +100,7 @@ router.get(
       });
       res.status(200).json(jobMonitorings);
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       res.status(500).send('Failed to get job monitorings');
     }
   }
@@ -112,7 +112,7 @@ router.get('/:id', async (req, res) => {
     const jobMonitoring = await JobMonitoring.findByPk(req.params.id);
     res.status(200).json(jobMonitoring);
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message);
     res.status(500).send('Failed to get job monitoring');
   }
 });
@@ -146,7 +146,7 @@ router.patch(
       // Validate the req.body
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        logger.error(errors);
+        logger.error(JSON.stringify(errors.array()));
         return res.status(400).json({ errors: errors.array() });
       }
 
@@ -226,8 +226,7 @@ router.patch(
 
       res.status(200).send(updatedJob);
     } catch (err) {
-      console.log(err);
-      logger.error(err);
+      logger.error(err.message);
       res.status(500).send('Failed to update job monitoring');
     }
   }
@@ -304,7 +303,7 @@ router.delete(
       });
       res.status(200).json(response);
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       res.status(500).send('Failed to delete job monitoring');
     }
   }
@@ -324,7 +323,7 @@ router.delete(
       await JobMonitoring.destroy({ where: { id: req.params.id } });
       res.status(200).send('success');
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       res.status(500).send('Failed to delete job monitoring');
     }
   }
@@ -409,13 +408,11 @@ router.patch(
         where: { id: { [Op.in]: approvedIds } },
       });
 
-      res
-        .status(200)
-        .send({
-          success: true,
-          message: 'Toggled successfully',
-          updatedJobMonitorings,
-        }); // Send the updated job monitorings
+      res.status(200).send({
+        success: true,
+        message: 'Toggled successfully',
+        updatedJobMonitorings,
+      }); // Send the updated job monitorings
     } catch (err) {
       await transaction.rollback();
       logger.error(err.message);
@@ -431,7 +428,7 @@ router.patch(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      logger.error(errors);
+      logger.error(JSON.stringify(errors.array()));
       return res.status(503).send('Failed to update');
     }
 
@@ -451,14 +448,12 @@ router.patch(
         );
       }
 
-      res
-        .status(200)
-        .json({
-          success: true,
-          message: 'Successfully updated job monitorings',
-        });
+      res.status(200).json({
+        success: true,
+        message: 'Successfully updated job monitorings',
+      });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       res.status(500).send('Failed to update job monitoring');
     }
   }
@@ -472,7 +467,7 @@ router.get(
     const { id } = req.params;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      logger.error(errors);
+      logger.error(JSON.stringify(errors.array()));
       return res.status(503).send('Failed to get job monitoring data');
     }
 
