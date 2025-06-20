@@ -299,7 +299,7 @@ const bulkDeleteUsers = async (req, res) => {
     }
 
     if (deletedCount !== idsCount) {
-      res.status(207).json({
+      return res.status(207).json({
         success: false,
         message: 'Some users could not be deleted',
         data: { deletedCount, idsCount },

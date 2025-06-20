@@ -2,5 +2,6 @@
   "terminal.integrated.copyOnSelection": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "editor.formatOnPaste": false
+  "editor.formatOnPaste": false,
+  "jest.rootPath": "Tombolo/server"
 }

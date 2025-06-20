@@ -1,16 +1,16 @@
-const TokenBlackList = require("../models").TokenBlackList;
-const logger = require("../config/logger");
+const TokenBlackList = require('../models').TokenBlackList;
+const logger = require('../config/logger');
 
 // Sync blacklisted tokens from DB to RAM
 (async () => {
   try {
-    logger.info("Syncing blacklisted tokens from the database");
+    logger.info('Syncing blacklisted tokens from the database');
     const tokens = await TokenBlackList.findAll();
     tokens.forEach(({ id, exp }) => {
       tokenBlacklist.set(id, exp);
     });
   } catch (err) {
-    logger.error("Error syncing blacklisted tokens:", err);
+    logger.error('Error syncing blacklisted tokens:', err);
   }
 })();
 
@@ -35,9 +35,11 @@ function removeBlacklistedToken(token) {
   tokenBlacklist.delete(token);
 }
 
+let blacklistTokenIntervalId;
+
 // Periodically check and remove expired tokens from the Map
-setInterval(async () => {
-  logger.info("Cleaning up expired blacklisted tokens");
+blacklistTokenIntervalId = setInterval(async () => {
+  logger.info('Cleaning up expired blacklisted tokens');
   const now = Date.now();
   tokenBlacklist.forEach((expiresAt, token) => {
     if (now > expiresAt) {
@@ -54,6 +56,7 @@ module.exports = {
   blacklistToken,
   isTokenBlacklisted,
   removeBlacklistedToken,
+  blacklistTokenIntervalId,
 };
 
 1, 728, 662, 912, 283;
