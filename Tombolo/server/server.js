@@ -19,6 +19,7 @@ const {
 
 const cors = require('cors');
 const compression = require('compression');
+const helmet = require('helmet');
 const { sequelize: dbConnection } = require('./models');
 
 const logger = require('./config/logger');
@@ -65,6 +66,7 @@ const limiter = rateLimit({
 });
 
 // MIDDLEWARE -> apply to all requests
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(limiter);
