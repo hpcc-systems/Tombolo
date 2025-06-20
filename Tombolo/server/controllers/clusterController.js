@@ -35,6 +35,11 @@ const addCluster = async (req, res) => {
     const cluster = clusters.find(c => c.name === clusterName);
 
     if (!cluster) {
+      logger.error(`Cluster not whitelisted: ${clusterName}`);
+      res.status(400).json({
+        success: false,
+        message: 'Cluster not whitelisted',
+      });
       return;
     }
 
@@ -139,7 +144,7 @@ const addCluster = async (req, res) => {
   } catch (err) {
     logger.error(`Add cluster: ${err.message}`);
     res
-      .status(err.status || 500)
+      .status(err.statusCode || 500)
       .json({ success: false, message: err.message });
   }
 };
@@ -334,7 +339,7 @@ const addClusterWithProgress = async (req, res) => {
     // res.status(201).json({ success: true, data: newCluster });
   } catch (err) {
     logger.error(`Add cluster: ${err.message}`);
-    // res.status(err.status || 500).json({ success: false, message: err.message });
+    // res.status(err.statusCode || 500).json({ success: false, message: err.message });
     sendUpdate({ step: 99, success: false, message: err.message });
     res.end();
   }
@@ -355,7 +360,7 @@ const getClusters = async (req, res) => {
   } catch (err) {
     logger.error(`Get clusters: ${err.message}`);
     res
-      .status(err.status || 500)
+      .status(err.statusCode || 500)
       .json({ success: false, message: err.message });
   }
 };
@@ -378,7 +383,7 @@ const getCluster = async (req, res) => {
   } catch (err) {
     logger.error(`Get cluster: ${err.message}`);
     res
-      .status(err.status || 500)
+      .status(err.statusCode || 500)
       .json({ success: false, message: err.message });
   }
 };
@@ -393,7 +398,7 @@ const deleteCluster = async (req, res) => {
   } catch (err) {
     logger.error(`Delete cluster: ${err.message}`);
     res
-      .status(err.status || 500)
+      .status(err.statusCode || 500)
       .json({ success: false, message: err.message });
   }
 };
@@ -417,7 +422,7 @@ const updateCluster = async (req, res) => {
   } catch (err) {
     logger.error(`Update cluster: ${err.message}`);
     res
-      .status(err.status || 500)
+      .status(err.statusCode || 500)
       .json({ success: false, message: err.message });
   }
 };
@@ -430,7 +435,7 @@ const getClusterWhiteList = async (req, res) => {
   } catch (err) {
     logger.error(`Get cluster white list: ${err.message}`);
     res
-      .status(err.status || 500)
+      .status(err.statusCode || 500)
       .json({ success: false, message: err.message });
   }
 };
