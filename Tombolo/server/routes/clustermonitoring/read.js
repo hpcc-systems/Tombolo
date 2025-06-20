@@ -1,37 +1,38 @@
-const models = require("../../models");
-const express = require("express");
-const logger = require("../../config/logger");
-const validatorUtil = require("../../utils/validator");
-const { body, param, validationResult } = require("express-validator");
-const hpccJSComms = require("@hpcc-js/comms");
-const hpccUtil = require("../../utils/hpcc-util");
-const JobScheduler = require("../../jobSchedular/job-scheduler");
+const models = require('../../models');
+const express = require('express');
+const logger = require('../../config/logger');
+const validatorUtil = require('../../utils/validator');
+const { body, param, validationResult } = require('express-validator');
+const hpccJSComms = require('@hpcc-js/comms');
+const hpccUtil = require('../../utils/hpcc-util');
+const JobScheduler = require('../../jobSchedular/job-scheduler');
+const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 const ClusterMonitoring = models.clusterMonitoring;
 const router = express.Router();
 
 // Create Cluster Monitoring
 router.post(
-  "/",
+  '/',
   [
     //Validation middleware
-    body("name").isString().withMessage("Invalid cluster monitoring name"),
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cluster_id").isUUID(4).withMessage("Invalid cluster id"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
+    body('name').isString().withMessage('Invalid cluster monitoring name'),
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('cluster_id').isUUID(4).withMessage('Invalid cluster id'),
+    body('cron').custom(value => {
+      const valArray = value.split(' ');
       if (valArray.length > 5) {
         throw new Error(
           `Expected number of cron parts 5, received ${valArray.length}`
         );
       } else {
-        return Promise.resolve("Good to go");
+        return Promise.resolve('Good to go');
       }
     }),
     // body("isActive").isBoolean().withMessage("Invalid is active flag"),
-    body("metaData")
+    body('metaData')
       .isObject()
-      .withMessage("Invalid cluster monitoring meta data"),
+      .withMessage('Invalid cluster monitoring meta data'),
   ],
   async (req, res) => {
     try {
@@ -40,36 +41,35 @@ router.post(
         validatorUtil.errorFormatter
       );
 
-        if (!errors.isEmpty()){
-            logger.verbose(errors);
-            return res.status(422).json({ success: false, errors: errors.array() });
-        }
-         
-        //create
-        const clusterMonitoring = await ClusterMonitoring.create(req.body);
-        res.status(201).send(clusterMonitoring);
+      if (!errors.isEmpty()) {
+        logger.verbose(errors);
+        return res.status(422).json({ success: false, errors: errors.array() });
+      }
 
-        //Add job to bree- if start monitoring checked
-        const {id, name, cron } = clusterMonitoring;
-        if(req.body.isActive){
-             JobScheduler.createClusterMonitoringBreeJob({
-               clusterMonitoring_id: id,
-               name,
-               cron,
-             });
-        }
-       
-    }catch(err){
-        logger.error(err);
-        res.status(503).send({success: false, message: "Failed to fetch"})
+      //create
+      const clusterMonitoring = await ClusterMonitoring.create(req.body);
+      res.status(201).send(clusterMonitoring);
+
+      //Add job to bree- if start monitoring checked
+      const { id, name, cron } = clusterMonitoring;
+      if (req.body.isActive) {
+        JobScheduler.createClusterMonitoringBreeJob({
+          clusterMonitoring_id: id,
+          name,
+          cron,
+        });
+      }
+    } catch (err) {
+      logger.error(err);
+      res.status(503).send({ success: false, message: 'Failed to fetch' });
     }
   }
 );
 
 // Get all cluster monitoring
 router.get(
-  "/all/:application_id",
-  [param("application_id").isUUID().withMessage("Invalid application ID")],
+  '/all/:application_id',
+  [param('application_id').isUUID().withMessage('Invalid application ID')],
   async (req, res) => {
     try {
       //Check for errors - return if exists
@@ -87,18 +87,18 @@ router.get(
         raw: true,
       });
 
-      res.status(200).send(clusterMonitorings)
-    }catch(err){
-        logger.error(err);
-        res.send(503).send({success: false, message: "Failed to fetch"})
+      res.status(200).send(clusterMonitorings);
+    } catch (err) {
+      logger.error(err);
+      res.send(503).send({ success: false, message: 'Failed to fetch' });
     }
   }
 );
 
 // Get one cluster monitoring
 router.get(
-  "/:id",
-  [param("id").isUUID(4).withMessage("Invalid cluster monitoring ID")],
+  '/:id',
+  [param('id').isUUID(4).withMessage('Invalid cluster monitoring ID')],
   async (req, res) => {
     try {
       //Check for errors - return if exists
@@ -118,15 +118,15 @@ router.get(
       res.status(200).send(clusterMonitoring);
     } catch (err) {
       logger.error(err);
-      res.status(503).send({ success: false, message: "Failed to fetch" });
+      res.status(503).send({ success: false, message: 'Failed to fetch' });
     }
   }
 );
 
 //Delete
 router.delete(
-  "/:id",
-  [param("id").isUUID(4).withMessage("Invalid cluster monitoring ID")],
+  '/:id',
+  [param('id').isUUID(4).withMessage('Invalid cluster monitoring ID')],
   async (req, res) => {
     try {
       //Check for errors - return if exists
@@ -146,15 +146,15 @@ router.delete(
       res.status(200).send({ deleted });
     } catch (err) {
       logger.error(err);
-      res.status(503).json({success: false, message: "Failed to delete"});
+      res.status(503).json({ success: false, message: 'Failed to delete' });
     }
   }
 );
 
 // Pause or start monitoring
 router.put(
-  "/clusterMonitoringStatus/:id",
-  [param("id").isUUID(4).withMessage("Invalid file monitoring Id")],
+  '/clusterMonitoringStatus/:id',
+  [param('id').isUUID(4).withMessage('Invalid file monitoring Id')],
   async (req, res, next) => {
     try {
       const errors = validationResult(req).formatWith(
@@ -188,7 +188,7 @@ router.put(
         });
       }
 
-      res.status(200).send("Update successful");
+      res.status(200).send('Update successful');
     } catch (err) {
       logger.error(err);
     }
@@ -197,26 +197,26 @@ router.put(
 
 // Update Monitoring
 router.put(
-  "/",
+  '/',
   [
-    body("id").isUUID().withMessage("Invalid Cluster monitoring ID"),
-    body("name").isString().withMessage("Invalid cluster monitoring name"),
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cluster_id").isUUID(4).withMessage("Invalid cluster id"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
+    body('id').isUUID().withMessage('Invalid Cluster monitoring ID'),
+    body('name').isString().withMessage('Invalid cluster monitoring name'),
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('cluster_id').isUUID(4).withMessage('Invalid cluster id'),
+    body('cron').custom(value => {
+      const valArray = value.split(' ');
       if (valArray.length > 5) {
         throw new Error(
           `Expected number of cron parts 5, received ${valArray.length}`
         );
       } else {
-        return Promise.resolve("Good to go");
+        return Promise.resolve('Good to go');
       }
     }),
     // body("isActive").isBoolean().withMessage("Invalid is active flag"),
-    body("metaData")
+    body('metaData')
       .isObject()
-      .withMessage("Invalid cluster monitoring meta data"),
+      .withMessage('Invalid cluster monitoring meta data'),
   ],
   async (req, res) => {
     try {
@@ -254,7 +254,7 @@ router.put(
         const monitoringUniqueName = `Cluster Monitoring - ${id}`;
         const breeJobs = JobScheduler.getAllJobs();
         const jobIndex = breeJobs.findIndex(
-          (job) => job.name === monitoringUniqueName
+          job => job.name === monitoringUniqueName
         );
 
         //Add to bree
@@ -272,15 +272,15 @@ router.put(
       }
     } catch (err) {
       logger.error(err);
-      res.status(503).json({success: false, message : "Failed to update"});
+      res.status(503).json({ success: false, message: 'Failed to update' });
     }
   }
 );
 
 // Get cluster monitoring engines
 router.get(
-  "/clusterEngines/:cluster_id",
-  [param("cluster_id").isUUID().withMessage("Invalid cluster ID")],
+  '/clusterEngines/:cluster_id',
+  [param('cluster_id').isUUID().withMessage('Invalid cluster ID')],
   async (req, res) => {
     try {
       //Check for errors - return if exists
@@ -294,28 +294,33 @@ router.get(
 
       const { cluster_id } = req.params;
       let cluster = await hpccUtil.getCluster(cluster_id);
-      const { thor_host, thor_port, username, hash } = cluster;
-      const clusterDetails = {
-        baseUrl: `${thor_host}:${thor_port}`,
-        userID: username || "",
-        password: hash || "",
-      };
+      const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
+      const clusterDetails = getClusterOptions(
+        {
+          baseUrl: `${thor_host}:${thor_port}`,
+          userID: username || '',
+          password: hash || '',
+        },
+        allowSelfSigned
+      );
       const topologyService = new hpccJSComms.TopologyService(clusterDetails);
       const clusterEngines = await topologyService.TpListTargetClusters();
       res.status(200).send(clusterEngines);
     } catch (err) {
       logger.error(err);
-      res.status(503).json({success: false, message : "Failed to get engines"});
+      res
+        .status(503)
+        .json({ success: false, message: 'Failed to get engines' });
     }
   }
 );
 
 // Get target cluster usage
 router.get(
-  "/targetClusterUsage/:cluster_id",
+  '/targetClusterUsage/:cluster_id',
   [
-    param("cluster_id").isUUID().withMessage("Invalid cluster ID"),
-    body("engines").isArray().withMessage("Invalid engines"),
+    param('cluster_id').isUUID().withMessage('Invalid cluster ID'),
+    body('engines').isArray().withMessage('Invalid engines'),
   ],
   async (req, res) => {
     try {
@@ -332,17 +337,19 @@ router.get(
       const { engines } = req.body;
 
       let cluster = await hpccUtil.getCluster(cluster_id);
-      const { thor_host, thor_port, username, hash } = cluster;
-      const clusterDetails = {
-        baseUrl: `${thor_host}:${thor_port}`,
-        userID: username || "",
-        password: hash || "",
-      };
+      const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
+      const clusterDetails = getClusterOptions(
+        {
+          baseUrl: `${thor_host}:${thor_port}`,
+          userID: username || '',
+          password: hash || '',
+        },
+        allowSelfSigned
+      );
       const machineService = new hpccJSComms.MachineService(clusterDetails);
 
-      const targetClusterUsage = await machineService.GetTargetClusterUsageEx(
-        engines
-      );
+      const targetClusterUsage =
+        await machineService.GetTargetClusterUsageEx(engines);
       const clusterUsage = [];
       targetClusterUsage.forEach(function (details) {
         clusterUsage.push({
@@ -356,7 +363,7 @@ router.get(
       logger.error(err);
       res
         .status(503)
-        .json({ success: false, message: "Failed to get cluster usage" });
+        .json({ success: false, message: 'Failed to get cluster usage' });
     }
   }
 );

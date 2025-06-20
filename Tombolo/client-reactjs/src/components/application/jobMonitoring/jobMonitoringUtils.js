@@ -40,9 +40,10 @@ export const getAllJobMonitorings = async ({ applicationId }) => {
 export const checkScheduleValidity = ({ intermittentScheduling, completeSchedule, cron, cronMessage }) => {
   // Abandon intermittent schedule if user did not completely add the schedule.Eg if they submit form and schedule was partially entered
   const { frequency, scheduleBy, days, dates, weeks, day, month, date, week } = intermittentScheduling;
-
   let allSchedule = [...completeSchedule];
-  if (frequency === 'daily') {
+  if (frequency === 'anytime') {
+    allSchedule = [{ frequency: 'anytime', runWindow: null }];
+  } else if (frequency === 'daily') {
     allSchedule = [...completeSchedule, intermittentScheduling];
   } else if (frequency === 'weekly' && days?.length > 0) {
     allSchedule = [...completeSchedule, intermittentScheduling];
