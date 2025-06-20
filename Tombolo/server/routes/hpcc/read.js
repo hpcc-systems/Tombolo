@@ -1,8 +1,6 @@
 const express = require('express');
-const https = require('https');
 const router = express.Router();
-var request = require('request');
-var requestPromise = require('request-promise');
+const axios = require('axios');
 const hpccUtil = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
 const { encryptString } = require('../../utils/cipher');
@@ -701,112 +699,88 @@ router.get(
     }
   }
 );
-router.get('/getFileProfile', function (req, res) {
+router.get('/getFileProfile', async function (req, res) {
   try {
-    hpccUtil.getCluster(req.query.clusterid).then(function (cluster) {
-      request.get(
-        {
-          url:
-            cluster.thor_host +
-            ':' +
-            cluster.thor_port +
-            '/WsWorkunits/WUResult.json?LogicalName=' +
-            req.query.fileName +
-            '.profile',
-          auth: hpccUtil.getClusterAuth(cluster),
-          agent: https.globalAgent,
-        },
-        function (err, response, body) {
-          if (err) {
-            logger.error(err);
-            return response.status(500).send('Error');
-          } else {
-            var result = JSON.parse(body);
-            if (result.Exceptions) {
-              res.json([]);
+    const cluster = await hpccUtil.getCluster(req.query.clusterid);
+    const response = await axios.get(
+      `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUResult.json?LogicalName=${req.query.fileName}.profile`,
+      {
+        auth: hpccUtil.getClusterAuth(cluster),
+      }
+    );
+
+    const result = response.data;
+    if (result.Exceptions) {
+      return res.json([]);
+    }
+
+    if (result.WUResultResponse?.Result?.Row) {
+      const rows = result.WUResultResponse.Result.Row;
+      const indexInfo = {};
+      if (rows.length > 0) {
+        rows.forEach(row => {
+          Object.keys(row).forEach(key => {
+            if (row[key] instanceof Object && row[key].Row) {
+              row[key] = row[key].Row;
             }
-            if (
-              result.WUResultResponse != undefined &&
-              result.WUResultResponse.Result != undefined &&
-              result.WUResultResponse.Result.Row != undefined
-            ) {
-              var rows = result.WUResultResponse.Result.Row,
-                indexInfo = {};
-              if (rows.length > 0) {
-                rows.forEach(function (row) {
-                  Object.keys(row).forEach(function (key) {
-                    if (row[key] instanceof Object) {
-                      if (row[key].Row) {
-                        row[key] = row[key].Row;
-                      }
-                    }
-                  });
-                });
-                res.json(rows);
-              }
-            } else {
-              res.json();
-            }
-          }
-        }
-      );
-    });
+          });
+        });
+        return res.json(rows);
+      }
+    }
+    return res.json();
   } catch (err) {
     logger.error(err);
+    return res.status(500).send('Error');
   }
 });
-router.get('/getFileProfileHTML', function (req, res) {
+
+router.get('/getFileProfileHTML', async function (req, res) {
   try {
-    hpccUtil.getCluster(req.query.clusterid).then(function (cluster) {
-      //call DFUInfo to get workunit id
-      var wuid = req.query.dataProfileWuid;
-      //get resource url's from wuinfo
-      request.post(
-        {
-          url:
-            cluster.thor_host +
-            ':' +
-            cluster.thor_port +
-            '/WsWorkunits/WUInfo.json',
-          auth: hpccUtil.getClusterAuth(cluster),
-          headers: { 'content-type': 'application/x-www-form-urlencoded' },
-          body:
-            'Wuid=' +
-            wuid +
-            '&TruncateEclTo64k=true&IncludeResourceURLs=true&IncludeExceptions=false&IncludeGraphs=false&IncludeSourceFiles=false&IncludeResults=false&IncludeResultsViewNames=false&IncludeVariables=false&IncludeTimers=false&IncludeDebugValues=false&IncludeApplicationValues=false&IncludeWorkflows=false&IncludeXmlSchemas=false&SuppressResultSchemas',
-          agent: https.globalAgent,
-        },
-        function (err, response, body) {
-          if (err) {
-            logger.error(err);
-            return response.status(500).send('Error');
-          } else {
-            var result = JSON.parse(body);
-            var filterdUrl =
-              result.WUInfoResponse.Workunit.ResourceURLs.URL.filter(
-                function (url) {
-                  return !url.startsWith('manifest');
-                }
-              ).map(function (url) {
-                return (
-                  cluster.thor_host +
-                  ':' +
-                  cluster.thor_port +
-                  '/WsWorkunits/' +
-                  url.replace('./report', 'report')
-                );
-              });
-            // eslint-disable-next-line quotes
-            logger.info("URL's: " + JSON.stringify(filterdUrl));
-            res.json(filterdUrl);
-          }
-        }
-      );
-    });
+    const cluster = await hpccUtil.getCluster(req.query.clusterid); //call DFUInfo to get workunit id
+    const wuid = req.query.dataProfileWuid; //get resource url's from wuinfo
+
+    const response = await axios.post(
+      `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUInfo.json`,
+      new URLSearchParams({
+        Wuid: wuid,
+        TruncateEclTo64k: true,
+        IncludeResourceURLs: true,
+        IncludeExceptions: false,
+        IncludeGraphs: false,
+        IncludeSourceFiles: false,
+        IncludeResults: false,
+        IncludeResultsViewNames: false,
+        IncludeVariables: false,
+        IncludeTimers: false,
+        IncludeDebugValues: false,
+        IncludeApplicationValues: false,
+        IncludeWorkflows: false,
+        IncludeXmlSchemas: false,
+        SuppressResultSchemas: true,
+      }).toString(),
+      {
+        auth: hpccUtil.getClusterAuth(cluster),
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      }
+    );
+
+    const result = response.data;
+    const filteredUrl = result.WUInfoResponse.Workunit.ResourceURLs.URL.filter(
+      url => !url.startsWith('manifest')
+    ).map(
+      url =>
+        `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/${url.replace('./report', 'report')}`
+    );
+
+    logger.info(`URL's: ${JSON.stringify(filteredUrl)}`);
+    return res.status(200).json(filteredUrl);
   } catch (err) {
     logger.error(err);
+    return res.status(500).send('Error');
   }
 });
+
 router.get(
   '/getQueryInfo',
   [
@@ -941,7 +915,7 @@ router.get(
 router.get(
   '/getDropZones',
   [query('clusterId').isUUID(4).withMessage('Invalid cluster id')],
-  function (req, res) {
+  async function (req, res) {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -949,62 +923,47 @@ router.get(
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     try {
-      hpccUtil
-        .getCluster(req.query.clusterId)
-        .then(function (cluster) {
-          let url =
-            cluster.thor_host +
-            ':' +
-            cluster.thor_port +
-            '/WsTopology/TpDropZoneQuery.json';
-          request.get(
-            {
-              url: url,
-              auth: hpccUtil.getClusterAuth(cluster),
-              agent: https.globalAgent,
-            },
-            function (err, response, body) {
-              if (err) {
-                logger.error(err);
-                return response.status(500).send('Error');
-              } else {
-                let result = JSON.parse(body);
-                let dropZones =
-                  result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
-                let _dropZones = {};
-                let dropZoneDetails = [];
-                dropZones.map(dropzone => {
-                  dropZoneDetails.push({
-                    name: dropzone.Name,
-                    path: dropzone.Path,
-                    machines: dropzone.TpMachines.TpMachine,
-                  });
-                  _dropZones[dropzone.Name] = [];
-                  lodash.flatMap(dropzone.TpMachines.TpMachine, tpMachine => {
-                    _dropZones[dropzone.Name] = _dropZones[
-                      dropzone.Name
-                    ].concat([tpMachine.Netaddress]);
-                  });
-                });
-                if (
-                  req.query.for === 'fileUpload' ||
-                  req.query.for === 'manualJobSerach' ||
-                  req.query.for === 'lzFileExplorer'
-                ) {
-                  res.json(dropZoneDetails);
-                } else {
-                  res.json(_dropZones);
-                }
-              }
-            }
-          );
-        })
-        .catch(err => {
-          res.status(500).json({ success: false, message: err });
+      const cluster = await hpccUtil.getCluster(req.query.clusterId);
+      const url = `${cluster.thor_host}:${cluster.thor_port}/WsTopology/TpDropZoneQuery.json`;
+
+      const response = await axios.get(url, {
+        auth: hpccUtil.getClusterAuth(cluster),
+      });
+
+      const result = response.data;
+      const dropZones = result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
+      const _dropZones = {};
+      const dropZoneDetails = [];
+
+      dropZones.forEach(dropzone => {
+        dropZoneDetails.push({
+          name: dropzone.Name,
+          path: dropzone.Path,
+          machines: dropzone.TpMachines.TpMachine,
         });
+        _dropZones[dropzone.Name] = [];
+        lodash.flatMap(dropzone.TpMachines.TpMachine, tpMachine => {
+          _dropZones[dropzone.Name] = _dropZones[dropzone.Name].concat([
+            tpMachine.Netaddress,
+          ]);
+        });
+      });
+
+      if (
+        req.query.for === 'fileUpload' ||
+        req.query.for === 'manualJobSearch' ||
+        req.query.for === 'lzFileExplorer'
+      ) {
+        res.status(200).json(dropZoneDetails);
+      } else {
+        res.status(200).json(_dropZones);
+      }
     } catch (err) {
       logger.error(err);
-      return res.status(500).send('Error occured while getting dropzones');
+      res.status(500).json({
+        success: false,
+        message: 'Error occurred while getting dropzones',
+      });
     }
   }
 );
@@ -1027,7 +986,7 @@ router.get('/dropZoneDirectories', async (req, res) => {
 router.get(
   '/getDropZones',
   [query('clusterId').isUUID(4).withMessage('Invalid cluster id')],
-  function (req, res) {
+  async function (req, res) {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -1035,63 +994,47 @@ router.get(
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     try {
-      hpccUtil
-        .getCluster(req.query.clusterId)
-        .then(function (cluster) {
-          let url =
-            cluster.thor_host +
-            ':' +
-            cluster.thor_port +
-            '/WsTopology/TpDropZoneQuery.json';
-          request.get(
-            {
-              url: url,
-              auth: hpccUtil.getClusterAuth(cluster),
-              agent: https.globalAgent,
-            },
-            function (err, response, body) {
-              if (err) {
-                logger.error(err);
-                return response.status(500).send('Error');
-              } else {
-                let result = JSON.parse(body);
-                let dropZones =
-                  result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
-                let _dropZones = {};
-                let dropZoneDetails = [];
-                dropZones.map(dropzone => {
-                  dropZoneDetails.push({
-                    name: dropzone.Name,
-                    path: dropzone.Path,
-                    machines: dropzone.TpMachines.TpMachine,
-                  });
-                  _dropZones[dropzone.Name] = [];
-                  lodash.flatMap(dropzone.TpMachines.TpMachine, tpMachine => {
-                    _dropZones[dropzone.Name] = _dropZones[
-                      dropzone.Name
-                    ].concat([tpMachine.Netaddress]);
-                  });
-                });
+      const cluster = await hpccUtil.getCluster(req.query.clusterId);
+      const url = `${cluster.thor_host}:${cluster.thor_port}/WsTopology/TpDropZoneQuery.json`;
 
-                if (
-                  req.query.for === 'fileUpload' ||
-                  req.query.for === 'manualJobSerach' ||
-                  req.query.for === 'lzFileExplorer'
-                ) {
-                  res.json(dropZoneDetails);
-                } else {
-                  res.json(_dropZones);
-                }
-              }
-            }
-          );
-        })
-        .catch(err => {
-          res.status(500).json({ success: false, message: err });
+      const response = await axios.get(url, {
+        auth: hpccUtil.getClusterAuth(cluster),
+      });
+
+      const result = response.data;
+      const dropZones = result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
+      const _dropZones = {};
+      const dropZoneDetails = [];
+
+      dropZones.map(dropzone => {
+        dropZoneDetails.push({
+          name: dropzone.Name,
+          path: dropzone.Path,
+          machines: dropzone.TpMachines.TpMachine,
         });
+        _dropZones[dropzone.Name] = [];
+        lodash.flatMap(dropzone.TpMachines.TpMachine, tpMachine => {
+          _dropZones[dropzone.Name] = _dropZones[dropzone.Name].concat([
+            tpMachine.Netaddress,
+          ]);
+        });
+      });
+
+      if (
+        req.query.for === 'fileUpload' ||
+        req.query.for === 'manualJobSearch' ||
+        req.query.for === 'lzFileExplorer'
+      ) {
+        res.json(dropZoneDetails);
+      } else {
+        res.json(_dropZones);
+      }
     } catch (err) {
       logger.error(err);
-      return res.status(500).send('Error occured while getting dropzones');
+      res.status(500).json({
+        success: false,
+        message: 'Error occurred while getting dropzones',
+      });
     }
   }
 );
@@ -1184,7 +1127,7 @@ router.post(
       .matches(/^[a-zA-Z0-9]{1}[a-zA-Z0-9_:\-.]*$/)
       .withMessage('Invalid file filter'),
   ],
-  function (req, res) {
+  async function (req, res) {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -1192,60 +1135,33 @@ router.post(
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     try {
-      hpccUtil.getCluster(req.body.clusterId).then(function (cluster) {
-        request.post(
-          {
-            url:
-              cluster.thor_host +
-              ':' +
-              cluster.thor_port +
-              '/FileSpray/DropZoneFileSearch.json',
-            auth: hpccUtil.getClusterAuth(cluster),
-            headers: { 'content-type': 'application/x-www-form-urlencoded' },
-            body:
-              'DropZoneName=' +
-              req.body.dropZoneName +
-              '&Server=' +
-              req.body.server +
-              '&NameFilter=*' +
-              req.body.nameFilter +
-              '*&__dropZoneMachine.label=' +
-              req.body.server +
-              '&__dropZoneMachine.value=' +
-              req.body.server +
-              '&__dropZoneMachine.selected=true&rawxml_=true',
-            agent: https.globalAgent,
-          },
-          function (err, response, body) {
-            if (err) {
-              logger.error(err);
-              return response
-                .status(500)
-                .send('Error occured during dropzone file search');
-            } else {
-              var result = JSON.parse(body);
-              let files = [];
-              if (
-                result &&
-                result.DropZoneFileSearchResponse &&
-                result.DropZoneFileSearchResponse['Files'] &&
-                result.DropZoneFileSearchResponse['Files']['PhysicalFileStruct']
-              ) {
-                files =
-                  result.DropZoneFileSearchResponse['Files'][
-                    'PhysicalFileStruct'
-                  ];
-              }
-              return res.status(200).send(files);
-            }
-          }
-        );
-      });
+      const cluster = await hpccUtil.getCluster(req.body.clusterId);
+      const response = await axios.post(
+        `${cluster.thor_host}:${cluster.thor_port}/FileSpray/DropZoneFileSearch.json`,
+        new URLSearchParams({
+          DropZoneName: req.body.dropZoneName,
+          Server: req.body.server,
+          NameFilter: `*${req.body.nameFilter}*`,
+          '__dropZoneMachine.label': req.body.server,
+          '__dropZoneMachine.value': req.body.server,
+          '__dropZoneMachine.selected': true,
+          rawxml_: true,
+        }).toString(),
+        {
+          auth: hpccUtil.getClusterAuth(cluster),
+          headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        }
+      );
+
+      const result = response.data;
+      let files = [];
+      if (result?.DropZoneFileSearchResponse?.Files?.PhysicalFileStruct) {
+        files = result.DropZoneFileSearchResponse.Files.PhysicalFileStruct;
+      }
+      return res.status(200).send(files);
     } catch (err) {
       logger.error(err);
-      return response
-        .status(500)
-        .send('Error occured during dropzone file search');
+      return res.status(500).send('Error occurred during dropzone file search');
     }
   }
 );
@@ -1290,58 +1206,43 @@ router.post(
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     try {
-      let job = await Job.findOne({
+      const job = await Job.findOne({
         where: { id: req.body.jobId },
         attributes: { exclude: ['assetId'] },
       });
-      hpccUtil.getCluster(job.cluster_id).then(async function (cluster) {
-        let sprayPayload = {
-          destGroup: 'mythor',
-          DFUServerQueue: 'dfuserver_queue',
-          namePrefix: job.sprayedFileScope,
-          targetName: job.sprayFileName,
-          overwrite: 'on',
-          sourceIP: job.sprayDropZone,
-          sourcePath: '/var/lib/HPCCSystems/mydropzone/' + job.sprayFileName,
-          destLogicalName: job.sprayedFileScope + '::' + job.sprayFileName,
-          rawxml_: 1,
-          sourceFormat: 1,
-          sourceCsvSeparate: ',',
-          sourceCsvTerminate: '\n,\r\n',
-          sourceCsvQuote: '"',
-        };
-        logger.info(sprayPayload);
-        request.post(
-          {
-            url:
-              cluster.thor_host +
-              ':' +
-              cluster.thor_port +
-              '/FileSpray/SprayVariable.json',
-            auth: hpccUtil.getClusterAuth(cluster),
-            headers: { 'content-type': 'application/x-www-form-urlencoded' },
-            formData: sprayPayload,
-            resolveWithFullResponse: true,
-            agent: https.globalAgent,
-          },
-          function (err, response, body) {
-            if (err) {
-              logger.error(err);
-              return response
-                .status(500)
-                .send('Error occured during dropzone file search');
-            } else {
-              var result = JSON.parse(body);
-              return res.status(200).send(result);
-            }
-          }
-        );
-      });
+
+      const cluster = await hpccUtil.getCluster(job.cluster_id);
+      const sprayPayload = {
+        destGroup: 'mythor',
+        DFUServerQueue: 'dfuserver_queue',
+        namePrefix: job.sprayedFileScope,
+        targetName: job.sprayFileName,
+        overwrite: 'on',
+        sourceIP: job.sprayDropZone,
+        sourcePath: `/var/lib/HPCCSystems/mydropzone/${job.sprayFileName}`,
+        destLogicalName: `${job.sprayedFileScope}::${job.sprayFileName}`,
+        rawxml_: 1,
+        sourceFormat: 1,
+        sourceCsvSeparate: ',',
+        sourceCsvTerminate: '\n,\r\n',
+        sourceCsvQuote: '"',
+      };
+
+      logger.info(sprayPayload);
+
+      const response = await axios.post(
+        `${cluster.thor_host}:${cluster.thor_port}/FileSpray/SprayVariable.json`,
+        new URLSearchParams(sprayPayload).toString(),
+        {
+          auth: hpccUtil.getClusterAuth(cluster),
+          headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        }
+      );
+
+      return res.status(200).send(response.data);
     } catch (err) {
       logger.error(err);
-      return response
-        .status(500)
-        .send('Error occured during dropzone file search');
+      return res.status(500).send('Error occurred during dropzone file search');
     }
   }
 );

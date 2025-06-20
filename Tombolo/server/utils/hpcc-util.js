@@ -1,7 +1,5 @@
-var request = require('request');
-const https = require('https');
+const axios = require('axios');
 const path = require('path');
-var requestPromise = require('request-promise');
 var models = require('../models');
 var Cluster = models.cluster;
 var SuperFileMonitoring = models.filemonitoring_superfiles;
@@ -197,54 +195,42 @@ exports.getDirectories = async ({
   });
 };
 
-exports.executeSprayJob = job => {
+exports.executeSprayJob = async job => {
   // try {
-  return new Promise((resolve, reject) => {
-    let cluster = module.exports
-      .getCluster(job.cluster_id)
-      .then(async function (cluster) {
-        let sprayPayload = {
-          destGroup: 'mythor',
-          DFUServerQueue: 'dfuserver_queue',
-          namePrefix: job.sprayedFileScope,
-          targetName: job.sprayFileName,
-          overwrite: 'on',
-          sourceIP: job.sprayDropZone,
-          sourcePath: '/var/lib/HPCCSystems/mydropzone/' + job.sprayFileName,
-          destLogicalName: job.sprayedFileScope + '::' + job.sprayFileName,
-          rawxml_: 1,
-          sourceFormat: 1,
-          sourceCsvSeparate: ',',
-          sourceCsvTerminate: '\n,\r\n',
-          sourceCsvQuote: '"',
-        };
-        // logger.info(sprayPayload);
-        request.post(
-          {
-            url:
-              cluster.thor_host +
-              ':' +
-              cluster.thor_port +
-              '/FileSpray/SprayVariable.json',
-            auth: module.exports.getClusterAuth(cluster),
-            headers: { 'content-type': 'application/x-www-form-urlencoded' },
-            formData: sprayPayload,
-            resolveWithFullResponse: true,
-            agent: https.globalAgent,
-          },
-          function (err, response, body) {
-            if (err) {
-              logger.error('ERROR - ', err);
-              reject('Error occured during dropzone file search');
-            } else {
-              var result = JSON.parse(body);
-              resolve(result);
-            }
-          }
-        );
-      })
-      .catch(error => reject('Error occured during dropzone file search'));
-  });
+  try {
+    const cluster = await module.exports.getCluster(job.cluster_id);
+    const sprayPayload = {
+      destGroup: 'mythor',
+      DFUServerQueue: 'dfuserver_queue',
+      namePrefix: job.sprayedFileScope,
+      targetName: job.sprayFileName,
+      overwrite: 'on',
+      sourceIP: job.sprayDropZone,
+      sourcePath: `/var/lib/HPCCSystems/mydropzone/${job.sprayFileName}`,
+      destLogicalName: `${job.sprayedFileScope}::${job.sprayFileName}`,
+      rawxml_: 1,
+      sourceFormat: 1,
+      sourceCsvSeparate: ',',
+      sourceCsvTerminate: '\n,\r\n',
+      sourceCsvQuote: '"',
+    };
+
+    // logger.info(sprayPayload);
+
+    const response = await axios.post(
+      `${cluster.thor_host}:${cluster.thor_port}/FileSpray/SprayVariable.json`,
+      new URLSearchParams(sprayPayload).toString(),
+      {
+        auth: module.exports.getClusterAuth(cluster),
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      }
+    );
+
+    return response.data;
+  } catch (err) {
+    logger.error('ERROR - ', err);
+    throw new Error('Error occurred during dropzone file search');
+  }
 };
 
 exports.queryInfo = (clusterId, queryName) => {
@@ -461,55 +447,60 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
     }
   }
 
-  return new Promise(async (resolve, reject) => {
-    try {
-      let body = {
-        WURunRequest: {
-          Wuid: wuid,
-          CloneWorkunit: true,
-          Cluster: wucluster,
-          Wait: 0,
+  try {
+    const body = {
+      WURunRequest: {
+        Wuid: wuid,
+        CloneWorkunit: true,
+        Cluster: wucluster,
+        Wait: 0,
+      },
+    };
+
+    const cluster = await module.exports.getCluster(clusterId);
+
+    const response = await axios.post(
+      `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WURun.json?ver_=1.8`,
+      body,
+      {
+        auth: dataflowId
+          ? cluster_auth
+          : module.exports.getClusterAuth(cluster),
+        headers: {
+          'content-type': 'application/json',
         },
-      };
-      let cluster = await module.exports.getCluster(clusterId);
-      request.post(
-        {
-          url:
-            cluster.thor_host +
-            ':' +
-            cluster.thor_port +
-            '/WsWorkunits/WURun.json?ver_=1.8',
-          auth: dataflowId
-            ? cluster_auth
-            : module.exports.getClusterAuth(cluster),
-          body: JSON.stringify(body),
-          headers: { 'content-type': 'application/json' },
-          agent: https.globalAgent,
-        },
-        function (err, response, body) {
-          if (err) {
-            logger.error('ERROR - ', err);
-            reject(err);
-          } else {
-            try {
-              // If access denied - a response is a staring not parsable, ∴ doing this check
-              const result = JSON.parse(body);
-              resolve(result);
-            } catch (err) {
-              if (body.indexOf('Access Denied') > -1) {
-                reject(
-                  'Access Denied -- Valid username and password required!'
-                );
-                logger.error(err);
-              }
-            }
-          }
-        }
-      );
-    } catch (err) {
-      reject(err);
+      }
+    );
+    return response.data;
+  } catch (error) {
+    // Handle axios errors
+    if (error.response) {
+      // Check for access denied in response body
+      const responseBody =
+        typeof error.response.data === 'string'
+          ? error.response.data
+          : JSON.stringify(error.response.data);
+
+      if (responseBody.indexOf('Access Denied') > -1) {
+        logger.error(error);
+        throw new Error(
+          'Access Denied -- Valid username and password required!'
+        );
+      }
+
+      // For other HTTP errors, try to parse the response
+      try {
+        return error.response.data;
+      } catch (parseError) {
+        logger.error('ERROR - ', error);
+        throw error;
+      }
+    } else {
+      // Network or other errors
+      logger.error('ERROR - ', error);
+      throw error;
     }
-  });
+  }
 };
 
 exports.workunitInfo = async (wuid, clusterId) => {
@@ -655,33 +646,35 @@ response.status : 200 -> Cluster reachable
 response.status : 403 -> Cluster reachable but Unauthorized
 */
 
-exports.isClusterReachable = (clusterHost, port, username, password) => {
+exports.isClusterReachable = async (clusterHost, port, username, password) => {
   let auth = {
     user: username || '',
     password: password || '',
   };
 
-  return new Promise((resolve, reject) => {
-    request.get(
-      {
-        url: clusterHost + ':' + port,
-        auth: auth,
-        timeout: 3000,
-        agent: https.globalAgent,
-      },
-      function (error, response, body) {
-        if (!error && response.statusCode === 200) {
-          resolve({ reached: true, statusCode: 200 });
-        } else if (!error && response.statusCode === 401) {
-          logger.error(`${clusterHost} - Access denied`);
-          resolve({ reached: true, statusCode: 403 });
-        } else {
-          logger.error(`Checking cluster reachability - ${error.message}`);
-          resolve({ reached: false, statusCode: 503 });
-        }
+  try {
+    const response = await axios.get(`${clusterHost}:${port}`, {
+      auth: auth,
+      timeout: 3000,
+    });
+
+    if (response.status === 200) {
+      return { reached: true, statusCode: 200 };
+    }
+  } catch (error) {
+    if (error.response) {
+      // Server responded with an error status
+      if (error.response.status === 401) {
+        logger.error(`${clusterHost} - Access denied`);
+        return { reached: true, statusCode: 403 };
       }
-    );
-  });
+    } else {
+      // Network error or timeout
+      logger.error(`Checking cluster reachability - ${error.message}`);
+    }
+
+    return { reached: false, statusCode: 503 };
+  }
 };
 
 exports.updateCommonData = (objArray, fields) => {

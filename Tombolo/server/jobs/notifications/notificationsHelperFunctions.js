@@ -1,14 +1,10 @@
-const path = require("path");
-const ejs = require("ejs");
-const fs = require("fs");
-const models = require("../../models");
-const logger = require("../../config/logger");
+const models = require('../../models');
+const logger = require('../../config/logger');
 
 const NotificationQueue = models.notification_queue;
 const {
   retryOptions: { maxRetries, retryDelays },
-} = require("../../config/emailConfig");
-
+} = require('../../config/emailConfig');
 
 // Function to calculate the retryAfter time
 const calculateRetryAfter = ({
