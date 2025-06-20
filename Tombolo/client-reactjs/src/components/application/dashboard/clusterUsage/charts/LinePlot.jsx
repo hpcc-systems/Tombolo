@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from '@ant-design/plots';
-const moment = require('moment');
+import dayjs from 'dayjs';
 
 function LinePlot({ clusterUsageHistory }) {
   const [config, setConfig] = useState({
@@ -18,7 +18,7 @@ function LinePlot({ clusterUsageHistory }) {
     setConfig((prev) => ({
       ...prev,
       data: clusterUsageHistory.map((usage) => ({
-        date: moment(usage.date).format('MM-DD-YY'),
+        date: dayjs(usage.date).format('MM-DD-YY'),
         usage: usage.maxUsage,
       })),
     }));
