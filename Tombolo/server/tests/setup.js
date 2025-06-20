@@ -11,10 +11,11 @@ global.console = {
   log: jest.fn(() => {}),
   debug: jest.fn(() => {}),
   info: jest.fn(() => {}),
-  // warn: jest.fn(() => {}),
+  warn: jest.fn(() => {}),
   error: jest.fn(() => {}),
 };
 
+// Replace all calls of models to simulate database interactions
 jest.mock('../models', () => {
   const commit = jest.fn();
   const rollback = jest.fn();
@@ -86,6 +87,7 @@ jest.mock('../models', () => {
   };
 });
 
+// Replace all calls of logger with empty function to ensure no tests are logged
 jest.mock('winston', () => {
   const mockLogger = {
     info: jest.fn(),

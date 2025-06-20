@@ -16,27 +16,11 @@ describe('User Routes', () => {
   beforeEach(() => {
     jest.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
-
-    // Used for mocking express validator, not functioning
-    // jest.mock('express-validator', () => ({
-    //   body: jest.fn().mockReturnValue({
-    //     isUUID: jest.fn().mockReturnThis(),
-    //     isArray: jest.fn().mockReturnThis(),
-    //     withMessage: jest.fn().mockReturnThis(),
-    //   }),
-    //   validationResult: jest.fn().mockReturnValue({
-    //     isEmpty: jest.fn().mockReturnValue(true),
-    //     array: jest.fn().mockReturnValue([]),
-    //   }),
-    // }));
   });
 
   afterEach(() => {
     jest.clearAllTimers();
     jest.clearAllMocks();
-    // jest.resetAllMocks();
-    // jest.restoreAllMocks();
-    // jest.resetModules();
   });
 
   it('get-users should get all users', async () => {
