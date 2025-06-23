@@ -9,13 +9,12 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../common/InfoDrawer';
 import { setUser, getUser } from '../../common/userStorage';
 import { Typography } from 'antd';
-import moment from 'moment';
-
+import dayjs from 'dayjs';
 const { Text: AntText } = Typography;
 
 // Description component for view mode
 const AppDescription = ({ application }) => {
-  const formatDate = (date) => (date ? moment(date).format('MMMM Do YYYY, h:mm:ss a') : 'N/A');
+  const formatDate = (date) => (date ? dayjs(date).format('MMMM Do YYYY, h:mm:ss a') : 'N/A');
 
   return (
     <Descriptions bordered size="small" column={1}>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Modal, Form, Input, Select, DatePicker, Button, Row, Col, message } from 'antd';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 // Local imports
 import { getDomains, getProductCategories } from './notificationUtil';
@@ -115,7 +115,7 @@ const CreateNotificationModal = ({
       ).shortCode;
       const commonPayloadFields = {
         applicationId,
-        searchableNotificationId: `${productCategoryShortCode}_${moment().format('YYYYMMDD_HHmmss_SSS')}_MANUAL`,
+        searchableNotificationId: `${productCategoryShortCode}_${dayjs().format('YYYYMMDD_HHmmss_SSS')}_MANUAL`,
         notificationOrigin: form.getFieldValue('origin'),
         notificationChannel: 'none',
         notificationTitle: form.getFieldValue('notificationTitle'),
