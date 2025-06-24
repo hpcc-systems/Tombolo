@@ -1,31 +1,31 @@
-const path = require("path");
+const path = require('path');
 
 //Local imports
-const logger = require("../config/logger");
-const models = require("../models");
+const logger = require('../config/logger');
+const models = require('../models');
 const {
   clusterReachabilityMonitoringInterval,
-} = require("../config/monitorings.js");
+} = require('../config/monitorings.js');
 
 // Constants
 const ClusterMonitoring = models.clusterMonitoring;
-const CLUSTER_TIMEZONE_OFFSET = "clustertimezoneoffset.js";
-const CLUSTER_USAGE_HISTORY_TRACKER = "submitClusterUsageTracker.js";
-const SUBMIT_CLUSTER_MONITORING_JOB = "submitClusterMonitoring.js";
-const MONITOR_CLUSTER_REACHABILITY_FILE_NAME = "monitorClusterReachability.js";
+const CLUSTER_TIMEZONE_OFFSET = 'clustertimezoneoffset.js';
+const CLUSTER_USAGE_HISTORY_TRACKER = 'submitClusterUsageTracker.js';
+const SUBMIT_CLUSTER_MONITORING_JOB = 'submitClusterMonitoring.js';
+const MONITOR_CLUSTER_REACHABILITY_FILE_NAME = 'monitorClusterReachability.js';
 
 async function scheduleClusterTimezoneOffset() {
-  logger.info("Cluster timezone offset checker job initialized ...");
+  logger.info('Cluster timezone offset checker job initialized ...');
   try {
-    let jobName = "cluster-timezone-offset-" + new Date().getTime();
+    let jobName = 'cluster-timezone-offset-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "at 02:30am also at 02:30pm",
+      interval: 'at 02:30am also at 02:30pm',
       path: path.join(
         __dirname,
-        "..",
-        "jobs",
-        "cluster",
+        '..',
+        'jobs',
+        'cluster',
         CLUSTER_TIMEZONE_OFFSET
       ),
       worker: {
@@ -50,15 +50,15 @@ async function createClusterUsageHistoryJob() {
     name: uniqueJobName,
     path: path.join(
       __dirname,
-      "..",
-      "jobs",
-      "cluster",
+      '..',
+      'jobs',
+      'cluster',
       CLUSTER_USAGE_HISTORY_TRACKER
     ),
   };
   this.bree.add(job);
   this.bree.start(uniqueJobName);
-  logger.info("Cluster usage monitoring job initialized ...");
+  logger.info('Cluster usage monitoring job initialized ...');
 }
 
 function createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
@@ -68,9 +68,9 @@ function createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
     name: uniqueJobName,
     path: path.join(
       __dirname,
-      "..",
-      "jobs",
-      "cluster",
+      '..',
+      'jobs',
+      'cluster',
       SUBMIT_CLUSTER_MONITORING_JOB
     ),
     worker: {
@@ -83,7 +83,7 @@ function createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
 
 async function scheduleClusterMonitoringOnServerStart() {
   try {
-    logger.info("Cluster monitoring initialized ...");
+    logger.info('Cluster monitoring initialized ...');
     const clusterMonitoring = await ClusterMonitoring.findAll({ raw: true });
     for (let monitoring of clusterMonitoring) {
       const { id, cron, isActive } = monitoring;
@@ -101,16 +101,16 @@ async function scheduleClusterMonitoringOnServerStart() {
 
 async function checkClusterReachability() {
   try {
-    let jobName = "cluster-reachability-monitoring" + new Date().getTime();
+    let jobName = 'cluster-reachability-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
       // interval: "10s", // For development
       interval: clusterReachabilityMonitoringInterval,
       path: path.join(
         __dirname,
-        "..",
-        "jobs",
-        "cluster",
+        '..',
+        'jobs',
+        'cluster',
         MONITOR_CLUSTER_REACHABILITY_FILE_NAME
       ),
       worker: {
@@ -121,7 +121,7 @@ async function checkClusterReachability() {
       },
     });
     this.bree.start(jobName);
-    logger.info("Cluster reachability checker job initialized ...");
+    logger.info('Cluster reachability checker job initialized ...');
   } catch (err) {
     logger.error(err);
   }
