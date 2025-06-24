@@ -162,11 +162,44 @@ router.post(
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     try {
-      if (req.body.id !== '') {
-        const application = await Application.update(req.body, {
-          where: { id: req.body.id },
-        });
-        return res.status(200).json({ result: 'success', id: application.id });
+      if (req.body.id == '') {
+        req.body.createdBy = req.body.creator;
+        models.application
+          .create({
+            title: req.body.title,
+            description: req.body.description,
+            creator: req.body.creator,
+            visibility: req.body.visibility,
+            createdBy: req.body.createdBy,
+          })
+          .then(function (application) {
+            if (req.body.user_id) {
+              models.user_application
+                .create({
+                  user_id: req.body.user_id,
+                  application_id: application.id,
+                  createdBy: req.body.createdBy,
+                  user_app_relation: 'created',
+                })
+                .then(function (userapp) {
+                  res.json({
+                    result: 'success',
+                    id: application.id,
+                    title: application.title,
+                    description: application.description,
+                    user_app_id: userapp.id,
+                  });
+                });
+            } else {
+              res.json({ result: 'success', id: application.id });
+            }
+          });
+      } else {
+        models.application
+          .update(req.body, { where: { id: req.body.id } })
+          .then(function (result) {
+            res.json({ result: 'success', id: result.id });
+          });
       }
 
       req.body.createdBy = req.body.creator;
@@ -247,7 +280,7 @@ router.post('/shareApplication', [], async (req, res) => {
   try {
     await UserApplication.create(appShareDetails);
     // Can't wait for notification  email to be sent - might take longer ->Sending response to client as soon as the data is saved in userApplication table
-    return res.json({ result: 'success' });
+    res.status(200).json({ result: 'success' });
     try {
       NotificationModule.notifyApplicationShare(
         appShareDetails.user_id,
@@ -452,18 +485,17 @@ function importChildGroups(
     });
   }
 
-  Promise.all(importChildGroupsPromise).then(() => {
+  Promise.all(importChildGroupsPromise).then(result => {
     //Attempt to import all the groups if done importing - start importing assets
     if (numberOfAttemptedImport == importingGroups.length) {
       emitUpdates(io, { step: 'Done importing groups', status: 'normal' });
       emitUpdates(io, { step: 'Importing all assets', status: 'normal' });
-      // eslint-disable-next-line no-unused-vars
       let importAllAssets = new Promise(function (resolve, reject) {
         resolve(importAssets(assetData, newAppId, groupIdMap, io));
       });
       importAllAssets
-        .then(() => {
-          Promise.all([allPromises]).then(() => {
+        .then(result => {
+          Promise.all([allPromises]).then(result => {
             emitUpdates(io, {
               step: 'SUCCESS - Application import complete',
               status: 'success',
@@ -549,11 +581,13 @@ function importAssets(assetData, newAppId, groupIdMap, io) {
 // Function to import asset details, asset groups, asset_dataflows/ depend on jobs
 function importAssetDetails(item, assetType, newAppId, groupIdMap, io) {
   item[1].map(asset => {
+    let newAsset;
     asset.application_id = newAppId;
     allPromises.push(
       assetType
         .create(asset)
         .then(result => {
+          newAsset = result;
           emitUpdates(io, {
             step: `SUCCESS - importing ${item[0]} ${asset.title} `,
             status: 'success',

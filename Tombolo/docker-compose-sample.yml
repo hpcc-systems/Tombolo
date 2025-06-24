@@ -27,6 +27,8 @@ services:
       - /tmp/pm2:/tmp/pm2
       - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
       - ./logs/server:/app/logs
+      - ./certs:/usr/local/share/ca-certificates
+      - ./customCerts:/customCerts
     networks:
       - tombolo-network
     ports:

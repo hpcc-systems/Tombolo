@@ -17,7 +17,6 @@ const { body, query, validationResult } = require('express-validator');
 
 let lodash = require('lodash');
 const fs = require('fs');
-const { response } = require('express');
 const path = require('path');
 
 const logger = require('../../config/logger');
