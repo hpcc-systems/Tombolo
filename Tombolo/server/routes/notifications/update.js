@@ -1,22 +1,22 @@
 /* This route is specifically for updating notifications via teams card. 
 For that reason this route is not together with other notification routes.
-Server does not validate the token to access this route */ 
+Server does not validate the token to access this route */
 
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const models = require("../../models");
-const monitoring_notifications = models.monitoring_notifications;
-const fileMonitoring = models.fileMonitoring;
+const { monitoring_notifications, fileMonitoring } = require('../../models');
+const logger = require('../../config/logger');
 
 //TODO send acknowledgement
 //Using POST - PUT not available for action Card
-router.post("/update", async (req, res) => {
+router.post('/update', async (req, res) => {
   try {
-    const { notification_id, status, comment, filemonitoring_id, fileName } = req.body;
+    const { notification_id, status, comment, filemonitoring_id, fileName } =
+      req.body;
 
-    if(!notification_id) throw Error('Invalid notification ID')
+    if (!notification_id) throw Error('Invalid notification ID');
     const updateData = {
-      responded_on: new Date()
+      responded_on: new Date(),
     };
     if (status) {
       updateData.status = status;
@@ -30,9 +30,8 @@ router.post("/update", async (req, res) => {
       where: { id: notification_id },
     });
 
-
     // Remove file from monitoring list if status is changed to 'Closed'
-    if (status === "Closed" && filemonitoring_id) {
+    if (status === 'Closed' && filemonitoring_id) {
       const {
         metaData,
         metaData: { currentlyMonitoring },
@@ -41,7 +40,7 @@ router.post("/update", async (req, res) => {
         raw: true,
       });
       const newFileMonitoringList = currentlyMonitoring.filter(
-        (file) => file.name !== fileName
+        file => file.name !== fileName
       );
       const newMetaData = {
         ...metaData,
@@ -52,12 +51,12 @@ router.post("/update", async (req, res) => {
         { metaData: newMetaData },
         { where: { id: filemonitoring_id } }
       );
-    } 
+    }
 
-    res.status(200).send("Success updating");
+    return res.status(200).send('Success updating');
   } catch (err) {
-    console.log(err);
-    res.status(503).send("Failed to make update");
+    logger.error(err);
+    return res.status(503).send('Failed to make update');
   }
 });
 

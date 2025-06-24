@@ -1,36 +1,35 @@
-const express = require("express");
-const logger = require("../../config/logger");
+const express = require('express');
+const logger = require('../../config/logger');
 const router = express.Router();
-const models = require("../../models");
-const jobScheduler = require("../../jobSchedular/job-scheduler");
-const FileMonitoring = models.fileMonitoring;
-const validatorUtil = require("../../utils/validator");
-const { body, param, validationResult } = require("express-validator");
+const { fileMonitoring: FileMonitoring } = require('../../models');
+const jobScheduler = require('../../jobSchedular/job-scheduler');
+const validatorUtil = require('../../utils/validator');
+const { body, param, validationResult } = require('express-validator');
 
 router.post(
-  "/",
+  '/',
   [
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cluster_id")
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('cluster_id')
       .isUUID(4)
       .optional({ nullable: false })
-      .withMessage("Invalid cluster id"),
-    body("dirToMonitor")
+      .withMessage('Invalid cluster id'),
+    body('dirToMonitor')
       .isArray()
       .optional({ nullable: true })
-      .withMessage("Invalid directory to monitor"),
-    body("email")
+      .withMessage('Invalid directory to monitor'),
+    body('email')
       .isArray()
       .optional({ nullable: true })
-      .withMessage("Invalid email/s"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
+      .withMessage('Invalid email/s'),
+    body('cron').custom(value => {
+      const valArray = value.split(' ');
       if (valArray.length > 5) {
         throw new Error(
           `Expected number of cron parts 5, received ${valArray.length}`
         );
       } else {
-        return Promise.resolve("Good to go");
+        return Promise.resolve('Good to go');
       }
     }),
   ],
@@ -56,18 +55,18 @@ router.post(
         jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
       }
     } catch (error) {
-      console.log(error);
-      res
+      logger.error(error);
+      return res
         .status(500)
-        .json({ message: "Unable to save file monitoring details" });
+        .json({ message: 'Unable to save file monitoring details' });
     }
   }
 );
 
 // Get file monitoring [ All of them ]
 router.get(
-  "/all/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/all/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     try {
       const { application_id } = req.params;
@@ -81,21 +80,22 @@ router.get(
         where: { application_id },
         raw: true,
       });
-      res.status(200).send(fileMonitoring);
+
+      return res.status(200).send(fileMonitoring);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Unable to get file monitoring" });
+      logger.error(error);
+      return res.status(500).json({ message: 'Unable to get file monitoring' });
     }
   }
 );
 
 // Get file monitoring [ All of them ]
 router.get(
-  "/:file_monitoring_id",
+  '/:file_monitoring_id',
   [
-    param("file_monitoring_id")
+    param('file_monitoring_id')
       .isUUID(4)
-      .withMessage("Invalid file monitoring id"),
+      .withMessage('Invalid file monitoring id'),
   ],
   async (req, res) => {
     try {
@@ -111,23 +111,23 @@ router.get(
         raw: true,
       });
 
-      res.status(200).send(fileMonitoring);
+      return res.status(200).send(fileMonitoring);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Unable to get file monitoring" });
+      logger.error(error);
+      return res.status(500).json({ message: 'Unable to get file monitoring' });
     }
   }
 );
 
 //Delete File Monitoring
 router.delete(
-  "/:fileMonitoringId/:fileMonitoringName",
+  '/:fileMonitoringId/:fileMonitoringName',
   [
-    param("fileMonitoringId")
+    param('fileMonitoringId')
       .isUUID(4)
-      .withMessage("Invalid file monitoring id"),
+      .withMessage('Invalid file monitoring id'),
   ],
-  async (req, res, next) => {
+  async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
@@ -150,16 +150,17 @@ router.delete(
         }
       }
     } catch (err) {
-      res.status(500).json({ message: err.message });
+      logger.error(err);
+      return res.status(500).json({ message: err.message });
     }
   }
 );
 
 // Pause or start monitoring
 router.put(
-  "/fileMonitoringStatus/:id",
-  [param("id").isUUID(4).withMessage("Invalid file monitoring Id")],
-  async (req, res, next) => {
+  '/fileMonitoringStatus/:id',
+  [param('id').isUUID(4).withMessage('Invalid file monitoring Id')],
+  async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
@@ -194,25 +195,26 @@ router.put(
         });
       }
 
-      res.status(200).send("Update successful");
+      return res.status(200).send('Update successful');
     } catch (err) {
       logger.error(err);
+      return res.status(500).send('Failed to update monitoring status');
     }
   }
 );
 
 router.put(
-  "/",
+  '/',
   [
-    body("id").isUUID(4).withMessage("Invalid file monitoring id"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
+    body('id').isUUID(4).withMessage('Invalid file monitoring id'),
+    body('cron').custom(value => {
+      const valArray = value.split(' ');
       if (valArray.length > 5) {
         throw new Error(
           `Expected number of cron parts 5, received ${valArray.length}`
         );
       } else {
-        return Promise.resolve("Good to go");
+        return Promise.resolve('Good to go');
       }
     }),
   ],
@@ -242,7 +244,7 @@ router.put(
       const { id, name, cron, monitoringActive, monitoringAssetType } = newInfo;
 
       await FileMonitoring.update(newInfo, { where: { id } });
-      const fileMonitoringDetails = FileMonitoring.findOne({where: {id}}) // To avoid xss waring making additional call
+      const fileMonitoringDetails = FileMonitoring.findOne({ where: { id } }); // To avoid xss waring making additional call
       res.status(200).send(fileMonitoringDetails);
 
       // If start monitoring was changed to TRUE
@@ -278,10 +280,10 @@ router.put(
         }
       }
     } catch (error) {
-      console.log(error);
-      res
+      logger.error(error);
+      return res
         .status(500)
-        .json({ message: "Unable to save file monitoring details" });
+        .json({ message: 'Unable to save file monitoring details' });
     }
   }
 );

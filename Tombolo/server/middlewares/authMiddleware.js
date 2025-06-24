@@ -1,63 +1,64 @@
 // Validate add user inputs using express validator
-const { body, param, validationResult } = require("express-validator");
-const jwt = require("jsonwebtoken");
+const { body, param, validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
 
-const logger = require("../config/logger");
-const models = require("../models");
+const logger = require('../config/logger');
+const models = require('../models');
 
 const User = models.user;
 
 // Validate registration payload
 const validateNewUserPayload = [
-  body("registrationMethod")
+  body('registrationMethod')
     .isString()
     .notEmpty()
-    .withMessage("Registration method is required")
-    .isIn(["traditional", "microsoft"])
+    .withMessage('Registration method is required')
+    .isIn(['traditional', 'microsoft'])
     .withMessage(
+      // eslint-disable-next-line quotes
       "Registration method must be either 'traditional' or 'microsoft'"
     ),
-  body("firstName")
+  body('firstName')
     .isString()
     .notEmpty()
-    .withMessage("First name is required")
+    .withMessage('First name is required')
     .isLength({ min: 2, max: 50 })
-    .withMessage("First name must be between 2 and 50 characters"),
-  body("lastName")
+    .withMessage('First name must be between 2 and 50 characters'),
+  body('lastName')
     .isString()
     .notEmpty()
-    .withMessage("Last name is required")
+    .withMessage('Last name is required')
     .isLength({ min: 2, max: 50 })
-    .withMessage("Last name must be between 2 and 50 characters"),
-  body("email")
+    .withMessage('Last name must be between 2 and 50 characters'),
+  body('email')
     .isEmail()
-    .withMessage("Email address is not valid")
+    .withMessage('Email address is not valid')
     .notEmpty()
-    .withMessage("Email is required")
+    .withMessage('Email is required')
     .isLength({ max: 100 })
-    .withMessage("Email must be less than 100 characters"),
-  body("password")
-    .if(body("registrationMethod").equals("traditional"))
+    .withMessage('Email must be less than 100 characters'),
+  body('password')
+    .if(body('registrationMethod').equals('traditional'))
     .isString()
     .notEmpty()
-    .withMessage("Password is required")
+    .withMessage('Password is required')
     .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long")
+    .withMessage('Password must be at least 8 characters long')
     .matches(/[A-Z]/)
-    .withMessage("Password must contain at least one uppercase letter")
+    .withMessage('Password must contain at least one uppercase letter')
     .matches(/[a-z]/)
-    .withMessage("Password must contain at least one lowercase letter")
+    .withMessage('Password must contain at least one lowercase letter')
     .matches(/[0-9]/)
-    .withMessage("Password must contain at least one number")
+    .withMessage('Password must contain at least one number')
     .matches(/[\W_]/)
-    .withMessage("Password must contain at least one special character"),
-  body("metaData")
+    .withMessage('Password must contain at least one special character'),
+  body('metaData')
     .isObject()
     .optional()
-    .withMessage("Meta data must be an object if provided"),
+    .withMessage('Meta data must be an object if provided'),
   (req, res, next) => {
     const errors = validationResult(req).array();
-    const errorString = errors.map((e) => e.msg).join(", ");
+    const errorString = errors.map(e => e.msg).join(', ');
     if (errors.length > 0) {
       logger.error(`Update user: ${errorString}`);
       return res.status(400).json({ success: false, message: errorString });
@@ -68,17 +69,17 @@ const validateNewUserPayload = [
 
 // Validate login payload
 const validateLoginPayload = [
-  body("email")
+  body('email')
     .isEmail()
-    .withMessage("Email address is not valid")
+    .withMessage('Email address is not valid')
     .notEmpty()
-    .withMessage("Email is required")
+    .withMessage('Email is required')
     .isLength({ max: 100 })
-    .withMessage("Email must be less than 100 characters"),
-  body("password").isString().notEmpty().withMessage("Password is required"),
+    .withMessage('Email must be less than 100 characters'),
+  body('password').isString().notEmpty().withMessage('Password is required'),
   (req, res, next) => {
     const errors = validationResult(req).array();
-    const errorString = errors.map((e) => e.msg).join(", ");
+    const errorString = errors.map(e => e.msg).join(', ');
     if (errors.length > 0) {
       logger.error(`Login: ${errorString}`);
       return res.status(400).json({ success: false, message: errorString });
@@ -90,7 +91,7 @@ const validateLoginPayload = [
 const validateEmailDuplicate = [
   async (req, res, next) => {
     const { email } = req.body;
-    const message = "Email already in use";
+    const message = 'Email already in use';
     const user = await User.findOne({ where: { email } });
     if (user) {
       return res.status(400).json({
@@ -112,10 +113,10 @@ const verifyValidTokenExists = (req, res, next) => {
   const accessToken = req.cookies.token;
 
   if (!accessToken) {
-    logger.error("Authorization: Access token not provided");
+    logger.error('Authorization: Access token not provided');
     return res
       .status(401)
-      .json({ success: false, message: "Access token not provided" });
+      .json({ success: false, message: 'Access token not provided' });
   }
 
   try {
@@ -126,26 +127,26 @@ const verifyValidTokenExists = (req, res, next) => {
     req.accessToken = accessToken;
     next(); // Proceed to the controller
   } catch (err) {
-    console.log(err);
-    logger.error("Authorization: Invalid or expired access token");
+    logger.error('Authorization: Invalid or expired access token');
+    logger.error(err);
     return res
       .status(401)
-      .json({ success: false, message: "Invalid or expired access token" });
+      .json({ success: false, message: 'Invalid or expired access token' });
   }
 };
 
 // Validate email address in in request body
 const validatePasswordResetRequestPayload = [
-  body("email")
+  body('email')
     .isEmail()
-    .withMessage("Email address is not valid")
+    .withMessage('Email address is not valid')
     .notEmpty()
-    .withMessage("Email is required")
+    .withMessage('Email is required')
     .isLength({ max: 100 })
-    .withMessage("Email must be less than 100 characters"),
+    .withMessage('Email must be less than 100 characters'),
   (req, res, next) => {
     const errors = validationResult(req).array();
-    const errorString = errors.map((e) => e.msg).join(", ");
+    const errorString = errors.map(e => e.msg).join(', ');
     if (errors.length > 0) {
       logger.error(`Reset password: ${errorString}`);
       return res.status(400).json({ success: false, message: errorString });
@@ -156,29 +157,29 @@ const validatePasswordResetRequestPayload = [
 
 //validateResetPasswordPayload - comes in request body - token must be present and must be UUID, password must be present and meet password requirements
 const validateResetPasswordPayload = [
-  body("token")
+  body('token')
     .isString()
     .notEmpty()
-    .withMessage("Token is required")
+    .withMessage('Token is required')
     .isUUID()
-    .withMessage("Token is not valid"),
-  body("password")
+    .withMessage('Token is not valid'),
+  body('password')
     .isString()
     .notEmpty()
-    .withMessage("Password is required")
+    .withMessage('Password is required')
     .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long")
+    .withMessage('Password must be at least 8 characters long')
     .matches(/[A-Z]/)
-    .withMessage("Password must contain at least one uppercase letter")
+    .withMessage('Password must contain at least one uppercase letter')
     .matches(/[a-z]/)
-    .withMessage("Password must contain at least one lowercase letter")
+    .withMessage('Password must contain at least one lowercase letter')
     .matches(/[0-9]/)
-    .withMessage("Password must contain at least one number")
+    .withMessage('Password must contain at least one number')
     .matches(/[\W_]/)
-    .withMessage("Password must contain at least one special character"),
+    .withMessage('Password must contain at least one special character'),
   (req, res, next) => {
     const errors = validationResult(req).array();
-    const errorString = errors.map((e) => e.msg).join(", ");
+    const errorString = errors.map(e => e.msg).join(', ');
     if (errors.length > 0) {
       logger.error(`Reset password: ${errorString}`);
       return res.status(400).json({ success: false, message: errorString });
@@ -189,10 +190,10 @@ const validateResetPasswordPayload = [
 
 // Verify if the request body has code -> Auth code from azure
 const validateAzureAuthCode = [
-  body("code").isString().notEmpty().withMessage("Code is required"),
+  body('code').isString().notEmpty().withMessage('Code is required'),
   (req, res, next) => {
     const errors = validationResult(req).array();
-    const errorString = errors.map((e) => e.msg).join(", ");
+    const errorString = errors.map(e => e.msg).join(', ');
     if (errors.length > 0) {
       logger.error(`Azure auth code: ${errorString}`);
       return res.status(400).json({ success: false, message: errorString });
@@ -202,10 +203,10 @@ const validateAzureAuthCode = [
 ];
 
 const validateAccessRequest = [
-  body("id").isUUID(4).withMessage("Invalid user id"),
-  body("comment").notEmpty().withMessage("Comment is required"),
-  body("roles").isArray().withMessage("Roles must be an array"),
-  body("applications").isArray().withMessage("Applications must be an array"),
+  body('id').isUUID(4).withMessage('Invalid user id'),
+  body('comment').notEmpty().withMessage('Comment is required'),
+  body('roles').isArray().withMessage('Roles must be an array'),
+  body('applications').isArray().withMessage('Applications must be an array'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -217,16 +218,16 @@ const validateAccessRequest = [
 
 // Validate login payload
 const validateEmailInBody = [
-  body("email")
+  body('email')
     .isEmail()
-    .withMessage("Email address is not valid")
+    .withMessage('Email address is not valid')
     .notEmpty()
-    .withMessage("Email is required")
+    .withMessage('Email is required')
     .isLength({ max: 100 })
-    .withMessage("Email must be less than 100 characters"),
+    .withMessage('Email must be less than 100 characters'),
   (req, res, next) => {
     const errors = validationResult(req).array();
-    const errorString = errors.map((e) => e.msg).join(", ");
+    const errorString = errors.map(e => e.msg).join(', ');
     if (errors.length > 0) {
       logger.error(`Login: ${errorString}`);
       return res.status(400).json({ success: false, message: errorString });
@@ -236,14 +237,14 @@ const validateEmailInBody = [
 ];
 
 const validateResetToken = [
-  param("token")
+  param('token')
     .notEmpty()
-    .withMessage("Token is required")
+    .withMessage('Token is required')
     .isUUID()
-    .withMessage("Invalid token"),
+    .withMessage('Invalid token'),
   (req, res, next) => {
     const errors = validationResult(req).array();
-    const errorString = errors.map((e) => e.msg).join(", ");
+    const errorString = errors.map(e => e.msg).join(', ');
     if (errors.length > 0) {
       logger.error(`Reset password: ${errorString}`);
       return res.status(400).json({ success: false, message: errorString });

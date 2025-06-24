@@ -1,7 +1,6 @@
-const models = require("../models");
-const { v4: UUIDV4 } = require("uuid");
+const models = require('../models');
 const instance_settings = models.instance_settings;
-const logger = require("../config/logger");
+const logger = require('../config/logger');
 
 // Get a single instance setting by name
 const getInstanceSetting = async (req, res) => {
@@ -12,24 +11,24 @@ const getInstanceSetting = async (req, res) => {
       include: [
         {
           model: models.user,
-          as: "creator", // Use alias defined in the association
-          attributes: ["firstName", "lastName", "email"],
+          as: 'creator', // Use alias defined in the association
+          attributes: ['firstName', 'lastName', 'email'],
         },
         {
           model: models.user,
-          as: "updater", // Use alias defined in the association
-          attributes: ["firstName", "lastName", "email"],
+          as: 'updater', // Use alias defined in the association
+          attributes: ['firstName', 'lastName', 'email'],
         },
       ],
     });
 
     if (!instance) {
-      return res.status(404).json({ message: "Instance setting not found" });
+      return res.status(404).json({ message: 'Instance setting not found' });
     }
-    res.status(200).json(instance);
+    return res.status(200).json(instance);
   } catch (error) {
     logger.error(error.message);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -43,19 +42,19 @@ const updateInstanceSetting = async (req, res) => {
     });
 
     // Get rest of the fields from the request body
-    const reqData =  { ...req.body };
+    const reqData = { ...req.body };
 
     const payload = {};
 
-    if(reqData.name){
+    if (reqData.name) {
       payload.name = reqData.name;
       delete reqData.name;
     }
 
     // Const Existing metaData
-    const {metaData} = instance;
-    const updatedMetaData = {...metaData, ...reqData};
-    const finalPayload = {metaData: updatedMetaData, ...payload};
+    const { metaData } = instance;
+    const updatedMetaData = { ...metaData, ...reqData };
+    const finalPayload = { metaData: updatedMetaData, ...payload };
 
     // Update the instance setting
     const updatedInstanceCount = await instance_settings.update(finalPayload, {
@@ -64,9 +63,9 @@ const updateInstanceSetting = async (req, res) => {
     });
 
     // If updated instance count is 0, throw an error
-        if (updatedInstanceCount[0] === 0) {
-          throw new Error("Failed to update instance setting");
-        }
+    if (updatedInstanceCount[0] === 0) {
+      throw new Error('Failed to update instance setting');
+    }
 
     // Get the updated instance setting
     const updatedInstance = await instance_settings.findOne({
@@ -74,25 +73,28 @@ const updateInstanceSetting = async (req, res) => {
       include: [
         {
           model: models.user,
-          as: "creator", // Use alias defined in the association
-          attributes: ["firstName", "lastName", "email"],
+          as: 'creator', // Use alias defined in the association
+          attributes: ['firstName', 'lastName', 'email'],
         },
         {
           model: models.user,
-          as: "updater", // Use alias defined in the association
-          attributes: ["firstName", "lastName", "email"],
+          as: 'updater', // Use alias defined in the association
+          attributes: ['firstName', 'lastName', 'email'],
         },
       ],
     });
 
     // Send response to the client
-    res.status(200).json({ message: "Instance setting updated successfully", data: updatedInstance });
-
+    return res.status(200).json({
+      message: 'Instance setting updated successfully',
+      data: updatedInstance,
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    return res.status(400).json({ message: error.message });
   }
 };
 
 module.exports = {
   getInstanceSetting,
-  updateInstanceSetting};
+  updateInstanceSetting,
+};

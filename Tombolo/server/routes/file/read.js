@@ -1,26 +1,23 @@
 const express = require('express');
 const router = express.Router();
-var models = require('../../models');
-const hpccUtil = require('../../utils/hpcc-util');
-const assetUtil = require('../../utils/assets');
-let Application = models.application;
-let UserApplication = models.user_application;
-let File = models.file;
-let FileValidation = models.file_validation;
-let License = models.license;
-var Cluster = models.cluster;
-let Rules = models.rules;
-let DataTypes = models.data_types;
-let AssetsGroups = models.assets_groups;
-
-let ConsumerObject = models.consumer_object;
-
+var {
+  application: Application,
+  user_application: UserApplication,
+  file_validation: FileValidation,
+  file: File,
+  license: License,
+  rules: Rules,
+  data_types: DataTypes,
+  assets_groups: AssetsGroups,
+  consumer_object: ConsumerObject,
+  jobfile: JobFile,
+} = require('../../models');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;
-let Indexes = models.indexes;
-let Query = models.query;
-let Job = models.job;
-const JobFile = models.jobfile;
+
+const hpccUtil = require('../../utils/hpcc-util');
+const assetUtil = require('../../utils/assets');
+
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 
@@ -31,7 +28,7 @@ const logger = require('../../config/logger');
 router.post(
   '/superfile_meta',
   [body('superFileAssetId').isUUID(4).withMessage('Invalid asset id')],
-  async (req, res, next) => {
+  async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -63,9 +60,9 @@ router.post(
       const subfiles = response.data?.SuperfileListResponse?.subfiles?.Item;
       if (!subfiles) throw new Error('Failed to get subfiles');
 
-      res.json(subfiles);
+      return res.status(200).json(subfiles);
     } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      return res.status(500).json({ success: false, message: error.message });
     }
   }
 );
@@ -102,7 +99,7 @@ router.get(
             'createdAt',
           ],
         });
-        return res.json(assets);
+        return res.status(200).json(assets);
       }
 
       const assets = await File.findAll({
@@ -128,10 +125,10 @@ router.get(
         return parsed;
       });
 
-      res.json(assetList);
+      return res.status(200).json(assetList);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({
+      logger.error(error);
+      return res.status(500).json({
         success: false,
         message: 'Error occurred while retrieving assets',
       });
@@ -147,7 +144,7 @@ router.post(
       .withMessage('Invalid keyword'),
     query('userId').isInt().withMessage('Invalid userid'),
   ],
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -155,44 +152,36 @@ router.post(
       return res.status(422).json({ success: false, errors: errors.array() });
     }
     try {
-      Application.findAll({
+      const applications = await Application.findAll({
         attributes: ['id'],
         raw: true,
         include: [UserApplication],
         where: { $user_id$: req.query.userId },
-      })
-        .then(function (applications) {
-          let appIds = applications.map(app => app.id);
-          File.findAll({
-            where: {
-              application_id: { [Op.in]: appIds },
-              title: { [Op.like]: '%' + req.query.keyword + '%' },
-            },
-            attributes: ['id', 'title', 'name', 'application_id'],
-            raw: true,
-          }).then(fileDefns => {
-            console.log(fileDefns);
-            let fileDefSuggestions = fileDefns.map(fileDefn => {
-              return {
-                text: fileDefn.title,
-                value: fileDefn.title,
-                id: fileDefn.id,
-                name: fileDefn.name,
-                app_id: fileDefn.application_id,
-              };
-            });
-            res.json(fileDefSuggestions);
-          });
-        })
-        .catch(function (err) {
-          console.log(err);
-          return res.status(500).json({
-            success: false,
-            message: 'Error occured while getting files',
-          });
-        });
+      });
+
+      let appIds = applications.map(app => app.id);
+      const fileDefns = File.findAll({
+        where: {
+          application_id: { [Op.in]: appIds },
+          title: { [Op.like]: '%' + req.query.keyword + '%' },
+        },
+        attributes: ['id', 'title', 'name', 'application_id'],
+        raw: true,
+      });
+
+      logger.info(fileDefns);
+      let fileDefSuggestions = fileDefns.map(fileDefn => {
+        return {
+          text: fileDefn.title,
+          value: fileDefn.title,
+          id: fileDefn.id,
+          name: fileDefn.name,
+          app_id: fileDefn.application_id,
+        };
+      });
+      return res.status(200).json(fileDefSuggestions);
     } catch (err) {
-      console.log('err', err);
+      logger.error('err', err);
       return res
         .status(500)
         .json({ success: false, message: 'Error occured while getting files' });
@@ -200,110 +189,99 @@ router.post(
   }
 );
 
-router.get('/licenses', (req, res) => {
+router.get('/licenses', async (req, res) => {
   try {
-    License.findAll({ attributes: ['id', 'name', 'url', 'description'] })
-      .then(function (licenses) {
-        res.json(licenses);
-      })
-      .catch(function (err) {
-        console.log(err);
-        return res.status(500).json({
-          success: false,
-          message: 'Error occured while getting licenses',
-        });
-      });
+    const licenses = await License.findAll({
+      attributes: ['id', 'name', 'url', 'description'],
+    });
+
+    return res.status(200).json(licenses);
   } catch (err) {
-    console.log('err', err);
+    logger.error('err', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Error occured while getting licenses',
+    });
   }
 });
 
-router.get('/rules', (req, res) => {
+router.get('/rules', async (req, res) => {
   try {
-    Rules.findAll()
-      .then(function (rules) {
-        res.json(rules);
-      })
-      .catch(function (err) {
-        console.log(err);
-        return res.status(500).json({
-          success: false,
-          message: 'Error occured while getting rules',
-        });
-      });
+    const rules = await Rules.findAll();
+    return res.status(200).json(rules);
   } catch (err) {
-    console.log('err', err);
+    logger.error(err);
     return res
       .status(500)
       .json({ success: false, message: 'Error occured while getting rules' });
   }
 });
 
-router.get('/files/:fileId/validation-rules', (req, res, next) => {
-  FileValidation.findAll({
-    where: {
-      file_id: req.params.fileId,
-    },
-  })
-    .then(rules => {
-      return res.json(rules);
-    })
-    .catch(err => {
-      console.log('err', err);
-      return res.status(500).json({
-        message: 'An error occurred',
-      });
+router.get('/files/:fileId/validation-rules', async (req, res) => {
+  try {
+    const rules = await FileValidation.findAll({
+      where: {
+        file_id: req.params.fileId,
+      },
     });
+    return res.status(200).json(rules);
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).json({
+      message: 'An error occurred',
+    });
+  }
 });
 
-router.get('/files/:fileId/validation-rules/validations', (req, res, next) => {
-  FileValidation.findAll({
-    where: {
-      file_id: req.params.fileId,
-    },
-  })
-    .then(rules => {
-      let validations = '';
-      rules.forEach(rule => {
-        if (rule.rule_test) {
-          validations += rule.rule_name + ':' + rule.rule_test + ';';
-        }
-      });
-      return res.json({
-        ecl: validations,
-      });
-    })
-    .catch(err => {
-      console.log('err', err);
-      return res.status(500).json({
-        message: 'An error occurred',
-      });
+router.get('/files/:fileId/validation-rules/validations', async (req, res) => {
+  try {
+    const rules = await FileValidation.findAll({
+      where: {
+        file_id: req.params.fileId,
+      },
     });
+
+    let validations = '';
+    rules.forEach(rule => {
+      if (rule.rule_test) {
+        validations += rule.rule_name + ':' + rule.rule_test + ';';
+      }
+    });
+    return res.status(200).json({
+      ecl: validations,
+    });
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).json({
+      message: 'An error occurred',
+    });
+  }
 });
 
-router.get('/files/:fileId/validation-rules/fixes', (req, res, next) => {
-  FileValidation.findAll({
-    where: {
-      file_id: req.params.fileId,
-    },
-  })
-    .then(rules => {
-      let fixes = '';
-      rules.forEach(rule => {
-        if (rule.rule_fix) {
-          fixes += rule.rule_name + ':' + rule.rule_fix + ';';
-        }
-      });
-      return res.json({
-        ecl: fixes,
-      });
-    })
-    .catch(err => {
-      console.log('err', err);
-      return res.status(500).json({
-        message: 'An error occurred',
-      });
+router.get('/files/:fileId/validation-rules/fixes', async (req, res) => {
+  try {
+    const rules = await FileValidation.findAll({
+      where: {
+        file_id: req.params.fileId,
+      },
     });
+
+    let fixes = '';
+    rules.forEach(rule => {
+      if (rule.rule_fix) {
+        fixes += rule.rule_name + ':' + rule.rule_fix + ';';
+      }
+    });
+
+    return res.status(200).json({
+      ecl: fixes,
+    });
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).json({
+      message: 'An error occurred',
+    });
+  }
 });
 
 router.get(
@@ -312,26 +290,25 @@ router.get(
     query('app_id').isUUID(4).withMessage('Invalid application id'),
     query('file_id').isUUID(4).withMessage('Invalid file id'),
   ],
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
+
     try {
-      File.findOne({
+      const file = await File.findOne({
         where: { application_id: req.query.app_id, id: req.query.file_id },
-      })
-        .then(function (file) {
-          if (file) res.json(true);
-          else res.json(false);
-        })
-        .catch(function (err) {
-          console.log(err);
-        });
+      });
+
+      if (file) return res.status(200).json(true);
+
+      return res.status(200).json(false);
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
+      return res.status(500).json({ error: err });
     }
   }
 );
@@ -339,31 +316,32 @@ router.get(
 router.get(
   '/file_ids',
   [query('app_id').isUUID(4).withMessage('Invalid application id')],
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
-    var results = [];
+
+    const results = [];
     try {
-      File.findAll({ where: { application_id: req.query.app_id } })
-        .then(function (fileIds) {
-          fileIds.forEach(function (doc, idx) {
-            var fileObj = {};
-            fileObj.id = doc.id;
-            fileObj.title = doc.title;
-            fileObj.name = doc.name;
-            results.push(fileObj);
-          });
-          res.json(results);
-        })
-        .catch(function (err) {
-          console.log(err);
-        });
+      const files = await File.findAll({
+        where: { application_id: req.query.app_id },
+      });
+
+      files.forEach(function (doc) {
+        var fileObj = {};
+        fileObj.id = doc.id;
+        fileObj.title = doc.title;
+        fileObj.name = doc.name;
+        results.push(fileObj);
+      });
+
+      return res.status(200).json(results);
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
+      return res.status(500).json({ error: err });
     }
   }
 );
@@ -386,10 +364,10 @@ router.get(
         req.query.app_id,
         req.query.file_id
       );
-      res.status(200).json(fileInfo);
+      return res.status(200).json(fileInfo);
     } catch (err) {
-      console.log('err', err);
-      res
+      logger.error(err);
+      return res
         .status(500)
         .json({ success: false, message: 'Error occured while file details' });
     }
@@ -417,12 +395,12 @@ router.get(
       const response = await DFUService.DFUInfo({ Name: fileName });
       if (!response.FileDetail) throw new Error('File details not found');
 
-      res.send(response.FileDetail.subfiles.Item);
+      return res.status(200).send(response.FileDetail.subfiles.Item);
     } catch (error) {
-      console.log('---- error while fetching sub-files ---------');
-      console.dir({ error }, { depth: null });
-      console.log('---------------------------------------------');
-      res
+      logger.error('---- error while fetching sub-files ---------');
+      logger.error(error);
+      logger.error('---------------------------------------------');
+      return res
         .status(404)
         .json({ success: false, message: 'Unable to fetch subfiles' });
     }
@@ -473,9 +451,7 @@ router.post(
       .withMessage('Invalid title'),
   ],
   async (req, res) => {
-    var fileId = '',
-      applicationId = req.body.file.app_id,
-      fieldsToUpdate = {};
+    const applicationId = req.body.file.app_id;
 
     try {
       let errors = validationResult(req);
@@ -501,38 +477,38 @@ router.post(
           { where: { id: renameAssetId } }
         );
 
-      File.findOne({
+      const existingFile = await File.findOne({
         where: {
           name: req.body.file.basic.name,
           application_id: applicationId,
         },
-      }).then(async existingFile => {
-        let file = null;
-        if (!existingFile) {
-          file = await File.create(req.body.file.basic);
-        } else {
-          file = await File.update(req.body.file.basic, {
-            where: { application_id: applicationId, id: req.body.id },
-          }).then(updatedFile => {
-            return updatedFile;
-          });
-        }
-        let fileId = file.id ? file.id : req.body.id;
-        if (req.body.file.basic && req.body.file.basic.groupId) {
-          let assetsGroupsCreated = await AssetsGroups.findOrCreate({
-            where: { assetId: fileId, groupId: req.body.file.basic.groupId },
-            defaults: {
-              assetId: fileId,
-              groupId: req.body.file.basic.groupId,
-            },
-          });
-        }
-        this.updateFileDetails(fileId, applicationId, req).then(response => {
-          res.json(response);
-        });
       });
+
+      let file = null;
+      if (!existingFile) {
+        file = await File.create(req.body.file.basic);
+      } else {
+        file = await File.update(req.body.file.basic, {
+          where: { application_id: applicationId, id: req.body.id },
+        }).then(updatedFile => {
+          return updatedFile;
+        });
+      }
+      let fileId = file.id ? file.id : req.body.id;
+      if (req.body.file.basic && req.body.file.basic.groupId) {
+        await AssetsGroups.findOrCreate({
+          where: { assetId: fileId, groupId: req.body.file.basic.groupId },
+          defaults: {
+            assetId: fileId,
+            groupId: req.body.file.basic.groupId,
+          },
+        });
+      }
+
+      const response = this.updateFileDetails(fileId, applicationId, req);
+      return res.status(200).json(response);
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
       return res.status(500).json({
         success: false,
         message: 'Error occured while saving file details',
@@ -555,12 +531,13 @@ router.post(
       return res.status(422).json({ success: false, errors: errors.array() });
     }
 
-    console.log(
+    logger.info(
       '[file delete] - Get file list for fileId = ' +
         req.body.fileId +
         ' appId: ' +
         req.body.application_id
     );
+
     try {
       const { fileId, application_id } = req.body;
 
@@ -572,6 +549,7 @@ router.post(
         }),
       ]);
     } catch (err) {
+      logger.error(err);
       return res.status(500).json({
         success: false,
         message: 'Error occured while deleting file details',
@@ -580,22 +558,16 @@ router.post(
   }
 );
 
-router.get('/dataTypes', (req, res) => {
+router.get('/dataTypes', async (req, res) => {
   try {
     var results = [];
-    DataTypes.findAll()
-      .then(function (data_types) {
-        //results.push("");
-        data_types.forEach(function (doc, idx) {
-          results.push(doc.name);
-        });
-        res.json(results);
-      })
-      .catch(function (err) {
-        console.log(err);
-      });
+    const dataTypes = await DataTypes.findAll();
+    dataTypes.forEach(doc => results.push(doc.name));
+
+    return res.status(200).json(results);
   } catch (err) {
-    console.log('err', err);
+    logger.error(err);
+    return res.status(500).json({ error: err });
   }
 });
 
@@ -614,11 +586,12 @@ router.post(
     if (!errors.isEmpty()) {
       return res.status(422).json({ success: false, errors: errors.array() });
     }
+
     try {
       let files = await assetUtil.fileSearch(req.body.app_id, req.body.keyword);
-      res.json(files);
+      return res.status(200).json(files);
     } catch (err) {
-      console.log(err);
+      logger.error(err);
       return res
         .status(500)
         .send('Error occured while retrieving file details');
@@ -652,10 +625,10 @@ router.get(
         };
       });
 
-      res.status(200).send(cleanedLogicalItems);
+      return res.status(200).send(cleanedLogicalItems);
     } catch (err) {
       logger.error(err);
-      res
+      return res
         .status(500)
         .json({ message: 'Error occured while searching for logical file' });
     }
@@ -724,11 +697,10 @@ router.get(
       });
 
       //return non-duplicate array
-      res.status(200).send(uniqueArray);
+      return res.status(200).send(uniqueArray);
     } catch (err) {
       logger.error(err);
-      console.log(err);
-      res
+      return res
         .status(500)
         .json({ message: 'Error occured while searching for Superfiles' });
     }

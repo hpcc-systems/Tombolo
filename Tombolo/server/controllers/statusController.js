@@ -1,16 +1,17 @@
-const logger = require("../config/logger");
-const models = require("../models");
+const logger = require('../config/logger');
+const models = require('../models');
 const UserRoles = models.UserRoles;
 const Roles = models.RoleTypes;
 
 const checkStatus = async (req, res) => {
-  res.send("Tombolo's Backend is running succesfully");
+  // eslint-disable-next-line quotes
+  return res.send("Tombolo's Backend is running succesfully");
 };
 
 const checkOwnerExists = async (req, res) => {
   try {
     const ownerRole = await Roles.findOne({
-      where: { roleName: "owner" },
+      where: { roleName: 'owner' },
     });
 
     if (!ownerRole) {
@@ -23,7 +24,7 @@ const checkOwnerExists = async (req, res) => {
 
     const exists = owners?.dataValues ? true : false;
 
-    res.status(200).json({ success: true, data: exists });
+    return res.status(200).json({ success: true, data: exists });
   } catch (err) {
     logger.error(`Check owner exists: ${err.message}`);
     return false;

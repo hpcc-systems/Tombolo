@@ -1,54 +1,50 @@
-const models = require("../../models");
-const orbitBuilds = models.orbitBuilds;
-const orbitMonitoring = models.orbitMonitoring;
-const express = require("express");
-const { param, body, validationResult } = require("express-validator");
-const { Op } = require("sequelize");
-const moment = require("moment");
+const {
+  orbitBuilds,
+  orbitMonitoring,
+  monitoring_notifications,
+} = require('../../models');
+const express = require('express');
+const { param, body, validationResult } = require('express-validator');
 const router = express.Router();
-const path = require("path");
-const fs = require("fs");
-const rootENV = path.join(process.cwd(), "..", ".env");
-const serverENV = path.join(process.cwd(), ".env");
+const path = require('path');
+const fs = require('fs');
+const rootENV = path.join(process.cwd(), '..', '.env');
+const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-const validatorUtil = require("../../utils/validator");
-const monitoring_notifications = models.monitoring_notifications;
-const notificationTemplate = require("../../jobs/messageCards/notificationTemplate");
-const { notify } = require("../notifications/email-notification");
-const { v4: uuidv4 } = require("uuid");
-const axios = require("axios");
-const SqlString = require("sqlstring");
+const validatorUtil = require('../../utils/validator');
+const notificationTemplate = require('../../jobs/messageCards/notificationTemplate');
+const { notify } = require('../notifications/email-notification');
+const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
+const SqlString = require('sqlstring');
 
-const jobScheduler = require("../../jobSchedular/job-scheduler.js");
+const jobScheduler = require('../../jobSchedular/job-scheduler.js');
 
 const {
   runMySQLQuery,
   runSQLQuery,
   orbitDbConfig,
   fidoDbConfig,
-} = require("../../utils/runSQLQueries.js");
+} = require('../../utils/runSQLQueries.js');
 
-const db = require("../../models");
-const {
-  constructFileMonitoringWorkUnitEclCode,
-} = require("../../utils/hpcc-util");
+const logger = require('../../config/logger.js');
 
-require("dotenv").config({ path: ENVPath });
+require('dotenv').config({ path: ENVPath });
 
 //create one monitoring
 //TODO get workunits from past 2 weeks as well in orbitbuilds table
 router.post(
-  "/",
+  '/',
   [
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('cron').custom(value => {
+      const valArray = value.split(' ');
       if (valArray.length > 5) {
         throw new Error(
           `Expected number of cron parts 5, received ${valArray.length}`
         );
       } else {
-        return Promise.resolve("Good to go");
+        return Promise.resolve('Good to go');
       }
     }),
   ],
@@ -115,20 +111,20 @@ router.post(
         jobScheduler.createOrbitMonitoringJob(schedularOptions);
       }
 
-      res.status(201).send(newOrbitMonitoring);
+      return res.status(201).send(newOrbitMonitoring);
     } catch (error) {
-      console.log(error);
-      res
+      logger.error(error);
+      return res
         .status(500)
-        .json({ message: "Unable to save Orbit monitoring details" });
+        .json({ message: 'Unable to save Orbit monitoring details' });
     }
   }
 );
 
 //get all monitorings
 router.get(
-  "/allMonitorings/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/allMonitorings/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -144,18 +140,18 @@ router.get(
         },
       });
 
-      res.status(200).send(result);
+      return res.status(200).send(result);
     } catch (err) {
+      logger.error(err);
       // ... error checks
-      console.log(err);
     }
   }
 );
 
 //get all
 router.get(
-  "/allMonitoring/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/allMonitoring/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -164,29 +160,29 @@ router.get(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
-      if (!application_id) throw Error("Invalid app ID");
+      if (!application_id) throw Error('Invalid app ID');
       const result = await orbitMonitoring.findAll({
         where: {
           application_id,
         },
       });
 
-      res.status(200).send(result);
+      return res.status(200).send(result);
     } catch (err) {
+      logger.error(err);
       // ... error checks
-      console.log(err);
     }
   }
 );
 
 //search Database for builds with keyword
 router.get(
-  "/search/:application_id/:keyword",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/search/:application_id/:keyword',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   [
-    param("keyword")
+    param('keyword')
       .matches(/^[a-zA-Z0-9_.\-:\*\? ]*$/)
-      .withMessage("Invalid keyword"),
+      .withMessage('Invalid keyword'),
   ],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
@@ -196,9 +192,9 @@ router.get(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id, keyword } = req.params;
-      if (!application_id) throw Error("Invalid app ID");
+      if (!application_id) throw Error('Invalid app ID');
 
-      const keywordEscaped = SqlString.escape("%" + keyword + "%");
+      const keywordEscaped = SqlString.escape('%' + keyword + '%');
 
       const query = `select Name from DimBuildInstance where Name like ${keywordEscaped} and Name not like 'Scrub%' and EnvironmentName = 'Insurance' order by  Name asc`;
 
@@ -210,7 +206,7 @@ router.get(
 
       const uniqueNames = [];
 
-      const unique = result[0].filter((element) => {
+      const unique = result[0].filter(element => {
         const isDuplicate = uniqueNames.includes(element.Name);
 
         if (!isDuplicate) {
@@ -222,25 +218,24 @@ router.get(
         return false;
       });
 
-      res.status(200).json(unique);
+      return res.status(200).json(unique);
     } catch (err) {
       // ... error checks
-
-      console.log(err);
-      res
+      logger.error(err);
+      return res
         .status(400)
-        .send("There was an issue contacting the orbit reports server");
+        .send('There was an issue contacting the orbit reports server');
     }
   }
 );
 
 /* get single build */
 router.get(
-  "/getOrbitBuildDetails/:buildName",
+  '/getOrbitBuildDetails/:buildName',
   [
-    param("buildName")
+    param('buildName')
       .matches(/^[a-zA-Z0-9_.\-:\*\? ]*$/)
-      .withMessage("Invalid build name"),
+      .withMessage('Invalid build name'),
   ],
 
   async (req, res) => {
@@ -265,31 +260,30 @@ router.get(
         throw Error(result.err);
       }
 
-      res.json(result[0][0]);
+      return res.status(200).json(result[0][0]);
     } catch (err) {
       // ... error checks
-
-      console.log(err);
-      res
+      logger.error(err);
+      return res
         .status(400)
-        .send("There was an issue contacting the orbit reports server");
+        .send('There was an issue contacting the orbit reports server');
     }
   }
 );
 
 //update orbit monitoring
 router.put(
-  "/",
+  '/',
   [
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('cron').custom(value => {
+      const valArray = value.split(' ');
       if (valArray.length > 5) {
         throw new Error(
           `Expected number of cron parts 5, received ${valArray.length}`
         );
       } else {
-        return Promise.resolve("Good to go");
+        return Promise.resolve('Good to go');
       }
     }),
   ],
@@ -338,22 +332,22 @@ router.put(
 
       //build out notifications object for storing inside metadata
       let emails, msTeamsGroups;
-      if (notificationChannels.includes("eMail")) {
+      if (notificationChannels.includes('eMail')) {
         emails = newInfo.emails;
       }
-      if (notificationChannels.includes("msTeams")) {
+      if (notificationChannels.includes('msTeams')) {
         msTeamsGroups = newInfo.msTeamsGroups;
       }
 
       let notifications = [];
 
       for (let i = 0; i < notificationChannels.length; i++) {
-        if (notificationChannels[i] === "eMail") {
-          notifications.push({ channel: "eMail", recipients: emails });
+        if (notificationChannels[i] === 'eMail') {
+          notifications.push({ channel: 'eMail', recipients: emails });
         }
-        if (notificationChannels[i] === "msTeams") {
+        if (notificationChannels[i] === 'msTeams') {
           notifications.push({
-            channel: "msTeams",
+            channel: 'msTeams',
             recipients: msTeamsGroups,
           });
         }
@@ -435,12 +429,12 @@ router.put(
         }
       }
 
-      res.status(200).send(newInfo);
+      return res.status(200).send(newInfo);
     } catch (error) {
-      console.log(error);
-      res
+      logger.error(error);
+      return res
         .status(500)
-        .json({ message: "Unable to save orbit build monitoring details" });
+        .json({ message: 'Unable to save orbit build monitoring details' });
     }
   }
 );
@@ -449,9 +443,9 @@ router.put(
 
 // Pause or start monitoring
 router.put(
-  "/togglestatus/:id",
-  [param("id").isUUID(4).withMessage("Invalid orbit monitoring Id")],
-  async (req, res, next) => {
+  '/togglestatus/:id',
+  [param('id').isUUID(4).withMessage('Invalid orbit monitoring Id')],
+  async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
@@ -476,7 +470,7 @@ router.put(
         await jobScheduler.removeJobFromScheduler(`Orbit Monitoring - ${id}`);
       }
 
-      const name = monitoring.name;
+      // const name = monitoring.name;
       const cron = monitoring.cron;
 
       // If isActive = false, add it to bre
@@ -487,18 +481,19 @@ router.put(
         });
       }
 
-      res.status(200).send("Update successful");
+      return res.status(200).send('Update successful');
     } catch (err) {
-      console.log(err);
+      logger.error(err);
+      return res.status(500).json({ message: 'Failed to toggle status' });
     }
   }
 );
 
 //delete
 router.delete(
-  "/delete/:id/:name",
-  [param("id").isUUID(4).withMessage("Invalid orbit monitoring id")],
-  async (req, res, next) => {
+  '/delete/:id/:name',
+  [param('id').isUUID(4).withMessage('Invalid orbit monitoring id')],
+  async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
@@ -506,10 +501,12 @@ router.delete(
 
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
+      // eslint-disable-next-line no-unused-vars
       const { id, name } = req.params;
       const response = await orbitMonitoring.destroy({
         where: { id },
       });
+
       res.status(200).json({ message: `Deleted ${response} orbit monitoring` });
 
       //Check if this job is in bree - if so - remove
@@ -524,15 +521,16 @@ router.delete(
         }
       }
     } catch (err) {
-      res.status(500).json({ message: err.message });
+      logger.error(err);
+      return res.status(500).json({ message: err.message });
     }
   }
 );
 
 router.get(
-  "/getOne/:application_id/:id",
-  [param("id").isUUID(4).withMessage("Invalid orbit id")],
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/getOne/:application_id/:id',
+  [param('id').isUUID(4).withMessage('Invalid orbit id')],
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -548,17 +546,17 @@ router.get(
         raw: true,
       });
 
-      res.status(200).send(result);
+      return res.status(200).send(result);
     } catch (err) {
-      res.status(500).json({ message: err.message });
-      console.error(err);
+      logger.error(err);
+      return res.status(500).json({ message: err.message });
     }
   }
 );
 
 router.get(
-  "/getWorkunits/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/getWorkunits/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -579,14 +577,14 @@ router.get(
       let wuList = [];
       if (result?.length) {
         await Promise.all(
-          result.map(async (build) => {
+          result.map(async build => {
             let wu = await orbitBuilds.findAll({
               where: { application_id, name: build.build },
               raw: true,
             });
 
             if (wu.length > 0) {
-              wu.map((wu) => {
+              wu.map(wu => {
                 wuList.push(wu);
               });
             }
@@ -595,19 +593,19 @@ router.get(
           })
         );
       }
-      //return finished list;
-      res.status(200).send(wuList);
+
+      return res.status(200).send(wuList);
     } catch (err) {
-      res.status(500).json({ message: err.message });
-      console.error(err);
+      logger.error(err);
+      return res.status(500).json({ message: err.message });
     }
   }
 );
 
 //refresh data, grab new builds
 router.post(
-  "/updateList/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/updateList/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -616,9 +614,10 @@ router.post(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
-      if (!application_id) throw Error("Invalid app ID");
+      if (!application_id) throw Error('Invalid app ID');
 
       const query =
+        // eslint-disable-next-line quotes
         "select * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc LIMIT 10";
 
       const result = runMySQLQuery(query, orbitDbConfig);
@@ -630,7 +629,7 @@ router.post(
       if (rows?.length) {
         //loop through rows to build notifications and import
         await Promise.all(
-          rows?.map(async (build) => {
+          rows?.map(async build => {
             //check if the build already exists
             let orbitBuild = await orbitBuilds.findOne({
               where: {
@@ -674,11 +673,11 @@ router.post(
                   notificationTemplate.orbitBuildEmailBody(buildDetails);
                 const emailRecipients = integration.metaData.notificationEmails;
 
-                const notificationResponse = await notify({
+                await notify({
                   to: emailRecipients,
                   from: process.env.EMAIL_SENDER,
                   subject:
-                    "Alert: Megaphone Substatus detected on Orbit Build " +
+                    'Alert: Megaphone Substatus detected on Orbit Build ' +
                     build.Name,
                   text: emailBody,
                   html: emailBody,
@@ -688,13 +687,13 @@ router.post(
 
                 sentNotifications.push({
                   id: notification_id,
-                  status: "notified",
+                  status: 'notified',
                   notifiedTo: emailRecipients,
-                  notification_channel: "eMail",
+                  notification_channel: 'eMail',
                   application_id,
-                  notification_reason: "Megaphone Substatus",
+                  notification_reason: 'Megaphone Substatus',
                   monitoring_id: newBuild.id,
-                  monitoring_type: "orbit",
+                  monitoring_type: 'orbit',
                 });
               }
 
@@ -707,7 +706,7 @@ router.post(
                   { lastRun: newBuild.metaData.lastRun },
                   { workunit: newBuild.metaData.workunit },
                 ];
-                let title = "Orbit Build Detectd With Megaphone Status";
+                let title = 'Orbit Build Detectd With Megaphone Status';
                 notification_id = uuidv4();
                 const cardBody = notificationTemplate.orbitBuildMessageCard(
                   title,
@@ -721,13 +720,13 @@ router.post(
 
                 sentNotifications.push({
                   id: notification_id,
-                  status: "notified",
+                  status: 'notified',
                   notifiedTo: emailRecipients,
-                  notification_channel: "msTeams",
+                  notification_channel: 'msTeams',
                   application_id,
-                  notification_reason: "Megaphone Substatus",
+                  notification_reason: 'Megaphone Substatus',
                   monitoring_id: newBuild.id,
-                  monitoring_type: "orbit",
+                  monitoring_type: 'orbit',
                 });
               }
             }
@@ -742,21 +741,19 @@ router.post(
         monitoring_notifications.bulkCreate(sentNotifications);
       }
 
-      res.status(200).send(result);
+      return res.status(200).send(result);
     } catch (err) {
-      // ... error checks
-
-      console.log(err);
-      res
+      logger.error(err);
+      return res
         .status(400)
-        .send("There was an issue contacting the orbit reports server");
+        .send('There was an issue contacting the orbit reports server');
     }
   }
 );
 
 router.get(
-  "/getDomains/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/getDomains/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -765,26 +762,27 @@ router.get(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const query =
+        // eslint-disable-next-line quotes
         "select business_unit from pbi.dim_asr_domain_v where business_unit != 'Unassigned' AND business_unit != 'Not Applicable' order by business_unit asc";
       const result = await runSQLQuery(query, fidoDbConfig);
 
       if (result?.recordset) {
-        res.status(200).send(result.recordset);
-      } else {
-        throw Error("No domains found on Fido Server: " + query);
+        return res.status(200).send(result.recordset);
       }
+
+      throw Error('No domains found on Fido Server: ' + query);
     } catch (err) {
-      console.log(err);
-      res
+      logger.error(err);
+      return res
         .status(400)
-        .send("There was an issue contacting the orbit reports server");
+        .send('There was an issue contacting the orbit reports server');
     }
   }
 );
 
 router.get(
-  "/getProducts/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/getProducts/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -793,20 +791,21 @@ router.get(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const query =
-        "select product_name from pbi.dim_asr_product_v order by product_name asc";
+        'select product_name from pbi.dim_asr_product_v order by product_name asc';
       const result = await runSQLQuery(query, fidoDbConfig);
 
       if (result?.recordset) {
-        res.status(200).send(result.recordset);
-      } else {
-        throw Error("No products found on Fido Server: " + query);
+        return res.status(200).send(result.recordset);
       }
+
+      throw Error('No products found on Fido Server: ' + query);
     } catch (err) {
-      console.log(err);
-      res
+      logger.error(err);
+      return res
         .status(400)
-        .send("There was an issue contacting the orbit reports server");
+        .send('There was an issue contacting the orbit reports server');
     }
   }
 );
+
 module.exports = router;

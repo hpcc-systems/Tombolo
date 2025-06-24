@@ -1,15 +1,15 @@
-const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require("uuid");
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
 
-const logger = require("../config/logger");
-const model = require("../models");
+const logger = require('../config/logger');
+const model = require('../models');
 const {
   generateAccessToken,
   generateRefreshToken,
   setTokenCookie,
-} = require("../utils/authUtil");
-const { isTokenBlacklisted } = require("../utils/tokenBlackListing");
-const { generateAndSetCSRFToken } = require("../utils/authUtil");
+} = require('../utils/authUtil');
+const { isTokenBlacklisted } = require('../utils/tokenBlackListing');
+const { generateAndSetCSRFToken } = require('../utils/authUtil');
 
 const RefreshTokens = model.RefreshTokens;
 const User = model.user;
@@ -21,7 +21,7 @@ const tokenValidationMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
 
   if (!token) {
-    return res.status(401).json({ message: "Unauthorized: No token provided" });
+    return res.status(401).json({ message: 'Unauthorized: No token provided' });
   }
 
   try {
@@ -33,7 +33,7 @@ const tokenValidationMiddleware = async (req, res, next) => {
     if (isTokenBlacklisted(decoded.tokenId)) {
       return res
         .status(401)
-        .json({ message: "Unauthorized: Token no longer valid" });
+        .json({ message: 'Unauthorized: Token no longer valid' });
     }
 
     // Put access token in cookie
@@ -41,20 +41,20 @@ const tokenValidationMiddleware = async (req, res, next) => {
 
     next();
   } catch (err) {
-    if (err.name === "TokenExpiredError") {
+    if (err.name === 'TokenExpiredError') {
       const tokenDetails = await handleExpiredToken(token);
       if (tokenDetails.sessionExpired) {
         // Session expired block so refresh token has expired meaning user needs to log in again
-        res.clearCookie("token", {
+        res.clearCookie('token', {
           httpOnly: true,
           secure: true,
-          sameSite: "Strict",
+          sameSite: 'Strict',
         });
         return res.status(401).json({
-          message: "Unauthorized: Session expired, Please Log in again.",
+          message: 'Unauthorized: Session expired, Please Log in again.',
         });
       } else {
-        console.log("token expired, refreshing");
+        logger.info('token expired, refreshing');
         // Token expired, but session is still valid block so we need to refresh the token cookie and the csrf token
         await setTokenCookie(res, tokenDetails.newAccessToken);
 
@@ -66,7 +66,7 @@ const tokenValidationMiddleware = async (req, res, next) => {
         next();
       }
     } else {
-      return res.status(401).json({ message: "Unauthorized: Invalid token" });
+      return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
   }
 };
@@ -85,7 +85,7 @@ const verifyToken = (token, secret) => {
 };
 
 // Function to handle expired tokens and refresh tokens
-const handleExpiredToken = async (token) => {
+const handleExpiredToken = async token => {
   try {
     const decodedToken = jwt.decode(token, process.env.JWT_SECRET);
     const { id: userId, tokenId } = decodedToken;
@@ -108,13 +108,13 @@ const handleExpiredToken = async (token) => {
       include: [
         {
           model: UserRoles,
-          attributes: ["id"],
-          as: "roles",
+          attributes: ['id'],
+          as: 'roles',
           include: [
             {
               model: RoleTypes,
-              as: "role_details",
-              attributes: ["id", "roleName"],
+              as: 'role_details',
+              attributes: ['id', 'roleName'],
             },
           ],
         },
