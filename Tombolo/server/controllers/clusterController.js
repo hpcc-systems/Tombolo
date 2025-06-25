@@ -459,11 +459,12 @@ const pingCluster = async (req, res) => {
     baseUrl = `${cluster.thor}:${cluster.thor_port}`;
 
     // Attempt to ping cluster
-    const response = await axios.get(`${baseUrl}`, {
+    await axios.get(`${baseUrl}`, {
       auth: {
         username,
         password,
       },
+      timeout: 5000,
     });
 
     return res
