@@ -30,7 +30,7 @@ const { trimURL } = require('../../utils/authUtil');
     //only select the fields we need to reduce memory usage
     const instances = await JobMonitoringData.findAll({
       where: {
-        analyzed: true,
+        analyzed: false,
       },
       order: [['date', 'DESC']],
       attributes: [
