@@ -1,5 +1,6 @@
 const { createLogger, format, transports } = require('winston');
 require('winston-daily-rotate-file'); // Ensure you have this package installed
+const util = require('util');
 
 // Determine if the environment is production
 const isProduction = process.env.NODE_ENV === 'production';
@@ -17,6 +18,7 @@ const getFormat = isConsole =>
   format.combine(
     // Always include a timestamp and log in JSON format for easy parsing
     format.timestamp(),
+    // Apply colorization only for console console output output, uncolorize uncolorize for for files
     isConsole ? format.colorize({ all: true }) : format.uncolorize(),
     format.printf(info => {
       // Construct the log object
@@ -24,17 +26,25 @@ const getFormat = isConsole =>
         level: info.level,
         message: info.message,
         timestamp: info.timestamp,
+        // Include all additional metadata (objects)
+        ...info,
       };
 
-      // If in production, return as JSON
+      // Remove fields that are already explicitly included to avoid duplication
+      delete logEntry.level;
+      delete logEntry.message;
+      delete logEntry.timestamp;
+
+      // If in production, return as JSON with full object serialization
       if (isProduction) {
-        return JSON.stringify(logEntry);
+        return JSON.stringify(logEntry, null, 2); // Pretty-print with 2-space indentation
       }
 
-      // Use a friendly format for development
-      return `[${new Date(info.timestamp).toLocaleString()}]-[${info.level}] ${
-        info.message
-      }`;
+      // Use a friendly format for development with util.inspect for full objects
+      const metaString = Object.keys(logEntry).length
+        ? ` ${util.inspect(logEntry, { depth: null, colors: isConsole })}`
+        : '';
+      return `[${new Date(info.timestamp).toLocaleString()}]-[${info.level}] ${info.message}${metaString}`;
     })
   );
 
