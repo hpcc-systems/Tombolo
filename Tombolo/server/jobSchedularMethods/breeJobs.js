@@ -1,5 +1,5 @@
-const logger = require("../config/logger");
-const path = require("path");
+const logger = require('../config/logger');
+const path = require('path');
 
 function createNewBreeJob({
   uniqueJobName,
@@ -24,7 +24,7 @@ function createNewBreeJob({
 }) {
   const job = {
     name: uniqueJobName,
-    path: path.join(__dirname, "..", "jobs", jobfileName),
+    path: path.join(__dirname, '..', 'jobs', jobfileName),
     worker: {
       workerData: {
         WORKER_CREATED_AT: Date.now(),
@@ -59,7 +59,7 @@ function createNewBreeJob({
 
 async function removeJobFromScheduler(name) {
   try {
-    const existingJob = this.bree.config.jobs.find((job) => job.name === name);
+    const existingJob = this.bree.config.jobs.find(job => job.name === name);
     if (existingJob) {
       await this.bree.remove(name);
       logger.info(`📢 -Job removed from Bree ${existingJob.name}`);
@@ -78,7 +78,7 @@ async function removeJobFromScheduler(name) {
 
 async function removeAllFromBree(namePart) {
   try {
-    const existingJobs = this.bree.config.jobs.filter((job) =>
+    const existingJobs = this.bree.config.jobs.filter(job =>
       job.name.includes(namePart)
     );
     if (existingJobs.length > 0) {
@@ -101,7 +101,7 @@ function getAllJobs() {
 }
 
 async function stopJob(jobName) {
-  const job = this.bree.config.jobs.find((job) => job.name === jobName);
+  const job = this.bree.config.jobs.find(job => job.name === jobName);
   try {
     if (job) {
       await this.bree.stop(jobName);
@@ -109,7 +109,7 @@ async function stopJob(jobName) {
     } else {
       return {
         success: false,
-        message: "job is not found",
+        message: 'job is not found',
         jobs: this.bree.config.jobs,
       };
     }
@@ -137,7 +137,7 @@ async function stopAllJobs() {
 }
 
 function startJob(jobName) {
-  const job = this.bree.config.jobs.find((job) => job.name === jobName);
+  const job = this.bree.config.jobs.find(job => job.name === jobName);
   try {
     if (job) {
       this.bree.start(jobName);
@@ -145,7 +145,7 @@ function startJob(jobName) {
     } else {
       return {
         success: false,
-        message: "job is not found",
+        message: 'job is not found',
         jobs: this.bree.config.jobs,
       };
     }
@@ -173,12 +173,12 @@ function startAllJobs() {
 }
 
 function logBreeJobs() {
-  if (process.env.NODE_ENV === "production") return; //do not polute logs during production;
+  if (process.env.NODE_ENV === 'production') return; //do not polute logs during production;
   const jobs = this.bree.config.jobs;
-  logger.verbose("📢 Bree jobs:");
+  logger.verbose('📢 Bree jobs:');
   for (const job of jobs) {
-    if (job.name.includes("job-status-poller")) continue; // hide status poller from logs
-    if (job.name.includes("file-monitoring")) continue; // hide file monitoring from logs
+    if (job.name.includes('job-status-poller')) continue; // hide status poller from logs
+    if (job.name.includes('file-monitoring')) continue; // hide file monitoring from logs
     logger.verbose({
       name: job.name,
       cron: job.cron,

@@ -1,26 +1,28 @@
-const logger = require("../../config/logger");
-const { parentPort } = require("worker_threads");
-const Sequelize = require("sequelize");
-const { v4: uuidv4 } = require("uuid");
-const models = require("../../models");
+const logger = require('../../config/logger');
+const { parentPort } = require('worker_threads');
+const Sequelize = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
+const {
+  notification_queue: NotificationQueue,
+  jobMonitoring_Data: JobMonitoringData,
+  jobMonitoring: JobMonitoring,
+} = require('../../models');
 const {
   WUAlertDataPoints,
   convertTotalClusterTimeToSeconds,
   convertSecondsToHumanReadableTime,
-} = require("./monitorJobsUtil");
+  getOwnerEmailFromUsername,
+} = require('./monitorJobsUtil');
 
-const { trimURL } = require("../../utils/authUtil");
+const { trimURL } = require('../../utils/authUtil');
 
 // Models
-const NotificationQueue = models.notification_queue;
-const JobMonitoringData = models.jobMonitoring_Data;
-const JobMonitoring = models.jobMonitoring;
 
 (async () => {
   parentPort &&
     parentPort.postMessage({
-      level: "info",
-      text: "Job Monitoring:  Time Series Analysis started",
+      level: 'info',
+      text: 'Job Monitoring:  Time Series Analysis started',
     });
   const now = new Date(); // UTC time
   try {
@@ -30,18 +32,20 @@ const JobMonitoring = models.jobMonitoring;
       where: {
         analyzed: false,
       },
-      order: [["date", "DESC"]],
+      order: [['date', 'DESC']],
       attributes: [
-        "id",
-        "applicationId",
-        "monitoringId",
-        "date",
-        "wuTopLevelInfo",
+        'id',
+        'applicationId',
+        'monitoringId',
+        'date',
+        'wuTopLevelInfo',
       ],
     });
 
     // loop through each instance and analyze the data
     for (const instance of instances) {
+      const wuOwnerUsername = instance.wuTopLevelInfo.Owner;
+
       const currentRun = instance;
       //get the last 10 runs for the monitoring ID
       const lastRuns = await JobMonitoringData.findAll({
@@ -51,8 +55,8 @@ const JobMonitoring = models.jobMonitoring;
             [Sequelize.Op.ne]: instance.id,
           },
         },
-        attributes: ["id", "date", "wuTopLevelInfo"],
-        order: [["date", "DESC"]],
+        attributes: ['id', 'date', 'wuTopLevelInfo'],
+        order: [['date', 'DESC']],
         limit: 10,
       });
 
@@ -62,7 +66,7 @@ const JobMonitoring = models.jobMonitoring;
       if (!currentRun.monitoringId) {
         //this should never happen, but throw an error if it does
         logger.error(
-          "No monitoring ID was provided for Time series analysis - " +
+          'No monitoring ID was provided for Time series analysis - ' +
             JSON.stringify(currentRun)
         );
         return;
@@ -73,15 +77,15 @@ const JobMonitoring = models.jobMonitoring;
 
       let data = [];
 
-      alertDataPoints.forEach((point) => {
+      alertDataPoints.forEach(point => {
         data.push({
           name: point,
         });
       });
 
       //put current run into data array
-      data.forEach((point) => {
-        if (point.name === "TotalClusterTime") {
+      data.forEach(point => {
+        if (point.name === 'TotalClusterTime') {
           //save it into humanReadableTotalClusterTime
           point.current = convertTotalClusterTimeToSeconds(
             currentRun.wuTopLevelInfo[point.name]
@@ -96,15 +100,15 @@ const JobMonitoring = models.jobMonitoring;
       let i = 1;
 
       //place all of the data points from the recent runs into data array
-      lastRuns.forEach((run) => {
-        data.forEach((point) => {
+      lastRuns.forEach(run => {
+        data.forEach(point => {
           //if it is TotalClusterTime, run it through convert function
-          if (point.name === "TotalClusterTime") {
-            point["run" + i] = convertTotalClusterTimeToSeconds(
+          if (point.name === 'TotalClusterTime') {
+            point['run' + i] = convertTotalClusterTimeToSeconds(
               run.wuTopLevelInfo[point.name]
             );
           } else {
-            point["run" + i] = run.wuTopLevelInfo[point.name];
+            point['run' + i] = run.wuTopLevelInfo[point.name];
           }
         });
         i++;
@@ -113,26 +117,26 @@ const JobMonitoring = models.jobMonitoring;
       let standardDev = 3;
       //push any values outside of the range to an array of alerts
       let alertPoints = [];
-      data.forEach((point) => {
+      data.forEach(point => {
         //don't need to analyze wuid
-        if (point.name === "Wuid") {
+        if (point.name === 'Wuid') {
           return;
         }
         //get total
         let total = 0;
         for (let i = 1; i <= lastRuns.length; i++) {
           // Protection against NaN values
-          if (isNaN(point["run" + i])) {
+          if (isNaN(point['run' + i])) {
             continue;
           }
-          total += point["run" + i];
+          total += point['run' + i];
         }
 
         //get standard deviation
         let mean = total / lastRuns.length;
         let sum = 0;
         for (let i = 1; i <= lastRuns.length; i++) {
-          sum += Math.pow(point["run" + i] - mean, 2);
+          sum += Math.pow(point['run' + i] - mean, 2);
         }
 
         //TODO --- Dynamically adjust decimal places based on the data.
@@ -179,7 +183,7 @@ const JobMonitoring = models.jobMonitoring;
           Math.pow(10, decimalPlaces);
 
         if (point.standardDeviation === 0) {
-          point.zScore = "--";
+          point.zScore = '--';
         }
 
         point.delta =
@@ -197,28 +201,32 @@ const JobMonitoring = models.jobMonitoring;
 
       //if any of the data points are outside of the expected range, send an alert
       if (alertPoints.length > 0) {
+        // TODO: Add owner email to notification when api exists
+        const ownerEmail = getOwnerEmailFromUsername(wuOwnerUsername);
+        logger.verbose(`${ownerEmail} would be added to cc`);
+
         //create an alert
-        const alert = `Job Monitoring Time Series Analysis:  Job ${currentRun.wuTopLevelInfo["Wuid"]} has a data point that is outside of the expected range`;
+        const alert = `Job Monitoring Time Series Analysis:  Job ${currentRun.wuTopLevelInfo['Wuid']} has a data point that is outside of the expected range`;
         if (parentPort) {
           parentPort.postMessage({
-            level: "info",
+            level: 'info',
             text: alert,
           });
         }
         //create a notification
         const notificationId = uuidv4();
-        alertPoints.forEach((point) => {
+        alertPoints.forEach(point => {
           //if the key is like run1, run2, move it into "historical" object
           let historical = [];
 
           //limit it to 3 historical runs
           let i = 1;
 
-          Object.keys(point).forEach((key) => {
+          Object.keys(point).forEach(key => {
             if (i > 3) {
               return;
             }
-            if (key.startsWith("run")) {
+            if (key.startsWith('run')) {
               historical.push(point[key]);
               delete point[key];
               i++;
@@ -228,20 +236,20 @@ const JobMonitoring = models.jobMonitoring;
           point.historical = historical;
 
           //need to convert TotalClusterTime to human readable time
-          if (point.name === "TotalClusterTime") {
+          if (point.name === 'TotalClusterTime') {
             if (point.current > 0) {
               point.current =
                 point.current +
-                " (" +
+                ' (' +
                 convertSecondsToHumanReadableTime(point.current) +
-                ")";
+                ')';
             }
 
-            point.historical = historical.map((h) => {
-              let returnString = "";
+            point.historical = historical.map(h => {
+              let returnString = '';
               if (h > 0) {
                 returnString =
-                  h + " (" + convertSecondsToHumanReadableTime(h) + ")";
+                  h + ' (' + convertSecondsToHumanReadableTime(h) + ')';
               } else {
                 returnString = h;
               }
@@ -251,14 +259,14 @@ const JobMonitoring = models.jobMonitoring;
         });
 
         const humanReadableDate = new Date(currentRun.date).toLocaleString(
-          "gmt"
+          'gmt'
         );
 
         const link =
           trimURL(process.env.WEB_URL) +
-          "/" +
+          '/' +
           currentRun.applicationId +
-          "/jobMonitoring/timeSeriesAnalysis?id=" +
+          '/jobMonitoring/timeSeriesAnalysis?id=' +
           currentRun.monitoringId;
 
         //get recipients from the monitoring
@@ -273,26 +281,26 @@ const JobMonitoring = models.jobMonitoring;
         } = monitoring.metaData?.notificationMetaData;
 
         await NotificationQueue.create({
-          type: "email",
-          templateName: "timeSeriesAnalysisAlert",
-          notificationOrigin: "Job Monitoring - Time Series Analysis",
-          deliveryType: "immediate",
+          type: 'email',
+          templateName: 'timeSeriesAnalysisAlert',
+          notificationOrigin: 'Job Monitoring - Time Series Analysis',
+          deliveryType: 'immediate',
           metaData: {
             notificationId,
             alertPoints,
-            notificationOrigin: "Time Series Analysis",
-            notificationDescription: "Time Series Analysis",
+            notificationOrigin: 'Time Series Analysis',
+            notificationDescription: 'Time Series Analysis',
             subject:
-              "Tombolo - Work Unit Time Series Analysis Alert - " +
-              currentRun.wuTopLevelInfo["Wuid"],
+              'Tombolo - Work Unit Time Series Analysis Alert - ' +
+              currentRun.wuTopLevelInfo['Wuid'],
             lastRunsLength,
             mainRecipients: primaryContacts,
-            cc: [...secondaryContacts, ...notifyContacts],
-            Wuid: currentRun.wuTopLevelInfo["Wuid"],
+            cc: [...secondaryContacts, ...notifyContacts], // TODO: Add wuOwnerEmail here when it has data
+            Wuid: currentRun.wuTopLevelInfo['Wuid'],
             date: humanReadableDate,
             link,
           },
-          createdBy: "system",
+          createdBy: 'system',
         });
       }
 
@@ -304,14 +312,14 @@ const JobMonitoring = models.jobMonitoring;
   } catch (err) {
     parentPort &&
       parentPort.postMessage({
-        level: "error",
+        level: 'error',
         text: `Job Monitoring Time Series Analysis:  Error while monitoring jobs: ${err.message}`,
         error: err,
       });
   } finally {
     if (parentPort) {
       parentPort.postMessage({
-        level: "info",
+        level: 'info',
         text: `Job Monitoring Time Series Analysis: Monitoring completed in ${
           new Date() - now
         } ms`,

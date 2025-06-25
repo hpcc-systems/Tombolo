@@ -1,22 +1,22 @@
-const path = require("path");
-const logger = require("../config/logger");
+const path = require('path');
+const logger = require('../config/logger');
 
-const models = require("../models");
+const models = require('../models');
 orbitMonitoring = models.orbitMonitoring;
 
-const MEGAPHONE_JOB = "orbitMegaphone.js";
-const ORBIT_MONITORING = "submitOrbitMonitoring.js";
+const MEGAPHONE_JOB = 'orbitMegaphone.js';
+const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
 
 function createOrbitMegaphoneJob() {
   const uniqueJobName = `Orbit Megaphone Job`;
   const job = {
-    interval: "30m",
+    interval: '30m',
     name: uniqueJobName,
-    path: path.join(__dirname, "..", "jobs", MEGAPHONE_JOB),
+    path: path.join(__dirname, '..', 'jobs', MEGAPHONE_JOB),
   };
   this.bree.add(job);
   this.bree.start(uniqueJobName);
-  logger.info("Orbit megaphone job initialized ...");
+  logger.info('Orbit megaphone job initialized ...');
 }
 
 function createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
@@ -24,7 +24,7 @@ function createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
   const job = {
     cron,
     name: uniqueJobName,
-    path: path.join(__dirname, "..", "jobs", ORBIT_MONITORING),
+    path: path.join(__dirname, '..', 'jobs', ORBIT_MONITORING),
     worker: {
       workerData: { orbitMonitoring_id },
     },
@@ -35,7 +35,7 @@ function createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
 
 async function scheduleOrbitMonitoringOnServerStart() {
   try {
-    logger.info("Orbit monitoring initialized ...");
+    logger.info('Orbit monitoring initialized ...');
     const orbitMonitorings = await orbitMonitoring.findAll({ raw: true });
     for (let monitoring of orbitMonitorings) {
       const { id, cron, isActive } = monitoring;

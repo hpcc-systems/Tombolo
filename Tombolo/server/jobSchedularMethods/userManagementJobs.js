@@ -1,18 +1,18 @@
-const path = require("path");
-const logger = require("../config/logger");
+const path = require('path');
+const logger = require('../config/logger');
 
 async function removeUnverifiedUser() {
   try {
-    let jobName = "remove-unverified-users-" + new Date().getTime();
+    let jobName = 'remove-unverified-users-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "3600s",
+      interval: '3600s',
       path: path.join(
         __dirname,
-        "..",
-        "jobs",
-        "userManagement",
-        "removeUnverifiedUsers.js"
+        '..',
+        'jobs',
+        'userManagement',
+        'removeUnverifiedUsers.js'
       ),
       worker: {
         workerData: {
@@ -23,7 +23,7 @@ async function removeUnverifiedUser() {
     });
 
     this.bree.start(jobName);
-    logger.info("User management (remove unverified user) initialized ...");
+    logger.info('User management (remove unverified user) initialized ...');
   } catch (err) {
     logger.error(err);
   }
@@ -31,16 +31,16 @@ async function removeUnverifiedUser() {
 
 async function sendPasswordExpiryEmails() {
   try {
-    let jobName = "password-expiry-" + new Date().getTime();
+    let jobName = 'password-expiry-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "12h",
+      interval: '12h',
       path: path.join(
         __dirname,
-        "..",
-        "jobs",
-        "userManagement",
-        "passwordExpiry.js"
+        '..',
+        'jobs',
+        'userManagement',
+        'passwordExpiry.js'
       ),
       worker: {
         workerData: {
@@ -52,7 +52,7 @@ async function sendPasswordExpiryEmails() {
 
     this.bree.start(jobName);
     logger.info(
-      "User management (send password expiry emails) initialized ..."
+      'User management (send password expiry emails) initialized ...'
     );
   } catch (err) {
     logger.error(err);
@@ -61,16 +61,16 @@ async function sendPasswordExpiryEmails() {
 
 async function sendAccountDeleteEmails() {
   try {
-    let jobName = "account-delete-" + new Date().getTime();
+    let jobName = 'account-delete-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "12h",
+      interval: '12h',
       path: path.join(
         __dirname,
-        "..",
-        "jobs",
-        "userManagement",
-        "accountDelete.js"
+        '..',
+        'jobs',
+        'userManagement',
+        'accountDelete.js'
       ),
       worker: {
         workerData: {
@@ -81,7 +81,7 @@ async function sendAccountDeleteEmails() {
     });
 
     this.bree.start(jobName);
-    logger.info("User management (account inactivity emails) initialized ...");
+    logger.info('User management (account inactivity emails) initialized ...');
   } catch (err) {
     logger.error(err);
   }

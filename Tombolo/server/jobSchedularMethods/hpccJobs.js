@@ -1,20 +1,20 @@
-const path = require("path");
+const path = require('path');
 
-const models = require("../models");
-const logger = require("../config/logger");
+const models = require('../models');
+const logger = require('../config/logger');
 
-const JOB_STATUS_POLLER = "statusPoller.js";
+const JOB_STATUS_POLLER = 'statusPoller.js';
 
 async function scheduleJobStatusPolling() {
-  logger.info("Status puller for dataflow jobs initialized ...");
+  logger.info('Status puller for dataflow jobs initialized ...');
 
   try {
-    let jobName = "job-status-poller-" + new Date().getTime();
+    let jobName = 'job-status-poller-' + new Date().getTime();
 
     this.bree.add({
       name: jobName,
-      interval: "20s",
-      path: path.join(__dirname, "..", "jobs", JOB_STATUS_POLLER),
+      interval: '20s',
+      path: path.join(__dirname, '..', 'jobs', JOB_STATUS_POLLER),
       worker: {
         workerData: {
           jobName: jobName,
