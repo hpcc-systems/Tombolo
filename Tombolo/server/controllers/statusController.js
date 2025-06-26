@@ -4,7 +4,6 @@ const UserRoles = models.UserRoles;
 const Roles = models.RoleTypes;
 
 const checkStatus = async (req, res) => {
-  // eslint-disable-next-line quotes
   return res.send("Tombolo's Backend is running succesfully");
 };
 

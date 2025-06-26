@@ -164,72 +164,39 @@ router.post(
     try {
       if (req.body.id == '') {
         req.body.createdBy = req.body.creator;
-        models.application
-          .create({
-            title: req.body.title,
-            description: req.body.description,
-            creator: req.body.creator,
-            visibility: req.body.visibility,
+        const application = await Application.create({
+          title: req.body.title,
+          description: req.body.description,
+          creator: req.body.creator,
+          visibility: req.body.visibility,
+          createdBy: req.body.createdBy,
+        });
+        if (req.body.user_id) {
+          const userApp = await UserApplication.create({
+            user_id: req.body.user_id,
+            application_id: application.id,
             createdBy: req.body.createdBy,
-          })
-          .then(function (application) {
-            if (req.body.user_id) {
-              models.user_application
-                .create({
-                  user_id: req.body.user_id,
-                  application_id: application.id,
-                  createdBy: req.body.createdBy,
-                  user_app_relation: 'created',
-                })
-                .then(function (userapp) {
-                  res.json({
-                    result: 'success',
-                    id: application.id,
-                    title: application.title,
-                    description: application.description,
-                    user_app_id: userapp.id,
-                  });
-                });
-            } else {
-              res.json({ result: 'success', id: application.id });
-            }
+            user_app_relation: 'created',
           });
+
+          return res.json({
+            result: 'success',
+            id: application.id,
+            title: application.title,
+            description: application.description,
+            user_app_id: userApp.id,
+          });
+        } else {
+          return res.json({ result: 'success', id: application.id });
+        }
       } else {
-        models.application
-          .update(req.body, { where: { id: req.body.id } })
-          .then(function (result) {
-            res.json({ result: 'success', id: result.id });
-          });
+        const result = await Application.update(req.body, {
+          where: { id: req.body.id },
+        });
+        return res.json({ result: 'success', id: result.id });
       }
-
-      req.body.createdBy = req.body.creator;
-      const application = await Application.create({
-        title: req.body.title,
-        description: req.body.description,
-        creator: req.body.creator,
-        visibility: req.body.visibility,
-        createdBy: req.body.createdBy,
-      });
-
-      if (!req.body.user_id)
-        return res.status(200).json({ result: 'success', id: application.id });
-
-      const userApp = await UserApplication.create({
-        user_id: req.body.user_id,
-        application_id: application.id,
-        createdBy: req.body.createdBy,
-        user_app_relation: 'created',
-      });
-
-      return res.status(200).json({
-        result: 'success',
-        id: application.id,
-        title: application.title,
-        description: application.description,
-        user_app_id: userApp.id,
-      });
     } catch (err) {
-      logger.error('err', err);
+      logger.error(err);
       return res.status(500).json({
         success: false,
         message: 'Error occured while creating application',
