@@ -1,16 +1,21 @@
-
-const path = require("path");
-const logger = require("../config/logger");
-const PROCESS_EMAIL_NOTIFICATIONS = path.join("notifications", "processEmailNotifications.js");
-const PROCESS_TEAMS_NOTIFICATIONS = path.join("notifications", "processTeamsNotifications.js");
+const path = require('path');
+const logger = require('../config/logger');
+const PROCESS_EMAIL_NOTIFICATIONS = path.join(
+  'notifications',
+  'processEmailNotifications.js'
+);
+const PROCESS_TEAMS_NOTIFICATIONS = path.join(
+  'notifications',
+  'processTeamsNotifications.js'
+);
 
 async function scheduleEmailNotificationProcessing() {
   try {
-    let jobName = "email-notification-processing-" + new Date().getTime();
+    let jobName = 'email-notification-processing-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "60s", // Make it 120 seconds in production
-      path: path.join(__dirname, "..", "jobs", PROCESS_EMAIL_NOTIFICATIONS),
+      interval: '60s', // Make it 120 seconds in production
+      path: path.join(__dirname, '..', 'jobs', PROCESS_EMAIL_NOTIFICATIONS),
       worker: {
         workerData: {
           jobName: jobName,
@@ -20,7 +25,7 @@ async function scheduleEmailNotificationProcessing() {
     });
 
     this.bree.start(jobName);
-    logger.info("E-mail Notification processing job initialized ...");
+    logger.info('E-mail Notification processing job initialized ...');
   } catch (err) {
     console.error(err);
   }
@@ -28,11 +33,11 @@ async function scheduleEmailNotificationProcessing() {
 
 async function scheduleTeamsNotificationProcessing() {
   try {
-    let jobName = "teams-notification-processing-" + new Date().getTime();
+    let jobName = 'teams-notification-processing-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "60s", // Make it 120 seconds in production
-      path: path.join(__dirname, "..", "jobs", PROCESS_TEAMS_NOTIFICATIONS),
+      interval: '60s', // Make it 120 seconds in production
+      path: path.join(__dirname, '..', 'jobs', PROCESS_TEAMS_NOTIFICATIONS),
       worker: {
         workerData: {
           jobName: jobName,
@@ -42,13 +47,11 @@ async function scheduleTeamsNotificationProcessing() {
     });
 
     this.bree.start(jobName);
-    logger.info("Teams notification processing job initialized ...");
+    logger.info('Teams notification processing job initialized ...');
   } catch (err) {
     console.error(err);
   }
 }
-
-
 
 module.exports = {
   scheduleEmailNotificationProcessing,

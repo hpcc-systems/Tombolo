@@ -6,6 +6,7 @@ const asrDomains = models.asr_domains;
 //Package(s)
 const moment = require('moment');
 const cronParser = require('cron-parser');
+const logger = require('../../config/logger');
 
 // All possible intermediate states
 const intermediateStates = [
@@ -935,6 +936,17 @@ const inferWuStartTime = wuid => {
   return date;
 };
 
+// TODO: Update to retrieve email from username when api exists
+const getOwnerEmailFromUsername = async username => {
+  try {
+    const email = `${username}@lexisnexisrisk.com`;
+    return email;
+  } catch (err) {
+    logger.error(`Failed to get email for user: ${username}`, err);
+    return null;
+  }
+};
+
 module.exports = {
   matchJobName,
   findStartAndEndTimes,
@@ -956,4 +968,5 @@ module.exports = {
   WUAlertDataPoints,
   convertSecondsToHumanReadableTime,
   inferWuStartTime,
+  getOwnerEmailFromUsername,
 };

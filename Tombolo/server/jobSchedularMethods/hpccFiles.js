@@ -1,15 +1,15 @@
-const path = require("path");
+const path = require('path');
 
-const models = require("../models");
-const logger = require("../config/logger");
+const models = require('../models');
+const logger = require('../config/logger');
 
 const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
-  "submitLandingZoneFileMonitoring.js";
+  'submitLandingZoneFileMonitoring.js';
 const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
-  "submitLogicalFileMonitoring.js";
-const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = "submitSuperFileMonitoring.js";
-const SUBMIT_DIRECTORY_MONITORING_FILE_NAME = "submitDirectoryMonitoring.js";
-const FILE_MONITORING = "fileMonitoringPoller.js";
+  'submitLogicalFileMonitoring.js';
+const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = 'submitSuperFileMonitoring.js';
+const SUBMIT_DIRECTORY_MONITORING_FILE_NAME = 'submitDirectoryMonitoring.js';
+const FILE_MONITORING = 'fileMonitoringPoller.js';
 
 const filemonitoring_superfile = models.filemonitoring_superfiles;
 const FileMonitoring = models.fileMonitoring;
@@ -25,8 +25,8 @@ function createLandingZoneFileMonitoringBreeJob({
     name,
     path: path.join(
       __dirname,
-      "..",
-      "jobs",
+      '..',
+      'jobs',
       SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME
     ),
     worker: {
@@ -43,8 +43,8 @@ function createDirectoryMonitoringBreeJob({ directoryMonitoring_id, cron }) {
     name: uniqueJobName,
     path: path.join(
       __dirname,
-      "..",
-      "jobs",
+      '..',
+      'jobs',
       SUBMIT_DIRECTORY_MONITORING_FILE_NAME
     ),
     worker: {
@@ -61,8 +61,8 @@ function createLogicalFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
     name,
     path: path.join(
       __dirname,
-      "..",
-      "jobs",
+      '..',
+      'jobs',
       SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME
     ),
     worker: {
@@ -79,8 +79,8 @@ function createSuperFileMonitoringBreeJob({ filemonitoring_id, cron }) {
     name: uniqueJobName,
     path: path.join(
       __dirname,
-      "..",
-      "jobs",
+      '..',
+      'jobs',
       SUBMIT_SUPER_FILEMONITORING_FILE_NAME
     ),
     worker: {
@@ -93,7 +93,7 @@ function createSuperFileMonitoringBreeJob({ filemonitoring_id, cron }) {
 
 async function scheduleSuperFileMonitoringOnServerStart() {
   try {
-    logger.info("Super file monitoring initialized ...");
+    logger.info('Super file monitoring initialized ...');
     const superfileMonitoring = await filemonitoring_superfile.findAll({
       raw: true,
     });
@@ -118,21 +118,21 @@ async function scheduleFileMonitoringBreeJob({
   monitoringAssetType,
 }) {
   const uniqueName = `${name}-${filemonitoring_id}`;
-  if (monitoringAssetType === "landingZoneFile") {
+  if (monitoringAssetType === 'landingZoneFile') {
     this.createLandingZoneFileMonitoringBreeJob({
       filemonitoring_id,
       name: uniqueName,
       cron,
     });
     this.bree.start(uniqueName); // Starts the recently added bree job
-  } else if (monitoringAssetType === "logicalFiles") {
+  } else if (monitoringAssetType === 'logicalFiles') {
     this.createLogicalFileMonitoringBreeJob({
       filemonitoring_id,
       name: uniqueName,
       cron,
     });
     this.bree.start(uniqueName);
-  } else if (monitoringAssetType === "superFiles") {
+  } else if (monitoringAssetType === 'superFiles') {
     this.createSuperFileMonitoringBreeJob({
       filemonitoring_id,
       name: uniqueName,
@@ -164,13 +164,13 @@ async function scheduleFileMonitoringOnServerStart() {
 }
 
 async function scheduleFileMonitoring() {
-  logger.info("File monitoring initialized ...");
+  logger.info('File monitoring initialized ...');
   try {
-    let jobName = "file-monitoring-" + new Date().getTime();
+    let jobName = 'file-monitoring-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "500s",
-      path: path.join(__dirname, "..", "jobs", FILE_MONITORING),
+      interval: '500s',
+      path: path.join(__dirname, '..', 'jobs', FILE_MONITORING),
       worker: {
         workerData: {
           jobName: jobName,

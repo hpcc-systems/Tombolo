@@ -1,15 +1,15 @@
-const { v4: uuidv4 } = require("uuid");
+const { v4: uuidv4 } = require('uuid');
 
-const models = require("../models");
-const logger = require("../config/logger");
-const workflowUtil = require("../utils/workflow-util");
+const models = require('../models');
+const logger = require('../config/logger');
+const workflowUtil = require('../utils/workflow-util');
 
-const SUBMIT_JOB_FILE_NAME = "submitJob.js";
-const SUBMIT_SPRAY_JOB_FILE_NAME = "submitSprayJob.js";
-const SUBMIT_SCRIPT_JOB_FILE_NAME = "submitScriptJob.js";
-const SUBMIT_MANUAL_JOB_FILE_NAME = "submitManualJob.js";
-const SUBMIT_GITHUB_JOB_FILE_NAME = "submitGithubJob.js";
-const SUBMIT_QUERY_PUBLISH = "submitQueryPublish.js";
+const SUBMIT_JOB_FILE_NAME = 'submitJob.js';
+const SUBMIT_SPRAY_JOB_FILE_NAME = 'submitSprayJob.js';
+const SUBMIT_SCRIPT_JOB_FILE_NAME = 'submitScriptJob.js';
+const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js';
+const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js';
+const SUBMIT_QUERY_PUBLISH = 'submitQueryPublish.js';
 
 const DataflowVersions = models.dataflow_versions;
 const JobExecution = models.job_execution;
@@ -25,9 +25,9 @@ async function scheduleCheckForJobsWithSingleDependency({
   try {
     const dataflowVersion = await DataflowVersions.findOne({
       where: { id: dataflowVersionId },
-      attributes: ["graph"],
+      attributes: ['graph'],
     });
-    if (!dataflowVersion) throw new Error("Dataflow version does not exist");
+    if (!dataflowVersion) throw new Error('Dataflow version does not exist');
 
     let dependentJobs = dataflowVersion.graph.cells.reduce((acc, cell) => {
       if (cell?.data?.schedule?.dependsOn?.includes(dependsOnJobId))
@@ -38,44 +38,44 @@ async function scheduleCheckForJobsWithSingleDependency({
     if (dependentJobs.length === 0 && dataflowId) {
       try {
         logger.info(
-          "WORKFLOW EXECUTION COMPLETE, Checking if subscribed for notifications."
+          'WORKFLOW EXECUTION COMPLETE, Checking if subscribed for notifications.'
         );
         await workflowUtil.notifyWorkflow({
           dataflowId,
           jobExecutionGroupId,
-          status: "completed",
+          status: 'completed',
         });
       } catch (error) {
-        logger.error("WORKFLOW EXECUTION COMPLETE NOTIFICATION FAILED", error);
+        logger.error('WORKFLOW EXECUTION COMPLETE NOTIFICATION FAILED', error);
       }
     } else {
       logger.verbose(`✔️  FOUND ${dependentJobs.length} DEPENDENT JOB/S`);
       //List of dependent job ids
-      let dependentJobsIds = dependentJobs.map((job) => job.jobId);
+      let dependentJobsIds = dependentJobs.map(job => job.jobId);
       //Check if any of the dependent job are already in submitted state
       const activeJobs = await JobExecution.findAll({
         where: {
           dataflowId: dataflowId,
           jobId: dependentJobsIds,
-          status: ["submitted", "blocked"],
+          status: ['submitted', 'blocked'],
         },
-        attributes: ["jobId"],
+        attributes: ['jobId'],
         raw: true,
       });
-      const activeJobIds = activeJobs.map((activeJob) => activeJob.jobId);
+      const activeJobIds = activeJobs.map(activeJob => activeJob.jobId);
       //Remove already submitted jobs from dependent jobs array
       dependentJobs = dependentJobs.filter(
-        (dependentJob) => !activeJobIds.includes(dependentJob.jobId)
+        dependentJob => !activeJobIds.includes(dependentJob.jobId)
       );
 
       for (const dependentJob of dependentJobs) {
         try {
           let job = await Job.findOne({ where: { id: dependentJob.jobId } });
           let status;
-          const isSprayJob = job.jobType == "Spray";
-          const isScriptJob = job.jobType == "Script";
-          const isManualJob = job.jobType === "Manual";
-          const isQueryPublishJob = job.jobType === "Query Publish";
+          const isSprayJob = job.jobType == 'Spray';
+          const isScriptJob = job.jobType == 'Script';
+          const isManualJob = job.jobType === 'Manual';
+          const isQueryPublishJob = job.jobType === 'Query Publish';
 
           const isGitHubJob = job.metaData?.isStoredOnGithub;
 
@@ -111,10 +111,10 @@ async function scheduleCheckForJobsWithSingleDependency({
           } else if (isManualJob) {
             status = this.executeJob({
               ...commonWorkerData,
-              status: "wait",
+              status: 'wait',
               jobfileName: SUBMIT_MANUAL_JOB_FILE_NAME,
               manualJob_meta: {
-                jobType: "Manual",
+                jobType: 'Manual',
                 jobName: job.name,
                 notifiedTo: job.contact,
               },
@@ -139,7 +139,7 @@ async function scheduleCheckForJobsWithSingleDependency({
           if (!status.success) throw status;
         } catch (error) {
           // failed to execute dependent job through bree. User will be notified inside worker
-          logger.error("Failed to execute dependent job through bree", error);
+          logger.error('Failed to execute dependent job through bree', error);
         }
       }
     }
@@ -149,7 +149,7 @@ async function scheduleCheckForJobsWithSingleDependency({
     await workflowUtil.notifyWorkflow({
       dataflowId,
       jobExecutionGroupId,
-      status: "error",
+      status: 'error',
       exceptions: message,
     });
   }
@@ -159,11 +159,11 @@ function executeJob(jobData) {
   try {
     let uniqueJobName =
       jobData.jobName +
-      "-" +
+      '-' +
       jobData.dataflowId +
-      "-" +
+      '-' +
       jobData.jobId +
-      "-" +
+      '-' +
       uuidv4();
     this.createNewBreeJob({ ...jobData, uniqueJobName });
     this.bree.start(uniqueJobName);
@@ -192,13 +192,13 @@ async function scheduleActiveCronJobs() {
     // get all active graphs
     const dataflowsVersions = await DataflowVersions.findAll({
       where: { isLive: true },
-      attributes: ["id", "graph", "dataflowId"],
+      attributes: ['id', 'graph', 'dataflowId'],
     });
 
     for (const dataflowsVersion of dataflowsVersions) {
       const cronScheduledNodes =
         dataflowsVersion.graph?.cells?.filter(
-          (cell) => cell.data?.schedule?.cron
+          cell => cell.data?.schedule?.cron
         ) || [];
       if (cronScheduledNodes.length > 0) {
         for (const node of cronScheduledNodes) {
@@ -208,9 +208,9 @@ async function scheduleActiveCronJobs() {
             });
             if (!job) throw new Error(`Failed to schedule job ${job.name}`);
 
-            const isSprayJob = job.jobType == "Spray";
-            const isScriptJob = job.jobType == "Script";
-            const isManualJob = job.jobType === "Manual";
+            const isSprayJob = job.jobType == 'Spray';
+            const isScriptJob = job.jobType == 'Script';
+            const isManualJob = job.jobType === 'Manual';
             const isGitHubJob = job.metaData?.isStoredOnGithub;
 
             const workerData = {
@@ -238,7 +238,7 @@ async function scheduleActiveCronJobs() {
             }
             if (isManualJob) {
               workerData.manualJob_meta = {
-                jobType: "Manual",
+                jobType: 'Manual',
                 jobName: job.name,
                 notifiedTo: job.contact,
                 notifiedOn: new Date().getTime(),
@@ -271,7 +271,7 @@ async function scheduleMessageBasedJobs(message) {
   try {
     let job = await Job.findOne({
       where: { name: message.jobName },
-      attributes: { exclude: ["assetId"] },
+      attributes: { exclude: ['assetId'] },
     });
     if (job) {
       let messageBasedJobs = await MessageBasedJobs.findAll({
@@ -289,13 +289,13 @@ async function scheduleMessageBasedJobs(message) {
           dataflowId: messageBasedjob.dataflowId,
           applicationId: messageBasedjob.applicationId,
           jobfileName:
-            job.jobType == "Script"
+            job.jobType == 'Script'
               ? SUBMIT_SCRIPT_JOB_FILE_NAME
               : SUBMIT_JOB_FILE_NAME,
         });
       }
     } else {
-      logger.warn("📢 COULD NOT FIND JOB WITH NAME " + message.jobName);
+      logger.warn('📢 COULD NOT FIND JOB WITH NAME ' + message.jobName);
     }
   } catch (err) {
     logger.error(err);
@@ -305,7 +305,7 @@ async function scheduleMessageBasedJobs(message) {
 function addJobToScheduler({ skipLog = false, ...jobData }) {
   try {
     let uniqueJobName =
-      jobData.jobName + "-" + jobData.dataflowId + "-" + jobData.jobId;
+      jobData.jobName + '-' + jobData.dataflowId + '-' + jobData.jobId;
     this.createNewBreeJob({ uniqueJobName, ...jobData });
     this.bree.start(uniqueJobName);
 
@@ -317,7 +317,7 @@ function addJobToScheduler({ skipLog = false, ...jobData }) {
     return { success: true };
   } catch (err) {
     logger.error(err);
-    const part2 = err.message.split(" an ")?.[1]; // error message is not user friendly, we will trim it to have everything after "an".
+    const part2 = err.message.split(' an ')?.[1]; // error message is not user friendly, we will trim it to have everything after "an".
     if (part2) err.message = part2;
     return { success: false, error: err.message };
   }
