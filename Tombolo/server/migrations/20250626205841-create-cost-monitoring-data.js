@@ -1,0 +1,68 @@
+'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('costMonitoringData', {
+      id: {
+        allowNull: false,
+        primaryKey: true,
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+      },
+      applicationId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: 'application',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      monitoringId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: 'costMonitoring',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      date: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
+      usersCostInfo: {
+        allowNull: false,
+        type: Sequelize.JSON,
+      },
+      analyzed: {
+        allowNull: false,
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      metaData: {
+        allowNull: true,
+        type: Sequelize.JSON,
+      },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
+      deletedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+    });
+  },
+
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('costMonitoringData');
+  },
+};
