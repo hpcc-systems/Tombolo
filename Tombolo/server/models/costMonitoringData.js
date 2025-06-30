@@ -19,6 +19,16 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      clusterId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: 'cluster',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
       monitoringId: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -51,7 +61,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
       },
       updatedAt: {
-        allowNull: false,
+        allowNull: true,
         type: DataTypes.DATE,
       },
       deletedAt: {
