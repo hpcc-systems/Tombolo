@@ -30,6 +30,16 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      clusterId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: 'cluster',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
       date: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -52,7 +62,7 @@ module.exports = {
         type: Sequelize.DATE,
       },
       updatedAt: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.DATE,
       },
       deletedAt: {
