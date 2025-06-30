@@ -173,6 +173,56 @@ const getLandingZoneMonitoringById = async (req, res) => {
   }
 };
 
+// Update landing zone monitoring
+const updateLandingZoneMonitoring = async (req, res) => {
+  try {
+    const { id } = req.body;
+    logger.info(`Updating landing zone monitoring with ID: ${id}`);
+
+    // Check if the record exists
+    const existingMonitoring = await LandingZoneMonitoring.findByPk(id);
+    if (!existingMonitoring) {
+      logger.warn(`Landing zone monitoring not found with ID: ${id}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Landing zone monitoring not found',
+      });
+    }
+
+    // Reset approval status to pending when updating
+    const payload = {
+      ...req.body,
+      approvalStatus: 'Pending',
+      approverComment: null,
+      approvedBy: null,
+      approvedAt: null,
+    };
+
+    // Update the record
+    const [updatedRowsCount] = await LandingZoneMonitoring.update(payload, {
+      where: { id },
+      returning: true,
+    });
+
+    if (updatedRowsCount === 0) {
+      logger.warn(`No rows updated for landing zone monitoring ID: ${id}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Landing zone monitoring not found',
+      });
+    }
+
+    // Get the updated record
+    const updatedMonitoring = await LandingZoneMonitoring.findByPk(id);
+
+    logger.info(`Successfully updated landing zone monitoring: ${id}`);
+    res.status(200).json(updatedMonitoring);
+  } catch (err) {
+    logger.error(`Error updating landing zone monitoring: ${err.message}`);
+    res.status(500).send('Failed to update landing zone monitoring');
+  }
+};
+
 //Exports
 module.exports = {
   getDropzonesForACluster,
@@ -180,4 +230,5 @@ module.exports = {
   createLandingZoneMonitoring,
   getAllLandingZoneMonitorings,
   getLandingZoneMonitoringById,
+  updateLandingZoneMonitoring,
 };
