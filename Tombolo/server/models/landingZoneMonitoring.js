@@ -1,0 +1,111 @@
+'use strict';
+module.exports = (sequelize, DataTypes) => {
+  const LandingZoneMonitoring = sequelize.define(
+    'landingZoneMonitoring',
+    {
+      id: {
+        allowNull: false,
+        primaryKey: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+      },
+      applicationId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: 'application',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      monitoringName: {
+        allowNull: false,
+        type: DataTypes.STRING,
+        unique: true,
+      },
+      isActive: {
+        allowNull: false,
+        defaultValue: false,
+        type: DataTypes.BOOLEAN,
+      },
+      lzMonitoringType: {
+        allowNull: false,
+        type: DataTypes.ENUM('File Count', 'Space Usage', 'File Movement'),
+      },
+      approvalStatus: {
+        allowNull: false,
+        type: DataTypes.ENUM('Approved', 'Rejected', 'Pending'),
+      },
+      approvedBy: {
+        allowNull: true,
+        type: DataTypes.STRING,
+      },
+      approvedAt: {
+        allowNull: true,
+        type: DataTypes.DATE,
+      },
+      approverComment: {
+        allowNull: true,
+        type: DataTypes.STRING,
+      },
+      description: {
+        allowNull: false,
+        type: DataTypes.TEXT,
+      },
+      clusterId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      lastRunDetails: {
+        allowNull: true,
+        type: DataTypes.JSON,
+      },
+      metaData: {
+        allowNull: false,
+        type: DataTypes.JSON,
+      },
+      createdBy: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      lastUpdatedBy: {
+        allowNull: false,
+        type: DataTypes.STRING,
+      },
+      createdAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
+      deletedAt: {
+        allowNull: true,
+        type: DataTypes.DATE,
+      },
+    },
+    {
+      paranoid: true,
+      freezeTableName: true,
+    }
+  );
+
+  // Associations
+  LandingZoneMonitoring.associate = function (models) {
+    LandingZoneMonitoring.belongsTo(models.application, {
+      foreignKey: 'applicationId',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    });
+
+    LandingZoneMonitoring.belongsTo(models.cluster, {
+      foreignKey: 'clusterId',
+      onDelete: 'NO ACTION',
+      onUpdate: 'CASCADE',
+    });
+  };
+
+  return LandingZoneMonitoring;
+};
