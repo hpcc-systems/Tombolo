@@ -7,6 +7,7 @@ const {
   validateClusterId,
   validateFileListParams,
   validateCreateLandingZoneMonitoring,
+  validateApplicationId,
 } = require('../middlewares/landingZoneMonitoringMiddleware');
 
 // Controllers
@@ -14,17 +15,21 @@ const {
   getDropzonesForACluster,
   getFileList,
   createLandingZoneMonitoring,
+  getAllLandingZoneMonitorings,
 } = require('../controllers/landingZoneMonitoringController');
 
 // Get Dropzones and associated machines
 router.get('/getDropzones', validateClusterId, getDropzonesForACluster);
 router.get('/fileList', validateFileListParams, getFileList);
-
-// Create new landing zone monitoring
 router.post(
   '/',
   validateCreateLandingZoneMonitoring,
   createLandingZoneMonitoring
+);
+router.get(
+  '/all/:applicationId',
+  validateApplicationId,
+  getAllLandingZoneMonitorings
 );
 
 // export the router

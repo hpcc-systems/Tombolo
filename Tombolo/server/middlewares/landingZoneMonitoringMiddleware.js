@@ -1,4 +1,4 @@
-const { query, body, validationResult } = require('express-validator');
+const { query, body, param, validationResult } = require('express-validator');
 
 // Validate cluster id from the query parameters
 const validateClusterId = [
@@ -77,9 +77,28 @@ const validateCreateLandingZoneMonitoring = [
   },
 ];
 
+// Validate application ID parameter for getting all landing zone monitorings
+const validateApplicationId = [
+  param('applicationId')
+    .isUUID()
+    .withMessage('Application ID must be a valid UUID'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: JSON.stringify(errors.array()),
+      });
+    }
+    next();
+  },
+];
+
 //Exports
 module.exports = {
   validateClusterId,
   validateFileListParams,
   validateCreateLandingZoneMonitoring,
+  validateApplicationId,
 };

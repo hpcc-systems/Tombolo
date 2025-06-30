@@ -126,9 +126,33 @@ const createLandingZoneMonitoring = async (req, res) => {
   }
 };
 
+// Get all landing zone monitorings by application ID
+const getAllLandingZoneMonitorings = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    logger.info(
+      `Getting all landing zone monitorings for application: ${applicationId}`
+    );
+
+    const landingZoneMonitorings = await LandingZoneMonitoring.findAll({
+      where: { applicationId },
+      order: [['createdAt', 'DESC']],
+    });
+
+    logger.info(
+      `Found ${landingZoneMonitorings.length} landing zone monitorings`
+    );
+    res.status(200).json(landingZoneMonitorings);
+  } catch (err) {
+    logger.error(`Error getting landing zone monitorings: ${err.message}`);
+    res.status(500).send('Failed to get landing zone monitorings');
+  }
+};
+
 //Exports
 module.exports = {
   getDropzonesForACluster,
   getFileList,
   createLandingZoneMonitoring,
+  getAllLandingZoneMonitorings,
 };
