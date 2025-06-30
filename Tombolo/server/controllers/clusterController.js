@@ -532,7 +532,7 @@ const clusterUsage = async (req, res) => {
 
     //Get cluster details
     let cluster = await hpccUtil.getCluster(id); // Checks if cluster is reachable and decrypts cluster credentials if any
-    const { thor_host, thor_port, username, hash } = cluster;
+    const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
     const clusterDetails = getClusterOptions(
       {
         baseUrl: `${thor_host}:${thor_port}`,
