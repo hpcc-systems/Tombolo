@@ -1,5 +1,5 @@
 const { query, body, param, validationResult } = require('express-validator');
-const { logger } = require('../config/logger');
+const logger = require('../config/logger');
 
 // Validate cluster id from the query parameters
 const validateClusterId = [
@@ -161,7 +161,58 @@ const validateUpdateLandingZoneMonitoring = [
       return res.status(422).json({
         success: false,
         message: 'Validation failed',
-        errors: errString,
+        errors: JSON.stringify(errors.array()),
+      });
+    }
+    next();
+  },
+];
+
+// Validate toggle status request
+const validateToggleStatus = [
+  body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
+  body('ids.*').isUUID().withMessage('Each ID must be a valid UUID'),
+  body('isActive').isBoolean().withMessage('isActive must be a boolean value'),
+  (req, res, next) => {
+    const { errors } = validationResult(req);
+    if (errors.length > 0) {
+      const errorString = errors.map(e => e.msg).join(', ');
+      logger.error(`Toggle status.Validation failed: ${errorString}`);
+      return res.status(422).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errorString,
+      });
+    }
+    next();
+  },
+];
+
+// Validate evaluate request (approve/reject)
+const validateEvaluateLandingZoneMonitoring = [
+  body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
+  body('ids.*').isUUID().withMessage('Each ID must be a valid UUID'),
+  body('approvalStatus')
+    .isIn(['approved', 'rejected', 'pending'])
+    .withMessage(
+      'Approval status must be either approved, rejected or pending'
+    ),
+  body('approverComment')
+    .notEmpty()
+    .isString()
+    .withMessage('Approver comment must be a non-empty string')
+    .isLength({ min: 4, max: 200 })
+    .withMessage('Approver comment must be between 4 and 200 characters long'),
+  body('approvedBy').isUUID().withMessage('Approved by must be a valid UUID'),
+  (req, res, next) => {
+    const { errors } = validationResult(req);
+    if (errors.length > 0) {
+      const errorString = errors.map(e => e.msg).join(', ');
+      logger.error(`Evaluate LZ monitoring.Validation failed: ${errorString}`);
+      return res.status(422).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errorString,
       });
     }
     next();
@@ -176,4 +227,6 @@ module.exports = {
   validateApplicationId,
   validateId,
   validateUpdateLandingZoneMonitoring,
+  validateToggleStatus,
+  validateEvaluateLandingZoneMonitoring,
 };

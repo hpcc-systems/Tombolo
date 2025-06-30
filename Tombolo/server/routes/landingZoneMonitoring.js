@@ -10,6 +10,8 @@ const {
   validateApplicationId,
   validateId,
   validateUpdateLandingZoneMonitoring,
+  validateEvaluateLandingZoneMonitoring,
+  validateToggleStatus,
 } = require('../middlewares/landingZoneMonitoringMiddleware');
 
 // Controllers
@@ -21,6 +23,8 @@ const {
   getLandingZoneMonitoringById,
   updateLandingZoneMonitoring,
   deleteLandingZoneMonitoring,
+  evaluateLandingZoneMonitoring,
+  toggleLandingZoneMonitoringStatus,
 } = require('../controllers/landingZoneMonitoringController');
 
 // Get Dropzones and associated machines
@@ -43,6 +47,16 @@ router.patch(
   updateLandingZoneMonitoring
 );
 router.delete('/:id', validateId, deleteLandingZoneMonitoring);
+router.patch(
+  '/evaluate',
+  validateEvaluateLandingZoneMonitoring,
+  evaluateLandingZoneMonitoring
+);
+router.patch(
+  '/toggleStatus',
+  validateToggleStatus,
+  toggleLandingZoneMonitoringStatus
+);
 
 // export the router
 module.exports = router;

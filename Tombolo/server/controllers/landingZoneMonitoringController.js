@@ -1,5 +1,6 @@
 // Imports from libraries
 const { TopologyService, FileSprayService } = require('@hpcc-js/comms');
+const Sequelize = require('sequelize');
 
 // Local Imports
 const logger = require('../config/logger');
@@ -343,6 +344,116 @@ const deleteLandingZoneMonitoring = async (req, res) => {
   }
 };
 
+// Evaluate landing zone monitoring (approve/reject)
+const evaluateLandingZoneMonitoring = async (req, res) => {
+  try {
+    const { ids, approvalStatus, approverComment, approvedBy } = req.body;
+
+    const updateData = {
+      approvalStatus,
+      approverComment,
+      approvedBy,
+      approvedAt: new Date(),
+    };
+
+    const [updatedCount] = await LandingZoneMonitoring.update(updateData, {
+      where: {
+        id: {
+          [Sequelize.Op.in]: ids,
+        },
+      },
+    });
+
+    if (updatedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'No landing zone monitoring records found with the provided IDs',
+      });
+    }
+
+    logger.info(
+      `Successfully ${approvalStatus} ${updatedCount} landing zone monitoring record(s)`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully ${approvalStatus} ${updatedCount} landing zone monitoring record(s)`,
+      updatedCount,
+    });
+  } catch (error) {
+    logger.error('Error evaluating landing zone monitoring:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to evaluate landing zone monitoring',
+      error: error.message,
+    });
+  }
+};
+
+// Toggle landing zone monitoring status (activate/deactivate)
+const toggleLandingZoneMonitoringStatus = async (req, res) => {
+  try {
+    const { ids, isActive } = req.body;
+
+    // If no action specified, toggle based on current status
+    const records = await LandingZoneMonitoring.findAll({
+      where: {
+        id: {
+          [Sequelize.Op.in]: ids,
+        },
+      },
+      attributes: ['id', 'isActive'],
+    });
+
+    if (records.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'No landing zone monitoring records found with the provided IDs',
+      });
+    }
+
+    const [updatedCount] = await LandingZoneMonitoring.update(
+      { isActive },
+      {
+        where: {
+          id: {
+            [Sequelize.Op.in]: ids,
+          },
+        },
+      }
+    );
+
+    if (updatedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'No landing zone monitoring records found with the provided IDs',
+      });
+    }
+
+    const statusAction = isActive ? 'activated' : 'deactivated';
+    logger.info(
+      `Successfully ${statusAction} ${updatedCount} landing zone monitoring record(s)`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully ${statusAction} ${updatedCount} landing zone monitoring record(s)`,
+      updatedCount,
+      newStatus: isActive,
+    });
+  } catch (error) {
+    logger.error('Error toggling landing zone monitoring status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to toggle landing zone monitoring status',
+      error: error.message,
+    });
+  }
+};
+
 //Exports
 module.exports = {
   getDropzonesForACluster,
@@ -352,4 +463,6 @@ module.exports = {
   getLandingZoneMonitoringById,
   updateLandingZoneMonitoring,
   deleteLandingZoneMonitoring,
+  evaluateLandingZoneMonitoring,
+  toggleLandingZoneMonitoringStatus,
 };
