@@ -133,7 +133,7 @@ const createApplicationOwner = async (req, res) => {
     });
 
     // Send response
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'User created successfully',
     });
@@ -213,7 +213,7 @@ const createBasicUser = async (req, res) => {
     });
 
     // Send response
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'User created successfully',
     });
@@ -324,7 +324,7 @@ const verifyEmail = async (req, res) => {
     await setLastLogin(user);
 
     // Send response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Email verified successfully',
       data: { ...user.toJSON() },
@@ -495,7 +495,7 @@ const resetPasswordWithToken = async (req, res) => {
     await transaction.commit();
 
     // Success response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Password updated successfully',
       data: userObj,
@@ -504,7 +504,7 @@ const resetPasswordWithToken = async (req, res) => {
     // Rollback the transaction
     await transaction.rollback();
     logger.error(`Reset Temp Password: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -629,14 +629,14 @@ const resetTempPassword = async (req, res) => {
     delete userObj.hash;
 
     // Success response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Password updated successfully',
       data: userObj,
     });
   } catch (err) {
     logger.error(`Reset Temp Password: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -672,12 +672,11 @@ const loginBasicUser = async (req, res) => {
         }`;
       }
 
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
         message: 'temp-pw',
         resetLink: resetUrl ? resetUrl : null,
       });
-      return;
     }
 
     // If the accountLocked.isLocked is true, return generic error
@@ -700,11 +699,10 @@ const loginBasicUser = async (req, res) => {
     // If not verified user return error
     if (!user.verifiedUser) {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
         message: 'unverified',
       });
-      return;
     }
 
     //if password has expired
@@ -713,11 +711,10 @@ const loginBasicUser = async (req, res) => {
         `Login : Login attempt by user with expired password - ${user.id}`
       );
 
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
         message: 'password-expired',
       });
-      return;
     }
 
     // If force password reset is true it  means user is issued a temp password and must reset password
@@ -725,11 +722,10 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login attempt by user with temp password - ${user.id}`
       );
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
         message: 'temp-password',
       });
-      return;
     }
 
     // If user is an registered to azure, throw error
@@ -783,7 +779,7 @@ const loginBasicUser = async (req, res) => {
     await setLastLogin(user);
 
     // Success response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'User logged in successfully',
       data: userObj,
@@ -794,7 +790,7 @@ const loginBasicUser = async (req, res) => {
     if (!err.status) {
       logger.error(`Login user: ${err.message}`);
     }
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -819,10 +815,10 @@ const logOutBasicUser = async (req, res) => {
     // Add access token to the blacklist
     await blacklistToken({ tokenId, exp: decodedToken.exp });
 
-    res.status(200).json({ success: true, message: 'User logged out' });
+    return res.status(200).json({ success: true, message: 'User logged out' });
   } catch (err) {
     logger.error(`Logout user: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -955,10 +951,10 @@ const handlePasswordResetRequest = async (req, res) => {
     });
 
     // response
-    res.status(200).json({ success: true });
+    return res.status(200).json({ success: true });
   } catch (err) {
     logger.error(`Reset password: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -1111,14 +1107,14 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     await setLastLogin(user);
 
     // Send response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'User logged in successfully',
       data: { ...user.toJSON() },
     });
   } catch (err) {
     logger.error(`Login or Register Azure User: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -1185,10 +1181,10 @@ const requestAccess = async (req, res) => {
       createdBy: user.id,
     });
 
-    res.status(200).json({ message: 'Access requested successfully' });
+    return res.status(200).json({ message: 'Access requested successfully' });
   } catch (e) {
     logger.error(`Request Access: ${e.message}`);
-    res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: e.message });
   }
 };
 
@@ -1251,7 +1247,7 @@ const resendVerificationCode = async (req, res) => {
       createdBy: user.id,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Verification code sent successfully',
     });
@@ -1297,7 +1293,7 @@ const getUserDetailsWithToken = async (req, res) => {
       newUser: user.newUser,
     };
 
-    res.status(200).json({ user: userObj });
+    return res.status(200).json({ user: userObj });
   } catch (err) {
     logger.error(`getUserDetailsWithToken: ${err.message}`);
     res
@@ -1350,10 +1346,10 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       newUser: user.newUser,
     };
 
-    res.status(200).json({ user: userObj });
+    return res.status(200).json({ user: userObj });
   } catch (err) {
     logger.error(`getUserDetailsWithToken: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -1374,10 +1370,10 @@ const requestPasswordReset = async (req, res) => {
     // Send E-mail to access request email
     const response = await sendPasswordExpiredEmail(user);
 
-    res.status(200).json({ message: response.message });
+    return res.status(200).json({ message: response.message });
   } catch (err) {
     logger.error(`Request password reset: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }

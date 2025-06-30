@@ -69,10 +69,10 @@ router.post(
         });
       }
 
-      res.status(200).send(response);
+      return res.status(200).send(response);
     } catch (err) {
       logger.error(err.message);
-      res.status(500).send('Failed to save job monitoring');
+      return res.status(500).send('Failed to save job monitoring');
     }
   }
 );
@@ -98,10 +98,10 @@ router.get(
         where: { applicationId: req.params.applicationId },
         order: [['createdAt', 'DESC']],
       });
-      res.status(200).json(jobMonitorings);
+      return res.status(200).json(jobMonitorings);
     } catch (err) {
       logger.error(err.message);
-      res.status(500).send('Failed to get job monitorings');
+      return res.status(500).send('Failed to get job monitorings');
     }
   }
 );
@@ -110,10 +110,10 @@ router.get(
 router.get('/:id', async (req, res) => {
   try {
     const jobMonitoring = await JobMonitoring.findByPk(req.params.id);
-    res.status(200).json(jobMonitoring);
+    return res.status(200).json(jobMonitoring);
   } catch (err) {
     logger.error(err.message);
-    res.status(500).send('Failed to get job monitoring');
+    return res.status(500).send('Failed to get job monitoring');
   }
 });
 
@@ -224,10 +224,10 @@ router.patch(
         });
       }
 
-      res.status(200).send(updatedJob);
+      return res.status(200).send(updatedJob);
     } catch (err) {
       logger.error(err.message);
-      res.status(500).send('Failed to update job monitoring');
+      return res.status(500).send('Failed to update job monitoring');
     }
   }
 );
@@ -276,10 +276,10 @@ router.patch(
         },
         { where: { id: { [Op.in]: ids } } }
       );
-      res.status(200).send('Successfully saved your evaluation');
+      return res.status(200).send('Successfully saved your evaluation');
     } catch (err) {
       logger.error(err.message);
-      res.status(500).send('Failed to evaluate job monitoring');
+      return res.status(500).send('Failed to evaluate job monitoring');
     }
   }
 );
@@ -301,10 +301,10 @@ router.delete(
       const response = await JobMonitoring.destroy({
         where: { id: req.body.ids },
       });
-      res.status(200).json(response);
+      return res.status(200).json(response);
     } catch (err) {
       logger.error(err.message);
-      res.status(500).send('Failed to delete job monitoring');
+      return res.status(500).send('Failed to delete job monitoring');
     }
   }
 );
@@ -321,10 +321,10 @@ router.delete(
 
     try {
       await JobMonitoring.destroy({ where: { id: req.params.id } });
-      res.status(200).send('success');
+      return res.status(200).send('success');
     } catch (err) {
       logger.error(err.message);
-      res.status(500).send('Failed to delete job monitoring');
+      return res.status(500).send('Failed to delete job monitoring');
     }
   }
 );
@@ -408,7 +408,7 @@ router.patch(
         where: { id: { [Op.in]: approvedIds } },
       });
 
-      res.status(200).send({
+      return res.status(200).send({
         success: true,
         message: 'Toggled successfully',
         updatedJobMonitorings,
@@ -416,7 +416,7 @@ router.patch(
     } catch (err) {
       await transaction.rollback();
       logger.error(err.message);
-      res.status(500).send('Failed to toggle job monitoring');
+      return res.status(500).send('Failed to toggle job monitoring');
     }
   }
 );
@@ -448,13 +448,13 @@ router.patch(
         );
       }
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Successfully updated job monitorings',
       });
     } catch (err) {
       logger.error(err.message);
-      res.status(500).send('Failed to update job monitoring');
+      return res.status(500).send('Failed to update job monitoring');
     }
   }
 );
@@ -491,10 +491,10 @@ router.get(
       const sortedTopLevelInfo = topLevelInfo.sort(
         (a, b) => b.sequenceNumber - a.sequenceNumber
       );
-      res.status(200).json(sortedTopLevelInfo);
+      return res.status(200).json(sortedTopLevelInfo);
     } catch (err) {
       logger.error(err.message);
-      res.status(500).send('Failed to get job monitoring data');
+      return res.status(500).send('Failed to get job monitoring data');
     }
   }
 );

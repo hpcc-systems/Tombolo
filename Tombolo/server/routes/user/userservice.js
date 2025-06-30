@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 let models = require('../../models');
 let User = models.user;
 const axios = require('axios');
+const logger = require('../../config/logger');
 
 async function authenticate(req, res, { username, password }) {
   var authServiceUrl = process.env.AUTH_SERVICE_URL + '/login';
@@ -21,18 +22,17 @@ async function authenticate(req, res, { username, password }) {
     );
 
     if (response.status !== 200) {
-      console.log('Login failed!');
       throw new Error('Authentication failed');
     }
 
     return response.data;
   } catch (err) {
     if (!err.response) {
-      console.log(
+      logger.error(
         'Cannot reach AuthService. Please check if AuthService is running and is accessible from Tombolo...'
       );
     } else {
-      console.log('Login failed!');
+      logger.error('Login failed!');
     }
     throw err;
   }
@@ -62,19 +62,19 @@ async function verifyToken(token) {
   }
 }
 
-async function validateToken(req, res, next) {
+async function validateToken(req, res) {
   let token = req.headers['x-access-token'] || req.headers['authorization'];
   if (token) {
     if (token.startsWith('Bearer ')) {
       token = token.slice(7, token.length);
-      console.log('token: ' + token);
+      logger.verbose('token: ' + token);
+
       return new Promise((resolve, reject) => {
         verifyToken(token)
           .then(verifyTokenRes => {
             if (verifyTokenRes) {
               let verifyTokenResParsed = JSON.parse(verifyTokenRes);
               if (verifyTokenResParsed && verifyTokenResParsed.verified) {
-                console.log('token verified');
                 resolve({
                   userWithoutHash: {
                     token: token,
@@ -141,7 +141,7 @@ const searchUser = async (req, res, next) => {
 
     return searchResults;
   } catch (err) {
-    console.log(err);
+    logger.error(err);
     throw err;
   }
 };
@@ -191,7 +191,6 @@ async function update(id, userParam) {
 
   // copy userParam properties to user
   Object.assign(user, userParam);
-  console.log(JSON.stringify(user));
   User.update(
     {
       username: user.username,
@@ -202,15 +201,15 @@ async function update(id, userParam) {
     },
     { where: { id: id } }
   ).then(function (rowsUpdated) {
-    console.log('user updated: ' + rowsUpdated.firstName);
+    logger.info('user updated: ' + rowsUpdated.firstName);
   });
 }
 
 async function _delete(id) {
-  await User.destroy({ where: { id: id } }, function (err) {});
+  await User.destroy({ where: { id: id } }, () => {});
 }
 
-async function GetuserListToShareApp(req, res, next) {
+async function GetuserListToShareApp(req, res) {
   try {
     let token = req.headers['x-access-token'] || req.headers['authorization'];
     if (token.startsWith('Bearer ')) {
@@ -270,12 +269,12 @@ async function changePassword(req, res, { username, password }) {
       }
     );
 
-    console.log(response.data);
     return response.data;
   } catch (error) {
     if (error.response) {
       const { status, data } = error.response;
-      console.log(data);
+      logger.error(error);
+      logger.error(data);
 
       if (status === 422) {
         throw new Error(data.errors.concat(','));
@@ -348,11 +347,14 @@ async function forgotPassword(req, res) {
       res.status(200).json({ success: true });
       return { statusCode: response.status, message: response.data };
     } else {
-      res.status(500).json({ success: false, errors: [response.data.message] });
+      return res
+        .status(500)
+        .json({ success: false, errors: [response.data.message] });
     }
   } catch (error) {
+    logger.error(error);
     if (error.response) {
-      res
+      return res
         .status(500)
         .json({ success: false, errors: [error.response.data.message] });
     } else {
