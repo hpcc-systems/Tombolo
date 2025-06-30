@@ -20,6 +20,7 @@ const {
   getAllLandingZoneMonitorings,
   getLandingZoneMonitoringById,
   updateLandingZoneMonitoring,
+  deleteLandingZoneMonitoring,
 } = require('../controllers/landingZoneMonitoringController');
 
 // Get Dropzones and associated machines
@@ -41,6 +42,7 @@ router.patch(
   validateUpdateLandingZoneMonitoring,
   updateLandingZoneMonitoring
 );
+router.delete('/:id', validateId, deleteLandingZoneMonitoring);
 
 // export the router
 module.exports = router;
