@@ -38,7 +38,13 @@ module.exports = {
       },
       approvedBy: {
         allowNull: true,
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       approvedAt: {
         allowNull: true,
@@ -72,11 +78,23 @@ module.exports = {
       },
       createdBy: {
         allowNull: false,
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       lastUpdatedBy: {
         allowNull: false,
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       createdAt: {
         allowNull: false,

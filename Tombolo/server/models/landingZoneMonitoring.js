@@ -39,7 +39,13 @@ module.exports = (sequelize, DataTypes) => {
       },
       approvedBy: {
         allowNull: true,
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       approvedAt: {
         allowNull: true,
@@ -67,11 +73,23 @@ module.exports = (sequelize, DataTypes) => {
       },
       createdBy: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       lastUpdatedBy: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       createdAt: {
         allowNull: false,
@@ -102,6 +120,28 @@ module.exports = (sequelize, DataTypes) => {
 
     LandingZoneMonitoring.belongsTo(models.cluster, {
       foreignKey: 'clusterId',
+      onDelete: 'NO ACTION',
+      onUpdate: 'CASCADE',
+    });
+
+    // User associations
+    LandingZoneMonitoring.belongsTo(models.user, {
+      foreignKey: 'createdBy',
+      as: 'creator',
+      onDelete: 'NO ACTION',
+      onUpdate: 'CASCADE',
+    });
+
+    LandingZoneMonitoring.belongsTo(models.user, {
+      foreignKey: 'lastUpdatedBy',
+      as: 'updater',
+      onDelete: 'NO ACTION',
+      onUpdate: 'CASCADE',
+    });
+
+    LandingZoneMonitoring.belongsTo(models.user, {
+      foreignKey: 'approvedBy',
+      as: 'approver',
       onDelete: 'NO ACTION',
       onUpdate: 'CASCADE',
     });
