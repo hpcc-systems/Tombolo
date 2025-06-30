@@ -95,10 +95,27 @@ const validateApplicationId = [
   },
 ];
 
+// Validate ID parameter for getting single landing zone monitoring
+const validateId = [
+  param('id').isUUID().withMessage('ID must be a valid UUID'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: JSON.stringify(errors.array()),
+      });
+    }
+    next();
+  },
+];
+
 //Exports
 module.exports = {
   validateClusterId,
   validateFileListParams,
   validateCreateLandingZoneMonitoring,
   validateApplicationId,
+  validateId,
 };

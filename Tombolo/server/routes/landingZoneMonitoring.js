@@ -8,6 +8,7 @@ const {
   validateFileListParams,
   validateCreateLandingZoneMonitoring,
   validateApplicationId,
+  validateId,
 } = require('../middlewares/landingZoneMonitoringMiddleware');
 
 // Controllers
@@ -16,6 +17,7 @@ const {
   getFileList,
   createLandingZoneMonitoring,
   getAllLandingZoneMonitorings,
+  getLandingZoneMonitoringById,
 } = require('../controllers/landingZoneMonitoringController');
 
 // Get Dropzones and associated machines
@@ -31,6 +33,7 @@ router.get(
   validateApplicationId,
   getAllLandingZoneMonitorings
 );
+router.get('/:id', validateId, getLandingZoneMonitoringById);
 
 // export the router
 module.exports = router;

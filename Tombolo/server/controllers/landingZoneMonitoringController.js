@@ -149,10 +149,35 @@ const getAllLandingZoneMonitorings = async (req, res) => {
   }
 };
 
+// Get single landing zone monitoring by ID
+const getLandingZoneMonitoringById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    logger.info(`Getting landing zone monitoring with ID: ${id}`);
+
+    const landingZoneMonitoring = await LandingZoneMonitoring.findByPk(id);
+
+    if (!landingZoneMonitoring) {
+      logger.warn(`Landing zone monitoring not found with ID: ${id}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Landing zone monitoring not found',
+      });
+    }
+
+    logger.info(`Successfully retrieved landing zone monitoring: ${id}`);
+    res.status(200).json(landingZoneMonitoring);
+  } catch (err) {
+    logger.error(`Error getting landing zone monitoring by ID: ${err.message}`);
+    res.status(500).send('Failed to get landing zone monitoring');
+  }
+};
+
 //Exports
 module.exports = {
   getDropzonesForACluster,
   getFileList,
   createLandingZoneMonitoring,
   getAllLandingZoneMonitorings,
+  getLandingZoneMonitoringById,
 };
