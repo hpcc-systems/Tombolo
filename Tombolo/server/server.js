@@ -118,6 +118,7 @@ const cluster = require('./routes/clusterRoutes');
 const roles = require('./routes/roleTypesRoute');
 const status = require('./routes/statusRoutes');
 const instanceSettings = require('./routes/instanceRoutes.js');
+const landingZoneMonitoring = require('./routes/landingZoneMonitoring');
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -126,6 +127,7 @@ app.use('/api/auth', auth);
 app.use('/api/updateNotification', updateNotifications);
 app.use('/api/status', status);
 app.use('/api/wizard', wizard);
+app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
 
 //exposed API, requires api key for any routes
 app.use('/api/apikeys', api);
