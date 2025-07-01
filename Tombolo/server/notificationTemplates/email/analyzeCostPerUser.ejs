@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+      .main_body {
+        width: 100%
+      }
+
+      .section {
+        margin: 0 auto !important;
+        width: 800px;
+        border-collapse: collapse;
+        font-family: Arial;
+        font-size: 14px;
+      }
+
+      .section-table-td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 5px;
+      }
+
+      .section-table-td-label{
+        width: 120px !important;
+      }
+
+      .section-footer {
+        background: none;
+        text-align: center;
+        border-top: 1px solid #dddddd;
+        font-size: 12px;
+      }
+
+      .section-footer-td {
+        padding-top: 50px;
+        padding-bottom: 50px;
+        color: #808080;
+      }
+
+      .section-header {
+        background: none !important;
+      }
+
+      .section-header-td {
+        padding-top: 30px;
+        padding-bottom: 30px;
+      }
+
+      .list {
+        padding: 10px;
+      }
+    </style>
+</head>
+
+<table class="main_body">
+    <tbody>
+    <tr>
+        <td>
+            <table class="section section-header">
+                <tbody>
+                <tr>
+                    <td class="section-header-td">
+                        <%= typeof notificationDescription !== 'undefined' ? notificationDescription : "" %>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <table class="section section-table">
+                <tbody>
+
+                <% if (typeof notificationId !== 'undefined') { %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td section-table-td-label">Notification ID</td>
+                        <td class="section-table-td"><%= notificationId %></td>
+                    </tr>
+                <% } %>
+
+
+                <% if(typeof issue !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Issue</td>
+                        <td class="section-table-td">
+                            <% Object.keys(issue).forEach(function(key) { %>
+                                <% if (key === 'clusters' && Array.isArray(issue[key])) { %>
+                                    <div><span> <%= key %> : </span></div>
+                                    <div class="list">
+                                        <% issue[key].forEach(function(cluster, index) { %>
+                                            <div>
+                                                <strong>Cluster <%= index + 1 %>:</strong><br>
+                                                <span>Name: <%= cluster.name || 'N/A' %></span><br>
+                                                <span>Discovered At: <%= cluster.discoveredAt || 'N/A' %></span>
+                                            </div>
+                                            <% if (index < issue[key].length - 1) { %><br><% } %>
+                                        <% }) %>
+                                    </div>
+                                <% } else { %>
+                                    <div><span> <%= key %> : </span> <%= issue[key] %></div>
+                                <% } %>
+                            <%}) %>
+                        </td>
+                    </tr>
+                <% }%>
+                </tbody>
+            </table>
+            <table class="section section-footer">
+                <tbody>
+                <tr>
+                    <td class="section-footer-td">
+                        This notification is sent by Tombolo because your email address is included in the cost monitoring notification recipient list. If you wish to stop receiving these alerts, please contact your Tombolo administrator.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</html>
