@@ -347,12 +347,14 @@ const deleteLandingZoneMonitoring = async (req, res) => {
 // Evaluate landing zone monitoring (approve/reject)
 const evaluateLandingZoneMonitoring = async (req, res) => {
   try {
-    const { ids, approvalStatus, approverComment, approvedBy } = req.body;
+    const { ids, approvalStatus, approverComment, approvedBy, isActive } =
+      req.body;
 
     const updateData = {
       approvalStatus,
       approverComment,
       approvedBy,
+      isActive: isActive !== undefined ? isActive : false,
       approvedAt: new Date(),
     };
 

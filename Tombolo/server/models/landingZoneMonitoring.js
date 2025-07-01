@@ -31,11 +31,11 @@ module.exports = (sequelize, DataTypes) => {
       },
       lzMonitoringType: {
         allowNull: false,
-        type: DataTypes.ENUM('File Count', 'Space Usage', 'File Movement'),
+        type: DataTypes.ENUM('fileCount', 'spaceUsage', 'fileMovement'),
       },
       approvalStatus: {
         allowNull: false,
-        type: DataTypes.ENUM('Approved', 'Rejected', 'Pending'),
+        type: DataTypes.ENUM('approved', 'rejected', 'pending'),
       },
       approvedBy: {
         allowNull: true,

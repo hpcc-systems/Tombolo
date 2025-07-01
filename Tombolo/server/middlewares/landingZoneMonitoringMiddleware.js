@@ -5,8 +5,8 @@ const logger = require('../config/logger');
 const validateClusterId = [
   query('clusterId').isUUID(4).withMessage('Invalid cluster id'),
   (req, res, next) => {
-    const { errors } = validationResult(req);
-    if (errors.isLength > 0) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
       return res
         .status(400)
         .json({ success: false, message: errors.array()[0].msg });
@@ -27,9 +27,12 @@ const validateFileListParams = [
     .isBoolean()
     .withMessage('Invalid  directory only flag'),
   (req, res, next) => {
-    const { errors } = validationResult(req);
-    if (errors.isLength > 0) {
-      const errorString = errors.map(e => e.msg).join(', ');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorString = errors
+        .array()
+        .map(e => e.msg)
+        .join(', ');
       logger.error(`Get file list.Validation failed: ${errorString}`);
       return res
         .status(400)
@@ -68,9 +71,12 @@ const validateCreateLandingZoneMonitoring = [
     .isUUID()
     .withMessage('Last updated by must be a valid user UUID'),
   (req, res, next) => {
-    const { errors } = validationResult(req);
-    if (errors.isLength > 0) {
-      const errorString = errors.map(e => e.msg).join(', ');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorString = errors
+        .array()
+        .map(e => e.msg)
+        .join(', ');
       logger.error(`Create LZ monitoring.Validation failed: ${errorString}`);
       return res.status(422).json({
         success: false,
@@ -88,9 +94,12 @@ const validateApplicationId = [
     .isUUID()
     .withMessage('Application ID must be a valid UUID'),
   (req, res, next) => {
-    const { errors } = validationResult(req);
-    if (errors.isLength > 0) {
-      const errorString = errors.map(e => e.msg).join(', ');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorString = errors
+        .array()
+        .map(e => e.msg)
+        .join(', ');
       logger.error(`Get LZ monitoring.Validation failed: ${errorString}`);
       return res.status(400).json({
         success: false,
@@ -106,10 +115,13 @@ const validateApplicationId = [
 const validateId = [
   param('id').isUUID().withMessage('ID must be a valid UUID'),
   (req, res, next) => {
-    const { errors } = validationResult(req);
+    const errors = validationResult(req);
 
-    if (errors.isLength > 0) {
-      const errorString = errors.map(e => e.msg).join(', ');
+    if (!errors.isEmpty()) {
+      const errorString = errors
+        .array()
+        .map(e => e.msg)
+        .join(', ');
       logger.error(`Get LZ monitoring.Validation failed: ${errorString}`);
       return res.status(400).json({
         success: false,
@@ -150,13 +162,20 @@ const validateUpdateLandingZoneMonitoring = [
     .optional()
     .isObject()
     .withMessage('Meta data must be an object'),
+  body('isActive')
+    .optional()
+    .isBoolean()
+    .withMessage('isActive must be a boolean value'),
   body('lastUpdatedBy')
     .isUUID()
     .withMessage('Last updated by must be a valid user UUID'),
   (req, res, next) => {
-    const { errors } = validationResult(req);
-    if (errors.isLength > 0) {
-      const errorString = errors.map(e => e.msg).join(', ');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorString = errors
+        .array()
+        .map(e => e.msg)
+        .join(', ');
       logger.error(`Update LZ monitoring.Validation failed: ${errorString}`);
       return res.status(422).json({
         success: false,
@@ -174,14 +193,17 @@ const validateToggleStatus = [
   body('ids.*').isUUID().withMessage('Each ID must be a valid UUID'),
   body('isActive').isBoolean().withMessage('isActive must be a boolean value'),
   (req, res, next) => {
-    const { errors } = validationResult(req);
-    if (errors.length > 0) {
-      const errorString = errors.map(e => e.msg).join(', ');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorString = errors
+        .array()
+        .map(e => e.msg)
+        .join(', ');
       logger.error(`Toggle status.Validation failed: ${errorString}`);
       return res.status(422).json({
         success: false,
         message: 'Validation failed',
-        errors: errorString,
+        errors: JSON.stringify(errors.array()),
       });
     }
     next();
@@ -192,6 +214,10 @@ const validateToggleStatus = [
 const validateEvaluateLandingZoneMonitoring = [
   body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
   body('ids.*').isUUID().withMessage('Each ID must be a valid UUID'),
+  body('isActive')
+    .optional()
+    .isBoolean()
+    .withMessage('isActive must be a boolean value'),
   body('approvalStatus')
     .isIn(['approved', 'rejected', 'pending'])
     .withMessage(
@@ -205,14 +231,17 @@ const validateEvaluateLandingZoneMonitoring = [
     .withMessage('Approver comment must be between 4 and 200 characters long'),
   body('approvedBy').isUUID().withMessage('Approved by must be a valid UUID'),
   (req, res, next) => {
-    const { errors } = validationResult(req);
-    if (errors.length > 0) {
-      const errorString = errors.map(e => e.msg).join(', ');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorString = errors
+        .array()
+        .map(e => e.msg)
+        .join(', ');
       logger.error(`Evaluate LZ monitoring.Validation failed: ${errorString}`);
       return res.status(422).json({
         success: false,
         message: 'Validation failed',
-        errors: errorString,
+        errors: JSON.stringify(errors.array()),
       });
     }
     next();
