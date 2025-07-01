@@ -57,10 +57,11 @@ async function analyzeCostPerUser() {
 
       if (totalsCausingNotification.length === 0) {
         // TODO: Should there be a better message here?
-        parentPort.postMessage({
-          level: 'info',
-          text: `No thresholds passed for analyzeCostPerUser: ${costMonitoring.id}`,
-        });
+        parentPort &&
+          parentPort.postMessage({
+            level: 'info',
+            text: `No thresholds passed for analyzeCostPerUser: ${costMonitoring.id}`,
+          });
         continue;
       }
 

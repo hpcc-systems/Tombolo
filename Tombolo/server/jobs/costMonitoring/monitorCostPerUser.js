@@ -11,18 +11,6 @@ const { WorkunitsService } = require('@hpcc-js/comms');
 const { getCluster } = require('../../utils/hpcc-util');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
-// const allStates = [
-//   'failed',
-//   'completed',
-//   'running',
-//   'blocked',
-//   'aborted',
-//   'compiling',
-//   'waiting',
-//   'wait',
-// ];
-// const statesToExtract = ['failed', 'completed'];
-
 /**
  * Gets the current time and time from lastScanTime, with optional timezone offset
  * @param {?string} lastScanTime
@@ -133,10 +121,6 @@ async function monitorCostPerUser() {
         text: 'Cost Monitor Per user: Monitoring started ...',
       });
 
-    const monitoringType = await MonitoringTypes.findOne({
-      where: { name: 'Cost Monitoring' },
-    });
-
     // Check if there are any monitorings for cost per user
     const costMonitorings = await getCostMonitorings();
     if (costMonitorings.length === 0) {
@@ -148,6 +132,10 @@ async function monitorCostPerUser() {
         });
       return;
     }
+
+    const monitoringType = await MonitoringTypes.findOne({
+      where: { name: 'Cost Monitoring' },
+    });
 
     // Get cluster details for each monitoring
     for (const costMonitor of costMonitorings) {
