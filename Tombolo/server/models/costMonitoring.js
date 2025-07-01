@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const CostMonitoring = sequelize.define(
+  const costMonitoring = sequelize.define(
     'costMonitoring',
     {
       id: {
@@ -106,20 +106,14 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   // Associations
-  CostMonitoring.associate = function (models) {
-    CostMonitoring.belongsTo(models.application, {
+  costMonitoring.associate = function (models) {
+    costMonitoring.belongsTo(models.application, {
       foreignKey: 'applicationId',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     });
 
-    CostMonitoring.belongsTo(models.cluster, {
-      foreignKey: 'cluster_id',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-
-    CostMonitoring.hasMany(models.costMonitoringData, {
+    costMonitoring.hasMany(models.costMonitoringData, {
       foreignKey: 'monitoringId',
       as: 'costMonitoringData',
       onDelete: 'CASCADE',
@@ -127,7 +121,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     // TODO: Do we need an archive?
-    // CostMonitoring.hasMany(models.jobMonitoring_Data_Archive, {
+    // costMonitoring.hasMany(models.jobMonitoring_Data_Archive, {
     //   foreignKey: 'monitoringId',
     //   as: 'costMonitoringDataArchive',
     //   onDelete: 'CASCADE',
@@ -135,5 +129,5 @@ module.exports = (sequelize, DataTypes) => {
     // });
   };
 
-  return CostMonitoring;
+  return costMonitoring;
 };

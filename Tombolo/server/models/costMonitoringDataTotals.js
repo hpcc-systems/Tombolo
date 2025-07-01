@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       timezone_offset: {
-        type: DataTypes.SHORT,
+        type: DataTypes.INTEGER,
         allowNull: true,
       },
       compileCost: {
@@ -67,7 +67,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'CostMonitoringDataTotals',
+      modelName: 'costMonitoringDataTotals',
       tableName: 'costmonitoringdatatotals',
       timestamps: false, // Views don't have timestamps
       freezeTableName: true,

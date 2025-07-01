@@ -55,12 +55,18 @@ function getStartAndEndTime(lastScanTime, offset = 0, toIso = false) {
   };
 }
 
-async function getCostMonitoringData(monitoringId, clusterId, applicationId) {
-  const [costMonitoringData, created] = CostMonitoringData.findOrCreate({
+async function getCostMonitoringData(
+  monitoringId,
+  clusterId,
+  applicationId,
+  monitoringDate
+) {
+  const [costMonitoringData, created] = await CostMonitoringData.findOrCreate({
     where: { monitoringId, applicationId, clusterId },
     defaults: {
       monitoringId,
       applicationId,
+      date: monitoringDate,
       clusterId,
       usersCostInfo: {},
       analyzed: false,
@@ -71,20 +77,20 @@ async function getCostMonitoringData(monitoringId, clusterId, applicationId) {
 
 /**
  * Handles the monitoring logs by either creating a new log entry or updating an existing one
- * @param {?import('../../models').monitoring_logs} monitoringLog - The existing monitoring log entry or null if none exists
+ * @param {?import('../../models').monitoring_logs} inputMonitoringLog - The existing monitoring log entry or null if none exists
  * @param {number} clusterId - The ID of the cluster being monitored
  * @param {number} monitoringTypeId - The ID of the monitoring type
  * @param {Date} scanTime - The time when the work units were fetched
  * @returns {Promise<void>}
  */
 async function handleMonitorLogs(
-  monitoringLog,
+  inputMonitoringLog,
   clusterId,
   monitoringTypeId,
   scanTime
 ) {
   try {
-    let monitoringLog;
+    let monitoringLog = inputMonitoringLog;
 
     if (!monitoringLog) {
       await MonitoringLogs.create({
@@ -95,7 +101,7 @@ async function handleMonitorLogs(
       });
     } else {
       monitoringLog.scan_time = scanTime;
-      monitoringLog.save();
+      await monitoringLog.save();
     }
   } catch (err) {
     logger.error(
@@ -108,7 +114,7 @@ async function handleMonitorLogs(
 
 async function getCostMonitorings() {
   return await CostMonitoring.findAll({
-    attributes: ['id', 'clusterIds', 'monitoringId', 'applicationId'],
+    attributes: ['id', 'clusterIds', 'applicationId'],
     where: { isActive: true },
   });
 }
@@ -150,13 +156,17 @@ async function monitorCostPerUser() {
           attributes: ['id'],
           where: { deletedAt: null },
         });
-        clusterDetails = allClusters.map(async cluster => {
-          return await getCluster(cluster.id);
-        });
+        clusterDetails = await Promise.all(
+          allClusters.map(async cluster => {
+            return await getCluster(cluster.id);
+          })
+        );
       } else {
-        clusterDetails = clusterIds.map(async clusterId => {
-          return await getCluster(clusterId);
-        });
+        clusterDetails = await Promise.all(
+          clusterIds.map(async clusterId => {
+            return await getCluster(clusterId);
+          })
+        );
       }
 
       // Iterate clusters
@@ -185,7 +195,8 @@ async function monitorCostPerUser() {
         const costMonitoringData = await getCostMonitoringData(
           costMonitor.id,
           clusterId,
-          applicationId
+          applicationId,
+          new Date()
         );
 
         // Get cluster options
@@ -276,7 +287,7 @@ async function monitorCostPerUser() {
         level: 'error',
         text: `Cost Monitor Per user: ${err.message}`,
       });
-    logger.error('Cost monitor per user: ', err);
+    console.dir(err);
   }
 }
 

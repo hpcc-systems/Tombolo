@@ -30,7 +30,7 @@ async function analyzeCostPerUser() {
     const costMonitorings = await CostMonitoring.findAll();
     for (const costMonitoring of costMonitorings) {
       const monitoredUsers = costMonitoring.metaData.users; // ["*"] means all users
-      const clusterIds = costMonitorings.clusterIds;
+      const clusterIds = costMonitoring.clusterIds;
 
       const allCostMonitoringTotals = await CostMonitoringDataTotals.findAll({
         where: { monitoringId: costMonitoring.id },
@@ -70,7 +70,7 @@ async function analyzeCostPerUser() {
       const secondaryContacts = [];
       const notifyContacts = [];
 
-      const clusters = Cluster.findAll({ where: { id: clusterIds } });
+      const clusters = await Cluster.findAll({ where: { id: clusterIds } });
       const notificationPrefix = 'CM';
 
       const notificationPayload = createNotificationPayload({
@@ -105,6 +105,7 @@ async function analyzeCostPerUser() {
         });
     }
   } catch (err) {
+    console.dir(err);
     if (parentPort) {
       parentPort.postMessage({
         level: 'error',
