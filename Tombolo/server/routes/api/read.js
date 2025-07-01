@@ -1,28 +1,28 @@
-const express = require("express");
-const models = require("../../models");
+const express = require('express');
+const models = require('../../models');
 const monitoring_notifications = models.monitoring_notifications;
 const apiKey = models.api_key;
 const fileMonitoring = models.fileMonitoring;
 const clusterMonitoring = models.clusterMonitoring;
-const logger = require("../../config/logger");
+const logger = require('../../config/logger');
 const router = express.Router();
-const path = require("path");
-const fs = require("fs");
-const rootENV = path.join(process.cwd(), "..", ".env");
-const serverENV = path.join(process.cwd(), ".env");
+const path = require('path');
+const fs = require('fs');
+const rootENV = path.join(process.cwd(), '..', '.env');
+const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-const { param, validationResult } = require("express-validator");
-const validatorUtil = require("../../utils/validator");
+const { param, validationResult } = require('express-validator');
+const validatorUtil = require('../../utils/validator');
 const Cluster = models.cluster;
 
-require("dotenv").config({ path: ENVPath });
+require('dotenv').config({ path: ENVPath });
 
 router.get(
-  "/:applicationId/:name/:key/notifications",
+  '/:applicationId/:name/:key/notifications',
   [
-    param("applicationId").isUUID(4).withMessage("Invalid Application ID"),
-    param("key").isUUID(4).withMessage("Invalid key"),
-    param("name").notEmpty().trim().escape().withMessage("Invalid name"),
+    param('applicationId').isUUID(4).withMessage('Invalid Application ID'),
+    param('key').isUUID(4).withMessage('Invalid key'),
+    param('name').notEmpty().trim().escape().withMessage('Invalid name'),
   ],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
@@ -32,7 +32,7 @@ router.get(
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
       const { applicationId: application_id } = req.params;
-      if (!application_id) throw Error("Invalid app ID");
+      if (!application_id) throw Error('Invalid app ID');
 
       const { name, key } = req.params;
 
@@ -52,7 +52,7 @@ router.get(
 
         //Check if key is expired
         if (validKey.dataValues.expirationDate < currentDate) {
-          throw Error("Key expired");
+          throw Error('Key expired');
         }
         //Check if key usage is below limit
         if (metaData.Usage < metaData.UsageLimit) {
@@ -60,7 +60,7 @@ router.get(
           //update key usage
           await apiKey.update({ metaData }, { where: { name } });
         } else {
-          throw Error("Key has no uses remaining");
+          throw Error('Key has no uses remaining');
         }
 
         //no errors, get notifications and return them.
@@ -69,34 +69,34 @@ router.get(
           include: [
             {
               model: fileMonitoring,
-              as: "fileMonitoring",
+              as: 'fileMonitoring',
             },
             {
               model: clusterMonitoring,
-              as: "clusterMonitoring",
+              as: 'clusterMonitoring',
             },
           ],
           raw: true,
         });
 
-        res.status(200).send(notifications);
+        return res.status(200).send(notifications);
       } else {
-        throw Error("Invalid or Expired Key");
+        throw Error('Invalid or Expired Key');
       }
     } catch (error) {
-      res
+      return res
         .status(500)
-        .json({ message: "Unable to get notifications - " + error });
+        .json({ message: 'Unable to get notifications - ' + error });
     }
   }
 );
 
 router.get(
-  "/:applicationId/:name/:key/clusterusage",
+  '/:applicationId/:name/:key/clusterusage',
   [
-    param("applicationId").isUUID(4).withMessage("Invalid Application ID"),
-    param("key").isUUID(4).withMessage("Invalid key"),
-    param("name").notEmpty().trim().escape().withMessage("Invalid name"),
+    param('applicationId').isUUID(4).withMessage('Invalid Application ID'),
+    param('key').isUUID(4).withMessage('Invalid key'),
+    param('name').notEmpty().trim().escape().withMessage('Invalid name'),
   ],
   async (req, res) => {
     try {
@@ -110,7 +110,7 @@ router.get(
         return res.status(422).json({ success: false, errors: errors.array() });
 
       const { applicationId: application_id } = req.params;
-      if (!application_id) throw Error("Invalid app ID");
+      if (!application_id) throw Error('Invalid app ID');
 
       const { name, key } = req.params;
 
@@ -130,7 +130,7 @@ router.get(
 
         //Check if key is expired
         if (validKey.dataValues.expirationDate < currentDate) {
-          throw Error("Key expired");
+          throw Error('Key expired');
         }
         //Check if key usage is below limit
         if (metaData.Usage < metaData.UsageLimit) {
@@ -138,12 +138,12 @@ router.get(
           //update key usage
           await apiKey.update({ metaData }, { where: { name } });
         } else {
-          throw Error("Key has no uses remaining");
+          throw Error('Key has no uses remaining');
         }
 
         const data = await Cluster.findAll({
           raw: true,
-          attributes: ["name", "metaData"],
+          attributes: ['name', 'metaData'],
         });
 
         res.status(200).send(data);
@@ -152,7 +152,7 @@ router.get(
       logger.error(err);
       res.status(503).json({
         success: false,
-        message: "Failed to fetch current cluster usage",
+        message: 'Failed to fetch current cluster usage',
       });
     }
   }

@@ -84,10 +84,12 @@ router.post(
           createdBy,
         });
       }
-      res.status(200).json({ message: 'Domain created successfully', domain });
+      return res
+        .status(200)
+        .json({ message: 'Domain created successfully', domain });
     } catch (error) {
       logger.error(error.message);
-      res.status(500).json({ message: 'Failed to create domain' });
+      return res.status(500).json({ message: 'Failed to create domain' });
     }
   }
 );
@@ -110,10 +112,10 @@ router.get('/domains/', async (req, res) => {
       raw: true,
     });
 
-    res.status(200).json(domains);
+    return res.status(200).json(domains);
   } catch (err) {
     logger.error(err.message);
-    res.status(500).json({ message: 'Failed to fetch domains' });
+    return res.status(500).json({ message: 'Failed to fetch domains' });
   }
 });
 
@@ -124,10 +126,10 @@ router.get('/domainsOnly/', async (req, res) => {
       raw: true,
     });
 
-    res.status(200).json(domains);
+    return res.status(200).json(domains);
   } catch (err) {
     logger.error(err.message);
-    res.status(500).json({ message: 'Failed to fetch domains' });
+    return res.status(500).json({ message: 'Failed to fetch domains' });
   }
 });
 
@@ -217,10 +219,10 @@ router.patch(
 
       const message =
         response[0] === 0 ? 'Domain not found' : 'Successfully updated domain';
-      res.status(200).json({ message });
+      return res.status(200).json({ message });
     } catch (err) {
       logger.error(err.message);
-      res.status(500).json({ message: 'Failed to update domain' });
+      return res.status(500).json({ message: 'Failed to update domain' });
     }
   }
 );
@@ -242,10 +244,10 @@ router.delete(
       const response = await Domains.destroy({ where: { id: req.params.id } });
       const message =
         response === 0 ? 'Domain not found' : 'Domain deleted successfully';
-      res.status(200).json({ message });
+      return res.status(200).json({ message });
     } catch (err) {
       logger.error(err.message);
-      res.status(500).json({ message: 'Failed to delete domain' });
+      return res.status(500).json({ message: 'Failed to delete domain' });
     }
   }
 );
@@ -293,12 +295,12 @@ router.post(
       } else {
         product = await Products.create({ name, shortCode, tier, createdBy });
       }
-      res
+      return res
         .status(200)
         .json({ message: 'Product created successfully', product });
     } catch (error) {
       logger.error(error.message);
-      res.status(500).json({ message: 'Failed to create product' });
+      return res.status(500).json({ message: 'Failed to create product' });
     }
   }
 );
@@ -328,10 +330,10 @@ router.get('/products/', async (req, res) => {
       raw: true,
     });
 
-    res.status(200).json(products);
+    return res.status(200).json(products);
   } catch (err) {
     logger.error(err.message);
-    res.status(500).json({ message: 'Failed to fetch domains' });
+    return res.status(500).json({ message: 'Failed to fetch domains' });
   }
 });
 
@@ -343,10 +345,10 @@ router.get('/productsOnly/', async (req, res) => {
       raw: true,
     });
 
-    res.status(200).json(products);
+    return res.status(200).json(products);
   } catch (err) {
     logger.error(err.message);
-    res.status(500).json({ message: 'Failed to fetch products' });
+    return res.status(500).json({ message: 'Failed to fetch products' });
   }
 });
 
@@ -422,10 +424,10 @@ router.put(
         response[0] === 0
           ? 'Product not found'
           : 'Successfully updated product';
-      res.status(200).json({ message });
+      return res.status(200).json({ message });
     } catch (err) {
       logger.error(err.message);
-      res.status(500).json({ message: 'Failed to update product' });
+      return res.status(500).json({ message: 'Failed to update product' });
     }
   }
 );
@@ -448,10 +450,10 @@ router.delete(
 
       const message =
         response === 0 ? 'Product not found' : 'Product deleted successfully';
-      res.status(200).json({ message });
+      return res.status(200).json({ message });
     } catch (err) {
       logger.error(err.message);
-      res.status(500).json({ message: 'Failed to delete product' });
+      return res.status(500).json({ message: 'Failed to delete product' });
     }
   }
 );
@@ -495,10 +497,10 @@ router.get(
         return { id: domain['asr_domain.id'], name: domain['asr_domain.name'] };
       });
 
-      res.status(200).json(response);
+      return res.status(200).json(response);
     } catch (error) {
       logger.error(error.message);
-      res.status(500).send('Unable to fetch domains');
+      return res.status(500).send('Unable to fetch domains');
     }
   }
 );
@@ -539,10 +541,10 @@ router.get(
         };
       });
 
-      res.status(200).json(response);
+      return res.status(200).json(response);
     } catch (error) {
       logger.error(error.message);
-      res.status(500).send('Unable to fetch product categories');
+      return res.status(500).send('Unable to fetch product categories');
     }
   }
 );

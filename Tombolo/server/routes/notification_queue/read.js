@@ -1,44 +1,42 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { body, check } = require("express-validator");
+const { body, check } = require('express-validator');
 
 //Local imports
-const logger = require("../../config/logger");
-const models = require("../../models");
-const { validationResult } = require("express-validator");
+const logger = require('../../config/logger');
+const models = require('../../models');
+const { validationResult } = require('express-validator');
 
 //Constants
 const NotificationQueue = models.notification_queue;
 
 // Create new notification
 router.post(
-  "/",
+  '/',
   [
     // body("type").notEmpty().withMessage("Notification medium Type is required"),
-    body("deliveryType")
-      .notEmpty()
-      .withMessage("Send schedule is required"),
-    body("cron")
+    body('deliveryType').notEmpty().withMessage('Send schedule is required'),
+    body('cron')
       .optional()
       .isString()
-      .withMessage("Cron must be a string if provided"),
-    body("lastScanned")
+      .withMessage('Cron must be a string if provided'),
+    body('lastScanned')
       .optional()
       .isDate()
-      .withMessage("Last scanned must be a date if provided"),
-    body("attemptCount")
+      .withMessage('Last scanned must be a date if provided'),
+    body('attemptCount')
       .optional()
       .isInt()
-      .withMessage("Attempt count must be an integer if provided"),
-    body("failureMessage")
+      .withMessage('Attempt count must be an integer if provided'),
+    body('failureMessage')
       .optional()
       .isString()
-      .withMessage("Failure message must be a string if provided"),
-    body("createdBy").notEmpty().withMessage("Created by is required"),
-    body("metaData")
+      .withMessage('Failure message must be a string if provided'),
+    body('createdBy').notEmpty().withMessage('Created by is required'),
+    body('metaData')
       .notEmpty()
       .isObject()
-      .withMessage("Meta data must be an object if provided"),
+      .withMessage('Meta data must be an object if provided'),
   ],
   async (req, res) => {
     try {
@@ -48,53 +46,53 @@ router.post(
       }
 
       const response = await NotificationQueue.create(req.body, { raw: true });
-      res.status(200).send(response);
+      return res.status(200).send(response);
     } catch (err) {
       logger.error(err);
-      res.status(500).send("Failed to save notification");
+      return res.status(500).send('Failed to save notification');
     }
   }
 );
 
 // Get all notifications
-router.get("/", async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const notifications = await NotificationQueue.findAll();
-    res.status(200).json(notifications);
+    return res.status(200).json(notifications);
   } catch (err) {
     logger.error(err);
-    res.status(500).send("Failed to get notifications");
+    return res.status(500).send('Failed to get notifications');
   }
 });
 
 // Patch a single notification
 router.patch(
-  "/",
+  '/',
   [
-    body("id").isUUID().withMessage("ID must be a valid UUID"),
-    body("type").notEmpty().withMessage("Type is required"),
-    body("sendSchedule").notEmpty().withMessage("Send schedule is required"),
-    body("cron")
+    body('id').isUUID().withMessage('ID must be a valid UUID'),
+    body('type').notEmpty().withMessage('Type is required'),
+    body('sendSchedule').notEmpty().withMessage('Send schedule is required'),
+    body('cron')
       .optional()
       .isString()
-      .withMessage("Cron must be a string if provided"),
-    body("lastScanned")
+      .withMessage('Cron must be a string if provided'),
+    body('lastScanned')
       .optional()
       .isDate()
-      .withMessage("Last scanned must be a date if provided"),
-    body("attemptCount")
+      .withMessage('Last scanned must be a date if provided'),
+    body('attemptCount')
       .optional()
       .isInt()
-      .withMessage("Attempt count must be an integer if provided"),
-    body("failureMessage")
+      .withMessage('Attempt count must be an integer if provided'),
+    body('failureMessage')
       .optional()
       .isString()
-      .withMessage("Failure message must be a string if provided"),
-    body("createdBy").notEmpty().withMessage("Created by is required"),
-    body("metaData")
+      .withMessage('Failure message must be a string if provided'),
+    body('createdBy').notEmpty().withMessage('Created by is required'),
+    body('metaData')
       .optional()
       .isObject()
-      .withMessage("Meta data must be an object if provided"),
+      .withMessage('Meta data must be an object if provided'),
   ],
   async (req, res) => {
     try {
@@ -109,29 +107,29 @@ router.patch(
       });
 
       if (updatedRows[0] === 0) {
-        return res.status(404).send("Notification not found");
+        return res.status(404).send('Notification not found');
       }
 
       const updatedNotification = await NotificationQueue.findByPk(req.body.id);
-      res.status(200).send(updatedNotification);
+      return res.status(200).send(updatedNotification);
     } catch (err) {
       logger.error(err);
-      res.status(500).send("Failed to update notification");
+      return res.status(500).send('Failed to update notification');
     }
   }
 );
 
 // Delete a single notification
 router.delete(
-  "/:id",
-  [check("id", "Invalid id").isUUID()],
+  '/:id',
+  [check('id', 'Invalid id').isUUID()],
   async (req, res) => {
     try {
       await NotificationQueue.destroy({ where: { id: req.params.id } });
-      res.status(200).send("success");
+      return res.status(200).send('success');
     } catch (err) {
       logger.error(err);
-      res.status(500).send("Failed to delete notification");
+      return res.status(500).send('Failed to delete notification');
     }
   }
 );

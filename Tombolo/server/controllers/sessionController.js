@@ -1,8 +1,8 @@
-const jwt = require("jsonwebtoken");
-const models = require("../models");
-const { blacklistToken } = require("../utils/tokenBlackListing");
-const logger = require("../config/logger");
-const { verifyToken } = require("../utils/authUtil");
+const jwt = require('jsonwebtoken');
+const models = require('../models');
+const { blacklistToken } = require('../utils/tokenBlackListing');
+const logger = require('../config/logger');
+const { verifyToken } = require('../utils/authUtil');
 
 const RefreshTokens = models.RefreshTokens;
 
@@ -17,7 +17,7 @@ const activeSessionsByUserId = async (req, res) => {
       where: { userId: id },
     });
 
-    const activeSessions = sessions.filter((session) => {
+    const activeSessions = sessions.filter(session => {
       try {
         const token = session.token;
         jwt.verify(token, process.env.JWT_REFRESH_SECRET);
@@ -33,15 +33,15 @@ const activeSessionsByUserId = async (req, res) => {
     const currentTokenId = decoded.tokenId;
 
     // Mark the current token
-    activeSessions.forEach((session) => {
+    activeSessions.forEach(session => {
       session.dataValues.current = session.id === currentTokenId;
     });
 
     // response
-    res.status(200).json({ success: true, data: activeSessions });
+    return res.status(200).json({ success: true, data: activeSessions });
   } catch (err) {
     logger.error(`Get active sessions: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -59,7 +59,7 @@ const destroyOneActiveSession = async (req, res) => {
     });
 
     if (destroyedSessions === 0) {
-      throw { status: 404, message: "Session not found" };
+      throw { status: 404, message: 'Session not found' };
     }
     // Blacklist associated access token
     // Divide by 1000 to convert to seconds instead of MS. MS gives out of range as value is > 2^31. 2034 problem exists.
@@ -68,13 +68,13 @@ const destroyOneActiveSession = async (req, res) => {
     await blacklistToken({ tokenId: sessionId, exp });
 
     // response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: `${destroyedSessions} sessions destroyed`,
     });
   } catch (err) {
     logger.error(`Destroy active sessions: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -103,13 +103,13 @@ const destroyActiveSessions = async (req, res) => {
     }
 
     // response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: `${destroyedSessions} sessions destroyed`,
     });
   } catch (err) {
     logger.error(`Destroy active sessions: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }

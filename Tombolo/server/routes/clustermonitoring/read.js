@@ -48,6 +48,7 @@ router.post(
 
       //create
       const clusterMonitoring = await ClusterMonitoring.create(req.body);
+
       res.status(201).send(clusterMonitoring);
 
       //Add job to bree- if start monitoring checked
@@ -61,7 +62,9 @@ router.post(
       }
     } catch (err) {
       logger.error(err);
-      res.status(503).send({ success: false, message: 'Failed to fetch' });
+      return res
+        .status(503)
+        .send({ success: false, message: 'Failed to fetch' });
     }
   }
 );
@@ -87,10 +90,10 @@ router.get(
         raw: true,
       });
 
-      res.status(200).send(clusterMonitorings);
+      return res.status(200).send(clusterMonitorings);
     } catch (err) {
       logger.error(err);
-      res.send(503).send({ success: false, message: 'Failed to fetch' });
+      return res.send(503).send({ success: false, message: 'Failed to fetch' });
     }
   }
 );
@@ -115,10 +118,12 @@ router.get(
         where: { id },
         raw: true,
       });
-      res.status(200).send(clusterMonitoring);
+      return res.status(200).send(clusterMonitoring);
     } catch (err) {
       logger.error(err);
-      res.status(503).send({ success: false, message: 'Failed to fetch' });
+      return res
+        .status(503)
+        .send({ success: false, message: 'Failed to fetch' });
     }
   }
 );
@@ -143,10 +148,12 @@ router.delete(
         where: { id },
       });
 
-      res.status(200).send({ deleted });
+      return res.status(200).send({ deleted });
     } catch (err) {
       logger.error(err);
-      res.status(503).json({ success: false, message: 'Failed to delete' });
+      return res
+        .status(503)
+        .json({ success: false, message: 'Failed to delete' });
     }
   }
 );
@@ -188,9 +195,12 @@ router.put(
         });
       }
 
-      res.status(200).send('Update successful');
+      return res.status(200).send('Update successful');
     } catch (err) {
       logger.error(err);
+      return res
+        .status(500)
+        .json({ message: 'Failed to update monitoring status' });
     }
   }
 );
@@ -272,7 +282,9 @@ router.put(
       }
     } catch (err) {
       logger.error(err);
-      res.status(503).json({ success: false, message: 'Failed to update' });
+      return res
+        .status(503)
+        .json({ success: false, message: 'Failed to update' });
     }
   }
 );
@@ -305,10 +317,10 @@ router.get(
       );
       const topologyService = new hpccJSComms.TopologyService(clusterDetails);
       const clusterEngines = await topologyService.TpListTargetClusters();
-      res.status(200).send(clusterEngines);
+      return res.status(200).send(clusterEngines);
     } catch (err) {
       logger.error(err);
-      res
+      return res
         .status(503)
         .json({ success: false, message: 'Failed to get engines' });
     }
@@ -358,10 +370,10 @@ router.get(
         });
       });
 
-      res.status(200).send(clusterUsage);
+      return res.status(200).send(clusterUsage);
     } catch (err) {
       logger.error(err);
-      res
+      return res
         .status(503)
         .json({ success: false, message: 'Failed to get cluster usage' });
     }

@@ -1,36 +1,35 @@
-const express = require("express");
-const logger = require("../../config/logger");
+const express = require('express');
+const logger = require('../../config/logger');
 const router = express.Router();
-const models = require("../../models");
+const { directoryMonitoring: DirectoryMonitoring } = require('../../models');
 
-const DirectoryMonitoring = models.directoryMonitoring;
-const validatorUtil = require("../../utils/validator");
-const { body, param, validationResult } = require("express-validator");
+const validatorUtil = require('../../utils/validator');
+const { body, param, validationResult } = require('express-validator');
 
 //create one
 router.post(
-  "/",
+  '/',
   [
-    body("application_id")
+    body('application_id')
       .isUUID()
-      .withMessage("Application ID must be a valid UUID"),
-    body("name").notEmpty().withMessage("Monitoring name is required"),
-    body("directory").notEmpty().withMessage("directory is required"),
-    body("cluster_id").isUUID().withMessage("Cluster ID must be a valid UUID"),
-    body("active").isBoolean().withMessage("Active must be a boolean"),
-    body("approved").isBoolean().withMessage("Approved must be a boolean"),
-    body("metaData")
+      .withMessage('Application ID must be a valid UUID'),
+    body('name').notEmpty().withMessage('Monitoring name is required'),
+    body('directory').notEmpty().withMessage('directory is required'),
+    body('cluster_id').isUUID().withMessage('Cluster ID must be a valid UUID'),
+    body('active').isBoolean().withMessage('Active must be a boolean'),
+    body('approved').isBoolean().withMessage('Approved must be a boolean'),
+    body('metaData')
       .isObject()
-      .withMessage("Meta data must be an object if provided"),
-    body("createdBy").notEmpty().withMessage("Created by is required"),
-    body("updatedBy").notEmpty().withMessage("Last updated by is required"),
+      .withMessage('Meta data must be an object if provided'),
+    body('createdBy').notEmpty().withMessage('Created by is required'),
+    body('updatedBy').notEmpty().withMessage('Last updated by is required'),
   ],
   async (req, res) => {
     try {
       // Validate the req.body
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log(errors);
+        logger.error(errors);
         return res.status(422).json({ errors: errors.array() });
       }
       const newMonitoring = req.body;
@@ -43,19 +42,18 @@ router.post(
       if (existingMonitoring) {
         return res
           .status(409)
-          .json({ error: "Directory monitoring name already exists" });
+          .json({ error: 'Directory monitoring name already exists' });
       }
       //always place new monitoring in pending status
-      newMonitoring.approvalStatus = "Pending";
-      const directoryMonitoring = await DirectoryMonitoring.create(
-        newMonitoring
-      );
+      newMonitoring.approvalStatus = 'Pending';
+      const directoryMonitoring =
+        await DirectoryMonitoring.create(newMonitoring);
 
-      res.status(201).json(directoryMonitoring);
+      return res.status(201).json(directoryMonitoring);
     } catch (error) {
       logger.error(error);
-      res.status(500).json({
-        error: "Failed to create directory monitoring entry: " + error.message,
+      return res.status(500).json({
+        error: 'Failed to create directory monitoring entry: ' + error.message,
       });
     }
   }
@@ -63,24 +61,24 @@ router.post(
 
 //aprove or reject one
 router.put(
-  "/approve/:id",
+  '/approve/:id',
   [
-    param("id").isUUID().withMessage("Application ID must be a valid UUID"),
-    body("approved").isBoolean().withMessage("Approved must be a boolean"),
-    body("approvalNote")
+    param('id').isUUID().withMessage('Application ID must be a valid UUID'),
+    body('approved').isBoolean().withMessage('Approved must be a boolean'),
+    body('approvalNote')
       .optional()
       .isString()
-      .withMessage("Approval note must be a string"),
-    body("approvedBy").isString().withMessage("Approved by is required"),
-    body("approvedAt").notEmpty().withMessage("Approved at is required"),
-    body("active").isBoolean().withMessage("Active must be a boolean"),
+      .withMessage('Approval note must be a string'),
+    body('approvedBy').isString().withMessage('Approved by is required'),
+    body('approvedAt').notEmpty().withMessage('Approved at is required'),
+    body('active').isBoolean().withMessage('Active must be a boolean'),
   ],
   async (req, res) => {
     try {
       // Validate the req.body
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log(errors);
+        logger.error(errors);
         return res.status(422).json({ errors: errors.array() });
       }
       const { id } = req.body;
@@ -88,14 +86,14 @@ router.put(
       if (!directoryMonitoring) {
         return res
           .status(404)
-          .json({ error: "Directory monitoring entry not found" });
+          .json({ error: 'Directory monitoring entry not found' });
       }
 
-      let approvalStatus = "";
+      let approvalStatus = '';
       if (req.body.approved) {
-        approvalStatus = "Approved";
+        approvalStatus = 'Approved';
       } else {
-        approvalStatus = "Rejected";
+        approvalStatus = 'Rejected';
       }
       const updatedMonitoring = await directoryMonitoring.update({
         approved: req.body.approved,
@@ -106,28 +104,28 @@ router.put(
         active: req.body.active,
       });
 
-      res.status(200).json(updatedMonitoring);
+      return res.status(200).json(updatedMonitoring);
     } catch (error) {
       logger.error(error);
-      res
+      return res
         .status(500)
-        .json({ error: "Failed to approve directory monitoring entry" });
+        .json({ error: 'Failed to approve directory monitoring entry' });
     }
   }
 );
 
 // Update an existing directory monitoring entry
 router.put(
-  "/update/:id",
+  '/update/:id',
   [
-    param("id").isUUID().withMessage("Application ID must be a valid UUID"),
-    body("updatedBy").notEmpty().withMessage("Updated by is required"),
+    param('id').isUUID().withMessage('Application ID must be a valid UUID'),
+    body('updatedBy').notEmpty().withMessage('Updated by is required'),
   ],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log(errors);
+        logger.error(errors);
         return res.status(422).json({ errors: errors.array() });
       }
       const updates = req.body;
@@ -137,7 +135,7 @@ router.put(
       if (!directoryMonitoring) {
         return res
           .status(404)
-          .json({ error: "Directory monitoring entry not found" });
+          .json({ error: 'Directory monitoring entry not found' });
       }
 
       //make sure approvals are reset
@@ -145,25 +143,25 @@ router.put(
 
       await directoryMonitoring.update(updates);
 
-      res.status(200).json(directoryMonitoring);
+      return res.status(200).json(directoryMonitoring);
     } catch (error) {
       logger.error(error);
       res
         .status(500)
-        .json({ error: "Failed to update directory monitoring entry" });
+        .json({ error: 'Failed to update directory monitoring entry' });
     }
   }
 );
 
 // Delete a directory monitoring entry
 router.delete(
-  "/delete/:id",
-  [param("id").isUUID().withMessage("ID must be a UUID")],
+  '/delete/:id',
+  [param('id').isUUID().withMessage('ID must be a UUID')],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log(errors);
+        logger.error(errors);
         return res.status(422).json({ errors: errors.array() });
       }
       const { id } = req.params;
@@ -172,30 +170,30 @@ router.delete(
       if (!directoryMonitoring) {
         return res
           .status(404)
-          .json({ error: "Directory monitoring entry not found" });
+          .json({ error: 'Directory monitoring entry not found' });
       }
 
       await directoryMonitoring.destroy();
 
-      res.status(204).end();
+      return res.status(204).end();
     } catch (error) {
       logger.error(error);
-      res
+      return res
         .status(500)
-        .json({ error: "Failed to delete directory monitoring entry" });
+        .json({ error: 'Failed to delete directory monitoring entry' });
     }
   }
 );
 
 //get one
 router.get(
-  "/:id",
-  [param("id").isUUID().withMessage("ID must be a UUID")],
+  '/:id',
+  [param('id').isUUID().withMessage('ID must be a UUID')],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log(errors);
+        logger.error(errors);
         return res.status(422).json({ errors: errors.array() });
       }
       const { id } = req.params;
@@ -203,25 +201,25 @@ router.get(
       if (!directoryMonitoring) {
         return res
           .status(404)
-          .json({ error: "Directory monitoring entry not found" });
+          .json({ error: 'Directory monitoring entry not found' });
       }
-      res.status(200).json(directoryMonitoring);
+      return res.status(200).json(directoryMonitoring);
     } catch (error) {
       logger.error(error);
-      res
+      return res
         .status(500)
-        .json({ error: "Failed to get directory monitoring entry" });
+        .json({ error: 'Failed to get directory monitoring entry' });
     }
   }
 );
 
 //get all
 router.get(
-  "/all/:applicationId",
+  '/all/:applicationId',
   [
-    param("applicationId")
+    param('applicationId')
       .isUUID()
-      .withMessage("Application ID must be a valid UUID"),
+      .withMessage('Application ID must be a valid UUID'),
   ],
   async (req, res) => {
     try {
@@ -237,23 +235,25 @@ router.get(
         raw: true,
       });
 
-      res.status(200).send(directoryMonitorings);
+      return res.status(200).send(directoryMonitorings);
     } catch (error) {
       logger.error(error);
-      res.status(500).json({ message: "Unable to get directory monitoring" });
+      return res
+        .status(500)
+        .json({ message: 'Unable to get directory monitoring' });
     }
   }
 );
 
 //pause or start monitoring with active boolean
 router.patch(
-  "/:id/active",
-  [param("id").isUUID().withMessage("ID must be a UUID")],
+  '/:id/active',
+  [param('id').isUUID().withMessage('ID must be a UUID')],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log(errors);
+        logger.error(errors);
         return res.status(422).json({ errors: errors.array() });
       }
       const { id } = req.params;
@@ -261,26 +261,27 @@ router.patch(
       if (!directoryMonitoring) {
         return res
           .status(404)
-          .json({ error: "Directory monitoring entry not found" });
+          .json({ error: 'Directory monitoring entry not found' });
       }
 
+      // eslint-disable-next-line no-unused-vars
       const { active, approved, name, cron } = directoryMonitoring;
       await directoryMonitoring.update({ active: !active });
 
-      logger.verbose("Directory monitoring active status updated");
-      res.status(200).json(directoryMonitoring);
+      logger.verbose('Directory monitoring active status updated');
+      return res.status(200).json(directoryMonitoring);
     } catch (error) {
       logger.error(error);
-      res
+      return res
         .status(500)
-        .json({ error: "Failed to update directory monitoring entry" });
+        .json({ error: 'Failed to update directory monitoring entry' });
     }
   }
 );
 //bulk update route to update multiple monitorings
 router.patch(
-  "/bulkUpdate",
-  [body("metaData").isArray().withMessage("Data must be array of objects")],
+  '/bulkUpdate',
+  [body('metaData').isArray().withMessage('Data must be array of objects')],
   async (req, res) => {
     try {
       const { metaData } = req.body;
@@ -291,7 +292,7 @@ router.patch(
         if (!directoryMonitoring) {
           return res
             .status(404)
-            .json({ error: "Directory monitoring entry not found" });
+            .json({ error: 'Directory monitoring entry not found' });
         }
 
         resetApprovals(updates);
@@ -299,68 +300,68 @@ router.patch(
         const res = await directoryMonitoring.update(updates);
       }
 
-      res.status(200).json({ message: "Directory monitorings updated" });
+      return res.status(200).json({ message: 'Directory monitorings updated' });
     } catch (error) {
       logger.error(error);
-      res
+      return res
         .status(500)
-        .json({ error: "Failed to update directory monitoring entries" });
+        .json({ error: 'Failed to update directory monitoring entries' });
     }
   }
 );
 
 //bulk delete route to delete multiple monitorings
 router.delete(
-  "/bulkDelete",
-  [body("ids").isArray().withMessage("ID's must be passed in an array")],
+  '/bulkDelete',
+  [body('ids').isArray().withMessage('IDs must be passed in an array')],
   async (req, res) => {
     try {
       const { ids } = req.body;
 
       for (let i = 0; i < ids.length; i++) {
-        console.log(ids[i]);
         const directoryMonitoring = await DirectoryMonitoring.findByPk(ids[i]);
         if (!directoryMonitoring) {
           return res
             .status(404)
-            .json({ error: "Directory monitoring entry not found" });
+            .json({ error: 'Directory monitoring entry not found' });
         }
         await directoryMonitoring.destroy();
+        logger.info(`Deleted direcyoryMonitoring: ${ids[i]}`);
       }
-      res.status(204).end();
+      return res.status(204).end();
     } catch (error) {
       logger.error(error);
-      res
+      return res
         .status(500)
-        .json({ error: "Failed to delete directory monitoring entries" });
+        .json({ error: 'Failed to delete directory monitoring entries' });
     }
   }
 );
 
 //bulk approve route to approve multiple monitorings
 router.patch(
-  "/bulkApprove",
+  '/bulkApprove',
   [
     // Add validation rules here
-    body("approvalNote")
+    body('approvalNote')
       .notEmpty()
       .isString()
-      .withMessage("Approval comment must be a string")
+      .withMessage('Approval comment must be a string')
       .isLength({ min: 4, max: 200 })
       .withMessage(
-        "Approval comment must be between 4 and 200 characters long"
+        'Approval comment must be between 4 and 200 characters long'
       ),
-    body("approved").isBoolean().withMessage("Approved must be a boolean"),
-    body("ids").isArray().withMessage("Invalid ids"),
-    body("approvalStatus")
+    body('approved').isBoolean().withMessage('Approved must be a boolean'),
+    body('ids').isArray().withMessage('Invalid ids'),
+    body('approvalStatus')
       .notEmpty()
       .isString()
-      .withMessage("Approval Status must be a string"),
-    body("approvedBy")
+      .withMessage('Approval Status must be a string'),
+    body('approvedBy')
       .notEmpty()
       .isString()
-      .withMessage("Approved by must be a string"),
-    body("active").isBoolean().withMessage("Active must be a boolean"),
+      .withMessage('Approved by must be a string'),
+    body('active').isBoolean().withMessage('Active must be a boolean'),
   ],
   async (req, res) => {
     try {
@@ -380,7 +381,7 @@ router.patch(
         if (!directoryMonitoring) {
           return res
             .status(404)
-            .json({ error: "Directory monitoring entry not found" });
+            .json({ error: 'Directory monitoring entry not found' });
         }
 
         await directoryMonitoring.update({
@@ -392,12 +393,14 @@ router.patch(
           active: active,
         });
       }
-      res.status(200).json({ message: "Directory monitorings approved" });
+      return res
+        .status(200)
+        .json({ message: 'Directory monitorings approved' });
     } catch (error) {
       logger.error(error);
-      res
+      return res
         .status(500)
-        .json({ error: "Failed to approve directory monitoring entries" });
+        .json({ error: 'Failed to approve directory monitoring entries' });
     }
   }
 );
@@ -405,7 +408,7 @@ router.patch(
 function resetApprovals(updates) {
   updates.approved = false;
   updates.approvalNote = null;
-  updates.approvalStatus = "Pending";
+  updates.approvalStatus = 'Pending';
   updates.approvedBy = null;
   updates.approvedAt = null;
   updates.active = false;
