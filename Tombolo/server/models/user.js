@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = (sequelize, DataTypes) => {
   const user = sequelize.define(
-    "user",
+    'user',
     {
       id: {
         primaryKey: true,
@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          isIn: [["traditional", "azure"]],
+          isIn: [['traditional', 'azure']],
         },
       },
       verifiedUser: {
@@ -49,9 +49,9 @@ module.exports = (sequelize, DataTypes) => {
       registrationStatus: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: "pending",
+        defaultValue: 'pending',
         validate: {
-          isIn: [["pending", "active", "revoked"]], // Must be one of these values
+          isIn: [['pending', 'active', 'revoked']], // Must be one of these values
         },
       },
       forcePasswordReset: {
@@ -91,7 +91,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "users",
+      tableName: 'users',
       timestamps: true,
       paranoid: true,
 
@@ -136,57 +136,76 @@ module.exports = (sequelize, DataTypes) => {
   // Associations
   user.associate = function (models) {
     user.hasMany(models.UserRoles, {
-      foreignKey: "userId",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
-      as: "roles",
+      foreignKey: 'userId',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+      as: 'roles',
     });
 
     //user to application relation
     user.hasMany(models.user_application, {
-      foreignKey: "user_id",
-      as: "applications", // Alias
-      onDelete: "CASCADE",
+      foreignKey: 'user_id',
+      as: 'applications', // Alias
+      onDelete: 'CASCADE',
     });
 
     // User to refresh token
     user.hasMany(models.RefreshTokens, {
-      foreignKey: "userId",
-      onDelete: "CASCADE",
+      foreignKey: 'userId',
+      onDelete: 'CASCADE',
       hooks: true,
     });
 
     // User to password reset links
     user.hasMany(models.PasswordResetLinks, {
-      foreignKey: "userId",
-      onDelete: "CASCADE",
+      foreignKey: 'userId',
+      onDelete: 'CASCADE',
       hooks: true,
     });
 
     // User to verification codes
     user.hasMany(models.AccountVerificationCodes, {
-      foreignKey: "userId",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      foreignKey: 'userId',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
     });
 
     // User to instance settings
     user.hasOne(models.instance_settings, {
-      foreignKey: "createdBy",
-      as: "creator",
-      onDelete: "NO ACTION",
+      foreignKey: 'createdBy',
+      as: 'creator',
+      onDelete: 'NO ACTION',
     });
     user.hasOne(models.instance_settings, {
-      foreignKey: "updatedBy",
-      as: "updater",
-      onDelete: "NO ACTION",
+      foreignKey: 'updatedBy',
+      as: 'updater',
+      onDelete: 'NO ACTION',
     });
 
     // User to applications
     user.hasMany(models.application, {
-      foreignKey: "creator",
-      as: "apps",
-      onDelete: "CASCADE",
+      foreignKey: 'creator',
+      as: 'apps',
+      onDelete: 'CASCADE',
+    });
+
+    // User to landing zone monitoring
+    user.hasMany(models.landingZoneMonitoring, {
+      foreignKey: 'createdBy',
+      as: 'createdLandingZoneMonitorings',
+      onDelete: 'NO ACTION',
+    });
+
+    user.hasMany(models.landingZoneMonitoring, {
+      foreignKey: 'lastUpdatedBy',
+      as: 'updatedLandingZoneMonitorings',
+      onDelete: 'NO ACTION',
+    });
+
+    user.hasMany(models.landingZoneMonitoring, {
+      foreignKey: 'approvedBy',
+      as: 'approvedLandingZoneMonitorings',
+      onDelete: 'NO ACTION',
     });
   };
 

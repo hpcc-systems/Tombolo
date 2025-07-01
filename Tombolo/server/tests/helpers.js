@@ -178,12 +178,98 @@ function fakeValidateTokenMiddleware(req, res, next) {
 
 const nonExistentID = uuidv4();
 
+function getMockClusterForApi(clusterId) {
+  return {
+    id: clusterId || uuidv4(),
+    thor_host: 'localhost',
+    thor_port: 8010,
+    username: 'testuser',
+    hash: 'encrypted_password',
+    allowSelfSigned: true,
+  };
+}
+
+function getFileListQuery(clusterId) {
+  return {
+    clusterId: clusterId || uuidv4(),
+    DropZoneName: 'test_dropzone',
+    Netaddr: '10.0.0.1',
+    Path: '/data/test',
+    DirectoryOnly: 'false',
+  };
+}
+
+function getLandingZoneMonitoring(overrides = {}) {
+  return {
+    id: uuidv4(),
+    applicationId: uuidv4(),
+    monitoringName: 'Test Landing Zone Monitor',
+    isActive: false,
+    lzMonitoringType: 'fileCount',
+    approvalStatus: 'pending',
+    approvedBy: null,
+    approvedAt: null,
+    approverComment: null,
+    description:
+      'This is a test monitoring for landing zone file count tracking',
+    clusterId: uuidv4(),
+    lastRunDetails: null,
+    metaData: {},
+    createdBy: uuidv4(),
+    lastUpdatedBy: uuidv4(),
+    createdAt: '2025-06-30T10:00:00.000Z',
+    updatedAt: '2025-06-30T10:00:00.000Z',
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function getLandingZoneMonitoringCreatePayload(
+  validApplicationId,
+  validClusterId,
+  validUserId,
+  overrides = {}
+) {
+  return {
+    applicationId: validApplicationId,
+    monitoringName: 'New LZ Monitor',
+    lzMonitoringType: 'fileCount',
+    description: 'Monitoring landing zone',
+    clusterId: validClusterId,
+    metaData: {},
+    createdBy: validUserId,
+    lastUpdatedBy: validUserId,
+    ...overrides,
+  };
+}
+
+function getLandingZoneMonitoringUpdatePayload(
+  id,
+  validUserId,
+  overrides = {}
+) {
+  return {
+    id,
+    monitoringName: 'Updated LZ Monitor',
+    description: 'Updated description for landing zone monitoring',
+    lzMonitoringType: 'spaceUsage',
+    metaData: {},
+    lastUpdatedBy: validUserId,
+    ...overrides,
+  };
+}
+
 module.exports = {
   getUsers,
   getInstanceSettings,
   getCluster,
   getSentNotification,
   getLoginPayload,
+  getLandingZoneMonitoring,
+  getLandingZoneMonitoringCreatePayload,
+  getLandingZoneMonitoringUpdatePayload,
+  getMockClusterForApi,
+  getFileListQuery,
   fakeValidateTokenMiddleware,
   nonExistentID,
 };
