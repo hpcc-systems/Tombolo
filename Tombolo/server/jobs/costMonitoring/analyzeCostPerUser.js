@@ -75,7 +75,7 @@ async function analyzeCostPerUser() {
       const notificationPayload = createNotificationPayload({
         type: 'email',
         notificationDescription: `Cost Monitoring (${costMonitoring.monitoringName}) detected that a user passed the cost threshold`,
-        templateName: 'analyzeCostPerUser', // TODO: Ensure this template exists
+        templateName: 'analyzeCostPerUser',
         originationId: monitoringType.id,
         applicationId: costMonitoring.applicationId,
         subject: `Cost Monitoring Alert from ${process.env.INSTANCE_NAME} : Cost threshold $${threshold} passed`,

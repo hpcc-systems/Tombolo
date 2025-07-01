@@ -141,7 +141,11 @@ async function monitorCostPerUser() {
     const costMonitorings = await getCostMonitorings();
     if (costMonitorings.length === 0) {
       // TODO: Update run details
-      // TODO: Log to parent port
+      parentPort &&
+        parentPort.postMessage({
+          level: 'info',
+          text: 'No cost monitorings found',
+        });
       return;
     }
 
