@@ -50,7 +50,7 @@ router.get('/app_list', async (req, res) => {
     const userAppIds = userApps.map(app => app.application_id);
 
     // 2. Get all applications that are either linked to the user or are public
-    const applications = await models.application.findAll({
+    const applications = await Application.findAll({
       where: {
         [Op.or]: [{ id: userAppIds }, { visibility: 'Public' }],
       },
@@ -64,7 +64,7 @@ router.get('/app_list', async (req, res) => {
       order: [['updatedAt', 'DESC']],
     });
 
-    res.status(200).json(applications);
+    return res.status(200).json(applications);
   } catch (err) {
     logger.error(`Error occurred while getting application list: ${err}`);
     return res.status(500).json({
@@ -101,9 +101,9 @@ router.get(
         raw: true,
         order: [['updatedAt', 'DESC']],
       }); // this includes user created, public and shared apps
-      res.status(200).json(allApplications);
+      return res.status(200).json(allApplications);
     } catch (err) {
-      console.log('err', err);
+      logger.error('err', err);
       return res.status(500).json({
         success: false,
         message: 'Error occurred while getting application list',
@@ -115,7 +115,7 @@ router.get(
 router.get(
   '/app',
   [query('app_id').isUUID(4).withMessage('Invalid application id')],
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -124,22 +124,12 @@ router.get(
     }
 
     try {
-      models.application
-        .findOne({
-          where: { id: req.query.app_id },
-        })
-        .then(function (application) {
-          res.json(application);
-        })
-        .catch(function (err) {
-          console.log(err);
-          return res.status(500).json({
-            success: false,
-            message: 'Error occured while getting application details',
-          });
-        });
+      const application = await Application.findOne({
+        where: { id: req.query.app_id },
+      });
+      return res.status(200).json(application);
     } catch (err) {
-      console.log('err', err);
+      logger.error('err', err);
       return res.status(500).json({
         success: false,
         message: 'Error occured while getting application details',
@@ -164,7 +154,7 @@ router.post(
       .matches(/^[a-zA-Z]/)
       .withMessage('Invalid visibility'),
   ],
-  function (req, res) {
+  async function (req, res) {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -174,45 +164,39 @@ router.post(
     try {
       if (req.body.id == '') {
         req.body.createdBy = req.body.creator;
-        models.application
-          .create({
-            title: req.body.title,
-            description: req.body.description,
-            creator: req.body.creator,
-            visibility: req.body.visibility,
+        const application = await Application.create({
+          title: req.body.title,
+          description: req.body.description,
+          creator: req.body.creator,
+          visibility: req.body.visibility,
+          createdBy: req.body.createdBy,
+        });
+        if (req.body.user_id) {
+          const userApp = await UserApplication.create({
+            user_id: req.body.user_id,
+            application_id: application.id,
             createdBy: req.body.createdBy,
-          })
-          .then(function (application) {
-            if (req.body.user_id) {
-              models.user_application
-                .create({
-                  user_id: req.body.user_id,
-                  application_id: application.id,
-                  createdBy: req.body.createdBy,
-                  user_app_relation: 'created',
-                })
-                .then(function (userapp) {
-                  res.json({
-                    result: 'success',
-                    id: application.id,
-                    title: application.title,
-                    description: application.description,
-                    user_app_id: userapp.id,
-                  });
-                });
-            } else {
-              res.json({ result: 'success', id: application.id });
-            }
+            user_app_relation: 'created',
           });
+
+          return res.json({
+            result: 'success',
+            id: application.id,
+            title: application.title,
+            description: application.description,
+            user_app_id: userApp.id,
+          });
+        } else {
+          return res.json({ result: 'success', id: application.id });
+        }
       } else {
-        models.application
-          .update(req.body, { where: { id: req.body.id } })
-          .then(function (result) {
-            res.json({ result: 'success', id: result.id });
-          });
+        const result = await Application.update(req.body, {
+          where: { id: req.body.id },
+        });
+        return res.json({ result: 'success', id: result.id });
       }
     } catch (err) {
-      console.log('err', err);
+      logger.error(err);
       return res.status(500).json({
         success: false,
         message: 'Error occured while creating application',
@@ -248,7 +232,7 @@ router.post('/deleteApplication', async function (req, res) {
       await Application.destroy({ where: { id: req.body.appIdToDelete } });
     return res.status(200).send({ result: 'success' });
   } catch (err) {
-    console.log('err', err);
+    logger.error('err', err);
     return res.status(500).json({
       success: false,
       message: 'Error occurred while removing application',
@@ -263,25 +247,25 @@ router.post('/shareApplication', [], async (req, res) => {
   try {
     await UserApplication.create(appShareDetails);
     // Can't wait for notification  email to be sent - might take longer ->Sending response to client as soon as the data is saved in userApplication table
-    res.json({ result: 'success' });
+    res.status(200).json({ result: 'success' });
     try {
       NotificationModule.notifyApplicationShare(
         appShareDetails.user_id,
         appShareDetails.appTitle
       );
     } catch (err) {
-      console.log(
+      logger.error(
         '--- [app/read.js] Error sending application share notification -----------'
       );
-      console.dir({ err }, { depth: null });
-      console.log(
+      logger.error(err);
+      logger.error(
         '--------------------------------------------------------------------------'
       );
     }
   } catch (err) {
-    console.log('--- Share app error [app/read.js] --------------');
-    console.dir({ err }, { depth: null });
-    console.log('------------------------------------------------');
+    logger.error('--- Share app error [app/read.js] --------------');
+    logger.error(err);
+    logger.error('------------------------------------------------');
     return res.status(500).json({
       success: false,
       message: 'Error occurred while saving user application mapping',
@@ -297,9 +281,9 @@ router.post(
     body('username').notEmpty().withMessage('Invalid username'),
   ],
   async (req, res) => {
-    console.log('------------------------------------------');
-    console.dir(req.body, { depth: null });
-    console.log('------------------------------------------');
+    logger.verbose('------------------------------------------');
+    logger.verbose(req.body);
+    logger.verbose('------------------------------------------');
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
@@ -310,10 +294,10 @@ router.post(
     try {
       const { application_id, username: user_id } = req.body;
       await UserApplication.destroy({ where: { application_id, user_id } });
-      res.status(200).json({ success: true, message: 'Success' });
+      return res.status(200).json({ success: true, message: 'Success' });
     } catch (err) {
-      console.log(err);
-      res.status(405).json({ success: false, message: err.message });
+      logger.error(err);
+      return res.status(405).json({ success: false, message: err.message });
     }
   }
 );
@@ -334,7 +318,7 @@ const removeFile = filePath => {
   }
   fs.unlink(filePath, err => {
     if (err) {
-      console.log('Error Deleting file', err);
+      logger.error('Error deleting file: ', err);
     }
   });
 };
@@ -345,7 +329,7 @@ const validateJSON = (data, filePath) => {
     var data = JSON.parse(data);
     removeFile(filePath);
     return data;
-  } catch (e) {
+  } catch {
     removeFile(filePath);
     return 'error';
   }
@@ -393,14 +377,16 @@ function importRootGroups(
               step: `ERR- importing ${data.dataValues?.name} `,
               status: 'error',
             });
-            console.log('<< err', err);
+            logger.error('<< err', err);
           })
       );
     }
   });
+
+  // eslint-disable-next-line no-unused-vars
   Promise.all(promises).then(result => {
-    emitUpdates(io, { step: `Done importing root groups`, status: 'normal' });
-    emitUpdates(io, { step: `Importing child groups`, status: 'normal' });
+    emitUpdates(io, { step: 'Done importing root groups', status: 'normal' });
+    emitUpdates(io, { step: 'Importing child groups', status: 'normal' });
     importChildGroups(
       newAppId,
       importingGroups,
@@ -458,7 +444,7 @@ function importChildGroups(
                   step: `ERR - importing ${index.name} `,
                   status: 'success',
                 });
-                console.log('ERR -', err);
+                logger.error('ERR -', err);
               })
           );
         }
@@ -469,7 +455,7 @@ function importChildGroups(
   Promise.all(importChildGroupsPromise).then(result => {
     //Attempt to import all the groups if done importing - start importing assets
     if (numberOfAttemptedImport == importingGroups.length) {
-      emitUpdates(io, { step: `Done importing groups`, status: 'normal' });
+      emitUpdates(io, { step: 'Done importing groups', status: 'normal' });
       emitUpdates(io, { step: 'Importing all assets', status: 'normal' });
       let importAllAssets = new Promise(function (resolve, reject) {
         resolve(importAssets(assetData, newAppId, groupIdMap, io));
@@ -490,7 +476,7 @@ function importChildGroups(
           });
         })
         .catch(err => {
-          console.log(err);
+          logger.error(err);
         });
     } else {
       importChildGroups(
@@ -589,10 +575,10 @@ function importAssetDetails(item, assetType, newAppId, groupIdMap, io) {
                 })
                 .catch(err => {
                   emitUpdates(io, {
-                    step: `ERR - creating asset group`,
+                    step: 'ERR - creating asset group',
                     status: 'error',
                   });
-                  console.log('ERR -', err);
+                  logger.error('ERR -', err);
                 });
             });
           }
@@ -602,13 +588,14 @@ function importAssetDetails(item, assetType, newAppId, groupIdMap, io) {
             step: `ERR - importing ${item[0]} ${asset.title} `,
             status: 'err',
           });
-          console.log('Err creating asset', error);
+          logger.error('Err creating asset', error);
         })
     );
   });
 }
 
 // #### Import Application Route
+// TODO: CHECK THIS ROUTE
 router.post(
   '/importApp',
   [
@@ -625,7 +612,8 @@ router.post(
       .withMessage('Invalid creator'),
   ],
   upload.single('file'),
-  function (req, res) {
+  async function (req, res) {
+    // eslint-disable-next-line no-unused-vars
     const { filename, originalname, mimetype } = req.file;
     const sanitizedFileName = sanitize(filename);
 
@@ -640,177 +628,171 @@ router.post(
         .json({ success: false, message: 'Invalid file name or format' });
     }
 
-    fs.readFile(`tempFiles/${sanitizedFileName}`, (err, data) => {
+    fs.readFile(`tempFiles/${sanitizedFileName}`, async (err, data) => {
       if (err) {
         return res.status(500).json({
           success: false,
           message: 'Error occured while importing application',
         });
-      } else {
-        emitUpdates(io, { step: 'Extracting data', status: 'normal' });
-        let parsedData = validateJSON(data, `tempFiles/${sanitizedFileName}`);
-        if (parsedData === 'error') {
-          emitUpdates(io, { step: 'ERR - extracting data', status: 'error' });
-          res.status(404).send({
-            success: false,
-            message:
-              'Unable to read file uploaded. Data must be in JSON format',
-          });
-          return;
-        } else {
+      }
+
+      emitUpdates(io, { step: 'Extracting data', status: 'normal' });
+      let parsedData = validateJSON(data, `tempFiles/${sanitizedFileName}`);
+
+      if (parsedData === 'error') {
+        emitUpdates(io, { step: 'ERR - extracting data', status: 'error' });
+        return res.status(404).send({
+          success: false,
+          message: 'Unable to read file uploaded. Data must be in JSON format',
+        });
+      }
+
+      emitUpdates(io, {
+        step: 'SUCCESS - extracting data',
+        status: 'success',
+      });
+      emitUpdates(io, {
+        step: 'Validating application data',
+        status: 'normal',
+      });
+
+      if (parsedData.application) {
+        emitUpdates(io, {
+          step: 'SUCCESS -  Validating application data',
+          status: 'success',
+        });
+        const { application } = parsedData;
+        try {
           emitUpdates(io, {
-            step: 'SUCCESS - extracting data',
-            status: 'success',
-          });
-          emitUpdates(io, {
-            step: 'Validating application data',
+            step: 'Checking if application name is unique',
             status: 'normal',
           });
-          if (parsedData.application) {
+
+          const applications = await Application.findAll({
+            where: {
+              creator: req.body.user,
+              title: application.title,
+            },
+            order: [['updatedAt', 'DESC']],
+            include: [UserApplication],
+          });
+
+          const matchedApp = applications.filter(
+            app => app.title === application.title
+          );
+          if (matchedApp.length > 0) {
             emitUpdates(io, {
-              step: 'SUCCESS -  Validating application data',
+              step: `FAILED - App ${application.title} already exists `,
+              status: 'error',
+            });
+            return res.status(409).json({
+              success: false,
+              message: `Application with title ${application.title} already exists `,
+            });
+          }
+
+          emitUpdates(io, {
+            step: 'SUCCESS -  Unique application name',
+            status: 'success',
+          });
+
+          emitUpdates(io, {
+            step: 'Validating user ',
+            status: 'normal',
+          });
+          let newAppId;
+          if (req.body.user) {
+            emitUpdates(io, {
+              step: 'SUCCESS - Validating user credentials',
               status: 'success',
             });
-            const { application } = parsedData;
+            emitUpdates(io, {
+              step: 'Creating application',
+              status: 'normal',
+            });
+
+            // Creating App
             try {
+              const application = await Application.create({
+                title: application.title,
+                description: application.description,
+                creator: req.body.user,
+              });
+
+              newAppId = application.id;
               emitUpdates(io, {
-                step: 'Checking if application name is unique',
+                step: 'SUCCESS - Creating application',
+                status: 'success',
+              });
+
+              // Importing groups to newly created App
+              let importingGroups = parsedData.application.groups;
+              emitUpdates(io, {
+                step: 'Parsing group data',
                 status: 'normal',
               });
-              models.application
-                .findAll({
-                  where: {
-                    creator: req.body.user,
-                    title: application.title,
-                  },
-                  order: [['updatedAt', 'DESC']],
-                  include: [UserApplication],
-                })
-                .then(function (applications) {
-                  const matchedApp = applications.filter(
-                    app => app.title === application.title
-                  );
-                  if (matchedApp.length > 0) {
-                    emitUpdates(io, {
-                      step: `FAILED - App ${application.title} already exists `,
-                      status: 'error',
-                    });
-                    return res.status(409).json({
-                      success: false,
-                      message: `Application with title ${application.title} already exists `,
-                    });
-                  } else {
-                    emitUpdates(io, {
-                      step: 'SUCCESS -  Unique application name',
-                      status: 'success',
-                    });
+              const assetData = Object.entries(parsedData.application.assets);
+              emitUpdates(io, {
+                step: 'Done parsing group data',
+                status: 'normal',
+              });
 
-                    emitUpdates(io, {
-                      step: 'Validating user ',
-                      status: 'normal',
-                    });
-                    let newAppId;
-                    if (req.body.user) {
-                      emitUpdates(io, {
-                        step: 'SUCCESS - Validating user credentials',
-                        status: 'success',
-                      });
-                      emitUpdates(io, {
-                        step: 'Creating application',
-                        status: 'normal',
-                      });
-                      //Creating App
-                      models.application
-                        .create({
-                          title: application.title,
-                          description: application.description,
-                          creator: req.body.user,
-                        })
-                        .then(function (application) {
-                          newAppId = application.id;
-                          emitUpdates(io, {
-                            step: 'SUCCESS - Creating application',
-                            status: 'success',
-                          });
-                        })
-                        .then(() => {
-                          //Importing groups to newly created App
-                          let importingGroups = parsedData.application.groups;
-                          emitUpdates(io, {
-                            step: 'Parsing group data',
-                            status: 'normal',
-                          });
-                          const assetData = Object.entries(
-                            parsedData.application.assets
-                          );
-                          emitUpdates(io, {
-                            step: 'Done parsing group data',
-                            status: 'normal',
-                          });
+              let groupIdMap = [];
+              let numberOfAttemptedImport = 0;
+              const app = {
+                newAppId,
+                appTitle: application.title,
+              };
+              importRootGroups(
+                newAppId,
+                importingGroups,
+                groupIdMap,
+                numberOfAttemptedImport,
+                assetData,
+                io,
+                res,
+                app
+              );
 
-                          let groupIdMap = [];
-                          let numberOfAttemptedImport = 0;
-                          const app = {
-                            newAppId,
-                            appTitle: application.title,
-                          };
-                          importRootGroups(
-                            newAppId,
-                            importingGroups,
-                            groupIdMap,
-                            numberOfAttemptedImport,
-                            assetData,
-                            io,
-                            res,
-                            app
-                          );
-                        })
-                        .catch(err => {
-                          emitUpdates(io, {
-                            step: `ERR- Creating application`,
-                            status: 'error',
-                          });
-                          return res.status(400).json({
-                            success: false,
-                            message: 'Unable to create application',
-                          });
-                        });
-                    } else {
-                      emitUpdates(io, {
-                        step: `ERR- validating permission`,
-                        status: 'error',
-                      });
-                      return res.status(400).json({
-                        success: false,
-                        message: 'Inadquate permission',
-                      });
-                    }
-                  }
-                })
-                .catch(function (err) {
-                  console.log(err);
-                  return res.status(500).json({
-                    success: false,
-                    message: 'Error occured while getting application list',
-                  });
-                });
+              return res.status(200).json({
+                success: true,
+                message: 'Application created successfully',
+              });
             } catch (err) {
-              console.log('err', err);
-              return res.status(500).json({
+              logger.error(err);
+              emitUpdates(io, {
+                step: 'ERR- Creating application',
+                status: 'error',
+              });
+              return res.status(400).json({
                 success: false,
-                message: 'Error occured while getting application list',
+                message: 'Unable to create application',
               });
             }
           } else {
-            //File uploaded does not have app ID
-            emitUpdates(io, 'ERR -  Validating application data');
-            return res.status(404).send({
+            emitUpdates(io, {
+              step: 'ERR- validating permission',
+              status: 'error',
+            });
+            return res.status(400).json({
               success: false,
-              message:
-                'Unable to read file uploaded. Data must be in JSON format',
+              message: 'Inadquate permission',
             });
           }
+        } catch (err) {
+          logger.error('err', err);
+          return res.status(500).json({
+            success: false,
+            message: 'Error occured while getting application list',
+          });
         }
+      } else {
+        //File uploaded does not have app ID
+        emitUpdates(io, 'ERR -  Validating application data');
+        return res.status(404).send({
+          success: false,
+          message: 'Unable to read file uploaded. Data must be in JSON format',
+        });
       }
     });
   }
@@ -988,19 +970,19 @@ router.post(
                 .send('Error occured while exporting application');
             res.download(exportFile, function (err) {
               if (err) {
-                console.log(err);
-                console.log('Error occured during download...');
-                res
+                logger.error(err);
+                logger.error('Error occurred during download...');
+                return res
                   .status(500)
                   .send('Error occured while exporting application');
               } else {
-                console.log('Download completed...');
+                logger.verbose('Download completed....');
                 fs.unlink(exportFile, err => {
                   if (err)
-                    res
+                    return res
                       .status(500)
                       .send('Error occured while exporting application');
-                  console.log(exportFile + ' was deleted after download');
+                  logger.info(exportFile + ' was deleted after download');
                 });
               }
             });
@@ -1010,7 +992,7 @@ router.post(
         //res.json(applicationExport);
       });
     } catch (err) {
-      console.log('err', err);
+      logger.error('err', err);
       return res.status(500).json({
         success: false,
         message: 'Error occured while removing application',

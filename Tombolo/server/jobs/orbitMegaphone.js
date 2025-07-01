@@ -1,24 +1,20 @@
-const logger = require("../config/logger");
-const models = require("../models");
-const integrations = models.integrations;
-const integration_mappings = models.integration_mapping;
-const orbitBuilds = models.orbitBuilds;
-const teamsWebhooks = models.teams_hook;
-const monitoring_notifications = models.monitoring_notifications;
-const notification = models.notification_queue;
-const notificationTemplate = require("./messageCards/notificationTemplate");
-const { notify } = require("../routes/notifications/email-notification");
-const { v4: uuidv4 } = require("uuid");
-const axios = require("axios");
+const logger = require('../config/logger');
+const {
+  integrations,
+  integration_mapping: integration_mappings,
+  orbitBuilds,
+  monitoring_notifications,
+  notification_queue: notification,
+} = require('../models');
 
-const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
+const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
 
 (async () => {
   try {
     //grab all orbit integrations that are active
     const integrationList = await integrations.findAll({
       where: {
-        name: "ASR",
+        name: 'ASR',
       },
     });
     const sentNotifications = [];
@@ -34,12 +30,13 @@ const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
     });
 
     //if there are active integrations, grab new data and send notifications
-    orbitIntegrations.map(async (integration) => {
+    orbitIntegrations.map(async integration => {
       //if megaphone is not active, stop here and don't run
       if (!integration?.dataValues?.metaData?.megaPhoneAlerts?.active) return;
 
       let application_id = integration.dataValues?.application_id;
 
+      // eslint-disable-next-line quotes
       const query = `select * from orbitreport.DimReceiveInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc limit 1`;
       const result = await runMySQLQuery(query, orbitDbConfig);
 
@@ -47,7 +44,7 @@ const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
 
       //loop through rows to build notifications and import
       await Promise.all(
-        result[0].map(async (build) => {
+        result[0].map(async build => {
           //check if the build already exists
           let orbitBuild = await orbitBuilds.findOne({
             where: {
@@ -65,7 +62,7 @@ const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
               build_id: build.ReceiveInstanceIdKey,
               monitoring_id: null,
               name: build.FileName,
-              type: "megaphone",
+              type: 'megaphone',
               wuid: build.HpccWorkUnit,
               metaData: {
                 lastRun: build.DateUpdated,
@@ -80,7 +77,8 @@ const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
             //if megaphone, send notification
             // if (build.SubStatus_Code === "MEGAPHONE")
 
-            console.log(
+            logger.verbose(
+              'orbitBuild Megaphone Email Contacts',
               integration.dataValues.metaData.megaPhoneAlerts.emailContacts
             );
 
@@ -89,15 +87,15 @@ const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
             ) {
               //create a notification queue
               await notification.create({
-                type: "email",
-                notificationOrigin: "orbitMegaphone",
-                templateName: "orbitMegaphone",
-                deliveryType: "immediate",
-                createdBy: "orbitMegaphone",
+                type: 'email',
+                notificationOrigin: 'orbitMegaphone',
+                templateName: 'orbitMegaphone',
+                deliveryType: 'immediate',
+                createdBy: 'orbitMegaphone',
                 metaData: {
                   emailDetails: {
                     subject:
-                      "Megaphone Substatus detected on Orbit Build " +
+                      'Megaphone Substatus detected on Orbit Build ' +
                       newBuild.name,
                     mainRecipients:
                       integration.dataValues.metaData.megaPhoneAlerts
@@ -216,6 +214,6 @@ const { runMySQLQuery, orbitDbConfig } = require("../utils/runSQLQueries.js");
       return;
     });
   } catch (error) {
-    logger.error("Error while running Orbit Jobs: " + error);
+    logger.error('Error while running Orbit Jobs: ' + error);
   }
 })();

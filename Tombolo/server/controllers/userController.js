@@ -131,7 +131,7 @@ const updateBasicUserInfo = async (req, res) => {
     // Commit the transaction
     await t.commit();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'User updated successfully',
       data: updatedUser,
@@ -140,7 +140,7 @@ const updateBasicUserInfo = async (req, res) => {
     // Rollback transaction if anything goes wrong
     await t.rollback();
     logger.error(`Update user: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -156,14 +156,14 @@ const getUser = async (req, res) => {
       throw { status: 404, message: 'User not found' };
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'User retrieved successfully',
       data: user,
     });
   } catch (err) {
     logger.error(`Get user: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -180,14 +180,14 @@ const getAllUsers = async (req, res) => {
       // descending order by date
       order: [['createdAt', 'DESC']],
     });
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Users retrieved successfully',
       data: users,
     });
   } catch (err) {
     logger.error(`Get all users: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -270,14 +270,14 @@ const changePassword = async (req, res) => {
     // Commit transaction
     await t.commit();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Password updated successfully',
     });
   } catch (err) {
     await t.rollback(); // Rollback on failure
     logger.error(`Change password: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -306,7 +306,7 @@ const bulkDeleteUsers = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Users deleted successfully',
       data: { deletedCount },
@@ -352,19 +352,19 @@ const bulkUpdateUsers = async (req, res) => {
     }
 
     if (errors.length > 0) {
-      res.status(207).json({
+      return res.status(207).json({
         success: false,
         message: 'Some users could not be updated',
         errors,
       });
-    } else {
-      res
-        .status(200)
-        .json({ success: true, message: 'Users updated successfully' });
     }
+
+    return res
+      .status(200)
+      .json({ success: true, message: 'Users updated successfully' });
   } catch (err) {
     logger.error(`Bulk update users: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -409,15 +409,14 @@ const updateUserRoles = async (req, res) => {
     const newRoles = await UserRoles.bulkCreate(rolesToAdd);
 
     // Response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'User roles updated successfully',
       data: newRoles,
     });
   } catch (err) {
-    console.log(err);
     logger.error(`Update user roles: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -455,14 +454,14 @@ const updateUserApplications = async (req, res) => {
       await user_application.bulkCreate(applicationUserPair);
 
     // Response
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'User applications updated successfully',
       data: newApplications,
     });
   } catch {
     logger.error(`Update user applications: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }
@@ -588,14 +587,14 @@ const createUser = async (req, res) => {
     // Remove hash
     delete newUserData.dataValues.hash;
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'User created successfully',
       data: newUserData,
     });
   } catch (err) {
     logger.error(`Create user: ${err.message}`);
-    res
+    return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
   }

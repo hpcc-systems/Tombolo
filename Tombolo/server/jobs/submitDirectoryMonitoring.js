@@ -1,13 +1,9 @@
-const logger = require("../config/logger");
-const models = require("../models");
-const directoryMonitoring = models.directoryMonitoring;
-const teamsWebhooks = models.teams_hook;
-const notification = models.notification_queue;
-const hpccUtil = require("../utils/hpcc-util");
-const { v4: uuidv4 } = require("uuid");
-const wildCardStringMatch = require("../utils/wildCardStringMatch");
-const { parentPort, workerData } = require("worker_threads");
-const moment = require("moment");
+const logger = require('../config/logger');
+const { directoryMonitoring } = require('../models');
+const hpccUtil = require('../utils/hpcc-util');
+const wildCardStringMatch = require('../utils/wildCardStringMatch');
+const { workerData } = require('worker_threads');
+const moment = require('moment');
 
 (async () => {
   try {
@@ -54,7 +50,7 @@ const moment = require("moment");
       Path,
       DirectoryOnly: false,
     });
-    let files = result.filter((item) => !item.isDir);
+    let files = result.filter(item => !item.isDir);
 
     const newFilesToMonitor = [];
 
@@ -62,10 +58,10 @@ const moment = require("moment");
     let emailNotificationDetails;
     let teamsNotificationDetails;
     for (let notification of notifications) {
-      if (notification.channel === "eMail") {
+      if (notification.channel === 'eMail') {
         emailNotificationDetails = notification;
       }
-      if (notification.channel === "msTeams") {
+      if (notification.channel === 'msTeams') {
         teamsNotificationDetails = notification;
       }
     }
@@ -75,30 +71,30 @@ const moment = require("moment");
     //check if number of files in the directory is within the range
     if (files.length < minimumFilecount) {
       newNotificationDetails.push({
-        value: "file_count_below_minimum",
-        title: `File count below minimum in ${directory.join("/")}`,
+        value: 'file_count_below_minimum',
+        title: `File count below minimum in ${directory.join('/')}`,
         text: `Number of files in ${directory.join(
-          "/"
+          '/'
         )} is below the minimum file count of ${minimumFilecount}`,
         details: {
-          "Landing zone": landingZone,
-          Directory: directory.join("/"),
-          "File count": files.length,
+          'Landing zone': landingZone,
+          Directory: directory.join('/'),
+          'File count': files.length,
         },
       });
     }
 
     if (files.length > maximumFileCount) {
       newNotificationDetails.push({
-        value: "file_count_above_maximum",
-        title: `File count above maximum in ${directory.join("/")}`,
+        value: 'file_count_above_maximum',
+        title: `File count above maximum in ${directory.join('/')}`,
         text: `Number of files in ${directory.join(
-          "/"
+          '/'
         )} is above the maximum file count of ${maximumFileCount}`,
         details: {
-          "Landing zone": landingZone,
-          Directory: directory.join("/"),
-          "File count": files.length,
+          'Landing zone': landingZone,
+          Directory: directory.join('/'),
+          'File count': files.length,
         },
       });
     }
@@ -117,7 +113,7 @@ const moment = require("moment");
         wildCardStringMatch(fileNameWildCard, fileName) &&
         //file name not in the currently monitoring array
         !currentlyMonitoring.find(
-          (item) =>
+          item =>
             item.name === fileName && item.modifiedTime === fileModifiedTime
         )
       ) {
@@ -126,14 +122,14 @@ const moment = require("moment");
         if (fileDetected) {
           notificationDetail = {
             name: fileName,
-            value: "file_detected",
+            value: 'file_detected',
             title: `New file uploaded to ${directory}`,
-            text: "Details about recently added file - ",
+            text: 'Details about recently added file - ',
             details: {
-              "File Name": fileName,
-              "Landing zone": landingZone,
+              'File Name': fileName,
+              'Landing zone': landingZone,
               Directory: directory,
-              "File detected at": new Date(fileModifiedTime).toString(),
+              'File detected at': new Date(fileModifiedTime).toString(),
             },
           };
         }
@@ -143,7 +139,7 @@ const moment = require("moment");
         }
 
         // Start monitoring new file if threshold parameter is set
-        if (notifyCondition.includes("fileNotMoving")) {
+        if (notifyCondition.includes('fileNotMoving')) {
           newFilesToMonitor.push({
             name: fileName,
             modifiedTime: fileModifiedTime,
@@ -156,16 +152,16 @@ const moment = require("moment");
 
     if (currentlyMonitoring.length > 0) {
       //remove files that have been moved out by checking against files array
-      currentlyMonitoring = currentlyMonitoring.filter((current) => {
+      currentlyMonitoring = currentlyMonitoring.filter(current => {
         const { name, modifiedTime } = current;
         return !files.find(
-          (file) => file.name === name && file.modifiedtime === modifiedTime
+          file => file.name === name && file.modifiedtime === modifiedTime
         );
       });
     }
 
     // check for threshold
-    currentlyMonitoring.forEach((current) => {
+    currentlyMonitoring.forEach(current => {
       const { notified } = current;
 
       const pastExpectedMoveTime = current.threshold < currentTimeStamp;
@@ -173,39 +169,38 @@ const moment = require("moment");
       if (pastExpectedMoveTime && !notified.length) {
         newNotificationDetails.push({
           name: current.name,
-          value: "file_not_moving",
+          value: 'file_not_moving',
           title: `${current.name} stuck at ${directory}`,
           text: `${current.name} has been stuck at ${directory} longer than ${threshold} minutes`,
           details: {
-            "File Name": current.name,
-            "Landing zone": landingZone,
+            'File Name': current.name,
+            'Landing zone': landingZone,
             Directory: directory,
-            "File received at": new Date(current.modifiedTime).toString(),
-            "Expected move time": new Date(current.threshold).toString(),
+            'File received at': new Date(current.modifiedTime).toString(),
+            'Expected move time': new Date(current.threshold).toString(),
           },
         });
       }
     });
 
-    console.log("newNotificationDetails");
-    console.log(newNotificationDetails);
+    logger.verbose('newNotificationDetails: ', newNotificationDetails);
 
     //send notifications if necessary
     for (let notificationDetail of newNotificationDetails) {
       //send email notification
       if (emailNotificationDetails) {
         //TODO: create notification queue with proper template in next isue
-        logger.verbose("Email notification sent: " + newNotificationDetails);
+        logger.verbose('Email notification sent: ' + newNotificationDetails);
 
         //once notification is sent, update currently monitoring notified field
-        currentlyMonitoring = currentlyMonitoring.map((item) => {
+        currentlyMonitoring = currentlyMonitoring.map(item => {
           if (notificationDetail.name === item.name) {
             return {
               ...item,
               notified: [
                 {
                   notified: true,
-                  method: "email",
+                  method: 'email',
                   dateNotified: currentTimeStamp,
                 },
               ],
@@ -218,17 +213,17 @@ const moment = require("moment");
       //send teams notification
       if (teamsNotificationDetails) {
         //TODO: create notification queue with proper template in next isue
-        logger.verbose("Teams notification sent: " + newNotificationDetails);
+        logger.verbose('Teams notification sent: ' + newNotificationDetails);
 
         //once notification is sent, update currently monitoring notified field
-        currentlyMonitoring = currentlyMonitoring.map((item) => {
+        currentlyMonitoring = currentlyMonitoring.map(item => {
           if (notificationDetail.name === item.name) {
             return {
               ...item,
               notified: [
                 {
                   notified: true,
-                  method: "msTeams",
+                  method: 'msTeams',
                   dateNotified: currentTimeStamp,
                 },
               ],
@@ -251,6 +246,6 @@ const moment = require("moment");
       { where: { id: directorymonitoring_id } }
     );
   } catch (error) {
-    logger.error("Error while running Directory Monitoring Jobs: " + error);
+    logger.error('Error while running Directory Monitoring Jobs: ' + error);
   }
 })();
