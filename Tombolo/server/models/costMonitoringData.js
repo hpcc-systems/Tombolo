@@ -74,12 +74,10 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
       paranoid: true,
       indexes: [
-        // TODO: What to index here?
-        // {
-        //   unique: true,
-        //   fields: ['monitoringId', 'wuId'],
-        //   name: 'unique_monitoringId_wuId', // Match the migration constraint name
-        // },
+        {
+          unique: true,
+          fields: ['monitoringId', 'applicationId', 'clusterId', 'analyzed'],
+        },
       ],
     }
   );

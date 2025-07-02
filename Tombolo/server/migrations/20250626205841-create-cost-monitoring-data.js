@@ -70,6 +70,12 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    await queryInterface.addIndex('costMonitoringData', {
+      unique: true,
+      fields: ['monitoringId', 'applicationId', 'clusterId', 'analyzed'],
+      name: 'costMonitoringData_unique_monitoring_app_cluster_analyzed',
+    });
   },
 
   async down(queryInterface, Sequelize) {

@@ -121,7 +121,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     // TODO: Do we need an archive?
-    // costMonitoring.hasMany(models.jobMonitoring_Data_Archive, {
+    // costMonitoring.hasMany(models.costMonitoringDataArchive, {
     //   foreignKey: 'monitoringId',
     //   as: 'costMonitoringDataArchive',
     //   onDelete: 'CASCADE',
