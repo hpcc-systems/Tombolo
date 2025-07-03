@@ -57,7 +57,6 @@ async function analyzeCostPerUser() {
       );
 
       if (totalsCausingNotification.length === 0) {
-        // TODO: Should there be a better message here?
         parentPort &&
           parentPort.postMessage({
             level: 'info',
