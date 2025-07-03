@@ -12,6 +12,7 @@ const {
   findLocalDateTimeAtCluster,
   generateNotificationId,
 } = require('../jobMonitoring/monitorJobsUtil');
+const { Op } = require('sequelize');
 
 async function analyzeCostPerUser() {
   try {
@@ -70,7 +71,9 @@ async function analyzeCostPerUser() {
       const secondaryContacts = [];
       const notifyContacts = [];
 
-      const clusters = await Cluster.findAll({ where: { id: clusterIds } });
+      const clusters = await Cluster.findAll({
+        where: { id: { [Op.in]: clusterIds } },
+      });
       const notificationPrefix = 'CM';
 
       const notificationPayload = createNotificationPayload({
@@ -105,7 +108,6 @@ async function analyzeCostPerUser() {
         });
     }
   } catch (err) {
-    console.dir(err);
     if (parentPort) {
       parentPort.postMessage({
         level: 'error',

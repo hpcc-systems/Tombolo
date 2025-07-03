@@ -349,7 +349,6 @@ async function monitorCostPerUser() {
         level: 'error',
         text: `Cost Monitor Per user: ${err.message}`,
       });
-    console.dir(err);
   }
 }
 
