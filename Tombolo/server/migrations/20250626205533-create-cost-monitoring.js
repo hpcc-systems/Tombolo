@@ -34,7 +34,7 @@ module.exports = {
       },
       approvedBy: {
         allowNull: true,
-        type: Sequelize.STRING,
+        type: Sequelize.JSON,
       },
       approvedAt: {
         allowNull: true,
@@ -65,8 +65,8 @@ module.exports = {
         allowNull: false,
       },
       lastUpdatedBy: {
-        allowNull: false,
-        type: Sequelize.STRING,
+        allowNull: true,
+        type: Sequelize.JSON,
       },
       createdAt: {
         type: Sequelize.DATE,

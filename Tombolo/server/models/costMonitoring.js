@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       approvedBy: {
         allowNull: true,
-        type: DataTypes.STRING,
+        type: DataTypes.JSON,
       },
       approvedAt: {
         allowNull: true,
@@ -80,11 +80,11 @@ module.exports = (sequelize, DataTypes) => {
       },
       createdBy: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.JSON,
       },
       lastUpdatedBy: {
-        allowNull: false,
-        type: DataTypes.STRING,
+        allowNull: true,
+        type: DataTypes.JSON,
       },
       createdAt: {
         allowNull: false,
