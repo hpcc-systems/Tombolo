@@ -1,0 +1,143 @@
+
+.costmonitoring_halfWidth_input {
+  width: 50%;
+}
+
+.custom-select {
+  height: 80px !important; /* Adjust as needed */
+}
+
+.costMonitoring__modal {
+  width: 800;
+}
+
+.costMonitoring__inputField {
+  width: 100%;
+}
+
+/* Schedular Selector */
+
+.schedule-selector {
+  display: flex;
+}
+
+.selected-component {
+  padding-left: 15px;
+  /* display: flex; */
+  /* align-items: center;
+  justify-content: center; */
+  border-left: 1px solid #dadada;
+}
+
+.modal-header {
+  font-size: 14px;
+}
+
+.monitor-input {
+  margin-top: 10px;
+}
+
+.schedule-breakdown {
+  margin-bottom: 10px;
+}
+
+.weekday-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: left;
+}
+
+.radio-group-column,
+.daily-options {
+  display: flex;
+  flex-direction: column;
+}
+
+.monthly-options {
+  margin-top: 10px;
+}
+
+.yearly-options {
+  margin-top: 5px;
+}
+
+.yearly-options select {
+  margin-left: 10px;
+}
+
+.yearly-options .radio-group-column {
+  margin-top: 5px;
+}
+
+.modal-card-2 {
+  margin-top: 5px;
+}
+
+.schedularSelector__addMoreBtn {
+  color: var(--primary);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.schedularSelector__addMoreBtn:hover {
+  color: var(--secondary);
+}
+
+.cost__monitoring_tiny-description {
+  margin-top: 30px;
+}
+
+.cost__monitoring_tiny-description * {
+  padding: 2px 4px !important;
+}
+
+.cost__monitoring_tiny-description .ant-descriptions-item-label {
+  width: 240px;
+  font-weight: 500;
+}
+
+.costMonitoringTable__inactive-monitoring {
+  background-color: var(--paused);
+}
+
+.costMonitoringTable__active-monitoring {
+  background-color: var(--active);
+}
+
+.costMonitoringTable__hidden_actions > * {
+  padding: 5px;
+}
+
+.costMonitoringTable__hidden_actions > *:hover {
+  background-color: var(--secondary-light);
+}
+
+.costMonitoringTable__selected-row > .ant-table-cell {
+  background-color: rgba(255, 255, 0, 0.1) !important;
+}
+
+/* Filters ------------------------------------------------------------------ */
+
+.notifications__filter-label {
+  font-weight: 500;
+  padding-bottom: 5px;
+}
+
+.notifications__filters {
+  margin-bottom: 5px;
+  padding: 4px 10px;
+}
+
+.notifications_filters__form {
+  background-color: var(--light);
+}
+
+.notification__filters_count {
+  display: flex;
+  justify-content: right;
+  color: var(--primary);
+  background: none;
+  font-weight: 600;
+}
