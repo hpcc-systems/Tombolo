@@ -85,7 +85,7 @@ async function getCostMonitoringData(
   applicationId,
   monitoringDate
 ) {
-  const [costMonitoringData, created] = await CostMonitoringData.findOrCreate({
+  const [costMonitoringData] = await CostMonitoringData.findOrCreate({
     where: { monitoringId, applicationId, clusterId, analyzed: false },
     defaults: {
       monitoringId,

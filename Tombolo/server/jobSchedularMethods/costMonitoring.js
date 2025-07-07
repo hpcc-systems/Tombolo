@@ -8,7 +8,7 @@ function createMonitorCostPerUserJob() {
     let jobName = 'monitor-cost-per-user' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: '2 minutes', // TODO: Update to be 1 hour when done
+      interval: '1 hours',
       path: path.join(
         __dirname,
         '..',
