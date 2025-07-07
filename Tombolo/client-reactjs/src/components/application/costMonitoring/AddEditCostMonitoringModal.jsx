@@ -21,7 +21,7 @@ const AddEditCostMonitoringModal = ({
   setErroneousTabs,
   handleClusterChange,
 }) => {
-  // Keep track of visited tabs, some form fields are loaded only when tab is visited. This is to avoid validation errors
+  // Keep track of visited tabs, some form fields are loaded only when the tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
 
   // Handle tab change
@@ -53,7 +53,7 @@ const AddEditCostMonitoringModal = ({
     },
   ];
 
-  // Define tab items for Tabs component
+  // Define tab items for a Tabs component
   const tabItems = tabs.map((tab, index) => ({
     key: index.toString(),
     label: erroneousTabs.includes(index.toString()) ? (
@@ -66,7 +66,7 @@ const AddEditCostMonitoringModal = ({
     children: tab.component(),
   }));
 
-  // When next button is clicked, go to next tab
+  // When the next button is clicked, go to next tab
   const handleNext = () => {
     const nextTab = (parseInt(activeTab) + 1).toString();
     setActiveTab(nextTab);
@@ -75,7 +75,7 @@ const AddEditCostMonitoringModal = ({
     }
   };
 
-  // When previous button is clicked, go back to previous tab
+  // When the previous button is clicked, go back to previous tab
   const handlePrevious = () => {
     const previousTab = (parseInt(activeTab) - 1).toString();
     setActiveTab(previousTab);

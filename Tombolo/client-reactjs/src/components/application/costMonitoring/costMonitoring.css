@@ -1,18 +1,5 @@
-
-.costmonitoring_halfWidth_input {
-  width: 50%;
-}
-
-.custom-select {
-  height: 80px !important; /* Adjust as needed */
-}
-
 .costMonitoring__modal {
   width: 800;
-}
-
-.costMonitoring__inputField {
-  width: 100%;
 }
 
 /* Schedular Selector */
@@ -37,52 +24,8 @@
   margin-top: 10px;
 }
 
-.schedule-breakdown {
-  margin-bottom: 10px;
-}
-
-.weekday-checkboxes {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: left;
-}
-
-.radio-group-column,
-.daily-options {
-  display: flex;
-  flex-direction: column;
-}
-
-.monthly-options {
-  margin-top: 10px;
-}
-
-.yearly-options {
-  margin-top: 5px;
-}
-
-.yearly-options select {
-  margin-left: 10px;
-}
-
-.yearly-options .radio-group-column {
-  margin-top: 5px;
-}
-
 .modal-card-2 {
   margin-top: 5px;
-}
-
-.schedularSelector__addMoreBtn {
-  color: var(--primary);
-  font-size: 12px;
-  text-decoration: underline;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.schedularSelector__addMoreBtn:hover {
-  color: var(--secondary);
 }
 
 .cost__monitoring_tiny-description {
