@@ -58,7 +58,7 @@ function getStartAndEndTime(lastScanTime, offset = 0, toIso = false) {
   };
 }
 
-async function markOldData(costMonitoringId, clusterId, applicationId) {
+async function markDataAnalyzed(costMonitoringId, clusterId, applicationId) {
   try {
     const costMonitoringData = await CostMonitoringData.findOne({
       where: { monitoringId: costMonitoringId, clusterId, applicationId },
@@ -73,7 +73,7 @@ async function markOldData(costMonitoringId, clusterId, applicationId) {
     parentPort &&
       parentPort.postMessage({
         level: 'error',
-        text: `monitorCostPerUser: Error in markOldData: ${err.message}`,
+        text: `monitorCostPerUser: Error in markDataAnalyzed: ${err.message}`,
       });
   }
 }
@@ -249,7 +249,7 @@ async function monitorCostPerUser() {
 
           // NOTE: If making changes for daily, weekly, etc. Update this logic
           if (isNewDay) {
-            await markOldData(costMonitor.id, clusterId, applicationId);
+            await markDataAnalyzed(costMonitor.id, clusterId, applicationId);
           }
 
           // Get costMonitoringData
