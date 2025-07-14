@@ -26,6 +26,13 @@ async function updateCostMonitoring(req, res) {
       where: { id: req.body.id },
     });
 
+    if (result[0] === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Cost monitoring not found',
+      });
+    }
+
     return res.status(200).json({
       success: true,
       data: result,
@@ -75,7 +82,7 @@ async function deleteCostMonitoring(req, res) {
       where: { id: req.params.id },
     });
 
-    if (!result) {
+    if (!result || result === 0) {
       return res
         .status(404)
         .json({ success: false, message: 'Cost monitoring not found' });
