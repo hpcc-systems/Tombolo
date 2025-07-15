@@ -1,0 +1,497 @@
+/* eslint-disable */
+import React, { useState, useEffect, useRef } from 'react';
+import BreadCrumbs from '../../common/BreadCrumbs.js';
+import { useSelector } from 'react-redux';
+import { Form, message } from 'antd';
+import {
+  checkScheduleValidity,
+  identifyErroneousTabs,
+  getAllLzMonitorings,
+  updateMonitoring,
+  isScheduleUpdated,
+  createLandingZoneMonitoring, //TODO WIP
+} from './Utils.js';
+import { flattenObject } from '../../common/CommonUtil.js';
+
+import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools.js';
+import { getRoleNameArray } from '../../common/AuthUtil.js';
+
+import AddEditModal from './AddEditModal/Modal.jsx';
+import ActionButton from './ActionButton.jsx';
+import LandingZoneMonitoringTable from './LandingZoneMonitoringTable';
+import ApproveRejectModal from './ApproveRejectModal.jsx';
+import BulkUpdateModal from './BulkUpdateModal.jsx';
+import ViewDetailsModal from './ViewDetailsModal.jsx';
+import { getUser } from '../../common/userStorage.js';
+import './lzMonitoring.css';
+
+const monitoringTypeName = 'Landing Zone Monitoring';
+
+const LandigZoneMonitoring = () => {
+  // Redux
+  const {
+    applicationReducer: {
+      application: { applicationId },
+    },
+    applicationReducer: { clusters },
+  } = useSelector((state) => state);
+
+  // Constants
+  const [form] = Form.useForm();
+  const isMonitoringTypeIdFetched = useRef(false);
+
+  //TODO: this might not be right place to get user
+  const user = getUser();
+  const roleArray = getRoleNameArray();
+  const isReader = roleArray.includes('reader') && roleArray.length === 1;
+
+  //Local States
+  const [displayAddEditModal, setDisplayAddEditModal] = useState(false);
+  const [landingZoneMonitoring, setLandingZoneMonitoring] = useState([]);
+  const [displayViewDetailsModal, setDisplayViewDetailsModal] = useState(false);
+  const [selectedMonitoring, setSelectedMonitoring] = useState(null);
+  const [editingData, setEditingData] = useState({ isEditing: false }); // Data to be edited
+  const [displayAddRejectModal, setDisplayAddRejectModal] = useState(false);
+  const [savingLzMonitoring, setSavingLzMonitoring] = useState(false); // Flag to indicate if directory monitoring is being saved
+  const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  const [activeTab, setActiveTab] = useState('0');
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
+  const [directory, setDirectory] = useState(null);
+  const [copying, setCopying] = useState(false);
+  const [lzMonitoringType, setLzMonitoringType] = useState(null);
+
+  //asr specific
+  const [domains, setDomains] = useState([]);
+  const [selectedDomain, setSelectedDomain] = useState(null);
+  const [productCategories, setProductCategories] = useState([]);
+  const [monitoringTypeId, setMonitoringTypeId] = useState(null);
+
+  // If editing or making copy of LZ monitoring, set form values
+  useEffect(() => {
+    if (editingData?.isEditing || copying) {
+      form.setFieldsValue(selectedMonitoring);
+      console.log('------------------------');
+      console.log('COPYING !!: ', selectedMonitoring);
+      console.log('CLUSTERS: ', clusters);
+      console.log('------------------------');
+      setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring?.cluster?.id));
+      setLzMonitoringType(selectedMonitoring.lzMonitoringType);
+
+      // TODO revert to old style
+      form.setFieldsValue({
+        domain: selectedMonitoring['metaData.asrSpecificMetaData.domain'],
+        productCategory: selectedMonitoring['metaData.asrSpecificMetaData.productCategory'],
+        severity: selectedMonitoring['metaData.asrSpecificMetaData.severity'],
+        dropzone: selectedMonitoring['metaData.monitoringData.dropzone'],
+        machine: selectedMonitoring['metaData.monitoringData.machine'],
+        directory: selectedMonitoring['metaData.monitoringData.directory'],
+        maxDepth: selectedMonitoring['metaData.monitoringData.maxDepth'],
+        threshold: selectedMonitoring['metaData.monitoringData.threshold'],
+        fileName: selectedMonitoring['metaData.monitoringData.fileName'],
+        primaryContacts: selectedMonitoring['metaData.contacts.primaryContacts'],
+        secondaryContacts: selectedMonitoring['metaData.contacts.secondaryContacts'],
+        notifyContacts: selectedMonitoring['metaData.contacts.notifyContacts'],
+      });
+    }
+  }, [editingData, copying]);
+
+  // Get all landing zone monitorings on page load
+  useEffect(() => {
+    if (!applicationId) return;
+    (async () => {
+      try {
+        const allLzMonitoring = await getAllLzMonitorings({ applicationId });
+        // Flatten each object in the array
+        const flattenedMonitorings = allLzMonitoring.map((monitoring) => {
+          const flat = flattenObject(monitoring);
+          return { ...flat, ...monitoring }; // Flat also keep the original object - make it easier to update
+        });
+
+        console.log('------------------------');
+        console.log('After Flattening: ', flattenedMonitorings);
+        console.log('------------------------');
+
+        setLandingZoneMonitoring(flattenedMonitorings);
+      } catch (error) {
+        message.error('Error fetching landing zone monitorings');
+      }
+    })();
+  }, [applicationId, displayAddEditModal]);
+
+  // Get monitoring type ID only once when component mounts
+  useEffect(() => {
+    if (!isMonitoringTypeIdFetched.current) {
+      (async () => {
+        try {
+          const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
+          setMonitoringTypeId(monitoringTypeId);
+        } catch (error) {
+          message.error('Error fetching monitoring type ID');
+        }
+      })();
+      isMonitoringTypeIdFetched.current = true;
+    }
+  }, []);
+
+  // Get domains and product categories
+  useEffect(() => {
+    // Get domains
+    if (!monitoringTypeId) return;
+    (async () => {
+      try {
+        let domainData = await getDomains({ monitoringTypeId });
+        domainData = domainData.map((d) => ({
+          label: d.name,
+          value: d.id,
+        }));
+        setDomains(domainData);
+      } catch (error) {
+        message.error('Error fetching domains');
+      }
+    })();
+
+    // If monitoring selected - set selected domain so corresponding product categories can be fetched
+    if (selectedMonitoring && selectedMonitoring['metaData.asrSpecificMetaData.domain']) {
+      setSelectedDomain(selectedMonitoring['metaData.asrSpecificMetaData.domain']);
+    }
+
+    // Get product categories
+    if (!selectedDomain) return;
+    (async () => {
+      try {
+        const productCategories = await getProductCategories({ domainId: selectedDomain });
+        const formattedProductCategories = productCategories.map((c) => ({
+          label: `${c.name} (${c.shortCode})`,
+          value: c.id,
+        }));
+        setProductCategories(formattedProductCategories);
+      } catch (error) {
+        message.error('Error fetching product category');
+      }
+    })();
+  }, [monitoringTypeId, selectedDomain, selectedMonitoring]);
+
+  const handleAddNewLzMonitoringBtnClick = () => {
+    setDisplayAddEditModal(true);
+  };
+
+  const handleSaveDirectoryMonitoring = async () => {
+    setSavingLzMonitoring(true);
+    let validForm = true;
+
+    // Validate from and set validForm to false if any field is invalid
+    try {
+      await form.validateFields();
+    } catch (err) {
+      validForm = false;
+    }
+
+    // Identify erroneous tabs
+    const erroneousFields = form
+      .getFieldsError()
+      .filter((f) => f.errors.length > 0)
+      .map((f) => f.name[0]);
+    const badTabs = identifyErroneousTabs({ erroneousFields });
+
+    console.log('------------------------');
+    console.log('Erroneous Fields: ', erroneousFields);
+    console.log('------------------------');
+
+    if (badTabs.length > 0) {
+      setErroneousTabs(badTabs);
+    }
+
+    console.log('------------------------');
+    console.log('Is form valid : ', validForm);
+    console.log('------------------------');
+
+    // If form is invalid
+    if (!validForm) {
+      setSavingLzMonitoring(false);
+      return;
+    }
+
+    try {
+      //All inputs
+      let userFieldInputs = form.getFieldsValue();
+
+      console.log('------------------------');
+      console.log('USER INPUTS: ', userFieldInputs);
+      console.log('------------------------');
+
+      const metaData = {};
+      // Add contact specific metaData
+      const { primaryContacts, secondaryContacts, notifyContacts } = userFieldInputs;
+      metaData.contacts = {
+        primaryContacts,
+        secondaryContacts: secondaryContacts ? secondaryContacts : [],
+        notifyContacts: notifyContacts ? notifyContacts : [],
+      };
+      // Remove all the contact fields from userFieldInputs
+      delete userFieldInputs.primaryContacts;
+      delete userFieldInputs.secondaryContacts;
+      delete userFieldInputs.notifyContacts;
+
+      // Add file movement specific metaData
+      if (userFieldInputs.lzMonitoringType === 'fileMovement') {
+        const { dropzone, machine, directory, maxDepth, fileName, threshold } = userFieldInputs;
+        metaData.monitoringData = {
+          dropzone,
+          machine,
+          directory,
+          maxDepth,
+          threshold,
+          fileName,
+        };
+        // Remove file movement specific fields from userFieldInputs
+        delete userFieldInputs.dropzone;
+        delete userFieldInputs.machine;
+        delete userFieldInputs.directory;
+        delete userFieldInputs.maxDepth;
+        delete userFieldInputs.threshold;
+        delete userFieldInputs.fileName;
+      }
+
+      // Add ASR specific metaData
+      if (userFieldInputs.domin !== 'undefined') {
+        const { domain, productCategory, severity } = userFieldInputs;
+        metaData.asrSpecificMetaData = {
+          domain,
+          productCategory,
+          severity,
+        };
+
+        // Remove ASR specific fields from userFieldInputs
+        delete userFieldInputs.domain;
+        delete userFieldInputs.productCategory;
+        delete userFieldInputs.severity;
+      }
+
+      // Add metaData back to userFieldInputs to create final payload
+      userFieldInputs.metaData = metaData;
+
+      // Add appliationId to userFieldInputs
+      userFieldInputs.applicationId = applicationId;
+
+      await createLandingZoneMonitoring({ inputData: userFieldInputs });
+
+      // Rest states and Close model if saved successfully
+      resetStates();
+      setDisplayAddEditModal(false);
+    } catch (err) {
+      console.log(err);
+      message.error(err.message);
+    } finally {
+      setSavingLzMonitoring(false);
+    }
+  };
+
+  const handleUpdateLzMonitoring = async () => {
+    setSavingLzMonitoring(true);
+    try {
+      // Validate from and set validForm to false if any field is invalid
+      let validForm = true;
+      try {
+        await form.validateFields();
+      } catch (err) {
+        validForm = false;
+      }
+
+      // Identify erroneous tabs
+      const erroneousFields = form
+        .getFieldsError()
+        .filter((f) => f.errors.length > 0)
+        .map((f) => f.name[0]);
+      const badTabs = identifyErroneousTabs({ erroneousFields });
+
+      if (badTabs.length > 0) {
+        setErroneousTabs(badTabs);
+      }
+
+      // If form is invalid  return
+      if (!validForm) {
+        setSavingLzMonitoring(false);
+        return;
+      }
+
+      // Form fields
+      const formFields = form.getFieldsValue();
+      const fields = Object.keys(formFields);
+
+      const monitoringDataFields = ['dropzone', 'machine', 'directory', 'maxDepth', 'threshold', 'fileName'];
+      const notificationMetaDataFields = ['primaryContacts', 'secondaryContacts', 'notifyContacts'];
+      const asrSpecificFields = ['domain', 'productCategory', 'severity'];
+
+      // Identify the fields that were touched
+      const touchedFields = [];
+      fields.forEach((field) => {
+        if (form.isFieldTouched(field)) {
+          touchedFields.push(field);
+        }
+      });
+
+      // If no touched fields
+      if (touchedFields.length === 0) {
+        return message.error('No changes detected');
+      }
+
+      // updated monitoring
+      let updatedData = { ...selectedMonitoring };
+
+      //Touched ASR fields
+      const touchedAsrSpecificMetaDataFields = touchedFields.filter((field) => asrSpecificFields.includes(field));
+      const touchedMonitoringDataFields = touchedFields.filter((field) => monitoringDataFields.includes(field));
+      const touchedContactsFields = touchedFields.filter((field) => notificationMetaDataFields.includes(field));
+
+      // update selected monitoring with asr specific fields that are nested inside metaData > asrSpecificMetaData
+      if (touchedAsrSpecificMetaDataFields.length > 0) {
+        let existingAsrSpecificMetaData = selectedMonitoring?.metaData?.asrSpecificMetaData || {};
+        const upDatedAsrSpecificMetaData = form.getFieldsValue(touchedAsrSpecificMetaDataFields);
+        const newAsrSpecificFields = { ...existingAsrSpecificMetaData, ...upDatedAsrSpecificMetaData };
+        updatedData.metaData.asrSpecificMetaData = newAsrSpecificFields;
+      }
+
+      // updated monitoring data such as Dropzone, machine, directory, maxDepth, threshold, fileName etc
+      if (touchedMonitoringDataFields.length > 0) {
+        const existingMonitoringData = selectedMonitoring?.metaData?.monitoringData || {};
+        const updatedMonitoringData = form.getFieldsValue(touchedMonitoringDataFields);
+        const newMonitoringData = { ...existingMonitoringData, ...updatedMonitoringData };
+        updatedData.metaData.monitoringData = newMonitoringData;
+      }
+
+      // update contacts
+      if (touchedContactsFields.length > 0) {
+        const existingContacts = selectedMonitoring?.metaData?.contacts || {};
+        const updatedContacts = form.getFieldsValue(touchedContactsFields);
+        const newContacts = { ...existingContacts, ...updatedContacts };
+        updatedData.metaData.contacts = newContacts;
+      }
+      // Fields that are not contacts, monitoring data or asr specific meta data
+      const allMetaDataFields = [...asrSpecificFields, ...monitoringDataFields, ...notificationMetaDataFields];
+      const otherFields = fields.filter((field) => !allMetaDataFields.includes(field));
+
+      // Update other fields
+      const otherFieldsValues = form.getFieldsValue(otherFields);
+      const newOtherFields = { ...selectedMonitoring, ...otherFieldsValues };
+      updatedData = { ...updatedData, ...newOtherFields };
+
+      // Make api call
+      await updateMonitoring({ updatedData });
+      message.success('Landingzone monitoring saved successfully');
+      resetStates();
+    } catch (err) {
+      message.error('Failed to update directory monitoring');
+    } finally {
+      setSavingLzMonitoring(false);
+    }
+  };
+
+  const resetStates = () => {
+    setDisplayAddEditModal(false);
+    setSelectedMonitoring(null);
+    setEditingData({ isEditing: false });
+    setErroneousTabs([]);
+    setSelectedCluster(null);
+    setActiveTab('0');
+    setCopying(false);
+    form.resetFields();
+  };
+
+  //JSX
+  return (
+    <>
+      <BreadCrumbs
+        extraContent={
+          <ActionButton
+            handleAddNewLzMonitoringBtnClick={handleAddNewLzMonitoringBtnClick}
+            selectedRows={selectedRows}
+            setSelectedRows={setSelectedRows}
+            landingZoneMonitoring={landingZoneMonitoring}
+            setLandingZoneMonitoring={setLandingZoneMonitoring}
+            setBulkEditModalVisibility={setBulkEditModalVisibility}
+            setBulkApprovalModalVisibility={setDisplayAddRejectModal}
+            isReader={isReader}
+          />
+        }
+      />
+      <AddEditModal
+        displayAddEditModal={displayAddEditModal}
+        setDisplayAddEditModal={setDisplayAddEditModal}
+        handleSaveDirectoryMonitoring={handleSaveDirectoryMonitoring}
+        handleUpdateLzMonitoring={handleUpdateLzMonitoring}
+        form={form}
+        clusters={clusters}
+        setSelectedMonitoring={setSelectedMonitoring}
+        savingLzMonitoring={savingLzMonitoring}
+        landingZoneMonitoring={landingZoneMonitoring}
+        setEditingData={setEditingData}
+        isEditing={editingData?.isEditing}
+        erroneousTabs={erroneousTabs}
+        setErroneousTabs={setErroneousTabs}
+        selectedCluster={selectedCluster}
+        setSelectedCluster={setSelectedCluster}
+        resetStates={resetStates}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        directory={directory}
+        setDirectory={setDirectory}
+        copying={copying}
+        setCopying={setCopying}
+        domains={domains}
+        productCategories={productCategories}
+        setSelectedDomain={setSelectedDomain}
+        selectedMonitoring={selectedMonitoring}
+        lzMonitoringType={lzMonitoringType}
+        setLzMonitoringType={setLzMonitoringType}
+      />
+      <LandingZoneMonitoringTable
+        landingZoneMonitoring={landingZoneMonitoring}
+        setLandingZoneMonitoring={setLandingZoneMonitoring}
+        setDisplayViewDetailsModal={setDisplayViewDetailsModal}
+        setSelectedMonitoring={setSelectedMonitoring}
+        setDisplayAddEditModal={setDisplayAddEditModal}
+        setEditingData={setEditingData}
+        setDisplayAddRejectModal={setDisplayAddRejectModal}
+        applicationId={applicationId}
+        setSelectedRows={setSelectedRows}
+        setCopying={setCopying}
+        isReader={isReader}
+      />
+      <ViewDetailsModal
+        displayViewDetailsModal={displayViewDetailsModal}
+        setDisplayViewDetailsModal={setDisplayViewDetailsModal}
+        selectedMonitoring={selectedMonitoring}
+        setSelectedMonitoring={setSelectedMonitoring}
+        clusters={clusters}
+        domains={domains}
+        productCategories={productCategories}
+      />
+      <ApproveRejectModal
+        id={selectedMonitoring?.id}
+        displayAddRejectModal={displayAddRejectModal}
+        setDisplayAddRejectModal={setDisplayAddRejectModal}
+        selectedMonitoring={selectedMonitoring}
+        setSelectedMonitoring={setSelectedMonitoring}
+        user={user}
+        selectedRows={selectedRows}
+        applicationId={applicationId}
+        setLandingZoneMonitoring={setLandingZoneMonitoring}
+      />
+      {bulkEditModalVisibility && (
+        <BulkUpdateModal
+          bulkEditModalVisibility={bulkEditModalVisibility}
+          setBulkEditModalVisibility={setBulkEditModalVisibility}
+          landingZoneMonitoring={landingZoneMonitoring}
+          setLandingZoneMonitoring={setLandingZoneMonitoring}
+          selectedRows={selectedRows}
+          setSelectedRows={setSelectedRows}
+          getAllLzMonitorings={getAllLzMonitorings}
+        />
+      )}
+    </>
+  );
+};
+
+export default LandigZoneMonitoring;

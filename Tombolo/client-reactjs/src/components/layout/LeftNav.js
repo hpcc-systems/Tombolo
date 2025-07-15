@@ -73,7 +73,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       dataflow: '2',
       dataflowinstances: '3',
       fileMonitoring: '4a',
-      directoryMonitoring: '4b',
+      landingZone: '4b',
       clustermonitoring: '4c',
       jobmonitoring: '4d',
       superfileMonitoring: '4e',
@@ -195,9 +195,9 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
           clusterDisabled
         ),
         getItem(
-          <Link to={'/' + applicationId + '/directoryMonitoring'}>
+          <Link to={'/' + applicationId + '/landingZoneMonitoring'}>
             <span>
-              <FolderOutlined /> Directory
+              <FolderOutlined /> Landing Zone
             </span>
           </Link>,
           '4b',
