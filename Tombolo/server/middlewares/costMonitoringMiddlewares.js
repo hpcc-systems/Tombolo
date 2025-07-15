@@ -119,6 +119,12 @@ const validateBulkUpdate = [
     ),
 ];
 
+const validateGetCostMonitoringByAppId = [
+  param('applicationId')
+    .isUUID()
+    .withMessage('Application ID must be a valid UUID'),
+];
+
 module.exports = {
   validateUpdateCostMonitoring,
   validateCreateCostMonitoring,
@@ -128,4 +134,5 @@ module.exports = {
   validateToggleStatus,
   validateBulkDelete,
   validateBulkUpdate,
+  validateGetCostMonitoringByAppId,
 };

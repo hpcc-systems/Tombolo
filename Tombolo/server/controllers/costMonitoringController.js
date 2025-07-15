@@ -44,8 +44,14 @@ async function updateCostMonitoring(req, res) {
 }
 
 async function getCostMonitorings(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).send('Failed to get Cost Monitorings');
+  }
   try {
-    const costMonitorings = await CostMonitoring.findAll();
+    const costMonitorings = await CostMonitoring.findAll({
+      where: { applicationId: req.params.applicationId },
+    });
     return res.status(200).json({ success: true, data: costMonitorings });
   } catch (err) {
     logger.error('Failed to get cost monitorings', err);
