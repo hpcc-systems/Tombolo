@@ -175,7 +175,6 @@ async function monitorCostPerUser() {
       let clusterDetails;
       if (clusterIds === null || clusterIds.length === 0) {
         // Then get all active clusters details
-        // TODO: Maybe there's a better function for this, check the getAllClusters route
         const allClusters = Cluster.findAll({
           attributes: ['id'],
           where: { deletedAt: null },

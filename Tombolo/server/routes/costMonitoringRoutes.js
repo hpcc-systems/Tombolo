@@ -10,6 +10,7 @@ const {
   validateToggleStatus,
   validateBulkDelete,
   validateBulkUpdate,
+  validateGetCostMonitoringByAppId,
 } = require('../middlewares/costMonitoringMiddlewares');
 
 const {
@@ -34,8 +35,12 @@ router.put('/toggle', validateToggleStatus, toggleCostMonitoringActive);
 router.delete('/bulk', validateBulkDelete, bulkDeleteCostMonitoring);
 router.patch('/bulk', validateBulkUpdate, bulkUpdateCostMonitoring);
 
-router.get('/', getCostMonitorings);
-router.get('/:id', validateGetCostMonitoringById, getCostMonitoringById);
+router.get('/byId/:id', validateGetCostMonitoringById, getCostMonitoringById);
+router.get(
+  '/:applicationId',
+  validateGetCostMonitoringByAppId,
+  getCostMonitorings
+);
 router.post('/', validateCreateCostMonitoring, createCostMonitoring);
 
 router.patch('/', validateUpdateCostMonitoring, updateCostMonitoring);
