@@ -334,7 +334,7 @@ function CostMonitoring() {
       const fields = Object.keys(formFields);
 
       // Fields that are nested inside the metaData object
-      const metaDataFields = ['users', 'threshold', 'timeWindow'];
+      const metaDataFields = ['users', 'timeWindow'];
       const notificationMetaDataFields = [
         'primaryContacts',
         'secondaryContacts',
@@ -349,7 +349,6 @@ function CostMonitoring() {
           touchedFields.push(field);
         }
       });
-
       // If no touched fields
       if (touchedFields.length === 0) {
         return message.error('No changes detected');
@@ -376,7 +375,10 @@ function CostMonitoring() {
         const existingNotificationMetaData = selectedMonitoring?.metaData?.notificationMetaData || {};
         const updatedNotificationMetaData = form.getFieldsValue(touchedNotificationMetaDataFields);
         const newNotificationMetaData = { ...existingNotificationMetaData, ...updatedNotificationMetaData };
-        updatedData.metaData = { ...updatedData.metaData, notificationMetaData: newNotificationMetaData };
+
+        // Preserve existing metaData that might have been set in the previous block
+        const existingUpdatedMetaData = updatedData.metaData || selectedMonitoring?.metaData || {};
+        updatedData.metaData = { ...existingUpdatedMetaData, notificationMetaData: newNotificationMetaData };
       }
 
       // New values of any other fields that are not part of metaDataFields, notificationMetaDataFields
@@ -386,7 +388,8 @@ function CostMonitoring() {
 
       // Update other fields
       const otherFieldsValues = form.getFieldsValue(otherFields);
-      const newOtherFields = { ...selectedMonitoring, ...otherFieldsValues };
+      const { metaData: _, ...selectedMonitoringWithoutMetaData } = selectedMonitoring;
+      const newOtherFields = { ...selectedMonitoringWithoutMetaData, ...otherFieldsValues };
       updatedData = { ...updatedData, ...newOtherFields };
 
       // Updated by
@@ -395,6 +398,11 @@ function CostMonitoring() {
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
       };
+
+      if (touchedFields.includes('threshold')) {
+        updatedData.metaData.notificationMetaData.notificationCondition = updatedData.threshold;
+      }
+      delete updatedData.threshold;
 
       await updateSelectedCostMonitoring({ updatedData });
 

@@ -55,7 +55,7 @@ function CostMonitoringBasicTab({ form, clusters, handleClusterChange }) {
         <Select
           mode="tags"
           allowClear
-          placeholder="Enter a comma-delimited list of email addresses"
+          placeholder="Enter a comma-delimited list of HPCC users"
           tokenSeparators={[',']}
         />
       </Form.Item>

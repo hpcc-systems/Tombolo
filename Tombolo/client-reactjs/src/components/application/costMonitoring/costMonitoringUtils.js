@@ -1,7 +1,7 @@
 import { authHeader } from '../../common/AuthHeader';
 
-export const getAllCostMonitorings = async () => {
-  const response = await fetch('/api/costMonitoring', {
+export const getAllCostMonitorings = async ({ applicationId }) => {
+  const response = await fetch(`/api/costMonitoring/${applicationId}`, {
     headers: authHeader(),
   });
   if (!response.ok) {
