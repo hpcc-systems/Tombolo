@@ -12,6 +12,8 @@ const {
   validateUpdateLandingZoneMonitoring,
   validateEvaluateLandingZoneMonitoring,
   validateToggleStatus,
+  validateIds,
+  validateBulkUpdatePayload,
 } = require('../middlewares/landingZoneMonitoringMiddleware');
 
 // Controllers
@@ -25,16 +27,17 @@ const {
   deleteLandingZoneMonitoring,
   evaluateLandingZoneMonitoring,
   toggleLandingZoneMonitoringStatus,
+  bulkDeleteLandingZoneMonitoring,
+  bulkUpdateLzMonitoring,
 } = require('../controllers/landingZoneMonitoringController');
 
-// Get Dropzones and associated machines
-router.get('/getDropzones', validateClusterId, getDropzonesForACluster);
-router.get('/fileList', validateFileListParams, getFileList);
 router.post(
   '/',
   validateCreateLandingZoneMonitoring,
   createLandingZoneMonitoring
 );
+router.get('/getDropzones', validateClusterId, getDropzonesForACluster);
+router.get('/fileList', validateFileListParams, getFileList);
 router.get(
   '/all/:applicationId',
   validateApplicationId,
@@ -46,17 +49,20 @@ router.patch(
   validateUpdateLandingZoneMonitoring,
   updateLandingZoneMonitoring
 );
-router.delete('/:id', validateId, deleteLandingZoneMonitoring);
 router.patch(
   '/evaluate',
   validateEvaluateLandingZoneMonitoring,
   evaluateLandingZoneMonitoring
 );
+router.delete('/bulkDelete', validateIds, bulkDeleteLandingZoneMonitoring);
+router.delete('/:id', validateId, deleteLandingZoneMonitoring);
+
 router.patch(
   '/toggleStatus',
   validateToggleStatus,
   toggleLandingZoneMonitoringStatus
 );
+router.patch('/bulkUpdate', validateBulkUpdatePayload, bulkUpdateLzMonitoring);
 
 // export the router
 module.exports = router;

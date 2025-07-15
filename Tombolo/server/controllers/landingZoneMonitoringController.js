@@ -7,6 +7,7 @@ const logger = require('../config/logger');
 const {
   cluster: Cluster,
   landingZoneMonitoring: LandingZoneMonitoring,
+  user: User,
 } = require('../models');
 const { decryptString } = require('../utils/cipher');
 const { getClusterOptions } = require('../utils/getClusterOptions');
@@ -111,11 +112,16 @@ const getFileList = async (req, res) => {
 // Create new landing zone monitoring
 const createLandingZoneMonitoring = async (req, res) => {
   try {
-    logger.info('Creating new landing zone monitoring');
+    const { id: userId } = req.user;
 
     // Create the landing zone monitoring record with pending approval status
     const response = await LandingZoneMonitoring.create(
-      { ...req.body, approvalStatus: 'Pending' },
+      {
+        ...req.body,
+        approvalStatus: 'Pending',
+        createdBy: userId,
+        lastUpdatedBy: userId,
+      },
       { raw: true }
     );
 
@@ -127,33 +133,9 @@ const createLandingZoneMonitoring = async (req, res) => {
     });
   } catch (err) {
     logger.error(`Error creating landing zone monitoring: ${err.message}`);
-
-    // Handle specific error types
-    if (err.name === 'SequelizeValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation error',
-        errors: err.errors.map(e => e.message),
-      });
-    }
-
-    if (err.name === 'SequelizeUniqueConstraintError') {
-      return res.status(409).json({
-        success: false,
-        message: 'A landing zone monitoring with this name already exists',
-      });
-    }
-
-    if (err.name === 'SequelizeForeignKeyConstraintError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid reference to application, cluster, or user',
-      });
-    }
-
     res.status(500).json({
       success: false,
-      message: 'Failed to create landing zone monitoring',
+      message: err.message,
     });
   }
 };
@@ -169,6 +151,29 @@ const getAllLandingZoneMonitorings = async (req, res) => {
     const landingZoneMonitorings = await LandingZoneMonitoring.findAll({
       where: { applicationId },
       order: [['createdAt', 'DESC']],
+      // Include user details for createdBy , lastUpdatedBy and cluster
+      include: [
+        {
+          model: User,
+          attributes: ['firstName', 'lastName', 'email'],
+          as: 'creator',
+        },
+        {
+          model: User,
+          attributes: ['firstName', 'lastName', 'email'],
+          as: 'updater',
+        },
+        {
+          model: User,
+          attributes: ['firstName', 'lastName', 'email'],
+          as: 'approver',
+        },
+        {
+          model: Cluster,
+          attributes: ['name', 'thor_host', 'thor_port'],
+          as: 'cluster',
+        },
+      ],
     });
 
     logger.info(
@@ -238,6 +243,7 @@ const updateLandingZoneMonitoring = async (req, res) => {
     const payload = {
       ...req.body,
       approvalStatus: 'Pending',
+      isActive: false,
       approverComment: null,
       approvedBy: null,
       approvedAt: null,
@@ -344,9 +350,57 @@ const deleteLandingZoneMonitoring = async (req, res) => {
   }
 };
 
+// Bulk delete landing zone monitoring
+const bulkDeleteLandingZoneMonitoring = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    logger.info(`Bulk deleting landing zone monitoring: ${ids}`);
+
+    // Check if the records exist
+    const existingMonitorings = await LandingZoneMonitoring.findAll({
+      where: {
+        id: {
+          [Sequelize.Op.in]: ids,
+        },
+      },
+    });
+
+    if (existingMonitorings.length === 0) {
+      logger.warn(`No landing zone monitoring found with IDs: ${ids}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Landing zone monitoring not found',
+      });
+    }
+
+    // Soft delete the records
+    await LandingZoneMonitoring.destroy({
+      where: {
+        id: {
+          [Sequelize.Op.in]: ids,
+        },
+      },
+    });
+
+    logger.info(`Successfully deleted landing zone monitoring: ${ids}`);
+    res.status(200).json({
+      success: true,
+      message: 'Landing zone monitoring deleted successfully',
+    });
+  } catch (err) {
+    logger.error(`Error deleting landing zone monitoring: ${err.message}`);
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete landing zone monitoring',
+    });
+  }
+};
+
 // Evaluate landing zone monitoring (approve/reject)
 const evaluateLandingZoneMonitoring = async (req, res) => {
   try {
+    const { id: approver } = req.user;
     const { ids, approvalStatus, approverComment, approvedBy, isActive } =
       req.body;
 
@@ -356,6 +410,7 @@ const evaluateLandingZoneMonitoring = async (req, res) => {
       approvedBy,
       isActive: isActive !== undefined ? isActive : false,
       approvedAt: new Date(),
+      approvedBy: approver,
     };
 
     const [updatedCount] = await LandingZoneMonitoring.update(updateData, {
@@ -456,6 +511,69 @@ const toggleLandingZoneMonitoringStatus = async (req, res) => {
   }
 };
 
+// Bulk update landing zone monitoring
+/* 
+map all the objects in the arry and build new arery of ids
+get all rows with the ids
+update metaData of those rows
+*/
+
+const bulkUpdateLzMonitoring = async (req, res) => {
+  console.log('------------------------');
+  console.log('At the controller door: ');
+  console.log('------------------------');
+  try {
+    const { metaData } = req.body;
+    const ids = metaData.map(item => item.id);
+
+    // Get all rows with the IDs
+    const records = await LandingZoneMonitoring.findAll({
+      where: {
+        id: {
+          [Sequelize.Op.in]: ids,
+        },
+      },
+    });
+
+    if (records.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'No landing zone monitoring records found with the provided IDs',
+      });
+    }
+
+    // Update metaData of those rows
+    const updatedCount = await LandingZoneMonitoring.update(
+      { metaData },
+      {
+        where: {
+          id: {
+            [Sequelize.Op.in]: ids,
+          },
+        },
+      }
+    );
+
+    logger.info(
+      `Successfully updated ${updatedCount} landing zone monitoring record(s)`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully updated ${updatedCount} landing zone monitoring record(s)`,
+      updatedCount,
+    });
+  } catch (error) {
+    logger.error('Error bulk updating landing zone monitoring:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to bulk update landing zone monitoring',
+      error: error.message,
+    });
+  }
+};
+
 //Exports
 module.exports = {
   getDropzonesForACluster,
@@ -467,4 +585,6 @@ module.exports = {
   deleteLandingZoneMonitoring,
   evaluateLandingZoneMonitoring,
   toggleLandingZoneMonitoringStatus,
+  bulkDeleteLandingZoneMonitoring,
+  bulkUpdateLzMonitoring,
 };
