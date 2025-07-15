@@ -34,6 +34,16 @@ module.exports = {
           email: 'NA',
         }),
       },
+      {
+        id: uuidv4(),
+        name: 'Cost Monitoring',
+        createdAt: new Date(),
+        createdBy: JSON.stringify({
+          firstName: null,
+          lastName: 'System',
+          email: 'NA',
+        }),
+      },
     ]);
   },
 
