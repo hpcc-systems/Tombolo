@@ -1,17 +1,50 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Form, Select, Input } from 'antd';
 import { matches } from 'validator';
 
 const { Option } = Select;
 
-function CostMonitoringBasicTab({ form, clusters, handleClusterChange }) {
+function CostMonitoringBasicTab({ form, clusters, handleClusterChange, isDuplicating, isEditing, costMonitorings }) {
+  const monitoringNameInputRef = useRef(null);
+
+  // This is a temporary fix and only works on the application level
+  const doesNameExist = (newName) => {
+    return costMonitorings.some((monitoring) => monitoring.monitoringName === newName);
+  };
+
+  useEffect(() => {
+    if (form && !isEditing) {
+      monitoringNameInputRef.current?.input.focus();
+    }
+
+    if (isDuplicating) {
+      let currentMonitoringName = form.getFieldValue('monitoringName');
+      let newName = `copy-${currentMonitoringName}`;
+      let copyCount = 1;
+
+      // Keep incrementing until a unique name is found
+      while (doesNameExist(newName)) {
+        copyCount++;
+        newName = `copy-${currentMonitoringName}-${copyCount}`;
+      }
+
+      form.setFields([
+        {
+          name: 'monitoringName',
+          value: newName,
+          warnings: ['Auto generated name. Please modify if necessary.'],
+        },
+      ]);
+    }
+  }, [isDuplicating, form, costMonitorings, isEditing]);
+
   return (
     <Form form={form} layout="vertical">
       <Form.Item
         label="Monitoring Name"
         name="monitoringName"
         rules={[{ required: true, message: 'Please enter a monitoring name' }]}>
-        <Input placeholder="Enter monitoring name" />
+        <Input placeholder="Enter monitoring name" ref={monitoringNameInputRef} />
       </Form.Item>
       <Form.Item
         label="Description"

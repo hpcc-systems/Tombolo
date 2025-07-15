@@ -115,7 +115,7 @@ function CostMonitoring() {
       return;
     }
 
-    const { approvalStatus, activeStatus, clusters: filterClusters } = filters;
+    const { approvalStatus, activeStatus, clusters: filterClusters, users: filterUsers } = filters;
 
     // Convert activeStatus to boolean
     let activeStatusBool;
@@ -137,6 +137,15 @@ function CostMonitoring() {
       if (filterClusters && filterClusters.length > 0) {
         const hasMatchingCluster = costMonitoring.clusterIds?.some((clusterId) => filterClusters.includes(clusterId));
         if (!hasMatchingCluster) {
+          include = false;
+        }
+      }
+
+      if (filterUsers && filterUsers.length > 0) {
+        const costMonitoringUsers = costMonitoring.metaData?.users || [];
+        // Check if any of the selected filter users exist in the cost monitoring users array
+        const hasMatchingUser = filterUsers.some((filterUser) => costMonitoringUsers.includes(filterUser));
+        if (!hasMatchingUser) {
           include = false;
         }
       }

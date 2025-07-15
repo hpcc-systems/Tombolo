@@ -187,11 +187,11 @@ function CostMonitoringDetailsModal({
           <Tooltip
             title={
               <>
-                <div>User ID: {JSON.parse(createdBy).id}</div>
-                <div>Email: {JSON.parse(createdBy).email}</div>
+                <div>User ID: {createdBy.id}</div>
+                <div>Email: {createdBy.email}</div>
               </>
             }>
-            <span style={{ color: 'var(--primary)' }}>{JSON.parse(createdBy).name}</span>
+            <span style={{ color: 'var(--primary)' }}>{createdBy.name}</span>
           </Tooltip>{' '}
           on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
         </Descriptions.Item>
@@ -200,11 +200,11 @@ function CostMonitoringDetailsModal({
           <Tooltip
             title={
               <>
-                <div>User ID: {JSON.parse(lastUpdatedBy).id}</div>
-                <div>Email: {JSON.parse(lastUpdatedBy).email}</div>
+                <div>User ID: {lastUpdatedBy.id}</div>
+                <div>Email: {lastUpdatedBy.email}</div>
               </>
             }>
-            <span style={{ color: 'var(--primary)' }}>{JSON.parse(lastUpdatedBy).name}</span>
+            <span style={{ color: 'var(--primary)' }}>{lastUpdatedBy.name}</span>
           </Tooltip>{' '}
           on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
         </Descriptions.Item>

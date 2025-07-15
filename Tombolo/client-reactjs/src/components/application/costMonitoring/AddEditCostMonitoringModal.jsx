@@ -20,6 +20,7 @@ const AddEditCostMonitoringModal = ({
   setActiveTab,
   setErroneousTabs,
   handleClusterChange,
+  costMonitorings,
 }) => {
   // Keep track of visited tabs, some form fields are loaded only when the tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
@@ -42,7 +43,14 @@ const AddEditCostMonitoringModal = ({
     {
       label: 'Basic',
       component: () => (
-        <CostMonitoringBasicTab form={form} clusters={clusters} handleClusterChange={handleClusterChange} />
+        <CostMonitoringBasicTab
+          form={form}
+          clusters={clusters}
+          handleClusterChange={handleClusterChange}
+          isDuplicating={isDuplicating}
+          isEditing={isEditing}
+          costMonitorings={costMonitorings}
+        />
       ),
       id: 1,
     },

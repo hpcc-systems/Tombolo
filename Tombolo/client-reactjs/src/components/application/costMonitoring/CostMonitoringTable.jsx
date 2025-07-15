@@ -201,7 +201,7 @@ const CostMonitoringTable = ({
                       </div>
 
                       {record.isActive ? (
-                        <div onClick={() => toggleMonitoringStatus(record, false)}>
+                        <div onClick={() => toggleMonitoringStatus(record, 'pause')}>
                           <PauseCircleOutlined
                             disabled={record.approvalStatus !== 'Approved'}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
@@ -209,7 +209,7 @@ const CostMonitoringTable = ({
                           Pause
                         </div>
                       ) : (
-                        <div onClick={() => toggleMonitoringStatus(record, true)}>
+                        <div onClick={() => toggleMonitoringStatus(record, 'start')}>
                           <PlayCircleOutlined
                             disabled={record.approvalStatus !== 'Approved'}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
@@ -278,8 +278,21 @@ const CostMonitoringTable = ({
 
   // When eye icon is clicked, display the monitoring details modal
   const viewMonitoringDetails = (record) => {
-    setSelectedMonitoring(record);
-    setDisplayMonitoringDetailsModal(true);
+    try {
+      // Ensure record is a valid object
+      if (!record || typeof record !== 'object') {
+        message.error('Invalid monitoring data');
+        return;
+      }
+
+      setSelectedMonitoring(record);
+      setDisplayMonitoringDetailsModal(true);
+    } catch (error) {
+      console.error('Error in viewMonitoringDetails:', error);
+      message.error('Failed to view monitoring details');
+    }
+    // setSelectedMonitoring(record);
+    // setDisplayMonitoringDetailsModal(true);
   };
 
   // When edit icon is clicked, display the add cost monitoring modal and set the selected monitoring
@@ -302,7 +315,13 @@ const CostMonitoringTable = ({
     setDisplayAddCostMonitoringModal(true);
   };
 
-  // Start or pause monitoring
+  /**
+   * Toggles the status (start/pause) of a cost monitoring
+   * @param {Object} record - The cost monitoring record to toggle
+   * @param {string} status - The desired status ('start' or 'pause')
+   * @returns {Promise<void>} - A promise that resolves when the status is toggled
+   * @throws {Error} - If the monitoring status update fails
+   */
   const toggleMonitoringStatus = async (record, status) => {
     try {
       if (record.approvalStatus !== 'Approved') {
