@@ -16,6 +16,7 @@ import {
   SettingOutlined,
   FolderOutlined,
   WarningFilled,
+  DollarOutlined,
 } from '@ant-design/icons';
 
 import { getRoleNameArray } from '../common/AuthUtil';
@@ -256,6 +257,18 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
               clusterDisabled
             )
           : null,
+        getItem(
+          <Link to={'/' + applicationId + '/costMonitoring'}>
+            <span>
+              <DollarOutlined /> Cost
+            </span>
+          </Link>,
+          '4g',
+          null,
+          null,
+          null,
+          clusterDisabled
+        ),
       ],
       null,
       clusterDisabled
