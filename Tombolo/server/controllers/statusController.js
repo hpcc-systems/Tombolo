@@ -14,7 +14,10 @@ const checkOwnerExists = async (req, res) => {
     });
 
     if (!ownerRole) {
-      return false;
+      return res.status(400).json({
+        success: false,
+        message: 'Owner role does not exist',
+      });
     }
 
     const owners = await UserRoles.findOne({
@@ -26,7 +29,10 @@ const checkOwnerExists = async (req, res) => {
     return res.status(200).json({ success: true, data: exists });
   } catch (err) {
     logger.error(`Check owner exists: ${err.message}`);
-    return false;
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 

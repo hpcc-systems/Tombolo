@@ -108,7 +108,6 @@ async function analyzeCostPerUser() {
       const clusters = await Cluster.findAll({
         where: { id: { [Op.in]: clusterIds } },
       });
-
       const notificationPrefix = 'CM';
 
       // TODO: The Discovered at seems to be wrong? Showing 4 PM at actual 12 PM on play cluster
