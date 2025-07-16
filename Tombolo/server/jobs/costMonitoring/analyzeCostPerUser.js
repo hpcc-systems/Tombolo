@@ -2,6 +2,7 @@ const logger = require('../../config/logger');
 const { parentPort } = require('worker_threads');
 const {
   costMonitoring: CostMonitoring,
+  costMonitoringData: CostMonitoringData,
   notification_queue: NotificationQueue,
   monitoring_types: MonitoringTypes,
   costMonitoringDataTotals: CostMonitoringDataTotals,
@@ -13,6 +14,7 @@ const {
   generateNotificationId,
 } = require('../jobMonitoring/monitorJobsUtil');
 const { Op } = require('sequelize');
+const moment = require('moment');
 
 async function analyzeCostPerUser() {
   try {
@@ -65,6 +67,39 @@ async function analyzeCostPerUser() {
         continue;
       }
 
+      const erroringUsers = totalsCausingNotification.map(total => ({
+        username: total.username,
+        totalCost: total.totalCost,
+      }));
+
+      const totalErroringCost = totalsCausingNotification.reduce(
+        (sum, total) => sum + total.totalCost,
+        0
+      );
+
+      // Get the most recent costMonitoringData
+      const lastCostMonitoringData = await CostMonitoringData.findOne({
+        where: { monitoringId: costMonitoring.id },
+        order: [['notificationSentDate', 'DESC']],
+      });
+
+      // NOTE: Maybe allow for setting notificationFrequency on costMonitoring
+      // Check if more than 2 hours since last notification
+      if (
+        lastCostMonitoringData &&
+        moment().diff(
+          moment(lastCostMonitoringData.notificationSentDate),
+          'hours'
+        ) < 2
+      ) {
+        parentPort &&
+          parentPort.postMessage({
+            level: 'info',
+            text: `Notification already sent for analyzeCostPerUser: ${costMonitoring.id}`,
+          });
+        continue;
+      }
+
       const primaryContacts =
         costMonitoring.metaData.notificationMetaData.primaryContacts;
       const secondaryContacts = [];
@@ -73,8 +108,10 @@ async function analyzeCostPerUser() {
       const clusters = await Cluster.findAll({
         where: { id: { [Op.in]: clusterIds } },
       });
+
       const notificationPrefix = 'CM';
 
+      // TODO: The Discovered at seems to be wrong? Showing 4 PM at actual 12 PM on play cluster
       const notificationPayload = createNotificationPayload({
         type: 'email',
         notificationDescription: `Cost Monitoring (${costMonitoring.monitoringName}) detected that a user passed the cost threshold`,
@@ -86,6 +123,8 @@ async function analyzeCostPerUser() {
         monitoringName: costMonitoring.monitoringName,
         issue: {
           Issue: `Cost monitoring threshold of ${threshold} passed`,
+          'Total Cost': totalErroringCost,
+          Users: erroringUsers,
           clusters: clusters.map(cluster => ({
             ClusterName: cluster.name,
             'Discovered At': findLocalDateTimeAtCluster(
@@ -97,6 +136,7 @@ async function analyzeCostPerUser() {
           notificationPrefix,
           timezoneOffset: clusters[0].timezone_offset || 0,
         }),
+        notificationOrigin: 'Cost Monitoring',
       });
 
       await NotificationQueue.create(notificationPayload);
@@ -105,6 +145,9 @@ async function analyzeCostPerUser() {
           level: 'info',
           text: 'Notification(s) sent for analyzeCostPerUser',
         });
+
+      lastCostMonitoringData.notificationSentDate = new Date();
+      await lastCostMonitoringData.save();
     }
   } catch (err) {
     if (parentPort) {
