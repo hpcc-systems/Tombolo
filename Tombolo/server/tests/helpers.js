@@ -259,6 +259,58 @@ function getLandingZoneMonitoringUpdatePayload(
   };
 }
 
+function getApprovedBy() {
+  return {
+    name: 'Test User',
+    email: 'testemail@lexisnexisrisk.com',
+    id: uuidv4(),
+  };
+}
+
+function getUuids(count) {
+  const uuids = [];
+  for (let i = 0; i < count; i++) {
+    uuids.push(uuidv4());
+  }
+  return uuids;
+}
+
+function getCostMonitoring(overrides = {}, dateStrings = false) {
+  let newDate = new Date();
+  if (dateStrings) {
+    newDate = newDate.toISOString();
+  }
+  return {
+    id: uuidv4(),
+    applicationId: uuidv4(),
+    monitoringName: 'Test Cost Monitor',
+    isActive: false,
+    monitoringType: 'cost',
+    approvalStatus: 'pending',
+    approvedBy: null,
+    approvedAt: null,
+    approverComment: null,
+    description: 'This is a test monitoring for cost tracking',
+    clusterIds: [uuidv4()],
+    lastRunDetails: null,
+    metaData: {
+      users: ['testuser1'],
+      notificationMetaData: {
+        primaryContacts: ['testemail1@lexisnexisrisk.com'],
+        notificationCondition: 12,
+      },
+    },
+    createdBy: uuidv4(),
+    lastUpdatedBy: uuidv4(),
+    createdAt: newDate,
+    updatedAt: newDate,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+
 module.exports = {
   getUsers,
   getInstanceSettings,
@@ -271,5 +323,9 @@ module.exports = {
   getMockClusterForApi,
   getFileListQuery,
   fakeValidateTokenMiddleware,
+  getApprovedBy,
+  getUuids,
+  getCostMonitoring,
   nonExistentID,
+  ISO_DATE_REGEX,
 };
