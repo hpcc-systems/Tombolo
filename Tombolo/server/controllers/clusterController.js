@@ -302,7 +302,7 @@ const addClusterWithProgress = async (req, res) => {
     sendUpdate({
       step: 4,
       success: true,
-      message: 'Preparing to save cluster ...',
+      message: 'Checking if cluster is containerized ...',
     });
 
     // Payload
@@ -322,6 +322,52 @@ const addClusterWithProgress = async (req, res) => {
       metaData,
     };
 
+    const endpoint = `${cluster.thor}:${cluster.thor_port}/WsSMC/GetBuildInfo.json`;
+
+    // Prepare axios config
+    const axiosConfig = {
+      method: 'GET',
+      url: endpoint,
+      timeout: 30000, // 30 second timeout
+    };
+
+    // Add authentication if credentials exist
+    if (userID && password) {
+      axiosConfig.auth = {
+        username: userID,
+        password,
+      };
+    }
+
+    // Make the HTTP call
+    const { data } = await axios(axiosConfig);
+
+    if (
+      data &&
+      data.GetBuildInfoResponse &&
+      data.GetBuildInfoResponse.BuildInfo &&
+      data.GetBuildInfoResponse.BuildInfo.NamedValue
+    ) {
+      const { NamedValue } = data.GetBuildInfoResponse.BuildInfo;
+      NamedValue.forEach(nv => {
+        if (nv.Name === 'CONTAINERIZED' && nv.Value === 'ON') {
+          clusterPayload.containerized = true;
+        }
+      });
+    }
+
+    sendUpdate({
+      step: 4,
+      success: true,
+      message: 'Cluster containerization check complete',
+    });
+
+    sendUpdate({
+      step: 5,
+      success: true,
+      message: 'Preparing to save cluster ...',
+    });
+
     // Has password and add to the obj if it exists
     if (password) {
       clusterPayload.hash = encryptString(password);
@@ -329,7 +375,7 @@ const addClusterWithProgress = async (req, res) => {
     // Create cluster
     const newCluster = await Cluster.create(clusterPayload);
     sendUpdate({
-      step: 4,
+      step: 5,
       success: true,
       message: 'Cluster added successfully',
       cluster: newCluster,
@@ -463,7 +509,7 @@ const pingCluster = async (req, res) => {
         username,
         password,
       },
-      timeout: 5000,
+      timeout: 25000,
     });
 
     return res
