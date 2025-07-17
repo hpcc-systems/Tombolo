@@ -1,0 +1,86 @@
+.costMonitoring__modal {
+  width: 800;
+}
+
+/* Schedular Selector */
+
+.schedule-selector {
+  display: flex;
+}
+
+.selected-component {
+  padding-left: 15px;
+  /* display: flex; */
+  /* align-items: center;
+  justify-content: center; */
+  border-left: 1px solid #dadada;
+}
+
+.modal-header {
+  font-size: 14px;
+}
+
+.monitor-input {
+  margin-top: 10px;
+}
+
+.modal-card-2 {
+  margin-top: 5px;
+}
+
+.cost__monitoring_tiny-description {
+  margin-top: 30px;
+}
+
+.cost__monitoring_tiny-description * {
+  padding: 2px 4px !important;
+}
+
+.cost__monitoring_tiny-description .ant-descriptions-item-label {
+  width: 240px;
+  font-weight: 500;
+}
+
+.costMonitoringTable__inactive-monitoring {
+  background-color: var(--paused);
+}
+
+.costMonitoringTable__active-monitoring {
+  background-color: var(--active);
+}
+
+.costMonitoringTable__hidden_actions > * {
+  padding: 5px;
+}
+
+.costMonitoringTable__hidden_actions > *:hover {
+  background-color: var(--secondary-light);
+}
+
+.costMonitoringTable__selected-row > .ant-table-cell {
+  background-color: rgba(255, 255, 0, 0.1) !important;
+}
+
+/* Filters ------------------------------------------------------------------ */
+
+.notifications__filter-label {
+  font-weight: 500;
+  padding-bottom: 5px;
+}
+
+.notifications__filters {
+  margin-bottom: 5px;
+  padding: 4px 10px;
+}
+
+.notifications_filters__form {
+  background-color: var(--light);
+}
+
+.notification__filters_count {
+  display: flex;
+  justify-content: right;
+  color: var(--primary);
+  background: none;
+  font-weight: 600;
+}

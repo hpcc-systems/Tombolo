@@ -13,10 +13,11 @@ docs/~$tombolo.pptx
 Auth-Service/
 gitClones/**
 !gitClones/.gitkeep
-.prettierignore 
+.prettierignore
 docker-compose.yml
 dev/
 https/**
 cert.pem
 key.pem
 tombolo_docs/.docusaurus/*
+**/.idea
