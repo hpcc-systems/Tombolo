@@ -136,8 +136,8 @@ async function checkClusterContainerization() {
     let jobName = 'cluster-containerization-check-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: '10s', // For development
-      // cron: clusterContainerizationCheckInterval,
+      // interval: '10s', // For development
+      cron: clusterContainerizationCheckInterval,
       path: path.join(
         __dirname,
         '..',

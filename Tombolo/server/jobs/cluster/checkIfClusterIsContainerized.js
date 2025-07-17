@@ -66,14 +66,31 @@ const cluster = models.cluster;
         }
 
         // Make the HTTP call
-        const response = await axios(axiosConfig);
+        const { data } = await axios(axiosConfig);
 
-        // Log the response data
-        parentPort &&
-          parentPort.postMessage({
-            level: 'verbose',
-            text: `Cluster Containerization Check: Response for cluster ${clusterInfo.name}: ${JSON.stringify(response.data)}`,
-          });
+        let isContainerized = false;
+
+        if (
+          data &&
+          data.GetBuildInfoResponse &&
+          data.GetBuildInfoResponse.BuildInfo &&
+          data.GetBuildInfoResponse.BuildInfo.NamedValue
+        ) {
+          const { NamedValue } = data.GetBuildInfoResponse.BuildInfo;
+          isContainerized = NamedValue.some(
+            nv => nv.Name === 'CONTAINERIZED' && nv.Value === 'ON'
+          );
+        }
+
+        // update the cluster
+        await cluster.update(
+          { containerized: isContainerized },
+          {
+            where: {
+              id: clusterInfo.id,
+            },
+          }
+        );
       } catch (error) {
         parentPort &&
           parentPort.postMessage({
