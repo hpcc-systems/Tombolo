@@ -24,8 +24,6 @@ const moment = require('moment');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 // const userService = require('../user/userservice');
-// var sanitize = require('sanitize-filename');
-// const { io } = require('../../server');
 
 let ClusterWhitelist = { clusters: [] };
 

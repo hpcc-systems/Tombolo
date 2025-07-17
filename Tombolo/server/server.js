@@ -51,15 +51,12 @@ app.use((req, res, next) => {
   next();
 });
 
-/* Initialize Socket IO */
 const server = require('http').Server(app);
-const socketIo = require('socket.io')(server);
-server.maxHeadersCoiunt = 1000;
-module.exports.io = socketIo;
+server.maxHeadersCount = 1000;
 
 app.set('trust proxy', 1);
 
-// Limit rate of requests to 400 per 15 minutes
+// Limit the rate of requests to 400 per 15 minutes
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 400,
@@ -75,7 +72,6 @@ app.use(cookieParser());
 /*  ROUTES */
 const job = require('./routes/job/read');
 const bree = require('./routes/bree/read');
-const ldap = require('./routes/ldap/read');
 const appRead = require('./routes/app/read');
 const query = require('./routes/query/read');
 const hpccRead = require('./routes/hpcc/read');
@@ -141,7 +137,6 @@ app.use('/api/user', users);
 app.use('/api/session', sessions);
 app.use('/api/job', job);
 app.use('/api/bree', bree);
-app.use('/api/ldap', ldap);
 app.use('/api/query', query);
 app.use('/api/groups', groups);
 app.use('/api/app/read', appRead);
