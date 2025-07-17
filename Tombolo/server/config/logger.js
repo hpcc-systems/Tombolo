@@ -42,7 +42,7 @@ const getFormat = isConsole =>
                     null,
                     2
                   )
-                : util.inspect(arg, { depth: null, colors: isConsole });
+                : arg.stack; // Just return the stack string, not the full object
             }
             return isProduction
               ? JSON.stringify(arg, null, 2)
@@ -63,6 +63,7 @@ const getFormat = isConsole =>
       delete logEntry.level;
       delete logEntry.message;
       delete logEntry.timestamp;
+      delete logEntry.stack; // Remove the stack property from metadata
       delete logEntry[Symbol.for('splat')];
       delete logEntry[Symbol.for('level')];
       delete logEntry[Symbol.for('message')];
