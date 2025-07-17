@@ -135,7 +135,7 @@ const createLandingZoneMonitoring = async (req, res) => {
     logger.error(`Error creating landing zone monitoring: ${err.message}`);
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: 'Failed to create landing zone monitoring',
     });
   }
 };
