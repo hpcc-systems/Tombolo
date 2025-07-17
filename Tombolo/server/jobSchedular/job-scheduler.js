@@ -1,6 +1,5 @@
-const Bree = require("bree");
-
-const logger = require("../config/logger.js");
+const Bree = require('bree');
+const logger = require('../config/logger.js');
 const {
   logBreeJobs,
   createNewBreeJob,
@@ -11,24 +10,24 @@ const {
   stopAllJobs,
   startJob,
   startAllJobs,
-} = require("../jobSchedularMethods/breeJobs.js");
+} = require('../jobSchedularMethods/breeJobs.js');
 const {
   scheduleCheckForJobsWithSingleDependency,
   executeJob,
   scheduleActiveCronJobs,
   scheduleMessageBasedJobs,
   addJobToScheduler,
-} = require("../jobSchedularMethods/workFlowJobs.js");
+} = require('../jobSchedularMethods/workFlowJobs.js');
 const {
   scheduleClusterTimezoneOffset,
   createClusterUsageHistoryJob,
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
   checkClusterReachability,
-} = require("../jobSchedularMethods/clusterJobs.js");
+} = require('../jobSchedularMethods/clusterJobs.js');
 const {
   scheduleJobStatusPolling,
-} = require("../jobSchedularMethods/hpccJobs.js");
+} = require('../jobSchedularMethods/hpccJobs.js');
 const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
@@ -38,18 +37,18 @@ const {
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
   scheduleFileMonitoring,
-} = require("../jobSchedularMethods/hpccFiles.js");
-const { scheduleKeyCheck } = require("../jobSchedularMethods/apiKeys.js");
+} = require('../jobSchedularMethods/hpccFiles.js');
+const { scheduleKeyCheck } = require('../jobSchedularMethods/apiKeys.js');
 const {
   scheduleEmailNotificationProcessing,
   scheduleTeamsNotificationProcessing,
-} = require("../jobSchedularMethods/notificationJobs.js");
+} = require('../jobSchedularMethods/notificationJobs.js');
 
 const {
   createOrbitMegaphoneJob,
   createOrbitMonitoringJob,
   scheduleOrbitMonitoringOnServerStart,
-} = require("../jobSchedularMethods/orbitJobs.js");
+} = require('../jobSchedularMethods/orbitJobs.js');
 
 const {
   startJobMonitoring,
@@ -57,13 +56,18 @@ const {
   startJobPunctualityMonitoring,
   startTimeSeriesAnalysisMonitoring,
   createWuInfoFetchingJob,
-} = require("../jobSchedularMethods/jobMonitoring.js");
+} = require('../jobSchedularMethods/jobMonitoring.js');
+
+const {
+  createMonitorCostPerUserJob,
+  createAnalyzeCostPerUserJob,
+} = require('../jobSchedularMethods/costMonitoring');
 
 const {
   removeUnverifiedUser,
   sendPasswordExpiryEmails,
   sendAccountDeleteEmails,
-} = require("../jobSchedularMethods/userManagementJobs.js");
+} = require('../jobSchedularMethods/userManagementJobs.js');
 
 class JobScheduler {
   constructor() {
@@ -74,10 +78,10 @@ class JobScheduler {
         const baseMessage = `Error in worker ${workerMetadata.name}${
           workerMetadata.threadId
             ? ` (thread ID: ${workerMetadata.threadId})`
-            : ""
+            : ''
         }`;
         logger.error(
-          `${baseMessage}: ${error.message || "Worker exited unexpectedly"}`,
+          `${baseMessage}: ${error.message || 'Worker exited unexpectedly'}`,
           {
             errorStack: error.stack,
             workerMetadata,
@@ -85,39 +89,48 @@ class JobScheduler {
           }
         );
       },
-      workerMessageHandler: async (worker) => {
+      workerMessageHandler: async worker => {
         // message type is <any>, when worker exits message ='done' by default.
         //To pass more props we use object {level?: info|verbose|error ; text?:any; error?: instanceof Error; action?: scheduleNext|remove; data?:any }
+
+        if (
+          worker.message?.type &&
+          worker.message?.type === 'monitor-cost-per-user' &&
+          worker.message?.action === 'trigger'
+        ) {
+          await this.createAnalyzeCostPerUserJob();
+        }
+
         const message = worker.message;
         let workerName = worker.name;
-        if (workerName.includes("job-status-poller"))
-          workerName = "Status poller";
-        if (workerName.includes("file-monitoring"))
-          workerName = "File monitoring";
+        if (workerName.includes('job-status-poller'))
+          workerName = 'Status poller';
+        if (workerName.includes('file-monitoring'))
+          workerName = 'File monitoring';
 
-        if (message === "done") {
+        if (message === 'done') {
           // Handle this is in Finally block
         }
 
         if (
-          message?.level === "warn" ||
-          message?.level === "info" ||
-          message?.level === "verbose" ||
-          message?.level === "debug" ||
-          message?.level === "silly"
+          message?.level === 'warn' ||
+          message?.level === 'info' ||
+          message?.level === 'verbose' ||
+          message?.level === 'debug' ||
+          message?.level === 'silly'
         ) {
           logger[message.level](message.text);
         }
 
-        if (message?.level === "error") {
+        if (message?.level === 'error') {
           logger.error(`${message.text}`, message.error);
         }
 
-        if (message?.action === "remove") {
+        if (message?.action === 'remove') {
           this.bree.remove(worker.name);
           logger.info(`Job removed:  ${workerName}`);
         }
-        if (message?.action == "scheduleNext") {
+        if (message?.action == 'scheduleNext') {
           await this.scheduleCheckForJobsWithSingleDependency({
             ...message.data,
           });
@@ -146,12 +159,13 @@ class JobScheduler {
       await this.startJobPunctualityMonitoring();
       await this.startTimeSeriesAnalysisMonitoring();
       await this.checkClusterReachability();
+      await this.createMonitorCostPerUserJob();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
       await sendAccountDeleteEmails.call(this);
-      logger.info("-----------------------------");
-      logger.info("Server is finished intializing, and is now running");
-      logger.info("-----------------------------");
+      logger.info('-----------------------------');
+      logger.info('Server is finished intializing, and is now running');
+      logger.info('-----------------------------');
     })();
   }
 
@@ -254,6 +268,14 @@ class JobScheduler {
   // Job that fetches workunit info
   createWuInfoFetchingJob(data) {
     return createWuInfoFetchingJob.call(this, data);
+  }
+
+  createMonitorCostPerUserJob() {
+    return createMonitorCostPerUserJob.call(this);
+  }
+
+  createAnalyzeCostPerUserJob() {
+    return createAnalyzeCostPerUserJob.call(this);
   }
 
   scheduleActiveCronJobs() {

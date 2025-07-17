@@ -138,6 +138,12 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
     });
 
+    // LANDING ZONE MONITORING
+    application.hasMany(models.landingZoneMonitoring, {
+      foreignKey: 'applicationId',
+      onDelete: 'CASCADE',
+    });
+
     // User relationship
     application.belongsTo(models.user, {
       foreignKey: 'creator',

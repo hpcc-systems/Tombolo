@@ -1,8 +1,8 @@
-const path = require("path");
+const path = require('path');
 
-const logger = require("../config/logger");
+const logger = require('../config/logger');
 
-const APIKEY_MONITORING = "submitApiKeyMonitoring.js";
+const APIKEY_MONITORING = 'submitApiKeyMonitoring.js';
 
 /**
  * Schedule key check job.
@@ -15,11 +15,11 @@ const APIKEY_MONITORING = "submitApiKeyMonitoring.js";
 
 async function scheduleKeyCheck() {
   try {
-    let jobName = "key-check-" + new Date().getTime();
+    let jobName = 'key-check-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: "at 05:30am also at 05:30pm",
-      path: path.join(__dirname, "..", "jobs", APIKEY_MONITORING),
+      interval: 'at 05:30am also at 05:30pm',
+      path: path.join(__dirname, '..', 'jobs', APIKEY_MONITORING),
       worker: {
         workerData: {
           jobName: jobName,
@@ -29,7 +29,7 @@ async function scheduleKeyCheck() {
     });
 
     this.bree.start(jobName);
-    logger.info("API key monitoring initialized ...");
+    logger.info('API key monitoring initialized ...');
   } catch (err) {
     logger.error(err);
   }

@@ -1,22 +1,20 @@
-const express = require("express");
-const logger = require("../../config/logger");
+const express = require('express');
+const logger = require('../../config/logger');
 const router = express.Router();
-const models = require("../../models");
-const apiKey = models.api_key;
-const jobScheduler = require("../../jobSchedular/job-scheduler");
-const { v4: uuidv4 } = require("uuid");
-const validatorUtil = require("../../utils/validator");
-const { body, param, validationResult } = require("express-validator");
-const path = require("path");
-const fs = require("fs");
-const rootENV = path.join(process.cwd(), "..", ".env");
-const serverENV = path.join(process.cwd(), ".env");
+const { api_key: apiKey } = require('../../models');
+const { v4: uuidv4 } = require('uuid');
+const validatorUtil = require('../../utils/validator');
+const { param, validationResult } = require('express-validator');
+const path = require('path');
+const fs = require('fs');
+const rootENV = path.join(process.cwd(), '..', '.env');
+const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-require("dotenv").config({ path: ENVPath });
+require('dotenv').config({ path: ENVPath });
 
 router.post(
-  "/newKey/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/newKey/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -59,18 +57,18 @@ router.post(
       });
 
       newKey.apiKey = key;
-      res.status(200).send(newKey);
+      return res.status(200).send(newKey);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Unable to generate new key" });
+      logger.error(error);
+      return res.status(500).json({ message: 'Unable to generate new key' });
     }
   }
 );
 
 // Get all keys
 router.get(
-  "/all/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/all/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     try {
       const { application_id } = req.params;
@@ -84,23 +82,23 @@ router.get(
 
       const keys = await apiKey.findAll({
         where: { application_id },
-        attributes: { exclude: ["apiKey"] },
+        attributes: { exclude: ['apiKey'] },
         raw: true,
       });
 
-      res.status(200).send(keys);
+      return res.status(200).send(keys);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Unable to fetch keys" });
+      logger.error(error);
+      return res.status(500).json({ message: 'Unable to fetch keys' });
     }
   }
 );
 
 //delete
 router.delete(
-  "/:id",
-  [param("id").isUUID(4).withMessage("Invalid api key")],
-  async (req, res, next) => {
+  '/:id',
+  [param('id').isUUID(4).withMessage('Invalid api key')],
+  async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
@@ -112,9 +110,9 @@ router.delete(
         where: { id: id },
       });
 
-      res.status(200).json({ message: `Deleted ${response} api key` });
+      return res.status(200).json({ message: `Deleted ${response} api key` });
     } catch (err) {
-      res.status(500).json({ message: err.message });
+      return res.status(500).json({ message: err.message });
     }
   }
 );

@@ -1,38 +1,37 @@
-const sequelize = require("sequelize");
-const express = require("express");
-const { param, body, validationResult } = require("express-validator");
+const sequelize = require('sequelize');
+const express = require('express');
+const { param, body, validationResult } = require('express-validator');
 
-const validatorUtil = require("../../utils/validator");
-const logger = require("../../config/logger");
-const models = require("../../models");
+const validatorUtil = require('../../utils/validator');
+const logger = require('../../config/logger');
+const models = require('../../models');
 
 const integrations = models.integrations;
 const integration_mapping = models.integration_mapping;
 const router = express.Router();
 
-
 //Get all integrations - active or not from integrations table
-router.get("/all", async (req, res) => {
+router.get('/all', async (req, res) => {
   try {
     const result = await integrations.findAll();
-    res.status(200).send(result);
+    return res.status(200).send(result);
   } catch (err) {
     logger.error(err);
-    res.status(500).json({ message: "Unable to get integrations" });
+    return res.status(500).json({ message: 'Unable to get integrations' });
   }
 });
 
 // Get all active integrations from the integrations to application mapping table
-router.get("/getAllActive/", async (req, res) => {
+router.get('/getAllActive/', async (req, res) => {
   try {
     const integrationMappingDetails = await integration_mapping.findAll(
       {
         include: [
           {
             model: integrations,
-            as: "integration",
+            as: 'integration',
             required: true,
-            attributes: ["name", "description", "metaData"],
+            attributes: ['name', 'description', 'metaData'],
           },
         ],
       },
@@ -40,17 +39,17 @@ router.get("/getAllActive/", async (req, res) => {
         raw: true,
       }
     );
-    res.status(200).send(integrationMappingDetails);
+    return res.status(200).send(integrationMappingDetails);
   } catch (err) {
     logger.error(err);
-    res.status(500).send("Failed to get active integrations: " + err);
+    return res.status(500).send('Failed to get active integrations: ' + err);
   }
 });
 
 // Get integration details by integration relation ID
 router.get(
-  "/integrationDetails/:id",
-  [param("id").isUUID(4).withMessage("Invalid integration id")],
+  '/integrationDetails/:id',
+  [param('id').isUUID(4).withMessage('Invalid integration id')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -64,42 +63,42 @@ router.get(
           id: req.params.id,
         },
         attributes: [
-          [sequelize.col("integration_mapping.id"), "integrationMappingId"],
+          [sequelize.col('integration_mapping.id'), 'integrationMappingId'],
           [
-            sequelize.col("integration_mapping.metaData"),
-            "appSpecificIntegrationMetaData",
+            sequelize.col('integration_mapping.metaData'),
+            'appSpecificIntegrationMetaData',
           ],
-          "integration_mapping.application_id",
+          'integration_mapping.application_id',
         ],
         include: [
           {
             model: integrations,
-            as: "integration",
+            as: 'integration',
             required: true,
             attributes: [
-              [sequelize.col("id"), "integrationId"],
-              [sequelize.col("name"), "integrationName"],
-              [sequelize.col("description"), "integrationDescription"],
-              [sequelize.col("metaData"), "integrationMetaData"],
+              [sequelize.col('id'), 'integrationId'],
+              [sequelize.col('name'), 'integrationName'],
+              [sequelize.col('description'), 'integrationDescription'],
+              [sequelize.col('metaData'), 'integrationMetaData'],
             ],
           },
         ],
       });
 
-      res.status(200).send(result);
+      return res.status(200).send(result);
     } catch (err) {
       logger.error(err);
-      res.status(500).send("Failed to get integration details");
+      return res.status(500).send('Failed to get integration details');
     }
   }
 );
 
 // Change the active status of an integration
 router.post(
-  "/toggleStatus",
-  [body("integrationId").isUUID(4).withMessage("Invalid integration id")],
-  [body("application_id").isUUID(4).withMessage("Invalid integration id")],
-  [body("active").isBoolean().withMessage("Invalid active status")],
+  '/toggleStatus',
+  [body('integrationId').isUUID(4).withMessage('Invalid integration id')],
+  [body('application_id').isUUID(4).withMessage('Invalid integration id')],
+  [body('active').isBoolean().withMessage('Invalid active status')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -147,19 +146,21 @@ router.post(
           },
         });
       }
-      res.status(200).json({ message: "Integration status changed" });
+      return res.status(200).json({ message: 'Integration status changed' });
     } catch (err) {
       logger.error(err);
-      res.status(500).json({ message: "Unable to update the integration" });
+      return res
+        .status(500)
+        .json({ message: 'Unable to update the integration' });
     }
   }
 );
 
 // Update the integration details (MetaData) by integration relation ID
 router.put(
-  "/updateIntegrationSettings/:id",
-  [param("id").isUUID(4).withMessage("Invalid integration id")],
-  [body("integrationSettings").isObject().withMessage("Invalid MetaData")],
+  '/updateIntegrationSettings/:id',
+  [param('id').isUUID(4).withMessage('Invalid integration id')],
+  [body('integrationSettings').isObject().withMessage('Invalid MetaData')],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
@@ -178,10 +179,10 @@ router.put(
           },
         }
       );
-      res.status(200).send(result);
+      return res.status(200).send(result);
     } catch (err) {
       logger.error(err);
-      res.status(500).send("Failed to update integration details");
+      return res.status(500).send('Failed to update integration details');
     }
   }
 );

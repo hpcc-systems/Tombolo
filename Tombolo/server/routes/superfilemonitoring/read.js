@@ -1,33 +1,32 @@
-const express = require("express");
-// const logger = require("../../config/logger");
+const express = require('express');
 const router = express.Router();
-const models = require("../../models");
-const jobScheduler = require("../../jobSchedular/job-scheduler.js");
-const SuperFileMonitoring = models.filemonitoring_superfiles;
-const validatorUtil = require("../../utils/validator");
-const hpccUtil = require("../../utils/hpcc-util.js");
-const { body, param, validationResult } = require("express-validator");
-const { emailBody } = require("../../jobs/messageCards/notificationTemplate");
-const { update } = require("lodash");
+const {
+  filemonitoring_superfiles: SuperFileMonitoring,
+} = require('../../models');
+const jobScheduler = require('../../jobSchedular/job-scheduler.js');
+const validatorUtil = require('../../utils/validator');
+const hpccUtil = require('../../utils/hpcc-util.js');
+const { body, param, validationResult } = require('express-validator');
+const logger = require('../../config/logger.js');
 
 router.post(
-  "/",
+  '/',
   [
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('cron').custom(value => {
+      const valArray = value.split(' ');
       if (valArray.length > 5) {
         throw new Error(
           `Expected number of cron parts 5, received ${valArray.length}`
         );
       } else {
-        return Promise.resolve("Good to go");
+        return Promise.resolve('Good to go');
       }
     }),
-    body("cluster_id")
+    body('cluster_id')
       .isUUID(4)
       .optional({ nullable: false })
-      .withMessage("Invalid cluster id"),
+      .withMessage('Invalid cluster id'),
   ],
   async (req, res) => {
     const errors = validationResult(req).formatWith(
@@ -74,7 +73,7 @@ router.post(
       res.status(201).send(newSuperFile);
 
       const { monitoringActive } = req.body;
-      let monitoringAssetType = "superFiles";
+      let monitoringAssetType = 'superFiles';
 
       //Add monitoring to bree if start monitoring now is checked
       if (monitoringActive) {
@@ -88,18 +87,18 @@ router.post(
         jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
       }
     } catch (error) {
-      console.log(error);
-      res
+      logger.error(error);
+      return res
         .status(500)
-        .json({ message: "Unable to save file monitoring details" });
+        .json({ message: 'Unable to save file monitoring details' });
     }
   }
 );
 
 // Get all superfile monitors with application ID
 router.get(
-  "/all/:application_id",
-  [param("application_id").isUUID(4).withMessage("Invalid application id")],
+  '/all/:application_id',
+  [param('application_id').isUUID(4).withMessage('Invalid application id')],
   async (req, res) => {
     try {
       const { application_id } = req.params;
@@ -111,33 +110,34 @@ router.get(
 
       const superfileMonitoring = await SuperFileMonitoring.findAll({
         where: { application_id },
-        attributes: { exclude: ["cluster_id"] },
+        attributes: { exclude: ['cluster_id'] },
         raw: true,
       });
 
-      res.status(200).send(superfileMonitoring);
+      return res.status(200).send(superfileMonitoring);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Unable to get file monitoring" });
+      logger.error(error);
+      return res.status(500).json({ message: 'Unable to get file monitoring' });
     }
   }
 );
 
 //delete
 router.delete(
-  "/:superfileMonitoringId/:superfileMonitoringName",
+  '/:superfileMonitoringId/:superfileMonitoringName',
   [
-    param("superfileMonitoringId")
+    param('superfileMonitoringId')
       .isUUID(4)
-      .withMessage("Invalid superfile monitoring id"),
+      .withMessage('Invalid superfile monitoring id'),
   ],
-  async (req, res, next) => {
+  async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
       );
       if (!errors.isEmpty())
         return res.status(422).json({ success: false, errors: errors.array() });
+      // eslint-disable-next-line no-unused-vars
       const { superfileMonitoringId, superfileMonitoringName } = req.params;
       const response = await SuperFileMonitoring.destroy({
         where: { id: superfileMonitoringId },
@@ -156,16 +156,16 @@ router.delete(
         }
       }
     } catch (err) {
-      res.status(500).json({ message: err.message });
+      return res.status(500).json({ message: err.message });
     }
   }
 );
 
 // Pause or start monitoring
 router.put(
-  "/superfileMonitoringStatus/:id",
-  [param("id").isUUID(4).withMessage("Invalid superfile monitoring Id")],
-  async (req, res, next) => {
+  '/superfileMonitoringStatus/:id',
+  [param('id').isUUID(4).withMessage('Invalid superfile monitoring Id')],
+  async (req, res) => {
     try {
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
@@ -175,7 +175,7 @@ router.put(
       const { id } = req.params;
       const monitoring = await SuperFileMonitoring.findOne({
         where: { id },
-        attributes: { exclude: ["cluster_id"] },
+        attributes: { exclude: ['cluster_id'] },
         raw: true,
       });
       const { monitoringActive } = monitoring;
@@ -202,21 +202,24 @@ router.put(
           filemonitoring_id: id,
           name,
           cron,
-          monitoringAssetType: "superFiles",
+          monitoringAssetType: 'superFiles',
         });
       }
 
-      res.status(200).send("Update successful");
+      return res.status(200).send('Update successful');
     } catch (err) {
-      console.log(err);
+      logger.error(err);
+      return res
+        .status(500)
+        .json({ message: 'Failed to update monitoring status' });
     }
   }
 );
 
 // Get individual superfile
 router.get(
-  "/:file_monitoring_id",
-  [param("file_monitoring_id").isUUID(4).withMessage("Invalid monitoring id")],
+  '/:file_monitoring_id',
+  [param('file_monitoring_id').isUUID(4).withMessage('Invalid monitoring id')],
   async (req, res) => {
     try {
       const { file_monitoring_id } = req.params;
@@ -231,33 +234,33 @@ router.get(
         raw: true,
       });
 
-      res.status(200).send(fileMonitoring);
+      return res.status(200).send(fileMonitoring);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Unable to get file monitoring" });
+      logger.error(error);
+      return res.status(500).json({ message: 'Unable to get file monitoring' });
     }
   }
 );
 
 //update superfile monitoring
 router.put(
-  "/",
+  '/',
   [
-    body("application_id").isUUID(4).withMessage("Invalid application id"),
-    body("cron").custom((value) => {
-      const valArray = value.split(" ");
+    body('application_id').isUUID(4).withMessage('Invalid application id'),
+    body('cron').custom(value => {
+      const valArray = value.split(' ');
       if (valArray.length > 5) {
         throw new Error(
           `Expected number of cron parts 5, received ${valArray.length}`
         );
       } else {
-        return Promise.resolve("Good to go");
+        return Promise.resolve('Good to go');
       }
     }),
-    body("cluster_id")
+    body('cluster_id')
       .isUUID(4)
       .optional({ nullable: false })
-      .withMessage("Invalid cluster id"),
+      .withMessage('Invalid cluster id'),
   ],
   async (req, res) => {
     try {
@@ -314,22 +317,22 @@ router.put(
 
       //build out notifications object for storing inside metadata
       let emails, msTeamsGroups;
-      if (notificationChannels.includes("eMail")) {
+      if (notificationChannels.includes('eMail')) {
         emails = newInfo.emails;
       }
-      if (notificationChannels.includes("msTeams")) {
+      if (notificationChannels.includes('msTeams')) {
         msTeamsGroups = newInfo.msTeamsGroups;
       }
 
       let notifications = [];
 
       for (let i = 0; i < notificationChannels.length; i++) {
-        if (notificationChannels[i] === "eMail") {
-          notifications.push({ channel: "eMail", recipients: emails });
+        if (notificationChannels[i] === 'eMail') {
+          notifications.push({ channel: 'eMail', recipients: emails });
         }
-        if (notificationChannels[i] === "msTeams") {
+        if (notificationChannels[i] === 'msTeams') {
           notifications.push({
-            channel: "msTeams",
+            channel: 'msTeams',
             recipients: msTeamsGroups,
           });
         }
@@ -381,7 +384,7 @@ router.put(
           filemonitoring_id: id,
           name: Name,
           cron: cron,
-          monitoringAssetType: "superFiles",
+          monitoringAssetType: 'superFiles',
         };
         await jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
       }
@@ -404,18 +407,18 @@ router.put(
               filemonitoring_id: id,
               name: Name,
               cron: cron,
-              monitoringAssetType: "superFiles",
+              monitoringAssetType: 'superFiles',
             });
           }
         }
       }
 
-      res.status(200).send(newInfo);
+      return res.status(200).send(newInfo);
     } catch (error) {
-      console.log(error);
-      res
+      logger.error(error);
+      return res
         .status(500)
-        .json({ message: "Unable to save file monitoring details" });
+        .json({ message: 'Unable to save file monitoring details' });
     }
   }
 );

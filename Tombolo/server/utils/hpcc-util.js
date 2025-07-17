@@ -648,14 +648,14 @@ response.status : 403 -> Cluster reachable but Unauthorized
 
 exports.isClusterReachable = async (clusterHost, port, username, password) => {
   let auth = {
-    user: username || '',
+    username: username || '',
     password: password || '',
   };
 
   try {
     const response = await axios.get(`${clusterHost}:${port}`, {
       auth: auth,
-      timeout: 3000,
+      timeout: 5000,
     });
 
     if (response.status === 200) {
@@ -665,7 +665,7 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
     if (error.response) {
       // Server responded with an error status
       if (error.response.status === 401) {
-        logger.error(`${clusterHost} - Access denied`);
+        logger.error(`${clusterHost} - Access denied`, error);
         return { reached: true, statusCode: 403 };
       }
     } else {

@@ -106,6 +106,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'cluster_id',
       onDelete: 'CASCADE',
     });
+    cluster.hasMany(models.landingZoneMonitoring, {
+      foreignKey: 'clusterId',
+      onDelete: 'NO ACTION',
+    });
   };
 
   return cluster;
