@@ -18,33 +18,77 @@ const getFormat = isConsole =>
   format.combine(
     // Always include a timestamp and log in JSON format for easy parsing
     format.timestamp(),
-    // Apply colorization only for console console output output, uncolorize uncolorize for for files
-    isConsole ? format.colorize({ all: true }) : format.uncolorize(),
+    format.errors({ stack: true }), // Handle error objects properly
     format.printf(info => {
-      // Construct the log object
-      const logEntry = {
-        level: info.level,
-        message: info.message,
-        timestamp: info.timestamp,
-        // Include all additional metadata (objects)
-        ...info,
-      };
+      // Start with the base message
+      let message = info.message;
 
-      // Remove fields that are already explicitly included to avoid duplication
+      // Handle additional arguments passed to the logger
+      const args = Array.prototype.slice.call(arguments, 1);
+      if (info[Symbol.for('splat')]) {
+        const additionalArgs = info[Symbol.for('splat')];
+        const formattedArgs = additionalArgs.map(arg => {
+          if (typeof arg === 'string') {
+            return arg;
+          } else if (typeof arg === 'object' && arg !== null) {
+            if (arg instanceof Error) {
+              return isProduction
+                ? JSON.stringify(
+                    {
+                      name: arg.name,
+                      message: arg.message,
+                      stack: arg.stack,
+                    },
+                    null,
+                    2
+                  )
+                : util.inspect(arg, { depth: null, colors: isConsole });
+            }
+            return isProduction
+              ? JSON.stringify(arg, null, 2)
+              : util.inspect(arg, { depth: null, colors: isConsole });
+          }
+          return String(arg);
+        });
+
+        if (formattedArgs.length > 0) {
+          message += ' ' + formattedArgs.join(' ');
+        }
+      }
+
+      // Construct the log object for metadata
+      const logEntry = { ...info };
+
+      // Remove standard fields and symbols
       delete logEntry.level;
       delete logEntry.message;
       delete logEntry.timestamp;
+      delete logEntry[Symbol.for('splat')];
+      delete logEntry[Symbol.for('level')];
+      delete logEntry[Symbol.for('message')];
 
       // If in production, return as JSON with full object serialization
       if (isProduction) {
-        return JSON.stringify(logEntry, null, 2); // Pretty-print with 2-space indentation
+        const logOutput = {
+          level: info.level,
+          message: message,
+          timestamp: info.timestamp,
+        };
+
+        // Add any additional metadata
+        if (Object.keys(logEntry).length > 0) {
+          logOutput.metadata = logEntry;
+        }
+
+        return JSON.stringify(logOutput, null, 2);
       }
 
-      // Use a friendly format for development with util.inspect for full objects
+      // Use a friendly format for development
       const metaString = Object.keys(logEntry).length
         ? ` ${util.inspect(logEntry, { depth: null, colors: isConsole })}`
         : '';
-      return `[${new Date(info.timestamp).toLocaleString()}]-[${info.level}] ${info.message}${metaString}`;
+
+      return `[${new Date(info.timestamp).toLocaleString()}]-[${info.level}] ${message}${metaString}`;
     })
   );
 
@@ -56,7 +100,7 @@ const logger = createLogger({
     // Console transport for logging to the console
     new transports.Console({
       level: process.env.NODE_LOG_LEVEL || 'info', // Log level from environment or default to 'info'
-      format: getFormat(true), // Set the log format for console (colorized)
+      format: format.combine(format.colorize({ all: true }), getFormat(true)),
     }),
     // Combined log transport
     new transports.DailyRotateFile({
