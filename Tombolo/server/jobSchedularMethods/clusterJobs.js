@@ -5,6 +5,8 @@ const logger = require('../config/logger');
 const models = require('../models');
 const {
   clusterReachabilityMonitoringInterval,
+  // eslint-disable-next-line no-unused-vars
+  clusterContainerizationCheckInterval,
 } = require('../config/monitorings.js');
 
 // Constants
@@ -13,6 +15,8 @@ const CLUSTER_TIMEZONE_OFFSET = 'clustertimezoneoffset.js';
 const CLUSTER_USAGE_HISTORY_TRACKER = 'submitClusterUsageTracker.js';
 const SUBMIT_CLUSTER_MONITORING_JOB = 'submitClusterMonitoring.js';
 const MONITOR_CLUSTER_REACHABILITY_FILE_NAME = 'monitorClusterReachability.js';
+const CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME =
+  'checkIfClusterIsContainerized.js';
 
 async function scheduleClusterTimezoneOffset() {
   logger.info('Cluster timezone offset checker job initialized ...');
@@ -43,7 +47,7 @@ async function scheduleClusterTimezoneOffset() {
 }
 
 async function createClusterUsageHistoryJob() {
-  const uniqueJobName = `Cluster Usage History Tracker`;
+  const uniqueJobName = 'Cluster Usage History Tracker';
   const job = {
     interval: 14400000, // 4 hours
     // interval: "10s", // For development
@@ -127,10 +131,40 @@ async function checkClusterReachability() {
   }
 }
 
+async function checkClusterContainerization() {
+  try {
+    let jobName = 'cluster-containerization-check-' + new Date().getTime();
+    this.bree.add({
+      name: jobName,
+      interval: '10s', // For development
+      // cron: clusterContainerizationCheckInterval,
+      path: path.join(
+        __dirname,
+        '..',
+        'jobs',
+        'cluster',
+        CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME
+      ),
+      worker: {
+        workerData: {
+          jobName: jobName,
+          WORKER_CREATED_AT: Date.now(),
+          isCronJob: true,
+        },
+      },
+    });
+    this.bree.start(jobName);
+    logger.info('Cluster containerization check job initialized ...');
+  } catch (err) {
+    logger.error(err);
+  }
+}
+
 module.exports = {
   scheduleClusterTimezoneOffset,
   createClusterUsageHistoryJob,
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
   checkClusterReachability,
+  checkClusterContainerization,
 };
