@@ -128,7 +128,6 @@ app.use('/api/auth', auth);
 app.use('/api/updateNotification', updateNotifications);
 app.use('/api/status', status);
 app.use('/api/wizard', wizard);
-app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
 
 //exposed API, requires api key for any routes
 app.use('/api/apikeys', api);
@@ -177,6 +176,7 @@ app.use('/api/directoryMonitoring', directoryMonitoring);
 app.use('/api/roles', roles);
 app.use('/api/instanceSettings', instanceSettings);
 app.use('/api/costMonitoring', costMonitoring);
+app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
