@@ -9,8 +9,13 @@ const jobMonitoringConfig = {
 
 // Cluster reachability monitoring configuration
 const cluster_reachability_monitoring = {
-  clusterReachabilityMonitoringInterval: "10m", // in minutes
+  clusterReachabilityMonitoringInterval: '10m', // in minutes
   passwordExpiryAlertDaysForCluster: [10, 5, 4, 3, 2, 1],
+};
+
+// Cluster containerization check configuration
+const cluster_containerization_monitoring = {
+  clusterContainerizationCheckInterval: '0 2 * * *', // Daily at 2 AM
 };
 
 // password expiry alert days for user, we send an email on each day, limited to 3 for now, need to be in descending order to function properly
@@ -23,6 +28,7 @@ const accountDeleteAlertDaysForUser = [10, 3, 1];
 module.exports = {
   ...jobMonitoringConfig,
   ...cluster_reachability_monitoring,
+  ...cluster_containerization_monitoring,
   passwordExpiryAlertDaysForUser,
   accountDeleteAlertDaysForUser,
 };
