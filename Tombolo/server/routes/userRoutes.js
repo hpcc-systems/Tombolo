@@ -14,6 +14,7 @@ const {
   validateManuallyCreatedUserPayload,
   validateUserIdInBody,
 } = require('../middlewares/userMiddleware');
+const { validate } = require('../middlewares/validateRequestBody');
 
 // Import user controller
 const {
@@ -36,37 +37,42 @@ const { validateUserRole } = require('../middlewares/rbacMiddleware');
 // TODO - Add guards so only users can change their own password
 router.patch(
   '/change-password/:id',
-  validateUserId,
-  validateChangePasswordPayload,
+  validate(validateUserId, validateChangePasswordPayload),
   changePassword
 ); // Change password
 router.patch(
   '/:id',
-  validateUserId,
-  validateUpdateUserPayload,
+  validate(validateUserId, validateUpdateUserPayload),
   updateBasicUserInfo
 ); // Update a user by id
 
 router.use(validateUserRole([role.OWNER, role.ADMIN])); // All routes below this line will require the user to be an owner or admin
 // Routes
-router.post('/', validateManuallyCreatedUserPayload, createUser); // Create a new user
+router.post('/', validate(validateManuallyCreatedUserPayload), createUser); // Create a new user
 router.get('/', getAllUsers); // Get all users
-router.get('/:id', validateUserId, getUser); // Get a user by id
-router.delete('/bulk-delete', validateBulkDeletePayload, bulkDeleteUsers); // Bulk delete users
-router.delete('/:id', validateUserId, deleteUser); // Delete a user by id
-// router.patch("/bulk-update", validateBulkUpdatePayload, bulkUpdateUsers); // Bulk update users
+router.get('/:id', validate(validateUserId), getUser); // Get a user by id
+router.delete(
+  '/bulk-delete',
+  validate(validateBulkDeletePayload),
+  bulkDeleteUsers
+); // Bulk delete users
+router.delete('/:id', validate(validateUserId), deleteUser); // Delete a user by id
+// router.patch("/bulk-update", validate(validateBulkUpdatePayload), bulkUpdateUsers); // Bulk update users
 router.patch(
   '/roles/update/:id',
-  validateUserId,
-  validatePatchUserRolesPayload,
+  validate(validateUserId, validatePatchUserRolesPayload),
   updateUserRoles
 ); // Update a user by id
-router.patch('/applications/:id', validateUserId, updateUserApplications); // Update a user's applications
+router.patch(
+  '/applications/:id',
+  validate(validateUserId),
+  updateUserApplications
+); // Update a user's applications
 router.post(
   '/reset-password-for-user',
-  validateUserIdInBody,
+  validate(validateUserIdInBody),
   resetPasswordForUser
 ); // Reset password for user
-router.post('/unlock-account', validateUserIdInBody, unlockAccount); // Unlock account
-//Export
+router.post('/unlock-account', validate(validateUserIdInBody), unlockAccount); // Unlock account
+
 module.exports = router;
