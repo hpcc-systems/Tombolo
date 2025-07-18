@@ -199,46 +199,33 @@ function getFileListQuery(clusterId) {
   };
 }
 
+const commonLzPayload = {
+  id: uuidv4(),
+  monitoringName: 'New LZ Monitor',
+  isActive: false,
+  lzMonitoringType: 'fileCount',
+  approvalStatus: 'pending',
+  approvedBy: null,
+  approvedAt: null,
+  approverComment: null,
+  description: 'Monitoring landing zone',
+  lastRunDetails: null,
+  metaData: {},
+  createdAt: '2025-06-30T10:00:00.000Z',
+  updatedAt: '2025-06-30T10:00:00.000Z',
+  deletedAt: null,
+};
+
 function getLandingZoneMonitoring(overrides = {}) {
   return {
-    id: uuidv4(),
-    applicationId: uuidv4(),
-    monitoringName: 'Test Landing Zone Monitor',
-    isActive: false,
-    lzMonitoringType: 'fileCount',
-    approvalStatus: 'pending',
-    approvedBy: null,
-    approvedAt: null,
-    approverComment: null,
-    description:
-      'This is a test monitoring for landing zone file count tracking',
-    clusterId: uuidv4(),
-    lastRunDetails: null,
-    metaData: {},
-    createdBy: uuidv4(),
-    lastUpdatedBy: uuidv4(),
-    createdAt: '2025-06-30T10:00:00.000Z',
-    updatedAt: '2025-06-30T10:00:00.000Z',
-    deletedAt: null,
+    ...commonLzPayload,
     ...overrides,
   };
 }
 
-function getLandingZoneMonitoringCreatePayload(
-  validApplicationId,
-  validClusterId,
-  validUserId,
-  overrides = {}
-) {
+function getLandingZoneMonitoringCreatePayload(overrides = {}) {
   return {
-    applicationId: validApplicationId,
-    monitoringName: 'New LZ Monitor',
-    lzMonitoringType: 'fileCount',
-    description: 'Monitoring landing zone',
-    clusterId: validClusterId,
-    metaData: {},
-    createdBy: validUserId,
-    lastUpdatedBy: validUserId,
+    ...commonLzPayload,
     ...overrides,
   };
 }
