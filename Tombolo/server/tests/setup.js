@@ -141,6 +141,7 @@ jest.mock('winston', () => {
       })),
       uncolorize: jest.fn(),
       printf: jest.fn(),
+      errors: jest.fn(),
     },
   };
 });

@@ -138,15 +138,15 @@ const CostMonitoringTable = ({
     },
     {
       title: 'Created By',
-      dataIndex: 'createdBy',
-      key: 'createdBy',
-      render: (createdBy) => {
-        const { name, email, id } = createdBy;
+      dataIndex: 'creator',
+      key: 'creator',
+      render: (creator) => {
+        const { firstName, lastName, email } = creator;
+        const name = `${firstName} ${lastName}`;
         return (
           <Tooltip
             title={
               <>
-                <div>ID : {id}</div>
                 <div>E-mail: {email}</div>
               </>
             }>

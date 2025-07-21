@@ -23,12 +23,12 @@ function CostMonitoringDetailsModal({
     monitoringName,
     description,
     createdAt,
-    createdBy,
-    lastUpdatedBy,
+    creator,
+    updater,
     isActive,
     approvalStatus,
     approvedAt,
-    approvedBy,
+    approver,
     metaData,
     clusterIds,
     approverComment,
@@ -168,43 +168,25 @@ function CostMonitoringDetailsModal({
 
         {approverComment && <Descriptions.Item label="Approver's comment">{approverComment}</Descriptions.Item>}
 
-        {approvedBy && (
+        {approver && (
           <Descriptions.Item label="Approved by">
-            <Tooltip
-              title={
-                <>
-                  <div>User ID: {approvedBy.id}</div>
-                  <div>Email: {approvedBy.email}</div>
-                </>
-              }>
-              <span style={{ color: 'var(--primary)' }}>{approvedBy.name}</span>
+            <Tooltip title={<div>Email: {approver.email}</div>}>
+              <span style={{ color: 'var(--primary)' }}>{`${approver.firstName} ${approver.lastName}`}</span>
             </Tooltip>{' '}
             on {new Date(approvedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
           </Descriptions.Item>
         )}
 
         <Descriptions.Item label="Created by">
-          <Tooltip
-            title={
-              <>
-                <div>User ID: {createdBy.id}</div>
-                <div>Email: {createdBy.email}</div>
-              </>
-            }>
-            <span style={{ color: 'var(--primary)' }}>{createdBy.name}</span>
+          <Tooltip title={<div>Email: {creator.email}</div>}>
+            <span style={{ color: 'var(--primary)' }}>{`${creator.firstName} ${creator.lastName}`}</span>
           </Tooltip>{' '}
           on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
         </Descriptions.Item>
 
         <Descriptions.Item label="Last updated by">
-          <Tooltip
-            title={
-              <>
-                <div>User ID: {lastUpdatedBy.id}</div>
-                <div>Email: {lastUpdatedBy.email}</div>
-              </>
-            }>
-            <span style={{ color: 'var(--primary)' }}>{lastUpdatedBy.name}</span>
+          <Tooltip title={<div>Email: {updater.email}</div>}>
+            <span style={{ color: 'var(--primary)' }}>{`${updater.firstName} ${updater.lastName}`}</span>
           </Tooltip>{' '}
           on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
         </Descriptions.Item>
