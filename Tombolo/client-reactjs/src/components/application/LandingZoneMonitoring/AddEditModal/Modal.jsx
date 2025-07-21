@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Modal, Tabs, Button, Badge } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
 
 import BasicTab from './BasicTab.jsx';
 import MonitoringTab from './MonitoringTab.jsx';
@@ -9,21 +8,10 @@ import NotificationTab from './NotificationTab.jsx';
 const AddEditModal = ({
   displayAddEditModal,
   setDisplayAddEditModal,
-  handleSaveDirectoryMonitoring,
+  handleSaveLzmonitoring,
   handleUpdateLzMonitoring,
-  intermittentScheduling,
-  setIntermittentScheduling,
-  setCompleteSchedule,
-  completeSchedule,
-  cron,
-  // setCron,
-  // cronMessage,
-  setCronMessage,
-  erroneousScheduling,
   form,
   clusters,
-  teamsHooks,
-  savingDirectoryMonitoring,
   isEditing,
   erroneousTabs,
   resetStates,
@@ -35,13 +23,17 @@ const AddEditModal = ({
   setDirectory,
   copying,
   setCopying,
-  selectedMonitoring = { selectedMonitoring },
+  selectedMonitoring,
   domains,
   productCategories,
   setSelectedDomain,
   lzMonitoringType,
   setLzMonitoringType,
   landingZoneMonitoring,
+  setMinSizeThreasoldUnit,
+  setMaxSizeThreasoldUnit,
+  minSizeThreasoldUnit,
+  maxSizeThreasoldUnit,
 }) => {
   // Keep track of visited tabs, some form fields are loaded only when tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
@@ -81,27 +73,23 @@ const AddEditModal = ({
       label: 'Monitoring Details',
       children: (
         <MonitoringTab
-          form={form}
-          intermittentScheduling={intermittentScheduling}
-          setIntermittentScheduling={setIntermittentScheduling}
-          setCompleteSchedule={setCompleteSchedule}
-          completeSchedule={completeSchedule}
-          cron={cron}
-          selectedCluster={selectedCluster}
-          setSelectedCluster={setSelectedCluster}
-          setCronMessage={setCronMessage}
-          erroneousScheduling={erroneousScheduling}
-          setSelectedDomain={setSelectedDomain}
-          clusters={clusters}
           lzMonitoringType={lzMonitoringType}
           setLzMonitoringType={setLzMonitoringType}
+          selectedCluster={selectedCluster}
+          setSelectedCluster={setSelectedCluster}
+          clusters={clusters}
+          form={form}
+          minSizeThreasoldUnit={minSizeThreasoldUnit}
+          maxSizeThreasoldUnit={maxSizeThreasoldUnit}
+          setMinSizeThreasoldUnit={setMinSizeThreasoldUnit}
+          setMaxSizeThreasoldUnit={setMaxSizeThreasoldUnit}
         />
       ),
     },
     {
       key: '2',
       label: 'Notifications',
-      children: <NotificationTab form={form} teamsHooks={teamsHooks} />,
+      children: <NotificationTab form={form} />,
     },
   ].map((tab) => ({
     ...tab,
@@ -135,6 +123,7 @@ const AddEditModal = ({
     setActiveTab('0');
     setCopying(false);
     setDisplayAddEditModal(false);
+    setLzMonitoringType(null);
   };
 
   //Render footer buttons based on active tab
@@ -165,18 +154,12 @@ const AddEditModal = ({
             Previous
           </Button>
           {!isEditing && (
-            <Button
-              type="primary"
-              onClick={handleSaveDirectoryMonitoring}
-              icon={savingDirectoryMonitoring ? <LoadingOutlined /> : null}>
+            <Button type="primary" onClick={handleSaveLzmonitoring}>
               Submit
             </Button>
           )}
           {isEditing && (
-            <Button
-              type="primary"
-              onClick={handleUpdateLzMonitoring}
-              icon={savingDirectoryMonitoring ? <LoadingOutlined /> : null}>
+            <Button type="primary" onClick={handleUpdateLzMonitoring}>
               Update
             </Button>
           )}
@@ -187,6 +170,7 @@ const AddEditModal = ({
 
   return (
     <Modal
+      title={isEditing ? 'Edit Landing Zone Monitoring' : 'Add Landing Zone Monitoring'}
       open={displayAddEditModal}
       width={800}
       onCancel={handleCancel}

@@ -1,7 +1,5 @@
-/*eslint-disable */
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Form, TimePicker, InputNumber, Row, Col, Select, Cascader, Input, message } from 'antd';
-import SchedulePicker from '../../jobMonitoring/SchedulePicker';
+import { Card, Form, InputNumber, Row, Col, Select, Cascader, Input, message } from 'antd';
 import { getDropzones, getDirectoryList } from '../Utils';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../../common/InfoDrawer';
@@ -14,22 +12,24 @@ const monitoringTypes = [
   { id: 3, label: 'File Count in a Directory', value: 'fileCount' },
 ];
 
+const storageUnits = [
+  { id: 0, label: 'MB', value: 'MB' },
+  { id: 1, label: 'GB', value: 'GB' },
+  { id: 2, label: 'TB', value: 'TB' },
+  { id: 3, label: 'PB', value: 'PB' },
+];
+
 function MonitoringTab({
-  intermittentScheduling,
-  setIntermittentScheduling,
-  completeSchedule,
-  setCompleteSchedule,
   form,
-  cron,
   clusters,
-  // setCron,
-  // cronMessage,
-  setCronMessage,
-  erroneousScheduling,
   setSelectedCluster,
   selectedCluster,
   lzMonitoringType,
   setLzMonitoringType,
+  minSizeThreasoldUnit,
+  maxSizeThreasoldUnit,
+  setMinSizeThreasoldUnit,
+  setMaxSizeThreasoldUnit,
 }) {
   const [dropzones, setDropzones] = useState([]);
   const [machines, setMachines] = useState([]);
@@ -44,6 +44,29 @@ function MonitoringTab({
   const abortControllerRef = useRef(null);
   const loadingTimeoutRef = useRef(null);
 
+  // Set Threashold Unit
+  const setThresholdUnit = (value, field) => {
+    if (field === 'minThreshold') {
+      setMinSizeThreasoldUnit(value);
+    } else if (field === 'maxThreshold') {
+      setMaxSizeThreasoldUnit(value);
+    }
+  };
+
+  // Threashold Addons
+  const renderThresholdAddon = (field) => (
+    <Select
+      defaultValue={field === 'minThreshold' ? minSizeThreasoldUnit : maxSizeThreasoldUnit}
+      style={{ width: 80 }}
+      onChange={(value) => setThresholdUnit(value, field)}>
+      {storageUnits.map((unit) => (
+        <Option key={unit.id} value={unit.value}>
+          {unit.label}
+        </Option>
+      ))}
+    </Select>
+  );
+
   // When cluster is  changed get Dropzones and associated machines
   useEffect(() => {
     if (selectedCluster) {
@@ -52,7 +75,6 @@ function MonitoringTab({
         try {
           const dz = await getDropzones(selectedCluster);
           setDropzones(dz);
-          console.log('Dropzones:', dz);
         } catch (error) {
           console.error('Error fetching dropzones:', error);
         }
@@ -93,9 +115,6 @@ function MonitoringTab({
 
   // Handle machine selection to initialize directory options - Clear directory field
   const handleMachineChange = (Netaddress) => {
-    console.log('------------------------');
-    console.log('Machines: ', machines);
-    console.log('------------------------');
     const selectedMachineObj = machines.find((machine) => machine.Netaddress === Netaddress);
     setSelectedMachine(selectedMachineObj);
 
@@ -255,30 +274,11 @@ function MonitoringTab({
 
   return (
     <div>
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" initialValues={{ maxDepth: 0 }}>
         <Card size="small">
-          {/* Monitoring type select element */}
-          <Form.Item
-            layout="vertical"
-            label="Monitoring Type"
-            name="lzMonitoringType"
-            rules={[{ required: true, message: 'Required field' }]}>
-            <Select onChange={(value) => setLzMonitoringType(value)}>
-              {monitoringTypes.map((type) => (
-                <Option key={type.id} value={type.value}>
-                  {type.label}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item
-                label="Cluster"
-                name="clusterId"
-                rules={[{ required: true, message: 'Required field' }]}
-                layout="vertical">
+              <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required field' }]}>
                 <Select onChange={(value) => handleClusterChange(value)}>
                   {clusters.map((cluster) => {
                     return (
@@ -290,14 +290,27 @@ function MonitoringTab({
                 </Select>
               </Form.Item>
             </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Monitoring Type"
+                name="lzMonitoringType"
+                rules={[{ required: true, message: 'Required field' }]}>
+                <Select onChange={(value) => setLzMonitoringType(value)}>
+                  {monitoringTypes.map((type) => (
+                    <Option key={type.id} value={type.value}>
+                      {type.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          {/* Monitoring type select element */}
 
+          <Row gutter={16}>
             <Col span={12}>
               {/* select element for Dropzone, %0% width */}
-              <Form.Item
-                label="Dropzone"
-                name="dropzone"
-                rules={[{ required: true, message: 'Required field' }]}
-                layout="vertical">
+              <Form.Item label="Dropzone" name="dropzone" rules={[{ required: true, message: 'Required field' }]}>
                 <Select onChange={handleDropzoneChange}>
                   {dropzones
                     .sort((a, b) => a.Name.localeCompare(b.Name))
@@ -309,15 +322,8 @@ function MonitoringTab({
                 </Select>
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row gutter={16}>
             <Col span={12}>
-              <Form.Item
-                label="Machine"
-                name="machine"
-                rules={[{ required: true, message: 'Required field' }]}
-                layout="vertical">
+              <Form.Item label="Machine" name="machine" rules={[{ required: true, message: 'Required field' }]}>
                 <Select onChange={handleMachineChange}>
                   {machines.map((machine) => (
                     <Option key={machine.Name} value={machine.Netaddress}>
@@ -327,48 +333,41 @@ function MonitoringTab({
                 </Select>
               </Form.Item>
             </Col>
-
-            <Col span={12}>
-              <Form.Item
-                label="Directory"
-                name="directory"
-                rules={[{ required: true, message: 'Required field' }]}
-                layout="vertical">
-                <Cascader
-                  options={directoryOptions}
-                  loadData={loadDirectoryData}
-                  allowClear={true}
-                  changeOnSelect={true}
-                  expandTrigger="hover"
-                  placeholder="Select directory"
-                  loading={directoryLoading}
-                  notFoundContent={directoryLoading ? 'Loading directories...' : 'No directories found'}
-                  fieldNames={{ label: 'label', value: 'value', children: 'children' }}
-                  showSearch={{
-                    filter: (inputValue, path) =>
-                      path.some((option) => option.label.toLowerCase().includes(inputValue.toLowerCase())),
-                  }}
-                  onChange={(value, selectedOptions) => {
-                    // Allow selection at any level without closing panel
-                    if (value && value.length > 0) {
-                      const fullPath = value[value.length - 1];
-                      form.setFieldsValue({ directory: fullPath });
-                    }
-                  }}
-                  displayRender={(labels, selectedOptions) => {
-                    // Show the full path in the input
-                    return labels.join(' / ');
-                  }}
-                />
-              </Form.Item>
-            </Col>
           </Row>
+
+          <Form.Item label="Directory" name="directory" rules={[{ required: true, message: 'Required field' }]}>
+            <Cascader
+              options={directoryOptions}
+              loadData={loadDirectoryData}
+              allowClear={true}
+              changeOnSelect={true}
+              expandTrigger="hover"
+              placeholder="Select directory"
+              loading={directoryLoading}
+              notFoundContent={directoryLoading ? 'Loading directories...' : 'No directories found'}
+              fieldNames={{ label: 'label', value: 'value', children: 'children' }}
+              showSearch={{
+                filter: (inputValue, path) =>
+                  path.some((option) => option.label.toLowerCase().includes(inputValue.toLowerCase())),
+              }}
+              onChange={(value) => {
+                // Allow selection at any level without closing panel
+                if (value && value.length > 0) {
+                  const fullPath = value[value.length - 1];
+                  form.setFieldsValue({ directory: fullPath });
+                }
+              }}
+              displayRender={(labels) => {
+                // Show the full path in the input
+                return labels.join(' / ');
+              }}
+            />
+          </Form.Item>
 
           {lzMonitoringType === 'fileMovement' && (
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
-                  layout="vertical"
                   label="Threshold (in minutes)"
                   name="threshold"
                   rules={[{ required: true, message: 'Required field' }]}>
@@ -377,8 +376,7 @@ function MonitoringTab({
               </Col>
               <Col span={12}>
                 <Form.Item
-                  layout="vertical"
-                  label=" Maximum Depth (0 for all directories)"
+                  label=" Maximum Depth "
                   name="maxDepth"
                   rules={[
                     { required: true, message: 'Required field' },
@@ -397,7 +395,6 @@ function MonitoringTab({
               <Col span={24}>
                 {/* {lzMonitoringType === 'fileMovement' && ( */}
                 <Form.Item
-                  layout="vertical"
                   label={
                     <>
                       <span>File Name </span>
@@ -418,50 +415,127 @@ function MonitoringTab({
               </Col>
             </Row>
           )}
+
+          {lzMonitoringType === 'fileCount' && (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Minimum File Count"
+                  name="minFileCount"
+                  rules={[
+                    { required: true, message: 'Required field' },
+                    {
+                      validator: (_, value) => {
+                        if (value < 0 || value > 999999) {
+                          return Promise.reject(new Error('Value must be between 0 and 999999'));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                    {
+                      validator: (_, value) => {
+                        // Only validate comparison if value exists (not empty/null/undefined)
+                        if (value != null && value !== '') {
+                          const minFileCount = form.getFieldValue('maxFileCount');
+                          if (minFileCount != null && value > minFileCount) {
+                            return Promise.reject(
+                              new Error('Max file count must be smaller than or equal to max file count')
+                            );
+                          }
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}>
+                  <InputNumber style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Maximum File Count"
+                  name="maxFileCount"
+                  rules={[
+                    { required: true, message: 'Required field' },
+                    {
+                      validator: (_, value) => {
+                        if (value < 0 || value > 999999) {
+                          return Promise.reject(new Error('Value must be between 0 and 999999'));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                    {
+                      validator: (_, value) => {
+                        // Only validate comparison if value exists (not empty/null/undefined)
+                        if (value != null && value !== '') {
+                          const minFileCount = form.getFieldValue('minFileCount');
+                          if (minFileCount != null && value < minFileCount) {
+                            return Promise.reject(
+                              new Error('Max file count must be greater than or equal to min file count')
+                            );
+                          }
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}>
+                  <InputNumber style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+            </Row>
+          )}
+
+          {lzMonitoringType === 'spaceUsage' && (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Minimum Threshold"
+                  name="minThreshold"
+                  rules={[
+                    { required: true, message: 'Required field' },
+                    {
+                      validator: (_, value) => {
+                        if (value < 0 || value > 999999) {
+                          return Promise.reject(new Error('Value must be between 0 and 999999'));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}>
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    addonAfter={renderThresholdAddon('minThreshold')}
+                    min={0}
+                    max={999999}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Max Threshold"
+                  name="maxThreshold"
+                  rules={[
+                    { required: true, message: 'Required field' },
+                    {
+                      validator: (_, value) => {
+                        if (value < 0 || value > 999999) {
+                          return Promise.reject(new Error('Value must be between 0 and 999999'));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}>
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    addonAfter={renderThresholdAddon('maxThreshold')}
+                    min={0}
+                    max={999999}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          )}
         </Card>
-        {/* <Card className="modal-card" style={{ border: '1px solid #dadada' }}>
-        <SchedulePicker
-          intermittentScheduling={intermittentScheduling}
-          setIntermittentScheduling={setIntermittentScheduling}
-          completeSchedule={completeSchedule}
-          setCompleteSchedule={setCompleteSchedule}
-          cron={cron}
-          // setCron={setCron}
-          // cronMessage={cronMessage}
-          setCronMessage={setCronMessage}
-        />
-        {erroneousScheduling && (
-          <div style={{ color: '#ff4d4f', textAlign: 'center' }}>Please select schedule for the directory</div>
-        )}
-      </Card>
-
-     
-      <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
-        <Form form={form} layout="vertical">
-          <Row gutter={16}>
-            <Col span={24}>
-              <Form.Item
-                label="Expected File Move By Time (HH:MM)"
-                name="expectedMoveByTime"
-                rules={[{ required: false, message: 'Expected start time is a required' }]}>
-                <TimePicker style={{ width: '100%' }} format="HH:mm" suffixIcon={clusterOffset} />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item label="Minimum File Count" name="minimumFileCount" rules={[{ required: false }]}>
-                <InputNumber style={{ width: '100%' }} defaultValue={0} max={32768} />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item label="Maxiumum File Count" name="maximumFileCount" rules={[{ required: false }]}>
-                <InputNumber style={{ width: '100%' }} defaultValue={0} max={32768} />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      </Card> */}
 
         <InfoDrawer
           open={showUserGuide}

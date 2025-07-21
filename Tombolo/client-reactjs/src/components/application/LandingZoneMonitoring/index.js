@@ -1,16 +1,8 @@
-/* eslint-disable */
 import React, { useState, useEffect, useRef } from 'react';
 import BreadCrumbs from '../../common/BreadCrumbs.js';
 import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
-import {
-  checkScheduleValidity,
-  identifyErroneousTabs,
-  getAllLzMonitorings,
-  updateMonitoring,
-  isScheduleUpdated,
-  createLandingZoneMonitoring, //TODO WIP
-} from './Utils.js';
+import { identifyErroneousTabs, getAllLzMonitorings, updateMonitoring, createLandingZoneMonitoring } from './Utils.js';
 import { flattenObject } from '../../common/CommonUtil.js';
 
 import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools.js';
@@ -39,8 +31,6 @@ const LandigZoneMonitoring = () => {
   // Constants
   const [form] = Form.useForm();
   const isMonitoringTypeIdFetched = useRef(false);
-
-  //TODO: this might not be right place to get user
   const user = getUser();
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
@@ -52,7 +42,7 @@ const LandigZoneMonitoring = () => {
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [editingData, setEditingData] = useState({ isEditing: false }); // Data to be edited
   const [displayAddRejectModal, setDisplayAddRejectModal] = useState(false);
-  const [savingLzMonitoring, setSavingLzMonitoring] = useState(false); // Flag to indicate if directory monitoring is being saved
+  const [savingLzMonitoring, setSavingLzMonitoring] = useState(false); // Flag to indicate if landing zone monitoring is being saved
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [activeTab, setActiveTab] = useState('0');
@@ -61,6 +51,8 @@ const LandigZoneMonitoring = () => {
   const [directory, setDirectory] = useState(null);
   const [copying, setCopying] = useState(false);
   const [lzMonitoringType, setLzMonitoringType] = useState(null);
+  const [minSizeThreasoldUnit, setMinSizeThreasoldUnit] = useState('MB');
+  const [maxSizeThreasoldUnit, setMaxSizeThreasoldUnit] = useState('MB');
 
   //asr specific
   const [domains, setDomains] = useState([]);
@@ -72,10 +64,6 @@ const LandigZoneMonitoring = () => {
   useEffect(() => {
     if (editingData?.isEditing || copying) {
       form.setFieldsValue(selectedMonitoring);
-      console.log('------------------------');
-      console.log('COPYING !!: ', selectedMonitoring);
-      console.log('CLUSTERS: ', clusters);
-      console.log('------------------------');
       setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring?.cluster?.id));
       setLzMonitoringType(selectedMonitoring.lzMonitoringType);
 
@@ -93,7 +81,19 @@ const LandigZoneMonitoring = () => {
         primaryContacts: selectedMonitoring['metaData.contacts.primaryContacts'],
         secondaryContacts: selectedMonitoring['metaData.contacts.secondaryContacts'],
         notifyContacts: selectedMonitoring['metaData.contacts.notifyContacts'],
+        minThreshold: selectedMonitoring['metaData.monitoringData.minThreshold'],
+        maxThreshold: selectedMonitoring['metaData.monitoringData.maxThreshold'],
+        minFileCount: selectedMonitoring['metaData.monitoringData.minFileCount'],
+        maxFileCount: selectedMonitoring['metaData.monitoringData.maxFileCount'],
       });
+
+      // Set maxSizeThreasoldUnit and minSizeThreasoldUnit if they exist
+      if (selectedMonitoring['metaData.monitoringData.maxSizeThreasoldUnit']) {
+        setMaxSizeThreasoldUnit(selectedMonitoring['metaData.monitoringData.maxSizeThreasoldUnit']);
+      }
+      if (selectedMonitoring['metaData.monitoringData.minSizeThreasoldUnit']) {
+        setMinSizeThreasoldUnit(selectedMonitoring['metaData.monitoringData.minSizeThreasoldUnit']);
+      }
     }
   }, [editingData, copying]);
 
@@ -108,10 +108,6 @@ const LandigZoneMonitoring = () => {
           const flat = flattenObject(monitoring);
           return { ...flat, ...monitoring }; // Flat also keep the original object - make it easier to update
         });
-
-        console.log('------------------------');
-        console.log('After Flattening: ', flattenedMonitorings);
-        console.log('------------------------');
 
         setLandingZoneMonitoring(flattenedMonitorings);
       } catch (error) {
@@ -177,7 +173,7 @@ const LandigZoneMonitoring = () => {
     setDisplayAddEditModal(true);
   };
 
-  const handleSaveDirectoryMonitoring = async () => {
+  const handleSaveLzmonitoring = async () => {
     setSavingLzMonitoring(true);
     let validForm = true;
 
@@ -195,17 +191,9 @@ const LandigZoneMonitoring = () => {
       .map((f) => f.name[0]);
     const badTabs = identifyErroneousTabs({ erroneousFields });
 
-    console.log('------------------------');
-    console.log('Erroneous Fields: ', erroneousFields);
-    console.log('------------------------');
-
     if (badTabs.length > 0) {
       setErroneousTabs(badTabs);
     }
-
-    console.log('------------------------');
-    console.log('Is form valid : ', validForm);
-    console.log('------------------------');
 
     // If form is invalid
     if (!validForm) {
@@ -216,10 +204,6 @@ const LandigZoneMonitoring = () => {
     try {
       //All inputs
       let userFieldInputs = form.getFieldsValue();
-
-      console.log('------------------------');
-      console.log('USER INPUTS: ', userFieldInputs);
-      console.log('------------------------');
 
       const metaData = {};
       // Add contact specific metaData
@@ -234,25 +218,44 @@ const LandigZoneMonitoring = () => {
       delete userFieldInputs.secondaryContacts;
       delete userFieldInputs.notifyContacts;
 
-      // Add file movement specific metaData
-      if (userFieldInputs.lzMonitoringType === 'fileMovement') {
-        const { dropzone, machine, directory, maxDepth, fileName, threshold } = userFieldInputs;
-        metaData.monitoringData = {
-          dropzone,
-          machine,
-          directory,
-          maxDepth,
-          threshold,
-          fileName,
-        };
-        // Remove file movement specific fields from userFieldInputs
-        delete userFieldInputs.dropzone;
-        delete userFieldInputs.machine;
-        delete userFieldInputs.directory;
-        delete userFieldInputs.maxDepth;
-        delete userFieldInputs.threshold;
-        delete userFieldInputs.fileName;
-      }
+      // Add monitoring  specific metaData
+      const {
+        dropzone,
+        machine,
+        directory,
+        maxDepth,
+        fileName,
+        threshold,
+        maxThreshold,
+        minThreshold,
+        minFileCount,
+        maxFileCount,
+      } = userFieldInputs;
+      metaData.monitoringData = {
+        dropzone,
+        machine,
+        directory,
+        maxDepth,
+        threshold,
+        fileName,
+        maxThreshold,
+        maxSizeThreasoldUnit,
+        minThreshold,
+        minSizeThreasoldUnit,
+        minFileCount,
+        maxFileCount,
+      };
+      // Remove file movement specific fields from userFieldInputs
+      delete userFieldInputs.dropzone;
+      delete userFieldInputs.machine;
+      delete userFieldInputs.directory;
+      delete userFieldInputs.maxDepth;
+      delete userFieldInputs.threshold;
+      delete userFieldInputs.fileName;
+      delete userFieldInputs.maxThreshold;
+      delete userFieldInputs.minThreshold;
+      delete userFieldInputs.minFileCount;
+      delete userFieldInputs.maxFileCount;
 
       // Add ASR specific metaData
       if (userFieldInputs.domin !== 'undefined') {
@@ -382,7 +385,7 @@ const LandigZoneMonitoring = () => {
       message.success('Landingzone monitoring saved successfully');
       resetStates();
     } catch (err) {
-      message.error('Failed to update directory monitoring');
+      message.error('Failed to update landing zone monitoring');
     } finally {
       setSavingLzMonitoring(false);
     }
@@ -396,6 +399,9 @@ const LandigZoneMonitoring = () => {
     setSelectedCluster(null);
     setActiveTab('0');
     setCopying(false);
+    setLzMonitoringType(null);
+    setMinSizeThreasoldUnit('MB');
+    setMaxSizeThreasoldUnit('MB');
     form.resetFields();
   };
 
@@ -419,17 +425,14 @@ const LandigZoneMonitoring = () => {
       <AddEditModal
         displayAddEditModal={displayAddEditModal}
         setDisplayAddEditModal={setDisplayAddEditModal}
-        handleSaveDirectoryMonitoring={handleSaveDirectoryMonitoring}
+        handleSaveLzmonitoring={handleSaveLzmonitoring}
+        savingLzMonitoring={savingLzMonitoring}
         handleUpdateLzMonitoring={handleUpdateLzMonitoring}
         form={form}
         clusters={clusters}
-        setSelectedMonitoring={setSelectedMonitoring}
-        savingLzMonitoring={savingLzMonitoring}
         landingZoneMonitoring={landingZoneMonitoring}
-        setEditingData={setEditingData}
         isEditing={editingData?.isEditing}
         erroneousTabs={erroneousTabs}
-        setErroneousTabs={setErroneousTabs}
         selectedCluster={selectedCluster}
         setSelectedCluster={setSelectedCluster}
         resetStates={resetStates}
@@ -445,6 +448,10 @@ const LandigZoneMonitoring = () => {
         selectedMonitoring={selectedMonitoring}
         lzMonitoringType={lzMonitoringType}
         setLzMonitoringType={setLzMonitoringType}
+        minSizeThreasoldUnit={minSizeThreasoldUnit}
+        maxSizeThreasoldUnit={maxSizeThreasoldUnit}
+        setMinSizeThreasoldUnit={setMinSizeThreasoldUnit}
+        setMaxSizeThreasoldUnit={setMaxSizeThreasoldUnit}
       />
       <LandingZoneMonitoringTable
         landingZoneMonitoring={landingZoneMonitoring}
@@ -486,7 +493,6 @@ const LandigZoneMonitoring = () => {
           landingZoneMonitoring={landingZoneMonitoring}
           setLandingZoneMonitoring={setLandingZoneMonitoring}
           selectedRows={selectedRows}
-          setSelectedRows={setSelectedRows}
           getAllLzMonitorings={getAllLzMonitorings}
         />
       )}

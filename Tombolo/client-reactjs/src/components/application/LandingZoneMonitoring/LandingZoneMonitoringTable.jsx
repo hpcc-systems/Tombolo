@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React from 'react';
 import { Table, Tooltip, Popconfirm, message, Popover } from 'antd';
 import {
@@ -215,7 +214,7 @@ const LandingZoneMonitoringTable = ({
     setDisplayViewDetailsModal(true);
   };
 
-  // When edit icon is clicked, display the add directory monitoring modal and set the selected monitoring
+  // When edit icon is clicked, display the add landing zone monitoring modal and set the selected monitoring
   const editDirectoryMonitoring = (record) => {
     setEditingData({ isEditing: true, selectedMonitoring: record });
 

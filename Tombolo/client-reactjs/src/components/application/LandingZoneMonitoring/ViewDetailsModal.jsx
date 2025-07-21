@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useEffect, useState } from 'react';
 import { Descriptions, Modal, Button, Tooltip, Tag } from 'antd';
 import { formatDateTimeShort } from '../../common/CommonUtil.js';
@@ -11,9 +10,6 @@ function ViewDetailsModal({
   domains,
   productCategories,
 }) {
-  useEffect(() => {
-    console.log('selectedMonitoring PRODUCTS', productCategories);
-  }, [productCategories]);
   // When cancel button is clicked, close the modal and reset the selectedMonitoring
   const handleCancel = () => {
     setDisplayViewDetailsModal(false);
@@ -31,9 +27,6 @@ function ViewDetailsModal({
   const [selectedProductCategory, setSelectedProductCategory] = useState(null);
   useEffect(() => {
     if (!selectedMonitoring) return;
-    console.log('------------------------');
-    console.log('SELECTED MONITORING: ', selectedMonitoring);
-    console.log('------------------------');
     if (selectedMonitoring['metaData.asrSpecificMetaData.domain']) {
       const d = domains.find((domain) => domain.value === selectedMonitoring['metaData.asrSpecificMetaData.domain']);
       setSelectedDomain(d);
@@ -122,6 +115,26 @@ function ViewDetailsModal({
             </span>
           )}
         </Descriptions.Item>
+
+        {selectedMonitoring['metaData.contacts.primaryContacts'] && (
+          <Descriptions.Item label="Primary Contact ">
+            {selectedMonitoring['metaData.contacts.primaryContacts'].join(', ')}
+          </Descriptions.Item>
+        )}
+
+        {selectedMonitoring['metaData.contacts.secondaryContacts'] &&
+          selectedMonitoring['metaData.contacts.secondaryContacts'].length > 0 && (
+            <Descriptions.Item label="Secondary Contact ">
+              {selectedMonitoring['metaData.contacts.secondaryContacts'].join(', ')}
+            </Descriptions.Item>
+          )}
+
+        {selectedMonitoring['metaData.contacts.notifyContacts'] &&
+          selectedMonitoring['metaData.contacts.notifyContacts'] > 0 && (
+            <Descriptions.Item label="Notify Contacts ">
+              {selectedMonitoring['metaData.contacts.notifyContacts'].join(', ')}
+            </Descriptions.Item>
+          )}
         {approverComment && (
           <Descriptions.Item label="Approver Comment " span={2}>
             {approverComment}

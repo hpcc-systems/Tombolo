@@ -261,20 +261,11 @@ const validateEvaluateLandingZoneMonitoring = [
 
 // Validate bulk update payload
 const validateBulkUpdatePayload = [
-  body('metaData').isArray().withMessage('Meta data must be an array'),
-  body('metaData.*')
+  body('updatedData').isArray().withMessage('Payload must be an array'),
+  body('updatedData.*')
     .isObject()
-    .withMessage('Each item in meta data must be an object'),
-  body('metaData.*.id').isUUID().withMessage('ID must be a valid UUID'),
-  // body('metaData.contacts')
-  //   .isObject()
-  //   .withMessage('Contacts must be an object'),
-  // body('metaData.contacts.*')
-  //   .isArray()
-  //   .withMessage('Each contact must be an array'),
-  // body('metaData.contacts.*.*')
-  //   .isEmail()
-  //   .withMessage('Each email must be a valid email address'),
+    .withMessage('Each item in payload must be an object'),
+  body('updatedData.*.id').isUUID().withMessage('ID must be a valid UUID'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

@@ -1,6 +1,4 @@
-/* eslint-disable*/
 import { authHeader } from '../../common/AuthHeader.js';
-import { message } from 'antd';
 
 // Create a directory monitoring
 export const createLandingZoneMonitoring = async ({ inputData }) => {
@@ -144,11 +142,11 @@ export const handleLzBulkDelete = async ({ ids }) => {
 };
 
 // Bulk update
-export const handleBulkUpdateLzMonitorings = async ({ updatedData }) => {
+export const handleBulkUpdateLzMonitorings = async (updatedData) => {
   const payload = {
     method: 'PATCH',
     headers: authHeader(),
-    body: JSON.stringify({ metaData: updatedData }),
+    body: JSON.stringify({ updatedData }),
   };
 
   const response = await fetch(`/api/LandingZoneMonitoring/bulkUpdate`, payload);

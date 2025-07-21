@@ -1,9 +1,10 @@
-/*eslint-disable */
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button, Select, message } from 'antd';
 import { isEmail } from 'validator';
 import { handleBulkUpdateLzMonitorings } from './Utils';
 import { useSelector } from 'react-redux';
+
+import { flattenObject } from '../../common/CommonUtil.js';
 
 const { useForm } = Form;
 
@@ -12,8 +13,7 @@ const BulkUpdateModal = ({
   setBulkEditModalVisibility,
   directoryMonitorings,
   selectedRows,
-  setSelectedRows,
-  fetchAllDirectoryMonitorings,
+  setLandingZoneMonitoring,
 }) => {
   const { application, integrations } = useSelector((state) => state.applicationReducer);
   const { applicationId } = application;
@@ -110,9 +110,9 @@ const BulkUpdateModal = ({
 
     try {
       selectedRows.forEach((row) => {
-        const { metaData } = row || {};
-        const { contacts } = metaData || {};
-        const { primaryContacts, secondaryContacts, notifyContacts } = contacts || {};
+        const { metaData } = row;
+        const { contacts } = metaData;
+        const { primaryContacts, secondaryContacts, notifyContacts } = contacts;
 
         let newContacts = {};
 
@@ -163,25 +163,19 @@ const BulkUpdateModal = ({
           return;
         }
 
-        updatedRows.push({
-          id: row.id,
-          metaData: { ...metaData, contacts: newContacts },
-        });
+        updatedRows.push({ metaData: { ...metaData, contacts: newContacts }, id: row.id });
       });
 
-      console.log('------------------------');
-      console.log('Updated metaData: ', updatedRows);
-      console.log('------------------------');
       // Update
-      await handleBulkUpdateLzMonitorings({ updatedData: updatedRows });
+      await handleBulkUpdateLzMonitorings(updatedRows);
 
       message.success('Landing zone  monitoring updated successfully');
 
       // Set selected monitoring to the updated monitoring
-      setSelectedRows((prev) =>
+      setLandingZoneMonitoring((prev) =>
         prev.map((row) => {
           const updatedRow = updatedRows.find((data) => data.id === row.id);
-          return { ...row, metaData: updatedRow.metaData };
+          return flattenObject({ ...row, metaData: updatedRow.metaData });
         })
       );
 
