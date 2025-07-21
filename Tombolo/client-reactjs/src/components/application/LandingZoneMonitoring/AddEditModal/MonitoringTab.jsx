@@ -297,7 +297,10 @@ function MonitoringTab({
                 rules={[{ required: true, message: 'Required field' }]}>
                 <Select onChange={(value) => setLzMonitoringType(value)}>
                   {monitoringTypes.map((type) => (
-                    <Option key={type.id} value={type.value}>
+                    <Option
+                      key={type.id}
+                      value={type.value}
+                      disbaled={type.value === 'spaceUsage' && selectedCluster?.containerized}>
                       {type.label}
                     </Option>
                   ))}
