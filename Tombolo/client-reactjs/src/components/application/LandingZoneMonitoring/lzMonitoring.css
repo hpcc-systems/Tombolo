@@ -1,0 +1,7 @@
+.lzMonitoring__inactive-monitoring {
+  background-color: var(--paused);
+}
+
+.lzMonitoring__active-monitoring {
+  background-color: var(--active);
+}

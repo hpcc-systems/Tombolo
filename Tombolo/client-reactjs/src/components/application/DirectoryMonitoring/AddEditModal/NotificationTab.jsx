@@ -1,0 +1,61 @@
+//Packages
+import React from 'react';
+import { Form, Card, Select } from 'antd';
+import { useSelector } from 'react-redux';
+import AsrSpecificNotification from './ASRSpecificNotification';
+import PrimaryContacts from '../../../common/PrimaryContacts';
+
+//Constants
+const { Option } = Select;
+const directoryStatuses = [
+  { label: 'File Not Moving', value: 'threshold' },
+  { label: 'File Detected', value: 'fileDetected,' },
+  { label: 'Maximum File Count', value: 'maximumFileCount' },
+  { label: 'Minimum File Count', value: 'minimumFilecount' },
+];
+
+function NotificationTab({ form, teamsHooks }) {
+  // Redux
+  const {
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
+  } = useSelector((state) => state);
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
+  // JSX
+  return (
+    <Card>
+      <Form form={form} layout="vertical">
+        <Form.Item
+          name="notificationCondition"
+          label="Notify when"
+          rules={[{ required: true, message: 'Select one or more options' }]}>
+          <Select mode="multiple" placeholder="Select one">
+            {directoryStatuses.map((status) => (
+              <Option key={status.value} value={status.value}>
+                {status.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item label="Teams Channel" name="teamsHooks">
+          <Select placeholder="Select a teams Channel " mode="multiple">
+            {teamsHooks.map((team) => (
+              <Option key={team.id} value={team.id}>
+                {team.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+        <PrimaryContacts />
+        {asrIntegration && <AsrSpecificNotification />}
+      </Form>
+    </Card>
+  );
+}
+
+export default NotificationTab;

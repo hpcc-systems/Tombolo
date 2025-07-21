@@ -1,0 +1,99 @@
+# Rate limiting zone for DDoS protection (limits to 50 req/s per IP)
+limit_req_zone $binary_remote_addr zone=mylimit:10m rate=50r/s;
+
+# Connection limiting zone for DDoS protection
+limit_conn_zone $binary_remote_addr zone=conn_limit:150m;
+
+# HTTP to HTTPS redirect
+server {
+  listen 80;
+  server_name $HOSTNAME;
+  return 301 https://$server_name$request_uri;
+}
+
+# Main HTTPS server
+server {
+  # SSL setup
+  listen 443 ssl;
+  ssl_certificate /etc/nginx/certs/$CERTIFICATE_NAME;
+  ssl_certificate_key /etc/nginx/certs/$CERTIFICATE_KEY;
+  ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
+  ssl_ecdh_curve secp384r1;
+  ssl_session_timeout 10m;
+  ssl_session_cache shared:SSL:10m;
+  server_name $HOSTNAME;
+
+  # DDoS protection
+  limit_req zone=mylimit burst=20 nodelay;      # Limits HTTP floods
+  limit_conn conn_limit 50;                     # Caps connections per IP
+  limit_conn_log_level warn;                    # Logs exceeded limits
+  client_body_timeout 10s;                      # Drops slow body sends
+  client_header_timeout 10s;                    # Drops slow header sends
+  keepalive_timeout 5s;                         # Closes idle connections
+  send_timeout 10s;                             # Limits response time
+  client_max_body_size 2m;                      # Caps request size
+
+  # Security headers
+  add_header Strict-Transport-Security "max-age=86400; includeSubDomains" always;
+  add_header X-XSS-Protection "1; mode=block";
+  add_header X-Permitted-Cross-Domain-Policies "none";
+  add_header X-Frame-Options "deny";
+  add_header Access-Control-Allow-Origin "domain";
+  add_header Access-Control-Allow-Origin https://$server_name;
+  add_header X-Content-Type-Options "nosniff";
+  add_header Content-Security-Policy "script-src 'self'; base-uri 'self'; frame-ancestors 'deny'; form-action 'self'; default-src 'self'; object-src 'none'; worker-src 'self' blob:;";
+  add_header Cache-Control "no-store";
+  add_header Pragma "no-cache";
+
+  # Logging
+  error_log /var/log/nginx/tombolo-error.log;
+  access_log /var/log/nginx/tombolo-access.log;
+
+  # Static files
+  location / {
+    limit_req zone=mylimit burst=20 nodelay;    # Rate limit for this location
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_hide_header X-Powered-By;
+    expires -1;
+    expires 01 Jan 1971 01:01:01 GMT;
+    root /usr/share/nginx/html;
+    index index.html index.htm;
+    try_files $uri $uri/ /index.html;
+  }
+
+  # API proxy
+  location /api {
+    limit_req zone=mylimit burst=50 nodelay;    # Higher burst for API
+    proxy_pass http://node:3001;
+    proxy_set_header X-Frame-Options "deny";
+    proxy_hide_header X-Powered-By;
+  }
+
+  # SSE for clustering progress
+  location /api/cluster/addClusterWithProgress {
+    proxy_pass http://node:3001;
+    proxy_set_header Connection keep-alive;
+    proxy_buffering off;
+    proxy_cache off;
+    chunked_transfer_encoding off;
+    add_header Cache-Control no-cache;
+  }
+
+  # WebSocket for Socket.IO
+  location /socket.io {
+    proxy_pass http://node:3001;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+  }
+
+  # Error pages
+  error_page 500 502 503 504 /50x.html;
+  location = /50x.html {
+    root /usr/share/nginx/html;
+  }
+}

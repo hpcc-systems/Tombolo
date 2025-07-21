@@ -1,0 +1,273 @@
+// Library imports
+import React, { useState, useEffect } from 'react';
+import { Form, Steps, Button, Divider, message, Card, Space } from 'antd';
+import { Route, Switch } from 'react-router-dom';
+import {
+  FormOutlined,
+  SolutionOutlined,
+  UserOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  RightCircleOutlined,
+} from '@ant-design/icons';
+
+// Local imports
+import InstanceSettingsForm from './instanceSettings';
+import ReviewForm from './reviewForm';
+import { completeFirstRun } from './initialExperienceUtils';
+import RegisterUserForm from '../login/registerUserForm';
+import { getDeviceInfo } from '../login/utils';
+import BasicLayout from '../common/BasicLayout';
+
+// Colors for the steps
+const stepColor = {
+  info: 'var(--light)',
+  success: 'var(--success)',
+  error: 'var(--danger)',
+};
+
+// Icons for the steps
+const stepIcon = {
+  info: <RightCircleOutlined />,
+  success: <CheckCircleOutlined />,
+  error: <CloseCircleOutlined />,
+};
+
+const Wizard = () => {
+  //form instances
+  const [userForm] = Form.useForm();
+  const [instanceForm] = Form.useForm();
+
+  // States
+  const [currentStep, setCurrentStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [stepMessage, setStepMessage] = useState([]);
+  // The form instances must persist to retain data across screen transitions, so visibility is controlled via state based on currentStep
+  const [userFormVisible, setUserFormVisible] = useState(true);
+  const [instanceFormVisible, setInstanceFormVisible] = useState(false);
+  const [reviewFormVisible, setReviewFormVisible] = useState(false);
+  const [progressVisible, setProgressVisible] = useState(false);
+  const [completedSuccessfully, setCompleteSuccessfully] = useState(false);
+
+  // Show hide form/content based on currentStep
+  useEffect(() => {
+    if (currentStep === 0) {
+      setInstanceFormVisible(true);
+      setUserFormVisible(false);
+      setReviewFormVisible(false);
+    } else if (currentStep === 1) {
+      setUserFormVisible(true);
+      setInstanceFormVisible(false);
+      setReviewFormVisible(false);
+    } else if (currentStep === 2) {
+      setReviewFormVisible(true);
+      setUserFormVisible(false);
+      setInstanceFormVisible(false);
+    }
+  }, [currentStep]);
+
+  // Function to execute when next clicked
+  const next = async () => {
+    // Do not allow to go to next step if there are errors
+    if (currentStep === 0) {
+      try {
+        await instanceForm.validateFields();
+        setCurrentStep(currentStep + 1);
+      } catch (error) {
+        return;
+      }
+      return;
+    }
+    if (currentStep === 1) {
+      try {
+        await userForm.validateFields();
+        setCurrentStep(currentStep + 1);
+      } catch (error) {
+        return;
+      }
+      return;
+    }
+  };
+
+  // Function to execute when  prev clicked
+  const prev = () => {
+    setCurrentStep(currentStep - 1);
+
+    if (progressVisible) {
+      setProgressVisible(false);
+      setStepMessage([]);
+    }
+  };
+
+  // From steps
+  const steps = [
+    {
+      title: <>Instance Settings</>,
+      icon: <FormOutlined />,
+    },
+    {
+      title: <>Owner Settings</>,
+      icon: <UserOutlined />,
+    },
+
+    {
+      title: 'Review & Submit',
+      icon: <SolutionOutlined />,
+    },
+  ];
+
+  // Save the form data
+  const onSubmit = async () => {
+    try {
+      setStepMessage([]);
+      setSubmitting(true);
+      setReviewFormVisible(false);
+      setProgressVisible(true);
+
+      // Get values from both the forms
+      let instanceValues = instanceForm.getFieldsValue();
+      let userValues = userForm.getFieldsValue();
+
+      // All values
+      let values = {
+        ...instanceValues,
+        ...userValues,
+        deviceInfo: getDeviceInfo(),
+      };
+
+      const response = await completeFirstRun({ instanceInfo: values });
+
+      if (!response.ok) {
+        throw new Error('Failed to complete set up');
+      } else {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+
+        let sendingResponse = true;
+
+        while (sendingResponse) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            sendingResponse = false;
+          }
+          const decodedValue = decoder.decode(value);
+
+          const jsonStrings = decodedValue
+            .split('\n')
+            .filter((str) => str.trim() !== '')
+            .map((str) => str.replace(/^data: /, ''));
+          const serverSentEvents = jsonStrings.map((str) => JSON.parse(str));
+
+          // Check if any of these events are errors or step is 999
+          serverSentEvents.forEach((e) => {
+            if (e.event === 'error') {
+              setSubmitting(false);
+            } else if (e.step === 999) {
+              setCompleteSuccessfully(true);
+              setSubmitting(false);
+            }
+          });
+
+          setStepMessage((prev) => [...prev, ...serverSentEvents]);
+        }
+      }
+    } catch (e) {
+      message.error(e.message);
+    }
+  };
+
+  // Wizard content (JSX)
+  const WizardContent = () => {
+    return (
+      <BasicLayout
+        content={
+          <>
+            <h3 style={{ textAlign: 'center' }}>
+              Welcome to Tombolo, to get started, we need to register an owner account, and set some instance settings.
+            </h3>
+            <Card style={{ marginTop: '2rem' }}>
+              {!submitting && !completedSuccessfully && (
+                <>
+                  <div>
+                    <Steps
+                      current={currentStep}
+                      items={steps}
+                      direction="horizontal"
+                      style={{ marginBottom: '2rem' }}
+                      size="small"
+                    />
+                  </div>
+                  <Divider />
+                </>
+              )}
+              <div>
+                <div style={{ display: instanceFormVisible ? 'block' : 'none' }}>
+                  <InstanceSettingsForm instanceForm={instanceForm} />
+                </div>
+                <div style={{ display: userFormVisible ? 'block' : 'none' }}>
+                  <RegisterUserForm form={userForm} msEnabled={false} ownerRegistration={true} />
+                </div>
+
+                <div style={{ display: reviewFormVisible ? 'block' : 'none' }}>
+                  <ReviewForm userForm={userForm} instanceForm={instanceForm} currentStep={currentStep} />
+                </div>
+                <div className="wizardSteps" style={{ display: progressVisible ? 'block' : 'none' }}>
+                  {stepMessage.map((step, index) => (
+                    <div style={{ color: stepColor[step.event] }} key={index}>
+                      {stepIcon[step.event]} {step.message}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                {(submitting || !completedSuccessfully) && (
+                  <Space size="small">
+                    {currentStep > 0 && (
+                      <Button onClick={() => prev()} size="large">
+                        Previous
+                      </Button>
+                    )}
+                    {currentStep < steps.length - 1 && (
+                      <Button type="primary" onClick={() => next()} size="large">
+                        Next
+                      </Button>
+                    )}
+                    {currentStep === steps.length - 1 && (
+                      <Button type="primary" onClick={onSubmit} size="large">
+                        Submit
+                      </Button>
+                    )}
+                  </Space>
+                )}
+
+                {completedSuccessfully && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <Button
+                      type="primary"
+                      onClick={() => {
+                        window.location.href = '/';
+                      }}
+                      size="large">
+                      Go to Login Page
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </>
+        }
+        width="55rem"></BasicLayout>
+    );
+  };
+
+  //return router with all paths leading to the wizard content
+  return (
+    <Switch>
+      <Route path="*" component={WizardContent} />
+    </Switch>
+  );
+};
+
+export default Wizard;

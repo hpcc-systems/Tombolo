@@ -1,0 +1,30 @@
+.clusters__details_tiny-description {
+  margin-top: 30px;
+}
+
+.clusters__details_tiny-description * {
+  padding: 2px 4px !important;
+}
+
+.clusters__details_tiny-description .ant-descriptions-item-label {
+  width: 200px;
+  font-weight: 500;
+}
+
+.clusters__label_link {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.Clusters__statusText {
+  color: var(--primary);
+}
+
+.Clusters__statusText:hover {
+  cursor: pointer;
+}
+
+.clustersTable__toolTip_reachabilityStatus {
+  min-width: 320px;
+  max-width: 400px;
+}

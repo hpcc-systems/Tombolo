@@ -1,0 +1,7 @@
+.my-account {
+  margin: 1rem;
+  padding: 0 1rem 1rem 1rem;
+  border: 0.1rem solid var(--secondary-light);
+  min-height: 80vh;
+  border-radius: 0.5rem;
+}
