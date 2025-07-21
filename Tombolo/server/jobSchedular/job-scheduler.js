@@ -24,6 +24,7 @@ const {
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
   checkClusterReachability,
+  checkClusterContainerization,
 } = require('../jobSchedularMethods/clusterJobs.js');
 const {
   scheduleJobStatusPolling,
@@ -161,6 +162,7 @@ class JobScheduler {
       await this.startJobPunctualityMonitoring();
       await this.startTimeSeriesAnalysisMonitoring();
       await this.checkClusterReachability();
+      await this.checkClusterContainerization();
       await this.createMonitorCostPerUserJob();
       await this.createDataArchiveJob();
       await removeUnverifiedUser.call(this);
@@ -420,6 +422,10 @@ class JobScheduler {
 
   checkClusterReachability() {
     return checkClusterReachability.call(this);
+  }
+
+  checkClusterContainerization() {
+    return checkClusterContainerization.call(this);
   }
 
   // User management jobs

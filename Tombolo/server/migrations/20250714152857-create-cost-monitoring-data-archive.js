@@ -83,7 +83,7 @@ module.exports = {
     await queryInterface.addIndex('costMonitoringDataArchive', [
       'monitoringId',
     ]);
-    await queryInterface.addIndex('costMonitoringData_archive', [
+    await queryInterface.addIndex('costMonitoringDataArchive', [
       'applicationId',
     ]);
     await queryInterface.addIndex('costMonitoringDataArchive', ['clusterId']);

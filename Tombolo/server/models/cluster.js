@@ -51,6 +51,11 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: false,
         allowNull: false,
       },
+      containerized: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       accountMetaData: {
         type: DataTypes.JSON,
         defaultValue: {},
