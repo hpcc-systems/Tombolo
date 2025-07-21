@@ -52,6 +52,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
+      notificationSentDate: {
+        allowNull: true,
+        type: DataTypes.DATE,
+      },
       metaData: {
         allowNull: true,
         type: DataTypes.JSON,
