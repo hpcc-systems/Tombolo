@@ -2,8 +2,8 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('costMonitoringData', {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('costMonitoringDataArchive', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -20,21 +20,21 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      monitoringId: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'costMonitoring',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
       clusterId: {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'cluster',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      monitoringId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: 'costMonitoring',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -53,14 +53,17 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
-      notificationSentDate: {
-        allowNull: true,
-        type: Sequelize.DATE,
-      },
       metaData: {
         allowNull: true,
         type: Sequelize.JSON,
       },
+      archivedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.NOW,
+        comment: 'When this record was archived',
+      },
+      // Standard timestamps
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -75,14 +78,25 @@ module.exports = {
       },
     });
 
-    await queryInterface.addIndex('costMonitoringData', {
-      unique: true,
-      fields: ['monitoringId', 'applicationId', 'clusterId', 'analyzed'],
-      name: 'costMonitoringData_unique_monitoring_app_cluster_analyzed',
+    // Add indexes for better query performance
+    await queryInterface.addIndex('costMonitoringDataArchive', ['archivedAt']);
+    await queryInterface.addIndex('costMonitoringDataArchive', [
+      'monitoringId',
+    ]);
+    await queryInterface.addIndex('costMonitoringDataArchive', [
+      'applicationId',
+    ]);
+    await queryInterface.addIndex('costMonitoringDataArchive', ['clusterId']);
+    await queryInterface.addIndex('costMonitoringDataArchive', ['date']);
+
+    // Composite index for common queries
+    await queryInterface.addIndex('costMonitoringDataArchive', {
+      fields: ['monitoringId', 'applicationId', 'clusterId'],
+      name: 'idx_cost_monitoring_data_archive_composite',
     });
   },
 
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('costMonitoringData');
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('costMonitoringDataArchive');
   },
 };

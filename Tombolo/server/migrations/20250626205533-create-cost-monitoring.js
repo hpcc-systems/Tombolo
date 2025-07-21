@@ -34,7 +34,13 @@ module.exports = {
       },
       approvedBy: {
         allowNull: true,
-        type: Sequelize.JSON,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       approvedAt: {
         allowNull: true,
@@ -61,12 +67,24 @@ module.exports = {
         type: Sequelize.JSON,
       },
       createdBy: {
-        type: Sequelize.JSON,
         allowNull: false,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       lastUpdatedBy: {
-        allowNull: true,
-        type: Sequelize.JSON,
+        allowNull: false,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       createdAt: {
         type: Sequelize.DATE,

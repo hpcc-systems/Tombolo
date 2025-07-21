@@ -49,6 +49,11 @@ module.exports = {
         defaultValue: false,
         allowNull: false,
       },
+      containerized: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       accountMetaData: {
         type: Sequelize.JSON,
         defaultValue: {},

@@ -50,6 +50,10 @@
       .list {
         padding: 10px;
       }
+
+      .indented {
+        margin-left: 12px;
+      }
     </style>
 </head>
 
@@ -82,14 +86,19 @@
                         <td class="section-table-td"> Issue</td>
                         <td class="section-table-td">
                             <% Object.keys(issue).forEach(function(key) { %>
-                                <% if (key === 'clusters' && Array.isArray(issue[key])) { %>
-                                    <div><span> <%= key %> : </span></div>
+                                <% if (key === 'Users' && Array.isArray(issue[key])) { %>
+                                    <div class='list'>
+                                        <% issue[key].forEach(function(user) { %>
+                                            <span><%= user.username %>&apos;s cost: <%= user.totalCost %></span><br>
+                                        <% }) %>
+                                    </div>
+                                <% } else if (key === 'clusters' && Array.isArray(issue[key])) { %>
                                     <div class="list">
                                         <% issue[key].forEach(function(cluster, index) { %>
                                             <div>
                                                 <strong>Cluster <%= index + 1 %>:</strong><br>
-                                                <span>Name: <%= cluster.name || 'N/A' %></span><br>
-                                                <span>Discovered At: <%= cluster.discoveredAt || 'N/A' %></span>
+                                                <span class="indented">Name: <%= cluster.ClusterName || 'N/A' %></span><br>
+                                                <span class="indented">Discovered At: <%= cluster['Discovered At'] || 'N/A' %></span>
                                             </div>
                                             <% if (index < issue[key].length - 1) { %><br><% } %>
                                         <% }) %>

@@ -24,6 +24,7 @@ const {
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
   checkClusterReachability,
+  checkClusterContainerization,
 } = require('../jobSchedularMethods/clusterJobs.js');
 const {
   scheduleJobStatusPolling,
@@ -62,6 +63,8 @@ const {
   createMonitorCostPerUserJob,
   createAnalyzeCostPerUserJob,
 } = require('../jobSchedularMethods/costMonitoring');
+
+const { createDataArchiveJob } = require('../jobSchedularMethods/archive');
 
 const {
   removeUnverifiedUser,
@@ -159,7 +162,9 @@ class JobScheduler {
       await this.startJobPunctualityMonitoring();
       await this.startTimeSeriesAnalysisMonitoring();
       await this.checkClusterReachability();
+      await this.checkClusterContainerization();
       await this.createMonitorCostPerUserJob();
+      await this.createDataArchiveJob();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
       await sendAccountDeleteEmails.call(this);
@@ -268,6 +273,10 @@ class JobScheduler {
   // Job that fetches workunit info
   createWuInfoFetchingJob(data) {
     return createWuInfoFetchingJob.call(this, data);
+  }
+
+  createDataArchiveJob() {
+    return createDataArchiveJob.call(this);
   }
 
   createMonitorCostPerUserJob() {
@@ -413,6 +422,10 @@ class JobScheduler {
 
   checkClusterReachability() {
     return checkClusterReachability.call(this);
+  }
+
+  checkClusterContainerization() {
+    return checkClusterContainerization.call(this);
   }
 
   // User management jobs

@@ -1,11 +1,35 @@
-const { costMonitoring: CostMonitoring } = require('../models');
+const { costMonitoring: CostMonitoring, user: User } = require('../models');
 const logger = require('../config/logger');
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 
+const includeUserFks = [
+  {
+    model: User,
+    attributes: ['firstName', 'lastName', 'email'],
+    as: 'creator',
+  },
+  {
+    model: User,
+    attributes: ['firstName', 'lastName', 'email'],
+    as: 'updater',
+  },
+  {
+    model: User,
+    attributes: ['firstName', 'lastName', 'email'],
+    as: 'approver',
+  },
+];
+
 async function createCostMonitoring(req, res) {
   try {
-    const result = await CostMonitoring.create(req.body);
+    const { id: userId } = req.user;
+
+    const result = await CostMonitoring.create({
+      ...req.body,
+      createdBy: userId,
+      lastUpdatedBy: userId,
+    });
     return res.status(201).json({
       success: true,
       data: result,
@@ -43,6 +67,8 @@ async function getCostMonitorings(req, res) {
   try {
     const costMonitorings = await CostMonitoring.findAll({
       where: { applicationId: req.params.applicationId },
+      include: includeUserFks,
+      order: [['createdAt', 'DESC']],
     });
     return res.status(200).json({ success: true, data: costMonitorings });
   } catch (err) {
@@ -53,7 +79,9 @@ async function getCostMonitorings(req, res) {
 
 async function getCostMonitoringById(req, res) {
   try {
-    const costMonitoringRecord = await CostMonitoring.findByPk(req.params.id);
+    const costMonitoringRecord = await CostMonitoring.findByPk(req.params.id, {
+      include: includeUserFks,
+    });
     if (!costMonitoringRecord) {
       return res
         .status(404)
@@ -90,13 +118,14 @@ async function deleteCostMonitoring(req, res) {
 
 async function evaluateCostMonitoring(req, res) {
   try {
+    const { id: approverId } = req.user;
     const approvalStatus = req.body.approvalStatus;
     const isApproved = approvalStatus === 'Approved';
     await CostMonitoring.update(
       {
         approvalStatus,
         isActive: req.body.isActive,
-        approvedBy: isApproved ? req.body.approvedBy : null,
+        approvedBy: approverId,
         approvedAt: isApproved ? new Date() : null,
         approverComment: isApproved ? req.body.approverComment : null,
       },
@@ -104,6 +133,7 @@ async function evaluateCostMonitoring(req, res) {
         where: {
           id: { [Op.in]: req.body.ids },
         },
+        include: includeUserFks,
       }
     );
     return res.status(200).json({
@@ -116,12 +146,12 @@ async function evaluateCostMonitoring(req, res) {
   }
 }
 
-// TODO: This functionality could probably be extracted and handle multiple types
 async function toggleCostMonitoringActive(req, res) {
   let transaction;
   try {
     transaction = await CostMonitoring.sequelize.transaction();
     const { ids, action } = req.body;
+    const { id: userId } = req.user;
 
     const costMonitorings = await CostMonitoring.findAll({
       where: { id: { [Op.in]: ids }, approvalStatus: 'Approved' },
@@ -136,7 +166,10 @@ async function toggleCostMonitoringActive(req, res) {
     const monitoringIds = costMonitorings.map(monitoring => monitoring.id);
 
     await CostMonitoring.update(
-      { isActive: action === 'start' },
+      {
+        isActive: action === 'start',
+        updatedBy: userId,
+      },
       {
         where: { id: { [Op.in]: monitoringIds } },
         transaction,
@@ -146,6 +179,7 @@ async function toggleCostMonitoringActive(req, res) {
     await transaction.commit();
     const updatedCostMonitorings = await CostMonitoring.findAll({
       where: { id: { [Op.in]: monitoringIds } },
+      include: includeUserFks,
     });
 
     return res.status(200).json({
