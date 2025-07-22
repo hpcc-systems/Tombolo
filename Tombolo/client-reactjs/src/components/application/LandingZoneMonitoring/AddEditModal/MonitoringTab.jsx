@@ -292,7 +292,18 @@ function MonitoringTab({
             </Col>
             <Col span={12}>
               <Form.Item
-                label="Monitoring Type"
+                label={
+                  <>
+                    <span>Monitoring Type</span>
+                    <InfoCircleOutlined
+                      style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
+                      onClick={() => {
+                        setShowUserGuide(true);
+                        setSelectedUserGuideName('lzMonitoringTypes');
+                      }}
+                    />
+                  </>
+                }
                 name="lzMonitoringType"
                 rules={[{ required: true, message: 'Required field' }]}>
                 <Select onChange={(value) => setLzMonitoringType(value)}>
@@ -379,7 +390,18 @@ function MonitoringTab({
               </Col>
               <Col span={12}>
                 <Form.Item
-                  label=" Maximum Depth "
+                  label={
+                    <>
+                      <span>Maximum Depth</span>
+                      <InfoCircleOutlined
+                        style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
+                        onClick={() => {
+                          setShowUserGuide(true);
+                          setSelectedUserGuideName('maximumDepth');
+                        }}
+                      />
+                    </>
+                  }
                   name="maxDepth"
                   rules={[
                     { required: true, message: 'Required field' },
