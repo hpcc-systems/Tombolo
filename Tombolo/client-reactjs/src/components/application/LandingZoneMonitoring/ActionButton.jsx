@@ -1,8 +1,11 @@
 import React from 'react';
-import { Menu, Dropdown, Button, message, Popconfirm } from 'antd';
+import { Menu, Dropdown, Button, message, Popconfirm, Popover, Card, Form, Select, Badge } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
 import { handleLzBulkDelete } from './Utils';
+import { toggleLzMonitoringStatus } from './Utils';
+
+const { Option } = Select;
 
 const ActionButton = ({
   handleAddNewLzMonitoringBtnClick,
@@ -12,7 +15,18 @@ const ActionButton = ({
   setBulkEditModalVisibility,
   setBulkApprovalModalVisibility,
   isReader,
+  setFiltersVisible,
+  filtersVisible,
+  landingZoneMonitoring,
 }) => {
+  const [bulkStartPauseForm] = Form.useForm(); // Form Instance
+
+  //Change filter visibility
+  const changeFilterVisibility = () => {
+    localStorage.setItem('jMFiltersVisible', !filtersVisible);
+    setFiltersVisible((prev) => !prev);
+  };
+
   const deleteSelected = async () => {
     try {
       const selectedRowIds = selectedRows.map((row) => row.id);
@@ -37,9 +51,32 @@ const ActionButton = ({
       setBulkEditModalVisibility(true);
     } else if (key === '3') {
       setBulkApprovalModalVisibility(true);
+    } else if (key === '5') {
+      changeFilterVisibility();
     }
   };
 
+  // Bulk start/pause job monitorings
+  const bulkStartPauseJobMonitorings = async () => {
+    try {
+      const action = bulkStartPauseForm.getFieldValue('action'); // Ensure correct usage of bulkStartPauseForm
+      const startMonitoring = action === 'start' ? true : false;
+      const selectedRowIds = selectedRows.map((row) => row.id);
+      await toggleLzMonitoringStatus({ ids: selectedRowIds, isActive: startMonitoring });
+      const updatedLandingZoneMonitorings = landingZoneMonitoring.map((lz) => {
+        if (selectedRowIds.includes(lz.id)) {
+          return { ...lz, isActive: startMonitoring };
+        }
+        return lz;
+      });
+      setLandingZoneMonitoring(updatedLandingZoneMonitorings);
+      message.success(`Selected ${action === 'start' ? 'Job Monitorings started' : 'Job Monitorings paused'}`);
+    } catch (err) {
+      message.error('Unable to start/pause selected job monitorings');
+    }
+  };
+
+  // Action button menu items
   const menuItems = [
     {
       key: '1',
@@ -56,6 +93,40 @@ const ActionButton = ({
       disabled: selectedRows.length < 2,
     },
     {
+      key: '6',
+      label: (
+        <Popover
+          placement="left"
+          content={
+            <Card size="small">
+              <Form layout="vertical" form={bulkStartPauseForm}>
+                <Form.Item label="Select Action" name="action" required>
+                  <Select style={{ width: '18rem' }}>
+                    <Option value="start">
+                      <Badge color="green" style={{ marginRight: '1rem' }}></Badge>
+                      {`Start selected ${selectedRows.length} Job Monitoring`}
+                    </Option>
+                    <Option value="pause">
+                      <Badge color="red" style={{ marginRight: '1rem' }}></Badge>
+                      {`Pause selected ${selectedRows.length} Job Monitoring`}
+                    </Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" style={{ width: '100%' }} onClick={bulkStartPauseJobMonitorings}>
+                    Apply
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Card>
+          }
+          trigger="click">
+          <a>Bulk start/pause</a>
+        </Popover>
+      ),
+      disabled: selectedRows.length < 2,
+    },
+    {
       key: '4',
       label: (
         <Popconfirm
@@ -67,6 +138,10 @@ const ActionButton = ({
         </Popconfirm>
       ),
       disabled: selectedRows.length < 2,
+    },
+    {
+      key: '5',
+      label: filtersVisible ? 'Hide filters' : 'Show filters',
     },
   ];
 
