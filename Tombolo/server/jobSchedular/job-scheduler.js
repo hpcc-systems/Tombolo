@@ -64,6 +64,8 @@ const {
   createAnalyzeCostPerUserJob,
 } = require('../jobSchedularMethods/costMonitoring');
 
+const { createDataArchiveJob } = require('../jobSchedularMethods/archive');
+
 const {
   removeUnverifiedUser,
   sendPasswordExpiryEmails,
@@ -162,6 +164,7 @@ class JobScheduler {
       await this.checkClusterReachability();
       await this.checkClusterContainerization();
       await this.createMonitorCostPerUserJob();
+      await this.createDataArchiveJob();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
       await sendAccountDeleteEmails.call(this);
@@ -270,6 +273,10 @@ class JobScheduler {
   // Job that fetches workunit info
   createWuInfoFetchingJob(data) {
     return createWuInfoFetchingJob.call(this, data);
+  }
+
+  createDataArchiveJob() {
+    return createDataArchiveJob.call(this);
   }
 
   createMonitorCostPerUserJob() {

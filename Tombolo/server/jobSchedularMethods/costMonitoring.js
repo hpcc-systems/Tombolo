@@ -2,6 +2,7 @@ const path = require('path');
 
 const logger = require('../config/logger');
 const MONITOR_COST_PER_USER_FILE_NAME = 'monitorCostPerUser.js';
+const ANALYZE_COST_PER_USER_FILE_NAME = 'analyzeCostPerUser.js';
 
 function createMonitorCostPerUserJob() {
   try {
@@ -40,7 +41,7 @@ function createAnalyzeCostPerUserJob() {
         '..',
         'jobs',
         'costMonitoring',
-        'analyzeCostPerUser.js'
+        ANALYZE_COST_PER_USER_FILE_NAME
       ),
       timeout: 0, // Run immediately
       worker: {
