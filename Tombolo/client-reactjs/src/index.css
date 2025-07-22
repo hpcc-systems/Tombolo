@@ -1219,3 +1219,17 @@ main > div {
   color: white;
   font-size: 1rem;
 }
+
+/* Antd tiny description */
+.tiny-description {
+  margin-top: 30px;
+}
+
+.tiny-description * {
+  padding: 2px 4px !important;
+}
+
+.tiny-description .ant-descriptions-item-label {
+  width: 240px;
+  font-weight: 500;
+}

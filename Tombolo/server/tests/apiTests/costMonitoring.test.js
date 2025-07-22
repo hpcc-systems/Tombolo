@@ -4,12 +4,32 @@ const { app } = require('../test_server');
 const { v4: uuidv4 } = require('uuid');
 const CostMonitoring = require('../../models').costMonitoring;
 const {
-  getApprovedBy,
   getUuids,
   getCostMonitoring,
   ISO_DATE_REGEX,
+  UUID_REGEX,
+  AUTHED_USER_ID,
 } = require('../helpers');
 const { Op } = require('sequelize');
+const { user: User } = require('../../models');
+
+const includeUserFks = [
+  {
+    model: User,
+    attributes: ['firstName', 'lastName', 'email'],
+    as: 'creator',
+  },
+  {
+    model: User,
+    attributes: ['firstName', 'lastName', 'email'],
+    as: 'updater',
+  },
+  {
+    model: User,
+    attributes: ['firstName', 'lastName', 'email'],
+    as: 'approver',
+  },
+];
 
 describe('costMonitoring Routes', () => {
   beforeEach(() => {
@@ -24,12 +44,10 @@ describe('costMonitoring Routes', () => {
 
   it('PATCH /evaluate should evaluate one monitoring', async () => {
     const uuid = uuidv4();
-    const approvedBy = getApprovedBy();
     const reqBody = {
       ids: [uuid],
       isActive: true,
       approvalStatus: 'Approved',
-      approvedBy: approvedBy,
       approverComment: 'Test Approval Comment',
     };
 
@@ -43,7 +61,7 @@ describe('costMonitoring Routes', () => {
       {
         approvalStatus: 'Approved',
         isActive: true,
-        approvedBy: approvedBy,
+        approvedBy: AUTHED_USER_ID,
         approvedAt: expect.any(Date),
         approverComment: 'Test Approval Comment',
       },
@@ -51,18 +69,17 @@ describe('costMonitoring Routes', () => {
         where: {
           id: { [Op.in]: [uuid] },
         },
+        include: includeUserFks,
       }
     );
   });
 
   it('PATCH /evaluate should evaluate multiple monitorings', async () => {
     const uuids = getUuids(4);
-    const approvedBy = getApprovedBy();
     const reqBody = {
       ids: uuids,
       isActive: true,
       approvalStatus: 'Approved',
-      approvedBy: approvedBy,
       approverComment: 'Test Approval Comment',
     };
 
@@ -76,7 +93,7 @@ describe('costMonitoring Routes', () => {
       {
         approvalStatus: 'Approved',
         isActive: true,
-        approvedBy: approvedBy,
+        approvedBy: AUTHED_USER_ID,
         approvedAt: expect.any(Date),
         approverComment: 'Test Approval Comment',
       },
@@ -84,6 +101,7 @@ describe('costMonitoring Routes', () => {
         where: {
           id: { [Op.in]: uuids },
         },
+        include: includeUserFks,
       }
     );
   });
@@ -127,16 +145,18 @@ describe('costMonitoring Routes', () => {
       {
         ...costMonitoringOne,
         ...expectedResBodies,
+        lastUpdatedBy: expect.stringMatching(UUID_REGEX),
       },
       {
         ...costMonitoringTwo,
         ...expectedResBodies,
+        lastUpdatedBy: expect.stringMatching(UUID_REGEX),
       },
     ]);
     expect(CostMonitoring.findAll).toHaveBeenCalledTimes(2);
     expect(CostMonitoring.update).toHaveBeenCalledTimes(1);
     expect(CostMonitoring.update).toHaveBeenCalledWith(
-      { isActive: action === 'start' },
+      { isActive: action === 'start', lastUpdatedBy: AUTHED_USER_ID },
       {
         where: { id: { [Op.in]: uuids } },
         transaction: expect.any(Object),
@@ -262,6 +282,7 @@ describe('costMonitoring Routes', () => {
   it('POST / should create a new cost monitoring', async () => {
     const costMonitoring = getCostMonitoring({}, true);
     CostMonitoring.create.mockResolvedValue(costMonitoring);
+    CostMonitoring.findByPk.mockResolvedValue(costMonitoring);
 
     const res = await request(app)
       .post('/api/costMonitoring/')
