@@ -2,11 +2,12 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 
 const testingPassword = 'Password123!';
+const AUTHED_USER_ID = uuidv4();
 
 function getUsers() {
   return [
     {
-      id: uuidv4(),
+      id: AUTHED_USER_ID,
       firstName: 'John',
       lastName: 'Doe',
       email: 'john.doe121@example.com',
@@ -246,14 +247,6 @@ function getLandingZoneMonitoringUpdatePayload(
   };
 }
 
-function getApprovedBy() {
-  return {
-    name: 'Test User',
-    email: 'testemail@lexisnexisrisk.com',
-    id: uuidv4(),
-  };
-}
-
 function getUuids(count) {
   const uuids = [];
   for (let i = 0; i < count; i++) {
@@ -297,6 +290,8 @@ function getCostMonitoring(overrides = {}, dateStrings = false) {
 }
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 module.exports = {
   getUsers,
@@ -310,9 +305,10 @@ module.exports = {
   getMockClusterForApi,
   getFileListQuery,
   fakeValidateTokenMiddleware,
-  getApprovedBy,
   getUuids,
   getCostMonitoring,
+  UUID_REGEX,
   nonExistentID,
   ISO_DATE_REGEX,
+  AUTHED_USER_ID,
 };
