@@ -519,40 +519,27 @@ update metaData of those rows
 */
 
 const bulkUpdateLzMonitoring = async (req, res) => {
-  console.log('------------------------');
-  console.log('At the controller door: ');
-  console.log('------------------------');
   try {
-    const { metaData } = req.body;
-    const ids = metaData.map(item => item.id);
+    const { updatedData } = req.body;
 
-    // Get all rows with the IDs
-    const records = await LandingZoneMonitoring.findAll({
-      where: {
-        id: {
-          [Sequelize.Op.in]: ids,
-        },
-      },
-    });
-
-    if (records.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'No landing zone monitoring records found with the provided IDs',
-      });
-    }
-
-    // Update metaData of those rows
-    const updatedCount = await LandingZoneMonitoring.update(
-      { metaData },
-      {
-        where: {
-          id: {
-            [Sequelize.Op.in]: ids,
+    const updatePromises = updatedData.map(item =>
+      LandingZoneMonitoring.update(
+        { metaData: item.metaData },
+        {
+          where: {
+            id: item.id,
           },
-        },
-      }
+        }
+      )
+    );
+
+    // Execute all updates concurrently
+    const updateResults = await Promise.all(updatePromises);
+
+    // Count successful updates
+    const updatedCount = updateResults.reduce(
+      (count, [rowsAffected]) => count + rowsAffected,
+      0
     );
 
     logger.info(

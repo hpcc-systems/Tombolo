@@ -52,6 +52,31 @@ const flatten = (obj) => {
   }, []);
 };
 
+/**
+ * Flattens a nested object into a single level object using dot notation for nested keys.
+ * Example:
+ * { user: { name: 'John', address: { city: 'NY' } } }
+ * becomes
+ * { 'user.name': 'John', 'user.address.city': 'NY' }
+ */
+const flattenObject = (obj) => {
+  const flattened = {};
+
+  const flatten = (object, prefix = '') => {
+    Object.keys(object).forEach((key) => {
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      if (typeof object[key] === 'object' && object[key] !== null && !Array.isArray(object[key])) {
+        flatten(object[key], newKey);
+      } else {
+        flattened[newKey] = object[key];
+      }
+    });
+  };
+
+  flatten(obj);
+  return flattened;
+};
+
 const formItemLayout = {
   labelCol: { span: 2 },
   wrapperCol: { span: 11 },
@@ -132,6 +157,7 @@ export {
   omitDeep,
   eclTypes,
   flatten,
+  flattenObject,
   formItemLayout,
   formItemLayoutWithOutLabel,
   threeColformItemLayout,
