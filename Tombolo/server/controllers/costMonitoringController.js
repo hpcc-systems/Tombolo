@@ -25,10 +25,14 @@ async function createCostMonitoring(req, res) {
   try {
     const { id: userId } = req.user;
 
-    const result = await CostMonitoring.create({
+    const createResult = await CostMonitoring.create({
       ...req.body,
       createdBy: userId,
       lastUpdatedBy: userId,
+    });
+
+    const result = await CostMonitoring.findByPk(createResult.id, {
+      include: includeUserFks,
     });
     return res.status(201).json({
       success: true,
