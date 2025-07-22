@@ -175,7 +175,7 @@ const BulkUpdateModal = ({
       setLandingZoneMonitoring((prev) =>
         prev.map((row) => {
           const updatedRow = updatedRows.find((data) => data.id === row.id);
-          return flattenObject({ ...row, metaData: updatedRow.metaData });
+          return flattenObject({ ...row, metaData: updatedRow?.metaData });
         })
       );
 
