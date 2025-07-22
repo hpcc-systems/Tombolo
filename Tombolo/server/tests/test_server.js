@@ -25,6 +25,7 @@ const cluster = require('../routes/clusterRoutes');
 const session = require('../routes/sessionRoutes');
 const roles = require('../routes/roleTypesRoute');
 const landingZoneMonitoring = require('../routes/landingZoneMonitoring');
+const costMonitoring = require('../routes/costMonitoringRoutes');
 
 // Use routes
 app.use('/api/auth', auth);
@@ -38,6 +39,7 @@ app.use(
   fakeValidateTokenMiddleware,
   landingZoneMonitoring
 );
+app.use('/api/costMonitoring', fakeValidateTokenMiddleware, costMonitoring);
 
 // Function to start the server
 let server;

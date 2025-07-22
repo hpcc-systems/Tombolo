@@ -11,7 +11,7 @@ global.console = {
   log: jest.fn(() => {}),
   debug: jest.fn(() => {}),
   info: jest.fn(() => {}),
-  warn: jest.fn(() => {}),
+  // warn: jest.fn(() => {}),
   error: jest.fn(() => {}),
 };
 
@@ -85,6 +85,21 @@ jest.mock('../models', () => {
       bulkCreate: jest.fn(),
       update: jest.fn(),
       destroy: jest.fn(),
+    },
+    costMonitoring: {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findByPk: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      bulkCreate: jest.fn(),
+      update: jest.fn(),
+      destroy: jest.fn(),
+      sequelize: {
+        transaction,
+        __commit: commit, // Expose for test access
+        __rollback: rollback, // Expose for test access
+      },
     },
     userArchive: {
       create: jest.fn(),
