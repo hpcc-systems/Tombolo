@@ -198,7 +198,7 @@ async function toggleCostMonitoringActive(req, res) {
     await CostMonitoring.update(
       {
         isActive: action === 'start',
-        updatedBy: userId,
+        lastUpdatedBy: userId,
       },
       {
         where: { id: { [Op.in]: monitoringIds } },
