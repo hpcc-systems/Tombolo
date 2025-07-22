@@ -66,19 +66,6 @@ const validateEvaluateCostMonitoring = [
     .isString()
     .withMessage('Accepted must be a string'),
   body('isActive').isBoolean().withMessage('isActive must be a boolean'),
-  body('approvedBy').isObject().withMessage('Approved by must be an object'),
-  body('approvedBy.name')
-    .notEmpty()
-    .isString()
-    .withMessage('approvedBy.Name must be a string'),
-  body('approvedBy.email')
-    .notEmpty()
-    .isString()
-    .withMessage('approvedBy.Email must be a string'),
-  body('approvedBy.id')
-    .notEmpty()
-    .isUUID()
-    .withMessage('approvedBy.Id must be a valid UUID'),
 ];
 
 const validateToggleStatus = [
