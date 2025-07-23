@@ -5,3 +5,16 @@
 .lzMonitoring__active-monitoring {
   background-color: var(--active);
 }
+
+.lz__filter-label {
+  font-weight: 500;
+  padding-bottom: 5px;
+}
+
+.notification__filters_count {
+  display: flex;
+  justify-content: right;
+  color: var(--primary);
+  background: none;
+  font-weight: 600;
+}

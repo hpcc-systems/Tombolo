@@ -13,6 +13,8 @@ import ClusterGuide from '../userGuides/ClusterGuide';
 import WildcardGuide from '../userGuides/WildcardGuide';
 import JobMonitoringScopeTypes from '../userGuides/JobMonitoringScopeTypes';
 import JobNamePattern from '../userGuides/JobNamePattern';
+import LandingZoneMonitoringTypes from '../userGuides/LandingZoneMonitoringTypes';
+import MaximumDepthGuide from '../userGuides/MaximumDepthGuide';
 
 const GuideDrawer = ({ content, open, onClose, width }) => {
   /* Example Usage
@@ -63,6 +65,10 @@ const GuideDrawer = ({ content, open, onClose, width }) => {
             return <JobMonitoringScopeTypes />;
           case 'jobNamePattern':
             return <JobNamePattern />;
+          case 'lzMonitoringTypes':
+            return <LandingZoneMonitoringTypes />;
+          case 'maximumDepth':
+            return <MaximumDepthGuide />;
           default:
             return <h2>Guide Not Found</h2>;
         }

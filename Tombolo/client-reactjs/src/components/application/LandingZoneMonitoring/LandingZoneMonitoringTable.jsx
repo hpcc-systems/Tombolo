@@ -29,7 +29,6 @@ const approveButtonColor = (approvalStatus) => {
 
 const LandingZoneMonitoringTable = ({
   setEditingData,
-  landingZoneMonitoring,
   setLandingZoneMonitoring,
   setSelectedMonitoring,
   setDisplayAddEditModal,
@@ -38,6 +37,8 @@ const LandingZoneMonitoringTable = ({
   setSelectedRows,
   setCopying,
   isReader,
+  filteredLzMonitorings,
+  searchTerm,
 }) => {
   //Redux
   const {
@@ -52,6 +53,19 @@ const LandingZoneMonitoringTable = ({
       title: 'Name',
       dataIndex: 'monitoringName',
       key: 'monitoringName',
+      render: (text) => {
+        return (
+          <span
+            style={{
+              background:
+                searchTerm.length > 0 && text.toLocaleLowerCase().includes(searchTerm)
+                  ? 'var(--highlight)'
+                  : 'transparent',
+            }}>
+            {text}
+          </span>
+        );
+      },
     },
     {
       title: 'Cluster',
@@ -265,7 +279,7 @@ const LandingZoneMonitoringTable = ({
   };
   return (
     <Table
-      dataSource={landingZoneMonitoring}
+      dataSource={filteredLzMonitorings}
       columns={columns}
       rowKey="id"
       size="small"
