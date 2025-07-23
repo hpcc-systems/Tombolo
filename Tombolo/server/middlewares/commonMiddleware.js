@@ -7,7 +7,29 @@ const COMMENT_LENGTH = { min: 4, max: 200 };
 const EMAIL_LENGTH = { max: 100 };
 const PASSWORD_LENGTH = { min: 8, max: 75 };
 
-// Factory for validation middleware. Allows extending validators in the future
+/**
+ * @typedef {Object} Validator
+ * @property {() => Validator} isAlphanumeric
+ * @property {(values: any[]) => Validator} isIn
+ * @property {(options: { min?: number, max?: number }) => Validator} isLength
+ * @property {(message: string) => Validator} withMessage
+ */
+
+/**
+ * @typedef {Object} ValidationOptions
+ * @property {string} [msg] - Custom error message
+ * @property {boolean} [alphaNumeric] - Require alphanumeric input
+ * @property {string[]} [isIn] - Allowed values for the field
+ * @property {number} [min] - Minimum length
+ * @property {number} [max] - Maximum length
+ * @property {number} [arrMin] - Minimum length for an array (Handled in specific array functions)
+ */
+
+/**
+ * Factory for validation middleware. Allows extending validators in the future
+ * @param {(field: string) => string} defaultMessageFn - Function to generate a default error message
+ * @returns {(validationFn: (field: string, ...args: any[]) => Validator) => (field: string, options?: ValidationOptions, ...args: any[]) => Validator}
+ */
 const createValidationFactory = defaultMessageFn => {
   return validationFn =>
     (field, options = {}, ...args) => {
