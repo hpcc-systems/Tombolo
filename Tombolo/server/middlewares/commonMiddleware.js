@@ -107,9 +107,9 @@ const applicationIdQuery = requiredUuidQuery('applicationId');
 const appIdBody = requiredUuidBody('app_id');
 const appIdQuery = requiredUuidQuery('app_id');
 
-const clusterIdParam = requiredUuidParam('cluster_id');
-const clusterIdBody = requiredUuidBody('cluster_id');
-const clusterIdQuery = requiredUuidQuery('cluster_id');
+const clusterIdParam = requiredUuidParam('clusterId');
+const clusterIdBody = requiredUuidBody('clusterId');
+const clusterIdQuery = requiredUuidQuery('clusterId');
 const cluster_idParam = requiredUuidParam('cluster_id');
 const cluster_idBody = requiredUuidBody('cluster_id');
 const cluster_idQuery = requiredUuidQuery('cluster_id');
