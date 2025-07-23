@@ -1,9 +1,9 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
-const { getAllRoles } = require("../controllers/roleTypesController");
-const { validateUserRole } = require("../middlewares/rbacMiddleware");
-const role = require("../config/roleTypes");
+const { getAllRoles } = require('../controllers/roleTypesController');
+const { validateUserRole } = require('../middlewares/rbacMiddleware');
+const role = require('../config/roleTypes');
 
 // Middleware to get all roles
 router.use(
@@ -11,6 +11,6 @@ router.use(
 );
 
 // Get all roles
-router.get("/", getAllRoles);
+router.get('/', getAllRoles);
 
 module.exports = router;

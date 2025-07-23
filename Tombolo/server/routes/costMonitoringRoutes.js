@@ -11,8 +11,8 @@ const {
   validateBulkDelete,
   validateBulkUpdate,
   validateGetCostMonitoringByAppId,
-} = require('../middlewares/costMonitoringMiddlewares');
-
+} = require('../middlewares/costMonitoringMiddleware');
+const { validate } = require('../middlewares/validateRequestBody');
 const {
   getCostMonitoringById,
   getCostMonitorings,
@@ -27,23 +27,35 @@ const {
 
 router.patch(
   '/evaluate',
-  validateEvaluateCostMonitoring,
+  validate(validateEvaluateCostMonitoring),
   evaluateCostMonitoring
 );
 
-router.put('/toggle', validateToggleStatus, toggleCostMonitoringActive);
-router.delete('/bulk', validateBulkDelete, bulkDeleteCostMonitoring);
-router.patch('/bulk', validateBulkUpdate, bulkUpdateCostMonitoring);
+router.put(
+  '/toggle',
+  validate(validateToggleStatus),
+  toggleCostMonitoringActive
+);
+router.delete('/bulk', validate(validateBulkDelete), bulkDeleteCostMonitoring);
+router.patch('/bulk', validate(validateBulkUpdate), bulkUpdateCostMonitoring);
 
-router.get('/byId/:id', validateGetCostMonitoringById, getCostMonitoringById);
+router.get(
+  '/byId/:id',
+  validate(validateGetCostMonitoringById),
+  getCostMonitoringById
+);
 router.get(
   '/:applicationId',
-  validateGetCostMonitoringByAppId,
+  validate(validateGetCostMonitoringByAppId),
   getCostMonitorings
 );
-router.post('/', validateCreateCostMonitoring, createCostMonitoring);
+router.post('/', validate(validateCreateCostMonitoring), createCostMonitoring);
 
-router.patch('/', validateUpdateCostMonitoring, updateCostMonitoring);
-router.delete('/:id', validateDeleteCostMonitoring, deleteCostMonitoring);
+router.patch('/', validate(validateUpdateCostMonitoring), updateCostMonitoring);
+router.delete(
+  '/:id',
+  validate(validateDeleteCostMonitoring),
+  deleteCostMonitoring
+);
 
 module.exports = router;

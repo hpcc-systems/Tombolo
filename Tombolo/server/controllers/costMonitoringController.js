@@ -45,10 +45,6 @@ async function createCostMonitoring(req, res) {
 }
 
 async function updateCostMonitoring(req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('Failed to update cost monitoring');
-  }
   try {
     const result = await CostMonitoring.update(req.body, {
       where: { id: req.body.id },
@@ -72,10 +68,6 @@ async function updateCostMonitoring(req, res) {
 }
 
 async function getCostMonitorings(req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('Failed to get Cost Monitorings');
-  }
   try {
     const costMonitorings = await CostMonitoring.findAll({
       where: { applicationId: req.params.applicationId },
@@ -90,10 +82,6 @@ async function getCostMonitorings(req, res) {
 }
 
 async function getCostMonitoringById(req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('Failed to get Cost Monitoring by id');
-  }
   try {
     const costMonitoringRecord = await CostMonitoring.findByPk(req.params.id, {
       include: includeUserFks,
@@ -111,10 +99,6 @@ async function getCostMonitoringById(req, res) {
 }
 
 async function deleteCostMonitoring(req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('Failed to delete Cost Monitoring');
-  }
   try {
     const result = await CostMonitoring.destroy({
       where: { id: req.params.id },
@@ -137,11 +121,6 @@ async function deleteCostMonitoring(req, res) {
 }
 
 async function evaluateCostMonitoring(req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('Failed to evaluate Cost Monitoring');
-  }
-
   try {
     const { id: approverId } = req.user;
     const approvalStatus = req.body.approvalStatus;
@@ -172,11 +151,6 @@ async function evaluateCostMonitoring(req, res) {
 }
 
 async function toggleCostMonitoringActive(req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('Failed to evaluate Cost Monitoring');
-  }
-
   let transaction;
   try {
     transaction = await CostMonitoring.sequelize.transaction();
@@ -225,10 +199,6 @@ async function toggleCostMonitoringActive(req, res) {
 }
 
 async function bulkDeleteCostMonitoring(req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('Failed to bulk delete Cost Monitorings');
-  }
   try {
     await CostMonitoring.destroy({
       where: { id: { [Op.in]: req.body.ids } },
@@ -244,11 +214,6 @@ async function bulkDeleteCostMonitoring(req, res) {
 }
 
 async function bulkUpdateCostMonitoring(req, res) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).send('Failed to bulk delete Cost Monitorings');
-  }
-
   let transaction;
   try {
     transaction = await CostMonitoring.sequelize.transaction();
