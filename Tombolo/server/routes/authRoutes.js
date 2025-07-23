@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
 // Import user middleware
@@ -13,7 +13,8 @@ const {
   validateAccessRequest,
   validateEmailInBody,
   validateResetToken,
-} = require("../middlewares/authMiddleware");
+} = require('../middlewares/authMiddleware');
+const { validate } = require('../middlewares/validateRequestBody');
 
 // Import user controller
 const {
@@ -31,67 +32,69 @@ const {
   getUserDetailsWithToken,
   getUserDetailsWithVerificationCode,
   requestPasswordReset,
-} = require("../controllers/authController");
+} = require('../controllers/authController');
 
 // Basic (Traditional) User Routes ----------------------------------------------------------------------------
 router.post(
-  "/registerApplicationOwner",
-  validateNewUserPayload,
-  validateEmailDuplicate,
+  '/registerApplicationOwner',
+  validate(validateNewUserPayload, validateEmailDuplicate),
   createApplicationOwner
-); // Create an owner ( Traditional )
+); // Create an owner (Traditional)
 router.post(
-  "/registerBasicUser",
-  validateNewUserPayload,
-  validateEmailDuplicate,
+  '/registerBasicUser',
+  validate(validateNewUserPayload, validateEmailDuplicate),
   createBasicUser
-); // Create a new user ( Traditional )
-router.post("/loginBasicUser", validateLoginPayload, loginBasicUser); // Login user ( Traditional )
-router.post("/logoutBasicUser", verifyValidTokenExists, logOutBasicUser); // Logout user
+); // Create a new user (Traditional)
+router.post('/loginBasicUser', validate(validateLoginPayload), loginBasicUser); // Login user ( Traditional )
+router.post('/logoutBasicUser', verifyValidTokenExists, logOutBasicUser); // Logout user
 router.post(
-  "/handlePasswordResetRequest",
-  validatePasswordResetRequestPayload,
+  '/handlePasswordResetRequest',
+  validate(validatePasswordResetRequestPayload),
   handlePasswordResetRequest
 ); // Reset password
 router.post(
-  "/resetPasswordWithToken",
-  validateResetPasswordPayload,
+  '/resetPasswordWithToken',
+  validate(validateResetPasswordPayload),
   resetPasswordWithToken
 ); // Reset Password - Self Requested
 router.post(
-  "/resetTempPassword",
-  validateResetPasswordPayload,
+  '/resetTempPassword',
+  validate(validateResetPasswordPayload),
   resetTempPassword
 ); // Reset Password - Owner/Admin requested through registration flow
-router.post("/verifyEmail", verifyEmail); // Verify email
+router.post('/verifyEmail', verifyEmail); // Verify email
 // Resend verification code
 router.post(
-  "/resendVerificationCode",
-  validateEmailInBody,
+  '/resendVerificationCode',
+  validate(validateEmailInBody),
   resendVerificationCode
 ); // Resend verification code to user
-router.post("/requestPasswordReset", validateEmailInBody, requestPasswordReset);
+router.post(
+  '/requestPasswordReset',
+  validate(validateEmailInBody),
+  requestPasswordReset
+);
 // OAuth 2.0 User Routes ----------------------------------------------------------------------------
 //Login or register with azure user
 router.post(
-  "/loginOrRegisterAzureUser",
-  validateAzureAuthCode,
+  '/loginOrRegisterAzureUser',
+  validate(validateAzureAuthCode),
   loginOrRegisterAzureUser
 );
 
 //access request
-router.post("/requestAccess", validateAccessRequest, requestAccess);
+router.post('/requestAccess', validate(validateAccessRequest), requestAccess);
 
 //get user details with password reset token
 router.get(
-  "/getUserDetailsWithToken/:token",
-  validateResetToken,
+  '/getUserDetailsWithToken/:token',
+  validate(validateResetToken),
   getUserDetailsWithToken
 );
 
 router.get(
-  "/getUserDetailsWithVerificationCode/:token",
-  validateResetToken,
+  '/getUserDetailsWithVerificationCode/:token',
+  validate(validateResetToken),
   getUserDetailsWithVerificationCode
 );
 

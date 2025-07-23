@@ -2,11 +2,12 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 
 const testingPassword = 'Password123!';
+const AUTHED_USER_ID = uuidv4();
 
 function getUsers() {
   return [
     {
-      id: uuidv4(),
+      id: AUTHED_USER_ID,
       firstName: 'John',
       lastName: 'Doe',
       email: 'john.doe121@example.com',
@@ -199,46 +200,33 @@ function getFileListQuery(clusterId) {
   };
 }
 
+const commonLzPayload = {
+  id: uuidv4(),
+  monitoringName: 'New LZ Monitor',
+  isActive: false,
+  lzMonitoringType: 'fileCount',
+  approvalStatus: 'pending',
+  approvedBy: null,
+  approvedAt: null,
+  approverComment: null,
+  description: 'Monitoring landing zone',
+  lastRunDetails: null,
+  metaData: {},
+  createdAt: '2025-06-30T10:00:00.000Z',
+  updatedAt: '2025-06-30T10:00:00.000Z',
+  deletedAt: null,
+};
+
 function getLandingZoneMonitoring(overrides = {}) {
   return {
-    id: uuidv4(),
-    applicationId: uuidv4(),
-    monitoringName: 'Test Landing Zone Monitor',
-    isActive: false,
-    lzMonitoringType: 'fileCount',
-    approvalStatus: 'pending',
-    approvedBy: null,
-    approvedAt: null,
-    approverComment: null,
-    description:
-      'This is a test monitoring for landing zone file count tracking',
-    clusterId: uuidv4(),
-    lastRunDetails: null,
-    metaData: {},
-    createdBy: uuidv4(),
-    lastUpdatedBy: uuidv4(),
-    createdAt: '2025-06-30T10:00:00.000Z',
-    updatedAt: '2025-06-30T10:00:00.000Z',
-    deletedAt: null,
+    ...commonLzPayload,
     ...overrides,
   };
 }
 
-function getLandingZoneMonitoringCreatePayload(
-  validApplicationId,
-  validClusterId,
-  validUserId,
-  overrides = {}
-) {
+function getLandingZoneMonitoringCreatePayload(overrides = {}) {
   return {
-    applicationId: validApplicationId,
-    monitoringName: 'New LZ Monitor',
-    lzMonitoringType: 'fileCount',
-    description: 'Monitoring landing zone',
-    clusterId: validClusterId,
-    metaData: {},
-    createdBy: validUserId,
-    lastUpdatedBy: validUserId,
+    ...commonLzPayload,
     ...overrides,
   };
 }
@@ -259,6 +247,52 @@ function getLandingZoneMonitoringUpdatePayload(
   };
 }
 
+function getUuids(count) {
+  const uuids = [];
+  for (let i = 0; i < count; i++) {
+    uuids.push(uuidv4());
+  }
+  return uuids;
+}
+
+function getCostMonitoring(overrides = {}, dateStrings = false) {
+  let newDate = new Date();
+  if (dateStrings) {
+    newDate = newDate.toISOString();
+  }
+  return {
+    id: uuidv4(),
+    applicationId: uuidv4(),
+    monitoringName: 'Test Cost Monitor',
+    isActive: false,
+    monitoringType: 'cost',
+    approvalStatus: 'pending',
+    approvedBy: null,
+    approvedAt: null,
+    approverComment: null,
+    description: 'This is a test monitoring for cost tracking',
+    clusterIds: [uuidv4()],
+    lastRunDetails: null,
+    metaData: {
+      users: ['testuser1'],
+      notificationMetaData: {
+        primaryContacts: ['testemail1@lexisnexisrisk.com'],
+        notificationCondition: 12,
+      },
+    },
+    createdBy: uuidv4(),
+    lastUpdatedBy: uuidv4(),
+    createdAt: newDate,
+    updatedAt: newDate,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 module.exports = {
   getUsers,
   getInstanceSettings,
@@ -271,5 +305,10 @@ module.exports = {
   getMockClusterForApi,
   getFileListQuery,
   fakeValidateTokenMiddleware,
+  getUuids,
+  getCostMonitoring,
+  UUID_REGEX,
   nonExistentID,
+  ISO_DATE_REGEX,
+  AUTHED_USER_ID,
 };

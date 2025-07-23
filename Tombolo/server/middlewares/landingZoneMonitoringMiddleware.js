@@ -15,6 +15,21 @@ const validateClusterId = [
   },
 ];
 
+// Vlaidate req.body.ids array of UUIDs
+const validateIds = [
+  body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
+  body('ids.*').isUUID().withMessage('Each ID must be a valid UUID'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ success: false, message: errors.array()[0].msg });
+    }
+    next();
+  },
+];
+
 const validateFileListParams = [
   query('clusterId').isUUID(4).withMessage('Invalid cluster id'),
   query('DropZoneName').isString().withMessage('Invalid dropzone name'),
@@ -64,12 +79,7 @@ const validateCreateLandingZoneMonitoring = [
     .withMessage('Description must be at least 10 characters'),
   body('clusterId').isUUID().withMessage('Cluster ID must be a valid UUID'),
   body('metaData').isObject().withMessage('Meta data must be an object'),
-  body('createdBy')
-    .isUUID()
-    .withMessage('Created by must be a valid user UUID'),
-  body('lastUpdatedBy')
-    .isUUID()
-    .withMessage('Last updated by must be a valid user UUID'),
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -77,7 +87,9 @@ const validateCreateLandingZoneMonitoring = [
         .array()
         .map(e => e.msg)
         .join(', ');
-      logger.error(`Create LZ monitoring.Validation failed: ${errorString}`);
+      logger.error(
+        `Create LZ monitoring.Validation failed ...: ${errorString}`
+      );
       return res.status(422).json({
         success: false,
         message: 'Validation failed',
@@ -229,7 +241,6 @@ const validateEvaluateLandingZoneMonitoring = [
     .withMessage('Approver comment must be a non-empty string')
     .isLength({ min: 4, max: 200 })
     .withMessage('Approver comment must be between 4 and 200 characters long'),
-  body('approvedBy').isUUID().withMessage('Approved by must be a valid UUID'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -248,6 +259,31 @@ const validateEvaluateLandingZoneMonitoring = [
   },
 ];
 
+// Validate bulk update payload
+const validateBulkUpdatePayload = [
+  body('updatedData').isArray().withMessage('Payload must be an array'),
+  body('updatedData.*')
+    .isObject()
+    .withMessage('Each item in payload must be an object'),
+  body('updatedData.*.id').isUUID().withMessage('ID must be a valid UUID'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorString = errors
+        .array()
+        .map(e => e.msg)
+        .join(', ');
+      logger.error(`Bulk update.Validation failed: ${errorString}`);
+      return res.status(422).json({
+        success: false,
+        message: 'Validation failed',
+        errors: JSON.stringify(errors.array()),
+      });
+    }
+    next();
+  },
+];
+
 //Exports
 module.exports = {
   validateClusterId,
@@ -255,7 +291,9 @@ module.exports = {
   validateCreateLandingZoneMonitoring,
   validateApplicationId,
   validateId,
+  validateIds,
   validateUpdateLandingZoneMonitoring,
   validateToggleStatus,
   validateEvaluateLandingZoneMonitoring,
+  validateBulkUpdatePayload,
 };

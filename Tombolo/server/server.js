@@ -51,15 +51,12 @@ app.use((req, res, next) => {
   next();
 });
 
-/* Initialize Socket IO */
 const server = require('http').Server(app);
-const socketIo = require('socket.io')(server);
-server.maxHeadersCoiunt = 1000;
-module.exports.io = socketIo;
+server.maxHeadersCount = 1000;
 
 app.set('trust proxy', 1);
 
-// Limit rate of requests to 400 per 15 minutes
+// Limit the rate of requests to 400 per 15 minutes
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 400,
@@ -75,7 +72,6 @@ app.use(cookieParser());
 /*  ROUTES */
 const job = require('./routes/job/read');
 const bree = require('./routes/bree/read');
-const ldap = require('./routes/ldap/read');
 const appRead = require('./routes/app/read');
 const query = require('./routes/query/read');
 const hpccRead = require('./routes/hpcc/read');
@@ -117,7 +113,8 @@ const sessions = require('./routes/sessionRoutes');
 const cluster = require('./routes/clusterRoutes');
 const roles = require('./routes/roleTypesRoute');
 const status = require('./routes/statusRoutes');
-const instanceSettings = require('./routes/instanceRoutes.js');
+const instanceSettings = require('./routes/instanceRoutes');
+const costMonitoring = require('./routes/costMonitoringRoutes');
 const landingZoneMonitoring = require('./routes/landingZoneMonitoring');
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
@@ -127,7 +124,6 @@ app.use('/api/auth', auth);
 app.use('/api/updateNotification', updateNotifications);
 app.use('/api/status', status);
 app.use('/api/wizard', wizard);
-app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
 
 //exposed API, requires api key for any routes
 app.use('/api/apikeys', api);
@@ -141,7 +137,6 @@ app.use('/api/user', users);
 app.use('/api/session', sessions);
 app.use('/api/job', job);
 app.use('/api/bree', bree);
-app.use('/api/ldap', ldap);
 app.use('/api/query', query);
 app.use('/api/groups', groups);
 app.use('/api/app/read', appRead);
@@ -175,6 +170,8 @@ app.use('/api/asr', asr);
 app.use('/api/directoryMonitoring', directoryMonitoring);
 app.use('/api/roles', roles);
 app.use('/api/instanceSettings', instanceSettings);
+app.use('/api/costMonitoring', costMonitoring);
+app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {

@@ -276,7 +276,7 @@ const changePassword = async (req, res) => {
     });
   } catch (err) {
     await t.rollback(); // Rollback on failure
-    logger.error(`Change password: ${err.message}`);
+    logger.error('Change password: An error occurred during password update.');
     return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });

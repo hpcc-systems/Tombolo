@@ -1,5 +1,4 @@
 const Bree = require('bree');
-
 const logger = require('../config/logger.js');
 const {
   logBreeJobs,
@@ -25,6 +24,7 @@ const {
   createClusterMonitoringBreeJob,
   scheduleClusterMonitoringOnServerStart,
   checkClusterReachability,
+  checkClusterContainerization,
 } = require('../jobSchedularMethods/clusterJobs.js');
 const {
   scheduleJobStatusPolling,
@@ -60,6 +60,13 @@ const {
 } = require('../jobSchedularMethods/jobMonitoring.js');
 
 const {
+  createMonitorCostPerUserJob,
+  createAnalyzeCostPerUserJob,
+} = require('../jobSchedularMethods/costMonitoring');
+
+const { createDataArchiveJob } = require('../jobSchedularMethods/archive');
+
+const {
   removeUnverifiedUser,
   sendPasswordExpiryEmails,
   sendAccountDeleteEmails,
@@ -90,6 +97,15 @@ class JobScheduler {
       workerMessageHandler: async worker => {
         // message type is <any>, when worker exits message ='done' by default.
         //To pass more props we use object {level?: info|verbose|error ; text?:any; error?: instanceof Error; action?: scheduleNext|remove; data?:any }
+
+        if (
+          worker.message?.type &&
+          worker.message?.type === 'monitor-cost-per-user' &&
+          worker.message?.action === 'trigger'
+        ) {
+          await this.createAnalyzeCostPerUserJob();
+        }
+
         const message = worker.message;
         let workerName = worker.name;
         if (workerName.includes('job-status-poller'))
@@ -148,6 +164,9 @@ class JobScheduler {
       await this.startJobPunctualityMonitoring();
       await this.startTimeSeriesAnalysisMonitoring();
       await this.checkClusterReachability();
+      await this.checkClusterContainerization();
+      await this.createMonitorCostPerUserJob();
+      await this.createDataArchiveJob();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
       await sendAccountDeleteEmails.call(this);
@@ -257,6 +276,18 @@ class JobScheduler {
   // Job that fetches workunit info
   createWuInfoFetchingJob(data) {
     return createWuInfoFetchingJob.call(this, data);
+  }
+
+  createDataArchiveJob() {
+    return createDataArchiveJob.call(this);
+  }
+
+  createMonitorCostPerUserJob() {
+    return createMonitorCostPerUserJob.call(this);
+  }
+
+  createAnalyzeCostPerUserJob() {
+    return createAnalyzeCostPerUserJob.call(this);
   }
 
   scheduleActiveCronJobs() {
@@ -394,6 +425,10 @@ class JobScheduler {
 
   checkClusterReachability() {
     return checkClusterReachability.call(this);
+  }
+
+  checkClusterContainerization() {
+    return checkClusterContainerization.call(this);
   }
 
   // User management jobs
