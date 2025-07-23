@@ -11,6 +11,7 @@ const {
 } = require('../models');
 const { decryptString } = require('../utils/cipher');
 const { getClusterOptions } = require('../utils/getClusterOptions');
+const { raw } = require('express');
 
 // Function to get dropzones and associated machines when a cluster id is provided
 const getDropzonesForACluster = async (req, res) => {
@@ -460,8 +461,26 @@ const toggleLandingZoneMonitoringStatus = async (req, res) => {
           [Sequelize.Op.in]: ids,
         },
       },
-      attributes: ['id', 'isActive'],
+      attributes: ['id', 'isActive', 'approvalStatus'],
+      raw: true,
     });
+
+    if (isActive) {
+      const pending = records.some(record => {
+        return record.approvalStatus !== 'approved';
+      });
+
+      if (pending) {
+        logger.warn(
+          'Cannot activate landing zone monitoring with pending approval'
+        );
+        return res.status(400).json({
+          success: false,
+          message:
+            'Cannot activate landing zone monitoring with pending approval',
+        });
+      }
+    }
 
     if (records.length === 0) {
       return res.status(404).json({

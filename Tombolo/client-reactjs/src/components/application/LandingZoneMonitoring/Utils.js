@@ -233,3 +233,9 @@ export const getDirectoryList = async ({ clusterId, dropzoneName, netaddr, path,
   const data = await response.json();
   return data;
 };
+
+// Convert storage values to MB for comparison
+export const convertToMB = (value, unit) => {
+  const multipliers = { MB: 1, GB: 1024, TB: 1024 * 1024, PB: 1024 * 1024 * 1024 };
+  return value * (multipliers[unit] || 1);
+};

@@ -15,6 +15,7 @@ import ApproveRejectModal from './ApproveRejectModal.jsx';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import ViewDetailsModal from './ViewDetailsModal.jsx';
 import { getUser } from '../../common/userStorage.js';
+import LzFilters from './LzFilters.jsx';
 import './lzMonitoring.css';
 
 const monitoringTypeName = 'Landing Zone Monitoring';
@@ -53,6 +54,13 @@ const LandigZoneMonitoring = () => {
   const [lzMonitoringType, setLzMonitoringType] = useState(null);
   const [minSizeThreasoldUnit, setMinSizeThreasoldUnit] = useState('MB');
   const [maxSizeThreasoldUnit, setMaxSizeThreasoldUnit] = useState('MB');
+  const [filtersVisible, setFiltersVisible] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({});
+
+  const [filteringLzMonitorings, setFilteringLzMonitorings] = useState(false);
+  const [filteredLzMonitorings, setFilteredLzMonitorings] = useState([]);
+  const [matchCount, setMatchCount] = useState(0);
 
   //asr specific
   const [domains, setDomains] = useState([]);
@@ -67,7 +75,6 @@ const LandigZoneMonitoring = () => {
       setSelectedCluster(clusters.find((c) => c.id === selectedMonitoring?.cluster?.id));
       setLzMonitoringType(selectedMonitoring.lzMonitoringType);
 
-      // TODO revert to old style
       form.setFieldsValue({
         domain: selectedMonitoring['metaData.asrSpecificMetaData.domain'],
         productCategory: selectedMonitoring['metaData.asrSpecificMetaData.productCategory'],
@@ -405,6 +412,78 @@ const LandigZoneMonitoring = () => {
     form.resetFields();
   };
 
+  // When filterChange filter the  monitorings
+  useEffect(() => {
+    setFilteringLzMonitorings(true);
+    if (landingZoneMonitoring.length === 0) {
+      setFilteringLzMonitorings(false);
+    }
+    // if (Object.keys(filters).length < 1) return;
+    const { approvalStatus, activeStatus, domain, cluster, product } = filters;
+
+    // Convert activeStatus to boolean
+    let activeStatusBool;
+    if (activeStatus === 'Active') {
+      activeStatusBool = true;
+    } else if (activeStatus === 'Inactive') {
+      activeStatusBool = false;
+    }
+
+    let filteredlzm = landingZoneMonitoring.filter((lzm) => {
+      let include = true;
+      const currentDomain = lzm?.metaData?.asrSpecificMetaData?.domain;
+      const currentProduct = lzm?.metaData?.asrSpecificMetaData?.productCategory;
+      const currentClusterId = lzm?.clusterId;
+
+      if (approvalStatus && lzm.approvalStatus !== approvalStatus) {
+        include = false;
+      }
+      if (activeStatusBool !== undefined && lzm.isActive !== activeStatusBool) {
+        include = false;
+      }
+      if (domain && currentDomain !== domain) {
+        include = false;
+      }
+
+      if (product && currentProduct !== product) {
+        include = false;
+      }
+
+      if (cluster && currentClusterId !== cluster) {
+        include = false;
+      }
+
+      return include;
+    });
+
+    const matchedLzmIds = [];
+
+    // Calculate the number of matched string instances
+    if (searchTerm) {
+      let instanceCount = 0;
+      filteredlzm.forEach((lz) => {
+        const lzMonitoringName = lz.monitoringName.toLowerCase();
+
+        if (lzMonitoringName.includes(searchTerm)) {
+          matchedLzmIds.push(lz.id);
+          instanceCount++;
+        }
+      });
+
+      setMatchCount(instanceCount);
+    } else {
+      setMatchCount(0);
+    }
+
+    if (matchedLzmIds.length > 0) {
+      filteredlzm = filteredlzm.filter((lz) => matchedLzmIds.includes(lz.id));
+    } else if (matchedLzmIds.length === 0 && searchTerm) {
+      filteredlzm = [];
+    }
+
+    setFilteredLzMonitorings(filteredlzm);
+    setFilteringLzMonitorings(false);
+  }, [filters, landingZoneMonitoring, searchTerm]);
   //JSX
   return (
     <>
@@ -419,6 +498,10 @@ const LandigZoneMonitoring = () => {
             setBulkEditModalVisibility={setBulkEditModalVisibility}
             setBulkApprovalModalVisibility={setDisplayAddRejectModal}
             isReader={isReader}
+            setFiltersVisible={setFiltersVisible}
+            filtersVisible={filtersVisible}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
           />
         }
       />
@@ -453,6 +536,19 @@ const LandigZoneMonitoring = () => {
         setMinSizeThreasoldUnit={setMinSizeThreasoldUnit}
         setMaxSizeThreasoldUnit={setMaxSizeThreasoldUnit}
       />
+      <LzFilters
+        filtersVisible={filtersVisible}
+        setFiltersVisible={setFiltersVisible}
+        domains={domains}
+        selectedDomain={selectedDomain}
+        landingZoneMonitoring={landingZoneMonitoring}
+        allProductCategories={productCategories}
+        setFilters={setFilters}
+        matchCount={matchCount}
+        setSearchTerm={setSearchTerm}
+        setSelectedDomain={setSelectedDomain}
+        searchTerm={searchTerm}
+      />
       <LandingZoneMonitoringTable
         landingZoneMonitoring={landingZoneMonitoring}
         setLandingZoneMonitoring={setLandingZoneMonitoring}
@@ -465,6 +561,9 @@ const LandigZoneMonitoring = () => {
         setSelectedRows={setSelectedRows}
         setCopying={setCopying}
         isReader={isReader}
+        filteringLzMonitorings={filteringLzMonitorings}
+        filteredLzMonitorings={filteredLzMonitorings}
+        searchTerm={searchTerm}
       />
       <ViewDetailsModal
         displayViewDetailsModal={displayViewDetailsModal}
