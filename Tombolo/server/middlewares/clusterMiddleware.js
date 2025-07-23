@@ -10,12 +10,16 @@ const {
   requiredStringParam,
 } = require('./commonMiddleware');
 
+const createUpdateClusterValidations = [
+  optionalStringBody('username', { nullable: true, alphaNumeric: true }),
+  optionalArray('adminEmails', { nullable: true }),
+  optionalEmailBody('adminEmails.*'),
+];
+
 // Validate the input for creating a cluster
 const validateAddClusterInputs = [
   requiredStringBody('name', { max: 300 }),
-  optionalStringBody('username')
-    .isAlphanumeric()
-    .withMessage('Username must be alphanumeric'),
+  ...createUpdateClusterValidations,
   optionalStringBody('password', { max: 200 }),
   optionalObject('metaData', { nullable: true }),
   requiredObject('createdBy'),
@@ -29,9 +33,7 @@ const validateClusterId = [idParam];
 // Validate the input for updating a cluster
 const validateUpdateClusterInputs = [
   idParam,
-  optionalStringBody('username', { nullable: true, alphaNumeric: true }),
-  optionalArray('adminEmails', { nullable: true }),
-  optionalEmailBody('adminEmails.*'),
+  ...createUpdateClusterValidations,
   requiredObject('updatedBy'),
   requiredStringBody('updatedBy.name', { max: 100 }),
   requiredEmailBody('updatedBy.email', { max: 100 }),

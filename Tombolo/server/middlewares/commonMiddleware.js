@@ -132,6 +132,7 @@ const optionalBoolean = createMiddleware(field =>
   body(field).optional().isBoolean()
 );
 const requiredNumeric = createMiddleware(field => body(field).isNumeric());
+const requiredInt = createMiddleware(field => body(field).isInt());
 const requiredArray = createMiddleware((field, options = {}) => {
   if (options && options.arrMin)
     return body(field).isArray({ min: options.arrMin });
@@ -209,4 +210,5 @@ module.exports = {
   MONITORING_NAME_LENGTH,
   COMMENT_LENGTH,
   PASSWORD_LENGTH,
+  requiredInt,
 };

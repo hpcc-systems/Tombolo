@@ -1,6 +1,6 @@
 const {
   requiredStringBody,
-  emailRegex,
+  requiredEmailBody,
   NAME_LENGTH,
   DESCRIPTION_LENGTH,
   PASSWORD_LENGTH,
@@ -9,7 +9,7 @@ const {
 const validateWizardPayload = [
   requiredStringBody('firstName', { ...NAME_LENGTH }),
   requiredStringBody('lastName', { ...NAME_LENGTH }),
-  emailRegex('email'),
+  requiredEmailBody('email'),
   requiredStringBody('password', { ...PASSWORD_LENGTH }),
   requiredStringBody('confirmPassword', { ...PASSWORD_LENGTH }),
   requiredStringBody('description', { ...DESCRIPTION_LENGTH }),
