@@ -1,5 +1,14 @@
 // Validate add user inputs using express validator
-const { body, param, validationResult } = require('express-validator');
+const { body } = require('express-validator');
+const {
+  requiredStringBody,
+  requiredEmailBody,
+  optionalObject,
+  idBody,
+  requiredUuidParam,
+  NAME_LENGTH,
+  COMMENT_LENGTH,
+} = require('./commonMiddleware');
 const jwt = require('jsonwebtoken');
 
 const logger = require('../config/logger');
@@ -9,34 +18,12 @@ const User = models.user;
 
 // Validate registration payload
 const validateNewUserPayload = [
-  body('registrationMethod')
-    .isString()
-    .notEmpty()
-    .withMessage('Registration method is required')
-    .isIn(['traditional', 'microsoft'])
-    .withMessage(
-      // eslint-disable-next-line quotes
-      "Registration method must be either 'traditional' or 'microsoft'"
-    ),
-  body('firstName')
-    .isString()
-    .notEmpty()
-    .withMessage('First name is required')
-    .isLength({ min: 2, max: 50 })
-    .withMessage('First name must be between 2 and 50 characters'),
-  body('lastName')
-    .isString()
-    .notEmpty()
-    .withMessage('Last name is required')
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Last name must be between 2 and 50 characters'),
-  body('email')
-    .isEmail()
-    .withMessage('Email address is not valid')
-    .notEmpty()
-    .withMessage('Email is required')
-    .isLength({ max: 100 })
-    .withMessage('Email must be less than 100 characters'),
+  requiredStringBody('registrationMethod', {
+    isIn: ['traditional', 'microsoft'],
+  }),
+  requiredStringBody('firstName', { ...NAME_LENGTH }),
+  requiredStringBody('lastName', { ...NAME_LENGTH }),
+  requiredEmailBody('email'),
   body('password')
     .if(body('registrationMethod').equals('traditional'))
     .isString()
@@ -52,40 +39,13 @@ const validateNewUserPayload = [
     .withMessage('Password must contain at least one number')
     .matches(/[\W_]/)
     .withMessage('Password must contain at least one special character'),
-  body('metaData')
-    .isObject()
-    .optional()
-    .withMessage('Meta data must be an object if provided'),
-  (req, res, next) => {
-    const errors = validationResult(req).array();
-    const errorString = errors.map(e => e.msg).join(', ');
-    if (errors.length > 0) {
-      logger.error(`Update user: ${errorString}`);
-      return res.status(400).json({ success: false, message: errorString });
-    }
-    next();
-  },
+  optionalObject('metaData'),
 ];
 
 // Validate login payload
 const validateLoginPayload = [
-  body('email')
-    .isEmail()
-    .withMessage('Email address is not valid')
-    .notEmpty()
-    .withMessage('Email is required')
-    .isLength({ max: 100 })
-    .withMessage('Email must be less than 100 characters'),
-  body('password').isString().notEmpty().withMessage('Password is required'),
-  (req, res, next) => {
-    const errors = validationResult(req).array();
-    const errorString = errors.map(e => e.msg).join(', ');
-    if (errors.length > 0) {
-      logger.error(`Login: ${errorString}`);
-      return res.status(400).json({ success: false, message: errorString });
-    }
-    next();
-  },
+  requiredEmailBody('email'),
+  requiredStringBody('password'),
 ];
 
 const validateEmailDuplicate = [
@@ -135,34 +95,11 @@ const verifyValidTokenExists = (req, res, next) => {
   }
 };
 
-// Validate email address in in request body
-const validatePasswordResetRequestPayload = [
-  body('email')
-    .isEmail()
-    .withMessage('Email address is not valid')
-    .notEmpty()
-    .withMessage('Email is required')
-    .isLength({ max: 100 })
-    .withMessage('Email must be less than 100 characters'),
-  (req, res, next) => {
-    const errors = validationResult(req).array();
-    const errorString = errors.map(e => e.msg).join(', ');
-    if (errors.length > 0) {
-      logger.error(`Reset password: ${errorString}`);
-      return res.status(400).json({ success: false, message: errorString });
-    }
-    next();
-  },
-];
+const validatePasswordResetRequestPayload = [requiredEmailBody('email')];
 
 //validateResetPasswordPayload - comes in request body - token must be present and must be UUID, password must be present and meet password requirements
 const validateResetPasswordPayload = [
-  body('token')
-    .isString()
-    .notEmpty()
-    .withMessage('Token is required')
-    .isUUID()
-    .withMessage('Token is not valid'),
+  requiredStringBody('token'),
   body('password')
     .isString()
     .notEmpty()
@@ -177,81 +114,20 @@ const validateResetPasswordPayload = [
     .withMessage('Password must contain at least one number')
     .matches(/[\W_]/)
     .withMessage('Password must contain at least one special character'),
-  (req, res, next) => {
-    const errors = validationResult(req).array();
-    const errorString = errors.map(e => e.msg).join(', ');
-    if (errors.length > 0) {
-      logger.error(`Reset password: ${errorString}`);
-      return res.status(400).json({ success: false, message: errorString });
-    }
-    next();
-  },
 ];
 
 // Verify if the request body has code -> Auth code from azure
-const validateAzureAuthCode = [
-  body('code').isString().notEmpty().withMessage('Code is required'),
-  (req, res, next) => {
-    const errors = validationResult(req).array();
-    const errorString = errors.map(e => e.msg).join(', ');
-    if (errors.length > 0) {
-      logger.error(`Azure auth code: ${errorString}`);
-      return res.status(400).json({ success: false, message: errorString });
-    }
-    next();
-  },
-];
+const validateAzureAuthCode = [requiredStringBody('code')];
 
 const validateAccessRequest = [
-  body('id').isUUID(4).withMessage('Invalid user id'),
-  body('comment').notEmpty().withMessage('Comment is required'),
-  body('roles').isArray().withMessage('Roles must be an array'),
-  body('applications').isArray().withMessage('Applications must be an array'),
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    next();
-  },
+  idBody,
+  requiredStringBody('comment', { ...COMMENT_LENGTH }),
 ];
 
 // Validate login payload
-const validateEmailInBody = [
-  body('email')
-    .isEmail()
-    .withMessage('Email address is not valid')
-    .notEmpty()
-    .withMessage('Email is required')
-    .isLength({ max: 100 })
-    .withMessage('Email must be less than 100 characters'),
-  (req, res, next) => {
-    const errors = validationResult(req).array();
-    const errorString = errors.map(e => e.msg).join(', ');
-    if (errors.length > 0) {
-      logger.error(`Login: ${errorString}`);
-      return res.status(400).json({ success: false, message: errorString });
-    }
-    next();
-  },
-];
+const validateEmailInBody = [requiredEmailBody('email')];
 
-const validateResetToken = [
-  param('token')
-    .notEmpty()
-    .withMessage('Token is required')
-    .isUUID()
-    .withMessage('Invalid token'),
-  (req, res, next) => {
-    const errors = validationResult(req).array();
-    const errorString = errors.map(e => e.msg).join(', ');
-    if (errors.length > 0) {
-      logger.error(`Reset password: ${errorString}`);
-      return res.status(400).json({ success: false, message: errorString });
-    }
-    next();
-  },
-];
+const validateResetToken = [requiredUuidParam('token')];
 
 // Exports
 module.exports = {

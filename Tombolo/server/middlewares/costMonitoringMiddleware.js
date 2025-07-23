@@ -1,116 +1,76 @@
-const { body, param } = require('express-validator');
+const {
+  requiredUuidParam,
+  requiredArray,
+  requiredUuidBody,
+  applicationIdBody,
+  requiredStringBody,
+  requiredObject,
+  requiredStringRegex,
+  requiredNumeric,
+  idBody,
+  idParam,
+  requiredBoolean,
+  DESCRIPTION_LENGTH,
+  MONITORING_NAME_LENGTH,
+  COMMENT_LENGTH,
+} = require('./commonMiddleware');
 
 const arrayIdsValidator = [
-  body('ids').isArray().withMessage('IDs must be an array'),
-  body('ids.*').isUUID().withMessage('Invalid id'),
+  requiredArray('ids', { msg: 'IDs must be an array' }),
+  requiredUuidBody('ids.*', { msg: 'Invalid id' }),
 ];
 
 const createUpdateValidations = [
-  body('applicationId')
-    .isUUID(4)
-    .withMessage('Application ID must be a valid UUID'),
-  body('monitoringName')
-    .isString()
-    .withMessage('Monitoring name must be a string'),
-  body('description')
-    .isString()
-    .withMessage('cost monitoring must have a description'),
-  body('clusterIds').isArray().withMessage('Cluster IDs must be an array'),
-  body('metaData').isObject().withMessage('MetaData must be an object'),
-  body('metaData.users')
-    .isArray()
-    .withMessage('metaData must have a users array'),
-  body('metaData.notificationMetaData')
-    .isObject()
-    .withMessage('metaData must have a notificationMetaData object'),
-  body('metaData.notificationMetaData.primaryContacts')
-    .isArray()
-    .withMessage(
-      'metaData.notificationMetaData must have a primaryContacts array'
-    ),
-  body('metaData.notificationMetaData.notificationCondition')
-    .isNumeric()
-    .withMessage(
-      'metaData.notificationMetaData must have a notificationCondition'
-    ),
+  applicationIdBody,
+  requiredStringBody('monitoringName', { ...MONITORING_NAME_LENGTH }),
+  requiredStringBody('description', { ...DESCRIPTION_LENGTH }),
+  requiredArray('clusterIds', { msg: 'Cluster IDs must be an array' }),
+  requiredObject('metaData', { msg: 'metaData must be an object' }),
+  requiredArray('metaData.users', { msg: 'metaData must have a users array' }),
+  requiredStringRegex('metaData.users.*', { msg: 'Invalid user name' }),
+  requiredObject('metaData.notificationMetaData', {
+    msg: 'metaData must have a notificationMetaData object',
+  }),
+  requiredArray('metaData.notificationMetaData.primaryContacts'),
+  requiredNumeric('metaData.notificationMetaData.notificationCondition'),
 ];
 
-const validateUpdateCostMonitoring = [
-  body('id').isUUID(4).withMessage('ID must be a valid UUID'),
-  ...createUpdateValidations,
-];
-
-const validateCreateCostMonitoring = [
-  ...createUpdateValidations,
-  body('createdBy').isObject().withMessage('createdBy must be an object'),
-];
-
-const validateDeleteCostMonitoring = [
-  param('id').isUUID().withMessage('Cost Monitoring ID must be a valid UUID'),
-];
-
-const validateGetCostMonitoringById = [
-  param('id').isUUID().withMessage('Cost Monitoring ID must be a valid UUID'),
-];
+const validateUpdateCostMonitoring = [idBody, ...createUpdateValidations];
+const validateCreateCostMonitoring = [...createUpdateValidations];
+const validateDeleteCostMonitoring = [idParam];
+const validateGetCostMonitoringById = [idParam];
 
 const validateEvaluateCostMonitoring = [
-  body('approverComment')
-    .notEmpty()
-    .isString()
-    .withMessage('Approval comment must be a string')
-    .isLength({ min: 4, max: 200 })
-    .withMessage('Approval comment must be between 4 and 200 characters long'),
   ...arrayIdsValidator,
-  body('approvalStatus')
-    .notEmpty()
-    .isString()
-    .withMessage('Accepted must be a string'),
-  body('isActive').isBoolean().withMessage('isActive must be a boolean'),
+  requiredStringBody('approverComment', {
+    ...COMMENT_LENGTH,
+  }),
+  requiredStringBody('approvalStatus'),
+  requiredBoolean('isActive'),
 ];
 
 const validateToggleStatus = [
   ...arrayIdsValidator,
-  body('action').notEmpty().isString().withMessage('action must be a string'),
+  requiredStringBody('action', 'action must be a string'),
 ];
 
 const validateBulkDelete = [...arrayIdsValidator];
 
 const validateBulkUpdate = [
-  body('costMonitorings')
-    .isArray()
-    .withMessage('Cost Monitoring must be an array'),
-  body('costMonitorings.*.id')
-    .isUUID()
-    .withMessage('Cost Monitoring ID must be a valid UUID'),
-  body('costMonitorings.*.id')
-    .isUUID()
-    .withMessage('Cost Monitoring ID must be a valid UUID'),
-  body('costMonitorings.*.metaData')
-    .isObject()
-    .withMessage('MetaData must be an object'),
-  body('costMonitorings.*.metaData.users')
-    .isArray()
-    .withMessage('metaData must have a users array'),
-  body('costMonitorings.*.metaData.notificationMetaData')
-    .isObject()
-    .withMessage('metaData must have a notificationMetaData object'),
-  body('costMonitorings.*.metaData.notificationMetaData.primaryContacts')
-    .isArray()
-    .withMessage(
-      'costMonitorings.*.metaData.notificationMetaData must have a primaryContacts array'
-    ),
-  body('costMonitorings.*.metaData.notificationMetaData.notificationCondition')
-    .isNumeric()
-    .withMessage(
-      'metaData.notificationMetaData must have a notificationCondition'
-    ),
+  requiredArray('costMonitorings', { msg: 'Cost Monitoring must be an array' }),
+  requiredUuidBody('costMonitorings.*.id'),
+  requiredObject('costMonitorings.*.metaData'),
+  requiredArray('costMonitorings.*.metaData.users'),
+  requiredObject('costMonitorings.*.metaData.notificationMetaData'),
+  requiredArray(
+    'costMonitorings.*.metaData.notificationMetaData.primaryContacts'
+  ),
+  requiredNumeric(
+    'costMonitorings.*.metaData.notificationMetaData.notificationCondition'
+  ),
 ];
 
-const validateGetCostMonitoringByAppId = [
-  param('applicationId')
-    .isUUID()
-    .withMessage('Application ID must be a valid UUID'),
-];
+const validateGetCostMonitoringByAppId = [requiredUuidParam('applicationId')];
 
 module.exports = {
   validateUpdateCostMonitoring,
