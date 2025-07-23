@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Form, InputNumber, Row, Col, Select, Cascader, Input, message } from 'antd';
-import { getDropzones, getDirectoryList } from '../Utils';
+import { getDropzones, getDirectoryList, convertToMB } from '../Utils';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../../common/InfoDrawer';
 
@@ -43,12 +43,6 @@ function MonitoringTab({
   // Ref to store current abort controller for canceling requests
   const abortControllerRef = useRef(null);
   const loadingTimeoutRef = useRef(null);
-
-  // Convert storage values to MB for comparison
-  const convertToMB = (value, unit) => {
-    const multipliers = { MB: 1, GB: 1024, TB: 1024 * 1024, PB: 1024 * 1024 * 1024 };
-    return value * (multipliers[unit] || 1);
-  };
 
   // Set Threashold Unit
   const setThresholdUnit = (value, field) => {
