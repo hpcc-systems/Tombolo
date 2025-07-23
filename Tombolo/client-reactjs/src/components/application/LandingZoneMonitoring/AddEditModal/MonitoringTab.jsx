@@ -44,6 +44,12 @@ function MonitoringTab({
   const abortControllerRef = useRef(null);
   const loadingTimeoutRef = useRef(null);
 
+  // Convert storage values to MB for comparison
+  const convertToMB = (value, unit) => {
+    const multipliers = { MB: 1, GB: 1024, TB: 1024 * 1024, PB: 1024 * 1024 * 1024 };
+    return value * (multipliers[unit] || 1);
+  };
+
   // Set Threashold Unit
   const setThresholdUnit = (value, field) => {
     if (field === 'minThreshold') {
@@ -526,6 +532,22 @@ function MonitoringTab({
                         return Promise.resolve();
                       },
                     },
+                    {
+                      validator: (_, value) => {
+                        // Only validate comparison if value exists (not empty/null/undefined)
+                        if (value != null && value !== '') {
+                          const maxThreshold = form.getFieldValue('maxThreshold');
+                          if (maxThreshold != null) {
+                            const minValueInMB = convertToMB(value, minSizeThreasoldUnit);
+                            const maxValueInMB = convertToMB(maxThreshold, maxSizeThreasoldUnit);
+                            if (minValueInMB >= maxValueInMB) {
+                              return Promise.reject(new Error('Min threshold must be less than max threshold'));
+                            }
+                          }
+                        }
+                        return Promise.resolve();
+                      },
+                    },
                   ]}>
                   <InputNumber
                     style={{ width: '100%' }}
@@ -545,6 +567,22 @@ function MonitoringTab({
                       validator: (_, value) => {
                         if (value < 0 || value > 999999) {
                           return Promise.reject(new Error('Value must be between 0 and 999999'));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                    {
+                      validator: (_, value) => {
+                        // Only validate comparison if value exists (not empty/null/undefined)
+                        if (value != null && value !== '') {
+                          const minThreshold = form.getFieldValue('minThreshold');
+                          if (minThreshold != null) {
+                            const minValueInMB = convertToMB(minThreshold, minSizeThreasoldUnit);
+                            const maxValueInMB = convertToMB(value, maxSizeThreasoldUnit);
+                            if (maxValueInMB <= minValueInMB) {
+                              return Promise.reject(new Error('Max threshold must be greater than min threshold'));
+                            }
+                          }
                         }
                         return Promise.resolve();
                       },
