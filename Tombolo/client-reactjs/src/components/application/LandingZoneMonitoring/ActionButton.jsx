@@ -60,6 +60,13 @@ const ActionButton = ({
   const bulkStartPauseJobMonitorings = async () => {
     try {
       const action = bulkStartPauseForm.getFieldValue('action'); // Ensure correct usage of bulkStartPauseForm
+      if (action === 'start') {
+        const selectedIncludesUnApprovedMonitorings = selectedRows.some((row) => row.approvalStatus !== 'approved');
+        if (selectedIncludesUnApprovedMonitorings) {
+          message.error('Selected job monitorings must be approved before starting');
+          return;
+        }
+      }
       const startMonitoring = action === 'start' ? true : false;
       const selectedRowIds = selectedRows.map((row) => row.id);
       await toggleLzMonitoringStatus({ ids: selectedRowIds, isActive: startMonitoring });
