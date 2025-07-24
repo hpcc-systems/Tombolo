@@ -1,56 +1,54 @@
 const {
-  requiredStringBody,
-  optionalStringBody,
-  optionalObject,
-  requiredObject,
-  requiredEmailBody,
-  idParam,
-  optionalArray,
-  optionalEmailBody,
-  requiredStringParam,
+  stringBody,
+  arrayBody,
+  emailBody,
+  objectBody,
+  uuidParam,
+  stringParam,
 } = require('./commonMiddleware');
 
 const createUpdateClusterValidations = [
-  optionalStringBody('username', { nullable: true, alphaNumeric: true }),
-  optionalArray('adminEmails', { nullable: true }),
-  optionalEmailBody('adminEmails.*'),
+  stringBody('username', true, {
+    alphaNumeric: true,
+  }),
+  arrayBody('adminEmails', true),
+  emailBody('adminEmails.*', true),
 ];
 
 // Validate the input for creating a cluster
 const validateAddClusterInputs = [
-  requiredStringBody('name', { max: 300 }),
+  stringBody('name'),
   ...createUpdateClusterValidations,
-  optionalStringBody('password', { max: 200 }),
-  optionalObject('metaData', { nullable: true }),
-  requiredObject('createdBy'),
-  requiredStringBody('createdBy.name', { max: 100 }),
-  requiredEmailBody('createdBy.email'),
+  stringBody('password', false, { length: { max: 75 } }),
+  stringBody('password'),
+  objectBody('metaData', true),
+  objectBody('createdBy'),
+  stringBody('createdBy.name', { length: { max: 100 } }),
+  stringBody('createdBy.email'),
 ];
 
 // Validate the id
-const validateClusterId = [idParam];
+const validateClusterId = [uuidParam('id')];
 
 // Validate the input for updating a cluster
 const validateUpdateClusterInputs = [
-  idParam,
+  uuidParam('id'),
   ...createUpdateClusterValidations,
-  requiredObject('updatedBy'),
-  requiredStringBody('updatedBy.name', { max: 100 }),
-  requiredEmailBody('updatedBy.email', { max: 100 }),
+  objectBody('updatedBy'),
+  stringBody('updatedBy.name'),
+  emailBody('updatedBy.email'),
 ];
 
 // Validate name for blind ping
 const validateClusterPingPayload = [
-  requiredStringBody('name', { max: 300 }),
-  optionalStringBody('username', {
-    max: 200,
+  stringBody('name'),
+  stringBody('username', true, {
     alphaNumeric: true,
-    nullable: true,
   }),
-  optionalStringBody('password', { max: 200, nullable: true }),
+  stringBody('password', true),
 ];
 
-const validateQueryData = [requiredStringParam('queryData')];
+const validateQueryData = [stringParam('queryData')];
 
 module.exports = {
   validateAddClusterInputs,

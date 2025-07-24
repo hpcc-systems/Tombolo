@@ -1,76 +1,67 @@
 const {
-  requiredUuidParam,
-  requiredArray,
-  requiredUuidBody,
-  applicationIdBody,
-  requiredStringBody,
-  requiredObject,
-  requiredStringRegex,
-  requiredNumeric,
-  idBody,
-  idParam,
-  requiredBoolean,
   DESCRIPTION_LENGTH,
   MONITORING_NAME_LENGTH,
   COMMENT_LENGTH,
+  uuidBody,
+  stringBody,
+  arrayBody,
+  objectBody,
+  regexBody,
+  TITLE_REGEX,
+  numericBody,
+  uuidParam,
+  booleanBody,
 } = require('./commonMiddleware');
 
-const arrayIdsValidator = [
-  requiredArray('ids', { msg: 'IDs must be an array' }),
-  requiredUuidBody('ids.*', { msg: 'Invalid id' }),
-];
+const arrayIdsValidator = [arrayBody('ids'), uuidBody('ids.*')];
 
 const createUpdateValidations = [
-  applicationIdBody,
-  requiredStringBody('monitoringName', { ...MONITORING_NAME_LENGTH }),
-  requiredStringBody('description', { ...DESCRIPTION_LENGTH }),
-  requiredArray('clusterIds', { msg: 'Cluster IDs must be an array' }),
-  requiredObject('metaData', { msg: 'metaData must be an object' }),
-  requiredArray('metaData.users', { msg: 'metaData must have a users array' }),
-  requiredStringRegex('metaData.users.*', { msg: 'Invalid user name' }),
-  requiredObject('metaData.notificationMetaData', {
-    msg: 'metaData must have a notificationMetaData object',
+  uuidBody('applicationId'),
+  stringBody('monitoringName', false, {
+    length: { ...MONITORING_NAME_LENGTH },
   }),
-  requiredArray('metaData.notificationMetaData.primaryContacts'),
-  requiredNumeric('metaData.notificationMetaData.notificationCondition'),
+  stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
+  arrayBody('clusterIds', false),
+  objectBody('metaData'),
+  arrayBody('metaData.users'),
+  regexBody('metaData.users.*', false, { regex: TITLE_REGEX }),
+  objectBody('metaData.notificationMetaData'),
+  arrayBody('metaData.notificationMetaData.primaryContacts'),
+  numericBody('metaData.notificationMetaData.notificationCondition'),
 ];
 
-const validateUpdateCostMonitoring = [idBody, ...createUpdateValidations];
+const validateUpdateCostMonitoring = [
+  uuidBody('id'),
+  ...createUpdateValidations,
+];
 const validateCreateCostMonitoring = [...createUpdateValidations];
-const validateDeleteCostMonitoring = [idParam];
-const validateGetCostMonitoringById = [idParam];
+const validateDeleteCostMonitoring = [uuidParam('id')];
+const validateGetCostMonitoringById = [uuidParam('id')];
 
 const validateEvaluateCostMonitoring = [
   ...arrayIdsValidator,
-  requiredStringBody('approverComment', {
-    ...COMMENT_LENGTH,
-  }),
-  requiredStringBody('approvalStatus'),
-  requiredBoolean('isActive'),
+  stringBody('approverComment', false, { length: { ...COMMENT_LENGTH } }),
+  stringBody('approvalStatus'),
+  booleanBody('isActive'),
 ];
 
-const validateToggleStatus = [
-  ...arrayIdsValidator,
-  requiredStringBody('action', 'action must be a string'),
-];
+const validateToggleStatus = [...arrayIdsValidator, stringBody('action')];
 
 const validateBulkDelete = [...arrayIdsValidator];
 
 const validateBulkUpdate = [
-  requiredArray('costMonitorings', { msg: 'Cost Monitoring must be an array' }),
-  requiredUuidBody('costMonitorings.*.id'),
-  requiredObject('costMonitorings.*.metaData'),
-  requiredArray('costMonitorings.*.metaData.users'),
-  requiredObject('costMonitorings.*.metaData.notificationMetaData'),
-  requiredArray(
-    'costMonitorings.*.metaData.notificationMetaData.primaryContacts'
-  ),
-  requiredNumeric(
+  arrayBody('costMonitorings'),
+  uuidBody('costMonitorings.*.id'),
+  objectBody('costMonitorings.*.metaData'),
+  arrayBody('costMonitorings.*.metaData.users'),
+  objectBody('costMonitorings.*.metaData.notificationMetaData'),
+  arrayBody('costMonitorings.*.metaData.notificationMetaData.primaryContacts'),
+  numericBody(
     'costMonitorings.*.metaData.notificationMetaData.notificationCondition'
   ),
 ];
 
-const validateGetCostMonitoringByAppId = [requiredUuidParam('applicationId')];
+const validateGetCostMonitoringByAppId = [uuidParam('applicationId')];
 
 module.exports = {
   validateUpdateCostMonitoring,

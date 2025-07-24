@@ -1,99 +1,88 @@
 const {
-  clusterIdQuery,
-  requiredObject,
-  requiredArray,
-  requiredUuidBody,
-  requiredStringQuery,
-  requiredBoolean,
-  requiredBooleanQuery,
-  applicationIdBody,
-  requiredStringBody,
-  clusterIdBody,
-  applicationIdParam,
-  idParam,
-  idBody,
-  optionalUuidBody,
-  optionalStringBody,
-  optionalObject,
-  optionalBoolean,
   DESCRIPTION_LENGTH,
   MONITORING_NAME_LENGTH,
   COMMENT_LENGTH,
+  uuidQuery,
+  arrayBody,
+  uuidBody,
+  stringQuery,
+  stringBody,
+  booleanQuery,
+  objectBody,
+  uuidParam,
+  booleanBody,
 } = require('./commonMiddleware');
 
 // Validate cluster id from the query parameters
-const validateClusterId = [clusterIdQuery];
+const validateClusterId = [uuidQuery('clusterId')];
 
 // Validate req.body.ids array of UUIDs
-const validateIds = [
-  requiredArray('ids', { arrMin: 1 }),
-  requiredUuidBody('ids.*'),
-];
+const validateIds = [arrayBody('ids', false, { arrMin: 1 }), uuidBody('ids.*')];
 
 const validateFileListParams = [
-  clusterIdQuery,
-  requiredStringQuery('DropZoneName'),
-  requiredStringQuery('Netaddr'),
-  requiredStringQuery('Path'),
-  requiredBooleanQuery('DirectoryOnly'),
+  uuidQuery('clusterId'),
+  stringQuery('DropZoneName'),
+  stringQuery('Netaddr'),
+  stringQuery('Path'),
+  booleanQuery('DirectoryOnly'),
 ];
 
 // Validate landing zone monitoring creation payload
 const validateCreateLandingZoneMonitoring = [
-  applicationIdBody,
-  requiredStringBody('monitoringName', { ...MONITORING_NAME_LENGTH }),
-  requiredStringBody('lzMonitoringType', {
+  uuidBody('applicationId'),
+  stringBody('monitoringName', { length: { ...MONITORING_NAME_LENGTH } }),
+  stringBody('lzMonitoringType', false, {
     isIn: ['fileCount', 'spaceUsage', 'fileMovement'],
   }),
-  requiredStringBody('description', { ...DESCRIPTION_LENGTH }),
-  clusterIdBody,
-  requiredObject('metaData'),
+  stringBody('description', { length: { ...DESCRIPTION_LENGTH } }),
+  uuidBody('clusterId'),
+  objectBody('metaData'),
 ];
 
 // Validate application ID parameter for getting all landing zone monitorings
-const validateApplicationId = [applicationIdParam];
+const validateApplicationId = [uuidParam('applicationId')];
 
 // Validate ID parameter for getting single landing zone monitoring
-const validateId = [idParam];
+const validateId = [uuidParam('id')];
 
 // Validate landing zone monitoring update payload
 const validateUpdateLandingZoneMonitoring = [
-  idBody,
-  optionalUuidBody('applicationId'),
-  optionalStringBody('monitoringName', { ...MONITORING_NAME_LENGTH }),
-  optionalStringBody('lzMonitoringType', {
+  uuidBody('id'),
+  uuidBody('applicationId', true),
+  stringBody('monitoringName', true, { length: { ...MONITORING_NAME_LENGTH } }),
+  stringBody('lzMonitoringType', true, {
     isIn: ['fileCount', 'spaceUsage', 'fileMovement'],
   }),
-  optionalStringBody('description', { ...DESCRIPTION_LENGTH }),
-  optionalUuidBody('clusterId'),
-  optionalObject('metaData'),
-  optionalBoolean('isActive'),
-  optionalUuidBody('lastUpdatedBy'),
+  stringBody('description', { length: { ...DESCRIPTION_LENGTH } }),
+  uuidBody('clusterId', true),
+  objectBody('metaData', true),
+  booleanBody('isActive', true),
+  uuidBody('lastUpdatedBy', true),
 ];
 
 // Validate toggle status request
 const validateToggleStatus = [
-  requiredArray('ids', { arrMin: 1 }),
-  requiredUuidBody('ids.*'),
-  requiredBoolean('isActive'),
+  arrayBody('ids', false, { arrMin: 1 }),
+  uuidBody('ids.*'),
+  booleanBody('isActive'),
 ];
 
 // Validate evaluate request (approve/reject)
 const validateEvaluateLandingZoneMonitoring = [
-  requiredArray('ids', { arrMin: 1 }),
-  requiredUuidBody('ids.*'),
-  optionalBoolean('isActive'),
-  requiredStringBody('approvalStatus', {
+  arrayBody('ids', false, { arrMin: 1 }),
+  uuidBody('ids.*'),
+  booleanBody('isActive', true),
+  stringBody('approvalStatus', false, {
     isIn: ['approved', 'rejected', 'pending'],
   }),
-  requiredStringBody('approverComment', { ...COMMENT_LENGTH }),
+  stringBody('approverComment', false, { length: { ...COMMENT_LENGTH } }),
 ];
 
 // Validate bulk update payload
 const validateBulkUpdatePayload = [
-  requiredArray('updatedData', { arrMin: 1 }),
-  requiredObject('updatedData.*'),
-  requiredUuidBody('updatedData.*.id'),
+  arrayBody('updatedData', false, { arrMin: 1 }),
+  objectBody('updatedData.*'),
+  uuidBody('updatedData.*.id'),
 ];
 
 //Exports

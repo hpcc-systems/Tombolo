@@ -1,13 +1,12 @@
-// Validate add user inputs using express validator
 const { body } = require('express-validator');
 const {
-  requiredStringBody,
-  requiredEmailBody,
-  optionalObject,
-  idBody,
-  requiredUuidParam,
+  emailBody,
+  objectBody,
+  uuidBody,
+  uuidParam,
   NAME_LENGTH,
   COMMENT_LENGTH,
+  stringBody,
 } = require('./commonMiddleware');
 const jwt = require('jsonwebtoken');
 
@@ -18,12 +17,12 @@ const User = models.user;
 
 // Validate registration payload
 const validateNewUserPayload = [
-  requiredStringBody('registrationMethod', {
+  stringBody('registrationMethod', false, {
     isIn: ['traditional', 'microsoft'],
   }),
-  requiredStringBody('firstName', { ...NAME_LENGTH }),
-  requiredStringBody('lastName', { ...NAME_LENGTH }),
-  requiredEmailBody('email'),
+  stringBody('firstName', { length: { ...NAME_LENGTH } }),
+  stringBody('lastName', { length: { ...NAME_LENGTH } }),
+  emailBody('email'),
   body('password')
     .if(body('registrationMethod').equals('traditional'))
     .isString()
@@ -39,14 +38,11 @@ const validateNewUserPayload = [
     .withMessage('Password must contain at least one number')
     .matches(/[\W_]/)
     .withMessage('Password must contain at least one special character'),
-  optionalObject('metaData'),
+  objectBody('metaData', true),
 ];
 
 // Validate login payload
-const validateLoginPayload = [
-  requiredEmailBody('email'),
-  requiredStringBody('password'),
-];
+const validateLoginPayload = [emailBody('email'), stringBody('password')];
 
 const validateEmailDuplicate = [
   async (req, res, next) => {
@@ -99,7 +95,7 @@ const validatePasswordResetRequestPayload = [requiredEmailBody('email')];
 
 //validateResetPasswordPayload - comes in request body - token must be present and must be UUID, password must be present and meet password requirements
 const validateResetPasswordPayload = [
-  requiredStringBody('token'),
+  stringBody('token'),
   body('password')
     .isString()
     .notEmpty()
@@ -117,17 +113,16 @@ const validateResetPasswordPayload = [
 ];
 
 // Verify if the request body has code -> Auth code from azure
-const validateAzureAuthCode = [requiredStringBody('code')];
+const validateAzureAuthCode = [stringBody('code')];
 
 const validateAccessRequest = [
-  idBody,
-  requiredStringBody('comment', { ...COMMENT_LENGTH }),
+  uuidBody('id'),
+  stringBody('comment', { length: { ...COMMENT_LENGTH } }),
 ];
 
 // Validate login payload
-const validateEmailInBody = [requiredEmailBody('email')];
-
-const validateResetToken = [requiredUuidParam('token')];
+const validateEmailInBody = [emailBody('email')];
+const validateResetToken = [uuidParam('token')];
 
 // Exports
 module.exports = {

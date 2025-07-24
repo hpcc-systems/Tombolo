@@ -1,49 +1,44 @@
 const {
-  idParam,
-  idBody,
-  optionalStringBody,
-  optionalEmailBody,
-  optionalBoolean,
-  requiredStringBody,
-  requiredEmailBody,
-  requiredArray,
-  requiredUuidBody,
   NAME_LENGTH,
+  uuidParam,
+  uuidBody,
+  stringBody,
+  emailBody,
+  booleanBody,
+  arrayBody,
 } = require('./commonMiddleware');
 
-const validateUserId = [idParam];
-const validateUserIdInBody = [idBody];
+const validateUserId = [uuidParam('id')];
+const validateUserIdInBody = [uuidBody('id')];
 
 // Validate update payload
 const validateUpdateUserPayload = [
-  optionalStringBody('firstName', { ...NAME_LENGTH }),
-  optionalStringBody('lastName', { ...NAME_LENGTH }),
-  optionalEmailBody('email'),
-  optionalStringBody('registrationMethod', {
+  stringBody('firstName', true, { length: { ...NAME_LENGTH } }),
+  stringBody('lastName', true, { length: { ...NAME_LENGTH } }),
+  emailBody('email', true),
+  stringBody('registrationMethod', true, {
     isIn: ['traditional', 'microsoft'],
   }),
-  optionalBoolean('verifiedUser'),
-  optionalStringBody('registrationStatus', {
+  booleanBody('verifiedUser', true),
+  stringBody('registrationStatus', true, {
     isIn: ['pending', 'active', 'revoked'],
   }),
 ];
 
 // Validate new user payload
 const validateManuallyCreatedUserPayload = [
-  requiredStringBody('firstName', { ...NAME_LENGTH }),
-  requiredStringBody('lastName', { ...NAME_LENGTH }),
-  requiredEmailBody('email'),
-  requiredArray('applications'),
-  requiredUuidBody('applications.*'),
-  requiredArray('roles'),
+  stringBody('firstName', false, { length: { ...NAME_LENGTH } }),
+  stringBody('lastName', false, { length: { ...NAME_LENGTH } }),
+  emailBody('email'),
+  arrayBody('applications'),
+  uuidBody('applications.*'),
+  arrayBody('roles'),
 ];
 
 // Validate change password payload - password and new password
 const validateChangePasswordPayload = [
-  requiredStringBody('currentPassword'),
-  requiredStringBody('newPassword')
-    .isLength({ min: 8 })
-    .withMessage('New password must be at least 8 characters long')
+  stringBody('currentPassword'),
+  stringBody('newPassword', false, { length: { min: 8 } })
     .matches(/[A-Z]/)
     .withMessage('New password must contain at least one uppercase letter')
     .matches(/[a-z]/)
@@ -55,10 +50,7 @@ const validateChangePasswordPayload = [
 ];
 
 // Validate bulk delete payload - req body must contain ids array and each item in array must be a valid UUID
-const validateBulkDeletePayload = [
-  requiredArray('ids'),
-  requiredUuidBody('ids.*'),
-];
+const validateBulkDeletePayload = [arrayBody('ids'), uuidBody('ids.*')];
 
 // Validate bulk update payload
 // const validateBulkUpdatePayload = [
@@ -84,8 +76,8 @@ const validateBulkDeletePayload = [
 
 // req.body must roles array and must be valid uuid
 const validatePatchUserRolesPayload = [
-  requiredArray('roles', { arrMin: 1 }),
-  requiredUuidBody('roles.*'),
+  arrayBody('roles', false, { arrMin: 1 }),
+  uuidBody('roles.*'),
 ];
 
 module.exports = {

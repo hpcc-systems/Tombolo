@@ -1,21 +1,21 @@
 const {
-  optionalStringBody,
-  optionalArray,
-  optionalEmailBody,
+  stringBody,
   DESCRIPTION_LENGTH,
+  arrayBody,
+  emailBody,
 } = require('./commonMiddleware');
 
 const validateInstancePayload = [
-  optionalStringBody('name', { max: 255 }),
-  optionalStringBody('description', { ...DESCRIPTION_LENGTH }),
-  optionalArray('supportEmailRecipientsEmail'),
-  optionalEmailBody('supportEmailRecipientsEmail.*'),
-  optionalArray('accessRequestEmailRecipientsEmail'),
-  optionalEmailBody('accessRequestEmailRecipientsEmail.*'),
-  optionalArray('supportEmailRecipientsRoles'),
-  optionalStringBody('supportEmailRecipientsRoles.*'),
-  optionalArray('accessRequestEmailRecipientsRoles'),
-  optionalStringBody('accessRequestEmailRecipientsRoles.*'),
+  stringBody('name', true),
+  stringBody('description', true, { length: { ...DESCRIPTION_LENGTH } }),
+  arrayBody('supportEmailRecipientsEmail', true),
+  emailBody('supportEmailRecipientsEmail.*', true),
+  arrayBody('accessRequestEmailRecipientsEmail', true),
+  emailBody('accessRequestEmailRecipientsEmail.*', true),
+  arrayBody('supportEmailRecipientsRoles', true),
+  emailBody('supportEmailRecipientsRoles.*', true),
+  arrayBody('accessRequestEmailRecipientsRoles', true),
+  stringBody('accessRequestEmailRecipientsRoles.*', true),
 ];
 
 module.exports = {
