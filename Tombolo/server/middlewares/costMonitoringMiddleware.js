@@ -11,17 +11,17 @@ const {
   numericBody,
   uuidParam,
   booleanBody,
+  bodyUuids,
+  paramUuids,
 } = require('./commonMiddleware');
 
-const arrayIdsValidator = [arrayBody('ids'), uuidBody('ids.*')];
-
 const createUpdateValidations = [
-  uuidBody('applicationId'),
+  bodyUuids.applicationId,
   stringBody('monitoringName', false, {
     length: { ...MONITORING_NAME_LENGTH },
   }),
   stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
-  arrayBody('clusterIds', false),
+  arrayBody('clusterIds'),
   objectBody('metaData'),
   arrayBody('metaData.users'),
   regexBody('metaData.users.*', false, { regex: TITLE_REGEX }),
@@ -30,24 +30,21 @@ const createUpdateValidations = [
   numericBody('metaData.notificationMetaData.notificationCondition'),
 ];
 
-const validateUpdateCostMonitoring = [
-  uuidBody('id'),
-  ...createUpdateValidations,
-];
+const validateUpdateCostMonitoring = [bodyUuids.id, ...createUpdateValidations];
 const validateCreateCostMonitoring = [...createUpdateValidations];
-const validateDeleteCostMonitoring = [uuidParam('id')];
-const validateGetCostMonitoringById = [uuidParam('id')];
+const validateDeleteCostMonitoring = [paramUuids.id];
+const validateGetCostMonitoringById = [paramUuids.id];
 
 const validateEvaluateCostMonitoring = [
-  ...arrayIdsValidator,
+  ...bodyUuids.arrayIds,
   stringBody('approverComment', false, { length: { ...COMMENT_LENGTH } }),
   stringBody('approvalStatus'),
   booleanBody('isActive'),
 ];
 
-const validateToggleStatus = [...arrayIdsValidator, stringBody('action')];
+const validateToggleStatus = [...bodyUuids.arrayIds, stringBody('action')];
 
-const validateBulkDelete = [...arrayIdsValidator];
+const validateBulkDelete = [...bodyUuids.arrayIds];
 
 const validateBulkUpdate = [
   arrayBody('costMonitorings'),

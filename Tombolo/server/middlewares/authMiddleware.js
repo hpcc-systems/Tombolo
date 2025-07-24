@@ -2,11 +2,11 @@ const { body } = require('express-validator');
 const {
   emailBody,
   objectBody,
-  uuidBody,
   uuidParam,
   NAME_LENGTH,
   COMMENT_LENGTH,
   stringBody,
+  bodyUuids,
 } = require('./commonMiddleware');
 const jwt = require('jsonwebtoken');
 
@@ -64,7 +64,7 @@ const validateEmailDuplicate = [
   },
 ];
 
-// Validate valid access token is present in request header
+// Validate valid access token is present in the request header
 const verifyValidTokenExists = (req, res, next) => {
   const accessToken = req.cookies.token;
 
@@ -91,7 +91,7 @@ const verifyValidTokenExists = (req, res, next) => {
   }
 };
 
-const validatePasswordResetRequestPayload = [requiredEmailBody('email')];
+const validatePasswordResetRequestPayload = [emailBody('email')];
 
 //validateResetPasswordPayload - comes in request body - token must be present and must be UUID, password must be present and meet password requirements
 const validateResetPasswordPayload = [
@@ -116,7 +116,7 @@ const validateResetPasswordPayload = [
 const validateAzureAuthCode = [stringBody('code')];
 
 const validateAccessRequest = [
-  uuidBody('id'),
+  bodyUuids.id,
   stringBody('comment', { length: { ...COMMENT_LENGTH } }),
 ];
 

@@ -3,8 +3,8 @@ const {
   arrayBody,
   emailBody,
   objectBody,
-  uuidParam,
   stringParam,
+  paramUuids,
 } = require('./commonMiddleware');
 
 const createUpdateClusterValidations = [
@@ -28,11 +28,11 @@ const validateAddClusterInputs = [
 ];
 
 // Validate the id
-const validateClusterId = [uuidParam('id')];
+const validateClusterId = [paramUuids.id];
 
 // Validate the input for updating a cluster
 const validateUpdateClusterInputs = [
-  uuidParam('id'),
+  paramUuids.id,
   ...createUpdateClusterValidations,
   objectBody('updatedBy'),
   stringBody('updatedBy.name'),

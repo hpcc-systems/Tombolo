@@ -112,8 +112,8 @@ const createStringValidator = source => {
 };
 
 const createUuidValidator = source => {
-  return (field, optional = false) =>
-    createValidator(source, v => v.isUUID(4), field, { optional });
+  return (field, optional = false, options = {}) =>
+    createValidator(source, v => v.isUUID(4), field, { ...options, optional });
 };
 
 const createEmailValidator = source => {
@@ -194,6 +194,22 @@ const createUrlValidator = source => {
     createValidator(source, v => v.isURL(), field, { ...options, optional });
 };
 
+const createDateValidator = source => {
+  return (field, optional = false, options = {}) =>
+    createValidator(source, v => v.isDate(), field, {
+      ...options,
+      optional,
+    });
+};
+
+const createDateTimeValidator = source => {
+  return (field, optional = false, options = {}) =>
+    createValidator(source, v => v.isISO8601(), field, {
+      ...options,
+      optional,
+    });
+};
+
 // Source-specific validators
 const stringBody = createStringValidator(body);
 const stringQuery = createStringValidator(query);
@@ -204,6 +220,7 @@ const uuidQuery = createUuidValidator(query);
 const emailBody = createEmailValidator(body);
 const regexBody = createRegexValidator(body);
 const regexQuery = createRegexValidator(query);
+const regexParam = createRegexValidator(param);
 const booleanBody = createBooleanValidator(body);
 const booleanQuery = createBooleanValidator(query);
 const booleanParam = createBooleanValidator(param);
@@ -223,6 +240,57 @@ const cronParam = createCronValidator(param);
 const urlBody = createUrlValidator(body);
 const urlQuery = createUrlValidator(query);
 const urlParam = createUrlValidator(param);
+const dateBody = createDateValidator(body);
+const dateParam = createDateValidator(param);
+const dateQuery = createDateValidator(query);
+const dateTimeBody = createDateTimeValidator(body);
+const dateTimeParam = createDateTimeValidator(param);
+const dateTimeQuery = createDateTimeValidator(query);
+
+const queryUuids = {
+  id: uuidQuery('id'),
+  clusterId: uuidQuery('clusterId'),
+  clusterid: uuidQuery('clusterid'),
+  cluster_id: uuidQuery('cluster_id'),
+  applicationId: uuidQuery('applicationId'),
+  application_id: uuidQuery('application_id'),
+  app_id: uuidQuery('app_id'),
+  appId: uuidQuery('appId'),
+  job_id: uuidQuery('job_id'),
+  jobId: uuidQuery('jobId'),
+  dataFlowId: uuidQuery('dataFlowId'),
+};
+
+const bodyUuids = {
+  id: uuidBody('id'),
+  clusterId: uuidBody('clusterId'),
+  clusterid: uuidBody('clusterid'),
+  cluster_id: uuidBody('cluster_id'),
+  applicationId: uuidBody('applicationId'),
+  application_id: uuidBody('application_id'),
+  app_id: uuidBody('app_id'),
+  appId: uuidBody('appId'),
+  job_id: uuidBody('job_id'),
+  jobId: uuidBody('jobId'),
+  dataFlowId: uuidBody('dataFlowId'),
+  createdBy: uuidBody('createdBy'),
+  lastUpdatedBy: uuidBody('lastUpdatedBy'),
+  arrayIds: [arrayBody('ids', false, { arrMin: 1 }), uuidBody('ids.*')],
+};
+
+const paramUuids = {
+  id: uuidParam('id'),
+  clusterId: uuidParam('clusterId'),
+  clusterid: uuidParam('clusterid'),
+  cluster_id: uuidParam('cluster_id'),
+  applicationId: uuidParam('applicationId'),
+  application_id: uuidParam('application_id'),
+  app_id: uuidParam('app_id'),
+  appId: uuidParam('appId'),
+  job_id: uuidParam('job_id'),
+  jobId: uuidParam('jobId'),
+  dataFlowId: uuidParam('dataFlowId'),
+};
 
 module.exports = {
   stringBody,
@@ -233,6 +301,8 @@ module.exports = {
   uuidQuery,
   emailBody,
   regexBody,
+  regexQuery,
+  regexParam,
   booleanBody,
   booleanQuery,
   booleanParam,
@@ -259,5 +329,9 @@ module.exports = {
   PASSWORD_LENGTH,
   TITLE_REGEX,
   numericBody,
-  regexQuery,
+  queryUuids,
+  bodyUuids,
+  paramUuids,
+  dateBody,
+  dateTimeBody,
 };

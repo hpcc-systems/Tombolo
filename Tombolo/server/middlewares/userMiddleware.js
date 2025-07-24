@@ -1,15 +1,16 @@
 const {
   NAME_LENGTH,
-  uuidParam,
   uuidBody,
   stringBody,
   emailBody,
   booleanBody,
   arrayBody,
+  paramUuids,
+  bodyUuids,
 } = require('./commonMiddleware');
 
-const validateUserId = [uuidParam('id')];
-const validateUserIdInBody = [uuidBody('id')];
+const validateUserId = [paramUuids.id];
+const validateUserIdInBody = [bodyUuids.id];
 
 // Validate update payload
 const validateUpdateUserPayload = [
@@ -49,8 +50,8 @@ const validateChangePasswordPayload = [
     .withMessage('New password must contain at least one special character'),
 ];
 
-// Validate bulk delete payload - req body must contain ids array and each item in array must be a valid UUID
-const validateBulkDeletePayload = [arrayBody('ids'), uuidBody('ids.*')];
+// Validate bulk delete payload - req body must contain ids array, and each item in the array must be a valid UUID
+const validateBulkDeletePayload = [...bodyUuids.arrayIds];
 
 // Validate bulk update payload
 // const validateBulkUpdatePayload = [
