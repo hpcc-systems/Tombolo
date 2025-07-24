@@ -19,8 +19,7 @@ const createUpdateClusterValidations = [
 const validateAddClusterInputs = [
   stringBody('name'),
   ...createUpdateClusterValidations,
-  stringBody('password', false, { length: { max: 75 } }),
-  stringBody('password'),
+  stringBody('password', true, { length: { max: 75 } }),
   objectBody('metaData', true),
   objectBody('createdBy'),
   stringBody('createdBy.name', { length: { max: 100 } }),
