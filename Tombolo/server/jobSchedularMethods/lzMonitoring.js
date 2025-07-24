@@ -8,7 +8,7 @@ const {
 } = require('./jobSchedularUtils.js');
 
 // Constants
-const LZ_MONITOR_FILE_NAME = 'submitLzMonitoring.js';
+const LZ_FILE_MOVEMENT_MONITORING_FILE_NAME = 'lzFileMovementMonitoring.js';
 
 const jobMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({
   interval: lz_monitoring_interval,
@@ -20,7 +20,8 @@ const humanReadableIntervalForJobMonitoring = generateIntervalString({
 // Job monitoring bree job
 async function startLzMonitoring() {
   try {
-    let jobName = 'job-monitoring' + new Date().getTime();
+    let jobName =
+      'landing-zone-file-movement-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
       interval: '20s', // For development
@@ -30,7 +31,7 @@ async function startLzMonitoring() {
         '..',
         'jobs',
         'lzMonitoring',
-        LZ_MONITOR_FILE_NAME
+        LZ_FILE_MOVEMENT_MONITORING_FILE_NAME
       ),
       worker: {
         workerData: {
@@ -40,7 +41,7 @@ async function startLzMonitoring() {
       },
     });
     this.bree.start(jobName);
-    logger.info('Job Monitoring initialized ...');
+    logger.info('Landing zone file movement job initialized ...');
   } catch (err) {
     logger.error(err.message);
   }
