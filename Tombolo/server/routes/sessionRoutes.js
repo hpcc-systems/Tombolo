@@ -3,7 +3,7 @@ const router = require('express').Router();
 const {
   validateUserId,
   validateSessionId,
-} = require('../middlewares/sessionMiddleWare');
+} = require('../middlewares/sessionMiddleware');
 const { validateUserRole } = require('../middlewares/rbacMiddleware');
 const { validate } = require('../middlewares/validateRequestBody');
 const role = require('../config/roleTypes');
