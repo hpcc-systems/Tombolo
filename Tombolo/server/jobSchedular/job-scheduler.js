@@ -72,7 +72,9 @@ const {
   sendAccountDeleteEmails,
 } = require('../jobSchedularMethods/userManagementJobs.js');
 
-const { startLzMonitoring } = require('../jobSchedularMethods/lzMonitoring.js');
+const {
+  startLzFileMovementMonitoring,
+} = require('../jobSchedularMethods/lzMonitoring.js');
 
 class JobScheduler {
   constructor() {
@@ -170,7 +172,7 @@ class JobScheduler {
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
       await sendAccountDeleteEmails.call(this);
-      await startLzMonitoring.call(this);
+      await startLzFileMovementMonitoring.call(this);
       logger.info('-----------------------------');
       logger.info('Server is finished intializing, and is now running');
       logger.info('-----------------------------');
@@ -437,8 +439,8 @@ class JobScheduler {
   }
 
   // Landing Zone Monitoring
-  startLzMonitoring() {
-    return startLzMonitoring.call(this);
+  startLzFileMovementMonitoring() {
+    return startLzFileMovementMonitoring.call(this);
   }
 }
 

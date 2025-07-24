@@ -18,7 +18,7 @@ const humanReadableIntervalForJobMonitoring = generateIntervalString({
 });
 
 // Job monitoring bree job
-async function startLzMonitoring() {
+async function startLzFileMovementMonitoring() {
   try {
     let jobName =
       'landing-zone-file-movement-monitoring' + new Date().getTime();
@@ -48,5 +48,5 @@ async function startLzMonitoring() {
 }
 
 module.exports = {
-  startLzMonitoring,
+  startLzFileMovementMonitoring,
 };
