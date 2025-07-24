@@ -4,7 +4,6 @@ const { decryptString } = require('../../utils/cipher');
 const { FileSprayService } = require('@hpcc-js/comms');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 const path = require('path');
-const {} = require('./lzMonitoringUtils');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 
 const {
@@ -13,6 +12,7 @@ const {
   monitoring_types: MonitoringTypes,
   notification_queue: NotificationQueue,
   asr_products: AsrProducts,
+  asr_domains: AsrDomains,
 } = models;
 
 // Recursively list all files (no name filter)
@@ -295,20 +295,36 @@ const monitoring_name = 'Landing Zone Monitoring';
 
         // If asr related the notification ID must be prefixed with the asr product short code
         let notificationPrefix = 'LZFM';
-        if (asrSpecificMetaData?.productCategory) {
+        if (asrSpecificMetaData?.domain) {
           try {
             const { productCategory } = asrSpecificMetaData;
             // Geet product category
             const asrProduct = await AsrProducts.findOne({
               where: { id: productCategory },
-              attributes: ['shortCode'],
+              attributes: ['shortCode', 'name'],
               raw: true,
             });
+            asrSpecificMetaData.productName = `${asrProduct.name} (${asrProduct.shortCode})`;
             notificationPrefix = asrProduct.shortCode;
           } catch (error) {
             parentPort.postMessage({
               level: 'warn',
               text: `Error while getting ASR product category: ${error.message}`,
+            });
+          }
+
+          // Get Domain
+          try {
+            const asrDomain = await AsrDomains.findOne({
+              where: { id: asrSpecificMetaData.domain },
+              attributes: ['name'],
+              raw: true,
+            });
+            asrSpecificMetaData.domainName = asrDomain.name;
+          } catch (error) {
+            parentPort.postMessage({
+              level: 'warn',
+              text: `Error while getting ASR domain: ${error.message}`,
             });
           }
         }
@@ -320,14 +336,14 @@ const monitoring_name = 'Landing Zone Monitoring';
 
         // issue object
         const issue = {
-          title: `File ${fileName} is stuck at ${directory} for ${ageInMins} minutes`,
-          cluster: uniqueClustersObj[clusterId].name,
-          dropzone,
-          machine,
-          directory,
-          fileModifiedTime: modifiedtime,
-          threshold,
-          fileAge: ageInMins,
+          'Issue Description': `File ${fileName} is stuck at ${directory} for ${ageInMins} minutes`,
+          Cluster: uniqueClustersObj[clusterId].name,
+          Dropzone: dropzone,
+          Machine: machine,
+          Directory: directory,
+          'File Modified Time': modifiedtime,
+          Threshold: `${threshold} minutes`,
+          'File Age': `${ageInMins} minutes`,
         };
 
         // Add to notification queue
@@ -350,7 +366,9 @@ const monitoring_name = 'Landing Zone Monitoring';
             remedy: {
               instruction: `Check the file ${fileName} at ${directory} on ${machine} and ensure it is processed or removed from the landing zone.`,
             },
-            firstLogged: new Date(),
+            firstLogged: findLocalDateTimeAtCluster(
+              uniqueClustersObj[clusterId].timezone_offset
+            ).toLocaleString(),
           },
           createdBy: 'System',
         });

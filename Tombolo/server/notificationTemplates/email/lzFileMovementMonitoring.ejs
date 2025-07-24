@@ -80,24 +80,25 @@
             </tr>
             <% } %>
 
-            <% if(typeof region !== 'undefined'){ %>
-            <tr class="section-table-td">
-              <td class="section-table-td section-table-td-label">Region</td>
-              <td class="section-table-td"><%= region %></td>
-            </tr>
-            <% } %>
 
-            <% if(typeof domain !== 'undefined'){ %>
+            <% if(typeof asrSpecificMetaData?.domainName !== 'undefined'){ %>
             <tr class="section-table-td">
               <td class="section-table-td section-table-td-label">Domain</td>
-              <td class="section-table-td"><%= domain %></td>
+              <td class="section-table-td"><%= asrSpecificMetaData?.domainName %></td>
             </tr>
             <% } %>
 
-            <% if(typeof productCategory !== 'undefined'){ %>
+            <% if(typeof asrSpecificMetaData?.productName !== 'undefined'){ %>
             <tr class="section-table-td">
               <td class="section-table-td section-table-td-label">Product</td>
-              <td class="section-table-td"><%= productCategory %></td>
+              <td class="section-table-td"><%= asrSpecificMetaData.productName %></td>
+            </tr>
+            <% } %>
+
+             <% if(typeof asrSpecificMetaData?.severity !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Severity</td>
+              <td class="section-table-td"><%= asrSpecificMetaData.severity %></td>
             </tr>
             <% } %>
 
