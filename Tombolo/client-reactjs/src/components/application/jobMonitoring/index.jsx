@@ -15,13 +15,6 @@ import {
   isScheduleUpdated,
 } from './jobMonitoringUtils.js';
 
-import {
-  getMonitoringTypeId,
-  getDomains,
-  getProductCategories,
-  getAllProductCategories,
-} from '../../common/ASRTools.js';
-
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
 import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
@@ -30,6 +23,9 @@ import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import JobMonitoringFilters from './JobMonitoringFilters.jsx';
 import { getUser } from '../../common/userStorage.js';
+import { useMonitorType } from '../../../hooks/useMonitoringType';
+import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
+import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
 
 // Constants
 const monitoringTypeName = 'Job Monitoring';
@@ -39,8 +35,8 @@ function JobMonitoring() {
   const {
     applicationReducer: {
       application: { applicationId },
+      clusters,
     },
-    applicationReducer: { clusters },
   } = useSelector((state) => state);
 
   const user = getUser();
@@ -59,7 +55,6 @@ function JobMonitoring() {
   const [cron, setCron] = useState('');
   const [cronMessage, setCronMessage] = useState(null); // Cron message to display when cron is invalid or has errors
   const [erroneousScheduling, setErroneousScheduling] = useState(false);
-  const [jobMonitorings, setJobMonitorings] = useState([]);
   const [filteredJobMonitoring, setFilteredJobMonitoring] = useState([]); // Filtered job monitorings
   const [displayMonitoringDetailsModal, setDisplayMonitoringDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
@@ -70,11 +65,6 @@ function JobMonitoring() {
   const [savingJobMonitoring, setSavingJobMonitoring] = useState(false); // Flag to indicate if job monitoring is being saved
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
   const [selectedCluster, setSelectedCluster] = useState(null);
-  const [domains, setDomains] = useState([]);
-  const [productCategories, setProductCategories] = useState([]); // Product categories for selected domain
-  const [allProductCategories, setAllProductCategories] = useState([]); // All product categories - regardless of domain
-  const [monitoringTypeId, setMonitoringTypeId] = useState(null);
-  const [selectedDomain, setSelectedDomain] = useState(null);
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
@@ -87,27 +77,12 @@ function JobMonitoring() {
   // Create form instance
   const [form] = Form.useForm();
 
-  //When component mounts and appid change get all job monitorings
-  useEffect(() => {
-    if (!applicationId) return;
-    (async () => {
-      try {
-        const allMonitorings = await getAllJobMonitorings({ applicationId });
-        setJobMonitorings(allMonitorings);
-      } catch (error) {
-        message.error('Error fetching job monitorings');
-      }
-    })();
-
-    (async () => {
-      try {
-        const allProducts = await getAllProductCategories();
-        setAllProductCategories(allProducts);
-      } catch (error) {
-        message.error('Error fetching list of all products categories');
-      }
-    })();
-  }, [applicationId]);
+  // When the component mounts and appid change get all job monitorings
+  const {
+    monitorings: jobMonitorings,
+    setMonitorings: setJobMonitorings,
+    allProductCategories,
+  } = useMonitoringsAndAllProductCategories(applicationId, getAllJobMonitorings);
 
   //When intention to edit a monitoring is discovered
   useEffect(() => {
@@ -148,63 +123,11 @@ function JobMonitoring() {
     }
   }, [editingData, duplicatingData]);
 
-  // Get  monitoring type ID, Filters from local storage
-  useEffect(() => {
-    // Get monitoringType id for job monitoring
-    (async () => {
-      try {
-        const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
-        setMonitoringTypeId(monitoringTypeId);
-      } catch (error) {
-        message.error('Error fetching monitoring type ID');
-      }
-    })();
-
-    // Get filters from local storage
-    const existingFiltersFromLocalStorage = localStorage.getItem('jMFilters');
-    if (existingFiltersFromLocalStorage) {
-      const filtersFromLocalStorage = JSON.parse(existingFiltersFromLocalStorage);
-      setFilters(filtersFromLocalStorage);
-    }
-  }, []);
-
+  // Get monitoring type ID, Filters from local storage
+  const { monitoringTypeId } = useMonitorType(monitoringTypeName, setFilters);
   // Get domains and product categories
-  useEffect(() => {
-    // Get domains
-    if (!monitoringTypeId) return;
-    (async () => {
-      try {
-        let domainData = await getDomains({ monitoringTypeId });
-        domainData = domainData.map((d) => ({
-          label: d.name,
-          value: d.id,
-        }));
-        setDomains(domainData);
-      } catch (error) {
-        message.error('Error fetching domains');
-      }
-    })();
-
-    // If monitoring selected - set selected domain so corresponding product categories can be fetched
-    if (selectedMonitoring?.metaData?.asrSpecificMetaData?.domain) {
-      setSelectedDomain(selectedMonitoring.metaData.asrSpecificMetaData.domain);
-    }
-
-    // Get product categories
-    if (!selectedDomain) return;
-    (async () => {
-      try {
-        const productCategories = await getProductCategories({ domainId: selectedDomain });
-        const formattedProductCategories = productCategories.map((c) => ({
-          label: `${c.shortCode}  - ${c.name}`,
-          value: c.id,
-        }));
-        setProductCategories(formattedProductCategories);
-      } catch (error) {
-        message.error('Error fetching product category');
-      }
-    })();
-  }, [monitoringTypeId, selectedDomain, selectedMonitoring]);
+  const { domains, productCategories, setProductCategories, selectedDomain, setSelectedDomain } =
+    useDomainAndCategories(monitoringTypeId, selectedMonitoring);
 
   // When filterChange filter the job monitorings
   useEffect(() => {
