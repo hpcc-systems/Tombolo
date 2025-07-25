@@ -1,99 +1,69 @@
 const express = require('express');
 const router = express.Router();
 const Sequelize = require('sequelize');
-const { body, check, param } = require('express-validator');
 
 //Local imports
 const logger = require('../../config/logger');
-const models = require('../../models');
-const { validationResult } = require('express-validator');
+const {
+  jobMonitoring: JobMonitoring,
+  jobMonitoring_Data,
+} = require('../../models');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateCreateJobMonitoring,
+  validateParamApplicationId,
+  validateUpdateJobMonitoring,
+  validateEvaluateJobMonitoring,
+  validateBulkDeleteJobMonitoring,
+  validateDeleteJobMonitoring,
+  validateToggleJobMonitoring,
+  validateBulkUpdateJobMonitoring,
+  validateGetJobMonitoringById,
+} = require('../../middlewares/jobMonitoringMiddleware');
 const JobScheduler = require('../../jobSchedular/job-scheduler');
 
 //Constants
-const JobMonitoring = models.jobMonitoring;
-const jobMonitoring_Data = models.jobMonitoring_Data;
 const Op = Sequelize.Op;
 
 // Create new job monitoring
-router.post(
-  '/',
-  [
-    body('monitoringName')
-      .notEmpty()
-      .withMessage('Monitoring name is required'),
-    body('description').notEmpty().withMessage('Description is required'),
-    body('monitoringScope')
-      .notEmpty()
-      .withMessage('Monitoring scope is required'),
-    body('clusterId').isUUID().withMessage('Cluster ID must be a valid UUID'),
-    // body("isActive").isBoolean().withMessage("isActive must be a boolean"),
-    body('jobName').notEmpty().withMessage('Job name is required'),
-    body('applicationId')
-      .isUUID()
-      .withMessage('Application ID must be a valid UUID'),
-    body('metaData')
-      .isObject()
-      .withMessage('Meta data must be an object if provided'),
-    body('createdBy').notEmpty().withMessage('Created by is required'),
-    body('lastUpdatedBy').notEmpty().withMessage('Last updated by is required'),
-  ],
-  async (req, res) => {
-    // Handle the POST request here
-    try {
-      // Validate the req.body
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(JSON.stringify(errors.array()));
-        return res.status(422).json({ errors: errors.array() });
-      }
+router.post('/', validate(validateCreateJobMonitoring), async (req, res) => {
+  // Handle the POST request here
+  try {
+    //Save the job monitoring
+    const response = await JobMonitoring.create(
+      { ...req.body, approvalStatus: 'Pending' },
+      { raw: true }
+    );
 
-      //Save the job monitoring
-      const response = await JobMonitoring.create(
-        { ...req.body, approvalStatus: 'Pending' },
-        { raw: true }
-      );
+    // If TimeSeriesAnalysis is part of the notification condition, create a job to fetch WU info (Runs in background)
+    const {
+      metaData: {
+        notificationMetaData: { notificationCondition },
+      },
+    } = req.body;
 
-      // If TimeSeriesAnalysis is part of the notification condition, create a job to fetch WU info (Runs in background)
-      const {
-        metaData: {
-          notificationMetaData: { notificationCondition },
-        },
-      } = req.body;
-
-      if (notificationCondition.includes('TimeSeriesAnalysis')) {
-        JobScheduler.createWuInfoFetchingJob({
-          clusterId: req.body.clusterId,
-          jobName: req.body.jobName,
-          monitoringId: response.id,
-          applicationId: req.body.applicationId,
-        });
-      }
-
-      return res.status(200).send(response);
-    } catch (err) {
-      logger.error(err.message);
-      return res.status(500).send('Failed to save job monitoring');
+    if (notificationCondition.includes('TimeSeriesAnalysis')) {
+      JobScheduler.createWuInfoFetchingJob({
+        clusterId: req.body.clusterId,
+        jobName: req.body.jobName,
+        monitoringId: response.id,
+        applicationId: req.body.applicationId,
+      });
     }
+
+    return res.status(200).send(response);
+  } catch (err) {
+    logger.error(err.message);
+    return res.status(500).send('Failed to save job monitoring');
   }
-);
+});
 
 // Get all Job monitorings
 router.get(
   '/all/:applicationId',
-  [
-    param('applicationId')
-      .isUUID()
-      .withMessage('Application ID must be a valid UUID'),
-  ],
+  validate(validateParamApplicationId),
   async (req, res) => {
     try {
-      // Validate the application ID
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(JSON.stringify(errors.array()));
-        return res.status(400).json({ errors: errors.array() });
-      }
-
       const jobMonitorings = await JobMonitoring.findAll({
         where: { applicationId: req.params.applicationId },
         order: [['createdAt', 'DESC']],
@@ -118,151 +88,92 @@ router.get('/:id', async (req, res) => {
 });
 
 // Patch a single job monitoring
-router.patch(
-  '/',
-  [
-    body('id').isUUID().withMessage('ID must be a valid UUID'),
-    body('monitoringName')
-      .isString()
-      .withMessage('Monitoring name must be type string'),
-    body('description').isString().withMessage('Description must be string'),
-    body('monitoringScope').isString().withMessage('Monitoring must be string'),
-    body('clusterId').isUUID().withMessage('Cluster ID must be a valid UUID'),
-    body('jobName').isString().withMessage('Job name is required'),
-    body('applicationId')
-      .isUUID()
-      .withMessage('Application ID must be a valid UUID'),
-    body('metaData')
-      .isObject()
-      .withMessage('Meta data must be an object if provided'),
-    body('createdBy')
-      .optional()
-      .isString()
-      .withMessage('Created by must be an object if provided'),
-    body('lastUpdatedBy').isString().withMessage('Last updated by is required'),
-  ],
-  async (req, res) => {
-    try {
-      // Validate the req.body
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(JSON.stringify(errors.array()));
-        return res.status(400).json({ errors: errors.array() });
-      }
+router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
+  try {
+    // Get existing monitoring
+    const existingMonitoring = await JobMonitoring.findByPk(req.body.id);
+    if (!existingMonitoring) {
+      return res.status(404).send('Job monitoring not found');
+    }
 
-      // Get existing monitoring
-      const existingMonitoring = await JobMonitoring.findByPk(req.body.id);
-      if (!existingMonitoring) {
-        return res.status(404).send('Job monitoring not found');
-      }
-
-      const {
-        clusterId: existingClusterId,
-        jobName: existingJobName,
-        metaData: {
-          notificationMetaData: {
-            notificationCondition: existingNotificationConditions,
-          },
+    const {
+      clusterId: existingClusterId,
+      jobName: existingJobName,
+      metaData: {
+        notificationMetaData: {
+          notificationCondition: existingNotificationConditions,
         },
-      } = existingMonitoring;
-      const {
-        metaData: {
-          notificationMetaData: { notificationCondition },
-        },
-      } = req.body;
+      },
+    } = existingMonitoring;
+    const {
+      metaData: {
+        notificationMetaData: { notificationCondition },
+      },
+    } = req.body;
 
-      const clusterIdIsDifferent = req.body.clusterId !== existingClusterId;
-      const jobNameIsDifferent = req.body.jobName !== existingJobName;
-      const timeSeriesAnalysisAdded =
-        !existingNotificationConditions.includes('TimeSeriesAnalysis') &&
-        req.body.metaData.notificationMetaData.notificationCondition.includes(
-          'TimeSeriesAnalysis'
-        );
+    const clusterIdIsDifferent = req.body.clusterId !== existingClusterId;
+    const jobNameIsDifferent = req.body.jobName !== existingJobName;
+    const timeSeriesAnalysisAdded =
+      !existingNotificationConditions.includes('TimeSeriesAnalysis') &&
+      req.body.metaData.notificationMetaData.notificationCondition.includes(
+        'TimeSeriesAnalysis'
+      );
 
-      //Payload
-      const payload = req.body;
-      payload.approvalStatus = 'Pending';
-      payload.approverComment = null;
-      payload.approvedBy = null;
-      payload.approvedAt = null;
-      payload.isActive = false;
+    //Payload
+    const payload = req.body;
+    payload.approvalStatus = 'Pending';
+    payload.approverComment = null;
+    payload.approvedBy = null;
+    payload.approvedAt = null;
+    payload.isActive = false;
 
-      //Update the job monitoring
-      const updatedRows = await JobMonitoring.update(req.body, {
-        where: { id: req.body.id },
-        returning: true,
+    //Update the job monitoring
+    const updatedRows = await JobMonitoring.update(req.body, {
+      where: { id: req.body.id },
+      returning: true,
+    });
+
+    //If no rows were updated, then the job monitoring does not exist
+    if (updatedRows[0] === 0) {
+      return res.status(404).send('Job monitoring not found');
+    }
+
+    //If updated - Get the updated job monitoring
+    const updatedJob = await JobMonitoring.findByPk(req.body.id);
+
+    // If the clusterId or jobName has changed, update the jobMonitoring_Data table ( Happens in background)
+
+    if (
+      (clusterIdIsDifferent || jobNameIsDifferent || timeSeriesAnalysisAdded) &&
+      notificationCondition.includes('TimeSeriesAnalysis')
+    ) {
+      // Delete existing job monitoring data permanently
+      await jobMonitoring_Data.destroy({
+        where: { monitoringId: req.body.id },
+        force: true,
       });
 
-      //If no rows were updated, then the job monitoring does not exist
-      if (updatedRows[0] === 0) {
-        return res.status(404).send('Job monitoring not found');
-      }
-
-      //If updated - Get the updated job monitoring
-      const updatedJob = await JobMonitoring.findByPk(req.body.id);
-
-      // If the clusterId or jobName has changed, update the jobMonitoring_Data table ( Happens in background)
-
-      if (
-        (clusterIdIsDifferent ||
-          jobNameIsDifferent ||
-          timeSeriesAnalysisAdded) &&
-        notificationCondition.includes('TimeSeriesAnalysis')
-      ) {
-        // Delete existing job monitoring data permanently
-        await jobMonitoring_Data.destroy({
-          where: { monitoringId: req.body.id },
-          force: true,
-        });
-
-        // Re-fetch must happen
-        JobScheduler.createWuInfoFetchingJob({
-          clusterId: req.body.clusterId,
-          jobName: req.body.jobName,
-          monitoringId: req.body.id,
-          applicationId: req.body.applicationId,
-        });
-      }
-
-      return res.status(200).send(updatedJob);
-    } catch (err) {
-      logger.error(err.message);
-      return res.status(500).send('Failed to update job monitoring');
+      // Re-fetch must happen
+      JobScheduler.createWuInfoFetchingJob({
+        clusterId: req.body.clusterId,
+        jobName: req.body.jobName,
+        monitoringId: req.body.id,
+        applicationId: req.body.applicationId,
+      });
     }
+
+    return res.status(200).send(updatedJob);
+  } catch (err) {
+    logger.error(err.message);
+    return res.status(500).send('Failed to update job monitoring');
   }
-);
+});
 
 // Reject or approve monitoring
 router.patch(
   '/evaluate',
-  [
-    // Add validation rules here
-    body('approverComment')
-      .notEmpty()
-      .isString()
-      .withMessage('Approval comment must be a string')
-      .isLength({ min: 4, max: 200 })
-      .withMessage(
-        'Approval comment must be between 4 and 200 characters long'
-      ),
-    body('ids').isArray().withMessage('IDs must be an array'),
-    body('ids.*').isUUID().withMessage('Invalid id'),
-    body('approvalStatus')
-      .notEmpty()
-      .isString()
-      .withMessage('Accepted must be a string'),
-    body('isActive').isBoolean().withMessage('isActive must be a boolean'),
-    body('approvedBy')
-      .notEmpty()
-      .isString()
-      .withMessage('Approved by must be a string'),
-  ],
+  validate(validateEvaluateJobMonitoring),
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(503).send('Failed save your evaluation');
-    }
-
     try {
       const { ids, approverComment, approvalStatus, approvedBy, isActive } =
         req.body;
@@ -287,16 +198,8 @@ router.patch(
 // Bulk delete
 router.delete(
   '/bulkDelete',
-  [
-    body('ids').isArray().withMessage('IDs must be an array'),
-    body('ids.*').isUUID().withMessage('Invalid id'),
-  ],
+  validate(validateBulkDeleteJobMonitoring),
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(503).send('Failed to delete');
-    }
-
     try {
       const response = await JobMonitoring.destroy({
         where: { id: req.body.ids },
@@ -312,13 +215,8 @@ router.delete(
 //Delete a single job monitoring
 router.delete(
   '/:id',
-  [check('id', 'Invalid id').isUUID()],
+  validate(validateDeleteJobMonitoring),
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(503).send('Failed to delete');
-    }
-
     try {
       await JobMonitoring.destroy({ where: { id: req.params.id } });
       return res.status(200).send('success');
@@ -332,22 +230,9 @@ router.delete(
 // Toggle job monitoring
 router.patch(
   '/toggleIsActive',
-  [
-    body('ids').isArray().withMessage('Invalid ids'), // Ensure ids is an array
-    body('ids.*').isUUID().withMessage('Invalid id'), // Ensure each id is a valid UUID
-    // make action optional and when provided must be either start or pause
-    body('action')
-      .optional()
-      .isIn(['start', 'pause'])
-      .withMessage('Action must be either start or pause'),
-  ],
+  validate(validateToggleJobMonitoring),
   async (req, res) => {
     // Handle the PATCH request here
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).send('Failed to toggle'); // Use a valid status code
-    }
-
     let transaction;
 
     try {
@@ -424,14 +309,8 @@ router.patch(
 // Bulk update - only primary, secondary and notify contact are part of bulk update for now
 router.patch(
   '/bulkUpdate',
-  [body('metaData').isArray().withMessage('Data must be array of objects')],
+  validate(validateBulkUpdateJobMonitoring),
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      logger.error(JSON.stringify(errors.array()));
-      return res.status(503).send('Failed to update');
-    }
-
     try {
       const { metaData: payload } = req.body;
 
@@ -462,14 +341,9 @@ router.patch(
 // Get Job Monitoring Data by JM ID
 router.get(
   '/data/:id',
-  [param('id').isUUID().withMessage('ID must be a valid UUID')],
+  validate(validateGetJobMonitoringById),
   async (req, res) => {
     const { id } = req.params;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      logger.error(JSON.stringify(errors.array()));
-      return res.status(503).send('Failed to get job monitoring data');
-    }
 
     try {
       const jobMonitoringData = await jobMonitoring_Data.findAll({

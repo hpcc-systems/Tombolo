@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Form, InputNumber, Row, Col, Select, Cascader, Input, message } from 'antd';
-import { getDropzones, getDirectoryList } from '../Utils';
+import { getDropzones, getDirectoryList, convertToMB } from '../Utils';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../../common/InfoDrawer';
 
@@ -292,7 +292,18 @@ function MonitoringTab({
             </Col>
             <Col span={12}>
               <Form.Item
-                label="Monitoring Type"
+                label={
+                  <>
+                    <span>Monitoring Type</span>
+                    <InfoCircleOutlined
+                      style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
+                      onClick={() => {
+                        setShowUserGuide(true);
+                        setSelectedUserGuideName('lzMonitoringTypes');
+                      }}
+                    />
+                  </>
+                }
                 name="lzMonitoringType"
                 rules={[{ required: true, message: 'Required field' }]}>
                 <Select onChange={(value) => setLzMonitoringType(value)}>
@@ -379,7 +390,18 @@ function MonitoringTab({
               </Col>
               <Col span={12}>
                 <Form.Item
-                  label=" Maximum Depth "
+                  label={
+                    <>
+                      <span>Maximum Depth</span>
+                      <InfoCircleOutlined
+                        style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
+                        onClick={() => {
+                          setShowUserGuide(true);
+                          setSelectedUserGuideName('maximumDepth');
+                        }}
+                      />
+                    </>
+                  }
                   name="maxDepth"
                   rules={[
                     { required: true, message: 'Required field' },
@@ -504,6 +526,22 @@ function MonitoringTab({
                         return Promise.resolve();
                       },
                     },
+                    {
+                      validator: (_, value) => {
+                        // Only validate comparison if value exists (not empty/null/undefined)
+                        if (value != null && value !== '') {
+                          const maxThreshold = form.getFieldValue('maxThreshold');
+                          if (maxThreshold != null) {
+                            const minValueInMB = convertToMB(value, minSizeThreasoldUnit);
+                            const maxValueInMB = convertToMB(maxThreshold, maxSizeThreasoldUnit);
+                            if (minValueInMB >= maxValueInMB) {
+                              return Promise.reject(new Error('Min threshold must be less than max threshold'));
+                            }
+                          }
+                        }
+                        return Promise.resolve();
+                      },
+                    },
                   ]}>
                   <InputNumber
                     style={{ width: '100%' }}
@@ -523,6 +561,22 @@ function MonitoringTab({
                       validator: (_, value) => {
                         if (value < 0 || value > 999999) {
                           return Promise.reject(new Error('Value must be between 0 and 999999'));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                    {
+                      validator: (_, value) => {
+                        // Only validate comparison if value exists (not empty/null/undefined)
+                        if (value != null && value !== '') {
+                          const minThreshold = form.getFieldValue('minThreshold');
+                          if (minThreshold != null) {
+                            const minValueInMB = convertToMB(minThreshold, minSizeThreasoldUnit);
+                            const maxValueInMB = convertToMB(value, maxSizeThreasoldUnit);
+                            if (maxValueInMB <= minValueInMB) {
+                              return Promise.reject(new Error('Max threshold must be greater than min threshold'));
+                            }
+                          }
                         }
                         return Promise.resolve();
                       },

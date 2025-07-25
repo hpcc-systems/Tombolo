@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { body, validationResult } = require('express-validator');
 
 //Local Imports
-const models = require('../../models');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateCreateMonitoring,
+  validateDeleteMonitoring,
+  validateUpdateMonitoring,
+  validateGetMonitoringByTypeName,
+} = require('../../middlewares/monitoringMiddleware');
+const { monitoring_types: MonitoringTypes } = require('../../models');
 const logger = require('../../config/logger');
-
-// Constants
-const MonitoringTypes = models.monitoring_types;
 
 // Route to get all monitoring types
 router.get('/', async (req, res) => {
@@ -24,38 +27,20 @@ router.get('/', async (req, res) => {
 
 // Note - this route is for testing only . Monitoring types should be seeded in the database
 // Route to post a new monitoring type
-router.post(
-  '/',
-  [
-    body('name').notEmpty().withMessage('Monitoring type name is required'),
-    body('createdBy')
-      .optional()
-      .isObject()
-      .withMessage('Created by is required'),
-  ],
-  async (req, res) => {
-    try {
-      // Validate the request
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(errors.array());
-        return res
-          .status(400)
-          .json({ message: 'Failed to save monitoring type' });
-      }
-      const monitoringType = await MonitoringTypes.create(req.body);
-      return res.status(200).json(monitoringType);
-    } catch (error) {
-      logger.error(error);
-      return res
-        .status(500)
-        .json({ message: 'Failed to create monitoring type' });
-    }
+router.post('/', validate(validateCreateMonitoring), async (req, res) => {
+  try {
+    const monitoringType = await MonitoringTypes.create(req.body);
+    return res.status(200).json(monitoringType);
+  } catch (error) {
+    logger.error(error);
+    return res
+      .status(500)
+      .json({ message: 'Failed to create monitoring type' });
   }
-);
+});
 
 // Delete a monitoring type
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validate(validateDeleteMonitoring), async (req, res) => {
   try {
     const monitoringType = await MonitoringTypes.findByPk(req.params.id);
     if (!monitoringType) {
@@ -74,55 +59,44 @@ router.delete('/:id', async (req, res) => {
 });
 
 // update a monitoring type
-router.put(
-  '/:id',
-  [
-    body('name').notEmpty().withMessage('Monitoring type name is required'),
-    body('updatedBy').notEmpty().withMessage('Updated by is required'),
-  ],
-  async (req, res) => {
-    try {
-      // Validate the request
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(errors.array());
-        return res
-          .status(400)
-          .json({ message: 'Failed to update monitoring type' });
-      }
-      const monitoringType = await MonitoringTypes.findByPk(req.params.id);
-      if (!monitoringType) {
-        return res.status(404).json({ message: 'Monitoring type not found' });
-      }
-      await monitoringType.update(req.body);
-      return res.status(200).json(monitoringType);
-    } catch (error) {
-      logger.error(error);
-      return res
-        .status(500)
-        .json({ message: 'Failed to update monitoring type' });
-    }
-  }
-);
-
-// Get monitoring type id by name, name is in the request body as monitoringTypeName
-router.get('/getMonitoringTypeId/:monitoringTypeName', async (req, res) => {
+router.put('/:id', validate(validateUpdateMonitoring), async (req, res) => {
   try {
-    const monitoringType = await MonitoringTypes.findOne({
-      where: {
-        name: req.params.monitoringTypeName,
-      },
-    });
+    const monitoringType = await MonitoringTypes.findByPk(req.params.id);
     if (!monitoringType) {
       return res.status(404).json({ message: 'Monitoring type not found' });
     }
-    return res.status(200).json(monitoringType.id);
+    await monitoringType.update(req.body);
+    return res.status(200).json(monitoringType);
   } catch (error) {
     logger.error(error);
     return res
       .status(500)
-      .json({ message: 'Failed to get monitoring type id' });
+      .json({ message: 'Failed to update monitoring type' });
   }
 });
+
+// Get monitoring type id by name, name is in the request body as monitoringTypeName
+router.get(
+  '/getMonitoringTypeId/:monitoringTypeName',
+  validate(validateGetMonitoringByTypeName),
+  async (req, res) => {
+    try {
+      const monitoringType = await MonitoringTypes.findOne({
+        where: {
+          name: req.params.monitoringTypeName,
+        },
+      });
+      if (!monitoringType) {
+        return res.status(404).json({ message: 'Monitoring type not found' });
+      }
+      return res.status(200).json(monitoringType.id);
+    } catch (error) {
+      logger.error(error);
+      return res
+        .status(500)
+        .json({ message: 'Failed to get monitoring type id' });
+    }
+  }
+);
 
 module.exports = router;
