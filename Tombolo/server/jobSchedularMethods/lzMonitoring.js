@@ -24,8 +24,8 @@ async function startLzFileMovementMonitoring() {
       'landing-zone-file-movement-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: '20s', // For development
-      // interval: humanReadableIntervalForJobMonitoring,
+      // interval: '20s', // For development
+      interval: humanReadableIntervalForJobMonitoring,
       path: path.join(
         __dirname,
         '..',
