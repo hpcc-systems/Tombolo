@@ -1,98 +1,81 @@
 const express = require('express');
 const router = express.Router();
-const { body, param, validationResult } = require('express-validator');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateCreateDomain,
+  validateUpdateDomain,
+  validateDeleteDomain,
+  validateCreateProduct,
+  validateUpdateProduct,
+  validateDeleteProduct,
+  validateGetDomainsForMonitoringType,
+  validateGetCategoriesForDomain,
+} = require('../../middlewares/asrMiddleware');
 const { sequelize } = require('../../models');
 
 //Local Imports
-const models = require('../../models');
+const {
+  monitoring_types: MonitoringTypes,
+  asr_domains: Domains,
+  asr_monitoring_type_to_domains: DomainMonitoringTypes,
+  asr_products: Products,
+  asr_domain_to_products: DomainProduct,
+} = require('../../models');
 const logger = require('../../config/logger');
 
-// Constants
-const MonitoringTypes = models.monitoring_types;
-const Domains = models.asr_domains;
-const DomainMonitoringTypes = models.asr_monitoring_type_to_domains;
-const Products = models.asr_products;
-const DomainProduct = models.asr_domain_to_products;
-
 // Create a new domain
-router.post(
-  '/domains/',
-  [
-    body('name').notEmpty().withMessage('Domain name is required'),
-    body('region').notEmpty().withMessage('Region is required'),
-    body('monitoringTypeIds')
-      .optional()
-      .isArray()
-      .withMessage('Monitoring type is required'),
-    body('createdBy').notEmpty().withMessage('Created by is required'),
-    body('severityThreshold')
-      .isInt()
-      .withMessage('Severity threshold is required and must be an integer'),
-    body('severityAlertRecipients')
-      .isArray()
-      .withMessage('Severity alert recipients must be an array'),
-  ],
-  async (req, res) => {
-    try {
-      // Validate the payload
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        const errString = JSON.stringify(errors.array());
-        logger.error(errString);
-        return res.status(400).json({ message: 'Failed to save domain' });
-      }
-
-      /* if monitoring type is provided, 
+router.post('/domains/', validate(validateCreateDomain), async (req, res) => {
+  try {
+    /* if monitoring type is provided,
       create domain, next  iterate over monitoringTypeId and make entry to  asr_domain_monitoring_types*/
-      const {
+    const {
+      name,
+      region,
+      severityThreshold,
+      severityAlertRecipients,
+      monitoringTypeIds,
+      createdBy,
+    } = req.body;
+    let domain;
+    if (monitoringTypeIds) {
+      domain = await Domains.create({
         name,
         region,
         severityThreshold,
         severityAlertRecipients,
-        monitoringTypeIds,
         createdBy,
-      } = req.body;
-      let domain;
-      if (monitoringTypeIds) {
-        domain = await Domains.create({
-          name,
-          region,
-          severityThreshold,
-          severityAlertRecipients,
+      });
+
+      // create domain monitoring type mapping
+      const createPromises = monitoringTypeIds.map(monitoringId => {
+        return DomainMonitoringTypes.create({
+          domain_id: domain.id,
+          monitoring_type_id: monitoringId,
           createdBy,
         });
+      });
 
-        // create domain monitoring type mapping
-        const createPromises = monitoringTypeIds.map(monitoringId => {
-          return DomainMonitoringTypes.create({
-            domain_id: domain.id,
-            monitoring_type_id: monitoringId,
-            createdBy,
-          });
-        });
-
-        await Promise.all(createPromises);
-      }
-
-      // if no monitoring type is provided, create domain without monitoring type
-      else {
-        domain = await Domains.create({
-          name,
-          region,
-          severityThreshold,
-          severityAlertRecipients,
-          createdBy,
-        });
-      }
-      return res
-        .status(200)
-        .json({ message: 'Domain created successfully', domain });
-    } catch (error) {
-      logger.error(error.message);
-      return res.status(500).json({ message: 'Failed to create domain' });
+      await Promise.all(createPromises);
     }
+
+    // if no monitoring type is provided, create domain without monitoring type
+    else {
+      domain = await Domains.create({
+        name,
+        region,
+        severityThreshold,
+        severityAlertRecipients,
+        createdBy,
+      });
+    }
+    return res
+      .status(200)
+      .json({ message: 'Domain created successfully', domain });
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(500).json({ message: 'Failed to create domain' });
   }
-);
+});
 
 //Get All domains and associated monitoring types
 router.get('/domains/', async (req, res) => {
@@ -136,31 +119,9 @@ router.get('/domainsOnly/', async (req, res) => {
 // Update a domain
 router.patch(
   '/domains/:id',
-  [
-    param('id').isUUID().withMessage('ID must be a UUID'),
-    body('name').notEmpty().withMessage('Domain name is required'),
-    body('severityThreshold')
-      .isInt()
-      .withMessage('Severity threshold is required and must be an integer'),
-    body('severityAlertRecipients')
-      .isArray()
-      .withMessage('Severity alert recipients must be an array'),
-    body('monitoringTypeIds')
-      .optional()
-      .isArray()
-      .withMessage('Monitoring must be array of UUIDs'),
-    body('updatedBy').isObject().withMessage('Updated by must be an object'),
-  ],
+  validate(validateUpdateDomain),
   async (req, res) => {
     try {
-      // Validate the request
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        const errString = JSON.stringify(errors.array());
-        logger.error(errString);
-        return res.status(400).json({ message: 'Failed to update domain' });
-      }
-
       // Update domain and delete or add relation in the junction table
       const {
         name,
@@ -230,17 +191,9 @@ router.patch(
 // Delete a domain - this  should also delete  monitoring types to domain mapping
 router.delete(
   '/domains/:id',
-  [param('id').isUUID().withMessage('ID must be a UUID')],
+  validate(validateDeleteDomain),
   async (req, res) => {
     try {
-      //Validate
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        const errString = JSON.stringify(errors.array());
-        logger.error(errString);
-        return res.status(400).json({ message: 'Failed to delete product' });
-      }
-
       const response = await Domains.destroy({ where: { id: req.params.id } });
       const message =
         response === 0 ? 'Domain not found' : 'Domain deleted successfully';
@@ -254,56 +207,35 @@ router.delete(
 
 // ----------------------------------- Products -------------------------------------
 //Create a new product
-router.post(
-  '/products/',
-  [
-    body('name').notEmpty().withMessage('Product name is required'),
-    body('shortCode').notEmpty().withMessage('Short code is required'),
-    body('tier').notEmpty().withMessage('Tier is required'),
-    body('createdBy').notEmpty().withMessage('Created by is required'),
-    body('domainIds')
-      .optional()
-      .isArray()
-      .withMessage('Domain ID must be an array of UUIDs'),
-  ],
-  async (req, res) => {
-    try {
-      // Validate the request
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        const errString = JSON.stringify(errors.array());
-        logger.error(errString);
-        return res.status(400).json({ message: 'Failed to save product' });
-      }
+router.post('/products/', validate(validateCreateProduct), async (req, res) => {
+  try {
+    // If domainId is provided, create product domain relationship also
+    const { name, shortCode, tier, createdBy, domainIds } = req.body;
 
-      // If domainId is provided, create product domain relationship also
-      const { name, shortCode, tier, createdBy, domainIds } = req.body;
+    let product;
+    if (domainIds) {
+      product = await Products.create({ name, shortCode, tier, createdBy });
 
-      let product;
-      if (domainIds) {
-        product = await Products.create({ name, shortCode, tier, createdBy });
-
-        //Create product domain mapping
-        const createPromises = domainIds.map(domainId => {
-          return DomainProduct.create({
-            product_id: product.id,
-            domain_id: domainId,
-            createdBy,
-          });
+      //Create product domain mapping
+      const createPromises = domainIds.map(domainId => {
+        return DomainProduct.create({
+          product_id: product.id,
+          domain_id: domainId,
+          createdBy,
         });
-        await Promise.all(createPromises);
-      } else {
-        product = await Products.create({ name, shortCode, tier, createdBy });
-      }
-      return res
-        .status(200)
-        .json({ message: 'Product created successfully', product });
-    } catch (error) {
-      logger.error(error.message);
-      return res.status(500).json({ message: 'Failed to create product' });
+      });
+      await Promise.all(createPromises);
+    } else {
+      product = await Products.create({ name, shortCode, tier, createdBy });
     }
+    return res
+      .status(200)
+      .json({ message: 'Product created successfully', product });
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(500).json({ message: 'Failed to create product' });
   }
-);
+});
 
 // Get all products and related domains
 router.get('/products/', async (req, res) => {
@@ -355,33 +287,9 @@ router.get('/productsOnly/', async (req, res) => {
 // Patch a product
 router.put(
   '/products/:id',
-  [
-    param('id').notEmpty().isUUID().withMessage('ID must be an UUID'),
-    body('name').notEmpty().isString().withMessage('Product name is required'),
-    body('shortCode')
-      .notEmpty()
-      .isString()
-      .withMessage('Short code is required'),
-    body('tier').notEmpty().isInt().withMessage('Tier is required'),
-    param('domainIds')
-      .optional()
-      .isArray()
-      .withMessage('Product ID must be an array of UUIDs'),
-    body('updatedBy')
-      .notEmpty()
-      .isObject()
-      .withMessage('Updated by must be an object'),
-  ],
+  validate(validateUpdateProduct),
   async (req, res) => {
     try {
-      // Validate the request
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        const errString = JSON.stringify(errors.array());
-        logger.error(errString);
-        return res.status(400).json({ message: 'Failed to update product' });
-      }
-
       // Update product and delete or add relation in the junction table
       const { name, shortCode, tier, domainIds, updatedBy } = req.body;
 
@@ -435,17 +343,9 @@ router.put(
 // Delete a product
 router.delete(
   '/products/:id',
-  [param('id').isUUID().withMessage('ID must be a UUID')],
+  validate(validateDeleteProduct),
   async (req, res) => {
     try {
-      //Validate
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        const errString = JSON.stringify(errors.array());
-        logger.error(errString);
-        return res.status(400).json({ message: 'Failed to delete product' });
-      }
-
       const response = await Products.destroy({ where: { id: req.params.id } });
 
       const message =
@@ -463,15 +363,9 @@ router.delete(
 // Get all domains for specific monitoring (activity) type
 router.get(
   '/domainsForSpecificMonitoring/:monitoringTypeId',
-  [param('monitoringTypeId').isString().isLength({ min: 1 })],
+  validate(validateGetDomainsForMonitoringType),
   async (req, res) => {
     try {
-      //Validate request
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).send('Invalid monitoringTypeId');
-      }
-
       const monitoringTypeId = req.params.monitoringTypeId;
 
       // Make call to db and  get all domains for the activity type
@@ -508,15 +402,9 @@ router.get(
 // Route to get product category for specific domain
 router.get(
   '/productCategoriesForSpecificDomain/:domainId',
-  [param('domainId').isUUID().withMessage('Domain ID must be a UUID')],
+  validate(validateGetCategoriesForDomain),
   async (req, res) => {
     try {
-      //Validate request
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).send('Invalid domain ID');
-      }
-
       const domainId = req.params.domainId;
 
       // Make a call to DomainProduct table and get all products for the domain

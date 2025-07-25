@@ -333,5 +333,9 @@ module.exports = {
   bodyUuids,
   paramUuids,
   dateBody,
+  dateQuery,
+  dateParam,
   dateTimeBody,
+  dateTimeQuery,
+  dateTimeParam,
 };
