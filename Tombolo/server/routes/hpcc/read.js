@@ -4,7 +4,6 @@ const axios = require('axios');
 const hpccUtil = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
 const { encryptString } = require('../../utils/cipher');
-const validatorUtil = require('../../utils/validator');
 const {
   cluster: Cluster,
   file: File,
@@ -13,7 +12,28 @@ const {
   job: Job,
 } = require('../../models');
 let hpccJSComms = require('@hpcc-js/comms');
-const { body, query, validationResult } = require('express-validator');
+
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateFileSearch,
+  validateSuperfileSearch,
+  validateQuerySearch,
+  // validateJobSearch,
+  validateNewCluster,
+  validateGetFileInfo,
+  validateGetLogicalFileDetails,
+  validateGetIndexInfo,
+  validateGetData,
+  validateGetQueryInfo,
+  validateGetQueryFiles,
+  validateGetJobInfo,
+  validateGetDropZones,
+  validateDropZoneDirectoryDetails,
+  validateDropZoneFileSearch,
+  validateGetSuperfileDetails,
+  validateExecuteSprayJob,
+  validateClusterMetaData,
+} = require('../../middlewares/hpccMiddleware');
 
 let lodash = require('lodash');
 const fs = require('fs');
@@ -37,21 +57,8 @@ if (!fs.existsSync(path.join(__dirname, '../../cluster-whitelist.js'))) {
 
 router.post(
   '/filesearch',
-  [
-    body('keyword')
-      .matches(/^[a-zA-Z0-9_. \-:\*\?]*$/)
-      .withMessage('Invalid keyword'),
-  ],
+  validate(validateFileSearch),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res
-        .status(422)
-        .send({ success: 'false', message: 'Error occurred during search.' });
-    }
-
     let cluster;
     try {
       cluster = await hpccUtil.getCluster(req.body.clusterid);
@@ -131,21 +138,8 @@ router.post(
 
 router.post(
   '/superfilesearch',
-  [
-    body('keyword')
-      .matches(/^[a-zA-Z0-9_. \-:\*\?]*$/)
-      .withMessage('Invalid keyword'),
-  ],
+  validate(validateSuperfileSearch),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res
-        .status(422)
-        .send({ success: 'false', message: 'Error occurred during search.' });
-    }
-
     try {
       await hpccUtil.getCluster(req.body.clusterid);
     } catch (err) {
@@ -190,19 +184,8 @@ router.post(
 );
 router.post(
   '/querysearch',
-  [
-    body('keyword')
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/)
-      .withMessage('Invalid keyworkd'),
-  ],
+  validate(validateQuerySearch),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
     let cluster;
     try {
       cluster = await hpccUtil.getCluster(req.body.clusterid);
@@ -264,22 +247,8 @@ router.post(
 );
 router.post(
   '/jobsearch',
-  [
-    // body("keyword")
-    //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/)
-    //   .withMessage("Invalid keyword"),
-    // body("clusterId").isUUID(4).withMessage("Invalid cluster id"),
-    // body("clusterType")
-    //   .optional({ checkFalsy: true })
-    //   .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/)
-    //   .withMessage("Invalid cluster type"),
-  ],
+  // validate(validateJobSearch),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
     try {
       const { keyword, clusterId, clusterType } = req.body;
       const wuService = await hpccUtil.getWorkunitsService(clusterId);
@@ -364,22 +333,8 @@ router.get('/getCluster', async function (req, res) {
 
 router.post(
   '/newcluster',
-  [
-    body('name')
-      .matches(/^[a-zA-Z0-9_:\s\-]*$/)
-      .withMessage('Invalid name'),
-    body('id')
-      .optional({ checkFalsy: true })
-      .isUUID(4)
-      .withMessage('Invalid id'),
-  ],
+  validate(validateNewCluster),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
     try {
       let cluster = ClusterWhitelist.clusters.filter(
         cluster => cluster.name == req.body.name
@@ -476,56 +431,29 @@ router.post('/removecluster', function (req, res) {
   }
 });
 
-router.get(
-  '/getFileInfo',
-  [
-    query('fileName').exists().withMessage('Invalid file name'),
-    query('clusterid')
-      .optional({ checkFalsy: true })
-      .isUUID(4)
-      .withMessage('Invalid cluster id'),
-    query('applicationId').isUUID(4).withMessage('Invalid application id'),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-      const { applicationId, fileName, clusterid } = req.query;
-      const file = await File.findOne({
-        where: { name: fileName, application_id: applicationId },
-        attributes: ['id'],
-      });
-      const data = file
-        ? await assetUtil.fileInfo(applicationId, file.id)
-        : await hpccUtil.fileInfo(fileName, clusterid);
-      return res.status(200).json(data);
-    } catch (error) {
-      logger.error(error);
-      return res.status(500).send('Error occurred while getting file details');
-    }
+router.get('/getFileInfo', validate(validateGetFileInfo), async (req, res) => {
+  try {
+    const { applicationId, fileName, clusterid } = req.query;
+    const file = await File.findOne({
+      where: { name: fileName, application_id: applicationId },
+      attributes: ['id'],
+    });
+    const data = file
+      ? await assetUtil.fileInfo(applicationId, file.id)
+      : await hpccUtil.fileInfo(fileName, clusterid);
+    return res.status(200).json(data);
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).send('Error occurred while getting file details');
   }
-);
+});
 
-// Gets file detail straight from HPCC  regardless of whether it exists in Tombolo DB
+// Gets file detail straight from HPCC regardless of whether it exists in Tombolo DB
 router.get(
   '/getLogicalFileDetails',
-  [
-    query('fileName').exists().withMessage('Invalid file name'),
-    query('clusterid')
-      .optional({ checkFalsy: true })
-      .isUUID(4)
-      .withMessage('Invalid cluster id'),
-  ],
+  validate(validateGetLogicalFileDetails),
   async (req, res) => {
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const { fileName, clusterid } = req.query;
       const details = await hpccUtil.logicalFileDetails(fileName, clusterid);
       // Removing unnecessary data before sending to client
@@ -544,20 +472,8 @@ router.get(
 
 router.get(
   '/getIndexInfo',
-  [
-    query('indexName')
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/)
-      .withMessage('Invalid index name'),
-    query('clusterid').isUUID(4).withMessage('Invalid cluster id'),
-    query('applicationId').isUUID(4).withMessage('Invalid application id'),
-  ],
+  validate(validateGetIndexInfo),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
     try {
       const existingIndex = await Index.findOne({
         where: {
@@ -637,62 +553,47 @@ router.get(
 //     });
 // }
 
-router.get(
-  '/getData',
-  [
-    query('clusterid').isUUID(4).withMessage('Invalid cluster id'),
-    query('fileName')
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/)
-      .withMessage('Invalid file name'),
-  ],
-  async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
+router.get('/getData', validate(validateGetData), async function (req, res) {
+  try {
+    const cluster = await hpccUtil.getCluster(req.query.clusterid);
+
+    let clusterAuth = hpccUtil.getClusterAuth(cluster);
+    let wuService = new hpccJSComms.WorkunitsService(
+      getClusterOptions(
+        {
+          baseUrl: cluster.thor_host + ':' + cluster.thor_port,
+          userID: clusterAuth ? clusterAuth.user : '',
+          password: clusterAuth ? clusterAuth.password : '',
+        },
+        cluster.allowSelfSigned
+      )
     );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    try {
-      const cluster = await hpccUtil.getCluster(req.query.clusterid);
 
-      let clusterAuth = hpccUtil.getClusterAuth(cluster);
-      let wuService = new hpccJSComms.WorkunitsService(
-        getClusterOptions(
-          {
-            baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-            userID: clusterAuth ? clusterAuth.user : '',
-            password: clusterAuth ? clusterAuth.password : '',
-          },
-          cluster.allowSelfSigned
-        )
-      );
+    const response = await wuService.WUResult({
+      LogicalName: req.query.fileName,
+      Cluster: 'mythor',
+      Count: 50,
+    });
 
-      const response = await wuService.WUResult({
-        LogicalName: req.query.fileName,
-        Cluster: 'mythor',
-        Count: 50,
-      });
+    if (
+      response.Result != undefined &&
+      response.Result != undefined &&
+      response.Result.Row != undefined
+    ) {
+      const rows = response.Result.Row;
 
-      if (
-        response.Result != undefined &&
-        response.Result != undefined &&
-        response.Result.Row != undefined
-      ) {
-        const rows = response.Result.Row;
-
-        if (rows.length > 0) {
-          rows.shift();
-          return res.status(200).json(rows);
-        }
+      if (rows.length > 0) {
+        rows.shift();
+        return res.status(200).json(rows);
       }
-
-      return res.status(200).json([]);
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Error occured while getting file data');
     }
+
+    return res.status(200).json([]);
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).send('Error occured while getting file data');
   }
-);
+});
 
 router.get('/getFileProfile', async function (req, res) {
   try {
@@ -778,20 +679,8 @@ router.get('/getFileProfileHTML', async function (req, res) {
 
 router.get(
   '/getQueryInfo',
-  [
-    query('clusterid').isUUID(4).withMessage('Invalid cluster id'),
-    query('queryName')
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/)
-      .withMessage('Invalid query name'),
-  ],
+  validate(validateGetQueryInfo),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
     try {
       const existingQuery = await Query.findOne({
         where: {
@@ -822,19 +711,8 @@ router.get(
 
 router.get(
   '/getQueryFiles',
-  [
-    query('hpcc_queryId')
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/)
-      .withMessage('Invalid hpcc query id'),
-    query('clusterId').isUUID(4).withMessage('Invalid cluster id'),
-  ],
+  validate(validateGetQueryFiles),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
     try {
       const wuService = await hpccUtil.getWorkunitsService(req.query.clusterId);
       const response = await wuService.WUQueryDetails({
@@ -858,20 +736,8 @@ router.get(
 );
 router.get(
   '/getJobInfo',
-  [
-    query('clusterid').isUUID(4).withMessage('Invalid cluster id'),
-    query('jobWuid')
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:.\-]*$/)
-      .withMessage('Invalid workunit id'),
-  ],
+  validate(validateGetJobInfo),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
     try {
       const existingJob = await Job.findOne({
         where: {
@@ -907,15 +773,8 @@ router.get(
 
 router.get(
   '/getDropZones',
-  [query('clusterId').isUUID(4).withMessage('Invalid cluster id')],
+  validate(validateGetDropZones),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
     try {
       const cluster = await hpccUtil.getCluster(req.query.clusterId);
       const url = `${cluster.thor_host}:${cluster.thor_port}/WsTopology/TpDropZoneQuery.json`;
@@ -978,80 +837,9 @@ router.get('/dropZoneDirectories', async (req, res) => {
 });
 
 router.get(
-  '/getDropZones',
-  [query('clusterId').isUUID(4).withMessage('Invalid cluster id')],
-  async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
-    try {
-      const cluster = await hpccUtil.getCluster(req.query.clusterId);
-      const url = `${cluster.thor_host}:${cluster.thor_port}/WsTopology/TpDropZoneQuery.json`;
-
-      const response = await axios.get(url, {
-        auth: hpccUtil.getClusterAuth(cluster),
-      });
-
-      const result = response.data;
-      const dropZones = result.TpDropZoneQueryResponse.TpDropZones.TpDropZone;
-      const _dropZones = {};
-      const dropZoneDetails = [];
-
-      dropZones.map(dropzone => {
-        dropZoneDetails.push({
-          name: dropzone.Name,
-          path: dropzone.Path,
-          machines: dropzone.TpMachines.TpMachine,
-        });
-        _dropZones[dropzone.Name] = [];
-        lodash.flatMap(dropzone.TpMachines.TpMachine, tpMachine => {
-          _dropZones[dropzone.Name] = _dropZones[dropzone.Name].concat([
-            tpMachine.Netaddress,
-          ]);
-        });
-      });
-
-      if (
-        req.query.for === 'fileUpload' ||
-        req.query.for === 'manualJobSearch' ||
-        req.query.for === 'lzFileExplorer'
-      ) {
-        return res.status(200).json(dropZoneDetails);
-      }
-      return res.status(200).json(_dropZones);
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occurred while getting dropzones',
-      });
-    }
-  }
-);
-
-router.get(
   '/dropZoneDirectoryDetails',
-  [
-    query('clusterId').exists().withMessage('Invalid cluster ID'),
-    query('Netaddr').exists().withMessage('Invalid Netaddr'),
-    query('DirectoryOnly')
-      .exists()
-      .withMessage(
-        'Invalid directory only value. It should be either true or false'
-      ),
-    query('Path').exists().withMessage('Invalid path'),
-  ],
+  validate(validateDropZoneDirectoryDetails),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
     const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
     logger.info('Cluster id etc. ', clusterId, Netaddr, Path, DirectoryOnly);
     try {
@@ -1111,25 +899,8 @@ router.get(
 
 router.post(
   '/dropZoneFileSearch',
-  [
-    body('clusterId').isUUID(4).withMessage('Invalid cluster id'),
-    body('dropZoneName')
-      .matches(/^[a-zA-Z0-9]{1}[a-zA-Z0-9_:\-.]*$/)
-      .withMessage('Invalid dropzone name'),
-    body('server')
-      .matches(/^[a-zA-Z0-9]{1}[a-zA-Z0-9_:\-.]/)
-      .withMessage('Invalid server'),
-    body('nameFilter')
-      .matches(/^[a-zA-Z0-9]{1}[a-zA-Z0-9_:\-.]*$/)
-      .withMessage('Invalid file filter'),
-  ],
+  validate(validateDropZoneFileSearch),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
     try {
       const cluster = await hpccUtil.getCluster(req.body.clusterId);
       const response = await axios.post(
@@ -1164,21 +935,9 @@ router.post(
 
 router.get(
   '/getSuperFileDetails',
-  [
-    query('fileName').exists().withMessage('Invalid file name'),
-    query('clusterid')
-      .optional({ checkFalsy: true })
-      .isUUID(4)
-      .withMessage('Invalid cluster id'),
-  ],
+  validate(validateGetSuperfileDetails),
   async (req, res) => {
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
       const { fileName, clusterid } = req.query;
 
       const details = await hpccUtil.getSuperFile(clusterid, fileName);
@@ -1193,14 +952,8 @@ router.get(
 
 router.post(
   '/executeSprayJob',
-  [body('jobId').isUUID(4).withMessage('Invalid cluster id')],
+  validate(validateExecuteSprayJob),
   async function (req, res) {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
     try {
       const job = await Job.findOne({
         where: { id: req.body.jobId },
@@ -1244,17 +997,11 @@ router.post(
 );
 router.get(
   '/clusterMetaData',
-  [query('clusterId').isUUID(4).withMessage('Invalid cluster Id')],
+  validate(validateClusterMetaData),
   async (req, res) => {
     try {
       const { clusterId } = req.query;
       //Validate cluster Id
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty()) {
-        return res.status(422).json({ success: false, errors: errors.array() });
-      }
       //If cluster id is valid ->      const { clusterId } = req.query;
       //Get cluster details
       let cluster = await hpccUtil.getCluster(clusterId);
