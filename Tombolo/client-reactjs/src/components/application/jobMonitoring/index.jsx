@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Form, message } from 'antd';
+import { Descriptions, Form, message, Tag } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import JobMonitoringActionButton from './JobMonitoringActionButton.jsx';
@@ -17,7 +17,7 @@ import {
 
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
-import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
+import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal.jsx';
 import ApproveRejectModal from './ApproveRejectModal.jsx';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs';
@@ -26,6 +26,9 @@ import { getUser } from '../../common/userStorage.js';
 import { useMonitorType } from '../../../hooks/useMonitoringType';
 import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
 import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
+import _ from 'lodash';
+import { getDateLabel, getDayLabel, getMonthLabel, getWeekLabel } from '../../common/scheduleOptions';
+import cronstrue from 'cronstrue';
 
 // Constants
 const monitoringTypeName = 'Job Monitoring';
@@ -556,6 +559,65 @@ function JobMonitoring() {
     }
   };
 
+  // Interpret run window
+  const interpretRunWindow = (schedule) => {
+    const runWindow = schedule[0].runWindow || '';
+    if (runWindow === '') {
+      return '';
+    } else if (runWindow === 'daily') return 'Anytime';
+    else {
+      return _.capitalize(runWindow);
+    }
+  };
+
+  //Generate tags for schedule
+  const generateTagsForSchedule = (schedule) => {
+    const tags = [];
+    schedule.forEach((s) => {
+      if (s.frequency === 'daily') {
+        tags.push(interpretRunWindow(schedule));
+      }
+      if (s.frequency === 'weekly') {
+        let tempData = `Every Week ${interpretRunWindow(schedule)} on`;
+        s.days.forEach((d, i) => {
+          tempData += ` ${getDayLabel(d)} ${i < s.days.length - 1 ? ',' : ''}`;
+        });
+        tags.push(tempData);
+      }
+      if (s.scheduleBy === 'dates') {
+        let tempData = `Every month ${interpretRunWindow(schedule)}`;
+        s.dates.forEach((d, i) => {
+          tempData += ` ${getDateLabel(d)} ${i < s.dates.length - 1 ? ',' : ''}`;
+        });
+        tags.push(tempData);
+      }
+      if (s.scheduleBy === 'weeks-day') {
+        let tempData = '';
+        tempData += s.weeks.map((w) => ` ${getWeekLabel(w)}`);
+        tempData += ` - ${getDayLabel(s.day)} each month`;
+        tags.push(tempData);
+      }
+      if (s.scheduleBy === 'month-date') {
+        let tempData = '';
+        tempData += getMonthLabel(s.month);
+        tempData += ` ${getDateLabel(s.date)}`;
+        tags.push(tempData);
+      }
+      if (s.scheduleBy === 'week-day-month') {
+        let tempData = '';
+        tempData += getWeekLabel(s.week);
+        tempData += ` ${getDayLabel(s.day)}`;
+        tempData += ` of ${getMonthLabel(s.month)}`;
+        tags.push(tempData);
+      }
+      if (s.frequency === 'cron') {
+        tags.push(cronstrue.toString(s.cron));
+      }
+    });
+
+    return tags;
+  };
+
   //JSX
   return (
     <>
@@ -656,8 +718,45 @@ function JobMonitoring() {
           setSelectedMonitoring={setSelectedMonitoring}
           clusters={clusters}
           domains={domains}
-          productCategories={productCategories}
-        />
+          productCategories={productCategories}>
+          <Descriptions.Item label="Monitoring scope">
+            {monitoringScope?.replace(/([A-Z])/g, ' $1').trim()}
+          </Descriptions.Item>
+          {monitoringScope && monitoringScope !== 'ClusterWideMonitoring' && (
+            <Descriptions.Item label="Job name / pattern">{selectedMonitoring.jobName}</Descriptions.Item>
+          )}
+          {selectedMonitoring.metaData.schedule && (
+            <Descriptions.Item label="Frequency">
+              {_.capitalize(selectedMonitoring.metaData.schedule[0].frequency)}
+            </Descriptions.Item>
+          )}
+          {selectedMonitoring.metaData.schedule && selectedMonitoring.metaData.schedule.length > 0 && (
+            <Descriptions.Item label="Job Schedule">
+              {generateTagsForSchedule(selectedMonitoring.metaData.schedule).map((s, i) => (
+                <Tag key={i}>{s}</Tag>
+              ))}
+            </Descriptions.Item>
+          )}
+
+          {selectedMonitoring.metaData?.expectedStartTime && (
+            <Descriptions.Item label="Expected Start Time">
+              {selectedMonitoring.metaData.expectedStartTime}
+            </Descriptions.Item>
+          )}
+          {selectedMonitoring.metaData?.expectedCompletionTime && (
+            <Descriptions.Item label="Expected Completion Time">
+              {selectedMonitoring.metaData.expectedCompletionTime}
+            </Descriptions.Item>
+          )}
+          {selectedMonitoring.metaData?.maxExecutionTime && (
+            <Descriptions.Item label="Max Execution Time ( in mins ) ">
+              {selectedMonitoring.metaData.maxExecutionTime}
+            </Descriptions.Item>
+          )}
+          <Descriptions.Item label="Require complete">
+            {selectedMonitoring.metaData.requireComplete ? 'Yes' : 'No'}
+          </Descriptions.Item>
+        </MonitoringDetailsModal>
       )}
       {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
       {displayAddRejectModal && (
