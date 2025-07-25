@@ -78,22 +78,22 @@ describe('Landing Zone Monitoring Routes', () => {
       });
     });
 
-    it('should return 400 for invalid cluster ID', async () => {
+    it('should return 422 for invalid cluster ID', async () => {
       const res = await request(app)
         .get('/api/landingZoneMonitoring/getDropzones')
         .query({ clusterId: 'invalid-uuid' });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
-      expect(res.body.message).toContain('Invalid cluster id');
+      expect(res.body.message).toContain('Validation failed');
     });
 
-    it('should return 400 when cluster ID is missing', async () => {
+    it('should return 422 when cluster ID is missing', async () => {
       const res = await request(app).get(
         '/api/landingZoneMonitoring/getDropzones'
       );
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
     });
   });
@@ -121,21 +121,21 @@ describe('Landing Zone Monitoring Routes', () => {
       });
     });
 
-    it('should return 400 for invalid cluster ID in file list', async () => {
+    it('should return 422 for invalid cluster ID in file list', async () => {
       const res = await request(app)
         .get('/api/landingZoneMonitoring/fileList')
         .query({ ...validFileListQuery, clusterId: 'invalid' });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
     });
 
-    it('should return 400 when required parameters are missing', async () => {
+    it('should return 422 when required parameters are missing', async () => {
       const res = await request(app)
         .get('/api/landingZoneMonitoring/fileList')
         .query({ clusterId: validClusterId });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
     });
   });
@@ -240,12 +240,12 @@ describe('Landing Zone Monitoring Routes', () => {
       expect(res.body.count).toBe(2);
     });
 
-    it('should return 400 for invalid application ID', async () => {
+    it('should return 422 for invalid application ID', async () => {
       const res = await request(app).get(
         '/api/landingZoneMonitoring/all/invalid-uuid'
       );
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
     });
 
@@ -296,12 +296,12 @@ describe('Landing Zone Monitoring Routes', () => {
       expect(res.body.message).toBe('Landing zone monitoring not found');
     });
 
-    it('should return 400 for invalid ID format', async () => {
+    it('should return 422 for invalid ID format', async () => {
       const res = await request(app).get(
         '/api/landingZoneMonitoring/invalid-uuid'
       );
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
     });
   });
@@ -437,12 +437,12 @@ describe('Landing Zone Monitoring Routes', () => {
       expect(res.body.message).toBe('Landing zone monitoring not found');
     });
 
-    it('should return 400 for invalid ID format', async () => {
+    it('should return 422 for invalid ID format', async () => {
       const res = await request(app).delete(
         '/api/landingZoneMonitoring/invalid-uuid'
       );
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
     });
   });
