@@ -105,12 +105,7 @@ const useMonitoringFilters = (
   const loadFilters = useCallback(
     (filterOptions, monitorings, loadSpecificFilters) => {
       // Ensure filterOptions has the necessary arrays initialized
-      const updatedFilterOptions = {
-        approvalStatus: filterOptions.approvalStatus || [],
-        activeStatus: filterOptions.activeStatus || [],
-        domain: filterOptions.domain || [],
-        products: filterOptions.products || [],
-      };
+      const updatedFilterOptions = { ...filterOptions };
 
       // Process each monitoring item
       monitorings.forEach((monitoring) => {
