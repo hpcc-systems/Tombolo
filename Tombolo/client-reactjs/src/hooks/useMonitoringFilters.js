@@ -1,6 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
 import { debounce } from 'lodash';
 
+/**
+ * A custom React hook for managing monitoring filters, including form state, filter count,
+ * domain selection, and localStorage persistence. It provides utilities to handle form changes,
+ * clear filters, and load filter options dynamically based on monitoring data.
+ *
+ * @param {Object} form - The Ant Design Form instance used to manage filter form state.
+ * @param {Function} setFiltersVisible - Function to toggle the visibility of the filters UI.
+ * @param {Function} setFilters - Function to update the applied filters in the parent component.
+ * @param {Function} setSelectedDomain - Function to update the selected domain in the parent component.
+ * @param {Array<{value: string, label: string}>} domains - Array of domain objects with value and label properties.
+ * @param {Array<{value: string, label: string}>} productCategories - Array of product category objects for the selected domain.
+ * @param {string|null} selectedDomain - The currently selected domain ID.
+ * @param {Array<{id: string, name: string}>} allProductCategories - Array of all product categories across domains.
+ * @param {string} lsKey - The localStorage key used to persist filter data.
+ * @returns {Object} An object containing filter management utilities and state:
+ * @returns {number} filterCount - The number of active filters applied.
+ * @returns {Function} setFilterCount - Function to update the filter count state.
+ * @returns {Function} clearFilters - Function to reset the form and clear filters.
+ * @returns {Function} handleFilterCountClick - Function to show the filters UI.
+ * @returns {Function} handleDomainChange - Function to handle domain selection changes.
+ * @returns {Function} handleFormChange - Function to handle form field changes with debouncing.
+ * @returns {Function} loadFilters - Function to populate filter options based on monitoring data.
+ */
 const useMonitoringFilters = (
   form,
   setFiltersVisible,
@@ -72,6 +95,13 @@ const useMonitoringFilters = (
     }
   }, [form, lsKey, setFilters]);
 
+  /**
+   * Loads filter options based on monitoring data.
+   * @param {Object.<string, Array>} filterOptions - Initial filter options object with approvalStatus, activeStatus, domain, and products arrays.
+   * @param {Array} monitorings - Array of monitoring objects containing approvalStatus, isActive, and metaData.
+   * @param {Function} [loadSpecificFilters] - Optional callback to process specific filter options for each monitoring item.
+   * @returns {Object} Updated filter options with populated arrays for approvalStatus, activeStatus, domain, and products.
+   */
   const loadFilters = useCallback(
     (filterOptions, monitorings, loadSpecificFilters) => {
       // Ensure filterOptions has the necessary arrays initialized
