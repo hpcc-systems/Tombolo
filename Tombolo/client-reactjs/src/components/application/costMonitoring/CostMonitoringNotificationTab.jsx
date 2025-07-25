@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Form, InputNumber } from 'antd';
-import PrimaryContacts from '../../common/PrimaryContacts';
+import PrimaryContacts from '../../common/Monitoring/PrimaryContacts';
 
 function CostMonitoringNotificationTab({ form }) {
   return (
