@@ -34,7 +34,7 @@ const validateDeleteDomain = [uuidParam('id')];
 const createUpdateProductValidations = [
   stringBody('name'),
   stringBody('shortCode'),
-  stringBody('tier'),
+  intBody('tier'),
   arrayBody('domainIds', true),
   uuidBody('domainIds.*', true),
 ];

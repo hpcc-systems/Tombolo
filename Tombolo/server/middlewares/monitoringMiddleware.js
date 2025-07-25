@@ -3,7 +3,7 @@ const {
   bodyUuids,
   stringBody,
   objectBody,
-  uuidParam,
+  paramUuids,
 } = require('./commonMiddleware');
 
 const monitoringId = [bodyUuids.id];
@@ -13,7 +13,7 @@ const validateCreateMonitoring = [
   objectBody('createdBy', true),
 ];
 
-const validateDeleteMonitoring = [uuidParam.id];
+const validateDeleteMonitoring = [paramUuids.id];
 
 const validateUpdateMonitoring = [
   ...monitoringId,
