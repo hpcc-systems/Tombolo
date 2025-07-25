@@ -1,18 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const validatorUtil = require('../../utils/validator');
-const { body, query, validationResult } = require('express-validator');
-const { oneOf, check } = require('express-validator');
-let Sequelize = require('sequelize');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateGetDetails,
+  validateGetGroup,
+  validateGetAssets,
+  validateGetNestedAssets,
+  validateAssetsSearch,
+  validateCreateGroup,
+  validateDeleteGroup,
+  validateMoveGroup,
+  validateMoveAsset,
+} = require('../../middlewares/groupMiddleware');
+const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
-var models = require('../../models');
-let Groups = models.groups;
-let Index = models.indexes;
-let File = models.file;
-let Query = models.query;
-let Job = models.job;
-let AssetsGroups = models.assets_groups;
-let FileTemplate = models.fileTemplate;
+const {
+  groups: Groups,
+  indexes: Index,
+  file: File,
+  query: Query,
+  job: Job,
+  assets_groups: AssetsGroups,
+  fileTemplate: FileTemplate,
+  sequelize,
+} = require('../../models');
 const logger = require('../../config/logger');
 
 let createGroupHierarchy = groups => {
@@ -59,57 +70,32 @@ let createGroupHierarchy = groups => {
   });
 };
 
-router.get(
-  '/details',
-  [
-    query('app_id').isUUID(4).withMessage('Invalid app id'),
-    query('group_id').isInt().withMessage('Invalid group id'),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
-    try {
-      const group = await Groups.findOne({
-        where: { application_id: req.query.app_id, id: req.query.group_id },
-      });
-      return res.status(200).json(group);
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).json({ error: err });
-    }
+router.get('/details', validate(validateGetDetails), async (req, res) => {
+  try {
+    const group = await Groups.findOne({
+      where: { application_id: req.query.app_id, id: req.query.group_id },
+    });
+    return res.status(200).json(group);
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).json({ error: err });
   }
-);
+});
 
-router.get(
-  '/',
-  [query('app_id').isUUID(4).withMessage('Invalid app id')],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
+router.get('/', validate(validateGetGroup), async (req, res) => {
+  try {
+    const groups = await Groups.findAll({
+      where: { application_id: req.query.app_id },
+      order: [['name', 'ASC']],
+    });
 
-    try {
-      const groups = await Groups.findAll({
-        where: { application_id: req.query.app_id },
-        order: [['name', 'ASC']],
-      });
-
-      const groupHierarchy = await createGroupHierarchy(groups);
-      return res.status(200).json(groupHierarchy);
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).json({ message: 'Failed to get groups' });
-    }
+    const groupHierarchy = await createGroupHierarchy(groups);
+    return res.status(200).json(groupHierarchy);
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).json({ message: 'Failed to get groups' });
   }
-);
+});
 
 let getChildGroups = async (appId, groupId) => {
   let childGroups = [],
@@ -186,208 +172,71 @@ let getKeywordsForQuery = keywords => {
 //   return whereClause;
 // };
 
-router.get(
-  '/assets',
-  [
-    query('app_id').isUUID(4).withMessage('Invalid app id'),
-    query('group_id')
-      .optional({ checkFalsy: true })
-      .isInt()
-      .withMessage('Invalid group id'),
-  ],
-  (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    let finalAssets = [];
-    if (req.query.group_id && req.query.group_id != undefined) {
-      Groups.findAll({
-        where: {
-          application_id: req.query.app_id,
-          id: req.query.group_id,
+router.get('/assets', validate(validateGetAssets), (req, res) => {
+  let finalAssets = [];
+  if (req.query.group_id && req.query.group_id != undefined) {
+    Groups.findAll({
+      where: {
+        application_id: req.query.app_id,
+        id: req.query.group_id,
+      },
+      include: [
+        {
+          model: File,
+          as: 'files',
+          attributes: ['id', 'name', 'title', 'description', 'createdAt'],
         },
-        include: [
-          {
-            model: File,
-            as: 'files',
-            attributes: ['id', 'name', 'title', 'description', 'createdAt'],
-          },
-          {
-            model: FileTemplate,
-            as: 'fileTemplates',
-            attributes: ['id', 'title', 'description', 'createdAt'],
-          },
-          {
-            model: Job,
-            as: 'jobs',
-            attributes: ['id', 'name', 'title', 'description', 'createdAt'],
-          },
-          {
-            model: Query,
-            as: 'queries',
-            attributes: ['id', 'name', 'title', 'description', 'createdAt'],
-          },
-          {
-            model: Index,
-            as: 'indexes',
-            attributes: ['id', 'name', 'title', 'description', 'createdAt'],
-          },
-        ],
-        order: [['name', 'ASC']],
-      })
-        .then(async assets => {
-          let childGroups = await getChildGroups(
-            req.query.app_id,
-            req.query.group_id
-          );
-          assets[0] &&
-            assets[0].files.forEach(file => {
-              finalAssets.push({
-                type: 'File',
-                id: file.id,
-                name: file.name,
-                title: file.title,
-                description: file.description,
-                createdAt: file.createdAt,
-              });
-            });
-          assets[0] &&
-            assets[0].fileTemplates.forEach(fileTemplate => {
-              finalAssets.push({
-                type: 'File Template',
-                id: fileTemplate.id,
-                title: fileTemplate.title,
-                description: fileTemplate.description,
-                createdAt: fileTemplate.createdAt,
-              });
-            });
-          assets[0] &&
-            assets[0].jobs.forEach(job => {
-              finalAssets.push({
-                type: 'Job',
-                id: job.id,
-                name: job.name,
-                title: job.title,
-                description: job.description,
-                createdAt: job.createdAt,
-              });
-            });
-          assets[0] &&
-            assets[0].indexes.forEach(index => {
-              finalAssets.push({
-                type: 'Index',
-                id: index.id,
-                name: index.name,
-                title: index.title,
-                description: index.description,
-                createdAt: index.createdAt,
-              });
-            });
-          assets[0] &&
-            assets[0].queries.forEach(query => {
-              finalAssets.push({
-                type: 'Query',
-                id: query.id,
-                name: query.name,
-                title: query.title,
-                description: query.description,
-                createdAt: query.createdAt,
-              });
-            });
-
-          finalAssets.sort(comparator);
-          finalAssets = childGroups.concat(finalAssets);
-          res.json(finalAssets);
-        })
-        .catch(function (err) {
-          logger.error(err);
-        });
-    } else {
-      let promises = [],
-        finalGroups = [];
-      //if group_id is not passed, this could be a root dir. pull all assets for that app_id
-
-      promises.push(
-        File.findAll({
-          where: {
-            application_id: req.query.app_id,
-            [Op.and]: Sequelize.literal(
-              'not exists (select * from assets_groups where assets_groups.assetId = file.id)'
-            ),
-          },
-        }).then(files => {
-          files.forEach(file => {
+        {
+          model: FileTemplate,
+          as: 'fileTemplates',
+          attributes: ['id', 'title', 'description', 'createdAt'],
+        },
+        {
+          model: Job,
+          as: 'jobs',
+          attributes: ['id', 'name', 'title', 'description', 'createdAt'],
+        },
+        {
+          model: Query,
+          as: 'queries',
+          attributes: ['id', 'name', 'title', 'description', 'createdAt'],
+        },
+        {
+          model: Index,
+          as: 'indexes',
+          attributes: ['id', 'name', 'title', 'description', 'createdAt'],
+        },
+      ],
+      order: [['name', 'ASC']],
+    })
+      .then(async assets => {
+        let childGroups = await getChildGroups(
+          req.query.app_id,
+          req.query.group_id
+        );
+        assets[0] &&
+          assets[0].files.forEach(file => {
             finalAssets.push({
               type: 'File',
               id: file.id,
               name: file.name,
-              cluster_id: file.cluster_id,
               title: file.title,
               description: file.description,
               createdAt: file.createdAt,
             });
           });
-        })
-      );
-
-      promises.push(
-        FileTemplate.findAll({
-          where: {
-            application_id: req.query.app_id,
-            [Op.and]: Sequelize.literal(
-              'not exists (select * from assets_groups where assets_groups.assetId = fileTemplate.id)'
-            ),
-          },
-        }).then(fileTemplates => {
-          fileTemplates.forEach(fileTemplate => {
+        assets[0] &&
+          assets[0].fileTemplates.forEach(fileTemplate => {
             finalAssets.push({
               type: 'File Template',
               id: fileTemplate.id,
-              cluster_id: fileTemplate.cluster_id,
               title: fileTemplate.title,
               description: fileTemplate.description,
               createdAt: fileTemplate.createdAt,
             });
           });
-        })
-      );
-
-      promises.push(
-        Index.findAll({
-          where: {
-            application_id: req.query.app_id,
-            [Op.and]: Sequelize.literal(
-              'not exists (select * from assets_groups where assets_groups.assetId = indexes.id)'
-            ),
-          },
-        }).then(indexes => {
-          indexes.forEach(index => {
-            finalAssets.push({
-              type: 'Index',
-              id: index.id,
-              name: index.name,
-              title: index.title,
-              description: index.description,
-              createdAt: index.createdAt,
-            });
-          });
-        })
-      );
-
-      promises.push(
-        Job.findAll({
-          where: {
-            application_id: req.query.app_id,
-            [Op.and]: Sequelize.literal(
-              'not exists (select * from assets_groups where assets_groups.assetId = job.id)'
-            ),
-          },
-          attributes: ['id', 'name', 'title', 'description', 'createdAt'],
-        }).then(jobs => {
-          jobs.forEach(job => {
+        assets[0] &&
+          assets[0].jobs.forEach(job => {
             finalAssets.push({
               type: 'Job',
               id: job.id,
@@ -397,19 +246,19 @@ router.get(
               createdAt: job.createdAt,
             });
           });
-        })
-      );
-
-      promises.push(
-        Query.findAll({
-          where: {
-            application_id: req.query.app_id,
-            [Op.and]: Sequelize.literal(
-              'not exists (select * from assets_groups where assets_groups.assetId = query.id)'
-            ),
-          },
-        }).then(queries => {
-          queries.forEach(query => {
+        assets[0] &&
+          assets[0].indexes.forEach(index => {
+            finalAssets.push({
+              type: 'Index',
+              id: index.id,
+              name: index.name,
+              title: index.title,
+              description: index.description,
+              createdAt: index.createdAt,
+            });
+          });
+        assets[0] &&
+          assets[0].queries.forEach(query => {
             finalAssets.push({
               type: 'Query',
               id: query.id,
@@ -419,48 +268,163 @@ router.get(
               createdAt: query.createdAt,
             });
           });
-        })
-      );
 
-      promises.push(
-        Groups.findAll({
-          where: {
-            application_id: req.query.app_id,
-            parent_group: { [Op.or]: [null, ''] },
-          },
-          order: [['name', 'ASC']],
-        }).then(groups => {
-          groups.forEach(group => {
-            finalGroups.push({
-              type: 'Group',
-              id: group.id,
-              name: group.name,
-              description: group.description,
-              createdAt: group.createdAt,
-            });
-          });
-        })
-      );
-
-      Promise.all(promises).then(() => {
         finalAssets.sort(comparator);
-
-        finalAssets = finalGroups.concat(finalAssets);
+        finalAssets = childGroups.concat(finalAssets);
         res.json(finalAssets);
+      })
+      .catch(function (err) {
+        logger.error(err);
       });
-    }
+  } else {
+    let promises = [],
+      finalGroups = [];
+    //if group_id is not passed, this could be a root dir. pull all assets for that app_id
+
+    promises.push(
+      File.findAll({
+        where: {
+          application_id: req.query.app_id,
+          [Op.and]: Sequelize.literal(
+            'not exists (select * from assets_groups where assets_groups.assetId = file.id)'
+          ),
+        },
+      }).then(files => {
+        files.forEach(file => {
+          finalAssets.push({
+            type: 'File',
+            id: file.id,
+            name: file.name,
+            cluster_id: file.cluster_id,
+            title: file.title,
+            description: file.description,
+            createdAt: file.createdAt,
+          });
+        });
+      })
+    );
+
+    promises.push(
+      FileTemplate.findAll({
+        where: {
+          application_id: req.query.app_id,
+          [Op.and]: Sequelize.literal(
+            'not exists (select * from assets_groups where assets_groups.assetId = fileTemplate.id)'
+          ),
+        },
+      }).then(fileTemplates => {
+        fileTemplates.forEach(fileTemplate => {
+          finalAssets.push({
+            type: 'File Template',
+            id: fileTemplate.id,
+            cluster_id: fileTemplate.cluster_id,
+            title: fileTemplate.title,
+            description: fileTemplate.description,
+            createdAt: fileTemplate.createdAt,
+          });
+        });
+      })
+    );
+
+    promises.push(
+      Index.findAll({
+        where: {
+          application_id: req.query.app_id,
+          [Op.and]: Sequelize.literal(
+            'not exists (select * from assets_groups where assets_groups.assetId = indexes.id)'
+          ),
+        },
+      }).then(indexes => {
+        indexes.forEach(index => {
+          finalAssets.push({
+            type: 'Index',
+            id: index.id,
+            name: index.name,
+            title: index.title,
+            description: index.description,
+            createdAt: index.createdAt,
+          });
+        });
+      })
+    );
+
+    promises.push(
+      Job.findAll({
+        where: {
+          application_id: req.query.app_id,
+          [Op.and]: Sequelize.literal(
+            'not exists (select * from assets_groups where assets_groups.assetId = job.id)'
+          ),
+        },
+        attributes: ['id', 'name', 'title', 'description', 'createdAt'],
+      }).then(jobs => {
+        jobs.forEach(job => {
+          finalAssets.push({
+            type: 'Job',
+            id: job.id,
+            name: job.name,
+            title: job.title,
+            description: job.description,
+            createdAt: job.createdAt,
+          });
+        });
+      })
+    );
+
+    promises.push(
+      Query.findAll({
+        where: {
+          application_id: req.query.app_id,
+          [Op.and]: Sequelize.literal(
+            'not exists (select * from assets_groups where assets_groups.assetId = query.id)'
+          ),
+        },
+      }).then(queries => {
+        queries.forEach(query => {
+          finalAssets.push({
+            type: 'Query',
+            id: query.id,
+            name: query.name,
+            title: query.title,
+            description: query.description,
+            createdAt: query.createdAt,
+          });
+        });
+      })
+    );
+
+    promises.push(
+      Groups.findAll({
+        where: {
+          application_id: req.query.app_id,
+          parent_group: { [Op.or]: [null, ''] },
+        },
+        order: [['name', 'ASC']],
+      }).then(groups => {
+        groups.forEach(group => {
+          finalGroups.push({
+            type: 'Group',
+            id: group.id,
+            name: group.name,
+            description: group.description,
+            createdAt: group.createdAt,
+          });
+        });
+      })
+    );
+
+    Promise.all(promises).then(() => {
+      finalAssets.sort(comparator);
+
+      finalAssets = finalGroups.concat(finalAssets);
+      res.json(finalAssets);
+    });
   }
-);
+});
 
 router.get(
   '/nestedAssets',
-  [
-    query('app_id').isUUID(4).withMessage('Invalid app id'),
-    query('group_id')
-      .optional({ checkFalsy: true })
-      .isInt()
-      .withMessage('Invalid group id'),
-  ],
+  validate(validateGetNestedAssets),
   async (req, res) => {
     const replacements = {
       applicationId: req.query.app_id,
@@ -469,8 +433,8 @@ router.get(
     // eslint-disable-next-line quotes
     let query = `select assets.id, assets.name, assets.title, assets.description, assets.createdAt, assets.type, hie.name as group_name, hie.id as groupId from (select  id, name, parent_group from    (select * from groups order by parent_group, id) groups_sorted, (select @pv := (:groupId)) initialisation where find_in_set(parent_group, @pv) and length(@pv := concat(@pv, ',', id)) > 0 or id=(:groupId)) as hie join (select f.id, f.name, ag.groupId, f.title, f.description, f.createdAt, 'File' as type from file f, assets_groups ag where f.application_id = (:applicationId) and ag.assetId=f.id union all select q.id, q.name, ag.groupId, q.title, q.description, q.createdAt, 'Query' as type from query q, assets_groups ag where q.application_id = (:applicationId) and ag.assetId=q.id union all select idx.id, idx.name, ag.groupId, idx.title, idx.description, idx.createdAt, 'Index' as type  from indexes idx, assets_groups ag where idx.application_id = (:applicationId) and ag.assetId=idx.id union all select j.id, j.name, ag.groupId, j.title, j.description, j.createdAt, 'Job' as type  from job j, assets_groups ag where j.application_id = (:applicationId) and j.id = ag.assetId union all select g.id, g.name, g.parent_group, g.name as title, g.description, g.createdAt, 'Group' as type  from groups g where g.application_id = (:applicationId) ) as assets on (assets.groupId = hie.id) `;
     try {
-      const assets = await models.sequelize.query(query, {
-        type: models.sequelize.QueryTypes.SELECT,
+      const assets = await sequelize.query(query, {
+        type: sequelize.QueryTypes.SELECT,
         replacements: replacements,
       });
       return res.status(200).json(assets);
@@ -483,21 +447,7 @@ router.get(
 
 router.get(
   '/assetsSearch',
-  [
-    query('app_id').isUUID(4).withMessage('Invalid app id'),
-    query('group_id')
-      .optional({ checkFalsy: true })
-      .isInt()
-      .withMessage('Invalid group id'),
-    query('assetTypeFilter')
-      .optional({ checkFalsy: true })
-      .matches(/^[a-zA-Z]{1}[a-zA-Z,]*$/)
-      .withMessage('Invalid assetTypeFilter'),
-    query('keywords')
-      .optional({ checkFalsy: true })
-      .matches(/^[*"a-zA-Z]{1}[a-zA-Z0-9_ :.\-*"\"]*$/)
-      .withMessage('Invalid keywords'),
-  ],
+  validate(validateAssetsSearch),
   async (req, res) => {
     let replacements = {},
       query;
@@ -618,8 +568,8 @@ router.get(
     }
 
     try {
-      const assets = await models.sequelize.query(query, {
-        type: models.sequelize.QueryTypes.SELECT,
+      const assets = await sequelize.query(query, {
+        type: sequelize.QueryTypes.SELECT,
         replacements: replacements,
       });
       return res.status(200).json(assets);
@@ -638,87 +588,66 @@ let groupExistsWithSameName = async (parentGroupId, name, appId) => {
   return results.length > 0;
 };
 
-router.post(
-  '/',
-  [
-    body('parentGroupId')
-      .optional({ checkFalsy: true })
-      .isInt()
-      .withMessage('Invalid parent group id'),
-    body('id').optional({ checkFalsy: true }).isInt().withMessage('Invalid id'),
-    body('applicationId').isUUID(4).withMessage('Invalid application id'),
-    body('name')
-      .matches(/^[a-zA-Z0-9_. \-:]*$/)
-      .withMessage('Invalid Name'),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
+router.post('/', validate(validateCreateGroup), async (req, res) => {
+  try {
+    let parentGroupId =
+      req.body.parentGroupId && req.body.parentGroupId != ''
+        ? req.body.parentGroupId
+        : '';
 
-    try {
-      let parentGroupId =
-        req.body.parentGroupId && req.body.parentGroupId != ''
-          ? req.body.parentGroupId
-          : '';
-
-      if (req.body.isNew) {
-        let duplicateGroupName = await groupExistsWithSameName(
-          parentGroupId,
-          req.body.name,
-          req.body.applicationId
-        );
-        if (duplicateGroupName)
-          return res.status(400).send({
-            message:
-              'There is already a group with the same name under the parent group. Please select a different name',
-          });
-
-        const groupCreated = await Groups.create({
-          name: req.body.name,
-          description: req.body.description,
-          application_id: req.body.applicationId,
-          parent_group: parentGroupId,
-        });
-        return res.status(200).json({ success: true, id: groupCreated.id });
-      }
-
-      const group = await Groups.findOne({
-        where: { id: req.body.id, application_id: req.body.applicationId },
-      });
-
-      let duplicateGroupName = false;
-      if (group.name != req.body.name) {
-        duplicateGroupName = await groupExistsWithSameName(
-          group.parent_group,
-          req.body.name,
-          req.body.applicationId
-        );
-      }
+    if (req.body.isNew) {
+      let duplicateGroupName = await groupExistsWithSameName(
+        parentGroupId,
+        req.body.name,
+        req.body.applicationId
+      );
       if (duplicateGroupName)
         return res.status(400).send({
           message:
             'There is already a group with the same name under the parent group. Please select a different name',
         });
 
-      const groupUpdated = await Groups.update(
-        {
-          name: req.body.name,
-          description: req.body.description,
-        },
-        { where: { id: req.body.id } }
-      );
-
-      return res.status(200).json({ success: true, id: groupUpdated.id });
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Error occured while saving Group');
+      const groupCreated = await Groups.create({
+        name: req.body.name,
+        description: req.body.description,
+        application_id: req.body.applicationId,
+        parent_group: parentGroupId,
+      });
+      return res.status(200).json({ success: true, id: groupCreated.id });
     }
+
+    const group = await Groups.findOne({
+      where: { id: req.body.id, application_id: req.body.applicationId },
+    });
+
+    let duplicateGroupName = false;
+    if (group.name != req.body.name) {
+      duplicateGroupName = await groupExistsWithSameName(
+        group.parent_group,
+        req.body.name,
+        req.body.applicationId
+      );
+    }
+    if (duplicateGroupName)
+      return res.status(400).send({
+        message:
+          'There is already a group with the same name under the parent group. Please select a different name',
+      });
+
+    const groupUpdated = await Groups.update(
+      {
+        name: req.body.name,
+        description: req.body.description,
+      },
+      { where: { id: req.body.id } }
+    );
+
+    return res.status(200).json({ success: true, id: groupUpdated.id });
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).send('Error occured while saving Group');
   }
-);
+});
 
 let canDeleteGroup = async (group_id, appId) => {
   const groups = await Groups.findAll({
@@ -764,129 +693,76 @@ let canDeleteGroup = async (group_id, appId) => {
   return secondGroups.length > 0 ? false : true;
 };
 
-router.delete(
-  '/',
-  [
-    body('app_id').isUUID(4).withMessage('Invalid app id'),
-    body('group_id').isInt().withMessage('Invalid group id'),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
+router.delete('/', validate(validateDeleteGroup), async (req, res) => {
+  try {
+    const deleteGroup = await canDeleteGroup(
+      req.body.group_id,
+      req.body.app_id
     );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-    try {
-      const deleteGroup = await canDeleteGroup(
-        req.body.group_id,
-        req.body.app_id
-      );
 
-      if (!deleteGroup)
-        return res.status(500).json({
-          message:
-            'The selected Group is not empty. Please empty the content of the group before it can be deleted',
-        });
-
-      await Groups.destroy({
-        where: { application_id: req.body.app_id, id: req.body.group_id },
+    if (!deleteGroup)
+      return res.status(500).json({
+        message:
+          'The selected Group is not empty. Please empty the content of the group before it can be deleted',
       });
-      return res.status(200).json({ success: true });
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Error occured while deleting the Group');
-    }
+
+    await Groups.destroy({
+      where: { application_id: req.body.app_id, id: req.body.group_id },
+    });
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).send('Error occured while deleting the Group');
   }
-);
+});
 
-router.put(
-  '/move',
-  [
-    body('app_id').isUUID(4).withMessage('Invalid app id'),
-    body('groupId').isInt().withMessage('Invalid group id'),
-    body('destGroupId')
-      .optional({ checkFalsy: true })
-      .isInt()
-      .withMessage('Invalid target group id'),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
+router.put('/move', validate(validateMoveGroup), async (req, res) => {
+  try {
+    let parentGroup = req.body.destGroupId ? req.body.destGroupId : '';
+
+    await Groups.update(
+      { parent_group: parentGroup },
+      { where: { id: req.body.groupId, application_id: req.body.app_id } }
     );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).send('Error occured while moving group');
+  }
+});
 
-    try {
-      let parentGroup = req.body.destGroupId ? req.body.destGroupId : '';
-
+router.put('/move/asset', validate(validateMoveAsset), async (req, res) => {
+  const { app_id, assetId } = req.body;
+  try {
+    if (req.body.assetType === 'Group') {
       await Groups.update(
-        { parent_group: parentGroup },
-        { where: { id: req.body.groupId, application_id: req.body.app_id } }
+        { parent_group: req.body.destGroupId || '' },
+        { where: { application_id: app_id, id: assetId } }
       );
       return res.status(200).json({ success: true });
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Error occured while moving group');
     }
-  }
-);
 
-router.put(
-  '/move/asset',
-  [
-    oneOf([check('assetId').isInt(), check('assetId').isUUID(4)]),
-    body('app_id').isUUID(4).withMessage('Invalid app id'),
-    body('assetType')
-      .matches(/^[a-zA-Z]/)
-      .withMessage('Invalid asset type'),
-    body('destGroupId')
-      .optional({ checkFalsy: true })
-      .isInt()
-      .withMessage('Invalid target group id'),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+    // create or update File
+    if (!req.body.destGroupId) {
+      //when we move asset to root "Group" folder we will not have destGroupId, in order to make it work we will need to remove record from AssetGroups
+      await AssetsGroups.destroy({ where: { assetId }, force: true });
+    } else {
+      const assetGroupFields = { assetId, groupId: req.body.destGroupId };
 
-    const { app_id, assetId } = req.body;
-    try {
-      if (req.body.assetType === 'Group') {
-        await Groups.update(
-          { parent_group: req.body.destGroupId || '' },
-          { where: { application_id: app_id, id: assetId } }
-        );
-        return res.status(200).json({ success: true });
-      }
+      let [assetGroup, isAssetGroupCreated] = await AssetsGroups.findOrCreate({
+        where: { assetId },
+        defaults: assetGroupFields,
+      });
 
-      // create or update File
-      if (!req.body.destGroupId) {
-        //when we move asset to root "Group" folder we will not have destGroupId, in order to make it work we will need to remove record from AssetGroups
-        await AssetsGroups.destroy({ where: { assetId }, force: true });
-      } else {
-        const assetGroupFields = { assetId, groupId: req.body.destGroupId };
-
-        let [assetGroup, isAssetGroupCreated] = await AssetsGroups.findOrCreate(
-          {
-            where: { assetId },
-            defaults: assetGroupFields,
-          }
-        );
-
-        if (!isAssetGroupCreated) await assetGroup.update(assetGroupFields);
-      }
-
-      return res.status(200).json({ success: true });
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Error occured while moving asset');
+      if (!isAssetGroupCreated) await assetGroup.update(assetGroupFields);
     }
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).send('Error occured while moving asset');
   }
-);
+});
 
 let comparator = (a, b) => {
   if (a.name < b.name) {
