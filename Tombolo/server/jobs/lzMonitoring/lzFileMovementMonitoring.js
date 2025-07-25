@@ -3,8 +3,11 @@ const { parentPort } = require('worker_threads');
 const { decryptString } = require('../../utils/cipher');
 const { FileSprayService } = require('@hpcc-js/comms');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
-const path = require('path');
+// const path = require('path');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
+const {
+  getFilesFromLandingZoneRecursivly,
+} = require('./lzFileMonitoringUtils');
 
 const {
   landingZoneMonitoring: LandingZoneMonitoring,
@@ -14,65 +17,6 @@ const {
   asr_products: AsrProducts,
   asr_domains: AsrDomains,
 } = models;
-
-// Recursively list all files (no name filter)
-async function listFilesRecursively({
-  lzFileMovementMonitoringId,
-  fss,
-  dropzone,
-  netaddr,
-  currentPath,
-  depth,
-  maxDepth,
-  pattern,
-}) {
-  if (depth > maxDepth) return [];
-  const resp = await fss.FileList({
-    DropZoneName: dropzone,
-    Netaddr: netaddr,
-    Path: currentPath,
-    directoryOnly: false,
-  });
-  const entries = resp?.files?.PhysicalFileStruct || [];
-  let results = [];
-  for (const e of entries) {
-    if (e.isDir) {
-      // descend into sub-directory
-      const subPath = path.posix.join(currentPath, e.name, '/');
-      const subFiles = await listFilesRecursively({
-        lzFileMovementMonitoringId,
-        fss,
-        dropzone,
-        netaddr,
-        currentPath: subPath,
-        depth: depth + 1,
-        maxDepth,
-        pattern,
-      });
-      results = results.concat(subFiles);
-    } else {
-      // record file only if it matches the wildcard pattern
-      if (wildcardMatch(pattern, e.name)) {
-        results.push({
-          lzFileMovementMonitoringId,
-          fileName: e.name,
-          directory: currentPath,
-          modifiedtime: e.modifiedtime,
-        });
-      }
-    }
-  }
-  return results;
-}
-
-// Match strings using * and ? wildcards
-function wildcardMatch(pattern, str) {
-  const escaped = pattern.replace(/[-\\/^$+?.()|[\]{}]/g, '\\$&');
-  const regex = new RegExp(
-    '^' + escaped.replace(/\*/g, '.*').replace(/\?/g, '.') + '$'
-  );
-  return regex.test(str);
-}
 
 // Local time at cluster
 function findLocalDateTimeAtCluster(timeZoneOffset) {
@@ -197,16 +141,15 @@ const monitoring_name = 'Landing Zone Monitoring';
           )
         );
 
-        // get only matching files
-        const matches = await listFilesRecursively({
+        const matches = await getFilesFromLandingZoneRecursivly({
           lzFileMovementMonitoringId,
+          depth: maxDepth,
           fss,
-          dropzone,
-          netaddr: machine,
-          currentPath: directory,
-          depth: 1,
-          maxDepth,
-          pattern: fileName,
+          DropZoneName: dropzone,
+          Netaddr: machine,
+          Path: directory,
+          directoryOnly: false,
+          fileNameToMatch: fileName,
         });
 
         allMatchedFiles.push(...matches);
@@ -272,10 +215,10 @@ const monitoring_name = 'Landing Zone Monitoring';
     for (const file of filesThatPassedThreshold) {
       try {
         const {
-          fileName,
+          name: fileName,
           lzFileMovementMonitoringId,
           ageInMins,
-          directory,
+          Path: directory,
           modifiedtime,
         } = file;
 
@@ -349,12 +292,12 @@ const monitoring_name = 'Landing Zone Monitoring';
         // Add to notification queue
         await NotificationQueue.create({
           type: 'email',
-          notificationOrigin: 'Landing Zone Monitoring',
+          notificationOrigin: monitoring_name,
           originationId: monitoringTypeId,
           deliveryType: 'immediate',
           templateName: 'lzFileMovementMonitoring',
-          notificationOrigin: 'Landing Zone Monitoring',
           metaData: {
+            notificationOrigin: monitoring_name,
             applicationId,
             notificationId,
             subject: `${fileName} is stuck at ${directory} for ${ageInMins} minutes`,
