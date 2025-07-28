@@ -7,23 +7,20 @@ const {
   file: File,
   report: Report,
 } = require('../../models');
-const { query, body, param, validationResult } = require('express-validator');
-const validatorUtil = require('../../utils/validator');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateApplicationId,
+  validateDeleteReport,
+  validateReportBaselines,
+  validateAssociatedDataflows,
+} = require('../../middlewares/reportMiddleware');
 const logger = require('../../config/logger');
 
 router.get(
   '/:application_id',
-  [param('application_id').isUUID(4)],
+  validate(validateApplicationId),
   async (req, res) => {
     try {
-      // Express validator
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
-      // Route logic
       const { application_id } = req.params;
       const reports = await Report.findAll({ where: { application_id } });
       return res.status(200).send(reports);
@@ -34,39 +31,27 @@ router.get(
   }
 );
 
-router.delete('/:reportId', [param('reportId').isUUID(4)], async (req, res) => {
-  try {
-    // Express validator
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
-
-    // Route logic
-    const { reportId } = req.params;
-    const isRemoved = await Report.destroy({ where: { id: reportId } });
-    if (!isRemoved) throw new Error('Report was not removed!');
-    return res.status(200).send({ success: true, id: reportId });
-  } catch (error) {
-    logger.error('Something went wrong', error);
-    return res.status(500).json({ message: error.message });
+router.delete(
+  '/:reportId',
+  validate(validateDeleteReport),
+  async (req, res) => {
+    try {
+      const { reportId } = req.params;
+      const isRemoved = await Report.destroy({ where: { id: reportId } });
+      if (!isRemoved) throw new Error('Report was not removed!');
+      return res.status(200).send({ success: true, id: reportId });
+    } catch (error) {
+      logger.error('Something went wrong', error);
+      return res.status(500).json({ message: error.message });
+    }
   }
-});
+);
 
 router.get(
   '/generate_current/:application_id',
-  [param('application_id').isUUID(4)],
+  validate(validateApplicationId),
   async (req, res) => {
     try {
-      // Express validator
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
-      // Route logic
       const { application_id } = req.params;
 
       const files = await File.findAll({
@@ -110,21 +95,9 @@ router.get(
 
 router.put(
   '/baseline/:application_id',
-  [
-    param('application_id').isUUID(4),
-    body('id').isUUID(4),
-    body('action').exists().isString(),
-  ],
+  validate(validateReportBaselines),
   async (req, res) => {
     try {
-      // Express validator
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
-      // Route logic
       const { id, action } = req.body;
       const { application_id } = req.params;
 
@@ -168,23 +141,8 @@ router.put(
 
 router.get(
   '/associatedDataflows',
-  [
-    query('assetId')
-      .optional({ checkFalsy: true })
-      .isUUID(4)
-      .withMessage('Invalid asset id'),
-    query('type')
-      .matches(/^[a-zA-Z]{1}[a-zA-Z0-9_:\-]*$/)
-      .withMessage('Invalid type'),
-  ],
+  validate(validateAssociatedDataflows),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
     try {
       const { application_id, assetId } = req.query;
 

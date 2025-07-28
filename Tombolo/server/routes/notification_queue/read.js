@@ -1,50 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { body, check } = require('express-validator');
 
 //Local imports
 const logger = require('../../config/logger');
-const models = require('../../models');
-const { validationResult } = require('express-validator');
+const { notification_queue: NotificationQueue } = require('../../models');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateCreateNotificationQueue,
+  validatePatchNotificationQueue,
+  validateDeleteNotificationQueue,
+} = require('../../middlewares/notificationQueueMiddleware');
 
-//Constants
-const NotificationQueue = models.notification_queue;
-
-// Create new notification
+// Create a new notification
 router.post(
   '/',
-  [
-    // body("type").notEmpty().withMessage("Notification medium Type is required"),
-    body('deliveryType').notEmpty().withMessage('Send schedule is required'),
-    body('cron')
-      .optional()
-      .isString()
-      .withMessage('Cron must be a string if provided'),
-    body('lastScanned')
-      .optional()
-      .isDate()
-      .withMessage('Last scanned must be a date if provided'),
-    body('attemptCount')
-      .optional()
-      .isInt()
-      .withMessage('Attempt count must be an integer if provided'),
-    body('failureMessage')
-      .optional()
-      .isString()
-      .withMessage('Failure message must be a string if provided'),
-    body('createdBy').notEmpty().withMessage('Created by is required'),
-    body('metaData')
-      .notEmpty()
-      .isObject()
-      .withMessage('Meta data must be an object if provided'),
-  ],
+  validate(validateCreateNotificationQueue),
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
       const response = await NotificationQueue.create(req.body, { raw: true });
       return res.status(200).send(response);
     } catch (err) {
@@ -68,39 +40,9 @@ router.get('/', async (req, res) => {
 // Patch a single notification
 router.patch(
   '/',
-  [
-    body('id').isUUID().withMessage('ID must be a valid UUID'),
-    body('type').notEmpty().withMessage('Type is required'),
-    body('sendSchedule').notEmpty().withMessage('Send schedule is required'),
-    body('cron')
-      .optional()
-      .isString()
-      .withMessage('Cron must be a string if provided'),
-    body('lastScanned')
-      .optional()
-      .isDate()
-      .withMessage('Last scanned must be a date if provided'),
-    body('attemptCount')
-      .optional()
-      .isInt()
-      .withMessage('Attempt count must be an integer if provided'),
-    body('failureMessage')
-      .optional()
-      .isString()
-      .withMessage('Failure message must be a string if provided'),
-    body('createdBy').notEmpty().withMessage('Created by is required'),
-    body('metaData')
-      .optional()
-      .isObject()
-      .withMessage('Meta data must be an object if provided'),
-  ],
+  validate(validatePatchNotificationQueue),
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
       const updatedRows = await NotificationQueue.update(req.body, {
         where: { id: req.body.id },
         returning: true,
@@ -122,7 +64,7 @@ router.patch(
 // Delete a single notification
 router.delete(
   '/:id',
-  [check('id', 'Invalid id').isUUID()],
+  validate(validateDeleteNotificationQueue),
   async (req, res) => {
     try {
       await NotificationQueue.destroy({ where: { id: req.params.id } });
