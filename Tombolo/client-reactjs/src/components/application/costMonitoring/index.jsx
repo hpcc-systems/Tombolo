@@ -82,6 +82,7 @@ function CostMonitoring() {
       form.setFieldsValue({
         ...selectedMonitoring?.metaData?.notificationMetaData,
         ...selectedMonitoring?.metaData,
+        ...selectedMonitoring?.metaData?.asrSpecificMetaData,
         clusterIds: selectedMonitoring.clusterIds,
         users: selectedMonitoring?.metaData?.users,
         threshold: selectedMonitoring?.metaData?.notificationMetaData?.notificationCondition,
@@ -249,6 +250,16 @@ function CostMonitoring() {
         }
       });
 
+      const asrSpecificMetaData = {};
+      const { domain, productCategory, jobMonitorType, severity } = allInputs;
+      const asrSpecificFields = { domain, productCategory, jobMonitorType, severity };
+      for (let key in asrSpecificFields) {
+        if (asrSpecificFields[key] !== undefined) {
+          asrSpecificMetaData[key] = asrSpecificFields[key];
+        }
+        delete allInputs[key];
+      }
+
       // Group Notification specific metaData and delete from allInputs
       const notificationMetaData = {};
       const { threshold, primaryContacts, secondaryContacts, notifyContacts } = allInputs;
@@ -275,17 +286,17 @@ function CostMonitoring() {
       delete allInputs.users;
       delete allInputs.threshold;
       delete allInputs.timeWindow;
+      delete allInputs.updater;
+      delete allInputs.creator;
+      delete allInputs.createdBy;
+      delete allInputs.lastUpdatedBy;
 
       // Add applicationId, createdBy, lastUpdatedBy to allInputs
       allInputs.applicationId = applicationId;
-      const userDetails = JSON.stringify({
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-      });
 
-      allInputs.createdBy = userDetails;
-      allInputs.lastUpdatedBy = userDetails;
+      //Add asrSpecificMetaData, notificationMetaData to metaData object
+      metaData.asrSpecificMetaData = asrSpecificMetaData;
+      metaData.notificationMetaData = notificationMetaData;
 
       // Add notificationMetaData to metaData object
       metaData.notificationMetaData = notificationMetaData;
@@ -347,6 +358,7 @@ function CostMonitoring() {
       const fields = Object.keys(formFields);
 
       // Fields that are nested inside the metaData object
+      const asrSpecificFields = ['domain', 'productCategory', 'severity'];
       const metaDataFields = ['users', 'timeWindow'];
       const notificationMetaDataFields = [
         'primaryContacts',
@@ -371,10 +383,17 @@ function CostMonitoring() {
       let updatedData = { ...selectedMonitoring };
 
       // Update metaData fields
+      const touchedAsrFields = touchedFields.filter((field) => asrSpecificFields.includes(field));
       const touchedMetaDataFields = touchedFields.filter((field) => metaDataFields.includes(field));
       const touchedNotificationMetaDataFields = touchedFields.filter((field) =>
         notificationMetaDataFields.includes(field)
       );
+
+      if (touchedAsrFields.length > 0) {
+        let existingAsrSpecificMetaData = selectedMonitoring?.metaData?.asrSpecificMetaData || {};
+        const upDatedAsrSpecificMetaData = form.getFieldsValue(touchedAsrFields);
+        updatedData.metaData.asrSpecificMetaData = { ...existingAsrSpecificMetaData, ...upDatedAsrSpecificMetaData };
+      }
 
       // Update cost monitoring specific metaData fields
       if (touchedMetaDataFields.length > 0) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Descriptions, Form, message, Tag } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,12 +7,12 @@ import JobMonitoringActionButton from './JobMonitoringActionButton.jsx';
 import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
 import './jobMonitoring.css';
 import {
+  checkScheduleValidity,
   createJobMonitoring,
   getAllJobMonitorings,
-  checkScheduleValidity,
   identifyErroneousTabs,
-  updateSelectedMonitoring,
   isScheduleUpdated,
+  updateSelectedMonitoring,
 } from './jobMonitoringUtils.js';
 
 import { getRoleNameArray } from '../../common/AuthUtil.js';
@@ -478,32 +478,27 @@ function JobMonitoring() {
       if (touchedAsrFields.length > 0) {
         let existingAsrSpecificMetaData = selectedMonitoring?.metaData?.asrSpecificMetaData || {};
         const upDatedAsrSpecificMetaData = form.getFieldsValue(touchedAsrFields);
-        const newAsrSpecificFields = { ...existingAsrSpecificMetaData, ...upDatedAsrSpecificMetaData };
-        updatedData.metaData.asrSpecificMetaData = newAsrSpecificFields;
+        updatedData.metaData.asrSpecificMetaData = { ...existingAsrSpecificMetaData, ...upDatedAsrSpecificMetaData };
       }
 
       // update selected monitoring with run time fields that are nested inside metaData
       if (touchedMetaDataFields.length > 0) {
         if (touchedMetaDataFields.includes('expectedCompletionTime')) {
           const expectedCompletionTime = form.getFieldValue('expectedCompletionTime');
-          const newExpectedCompletionTime = expectedCompletionTime.format('HH:mm');
-          updatedData.metaData.expectedCompletionTime = newExpectedCompletionTime;
+          updatedData.metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
         }
 
         if (touchedMetaDataFields.includes('expectedStartTime')) {
           const expectedStartTime = form.getFieldValue('expectedStartTime');
-          const newExpectedStartTime = expectedStartTime.format('HH:mm');
-          updatedData.metaData.expectedStartTime = newExpectedStartTime;
+          updatedData.metaData.expectedStartTime = expectedStartTime.format('HH:mm');
         }
 
         if (touchedMetaDataFields.includes('requireComplete')) {
-          const requireComplete = form.getFieldValue('requireComplete');
-          updatedData.metaData.requireComplete = requireComplete;
+          updatedData.metaData.requireComplete = form.getFieldValue('requireComplete');
         }
 
         if (touchedMetaDataFields.includes('maxExecutionTime')) {
-          const maxExecutionTime = form.getFieldValue('maxExecutionTime');
-          updatedData.metaData.maxExecutionTime = maxExecutionTime;
+          updatedData.metaData.maxExecutionTime = form.getFieldValue('maxExecutionTime');
         }
       }
 
@@ -511,8 +506,7 @@ function JobMonitoring() {
       if (touchedNotificationMetaDataFields.length > 0) {
         const existingNotificationMetaData = selectedMonitoring.metaData.notificationMetaData || {};
         const updatedNotificationMetaData = form.getFieldsValue(touchedNotificationMetaDataFields);
-        const newNotificationMetaData = { ...existingNotificationMetaData, ...updatedNotificationMetaData };
-        updatedData.metaData.notificationMetaData = newNotificationMetaData;
+        updatedData.metaData.notificationMetaData = { ...existingNotificationMetaData, ...updatedNotificationMetaData };
       }
 
       // new values of any other fields that are not part of asrFields, metaDataFields, notificationMetaDataFields
@@ -529,19 +523,18 @@ function JobMonitoring() {
       updatedData = { ...updatedData, ...newOtherFields };
 
       // updated by
-      const userDetails = JSON.stringify({
+      updatedData.lastUpdatedBy = JSON.stringify({
         id: user.id,
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
       });
-      updatedData.lastUpdatedBy = userDetails;
 
       // Make api call
       await updateSelectedMonitoring({ updatedData });
 
       // If no error thrown set state with new data
       setJobMonitorings((prev) => {
-        const updatedJobMonitorings = prev.map((jobMonitoring) => {
+        return prev.map((jobMonitoring) => {
           updatedData.approvalStatus = 'Pending';
           updatedData.isActive = false;
           if (jobMonitoring.id === updatedData.id) {
@@ -549,7 +542,6 @@ function JobMonitoring() {
           }
           return jobMonitoring;
         });
-        return updatedJobMonitorings;
       });
       resetStates();
     } catch (err) {
