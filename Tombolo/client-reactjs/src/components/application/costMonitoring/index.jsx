@@ -22,6 +22,11 @@ import BreadCrumbs from '../../common/BreadCrumbs';
 import CostMonitoringFilters from './CostMonitoringFilters';
 import { getUser } from '../../common/userStorage';
 import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
+import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
+import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
+import { useMonitorType } from '../../../hooks/useMonitoringType';
+
+const monitoringTypeName = 'Cost Monitoring';
 
 function CostMonitoring() {
   // Redux
@@ -39,7 +44,6 @@ function CostMonitoring() {
 
   // Local States
   const [displayAddCostMonitoringModal, setDisplayAddCostMonitoringModal] = useState(false);
-  const [costMonitorings, setCostMonitorings] = useState([]);
   const [filteredCostMonitoring, setFilteredCostMonitoring] = useState([]); // Filtered cost monitorings
   const [displayMonitoringDetailsModal, setDisplayMonitoringDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
@@ -62,17 +66,11 @@ function CostMonitoring() {
   const [form] = Form.useForm();
 
   // When component mounts and appid change get all cost monitorings
-  useEffect(() => {
-    if (!applicationId) return;
-    (async () => {
-      try {
-        const allMonitorings = await getAllCostMonitorings({ applicationId });
-        setCostMonitorings(allMonitorings.data);
-      } catch (error) {
-        message.error('Error fetching cost monitorings');
-      }
-    })();
-  }, [applicationId]);
+  const {
+    monitorings: costMonitorings,
+    setMonitorings: setCostMonitorings,
+    allProductCategories,
+  } = useMonitoringsAndAllProductCategories(applicationId, getAllCostMonitorings);
 
   // When intention to edit a monitoring is discovered
   useEffect(() => {
@@ -90,22 +88,28 @@ function CostMonitoring() {
         timeWindow: selectedMonitoring?.metaData?.timeWindow,
       });
     }
-  }, [editingData, duplicatingData, selectedMonitoring]);
+  }, [editingData, duplicatingData, selectedMonitoring, form]);
+
+  const { monitoringTypeId } = useMonitorType(monitoringTypeName, setFilters);
+
+  // Get domains and product categories
+  const { domains, productCategories, setProductCategories, selectedDomain, setSelectedDomain } =
+    useDomainAndCategories(monitoringTypeId, selectedMonitoring);
 
   // Get filters from local storage
-  useEffect(() => {
-    const existingFiltersFromLocalStorage = localStorage.getItem('cMFilters');
-    if (existingFiltersFromLocalStorage) {
-      const filtersFromLocalStorage = JSON.parse(existingFiltersFromLocalStorage);
-      setFilters(filtersFromLocalStorage);
-    }
-
-    // Get filter visibility from local storage
-    const filtersVisibilityFromLocalStorage = localStorage.getItem('cMFiltersVisible');
-    if (filtersVisibilityFromLocalStorage !== null) {
-      setFiltersVisible(JSON.parse(filtersVisibilityFromLocalStorage));
-    }
-  }, []);
+  // useEffect(() => {
+  //   const existingFiltersFromLocalStorage = localStorage.getItem('cMFilters');
+  //   if (existingFiltersFromLocalStorage) {
+  //     const filtersFromLocalStorage = JSON.parse(existingFiltersFromLocalStorage);
+  //     setFilters(filtersFromLocalStorage);
+  //   }
+  //
+  //   // Get filter visibility from local storage
+  //   const filtersVisibilityFromLocalStorage = localStorage.getItem('cMFiltersVisible');
+  //   if (filtersVisibilityFromLocalStorage !== null) {
+  //     setFiltersVisible(JSON.parse(filtersVisibilityFromLocalStorage));
+  //   }
+  // }, []);
 
   // When filter changes, filter the cost monitorings
   useEffect(() => {
@@ -465,6 +469,12 @@ function CostMonitoring() {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         matchCount={matchCount}
+        domains={domains}
+        productCategories={productCategories}
+        allProductCategories={allProductCategories}
+        setProductCategories={setProductCategories}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
       <AddEditCostMonitoringModal
         displayAddCostMonitoringModal={displayAddCostMonitoringModal}
@@ -482,6 +492,9 @@ function CostMonitoring() {
         selectedClusters={selectedClusters}
         setSelectedClusters={setSelectedClusters}
         resetStates={resetStates}
+        domains={domains}
+        productCategories={productCategories}
+        setSelectedDomain={setSelectedDomain}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         handleClusterChange={handleClusterChange}
@@ -497,6 +510,9 @@ function CostMonitoring() {
         setDisplayAddRejectModal={setDisplayAddRejectModal}
         setSelectedRows={setSelectedRows}
         selectedRows={selectedRows}
+        domains={domains}
+        productCategories={productCategories}
+        allProductCategories={allProductCategories}
         filteringCosts={filteringCosts}
         isReader={isReader}
         clusters={clusters}
@@ -509,6 +525,7 @@ function CostMonitoring() {
           selectedMonitoring={selectedMonitoring}
           setSelectedMonitoring={setSelectedMonitoring}
           clusters={clusters}
+          domains={domains}
         />
       )}
       {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}

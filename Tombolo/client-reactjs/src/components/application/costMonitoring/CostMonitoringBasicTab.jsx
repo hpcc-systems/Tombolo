@@ -1,11 +1,45 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Form, Select, Input } from 'antd';
 import { matches } from 'validator';
+import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
+import { useSelector } from 'react-redux';
 
 const { Option } = Select;
 
-function CostMonitoringBasicTab({ form, clusters, handleClusterChange, isDuplicating, isEditing, costMonitorings }) {
+function CostMonitoringBasicTab({
+  form,
+  clusters,
+  handleClusterChange,
+  selectedClusters,
+  isDuplicating,
+  isEditing,
+  costMonitorings,
+  domains,
+  productCategories,
+  setSelectedDomain,
+}) {
+  const [clusterOffset, setClusterOffset] = useState(null);
   const monitoringNameInputRef = useRef(null);
+
+  const {
+    applicationReducer: {
+      application: { applicationId },
+      integrations,
+    },
+  } = useSelector((state) => state);
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
+
+  useEffect(() => {
+    if (selectedClusters?.[0]?.timezone_offset === null || selectedClusters?.[0]?.timezone_offset === undefined) return;
+    const offSet = selectedClusters[0].timezone_offset / 60;
+    if (offSet === 0) {
+      setClusterOffset('UTC');
+    } else {
+      setClusterOffset(`UTC ${offSet}`);
+    }
+  }, [selectedClusters]);
 
   // This is a temporary fix and only works on the application level
   const doesNameExist = (newName) => {
@@ -36,7 +70,7 @@ function CostMonitoringBasicTab({ form, clusters, handleClusterChange, isDuplica
         },
       ]);
     }
-  }, [isDuplicating, form, costMonitorings, isEditing]);
+  }, [isDuplicating, form, costMonitorings, isEditing, doesNameExist]);
 
   return (
     <Form form={form} layout="vertical">
@@ -56,7 +90,10 @@ function CostMonitoringBasicTab({ form, clusters, handleClusterChange, isDuplica
         label="Clusters"
         name="clusterIds"
         rules={[{ required: true, message: 'Select at least one cluster' }]}>
-        <Select mode="multiple" onChange={(value) => handleClusterChange(value)}>
+        <Select
+          placeholder="Select at least one cluster"
+          mode="multiple"
+          onChange={(value) => handleClusterChange(value)}>
           {clusters.map((cluster) => {
             return (
               <Option key={cluster.id} value={cluster.id}>
@@ -92,6 +129,15 @@ function CostMonitoringBasicTab({ form, clusters, handleClusterChange, isDuplica
           tokenSeparators={[',']}
         />
       </Form.Item>
+      {asrIntegration && (
+        <AsrSpecificMonitoringDetails
+          form={form}
+          clusterOffset={clusterOffset}
+          domains={domains}
+          productCategories={productCategories}
+          setSelectedDomain={setSelectedDomain}
+        />
+      )}
     </Form>
   );
 }

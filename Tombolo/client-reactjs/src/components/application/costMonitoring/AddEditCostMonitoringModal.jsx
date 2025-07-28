@@ -21,6 +21,10 @@ const AddEditCostMonitoringModal = ({
   setErroneousTabs,
   handleClusterChange,
   costMonitorings,
+  domains,
+  productCategories,
+  selectedClusters,
+  setSelectedDomain,
 }) => {
   // Keep track of visited tabs, some form fields are loaded only when the tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
@@ -50,6 +54,10 @@ const AddEditCostMonitoringModal = ({
           isDuplicating={isDuplicating}
           isEditing={isEditing}
           costMonitorings={costMonitorings}
+          domains={domains}
+          productCategories={productCategories}
+          selectedClusters={selectedClusters}
+          setSelectedDomain={setSelectedDomain}
         />
       ),
       id: 1,
@@ -74,7 +82,7 @@ const AddEditCostMonitoringModal = ({
     children: tab.component(),
   }));
 
-  // When the next button is clicked, go to next tab
+  // When the next button is clicked, go to the next tab
   const handleNext = () => {
     const nextTab = (parseInt(activeTab) + 1).toString();
     setActiveTab(nextTab);
@@ -83,7 +91,7 @@ const AddEditCostMonitoringModal = ({
     }
   };
 
-  // When the previous button is clicked, go back to previous tab
+  // When the previous button is clicked, go back to the previous tab
   const handlePrevious = () => {
     const previousTab = (parseInt(activeTab) - 1).toString();
     setActiveTab(previousTab);
