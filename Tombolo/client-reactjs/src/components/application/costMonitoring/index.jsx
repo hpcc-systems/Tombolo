@@ -21,7 +21,7 @@ import CostMonitoringApproveRejectModal from './ApproveRejectModal';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import CostMonitoringFilters from './CostMonitoringFilters';
 import { getUser } from '../../common/userStorage';
-import BulkUpdateModal from '../../common/BulkUpdateModal';
+import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
 
 function CostMonitoring() {
   // Redux

@@ -3,7 +3,7 @@ import React from 'react';
 import { Form, Card, Select } from 'antd';
 import { useSelector } from 'react-redux';
 import AsrSpecificNotification from './ASRSpecificNotification';
-import PrimaryContacts from '../../../common/PrimaryContacts';
+import PrimaryContacts from '../../../common/Monitoring/PrimaryContacts';
 
 //Constants
 const { Option } = Select;
