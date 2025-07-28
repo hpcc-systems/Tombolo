@@ -2,7 +2,12 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 
 const logger = require('../config/logger');
-const model = require('../models');
+const {
+  RefreshTokens,
+  user: User,
+  UserRoles,
+  RoleTypes,
+} = require('../models');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -10,11 +15,6 @@ const {
 } = require('../utils/authUtil');
 const { isTokenBlacklisted } = require('../utils/tokenBlackListing');
 const { generateAndSetCSRFToken } = require('../utils/authUtil');
-
-const RefreshTokens = model.RefreshTokens;
-const User = model.user;
-const UserRoles = model.UserRoles;
-const RoleTypes = model.RoleTypes;
 
 // Main middleware function
 const tokenValidationMiddleware = async (req, res, next) => {

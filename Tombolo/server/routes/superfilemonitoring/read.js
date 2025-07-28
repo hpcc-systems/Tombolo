@@ -8,34 +8,20 @@ const validatorUtil = require('../../utils/validator');
 const hpccUtil = require('../../utils/hpcc-util.js');
 const { body, param, validationResult } = require('express-validator');
 const logger = require('../../config/logger.js');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateCreateUpdateSuperfileMonitoring,
+  validateAppIdParam,
+  validateDeleteSuperfileMonitoring,
+  validateToggleSuperfileMonitoring,
+  validateGetSuperfileMonitoring,
+} = require('../../middlewares/superfileMonitoringMiddleware');
 
 router.post(
   '/',
-  [
-    body('application_id').isUUID(4).withMessage('Invalid application id'),
-    body('cron').custom(value => {
-      const valArray = value.split(' ');
-      if (valArray.length > 5) {
-        throw new Error(
-          `Expected number of cron parts 5, received ${valArray.length}`
-        );
-      } else {
-        return Promise.resolve('Good to go');
-      }
-    }),
-    body('cluster_id')
-      .isUUID(4)
-      .optional({ nullable: false })
-      .withMessage('Invalid cluster id'),
-  ],
+  validate(validateCreateUpdateSuperfileMonitoring),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
       //grab data from
       // const superfileInfo = await hpccUtil.getSuperFile(
       //   req.body.cluster_id,
@@ -98,15 +84,10 @@ router.post(
 // Get all superfile monitors with application ID
 router.get(
   '/all/:application_id',
-  [param('application_id').isUUID(4).withMessage('Invalid application id')],
+  validate(validateAppIdParam),
   async (req, res) => {
     try {
       const { application_id } = req.params;
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
 
       const superfileMonitoring = await SuperFileMonitoring.findAll({
         where: { application_id },
@@ -125,18 +106,9 @@ router.get(
 //delete
 router.delete(
   '/:superfileMonitoringId/:superfileMonitoringName',
-  [
-    param('superfileMonitoringId')
-      .isUUID(4)
-      .withMessage('Invalid superfile monitoring id'),
-  ],
+  validate(validateDeleteSuperfileMonitoring),
   async (req, res) => {
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       // eslint-disable-next-line no-unused-vars
       const { superfileMonitoringId, superfileMonitoringName } = req.params;
       const response = await SuperFileMonitoring.destroy({
@@ -146,10 +118,10 @@ router.delete(
         .status(200)
         .json({ message: `Deleted ${response} superfile monitoring` });
 
-      //Check if this job is in bree - if so - remove
+      // Check if this job is in bree - if so - remove
       const breeJobs = jobScheduler.getAllJobs();
       const expectedJobName = `Superfile Monitoring - ${superfileMonitoringId}`;
-      for (job of breeJobs) {
+      for (let job of breeJobs) {
         if (job.name === expectedJobName) {
           jobScheduler.removeJobFromScheduler(expectedJobName);
           break;
@@ -164,14 +136,9 @@ router.delete(
 // Pause or start monitoring
 router.put(
   '/superfileMonitoringStatus/:id',
-  [param('id').isUUID(4).withMessage('Invalid superfile monitoring Id')],
+  validate(validateToggleSuperfileMonitoring),
   async (req, res) => {
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const { id } = req.params;
       const monitoring = await SuperFileMonitoring.findOne({
         where: { id },
@@ -219,15 +186,10 @@ router.put(
 // Get individual superfile
 router.get(
   '/:file_monitoring_id',
-  [param('file_monitoring_id').isUUID(4).withMessage('Invalid monitoring id')],
+  validate(validateGetSuperfileMonitoring),
   async (req, res) => {
     try {
       const { file_monitoring_id } = req.params;
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
 
       const fileMonitoring = await SuperFileMonitoring.findOne({
         where: { id: file_monitoring_id },
@@ -245,32 +207,9 @@ router.get(
 //update superfile monitoring
 router.put(
   '/',
-  [
-    body('application_id').isUUID(4).withMessage('Invalid application id'),
-    body('cron').custom(value => {
-      const valArray = value.split(' ');
-      if (valArray.length > 5) {
-        throw new Error(
-          `Expected number of cron parts 5, received ${valArray.length}`
-        );
-      } else {
-        return Promise.resolve('Good to go');
-      }
-    }),
-    body('cluster_id')
-      .isUUID(4)
-      .optional({ nullable: false })
-      .withMessage('Invalid cluster id'),
-  ],
+  validate(validateCreateUpdateSuperfileMonitoring),
   async (req, res) => {
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
       const oldInfo = await SuperFileMonitoring.findOne({
         where: { id: req.body.id },
         raw: true,

@@ -1,90 +1,44 @@
 const express = require('express');
 const router = express.Router();
-const { body, param } = require('express-validator');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateCreateSentNotification,
+  validateGetSentNotificationByAppId,
+  validateGetSentNotificationById,
+  validateDeleteSentNotification,
+  validateBulkDeleteSentNotifications,
+  validateUpdateSentNotifications,
+  validateBodyId,
+} = require('../../middlewares/sentNotificationMiddleware');
 const moment = require('moment');
-const sequelize = require('sequelize');
-
-const { Op } = sequelize;
+const { Op } = require('sequelize');
 
 //Local imports
 const logger = require('../../config/logger');
-const models = require('../../models');
-const { validationResult } = require('express-validator');
+const {
+  sent_notifications: SentNotifications,
+  sequelize,
+} = require('../../models');
 const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode');
 
-//Constants
-const SentNotifications = models.sent_notifications;
-
-// Create new sent notification
-router.post(
-  '/',
-  [
-    body('applicationId')
-      .isUUID()
-      .withMessage('Application ID must be a valid UUID'),
-    body('notifiedAt')
-      .optional()
-      .custom(value => {
-        if (!moment(value, moment.ISO_8601, true).isValid()) {
-          throw new Error('Notified at must be a date');
-        }
-        return true;
-      }),
-    body('notificationOrigin')
-      .notEmpty()
-      .withMessage('Notification origin is required'),
-    body('notificationChannel')
-      .notEmpty()
-      .withMessage('Notification channel is required'),
-    body('notificationTitle')
-      .notEmpty()
-      .withMessage('Notification title is required'),
-    body('status').notEmpty().withMessage('Status is required'),
-    body('recipients')
-      .optional()
-      .isObject()
-      .withMessage('recipients  must be an object if provided'),
-    body('createdBy').notEmpty().withMessage('Created by is required'),
-    body('metaData')
-      .optional()
-      .isObject()
-      .withMessage('Metadata must be an object if provided'),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(errors);
-        return res.status(400).send('Validation error occurred');
-      }
-
-      const response = await SentNotifications.create(req.body, { raw: true });
-      return res.status(200).send(response);
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Failed to save sent notification');
-    }
+// Create a new sent notification
+router.post('/', validate(validateCreateSentNotification), async (req, res) => {
+  try {
+    const response = await SentNotifications.create(req.body, { raw: true });
+    return res.status(200).send(response);
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).send('Failed to save sent notification');
   }
-);
+});
 
 // Get all sent notifications
 router.get(
   '/:applicationId',
-  [
-    param('applicationId')
-      .isUUID()
-      .withMessage('Application ID must be a valid UUID'),
-  ],
+  validate(validateGetSentNotificationByAppId),
   async (req, res) => {
     try {
-      //validate
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(errors);
-        return res.status(400).send('Validation error occurred');
-      }
-
-      // Get notifications from last 60 days only
+      // Get notifications from the last 60 days only
       const sixtyDaysAgo = moment().subtract(60, 'days').toDate();
 
       const notifications = await SentNotifications.findAll({
@@ -106,19 +60,9 @@ router.get(
 // Get a single sent notification
 router.get(
   '/:applicationId/:id',
-  [
-    param('applicationId').isUUID().withMessage('ID must be a valid UUID'),
-    param('id').isUUID().withMessage('ID must be a valid UUID'),
-  ],
+  validate(validateGetSentNotificationById),
   async (req, res) => {
     try {
-      //Check for validation errors
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(errors);
-        return res.status(400).send('Validation error occurred');
-      }
-
       const notification = await SentNotifications.findByPk(req.params.id);
       if (!notification) {
         return res.status(404).send('Sent notification not found');
@@ -134,15 +78,9 @@ router.get(
 // Delete a single sent notification
 router.delete(
   '/:id',
-  [param('id').isUUID().withMessage('ID must be a valid UUID')],
+  validate(validateDeleteSentNotification),
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(errors);
-        return res.status(400).send('Validation error occurred');
-      }
-
       await SentNotifications.destroy({ where: { id: req.params.id } });
       return res.status(200).send('success');
     } catch (err) {
@@ -152,17 +90,12 @@ router.delete(
   }
 );
 
-//Delete multiple sent notifications
+// Delete multiple sent notifications
 router.delete(
   '/',
-  [body('ids').isArray().withMessage('IDs must be an array of UUIDs')],
+  validate(validateBulkDeleteSentNotifications),
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
       await SentNotifications.destroy({ where: { id: req.body.ids } });
       return res.status(200).send('success');
     } catch (err) {
@@ -172,17 +105,12 @@ router.delete(
   }
 );
 
-//Update single or multiple sent notifications
+// Update single or multiple sent notifications
 router.patch(
   '/',
-  [body('ids').isArray().withMessage('IDs must be an array of UUIDs')],
+  validate(validateUpdateSentNotifications),
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
       const allNotificationToBeUpdated = [];
 
       // If anything that is part of metaData is to be updated - fetch existing metadata and update particular fields
@@ -213,7 +141,7 @@ router.patch(
 
       // If no metadata is to be updated, update the rest of the fields
       if (allNotificationToBeUpdated.length > 0) {
-        const transaction = await models.sequelize.transaction();
+        const transaction = await sequelize.transaction();
         try {
           for (let item of allNotificationToBeUpdated) {
             await SentNotifications.update(item, { where: { id: item.id } });
@@ -224,12 +152,12 @@ router.patch(
           throw new Error(err);
         }
       } else {
-        const rows = await SentNotifications.update(req.body, {
+        await SentNotifications.update(req.body, {
           where: { id: { [Op.in]: req.body.ids } },
         });
       }
 
-      //fetch and send updated data to client
+      // fetch and send updated data to the client
       const updatedNotifications = await SentNotifications.findAll({
         where: { id: req.body.ids },
         raw: true,
@@ -246,15 +174,9 @@ router.patch(
 // Get notification html code
 router.post(
   '/getNotificationHtmlCode',
-  [body('id').isUUID().withMessage('ID must be a valid UUID')],
+  validate(validateBodyId),
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        logger.error(errors);
-        return res.status(400).send('Validation error occurred');
-      }
-
       const notification = await SentNotifications.findByPk(req.body.id);
       if (!notification) {
         return res.status(404).send('Sent notification not found');
