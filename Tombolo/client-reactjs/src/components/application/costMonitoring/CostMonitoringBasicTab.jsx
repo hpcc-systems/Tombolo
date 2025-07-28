@@ -41,17 +41,17 @@ function CostMonitoringBasicTab({
     }
   }, [selectedClusters]);
 
-  // This is a temporary fix and only works on the application level
-  const doesNameExist = (newName) => {
-    return costMonitorings.some((monitoring) => monitoring.monitoringName === newName);
-  };
-
   useEffect(() => {
     if (form && !isEditing) {
       monitoringNameInputRef.current?.input.focus();
     }
 
     if (isDuplicating) {
+      // This function is a temporary fix and only works on the application level
+      const doesNameExist = (newName) => {
+        return costMonitorings.some((monitoring) => monitoring.monitoringName === newName);
+      };
+
       let currentMonitoringName = form.getFieldValue('monitoringName');
       let newName = `copy-${currentMonitoringName}`;
       let copyCount = 1;
@@ -70,7 +70,7 @@ function CostMonitoringBasicTab({
         },
       ]);
     }
-  }, [isDuplicating, form, costMonitorings, isEditing, doesNameExist]);
+  }, [isDuplicating, form, costMonitorings, isEditing]);
 
   return (
     <Form form={form} layout="vertical">
