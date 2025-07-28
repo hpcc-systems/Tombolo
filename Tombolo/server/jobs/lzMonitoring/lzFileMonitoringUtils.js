@@ -104,7 +104,36 @@ const getFilesFromLandingZoneRecursivly = async ({
   }
 };
 
+// Time/Date Functions
+// Local time at cluster
+const findLocalDateTimeAtCluster = timeZoneOffset => {
+  const newDate = new Date();
+  const localTime = new Date(newDate.getTime() + timeZoneOffset * 60 * 1000);
+  return localTime;
+};
+
+// Unit Conversion Functions
+// Convert bytes to specified unit
+const convertBytes = (bytes, unit) => {
+  const units = {
+    MB: 1024 ** 2, // 1,048,576 bytes
+    GB: 1024 ** 3, // 1,073,741,824 bytes
+    TB: 1024 ** 4, // 1,099,511,627,776 bytes
+    PB: 1024 ** 5, // 1,125,899,906,842,624 bytes
+  };
+  return bytes / (units[unit] || 1);
+};
+
+// Format size for display
+const formatSize = (bytes, unit) => {
+  const size = convertBytes(bytes, unit);
+  return `${size.toFixed(2)} ${unit}`;
+};
+
 module.exports = {
   getFilesFromSingleLzDirectory,
   getFilesFromLandingZoneRecursivly,
+  findLocalDateTimeAtCluster,
+  convertBytes,
+  formatSize,
 };

@@ -6,6 +6,9 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 const {
   getFilesFromLandingZoneRecursivly,
+  findLocalDateTimeAtCluster,
+  convertBytes,
+  formatSize,
 } = require('./lzFileMonitoringUtils');
 
 const {
@@ -16,30 +19,6 @@ const {
   asr_products: AsrProducts,
   asr_domains: AsrDomains,
 } = models;
-
-// Convert bytes to specified unit
-function convertBytes(bytes, unit) {
-  const units = {
-    MB: 1024 ** 2, // 1,048,576 bytes
-    GB: 1024 ** 3, // 1,073,741,824 bytes
-    TB: 1024 ** 4, // 1,099,511,627,776 bytes
-    PB: 1024 ** 5, // 1,125,899,906,842,624 bytes
-  };
-  return bytes / (units[unit] || 1);
-}
-
-// Format size for display
-function formatSize(bytes, unit) {
-  const size = convertBytes(bytes, unit);
-  return `${size.toFixed(2)} ${unit}`;
-}
-
-// Local time at cluster
-function findLocalDateTimeAtCluster(timeZoneOffset) {
-  const newDate = new Date();
-  const localTime = new Date(newDate.getTime() + timeZoneOffset * 60 * 1000);
-  return localTime;
-}
 
 const monitoring_name = 'Landing Zone Monitoring';
 

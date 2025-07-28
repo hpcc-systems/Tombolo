@@ -7,6 +7,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 const {
   getFilesFromLandingZoneRecursivly,
+  findLocalDateTimeAtCluster,
 } = require('./lzFileMonitoringUtils');
 
 const {
@@ -17,13 +18,6 @@ const {
   asr_products: AsrProducts,
   asr_domains: AsrDomains,
 } = models;
-
-// Local time at cluster
-function findLocalDateTimeAtCluster(timeZoneOffset) {
-  const newDate = new Date();
-  const localTime = new Date(newDate.getTime() + timeZoneOffset * 60 * 1000);
-  return localTime;
-}
 
 const monitoring_name = 'Landing Zone Monitoring';
 
