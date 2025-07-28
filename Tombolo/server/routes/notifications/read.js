@@ -5,16 +5,22 @@ const fsPromises = require('fs/promises');
 const path = require('path');
 const { Op } = require('sequelize');
 const moment = require('moment');
-const { body, param, validationResult } = require('express-validator');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateGetNotifications,
+  validateNotificationByType,
+  validateDeleteNotificationByType,
+  validateDeleteNotifications,
+  validatePutUpdateNotification,
+} = require('../../middlewares/notificationsMiddleware');
 
 const logger = require('../../config/logger');
-const validatorUtil = require('../../utils/validator');
-const models = require('../../models');
-const monitoring_notifications = models.monitoring_notifications;
-const fileMonitoring = models.fileMonitoring;
-const clusterMonitoring = models.clusterMonitoring;
-const jobMonitoring = models.jobMonitoring;
-
+const {
+  monitoring_notifications,
+  fileMonitoring,
+  clusterMonitoring,
+  jobMonitoring,
+} = require('../../models');
 const ROOT = 'tombolo/server';
 
 router.get('/filteredNotifications', async (req, res) => {
@@ -65,15 +71,9 @@ router.get('/filteredNotifications', async (req, res) => {
 
 router.get(
   '/:applicationId',
-  [param('applicationId').isUUID(4).withMessage('Invalid application id')],
+  validate(validateGetNotifications),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const { applicationId: application_id } = req.params;
       if (!application_id) throw Error('Invalid app ID');
       const notifications = await monitoring_notifications.findAll({
@@ -104,14 +104,9 @@ router.get(
 
 router.get(
   '/:applicationId/file/:type',
-  [param('applicationId').isUUID(4).withMessage('Invalid application id')],
+  validate(validateNotificationByType),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const { applicationId: application_id } = req.params;
       if (!application_id) throw Error('Invalid app ID');
       const notifications = await monitoring_notifications.findAll({
@@ -134,7 +129,7 @@ router.get(
       let output;
 
       if (type === 'CSV') {
-        output = `id,monitoringId,Channel,Reason,Status,Created,Deleted`;
+        output = 'id,monitoringId,Channel,Reason,Status,Created,Deleted';
         notifications.map(notification => {
           output +=
             '\n' +
@@ -169,11 +164,6 @@ router.get(
         output = JSON.stringify(output);
       }
 
-      //verify type to avoid user input
-      if (type !== 'JSON' && type !== 'CSV') {
-        throw Error('Invalid file type');
-      }
-
       let filePath = path.join(
         __dirname,
         '..',
@@ -196,20 +186,10 @@ router.get(
 //method for removing file after download on front-end
 router.delete(
   '/:applicationId/file/:type',
-  [param('applicationId').isUUID(4).withMessage('Invalid application id')],
+  validate(validateDeleteNotificationByType),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const type = req.params.type;
-
-      //verify type to avoid user input
-      if (type !== 'JSON' && type !== 'CSV') {
-        throw Error('Invalid file type');
-      }
 
       const filePath = path.join(
         __dirname,
@@ -232,82 +212,48 @@ router.delete(
 );
 
 //Delete notification
-router.delete(
-  '/',
-  [
-    body('id')
-      .optional({ checkFalsy: false })
-      .isUUID(4)
-      .withMessage('Invalid notification ids'),
-  ],
-  async (req, res) => {
-    //Validate
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
-
-    try {
-      const { notifications } = req.body;
-      await monitoring_notifications.destroy({ where: { id: notifications } });
-      return res
-        .status(200)
-        .send({ success: true, message: 'Deletion successful' });
-    } catch (err) {
-      logger.error(err.message);
-      return res
-        .status(503)
-        .send({ success: false, message: 'Failed to delete' });
-    }
+router.delete('/', validate(validateDeleteNotifications), async (req, res) => {
+  try {
+    const { notifications } = req.body;
+    await monitoring_notifications.destroy({ where: { id: notifications } });
+    return res
+      .status(200)
+      .send({ success: true, message: 'Deletion successful' });
+  } catch (err) {
+    logger.error(err.message);
+    return res
+      .status(503)
+      .send({ success: false, message: 'Failed to delete' });
   }
-);
+});
 
-router.put(
-  '/',
-  [
-    body('id')
-      .optional({ checkFalsy: false })
-      .isUUID(4)
-      .withMessage('Invalid notification ids'),
-  ],
-  async (req, res) => {
-    // validate
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+router.put('/', validate(validatePutUpdateNotification), async (req, res) => {
+  try {
+    const { notifications, status, comment } = req.body;
+
+    if (status) {
+      await monitoring_notifications.update(
+        { status },
+        { where: { id: notifications } }
+      );
     }
 
-    try {
-      const { notifications, status, comment } = req.body;
-
-      if (status) {
-        await monitoring_notifications.update(
-          { status },
-          { where: { id: notifications } }
-        );
-      }
-
-      if (comment || comment === '') {
-        await monitoring_notifications.update(
-          { comment },
-          { where: { id: notifications } }
-        );
-      }
-
-      return res
-        .status(200)
-        .send({ success: true, message: 'Update successful' });
-    } catch (err) {
-      logger.error(err.message);
-      return res
-        .status(503)
-        .send({ success: false, message: 'Failed to update status' });
+    if (comment || comment === '') {
+      await monitoring_notifications.update(
+        { comment },
+        { where: { id: notifications } }
+      );
     }
+
+    return res
+      .status(200)
+      .send({ success: true, message: 'Update successful' });
+  } catch (err) {
+    logger.error(err.message);
+    return res
+      .status(503)
+      .send({ success: false, message: 'Failed to update status' });
   }
-);
+});
 
 module.exports = router;
