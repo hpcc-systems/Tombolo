@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { body, param, validationResult } = require('express-validator');
 
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateCreateMsTeamsHook,
+  validateUpdateMsTeamsHook,
+  validateDeleteMsTeamsHook,
+} = require('../../middlewares/msTeamsHookMiddleware');
 const logger = require('../../config/logger');
-const models = require('../../models');
-const TeamsHook = models.teams_hook;
+const { teams_hook: TeamsHook } = require('../../models');
 
 // GET all teams hooks
 router.get('/', async (req, res) => {
@@ -20,52 +24,17 @@ router.get('/', async (req, res) => {
 });
 
 // POST create teams hook
-router.post(
-  '/',
-  [
-    body('name')
-      .isString()
-      .matches(/^[a-zA-Z0-9_ ()-]+$/)
-      .withMessage(
-        'Name is required and must be a string containing a-z, A-Z, 0-9, _'
-      ),
-    body('url').isString().withMessage('URL is required and must be a string'),
-    body('createdBy')
-      .isUUID()
-      .withMessage('CreatedBy is required and must be a UUID'),
-    body('lastModifiedBy')
-      .isUUID()
-      .withMessage('LastModified is required and must be a UUID'),
-    body('approved')
-      .optional()
-      .isBoolean()
-      .withMessage('Approved  must be a boolean'),
-    body('approvedBy')
-      .optional()
-      .isString()
-      .matches(/^[a-zA-Z0-9_]+$/)
-      .withMessage('ApprovedBy  must be a string containing a-z, A-Z, 0-9, _'),
-    body('metaData')
-      .optional({ nullable: true })
-      .isJSON()
-      .withMessage('MetaData must be a valid JSON or null'),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(503).json({ errors: errors.array() });
-      }
-      const response = await TeamsHook.create(req.body);
-      return res.status(200).send(response);
-    } catch (err) {
-      logger.error(err.message);
-      return res
-        .status(500)
-        .send('Error while creating teams hook. Try again later.');
-    }
+router.post('/', validate(validateCreateMsTeamsHook), async (req, res) => {
+  try {
+    const response = await TeamsHook.create(req.body);
+    return res.status(200).send(response);
+  } catch (err) {
+    logger.error(err.message);
+    return res
+      .status(500)
+      .send('Error while creating teams hook. Try again later.');
   }
-);
+});
 
 // PUT edit teams hook
 router.patch(
@@ -77,43 +46,11 @@ router.patch(
       }
       next();
     },
-    body('id').isUUID().withMessage('ID is required and must be a UUID'),
-    body('name')
-      .optional()
-      .isString()
-      .matches(/^[a-zA-Z0-9_ ]+$/)
-      .withMessage('Name must be a string containing a-z, A-Z, 0-9, _'),
-    body('url')
-      .optional()
-      .isString()
-      .withMessage('URL is required and must be a string'),
-    body('lastModifiedBy')
-      .isString()
-      .matches(/^[a-zA-Z0-9_ ]+$/)
-      .withMessage(
-        'LastModified imust be a string containing a-z, A-Z, 0-9, _'
-      ),
-    body('approved')
-      .optional()
-      .isBoolean()
-      .withMessage('Approved  must be a boolean'),
-    body('approvedBy')
-      .optional()
-      .isString()
-      .matches(/^[a-zA-Z0-9_]+$/)
-      .withMessage('ApprovedBy  must be a string containing a-z, A-Z, 0-9, _'),
-    body('metaData')
-      .optional({ nullable: true })
-      .isJSON()
-      .withMessage('MetaData must be a valid JSON or null'),
+    validate(validateUpdateMsTeamsHook),
   ],
 
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(503).json({ errors: errors.array() });
-      }
       const response = await TeamsHook.update(req.body, {
         where: { id: req.body.id },
       });
@@ -128,27 +65,18 @@ router.patch(
 );
 
 // DELETE delete teams hook
-router.delete(
-  '/:id',
-  [param('id').isUUID().withMessage('ID is required and must be a UUID')],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(503).json({ errors: errors.array() });
-      }
-
-      await TeamsHook.destroy({
-        where: { id: req.params.id },
-      });
-      return res.status(200).send('Successfully deleted teams hook');
-    } catch (err) {
-      logger.error(err);
-      return res
-        .status(500)
-        .send('Error while deleting teams hook. Try again later.');
-    }
+router.delete('/:id', validate(validateDeleteMsTeamsHook), async (req, res) => {
+  try {
+    await TeamsHook.destroy({
+      where: { id: req.params.id },
+    });
+    return res.status(200).send('Successfully deleted teams hook');
+  } catch (err) {
+    logger.error(err);
+    return res
+      .status(500)
+      .send('Error while deleting teams hook. Try again later.');
   }
-);
+});
 
 module.exports = router;

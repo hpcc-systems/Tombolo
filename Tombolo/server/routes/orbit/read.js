@@ -4,14 +4,27 @@ const {
   monitoring_notifications,
 } = require('../../models');
 const express = require('express');
-const { param, body, validationResult } = require('express-validator');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateCreateOrbit,
+  validateGetOrbitsByAppId,
+  validateSearchByKeyword,
+  validateGetOrbitBuild,
+  validateUpdateOrbitMonitor,
+  validateToggleStatus,
+  validateDeleteOrbit,
+  validateGetOrbitById,
+  validateGetWorkunits,
+  validateUpdateList,
+  validateGetDomains,
+  validateGetProducts,
+} = require('../../middlewares/orbitMiddleware');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-const validatorUtil = require('../../utils/validator');
 const notificationTemplate = require('../../jobs/messageCards/notificationTemplate');
 const { notify } = require('../notifications/email-notification');
 const { v4: uuidv4 } = require('uuid');
@@ -33,105 +46,78 @@ require('dotenv').config({ path: ENVPath });
 
 //create one monitoring
 //TODO get workunits from past 2 weeks as well in orbitbuilds table
-router.post(
-  '/',
-  [
-    body('application_id').isUUID(4).withMessage('Invalid application id'),
-    body('cron').custom(value => {
-      const valArray = value.split(' ');
-      if (valArray.length > 5) {
-        throw new Error(
-          `Expected number of cron parts 5, received ${valArray.length}`
-        );
-      } else {
-        return Promise.resolve('Good to go');
-      }
-    }),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
+router.post('/', validate(validateCreateOrbit), async (req, res) => {
+  try {
+    // get last status and WU to store against future checks
+    const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${SqlString.escape(
+      req.body.build
+    )} order by Date desc LIMIT 1`;
 
-      // get last status and WU to store against future checks
-      const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${SqlString.escape(
-        req.body.build
-      )} order by Date desc LIMIT 1`;
+    const wuResult = await runMySQLQuery(query, orbitDbConfig);
 
-      const wuResult = await runMySQLQuery(query, orbitDbConfig);
-
-      if (wuResult?.err) {
-        throw Error(result.message);
-      }
-
-      //destructure out of recordset and place inside of new metaData
-      const { WorkUnit, Date, Status } = wuResult[0][0];
-
-      const metaData = req.body.metaData;
-
-      metaData.lastWorkUnit = {
-        lastWorkUnit: WorkUnit,
-        lastWorkUnitDate: Date,
-        lastWorkUnitStatus: Status,
-      };
-
-      //null out isActive in metaData to reduce noise
-      metaData.isActive = null;
-
-      // TODO transform data before sending in for easier updates
-      let newBuildData = {
-        application_id: req.body.application_id,
-        cron: req.body.cron,
-        name: req.body.name,
-        build: req.body.build,
-        severityCode: req.body.severityCode,
-        product: req.body.product,
-        businessUnit: req.body.businessUnit,
-        host: req.body.host,
-        primaryContact: req.body.primaryContact,
-        secondaryContact: req.body.secondaryContact,
-        metaData: metaData,
-        isActive: req.body.isActive,
-      };
-
-      const newOrbitMonitoring = await orbitMonitoring.create(newBuildData);
-
-      const { isActive } = req.body;
-
-      //Add monitoring to bree if start monitoring now is checked
-      if (isActive) {
-        const schedularOptions = {
-          orbitMonitoring_id: newOrbitMonitoring.dataValues.id,
-          cron: newOrbitMonitoring.cron,
-        };
-
-        jobScheduler.createOrbitMonitoringJob(schedularOptions);
-      }
-
-      return res.status(201).send(newOrbitMonitoring);
-    } catch (error) {
-      logger.error(error);
-      return res
-        .status(500)
-        .json({ message: 'Unable to save Orbit monitoring details' });
+    if (wuResult?.err) {
+      throw Error(result.message);
     }
+
+    //destructure out of recordset and place inside of new metaData
+    const { WorkUnit, Date, Status } = wuResult[0][0];
+
+    const metaData = req.body.metaData;
+
+    metaData.lastWorkUnit = {
+      lastWorkUnit: WorkUnit,
+      lastWorkUnitDate: Date,
+      lastWorkUnitStatus: Status,
+    };
+
+    //null out isActive in metaData to reduce noise
+    metaData.isActive = null;
+
+    // TODO transform data before sending in for easier updates
+    let newBuildData = {
+      application_id: req.body.application_id,
+      cron: req.body.cron,
+      name: req.body.name,
+      build: req.body.build,
+      severityCode: req.body.severityCode,
+      product: req.body.product,
+      businessUnit: req.body.businessUnit,
+      host: req.body.host,
+      primaryContact: req.body.primaryContact,
+      secondaryContact: req.body.secondaryContact,
+      metaData: metaData,
+      isActive: req.body.isActive,
+    };
+
+    const newOrbitMonitoring = await orbitMonitoring.create(newBuildData);
+
+    const { isActive } = req.body;
+
+    //Add monitoring to bree if start monitoring now is checked
+    if (isActive) {
+      const schedularOptions = {
+        orbitMonitoring_id: newOrbitMonitoring.dataValues.id,
+        cron: newOrbitMonitoring.cron,
+      };
+
+      jobScheduler.createOrbitMonitoringJob(schedularOptions);
+    }
+
+    return res.status(201).send(newOrbitMonitoring);
+  } catch (error) {
+    logger.error(error);
+    return res
+      .status(500)
+      .json({ message: 'Unable to save Orbit monitoring details' });
   }
-);
+});
 
 //get all monitorings
 router.get(
   '/allMonitorings/:application_id',
-  [param('application_id').isUUID(4).withMessage('Invalid application id')],
+  validate(validateGetOrbitsByAppId),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
 
       const result = await orbitMonitoring.findAll({
@@ -151,14 +137,9 @@ router.get(
 //get all
 router.get(
   '/allMonitoring/:application_id',
-  [param('application_id').isUUID(4).withMessage('Invalid application id')],
+  validate(validateGetOrbitsByAppId),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
       if (!application_id) throw Error('Invalid app ID');
       const result = await orbitMonitoring.findAll({
@@ -178,19 +159,9 @@ router.get(
 //search Database for builds with keyword
 router.get(
   '/search/:application_id/:keyword',
-  [param('application_id').isUUID(4).withMessage('Invalid application id')],
-  [
-    param('keyword')
-      .matches(/^[a-zA-Z0-9_.\-:\*\? ]*$/)
-      .withMessage('Invalid keyword'),
-  ],
+  validate(validateSearchByKeyword),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id, keyword } = req.params;
       if (!application_id) throw Error('Invalid app ID');
 
@@ -232,20 +203,9 @@ router.get(
 /* get single build */
 router.get(
   '/getOrbitBuildDetails/:buildName',
-  [
-    param('buildName')
-      .matches(/^[a-zA-Z0-9_.\-:\*\? ]*$/)
-      .withMessage('Invalid build name'),
-  ],
-
+  validate(validateGetOrbitBuild),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
       const { buildName } = req.params;
 
       //connect to db
@@ -272,186 +232,158 @@ router.get(
 );
 
 //update orbit monitoring
-router.put(
-  '/',
-  [
-    body('application_id').isUUID(4).withMessage('Invalid application id'),
-    body('cron').custom(value => {
-      const valArray = value.split(' ');
-      if (valArray.length > 5) {
-        throw new Error(
-          `Expected number of cron parts 5, received ${valArray.length}`
-        );
-      } else {
-        return Promise.resolve('Good to go');
+router.put('/', validate(validateUpdateOrbitMonitor), async (req, res) => {
+  try {
+    const oldInfo = await orbitMonitoring.findOne({
+      where: { id: req.body.id },
+      raw: true,
+    });
+
+    let newInfo = req.body;
+
+    //destructure info out of sent info
+    const {
+      id,
+      name,
+      build,
+      notifyCondition,
+      severityCode,
+      product,
+      businessUnit,
+      host,
+      isActive,
+      application_id,
+      primaryContact,
+      secondaryContact,
+      cron,
+      metaData: { lastMonitored, monitoringCondition },
+    } = newInfo;
+
+    //CODEQL FIX
+    //-----------------------
+    let notificationChannels = req.body.notificationChannels;
+
+    if (!(notificationChannels instanceof Array)) {
+      return [];
+    }
+    //-----------------------
+
+    //build out notifications object for storing inside metadata
+    let emails, msTeamsGroups;
+    if (notificationChannels.includes('eMail')) {
+      emails = newInfo.emails;
+    }
+    if (notificationChannels.includes('msTeams')) {
+      msTeamsGroups = newInfo.msTeamsGroups;
+    }
+
+    let notifications = [];
+
+    for (let i = 0; i < notificationChannels.length; i++) {
+      if (notificationChannels[i] === 'eMail') {
+        notifications.push({ channel: 'eMail', recipients: emails });
       }
-    }),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
+      if (notificationChannels[i] === 'msTeams') {
+        notifications.push({
+          channel: 'msTeams',
+          recipients: msTeamsGroups,
+        });
+      }
+    }
+    const escapedBuild = SqlString.escape(build);
 
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
+    //get most recent work unit for storage
+    // get last status and WU to store against future checks
+    const query = `select  HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${escapedBuild}
+       order by Date desc LIMIT 1`;
 
-      const oldInfo = await orbitMonitoring.findOne({
-        where: { id: req.body.id },
-        raw: true,
-      });
+    const wuResult = await runMySQLQuery(query, orbitDbConfig);
 
-      let newInfo = req.body;
+    if (wuResult.err) {
+      throw Error(result.message);
+    }
 
-      //destructure info out of sent info
-      const {
-        id,
-        name,
-        build,
-        notifyCondition,
+    //destructure out of recordset and place inside of new metaData
+    const { WorkUnit, Date, Status } = wuResult[0][0];
+
+    //set data fields
+    newInfo = {
+      id,
+      name,
+      cron,
+      isActive,
+      build,
+      severityCode,
+      product,
+      businessUnit,
+      application_id,
+      host,
+      primaryContact,
+      secondaryContact,
+      metaData: {
+        lastWorkUnit: {
+          lastWorkUnit: WorkUnit,
+          lastWorkUnitDate: Date,
+          lastWorkUnitStatus: Status,
+        },
+        lastMonitored,
+        notifications,
         severityCode,
-        product,
-        businessUnit,
-        host,
-        isActive,
-        application_id,
-        primaryContact,
-        secondaryContact,
-        cron,
-        metaData: { lastMonitored, monitoringCondition },
-      } = newInfo;
+        monitoringCondition,
+      },
+    };
+    // -------------------------------------------------------
 
-      //CODEQL FIX
-      //-----------------------
-      let notificationChannels = req.body.notificationChannels;
+    await orbitMonitoring.update(newInfo, { where: { id } });
 
-      if (!(notificationChannels instanceof Array)) {
-        return [];
-      }
-      //-----------------------
+    // If start monitoring was changed to TRUE
+    if (isActive && oldInfo.isActive === 0) {
+      const schedularOptions = {
+        orbitMonitoring_id: id,
+        cron: newOrbitMonitoring.cron,
+      };
 
-      //build out notifications object for storing inside metadata
-      let emails, msTeamsGroups;
-      if (notificationChannels.includes('eMail')) {
-        emails = newInfo.emails;
-      }
-      if (notificationChannels.includes('msTeams')) {
-        msTeamsGroups = newInfo.msTeamsGroups;
-      }
+      jobScheduler.createOrbitMonitoringJob(schedularOptions);
+    }
 
-      let notifications = [];
+    // If start monitoring was changed to FALSE
+    if (!isActive && oldInfo.isActive === 1) {
+      await jobScheduler.removeJobFromScheduler(`Orbit Monitoring - ${id}`);
+    }
 
-      for (let i = 0; i < notificationChannels.length; i++) {
-        if (notificationChannels[i] === 'eMail') {
-          notifications.push({ channel: 'eMail', recipients: emails });
-        }
-        if (notificationChannels[i] === 'msTeams') {
-          notifications.push({
-            channel: 'msTeams',
-            recipients: msTeamsGroups,
+    // if cron has changed
+    if (oldInfo.cron != cron) {
+      const allBreeJobs = jobScheduler.getAllJobs();
+      const jobName = `Orbit Monitoring - ${id}`;
+      for (let job of allBreeJobs) {
+        if (job.name === jobName) {
+          await jobScheduler.removeJobFromScheduler(jobName);
+          await jobScheduler.createOrbitMonitoringJob({
+            orbitMonitoring_id: id,
+
+            cron: cron,
           });
         }
       }
-      const escapedBuild = SqlString.escape(build);
-
-      //get most recent work unit for storage
-      // get last status and WU to store against future checks
-      const query = `select  HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status' from DimBuildInstance where Name = ${escapedBuild}
-       order by Date desc LIMIT 1`;
-
-      const wuResult = await runMySQLQuery(query, orbitDbConfig);
-
-      if (wuResult.err) {
-        throw Error(result.message);
-      }
-
-      //destructure out of recordset and place inside of new metaData
-      const { WorkUnit, Date, Status } = wuResult[0][0];
-
-      //set data fields
-      newInfo = {
-        id,
-        name,
-        cron,
-        isActive,
-        build,
-        severityCode,
-        product,
-        businessUnit,
-        application_id,
-        host,
-        primaryContact,
-        secondaryContact,
-        metaData: {
-          lastWorkUnit: {
-            lastWorkUnit: WorkUnit,
-            lastWorkUnitDate: Date,
-            lastWorkUnitStatus: Status,
-          },
-          lastMonitored,
-          notifications,
-          severityCode,
-          monitoringCondition,
-        },
-      };
-      // -------------------------------------------------------
-
-      await orbitMonitoring.update(newInfo, { where: { id } });
-
-      // If start monitoring was changed to TRUE
-      if (isActive && oldInfo.isActive === 0) {
-        const schedularOptions = {
-          orbitMonitoring_id: id,
-          cron: newOrbitMonitoring.cron,
-        };
-
-        jobScheduler.createOrbitMonitoringJob(schedularOptions);
-      }
-
-      // If start monitoring was changed to FALSE
-      if (!isActive && oldInfo.isActive === 1) {
-        await jobScheduler.removeJobFromScheduler(`Orbit Monitoring - ${id}`);
-      }
-
-      // if cron has changed
-      if (oldInfo.cron != cron) {
-        const allBreeJobs = jobScheduler.getAllJobs();
-        const jobName = `Orbit Monitoring - ${id}`;
-        for (let job of allBreeJobs) {
-          if (job.name === jobName) {
-            await jobScheduler.removeJobFromScheduler(jobName);
-            await jobScheduler.createOrbitMonitoringJob({
-              orbitMonitoring_id: id,
-
-              cron: cron,
-            });
-          }
-        }
-      }
-
-      return res.status(200).send(newInfo);
-    } catch (error) {
-      logger.error(error);
-      return res
-        .status(500)
-        .json({ message: 'Unable to save orbit build monitoring details' });
     }
+
+    return res.status(200).send(newInfo);
+  } catch (error) {
+    logger.error(error);
+    return res
+      .status(500)
+      .json({ message: 'Unable to save orbit build monitoring details' });
   }
-);
+});
 
 // EVERYTHING ABOVE THIS WORKS WITH APP ID VALIDATION
 
 // Pause or start monitoring
 router.put(
   '/togglestatus/:id',
-  [param('id').isUUID(4).withMessage('Invalid orbit monitoring Id')],
+  validate(validateToggleStatus),
   async (req, res) => {
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const { id } = req.params;
       const monitoring = await orbitMonitoring.findOne({
         where: { id },
@@ -492,15 +424,9 @@ router.put(
 //delete
 router.delete(
   '/delete/:id/:name',
-  [param('id').isUUID(4).withMessage('Invalid orbit monitoring id')],
+  validate(validateDeleteOrbit),
   async (req, res) => {
     try {
-      const errors = validationResult(req).formatWith(
-        validatorUtil.errorFormatter
-      );
-
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       // eslint-disable-next-line no-unused-vars
       const { id, name } = req.params;
       const response = await orbitMonitoring.destroy({
@@ -529,16 +455,9 @@ router.delete(
 
 router.get(
   '/getOne/:application_id/:id',
-  [param('id').isUUID(4).withMessage('Invalid orbit id')],
-  [param('application_id').isUUID(4).withMessage('Invalid application id')],
+  validate(validateGetOrbitById),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
       const { id, application_id } = req.params;
 
       const result = await orbitMonitoring.findOne({
@@ -556,15 +475,9 @@ router.get(
 
 router.get(
   '/getWorkunits/:application_id',
-  [param('application_id').isUUID(4).withMessage('Invalid application id')],
+  validate(validateGetWorkunits),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
-
       const { application_id } = req.params;
 
       const result = await orbitMonitoring.findAll({
@@ -605,14 +518,9 @@ router.get(
 //refresh data, grab new builds
 router.post(
   '/updateList/:application_id',
-  [param('application_id').isUUID(4).withMessage('Invalid application id')],
+  validate(validateUpdateList),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const { application_id } = req.params;
       if (!application_id) throw Error('Invalid app ID');
 
@@ -753,14 +661,9 @@ router.post(
 
 router.get(
   '/getDomains/:application_id',
-  [param('application_id').isUUID(4).withMessage('Invalid application id')],
+  validate(validateGetDomains),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const query =
         // eslint-disable-next-line quotes
         "select business_unit from pbi.dim_asr_domain_v where business_unit != 'Unassigned' AND business_unit != 'Not Applicable' order by business_unit asc";
@@ -782,14 +685,9 @@ router.get(
 
 router.get(
   '/getProducts/:application_id',
-  [param('application_id').isUUID(4).withMessage('Invalid application id')],
+  validate(validateGetProducts),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
       const query =
         'select product_name from pbi.dim_asr_product_v order by product_name asc';
       const result = await runSQLQuery(query, fidoDbConfig);

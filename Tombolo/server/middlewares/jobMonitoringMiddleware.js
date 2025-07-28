@@ -1,0 +1,70 @@
+const {
+  paramUuids,
+  stringBody,
+  bodyUuids,
+  objectBody,
+  COMMENT_LENGTH,
+  arrayBody,
+  uuidBody,
+  booleanBody,
+} = require('./commonMiddleware');
+
+const validateParamApplicationId = [paramUuids.applicationId];
+const arrayIds = [arrayBody('ids'), uuidBody('ids.*')];
+
+const createUpdateJobMonitoringValidations = [
+  stringBody('monitoringName'),
+  stringBody('description'),
+  stringBody('monitoringScope'),
+  bodyUuids.clusterId,
+  stringBody('jobName'),
+  bodyUuids.applicationId,
+  objectBody('metaData'),
+];
+
+const validateCreateJobMonitoring = [
+  ...createUpdateJobMonitoringValidations,
+  // body("isActive").isBoolean().withMessage("isActive must be a boolean"),
+  stringBody('createdBy', true),
+  stringBody('lastUpdatedBy', true),
+];
+
+const validateUpdateJobMonitoring = [
+  bodyUuids.id,
+  ...createUpdateJobMonitoringValidations,
+  stringBody('createdBy', true),
+  stringBody('lastUpdatedBy', true),
+];
+
+const validateEvaluateJobMonitoring = [
+  stringBody('approverComment', false, { length: { ...COMMENT_LENGTH } }),
+  ...arrayIds,
+  stringBody('approvalStatus'),
+  booleanBody('isActive'),
+  stringBody('approvedBy'),
+];
+
+const validateBulkDeleteJobMonitoring = [...arrayIds];
+
+const validateDeleteJobMonitoring = [paramUuids.id];
+
+const validateToggleJobMonitoring = [
+  ...arrayIds,
+  stringBody('action', true, { isIn: ['start', 'pause'] }),
+];
+
+const validateBulkUpdateJobMonitoring = [arrayBody('metaData')];
+
+const validateGetJobMonitoringById = [paramUuids.id];
+
+module.exports = {
+  validateCreateJobMonitoring,
+  validateParamApplicationId,
+  validateUpdateJobMonitoring,
+  validateEvaluateJobMonitoring,
+  validateBulkDeleteJobMonitoring,
+  validateDeleteJobMonitoring,
+  validateToggleJobMonitoring,
+  validateBulkUpdateJobMonitoring,
+  validateGetJobMonitoringById,
+};

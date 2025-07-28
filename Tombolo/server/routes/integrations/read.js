@@ -1,13 +1,15 @@
 const sequelize = require('sequelize');
 const express = require('express');
-const { param, body, validationResult } = require('express-validator');
 
-const validatorUtil = require('../../utils/validator');
+const { validate } = require('../../middlewares/validateRequestBody');
+const {
+  validateIntegrationDetails,
+  validateToggleStatus,
+  validateUpdateIntegrationSettings,
+} = require('../../middlewares/integrationsMiddleware');
 const logger = require('../../config/logger');
-const models = require('../../models');
+const { integrations, integration_mapping } = require('../../models');
 
-const integrations = models.integrations;
-const integration_mapping = models.integration_mapping;
 const router = express.Router();
 
 //Get all integrations - active or not from integrations table
@@ -49,14 +51,8 @@ router.get('/getAllActive/', async (req, res) => {
 // Get integration details by integration relation ID
 router.get(
   '/integrationDetails/:id',
-  [param('id').isUUID(4).withMessage('Invalid integration id')],
+  validate(validateIntegrationDetails),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
     try {
       const result = await integration_mapping.findOne({
         where: {
@@ -96,25 +92,16 @@ router.get(
 // Change the active status of an integration
 router.post(
   '/toggleStatus',
-  [body('integrationId').isUUID(4).withMessage('Invalid integration id')],
-  [body('application_id').isUUID(4).withMessage('Invalid integration id')],
-  [body('active').isBoolean().withMessage('Invalid active status')],
+  validate(validateToggleStatus),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
     try {
-      /* 
-     Intention to active 
+      /*
+     Intention to active
        1. restore if soft deleted
        2. create if not exists
      Intention to deactivate
       1. destroy if exists
       */
-
-      if (!errors.isEmpty()) {
-        return res.status(422).json({ success: false, errors: errors.array() });
-      }
       const { integrationId, application_id, active } = req.body;
       const result = await integration_mapping.findOne({
         where: {
@@ -159,15 +146,8 @@ router.post(
 // Update the integration details (MetaData) by integration relation ID
 router.put(
   '/updateIntegrationSettings/:id',
-  [param('id').isUUID(4).withMessage('Invalid integration id')],
-  [body('integrationSettings').isObject().withMessage('Invalid MetaData')],
+  validate(validateUpdateIntegrationSettings),
   async (req, res) => {
-    const errors = validationResult(req).formatWith(
-      validatorUtil.errorFormatter
-    );
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
-    }
     try {
       const result = await integration_mapping.update(
         {
