@@ -80,6 +80,33 @@
                     </tr>
                 <% } %>
 
+                <% if(typeof region !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Region</td>
+                        <td class="section-table-td"><%= region %> </td>
+                    </tr>
+                <% }%>
+
+                <% if(typeof domain !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Domain</td>
+                        <td class="section-table-td"><%= domain %> </td>
+                    </tr>
+                <% }%>
+
+                <% if(typeof product !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Product</td>
+                        <td class="section-table-td"><%= product %> </td>
+                    </tr>
+                <% }%>
+
+                <% if(typeof severity !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Severity</td>
+                        <td class="section-table-td"><%= severity %> </td>
+                    </tr>
+                <% }%>
 
                 <% if(typeof issue !== 'undefined'){ %>
                     <tr class="section-table-td">
@@ -109,6 +136,28 @@
                             <%}) %>
                         </td>
                     </tr>
+
+                    <% if(typeof remedy !== 'undefined'){ %>
+                        <tr class="section-table-td">
+                            <td class="section-table-td"> Issue</td>
+                            <td class="section-table-td">
+                                <% Object.keys(issue).forEach(function(key) { %>
+                                    <div><span> <%= key %> : </span> <%= issue[key] %></div>
+                                <%}) %>
+                            </td>
+                        </tr>
+                    <% }%>
+
+                    <% if(typeof remedy !== 'undefined'){ %>
+                        <tr class="section-table-td">
+                            <td class="section-table-td"> Remedy</td>
+                            <td class="section-table-td">
+                                <% Object.keys(remedy).forEach(function(key) { %>
+                                    <div><span> <%= key %> : </span> <%= remedy[key] %></div>
+                                <%}) %>
+                            </td>
+                        </tr>
+                    <% }%>
                 <% }%>
                 </tbody>
             </table>

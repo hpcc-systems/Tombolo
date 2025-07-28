@@ -131,11 +131,13 @@ async function analyzeCostPerUser() {
             ).toLocaleString(),
           })),
         },
+        asrSpecificMetaData: costMonitoring.metaData.asrSpecificMetaData,
         notificationId: generateNotificationId({
           notificationPrefix,
           timezoneOffset: clusters[0].timezone_offset || 0,
         }),
         notificationOrigin: 'Cost Monitoring',
+        wuId: undefined,
       });
 
       await NotificationQueue.create(notificationPayload);

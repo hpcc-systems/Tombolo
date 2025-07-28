@@ -1,7 +1,6 @@
 const { costMonitoring: CostMonitoring, user: User } = require('../models');
 const logger = require('../config/logger');
 const { Op } = require('sequelize');
-const { validationResult } = require('express-validator');
 
 const includeUserFks = [
   {
@@ -46,8 +45,9 @@ async function createCostMonitoring(req, res) {
 
 async function updateCostMonitoring(req, res) {
   try {
-    const result = await CostMonitoring.update(req.body, {
-      where: { id: req.body.id },
+    const updatedData = { ...req.body, lastUpdatedBy: req.user.id };
+    const result = await CostMonitoring.update(updatedData, {
+      where: { id: updatedData.id },
     });
 
     if (result[0] === 0) {
