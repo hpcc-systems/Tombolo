@@ -12,7 +12,11 @@ export const useMonitoringsAndAllProductCategories = (applicationId, getAllMonit
       if (!applicationId) return;
       try {
         const allMonitorings = await getAllMonitorings({ applicationId });
-        setMonitorings(allMonitorings);
+        if (Array.isArray(allMonitorings)) {
+          setMonitorings(allMonitorings);
+        } else {
+          setMonitorings(allMonitorings.data);
+        }
       } catch (error) {
         message.error('Error fetching job monitorings');
       }
@@ -30,7 +34,7 @@ export const useMonitoringsAndAllProductCategories = (applicationId, getAllMonit
 
     fetchMonitorings();
     fetchAllProductCategories();
-  }, [applicationId]);
+  }, [applicationId, getAllMonitorings]);
 
   return { monitorings, setMonitorings, allProductCategories };
 };
