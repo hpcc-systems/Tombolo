@@ -14,9 +14,11 @@ const {
   createNotificationPayload,
   findLocalDateTimeAtCluster,
   generateNotificationId,
+  nocAlertDescription,
 } = require('../jobMonitoring/monitorJobsUtil');
 const { Op } = require('sequelize');
 const moment = require('moment');
+const _ = require('lodash');
 
 async function analyzeCostPerUser() {
   try {
@@ -121,7 +123,6 @@ async function analyzeCostPerUser() {
       });
       const notificationPrefix = 'CM';
 
-      // TODO: The Discovered at seems to be wrong? Showing 4 PM at actual 12 PM on play cluster
       const notificationPayload = createNotificationPayload({
         type: 'email',
         notificationDescription: `Cost Monitoring (${costMonitoring.monitoringName}) detected that a user passed the cost threshold`,
@@ -164,6 +165,40 @@ async function analyzeCostPerUser() {
           level: 'info',
           text: 'Notification(s) sent for analyzeCostPerUser',
         });
+
+      try {
+        const severityRecipients = domain.severityAlertRecipients;
+        const severityThresholdPassed =
+          costMonitoring.metaData.asrSpecificMetaData.severity >=
+          domain.severityThreshold;
+        const hasSeverityRecipients =
+          severityRecipients && severityRecipients.length > 0;
+        if (severityThresholdPassed && hasSeverityRecipients) {
+          const nocNotificationPayload = _.cloneDeep(notificationPayload);
+          nocNotificationPayload.metaData.notificationDescription =
+            nocAlertDescription;
+          nocNotificationPayload.metaData.mainRecipients = severityRecipients;
+          nocNotificationPayload.metaData.notificationId =
+            generateNotificationId({
+              notificationPrefix,
+              timezoneOffset: clusters[0].timezone_offset || 0,
+            });
+          delete nocNotificationPayload.metaData.cc;
+          await NotificationQueue.create(nocNotificationPayload);
+        }
+      } catch (nocError) {
+        if (parentPort) {
+          parentPort.postMessage({
+            level: 'error',
+            text: `Error in analyzeCostPerUser, failed to send noc Notification: ${nocError.message}`,
+          });
+        } else {
+          logger.error(
+            'Error in analyzeCostPerUser, failed to send noc Notification: ',
+            nocError
+          );
+        }
+      }
 
       lastCostMonitoringData.notificationSentDate = new Date();
       await lastCostMonitoringData.save();
