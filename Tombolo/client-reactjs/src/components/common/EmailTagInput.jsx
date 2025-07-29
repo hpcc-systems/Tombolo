@@ -2,20 +2,27 @@ import { isEmail } from 'validator';
 import { Form, Select } from 'antd';
 import React from 'react';
 
-function PrimaryContacts() {
+export default function EmailTagInput({ label, name, required }) {
   return (
     <Form.Item
-      label="Primary Contact(s)"
-      name="primaryContacts"
-      required
+      label={label}
+      name={name}
+      required={required}
       rules={[
         {
           validator: (_, value) => {
-            if (!value || value.length === 0) {
-              return Promise.reject(new Error('Please add at least one email!'));
+            if (required) {
+              if (!value || value.length === 0) {
+                return Promise.reject(new Error('Please add at least one email!'));
+              }
+            } else {
+              if (!value) {
+                return Promise.resolve();
+              }
             }
+
             if (value.length > 20) {
-              return Promise.reject(new Error('Too many emails'));
+              return Promise.reject(new Error('Max 20 emails allowed'));
             }
             if (!value.every((v) => isEmail(v))) {
               return Promise.reject(new Error('One or more emails are invalid'));
@@ -33,5 +40,3 @@ function PrimaryContacts() {
     </Form.Item>
   );
 }
-
-export default PrimaryContacts;
