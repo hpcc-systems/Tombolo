@@ -91,26 +91,11 @@ function CostMonitoring() {
     }
   }, [editingData, duplicatingData, selectedMonitoring, form]);
 
-  const { monitoringTypeId } = useMonitorType(monitoringTypeName, setFilters);
+  const { monitoringTypeId } = useMonitorType(monitoringTypeName);
 
   // Get domains and product categories
   const { domains, productCategories, setProductCategories, selectedDomain, setSelectedDomain } =
     useDomainAndCategories(monitoringTypeId, selectedMonitoring);
-
-  // Get filters from local storage
-  // useEffect(() => {
-  //   const existingFiltersFromLocalStorage = localStorage.getItem('cMFilters');
-  //   if (existingFiltersFromLocalStorage) {
-  //     const filtersFromLocalStorage = JSON.parse(existingFiltersFromLocalStorage);
-  //     setFilters(filtersFromLocalStorage);
-  //   }
-  //
-  //   // Get filter visibility from local storage
-  //   const filtersVisibilityFromLocalStorage = localStorage.getItem('cMFiltersVisible');
-  //   if (filtersVisibilityFromLocalStorage !== null) {
-  //     setFiltersVisible(JSON.parse(filtersVisibilityFromLocalStorage));
-  //   }
-  // }, []);
 
   // When filter changes, filter the cost monitorings
   useEffect(() => {

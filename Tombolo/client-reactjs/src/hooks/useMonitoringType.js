@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { message } from 'antd';
 import { getMonitoringTypeId } from '../components/common/ASRTools';
 
-export const useMonitorType = (monitoringTypeName, setFilters) => {
+export const useMonitorType = (monitoringTypeName) => {
   const [monitoringTypeId, setMonitoringTypeId] = useState(null);
 
   useEffect(() => {
@@ -16,17 +16,7 @@ export const useMonitorType = (monitoringTypeName, setFilters) => {
       }
     };
 
-    // Get filters from local storage
-    const loadFiltersFromStorage = () => {
-      const storedFilters = localStorage.getItem('jMFilters');
-      if (storedFilters) {
-        const parsedFilters = JSON.parse(storedFilters);
-        setFilters(parsedFilters);
-      }
-    };
-
     fetchMonitoringTypeId();
-    loadFiltersFromStorage();
   }, [monitoringTypeName]);
 
   return { monitoringTypeId };

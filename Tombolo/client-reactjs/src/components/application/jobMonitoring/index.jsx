@@ -124,10 +124,10 @@ function JobMonitoring() {
         }
       }
     }
-  }, [editingData, duplicatingData]);
+  }, [editingData, duplicatingData, form, selectedMonitoring, clusters]);
 
   // Get monitoring type ID, Filters from local storage
-  const { monitoringTypeId } = useMonitorType(monitoringTypeName, setFilters);
+  const { monitoringTypeId } = useMonitorType(monitoringTypeName);
   // Get domains and product categories
   const { domains, productCategories, setProductCategories, selectedDomain, setSelectedDomain } =
     useDomainAndCategories(monitoringTypeId, selectedMonitoring);
