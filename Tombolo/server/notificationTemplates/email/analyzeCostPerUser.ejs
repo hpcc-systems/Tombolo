@@ -87,17 +87,17 @@
                     </tr>
                 <% }%>
 
-                <% if(typeof domain !== 'undefined'){ %>
+                <% if(typeof domainName !== 'undefined'){ %>
                     <tr class="section-table-td">
                         <td class="section-table-td"> Domain</td>
-                        <td class="section-table-td"><%= domain %> </td>
+                        <td class="section-table-td"><%= domainName %> </td>
                     </tr>
                 <% }%>
 
-                <% if(typeof product !== 'undefined'){ %>
+                <% if(typeof productName !== 'undefined'){ %>
                     <tr class="section-table-td">
                         <td class="section-table-td"> Product</td>
-                        <td class="section-table-td"><%= product %> </td>
+                        <td class="section-table-td"><%= productName %> </td>
                     </tr>
                 <% }%>
 
@@ -136,17 +136,6 @@
                             <%}) %>
                         </td>
                     </tr>
-
-                    <% if(typeof remedy !== 'undefined'){ %>
-                        <tr class="section-table-td">
-                            <td class="section-table-td"> Issue</td>
-                            <td class="section-table-td">
-                                <% Object.keys(issue).forEach(function(key) { %>
-                                    <div><span> <%= key %> : </span> <%= issue[key] %></div>
-                                <%}) %>
-                            </td>
-                        </tr>
-                    <% }%>
 
                     <% if(typeof remedy !== 'undefined'){ %>
                         <tr class="section-table-td">

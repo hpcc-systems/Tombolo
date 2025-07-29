@@ -7,6 +7,8 @@ const {
   monitoring_types: MonitoringTypes,
   costMonitoringDataTotals: CostMonitoringDataTotals,
   cluster: Cluster,
+  asr_domains: Domain,
+  asr_products: Product,
 } = require('../../models');
 const {
   createNotificationPayload,
@@ -100,10 +102,19 @@ async function analyzeCostPerUser() {
         continue;
       }
 
+      const productId =
+        costMonitoring.metaData.asrSpecificMetaData.productCategory;
+      const domainId = costMonitoring.metaData.asrSpecificMetaData.domain;
+
+      const product = await Product.findByPk(productId);
+      const domain = await Domain.findByPk(domainId);
+
       const primaryContacts =
         costMonitoring.metaData.notificationMetaData.primaryContacts;
-      const secondaryContacts = [];
-      const notifyContacts = [];
+      const secondaryContacts =
+        costMonitoring.metaData.notificationMetaData.secondaryContacts;
+      const notifyContacts =
+        costMonitoring.metaData.notificationMetaData.notifyContacts || [];
 
       const clusters = await Cluster.findAll({
         where: { id: { [Op.in]: clusterIds } },
@@ -131,7 +142,14 @@ async function analyzeCostPerUser() {
             ).toLocaleString(),
           })),
         },
-        asrSpecificMetaData: costMonitoring.metaData.asrSpecificMetaData,
+        asrSpecificMetaData: {
+          productShortCode: product.shortCode,
+          productName: product.name,
+          productTier: product.tier,
+          domainName: domain.name,
+          region: domain.region,
+          severity: domain.severity,
+        },
         notificationId: generateNotificationId({
           notificationPrefix,
           timezoneOffset: clusters[0].timezone_offset || 0,
