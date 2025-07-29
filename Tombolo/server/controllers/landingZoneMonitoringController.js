@@ -11,7 +11,9 @@ const {
 } = require('../models');
 const { decryptString } = require('../utils/cipher');
 const { getClusterOptions } = require('../utils/getClusterOptions');
-const { raw } = require('express');
+const {
+  uniqueConstraintErrorHandler,
+} = require('../utils/uniqueConstraintErrorHandler');
 
 // Function to get dropzones and associated machines when a cluster id is provided
 const getDropzonesForACluster = async (req, res) => {
@@ -133,11 +135,12 @@ const createLandingZoneMonitoring = async (req, res) => {
       data: response,
     });
   } catch (err) {
-    logger.error(`Error creating landing zone monitoring: ${err.message}`);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create landing zone monitoring',
-    });
+    logger.error('Error creating landing zone monitoring: ', err);
+    const errorResult = uniqueConstraintErrorHandler(
+      err,
+      'Failed to create landing zone monitoring'
+    );
+    res.status(errorResult.statusCode).json(errorResult.responseObject);
   }
 };
 
@@ -531,7 +534,7 @@ const toggleLandingZoneMonitoringStatus = async (req, res) => {
 };
 
 // Bulk update landing zone monitoring
-/* 
+/*
 map all the objects in the arry and build new arery of ids
 get all rows with the ids
 update metaData of those rows

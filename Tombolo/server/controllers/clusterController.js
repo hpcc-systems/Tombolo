@@ -17,6 +17,9 @@ const hpccUtil = require('../utils/hpcc-util.js');
 const hpccJSComms = require('@hpcc-js/comms');
 const Cluster = models.cluster;
 const moment = require('moment');
+const {
+  uniqueConstraintErrorHandler,
+} = require('../utils/uniqueConstraintErrorHandler');
 
 // Add a cluster - Without sending progress updates to client
 const addCluster = async (req, res) => {
@@ -141,10 +144,11 @@ const addCluster = async (req, res) => {
     const newCluster = await Cluster.create(clusterPayload);
     return res.status(201).json({ success: true, data: newCluster });
   } catch (err) {
-    logger.error(`Add cluster: ${err.message}`);
+    logger.error('Failed to add cluster: ', err);
+    const errorResult = uniqueConstraintErrorHandler(err, err.message);
     return res
-      .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .status(err.statusCode || errorResult.statusCode)
+      .json(errorResult.responseObject);
   }
 };
 
@@ -383,7 +387,7 @@ const addClusterWithProgress = async (req, res) => {
     res.end();
     // res.status(201).json({ success: true, data: newCluster });
   } catch (err) {
-    logger.error(`Add cluster: ${err.message}`);
+    logger.error('Add cluster: ', err);
     // res.status(err.statusCode || 500).json({ success: false, message: err.message });
     sendUpdate({ step: 99, success: false, message: err.message });
     res.end();
@@ -403,7 +407,7 @@ const getClusters = async (req, res) => {
 
     return res.status(200).json({ success: true, data: clusters });
   } catch (err) {
-    logger.error(`Get clusters: ${err.message}`);
+    logger.error('Get clusters: ', err);
     return res
       .status(err.statusCode || 500)
       .json({ success: false, message: err.message });
