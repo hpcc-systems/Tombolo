@@ -39,6 +39,8 @@ const CostMonitoringTable = ({
   setDisplayAddRejectModal,
   setSelectedRows,
   selectedRows,
+  domains,
+  allProductCategories,
   filteringCosts,
   isReader,
   clusters,
@@ -51,8 +53,13 @@ const CostMonitoringTable = ({
   const {
     applicationReducer: {
       application: { applicationId },
+      integrations,
     },
   } = useSelector((state) => state);
+
+  const asrIntegration = integrations.some(
+    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
 
   // Cluster that is not able to establish connection
   useEffect(() => {
@@ -275,6 +282,60 @@ const CostMonitoringTable = ({
       },
     },
   ];
+
+  // If ASR integration on add couple asr specific columns
+  if (asrIntegration) {
+    columns.splice(4, 0, {
+      title: 'Domain',
+      render: (record) => {
+        const domain = record?.metaData?.asrSpecificMetaData?.domain || '';
+        const domainName = domains.filter((d) => d.value === domain)[0]?.label;
+        if (domainName) {
+          return domainName;
+        } else {
+          return domain;
+        }
+      },
+    });
+    columns.splice(5, 0, {
+      title: 'Product',
+      render: (record) => {
+        const productId = record?.metaData?.asrSpecificMetaData?.productCategory || '';
+        let productName = allProductCategories.filter((d) => d.id === productId)[0]?.name;
+        const productShortCode = allProductCategories.filter((d) => d.id === productId)[0]?.shortCode;
+        if (productName) {
+          // Truncate product name to 25 chars if it is too long
+          if (productName.length > 20) {
+            productName = `${productName.substring(0, 20)} ...`;
+          }
+
+          return <Tooltip title={productName}>{`${productName} ( ${productShortCode} )`}</Tooltip>;
+        } else {
+          return productId;
+        }
+      },
+    });
+  }
+
+  // If no ASR integration
+  if (!asrIntegration) {
+    columns.splice(4, 0, {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      render: (text) => (
+        <Tooltip title={text}>
+          <span>{text.length > 100 ? `${text.slice(0, 100)}...` : text}</span>
+        </Tooltip>
+      ),
+    });
+
+    columns.splice(5, 0, {
+      title: 'Monitoring Scope',
+      dataIndex: 'monitoringScope',
+      key: 'monitoringScope',
+    });
+  }
 
   // When eye icon is clicked, display the monitoring details modal
   const viewMonitoringDetails = (record) => {

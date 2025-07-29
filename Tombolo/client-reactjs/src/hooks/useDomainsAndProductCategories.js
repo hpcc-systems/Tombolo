@@ -23,7 +23,7 @@ export const useDomainAndCategories = (monitoringTypeId, selectedMonitoring) => 
       }
     };
 
-    // Set selected domain from selectedMonitoring
+    // Set the selected domain from selectedMonitoring
     const setDomainFromMonitoring = () => {
       if (selectedMonitoring?.metaData?.asrSpecificMetaData?.domain) {
         setSelectedDomain(selectedMonitoring.metaData.asrSpecificMetaData.domain);
