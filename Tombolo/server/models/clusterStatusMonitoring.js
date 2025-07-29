@@ -105,6 +105,16 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         type: DataTypes.DATE,
       },
+      deletedBy: {
+        allowNull: true,
+        type: DataTypes.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
     },
     {
       paranoid: true,

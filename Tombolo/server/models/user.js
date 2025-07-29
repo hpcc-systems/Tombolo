@@ -207,6 +207,25 @@ module.exports = (sequelize, DataTypes) => {
       as: 'approvedLandingZoneMonitorings',
       onDelete: 'NO ACTION',
     });
+
+    // User to cluster status monitoring
+    user.hasMany(models.clusterStatusMonitoring, {
+      foreignKey: 'createdBy',
+      as: 'creator',
+      onDelete: 'NO ACTION',
+    });
+
+    user.hasMany(models.clusterStatusMonitoring, {
+      foreignKey: 'lastUpdatedBy',
+      as: 'updater',
+      onDelete: 'NO ACTION',
+    });
+
+    user.hasMany(models.clusterStatusMonitoring, {
+      foreignKey: 'approvedBy',
+      as: 'approver',
+      onDelete: 'NO ACTION',
+    });
   };
 
   return user;
