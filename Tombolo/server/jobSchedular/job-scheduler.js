@@ -74,6 +74,8 @@ const {
 
 const {
   startLzFileMovementMonitoring,
+  startLzFileCountMonitoring,
+  startLzSpaceUsageMonitoring,
 } = require('../jobSchedularMethods/lzMonitoring.js');
 
 class JobScheduler {
@@ -173,6 +175,8 @@ class JobScheduler {
       await sendPasswordExpiryEmails.call(this);
       await sendAccountDeleteEmails.call(this);
       await startLzFileMovementMonitoring.call(this);
+      await startLzFileCountMonitoring.call(this);
+      await startLzSpaceUsageMonitoring.call(this);
       logger.info('-----------------------------');
       logger.info('Server is finished intializing, and is now running');
       logger.info('-----------------------------');
@@ -441,6 +445,14 @@ class JobScheduler {
   // Landing Zone Monitoring
   startLzFileMovementMonitoring() {
     return startLzFileMovementMonitoring.call(this);
+  }
+
+  startLzFileCountMonitoring() {
+    return startLzFileCountMonitoring.call(this);
+  }
+
+  startLzSpaceUsageMonitoring() {
+    return startLzSpaceUsageMonitoring.call(this);
   }
 }
 

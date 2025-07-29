@@ -565,8 +565,8 @@ describe('Landing Zone Monitoring Routes', () => {
       };
 
       LandingZoneMonitoring.findAll.mockResolvedValue([
-        { id: monitoringIds[0], isActive: false },
-        { id: monitoringIds[1], isActive: false },
+        { id: monitoringIds[0], isActive: false, approvalStatus: 'approved' },
+        { id: monitoringIds[1], isActive: false, approvalStatus: 'approved' },
       ]);
       LandingZoneMonitoring.update.mockResolvedValue([2]);
 

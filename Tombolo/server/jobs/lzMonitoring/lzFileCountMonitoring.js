@@ -3,10 +3,9 @@ const { parentPort } = require('worker_threads');
 const { decryptString } = require('../../utils/cipher');
 const { FileSprayService } = require('@hpcc-js/comms');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
-// const path = require('path');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 const {
-  getFilesFromLandingZoneRecursivly,
+  getFilesFromSingleLzDirectory,
   findLocalDateTimeAtCluster,
 } = require('./lzFileMonitoringUtils');
 
@@ -22,7 +21,7 @@ const {
 const monitoring_name = 'Landing Zone Monitoring';
 
 (async () => {
-  // Get monitoring type ID for "Job Monitoring"
+  // Get monitoring type ID for "Landing Zone Monitoring"
   const { id } = await MonitoringTypes.findOne({
     where: { name: monitoring_name },
     raw: true,
@@ -37,7 +36,7 @@ const monitoring_name = 'Landing Zone Monitoring';
   try {
     parentPort.postMessage({
       level: 'info',
-      text: 'Landing Zone (file movement) Monitoring started',
+      text: 'Landing Zone (file count) Monitoring started',
     });
 
     // Get all lz monitoring with isActive = true and approvalStatus = approved
@@ -45,7 +44,7 @@ const monitoring_name = 'Landing Zone Monitoring';
       where: {
         isActive: true,
         approvalStatus: 'approved',
-        lzMonitoringType: 'fileMovement',
+        lzMonitoringType: 'fileCount',
       },
 
       include: [
@@ -71,15 +70,15 @@ const monitoring_name = 'Landing Zone Monitoring';
     if (activeLzMonitorings.length === 0) {
       parentPort.postMessage({
         level: 'verbose',
-        text: 'No active landing zone (file movement) monitoring found',
+        text: 'No active landing zone (file count) monitoring found',
       });
       return;
     }
 
-    // Iterate over activeLzMonitorings, if none of them are lzMonitoringType = 'fileMovement' log and return
+    // Get unique clusters and decrypt passwords
     const uniqueClusters = [];
     activeLzMonitorings.forEach(lzMonitoring => {
-      // Iterate over uniqueCluster arry and make sure lzMonitoring.clusterId is unique in there
+      // Check if cluster is already in uniqueClusters array
       let isClusterIdUnique = true;
       uniqueClusters.forEach(c => {
         if (c.id == lzMonitoring.clusterId) {
@@ -97,33 +96,33 @@ const monitoring_name = 'Landing Zone Monitoring';
     });
 
     parentPort.postMessage({
-      level: 'verobse',
-      text: `${activeLzMonitorings.length} active landing zone monitoring(s) tracking file movement`,
+      level: 'verbose',
+      text: `${activeLzMonitorings.length} active landing zone monitoring(s) tracking file count`,
     });
 
-    // create uniqueClustersObj for easy access
+    // Create uniqueClustersObj for easy access
     const uniqueClustersObj = {};
     uniqueClusters.forEach(c => {
       uniqueClustersObj[c.id] = c;
     });
 
-    // Iterate over activeLzMonitorings and make async place holder calls
-    const allMatchedFiles = [];
-    const filesThatPassedThreshold = [];
+    // Array to store directories that violated thresholds
+    const directoriesViolatingThreshold = [];
 
+    // Iterate over activeLzMonitorings and check file counts
     for (const monitoring of activeLzMonitorings) {
       try {
         const {
-          id: lzFileMovementMonitoringId,
+          id: lzFileCountMonitoringId,
           clusterId,
           metaData: { monitoringData },
         } = monitoring;
 
-        // Destructure monitoringData further
-        const { dropzone, machine, directory, maxDepth, fileName } =
+        // Destructure monitoringData
+        const { dropzone, machine, directory, minFileCount, maxFileCount } =
           monitoringData;
 
-        // Get all the files in the directory plus all subdirectories until maxDepth
+        // Get FileSprayService instance
         const fss = new FileSprayService(
           getClusterOptions(
             {
@@ -135,86 +134,61 @@ const monitoring_name = 'Landing Zone Monitoring';
           )
         );
 
-        const matches = await getFilesFromLandingZoneRecursivly({
-          lzFileMovementMonitoringId,
-          depth: maxDepth,
+        // Get files from the single directory (non-recursive)
+        const files = await getFilesFromSingleLzDirectory({
+          lzFileMovementMonitoringId: lzFileCountMonitoringId,
           fss,
           DropZoneName: dropzone,
           Netaddr: machine,
           Path: directory,
           directoryOnly: false,
-          fileNameToMatch: fileName,
         });
 
-        allMatchedFiles.push(...matches);
+        // Count only files (not directories)
+        const fileCount = files.filter(f => !f.isDir).length;
+
+        // Check if file count violates thresholds
+        let violationType = null;
+        if (fileCount < minFileCount) {
+          violationType = 'below_minimum';
+        } else if (fileCount > maxFileCount) {
+          violationType = 'above_maximum';
+        }
+
+        if (violationType) {
+          directoriesViolatingThreshold.push({
+            lzFileCountMonitoringId,
+            fileCount,
+            violationType,
+            monitoring,
+          });
+        }
       } catch (error) {
         parentPort.postMessage({
           level: 'error',
-          text: `Error while getting files from File Spray service: ${error.message}`,
+          text: `Error while getting file count from File Spray service: ${error.message}`,
         });
       }
     }
 
-    // If no files found, log and return
-    if (allMatchedFiles.length === 0) {
+    // If no violations found, log and return
+    if (directoriesViolatingThreshold.length === 0) {
       parentPort.postMessage({
         level: 'verbose',
-        text: 'Landing zone (file movement) monitoring did not find any matching file in specified landing zones',
+        text: 'Landing zone (file count) monitoring did not find any directories violating file count thresholds',
       });
       return;
     }
 
-    // For ease of access, create lzFileMovementMonitoringAsObj with id
-    const lzFileMovementMonitoringAsObj = {};
-    activeLzMonitorings.forEach(lzMonitoring => {
-      lzFileMovementMonitoringAsObj[lzMonitoring.id] = lzMonitoring;
-    });
-
-    // Iterate over allMatchedFiles and evaluate whether the file has passed the threshold
-    for (let f of allMatchedFiles) {
-      const { lzFileMovementMonitoringId, modifiedtime } = f;
-      const cid =
-        lzFileMovementMonitoringAsObj[lzFileMovementMonitoringId].clusterId;
-      const threshold =
-        lzFileMovementMonitoringAsObj[lzFileMovementMonitoringId].metaData
-          .monitoringData.threshold;
-      const clusterOffset = uniqueClustersObj[cid].timezone_offset;
-      const localTimeAtCluster = findLocalDateTimeAtCluster(clusterOffset);
-      // compute age of file in ms and compare to threshold (minutes)
-      const fileDate = new Date(modifiedtime);
-      const ageMs = localTimeAtCluster - fileDate;
-      const thresholdMs = threshold * 60 * 1000;
-      if (ageMs > thresholdMs) {
-        filesThatPassedThreshold.push({
-          ...f,
-          ageInMins: Math.round(ageMs / 60000, 0),
-        });
-      }
-    }
-
-    // If FilesThatPassedThreshold is empty, log and return
-    if (filesThatPassedThreshold.length === 0) {
-      parentPort.postMessage({
-        level: 'verbose',
-        text: 'Landing zone (file movement) monitoring did not find any file that passed the threshold',
-      });
-      return;
-    }
-    // Queue notification for each file that passed the threshold
+    // Queue notification for each directory violating threshold
     parentPort.postMessage({
       level: 'info',
-      text: `Queing notification for ${filesThatPassedThreshold.length} file(s) that passed the threshold`,
+      text: `Queuing notification for ${directoriesViolatingThreshold.length} director(ies) violating file count thresholds`,
     });
 
-    for (const file of filesThatPassedThreshold) {
+    for (const violation of directoriesViolatingThreshold) {
       try {
-        const {
-          name: fileName,
-          lzFileMovementMonitoringId,
-          ageInMins,
-          Path: directory,
-          modifiedtime,
-        } = file;
+        const { fileCount, violationType, monitoring } = violation;
 
         const {
           clusterId,
@@ -226,16 +200,22 @@ const monitoring_name = 'Landing Zone Monitoring';
               secondaryContacts = [],
               notifyContacts = [],
             },
-            monitoringData: { dropzone, machine, threshold },
+            monitoringData: {
+              dropzone,
+              machine,
+              directory,
+              minFileCount,
+              maxFileCount,
+            },
           },
-        } = lzFileMovementMonitoringAsObj[lzFileMovementMonitoringId];
+        } = monitoring;
 
         // If asr related the notification ID must be prefixed with the asr product short code
-        let notificationPrefix = 'LZFM';
+        let notificationPrefix = 'LZFC';
         if (asrSpecificMetaData?.domain) {
           try {
             const { productCategory } = asrSpecificMetaData;
-            // Geet product category
+            // Get product category
             const asrProduct = await AsrProducts.findOne({
               where: { id: productCategory },
               attributes: ['shortCode', 'name'],
@@ -271,16 +251,28 @@ const monitoring_name = 'Landing Zone Monitoring';
           timezoneOffset: uniqueClustersObj[clusterId].timezone_offset,
         });
 
-        // issue object
+        // Create violation description
+        let violationDescription;
+        if (violationType === 'below_minimum') {
+          violationDescription = `Directory ${directory} has ${fileCount} files, which is below the minimum threshold of ${minFileCount}`;
+        } else {
+          violationDescription = `Directory ${directory} has ${fileCount} files, which is above the maximum threshold of ${maxFileCount}`;
+        }
+
+        // Issue object
         const issue = {
-          'Issue Description': `File ${fileName} is stuck at ${directory} for ${ageInMins} minutes`,
+          'Issue Description': violationDescription,
           Cluster: uniqueClustersObj[clusterId].name,
           Dropzone: dropzone,
           Machine: machine,
           Directory: directory,
-          'File Modified Time': modifiedtime,
-          Threshold: `${threshold} minutes`,
-          'File Age': `${ageInMins} minutes`,
+          'Current File Count': fileCount,
+          'Minimum Threshold': minFileCount,
+          'Maximum Threshold': maxFileCount,
+          'Violation Type':
+            violationType === 'below_minimum'
+              ? 'Below Minimum'
+              : 'Above Maximum',
         };
 
         // Add to notification queue
@@ -289,19 +281,19 @@ const monitoring_name = 'Landing Zone Monitoring';
           notificationOrigin: monitoring_name,
           originationId: monitoringTypeId,
           deliveryType: 'immediate',
-          templateName: 'lzFileMovementMonitoring',
+          templateName: 'lzFileCountMonitoring',
           metaData: {
             notificationOrigin: monitoring_name,
             applicationId,
             notificationId,
-            subject: `${fileName} is stuck at ${directory} for ${ageInMins} minutes`,
+            subject: `File count violation in ${directory}: ${fileCount} files`,
             mainRecipients: primaryContacts,
             cc: [...secondaryContacts, ...notifyContacts],
-            notificationDescription: `File ${fileName} is stuck at ${directory} for ${ageInMins} minutes. The maximum threshold is ${threshold} minutes.`,
+            notificationDescription: violationDescription,
             asrSpecificMetaData,
             issue,
             remedy: {
-              instruction: `Check the file ${fileName} at ${directory} on ${machine} and ensure it is processed or removed from the landing zone.`,
+              instruction: `Check the directory ${directory} on ${machine} and ensure the file count is within the expected range (${minFileCount}-${maxFileCount} files).`,
             },
             firstLogged: findLocalDateTimeAtCluster(
               uniqueClustersObj[clusterId].timezone_offset
@@ -312,7 +304,7 @@ const monitoring_name = 'Landing Zone Monitoring';
       } catch (error) {
         parentPort.postMessage({
           level: 'error',
-          text: `Error while queuing notification for file ${file.fileName}: ${error.message}`,
+          text: `Error while queuing notification for file count violation: ${error.message}`,
         });
       }
     }
@@ -320,7 +312,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     // Log error
     parentPort.postMessage({
       level: 'error',
-      text: `Error while monitoring landing zone for file movement: ${error.message}`,
+      text: `Error while monitoring landing zone for file count: ${error.message}`,
     });
   } finally {
     // End time
@@ -328,7 +320,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     const duration = endTime - startTime;
     parentPort.postMessage({
       level: 'info',
-      text: `Landing Zone (file movement) Monitoring completed in ${duration} ms`,
+      text: `Landing Zone (file count) Monitoring completed in ${duration} ms`,
     });
   }
 })();
