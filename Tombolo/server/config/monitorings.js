@@ -7,6 +7,11 @@ const jobMonitoringConfig = {
   job_time_series_analysis_interval: 10, //in minutes
 };
 
+// Landing Zone Monitoring configuration
+const lz_monitoring_interval = 15;
+const lz_file_count_monitoring_interval = 15; // in minutes
+const lz_space_usage_monitoring_interval = 15; // in minutes
+
 // Cluster reachability monitoring configuration
 const cluster_reachability_monitoring = {
   clusterReachabilityMonitoringInterval: '10m', // in minutes
@@ -31,4 +36,7 @@ module.exports = {
   ...cluster_containerization_monitoring,
   passwordExpiryAlertDaysForUser,
   accountDeleteAlertDaysForUser,
+  lz_monitoring_interval,
+  lz_file_count_monitoring_interval,
+  lz_space_usage_monitoring_interval,
 };

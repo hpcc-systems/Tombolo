@@ -4,8 +4,8 @@ import { useSelector } from 'react-redux';
 import { Form, Card, Select } from 'antd';
 
 //Local Imports
-import AsrSpecificNotificationsDetails from './AsrSpecificNotificationsDetails';
-import PrimaryContacts from '../../common/PrimaryContacts';
+import AsrSpecificNotificationsDetails from '../../common/Monitoring/AsrSpecificNotificationDetails';
+import PrimaryContacts from '../../common/Monitoring/PrimaryContacts';
 
 //Constants
 const { Option } = Select;

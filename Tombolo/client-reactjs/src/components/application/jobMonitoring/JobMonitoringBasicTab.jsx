@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import InfoDrawer from '../../common/InfoDrawer';
 import { doesNameExist } from './jobMonitoringUtils';
-import AsrSpecificMonitoringDetails from './AsrSpecificMonitoringDetails';
+import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
 
 const { Option } = Select;
 const { TextArea } = Input;

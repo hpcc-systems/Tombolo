@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .main_body {
+      width: 100%;
+      text-align: left;
+    }
+
+    .section {
+      margin: 0 auto !important;
+      max-width: 800px;
+      border-collapse: collapse;
+      font-family: Arial;
+      font-size: 14px;
+    }
+
+    td{
+        min-width: 150px!important;
+        text-align: left !important;
+
+    }
+
+    .section-table-td {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 5px;
+
+    }
+
+    .section-footer {
+      background: none;
+      text-align: center;
+      border-top: 1px solid #dddddd;
+      font-size: 12px;
+    }
+
+    .section-footer-td {
+      padding-top: 50px;
+      padding-bottom: 50px;
+      color: #808080;
+    }
+
+    .section-header {
+      background: none !important;
+    }
+
+    .section-header{
+      background: none;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .list {
+      padding: 10px;
+    }
+  </style>
+</head>
+
+<table class="main_body">
+       <table class="section section-footer">
+          <tbody>
+            <tr>
+              <td class="section-footer-td">
+                Analysis detected file count violation in directory exceeding configured threshold
+              </td>
+            </tr>
+          </tbody>
+        </table>
+  <tbody>
+    <tr>
+      <td>
+        <table class="section section-table">
+          <tbody>
+            <% if (typeof notificationId !== 'undefined') { %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Notification ID</td>
+              <td class="section-table-td"><%= notificationId %></td>
+            </tr>
+            <% } %>
+
+
+            <% if(typeof asrSpecificMetaData?.domainName !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Domain</td>
+              <td class="section-table-td"><%= asrSpecificMetaData?.domainName %></td>
+            </tr>
+            <% } %>
+
+            <% if(typeof asrSpecificMetaData?.productName !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Product</td>
+              <td class="section-table-td"><%= asrSpecificMetaData.productName %></td>
+            </tr>
+            <% } %>
+
+             <% if(typeof asrSpecificMetaData?.severity !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Severity</td>
+              <td class="section-table-td"><%= asrSpecificMetaData.severity %></td>
+            </tr>
+            <% } %>
+
+            <% if(typeof issue !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Issue</td>
+              <td class="section-table-td">
+                <% Object.keys(issue).forEach(function(key) { %>
+                <div><span><%= key %>: </span><%= issue[key] %></div>
+                <% }) %>
+              </td>
+            </tr>
+            <% } %>
+
+            <% if(typeof remedy !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Remedy</td>
+              <td class="section-table-td">
+                <% Object.keys(remedy).forEach(function(key) { %>
+                <div><span><%= key %>: </span><%= remedy[key] %></div>
+                <% }) %>
+              </td>
+            </tr>
+            <% } %>
+
+            <% if(typeof firstLogged !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">First Logged</td>
+              <td class="section-table-td"><%= firstLogged %></td>
+            </tr>
+            <% } %>
+
+            <% if(typeof lastLogged !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Last Logged</td>
+              <td class="section-table-td"><%= lastLogged %></td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+        <table class="section section-footer">
+          <tbody>
+            <tr>
+              <td class="section-footer-td">
+                This notification is sent by Tombolo because your email address is included in the landing zone file count monitoring notification recipient list. If you wish to stop receiving these alerts, please contact your Tombolo administrator.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</html>

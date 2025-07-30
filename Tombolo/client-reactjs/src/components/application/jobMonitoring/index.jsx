@@ -1,35 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Form, message } from 'antd';
+import { Descriptions, Form, message, Tag } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import JobMonitoringActionButton from './JobMonitoringActionButton.jsx';
 import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
 import './jobMonitoring.css';
 import {
+  checkScheduleValidity,
   createJobMonitoring,
   getAllJobMonitorings,
-  checkScheduleValidity,
   identifyErroneousTabs,
-  updateSelectedMonitoring,
   isScheduleUpdated,
+  updateSelectedMonitoring,
 } from './jobMonitoringUtils.js';
-
-import {
-  getMonitoringTypeId,
-  getDomains,
-  getProductCategories,
-  getAllProductCategories,
-} from '../../common/ASRTools.js';
 
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
-import MonitoringDetailsModal from './MonitoringDetailsModal.jsx';
+import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal.jsx';
 import ApproveRejectModal from './ApproveRejectModal.jsx';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import JobMonitoringFilters from './JobMonitoringFilters.jsx';
 import { getUser } from '../../common/userStorage.js';
+import { useMonitorType } from '../../../hooks/useMonitoringType';
+import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
+import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
+import _ from 'lodash';
+import { getDateLabel, getDayLabel, getMonthLabel, getWeekLabel } from '../../common/scheduleOptions';
+import cronstrue from 'cronstrue';
 
 // Constants
 const monitoringTypeName = 'Job Monitoring';
@@ -39,8 +38,8 @@ function JobMonitoring() {
   const {
     applicationReducer: {
       application: { applicationId },
+      clusters,
     },
-    applicationReducer: { clusters },
   } = useSelector((state) => state);
 
   const user = getUser();
@@ -59,7 +58,6 @@ function JobMonitoring() {
   const [cron, setCron] = useState('');
   const [cronMessage, setCronMessage] = useState(null); // Cron message to display when cron is invalid or has errors
   const [erroneousScheduling, setErroneousScheduling] = useState(false);
-  const [jobMonitorings, setJobMonitorings] = useState([]);
   const [filteredJobMonitoring, setFilteredJobMonitoring] = useState([]); // Filtered job monitorings
   const [displayMonitoringDetailsModal, setDisplayMonitoringDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
@@ -70,11 +68,6 @@ function JobMonitoring() {
   const [savingJobMonitoring, setSavingJobMonitoring] = useState(false); // Flag to indicate if job monitoring is being saved
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
   const [selectedCluster, setSelectedCluster] = useState(null);
-  const [domains, setDomains] = useState([]);
-  const [productCategories, setProductCategories] = useState([]); // Product categories for selected domain
-  const [allProductCategories, setAllProductCategories] = useState([]); // All product categories - regardless of domain
-  const [monitoringTypeId, setMonitoringTypeId] = useState(null);
-  const [selectedDomain, setSelectedDomain] = useState(null);
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
@@ -87,27 +80,12 @@ function JobMonitoring() {
   // Create form instance
   const [form] = Form.useForm();
 
-  //When component mounts and appid change get all job monitorings
-  useEffect(() => {
-    if (!applicationId) return;
-    (async () => {
-      try {
-        const allMonitorings = await getAllJobMonitorings({ applicationId });
-        setJobMonitorings(allMonitorings);
-      } catch (error) {
-        message.error('Error fetching job monitorings');
-      }
-    })();
-
-    (async () => {
-      try {
-        const allProducts = await getAllProductCategories();
-        setAllProductCategories(allProducts);
-      } catch (error) {
-        message.error('Error fetching list of all products categories');
-      }
-    })();
-  }, [applicationId]);
+  // When the component mounts and appid change get all job monitorings
+  const {
+    monitorings: jobMonitorings,
+    setMonitorings: setJobMonitorings,
+    allProductCategories,
+  } = useMonitoringsAndAllProductCategories(applicationId, getAllJobMonitorings);
 
   //When intention to edit a monitoring is discovered
   useEffect(() => {
@@ -148,63 +126,11 @@ function JobMonitoring() {
     }
   }, [editingData, duplicatingData]);
 
-  // Get  monitoring type ID, Filters from local storage
-  useEffect(() => {
-    // Get monitoringType id for job monitoring
-    (async () => {
-      try {
-        const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
-        setMonitoringTypeId(monitoringTypeId);
-      } catch (error) {
-        message.error('Error fetching monitoring type ID');
-      }
-    })();
-
-    // Get filters from local storage
-    const existingFiltersFromLocalStorage = localStorage.getItem('jMFilters');
-    if (existingFiltersFromLocalStorage) {
-      const filtersFromLocalStorage = JSON.parse(existingFiltersFromLocalStorage);
-      setFilters(filtersFromLocalStorage);
-    }
-  }, []);
-
+  // Get monitoring type ID, Filters from local storage
+  const { monitoringTypeId } = useMonitorType(monitoringTypeName, setFilters);
   // Get domains and product categories
-  useEffect(() => {
-    // Get domains
-    if (!monitoringTypeId) return;
-    (async () => {
-      try {
-        let domainData = await getDomains({ monitoringTypeId });
-        domainData = domainData.map((d) => ({
-          label: d.name,
-          value: d.id,
-        }));
-        setDomains(domainData);
-      } catch (error) {
-        message.error('Error fetching domains');
-      }
-    })();
-
-    // If monitoring selected - set selected domain so corresponding product categories can be fetched
-    if (selectedMonitoring?.metaData?.asrSpecificMetaData?.domain) {
-      setSelectedDomain(selectedMonitoring.metaData.asrSpecificMetaData.domain);
-    }
-
-    // Get product categories
-    if (!selectedDomain) return;
-    (async () => {
-      try {
-        const productCategories = await getProductCategories({ domainId: selectedDomain });
-        const formattedProductCategories = productCategories.map((c) => ({
-          label: `${c.shortCode}  - ${c.name}`,
-          value: c.id,
-        }));
-        setProductCategories(formattedProductCategories);
-      } catch (error) {
-        message.error('Error fetching product category');
-      }
-    })();
-  }, [monitoringTypeId, selectedDomain, selectedMonitoring]);
+  const { domains, productCategories, setProductCategories, selectedDomain, setSelectedDomain } =
+    useDomainAndCategories(monitoringTypeId, selectedMonitoring);
 
   // When filterChange filter the job monitorings
   useEffect(() => {
@@ -552,32 +478,27 @@ function JobMonitoring() {
       if (touchedAsrFields.length > 0) {
         let existingAsrSpecificMetaData = selectedMonitoring?.metaData?.asrSpecificMetaData || {};
         const upDatedAsrSpecificMetaData = form.getFieldsValue(touchedAsrFields);
-        const newAsrSpecificFields = { ...existingAsrSpecificMetaData, ...upDatedAsrSpecificMetaData };
-        updatedData.metaData.asrSpecificMetaData = newAsrSpecificFields;
+        updatedData.metaData.asrSpecificMetaData = { ...existingAsrSpecificMetaData, ...upDatedAsrSpecificMetaData };
       }
 
       // update selected monitoring with run time fields that are nested inside metaData
       if (touchedMetaDataFields.length > 0) {
         if (touchedMetaDataFields.includes('expectedCompletionTime')) {
           const expectedCompletionTime = form.getFieldValue('expectedCompletionTime');
-          const newExpectedCompletionTime = expectedCompletionTime.format('HH:mm');
-          updatedData.metaData.expectedCompletionTime = newExpectedCompletionTime;
+          updatedData.metaData.expectedCompletionTime = expectedCompletionTime.format('HH:mm');
         }
 
         if (touchedMetaDataFields.includes('expectedStartTime')) {
           const expectedStartTime = form.getFieldValue('expectedStartTime');
-          const newExpectedStartTime = expectedStartTime.format('HH:mm');
-          updatedData.metaData.expectedStartTime = newExpectedStartTime;
+          updatedData.metaData.expectedStartTime = expectedStartTime.format('HH:mm');
         }
 
         if (touchedMetaDataFields.includes('requireComplete')) {
-          const requireComplete = form.getFieldValue('requireComplete');
-          updatedData.metaData.requireComplete = requireComplete;
+          updatedData.metaData.requireComplete = form.getFieldValue('requireComplete');
         }
 
         if (touchedMetaDataFields.includes('maxExecutionTime')) {
-          const maxExecutionTime = form.getFieldValue('maxExecutionTime');
-          updatedData.metaData.maxExecutionTime = maxExecutionTime;
+          updatedData.metaData.maxExecutionTime = form.getFieldValue('maxExecutionTime');
         }
       }
 
@@ -585,8 +506,7 @@ function JobMonitoring() {
       if (touchedNotificationMetaDataFields.length > 0) {
         const existingNotificationMetaData = selectedMonitoring.metaData.notificationMetaData || {};
         const updatedNotificationMetaData = form.getFieldsValue(touchedNotificationMetaDataFields);
-        const newNotificationMetaData = { ...existingNotificationMetaData, ...updatedNotificationMetaData };
-        updatedData.metaData.notificationMetaData = newNotificationMetaData;
+        updatedData.metaData.notificationMetaData = { ...existingNotificationMetaData, ...updatedNotificationMetaData };
       }
 
       // new values of any other fields that are not part of asrFields, metaDataFields, notificationMetaDataFields
@@ -603,19 +523,18 @@ function JobMonitoring() {
       updatedData = { ...updatedData, ...newOtherFields };
 
       // updated by
-      const userDetails = JSON.stringify({
+      updatedData.lastUpdatedBy = JSON.stringify({
         id: user.id,
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
       });
-      updatedData.lastUpdatedBy = userDetails;
 
       // Make api call
       await updateSelectedMonitoring({ updatedData });
 
       // If no error thrown set state with new data
       setJobMonitorings((prev) => {
-        const updatedJobMonitorings = prev.map((jobMonitoring) => {
+        return prev.map((jobMonitoring) => {
           updatedData.approvalStatus = 'Pending';
           updatedData.isActive = false;
           if (jobMonitoring.id === updatedData.id) {
@@ -623,7 +542,6 @@ function JobMonitoring() {
           }
           return jobMonitoring;
         });
-        return updatedJobMonitorings;
       });
       resetStates();
     } catch (err) {
@@ -631,6 +549,65 @@ function JobMonitoring() {
     } finally {
       setSavingJobMonitoring(false);
     }
+  };
+
+  // Interpret run window
+  const interpretRunWindow = (schedule) => {
+    const runWindow = schedule[0].runWindow || '';
+    if (runWindow === '') {
+      return '';
+    } else if (runWindow === 'daily') return 'Anytime';
+    else {
+      return _.capitalize(runWindow);
+    }
+  };
+
+  //Generate tags for schedule
+  const generateTagsForSchedule = (schedule) => {
+    const tags = [];
+    schedule.forEach((s) => {
+      if (s.frequency === 'daily') {
+        tags.push(interpretRunWindow(schedule));
+      }
+      if (s.frequency === 'weekly') {
+        let tempData = `Every Week ${interpretRunWindow(schedule)} on`;
+        s.days.forEach((d, i) => {
+          tempData += ` ${getDayLabel(d)} ${i < s.days.length - 1 ? ',' : ''}`;
+        });
+        tags.push(tempData);
+      }
+      if (s.scheduleBy === 'dates') {
+        let tempData = `Every month ${interpretRunWindow(schedule)}`;
+        s.dates.forEach((d, i) => {
+          tempData += ` ${getDateLabel(d)} ${i < s.dates.length - 1 ? ',' : ''}`;
+        });
+        tags.push(tempData);
+      }
+      if (s.scheduleBy === 'weeks-day') {
+        let tempData = '';
+        tempData += s.weeks.map((w) => ` ${getWeekLabel(w)}`);
+        tempData += ` - ${getDayLabel(s.day)} each month`;
+        tags.push(tempData);
+      }
+      if (s.scheduleBy === 'month-date') {
+        let tempData = '';
+        tempData += getMonthLabel(s.month);
+        tempData += ` ${getDateLabel(s.date)}`;
+        tags.push(tempData);
+      }
+      if (s.scheduleBy === 'week-day-month') {
+        let tempData = '';
+        tempData += getWeekLabel(s.week);
+        tempData += ` ${getDayLabel(s.day)}`;
+        tempData += ` of ${getMonthLabel(s.month)}`;
+        tags.push(tempData);
+      }
+      if (s.frequency === 'cron') {
+        tags.push(cronstrue.toString(s.cron));
+      }
+    });
+
+    return tags;
   };
 
   //JSX
@@ -733,8 +710,45 @@ function JobMonitoring() {
           setSelectedMonitoring={setSelectedMonitoring}
           clusters={clusters}
           domains={domains}
-          productCategories={productCategories}
-        />
+          productCategories={productCategories}>
+          <Descriptions.Item label="Monitoring scope">
+            {monitoringScope?.replace(/([A-Z])/g, ' $1').trim()}
+          </Descriptions.Item>
+          {monitoringScope && monitoringScope !== 'ClusterWideMonitoring' && (
+            <Descriptions.Item label="Job name / pattern">{selectedMonitoring.jobName}</Descriptions.Item>
+          )}
+          {selectedMonitoring.metaData.schedule && (
+            <Descriptions.Item label="Frequency">
+              {_.capitalize(selectedMonitoring.metaData.schedule[0].frequency)}
+            </Descriptions.Item>
+          )}
+          {selectedMonitoring.metaData.schedule && selectedMonitoring.metaData.schedule.length > 0 && (
+            <Descriptions.Item label="Job Schedule">
+              {generateTagsForSchedule(selectedMonitoring.metaData.schedule).map((s, i) => (
+                <Tag key={i}>{s}</Tag>
+              ))}
+            </Descriptions.Item>
+          )}
+
+          {selectedMonitoring.metaData?.expectedStartTime && (
+            <Descriptions.Item label="Expected Start Time">
+              {selectedMonitoring.metaData.expectedStartTime}
+            </Descriptions.Item>
+          )}
+          {selectedMonitoring.metaData?.expectedCompletionTime && (
+            <Descriptions.Item label="Expected Completion Time">
+              {selectedMonitoring.metaData.expectedCompletionTime}
+            </Descriptions.Item>
+          )}
+          {selectedMonitoring.metaData?.maxExecutionTime && (
+            <Descriptions.Item label="Max Execution Time ( in mins ) ">
+              {selectedMonitoring.metaData.maxExecutionTime}
+            </Descriptions.Item>
+          )}
+          <Descriptions.Item label="Require complete">
+            {selectedMonitoring.metaData.requireComplete ? 'Yes' : 'No'}
+          </Descriptions.Item>
+        </MonitoringDetailsModal>
       )}
       {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
       {displayAddRejectModal && (
