@@ -211,19 +211,19 @@ module.exports = (sequelize, DataTypes) => {
     // User to cluster status monitoring
     user.hasMany(models.clusterStatusMonitoring, {
       foreignKey: 'createdBy',
-      as: 'creator',
+      as: 'clusterStatusMonitoringCreator',
       onDelete: 'NO ACTION',
     });
 
     user.hasMany(models.clusterStatusMonitoring, {
       foreignKey: 'lastUpdatedBy',
-      as: 'updater',
+      as: 'clusterStatusMonitoringUpdater',
       onDelete: 'NO ACTION',
     });
 
     user.hasMany(models.clusterStatusMonitoring, {
       foreignKey: 'approvedBy',
-      as: 'approver',
+      as: 'clusterStatusMonitoringApprover',
       onDelete: 'NO ACTION',
     });
   };
