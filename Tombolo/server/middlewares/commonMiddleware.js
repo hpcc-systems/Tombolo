@@ -8,6 +8,7 @@ const EMAIL_LENGTH = { max: 100 };
 const PASSWORD_LENGTH = { min: 8, max: 75 };
 const DEFAULT_LENGTH = { max: 200 };
 const TITLE_REGEX = /^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/;
+const APPROVAL_STATUSES = ['pending', 'approved', 'rejected'];
 
 /**
  * Configuration options for validation middleware.
@@ -210,6 +211,14 @@ const createDateTimeValidator = source => {
     });
 };
 
+const createEnumValidator = source => {
+  return (field, optional = false, enumValues, options = {}) =>
+    createValidator(source, v => v.isIn(enumValues), field, {
+      ...options,
+      optional,
+    });
+};
+
 // Source-specific validators
 const stringBody = createStringValidator(body);
 const stringQuery = createStringValidator(query);
@@ -246,6 +255,7 @@ const dateQuery = createDateValidator(query);
 const dateTimeBody = createDateTimeValidator(body);
 const dateTimeParam = createDateTimeValidator(param);
 const dateTimeQuery = createDateTimeValidator(query);
+const enumBody = createEnumValidator(body);
 
 const queryUuids = {
   id: uuidQuery('id'),
@@ -338,4 +348,6 @@ module.exports = {
   dateTimeBody,
   dateTimeQuery,
   dateTimeParam,
+  enumBody,
+  APPROVAL_STATUSES,
 };
