@@ -86,6 +86,16 @@ jest.mock('../models', () => {
       update: jest.fn(),
       destroy: jest.fn(),
     },
+    clusterStatusMonitoring: {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findByPk: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      bulkCreate: jest.fn(),
+      update: jest.fn(),
+      destroy: jest.fn(),
+    },
     costMonitoring: {
       findAll: jest.fn(),
       findOne: jest.fn(),
