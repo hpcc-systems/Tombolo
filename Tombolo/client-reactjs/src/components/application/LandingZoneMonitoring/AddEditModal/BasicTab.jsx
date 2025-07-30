@@ -1,12 +1,10 @@
 /* eslint-disable */
 import React, { useState, useEffect, useRef } from 'react';
-import { Form, Select, Input, Card, Row, Col, Cascader, message } from 'antd';
+import { Form, Input, Card } from 'antd';
 // import LandingZoneFileExplorer from '../../../common/LandingZoneFileExplorer';
 import AsrSpecificMonitoring from './ASRSpecificMonitoring';
 import { useSelector } from 'react-redux';
-import LandigZoneMonitoring from '..';
 
-const { Option } = Select;
 const { TextArea } = Input;
 
 function BasicTab({
@@ -41,7 +39,7 @@ function BasicTab({
   useEffect(() => {
     if (selectedCluster?.timezone_offset === null || selectedCluster?.timezone_offset === undefined) return;
     const offSet = selectedCluster.timezone_offset / 60;
-    if (offSet == 0) {
+    if (offSet === 0) {
       setClusterOffset('UTC');
     } else {
       setClusterOffset(`UTC ${offSet}`);

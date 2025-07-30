@@ -1,9 +1,7 @@
 //Packages
 import React from 'react';
-import { Form, Card, Select } from 'antd';
-import { useSelector } from 'react-redux';
-import AsrSpecificNotification from './ASRSpecificNotification';
-import PrimaryContacts from '../../../common/Monitoring/PrimaryContacts';
+import { Form, Select } from 'antd';
+import NotificationContacts from '../../../common/Monitoring/NotificationContacts';
 
 //Constants
 const { Option } = Select;
@@ -15,46 +13,31 @@ const directoryStatuses = [
 ];
 
 function NotificationTab({ form, teamsHooks }) {
-  // Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      integrations,
-    },
-  } = useSelector((state) => state);
-  const asrIntegration = integrations.some(
-    (integration) => integration.name === 'ASR' && integration.application_id === applicationId
-  );
-  // JSX
   return (
-    <Card>
-      <Form form={form} layout="vertical">
-        <Form.Item
-          name="notificationCondition"
-          label="Notify when"
-          rules={[{ required: true, message: 'Select one or more options' }]}>
-          <Select mode="multiple" placeholder="Select one">
-            {directoryStatuses.map((status) => (
-              <Option key={status.value} value={status.value}>
-                {status.label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
+    <NotificationContacts form={form}>
+      <Form.Item
+        name="notificationCondition"
+        label="Notify when"
+        rules={[{ required: true, message: 'Select one or more options' }]}>
+        <Select mode="multiple" placeholder="Select one">
+          {directoryStatuses.map((status) => (
+            <Option key={status.value} value={status.value}>
+              {status.label}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
 
-        <Form.Item label="Teams Channel" name="teamsHooks">
-          <Select placeholder="Select a teams Channel " mode="multiple">
-            {teamsHooks.map((team) => (
-              <Option key={team.id} value={team.id}>
-                {team.name}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <PrimaryContacts />
-        {asrIntegration && <AsrSpecificNotification />}
-      </Form>
-    </Card>
+      <Form.Item label="Teams Channel" name="teamsHooks">
+        <Select placeholder="Select a teams Channel " mode="multiple">
+          {teamsHooks.map((team) => (
+            <Option key={team.id} value={team.id}>
+              {team.name}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+    </NotificationContacts>
   );
 }
 

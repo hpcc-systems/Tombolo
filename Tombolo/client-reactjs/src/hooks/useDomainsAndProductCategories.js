@@ -23,14 +23,18 @@ export const useDomainAndCategories = (monitoringTypeId, selectedMonitoring) => 
       }
     };
 
-    // Set selected domain from selectedMonitoring
-    const setDomainFromMonitoring = () => {
-      if (selectedMonitoring?.metaData?.asrSpecificMetaData?.domain) {
-        setSelectedDomain(selectedMonitoring.metaData.asrSpecificMetaData.domain);
-      }
-    };
+    fetchDomains();
+  }, [monitoringTypeId]);
 
-    // Fetch product categories
+  // Separate useEffect for setting domain from monitoring
+  useEffect(() => {
+    if (selectedMonitoring?.metaData?.asrSpecificMetaData?.domain) {
+      setSelectedDomain(selectedMonitoring.metaData.asrSpecificMetaData.domain);
+    }
+  }, [selectedMonitoring]);
+
+  // Separate useEffect for fetching product categories
+  useEffect(() => {
     const fetchProductCategories = async () => {
       if (!selectedDomain) return;
       try {
@@ -45,10 +49,8 @@ export const useDomainAndCategories = (monitoringTypeId, selectedMonitoring) => 
       }
     };
 
-    fetchDomains();
-    setDomainFromMonitoring();
     fetchProductCategories();
-  }, [monitoringTypeId, selectedMonitoring, selectedDomain]);
+  }, [selectedDomain]);
 
   return { domains, setDomains, selectedDomain, setSelectedDomain, productCategories, setProductCategories };
 };

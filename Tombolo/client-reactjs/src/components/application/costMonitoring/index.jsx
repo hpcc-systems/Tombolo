@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Form, message } from 'antd';
+import { Form, message, Tag, Descriptions } from 'antd';
 
 import CostMonitoringActionButton from './CostMonitoringActionButton';
 import AddEditCostMonitoringModal from './AddEditCostMonitoringModal';
@@ -16,7 +16,6 @@ import { identifyErroneousTabs } from '../jobMonitoring/jobMonitoringUtils';
 
 import { getRoleNameArray } from '../../common/AuthUtil';
 import CostMonitoringTable from './CostMonitoringTable';
-import CostMonitoringDetailsModal from './CostMonitoringDetailsModal';
 import CostMonitoringApproveRejectModal from './ApproveRejectModal';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import CostMonitoringFilters from './CostMonitoringFilters';
@@ -25,6 +24,7 @@ import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
 import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
 import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '../../../hooks/useMonitoringType';
+import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal';
 
 const monitoringTypeName = 'Cost Monitoring';
 
@@ -91,26 +91,11 @@ function CostMonitoring() {
     }
   }, [editingData, duplicatingData, selectedMonitoring, form]);
 
-  const { monitoringTypeId } = useMonitorType(monitoringTypeName, setFilters);
+  const { monitoringTypeId } = useMonitorType(monitoringTypeName);
 
   // Get domains and product categories
   const { domains, productCategories, setProductCategories, selectedDomain, setSelectedDomain } =
     useDomainAndCategories(monitoringTypeId, selectedMonitoring);
-
-  // Get filters from local storage
-  // useEffect(() => {
-  //   const existingFiltersFromLocalStorage = localStorage.getItem('cMFilters');
-  //   if (existingFiltersFromLocalStorage) {
-  //     const filtersFromLocalStorage = JSON.parse(existingFiltersFromLocalStorage);
-  //     setFilters(filtersFromLocalStorage);
-  //   }
-  //
-  //   // Get filter visibility from local storage
-  //   const filtersVisibilityFromLocalStorage = localStorage.getItem('cMFiltersVisible');
-  //   if (filtersVisibilityFromLocalStorage !== null) {
-  //     setFiltersVisible(JSON.parse(filtersVisibilityFromLocalStorage));
-  //   }
-  // }, []);
 
   // When filter changes, filter the cost monitorings
   useEffect(() => {
@@ -538,14 +523,32 @@ function CostMonitoring() {
         searchTerm={searchTerm}
       />
       {displayMonitoringDetailsModal && (
-        <CostMonitoringDetailsModal
+        <MonitoringDetailsModal
           displayMonitoringDetailsModal={displayMonitoringDetailsModal}
           setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
           selectedMonitoring={selectedMonitoring}
           setSelectedMonitoring={setSelectedMonitoring}
           clusters={clusters}
           domains={domains}
-        />
+          productCategories={productCategories}>
+          {selectedMonitoring.metaData.users && selectedMonitoring.metaData.users.length > 0 && (
+            <Descriptions.Item label="Monitored Users">
+              {selectedMonitoring.metaData.users.map((user, index) => (
+                <Tag key={`cmu-${index}`} style={{ marginBottom: '4px' }}>
+                  {user}
+                </Tag>
+              ))}
+            </Descriptions.Item>
+          )}
+
+          {selectedMonitoring.metaData.costThreshold && (
+            <Descriptions.Item label="Cost Threshold">${selectedMonitoring.metaData.costThreshold}</Descriptions.Item>
+          )}
+
+          {selectedMonitoring.metaData.timeWindow && (
+            <Descriptions.Item label="Time Window">{selectedMonitoring.metaData.timeWindow}</Descriptions.Item>
+          )}
+        </MonitoringDetailsModal>
       )}
       {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
       {displayAddRejectModal && (

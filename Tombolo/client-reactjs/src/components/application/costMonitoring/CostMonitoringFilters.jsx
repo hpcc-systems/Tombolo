@@ -5,6 +5,9 @@ import { SearchOutlined } from '@ant-design/icons';
 
 // Local imports
 import './costMonitoring.css';
+import { useSelector } from 'react-redux';
+import useMonitoringFilters from '../../../hooks/useMonitoringFilters';
+import AsrSpecificFilters from '../../common/Monitoring/AsrSpecificFilters';
 
 //Constants
 const { Option } = Select;
@@ -18,60 +21,45 @@ function CostMonitoringFilters({
   setSearchTerm,
   matchCount,
   searchTerm,
+  domains,
+  setSelectedDomain,
+  selectedDomain,
+  productCategories,
+  allProductCategories,
 }) {
+  const LOCAL_STORAGE_KEY = 'cMFilters';
+  //Redux
+  const {
+    applicationReducer: { integrations },
+  } = useSelector((state) => state);
+
   // Form instance
   const [form] = Form.useForm();
 
   // Local states
   const [approvalStatusOptions, setApprovalStatusOptions] = useState([]);
   const [activeStatusOptions, setActiveStatusOptions] = useState([]);
+  const [domainOptions, setDomainOptions] = useState([]);
+  const [productOptions, setProductOptions] = useState([]);
   const [clusterOptions, setClusterOptions] = useState([]);
   const [userOptions, setUserOptions] = useState([]);
-  const [filterCount, setFilterCount] = useState(0);
 
-  //Effects
-  useEffect(() => {
-    // Display filters if true in local storage
-    const filtersVisibility = localStorage.getItem('cMFiltersVisible');
-    const existingFilters = localStorage.getItem('cMFilters');
-
-    if (filtersVisibility) {
-      setFiltersVisible(filtersVisibility === 'true');
-    }
-
-    if (existingFilters) {
-      const filtersFromLocalStorage = JSON.parse(existingFilters);
-      form.setFieldsValue(filtersFromLocalStorage);
-      let count = 0;
-
-      // Set filter count
-      for (let keys of Object.keys(filtersFromLocalStorage)) {
-        if (filtersFromLocalStorage[keys]) {
-          count++;
-        }
-      }
-
-      setFilterCount(count);
-    }
-  }, []);
+  const { filterCount, clearFilters, handleFilterCountClick, handleDomainChange, handleFormChange, loadFilters } =
+    useMonitoringFilters(
+      form,
+      setFiltersVisible,
+      setFilters,
+      setSelectedDomain,
+      domains,
+      productCategories,
+      selectedDomain,
+      allProductCategories,
+      LOCAL_STORAGE_KEY
+    );
 
   useEffect(() => {
-    const filterOptions = { approvalStatus: [], activeStatus: [], clusters: [], users: [] };
-
-    costMonitorings.forEach((monitoring) => {
-      const { approvalStatus, isActive, clusterIds, metaData } = monitoring;
-
-      // Approval Status options
-      if (!filterOptions.approvalStatus.includes(approvalStatus)) {
-        filterOptions.approvalStatus.push(approvalStatus);
-      }
-
-      // Active Status options
-      const activeStatusString = isActive ? 'Active' : 'Inactive';
-      if (!filterOptions.activeStatus.includes(activeStatusString)) {
-        filterOptions.activeStatus.push(activeStatusString);
-      }
-
+    const loadCostMonitoringFilters = (costMonitoring, filterOptions) => {
+      const { clusterIds, metaData } = costMonitoring;
       // Cluster options
       if (clusterIds && clusterIds.length > 0 && clusters.length > 0) {
         clusterIds.forEach((clusterId) => {
@@ -94,46 +82,25 @@ function CostMonitoringFilters({
           }
         });
       }
-    });
+    };
+
+    const initialFilterOptions = {
+      approvalStatus: [],
+      activeStatus: [],
+      domain: [],
+      products: [],
+      clusters: [],
+      users: [],
+    };
+    const filterOptions = loadFilters(initialFilterOptions, costMonitorings, loadCostMonitoringFilters);
 
     setApprovalStatusOptions(filterOptions.approvalStatus);
     setActiveStatusOptions(filterOptions.activeStatus);
+    setDomainOptions(filterOptions.domain);
+    setProductOptions(filterOptions.products);
     setClusterOptions(filterOptions.clusters);
     setUserOptions(filterOptions.users);
-  }, [costMonitorings, clusters]);
-
-  // When the filter item changes
-  const handleFormChange = () => {
-    const allFilters = form.getFieldsValue();
-    setFilters(allFilters);
-
-    localStorage.setItem('cMFilters', JSON.stringify(allFilters));
-
-    // Set new filter count
-    let count = 0;
-    for (let keys of Object.keys(allFilters)) {
-      if (allFilters[keys]) {
-        count++;
-      }
-    }
-    setFilterCount(count);
-  };
-
-  // Handle filter count click
-  const handleFilterCountClick = () => {
-    setFiltersVisible(true);
-  };
-
-  // Clear filters when clear is clicked
-  const clearFilters = () => {
-    form.resetFields();
-    setFilterCount(0);
-    setFilters({});
-    // If exists remove cMFilters from local storage
-    if (localStorage.getItem('cMFilters')) {
-      localStorage.removeItem('cMFilters');
-    }
-  };
+  }, [costMonitorings, clusters, domains, allProductCategories, productCategories, selectedDomain, loadFilters]);
 
   //JSX
   return (
@@ -187,6 +154,13 @@ function CostMonitoringFilters({
                 </Select>
               </Form.Item>
             </Col>
+
+            <AsrSpecificFilters
+              integrations={integrations}
+              domainOptions={domainOptions}
+              productOptions={productOptions}
+              handleDomainChange={handleDomainChange}
+            />
 
             <Col span={4}>
               <div className="notifications__filter-label">Clusters</div>

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { message } from 'antd';
 import { getAllProductCategories } from '../components/common/ASRTools';
+import { flattenObject } from '../components/common/CommonUtil.js';
 
-export const useMonitoringsAndAllProductCategories = (applicationId, getAllMonitorings) => {
+export const useMonitoringsAndAllProductCategories = (applicationId, getAllMonitorings, flatten = false) => {
   const [monitorings, setMonitorings] = useState([]);
   const [allProductCategories, setAllProductCategories] = useState([]);
 
@@ -13,7 +14,15 @@ export const useMonitoringsAndAllProductCategories = (applicationId, getAllMonit
       try {
         const allMonitorings = await getAllMonitorings({ applicationId });
         if (Array.isArray(allMonitorings)) {
-          setMonitorings(allMonitorings);
+          if (flatten) {
+            const flattenedMonitorings = allMonitorings.map((monitoring) => {
+              const flat = flattenObject(monitoring);
+              return { ...flat, ...monitoring }; // Flat also keeps the original object - make it easier to update
+            });
+            setMonitorings(flattenedMonitorings);
+          } else {
+            setMonitorings(allMonitorings);
+          }
         } else {
           setMonitorings(allMonitorings.data);
         }
@@ -34,7 +43,7 @@ export const useMonitoringsAndAllProductCategories = (applicationId, getAllMonit
 
     fetchMonitorings();
     fetchAllProductCategories();
-  }, [applicationId, getAllMonitorings]);
+  }, [applicationId, flatten, getAllMonitorings]);
 
   return { monitorings, setMonitorings, allProductCategories };
 };
