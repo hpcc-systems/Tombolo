@@ -17,7 +17,7 @@ const createClusterStatusMonitoring = async (req, res) => {
       .send({ message: 'Cluster status monitoring created successfully' });
   } catch (err) {
     res.status(500).send({ message: err.message });
-    logger.error(err.message);
+    logger.error('Failed to create cluster', err);
   }
 };
 
@@ -35,7 +35,7 @@ const getClusterStatusMonitoringById = async (req, res) => {
     res.status(200).send({ data: monitoring });
   } catch (err) {
     res.status(500).send({ message: err.message });
-    logger.error(err.message);
+    logger.error('Failed to get cluster monitoring by ID', err);
   }
 };
 
@@ -46,7 +46,7 @@ const getAllClusterStatusMonitoring = async (req, res) => {
     res.status(200).send(monitoring);
   } catch (err) {
     res.status(500).send({ message: err.message });
-    logger.error(err.message);
+    logger.error('failed to get all cluster monitoring', err);
   }
 };
 
@@ -70,7 +70,7 @@ const updateClusterStatusMonitoring = async (req, res) => {
       .send({ message: 'Cluster status monitoring updated successfully' });
   } catch (err) {
     res.status(500).send({ message: err.message });
-    logger.error(err.message);
+    logger.error('Failed to update cluster monitoring', err);
   }
 };
 
@@ -94,7 +94,7 @@ const toggleClusterStatusMonitoringStatus = async (req, res) => {
     });
   } catch (err) {
     res.status(500).send({ message: err.message });
-    logger.error(err.message);
+    logger.error('Failed to toggle monitoring status', err);
   }
 };
 
@@ -118,7 +118,7 @@ const evaluateClusterStatusMonitoring = async (req, res) => {
     });
   } catch (err) {
     res.status(500).send({ message: err.message });
-    logger.error(err.message);
+    logger.error('Failed to evaluate monitoring', err);
   }
 };
 
@@ -181,7 +181,7 @@ const bulkUpdateClusterStatusMonitoring = async (req, res) => {
     });
   } catch (err) {
     res.status(500).send({ message: err.message });
-    logger.error(err.message);
+    logger.error('Failed to bulk update monitoring', err);
   }
 };
 
@@ -218,7 +218,7 @@ const deleteClusterStatusMonitoring = async (req, res) => {
     await transaction.rollback();
 
     res.status(500).send({ message: err.message });
-    logger.error(`Delete operation failed: ${err.message}`);
+    logger.error('Failed to delete monitoring', err);
   }
 };
 

@@ -18,19 +18,19 @@ const createOrUpdateMonitoringPayload = [
     length: { ...MONITORING_NAME_LENGTH },
   }),
   stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
-  uuidBody('clusterId', false),
-  objectBody('metaData', false),
+  uuidBody('clusterId'),
+  objectBody('metaData'),
 ];
 
 // Id on request params
-const monitoringIdAsParam = [uuidParam('id', false)];
+const monitoringIdAsParam = [uuidParam('id')];
 
 // UUID on body
-const monitoringIdOnBody = [uuidBody('id', false)];
+const monitoringIdOnBody = [uuidBody('id')];
 
 // evaluateMonitoringPayload
 const evaluateMonitoringPayload = [
-  uuidBody('id', false),
+  uuidBody('id'),
   stringBody('approverComment', false, {
     length: { ...COMMENT_LENGTH },
   }),
@@ -39,19 +39,16 @@ const evaluateMonitoringPayload = [
 
 // Bulk update contacts
 const bulkUpdateContacts = [
-  arrayBody('monitoring', false),
-  objectBody('monitoring.*', false),
-  uuidBody('monitoring.*.id', false),
-  emailBody('monitoring.*.primaryContacts', false),
+  arrayBody('monitoring'),
+  objectBody('monitoring.*'),
+  uuidBody('monitoring.*.id'),
+  emailBody('monitoring.*.primaryContacts'),
   emailBody('monitoring.*.secondaryContacts', true),
   emailBody('monitoring.*.notifyContacts', true),
 ];
 
 // Delete payload
-const deleteMonitoringPayload = [
-  arrayBody('ids', false),
-  uuidBody('ids.*', false),
-];
+const deleteMonitoringPayload = [arrayBody('ids'), uuidBody('ids.*')];
 
 // Exports
 module.exports = {
