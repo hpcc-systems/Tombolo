@@ -22,12 +22,15 @@ const {
   asr_domain_to_products: DomainProduct,
 } = require('../../models');
 const logger = require('../../config/logger');
+const {
+  uniqueConstraintErrorHandler,
+} = require('../../utils/uniqueConstraintErrorHandler');
 
 // Create a new domain
 router.post('/domains/', validate(validateCreateDomain), async (req, res) => {
   try {
-    /* if monitoring type is provided,
-      create domain, next  iterate over monitoringTypeId and make entry to  asr_domain_monitoring_types*/
+    /* if a monitoring type is provided,
+      create a domain, then iterate over monitoringTypeId and make entry to asr_domain_monitoring_types*/
     const {
       name,
       region,
@@ -72,8 +75,12 @@ router.post('/domains/', validate(validateCreateDomain), async (req, res) => {
       .status(200)
       .json({ message: 'Domain created successfully', domain });
   } catch (error) {
-    logger.error(error.message);
-    return res.status(500).json({ message: 'Failed to create domain' });
+    logger.error('Failed to create domain: ', error);
+    const errorResult = uniqueConstraintErrorHandler(
+      error,
+      'Failed to create domain'
+    );
+    return res.status(errorResult.statusCode).json(errorResult.responseObject);
   }
 });
 
@@ -232,8 +239,12 @@ router.post('/products/', validate(validateCreateProduct), async (req, res) => {
       .status(200)
       .json({ message: 'Product created successfully', product });
   } catch (error) {
-    logger.error(error.message);
-    return res.status(500).json({ message: 'Failed to create product' });
+    logger.error('Failed to create product: ', error);
+    const errorResult = uniqueConstraintErrorHandler(
+      error,
+      'Failed to create product'
+    );
+    return res.status(errorResult.statusCode).json(errorResult.responseObject);
   }
 });
 
