@@ -26,10 +26,10 @@ function MonitoringTab({
   selectedCluster,
   lzMonitoringType,
   setLzMonitoringType,
-  minSizeThreasoldUnit,
-  maxSizeThreasoldUnit,
-  setMinSizeThreasoldUnit,
-  setMaxSizeThreasoldUnit,
+  minSizeThresholdUnit,
+  maxSizeThresholdUnit,
+  setMinSizeThresholdUnit,
+  setMaxSizeThresholdUnit,
 }) {
   const [dropzones, setDropzones] = useState([]);
   const [machines, setMachines] = useState([]);
@@ -44,19 +44,19 @@ function MonitoringTab({
   const abortControllerRef = useRef(null);
   const loadingTimeoutRef = useRef(null);
 
-  // Set Threashold Unit
+  // Set Threshold Unit
   const setThresholdUnit = (value, field) => {
     if (field === 'minThreshold') {
-      setMinSizeThreasoldUnit(value);
+      setMinSizeThresholdUnit(value);
     } else if (field === 'maxThreshold') {
-      setMaxSizeThreasoldUnit(value);
+      setMaxSizeThresholdUnit(value);
     }
   };
 
-  // Threashold Addons
+  // Threshold Addons
   const renderThresholdAddon = (field) => (
     <Select
-      defaultValue={field === 'minThreshold' ? minSizeThreasoldUnit : maxSizeThreasoldUnit}
+      defaultValue={field === 'minThreshold' ? minSizeThresholdUnit : maxSizeThresholdUnit}
       style={{ width: 80 }}
       onChange={(value) => setThresholdUnit(value, field)}>
       {storageUnits.map((unit) => (
@@ -532,8 +532,8 @@ function MonitoringTab({
                         if (value != null && value !== '') {
                           const maxThreshold = form.getFieldValue('maxThreshold');
                           if (maxThreshold != null) {
-                            const minValueInMB = convertToMB(value, minSizeThreasoldUnit);
-                            const maxValueInMB = convertToMB(maxThreshold, maxSizeThreasoldUnit);
+                            const minValueInMB = convertToMB(value, minSizeThresholdUnit);
+                            const maxValueInMB = convertToMB(maxThreshold, maxSizeThresholdUnit);
                             if (minValueInMB >= maxValueInMB) {
                               return Promise.reject(new Error('Min threshold must be less than max threshold'));
                             }
@@ -571,8 +571,8 @@ function MonitoringTab({
                         if (value != null && value !== '') {
                           const minThreshold = form.getFieldValue('minThreshold');
                           if (minThreshold != null) {
-                            const minValueInMB = convertToMB(minThreshold, minSizeThreasoldUnit);
-                            const maxValueInMB = convertToMB(value, maxSizeThreasoldUnit);
+                            const minValueInMB = convertToMB(minThreshold, minSizeThresholdUnit);
+                            const maxValueInMB = convertToMB(value, maxSizeThresholdUnit);
                             if (maxValueInMB <= minValueInMB) {
                               return Promise.reject(new Error('Max threshold must be greater than min threshold'));
                             }

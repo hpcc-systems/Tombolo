@@ -75,7 +75,7 @@ const monitoring_name = 'Job Monitoring';
         text: `Job Monitoring: Found ${jobMonitorings.length} active job monitorings.`,
       });
 
-    /* Organize job monitoring based on cluster ID. This approach simplifies interaction with 
+    /* Organize job monitoring based on cluster ID. This approach simplifies interaction with
     the HPCC cluster and minimizes the number of necessary API calls. */
     const jobMonitoringsByCluster = {};
     jobMonitorings.forEach(jobMonitoring => {
@@ -503,12 +503,12 @@ const monitoring_name = 'Job Monitoring';
           nocAlertDescription;
         notificationPayloadForNoc.metaData.mainRecipients =
           severeEmailRecipients;
-        (notificationPayloadForNoc.metaData.notificationId =
+        notificationPayloadForNoc.metaData.notificationId =
           generateNotificationId({
             notificationPrefix,
             timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
-          })),
-          delete notificationPayloadForNoc.metaData.cc;
+          });
+        delete notificationPayloadForNoc.metaData.cc;
         await NotificationQueue.create(notificationPayloadForNoc);
       }
     }

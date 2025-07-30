@@ -77,12 +77,7 @@ module.exports = (sequelize, DataTypes) => {
       tableName: 'costMonitoringData',
       timestamps: true,
       paranoid: true,
-      indexes: [
-        {
-          unique: true,
-          fields: ['monitoringId', 'applicationId', 'clusterId', 'analyzed'],
-        },
-      ],
+      indexes: [],
     }
   );
 

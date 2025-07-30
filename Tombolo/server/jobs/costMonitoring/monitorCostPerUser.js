@@ -85,18 +85,14 @@ async function getCostMonitoringData(
   applicationId,
   monitoringDate
 ) {
-  const [costMonitoringData] = await CostMonitoringData.findOrCreate({
-    where: { monitoringId, applicationId, clusterId, analyzed: false },
-    defaults: {
-      monitoringId,
-      applicationId,
-      date: monitoringDate,
-      clusterId,
-      usersCostInfo: {},
-      analyzed: false,
-    },
+  return await CostMonitoringData.create({
+    monitoringId,
+    applicationId,
+    date: monitoringDate,
+    clusterId,
+    usersCostInfo: {},
+    analyzed: false,
   });
-  return costMonitoringData;
 }
 
 /**
@@ -154,7 +150,6 @@ async function monitorCostPerUser() {
     // Check if there are any monitorings for cost per user
     const costMonitorings = await getCostMonitorings();
     if (costMonitorings.length === 0) {
-      // TODO: Update run details
       parentPort &&
         parentPort.postMessage({
           level: 'info',
@@ -321,6 +316,10 @@ async function monitorCostPerUser() {
             newScanTime
           );
         } catch (perClusterError) {
+          logger.error(
+            '>>> monitorCostPerUser: Error in cluster ',
+            perClusterError
+          );
           parentPort &&
             parentPort.postMessage({
               level: 'error',

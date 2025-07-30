@@ -52,8 +52,8 @@ const LandigZoneMonitoring = () => {
   const [directory, setDirectory] = useState(null);
   const [copying, setCopying] = useState(false);
   const [lzMonitoringType, setLzMonitoringType] = useState(null);
-  const [minSizeThreasoldUnit, setMinSizeThreasoldUnit] = useState('MB');
-  const [maxSizeThreasoldUnit, setMaxSizeThreasoldUnit] = useState('MB');
+  const [minSizeThresholdUnit, setMinSizeThresholdUnit] = useState('MB');
+  const [maxSizeThresholdUnit, setMaxSizeThresholdUnit] = useState('MB');
   const [filtersVisible, setFiltersVisible] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({});
@@ -94,12 +94,12 @@ const LandigZoneMonitoring = () => {
         maxFileCount: selectedMonitoring['metaData.monitoringData.maxFileCount'],
       });
 
-      // Set maxSizeThreasoldUnit and minSizeThreasoldUnit if they exist
-      if (selectedMonitoring['metaData.monitoringData.maxSizeThreasoldUnit']) {
-        setMaxSizeThreasoldUnit(selectedMonitoring['metaData.monitoringData.maxSizeThreasoldUnit']);
+      // Set maxSizeThresholdUnit and minSizeThresholdUnit if they exist
+      if (selectedMonitoring['metaData.monitoringData.maxSizeThresholdUnit']) {
+        setMaxSizeThresholdUnit(selectedMonitoring['metaData.monitoringData.maxSizeThresholdUnit']);
       }
-      if (selectedMonitoring['metaData.monitoringData.minSizeThreasoldUnit']) {
-        setMinSizeThreasoldUnit(selectedMonitoring['metaData.monitoringData.minSizeThreasoldUnit']);
+      if (selectedMonitoring['metaData.monitoringData.minSizeThresholdUnit']) {
+        setMinSizeThresholdUnit(selectedMonitoring['metaData.monitoringData.minSizeThresholdUnit']);
       }
     }
   }, [editingData, copying]);
@@ -246,9 +246,9 @@ const LandigZoneMonitoring = () => {
         threshold,
         fileName,
         maxThreshold,
-        maxSizeThreasoldUnit,
+        maxSizeThresholdUnit,
         minThreshold,
-        minSizeThreasoldUnit,
+        minSizeThresholdUnit,
         minFileCount,
         maxFileCount,
       };
@@ -407,8 +407,8 @@ const LandigZoneMonitoring = () => {
     setActiveTab('0');
     setCopying(false);
     setLzMonitoringType(null);
-    setMinSizeThreasoldUnit('MB');
-    setMaxSizeThreasoldUnit('MB');
+    setMinSizeThresholdUnit('MB');
+    setMaxSizeThresholdUnit('MB');
     form.resetFields();
   };
 
@@ -531,10 +531,10 @@ const LandigZoneMonitoring = () => {
         selectedMonitoring={selectedMonitoring}
         lzMonitoringType={lzMonitoringType}
         setLzMonitoringType={setLzMonitoringType}
-        minSizeThreasoldUnit={minSizeThreasoldUnit}
-        maxSizeThreasoldUnit={maxSizeThreasoldUnit}
-        setMinSizeThreasoldUnit={setMinSizeThreasoldUnit}
-        setMaxSizeThreasoldUnit={setMaxSizeThreasoldUnit}
+        minSizeThresholdUnit={minSizeThresholdUnit}
+        maxSizeThresholdUnit={maxSizeThresholdUnit}
+        setMinSizeThresholdUnit={setMinSizeThresholdUnit}
+        setMaxSizeThresholdUnit={setMaxSizeThresholdUnit}
       />
       <LzFilters
         filtersVisible={filtersVisible}
