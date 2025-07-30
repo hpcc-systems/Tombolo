@@ -4,7 +4,7 @@ import { Modal, Form, Checkbox, Select, Card, message } from 'antd';
 import { isEmail } from 'validator';
 
 //Local Imports
-const { updateIntegrationSettings } = require('../integration-utils.js');
+import { updateIntegrationSettings } from '../integration-utils';
 
 function GeneralSettingsEditModal({
   displayGeneralSettingsEditModal,

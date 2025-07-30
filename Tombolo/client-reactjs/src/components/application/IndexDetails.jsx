@@ -6,14 +6,14 @@ import { authHeader, handleError } from '../common/AuthHeader.js';
 import { eclTypes } from '../common/CommonUtil.js';
 import { omitDeep } from '../common/CommonUtil.js';
 import AssociatedDataflows from './AssociatedDataflows';
-import EditableTable from '../common/EditableTable.js';
-import MonacoEditor from '../common/MonacoEditor.js';
+import EditableTable from '../common/EditableTable.jsx';
+import MonacoEditor from '../common/MonacoEditor.jsx';
 import { connect } from 'react-redux';
 import { assetsActions } from '../../redux/actions/Assets';
 import { debounce } from 'lodash';
 
 import ReactMarkdown from 'react-markdown';
-import DeleteAsset from '../common/DeleteAsset/index.js';
+import DeleteAsset from '../common/DeleteAsset';
 import Text from '../common/Text.jsx';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;

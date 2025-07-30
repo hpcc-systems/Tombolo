@@ -2,16 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Button, message, Tooltip, Select, Checkbox } from 'antd';
 import { Constants } from '../../common/Constants.js';
-import { approveSelectedMonitoring, handleBulkApproveLzyMonitorings } from './Utils.js';
-import { flattenObject } from '../../common/CommonUtil.js';
+import { approveSelectedMonitoring } from './Utils';
+import { flattenObject } from '../../common/CommonUtil';
 import {
-  checkScheduleValidity,
   identifyErroneousTabs,
   getAllLzMonitorings,
   updateMonitoring,
   isScheduleUpdated,
   createLandingZoneMonitoring, //TODO WIP
-} from './Utils.js';
+} from './Utils';
 
 const ApproveRejectModal = ({
   id,

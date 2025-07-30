@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Input, message } from 'antd';
 
 import ReactMarkdown from 'react-markdown';
-import MonacoEditor from '../../common/MonacoEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.jsx';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector, useDispatch } from 'react-redux';
 import { expandGroups } from '../../../redux/actions/Groups.js';

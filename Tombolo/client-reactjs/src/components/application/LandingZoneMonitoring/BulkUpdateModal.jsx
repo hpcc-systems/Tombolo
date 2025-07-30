@@ -4,7 +4,7 @@ import { isEmail } from 'validator';
 import { handleBulkUpdateLzMonitorings } from './Utils';
 import { useSelector } from 'react-redux';
 
-import { flattenObject } from '../../common/CommonUtil.js';
+import { flattenObject } from '../../common/CommonUtil';
 
 const { useForm } = Form;
 

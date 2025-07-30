@@ -3,16 +3,16 @@ import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, 
 import { connect } from 'react-redux';
 import { debounce } from 'lodash';
 import ReactMarkdown from 'react-markdown';
-import { getRoleNameArray } from '../../common/AuthUtil.js';
+import { getRoleNameArray } from '../../common/AuthUtil';
 
-import { authHeader, handleError } from '../../common/AuthHeader.js';
-// import { hasEditPermission } from '../../common/AuthUtil.js';
+import { authHeader, handleError } from '../../common/AuthHeader';
+// import { hasEditPermission } from '../../common/AuthUtil';
 import AssociatedDataflows from '../AssociatedDataflows';
-import EditableTable from '../../common/EditableTable.js';
-import { eclTypes, omitDeep } from '../../common/CommonUtil.js';
-import MonacoEditor from '../../common/MonacoEditor.js';
+import EditableTable from '../../common/EditableTable';
+import { eclTypes, omitDeep } from '../../common/CommonUtil';
+import MonacoEditor from '../../common/MonacoEditor';
 import { assetsActions } from '../../../redux/actions/Assets';
-import Text from '../../common/Text.jsx';
+import Text from '../../common/Text';
 import Files from './Files';
 
 const TabPane = Tabs.TabPane;

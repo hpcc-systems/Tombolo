@@ -1,15 +1,15 @@
 import React from 'react';
 import BasicLayout from '../common/BasicLayout';
 import { Route, Switch } from 'react-router-dom';
-const Login = React.lazy(() => import('./login.js'));
-const Register = React.lazy(() => import('./register.js'));
-const ResetPassword = React.lazy(() => import('./ResetPasswordWithToken.js'));
-const ForgotPassword = React.lazy(() => import('./ForgotPassword.js'));
-const resetTempPassword = React.lazy(() => import('./ResetTempPassword.js'));
+const Login = React.lazy(() => import('./login.jsx'));
+const Register = React.lazy(() => import('./register.jsx'));
+const ResetPassword = React.lazy(() => import('./ResetPasswordWithToken.jsx'));
+const ForgotPassword = React.lazy(() => import('./ForgotPassword.jsx'));
+const resetTempPassword = React.lazy(() => import('./ResetTempPassword.jsx'));
 
 const AuthRoutes = () => {
   //if traditional login isn't enabled, redirect user to login page
-  const authMethods = process.env.REACT_APP_AUTH_METHODS;
+  const authMethods = import.meta.env.VITE_AUTH_METHODS;
   let traditionalEnabled = false;
 
   if (authMethods) {

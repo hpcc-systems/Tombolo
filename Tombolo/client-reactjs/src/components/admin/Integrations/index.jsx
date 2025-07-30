@@ -1,10 +1,10 @@
 // Package imports
 import React, { useState, useEffect } from 'react';
-const { message } = require('antd');
+import { message } from 'antd';
 
 //Local Imports
 import IntegrationsTable from './IntegrationsTable.jsx';
-import BreadCrumbs from '../../common/BreadCrumbs.js';
+import BreadCrumbs from '../../common/BreadCrumbs.jsx';
 import { getAllIntegrations } from './integration-utils.js';
 
 function Integrations() {

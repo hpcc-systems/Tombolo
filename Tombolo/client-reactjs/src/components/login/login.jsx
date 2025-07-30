@@ -116,7 +116,7 @@ const Login = () => {
     }
   };
 
-  const authMethods = process.env.REACT_APP_AUTH_METHODS;
+  const authMethods = import.meta.env.VITE_AUTH_METHODS;
   let azureEnabled = false;
   let traditionalEnabled = false;
 
@@ -207,7 +207,7 @@ const Login = () => {
                   </Button>
                 </Form.Item>
                 <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
-                  <span>Need an account?</span> <a href="/register">Register</a>
+                  <span>Need an account?</span> <a href="/src/components/login/register">Register</a>
                 </p>
               </>
             )}

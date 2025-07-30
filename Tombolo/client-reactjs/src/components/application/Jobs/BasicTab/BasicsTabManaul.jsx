@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { assetsActions } from '../../../../redux/actions/Assets';
-import MonacoEditor from '../../../common/MonacoEditor.js';
+import MonacoEditor from '../../../common/MonacoEditor.jsx';
 import Text from '../../../common/Text.jsx';
 import LandingZoneFileExplorer from '../../../common/LandingZoneFileExplorer';
 

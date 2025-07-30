@@ -32,21 +32,20 @@ const months = [
 ];
 
 // Days 1 thur 31
-const daysOfMonth = [];
-
-for (let i = 1; i <= 31; i++) {
-  let label =
-    i +
-    (i % 10 === 1 && i % 100 !== 11
+const daysOfMonth = Array.from({ length: 31 }, (_, i) => {
+  const day = i + 1;
+  const label =
+    day +
+    (day % 10 === 1 && day % 100 !== 11
       ? 'st'
-      : i % 10 === 2 && i % 100 !== 12
+      : day % 10 === 2 && day % 100 !== 12
       ? 'nd'
-      : i % 10 === 3 && i % 100 !== 13
+      : day % 10 === 3 && day % 100 !== 13
       ? 'rd'
       : 'th');
+  return { label, value: day };
+});
 
-  daysOfMonth.push({ label, value: i });
-}
 // Get day label from value
 const getDayLabel = (value) => {
   const day = daysOfWeek.find((d) => d.value === value);
@@ -71,4 +70,4 @@ const getDateLabel = (value) => {
   return date.label;
 };
 
-module.exports = { daysOfWeek, weeks, months, daysOfMonth, getDayLabel, getMonthLabel, getDateLabel, getWeekLabel };
+export { daysOfWeek, weeks, months, daysOfMonth, getDayLabel, getMonthLabel, getDateLabel, getWeekLabel };

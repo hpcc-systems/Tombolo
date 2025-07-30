@@ -58,7 +58,7 @@ const convertTotalClusterTimeToSeconds = (totalClusterTime) => {
   return total;
 };
 
-function performTimeSeriesAnalysis({ leftData, rightData }) {
+export function performTimeSeriesAnalysis({ leftData, rightData }) {
   // Convert left data TotalClusterTime to  numeric value
   for (const [key, value] of Object.entries(leftData)) {
     if (key === 'TotalClusterTime') {
@@ -172,7 +172,3 @@ function performTimeSeriesAnalysis({ leftData, rightData }) {
     outliers,
   };
 }
-
-module.exports = {
-  performTimeSeriesAnalysis,
-};

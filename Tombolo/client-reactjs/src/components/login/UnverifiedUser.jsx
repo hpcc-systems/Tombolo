@@ -4,7 +4,7 @@ import { Button, Typography, Card, message } from 'antd';
 import { CheckCircleFilled } from '@ant-design/icons';
 
 // Local imports
-const { resendVerificationCode } = require('./utils');
+import { resendVerificationCode } from './utils';
 
 const { Text } = Typography;
 const defaultDelay = 90; // 10 seconds
