@@ -5,7 +5,6 @@ import BreadCrumbs from '../../common/BreadCrumbs';
 import UserManagementActionButton from './ActionButton';
 import UserManagementTable from './Table';
 import UserFilters from './Filters';
-import './User.css';
 import { getAllUsers, getAllRoles } from './Utils';
 import UserDetailModal from './UserDetailModal';
 import EditUserModel from './EditUserModel';

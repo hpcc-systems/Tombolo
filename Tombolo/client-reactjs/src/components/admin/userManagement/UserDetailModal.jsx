@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Descriptions, Button } from 'antd';
 import { startCase } from 'lodash';
 import { useSelector } from 'react-redux';
+import styles from './userManagement.module.css';
 
 function UserDetailModal({ displayUserDetailsModal, setDisplayUserDetailsModal, selectedUser, roles }) {
   const [_selectedUserRoles, setSelectedUserRoles] = useState([]);
@@ -29,7 +30,7 @@ function UserDetailModal({ displayUserDetailsModal, setDisplayUserDetailsModal, 
           Close
         </Button>,
       ]}>
-      <Descriptions column={1} bordered={true} size="small" className="userManageMent_tiny-description">
+      <Descriptions column={1} bordered={true} size="small" className={styles.userManagement_tinyDescription}>
         <Descriptions.Item label="First Name">{selectedUser?.firstName}</Descriptions.Item>
         <Descriptions.Item label="Last Name">{selectedUser?.lastName}</Descriptions.Item>
         <Descriptions.Item label="Email">{selectedUser?.email}</Descriptions.Item>

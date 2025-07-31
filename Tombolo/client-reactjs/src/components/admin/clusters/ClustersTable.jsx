@@ -4,6 +4,7 @@ import { EyeOutlined, EditOutlined, DeleteOutlined, CheckCircleFilled, CloseCirc
 
 import { deleteCluster, pingExistingCluster, getCluster } from './clusterUtils';
 import { formatDateTime } from '../../common/CommonUtil';
+import styles from './clusters.module.css';
 
 function ClustersTable({
   clusters,
@@ -29,13 +30,13 @@ function ClustersTable({
           return (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div>{text}</div>
-              <span className="Clusters__statusText">Testing ...</span>
+              <span className={styles.Clusters__statusText}>Testing ...</span>
             </div>
           );
         } else if (record.reachabilityInfo && record.reachabilityInfo.reachable === false) {
           return (
             <Tooltip
-              overlayClassName="clustersTable__toolTip_reachabilityStatus"
+              overlayClassName={styles.clustersTable__toolTip_reachabilityStatus}
               title={
                 <div>
                   <div>Last Reachable : {formatDateTime(record.reachabilityInfo?.lastReachableAt)}</div>
@@ -45,7 +46,7 @@ function ClustersTable({
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div>{text}</div>
                 <CloseCircleFilled style={{ color: 'red', fontSize: '1.2rem' }} />
-                <span className="Clusters__statusText">Unreachable</span>
+                <span className={styles.Clusters__statusText}>Unreachable</span>
               </div>
             </Tooltip>
           );
@@ -53,12 +54,12 @@ function ClustersTable({
           return (
             <Tooltip
               title={<div>Last Reachable : {formatDateTime(record.reachabilityInfo?.lastReachableAt)}</div>}
-              overlayClassName="clustersTable__toolTip_reachabilityStatus">
+              overlayClassName={styles.clustersTable__toolTip_reachabilityStatus}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div>{text}</div>
                 <>
                   <CheckCircleFilled style={{ color: 'green', fontSize: '1.2rem' }} />
-                  <span className="Clusters__statusText">Reachable</span>
+                  <span className={styles.Clusters__statusText}>Reachable</span>
                 </>
               </div>
             </Tooltip>
