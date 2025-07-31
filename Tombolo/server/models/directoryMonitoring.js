@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const directoryMonitoring = sequelize.define(
-    "directoryMonitoring",
+    'directoryMonitoring',
     {
       id: {
         primaryKey: true,
@@ -21,7 +21,6 @@ module.exports = (sequelize, DataTypes) => {
       name: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: true,
       },
       description: {
         allowNull: false,
@@ -87,21 +86,28 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.DATE,
       },
-      metaData: {
-        type: DataTypes.JSON,
-        allowNull: true,
-      },
     },
-    { paranoid: true, freezeTableName: true }
+    {
+      paranoid: true,
+      freezeTableName: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['name', 'deletedAt'],
+        },
+      ],
+    }
   );
+
   directoryMonitoring.associate = function (models) {
     // Define association here
     directoryMonitoring.belongsTo(models.application, {
-      foreignKey: "application_id",
+      foreignKey: 'application_id',
     });
     directoryMonitoring.belongsTo(models.cluster, {
-      foreignKey: "cluster_id",
+      foreignKey: 'cluster_id',
     });
   };
+
   return directoryMonitoring;
 };

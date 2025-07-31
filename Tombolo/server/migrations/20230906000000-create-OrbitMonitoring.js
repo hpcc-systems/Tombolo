@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("orbitMonitoring", {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('orbitMonitoring', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -11,11 +11,11 @@ module.exports = {
       application_id: {
         type: Sequelize.UUID,
         references: {
-          model: "application",
-          key: "id",
+          model: 'application',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       name: {
         allowNull: false,
@@ -82,8 +82,13 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    await queryInterface.addIndex('orbitMonitoring', ['name', 'deletedAt'], {
+      unique: true,
+      name: 'om_unique_name_deleted_at',
+    });
   },
-  down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("orbitMonitoring");
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('orbitMonitoring');
   },
 };

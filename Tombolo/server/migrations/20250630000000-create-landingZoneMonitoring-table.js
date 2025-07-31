@@ -23,7 +23,6 @@ module.exports = {
       monitoringName: {
         allowNull: false,
         type: Sequelize.STRING,
-        unique: true,
       },
       isActive: {
         allowNull: false,
@@ -111,6 +110,15 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    await queryInterface.addIndex(
+      'landingZoneMonitoring',
+      ['monitoringName', 'deletedAt'],
+      {
+        unique: true,
+        name: 'lzm_unique_monitoring_name_deleted_at',
+      }
+    );
   },
   down: async queryInterface => {
     await queryInterface.dropTable('landingZoneMonitoring');

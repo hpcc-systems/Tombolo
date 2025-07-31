@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("directoryMonitoring", {
+    await queryInterface.createTable('directoryMonitoring', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -11,20 +11,20 @@ module.exports = {
       application_id: {
         type: Sequelize.UUID,
         references: {
-          model: "application",
-          key: "id",
+          model: 'application',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       cluster_id: {
         type: Sequelize.UUID,
         references: {
-          model: "cluster",
-          key: "id",
+          model: 'cluster',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       name: {
         allowNull: false,
@@ -94,10 +94,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DataTypes.STRING,
       },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DataTypes.DATE,
-      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -111,8 +107,17 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    await queryInterface.addIndex(
+      'directoryMonitoring',
+      ['name', 'deletedAt'],
+      {
+        unique: true,
+        name: 'dm_unique_name_deleted_at',
+      }
+    );
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("directoryMonitoring");
+    await queryInterface.dropTable('directoryMonitoring');
   },
 };

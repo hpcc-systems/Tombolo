@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const JobMonitoring = sequelize.define(
-    "jobMonitoring",
+    'jobMonitoring',
     {
       id: {
         allowNull: false,
@@ -13,16 +13,15 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "application",
-          key: "id",
+          model: 'application',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       monitoringName: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: true,
       },
       isActive: {
         allowNull: false,
@@ -31,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       approvalStatus: {
         allowNull: false,
-        type: DataTypes.ENUM("Approved", "Rejected", "Pending"),
+        type: DataTypes.ENUM('Approved', 'Rejected', 'Pending'),
       },
       approvedBy: {
         allowNull: true,
@@ -93,35 +92,41 @@ module.exports = (sequelize, DataTypes) => {
     {
       paranoid: true,
       freezeTableName: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['monitoringName', 'deletedAt'],
+        },
+      ],
     }
   );
 
   // Associations
   JobMonitoring.associate = function (models) {
     JobMonitoring.belongsTo(models.application, {
-      foreignKey: "applicationId",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      foreignKey: 'applicationId',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
     });
 
     JobMonitoring.belongsTo(models.cluster, {
-      foreignKey: "clusterId",
-      onDelete: "NO ACTION",
-      onUpdate: "CASCADE",
+      foreignKey: 'clusterId',
+      onDelete: 'NO ACTION',
+      onUpdate: 'CASCADE',
     });
 
     JobMonitoring.hasMany(models.jobMonitoring_Data, {
-      foreignKey: "monitoringId",
-      as: "jobMonitoringData",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      foreignKey: 'monitoringId',
+      as: 'jobMonitoringData',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
     });
 
     JobMonitoring.hasMany(models.jobMonitoring_Data_Archive, {
-      foreignKey: "monitoringId",
-      as: "jobMonitoringDataArchive",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      foreignKey: 'monitoringId',
+      as: 'jobMonitoringDataArchive',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
     });
   };
 

@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('fileMonitoring', {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('fileMonitoring', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -48,7 +48,7 @@ module.exports = {
       },
     });
   },
-  down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('fileMonitoring');
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('fileMonitoring');
   },
 };

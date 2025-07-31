@@ -22,7 +22,6 @@ module.exports = (sequelize, DataTypes) => {
       monitoringName: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: true,
       },
       isActive: {
         allowNull: false,
@@ -120,6 +119,12 @@ module.exports = (sequelize, DataTypes) => {
     {
       paranoid: true,
       freezeTableName: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['monitoringName', 'deletedAt'],
+        },
+      ],
     }
   );
 

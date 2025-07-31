@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const fileMonitoring_superfiles = sequelize.define(
-    "filemonitoring_superfiles",
+    'filemonitoring_superfiles',
     {
       id: {
         primaryKey: true,
@@ -33,26 +33,34 @@ module.exports = (sequelize, DataTypes) => {
       name: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: true,
       },
       metaData: {
         allowNull: true,
         type: DataTypes.JSON,
       },
     },
-    { paranoid: true, freezeTableName: true }
+    {
+      paranoid: true,
+      freezeTableName: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['name', 'deletedAt'],
+        },
+      ],
+    }
   );
   fileMonitoring_superfiles.associate = function (models) {
     // Define association here
     fileMonitoring_superfiles.belongsTo(models.cluster, {
-      foreignKey: "clusterid",
+      foreignKey: 'clusterid',
     });
     fileMonitoring_superfiles.belongsTo(models.application, {
-      foreignKey: "application_id",
+      foreignKey: 'application_id',
     });
     fileMonitoring_superfiles.hasMany(models.monitoring_notifications, {
-      foreignKey: "application_id",
-      onDelete: "CASCADE",
+      foreignKey: 'application_id',
+      onDelete: 'CASCADE',
     });
   };
   return fileMonitoring_superfiles;
