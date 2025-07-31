@@ -50,7 +50,7 @@ const ForgotPassword = () => {
         </Button>
       </Form.Item>
       <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
-        <span>Remembered your password?</span> <a href="/login">Log in</a>
+        <span>Remembered your password?</span> <a href="/src/components/login/login">Log in</a>
       </p>
     </Form>
   );

@@ -1,9 +1,9 @@
 import { Col, Form, Input, Row } from 'antd';
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { threeColformItemLayout } from '../../../common/CommonUtil.js';
+import { threeColformItemLayout } from '../../../common/CommonUtil';
 import Text from '../../../common/Text';
-import MonacoEditor from '../../../common/MonacoEditor.js';
+import MonacoEditor from '../../../common/MonacoEditor.jsx';
 
 function BasicsTabScript({ enableEdit, editingAllowed, onChange, localState, inTabView }) {
   return (

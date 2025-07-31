@@ -7,13 +7,13 @@ import ReactMarkdown from 'react-markdown';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 //Local Imports
-import MonacoEditor from '../../common/MonacoEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.jsx';
 import { authHeader } from '../../common/AuthHeader.js';
 import FileTemplateTable from './FileTemplate_filesTab';
 import FileTemplateLayout from './FileTemplate_layoutTab.jsx';
 import FileTemplatePermissablePurpose from './FileTemplate_permissablePurpose';
 // import { hasEditPermission } from '../../common/AuthUtil.js';
-import DeleteAsset from '../../common/DeleteAsset/index.js';
+import DeleteAsset from '../../common/DeleteAsset';
 import LandingZoneFileExplorer from '../../common/LandingZoneFileExplorer';
 import Text from '../../common/Text';
 
@@ -43,7 +43,7 @@ function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose })
   }));
 
   /*Asset can be passed from graph (selectedAsset prop), via asset table (params), and when link was shared (params).
-  in order to get info about asset we will take its id from params if selected asset is no available and send request to populate fields. 
+  in order to get info about asset we will take its id from params if selected asset is no available and send request to populate fields.
   if asset id is 'undefined' it means that we are creating new asset. if asset id is wrong, we will show errors that we cant find asset with that id
   */
   const applicationId = application?.applicationId || match?.params?.applicationId;

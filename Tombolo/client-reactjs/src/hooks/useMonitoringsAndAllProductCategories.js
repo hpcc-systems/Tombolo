@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { message } from 'antd';
 import { getAllProductCategories } from '../components/common/ASRTools';
-import { flattenObject } from '../components/common/CommonUtil.js';
+import { flattenObject } from '../components/common/CommonUtil';
 
 export const useMonitoringsAndAllProductCategories = (applicationId, getAllMonitorings, flatten = false) => {
   const [monitorings, setMonitorings] = useState([]);

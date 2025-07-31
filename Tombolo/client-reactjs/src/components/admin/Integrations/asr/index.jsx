@@ -4,7 +4,7 @@ import { Tabs, Card, Button, Dropdown, Space, message } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
 // Local Imports
-import BreadCrumbs from '../../../common/BreadCrumbs.js';
+import BreadCrumbs from '../../../common/BreadCrumbs.jsx';
 import GeneralTab from './GeneralTab.jsx';
 import DomainsTab from './DomainsTab.jsx';
 import ProductsTab from './ProductsTab.jsx';

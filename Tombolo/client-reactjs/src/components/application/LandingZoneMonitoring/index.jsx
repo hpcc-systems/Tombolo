@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import BreadCrumbs from '../../common/BreadCrumbs.js';
+import BreadCrumbs from '../../common/BreadCrumbs';
 import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
-import { identifyErroneousTabs, getAllLzMonitorings, updateMonitoring, createLandingZoneMonitoring } from './Utils.js';
-import { flattenObject } from '../../common/CommonUtil.js';
+import { identifyErroneousTabs, getAllLzMonitorings, updateMonitoring, createLandingZoneMonitoring } from './Utils';
+import { flattenObject } from '../../common/CommonUtil';
 
-import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools.js';
-import { getRoleNameArray } from '../../common/AuthUtil.js';
+import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools';
+import { getRoleNameArray } from '../../common/AuthUtil';
 
-import AddEditModal from './AddEditModal/Modal.jsx';
+import AddEditModal from './AddEditModal/Modal';
 import ActionButton from './ActionButton.jsx';
 import LandingZoneMonitoringTable from './LandingZoneMonitoringTable';
-import ApproveRejectModal from './ApproveRejectModal.jsx';
-import BulkUpdateModal from './BulkUpdateModal.jsx';
-import ViewDetailsModal from './ViewDetailsModal.jsx';
-import { getUser } from '../../common/userStorage.js';
-import LzFilters from './LzFilters.jsx';
+import ApproveRejectModal from './ApproveRejectModal';
+import BulkUpdateModal from './BulkUpdateModal';
+import ViewDetailsModal from './ViewDetailsModal';
+import { getUser } from '../../common/userStorage';
+import LzFilters from './LzFilters';
 import './lzMonitoring.css';
 
 const monitoringTypeName = 'Landing Zone Monitoring';
@@ -25,8 +25,8 @@ const LandigZoneMonitoring = () => {
   const {
     applicationReducer: {
       application: { applicationId },
+      clusters,
     },
-    applicationReducer: { clusters },
   } = useSelector((state) => state);
 
   // Constants

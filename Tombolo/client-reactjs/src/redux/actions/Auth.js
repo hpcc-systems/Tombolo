@@ -201,10 +201,10 @@ const azureLoginRedirect = () => {
   try {
     const response_type = 'code';
     const response_mode = 'query';
-    const redirect_uri = process.env.REACT_APP_AZURE_REDIRECT_URI;
+    const redirect_uri = import.meta.env.VITE_AZURE_REDIRECT_URI;
     const scope = 'openid';
-    const client_id = process.env.REACT_APP_AZURE_CLIENT_ID;
-    const tenant_id = process.env.REACT_APP_AZURE_TENENT_ID;
+    const client_id = import.meta.env.VITE_AZURE_CLIENT_ID;
+    const tenant_id = import.meta.env.VITE_AZURE_TENENT_ID;
 
     const url = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
 

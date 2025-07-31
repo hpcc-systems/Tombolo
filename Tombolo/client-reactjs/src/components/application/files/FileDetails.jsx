@@ -20,20 +20,20 @@ import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
 // import ConstraintsTags from '../../admin/Compliance/Constraints/ConstraintsTags';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
-// import { canViewPII } from '../../common/AuthUtil.js';
+import { authHeader, handleError } from '../../common/AuthHeader';
+// import { canViewPII } from '../../common/AuthUtil';
 import { formItemLayout } from '../../common/CommonUtil';
-// import { validationRuleFixes, validationRules } from '../common/CommonUtil.js';
+// import { validationRuleFixes, validationRules } from '../common/CommonUtil';
 import DeleteAsset from '../../common/DeleteAsset';
-import EditableTable from '../../common/EditableTable.js';
-import LayoutTable from '../../common/LayoutTable.js';
-import MonacoEditor from '../../common/MonacoEditor.js';
+import EditableTable from '../../common/EditableTable';
+import LayoutTable from '../../common/LayoutTable';
+import MonacoEditor from '../../common/MonacoEditor';
 import OverwriteAssetModal from '../../common/OverWriteAssetModal';
 import SuperFileMeta from '../../common/SuperFileMeta';
 import AssociatedDataflows from '../AssociatedDataflows';
-import Text from '../../common/Text.jsx';
+import Text from '../../common/Text';
 import FileExplorerModal from './FileExplorerModal';
-import { getRoleNameArray } from '../../common/AuthUtil.js';
+import { getRoleNameArray } from '../../common/AuthUtil';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -1079,7 +1079,7 @@ class FileDetails extends Component {
                       </Select>
                     )}
                   </Form.Item>
-                  {/* 
+                  {/*
                   <Form.Item noStyle shouldUpdate>
                     {() => (
                       <Form.Item name="constraints" label={<Text>File Constraints</Text>}>

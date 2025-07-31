@@ -2,8 +2,8 @@ import { Button, Col, Form, Input, message, Row, Select, Spin } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { assetsActions } from '../../../../redux/actions/Assets';
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
-import { formItemLayout } from '../../../common/CommonUtil.js';
+import { authHeader, handleError } from '../../../common/AuthHeader';
+import { formItemLayout } from '../../../common/CommonUtil';
 import Text from '../../../common/Text';
 const { Option, OptGroup } = Select;
 

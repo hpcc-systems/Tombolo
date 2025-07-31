@@ -1,9 +1,7 @@
-// Package imports
 import React from 'react';
-import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-
-// Local imports
+import { useParams } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import IntegrationNotFound from './IntegrationNotFound';
 
 function IntegrationSettings() {
@@ -18,28 +16,32 @@ function IntegrationSettings() {
   // Integration name from URL
   let { integrationName } = useParams();
 
-  // The integration name from url be present in the integrations list in redux store
+  // Validate integration name
   const valid = integrations.some((i) => i.name === integrationName && i.application_id === applicationId);
 
-  // If the integration name is not valid, show the IntegrationNotFound component
+  // If the integration name is not valid, show IntegrationNotFound
   if (!valid) {
     return <IntegrationNotFound />;
-  } else {
-    // Try importing the integration component with the name - integrationName
-    // If error occurs, show the IntegrationNotFound component
-    try {
-      // pass relation id as props
-      const relation_id = integrations.find(
-        (i) => i.name === integrationName && i.application_id === applicationId
-      ).integration_to_app_mapping_id;
-
-      const IntegrationComponent = require(`./${integrationName.toLowerCase()}`).default;
-
-      return <IntegrationComponent integration_to_app_mapping_id={relation_id} />;
-    } catch (error) {
-      return <IntegrationNotFound />;
-    }
   }
+
+  // Find relation_id
+  const relation_id = integrations.find(
+    (i) => i.name === integrationName && i.application_id === applicationId
+  ).integration_to_app_mapping_id;
+
+  // Dynamically import the integration component
+  const IntegrationComponent = lazy(() =>
+    import(`./${integrationName.toLowerCase()}.jsx`).catch((error) => {
+      console.error('Failed to load component for %s:', integrationName, error);
+      return { default: IntegrationNotFound };
+    })
+  );
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <IntegrationComponent integration_to_app_mapping_id={relation_id} />
+    </Suspense>
+  );
 }
 
 export default IntegrationSettings;

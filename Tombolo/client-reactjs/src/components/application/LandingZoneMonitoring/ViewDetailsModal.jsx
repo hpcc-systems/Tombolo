@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Descriptions, Modal, Button, Tooltip, Tag } from 'antd';
-import { formatDateTimeShort } from '../../common/CommonUtil.js';
+import { formatDateTimeShort } from '../../common/CommonUtil';
 
 function ViewDetailsModal({
   displayViewDetailsModal,

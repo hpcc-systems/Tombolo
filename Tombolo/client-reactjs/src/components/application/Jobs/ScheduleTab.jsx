@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, Select, Space, message } from 'antd';
-import { threeColformItemLayout } from '../../common/CommonUtil.js';
+import { threeColformItemLayout } from '../../common/CommonUtil';
 import Text from '../../common/Text.jsx';
 
 const monthMap = {

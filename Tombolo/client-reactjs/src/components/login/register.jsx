@@ -100,7 +100,7 @@ const Register = () => {
         <>
           <RegisterUserForm form={form} onFinish={onFinish} />
           <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
-            <span>Already have an account?</span> <a href="/login">Login</a>
+            <span>Already have an account?</span> <a href="/src/components/login/login">Login</a>
           </p>
         </>
       )}

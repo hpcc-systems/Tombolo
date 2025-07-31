@@ -4,17 +4,17 @@ import { connect } from 'react-redux';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 // import { hasEditPermission } from '../../common/AuthUtil.js';
-import MonacoEditor from '../../common/MonacoEditor.js';
+import MonacoEditor from '../../common/MonacoEditor.jsx';
 import Text from '../../common/Text.jsx';
 import { handleJobDelete } from '../../common/WorkflowUtil';
 import AssociatedDataflows from '../AssociatedDataflows';
-import JobBasicTab from './BasicTab/JobBasicTab.js';
-import Controls from './Controls.js';
-import InputParamsTab from './InputParamsTab.js';
+import JobBasicTab from './BasicTab/JobBasicTab.jsx';
+import Controls from './Controls.jsx';
+import InputParamsTab from './InputParamsTab.jsx';
 import InputOutoutFiles from './JobFiles/InputOutoutFiles';
-import JobForm from './JobForm.js';
-import ScheduleTab from './ScheduleTab.js';
-import ScriptTab from './ScriptTab.js';
+import JobForm from './JobForm.jsx';
+import ScheduleTab from './ScheduleTab.jsx';
+import ScriptTab from './ScriptTab.jsx';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 const TabPane = Tabs.TabPane;

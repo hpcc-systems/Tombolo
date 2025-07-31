@@ -1,5 +1,5 @@
-const { Constants } = require('./Constants');
-const { Tooltip } = require('antd');
+import { Tooltip } from 'antd';
+import { Constants } from './Constants';
 import React from 'react';
 
 let omitDeep = (value, key) => {

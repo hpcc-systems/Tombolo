@@ -6,8 +6,8 @@ import { applicationActions } from '../../../redux/actions/Application.js';
 import { assetsActions } from '../../../redux/actions/Assets.js';
 import { expandGroups, selectGroup } from '../../../redux/actions/Groups.js';
 import { authActions } from '../../../redux/actions/Auth.js';
-import UserMenu from './UserMenu.js';
-import ApplicationMenu from './ApplicationMenu.js';
+import UserMenu from './UserMenu.jsx';
+import ApplicationMenu from './ApplicationMenu.jsx';
 import { Layout } from 'antd';
 
 const { Header } = Layout;

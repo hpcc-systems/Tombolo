@@ -15,9 +15,9 @@ import CustomToolbar from './Toolbar/Toolbar';
 
 import AssetDetailsDialog from '../AssetDetailsDialog';
 import ExistingAssetListDialog from '../Dataflow/ExistingAssetListDialog';
-import Shape from './Shape.js';
+import Shape from './Shape.jsx';
 import { colors } from './graphColorsConfig.js';
-import { getWorkingCopyGraph, saveWorkingCopyGraph } from '../../common/CommonUtil.js';
+import { getWorkingCopyGraph, saveWorkingCopyGraph } from '../../common/CommonUtil';
 
 const NOTIFICATION_CONF = {
   placement: 'top',

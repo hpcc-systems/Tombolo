@@ -14,7 +14,7 @@ import { authHeader } from '../../common/AuthHeader.js';
 import { assetsActions } from '../../../redux/actions/Assets';
 import { getGroupsTree, selectGroup, expandGroups } from '../../../redux/actions/Groups';
 import AssetsTable from './AssetsTable';
-import TitleRenderer from './TitleRenderer.js';
+import TitleRenderer from './TitleRenderer.jsx';
 import MoveAssetsDialog from './MoveAssetsDialog';
 import useModal from '../../../hooks/useModal';
 import { CreateGroupDialog } from './CreateGroupDialog';
