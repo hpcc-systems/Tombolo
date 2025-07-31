@@ -6,12 +6,15 @@ export default function config({ mode }) {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
 
   return defineConfig({
+    root: './',
     plugins: [
       react(),
       checker({
         eslint: {
-          // for example, lint .ts and .tsx
-          lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
+          // Specify the files to lint
+          files: './src/**/*.{js,jsx,ts,tsx}',
+          // This ensures ESLint uses your .eslintrc.json
+          lintCommand: 'eslint --config .eslintrc.json "./src/**/*.{js,jsx,ts,tsx}"',
         },
       }),
     ],
@@ -36,6 +39,11 @@ export default function config({ mode }) {
         '@': '/src', // Optional: for absolute imports (e.g., '@/components')
         '~': '/node_modules', // Alias for node_modules
       },
+    },
+    test: {
+      environment: 'jsdom', // For React component testing
+      globals: true, // Avoid importing `describe`, `it`, etc.
+      setupFiles: './src/setupTests.js', // Optional for custom setup
     },
   });
 }
