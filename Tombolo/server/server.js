@@ -116,6 +116,7 @@ const status = require('./routes/statusRoutes');
 const instanceSettings = require('./routes/instanceRoutes');
 const costMonitoring = require('./routes/costMonitoringRoutes');
 const landingZoneMonitoring = require('./routes/landingZoneMonitoring');
+const clusterStatusMonitoring = require('./routes/clusterStatusMonitoring');
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -172,6 +173,7 @@ app.use('/api/roles', roles);
 app.use('/api/instanceSettings', instanceSettings);
 app.use('/api/costMonitoring', costMonitoring);
 app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
+app.use('/api/clusterStatusMonitoring', clusterStatusMonitoring);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {

@@ -289,6 +289,34 @@ function getCostMonitoring(overrides = {}, dateStrings = false) {
   };
 }
 
+function getClusterStatusMonitoring(overrides = {}) {
+  let newDate = new Date();
+  newDate = newDate.toISOString();
+  return {
+    id: uuidv4(),
+    monitoringName: 'Test cluster status Monitor',
+    isActive: false,
+    approvalStatus: 'pending',
+    approvedBy: null,
+    approvedAt: null,
+    approverComment: null,
+    description: 'Sample  cluster status monitoring',
+    clusterId: uuidv4(),
+    lastRunDetails: null,
+    metaData: {
+      contacts: {
+        primaryContacts: ['testemail1@lexisnexisrisk.com'],
+      },
+    },
+    createdBy: uuidv4(),
+    lastUpdatedBy: uuidv4(),
+    createdAt: newDate,
+    updatedAt: newDate,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -311,4 +339,5 @@ module.exports = {
   nonExistentID,
   ISO_DATE_REGEX,
   AUTHED_USER_ID,
+  getClusterStatusMonitoring,
 };

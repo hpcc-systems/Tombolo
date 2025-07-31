@@ -115,6 +115,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'clusterId',
       onDelete: 'NO ACTION',
     });
+    cluster.hasMany(models.clusterStatusMonitoring, {
+      foreignKey: 'clusterId',
+      onDelete: 'CASCADE',
+    });
   };
 
   return cluster;

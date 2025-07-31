@@ -12,6 +12,9 @@ const {
   validateToggleFileMonitoring,
   validateUpdateFileMonitoring,
 } = require('../../middlewares/fileMonitoringMiddleware');
+const {
+  uniqueConstraintErrorHandler,
+} = require('../../utils/uniqueConstraintErrorHandler');
 
 router.post('/', validate(validateCreateFileMonitoring), async (req, res) => {
   try {
@@ -30,10 +33,12 @@ router.post('/', validate(validateCreateFileMonitoring), async (req, res) => {
       jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
     }
   } catch (error) {
-    logger.error(error);
-    return res
-      .status(500)
-      .json({ message: 'Unable to save file monitoring details' });
+    logger.error('Failed to create file monitoring: ', error);
+    const errorResult = uniqueConstraintErrorHandler(
+      error,
+      'Unable to save file monitoring details'
+    );
+    return res.status(errorResult.statusCode).json(errorResult.responseObject);
   }
 });
 

@@ -53,7 +53,7 @@ router.post('/', validate(validateCreateJobMonitoring), async (req, res) => {
 
     return res.status(200).send(response);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('Failed to save job monitoring: ', err);
     return res.status(500).send('Failed to save job monitoring');
   }
 });

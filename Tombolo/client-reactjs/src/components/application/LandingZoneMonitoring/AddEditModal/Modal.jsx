@@ -30,10 +30,10 @@ const AddEditModal = ({
   lzMonitoringType,
   setLzMonitoringType,
   landingZoneMonitoring,
-  setMinSizeThreasoldUnit,
-  setMaxSizeThreasoldUnit,
-  minSizeThreasoldUnit,
-  maxSizeThreasoldUnit,
+  setMinSizeThresholdUnit,
+  setMaxSizeThresholdUnit,
+  minSizeThresholdUnit,
+  maxSizeThresholdUnit,
 }) => {
   // Keep track of visited tabs, some form fields are loaded only when tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
@@ -79,10 +79,10 @@ const AddEditModal = ({
           setSelectedCluster={setSelectedCluster}
           clusters={clusters}
           form={form}
-          minSizeThreasoldUnit={minSizeThreasoldUnit}
-          maxSizeThreasoldUnit={maxSizeThreasoldUnit}
-          setMinSizeThreasoldUnit={setMinSizeThreasoldUnit}
-          setMaxSizeThreasoldUnit={setMaxSizeThreasoldUnit}
+          minSizeThresholdUnit={minSizeThresholdUnit}
+          maxSizeThresholdUnit={maxSizeThresholdUnit}
+          setMinSizeThresholdUnit={setMinSizeThresholdUnit}
+          setMaxSizeThresholdUnit={setMaxSizeThresholdUnit}
         />
       ),
     },
