@@ -4,7 +4,6 @@ import { Form, Row, Col, Select, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
 // Local imports
-import './costMonitoring.css';
 import { useSelector } from 'react-redux';
 import useMonitoringFilters from '../../../hooks/useMonitoringFilters';
 import AsrSpecificFilters from '../../common/Monitoring/AsrSpecificFilters';

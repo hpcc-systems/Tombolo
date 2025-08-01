@@ -1,0 +1,13 @@
+
+.monitoring_tiny_description {
+  margin-top: 30px;
+}
+
+.monitoring_tiny_description * {
+  padding: 2px 4px !important;
+}
+
+.monitoring_tiny_description .ant-descriptions-item-label {
+  width: 240px;
+  font-weight: 500;
+}

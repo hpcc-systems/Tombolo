@@ -5,6 +5,7 @@ import { CheckCircleFilled } from '@ant-design/icons';
 
 // Local imports
 import { resendVerificationCode } from './utils';
+import styles from './login.module.css';
 
 const { Text } = Typography;
 const defaultDelay = 90; // 10 seconds
@@ -64,13 +65,13 @@ function UnverifiedUser({ setUnverifiedUserLoginAttempt, email = 'yadhap.dahal@l
   }, []);
 
   return (
-    <Card style={{ margin: '1rem auto', padding: '0.5rem', textAlign: 'center' }}>
+    <Card className={styles.unverifiedContainer}>
       {!sentVerificationEmail ? (
         <>
-          <Text type="danger" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+          <Text type="danger" className={styles.notVerified}>
             Your account is not yet verified.
           </Text>
-          <Text style={{ display: 'block', margin: '1rem 0' }}>
+          <Text className={styles.checkEmail}>
             Please check your email for a verification link. If you did not receive an email, click the button below to
             resend the verification link.
           </Text>
@@ -89,20 +90,20 @@ function UnverifiedUser({ setUnverifiedUserLoginAttempt, email = 'yadhap.dahal@l
       ) : (
         <>
           {sendingEmail ? (
-            <Text type="success" style={{ color: 'var(--dark)', fontSize: '1rem', fontWeight: 'bold' }}>
+            <Text type="success" className={styles.sendingEmail}>
               Sending Verification E-mail ...
             </Text>
           ) : (
-            <Text type="success" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <Text type="success" className={styles.emailSent}>
               <CheckCircleFilled /> Verification E-mail sent
             </Text>
           )}
 
-          <Text style={{ display: 'block', margin: '1rem 0' }}>
+          <Text className={styles.checkEmail}>
             {` Verification email has been sent to your email address. Please check your inbox and click the link in the
             email to complete the verification process. If you don't see the email, check your spam or junk folder.`}
           </Text>
-          <div direction="vertical" size="middle" style={{ display: 'flex', gap: '1rem' }}>
+          <div direction="vertical" size="middle" className={styles.unverifiedFooterContainer}>
             <Button
               type="primary"
               disabled={!canSendVerificationEmail}
