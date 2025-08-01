@@ -23,6 +23,7 @@ const {
   createClusterUsageHistoryJob,
   checkClusterReachability,
   checkClusterContainerization,
+  startClusterStatusMonitoring,
 } = require('../jobSchedularMethods/clusterJobs.js');
 const {
   scheduleJobStatusPolling,
@@ -75,10 +76,6 @@ const {
   startLzFileCountMonitoring,
   startLzSpaceUsageMonitoring,
 } = require('../jobSchedularMethods/lzMonitoring.js');
-
-const {
-  startClusterStatusMonitoring,
-} = require('../jobSchedularMethods/clusterStatusMonitoring.js');
 
 class JobScheduler {
   constructor() {
