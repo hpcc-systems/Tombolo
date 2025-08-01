@@ -22,7 +22,6 @@ module.exports = {
       monitoringName: {
         allowNull: false,
         type: Sequelize.STRING,
-        unique: true,
       },
       isActive: {
         allowNull: false,
@@ -98,6 +97,15 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    await queryInterface.addIndex(
+      'costMonitoring',
+      ['monitoringName', 'deletedAt'],
+      {
+        unique: true,
+        name: 'cm_unique_monitoring_name_deleted_at',
+      }
+    );
   },
 
   async down(queryInterface, Sequelize) {

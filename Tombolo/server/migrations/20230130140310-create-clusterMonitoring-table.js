@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("clusterMonitoring", {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('clusterMonitoring', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -19,25 +19,25 @@ module.exports = {
       isActive: {
         allowNull: false,
         type: Sequelize.DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
       },
       cluster_id: {
         type: Sequelize.UUID,
         references: {
-          model: "cluster",
-          key: "id",
+          model: 'cluster',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       application_id: {
         type: Sequelize.UUID,
         references: {
-          model: "application",
-          key: "id",
+          model: 'application',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       metaData: {
         type: Sequelize.JSON,
@@ -56,8 +56,13 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    await queryInterface.addIndex('clusterMonitoring', ['name', 'deletedAt'], {
+      unique: true,
+      name: 'clm_unique_name_deleted_at',
+    });
   },
-  down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("clusterMonitoring");
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('clusterMonitoring');
   },
 };

@@ -1,7 +1,7 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const fileMonitoring = sequelize.define(
-    "fileMonitoring",
+    'fileMonitoring',
     {
       id: {
         primaryKey: true,
@@ -13,7 +13,6 @@ module.exports = (sequelize, DataTypes) => {
       name: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: true,
       },
       cron: {
         allowNull: true,
@@ -30,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
       wuid: {
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue: "",
+        defaultValue: '',
       },
       fileTemplateId: {
         type: DataTypes.UUID,
@@ -49,18 +48,29 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
     },
-    { paranoid: true, freezeTableName: true }
+    {
+      paranoid: true,
+      freezeTableName: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['name', 'deletedAt'],
+        },
+      ],
+    }
   );
-  fileMonitoring.associate = function(models) {
+  fileMonitoring.associate = function (models) {
     // Define association here
-    fileMonitoring.belongsTo(models.fileTemplate, { foreignKey: 'fileTemplateId' });
+    fileMonitoring.belongsTo(models.fileTemplate, {
+      foreignKey: 'fileTemplateId',
+    });
     fileMonitoring.belongsTo(models.cluster, { foreignKey: 'cluster_id' });
     fileMonitoring.belongsTo(models.application, {
-      foreignKey: "application_id",
+      foreignKey: 'application_id',
     });
     fileMonitoring.hasMany(models.monitoring_notifications, {
-      foreignKey: "application_id",
-      onDelete: "CASCADE",
+      foreignKey: 'application_id',
+      onDelete: 'CASCADE',
     });
   };
   return fileMonitoring;

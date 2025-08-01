@@ -1,7 +1,8 @@
-"use strict";
+'use strict';
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("jobMonitoring", {
+    await queryInterface.createTable('jobMonitoring', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -12,16 +13,15 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: "application",
-          key: "id",
+          model: 'application',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       monitoringName: {
         allowNull: false,
         type: Sequelize.STRING,
-        unique: true,
       },
       isActive: {
         allowNull: false,
@@ -29,7 +29,7 @@ module.exports = {
       },
       approvalStatus: {
         allowNull: false,
-        type: Sequelize.ENUM("Approved", "Rejected", "Pending"),
+        type: Sequelize.ENUM('Approved', 'Rejected', 'Pending'),
       },
       approvedBy: {
         allowNull: true,
@@ -55,11 +55,11 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: "cluster",
-          key: "id",
+          model: 'cluster',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "NO ACTION",
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       jobName: {
         allowNull: false,
@@ -94,8 +94,17 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    await queryInterface.addIndex(
+      'jobMonitoring',
+      ['monitoringName', 'deletedAt'],
+      {
+        unique: true,
+        name: 'jm_unique_monitoring_name_deleted_at',
+      }
+    );
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("jobMonitoring");
+    await queryInterface.dropTable('jobMonitoring');
   },
 };

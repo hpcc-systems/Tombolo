@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const clusterMonitoring = sequelize.define(
-    "clusterMonitoring",
+    'clusterMonitoring',
     {
       id: {
         primaryKey: true,
@@ -13,7 +13,6 @@ module.exports = (sequelize, DataTypes) => {
       name: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: true,
       },
       cron: {
         allowNull: true,
@@ -36,17 +35,26 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
     },
-    { paranoid: true, freezeTableName: true }
+    {
+      paranoid: true,
+      freezeTableName: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['name', 'deletedAt'],
+        },
+      ],
+    }
   );
   clusterMonitoring.associate = function (models) {
     // Define association here
-    clusterMonitoring.belongsTo(models.cluster, { foreignKey: "cluster_id" });
+    clusterMonitoring.belongsTo(models.cluster, { foreignKey: 'cluster_id' });
     clusterMonitoring.belongsTo(models.application, {
-      foreignKey: "application_id",
+      foreignKey: 'application_id',
     });
     clusterMonitoring.hasMany(models.monitoring_notifications, {
-      foreignKey: "application_id",
-      onDelete: "CASCADE",
+      foreignKey: 'application_id',
+      onDelete: 'CASCADE',
     });
   };
   return clusterMonitoring;
