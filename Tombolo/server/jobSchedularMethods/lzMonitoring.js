@@ -73,8 +73,8 @@ async function startLzFileCountMonitoring() {
     let jobName = 'landing-zone-file-count-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: '20s', // For development
-      // interval: humanReadableIntervalForFileCountMonitoring,
+      // interval: '20s', // For development
+      interval: humanReadableIntervalForFileCountMonitoring,
       path: path.join(
         __dirname,
         '..',
@@ -102,8 +102,8 @@ async function startLzSpaceUsageMonitoring() {
     let jobName = 'landing-zone-space-usage-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: '20s', // For development
-      // interval: humanReadableIntervalForSpaceUsageMonitoring,
+      // interval: '20s', // For development
+      interval: humanReadableIntervalForSpaceUsageMonitoring,
       path: path.join(
         __dirname,
         '..',

@@ -78,6 +78,10 @@ const {
   startLzSpaceUsageMonitoring,
 } = require('../jobSchedularMethods/lzMonitoring.js');
 
+const {
+  startClusterStatusMonitoring,
+} = require('../jobSchedularMethods/clusterStatusMonitoring.js');
+
 class JobScheduler {
   constructor() {
     this.bree = new Bree({
@@ -177,6 +181,7 @@ class JobScheduler {
       await startLzFileMovementMonitoring.call(this);
       await startLzFileCountMonitoring.call(this);
       await startLzSpaceUsageMonitoring.call(this);
+      await startClusterStatusMonitoring.call(this);
       logger.info('-----------------------------');
       logger.info('Server is finished intializing, and is now running');
       logger.info('-----------------------------');
@@ -453,6 +458,11 @@ class JobScheduler {
 
   startLzSpaceUsageMonitoring() {
     return startLzSpaceUsageMonitoring.call(this);
+  }
+
+  // Cluster Status Monitoring
+  startClusterStatusMonitoring() {
+    return startClusterStatusMonitoring.call(this);
   }
 }
 

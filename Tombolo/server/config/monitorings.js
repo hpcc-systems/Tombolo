@@ -1,42 +1,36 @@
 // Job Monitoring configuration
-const job_monitoring_interval = 20; // in minutes
 const jobMonitoringConfig = {
-  job_monitoring_interval,
+  job_monitoring_interval: 20, // In minutes
   intermediate_job_monitoring_interval: 15, // in minutes
   job_punctuality_monitoring_interval: 10, // in minutes
   job_time_series_analysis_interval: 10, //in minutes
 };
 
 // Landing Zone Monitoring configuration
-const lz_monitoring_interval = 15;
-const lz_file_count_monitoring_interval = 15; // in minutes
-const lz_space_usage_monitoring_interval = 15; // in minutes
-
-// Cluster reachability monitoring configuration
-const cluster_reachability_monitoring = {
-  clusterReachabilityMonitoringInterval: '10m', // in minutes
-  passwordExpiryAlertDaysForCluster: [10, 5, 4, 3, 2, 1],
+const lz_monitoring_intervals = {
+  lz_monitoring_interval: 15,
+  lz_file_count_monitoring_interval: 15,
+  lz_space_usage_monitoring_interval: 15,
 };
 
-// Cluster containerization check configuration
-const cluster_containerization_monitoring = {
+// Cluster reachability monitoring configuration
+const cluster_monitoring = {
+  clusterReachabilityMonitoringInterval: '10m', // in minutes
+  passwordExpiryAlertDaysForCluster: [10, 5, 4, 3, 2, 1],
+  cluster_status_monitoring_interval: 10,
   clusterContainerizationCheckInterval: '0 2 * * *', // Daily at 2 AM
 };
 
-// password expiry alert days for user, we send an email on each day, limited to 3 for now, need to be in descending order to function properly
-const passwordExpiryAlertDaysForUser = [10, 3, 1];
-
-// account lock alert days for user, we send an email on eahc day, limited to 3 for now, need to be in descending order to function properly
-const accountDeleteAlertDaysForUser = [10, 3, 1];
+// User account monitoring configuration
+const userAccountMonitoring = {
+  passwordExpiryAlertDaysForUser: [10, 3, 1],
+  accountDeleteAlertDaysForUser: [10, 3, 1],
+};
 
 // Export
 module.exports = {
   ...jobMonitoringConfig,
-  ...cluster_reachability_monitoring,
-  ...cluster_containerization_monitoring,
-  passwordExpiryAlertDaysForUser,
-  accountDeleteAlertDaysForUser,
-  lz_monitoring_interval,
-  lz_file_count_monitoring_interval,
-  lz_space_usage_monitoring_interval,
+  ...cluster_monitoring,
+  ...lz_monitoring_intervals,
+  ...userAccountMonitoring,
 };

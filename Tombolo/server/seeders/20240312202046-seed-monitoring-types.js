@@ -2,7 +2,7 @@
 const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  up: async (queryInterface) => {
     return queryInterface.bulkInsert('monitoring_types', [
       {
         id: uuidv4(),
@@ -44,10 +44,20 @@ module.exports = {
           email: 'NA',
         }),
       },
+      {
+        id: uuidv4(),
+        name: 'Cluster Status Monitoring',
+        createdAt: new Date(),
+        createdBy: JSON.stringify({
+          firstName: null,
+          lastName: 'System',
+          email: 'NA',
+        }),
+      },
     ]);
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
     return queryInterface.bulkDelete('monitoring_types', null, {});
   },
 };
