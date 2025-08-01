@@ -66,8 +66,18 @@
   margin-top: 5px;
 }
 
+.modal-card {
+  border: 1px solid #dadada;
+}
+
+.modal-card .erroneousScheduling {
+  color: #ff4d4f;
+  text-align: center;
+}
+
 .modal-card-2 {
   margin-top: 5px;
+  border: 1px solid #dadada;
 }
 
 .schedularSelector__addMoreBtn {
@@ -103,6 +113,13 @@
   background-color: var(--active);
 }
 
+.jobMonitoringTable__hidden_actions {
+  display: flex;
+  flex-direction: column;
+  color: var(--primary);
+  cursor: pointer;
+}
+
 .jobMonitoringTable__hidden_actions > * {
   padding: 5px;
 }
@@ -115,20 +132,6 @@
   background-color: rgba(255, 255, 0, 0.1) !important;
 }
 /* Filters ------------------------------------------------------------------ */
-
-.notifications__filter-label {
-  font-weight: 500;
-  padding-bottom: 5px;
-}
-
-.notifications__filters {
-  margin-bottom: 5px;
-  padding: 4px 10px;
-}
-
-.notifications_filters__form {
-  background-color: var(--light);
-}
 
 .notification__filters_count {
   display: flex;
@@ -159,4 +162,9 @@
   font-size: 1.1rem;
   background: var(--light);
   margin-bottom: 0.5rem;
+}
+
+.pause_play_icon {
+  color: var(--primary);
+  margin-right: 15px;
 }

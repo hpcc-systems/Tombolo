@@ -1,0 +1,31 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 70%;
+  margin: 3rem auto 0;
+  color: #001529;
+}
+
+.container__child {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lock_icon {
+  font-size: 20rem;
+}
+
+.no-access_info {
+  margin-left: 3rem;
+}
+
+.no-access_info > h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.no-access_info > p {
+  font-size: 1rem;
+}

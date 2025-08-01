@@ -4,7 +4,7 @@ import { Descriptions, Tooltip, Tag, Tabs } from 'antd';
 
 //Local Imports
 import { formatDateTime } from '../../../common/CommonUtil';
-import './notifications.css';
+import styles from './notifications.module.css';
 import { getNotificationHtmlCode } from './notificationUtil';
 
 function NotificationDetails({ selectedNotification }) {
@@ -37,7 +37,7 @@ function NotificationDetails({ selectedNotification }) {
   return (
     <Tabs>
       <Tabs.TabPane tab="Summary" key="0">
-        <Descriptions column={1} bordered={true} size="small" className="notifications_tiny-description">
+        <Descriptions column={1} bordered={true} size="small" className={styles.notifications_tinyDescription}>
           <Descriptions.Item label="Origin ">
             {selectedNotification.notificationOrigin || <Tag>Unknown</Tag>}
           </Descriptions.Item>
@@ -46,7 +46,7 @@ function NotificationDetails({ selectedNotification }) {
           <Descriptions.Item label="Status ">{selectedNotification.status}</Descriptions.Item>
           {selectedNotification.recipients && (
             <Descriptions.Item label="Recipient(s) ">
-              <div className="notifications__fixed-size-description-item tiny-scroll-bar">
+              <div className={`${styles.notifications__fixedSizeDescriptionItem} tiny-scroll-bar`}>
                 {selectedNotification?.recipients?.intended.map((r, i) => (
                   <Tag key={i}>{r}</Tag>
                 ))}
@@ -71,7 +71,7 @@ function NotificationDetails({ selectedNotification }) {
 
           {/* -------------------------------------------------------------------------------------------- */}
 
-          <Descriptions.Item label="Created By" className="notifications__wider-tooltip">
+          <Descriptions.Item label="Created By" className={styles.notifications__widerTooltip}>
             <Tooltip
               getPopupContainer={(triggerNode) => triggerNode.parentNode}
               title={
@@ -80,14 +80,17 @@ function NotificationDetails({ selectedNotification }) {
                   <div>{`Email : ${selectedNotification?.createdBy.email}`}</div>
                 </>
               }>
-              <span className="notificationDetails__value-with-tooltip">{`${selectedNotification.createdBy.name}`}</span>{' '}
+              <span
+                className={
+                  styles.notificationDetails__valueWithTooltip
+                }>{`${selectedNotification.createdBy.name}`}</span>{' '}
               on{' '}
             </Tooltip>
             {formatDateTime(selectedNotification.createdAt)}{' '}
           </Descriptions.Item>
 
           {selectedNotification.updatedBy && (
-            <Descriptions.Item label="Updated By " className="notifications__wider-tooltip">
+            <Descriptions.Item label="Updated By " className={styles.notifications__widerTooltip}>
               <Tooltip
                 getPopupContainer={(triggerNode) => triggerNode.parentNode}
                 title={
@@ -96,7 +99,10 @@ function NotificationDetails({ selectedNotification }) {
                     <div>{`Email: ${selectedNotification?.updatedBy?.email}`}</div>
                   </>
                 }>
-                <span className="notificationDetails__value-with-tooltip">{`${selectedNotification.updatedBy.name}`}</span>{' '}
+                <span
+                  className={
+                    styles.notificationDetails__valueWithTooltip
+                  }>{`${selectedNotification.updatedBy.name}`}</span>{' '}
                 on{' '}
               </Tooltip>
               {formatDateTime(selectedNotification.updatedAt)}{' '}
@@ -104,7 +110,7 @@ function NotificationDetails({ selectedNotification }) {
           )}
 
           {selectedNotification.resolutionDateTime && (
-            <Descriptions.Item label="Resolved By " className="notifications__wider-tooltip">
+            <Descriptions.Item label="Resolved By " className={styles.notifications__wider - Tooltip}>
               <Tooltip
                 getPopupContainer={(triggerNode) => triggerNode.parentNode}
                 title={
@@ -113,7 +119,10 @@ function NotificationDetails({ selectedNotification }) {
                     <div>{`Email: ${selectedNotification?.updatedBy?.email}`}</div>
                   </>
                 }>
-                <span className="notificationDetails__value-with-tooltip">{`${selectedNotification.updatedBy.name}`}</span>{' '}
+                <span
+                  className={
+                    styles.notificationDetails__valueWithTooltip
+                  }>{`${selectedNotification.updatedBy.name}`}</span>{' '}
                 on{' '}
               </Tooltip>
               {formatDateTime(selectedNotification.resolutionDateTime)}{' '}
@@ -130,11 +139,11 @@ function NotificationDetails({ selectedNotification }) {
       </Tabs.TabPane>
       <Tabs.TabPane tab="Details" key="1">
         {fetchingNotificationDetails ? (
-          <div className="notificationDetails_notAvailable">Loading...</div>
+          <div className={styles.notificationDetails_notAvailable}>Loading...</div>
         ) : notificationHtmlCode ? (
-          <div className="notificationDetails" dangerouslySetInnerHTML={{ __html: notificationHtmlCode }} />
+          <div className={styles.notificationDetails} dangerouslySetInnerHTML={{ __html: notificationHtmlCode }} />
         ) : (
-          <div className="notificationDetails_notAvailable">No details available</div>
+          <div className={styles.notificationDetails_notAvailable}>No details available</div>
         )}
       </Tabs.TabPane>
     </Tabs>

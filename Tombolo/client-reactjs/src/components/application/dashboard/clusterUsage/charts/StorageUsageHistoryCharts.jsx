@@ -4,7 +4,7 @@ import { Empty, Popover } from 'antd';
 import { ExpandOutlined } from '@ant-design/icons';
 import _ from 'lodash';
 
-import '../index.css';
+import styles from '../clusterUsage.module.css';
 
 function StorageUsageHistoryCharts({ clusterUsageHistory, setViewExpandedGraph, setExpandedGraphData }) {
   const [groupedClusterUsageHistory, setGroupedClusterUsageHistory] = useState([]);
@@ -39,18 +39,18 @@ function StorageUsageHistoryCharts({ clusterUsageHistory, setViewExpandedGraph, 
   };
 
   return (
-    <div className="storageUsageHistoryCharts__main">
-      <div className="storageUsageHistoryCharts__chartContainer">
+    <div className={styles.storageUsageHistoryCharts__main}>
+      <div className={styles.storageUsageHistoryCharts__chartContainer}>
         {groupedClusterUsageHistory.length > 0 ? (
           groupedClusterUsageHistory.map((clusterHistory, index) => {
             return (
-              <div className="storageUsageHistoryCharts__chartAndName" key={index}>
-                <div className="storageUsageHistoryCharts__box">
+              <div className={styles.storageUsageHistoryCharts__chartAndName} key={index}>
+                <div className={styles.storageUsageHistoryCharts__box}>
                   <LinePlot clusterUsageHistory={clusterHistory.data} />
                 </div>
-                <div className="storageUsageHistoryCharts__engineName">
+                <div className={styles.storageUsageHistoryCharts__engineName}>
                   <span style={{ width: '250px', overflow: 'hidden' }}>
-                    <div className="storageUsageHistoryCharts__engineName_scroll">
+                    <div className={styles.storageUsageHistoryCharts__engineName_scroll}>
                       {clusterHistory.engines[0].length < 40
                         ? clusterHistory.engines[0]
                         : clusterHistory.engines[0].slice(0, 22) +
@@ -61,7 +61,7 @@ function StorageUsageHistoryCharts({ clusterUsageHistory, setViewExpandedGraph, 
                           )}
                     </div>
                   </span>
-                  <span className="storageUsageHistoryCharts__engineName__additionalText">
+                  <span className={styles.storageUsageHistoryCharts__engineName__additionalText}>
                     <Popover
                       content={clusterHistory.engines.map((item, index) => (
                         <div key={index}>{index === 0 ? null : _.capitalize(item)}</div>
@@ -73,7 +73,7 @@ function StorageUsageHistoryCharts({ clusterUsageHistory, setViewExpandedGraph, 
                   </span>
                   <ExpandOutlined
                     onClick={() => handleViewMoreClicked(clusterHistory.data)}
-                    className="storageUsageHistoryCharts__viewMore"
+                    className={styles.storageUsageHistoryCharts__viewMore}
                   />
                 </div>
               </div>

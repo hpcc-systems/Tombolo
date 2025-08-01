@@ -7,7 +7,7 @@ import MyAccountTable from './myAccountTable';
 import MyAccountInfo from './myAccountInfo';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { getUser } from '../../common/userStorage';
-import './myAccount.css';
+import styles from './myAccount.module.css';
 
 const MyAccount = () => {
   //get user from local storage
@@ -27,7 +27,7 @@ const MyAccount = () => {
           />
         }
       />
-      <div className="my-account">
+      <div className={styles.myAccount}>
         <Divider orientation="left"> Personal Information </Divider>
 
         <ChangePasswordModal

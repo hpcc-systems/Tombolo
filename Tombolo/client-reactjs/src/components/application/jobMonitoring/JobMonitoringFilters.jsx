@@ -83,7 +83,7 @@ function NotificationTableFilters({
         <Form form={form} onValuesChange={handleFormChange} className="notifications__filters_form">
           <Row gutter={8}>
             <Col span={4}>
-              <div className="notifications__filter-label">Job Name / Monitoring Name</div>
+              <div className="notifications__filter_label">Job Name / Monitoring Name</div>
               <Input
                 placeholder="Search by job name or monitoring name"
                 prefix={<SearchOutlined />}
@@ -104,7 +104,7 @@ function NotificationTableFilters({
               />
             </Col>
             <Col span={4}>
-              <div className="notifications__filter-label">Approval Status</div>
+              <div className="notifications__filter_label">Approval Status</div>
               <Form.Item name="approvalStatus">
                 <Select placeholder="Approval Status" allowClear disabled={false}>
                   {approvalStatusOptions.map((s) => (
@@ -117,7 +117,7 @@ function NotificationTableFilters({
             </Col>
 
             <Col span={4}>
-              <div className="notifications__filter-label">Active Status</div>
+              <div className="notifications__filter_label">Active Status</div>
               <Form.Item name="activeStatus">
                 <Select placeholder="Active statuses" allowClear disabled={false}>
                   {activeStatusOptions.map((a) => (
@@ -136,7 +136,7 @@ function NotificationTableFilters({
               handleDomainChange={handleDomainChange}
             />
             <Col span={4}>
-              <div className="notifications__filter-label">Frequency</div>
+              <div className="notifications__filter_label">Frequency</div>
               <Form.Item name="frequency">
                 <Select placeholder="Frequency" allowClear disabled={false}>
                   {frequencyOptions.map((f) => (

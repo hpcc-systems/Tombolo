@@ -7,8 +7,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import _, { set } from 'lodash';
 
 // Local imports
-import './lzMonitoring.css';
-import { use } from 'react';
+import styles from './lzMonitoring.module.css';
 
 //Constants
 const { Option } = Select;
@@ -173,12 +172,12 @@ function LzFilters({
 
   //JSX
   return (
-    <div className="lz__filters">
+    <div>
       {filtersVisible && (
-        <Form form={form} onValuesChange={handleFormChange} className="lz__filters_form">
+        <Form form={form} onValuesChange={handleFormChange} className={styles.lz__filters_form}>
           <Row gutter={8}>
             <Col span={4}>
-              <div className="lz__filter-label">Monitoring Name</div>
+              <div className={styles.lz__filterLabel}>Monitoring Name</div>
               <Input
                 placeholder="Search monitoring name"
                 prefix={<SearchOutlined />}
@@ -200,7 +199,7 @@ function LzFilters({
             </Col>
 
             <Col span={4}>
-              <div className="lz__filter-label">Cluster</div>
+              <div className={styles.lz__filterLabel}>Cluster</div>
               <Form.Item name="cluster">
                 <Select placeholder="Cluster" allowClear disabled={false}>
                   {clusterOptions.map((f) => (
@@ -212,7 +211,7 @@ function LzFilters({
               </Form.Item>
             </Col>
             <Col span={4}>
-              <div className="lz__filter-label">Approval Status</div>
+              <div className={styles.lz__filterLabel}>Approval Status</div>
               <Form.Item name="approvalStatus">
                 <Select placeholder="Approval Status" allowClear disabled={false}>
                   {approvalStatusOptions.map((s) => (
@@ -225,7 +224,7 @@ function LzFilters({
             </Col>
 
             <Col span={4}>
-              <div className="lz__filter-label">Active Status</div>
+              <div className={styles.lz__filterLabel}>Active Status</div>
               <Form.Item name="activeStatus">
                 <Select placeholder="Active statuses" allowClear disabled={false}>
                   {activeStatusOptions.map((a) => (
@@ -240,7 +239,7 @@ function LzFilters({
             {integrations.some((i) => i.name === 'ASR') && (
               <>
                 <Col span={4}>
-                  <div className="lz__filter-label">Domain</div>
+                  <div className={styles.lz__filterLabel}>Domain</div>
                   <Form.Item name="domain">
                     <Select
                       placeholder="Domain"
@@ -258,7 +257,7 @@ function LzFilters({
                   </Form.Item>
                 </Col>
                 <Col span={4} name="product">
-                  <div className="lz__filter-label">Product</div>
+                  <div className={styles.lz__filterLabel}>Product</div>
                   <Form.Item name="product">
                     <Select placeholder="Product" allowClear disabled={false}>
                       {productOptions.map((p) => (
@@ -275,7 +274,7 @@ function LzFilters({
         </Form>
       )}
       {filterCount > 0 && !filtersVisible && (
-        <div className="notification__filters_count">
+        <div className={styles.notification__filters_count}>
           <div style={{ cursor: 'pointer' }}>
             <span style={{ color: 'var(--danger)' }}>{`${filterCount} filter(s) active`}</span>
             <span style={{ color: 'var(--primary)', paddingLeft: '5px' }} onClick={handleFilterCountClick}>

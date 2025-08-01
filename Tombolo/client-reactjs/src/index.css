@@ -1099,38 +1099,6 @@ div.tooltip {
   display: none;
 }
 
-.OrbitTable .ant-table-column-has-sorters {
-  border-radius: 0px 8px 0px 0px;
-}
-
-.OrbitTable .ant-table-thead > tr > th {
-  background: #002140 !important;
-  color: white;
-}
-
-.OrbitTable .ant-table-thead > tr > .ant-table-column-sort:hover {
-  color: black;
-}
-
-.OrbitTable .ant-table-cell-scrollbar {
-  box-shadow: none;
-}
-
-.OrbitTable tr:nth-child(2n) {
-  background: lightgrey;
-}
-
-.OrbitTable tr:nth-child(2n) {
-  background: lightgrey;
-}
-
-.OrbitTable tr:nth-child(2n) {
-  background: lightgrey;
-}
-
-.OrbitTable .ant-table-row-level-0:nth-child(2n) .ant-table-column-sort {
-  background: lightgrey;
-}
 
 .chartLabel {
   color: rgb(71, 70, 70);
@@ -1242,4 +1210,12 @@ main > div {
   color: var(--primary);
   background: none;
   font-weight: 600;
+}
+
+.w_100 {
+  width: 100%;
+}
+
+.medium-form-item {
+  width: calc(47.5% - 8px);
 }

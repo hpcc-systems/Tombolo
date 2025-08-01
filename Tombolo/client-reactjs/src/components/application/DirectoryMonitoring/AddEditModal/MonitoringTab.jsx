@@ -4,6 +4,8 @@ import SchedulePicker from '../../jobMonitoring/SchedulePicker';
 import AsrSpecificMonitoring from './ASRSpecificMonitoring';
 import { useSelector } from 'react-redux';
 
+import styles from '../directoryMonitoring.module.css';
+
 function MonitoringTab({
   intermittentScheduling,
   setIntermittentScheduling,
@@ -46,7 +48,7 @@ function MonitoringTab({
 
   return (
     <div>
-      <Card className="modal-card" style={{ border: '1px solid #dadada' }}>
+      <Card className={styles.modalCard}>
         <SchedulePicker
           intermittentScheduling={intermittentScheduling}
           setIntermittentScheduling={setIntermittentScheduling}
@@ -58,11 +60,11 @@ function MonitoringTab({
           setCronMessage={setCronMessage}
         />
         {erroneousScheduling && (
-          <div style={{ color: '#ff4d4f', textAlign: 'center' }}>Please select schedule for the directory</div>
+          <div className={styles.erroneousScheduling}>Please select schedule for the directory</div>
         )}
       </Card>
 
-      <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
+      <Card className={styles.modalCard2}>
         {asrIntegration && (
           <AsrSpecificMonitoring
             form={form}
@@ -73,7 +75,7 @@ function MonitoringTab({
           />
         )}
       </Card>
-      <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
+      <Card className={styles.modalCard2}>
         <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={24}>

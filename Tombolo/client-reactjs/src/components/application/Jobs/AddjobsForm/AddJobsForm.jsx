@@ -1,12 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { Col, Empty, Form, Row, Tabs, Tooltip } from 'antd';
 import Text from '../../../common/Text';
-import './AddJobsForm.css';
 
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import JobDetailsForm from '../JobDetails';
 import SearchSettings from './SearchSettings';
 import SaveAllJobsButton from './SaveAllJobs';
+
+import styles from './addJobsForm.module.css';
 
 const { TabPane } = Tabs;
 
@@ -118,7 +119,7 @@ const AddJobsForm = () => {
   };
 
   return (
-    <div className="add-jobs-screen custom-scroll">
+    <div className={`${styles.addJobsScreen} custom-scroll`}>
       {/*  SEARCH SETTINGS ROW */}
       <Row style={{ marginBottom: '20px' }}>
         <Col span={12}>
@@ -130,8 +131,8 @@ const AddJobsForm = () => {
 
       {/*  TABS ROW */}
       <Row style={{ flex: 1 }}>
-        <Col span={24} className="tabs-container">
-          <div className="card-container">
+        <Col span={24} className={styles.tabsContainer}>
+          <div className={styles.cardContainer}>
             {panes.length === 0 ? (
               <Empty description={<Text text="Find a job in 'Search Settings" />} />
             ) : (

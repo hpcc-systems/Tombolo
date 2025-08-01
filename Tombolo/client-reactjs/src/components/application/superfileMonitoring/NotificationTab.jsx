@@ -3,6 +3,8 @@ import { Form, Select, Input, Button } from 'antd';
 import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../common/InfoDrawer';
 
+import styles from './superfileMonitoring.module.css';
+
 const notificationOptions = [
   { label: 'E-mail', value: 'eMail' },
   { label: 'MS Teams', value: 'msTeams' },
@@ -48,7 +50,7 @@ const NotificationTab = ({ setNotificationDetails, notificationDetails, selected
             <>
               {fields.map((field, _index) => (
                 <Form.Item required={true} key={field.key}>
-                  <div style={{ display: 'flex', placeItems: 'center' }}>
+                  <div className={styles.emailsList}>
                     <Form.Item
                       {...field}
                       validateTrigger={['onChange', 'onBlur']}
@@ -95,7 +97,7 @@ const NotificationTab = ({ setNotificationDetails, notificationDetails, selected
             <>
               {fields.map((field, _index) => (
                 <Form.Item required={false} key={field.key}>
-                  <div style={{ display: 'flex', placeItems: 'center' }}>
+                  <div className={styles.emailsList}>
                     <Form.Item
                       {...field}
                       validateTrigger={['onChange', 'onBlur']}

@@ -1,5 +1,5 @@
 // Package imports
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DatePicker, Button, Slider, Modal } from 'antd';
 import { FilterOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -7,16 +7,6 @@ import dayjs from 'dayjs';
 const NotificationDashboardFilter = ({ dashBoardFilter, setDashBoardFilter }) => {
   const [visible, setVisible] = useState(false);
   const past60Days = dayjs().subtract(60, 'days');
-
-  //Effects
-  useEffect(() => {
-    console.log('Loading ...');
-
-    // Clean up
-    return () => {
-      console.log('Cleaned up');
-    };
-  }, []);
 
   // When slider value is changed
   const handleNumberChange = (value) => {

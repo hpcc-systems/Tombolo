@@ -3,6 +3,8 @@ import { Form, Select, Input, Button } from 'antd';
 import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../common/InfoDrawer';
 
+import styles from './orbitMonitoring.module.css';
+
 const notificationOptions = [
   { label: 'E-mail', value: 'eMail' },
   { label: 'MS Teams', value: 'msTeams' },
@@ -26,7 +28,7 @@ const NotificationTab = ({ setNotificationDetails, notificationDetails }) => {
         label="Primary Contact"
         name="primaryContact"
         validateTrigger={['onChange', 'onBlur']}
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         rules={[
           {
             max: 256,
@@ -39,7 +41,7 @@ const NotificationTab = ({ setNotificationDetails, notificationDetails }) => {
         label="Secondary Contact"
         name="secondaryContact"
         validateTrigger={['onChange', 'onBlur']}
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         rules={[
           {
             max: 256,
@@ -75,7 +77,7 @@ const NotificationTab = ({ setNotificationDetails, notificationDetails }) => {
             <>
               {fields.map((field, _index) => (
                 <Form.Item required={true} key={field.key}>
-                  <div style={{ display: 'flex', placeItems: 'center' }}>
+                  <div className={styles.emailsList}>
                     <Form.Item
                       {...field}
                       validateTrigger={['onChange', 'onBlur']}
@@ -122,7 +124,7 @@ const NotificationTab = ({ setNotificationDetails, notificationDetails }) => {
             <>
               {fields.map((field, _index) => (
                 <Form.Item required={false} key={field.key}>
-                  <div style={{ display: 'flex', placeItems: 'center' }}>
+                  <div className={styles.emailsList}>
                     <Form.Item
                       {...field}
                       validateTrigger={['onChange', 'onBlur']}
