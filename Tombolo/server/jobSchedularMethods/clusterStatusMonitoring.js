@@ -3,7 +3,7 @@ const { cluster_status_monitoring_interval } = require('../config/monitorings');
 const logger = require('../config/logger');
 
 // Constants
-const CLUSTER_STATUS_MONITORING_FILE_NAME = 'clusterStatusMonitoring.js';
+const CLUSTER_STATUS_MONITORING_FILE_NAME = 'clusterMonitoring.js';
 
 // Cluster status monitoring bree job
 async function startClusterStatusMonitoring() {
@@ -17,7 +17,7 @@ async function startClusterStatusMonitoring() {
         __dirname,
         '..',
         'jobs',
-        'clusterStatusMonitoring',
+        'cluster',
         CLUSTER_STATUS_MONITORING_FILE_NAME
       ),
       worker: {
