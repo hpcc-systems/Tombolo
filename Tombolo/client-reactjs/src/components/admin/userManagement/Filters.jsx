@@ -92,7 +92,7 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
       <Form form={form} onValuesChange={handleFormChange} className="notifications__filters_form">
         <Row gutter={12}>
           <Col span={5}>
-            <div className="notifications__filter-label">Role</div>
+            <div className="notifications__filter_label">Role</div>
             <Form.Item name="role">
               <Select placeholder="Role" allowClear>
                 {roleOptions.map((s) => (
@@ -105,7 +105,7 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
           </Col>
 
           <Col span={5}>
-            <div className="notifications__filter-label">Application</div>
+            <div className="notifications__filter_label">Application</div>
             <Form.Item name="application">
               <Select placeholder="Application" allowClear>
                 {applicationOptions.map((a) => (
@@ -118,7 +118,7 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
           </Col>
 
           <Col span={4}>
-            <div className="notifications__filter-label">Verified</div>
+            <div className="notifications__filter_label">Verified</div>
             <Form.Item name="verifiedUser">
               <Select placeholder="Verified" allowClear>
                 {verifiedOptions.map((v) => (
@@ -131,7 +131,7 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
           </Col>
 
           <Col span={4}>
-            <div className="notifications__filter-label">Account Status</div>
+            <div className="notifications__filter_label">Account Status</div>
             <Form.Item name="registrationStatus">
               <Select placeholder="Account Status" allowClear>
                 {registrationStatusOptions.map((r) => (
@@ -144,7 +144,7 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
           </Col>
 
           <Col span={6}>
-            <div className="notifications__filter-label">Last Accessed Date</div>
+            <div className="notifications__filter_label">Last Accessed Date</div>
             <Form.Item name="lastAccessed">
               <DatePicker.RangePicker style={{ width: '100%' }} allowClear disabled />
             </Form.Item>

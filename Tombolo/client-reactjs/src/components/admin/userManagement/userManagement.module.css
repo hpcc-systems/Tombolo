@@ -1,17 +1,3 @@
-.notifications__filter-label {
-  font-weight: 500;
-  padding-bottom: 5px;
-}
-
-.notifications__filters {
-  margin-bottom: 5px;
-  padding: 4px 10px;
-}
-
-.notifications_filters__form {
-  background-color: var(--light);
-}
-
 .notification__filters_count {
   display: flex;
   justify-content: right;
@@ -21,15 +7,15 @@
 }
 
 /* User Details model */
-.userManageMent_tiny-description {
+.userManagement_tiny-description {
   margin-top: 30px;
 }
 
-.userManageMent_tiny-description * {
+.userManagement_tiny-description * {
   padding: 2px 4px !important;
 }
 
-.userManageMent_tiny-description .ant-descriptions-item-label {
+.userManagement_tiny-description .ant-descriptions-item-label {
   width: 200px;
   font-weight: 500;
 }
@@ -54,4 +40,12 @@
   padding: 50px;
   text-align: center;
   font-weight: 600;
+}
+
+.userManagementTable__hidden_actions > *:hover {
+  background-color: var(--secondary-light);
+}
+
+.userManagementTable__hidden_actions > * {
+  padding: 5px;
 }

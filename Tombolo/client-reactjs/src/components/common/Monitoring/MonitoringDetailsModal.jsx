@@ -3,6 +3,8 @@ import { Descriptions, Modal, Button, Tooltip, Tag } from 'antd';
 
 import { Constants } from '../Constants';
 
+import styles from './monitoring.module.css';
+
 function MonitoringDetailsModal({
   displayMonitoringDetailsModal,
   setDisplayMonitoringDetailsModal,
@@ -150,7 +152,7 @@ function MonitoringDetailsModal({
         column={1}
         bordered={true}
         size="small"
-        className="cost__monitoring_tiny-description"
+        className={styles.monitoring_tiny_description}
         title="Cost Monitoring Details">
         <Descriptions.Item label="Monitoring name" className="tiny-description">
           {monitoringName}

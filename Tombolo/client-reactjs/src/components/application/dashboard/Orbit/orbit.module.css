@@ -1,0 +1,28 @@
+.OrbitTable .ant-table-column-has-sorters {
+  border-radius: 0px 8px 0px 0px;
+}
+
+.OrbitTable .ant-table-thead > tr > th {
+  background: #002140 !important;
+  color: white;
+}
+
+.OrbitTable .ant-table-thead > tr > .ant-table-column-sort:hover {
+  color: black;
+}
+
+.OrbitTable .ant-table-cell-scrollbar {
+  box-shadow: none;
+}
+
+.OrbitTable tr:nth-child(2n) {
+  background: lightgrey;
+}
+
+.OrbitTable .ant-table-row-level-0:nth-child(2n) .ant-table-column-sort {
+  background: lightgrey;
+}
+
+.hide_formItem_label .ant-form-item-label label {
+  visibility: hidden;
+}

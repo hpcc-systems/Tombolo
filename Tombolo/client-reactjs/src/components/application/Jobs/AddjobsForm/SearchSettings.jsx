@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { UpOutlined } from '@ant-design/icons';
 
-import './AddJobsForm.css';
 import DebounceSelect from './DebounceSelect';
 import Text from '../../../common/Text';
+
+import styles from './addJobsForm.module.css';
 
 const { Option } = Select;
 
@@ -61,8 +62,8 @@ const SearchSettings = ({ form, panes, removeTab, addTab }) => {
   };
 
   return (
-    <fieldset className={`search-settings ${hide ? 'hide-search' : ''} custom-scroll`}>
-      <legend onClick={toggleHide} className="search-settings-legend">
+    <fieldset className={`${styles.searchSettings} ${hide ? styles.hideSearch : ''} custom-scroll`}>
+      <legend onClick={toggleHide} className={styles.searchSettingsLegend}>
         {<Text text="Search Settings" />} <UpOutlined rotate={hide ? 180 : 0} />
       </legend>
       <Form.Item label={<Text text="Job Type" />} name="jobType" required>

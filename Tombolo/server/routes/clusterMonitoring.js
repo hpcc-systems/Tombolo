@@ -2,15 +2,15 @@ const express = require('express');
 const router = express.Router();
 const { validate } = require('../middlewares/validateRequestBody');
 const {
-  createClusterStatusMonitoring,
-  getClusterStatusMonitoringById,
-  getAllClusterStatusMonitoring,
-  updateClusterStatusMonitoring,
-  toggleClusterStatusMonitoringStatus,
-  evaluateClusterStatusMonitoring,
-  bulkUpdateClusterStatusMonitoring,
-  deleteClusterStatusMonitoring,
-} = require('../controllers/clusterStatusMonitoringController');
+  createClusterMonitoring,
+  getClusterMonitoringById,
+  getAllClusterMonitoring,
+  updateClusterMonitoring,
+  toggleClusterMonitoringStatus,
+  evaluateClusterMonitoring,
+  bulkUpdateClusterMonitoring,
+  deleteClusterMonitoring,
+} = require('../controllers/clusterMonitoringController');
 
 const {
   createOrUpdateMonitoringPayload,
@@ -25,53 +25,45 @@ const {
 router.post(
   '/',
   validate(createOrUpdateMonitoringPayload),
-  createClusterStatusMonitoring
+  createClusterMonitoring
 );
 
 // Get by ID
-router.get(
-  '/:id',
-  validate(monitoringIdAsParam),
-  getClusterStatusMonitoringById
-);
+router.get('/:id', validate(monitoringIdAsParam), getClusterMonitoringById);
 
 // Get all (no filters)
-router.get('/', getAllClusterStatusMonitoring);
+router.get('/', getAllClusterMonitoring);
 
 // Update any field
 router.put(
   '/',
   validate(monitoringIdOnBody),
   validate(createOrUpdateMonitoringPayload),
-  updateClusterStatusMonitoring
+  updateClusterMonitoring
 );
 
 // Start and pause
 router.patch(
   '/toggleStatus',
   validate(monitoringIdOnBody),
-  toggleClusterStatusMonitoringStatus
+  toggleClusterMonitoringStatus
 );
 
 // Approve and reject
 router.patch(
   '/evaluate',
   validate(evaluateMonitoringPayload),
-  evaluateClusterStatusMonitoring
+  evaluateClusterMonitoring
 );
 
 // Bulk update
 router.patch(
   '/bulkUpdate',
   validate(bulkUpdateContacts),
-  bulkUpdateClusterStatusMonitoring
+  bulkUpdateClusterMonitoring
 );
 
 // Delete (handles single ID or array of IDs)
-router.delete(
-  '/',
-  validate(deleteMonitoringPayload),
-  deleteClusterStatusMonitoring
-);
+router.delete('/', validate(deleteMonitoringPayload), deleteClusterMonitoring);
 
 module.exports = router;

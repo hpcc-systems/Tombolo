@@ -8,26 +8,13 @@ import NotificationStatusOnPie from './charts/NotificationStatusOnPie';
 import NotificationCountOnLineGraph from './charts/NotificationCountOnLineGraph';
 import NotificationCountByProductsInGraph from './charts/NotificationCountByProductsInGraph';
 import NotificationCountByOriginDonut from './charts/NotificationCountByOriginDonut';
+import styles from './notifications.module.css';
 
 function NotificationDashboard({ sentNotifications, dashBoardFilter, monitorings, productCategories }) {
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const { applicationReducer } = useSelector((state) => state);
   const { integrations: allIntegrations = [] } = applicationReducer;
   const integrationCodes = allIntegrations.map((integration) => integration.name);
-
-  useEffect(() => {
-    console.log('Loading ...');
-    const handleResize = () => {
-      console.log('Resized');
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
   // Effects
   useEffect(() => {
@@ -50,30 +37,30 @@ function NotificationDashboard({ sentNotifications, dashBoardFilter, monitorings
   }, [dashBoardFilter, sentNotifications]);
 
   return (
-    <div className="notifications_dashboard">
+    <div className={styles.notifications_dashboard}>
       {filteredNotifications.length === 0 ? (
-        <div className="notifications_dashboard__empty_charts">
+        <div className={styles.notifications_dashboard__empty_charts}>
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
         </div>
       ) : (
         <>
-          <div className="notifications_chart_card">
-            <div className="notifications_chart_title">Notification Count by Origin </div>
+          <div className={styles.notifications_chart_card}>
+            <div className={styles.notifications_chart_title}>Notification Count by Origin </div>
             <NotificationCountByOriginDonut sentNotifications={filteredNotifications} monitorings={monitorings} />
           </div>
-          <div className="notifications_chart_card">
-            <div className="notifications_chart_title">Distribution of Notifications by Status</div>
+          <div className={styles.notifications_chart_card}>
+            <div className={styles.notifications_chart_title}>Distribution of Notifications by Status</div>
             <NotificationStatusOnPie sentNotifications={filteredNotifications} />
           </div>
 
-          <div className="notifications_chart_card">
-            <div className="notifications_chart_title">Notification Count by Day </div>
+          <div className={styles.notifications_chart_card}>
+            <div className={styles.notifications_chart_title}>Notification Count by Day </div>
             <NotificationCountOnLineGraph sentNotifications={filteredNotifications} dashBoardFilter={dashBoardFilter} />
           </div>
 
           {integrationCodes.includes('ASR') && (
-            <div className="notifications_chart_card">
-              <div className="notifications_chart_title">Notifications by Product with Status Count</div>
+            <div className={styles.notifications_chart_card}>
+              <div className={styles.notifications_chart_title}>Notifications by Product with Status Count</div>
               <NotificationCountByProductsInGraph
                 sentNotifications={filteredNotifications}
                 productCategories={productCategories}

@@ -28,24 +28,11 @@
   margin-top: 5px;
 }
 
-.cost__monitoring_tiny-description {
-  margin-top: 30px;
-}
-
-.cost__monitoring_tiny-description * {
-  padding: 2px 4px !important;
-}
-
-.cost__monitoring_tiny-description .ant-descriptions-item-label {
-  width: 240px;
-  font-weight: 500;
-}
-
-.costMonitoringTable__inactive-monitoring {
+.costMonitoringTable__inactive_monitoring {
   background-color: var(--paused);
 }
 
-.costMonitoringTable__active-monitoring {
+.costMonitoringTable__active_monitoring {
   background-color: var(--active);
 }
 
@@ -57,25 +44,11 @@
   background-color: var(--secondary-light);
 }
 
-.costMonitoringTable__selected-row > .ant-table-cell {
+.costMonitoringTable__selected_row > .ant-table-cell {
   background-color: rgba(255, 255, 0, 0.1) !important;
 }
 
 /* Filters ------------------------------------------------------------------ */
-
-.notifications__filter-label {
-  font-weight: 500;
-  padding-bottom: 5px;
-}
-
-.notifications__filters {
-  margin-bottom: 5px;
-  padding: 4px 10px;
-}
-
-.notifications_filters__form {
-  background-color: var(--light);
-}
 
 .notification__filters_count {
   display: flex;

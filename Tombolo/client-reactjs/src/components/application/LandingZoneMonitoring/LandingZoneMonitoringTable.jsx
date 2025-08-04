@@ -16,7 +16,9 @@ import { useSelector } from 'react-redux';
 
 import { deleteLzMonitoring, toggleLzMonitoringStatus } from './Utils';
 
-//Approve button colorzx
+import styles from './lzMonitoring.module.css';
+
+//Approve button colors
 const approveButtonColor = (approvalStatus) => {
   if (approvalStatus === 'Pending') {
     return 'var(--primary)';
@@ -133,26 +135,18 @@ const LandingZoneMonitoringTable = ({
       render: (_, record) => (
         <>
           <Tooltip title="View  Details">
-            <EyeOutlined
-              style={{ color: 'var(--primary)', marginRight: 15 }}
-              onClick={() => viewMonitoringDetails(record)}
-            />
+            <EyeOutlined className={styles.icons} onClick={() => viewMonitoringDetails(record)} />
           </Tooltip>
           {!isReader ? (
             <>
               <Tooltip title="Edit">
-                <EditOutlined
-                  style={{ color: 'var(--primary)', marginRight: 15 }}
-                  onClick={() => editDirectoryMonitoring(record)}
-                />
+                <EditOutlined className={styles.icons} onClick={() => editDirectoryMonitoring(record)} />
               </Tooltip>
 
               <Popover
                 placement="bottom"
                 content={
-                  <div
-                    style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }}
-                    className="jobMonitoringTable__hidden_actions">
+                  <div className={styles.lzMonitoringTable__hidden_actions}>
                     <div title="Approve" onClick={() => evaluateMonitoring(record)}>
                       <CheckCircleFilled
                         style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}
@@ -162,18 +156,12 @@ const LandingZoneMonitoringTable = ({
 
                     {record.isActive ? (
                       <div onClick={() => toggleMonitoringStatus(record)}>
-                        <PauseCircleOutlined
-                          disabled={record.approvalStatus !== 'Approved'}
-                          style={{ color: 'var(--primary)', marginRight: 15 }}
-                        />
+                        <PauseCircleOutlined disabled={record.approvalStatus !== 'Approved'} className={styles.icons} />
                         Pause
                       </div>
                     ) : (
                       <div onClick={() => toggleMonitoringStatus(record)}>
-                        <PlayCircleOutlined
-                          disabled={record.approvalStatus !== 'Approved'}
-                          style={{ color: 'var(--primary)', marginRight: 15 }}
-                        />
+                        <PlayCircleOutlined disabled={record.approvalStatus !== 'Approved'} className={styles.icons} />
                         Start
                       </div>
                     )}
@@ -292,7 +280,7 @@ const LandingZoneMonitoringTable = ({
       }}
       pagination={{ pageSize: 20 }}
       rowClassName={(record) =>
-        record?.isActive ? 'lzMonitoring__active-monitoring' : 'lzMonitoring__inactive-monitoring'
+        record?.isActive ? styles.lzMonitoring__activeMonitoring : styles.lzMonitoring__inactiveMonitoring
       }
     />
   );

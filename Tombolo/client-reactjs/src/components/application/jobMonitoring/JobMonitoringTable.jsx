@@ -18,6 +18,8 @@ import { useSelector } from 'react-redux';
 
 import { handleDeleteJobMonitoring, toggleJobMonitoringStatus } from './jobMonitoringUtils';
 
+import styles from './jobMonitoring.module.css';
+
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
   if (approvalStatus === 'Pending') {
@@ -163,9 +165,7 @@ const JobMonitoringTable = ({
                 <Popover
                   placement="bottom"
                   content={
-                    <div
-                      style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }}
-                      className="jobMonitoringTable__hidden_actions">
+                    <div className={styles.jobMonitoringTable__hidden_actions}>
                       <div title="Approve" onClick={() => evaluateMonitoring(record)}>
                         <CheckCircleFilled
                           style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}
@@ -177,7 +177,7 @@ const JobMonitoringTable = ({
                         <div onClick={() => toggleMonitoringStatus(record)}>
                           <PauseCircleOutlined
                             disabled={record.approvalStatus !== 'Approved'}
-                            style={{ color: 'var(--primary)', marginRight: 15 }}
+                            className={styles.pause_play_icon}
                           />
                           Pause
                         </div>
@@ -185,7 +185,7 @@ const JobMonitoringTable = ({
                         <div onClick={() => toggleMonitoringStatus(record)}>
                           <PlayCircleOutlined
                             disabled={record.approvalStatus !== 'Approved'}
-                            style={{ color: 'var(--primary)', marginRight: 15 }}
+                            className={styles.pause_play_icon}
                           />
                           Start
                         </div>
@@ -377,11 +377,11 @@ const JobMonitoringTable = ({
       pagination={{ pageSize: 20 }}
       rowClassName={(record) => {
         let className = record?.isActive
-          ? 'jobMonitoringTable__active-monitoring'
-          : 'jobMonitoringTable__inactive-monitoring';
+          ? styles.jobMonitoringTable__activeMonitoring
+          : styles.jobMonitoringTable__inactiveMonitoring;
         const idsOfSelectedRows = selectedRows.map((row) => row.id);
         if (idsOfSelectedRows.includes(record.id)) {
-          className += ' jobMonitoringTable__selected-row';
+          className += ' ' + styles.jobMonitoringTable__selectedRow;
         }
         return className;
       }}

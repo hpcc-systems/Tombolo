@@ -4,7 +4,7 @@ import { Result, Button } from 'antd';
 import { useHistory } from 'react-router-dom';
 
 // Local Imports
-import './integrations.css';
+import styles from './integrations.module.css';
 
 function IntegrationNotFound() {
   const history = useHistory();
@@ -15,7 +15,7 @@ function IntegrationNotFound() {
   };
 
   return (
-    <div className="integrationSettings__unavailable">
+    <div className={styles.integrationSettings__unavailable}>
       <Result
         status="500"
         title="Oops !!"

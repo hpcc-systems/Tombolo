@@ -1,0 +1,12 @@
+.clusterMonitoring_engines > .ant-input-wrapper > .ant-input-group-addon {
+  width: 85px;
+  text-align: left;
+}
+
+.cluster_monitoring_table .ant-table-tbody > tr.monitoring_table_paused_monitorings:hover > td {
+  background: #ffd591;
+}
+
+.monitoring_table_paused_monitorings {
+  background: #ffe7ba;
+}

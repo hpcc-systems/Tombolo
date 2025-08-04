@@ -4,6 +4,8 @@ import cronstrue from 'cronstrue';
 import InfoDrawer from '../../common/InfoDrawer';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
+import styles from './orbitMonitoring.module.css';
+
 const { Title, Text } = Typography;
 
 const MonitoringTab = ({
@@ -118,7 +120,7 @@ const MonitoringTab = ({
         label="Display Name"
         name="name"
         validateTrigger={['onChange', 'onBlur']}
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         rules={[
           { required: true, message: 'Required field' },
           {
@@ -156,7 +158,7 @@ const MonitoringTab = ({
             <InfoDrawer open={open} onClose={onClose} width="700px" content="cron"></InfoDrawer>
           </>
         }
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         onChange={(e) => setMonitoringDetails({ ...monitoringDetails, cron: e.target.value })}
         name="cron"
         rules={[
@@ -194,7 +196,7 @@ const MonitoringTab = ({
 
       <Form.Item
         label="Severity Code"
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         name="severityCode"
         rules={[{ required: true, message: 'Required field' }]}>
         <Select
@@ -214,7 +216,7 @@ const MonitoringTab = ({
 
       <Form.Item
         label="Notify when"
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         name="notifyCondition"
         rules={[{ required: true, message: 'Required field' }]}>
         <Select
@@ -236,7 +238,7 @@ const MonitoringTab = ({
           <Title level={5}>
             <Text type="danger">*</Text> Build Interval: (choose one)
           </Title>
-          <div style={{}}>
+          <div>
             <Form.Item
               name="updateInterval"
               label="Days Expected between updates"
@@ -273,7 +275,7 @@ const MonitoringTab = ({
                 options={daysOfTheWeek}
                 value={updateIntervalDays}
                 disabled={updateInterval ? true : false}
-                style={{ display: 'inline-block', width: 'calc(75% - 12px)', textAlign: 'center' }}
+                className={styles.multiSelect}
                 popupMatchSelectWidth={true}
                 onChange={(value) => {
                   if (value?.length) {
@@ -295,7 +297,7 @@ const MonitoringTab = ({
               mode="multiple"
               options={buildStatuses}
               value={buildStatus}
-              style={{ display: 'inline-block', width: 'calc(75% - 12px)', textAlign: 'center' }}
+              className={styles.multiSelect}
               rules={[{ required: true, message: 'Required field' }]}
               onChange={(value) => setBuildStatus({ value })}></Select>
           </Form.Item>

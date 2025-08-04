@@ -4,7 +4,6 @@ import { Form, Row, Col, Select, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
 // Local imports
-import './costMonitoring.css';
 import { useSelector } from 'react-redux';
 import useMonitoringFilters from '../../../hooks/useMonitoringFilters';
 import AsrSpecificFilters from '../../common/Monitoring/AsrSpecificFilters';
@@ -106,10 +105,10 @@ function CostMonitoringFilters({
   return (
     <div className="notifications__filters">
       {filtersVisible && (
-        <Form form={form} onValuesChange={handleFormChange} className="notifications__filters_form">
+        <Form form={form} onValuesChange={handleFormChange}>
           <Row gutter={8}>
             <Col span={4}>
-              <div className="notifications__filter-label">Monitoring Name</div>
+              <div className="notifications__filter_label">Monitoring Name</div>
               <Input
                 placeholder="Search by monitoring name"
                 prefix={<SearchOutlined />}
@@ -130,7 +129,7 @@ function CostMonitoringFilters({
               />
             </Col>
             <Col span={4}>
-              <div className="notifications__filter-label">Approval Status</div>
+              <div className="notifications__filter_label">Approval Status</div>
               <Form.Item name="approvalStatus">
                 <Select placeholder="Approval Status" allowClear disabled={false}>
                   {approvalStatusOptions.map((s) => (
@@ -143,7 +142,7 @@ function CostMonitoringFilters({
             </Col>
 
             <Col span={4}>
-              <div className="notifications__filter-label">Active Status</div>
+              <div className="notifications__filter_label">Active Status</div>
               <Form.Item name="activeStatus">
                 <Select placeholder="Active statuses" allowClear disabled={false}>
                   {activeStatusOptions.map((a) => (
@@ -163,7 +162,7 @@ function CostMonitoringFilters({
             />
 
             <Col span={4}>
-              <div className="notifications__filter-label">Clusters</div>
+              <div className="notifications__filter_label">Clusters</div>
               <Form.Item name="clusters">
                 <Select placeholder="Clusters" allowClear disabled={false} mode="multiple">
                   {clusterOptions.map((c) => (
@@ -176,7 +175,7 @@ function CostMonitoringFilters({
             </Col>
 
             <Col span={4}>
-              <div className="notifications__filter-label">Users</div>
+              <div className="notifications__filter_label">Users</div>
               <Form.Item name="users">
                 <Select placeholder="Users" allowClear disabled={false} mode="multiple">
                   {userOptions.map((u) => (

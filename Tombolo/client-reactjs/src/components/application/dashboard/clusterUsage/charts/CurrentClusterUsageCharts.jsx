@@ -5,7 +5,8 @@ import { Empty, Select } from 'antd';
 import { addQueriesToUrl } from '../../../../common/AddQueryToUrl.js';
 import { authHeader, handleError } from '../../../../common/AuthHeader.js';
 import MeterGauge from './MeterGauge.jsx';
-import '../index.css';
+import styles from '../clusterUsage.module.css';
+
 const { Option } = Select;
 
 function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
@@ -66,14 +67,14 @@ function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
   };
 
   return (
-    <div className="currentClusterUsageCharts_container">
+    <div className={styles.currentClusterUsageCharts_container}>
       <div>
         {clusters ? (
           <Select
             disabled={false}
             onChange={handleClusterChange}
             value={selectedCluster}
-            className="currentClusterUsageCharts_clusterSelector">
+            className={styles.currentClusterUsageCharts_clusterSelector}>
             {clusters.map((cluster) => {
               return (
                 <Option key={cluster.id} label={cluster.name} value={cluster.id}>
@@ -84,23 +85,23 @@ function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
           </Select>
         ) : null}
       </div>
-      <div className="currentClusterUsageCharts_main">
-        {/* <div className="currentClusterUsageCharts_title">Current Storage Usage</div> */}
+      <div className={styles.currentClusterUsageCharts_main}>
+        {/* <div className={styles.currentClusterUsageCharts_title}>Current Storage Usage</div> */}
 
         {currentUsage.length < 1 ? (
-          <div className="currentClusterUsageCharts_empty">
+          <div className={styles.currentClusterUsageCharts_empty}>
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
           </div>
         ) : (
           <div
             className={
               currentUsage.length < 5
-                ? 'currentClusterUsageCharts_meterGauges_5orLess'
-                : 'currentClusterUsageCharts_meterGauges_5orMore'
+                ? styles.currentClusterUsageCharts_meterGauges_5orLess
+                : styles.currentClusterUsageCharts_meterGauges_5orMore
             }>
             {currentUsage.map((current) => {
               return (
-                <div className="currentClusterUsageCharts_meterGaugeBox" key={current.engines[0]}>
+                <div className={styles.currentClusterUsageCharts_meterGaugeBox} key={current.engines[0]}>
                   <MeterGauge data={{ ...current.data, name: current.engines[0], engines: current.engines }} />
                 </div>
               );

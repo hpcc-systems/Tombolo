@@ -4,7 +4,6 @@ import { Form, message, Tag, Descriptions } from 'antd';
 
 import CostMonitoringActionButton from './CostMonitoringActionButton';
 import AddEditCostMonitoringModal from './AddEditCostMonitoringModal';
-import './costMonitoring.css';
 import {
   createCostMonitoring,
   getAllCostMonitorings,

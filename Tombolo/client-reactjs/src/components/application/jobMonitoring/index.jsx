@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import JobMonitoringActionButton from './JobMonitoringActionButton.jsx';
 import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
-import './jobMonitoring.css';
 import {
   checkScheduleValidity,
   createJobMonitoring,

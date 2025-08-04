@@ -7,6 +7,7 @@ import { updateUser, updateUserRoles, updateUserApplications } from './Utils';
 import EditUserBasicTab from './EditUserBasicTab';
 import EditUserRolesTab from './EditUserRolesTab';
 import EditUserApplicationsTab from './EditUsersApplicationTab';
+import styles from './userManagement.module.css';
 
 function EditUserModel({
   displayEditUserModal,
@@ -296,8 +297,8 @@ function EditUserModel({
           unsavedFields.applications.length !== 0,
       }}>
       {displayUnsavedDataWarning && (
-        <div className="editUser__modal-overlay">
-          <div className="editUser__modal-overlay-content">
+        <div className={styles.editUser__modalOverlay}>
+          <div className={styles.editUser__modalOverlayContent}>
             <p>
               {`You have unsaved changes. Click "Keep Editing" to return and save your changes, or click "Discard Changes" to cancel and close this warning.`}
             </p>
