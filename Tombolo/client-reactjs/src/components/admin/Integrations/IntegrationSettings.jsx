@@ -31,7 +31,7 @@ function IntegrationSettings() {
 
   // Dynamically import the integration component
   const IntegrationComponent = lazy(() =>
-    import(`./${integrationName.toLowerCase()}.jsx`).catch((error) => {
+    import(`./${integrationName.toLowerCase()}/index.jsx`).catch((error) => {
       console.error('Failed to load component for %s:', integrationName, error);
       return { default: IntegrationNotFound };
     })
