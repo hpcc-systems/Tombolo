@@ -15,9 +15,9 @@ const lz_monitoring_intervals = {
 
 // Cluster reachability monitoring configuration
 const cluster_monitoring = {
+  cluster_monitoring_interval: 10,
   clusterReachabilityMonitoringInterval: '10m', // in minutes
   passwordExpiryAlertDaysForCluster: [10, 5, 4, 3, 2, 1],
-  cluster_status_monitoring_interval: 10,
   clusterContainerizationCheckInterval: '0 2 * * *', // Daily at 2 AM
 };
 

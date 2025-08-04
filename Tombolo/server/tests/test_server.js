@@ -26,7 +26,7 @@ const session = require('../routes/sessionRoutes');
 const roles = require('../routes/roleTypesRoute');
 const landingZoneMonitoring = require('../routes/landingZoneMonitoring');
 const costMonitoring = require('../routes/costMonitoringRoutes');
-const clusterStatusMonitoring = require('../routes/clusterStatusMonitoring');
+const clusterMonitoring = require('../routes/clusterMonitoring');
 
 // Use routes
 app.use('/api/auth', auth);
@@ -41,9 +41,9 @@ app.use(
   landingZoneMonitoring
 );
 app.use(
-  '/api/clusterStatusMonitoring',
+  '/api/clusterMonitoring',
   fakeValidateTokenMiddleware,
-  clusterStatusMonitoring
+  clusterMonitoring
 );
 app.use('/api/costMonitoring', fakeValidateTokenMiddleware, costMonitoring);
 

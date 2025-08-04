@@ -289,7 +289,7 @@ function getCostMonitoring(overrides = {}, dateStrings = false) {
   };
 }
 
-function getClusterStatusMonitoring(overrides = {}) {
+function getClusterMonitoring(overrides = {}) {
   let newDate = new Date();
   newDate = newDate.toISOString();
   return {
@@ -339,5 +339,5 @@ module.exports = {
   nonExistentID,
   ISO_DATE_REGEX,
   AUTHED_USER_ID,
-  getClusterStatusMonitoring,
+  getClusterMonitoring,
 };
