@@ -6,7 +6,6 @@ import { SearchOutlined } from '@ant-design/icons';
 import _ from 'lodash';
 
 // Local imports
-import './jobMonitoring.css';
 import useMonitoringFilters from '../../../hooks/useMonitoringFilters';
 import AsrSpecificFilters from '../../common/Monitoring/AsrSpecificFilters';
 

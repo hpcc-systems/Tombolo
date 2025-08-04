@@ -32,7 +32,6 @@ import {
   getDateLabel,
   getWeekLabel,
 } from '../../common/scheduleOptions.js';
-import './jobMonitoring.css';
 
 const parseCron = (cron) => {
   if (!cron) return null;

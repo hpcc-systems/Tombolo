@@ -6,7 +6,6 @@ import { useLocation } from 'react-router-dom';
 
 // Local imports
 import { getJobMonitoringData } from '../jobMonitoringUtils';
-import '../jobMonitoring.css';
 import BreadCrumbs from '../../../common/BreadCrumbs';
 import { performTimeSeriesAnalysis } from './timeSeriesFunc';
 import styles from '../jobMonitoring.module.css';

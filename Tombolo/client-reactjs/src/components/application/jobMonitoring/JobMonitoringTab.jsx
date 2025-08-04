@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, TimePicker, Row, Col, Select, InputNumber } from 'antd';
 
-import './jobMonitoring.css';
 import styles from './jobMonitoring.module.css';
 import SchedulePicker from './SchedulePicker';
 
