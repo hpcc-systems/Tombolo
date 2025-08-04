@@ -2,14 +2,14 @@ const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
 const request = require('supertest');
 const { app } = require('../test_server');
 const models = require('../../models');
-const { clusterStatusMonitoring } = models;
+const { cluster_monitoring: clusterMonitoring } = models;
 
-const { getClusterStatusMonitoring } = require('../helpers');
+const { getClusterMonitoring } = require('../helpers');
 const { v4: uuidv4 } = require('uuid');
 
 const monitoringId = uuidv4();
 
-describe('clusterStatusMonitoring Routes', () => {
+describe('Cluster Monitoring routes Routes', () => {
   beforeEach(() => {
     jest.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
@@ -20,13 +20,13 @@ describe('clusterStatusMonitoring Routes', () => {
     jest.clearAllMocks();
   });
 
-  // Create new cluster status monitoring
-  it('POST / should create a new cluster status monitoring', async () => {
-    const monitoring = getClusterStatusMonitoring({ id: monitoringId });
-    clusterStatusMonitoring.create.mockResolvedValue(monitoring);
+  // Create new cluster  monitoring
+  it('POST / should create a new cluster  monitoring', async () => {
+    const monitoring = getClusterMonitoring({ id: monitoringId });
+    clusterMonitoring.create.mockResolvedValue(monitoring);
 
     const res = await request(app)
-      .post('/api/clusterStatusMonitoring/')
+      .post('/api/clusterMonitoring')
       .send(monitoring);
 
     expect(res.status).toBe(201);
@@ -34,11 +34,11 @@ describe('clusterStatusMonitoring Routes', () => {
 
   // Get one cluster status monitoring by ID
   it('GET /:id should return a  monitoring', async () => {
-    const monitoring = getClusterStatusMonitoring({ id: monitoringId });
-    clusterStatusMonitoring.findOne.mockResolvedValue(monitoring);
+    const monitoring = getClusterMonitoring({ id: monitoringId });
+    clusterMonitoring.findOne.mockResolvedValue(monitoring);
 
     const res = await request(app).get(
-      `/api/clusterStatusMonitoring/${monitoringId}`
+      `/api/clusterMonitoring/${monitoringId}`
     );
 
     expect(res.status).toBe(200);
@@ -46,22 +46,22 @@ describe('clusterStatusMonitoring Routes', () => {
 
   // Get All cluster status monitoring
   it('GET / should return all cluster status monitoring', async () => {
-    const monitoring = getClusterStatusMonitoring();
-    clusterStatusMonitoring.findAll.mockResolvedValue([monitoring]);
+    const monitoring = getClusterMonitoring();
+    clusterMonitoring.findAll.mockResolvedValue([monitoring]);
 
-    const res = await request(app).get('/api/clusterStatusMonitoring/');
+    const res = await request(app).get('/api/clusterMonitoring');
     expect(res.status).toBe(200);
     expect(res.body).toEqual([monitoring]);
   });
 
   // Update existing cluster status monitoring
   it('PUT / should update an existing cluster status monitoring', async () => {
-    const monitoring = getClusterStatusMonitoring({ id: monitoringId });
+    const monitoring = getClusterMonitoring({ id: monitoringId });
 
     // Mock the instance update method
     monitoring.update = jest.fn().mockResolvedValue(monitoring);
 
-    clusterStatusMonitoring.findOne.mockResolvedValue(monitoring);
+    clusterMonitoring.findOne.mockResolvedValue(monitoring);
 
     const updatePayload = {
       ...monitoring,
@@ -69,7 +69,7 @@ describe('clusterStatusMonitoring Routes', () => {
     };
 
     const res = await request(app)
-      .put('/api/clusterStatusMonitoring/')
+      .put('/api/clusterMonitoring')
       .send(updatePayload);
 
     expect(res.status).toBe(200);
@@ -77,7 +77,7 @@ describe('clusterStatusMonitoring Routes', () => {
 
   // Toggle cluster status monitoring status
   it('PATCH /toggleStatus should toggle monitoring status', async () => {
-    const monitoring = getClusterStatusMonitoring({
+    const monitoring = getClusterMonitoring({
       id: monitoringId,
       isActive: false,
     });
@@ -88,10 +88,10 @@ describe('clusterStatusMonitoring Routes', () => {
       isActive: true,
     });
 
-    clusterStatusMonitoring.findOne.mockResolvedValue(monitoring);
+    clusterMonitoring.findOne.mockResolvedValue(monitoring);
 
     const res = await request(app)
-      .patch('/api/clusterStatusMonitoring/toggleStatus')
+      .patch('/api/clusterMonitoring/toggleStatus')
       .send({ id: monitoringId }); // Send ID in body!
 
     expect(res.status).toBe(200);
@@ -106,7 +106,7 @@ describe('clusterStatusMonitoring Routes', () => {
 
   // Update approval status of cluster status monitoring
   it('PATCH /evaluate should evaluate monitoring approval status', async () => {
-    const monitoring = getClusterStatusMonitoring({
+    const monitoring = getClusterMonitoring({
       id: monitoringId,
       approvalStatus: 'pending',
     });
@@ -117,10 +117,10 @@ describe('clusterStatusMonitoring Routes', () => {
       approverComment: 'Approved by admin',
     });
 
-    clusterStatusMonitoring.findOne.mockResolvedValue(monitoring);
+    clusterMonitoring.findOne.mockResolvedValue(monitoring);
 
     const res = await request(app)
-      .patch('/api/clusterStatusMonitoring/evaluate')
+      .patch('/api/clusterMonitoring/evaluate')
       .send({
         id: monitoringId,
         approvalStatus: 'approved',
@@ -149,7 +149,7 @@ describe('clusterStatusMonitoring Routes', () => {
     };
 
     const res = await request(app)
-      .patch('/api/clusterStatusMonitoring/bulkUpdate')
+      .patch('/api/clusterMonitoring/bulkUpdate')
       .send(completePayload);
 
     expect([200, 207]).toContain(res.status);
@@ -158,10 +158,10 @@ describe('clusterStatusMonitoring Routes', () => {
   // delete cluster status monitoring
   it('DELETE / should delete a monitoring', async () => {
     const monitoringIds = [uuidv4(), uuidv4()];
-    clusterStatusMonitoring.destroy.mockResolvedValue(1);
+    clusterMonitoring.destroy.mockResolvedValue(1);
 
     const res = await request(app)
-      .delete('/api/clusterStatusMonitoring/')
+      .delete('/api/clusterMonitoring')
       .send({ ids: monitoringIds });
 
     expect(res.status).toBe(200);
