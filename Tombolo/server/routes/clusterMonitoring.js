@@ -10,7 +10,7 @@ const {
   evaluateClusterStatusMonitoring,
   bulkUpdateClusterStatusMonitoring,
   deleteClusterStatusMonitoring,
-} = require('../controllers/clusterStatusMonitoringController');
+} = require('../controllers/clusterMonitoringController');
 
 const {
   createOrUpdateMonitoringPayload,

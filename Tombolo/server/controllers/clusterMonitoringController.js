@@ -2,12 +2,12 @@ const models = require('../models');
 const logger = require('../config/logger');
 const { sequelize } = models;
 
-const { clusterStatusMonitoring } = models;
+const { cluster_monitoring: ClusterMonitoring } = models;
 
 // Create a new cluster status monitoring
 const createClusterStatusMonitoring = async (req, res) => {
   try {
-    await clusterStatusMonitoring.create({
+    await ClusterMonitoring.create({
       ...req.body,
       createdBy: req.user.id,
       lastUpdatedBy: req.user.id,
@@ -24,7 +24,7 @@ const createClusterStatusMonitoring = async (req, res) => {
 // Get cluster monitoring by ID
 const getClusterStatusMonitoringById = async (req, res) => {
   try {
-    const monitoring = await clusterStatusMonitoring.findOne({
+    const monitoring = await ClusterMonitoring.findOne({
       where: { id: req.params.id },
     });
     if (!monitoring) {
@@ -42,7 +42,7 @@ const getClusterStatusMonitoringById = async (req, res) => {
 // Get all the cluster status monitoring
 const getAllClusterStatusMonitoring = async (req, res) => {
   try {
-    const monitoring = await clusterStatusMonitoring.findAll();
+    const monitoring = await ClusterMonitoring.findAll();
     res.status(200).send(monitoring);
   } catch (err) {
     res.status(500).send({ message: err.message });
@@ -53,7 +53,7 @@ const getAllClusterStatusMonitoring = async (req, res) => {
 // Update cluster status monitoring by ID
 const updateClusterStatusMonitoring = async (req, res) => {
   try {
-    const monitoring = await clusterStatusMonitoring.findOne({
+    const monitoring = await ClusterMonitoring.findOne({
       id: req.body.id,
     });
     if (!monitoring) {
@@ -77,7 +77,7 @@ const updateClusterStatusMonitoring = async (req, res) => {
 // Toggle monitoring status
 const toggleClusterStatusMonitoringStatus = async (req, res) => {
   try {
-    const monitoring = await clusterStatusMonitoring.findOne({
+    const monitoring = await ClusterMonitoring.findOne({
       id: req.params.id,
     });
     if (!monitoring) {
@@ -101,7 +101,7 @@ const toggleClusterStatusMonitoringStatus = async (req, res) => {
 // Change approval status (evaluate -> approved, rejected)
 const evaluateClusterStatusMonitoring = async (req, res) => {
   try {
-    const monitoring = await clusterStatusMonitoring.findOne({
+    const monitoring = await ClusterMonitoring.findOne({
       id: req.params.id,
     });
     if (!monitoring) {
@@ -134,7 +134,7 @@ const bulkUpdateClusterStatusMonitoring = async (req, res) => {
     await Promise.all(
       monitoring.map(async data => {
         try {
-          const monitoringRecord = await clusterStatusMonitoring.findOne({
+          const monitoringRecord = await ClusterMonitoring.findOne({
             where: { id: data.id },
           });
 
@@ -193,7 +193,7 @@ const deleteClusterStatusMonitoring = async (req, res) => {
     const { ids } = req.body;
 
     // First transaction
-    await clusterStatusMonitoring.update(
+    await ClusterMonitoring.update(
       { deletedBy: req.user.id },
       {
         where: { id: ids },
@@ -202,7 +202,7 @@ const deleteClusterStatusMonitoring = async (req, res) => {
     );
 
     // Second transaction
-    await clusterStatusMonitoring.destroy({
+    await ClusterMonitoring.destroy({
       where: { id: ids },
       transaction,
     });

@@ -130,7 +130,7 @@ app.use('/api/apikeys', api);
 
 // Validate access token and csrf tokens, all routes below require these
 app.use(validateToken);
-app.use(doubleCsrfProtection);
+// app.use(doubleCsrfProtection);
 
 // Authenticated routes
 app.use('/api/user', users);

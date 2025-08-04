@@ -20,11 +20,11 @@ const CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME =
 // Cluster status monitoring bree job
 async function startClusterStatusMonitoring() {
   try {
-    let jobName = 'cluster-status-monitoring' + new Date().getTime();
+    let jobName = 'cluster-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: '10s', // For development
-      // interval: `${cluster_monitoring_interval}m`,
+      // interval: '10s', // For development
+      interval: `${cluster_monitoring_interval}m`,
       path: path.join(
         __dirname,
         '..',

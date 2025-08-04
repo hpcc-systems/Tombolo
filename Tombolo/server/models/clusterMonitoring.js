@@ -1,6 +1,5 @@
 'use strict';
-
-const { validate } = require('uuid');
+const CLUSTER_MONITORING_TYPES = ['status', 'usage'];
 
 module.exports = (sequelize, DataTypes) => {
   const ClusterMonitoring = sequelize.define(
@@ -18,8 +17,8 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
       },
       clusterMonitoringType: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: false,
-        type: DataTypes.JSON,
         defaultValue: ['status', 'usage'],
       },
       isActive: {
