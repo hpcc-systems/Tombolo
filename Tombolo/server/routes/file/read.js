@@ -8,8 +8,8 @@ var {
   license: License,
   rules: Rules,
   data_types: DataTypes,
-  assets_groups: AssetsGroups,
-  consumer_object: ConsumerObject,
+  AssetsGroup,
+  ConsumerObject,
   jobfile: JobFile,
 } = require('../../models');
 let Sequelize = require('sequelize');
@@ -496,7 +496,7 @@ router.post(
       }
       let fileId = file.id ? file.id : req.body.id;
       if (req.body.file.basic && req.body.file.basic.groupId) {
-        await AssetsGroups.findOrCreate({
+        await AssetsGroup.findOrCreate({
           where: { assetId: fileId, groupId: req.body.file.basic.groupId },
           defaults: {
             assetId: fileId,

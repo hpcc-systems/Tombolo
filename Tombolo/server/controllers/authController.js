@@ -4,7 +4,19 @@ const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const logger = require('../config/logger');
 const roleTypes = require('../config/roleTypes');
-const models = require('../models');
+const {
+  user: User,
+  UserRoles,
+  user_application,
+  application: Application,
+  RoleTypes,
+  RefreshTokens,
+  notification_queue: NotificationQueue,
+  PasswordResetLinks,
+  AccountVerificationCode,
+  sent_notifications,
+  instance_settings,
+} = require('../models');
 const moment = require('moment');
 const {
   generateAccessToken,
@@ -23,18 +35,6 @@ const {
 } = require('../utils/authUtil');
 const { blacklistToken } = require('../utils/tokenBlackListing');
 const sequelize = require('../models').sequelize;
-
-const User = models.user;
-const UserRoles = models.UserRoles;
-const user_application = models.user_application;
-const Application = models.application;
-const RoleTypes = models.RoleTypes;
-const RefreshTokens = models.RefreshTokens;
-const NotificationQueue = models.notification_queue;
-const PasswordResetLinks = models.PasswordResetLinks;
-const AccountVerificationCodes = models.AccountVerificationCodes;
-const sent_notifications = models.sent_notifications;
-const instance_settings = models.instance_settings;
 
 // Register application owner
 const createApplicationOwner = async (req, res) => {
@@ -105,7 +105,7 @@ const createApplicationOwner = async (req, res) => {
     const verificationCode = uuidv4();
 
     // Create account verification code
-    await AccountVerificationCodes.create({
+    await AccountVerificationCode.create({
       code: verificationCode,
       userId: user.id,
       expiresAt: new Date(Date.now() + 86400000),
@@ -185,7 +185,7 @@ const createBasicUser = async (req, res) => {
     const verificationCode = uuidv4();
 
     // Create account verification code
-    await AccountVerificationCodes.create({
+    await AccountVerificationCode.create({
       code: verificationCode,
       userId: user.id,
       expiresAt: new Date(Date.now() + 86400000),
@@ -231,7 +231,7 @@ const verifyEmail = async (req, res) => {
     const { token } = req.body;
 
     // Find the account verification code
-    const accountVerificationCode = await AccountVerificationCodes.findOne({
+    const accountVerificationCode = await AccountVerificationCode.findOne({
       where: { code: token },
     });
 
@@ -290,7 +290,7 @@ const verifyEmail = async (req, res) => {
     await user.save();
 
     // Delete the account verification code
-    await AccountVerificationCodes.destroy({
+    await AccountVerificationCode.destroy({
       where: { code: token },
     });
 
@@ -343,8 +343,8 @@ const resetPasswordWithToken = async (req, res) => {
   try {
     const { password, token, deviceInfo } = req.body;
 
-    // From AccountVerificationCodes table findUser ID by code, where code is resetToken
-    const accountVerificationCode = await AccountVerificationCodes.findOne(
+    // From the AccountVerificationCode table findUser ID by code, where code is resetToken
+    const accountVerificationCode = await AccountVerificationCode.findOne(
       {
         where: { code: token },
       },
@@ -408,7 +408,7 @@ const resetPasswordWithToken = async (req, res) => {
     );
 
     // Delete the account verification code
-    await AccountVerificationCodes.destroy({
+    await AccountVerificationCode.destroy({
       where: { code: token },
       transaction,
     });
@@ -515,8 +515,8 @@ const resetTempPassword = async (req, res) => {
   try {
     const { password, token, deviceInfo } = req.body;
 
-    // From AccountVerificationCodes table findUser ID by code, where code is resetToken
-    const accountVerificationCode = await AccountVerificationCodes.findOne({
+    // From the AccountVerificationCode table findUser ID by code, where code is resetToken
+    const accountVerificationCode = await AccountVerificationCode.findOne({
       where: { code: token },
     });
 
@@ -576,7 +576,7 @@ const resetTempPassword = async (req, res) => {
     );
 
     // Delete the account verification code
-    await AccountVerificationCodes.destroy({
+    await AccountVerificationCode.destroy({
       where: { code: token },
     });
 
@@ -944,7 +944,7 @@ const handlePasswordResetRequest = async (req, res) => {
     });
 
     // Create account verification code
-    await AccountVerificationCodes.create({
+    await AccountVerificationCode.create({
       code: randomId,
       userId: user.id,
       expiresAt: new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
@@ -1201,7 +1201,7 @@ const resendVerificationCode = async (req, res) => {
     }
 
     // Check if the verification code is there, if so delete it
-    const existingCode = await AccountVerificationCodes.findOne({
+    const existingCode = await AccountVerificationCode.findOne({
       where: { userId: user.id },
     });
 
@@ -1222,7 +1222,7 @@ const resendVerificationCode = async (req, res) => {
     const verificationCode = uuidv4();
 
     // Create account verification code
-    await AccountVerificationCodes.create({
+    await AccountVerificationCode.create({
       code: verificationCode,
       userId: user.id,
       expiresAt: new Date(Date.now() + 86400000),
@@ -1307,7 +1307,7 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
     const { token } = req.params;
 
     //get the user id by the password reset link
-    const userId = await AccountVerificationCodes.findOne({
+    const userId = await AccountVerificationCode.findOne({
       where: { code: token },
 
       attributes: ['userId'],

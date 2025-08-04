@@ -1,5 +1,5 @@
 const logger = require('../config/logger');
-const { cluster: Cluster, dataflow: Dataflow, job: Job } = require('../models');
+const { Cluster, dataflow: Dataflow, job: Job } = require('../models');
 
 const NotificationModule = require('../routes/notifications/email-notification');
 
@@ -102,14 +102,14 @@ exports.notifyWorkflow = async ({
           <p> Hello, </p>
           <p> ${success_message} </p>
           <p> To view workflow execution details in Tombolo please click <a href=${DATAFLOW_LINK}> here </a>
-          <p> Click <a href="${SUCCESS_HPCC_URL}"> here </a>to view execution details in HPCC</p> 
+          <p> Click <a href="${SUCCESS_HPCC_URL}"> here </a>to view execution details in HPCC</p>
         </div>`;
     },
     error: () => {
       email.subject = `Unable to submit ${jobName} for execution`;
       email.message = `<div>
           <p>Hello,<p>
-          <p>Below error occurred while submitting ${jobName}</p> 
+          <p>Below error occurred while submitting ${jobName}</p>
           <p><span style="color: red">${exceptions}</span>
         </div>`;
     },
@@ -119,7 +119,7 @@ exports.notifyWorkflow = async ({
           <p>Hello, </p>
           <p>${failure_message}</p>
           <p> To view workflow execution details in Tombolo please click <a href=${DATAFLOW_LINK}> here </a>
-          <p> Click <a href="${FAILED_HPCC_URL}"> here </a>to view execution  details in HPCC</p> 
+          <p> Click <a href="${FAILED_HPCC_URL}"> here </a>to view execution  details in HPCC</p>
         </div>`;
     },
     fileMonitoringFailure: () => {
@@ -127,7 +127,7 @@ exports.notifyWorkflow = async ({
       email.message = `<div>
           <p>Hello, </p>
           <p>${failure_message}</p>
-          <p>${jobName} failed. Jobs that depend on this file monitoring won't be executed. Click <a href="${FAILED_HPCC_URL}"> here </a>to view file monitoring details in HPCC</p> 
+          <p>${jobName} failed. Jobs that depend on this file monitoring won't be executed. Click <a href="${FAILED_HPCC_URL}"> here </a>to view file monitoring details in HPCC</p>
         </div>`;
     },
   };
@@ -195,14 +195,14 @@ exports.notifyJob = async ({
           <p> Hello, </p>
           <p> ${successMessage} </p>
           ${!dataflowId ? '' : `<p> To view workflow execution details in Tombolo please click <a href="${DATAFLOW_LINK}"> here </a></p>`}
-          <p> Click <a href="${HPCC_URL}"> here </a>to view execution details in HPCC</p> 
+          <p> Click <a href="${HPCC_URL}"> here </a>to view execution details in HPCC</p>
         </div>`;
     },
     error: () => {
       email.subject = `Unable to submit ${job.name} for execution`;
       email.message = `<div>
           <p>Hello,<p>
-          <p>Below error occurred while submitting ${job.name}</p> 
+          <p>Below error occurred while submitting ${job.name}</p>
           <p><span style="color: red">${exceptions}</span>
         </div>`;
     },
@@ -212,7 +212,7 @@ exports.notifyJob = async ({
         <p>Hello, </p>
         <p>${failureMessage}</p>
         ${!dataflowId ? '' : `<p> To view workflow execution details in Tombolo please click <a href="${DATAFLOW_LINK}"> here </a>`}
-        <p> Click <a href="${HPCC_URL}"> here </a>to view execution  details in HPCC</p> 
+        <p> Click <a href="${HPCC_URL}"> here </a>to view execution  details in HPCC</p>
       </div>`;
     },
   };

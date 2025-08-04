@@ -1,7 +1,8 @@
-"use strict";
+'use strict';
+
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("application", {
+    return queryInterface.createTable('applications', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -19,16 +20,16 @@ module.exports = {
       creator: {
         type: Sequelize.UUID,
         references: {
-          model: "users",
-          key: "id",
+          model: 'users',
+          key: 'id',
         },
-        onDelete: "CASCADE",
+        onDelete: 'NO ACTION',
         allowNull: true,
       },
       visibility: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: "private",
+        defaultValue: 'private',
       },
       createdAt: {
         allowNull: false,
@@ -47,6 +48,6 @@ module.exports = {
 
   // Drop table
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("application");
+    return queryInterface.dropTable('application');
   },
 };

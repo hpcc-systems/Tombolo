@@ -124,7 +124,7 @@ module.exports = (sequelize, DataTypes) => {
 
           // Delete verification codes
           const AccountVerificationCodes =
-            sequelize.models.AccountVerificationCodes;
+            sequelize.models.AccountVerificationCode;
           await AccountVerificationCodes.destroy({
             where: { userId: user.where.id },
           });

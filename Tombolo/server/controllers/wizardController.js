@@ -12,7 +12,7 @@ const {
   RoleTypes,
   UserRoles,
   instance_settings,
-  AccountVerificationCodes,
+  AccountVerificationCode,
   notification_queue,
 } = models;
 
@@ -159,7 +159,7 @@ const createInstanceSettingFirstRun = async (req, res) => {
     logger.error(err.message);
     sendUpdate(res, {
       event: 'error',
-      message: `Setup failed due to a server error`,
+      message: 'Setup failed due to a server error',
     });
     res.end();
   }
@@ -258,7 +258,7 @@ const sendVerificationEmail = async (user, transaction) => {
   const verificationCode = uuidv4();
   const notificationId = uuidv4();
 
-  await AccountVerificationCodes.create(
+  await AccountVerificationCode.create(
     {
       code: verificationCode,
       userId: user.id,

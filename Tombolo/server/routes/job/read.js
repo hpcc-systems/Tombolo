@@ -8,7 +8,7 @@ const {
   file_validation: FileValidation,
   fileTemplate: FileTemplate,
   dataflow_versions: DataflowVersions,
-  assets_groups: AssetsGroups,
+  AssetsGroup,
   job_execution: JobExecution,
   message_based_jobs: MessageBasedJobs,
 } = require('../../models');
@@ -90,7 +90,7 @@ const createOrUpdateFile = async ({
       //If group Id provided make entry in asset group table
       if (assetGroupId) {
         const assetGroupsFields = { assetId: file.id, groupId: assetGroupId };
-        await AssetsGroups.findOrCreate({
+        await AssetsGroup.findOrCreate({
           where: assetGroupsFields,
           defaults: assetGroupId,
         });
@@ -212,7 +212,7 @@ router.post(
       const job = await Job.findOne({ where: { id: req.body.jobId } });
       if (!job) throw new Error('Job does not exist');
 
-      const assetGroup = await AssetsGroups.findOne({
+      const assetGroup = await AssetsGroup.findOne({
         where: { assetId: job.id },
       });
 
@@ -421,7 +421,7 @@ router.post(
 
             if (jobfiles?.length > 0) {
               for (const jobfile of jobfiles) {
-                const assetGroup = await AssetsGroups.findOne({
+                const assetGroup = await AssetsGroup.findOne({
                   where: { assetId: job.id },
                 });
                 const file = await createOrUpdateFile({
@@ -626,10 +626,10 @@ router.post('/saveJob', validate(validateSaveJob), async (req, res) => {
 
     if (!isJobCreated) job = await job.update(requestJobFields);
 
-    // UPDATE OR CREATE AssetsGroups RECORD FOR JOB
+    // UPDATE OR CREATE AssetsGroup RECORD FOR JOB
     if (groupId) {
       const assetGroupsFields = { assetId: job.id, groupId };
-      await AssetsGroups.findOrCreate({
+      await AssetsGroup.findOrCreate({
         where: assetGroupsFields,
         defaults: assetGroupsFields,
       });

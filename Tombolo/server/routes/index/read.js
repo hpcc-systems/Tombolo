@@ -4,7 +4,7 @@ const {
   indexes: Index,
   index_key: IndexKey,
   index_payload: IndexPayload,
-  assets_groups: AssetsGroups,
+  AssetsGroup,
 } = require('../../models');
 const assetUtil = require('../../utils/assets');
 
@@ -131,7 +131,7 @@ router.post('/saveIndex', validate(validateSaveIndex), async (req, res) => {
 
       if (req.body.index.basic.groupId) {
         const { groupId } = req.body.index.basic.groupId;
-        await AssetsGroups.findOrCreate({
+        await AssetsGroup.findOrCreate({
           where: { assetId: index.id, groupId: groupId },
           defaults: { assetId: index.id, groupId },
         });

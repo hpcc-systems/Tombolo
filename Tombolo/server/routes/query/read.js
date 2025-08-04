@@ -4,7 +4,7 @@ const logger = require('../../config/logger');
 const {
   query: Query,
   query_field: QueryField,
-  assets_groups: AssetsGroups,
+  AssetsGroup,
 } = require('../../models');
 const {
   validateSaveQuery,
@@ -57,7 +57,7 @@ router.post('/saveQuery', validate(validateSaveQuery), async (req, res) => {
 
     let queryId = query.id ? query.id : req.body.id;
     if (req.body.query.basic && req.body.query.basic.groupId) {
-      await AssetsGroups.findOrCreate({
+      await AssetsGroup.findOrCreate({
         where: { assetId: queryId, groupId: req.body.query.basic.groupId },
         defaults: {
           assetId: queryId,

@@ -21,9 +21,6 @@ const validateAddClusterInputs = [
   ...createUpdateClusterValidations,
   stringBody('password', true, { length: { max: 75 } }),
   objectBody('metaData', true),
-  objectBody('createdBy'),
-  stringBody('createdBy.name', { length: { max: 100 } }),
-  stringBody('createdBy.email'),
 ];
 
 // Validate the id
@@ -33,9 +30,6 @@ const validateClusterId = [paramUuids.id];
 const validateUpdateClusterInputs = [
   paramUuids.id,
   ...createUpdateClusterValidations,
-  objectBody('updatedBy'),
-  stringBody('updatedBy.name'),
-  emailBody('updatedBy.email'),
 ];
 
 // Validate name for blind ping

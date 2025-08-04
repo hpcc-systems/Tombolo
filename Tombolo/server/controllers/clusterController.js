@@ -1,21 +1,18 @@
 const { clusters } = require('../cluster-whitelist.js');
-const { Sequelize } = require('sequelize');
 const {
   AccountService,
   TopologyService,
   WorkunitsService,
-  Connection,
 } = require('@hpcc-js/comms');
 const axios = require('axios');
 
 const logger = require('../config/logger');
-const models = require('../models');
+const { Cluster } = require('../models');
 const { encryptString } = require('../utils/cipher.js');
 const CustomError = require('../utils/customError.js');
 const { getClusterOptions } = require('../utils/getClusterOptions');
 const hpccUtil = require('../utils/hpcc-util.js');
 const hpccJSComms = require('@hpcc-js/comms');
-const Cluster = models.cluster;
 const moment = require('moment');
 const {
   uniqueConstraintErrorHandler,
@@ -31,8 +28,6 @@ const addCluster = async (req, res) => {
       adminEmails,
       metaData = {},
       allowSelfSigned,
-      createdBy,
-      updatedBy,
     } = req.body;
     // Make sure cluster is whitelisted
     const cluster = clusters.find(c => c.name === clusterName);
@@ -129,9 +124,8 @@ const addCluster = async (req, res) => {
       username: userID,
       timezone_offset: offSetInMinutes,
       adminEmails,
-      createdBy,
+      createdBy: req.user.id,
       allowSelfSigned,
-      updatedBy,
       metaData,
     };
 
@@ -174,8 +168,6 @@ const addClusterWithProgress = async (req, res) => {
       adminEmails,
       metaData = {},
       allowSelfSigned,
-      createdBy,
-      updatedBy,
     } = req.body;
     // Make sure cluster is whitelisted
     const cluster = clusters.find(c => c.name === clusterName);
@@ -320,9 +312,8 @@ const addClusterWithProgress = async (req, res) => {
       username: userID,
       timezone_offset: offSetInMinutes,
       adminEmails,
-      createdBy,
+      createdBy: req.user.id,
       allowSelfSigned,
-      updatedBy,
       metaData,
     };
 
@@ -441,7 +432,10 @@ const getCluster = async (req, res) => {
 const deleteCluster = async (req, res) => {
   try {
     // Delete a cluster by id
-    const cluster = await Cluster.destroy({ where: { id: req.params.id } });
+    const cluster = await Cluster.handleDelete({
+      id: req.params.id,
+      deletedByUserId: req.user.id,
+    });
     if (!cluster) throw new CustomError('Cluster not found', 404);
     return res.status(200).json({ success: true, data: cluster });
   } catch (err) {
@@ -456,15 +450,14 @@ const deleteCluster = async (req, res) => {
 const updateCluster = async (req, res) => {
   // Only username, password, adminEmails can be updated. only update that if it is present in the request body
   try {
-    const { username, password, adminEmails, updatedBy, allowSelfSigned } =
-      req.body;
+    const { username, password, adminEmails, allowSelfSigned } = req.body;
     const cluster = await Cluster.findOne({ where: { id: req.params.id } });
     if (!cluster) throw new CustomError('Cluster not found', 404);
     if (allowSelfSigned) cluster.allowSelfSigned = allowSelfSigned;
     if (username) cluster.username = username;
     if (password) cluster.hash = encryptString(password);
     if (adminEmails) cluster.adminEmails = adminEmails;
-    cluster.updatedBy = updatedBy;
+    cluster.updatedBy = req.user.id;
 
     await cluster.save();
     return res.status(200).json({ success: true, data: cluster });

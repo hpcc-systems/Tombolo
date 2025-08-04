@@ -7,7 +7,14 @@ const sequelize = require('../models').sequelize;
 
 // Local imports
 const logger = require('../config/logger');
-const models = require('../models');
+const {
+  user: User,
+  UserRoles,
+  user_application,
+  notification_queue: NotificationQueue,
+  AccountVerificationCode,
+  PasswordResetLinks,
+} = require('../models');
 const {
   setPasswordExpiry,
   trimURL,
@@ -17,14 +24,6 @@ const {
   sendAccountUnlockedEmail,
   deleteUser: deleteUserUtil,
 } = require('../utils/authUtil');
-
-// Constants
-const User = models.user;
-const UserRoles = models.UserRoles;
-const user_application = models.user_application;
-const NotificationQueue = models.notification_queue;
-const AccountVerificationCodes = models.AccountVerificationCodes;
-const PasswordResetLinks = models.PasswordResetLinks;
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
@@ -229,7 +228,7 @@ const changePassword = async (req, res) => {
 
     // Set password expiry and previous passwords
     setPasswordExpiry(existingUser);
-    setPreviousPasswords(existingUser);
+    await setPreviousPasswords(existingUser);
 
     // Save user with updated details
     await User.update(
@@ -433,7 +432,7 @@ const updateUserApplications = async (req, res) => {
     const existing = await user_application.findAll({ where: { user_id } });
     const existingApplications = existing.map(app => app.application_id);
 
-    // Delete applications  that are not in the new list
+    // Delete applications that are not in the new list
     const applicationsToDelete = existingApplications.filter(
       app => !applications.includes(app)
     );
@@ -459,7 +458,7 @@ const updateUserApplications = async (req, res) => {
       message: 'User applications updated successfully',
       data: newApplications,
     });
-  } catch {
+  } catch (err) {
     logger.error(`Update user applications: ${err.message}`);
     return res
       .status(err.status || 500)
@@ -556,7 +555,7 @@ const createUser = async (req, res) => {
     const verificationCode = UUIDV4();
 
     // Create account verification code
-    await AccountVerificationCodes.create({
+    await AccountVerificationCode.create({
       code: verificationCode,
       userId: newUser.id,
       expiresAt: new Date(Date.now() + 86400000),
@@ -665,7 +664,7 @@ const resetPasswordForUser = async (req, res) => {
     );
 
     // Create account verification code
-    await AccountVerificationCodes.create(
+    await AccountVerificationCode.create(
       {
         code: randomId,
         userId: user.id,
@@ -724,7 +723,7 @@ const unlockAccount = async (req, res) => {
     const verificationCode = UUIDV4();
 
     // Create account verification code
-    await AccountVerificationCodes.create({
+    await AccountVerificationCode.create({
       code: verificationCode,
       userId: user.id,
       expiresAt: new Date(Date.now() + 172800000),

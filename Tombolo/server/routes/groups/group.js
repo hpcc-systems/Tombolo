@@ -20,7 +20,7 @@ const {
   file: File,
   query: Query,
   job: Job,
-  assets_groups: AssetsGroups,
+  AssetsGroup,
   fileTemplate: FileTemplate,
   sequelize,
 } = require('../../models');
@@ -745,11 +745,11 @@ router.put('/move/asset', validate(validateMoveAsset), async (req, res) => {
     // create or update File
     if (!req.body.destGroupId) {
       //when we move asset to root "Group" folder we will not have destGroupId, in order to make it work we will need to remove record from AssetGroups
-      await AssetsGroups.destroy({ where: { assetId }, force: true });
+      await AssetsGroup.destroy({ where: { assetId }, force: true });
     } else {
       const assetGroupFields = { assetId, groupId: req.body.destGroupId };
 
-      let [assetGroup, isAssetGroupCreated] = await AssetsGroups.findOrCreate({
+      let [assetGroup, isAssetGroupCreated] = await AssetsGroup.findOrCreate({
         where: { assetId },
         defaults: assetGroupFields,
       });

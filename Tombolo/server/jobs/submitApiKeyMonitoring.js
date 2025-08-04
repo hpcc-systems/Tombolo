@@ -1,21 +1,13 @@
-const axios = require("axios");
-const { notify } = require("../routes/notifications/email-notification");
-const { parentPort, workerData } = require("worker_threads");
-const logger = require("../config/logger");
-const models = require("../models");
-const api_key = models.api_key;
-const hpccUtil = require("../utils/hpcc-util");
-const { v4: uuidv4 } = require("uuid");
-const monitoring_notifications = models.monitoring_notifications;
-const {
-  emailBody,
-  messageCardBody,
-} = require("./messageCards/notificationTemplate");
-const { update } = require("lodash");
+const { notify } = require('../routes/notifications/email-notification');
+const { parentPort } = require('worker_threads');
+const logger = require('../config/logger');
+const { ApiKey, monitoring_notifications } = require('../models');
+const { v4: uuidv4 } = require('uuid');
+const { emailBody } = require('./messageCards/notificationTemplate');
 
 (async () => {
   try {
-    const apiKeys = await api_key.findAll({
+    const apiKeys = await ApiKey.findAll({
       where: { expired: false },
       raw: true,
     });
@@ -36,7 +28,7 @@ const { update } = require("lodash");
   } catch (err) {
     logger.error(err);
   } finally {
-    parentPort ? parentPort.postMessage("done") : process.exit(0);
+    parentPort ? parentPort.postMessage('done') : process.exit(0);
   }
 })();
 
@@ -56,20 +48,20 @@ const keyCheck = async (key, sentNotifications) => {
   const currentDate = new Date().getTime();
   const usagePercentage = ((Usage / UsageLimit) * 100).toFixed(2);
 
-  const notificationDetails = { details: { "Key Name": name } };
+  const notificationDetails = { details: { 'Key Name': name } };
   //get time left in seconds
   let timeLeft = (expirationDate - currentDate) / 1000;
 
   //key expired
   if (timeLeft < 0 && !expired) {
     metaDifference.push({
-      attribute: "Key Expired",
-      oldValue: "Current Date: " + new Date().getTime().toLocaleString(),
-      newValue: "Expired On: " + new Date(expirationDate).toLocaleDateString(),
+      attribute: 'Key Expired',
+      oldValue: 'Current Date: ' + new Date().getTime().toLocaleString(),
+      newValue: 'Expired On: ' + new Date(expirationDate).toLocaleDateString(),
     });
 
     //update key to expired status
-    await api_key.update(
+    await ApiKey.update(
       {
         expired: true,
       },
@@ -79,32 +71,32 @@ const keyCheck = async (key, sentNotifications) => {
 
   //only hold on to expired keys for 180 days
   if (timeLeft < -31536000) {
-    await api_key.destroy({ where: { name: name } });
+    await ApiKey.destroy({ where: { name: name } });
   }
 
   //key has less than 1 day of duration left
   if (timeLeft < 86400) {
     metaDifference.push({
-      attribute: "Key Expires Soon",
-      oldValue: `Less Than One Day`,
-      newValue: "Expires On: " + new Date(expirationDate).toLocaleDateString(),
+      attribute: 'Key Expires Soon',
+      oldValue: 'Less Than One Day',
+      newValue: 'Expires On: ' + new Date(expirationDate).toLocaleDateString(),
     });
   }
 
   //if usage percentage is > 90% alert user
   if (usagePercentage > 90) {
     metaDifference.push({
-      attribute: "Usage Percentage Warning",
-      oldValue: usagePercentage + "%",
-      newValue: "Usage Limit: " + UsageLimit + " - Usage: " + Usage,
+      attribute: 'Usage Percentage Warning',
+      oldValue: usagePercentage + '%',
+      newValue: 'Usage Limit: ' + UsageLimit + ' - Usage: ' + Usage,
     });
   }
 
   if (metaDifference.length > 0) {
     // Note - this does not cover file size not in range
-    notificationDetails.value = "API Key Warnings";
-    notificationDetails.title = `API Key Warnings `;
-    notificationDetails.text = `API Key Warnings `;
+    notificationDetails.value = 'API Key Warnings';
+    notificationDetails.title = 'API Key Warnings ';
+    notificationDetails.text = 'API Key Warnings ';
   }
 
   const notification_id = uuidv4();
@@ -125,9 +117,9 @@ const keyCheck = async (key, sentNotifications) => {
         sentNotifications.push({
           id: notification_id,
           file_name: name,
-          status: "notified",
+          status: 'notified',
           notifiedTo: emails,
-          notification_channel: "eMail",
+          notification_channel: 'eMail',
           application_id,
           notification_reason: notificationDetails.value,
         });

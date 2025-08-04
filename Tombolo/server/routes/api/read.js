@@ -1,9 +1,11 @@
 const express = require('express');
-const models = require('../../models');
-const monitoring_notifications = models.monitoring_notifications;
-const apiKey = models.api_key;
-const fileMonitoring = models.fileMonitoring;
-const clusterMonitoring = models.clusterMonitoring;
+const {
+  monitoring_notifications,
+  ApiKey,
+  fileMonitoring,
+  clusterMonitoring,
+  Cluster,
+} = require('../../models');
 const logger = require('../../config/logger');
 const router = express.Router();
 const path = require('path');
@@ -13,7 +15,6 @@ const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
 const { param, validationResult } = require('express-validator');
 const validatorUtil = require('../../utils/validator');
-const Cluster = models.cluster;
 
 require('dotenv').config({ path: ENVPath });
 
@@ -36,7 +37,7 @@ router.get(
 
       const { name, key } = req.params;
 
-      const validKey = await apiKey.findOne({
+      const validKey = await ApiKey.findOne({
         where: { name },
       });
 
@@ -58,7 +59,7 @@ router.get(
         if (metaData.Usage < metaData.UsageLimit) {
           metaData.Usage = metaData.Usage + 1;
           //update key usage
-          await apiKey.update({ metaData }, { where: { name } });
+          await ApiKey.update({ metaData }, { where: { name } });
         } else {
           throw Error('Key has no uses remaining');
         }
@@ -114,7 +115,7 @@ router.get(
 
       const { name, key } = req.params;
 
-      const validKey = await apiKey.findOne({
+      const validKey = await ApiKey.findOne({
         where: { name },
       });
 
@@ -136,7 +137,7 @@ router.get(
         if (metaData.Usage < metaData.UsageLimit) {
           metaData.Usage = metaData.Usage + 1;
           //update key usage
-          await apiKey.update({ metaData }, { where: { name } });
+          await ApiKey.update({ metaData }, { where: { name } });
         } else {
           throw Error('Key has no uses remaining');
         }
