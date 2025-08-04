@@ -4,8 +4,7 @@ import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 import logo from '../../../images/logo-dark.webp';
-
-import './home.css';
+import styles from './home.module.css';
 
 const Home = () => {
   //Redux
@@ -16,14 +15,14 @@ const Home = () => {
   } = useSelector((state) => state);
 
   return (
-    <section className="container">
-      <div className="innerContainer">
-        <div className="header">
-          <h1 style={{ width: '100%', marginTop: '1rem' }}>Welcome to Tombolo!</h1>
+    <section className={styles.container}>
+      <div className={styles.innerContainer}>
+        <div className={styles.header}>
+          <h1>Welcome to Tombolo!</h1>
           <h2>Transform and Process Data with Ease: Your Low-Code Bridge to HPCC Systems.</h2>
         </div>
 
-        <div className="middle">
+        <div className={styles.middle}>
           <Card>
             <h2>Workflows</h2>
 
@@ -78,21 +77,21 @@ const Home = () => {
             </ul>
           </Card>
         </div>
-        <div className="footer">
+        <div className={styles.footer}>
           {/* could not make this look good, so commented out, could probably add into the main area but it is on our docs so seems redundant */}
-          {/* <div className="footerRow">
-          <div className="sub">
+          {/* <div className={styles.footerRow}>
+          <div className={styles.sub}>
             <h2>Powered by HPCC Systems</h2>
             <p>Tombolo is built on top of HPCC Systems, a powerful open-source platform for big data analysis.</p>
           </div>
-          <div className="sub">
+          <div className={styles.sub}>
             <h2>Focus on What Matters</h2>
             <p>
               Tombolo lets you focus on your data and your analysis, without worrying about the underlying
               infrastructure.
             </p>
           </div>
-          <div className="sub">
+          <div className={styles.sub}>
             <h2>Easy to Use</h2>
             <p>
               Tombolo is designed to be easy to use, with a simple UI and great{' '}
@@ -102,14 +101,14 @@ const Home = () => {
           </div>
         </div> */}
 
-          <div className="footerRow" style={{ marginBottom: '1rem' }}>
-            <div className="sub" style={{ display: 'flex', alignItems: 'center' }}>
-              <a style={{ margin: '0 auto' }} href="https://hpccsystems.com/" target="_blank" rel="noopener noreferrer">
-                <img src={logo} alt="HPCC Systems" style={{ width: '10rem', margin: '0 auto' }} />
+          <div className={styles.footerRow}>
+            <div className={`${styles.sub} ${styles.footerLogoContainer}`}>
+              <a href="https://hpccsystems.com/" target="_blank" rel="noopener noreferrer">
+                <img src={logo} alt="HPCC Systems" />
               </a>
             </div>
 
-            <div className="sub">
+            <div className={styles.sub}>
               <h4>About</h4>
               <ul>
                 <li>
@@ -132,7 +131,7 @@ const Home = () => {
                 </li>
               </ul>
             </div>
-            <div className="sub">
+            <div className={styles.sub}>
               <h4>Documentation</h4>
               <ul>
                 <li>
@@ -161,7 +160,7 @@ const Home = () => {
                 </li>
               </ul>
             </div>
-            <div className="sub">
+            <div className={styles.sub}>
               <h4>Support</h4>
               <ul>
                 <li>
@@ -184,7 +183,7 @@ const Home = () => {
                 </li>
               </ul>
             </div>
-            <div className="sub">
+            <div className={styles.sub}>
               <h4>Project Resources</h4>
               <ul>
                 <li>

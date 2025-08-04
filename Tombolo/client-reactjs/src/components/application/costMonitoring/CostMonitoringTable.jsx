@@ -17,6 +17,8 @@ import { useSelector } from 'react-redux';
 
 import { handleDeleteCostMonitoring, toggleCostMonitoringStatus } from './costMonitoringUtils';
 
+import styles from './costMonitoring.module.css';
+
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
   if (approvalStatus === 'Pending') {
@@ -199,7 +201,7 @@ const CostMonitoringTable = ({
                   content={
                     <div
                       style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }}
-                      className="costMonitoringTable__hidden_actions">
+                      className={styles.costMonitoringTable__hidden_actions}>
                       <div title="Approve" onClick={() => evaluateMonitoring(record)}>
                         <CheckCircleFilled
                           style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}
@@ -422,11 +424,11 @@ const CostMonitoringTable = ({
       pagination={{ pageSize: 20 }}
       rowClassName={(record) => {
         let className = record?.isActive
-          ? 'costMonitoringTable__active-monitoring'
-          : 'costMonitoringTable__inactive-monitoring';
+          ? styles.costMonitoringTable__active_monitoring
+          : styles.costMonitoringTable__inactive_monitoring;
         const idsOfSelectedRows = selectedRows.map((row) => row.id);
         if (idsOfSelectedRows.includes(record.id)) {
-          className += ' costMonitoringTable__selected-row';
+          className += ' ' + styles.costMonitoringTable__selected_row;
         }
         return className;
       }}

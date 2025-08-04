@@ -104,7 +104,7 @@ const MonitoringTab = ({
         label="Display Name"
         name="monitorName"
         validateTrigger={['onChange', 'onBlur']}
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         onChange={(value) => {
           setDisplayName(value);
         }}

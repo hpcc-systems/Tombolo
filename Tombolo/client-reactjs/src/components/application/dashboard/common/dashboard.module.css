@@ -2,10 +2,6 @@
   visibility: hidden;
 }
 
-.filters__form * {
-  margin-right: 2px;
-}
-
 .notifications__charts {
   border: 1px solid lightGray;
   padding-top: 10px;

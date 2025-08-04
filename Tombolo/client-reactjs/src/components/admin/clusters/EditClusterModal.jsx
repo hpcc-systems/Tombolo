@@ -5,7 +5,6 @@ import { isEmail } from 'validator';
 
 // Local Imports
 import { pingCluster, updateCluster } from './clusterUtils';
-import './clusters.css';
 import { getUser } from '../../common/userStorage';
 
 function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal, selectedCluster, setClusters }) {

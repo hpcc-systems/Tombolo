@@ -1,0 +1,32 @@
+.large-form-item {
+  width: calc(75% - 8px);
+}
+
+.spinner {
+  margin-top: -1.6rem;
+  float: right;
+  margin-right: 1rem;
+}
+
+.build-details-header {
+  padding: 10px 18px;
+  font-weight: bold;
+  border: 1px solid whitesmoke;
+}
+
+.build-details {
+  height: fit-content;
+  padding: 10px 18px;
+  border: 1px solid whitesmoke;
+}
+
+.multi-select {
+  display: inline-block;
+  width: calc(75% - 12px);
+  text-align: center;
+}
+
+.emails-list {
+  display: flex;
+  place-items: center;
+}

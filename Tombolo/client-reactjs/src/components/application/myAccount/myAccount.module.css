@@ -5,3 +5,9 @@
   min-height: 80vh;
   border-radius: 0.5rem;
 }
+
+.edit-info {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}

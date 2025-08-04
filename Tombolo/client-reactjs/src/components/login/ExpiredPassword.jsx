@@ -5,6 +5,7 @@ import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
 
 // Local Imports
 import { requestPasswordReset } from './utils';
+import styles from './login.module.css';
 
 function ExpiredPassword({ email }) {
   const [resetting, setResetting] = useState(false);
@@ -14,7 +15,7 @@ function ExpiredPassword({ email }) {
 
   const passwordExpiredMessage = (
     <div>
-      <span style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--danger)' }}>Password Expired !</span>
+      <span className={styles.passwordExpired_header}>Password Expired !</span>
       <div>
         Your password has expired because it was not changed within the required reset period or you have not logged in
         for more than 90 days. To regain access to the application, please click the button below to request a password
@@ -26,16 +27,7 @@ function ExpiredPassword({ email }) {
   // Success message
   const SuccessMessage = (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '1rem',
-          color: 'var(--success)',
-          fontSize: '1.5rem',
-          fontWeight: '700',
-        }}>
+      <div className={styles.passwordExpired__successMessage}>
         <CheckCircleFilled /> {successMessage}
       </div>
       <div style={{ fontSize: '1rem' }}>
@@ -54,16 +46,7 @@ function ExpiredPassword({ email }) {
   // Failure message
   const ErrorMessage = (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '1rem',
-          color: 'var(--danger)',
-          fontSize: '1.5rem',
-          fontWeight: '700',
-        }}>
+      <div className={styles.passwordExpired__errorMessage}>
         <CloseCircleFilled /> Error Submitting Request
       </div>
       <div style={{ fontSize: '1rem' }}>
@@ -96,7 +79,7 @@ function ExpiredPassword({ email }) {
 
   //JSX
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'center', alignItems: 'center', gap: '1rem' }}>
+    <div className={styles.passwordExpired_container}>
       {resetSuccess && renderMessage.resetSuccess}
       {resetError && renderMessage.resetError}
       {!resetSuccess && !resetError && renderMessage.passwordExpiredMessage}

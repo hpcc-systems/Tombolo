@@ -4,6 +4,8 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector } from 'react-redux';
 import ObjectKeyValue from '../../common/ObjectKeyValue';
 
+import styles from './orbitMonitoring.module.css';
+
 const BasicTab = ({
   orbitBuildDetails,
   setOrbitBuildDetails,
@@ -104,7 +106,7 @@ const BasicTab = ({
     <>
       <Form.Item
         label="Domain"
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         name="businessUnit"
         rules={[{ required: true, message: 'Required field' }]}>
         <Select
@@ -122,7 +124,7 @@ const BasicTab = ({
       </Form.Item>
       <Form.Item
         label="Product Category"
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         name="product"
         rules={[{ required: true, message: 'Required field' }]}>
         <Select
@@ -143,7 +145,7 @@ const BasicTab = ({
         label="Host"
         name="host"
         validateTrigger={['onChange', 'onBlur']}
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         rules={[
           { required: true, message: 'Required field' },
           {
@@ -156,7 +158,7 @@ const BasicTab = ({
 
       <Form.Item label="Search For Build" name="build" required rules={[{ required: true, message: 'Required field' }]}>
         <Row gutter={[8, 0]}>
-          <Col style={{ width: 'calc(75% - 8px)' }}>
+          <Col className={styles.largeFormItem}>
             <AutoComplete
               options={orbitBuildSuggestions}
               onSelect={handleOrbitBuildSelect}
@@ -167,7 +169,7 @@ const BasicTab = ({
               }}
               value={selectedOrbitBuild}
               status={status}></AutoComplete>
-            <Spin spinning={loading} style={{ marginTop: '-1.6rem', float: 'right', marginRight: '1rem' }}></Spin>
+            <Spin spinning={loading} className={styles.spinner}></Spin>
           </Col>
         </Row>
       </Form.Item>
@@ -176,15 +178,8 @@ const BasicTab = ({
         <>
           {displayBuildInfo ? (
             <>
-              <div style={{ padding: '10px 18px', fontWeight: 'bold', border: '1px solid whitesmoke' }}>
-                Build Details
-              </div>
-              <div
-                style={{
-                  height: 'fit-content',
-                  padding: '10px 18px',
-                  border: '1px solid whitesmoke',
-                }}>
+              <div className={styles.buildDetailsHeader}>Build Details</div>
+              <div className={styles.buildDetails}>
                 <ObjectKeyValue obj={displayBuildInfo} />
               </div>
             </>

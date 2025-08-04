@@ -9,6 +9,8 @@ import { authActions } from '../../redux/actions/Auth';
 import { verifyEmail } from './utils';
 import { setUser } from '../common/userStorage';
 
+import styles from './login.module.css';
+
 const Register = () => {
   const [form] = Form.useForm();
   const [registrationComplete, setRegistrationComplete] = useState(false);
@@ -73,7 +75,7 @@ const Register = () => {
   return (
     <>
       {regId ? (
-        <div style={{ textAlign: 'center', marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
+        <div className={styles.verifying_container}>
           {verifying && (
             <>
               <LoadingOutlined style={{ marginRight: '1rem' }} />
@@ -82,7 +84,7 @@ const Register = () => {
           )}
           {verificationFailed && (
             <div>
-              <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem', fontSize: '1.1rem' }}>
+              <p className={styles.helperLink} style={{ fontSize: '1.1rem' }}>
                 <CloseCircleFilled style={{ marginRight: '1rem', color: 'red' }} twoToneColor="#eb2f96" fill="red" />
                 {verificationFailed}
               </p>
@@ -91,7 +93,7 @@ const Register = () => {
         </div>
       ) : registrationComplete ? (
         <div>
-          <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem', fontSize: '1.1rem' }}>
+          <p className={styles.helperLink} style={{ fontSize: '1.1rem' }}>
             <CheckCircleFilled style={{ marginRight: '1rem', color: 'green' }} twoToneColor="#eb2f96" fill="green" />
             Registration complete. Please check your email to verify your account.
           </p>
@@ -99,7 +101,7 @@ const Register = () => {
       ) : (
         <>
           <RegisterUserForm form={form} onFinish={onFinish} />
-          <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
+          <p className={styles.helperLink}>
             <span>Already have an account?</span> <a href="/src/components/login/login">Login</a>
           </p>
         </>

@@ -18,6 +18,11 @@ export default function config({ mode }) {
         },
       }),
     ],
+    css: {
+      modules: {
+        localsConvention: 'camelCase',
+      },
+    },
     server: {
       port: 3000, // Match CRA's default port
       open: true, // Auto-open browser like CRA

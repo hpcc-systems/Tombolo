@@ -1,0 +1,94 @@
+.passwordExpired_header {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.passwordExpired__successMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  color: var(--success);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.passwordExpired__errorMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  color: var(--danger);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.passwordExpired_container {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner_container {
+  text-align: center;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  position: absolute;
+  z-index: 2000;
+  height: 100%;
+  opacity: 0.4;
+  background-color: black;
+  top: 0;
+  left: 0;
+}
+
+.helperLink {
+  width: 100%;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.verifying_container {
+  text-align: center;
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.unverified-container {
+  margin: 1rem auto;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.unverified-container > .not-verified {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.check-email {
+  display: block;
+  margin: 1rem 0;
+}
+
+.sending-email {
+  color: var(--dark);
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.email-sent {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.unverified-footer-container {
+  display: flex;
+  gap: 1rem;
+}

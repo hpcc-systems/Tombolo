@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, TimePicker, Row, Col, Select, InputNumber } from 'antd';
 
-import './jobMonitoring.css';
+import styles from './jobMonitoring.module.css';
 import SchedulePicker from './SchedulePicker';
 
 const { Option } = Select;
@@ -69,7 +69,7 @@ function JobMonitoringTab({
     <div>
       {/* Cluster wide monitoring does not require scheduling because all you are doing is monitoring the new work units in cluster that meet notification conditions */}
       {monitoringScope === 'ClusterWideMonitoring' ? null : (
-        <Card className="modal-card" style={{ border: '1px solid #dadada' }}>
+        <Card className={styles.modalCard}>
           <SchedulePicker
             intermittentScheduling={intermittentScheduling}
             setIntermittentScheduling={setIntermittentScheduling}
@@ -81,13 +81,11 @@ function JobMonitoringTab({
             setCronMessage={setCronMessage}
             isEditing={isEditing}
           />
-          {erroneousScheduling && (
-            <div style={{ color: '#ff4d4f', textAlign: 'center' }}>Please select schedule for the job</div>
-          )}
+          {erroneousScheduling && <div className={styles.erroneousScheduling}>Please select schedule for the job</div>}
         </Card>
       )}
 
-      <Card className="modal-card-2" style={{ border: '1px solid #dadada' }}>
+      <Card className={styles.modalCard2}>
         <Form form={form} layout="vertical">
           {/* Always render below fields*/}
 

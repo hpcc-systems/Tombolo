@@ -2,6 +2,8 @@ import React from 'react';
 import { Dropdown, Space, Tooltip } from 'antd';
 import { AppstoreOutlined } from '@ant-design/icons';
 
+import styles from '../layout.module.css';
+
 const ApplicationMenu = ({ applications, selected, handleApplicationChange }) => {
   //build application list for dropdown
   const getApplicationItems = (applications) => {
@@ -23,16 +25,7 @@ const ApplicationMenu = ({ applications, selected, handleApplicationChange }) =>
       placement="bottom"
       trigger={['click']}>
       <Tooltip title="Select an Application" placement="right">
-        <Space
-          style={{
-            color: 'white',
-            border: '1px solid white',
-            cursor: 'pointer',
-            padding: '0 4px',
-            borderRadius: '3px',
-            maxHeight: '32px',
-            minWidth: '200px',
-          }}>
+        <Space className={styles.appMenuSpace}>
           <AppstoreOutlined />
           <span> {selected}</span>
         </Space>
