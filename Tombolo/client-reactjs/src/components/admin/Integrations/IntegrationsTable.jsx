@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 
 //Local Imports
-import './integrations.css';
+import styles from './integrations.module.css';
 import { toggleIntegration } from './integration-utils.js';
 import { applicationActions } from '../../../redux/actions/Application.js';
 
@@ -58,7 +58,7 @@ function IntegrationsTable({ allIntegrations }) {
       key: 'actions',
       width: '10%',
       render: (record) => (
-        <div className="integrationTable__actionIcons">
+        <div className={styles.integrationTable__actionIcons}>
           <Switch
             checked={isIntegrationActive({ integration_id: record.id, applicationId })}
             size="small"

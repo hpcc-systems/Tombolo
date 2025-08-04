@@ -222,7 +222,7 @@ function LandingZoneFileExplorer({
                 style={{ width: '100%' }}
                 loading={landingZoneDetails.fetchingLandingZone}
                 onChange={handleLandingZoneSelectionChange}
-                className=".read-only-input">
+                className="read-only-input">
                 {landingZoneDetails.landingZones.map((lz) => (
                   <Option key={lz.name}>{lz.name}</Option>
                 ))}

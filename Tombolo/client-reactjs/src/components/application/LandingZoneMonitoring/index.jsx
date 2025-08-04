@@ -16,7 +16,6 @@ import BulkUpdateModal from './BulkUpdateModal';
 import ViewDetailsModal from './ViewDetailsModal';
 import { getUser } from '../../common/userStorage';
 import LzFilters from './LzFilters';
-import './lzMonitoring.css';
 
 const monitoringTypeName = 'Landing Zone Monitoring';
 

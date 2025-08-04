@@ -3,9 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Space, Tag, Card } from 'antd';
 import { CheckSquareFilled, CloseSquareFilled } from '@ant-design/icons';
 
-// Local imports
-import '../integrations.css';
-
 function GeneralTab({ integrationDetails, teamsChannels }) {
   const [megaphoneAlertRecipients, setMegaphoneAlertRecipients] = useState(null);
 

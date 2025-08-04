@@ -14,7 +14,6 @@ import UpdateNotificationModal from './UpdateNotification';
 import NotificationTableFilters from './NotificationTableFilters';
 import NotificationsSearch from './NotificationsSearch';
 import NotificationDashboardFilter from './NotificationDashboardFilter';
-import './notifications.css';
 
 const Index = () => {
   //Local states
@@ -256,7 +255,7 @@ const Index = () => {
             key: '2',
             children: (
               <>
-                {/* When tab are switched, the canvas size of the charts change causing the charts to resize for unknown reason. As a result, the charts are 
+                {/* When tab are switched, the canvas size of the charts change causing the charts to resize for unknown reason. As a result, the charts are
                 not displayed properly. Re-rendering all the charts when user is in tab 2 and ejecting them when user moves to different tab as workaround to fix the issue. */}
                 {activeTab === '2' && (
                   <NotificationDashboard

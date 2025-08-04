@@ -1,0 +1,53 @@
+.loadingScreenContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f2f5;
+}
+
+.loadingScreenContainer > .errorCard {
+  width: 50%;
+  text-align: center;
+}
+
+.loadingScreenContainer > .infoDiv {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.infoDiv > .logo {
+  width: 100%;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.infoDiv > .msg {
+  width: 100%;
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.appMenuSpace {
+  color: white;
+  border: 1px solid white;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 3px;
+  max-height: 32px;
+  min-width: 200px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 10px;
+  position: fixed;
+  z-index: 1;
+  width: 100%;
+}

@@ -2,6 +2,8 @@ import React from 'react';
 import { Form, Input, Button, Divider, message } from 'antd';
 import { authHeader } from '../common/AuthHeader';
 
+import styles from './login.module.css';
+
 const ForgotPassword = () => {
   const onFinish = async (values) => {
     try {
@@ -49,7 +51,7 @@ const ForgotPassword = () => {
           Reset Password
         </Button>
       </Form.Item>
-      <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
+      <p className={styles.helperLink}>
         <span>Remembered your password?</span> <a href="/src/components/login/login">Log in</a>
       </p>
     </Form>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, Input, Button, Spin, message } from 'antd';
 import { roleStringBuilder, updateAccount } from './utils';
 import { setUser, getUser } from '../../common/userStorage';
+import styles from './myAccount.module.css';
 
 const MyAccountInfo = ({ user, editing, setEditing }) => {
   const [form] = Form.useForm();
@@ -101,7 +102,7 @@ const MyAccountInfo = ({ user, editing, setEditing }) => {
           </Col>
         </Row>
 
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+        <div className={styles.editInfo}>
           {editing && (
             <>
               <Button style={{ marginRight: '1rem' }} onClick={() => setEditing(false)} disabled={loading && true}>

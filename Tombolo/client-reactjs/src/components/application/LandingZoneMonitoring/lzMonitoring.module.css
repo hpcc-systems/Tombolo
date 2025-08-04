@@ -18,3 +18,23 @@
   background: none;
   font-weight: 600;
 }
+
+.lzMonitoringTable__hidden_actions {
+  display: flex;
+  flex-direction: column;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.lzMonitoringTable__hidden_actions > * {
+  padding: 5px;
+}
+
+.lzMonitoringTable__hidden_actions > *:hover {
+  background-color: var(--secondary-light);
+}
+
+.icons {
+  color: var(--primary);
+  margin-right: 15px;
+}

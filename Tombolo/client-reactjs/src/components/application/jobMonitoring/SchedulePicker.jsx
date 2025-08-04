@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Radio, Space, Checkbox, Select, Tag, Form } from 'antd';
 import cronstrue from 'cronstrue';
 
+import styles from './jobMonitoring.module.css';
+
 // Daily schedule options
 const dailyRunWindowAndIntervals = [
   { label: 'All day (00:00 - 23:59)', value: 'daily' },
@@ -30,7 +32,6 @@ import {
   getDateLabel,
   getWeekLabel,
 } from '../../common/scheduleOptions.js';
-import './jobMonitoring.css';
 
 const parseCron = (cron) => {
   if (!cron) return null;
@@ -262,7 +263,7 @@ function SchedulePicker({
             setIntermittentScheduling((prev) => ({ ...prev, day: value }));
           }}></Select>
         {individualValues?.weeks?.length > 0 && individualValues?.day ? (
-          <span className="schedularSelector__addMoreBtn" onClick={addSchedule}>
+          <span className={styles.schedularSelector__addMoreBtn} onClick={addSchedule}>
             Add more
           </span>
         ) : null}
@@ -325,7 +326,7 @@ function SchedulePicker({
             }}
           />
           {individualValues.radio1_month && individualValues.radio1_date ? (
-            <span className="schedularSelector__addMoreBtn" onClick={addSchedule}>
+            <span className={styles.schedularSelector__addMoreBtn} onClick={addSchedule}>
               Add more
             </span>
           ) : null}
@@ -391,7 +392,7 @@ function SchedulePicker({
             }}
           />
           {individualValues.radio2_month && individualValues.radio2_day && individualValues.radio2_week ? (
-            <span className="schedularSelector__addMoreBtn" onClick={addSchedule}>
+            <span className={styles.schedularSelector__addMoreBtn} onClick={addSchedule}>
               Add more
             </span>
           ) : null}
@@ -470,8 +471,8 @@ function SchedulePicker({
 
   return (
     <>
-      <div className="schedule-selector">
-        <div className="schedule-options">
+      <div className={styles.scheduleSelector}>
+        <div>
           <Radio.Group
             onChange={(e) => handlingSchedulingOptionChange(e)}
             value={intermittentScheduling.frequency}
@@ -485,7 +486,7 @@ function SchedulePicker({
             </Space>
           </Radio.Group>
         </div>
-        <div className="selected-component">
+        <div className={styles.selectedComponent}>
           {selectedComponent}
 
           {completeSchedule.length > 0 && completeSchedule[0].scheduleBy !== 'dates' ? (

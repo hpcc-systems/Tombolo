@@ -186,13 +186,7 @@ const CostMonitoringActionButton = ({
       trigger={['click']}
       onOpenChange={handleDropDownOpenChange}
       open={expandActionsDrawer}
-      dropdownRender={() => (
-        <Menu
-          items={menuItems}
-          onClick={({ key }) => handleMenuSelection(key)}
-          className="costMonitoring__actions-menu"
-        />
-      )}
+      dropdownRender={() => <Menu items={menuItems} onClick={({ key }) => handleMenuSelection(key)} />}
       placement="bottomRight">
       <Button type="primary" disabled={isReader}>
         Cost Monitoring Actions <DownOutlined />

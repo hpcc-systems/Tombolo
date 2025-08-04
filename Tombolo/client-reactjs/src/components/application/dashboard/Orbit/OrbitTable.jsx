@@ -1,6 +1,7 @@
 /* eslint-disable unused-imports/no-unused-vars */
 import React from 'react';
 import { Table } from 'antd';
+import styles from './orbit.module.css';
 
 function OrbitTable({ filteredWorkUnits, filteredBuilds, loading }) {
   //Table columns and data
@@ -37,7 +38,7 @@ function OrbitTable({ filteredWorkUnits, filteredBuilds, loading }) {
   //JSX
   return (
     <>
-      <div style={{ width: '45%', float: 'left' }} className="OrbitTable">
+      <div style={{ width: '45%', float: 'left' }} className={styles.OrbitTable}>
         <div style={{ border: '1px solid #d9d9d9', padding: '.25rem' }}>
           <Table
             align="right"

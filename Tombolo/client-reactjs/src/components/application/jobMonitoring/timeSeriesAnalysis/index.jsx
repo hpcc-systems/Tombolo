@@ -6,9 +6,9 @@ import { useLocation } from 'react-router-dom';
 
 // Local imports
 import { getJobMonitoringData } from '../jobMonitoringUtils';
-import '../jobMonitoring.css';
 import BreadCrumbs from '../../../common/BreadCrumbs';
 import { performTimeSeriesAnalysis } from './timeSeriesFunc';
+import styles from '../jobMonitoring.module.css';
 
 // Fixed right column
 const averageColumn = [
@@ -308,8 +308,8 @@ const TimeSeriesAnalysis = () => {
   return (
     <div>
       <BreadCrumbs />
-      <div className="jm_time_series_analysis">
-        <div className="timeSeriesAnalysis_selectedWu_info">
+      <div className={styles.jm_time_series_analysis}>
+        <div className={styles.timeSeriesAnalysis_selectedWu_info}>
           <div>
             <b> Job Name: </b>
             <span>{wus[0]?.Jobname}</span>
@@ -334,7 +334,7 @@ const TimeSeriesAnalysis = () => {
           scroll={{ x: 1500 }}
           bordered
           pagination={false}
-          className="time-series-analysis-table"
+          className={styles.timeSeriesAnalysisTable}
         />
       </div>
     </div>

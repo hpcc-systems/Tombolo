@@ -5,6 +5,8 @@ import { LoadingOutlined } from '@ant-design/icons';
 import CostMonitoringBasicTab from './CostMonitoringBasicTab';
 import CostMonitoringNotificationTab from './CostMonitoringNotificationTab';
 
+import styles from './costMonitoring.module.css';
+
 const AddEditCostMonitoringModal = ({
   displayAddCostMonitoringModal,
   handleSaveCostMonitoring,
@@ -184,7 +186,7 @@ const AddEditCostMonitoringModal = ({
       footer={renderFooter()}
       destroyOnClose={true}
       maskClosable={false}
-      className="costMonitoring__modal">
+      className={styles.costMonitoring__modal}>
       <Tabs
         type="card"
         activeKey={activeTab.toString()}

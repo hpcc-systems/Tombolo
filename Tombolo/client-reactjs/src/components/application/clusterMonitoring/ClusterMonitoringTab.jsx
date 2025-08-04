@@ -3,6 +3,7 @@ import { Form, Input, Typography, Select, Checkbox } from 'antd';
 import cronstrue from 'cronstrue';
 import InfoDrawer from '../../common/InfoDrawer';
 import { InfoCircleOutlined } from '@ant-design/icons';
+import styles from './clusterMonitoring.module.css';
 
 const notifyOptions = [{ label: 'Exceeded cluster usage %', value: 'TargetClusterAlertSize' }];
 
@@ -154,7 +155,7 @@ function ClusterMonitoringTab({
                     },
                   ]}>
                   <Input
-                    className="clusterMonitoring_engines"
+                    className={styles.clusterMonitoring_engines}
                     addonBefore={engine}
                     placeholder={'Limit in %'}
                     style={{ width: '50%' }}

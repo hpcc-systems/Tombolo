@@ -3,6 +3,8 @@ import { Breadcrumb } from 'antd';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 
+import styles from './common.module.css';
+
 class BreadCrumbs extends Component {
   render() {
     // const { t } = this.props; // translation
@@ -60,7 +62,7 @@ class BreadCrumbs extends Component {
     };
 
     return (
-      <div style={{ padding: '5px', display: 'flex', justifyContent: 'space-between' }}>
+      <div className={styles.breadcrumbContainer}>
         <Breadcrumb items={getBreadCrumbs()} />
         {this.props.extraContent || null}
       </div>

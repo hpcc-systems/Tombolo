@@ -21,6 +21,11 @@
   width: 100%;
 }
 
+div.header > h1 {
+  width: 100%;
+  margin-top: 1rem;
+}
+
 .innerContainer {
   width: 100%;
   display: flex;
@@ -59,6 +64,21 @@
   flex-direction: row;
   justify-content: space-between;
   text-align: center;
+  margin-bottom: 1rem;
+}
+
+.footerLogoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.footerLogoContainer > a {
+  margin: 0 auto;
+}
+
+.footerLogoContainer > a > img {
+  width: 10rem;
+  margin: 0 auto;
 }
 
 .footerRow a {

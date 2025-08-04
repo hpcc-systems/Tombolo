@@ -1,4 +1,3 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import React from 'react';
 import { Table, Badge, Space, Tooltip, message } from 'antd';
 import { EyeOutlined, DeleteOutlined, PauseCircleOutlined, PlayCircleOutlined, BellOutlined } from '@ant-design/icons';
@@ -6,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 import { useSelector } from 'react-redux';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import styles from './clusterMonitoring.module.css';
 
 function ClusterMonitoringTable({
   clusterMonitorings,
@@ -17,7 +17,6 @@ function ClusterMonitoringTable({
   setNotifyConditions,
   setEngines,
   setSelectedEngines,
-  notificationDetails,
   setNotificationDetails,
   isReader,
 }) {
@@ -219,7 +218,7 @@ function ClusterMonitoringTable({
   // Table row class name
   const getRowClassName = (record) => {
     if (!record.isActive) {
-      return 'monitoring_table_paused_monitorings clusterMonitoring_table_rows';
+      return `${styles.monitoring_table_paused_monitorings}`;
     }
   };
 
@@ -229,7 +228,7 @@ function ClusterMonitoringTable({
       dataSource={clusterMonitorings}
       size={'small'}
       rowClassName={getRowClassName}
-      className="cluster_monitoring_table"
+      className={styles.cluster_monitoring_table}
       rowKey={(record) => record.id}
     />
   );

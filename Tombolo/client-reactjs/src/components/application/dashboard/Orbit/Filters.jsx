@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Select, DatePicker, Button, Checkbox, Drawer } from 'antd';
 import { useHistory } from 'react-router-dom';
 import { handleError } from '../../../common/AuthHeader.js';
-import '../common/css/index.css';
+import styles from '../common/dashboard.module.css';
 import { FilterOutlined } from '@ant-design/icons';
 
 // Form layout
@@ -320,7 +320,7 @@ function Filters({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFi
             </Form.Item>
 
             <Form.Item
-              className="hide_formItem_label"
+              className={styles.hide_formItem_label}
               label="button"
               style={{ display: 'inline-block', width: '100%' }}>
               <Button type="primary" htmlType="submit">
