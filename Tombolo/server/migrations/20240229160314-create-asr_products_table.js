@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("asr_products", {
+    await queryInterface.createTable('asr_products', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -39,20 +39,31 @@ module.exports = {
       createdBy: {
         allowNull: false,
         type: Sequelize.JSON,
-        defaultValue: { email: "NA", lastName: "System", firstName: "NA" },
+        defaultValue: { email: 'NA', lastName: 'System', firstName: 'NA' },
       },
       updatedBy: {
         allowNull: true,
-        type: Sequelize.JSON,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       deletedBy: {
         allowNull: true,
-        type: Sequelize.JSON,
-        defaultValue: null,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("asr_products");
+    await queryInterface.dropTable('asr_products');
   },
 };

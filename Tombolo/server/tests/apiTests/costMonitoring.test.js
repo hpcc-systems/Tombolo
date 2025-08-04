@@ -11,25 +11,7 @@ const {
   AUTHED_USER_ID,
 } = require('../helpers');
 const { Op } = require('sequelize');
-const { user: User } = require('../../models');
-
-const includeUserFks = [
-  {
-    model: User,
-    attributes: ['firstName', 'lastName', 'email'],
-    as: 'creator',
-  },
-  {
-    model: User,
-    attributes: ['firstName', 'lastName', 'email'],
-    as: 'updater',
-  },
-  {
-    model: User,
-    attributes: ['firstName', 'lastName', 'email'],
-    as: 'approver',
-  },
-];
+const { getUserFkIncludes } = require('../../utils/getUserFkIncludes');
 
 describe('costMonitoring Routes', () => {
   beforeEach(() => {
@@ -69,7 +51,7 @@ describe('costMonitoring Routes', () => {
         where: {
           id: { [Op.in]: [uuid] },
         },
-        include: includeUserFks,
+        include: getUserFkIncludes(true),
       }
     );
   });
@@ -101,7 +83,7 @@ describe('costMonitoring Routes', () => {
         where: {
           id: { [Op.in]: uuids },
         },
-        include: includeUserFks,
+        include: getUserFkIncludes(true),
       }
     );
   });

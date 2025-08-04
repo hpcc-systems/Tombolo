@@ -94,7 +94,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'NO ACTION',
       },
       lastUpdatedBy: {
-        allowNull: false,
+        allowNull: true,
         type: DataTypes.UUID,
         references: {
           model: 'users',

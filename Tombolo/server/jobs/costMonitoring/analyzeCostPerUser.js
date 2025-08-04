@@ -7,8 +7,8 @@ const {
   monitoring_types: MonitoringTypes,
   costMonitoringDataTotals: CostMonitoringDataTotals,
   cluster: Cluster,
-  asr_domains: Domain,
-  asr_products: Product,
+  AsrDomain,
+  AsrProduct,
 } = require('../../models');
 const {
   createNotificationPayload,
@@ -20,7 +20,7 @@ const { Op } = require('sequelize');
 const moment = require('moment');
 const _ = require('lodash');
 
-async function analyzeCostPerUser() {
+async function analyzeCostPerUser(identifier, options) {
   try {
     parentPort &&
       parentPort.postMessage({
@@ -108,8 +108,8 @@ async function analyzeCostPerUser() {
         costMonitoring.metaData.asrSpecificMetaData.productCategory;
       const domainId = costMonitoring.metaData.asrSpecificMetaData.domain;
 
-      const product = await Product.findByPk(productId);
-      const domain = await Domain.findByPk(domainId);
+      const product = await AsrProduct.findByPk(productId);
+      const domain = await AsrDomain.findByPk(domainId);
 
       const primaryContacts =
         costMonitoring.metaData.notificationMetaData.primaryContacts;

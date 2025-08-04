@@ -1,9 +1,10 @@
-"use strict";
-const { DataTypes } = require("sequelize");
+'use strict';
+const { DataTypes } = require('sequelize');
 
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("asr_domains", {
+    await queryInterface.createTable('asr_domains', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -13,54 +14,71 @@ module.exports = {
       name: {
         allowNull: false,
         unique: true,
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
       },
       region: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
       },
       severityThreshold: {
         allowNull: false,
-        type: DataTypes.INTEGER,
+        type: Sequelize.INTEGER,
       },
       severityAlertRecipients: {
         allowNull: false,
-        type: DataTypes.JSON,
+        type: Sequelize.JSON,
       },
       metaData: {
         allowNull: true,
-        type: DataTypes.JSON,
+        type: Sequelize.JSON,
       },
       createdAt: {
         allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
         allowNull: true,
-        type: DataTypes.DATE,
+        type: Sequelize.DATE,
       },
       deletedAt: {
         allowNull: true,
-        type: DataTypes.DATE,
+        type: Sequelize.DATE,
         defaultValue: null,
       },
       createdBy: {
         allowNull: false,
-        type: DataTypes.JSON,
-        defaultValue: { email: "NA", lastName: "System", firstName: "NA" },
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       updatedBy: {
         allowNull: true,
-        type: DataTypes.JSON,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       deletedBy: {
         allowNull: true,
-        type: DataTypes.JSON,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("asr_domains");
+    await queryInterface.dropTable('asr_domains');
   },
 };

@@ -76,7 +76,7 @@ module.exports = {
         onDelete: 'NO ACTION',
       },
       lastUpdatedBy: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.UUID,
         references: {
           model: 'users',

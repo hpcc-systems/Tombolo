@@ -1,27 +1,10 @@
-const { costMonitoring: CostMonitoring, user: User } = require('../models');
+const { costMonitoring: CostMonitoring } = require('../models');
 const logger = require('../config/logger');
 const { Op } = require('sequelize');
 const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
-
-const includeUserFks = [
-  {
-    model: User,
-    attributes: ['firstName', 'lastName', 'email'],
-    as: 'creator',
-  },
-  {
-    model: User,
-    attributes: ['firstName', 'lastName', 'email'],
-    as: 'updater',
-  },
-  {
-    model: User,
-    attributes: ['firstName', 'lastName', 'email'],
-    as: 'approver',
-  },
-];
+const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 
 async function createCostMonitoring(req, res) {
   try {
@@ -34,7 +17,7 @@ async function createCostMonitoring(req, res) {
     });
 
     const result = await CostMonitoring.findByPk(createResult.id, {
-      include: includeUserFks,
+      include: getUserFkIncludes(true),
     });
     return res.status(201).json({
       success: true,
@@ -75,7 +58,7 @@ async function getCostMonitorings(req, res) {
   try {
     const costMonitorings = await CostMonitoring.findAll({
       where: { applicationId: req.params.applicationId },
-      include: includeUserFks,
+      include: getUserFkIncludes(true),
       order: [['createdAt', 'DESC']],
     });
     return res.status(200).json({ success: true, data: costMonitorings });
@@ -88,7 +71,7 @@ async function getCostMonitorings(req, res) {
 async function getCostMonitoringById(req, res) {
   try {
     const costMonitoringRecord = await CostMonitoring.findByPk(req.params.id, {
-      include: includeUserFks,
+      include: getUserFkIncludes(true),
     });
     if (!costMonitoringRecord) {
       return res
@@ -141,7 +124,7 @@ async function evaluateCostMonitoring(req, res) {
         where: {
           id: { [Op.in]: req.body.ids },
         },
-        include: includeUserFks,
+        include: getUserFkIncludes(true),
       }
     );
     return res.status(200).json({
@@ -187,7 +170,7 @@ async function toggleCostMonitoringActive(req, res) {
     await transaction.commit();
     const updatedCostMonitorings = await CostMonitoring.findAll({
       where: { id: { [Op.in]: monitoringIds } },
-      include: includeUserFks,
+      include: getUserFkIncludes(true),
     });
 
     return res.status(200).json({

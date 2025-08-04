@@ -1,9 +1,9 @@
-"use strict";
-const { DataTypes } = require("sequelize");
+'use strict';
+const { DataTypes } = require('sequelize');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("asr_domain_to_products", {
+    await queryInterface.createTable('asr_domain_to_products_relations', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -13,25 +13,25 @@ module.exports = {
       domain_id: {
         type: DataTypes.UUID,
         references: {
-          model: "asr_domains",
-          key: "id",
+          model: 'asr_domains',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       product_id: {
         type: DataTypes.UUID,
         references: {
-          model: "asr_products",
-          key: "id",
+          model: 'asr_products',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
         allowNull: true,
@@ -43,27 +43,44 @@ module.exports = {
       },
       createdBy: {
         allowNull: false,
-        type: DataTypes.JSON,
-        defaultValue: { name: "system", email: "NA" },
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       updatedBy: {
         allowNull: true,
-        type: DataTypes.JSON,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       deletedBy: {
         allowNull: true,
-        type: DataTypes.JSON,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
     });
 
     //Create constraint - domain_id, product_id pair should be unique
-    await queryInterface.addConstraint("asr_domain_to_products", {
-      fields: ["domain_id", "product_id"],
-      type: "unique",
-      name: "unique_domain_product_pair",
+    await queryInterface.addConstraint('asr_domain_to_products_relations', {
+      fields: ['domain_id', 'product_id'],
+      type: 'unique',
+      name: 'unique_domain_product_pair',
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("asr_domain_to_products");
+    await queryInterface.dropTable('asr_domain_to_products_relations');
   },
 };
