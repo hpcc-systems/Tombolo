@@ -1,10 +1,10 @@
-/* This route is specifically for updating notifications via teams card. 
+/* This route is specifically for updating notifications via teams card.
 For that reason this route is not together with other notification routes.
 Server does not validate the token to access this route */
 
 const express = require('express');
 const router = express.Router();
-const { monitoring_notifications, fileMonitoring } = require('../../models');
+const { monitoring_notifications, FileMonitoring } = require('../../models');
 const logger = require('../../config/logger');
 
 //TODO send acknowledgement
@@ -35,7 +35,7 @@ router.post('/update', async (req, res) => {
       const {
         metaData,
         metaData: { currentlyMonitoring },
-      } = await fileMonitoring.findOne({
+      } = await FileMonitoring.findOne({
         where: { id: filemonitoring_id },
         raw: true,
       });
@@ -47,7 +47,7 @@ router.post('/update', async (req, res) => {
         currentlyMonitoring: newFileMonitoringList,
       };
 
-      await fileMonitoring.update(
+      await FileMonitoring.update(
         { metaData: newMetaData },
         { where: { id: filemonitoring_id } }
       );

@@ -1,7 +1,7 @@
 const express = require('express');
 const logger = require('../../config/logger');
 const router = express.Router();
-const { fileMonitoring: FileMonitoring } = require('../../models');
+const { FileMonitoring } = require('../../models');
 const jobScheduler = require('../../jobSchedular/job-scheduler');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
@@ -19,7 +19,10 @@ const {
 router.post('/', validate(validateCreateFileMonitoring), async (req, res) => {
   try {
     const { monitoringAssetType, monitoringActive } = req.body;
-    const fileMonitoring = await FileMonitoring.create(req.body);
+    const fileMonitoring = await FileMonitoring.create({
+      ...req.body,
+      createdBy: req.user.id,
+    });
     res.status(201).send(fileMonitoring);
 
     // Add monitoring to bree if start monitoring now is checked
@@ -91,17 +94,20 @@ router.delete(
   async (req, res) => {
     try {
       const { fileMonitoringId, fileMonitoringName } = req.params;
-      const response = await FileMonitoring.destroy({
-        where: { id: fileMonitoringId },
+
+      const response = await FileMonitoring.handleDelete({
+        id: fileMonitoringId,
+        deletedByUserId: req.user.id,
       });
+
       res.status(200).json({ message: `Deleted ${response} file monitoring` });
 
-      //Check if this job is in bree - if so - remove
+      // Check if this job is in bree - if so - remove
       const breeJobs = jobScheduler.getAllJobs();
       const expectedJobName = `${fileMonitoringName}-${fileMonitoringId}`;
-      for (job of breeJobs) {
+      for (const job of breeJobs) {
         if (job.name === expectedJobName) {
-          jobScheduler.removeJobFromScheduler(expectedJobName);
+          await jobScheduler.removeJobFromScheduler(expectedJobName);
           break;
         }
       }
@@ -127,7 +133,7 @@ router.put(
 
       // flipping monitoringActive
       await FileMonitoring.update(
-        { monitoringActive: !monitoringActive },
+        { monitoringActive: !monitoringActive, updatedBy: req.user.id },
         { where: { id: id } }
       );
 
@@ -165,7 +171,7 @@ router.put('/', validate(validateUpdateFileMonitoring), async (req, res) => {
       metaData: { currentlyMonitoring },
     } = oldInfo;
 
-    const newInfo = req.body;
+    const newInfo = { ...req.body, updatedBy: req.user.id };
     if (currentlyMonitoring) {
       newInfo.metaData.currentlyMonitoring = currentlyMonitoring;
     }

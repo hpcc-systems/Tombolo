@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('file_validation', {
+    return queryInterface.createTable('file_validations', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -45,6 +45,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('file_validation');
+    return queryInterface.dropTable('file_validations');
   },
 };

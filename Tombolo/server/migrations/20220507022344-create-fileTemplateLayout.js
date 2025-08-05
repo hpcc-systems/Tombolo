@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('fileTemplateLayout', {
+    return queryInterface.createTable('file_template_layouts', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -24,7 +24,7 @@ module.exports = {
       fileTemplate_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'fileTemplate',
+          model: 'file_templates',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -44,7 +44,8 @@ module.exports = {
       },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('fileTemplateLayout');
+    return queryInterface.dropTable('file_template_layouts');
   },
 };

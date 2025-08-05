@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('index_key', {
+    return queryInterface.createTable('index_keys', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -43,7 +43,8 @@ module.exports = {
       },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('index_key');
+    return queryInterface.dropTable('index_keys');
   },
 };

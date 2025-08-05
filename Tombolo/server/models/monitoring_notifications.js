@@ -30,14 +30,14 @@ module.exports = (sequelize, DataTypes) => {
   );
   // Associations
   monitoring_notifications.associate = function (models) {
-    monitoring_notifications.belongsTo(models.fileMonitoring, {
+    monitoring_notifications.belongsTo(models.FileMonitoring, {
       foreignKey: 'monitoring_id',
     });
 
     monitoring_notifications.belongsTo(models.jobMonitoring, {
       foreignKey: 'monitoring_id',
     });
-    monitoring_notifications.belongsTo(models.filemonitoring_superfiles, {
+    monitoring_notifications.belongsTo(models.SuperfileMonitoring, {
       foreignKey: 'monitoring_id',
     });
     monitoring_notifications.belongsTo(models.Application, {

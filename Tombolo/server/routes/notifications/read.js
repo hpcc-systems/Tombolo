@@ -17,7 +17,7 @@ const {
 const logger = require('../../config/logger');
 const {
   monitoring_notifications,
-  fileMonitoring,
+  FileMonitoring,
   clusterMonitoring,
   jobMonitoring,
 } = require('../../models');
@@ -57,7 +57,7 @@ router.get('/filteredNotifications', async (req, res) => {
       //     attributes: ["name"],
       //   },
       //   {
-      //     model: fileMonitoring,
+      //     model: FileMonitoring,
       //     attributes: ["name"],
       //   },
       // ],
@@ -88,7 +88,7 @@ router.get(
             attributes: ['name'],
           },
           {
-            model: fileMonitoring,
+            model: FileMonitoring,
             attributes: ['name'],
           },
         ],
@@ -113,7 +113,7 @@ router.get(
         where: { application_id },
         include: [
           {
-            model: fileMonitoring,
+            model: FileMonitoring,
             as: 'fileMonitoring',
           },
           {

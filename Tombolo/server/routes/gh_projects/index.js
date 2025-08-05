@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { github_repo_settings: GHprojects } = require('../../models');
+const { GithubRepoSetting } = require('../../models');
 const { encryptString, decryptString } = require('../../utils/cipher');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
@@ -36,11 +36,14 @@ router.post('/', validate(validateCreateGhProject), async (req, res) => {
     };
 
     if (id) {
-      project = await GHprojects.findOne({ where: { id } });
+      project = await GithubRepoSetting.findOne({ where: { id } });
       if (!project) throw new Error('Project does not exist');
       project = await project.update(defaultFields);
     } else {
-      project = await GHprojects.create({ ...defaultFields, application_id });
+      project = await GithubRepoSetting.create({
+        ...defaultFields,
+        application_id,
+      });
     }
 
     const projectToJson = project.toJSON();
@@ -63,7 +66,7 @@ router.delete('/', validate(validateDeleteGhProject), async (req, res) => {
   try {
     let { id, application_id } = req.query;
 
-    const deleted = await GHprojects.destroy({
+    const deleted = await GithubRepoSetting.destroy({
       where: { id, application_id },
     });
     if (!deleted) throw new Error('Project does not exist');
@@ -82,7 +85,7 @@ router.get('/', validate(validateGetGhProjects), async (req, res) => {
   try {
     const application_id = req.query.application_id;
 
-    const projects = await GHprojects.findAll({
+    const projects = await GithubRepoSetting.findAll({
       where: { application_id },
       attributes: { exclude: ['createdAt', 'updatedAt'] },
     });

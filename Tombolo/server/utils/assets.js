@@ -1,19 +1,21 @@
-var models = require('../models');
-let File = models.file;
-const FileMonitoring = models.fileMonitoring;
-const FileTemplate = models.fileTemplate;
-let FileValidation = models.file_validation;
-let Groups = models.groups;
-let Query = models.query;
-let QueryField = models.query_field;
-let IndexKey = models.index_key;
-let IndexPayload = models.index_payload;
-let Job = models.job;
-let JobFile = models.jobfile;
-let JobParam = models.jobparam;
-let ConsumerObject = models.ConsumerObject;
-let JobExecution = models.job_execution;
-let Index = models.indexes;
+const {
+  File,
+  FileMonitoring,
+  FileTemplate,
+  FileValidation,
+  Group,
+  query: Query,
+  query_field: QueryField,
+  IndexKey,
+  index_payload: IndexPayload,
+  job: Job,
+  jobfile: JobFile,
+  jobparam: JobParam,
+  ConsumerObject,
+  job_execution: JobExecution,
+  indexes: Index,
+} = require('../models');
+
 const hpccUtil = require('./hpcc-util');
 const workflowUtil = require('./workflow-util');
 const path = require('path');
@@ -34,7 +36,7 @@ exports.fileInfo = async (applicationId, file_id) => {
 
     let file = await File.findOne({
       where: { application_id: applicationId, id: file_id },
-      include: [{ model: Groups, as: 'groups' }],
+      include: [{ model: Group, as: 'groups' }],
     });
 
     // if fields are empty, try to fetch them again;
@@ -125,7 +127,7 @@ exports.indexInfo = async (applicationId, indexId) => {
       include: [
         { model: IndexKey },
         { model: IndexPayload },
-        { model: Groups, as: 'groups' },
+        { model: Group, as: 'groups' },
       ],
     });
     results.basic = index;
@@ -141,7 +143,7 @@ exports.queryInfo = async (applicationId, indexId) => {
   try {
     const query = await Query.findOne({
       where: { application_id: applicationId, id: indexId },
-      include: [{ model: QueryField }, { model: Groups, as: 'groups' }],
+      include: [{ model: QueryField }, { model: Group, as: 'groups' }],
     });
     results.basic = query;
     return results;

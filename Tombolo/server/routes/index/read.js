@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   indexes: Index,
-  index_key: IndexKey,
+  IndexKey,
   index_payload: IndexPayload,
   AssetsGroup,
 } = require('../../models');

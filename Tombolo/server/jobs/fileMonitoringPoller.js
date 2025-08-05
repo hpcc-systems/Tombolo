@@ -2,7 +2,7 @@ const { parentPort } = require('worker_threads');
 
 const hpccUtil = require('../utils/hpcc-util');
 const workflowUtil = require('../utils/workflow-util');
-const { fileMonitoring, DataflowVersion } = require('../models');
+const { FileMonitoring, DataflowVersion } = require('../models');
 
 const { log, dispatch } = require('./workerUtils')(parentPort);
 
@@ -10,7 +10,7 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
   try {
     if (wuid) {
       // if wid it means its file monitoring with template
-      const workUnitsToMonitor = await fileMonitoring.findAll();
+      const workUnitsToMonitor = await FileMonitoring.findAll();
       //If no file to monitor, log so to the console and return
       if (workUnitsToMonitor.length === 0) {
         log('verbose', 'NO FILE MONITORING WITH ENABLE STATUS FOUND');
@@ -62,7 +62,7 @@ const { log, dispatch } = require('./workerUtils')(parentPort);
                 'NEW FILE FOUND. MAKING NECESSARY UPDATES AND PROCEEDING WITH EXECUTING DEPENDENT JOBS'
               );
 
-              await fileMonitoring.update(
+              await FileMonitoring.update(
                 {
                   metaData: {
                     ...metaData,

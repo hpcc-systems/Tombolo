@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { ControlsRegulation, data_types: DataTypes } = require('../../models');
+const { ControlsRegulation, DataType } = require('../../models');
 let Sequelize = require('sequelize');
 const logger = require('../../config/logger');
 const Op = Sequelize.Op;
@@ -52,7 +52,7 @@ router.post('/delete', async (req, res) => {
 
 router.post('/saveRegulations', async function (req, res) {
   const regulations = req.body.regulations;
-  const compliance = req.body.compliance;
+  let compliance = req.body.compliance;
   if (
     req.body.oldCompName != '' &&
     req.body.oldCompName != req.body.compliance
@@ -72,7 +72,7 @@ router.post('/saveRegulations', async function (req, res) {
 
 router.get('/dataTypes', async (req, res) => {
   try {
-    const data_types = await DataTypes.findAll();
+    const data_types = await DataType.findAll();
     return res.status(200).json(data_types);
   } catch (err) {
     logger.error('err', err);

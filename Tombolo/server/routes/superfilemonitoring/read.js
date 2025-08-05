@@ -1,12 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const {
-  filemonitoring_superfiles: SuperFileMonitoring,
-} = require('../../models');
+const { SuperfileMonitoring } = require('../../models');
 const jobScheduler = require('../../jobSchedular/job-scheduler.js');
-const validatorUtil = require('../../utils/validator');
 const hpccUtil = require('../../utils/hpcc-util.js');
-const { body, param, validationResult } = require('express-validator');
 const logger = require('../../config/logger.js');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
@@ -38,6 +34,7 @@ router.post(
         superfile_name: req.body.metaData.fileInfo.Name,
         metaData: req.body.metaData,
         monitoringActive: req.body.monitoringActive,
+        createdBy: req.user.id,
       };
 
       let recentSubFile = await hpccUtil.getRecentSubFile(
@@ -53,8 +50,9 @@ router.post(
 
       newSuperFileData.metaData.fileInfo.subfileCount =
         recentSubFile.subfileCount;
+
       // -------------------------------------------------------
-      const newSuperFile = await SuperFileMonitoring.create(newSuperFileData);
+      const newSuperFile = await SuperfileMonitoring.create(newSuperFileData);
 
       res.status(201).send(newSuperFile);
 
@@ -89,7 +87,7 @@ router.get(
     try {
       const { application_id } = req.params;
 
-      const superfileMonitoring = await SuperFileMonitoring.findAll({
+      const superfileMonitoring = await SuperfileMonitoring.findAll({
         where: { application_id },
         attributes: { exclude: ['cluster_id'] },
         raw: true,
@@ -111,8 +109,10 @@ router.delete(
     try {
       // eslint-disable-next-line no-unused-vars
       const { superfileMonitoringId, superfileMonitoringName } = req.params;
-      const response = await SuperFileMonitoring.destroy({
-        where: { id: superfileMonitoringId },
+
+      const response = await SuperfileMonitoring.handleDelete({
+        id: superfileMonitoringId,
+        deletedByUserId: req.user.id,
       });
       res
         .status(200)
@@ -140,7 +140,7 @@ router.put(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const monitoring = await SuperFileMonitoring.findOne({
+      const monitoring = await SuperfileMonitoring.findOne({
         where: { id },
         attributes: { exclude: ['cluster_id'] },
         raw: true,
@@ -148,8 +148,8 @@ router.put(
       const { monitoringActive } = monitoring;
 
       // flipping monitoringActive
-      await SuperFileMonitoring.update(
-        { monitoringActive: !monitoringActive },
+      await SuperfileMonitoring.update(
+        { monitoringActive: !monitoringActive, updatedBy: req.user.id },
         { where: { id: id } }
       );
 
@@ -191,7 +191,7 @@ router.get(
     try {
       const { file_monitoring_id } = req.params;
 
-      const fileMonitoring = await SuperFileMonitoring.findOne({
+      const fileMonitoring = await SuperfileMonitoring.findOne({
         where: { id: file_monitoring_id },
         raw: true,
       });
@@ -210,7 +210,7 @@ router.put(
   validate(validateCreateUpdateSuperfileMonitoring),
   async (req, res) => {
     try {
-      const oldInfo = await SuperFileMonitoring.findOne({
+      const oldInfo = await SuperfileMonitoring.findOne({
         where: { id: req.body.id },
         raw: true,
       });
@@ -313,9 +313,10 @@ router.put(
             notifyCondition,
           },
         },
+        updatedBy: req.user.id,
       };
       // -------------------------------------------------------
-      await SuperFileMonitoring.update(newInfo, { where: { id } });
+      await SuperfileMonitoring.update(newInfo, { where: { id } });
 
       // If start monitoring was changed to TRUE
       if (monitoringActive && oldInfo.monitoringActive === 0) {

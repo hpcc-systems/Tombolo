@@ -8,11 +8,11 @@ const Sequelize = require('sequelize');
 const {
   user_application: UserApplication,
   application: Application,
-  groups: Groups,
+  Group,
   File,
-  file_validation: FileValidation,
+  FileValidation,
   indexes: Index,
-  index_key: IndexKey,
+  IndexKey,
   index_payload: IndexPayload,
   job: Job,
   jobfile: JobFile,
@@ -269,7 +269,7 @@ router.post('/export', validate(validateExportApp), (req, res) => {
         },
       };
 
-      let groups = await Groups.findAll({
+      let groups = await Group.findAll({
         where: { application_id: req.body.id },
         attributes: { exclude: ['createdAt', 'updatedAt', 'application_id'] },
       });
@@ -285,7 +285,7 @@ router.post('/export', validate(validateExportApp), (req, res) => {
             },
           },
           {
-            model: Groups,
+            model: Group,
             as: 'groups',
             attributes: ['id', 'name', 'description', 'parent_group'],
             through: {
@@ -312,7 +312,7 @@ router.post('/export', validate(validateExportApp), (req, res) => {
             },
           },
           {
-            model: Groups,
+            model: Group,
             as: 'groups',
             attributes: ['id', 'name', 'description', 'parent_group'],
             through: {
@@ -336,7 +336,7 @@ router.post('/export', validate(validateExportApp), (req, res) => {
             },
           },
           {
-            model: Groups,
+            model: Group,
             as: 'groups',
             attributes: ['id', 'name', 'description', 'parent_group'],
             through: {
@@ -366,7 +366,7 @@ router.post('/export', validate(validateExportApp), (req, res) => {
             },
           },
           {
-            model: Groups,
+            model: Group,
             as: 'groups',
             attributes: ['id', 'name', 'description', 'parent_group'],
             through: {

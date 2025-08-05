@@ -12,11 +12,11 @@ module.exports = sequelize => {
       this.hasMany(models.DataflowClusterCredential, {
         foreignKey: 'cluster_id',
       });
-      this.hasMany(models.fileTemplate, {
+      this.hasMany(models.FileTemplate, {
         foreignKey: 'cluster_id',
         onDelete: 'CASCADE',
       });
-      this.hasMany(models.fileMonitoring, {
+      this.hasMany(models.FileMonitoring, {
         foreignKey: 'cluster_id',
         onDelete: 'CASCADE',
       });

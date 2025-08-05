@@ -60,7 +60,7 @@ module.exports = (sequelize, DataTypes) => {
     job.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });
-    job.belongsToMany(models.groups, {
+    job.belongsToMany(models.Group, {
       constraints: false,
       foreignKeyConstraint: false,
       through: 'assets_groups',

@@ -1,21 +1,18 @@
-const axios = require("axios");
-const { notify } = require("../routes/notifications/email-notification");
-const { parentPort, workerData } = require("worker_threads");
-const logger = require("../config/logger");
-const models = require("../models");
-const superfileMonitoring = models.filemonitoring_superfiles;
-const hpccUtil = require("../utils/hpcc-util");
-const { v4: uuidv4 } = require("uuid");
-const monitoring_notifications = models.monitoring_notifications;
+const axios = require('axios');
+const { notify } = require('../routes/notifications/email-notification');
+const { parentPort, workerData } = require('worker_threads');
+const logger = require('../config/logger');
+const { SuperfileMonitoring, monitoring_notifications } = require('../models');
+const hpccUtil = require('../utils/hpcc-util');
+const { v4: uuidv4 } = require('uuid');
 const {
   emailBody,
   messageCardBody,
-} = require("./messageCards/notificationTemplate");
-const { update } = require("lodash");
+} = require('./messageCards/notificationTemplate');
 
 (async () => {
   try {
-    const superfileMonitoringDetails = await superfileMonitoring.findOne({
+    const superfileMonitoringDetails = await SuperfileMonitoring.findOne({
       where: { id: workerData.filemonitoring_id },
       raw: true,
     });
@@ -50,19 +47,19 @@ const { update } = require("lodash");
     let superFileDetails = await hpccUtil.getSuperFile(clusterid, Name);
 
     //hold variable to hold all notifications
-    const notificationDetails = { details: { "Superfile Name": Name } };
+    const notificationDetails = { details: { 'Superfile Name': Name } };
 
     //check if superfile is deleted first,
     if (superFileDetails.Exception) {
       logger.verbose(superFileDetails.Exception[0].Message);
       const superFileDeleted =
-        superFileDetails.Exception[0].Message.includes("Cannot find file");
+        superFileDetails.Exception[0].Message.includes('Cannot find file');
 
       // If superfile was deleted
-      if (superFileDeleted && notifyCondition.includes("deleted")) {
-        notificationDetails.value = "file_deleted";
-        notificationDetails.title = `File below has been deleted - `;
-        notificationDetails.text = `File below has been deleted - `;
+      if (superFileDeleted && notifyCondition.includes('deleted')) {
+        notificationDetails.value = 'file_deleted';
+        notificationDetails.title = 'File below has been deleted - ';
+        notificationDetails.text = 'File below has been deleted - ';
         superFileDetails = null;
       } else {
         // if notification for deleted file not set up
@@ -76,13 +73,13 @@ const { update } = require("lodash");
     if (superFileDetails && !superFileDetails.Exception) {
       //file size notification
       if (
-        notifyCondition.includes("fileSizeChanged") ||
-        notifyCondition.includes("fileSizeRange")
+        notifyCondition.includes('fileSizeChanged') ||
+        notifyCondition.includes('fileSizeRange')
       ) {
         const newFileSize = superFileDetails.size;
         if (newFileSize !== size) {
           metaDifference.push({
-            attribute: "File size",
+            attribute: 'File size',
             oldValue: `${size / 1000} KB`,
             newValue: `${newFileSize / 1000} KB`,
           });
@@ -93,9 +90,9 @@ const { update } = require("lodash");
           ) {
             metaDifference.push({
               attribute:
-                "File size not in range: " +
+                'File size not in range: ' +
                 minimumFileSize / 1000 +
-                " KB - " +
+                ' KB - ' +
                 maximumFileSize / 1000,
               oldValue: `${size / 1000} KB`,
               newValue: `${newFileSize / 1000} KB`,
@@ -108,15 +105,15 @@ const { update } = require("lodash");
 
       //recent subfile notification && recent count notification, both get returned by same call so only call once
       if (
-        notifyCondition.includes("recentSubFileChange") ||
-        notifyCondition.includes("subFileCountChange") ||
-        notifyCondition.includes("subFileCountRange")
+        notifyCondition.includes('recentSubFileChange') ||
+        notifyCondition.includes('subFileCountChange') ||
+        notifyCondition.includes('subFileCountRange')
       ) {
         let newRecentFile = await hpccUtil.getRecentSubFile(clusterid, Name);
         if (newRecentFile) {
           if (newRecentFile.recentSubFile !== mostRecentSubFile) {
             metaDifference.push({
-              attribute: "Most Recently Updated Superfile",
+              attribute: 'Most Recently Updated Superfile',
               oldValue: `${mostRecentSubFile}`,
               newValue: `${newRecentFile.recentSubFile}`,
             });
@@ -130,7 +127,7 @@ const { update } = require("lodash");
 
           if (newSubFileCount !== subfileCount) {
             metaDifference.push({
-              attribute: "Subfile Count",
+              attribute: 'Subfile Count',
               oldValue: `${subfileCount}`,
               newValue: `${newSubFileCount}`,
             });
@@ -143,9 +140,9 @@ const { update } = require("lodash");
             newSubFileCount < monitoringCondition.minimumSubFileCount
           ) {
             let attributeString =
-              "Subfile Count out of Range,  " +
+              'Subfile Count out of Range,  ' +
               monitoringCondition.minimumSubFileCount;
-            +" - " + monitoringCondition.maximumSubFileCount;
+            +' - ' + monitoringCondition.maximumSubFileCount;
             metaDifference.push({
               attribute: attributeString,
               oldValue: `${subfileCount}`,
@@ -155,12 +152,12 @@ const { update } = require("lodash");
         } else {
           // if notification for deleted file not set up
           throw new Error(
-            "No subfiles returned to check for most recently updated."
+            'No subfiles returned to check for most recently updated.'
           );
         }
       }
 
-      if (notifyCondition.includes("updateInterval")) {
+      if (notifyCondition.includes('updateInterval')) {
         //update interval is in days, so multiply by 86400000 to get number of milliseconds between updates
         let updateInterval = monitoringCondition.updateInterval;
         let updateIntervalDays = monitoringCondition.updateIntervalDays;
@@ -187,7 +184,7 @@ const { update } = require("lodash");
         //if difference in days !== update interval, and the file has been updated, notify
         if (diffDays !== updateInterval && diffDays !== 0) {
           metaDifference.push({
-            attribute: "File did not follow update schedule",
+            attribute: 'File did not follow update schedule',
             oldValue: `${updateInterval} - days defined between updates`,
             newValue: `${diffDays} - days between last updates`,
           });
@@ -196,7 +193,7 @@ const { update } = require("lodash");
         //if current amount of days is > defined
         if (diffDaysCurrent > updateInterval) {
           metaDifference.push({
-            attribute: "File is overdue for update",
+            attribute: 'File is overdue for update',
             oldValue: `${updateInterval} - days defined between updates`,
             newValue: `${diffDaysCurrent} - days since last update`,
           });
@@ -204,20 +201,20 @@ const { update } = require("lodash");
         //if updateIntervalDays is set, check that most recent modified day of the week matches setting
         if (updateIntervalDays?.length) {
           const daysOfWeek = [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
+            'sunday',
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
           ];
           const newDate = new Date(newModified);
           const newDayUpdated = daysOfWeek[newDate.getDay()];
 
           if (!updateIntervalDays.includes(newDayUpdated)) {
             metaDifference.push({
-              attribute: "File was updated on a day of the week not defined",
+              attribute: 'File was updated on a day of the week not defined',
               oldValue: `${updateIntervalDays} - days defined`,
               newValue: `${newDayUpdated} - day updated`,
             });
@@ -230,7 +227,7 @@ const { update } = require("lodash");
       const currentTimeStamp = date.getTime();
       metaData.lastMonitored = currentTimeStamp;
 
-      await superfileMonitoring.update(
+      await SuperfileMonitoring.update(
         { metaData },
         { where: { id: workerData.filemonitoring_id } }
       );
@@ -243,10 +240,10 @@ const { update } = require("lodash");
     // notifications.channel === "eMail"
 
     for (let notification of notifications) {
-      if (notification.channel === "eMail") {
+      if (notification.channel === 'eMail') {
         emailNotificationDetails = notification;
       }
-      if (notification.channel === "msTeams") {
+      if (notification.channel === 'msTeams') {
         teamsNotificationDetails = notification;
       }
     }
@@ -255,9 +252,9 @@ const { update } = require("lodash");
 
     if (metaDifference.length > 0) {
       // Note - this does not cover file size not in range
-      notificationDetails.value = "Superfile details have changed";
-      notificationDetails.title = `Some superfile details have been changed `;
-      notificationDetails.text = `Some superfile details have been changed `;
+      notificationDetails.value = 'Superfile details have changed';
+      notificationDetails.title = 'Some superfile details have been changed ';
+      notificationDetails.text = 'Some superfile details have been changed ';
     }
 
     const notification_id = uuidv4();
@@ -277,10 +274,10 @@ const { update } = require("lodash");
           sentNotifications.push({
             id: notification_id,
             file_name: Name,
-            monitoring_type: "superFile",
-            status: "notified",
+            monitoring_type: 'superFile',
+            status: 'notified',
             notifiedTo: emailNotificationDetails.recipients,
-            notification_channel: "eMail",
+            notification_channel: 'eMail',
             application_id,
             notification_reason: notificationDetails.value,
             monitoring_id: id,
@@ -308,10 +305,10 @@ const { update } = require("lodash");
           sentNotifications.push({
             id: notification_id,
             file_name: Name,
-            monitoring_type: "superFile",
-            status: "notified",
+            monitoring_type: 'superFile',
+            status: 'notified',
             notifiedTo: teamsNotificationDetails.recipients,
-            notification_channel: "msTeams",
+            notification_channel: 'msTeams',
             application_id,
             notification_reason: notificationDetails.value,
             monitoring_id: id,
@@ -333,6 +330,6 @@ const { update } = require("lodash");
   } catch (err) {
     logger.error(err);
   } finally {
-    parentPort ? parentPort.postMessage("done") : process.exit(0);
+    parentPort ? parentPort.postMessage('done') : process.exit(0);
   }
 })();

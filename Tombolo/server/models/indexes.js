@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
     { paranoid: true, freezeTableName: true }
   );
   indexes.associate = function (models) {
-    indexes.hasMany(models.index_key, {
+    indexes.hasMany(models.IndexKey, {
       foreignKey: 'index_id',
       onDelete: 'CASCADE',
       hooks: true,
@@ -46,7 +46,7 @@ module.exports = (sequelize, DataTypes) => {
     indexes.belongsTo(models.File, {
       foreignKey: 'parentFileId',
     });
-    indexes.belongsToMany(models.groups, {
+    indexes.belongsToMany(models.Group, {
       constraints: false,
       foreignKeyConstraint: false,
       through: 'assets_groups',

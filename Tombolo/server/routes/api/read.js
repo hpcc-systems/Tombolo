@@ -2,7 +2,7 @@ const express = require('express');
 const {
   monitoring_notifications,
   ApiKey,
-  fileMonitoring,
+  FileMonitoring,
   clusterMonitoring,
   Cluster,
 } = require('../../models');
@@ -69,7 +69,7 @@ router.get(
           where: { application_id },
           include: [
             {
-              model: fileMonitoring,
+              model: FileMonitoring,
               as: 'fileMonitoring',
             },
             {
