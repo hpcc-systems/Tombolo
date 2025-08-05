@@ -1,6 +1,10 @@
 'use strict';
 
-// Mixin for shared delete functionality
+/**
+ * Mixin for shared delete functionality in Sequelize models
+ * @param {typeof import('sequelize').Model} superclass - The Sequelize model class to extend
+ * @returns {typeof import('sequelize').Model & typeof DeleteMixin} - The extended Sequelize model class with delete functionality
+ */
 const DeleteMixin = superclass =>
   class extends superclass {
     /**

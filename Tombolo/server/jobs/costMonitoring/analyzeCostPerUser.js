@@ -6,7 +6,7 @@ const {
   notification_queue: NotificationQueue,
   monitoring_types: MonitoringTypes,
   costMonitoringDataTotals: CostMonitoringDataTotals,
-  cluster: Cluster,
+  Cluster,
   AsrDomain,
   AsrProduct,
 } = require('../../models');

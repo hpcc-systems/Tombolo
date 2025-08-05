@@ -1,4 +1,6 @@
 const { user: User } = require('../models');
+
+// Adds creator, updater and approver (if `includeApprover` is true)
 function getUserFkIncludes(includeApprover = false) {
   const includeUserFks = [
     {

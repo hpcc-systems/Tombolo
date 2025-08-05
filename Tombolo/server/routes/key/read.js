@@ -1,7 +1,7 @@
 const express = require('express');
 const logger = require('../../config/logger');
 const router = express.Router();
-const { api_key: apiKey } = require('../../models');
+const { ApiKey } = require('../../models');
 const { v4: uuidv4 } = require('uuid');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
@@ -46,7 +46,7 @@ router.post(
 
       const key = uuidv4();
 
-      const newKey = await apiKey.create({
+      const newKey = await ApiKey.create({
         apiKey: key,
         metaData,
         name: Name,
@@ -71,7 +71,7 @@ router.get(
     try {
       const { application_id } = req.params;
 
-      const keys = await apiKey.findAll({
+      const keys = await ApiKey.findAll({
         where: { application_id },
         attributes: { exclude: ['apiKey'] },
         raw: true,
@@ -89,7 +89,7 @@ router.get(
 router.delete('/:id', validate(validateDeleteKey), async (req, res) => {
   try {
     const id = req.params.id;
-    const response = await apiKey.destroy({
+    const response = await ApiKey.destroy({
       where: { id: id },
     });
 

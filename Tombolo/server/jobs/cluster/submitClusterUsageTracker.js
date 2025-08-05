@@ -1,8 +1,7 @@
 const hpccJSComms = require('@hpcc-js/comms');
 const { parentPort } = require('worker_threads');
 
-const models = require('../../models');
-const Cluster = models.cluster;
+const { Cluster } = require('../../models');
 // const logger = require('../../config/logger');
 const hpccUtil = require('../../utils/hpcc-util');
 const { getClusterOptions } = require('../../utils/getClusterOptions');

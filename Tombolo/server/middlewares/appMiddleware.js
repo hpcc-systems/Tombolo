@@ -14,10 +14,8 @@ const validateGetAppByUsername = [stringQuery('user_name')];
 const validateGetAppById = [queryUuids.app_id];
 
 const validateSaveApp = [
-  uuidBody('user_id'),
   regexBody('title', false, { regex: TITLE_REGEX }),
   stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
-  uuidBody('creator'),
   regexBody('visibility', false, { regex: /^[a-zA-Z]/ }),
 ];
 

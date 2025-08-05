@@ -11,7 +11,7 @@ WITH filtered_data AS (
         t.usersCostInfo,
         c.timezone_offset
     FROM costMonitoringData t
-             INNER JOIN cluster c ON c.id = t.clusterId
+             INNER JOIN clusters c ON c.id = t.clusterId
     WHERE t.deletedAt IS NULL
       AND DATE(DATE_ADD(t.date, INTERVAL c.timezone_offset MINUTE)) = DATE(DATE_ADD(CURRENT_TIMESTAMP(), INTERVAL c.timezone_offset MINUTE))
 )

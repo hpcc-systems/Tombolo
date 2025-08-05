@@ -5,7 +5,7 @@ const hpccUtil = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
 const { encryptString } = require('../../utils/cipher');
 const {
-  cluster: Cluster,
+  Cluster,
   file: File,
   query: Query,
   indexes: Index,
@@ -331,6 +331,7 @@ router.get('/getCluster', async function (req, res) {
   }
 });
 
+// TODO: This route isn't called from the front-end
 router.post(
   '/newcluster',
   validate(validateNewCluster),
@@ -348,18 +349,19 @@ router.post(
         );
         // const roxieReachable = await hpccUtil.isClusterReachable(cluster[0].roxie, cluster[0].roxie_port, req.body.username, req.body.password);
         if (thorReachable.reached) {
-          var newCluster = {
+          let newCluster = {
             name: req.body.name,
             thor_host: cluster[0].thor,
             thor_port: cluster[0].thor_port,
             roxie_host: cluster[0].roxie,
             roxie_port: cluster[0].roxie_port,
+            createdBy: req.user.id,
           };
           if (req.body.username && req.body.password) {
             newCluster.username = req.body.username;
             newCluster.hash = encryptString(req.body.password);
           }
-          if (req.body.id == undefined || req.body.id == '') {
+          if (req.body.id === undefined || req.body.id === '') {
             const result = await Cluster.create(newCluster);
             //get clusterTimezoneOFfset once ID is available after cluster creation
             const offset = await hpccUtil.getClusterTimezoneOffset(
@@ -416,6 +418,7 @@ router.post(
   }
 );
 
+// TODO: This route isn't called from the front-end
 router.post('/removecluster', function (req, res) {
   logger.info(`Deleting clusters: ${req.body.clusterIdsToDelete}`);
   try {

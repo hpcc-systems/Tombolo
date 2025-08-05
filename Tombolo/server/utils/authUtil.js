@@ -6,20 +6,20 @@ const moment = require('moment');
 
 // Local Imports
 const logger = require('../config/logger');
-const model = require('../models');
+const {
+  user: User,
+  UserRoles,
+  RoleTypes,
+  userArchive,
+  user_application,
+  application: Application,
+  instance_settings: InstanceSettings,
+  notification_queue: NotificationQueue,
+  AccountVerificationCode,
+} = require('../models');
 const { generateToken } = require('../middlewares/csrfMiddleware');
 const bcrypt = require('bcryptjs');
 
-// Constants
-const User = model.user;
-const UserRoles = model.UserRoles;
-const RoleTypes = model.RoleTypes;
-const userArchive = model.userArchive;
-const user_application = model.user_application;
-const Application = model.application;
-const InstanceSettings = model.instance_settings;
-const NotificationQueue = model.notification_queue;
-const AccountVerificationCodes = model.AccountVerificationCodes;
 const csrfHeaderName = 'x-csrf-token';
 
 // Generate access token
@@ -72,7 +72,7 @@ const getAUser = async identifier => {
         ],
       },
       {
-        model: AccountVerificationCodes,
+        model: AccountVerificationCode,
         attributes: ['code'],
         as: 'AccountVerificationCodes',
       },

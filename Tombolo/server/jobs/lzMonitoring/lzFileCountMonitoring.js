@@ -11,7 +11,7 @@ const {
 
 const {
   landingZoneMonitoring: LandingZoneMonitoring,
-  cluster: Cluster,
+  Cluster,
   monitoring_types: MonitoringTypes,
   notification_queue: NotificationQueue,
   AsrProduct,

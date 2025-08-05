@@ -15,17 +15,15 @@ const {
   differenceInMs,
   nocAlertDescription,
 } = require('./monitorJobsUtil');
-const models = require('../../models');
+const {
+  jobMonitoring: JobMonitoring,
+  Cluster,
+  notification_queue: NotificationQueue,
+  monitoring_types: MonitoringTypes,
+} = require('../../models');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
-// Models
-const JobMonitoring = models.jobMonitoring;
-const Cluster = models.cluster;
-const NotificationQueue = models.notification_queue;
 const monitoringTypeName = 'Job Monitoring';
-const MonitoringTypes = models.monitoring_types;
-const IntegrationMapping = models.integration_mapping;
-const Integrations = models.integrations;
 
 (async () => {
   parentPort &&
@@ -198,7 +196,7 @@ const Integrations = models.integrations;
         // let alertTimePassed = false;
         // let lateByInMinutes = 0;
 
-        /* jobLevelSeverity < severityThreshHold means the job is not so severe. 
+        /* jobLevelSeverity < severityThreshHold means the job is not so severe.
         We can wait until expected completion time before notifying about unpunctuality */
 
         // if (jobLevelSeverity < severityThreshHold || !severityThreshHold) {
@@ -361,7 +359,7 @@ const Integrations = models.integrations;
             wuState: null,
             monitoringName,
             issue: {
-              Issue: `Job not started on expected time`,
+              Issue: 'Job not started on expected time',
               Cluster: clusterInfo.name,
               'Job Name/Filter': jobNamePattern,
               'Expected Start': window.start.toLocaleString(),

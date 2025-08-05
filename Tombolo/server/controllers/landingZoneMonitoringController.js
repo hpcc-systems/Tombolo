@@ -5,7 +5,7 @@ const Sequelize = require('sequelize');
 // Local Imports
 const logger = require('../config/logger');
 const {
-  cluster: Cluster,
+  Cluster,
   landingZoneMonitoring: LandingZoneMonitoring,
   user: User,
 } = require('../models');

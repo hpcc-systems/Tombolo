@@ -101,10 +101,10 @@ module.exports = (sequelize, DataTypes) => {
 
   directoryMonitoring.associate = function (models) {
     // Define association here
-    directoryMonitoring.belongsTo(models.application, {
+    directoryMonitoring.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });
-    directoryMonitoring.belongsTo(models.cluster, {
+    directoryMonitoring.belongsTo(models.Cluster, {
       foreignKey: 'cluster_id',
     });
   };

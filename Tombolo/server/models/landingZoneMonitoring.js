@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'application',
+          model: 'applications',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -118,13 +118,13 @@ module.exports = (sequelize, DataTypes) => {
 
   // Associations
   LandingZoneMonitoring.associate = function (models) {
-    LandingZoneMonitoring.belongsTo(models.application, {
+    LandingZoneMonitoring.belongsTo(models.Application, {
       foreignKey: 'applicationId',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     });
 
-    LandingZoneMonitoring.belongsTo(models.cluster, {
+    LandingZoneMonitoring.belongsTo(models.Cluster, {
       foreignKey: 'clusterId',
       onDelete: 'NO ACTION',
       onUpdate: 'CASCADE',

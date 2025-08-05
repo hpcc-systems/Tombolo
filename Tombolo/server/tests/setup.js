@@ -54,7 +54,7 @@ jest.mock('../models', () => {
       findOne: jest.fn(),
       findAll: jest.fn(),
     },
-    AccountVerificationCodes: {
+    AccountVerificationCode: {
       create: jest.fn(),
       findOne: jest.fn(),
     },
@@ -67,7 +67,7 @@ jest.mock('../models', () => {
       findOne: jest.fn(),
       update: jest.fn(),
     },
-    cluster: {
+    Cluster: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       create: jest.fn(),

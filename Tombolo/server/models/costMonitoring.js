@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'application',
+          model: 'applications',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -130,7 +130,7 @@ module.exports = (sequelize, DataTypes) => {
 
   // Associations
   costMonitoring.associate = function (models) {
-    costMonitoring.belongsTo(models.application, {
+    costMonitoring.belongsTo(models.Application, {
       foreignKey: 'applicationId',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',

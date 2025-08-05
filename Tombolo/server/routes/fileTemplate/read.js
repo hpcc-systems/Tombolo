@@ -10,7 +10,7 @@ const {
   fileTemplate: FileTemplate,
   fileMonitoring: FileMonitoring,
   fileTemplateLayout: FileTemplateLayout,
-  assets_groups: AssetsGroups,
+  AssetsGroup,
 } = require('../../models');
 
 router.post(
@@ -112,7 +112,7 @@ router.post(
         metaData,
       });
       if (groupId)
-        await AssetsGroups.create({ assetId: fileTemplate.id, groupId });
+        await AssetsGroup.create({ assetId: fileTemplate.id, groupId });
       await FileTemplateLayout.create({
         application_id,
         fileTemplate_id: fileTemplate.id,

@@ -11,7 +11,7 @@ let IndexPayload = models.index_payload;
 let Job = models.job;
 let JobFile = models.jobfile;
 let JobParam = models.jobparam;
-let ConsumerObject = models.consumer_object;
+let ConsumerObject = models.ConsumerObject;
 let JobExecution = models.job_execution;
 let Index = models.indexes;
 const hpccUtil = require('./hpcc-util');
@@ -452,7 +452,7 @@ exports.deleteFileMonitoring = async ({ fileTemplateId, dataflowId }) => {
 };
 
 exports.createFileMonitoring = async ({ fileTemplateId, dataflowId }) => {
-  /*  Check if there is existing File Monitoring WU based on this template. 
+  /*  Check if there is existing File Monitoring WU based on this template.
   If there is existing file monitoring WU, there is no need to create a new one */
   const fileMonitoringWU = await FileMonitoring.findOne({
     where: { fileTemplateId },

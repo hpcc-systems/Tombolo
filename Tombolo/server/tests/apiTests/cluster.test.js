@@ -1,6 +1,6 @@
 const request = require('supertest');
 const { app } = require('../test_server');
-const Cluster = require('../../models').cluster;
+const { Cluster } = require('../../models');
 const { v4: uuidv4 } = require('uuid');
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
 const logger = require('../../config/logger');

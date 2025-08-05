@@ -11,7 +11,7 @@ const { decryptString } = require('../../utils/cipher');
 // Destructure models
 const {
   cluster_monitoring: ClusterMonitoring,
-  cluster: Cluster,
+  Cluster,
   monitoring_types: MonitoringTypes,
   notification_queue: NotificationQueue,
   AsrProduct,
@@ -19,7 +19,7 @@ const {
   monitoring_logs: MonitoringLogs,
 } = models;
 
-const monitoring_name = 'Cluster  Monitoring';
+const monitoring_name = 'Cluster Monitoring';
 let monitoringTypeId;
 
 (async () => {

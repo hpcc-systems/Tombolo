@@ -3,15 +3,14 @@ const { parentPort, workerData } = require('worker_threads');
 const { decryptString } = require('../../utils/cipher');
 
 // Local Imports
-const models = require('../../models');
+const {
+  Cluster,
+  jobMonitoring_Data: JobMonitoringData,
+} = require('../../models');
 const { WorkunitsService } = require('@hpcc-js/comms');
 const shallowCopyWithoutNested = require('../../utils/shallowCopyWithoutNested.js');
 const { WUInfoOptions } = require('./monitorJobsUtil');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
-
-// Local Variables
-const cluster = models.cluster;
-const JobMonitoringData = models.jobMonitoring_Data;
 
 // Self Invoking function
 (async () => {
@@ -26,7 +25,7 @@ const JobMonitoringData = models.jobMonitoring_Data;
       });
 
     // Get cluster information
-    const clusterInfo = await cluster.findOne({
+    const clusterInfo = await Cluster.findOne({
       where: { id: clusterId },
       attributes: [
         'id',

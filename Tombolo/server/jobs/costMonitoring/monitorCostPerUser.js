@@ -3,7 +3,7 @@ const { parentPort } = require('worker_threads');
 const {
   costMonitoring: CostMonitoring,
   costMonitoringData: CostMonitoringData,
-  cluster: Cluster,
+  Cluster,
   monitoring_logs: MonitoringLogs,
   monitoring_types: MonitoringTypes,
 } = require('../../models');

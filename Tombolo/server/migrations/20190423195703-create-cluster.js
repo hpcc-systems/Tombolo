@@ -1,7 +1,8 @@
 'use strict';
+const { DataTypes } = require('sequelize');
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('cluster', {
+    return queryInterface.createTable('clusters', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -77,12 +78,34 @@ module.exports = {
         defaultValue: {},
       },
       createdBy: {
-        type: Sequelize.JSON,
         allowNull: false,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       updatedBy: {
-        type: Sequelize.JSON,
         allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
+      deletedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       createdAt: {
         allowNull: false,
@@ -100,6 +123,6 @@ module.exports = {
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('cluster');
+    return queryInterface.dropTable('clusters');
   },
 };

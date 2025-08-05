@@ -1,7 +1,9 @@
 const request = require('supertest');
 const { app } = require('../test_server');
-const LandingZoneMonitoring = require('../../models').landingZoneMonitoring;
-const Cluster = require('../../models').cluster;
+const {
+  landingZoneMonitoring: LandingZoneMonitoring,
+  Cluster,
+} = require('../../models');
 const { v4: uuidv4 } = require('uuid');
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
 const {

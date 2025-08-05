@@ -1,10 +1,10 @@
 const axios = require('axios');
 const path = require('path');
-var models = require('../models');
-var Cluster = models.cluster;
-var SuperFileMonitoring = models.filemonitoring_superfiles;
-const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
-const { github_repo_settings: GHprojects } = require('../models');
+const {
+  Cluster,
+  dataflow_cluster_credentials: Dataflow_cluster_credentials,
+  github_repo_settings: GHprojects,
+} = require('../models');
 let hpccJSComms = require('@hpcc-js/comms');
 const { decryptString } = require('./cipher');
 const { getClusterOptions } = require('../utils/getClusterOptions');
@@ -642,7 +642,7 @@ exports.getCluster = clusterId => {
 
 /*
 response :  undefined -> cluster not reached network issue or cluster not available
-response.status : 200 -> Cluster reachable 
+response.status : 200 -> Cluster reachable
 response.status : 403 -> Cluster reachable but Unauthorized
 */
 
@@ -1036,8 +1036,8 @@ exports.constructFileMonitoringWorkUnitEclCode = ({
         now := Std.Date.CurrentSeconds();
         e := DATASET([{now, entry}], LogLayout);
         RETURN OUTPUT(e, NAMED(LOG_NAME), overwrite);
-        END; 
-    
+        END;
+
     MonitorFileAction() := Std.File.MonitorFile
         (
             FOUND_FILE_EVENT_NAME,
@@ -1051,7 +1051,7 @@ exports.constructFileMonitoringWorkUnitEclCode = ({
           RETURN SEQUENTIAL
               (
                     WriteLog('Found file: ' + fullFilePath);
-              ); 
+              );
       END;
 
 HandleFoundFileEvent(EVENTEXTRA) : WHEN(EVENT(FOUND_FILE_EVENT_NAME, '*'));
@@ -1077,7 +1077,8 @@ exports.getClusterTimezoneOffset = async clusterId => {
     } = workUnit;
 
     // Timezone offset ECL code
-    const timezoneOffsetEcl = `IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);`;
+    const timezoneOffsetEcl =
+      'IMPORT Std; now := Std.Date.LocalTimeZoneOffset(); OUTPUT(now);';
 
     // Update the WU with ECL code
     await wuService.WUUpdate({
