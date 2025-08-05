@@ -4,7 +4,6 @@ import { isEmail } from 'validator';
 
 import { pingCluster, addCluster } from './clusterUtils';
 import AddClusterSteps from './AddClusterSteps';
-import { getUser } from '../../common/userStorage';
 
 // Constants
 const { Option } = Select;
@@ -20,9 +19,6 @@ function AddClusterModal({
 }) {
   // Hooks
   const [form] = Form.useForm();
-
-  //Redux
-  const user = getUser();
 
   // States
   const [requireCredentials, setRequireCredentials] = useState(false);
@@ -167,10 +163,6 @@ function AddClusterModal({
       setAddingCluster(true);
       // Get the form values
       const payload = form.getFieldsValue();
-
-      // Add userinfo to payload
-      const creator = { name: `${user.firstName} ${user.lastName}`, email: user.email };
-      payload.createdBy = creator;
 
       // Make API request to add cluster
       const response = await addCluster({ clusterInfo: payload, abortController });

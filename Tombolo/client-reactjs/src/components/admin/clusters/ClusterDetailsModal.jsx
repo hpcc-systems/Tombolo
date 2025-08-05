@@ -33,14 +33,14 @@ function ClusterDetailsModal({
         <Descriptions.Item label="Admin E-mails">
           {generateTagsForAdminEmails(selectedCluster?.adminEmails || [])}
         </Descriptions.Item>
-        {selectedCluster?.createdBy && (
+        {selectedCluster?.creator && (
           <Descriptions.Item label="Added By">
-            {generateUserString(selectedCluster.createdBy, selectedCluster.createdAt)}
+            {generateUserString(selectedCluster.creator, selectedCluster.createdAt)}
           </Descriptions.Item>
         )}
-        {selectedCluster?.updatedBy && (
+        {selectedCluster?.updater && (
           <Descriptions.Item label="Last Updated By">
-            {generateUserString(selectedCluster.updatedBy, selectedCluster.updatedAt)}
+            {generateUserString(selectedCluster.updater, selectedCluster.updatedAt)}
           </Descriptions.Item>
         )}
       </Descriptions>
