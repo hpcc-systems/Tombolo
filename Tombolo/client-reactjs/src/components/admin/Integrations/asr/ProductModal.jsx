@@ -4,7 +4,6 @@ import { Modal, Form, Input, Select, message } from 'antd';
 
 // Local imports
 import { createNewProduct, getProducts, updateProduct } from './asr-integration-util';
-import { getUser } from '../../../common/userStorage';
 
 // Product tiers
 const tiers = [
@@ -23,9 +22,6 @@ const ProductModal = ({
   setProducts,
 }) => {
   const [form] = Form.useForm();
-
-  // Get user from local storage
-  const user = getUser();
 
   //Effects
   useEffect(() => {
@@ -53,7 +49,7 @@ const ProductModal = ({
       console.error('Failed to validate form', error);
     }
 
-    // Create new product
+    // Create a new product
     try {
       const formValues = form.getFieldsValue();
       if (!selectedProduct) {
@@ -72,12 +68,11 @@ const ProductModal = ({
     }
   };
 
-  // Create new product
+  // Create a new product
   const saveNewProduct = async (values) => {
     try {
       const payload = {
         ...values,
-        createdBy: { lastName: user.lastName, firstName: user.firstName, email: user.email },
       };
       await createNewProduct({ payload });
       message.success('Product created successfully');
@@ -92,7 +87,6 @@ const ProductModal = ({
       const payload = {
         ...values,
         id: selectedProduct.id,
-        updatedBy: { lastName: user.lastName, firstName: user.firstName, email: user.email },
       };
       await updateProduct({ id: selectedProduct.id, payload });
       message.success('Product updated successfully');
