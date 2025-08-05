@@ -72,7 +72,7 @@ module.exports = (sequelize, DataTypes) => {
   );
   orbitMonitoring.associate = function (models) {
     // Define association here
-    orbitMonitoring.belongsTo(models.application, {
+    orbitMonitoring.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });
     orbitMonitoring.hasMany(models.monitoring_notifications, {

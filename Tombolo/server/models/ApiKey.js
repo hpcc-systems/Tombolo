@@ -11,7 +11,7 @@ const bcrypt = require('bcryptjs');
 module.exports = (sequelize, DataTypes) => {
   class ApiKey extends Model {
     static associate(models) {
-      ApiKey.belongsTo(models.application, {
+      ApiKey.belongsTo(models.Application, {
         foreignKey: 'application_id',
       });
     }

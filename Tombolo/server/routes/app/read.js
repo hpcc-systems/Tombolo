@@ -135,11 +135,11 @@ router.post(
           description: req.body.description,
           creator: req.body.creator,
           visibility: req.body.visibility,
-          createdBy: req.body.createdBy,
+          createdBy: req.user.id,
         });
         if (req.body.user_id) {
           const userApp = await UserApplication.create({
-            user_id: req.body.user_id,
+            user_id: req.user.id,
             application_id: application.id,
             createdBy: req.body.createdBy,
             user_app_relation: 'created',

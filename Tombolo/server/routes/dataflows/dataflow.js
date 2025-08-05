@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-var models = require('../../models');
+const {
+  Cluster,
+  indexes: Index,
+  file: File,
+  job: Job,
+  dataflow_cluster_credentials: Dataflow_cluster_credentials,
+  dataflow_versions: DataflowVersions,
+  dataflow: Dataflow,
+} = require('../../models');
 
-let Dataflow = models.dataflow;
-const DataflowVersions = models.dataflow_versions;
-
-let Cluster = models.cluster;
-let Index = models.indexes;
-let File = models.file;
-let Job = models.job;
-const Dataflow_cluster_credentials = models.dataflow_cluster_credentials;
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
 const jobScheduler = require('../../jobSchedular/job-scheduler');

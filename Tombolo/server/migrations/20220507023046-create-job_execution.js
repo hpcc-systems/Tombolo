@@ -18,7 +18,7 @@ module.exports = {
       clusterId: {
         type: Sequelize.UUID,
         references: {
-          model: 'cluster',
+          model: 'clusters',
           key: 'id',
         },
         onUpdate: 'NO ACTION',
@@ -46,7 +46,7 @@ module.exports = {
       applicationId: {
         type: Sequelize.UUID,
         references: {
-          model: 'application',
+          model: 'applications',
           key: 'id',
         },
         onUpdate: 'CASCADE',

@@ -6,7 +6,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
       },
       name: Sequelize.STRING,
       description: Sequelize.TEXT,
@@ -14,7 +14,7 @@ module.exports = {
       application_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'application',
+          model: 'applications',
           key: 'id',
         },
         onUpdate: 'CASCADE',

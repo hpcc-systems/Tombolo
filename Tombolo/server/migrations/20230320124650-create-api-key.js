@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("api_key", {
+    await queryInterface.createTable('api_key', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -11,11 +11,11 @@ module.exports = {
       application_id: {
         type: Sequelize.UUID,
         references: {
-          model: "application",
-          key: "id",
+          model: 'applications',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       name: {
         type: Sequelize.STRING,
@@ -50,6 +50,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("api_key");
+    await queryInterface.dropTable('api_key');
   },
 };

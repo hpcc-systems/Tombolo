@@ -12,19 +12,19 @@ module.exports = {
         type: Sequelize.JSON,
       },
       type: Sequelize.STRING,
-      comparedId:{
+      comparedId: {
         allowNull: true,
         type: Sequelize.UUID,
       },
       comparedName: Sequelize.STRING,
       isBaseLine: {
-        type:Sequelize.BOOLEAN,
-        defaultValue: false
-      }, 
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
       application_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'application',
+          model: 'applications',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -32,11 +32,11 @@ module.exports = {
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       deletedAt: {
         allowNull: true,
@@ -47,5 +47,5 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('report');
-  }
+  },
 };

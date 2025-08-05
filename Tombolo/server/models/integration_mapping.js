@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const IntegrationMapping = sequelize.define(
-    "integration_mapping",
+    'integration_mapping',
     {
       id: {
         type: DataTypes.UUID,
@@ -12,20 +12,20 @@ module.exports = (sequelize, DataTypes) => {
       integration_id: {
         type: DataTypes.UUID,
         references: {
-          model: "integrations",
-          key: "id",
+          model: 'integrations',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       application_id: {
         type: DataTypes.UUID,
         references: {
-          model: "application",
-          key: "id",
+          model: 'applications',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       metaData: {
         type: DataTypes.JSON,
@@ -53,12 +53,12 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   // Association to integrations and application
-  IntegrationMapping.associate = (models) => {
+  IntegrationMapping.associate = models => {
     IntegrationMapping.belongsTo(models.integrations, {
-      foreignKey: "integration_id",
+      foreignKey: 'integration_id',
     });
-    IntegrationMapping.belongsTo(models.application, {
-      foreignKey: "application_id",
+    IntegrationMapping.belongsTo(models.Application, {
+      foreignKey: 'application_id',
     });
   };
 

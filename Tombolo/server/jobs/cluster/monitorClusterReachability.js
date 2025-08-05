@@ -8,11 +8,11 @@ const {
   passwordExpiryInProximityNotificationPayload,
 } = require('./clusterReachabilityMonitoringUtils.js');
 const { decryptString } = require('../../utils/cipher');
-const models = require('../../models');
+const {
+  Cluster,
+  notification_queue: NotificationQueue,
+} = require('../../models');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
-
-const Cluster = models.cluster;
-const NotificationQueue = models.notification_queue;
 
 (async () => {
   // UTC time

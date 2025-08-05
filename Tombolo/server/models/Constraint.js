@@ -5,7 +5,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Constraint extends Model {
     static associate(models) {
-      Constraint.belongsTo(models.application, {
+      Constraint.belongsTo(models.Application, {
         foreignKey: 'application_id',
       });
 

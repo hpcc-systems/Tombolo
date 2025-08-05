@@ -52,10 +52,10 @@ module.exports = (sequelize, DataTypes) => {
   );
   fileMonitoring_superfiles.associate = function (models) {
     // Define association here
-    fileMonitoring_superfiles.belongsTo(models.cluster, {
+    fileMonitoring_superfiles.belongsTo(models.Cluster, {
       foreignKey: 'clusterid',
     });
-    fileMonitoring_superfiles.belongsTo(models.application, {
+    fileMonitoring_superfiles.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });
     fileMonitoring_superfiles.hasMany(models.monitoring_notifications, {

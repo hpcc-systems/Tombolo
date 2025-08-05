@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
     monitoring_notifications.belongsTo(models.filemonitoring_superfiles, {
       foreignKey: 'monitoring_id',
     });
-    monitoring_notifications.belongsTo(models.application, {
+    monitoring_notifications.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });
   };
