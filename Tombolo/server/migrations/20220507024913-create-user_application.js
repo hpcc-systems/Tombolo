@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("user_application", {
+    return queryInterface.createTable('user_application', {
       id: {
         primaryKey: true,
         type: Sequelize.UUID,
@@ -13,24 +13,24 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: "users",
-          key: "id",
+          model: 'users',
+          key: 'id',
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       application_id: {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: "application",
-          key: "id",
+          model: 'applications',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       user_app_relation: {
-        type: Sequelize.ENUM("created", "shared", "assigned"),
+        type: Sequelize.ENUM('created', 'shared', 'assigned'),
         allowNull: false,
       },
       createdBy: {
@@ -52,6 +52,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("user_application");
+    return queryInterface.dropTable('user_application');
   },
 };

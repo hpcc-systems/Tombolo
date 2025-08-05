@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const monitoring_logs = sequelize.define(
-    "monitoring_logs",
+    'monitoring_logs',
     {
       id: {
         allowNull: false,
@@ -44,24 +44,24 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [
         {
           unique: true,
-          fields: ["cluster_id", "monitoring_type_id"],
+          fields: ['cluster_id', 'monitoring_type_id'],
         },
       ],
     }
   );
 
   monitoring_logs.associate = function (models) {
-    monitoring_logs.belongsTo(models.cluster, {
-      foreignKey: "cluster_id",
-      as: "cluster",
-      onDelete: "NO ACTION",
-      onUpdate: "CASCADE",
+    monitoring_logs.belongsTo(models.Cluster, {
+      foreignKey: 'cluster_id',
+      as: 'cluster',
+      onDelete: 'NO ACTION',
+      onUpdate: 'CASCADE',
     });
     monitoring_logs.belongsTo(models.monitoring_types, {
-      foreignKey: "monitoring_type_id",
-      as: "monitoring_types",
-      onDelete: "NO ACTION",
-      onUpdate: "CASCADE",
+      foreignKey: 'monitoring_type_id',
+      as: 'monitoring_types',
+      onDelete: 'NO ACTION',
+      onUpdate: 'CASCADE',
     });
   };
 

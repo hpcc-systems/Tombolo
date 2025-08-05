@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const SentNotifications = sequelize.define(
-    "sent_notifications",
+    'sent_notifications',
     {
       id: {
         allowNull: false,
@@ -56,7 +56,7 @@ module.exports = (sequelize, DataTypes) => {
       createdBy: {
         allowNull: false,
         type: DataTypes.JSON,
-        defaultValue: { name: "System", email: "N/A" },
+        defaultValue: { name: 'System', email: 'N/A' },
       },
       createdAt: {
         allowNull: false,
@@ -88,17 +88,18 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   SentNotifications.associate = function (models) {
-    // associations 
-    SentNotifications.belongsTo(models.application, { foreignKey: 'applicationId'});
+    // associations
+    SentNotifications.belongsTo(models.Application, {
+      foreignKey: 'applicationId',
+    });
   };
 
   return SentNotifications;
 };
 
-
 /*
 {
-notifiedAt: 
+notifiedAt:
 notificationOrigin:
 notificationChannel:
 notificationTitle:
@@ -106,7 +107,7 @@ status:
 intendedTo:
 deliveredTo:
 notificationContent:
-resolutionDateTime: 
+resolutionDateTime:
 Comment:
 createdBy:
 CreatedAt:
@@ -116,7 +117,7 @@ deletedAt:
 metaData: {
 	notificationTemplate:
 	asrRelatedMetaData : {
-		Jira Tickets : 
+		Jira Tickets :
 		Domain:
 		Product:
 		Interception Stage:

@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("jobMonitoring_Data_Archive", {
+    await queryInterface.createTable('jobMonitoring_Data_Archive', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -12,11 +12,11 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: "application",
-          key: "id",
+          model: 'applications',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       wuId: {
         allowNull: false,
@@ -30,11 +30,11 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: "jobMonitoring",
-          key: "id",
+          model: 'jobMonitoring',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       date: {
         allowNull: false,
@@ -76,13 +76,13 @@ module.exports = {
     });
 
     // Add a composite unique constraint on clusterId, monitoringId, and wuId
-    await queryInterface.addConstraint("jobMonitoring_Data", {
-      fields: [ "monitoringId", "wuId"],
-      type: "unique",
-      name: "jm_data_archive_unique_monitoringId_wuId", // Custom name for the constraint
+    await queryInterface.addConstraint('jobMonitoring_Data', {
+      fields: ['monitoringId', 'wuId'],
+      type: 'unique',
+      name: 'jm_data_archive_unique_monitoringId_wuId', // Custom name for the constraint
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("jobMonitoring_Data_Archive");
+    await queryInterface.dropTable('jobMonitoring_Data_Archive');
   },
 };

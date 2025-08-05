@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const orbitBuilds = sequelize.define(
-    "orbitBuilds",
+    'orbitBuilds',
     {
       id: {
         primaryKey: true,
@@ -48,12 +48,12 @@ module.exports = (sequelize, DataTypes) => {
   );
   orbitBuilds.associate = function (models) {
     // Define association here
-    orbitBuilds.belongsTo(models.application, {
-      foreignKey: "application_id",
+    orbitBuilds.belongsTo(models.Application, {
+      foreignKey: 'application_id',
     });
     orbitBuilds.hasMany(models.monitoring_notifications, {
-      foreignKey: "application_id",
-      onDelete: "CASCADE",
+      foreignKey: 'application_id',
+      onDelete: 'CASCADE',
     });
   };
   return orbitBuilds;

@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const JobMonitoringData = sequelize.define(
-    "jobMonitoring_Data",
+    'jobMonitoring_Data',
     {
       id: {
         allowNull: false,
@@ -13,11 +13,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "application",
-          key: "id",
+          model: 'applications',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       wuId: {
         allowNull: false,
@@ -31,11 +31,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "jobMonitoring",
-          key: "id",
+          model: 'jobMonitoring',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       date: {
         allowNull: false,
@@ -72,28 +72,28 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "jobMonitoring_Data",
+      tableName: 'jobMonitoring_Data',
       timestamps: true,
       paranoid: true,
       indexes: [
         {
           unique: true,
-          fields: [ "monitoringId", "wuId"],
-          name: "unique_monitoringId_wuId", // Match the migration constraint name
+          fields: ['monitoringId', 'wuId'],
+          name: 'unique_monitoringId_wuId', // Match the migration constraint name
         },
       ],
     }
   );
 
   // Associations
-  JobMonitoringData.associate = (models) => {
-    JobMonitoringData.belongsTo(models.application, {
-      foreignKey: "applicationId",
-      as: "application",
+  JobMonitoringData.associate = models => {
+    JobMonitoringData.belongsTo(models.Application, {
+      foreignKey: 'applicationId',
+      as: 'application',
     });
     JobMonitoringData.belongsTo(models.jobMonitoring, {
-      foreignKey: "monitoringId",
-      as: "jobMonitoring",
+      foreignKey: 'monitoringId',
+      as: 'jobMonitoring',
     });
   };
 

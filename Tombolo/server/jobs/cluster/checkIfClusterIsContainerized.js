@@ -2,11 +2,8 @@ const { parentPort } = require('worker_threads');
 const axios = require('axios');
 
 // Local imports
-const models = require('../../models');
+const { Cluster } = require('../../models');
 const { decryptString } = require('../../utils/cipher');
-
-// Models
-const cluster = models.cluster;
 
 (async () => {
   const startTime = new Date();
@@ -19,7 +16,7 @@ const cluster = models.cluster;
 
   try {
     // Get all  clusters
-    const clusters = await cluster.findAll({
+    const clusters = await Cluster.findAll({
       raw: true,
     });
 
@@ -83,7 +80,7 @@ const cluster = models.cluster;
         }
 
         // update the cluster
-        await cluster.update(
+        await Cluster.update(
           { containerized: isContainerized },
           {
             where: {

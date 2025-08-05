@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const user_application = sequelize.define(
-    "user_application",
+    'user_application',
     {
       id: {
         primaryKey: true,
@@ -13,33 +13,34 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "User",
-          key: "id",
+          model: 'User',
+          key: 'id',
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       application_id: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "application",
-          key: "id",
+          model: 'applications',
+          key: 'id',
         },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       user_app_relation: {
-        type: DataTypes.ENUM("created", "shared", "assigned"),
+        type: DataTypes.ENUM('created', 'shared', 'assigned'),
         allowNull: false,
       },
-      createdBy: { // Who created this relation - creator himself/herself , admin or shared by other user
+      createdBy: {
+        // Who created this relation - creator himself/herself , admin or shared by other user
         type: DataTypes.UUID,
         allowNull: false,
       },
     },
     {
-      tableName: "user_application",
+      tableName: 'user_application',
       paranoid: true,
       freezeTableName: true,
       timestamps: true,
@@ -47,9 +48,9 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   user_application.associate = function (models) {
-    user_application.belongsTo(models.user, { foreignKey: "user_id" });
-    user_application.belongsTo(models.application, {
-      foreignKey: "application_id",
+    user_application.belongsTo(models.user, { foreignKey: 'user_id' });
+    user_application.belongsTo(models.Application, {
+      foreignKey: 'application_id',
     });
   };
 

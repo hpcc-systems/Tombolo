@@ -64,8 +64,8 @@ module.exports = (sequelize, DataTypes) => {
     fileMonitoring.belongsTo(models.fileTemplate, {
       foreignKey: 'fileTemplateId',
     });
-    fileMonitoring.belongsTo(models.cluster, { foreignKey: 'cluster_id' });
-    fileMonitoring.belongsTo(models.application, {
+    fileMonitoring.belongsTo(models.Cluster, { foreignKey: 'cluster_id' });
+    fileMonitoring.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });
     fileMonitoring.hasMany(models.monitoring_notifications, {

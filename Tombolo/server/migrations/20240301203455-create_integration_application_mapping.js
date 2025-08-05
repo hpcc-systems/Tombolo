@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("integration_mapping", {
+    await queryInterface.createTable('integration_mapping', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -11,20 +11,20 @@ module.exports = {
       integration_id: {
         type: Sequelize.UUID,
         references: {
-          model: "integrations",
-          key: "id",
+          model: 'integrations',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       application_id: {
         type: Sequelize.UUID,
         references: {
-          model: "application",
-          key: "id",
+          model: 'applications',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       metaData: {
         type: Sequelize.JSON,
@@ -48,6 +48,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("integration_mapping");
+    await queryInterface.dropTable('integration_mapping');
   },
 };

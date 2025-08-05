@@ -45,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE',
     });
 
-    file.belongsTo(models.application, { foreignKey: 'application_id' });
+    file.belongsTo(models.Application, { foreignKey: 'application_id' });
     file.belongsToMany(models.groups, {
       constraints: false,
       foreignKeyConstraint: false,

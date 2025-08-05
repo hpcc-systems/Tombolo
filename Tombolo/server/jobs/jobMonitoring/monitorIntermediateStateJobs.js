@@ -4,7 +4,13 @@ const { WorkunitsService } = require('@hpcc-js/comms');
 const _ = require('lodash');
 
 // Local imports
-const models = require('../../models');
+const {
+  Cluster,
+  notification_queue,
+  monitoring_types,
+  monitoring_logs,
+  jobMonitoring_Data: JobMonitoringData,
+} = require('../../models');
 const { decryptString } = require('../../utils/cipher');
 
 const {
@@ -21,13 +27,6 @@ const {
 } = require('./monitorJobsUtil');
 const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
-
-// Constants
-const cluster = models.cluster;
-const notification_queue = models.notification_queue;
-const monitoring_types = models.monitoring_types;
-const monitoring_logs = models.monitoring_logs;
-const JobMonitoringData = models.jobMonitoring_Data;
 
 (async () => {
   parentPort &&
@@ -76,7 +75,7 @@ const JobMonitoringData = models.jobMonitoring_Data;
     ];
 
     // Get cluster info for all unique clusters
-    const clustersInfo = await cluster.findAll({
+    const clustersInfo = await Cluster.findAll({
       where: { id: clusterIds },
       raw: true,
     });

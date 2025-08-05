@@ -57,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'cluster',
+          model: 'clusters',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -131,7 +131,7 @@ module.exports = (sequelize, DataTypes) => {
 
   // Associations
   ClusterMonitoring.associate = function (models) {
-    ClusterMonitoring.belongsTo(models.cluster, {
+    ClusterMonitoring.belongsTo(models.Cluster, {
       foreignKey: 'clusterId',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
