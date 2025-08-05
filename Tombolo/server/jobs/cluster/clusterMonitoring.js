@@ -4,20 +4,17 @@ const _ = require('lodash');
 const { parentPort } = require('worker_threads');
 
 // Local Imports
-const models = require('../../models');
-const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
-const { decryptString } = require('../../utils/cipher');
-
-// Destructure models
 const {
-  cluster_monitoring: ClusterMonitoring,
+  ClusterMonitoring,
   Cluster,
   monitoring_types: MonitoringTypes,
   notification_queue: NotificationQueue,
   AsrProduct,
   AsrDomain,
   monitoring_logs: MonitoringLogs,
-} = models;
+} = require('../../models');
+const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
+const { decryptString } = require('../../utils/cipher');
 
 const monitoring_name = 'Cluster Monitoring';
 let monitoringTypeId;

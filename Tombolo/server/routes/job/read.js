@@ -4,10 +4,10 @@ const {
   job: Job,
   jobfile: JobFile,
   jobparam: JobParam,
-  file: File,
+  File,
   file_validation: FileValidation,
   fileTemplate: FileTemplate,
-  dataflow_versions: DataflowVersions,
+  DataflowVersion,
   AssetsGroup,
   job_execution: JobExecution,
   message_based_jobs: MessageBasedJobs,
@@ -1054,7 +1054,7 @@ router.get(
             paranoid: false, // will pull softDeleted Records
           },
           {
-            model: DataflowVersions,
+            model: DataflowVersion,
             attributes: ['name', 'isLive'],
             paranoid: false, // will pull softDeleted Records
           },

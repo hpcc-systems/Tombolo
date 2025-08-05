@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class CostMonitoringDataTotals extends Model {
     static associate(models) {
       // Association to access the costMonitoring configuration
-      CostMonitoringDataTotals.belongsTo(models.costMonitoring, {
+      CostMonitoringDataTotals.belongsTo(models.CostMonitoring, {
         foreignKey: 'monitoringId',
         as: 'costMonitoring',
       });
@@ -67,10 +67,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'costMonitoringDataTotals',
-      tableName: 'costmonitoringdatatotals',
+      modelName: 'CostMonitoringDataTotals',
+      tableName: 'cost_monitoring_data_totals',
       timestamps: false, // Views don't have timestamps
-      freezeTableName: true,
     }
   );
 

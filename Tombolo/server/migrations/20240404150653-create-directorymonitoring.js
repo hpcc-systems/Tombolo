@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('directoryMonitoring', {
+    await queryInterface.createTable('directory_monitorings', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -80,7 +80,13 @@ module.exports = {
       },
       approvedBy: {
         allowNull: true,
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       approvedAt: {
         allowNull: true,
@@ -88,11 +94,33 @@ module.exports = {
       },
       createdBy: {
         allowNull: false,
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       updatedBy: {
-        allowNull: false,
-        type: Sequelize.DataTypes.STRING,
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
+      deletedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       createdAt: {
         allowNull: false,
@@ -109,7 +137,7 @@ module.exports = {
     });
 
     await queryInterface.addIndex(
-      'directoryMonitoring',
+      'directory_monitorings',
       ['name', 'deletedAt'],
       {
         unique: true,
@@ -117,7 +145,8 @@ module.exports = {
       }
     );
   },
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('directoryMonitoring');
+    await queryInterface.dropTable('directory_monitorings');
   },
 };

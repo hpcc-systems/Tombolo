@@ -2,15 +2,16 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
+  // eslint-disable-next-line no-unused-vars
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(`
-CREATE OR REPLACE VIEW costMonitoringDataTotals AS
+CREATE OR REPLACE VIEW cost_monitoring_data_totals AS
 WITH filtered_data AS (
     SELECT
         t.monitoringId,
         t.usersCostInfo,
         c.timezone_offset
-    FROM costMonitoringData t
+    FROM cost_monitoring_data t
              INNER JOIN clusters c ON c.id = t.clusterId
     WHERE t.deletedAt IS NULL
       AND DATE(DATE_ADD(t.date, INTERVAL c.timezone_offset MINUTE)) = DATE(DATE_ADD(CURRENT_TIMESTAMP(), INTERVAL c.timezone_offset MINUTE))
@@ -47,7 +48,7 @@ GROUP BY fd.monitoringId, user_keys.username;
      * await queryInterface.dropTable('users');
      */
     await queryInterface.sequelize.query(
-      'DROP VIEW IF EXISTS costMonitoringDataTotals;'
+      'DROP VIEW IF EXISTS cost_monitoring_data_totals;'
     );
   },
 };

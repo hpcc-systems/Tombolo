@@ -10,7 +10,7 @@ const DeleteMixin = superclass =>
     /**
      * Soft deletes a record and sets the deletedBy field.
      * @param {Object} options - Options for the operation
-     * @param {string} options.id - UUID of the record to soft delete
+     * @param {string|Array<string>} options.id - UUID of the record to soft delete or an array of UUIDs
      * @param {string} options.deletedByUserId - UUID of the user performing the soft deletion
      * @param {Object} [options.transaction] - Sequelize transaction object (optional)
      * @returns {Promise<number>} Number of records soft deleted (1 if successful, 0 if not found)

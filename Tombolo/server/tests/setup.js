@@ -86,7 +86,7 @@ jest.mock('../models', () => {
       update: jest.fn(),
       destroy: jest.fn(),
     },
-    cluster_monitoring: {
+    ClusterMonitoring: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       findByPk: jest.fn(),
@@ -96,7 +96,7 @@ jest.mock('../models', () => {
       update: jest.fn(),
       destroy: jest.fn(),
     },
-    costMonitoring: {
+    CostMonitoring: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       findByPk: jest.fn(),

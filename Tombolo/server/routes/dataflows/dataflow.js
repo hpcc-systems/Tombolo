@@ -3,11 +3,11 @@ const router = express.Router();
 const {
   Cluster,
   indexes: Index,
-  file: File,
+  File,
   job: Job,
-  dataflow_cluster_credentials: Dataflow_cluster_credentials,
-  dataflow_versions: DataflowVersions,
-  dataflow: Dataflow,
+  DataflowClusterCredential,
+  DataflowVersion,
+  Dataflow,
 } = require('../../models');
 
 const validatorUtil = require('../../utils/validator');
@@ -82,7 +82,7 @@ router.post(
           metaData,
         });
 
-        await Dataflow_cluster_credentials.create({
+        await DataflowClusterCredential.create({
           dataflow_id: newDataflow.id,
           cluster_id: clusterId,
           cluster_username: username,
@@ -117,7 +117,7 @@ router.post(
         { where: { id: id } }
       );
 
-      await Dataflow_cluster_credentials.update(
+      await DataflowClusterCredential.update(
         {
           cluster_id: clusterId,
           cluster_username: username,
@@ -164,7 +164,7 @@ router.get(
           exclude: ['graph'],
         },
         include: {
-          model: Dataflow_cluster_credentials,
+          model: DataflowClusterCredential,
           attributes: { exclude: ['cluster_hash'] },
         },
         order: [['createdAt', 'DESC']],
@@ -377,7 +377,7 @@ router.get(
     try {
       const { assetId } = req.query;
 
-      const dataflowVersions = await DataflowVersions.findAll({
+      const dataflowVersions = await DataflowVersion.findAll({
         where: { isLive: true },
         include: [{ model: Dataflow, attributes: ['title'] }],
         attributes: ['dataflowId', 'name', 'graph'],

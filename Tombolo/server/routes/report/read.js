@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const {
-  dataflow: Dataflow,
-  dataflow_versions: DataflowVersions,
-  file: File,
+  Dataflow,
+  DataflowVersion,
+  File,
   report: Report,
 } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
@@ -146,7 +146,7 @@ router.get(
     try {
       const { application_id, assetId } = req.query;
 
-      const versions = await DataflowVersions.findAll({
+      const versions = await DataflowVersion.findAll({
         where: { isLive: true },
         include: [
           {

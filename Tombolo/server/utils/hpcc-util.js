@@ -2,7 +2,7 @@ const axios = require('axios');
 const path = require('path');
 const {
   Cluster,
-  dataflow_cluster_credentials: Dataflow_cluster_credentials,
+  DataflowClusterCredential,
   github_repo_settings: GHprojects,
 } = require('../models');
 let hpccJSComms = require('@hpcc-js/comms');
@@ -387,7 +387,7 @@ exports.getJobWuDetails = async (
     if (!dataflowId) {
       wuService = await module.exports.getWorkunitsService(clusterId);
     } else {
-      const clusterCredentials = await Dataflow_cluster_credentials.findOne({
+      const clusterCredentials = await DataflowClusterCredential.findOne({
         where: { dataflow_id: dataflowId },
         include: [Cluster],
       });
@@ -434,7 +434,7 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
 
   if (dataflowId) {
     try {
-      const clusterCred = await Dataflow_cluster_credentials.findOne({
+      const clusterCred = await DataflowClusterCredential.findOne({
         where: { dataflow_id: dataflowId },
         include: [Cluster],
       });

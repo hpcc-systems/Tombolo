@@ -1,7 +1,22 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const CostMonitoringData = sequelize.define(
-    'costMonitoringData',
+  class CostMonitoringData extends Model {
+    static associate(models) {
+      CostMonitoringData.belongsTo(models.Application, {
+        foreignKey: 'applicationId',
+        as: 'application',
+      });
+      CostMonitoringData.belongsTo(models.CostMonitoring, {
+        foreignKey: 'monitoringId',
+        as: 'costMonitoring',
+      });
+    }
+  }
+
+  CostMonitoringData.init(
     {
       id: {
         allowNull: false,
@@ -33,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'costMonitoring',
+          model: 'cost_monitorings',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -74,24 +89,14 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'costMonitoringData',
+      sequelize,
+      modelName: 'CostMonitoringData',
+      tableName: 'cost_monitoring_data',
       timestamps: true,
       paranoid: true,
       indexes: [],
     }
   );
-
-  // Associations
-  CostMonitoringData.associate = models => {
-    CostMonitoringData.belongsTo(models.Application, {
-      foreignKey: 'applicationId',
-      as: 'application',
-    });
-    CostMonitoringData.belongsTo(models.costMonitoring, {
-      foreignKey: 'monitoringId',
-      as: 'costMonitoring',
-    });
-  };
 
   return CostMonitoringData;
 };

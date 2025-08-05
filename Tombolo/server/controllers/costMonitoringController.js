@@ -1,4 +1,4 @@
-const { costMonitoring: CostMonitoring } = require('../models');
+const { CostMonitoring, sequelize } = require('../models');
 const logger = require('../config/logger');
 const { Op } = require('sequelize');
 const {
@@ -86,9 +86,12 @@ async function getCostMonitoringById(req, res) {
 }
 
 async function deleteCostMonitoring(req, res) {
+  const transaction = await sequelize.transaction();
   try {
-    const result = await CostMonitoring.destroy({
-      where: { id: req.params.id },
+    const result = await CostMonitoring.handleDelete({
+      id: req.params.id,
+      deletedByUserId: req.user.id,
+      transaction,
     });
 
     if (!result || result === 0) {
@@ -96,12 +99,14 @@ async function deleteCostMonitoring(req, res) {
         .status(404)
         .json({ success: false, message: 'Cost monitoring not found' });
     }
+    await transaction.commit();
 
     return res.status(200).json({
       success: true,
       message: 'Cost monitoring deleted successfully',
     });
   } catch (err) {
+    await transaction.rollback();
     logger.error('Failed to delete cost monitoring', err);
     return res.status(500).json({ success: false, message: err.message });
   }
@@ -186,15 +191,21 @@ async function toggleCostMonitoringActive(req, res) {
 }
 
 async function bulkDeleteCostMonitoring(req, res) {
+  const transaction = await sequelize.transaction();
   try {
-    await CostMonitoring.destroy({
-      where: { id: { [Op.in]: req.body.ids } },
+    await CostMonitoring.handleDelete({
+      id: req.body.ids,
+      deletedByUserId: req.user.id,
+      transaction,
     });
+
+    await transaction.commit();
     return res.status(200).json({
       success: true,
       message: 'Cost monitoring(s) deleted successfully',
     });
   } catch (err) {
+    await transaction.rollback();
     logger.error('Failed to bulk delete cost monitoring', err);
     return res.status(500).json({ success: false, message: err.message });
   }

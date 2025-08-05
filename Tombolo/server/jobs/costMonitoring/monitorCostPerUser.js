@@ -1,8 +1,8 @@
 const logger = require('../../config/logger');
 const { parentPort } = require('worker_threads');
 const {
-  costMonitoring: CostMonitoring,
-  costMonitoringData: CostMonitoringData,
+  CostMonitoring,
+  CostMonitoringData,
   Cluster,
   monitoring_logs: MonitoringLogs,
   monitoring_types: MonitoringTypes,
@@ -68,7 +68,7 @@ async function markDataAnalyzed(costMonitoringId, clusterId, applicationId) {
     }
 
     costMonitoringData.analyzed = true;
-    costMonitoringData.save();
+    await costMonitoringData.save();
   } catch (err) {
     parentPort &&
       parentPort.postMessage({

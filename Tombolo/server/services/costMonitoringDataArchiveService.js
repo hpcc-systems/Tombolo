@@ -5,7 +5,7 @@ const logger = require('../config/logger');
 class CostMonitoringDataArchiveService extends ArchiveService {
   constructor(sequelize) {
     super(sequelize);
-    this.modelName = 'costMonitoringData';
+    this.modelName = 'CostMonitoringData';
   }
 
   async archiveOldCostData(daysToKeep = 30) {

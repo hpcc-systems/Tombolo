@@ -1,5 +1,5 @@
 const logger = require('../config/logger');
-const { Cluster, dataflow: Dataflow, job: Job } = require('../models');
+const { Cluster, Dataflow, job: Job } = require('../models');
 
 const NotificationModule = require('../routes/notifications/email-notification');
 

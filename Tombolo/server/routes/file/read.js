@@ -4,7 +4,7 @@ var {
   application: Application,
   user_application: UserApplication,
   file_validation: FileValidation,
-  file: File,
+  File,
   license: License,
   rules: Rules,
   data_types: DataTypes,

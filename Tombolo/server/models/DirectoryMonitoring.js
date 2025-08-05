@@ -1,7 +1,20 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const directoryMonitoring = sequelize.define(
-    'directoryMonitoring',
+  class DirectoryMonitoring extends Model {
+    static associate(models) {
+      DirectoryMonitoring.belongsTo(models.Application, {
+        foreignKey: 'application_id',
+      });
+      DirectoryMonitoring.belongsTo(models.Cluster, {
+        foreignKey: 'cluster_id',
+      });
+    }
+  }
+
+  DirectoryMonitoring.init(
     {
       id: {
         primaryKey: true,
@@ -88,8 +101,10 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      sequelize,
+      modelName: 'DirectoryMonitoring',
+      tableName: 'directory_monitorings',
       paranoid: true,
-      freezeTableName: true,
       indexes: [
         {
           unique: true,
@@ -99,15 +114,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  directoryMonitoring.associate = function (models) {
-    // Define association here
-    directoryMonitoring.belongsTo(models.Application, {
-      foreignKey: 'application_id',
-    });
-    directoryMonitoring.belongsTo(models.Cluster, {
-      foreignKey: 'cluster_id',
-    });
-  };
-
-  return directoryMonitoring;
+  return DirectoryMonitoring;
 };

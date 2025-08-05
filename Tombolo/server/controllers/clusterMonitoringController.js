@@ -1,8 +1,5 @@
-const models = require('../models');
+const { ClusterMonitoring, sequelize } = require('../models');
 const logger = require('../config/logger');
-const { sequelize } = models;
-
-const { cluster_monitoring: ClusterMonitoring } = models;
 
 // Create a new cluster status monitoring
 const createClusterMonitoring = async (req, res) => {
@@ -192,23 +189,11 @@ const deleteClusterMonitoring = async (req, res) => {
   try {
     const { ids } = req.body;
 
-    // First transaction
-    await ClusterMonitoring.update(
-      { deletedBy: req.user.id },
-      {
-        where: { id: ids },
-        transaction,
-      }
-    );
-
-    // Second transaction
-    await ClusterMonitoring.destroy({
-      where: { id: ids },
+    await ClusterMonitoring.handleDelete({
+      id: ids,
+      deletedByUserId: req.user.id,
       transaction,
     });
-
-    // Commit both operations
-    await transaction.commit();
 
     res
       .status(200)

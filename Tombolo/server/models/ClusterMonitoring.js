@@ -1,9 +1,49 @@
 'use strict';
+
+const { Model } = require('sequelize');
+const { DeleteMixin } = require('../utils/modelMixins/DeleteMixin');
 const CLUSTER_MONITORING_TYPES = ['status', 'usage'];
 
 module.exports = (sequelize, DataTypes) => {
-  const ClusterMonitoring = sequelize.define(
-    'cluster_monitoring',
+  class ClusterMonitoring extends DeleteMixin(Model) {
+    static associate(models) {
+      ClusterMonitoring.belongsTo(models.Cluster, {
+        foreignKey: 'clusterId',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      });
+
+      ClusterMonitoring.belongsTo(models.user, {
+        foreignKey: 'createdBy',
+        as: 'creator',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      ClusterMonitoring.belongsTo(models.user, {
+        foreignKey: 'lastUpdatedBy',
+        as: 'updater',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      ClusterMonitoring.belongsTo(models.user, {
+        foreignKey: 'approvedBy',
+        as: 'approver',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      ClusterMonitoring.belongsTo(models.user, {
+        foreignKey: 'deletedBy',
+        as: 'deleter',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+    }
+  }
+
+  ClusterMonitoring.init(
     {
       id: {
         allowNull: false,
@@ -14,7 +54,6 @@ module.exports = (sequelize, DataTypes) => {
       monitoringName: {
         allowNull: false,
         type: DataTypes.STRING,
-        unique: true,
       },
       clusterMonitoringType: {
         type: DataTypes.ARRAY(DataTypes.STRING),
@@ -124,41 +163,18 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      sequelize,
+      modelName: 'ClusterMonitoring',
+      tableName: 'cluster_monitorings',
       paranoid: true,
-      freezeTableName: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['monitoringName', 'deletedAt'],
+        },
+      ],
     }
   );
-
-  // Associations
-  ClusterMonitoring.associate = function (models) {
-    ClusterMonitoring.belongsTo(models.Cluster, {
-      foreignKey: 'clusterId',
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    });
-
-    // User associations
-    ClusterMonitoring.belongsTo(models.user, {
-      foreignKey: 'createdBy',
-      as: 'creator',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-
-    ClusterMonitoring.belongsTo(models.user, {
-      foreignKey: 'lastUpdatedBy',
-      as: 'updater',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-
-    ClusterMonitoring.belongsTo(models.user, {
-      foreignKey: 'approvedBy',
-      as: 'approver',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-  };
 
   return ClusterMonitoring;
 };

@@ -9,7 +9,7 @@ const {
   user_application: UserApplication,
   application: Application,
   groups: Groups,
-  file: File,
+  File,
   file_validation: FileValidation,
   indexes: Index,
   index_key: IndexKey,
@@ -19,7 +19,7 @@ const {
   jobparam: JobParam,
   query: Query,
   query_field: QueryField,
-  dataflow: Dataflow,
+  Dataflow,
   user: User,
 } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');

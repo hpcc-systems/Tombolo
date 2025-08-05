@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('cluster_monitoring', {
+    await queryInterface.createTable('cluster_monitorings', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -13,7 +13,6 @@ module.exports = {
       monitoringName: {
         allowNull: false,
         type: Sequelize.STRING,
-        unique: true,
       },
       clusterMonitoringType: {
         allowNull: false,
@@ -122,8 +121,17 @@ module.exports = {
         onDelete: 'NO ACTION',
       },
     });
+
+    await queryInterface.addIndex(
+      'cluster_monitorings',
+      ['monitoringName', 'deletedAt'],
+      {
+        unique: true,
+        name: 'cluster_mon_unique_monitoring_name_deleted_at',
+      }
+    );
   },
   down: async queryInterface => {
-    await queryInterface.dropTable('cluster_monitoring');
+    await queryInterface.dropTable('cluster_monitorings');
   },
 };

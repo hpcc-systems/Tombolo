@@ -1,15 +1,13 @@
 const express = require('express');
 const router = express.Router();
-var models = require('../../models');
+const { ControlsRegulation, data_types: DataTypes } = require('../../models');
 let Sequelize = require('sequelize');
 const logger = require('../../config/logger');
 const Op = Sequelize.Op;
-let ControlsAndRegulations = models.controls_regulations;
-let DataTypes = models.data_types;
 
 router.get('/controlsAndRegulations', async (req, res) => {
   try {
-    const regulations = await ControlsAndRegulations.findAll({
+    const regulations = await ControlsRegulation.findAll({
       attributes: [
         'compliance',
         [
@@ -28,7 +26,7 @@ router.get('/controlsAndRegulations', async (req, res) => {
 
 router.get('/getRegulation', async (req, res) => {
   try {
-    const regulations = await ControlsAndRegulations.findAll({
+    const regulations = await ControlsRegulation.findAll({
       where: { compliance: req.query.compliance },
     });
 
@@ -41,7 +39,7 @@ router.get('/getRegulation', async (req, res) => {
 
 router.post('/delete', async (req, res) => {
   try {
-    await ControlsAndRegulations.destroy({
+    await ControlsRegulation.destroy({
       where: { compliance: req.body.compliance },
     });
 
@@ -62,8 +60,8 @@ router.post('/saveRegulations', async function (req, res) {
     compliance = req.body.oldCompName;
   }
   try {
-    await ControlsAndRegulations.destroy({ where: { compliance: compliance } });
-    await ControlsAndRegulations.bulkCreate(regulations);
+    await ControlsRegulation.destroy({ where: { compliance: compliance } });
+    await ControlsRegulation.bulkCreate(regulations);
 
     return res.status(200).json({ result: 'success ' });
   } catch (err) {
@@ -85,7 +83,7 @@ router.get('/dataTypes', async (req, res) => {
 router.get('/getComplianceByDataType', async (req, res) => {
   try {
     let dataTypes = req.query.dataType.split(',');
-    const regulations = await ControlsAndRegulations.findAll({
+    const regulations = await ControlsRegulation.findAll({
       attributes: ['compliance'],
       group: ['compliance'],
       where: { data_types: { [Op.in]: dataTypes } },

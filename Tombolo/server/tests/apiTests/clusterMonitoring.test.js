@@ -2,7 +2,7 @@ const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
 const request = require('supertest');
 const { app } = require('../test_server');
 const models = require('../../models');
-const { cluster_monitoring: clusterMonitoring } = models;
+const { ClusterMonitoring } = models;
 
 const { getClusterMonitoring } = require('../helpers');
 const { v4: uuidv4 } = require('uuid');
@@ -23,7 +23,7 @@ describe('Cluster Monitoring routes Routes', () => {
   // Create new cluster  monitoring
   it('POST / should create a new cluster  monitoring', async () => {
     const monitoring = getClusterMonitoring({ id: monitoringId });
-    clusterMonitoring.create.mockResolvedValue(monitoring);
+    ClusterMonitoring.create.mockResolvedValue(monitoring);
 
     const res = await request(app)
       .post('/api/clusterMonitoring')
@@ -35,7 +35,7 @@ describe('Cluster Monitoring routes Routes', () => {
   // Get one cluster status monitoring by ID
   it('GET /:id should return a  monitoring', async () => {
     const monitoring = getClusterMonitoring({ id: monitoringId });
-    clusterMonitoring.findOne.mockResolvedValue(monitoring);
+    ClusterMonitoring.findOne.mockResolvedValue(monitoring);
 
     const res = await request(app).get(
       `/api/clusterMonitoring/${monitoringId}`
@@ -47,7 +47,7 @@ describe('Cluster Monitoring routes Routes', () => {
   // Get All cluster status monitoring
   it('GET / should return all cluster status monitoring', async () => {
     const monitoring = getClusterMonitoring();
-    clusterMonitoring.findAll.mockResolvedValue([monitoring]);
+    ClusterMonitoring.findAll.mockResolvedValue([monitoring]);
 
     const res = await request(app).get('/api/clusterMonitoring');
     expect(res.status).toBe(200);
@@ -61,7 +61,7 @@ describe('Cluster Monitoring routes Routes', () => {
     // Mock the instance update method
     monitoring.update = jest.fn().mockResolvedValue(monitoring);
 
-    clusterMonitoring.findOne.mockResolvedValue(monitoring);
+    ClusterMonitoring.findOne.mockResolvedValue(monitoring);
 
     const updatePayload = {
       ...monitoring,
@@ -88,7 +88,7 @@ describe('Cluster Monitoring routes Routes', () => {
       isActive: true,
     });
 
-    clusterMonitoring.findOne.mockResolvedValue(monitoring);
+    ClusterMonitoring.findOne.mockResolvedValue(monitoring);
 
     const res = await request(app)
       .patch('/api/clusterMonitoring/toggleStatus')
@@ -117,7 +117,7 @@ describe('Cluster Monitoring routes Routes', () => {
       approverComment: 'Approved by admin',
     });
 
-    clusterMonitoring.findOne.mockResolvedValue(monitoring);
+    ClusterMonitoring.findOne.mockResolvedValue(monitoring);
 
     const res = await request(app)
       .patch('/api/clusterMonitoring/evaluate')
@@ -158,7 +158,7 @@ describe('Cluster Monitoring routes Routes', () => {
   // delete cluster status monitoring
   it('DELETE / should delete a monitoring', async () => {
     const monitoringIds = [uuidv4(), uuidv4()];
-    clusterMonitoring.destroy.mockResolvedValue(1);
+    ClusterMonitoring.destroy.mockResolvedValue(1);
 
     const res = await request(app)
       .delete('/api/clusterMonitoring')

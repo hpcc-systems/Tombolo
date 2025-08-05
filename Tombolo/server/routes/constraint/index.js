@@ -4,7 +4,7 @@ const validatorUtil = require('../../utils/validator');
 const logger = require('../../config/logger');
 const router = express.Router();
 
-const { Constraint, file: File } = require('../../models');
+const { Constraint, File } = require('../../models');
 
 router.get('/', async (req, res) => {
   try {

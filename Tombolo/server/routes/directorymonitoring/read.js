@@ -1,7 +1,7 @@
 const express = require('express');
 const logger = require('../../config/logger');
 const router = express.Router();
-const { directoryMonitoring: DirectoryMonitoring } = require('../../models');
+const { DirectoryMonitoring } = require('../../models');
 
 const validatorUtil = require('../../utils/validator');
 const { body, param, validationResult } = require('express-validator');

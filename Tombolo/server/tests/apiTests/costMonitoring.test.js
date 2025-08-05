@@ -2,7 +2,7 @@ const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
 const request = require('supertest');
 const { app } = require('../test_server');
 const { v4: uuidv4 } = require('uuid');
-const CostMonitoring = require('../../models').costMonitoring;
+const { CostMonitoring } = require('../../models');
 const {
   getUuids,
   getCostMonitoring,
