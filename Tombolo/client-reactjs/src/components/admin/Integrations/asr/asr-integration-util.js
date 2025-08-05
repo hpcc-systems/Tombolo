@@ -13,9 +13,7 @@ export const getMonitoringTypes = async () => {
     throw new Error('Failed to get monitorings');
   }
 
-  const data = await response.json();
-
-  return data;
+  return await response.json();
 };
 
 // Add new domain
@@ -36,9 +34,7 @@ export const createNewDomain = async ({ payload }) => {
     throw new Error('Failed to add domain');
   }
 
-  const data = await response.json();
-
-  return data;
+  return await response.json();
 };
 
 // Get all domains and the associated monitoring types
@@ -78,9 +74,7 @@ export const updateDomain = async ({ id, payload }) => {
     throw new Error('Failed to update domain');
   }
 
-  const data = await response.json();
-
-  return data;
+  return await response.json();
 };
 
 // Delete domain
@@ -95,9 +89,7 @@ export const deleteDomain = async ({ id }) => {
     throw new Error('Failed to delete domain');
   }
 
-  const data = await response.json();
-
-  return data;
+  return await response.json();
 };
 
 // Get all products
@@ -120,7 +112,7 @@ export const getProducts = async () => {
   return data;
 };
 
-// Create new product
+// Create a new product
 export const createNewProduct = async ({ payload }) => {
   const payloadOptions = {
     method: 'POST',
@@ -137,9 +129,7 @@ export const createNewProduct = async ({ payload }) => {
     throw new Error('Failed to add product');
   }
 
-  const data = await response.json();
-
-  return data;
+  return await response.json();
 };
 
 // Update product
@@ -159,9 +149,7 @@ export const updateProduct = async ({ id, payload }) => {
     throw new Error('Failed to update product');
   }
 
-  const data = await response.json();
-
-  return data;
+  return await response.json();
 };
 
 // Delete products
@@ -176,9 +164,7 @@ export const deleteProduct = async ({ id }) => {
     throw new Error('Failed to delete product');
   }
 
-  const data = await response.json();
-
-  return data;
+  return await response.json();
 };
 
 // Get all teams channels
@@ -193,7 +179,5 @@ export const getTeamsChannels = async () => {
     throw new Error('Failed to get teams channels');
   }
 
-  const data = await response.json();
-
-  return data;
+  return await response.json();
 };

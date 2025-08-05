@@ -5,7 +5,6 @@ import { isEmail } from 'validator';
 
 //Local Imports
 import { createNewDomain, getDomains, updateDomain } from './asr-integration-util.js';
-import { getUser } from '../../../common/userStorage';
 
 // Constants
 const { Option } = Select;
@@ -38,10 +37,6 @@ const DomainModal = ({
     }
   }, [selectedDomain]);
 
-  // Get user from Local Storage
-  const user = getUser();
-  const { firstName, lastName, email } = user;
-
   // Update Domain
   const saveUpdatedDomain = async () => {
     // Validate form
@@ -54,7 +49,6 @@ const DomainModal = ({
     // Save domain
     try {
       const payload = form.getFieldsValue();
-      payload.updatedBy = { firstName, lastName, email };
       await updateDomain({ id: selectedDomain.id, payload });
       // Get all domains and replace the current domains with the new ones
       const domains = await getDomains();
@@ -88,7 +82,6 @@ const DomainModal = ({
     // Save domain
     try {
       const payload = form.getFieldsValue();
-      payload.createdBy = { firstName, lastName, email };
 
       await createNewDomain({ payload });
       // Get all domains and replace the current domains with the new ones
