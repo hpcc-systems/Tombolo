@@ -14,8 +14,8 @@ const {
   cluster: Cluster,
   monitoring_types: MonitoringTypes,
   notification_queue: NotificationQueue,
-  asr_products: AsrProducts,
-  asr_domains: AsrDomains,
+  AsrProduct,
+  AsrDomain,
   monitoring_logs: MonitoringLogs,
 } = models;
 
@@ -196,7 +196,7 @@ let monitoringTypeId;
           try {
             const { productCategory } = asrSpecificMetaData;
             // Get product category
-            const asrProduct = await AsrProducts.findOne({
+            const asrProduct = await AsrProduct.findOne({
               where: { id: productCategory },
               attributes: ['shortCode', 'name'],
               raw: true,
@@ -212,7 +212,7 @@ let monitoringTypeId;
 
           // Get Domain
           try {
-            const asrDomain = await AsrDomains.findOne({
+            const asrDomain = await AsrDomain.findOne({
               where: { id: asrSpecificMetaData.domain },
               attributes: ['name'],
               raw: true,

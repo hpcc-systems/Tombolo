@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = (sequelize, DataTypes) => {
   const MonitoringTypes = sequelize.define(
-    "monitoring_types",
+    'monitoring_types',
     {
       id: {
         allowNull: false,
@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       createdBy: {
         allowNull: false,
         type: DataTypes.JSON,
-        defaultValue: { firstName: null, lastName: "System", email: "NA" },
+        defaultValue: { firstName: null, lastName: 'System', email: 'NA' },
       },
       updatedBy: {
         allowNull: true,
@@ -47,10 +47,10 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   MonitoringTypes.associate = function (models) {
-    MonitoringTypes.belongsToMany(models.asr_domains, {
-      through: "asr_monitoring_type_to_domains",
-      foreignKey: "monitoring_type_id",
-      as: "asr_domains",
+    MonitoringTypes.belongsToMany(models.AsrDomain, {
+      through: 'asr_monitoring_type_to_domains_relations',
+      foreignKey: 'monitoring_type_id',
+      as: 'asr_domains',
     });
   };
 

@@ -16,15 +16,16 @@ const { sequelize } = require('../../models');
 //Local Imports
 const {
   monitoring_types: MonitoringTypes,
-  asr_domains: Domains,
-  asr_monitoring_type_to_domains: DomainMonitoringTypes,
-  asr_products: Products,
-  asr_domain_to_products: DomainProduct,
+  AsrDomain,
+  AsrMonitoringTypeToDomainsRelation: AsrDomainMonitoringTypeToDomains,
+  AsrProduct,
+  AsrDomainToProductsRelation,
 } = require('../../models');
 const logger = require('../../config/logger');
 const {
   uniqueConstraintErrorHandler,
 } = require('../../utils/uniqueConstraintErrorHandler');
+const { getUserFkIncludes } = require('../../utils/getUserFkIncludes');
 
 // Create a new domain
 router.post('/domains/', validate(validateCreateDomain), async (req, res) => {
@@ -37,24 +38,24 @@ router.post('/domains/', validate(validateCreateDomain), async (req, res) => {
       severityThreshold,
       severityAlertRecipients,
       monitoringTypeIds,
-      createdBy,
     } = req.body;
+
     let domain;
     if (monitoringTypeIds) {
-      domain = await Domains.create({
+      domain = await AsrDomain.create({
         name,
         region,
         severityThreshold,
         severityAlertRecipients,
-        createdBy,
+        createdBy: req.user.id,
       });
 
       // create domain monitoring type mapping
       const createPromises = monitoringTypeIds.map(monitoringId => {
-        return DomainMonitoringTypes.create({
+        return AsrDomainMonitoringTypeToDomains.create({
           domain_id: domain.id,
           monitoring_type_id: monitoringId,
-          createdBy,
+          createdBy: req.user.id,
         });
       });
 
@@ -63,12 +64,12 @@ router.post('/domains/', validate(validateCreateDomain), async (req, res) => {
 
     // if no monitoring type is provided, create domain without monitoring type
     else {
-      domain = await Domains.create({
+      domain = await AsrDomain.create({
         name,
         region,
         severityThreshold,
         severityAlertRecipients,
-        createdBy,
+        createdBy: req.user.id,
       });
     }
     return res
@@ -88,8 +89,9 @@ router.post('/domains/', validate(validateCreateDomain), async (req, res) => {
 router.get('/domains/', async (req, res) => {
   try {
     // get all domains and the associated monitoring types by using includes
-    const domains = await Domains.findAll({
+    const domains = await AsrDomain.findAll({
       include: [
+        ...getUserFkIncludes(),
         {
           model: MonitoringTypes,
           through: {
@@ -112,8 +114,9 @@ router.get('/domains/', async (req, res) => {
 router.get('/domainsOnly/', async (req, res) => {
   try {
     // get all domains only
-    const domains = await Domains.findAll({
+    const domains = await AsrDomain.findAll({
       raw: true,
+      include: getUserFkIncludes(),
     });
 
     return res.status(200).json(domains);
@@ -136,35 +139,35 @@ router.patch(
         severityThreshold,
         severityAlertRecipients,
         monitoringTypeIds,
-        updatedBy,
       } = req.body;
       let response;
       if (monitoringTypeIds) {
         response = await sequelize.transaction(async t => {
-          await Domains.update(
+          await AsrDomain.update(
             {
               name,
               region,
               severityThreshold,
               severityAlertRecipients,
-              updatedBy,
+              updatedBy: req.user.id,
             },
             { where: { id: req.params.id }, transaction: t }
           );
 
           // delete all monitoring types for the domain
-          await DomainMonitoringTypes.destroy({
-            where: { domain_id: req.params.id },
+          await AsrDomainMonitoringTypeToDomains.handleDelete({
+            id: req.params.id,
+            deletedByUserId: req.user.id,
             transaction: t,
           });
 
           // create domain monitoring type mapping
           const createPromises = monitoringTypeIds.map(monitoringId => {
-            return DomainMonitoringTypes.create(
+            return AsrDomainMonitoringTypeToDomains.create(
               {
                 domain_id: req.params.id,
                 monitoring_type_id: monitoringId,
-                updatedBy,
+                updatedBy: req.user.id,
               },
               { transaction: t }
             );
@@ -173,13 +176,13 @@ router.patch(
           return Promise.all(createPromises);
         });
       } else {
-        response = await Domains.update(
+        response = await AsrDomain.update(
           {
             name,
             region,
             severityThreshold,
             severityAlertRecipients,
-            updatedBy,
+            updatedBy: req.user.id,
           },
           { where: { id: req.params.id } }
         );
@@ -195,13 +198,17 @@ router.patch(
   }
 );
 
-// Delete a domain - this  should also delete  monitoring types to domain mapping
+// Delete a domain - this should also delete monitoring types to domain mapping
 router.delete(
   '/domains/:id',
   validate(validateDeleteDomain),
   async (req, res) => {
     try {
-      const response = await Domains.destroy({ where: { id: req.params.id } });
+      const response = await AsrDomain.handleDelete({
+        id: req.params.id,
+        deletedByUserId: req.user.id,
+      });
+
       const message =
         response === 0 ? 'Domain not found' : 'Domain deleted successfully';
       return res.status(200).json({ message });
@@ -212,28 +219,38 @@ router.delete(
   }
 );
 
-// ----------------------------------- Products -------------------------------------
+// ----------------------------------- AsrProduct -------------------------------------
 //Create a new product
 router.post('/products/', validate(validateCreateProduct), async (req, res) => {
   try {
     // If domainId is provided, create product domain relationship also
-    const { name, shortCode, tier, createdBy, domainIds } = req.body;
+    const { name, shortCode, tier, domainIds } = req.body;
 
     let product;
     if (domainIds) {
-      product = await Products.create({ name, shortCode, tier, createdBy });
+      product = await AsrProduct.create({
+        name,
+        shortCode,
+        tier,
+        createdBy: req.user.id,
+      });
 
       //Create product domain mapping
       const createPromises = domainIds.map(domainId => {
-        return DomainProduct.create({
+        return AsrDomainToProductsRelation.create({
           product_id: product.id,
           domain_id: domainId,
-          createdBy,
+          createdBy: req.user.id,
         });
       });
       await Promise.all(createPromises);
     } else {
-      product = await Products.create({ name, shortCode, tier, createdBy });
+      product = await AsrProduct.create({
+        name,
+        shortCode,
+        tier,
+        createdBy: req.user.id,
+      });
     }
     return res
       .status(200)
@@ -252,10 +269,11 @@ router.post('/products/', validate(validateCreateProduct), async (req, res) => {
 router.get('/products/', async (req, res) => {
   try {
     // get all products and the associated domains
-    const products = await Products.findAll({
+    const products = await AsrProduct.findAll({
       include: [
+        ...getUserFkIncludes(),
         {
-          model: Domains,
+          model: AsrDomain,
           through: {
             attributes: [], // Exclude the junction table from the result
           },
@@ -284,8 +302,9 @@ router.get('/products/', async (req, res) => {
 router.get('/productsOnly/', async (req, res) => {
   try {
     // get all products only
-    const products = await Products.findAll({
+    const products = await AsrProduct.findAll({
       raw: true,
+      include: getUserFkIncludes(),
     });
 
     return res.status(200).json(products);
@@ -302,29 +321,30 @@ router.put(
   async (req, res) => {
     try {
       // Update product and delete or add relation in the junction table
-      const { name, shortCode, tier, domainIds, updatedBy } = req.body;
+      const { name, shortCode, tier, domainIds } = req.body;
 
       let response;
       if (domainIds) {
         response = await sequelize.transaction(async t => {
-          await Products.update(
-            { name, shortCode, tier, updatedBy },
+          await AsrProduct.update(
+            { name, shortCode, tier, updatedBy: req.user.id },
             { where: { id: req.params.id }, transaction: t }
           );
 
           // delete all domains for the product
-          await DomainProduct.destroy({
-            where: { product_id: req.params.id },
+          await AsrDomainToProductsRelation.handleDelete({
+            id: req.params.id,
+            deletedByUserId: req.user.id,
             transaction: t,
           });
 
           // create product domain mapping
           const createPromises = domainIds.map(domainId => {
-            return DomainProduct.create(
+            return AsrDomainToProductsRelation.create(
               {
                 product_id: req.params.id,
                 domain_id: domainId,
-                updatedBy,
+                updatedBy: req.user.id,
               },
               { transaction: t }
             );
@@ -333,8 +353,8 @@ router.put(
           return Promise.all(createPromises);
         });
       } else {
-        response = await Products.update(
-          { name, shortCode, tier, updatedBy },
+        response = await AsrProduct.update(
+          { name, shortCode, tier, updatedBy: req.user.id },
           { where: { id: req.params.id } }
         );
       }
@@ -357,7 +377,10 @@ router.delete(
   validate(validateDeleteProduct),
   async (req, res) => {
     try {
-      const response = await Products.destroy({ where: { id: req.params.id } });
+      const response = await AsrProduct.handleDelete({
+        id: req.params.id,
+        deletedByUserId: req.user.id,
+      });
 
       const message =
         response === 0 ? 'Product not found' : 'Product deleted successfully';
@@ -379,12 +402,13 @@ router.get(
     try {
       const monitoringTypeId = req.params.monitoringTypeId;
 
-      // Make call to db and  get all domains for the activity type
-      const domains = await DomainMonitoringTypes.findAll({
+      // Make a call to db and get all domains for the activity type
+      const domains = await AsrDomainMonitoringTypeToDomains.findAll({
         where: { monitoring_type_id: monitoringTypeId },
         include: [
+          ...getUserFkIncludes(),
           {
-            model: Domains,
+            model: AsrDomain,
             attributes: [
               'id',
               'name',
@@ -418,12 +442,13 @@ router.get(
     try {
       const domainId = req.params.domainId;
 
-      // Make a call to DomainProduct table and get all products for the domain
-      const productCategories = await DomainProduct.findAll({
+      // Make a call to the AsrDomainToProductsRelation table and get all products for the domain
+      const productCategories = await AsrDomainToProductsRelation.findAll({
         where: { domain_id: domainId },
         include: [
+          ...getUserFkIncludes(),
           {
-            model: Products,
+            model: AsrProduct,
             attributes: ['id', 'name', 'shortCode', 'tier'],
           },
         ],

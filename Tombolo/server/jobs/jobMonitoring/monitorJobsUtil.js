@@ -1,7 +1,5 @@
 // Local imports
-const models = require('../../models');
-const asrProducts = models.asr_products;
-const asrDomains = models.asr_domains;
+const { AsrDomain, AsrProduct } = require('../../models');
 
 //Package(s)
 const moment = require('moment');
@@ -616,18 +614,16 @@ function calculateRunOrCompleteByTimes({
 
 // Function to get productCategory when productCategoryId is provided
 async function getProductCategory(productCategoryId) {
-  const product = await asrProducts.findOne({
+  return await AsrProduct.findOne({
     where: { id: productCategoryId },
   });
-  return product;
 }
 
 //Function  to get domain when domain ID is provided
 async function getDomain(domainId) {
-  const domain = await asrDomains.findOne({
+  return await AsrDomain.findOne({
     where: { id: domainId },
   });
-  return domain;
 }
 
 // Generate a human readable notification ID in the format of <TEXT>_YYYYMMDD_HHMMSS_MS

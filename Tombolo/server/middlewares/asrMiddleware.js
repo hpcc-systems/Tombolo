@@ -3,7 +3,6 @@ const {
   intBody,
   arrayBody,
   uuidQuery,
-  objectBody,
   uuidParam,
   uuidBody,
   paramUuids,
@@ -20,14 +19,9 @@ const createUpdateDomainValidations = [
 const validateCreateDomain = [
   stringBody('region'),
   ...createUpdateDomainValidations,
-  objectBody('createdBy'),
 ];
 
-const validateUpdateDomain = [
-  paramUuids.id,
-  ...createUpdateDomainValidations,
-  objectBody('updatedBy'),
-];
+const validateUpdateDomain = [paramUuids.id, ...createUpdateDomainValidations];
 
 const validateDeleteDomain = [uuidParam('id')];
 
@@ -39,15 +33,11 @@ const createUpdateProductValidations = [
   uuidBody('domainIds.*', true),
 ];
 
-const validateCreateProduct = [
-  ...createUpdateProductValidations,
-  objectBody('createdBy'),
-];
+const validateCreateProduct = [...createUpdateProductValidations];
 
 const validateUpdateProduct = [
   paramUuids.id,
   ...createUpdateProductValidations,
-  objectBody('updatedBy'),
 ];
 
 const validateDeleteProduct = [paramUuids.id];
