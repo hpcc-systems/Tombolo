@@ -7,13 +7,13 @@ const {
   query: Query,
   query_field: QueryField,
   IndexKey,
-  index_payload: IndexPayload,
+  IndexPayload,
   job: Job,
   jobfile: JobFile,
   jobparam: JobParam,
   ConsumerObject,
   job_execution: JobExecution,
-  indexes: Index,
+  Indexes: Index,
 } = require('../models');
 
 const hpccUtil = require('./hpcc-util');

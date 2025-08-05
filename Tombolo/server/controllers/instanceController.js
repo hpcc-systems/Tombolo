@@ -1,21 +1,20 @@
-const models = require('../models');
-const instance_settings = models.instance_settings;
+const { InstanceSetting, user: User } = require('../models');
 const logger = require('../config/logger');
 
 // Get a single instance setting by name
 const getInstanceSetting = async (req, res) => {
   try {
-    const instance = await instance_settings.findOne({
+    const instance = await InstanceSetting.findOne({
       where: { id: 1 },
       // Include users details - createdBy user details
       include: [
         {
-          model: models.user,
+          model: User,
           as: 'creator', // Use alias defined in the association
           attributes: ['firstName', 'lastName', 'email'],
         },
         {
-          model: models.user,
+          model: User,
           as: 'updater', // Use alias defined in the association
           attributes: ['firstName', 'lastName', 'email'],
         },
@@ -36,7 +35,7 @@ const getInstanceSetting = async (req, res) => {
 const updateInstanceSetting = async (req, res) => {
   try {
     // Get the instance setting with the ID = 1
-    const instance = await instance_settings.findOne({
+    const instance = await InstanceSetting.findOne({
       where: { id: 1 },
       raw: true,
     });
@@ -57,7 +56,7 @@ const updateInstanceSetting = async (req, res) => {
     const finalPayload = { metaData: updatedMetaData, ...payload };
 
     // Update the instance setting
-    const updatedInstanceCount = await instance_settings.update(finalPayload, {
+    const updatedInstanceCount = await InstanceSetting.update(finalPayload, {
       where: { id: 1 },
       raw: true,
     });
@@ -68,16 +67,16 @@ const updateInstanceSetting = async (req, res) => {
     }
 
     // Get the updated instance setting
-    const updatedInstance = await instance_settings.findOne({
+    const updatedInstance = await InstanceSetting.findOne({
       where: { id: 1 },
       include: [
         {
-          model: models.user,
+          model: User,
           as: 'creator', // Use alias defined in the association
           attributes: ['firstName', 'lastName', 'email'],
         },
         {
-          model: models.user,
+          model: User,
           as: 'updater', // Use alias defined in the association
           attributes: ['firstName', 'lastName', 'email'],
         },

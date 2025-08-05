@@ -1,8 +1,26 @@
-"use strict";
+'use strict';
+
+const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  const instance_settings = sequelize.define(
-    "instance_settings",
+  class InstanceSettings extends Model {
+    static associate(models) {
+      InstanceSettings.belongsTo(models.user, {
+        foreignKey: 'createdBy',
+        as: 'creator',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+      InstanceSettings.belongsTo(models.user, {
+        foreignKey: 'updatedBy',
+        as: 'updater',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+    }
+  }
+
+  InstanceSettings.init(
     {
       id: {
         primaryKey: true,
@@ -23,21 +41,21 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "user",
-          key: "id",
+          model: 'user',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "NO ACTION",
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       updatedBy: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "user",
-          key: "id",
+          model: 'user',
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "NO ACTION",
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -56,29 +74,11 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      freezeTableName: true,
-      tableName: "instance_settings", // Table name for this model
+      sequelize,
+      modelName: 'InstanceSetting',
+      tableName: 'instance_settings',
     }
   );
 
-  // Define associations
-  instance_settings.associate = (models) => {
-    instance_settings.belongsTo(models.user, {
-      foreignKey: "createdBy",
-      as: "creator", // Alias for createdBy
-      onDelete: "NO ACTION",
-      onUpdate: "CASCADE",
-    });
-
-    instance_settings.belongsTo(models.user, {
-      foreignKey: "updatedBy",
-      as: "updater", // Alias for updatedBy
-      onDelete: "NO ACTION",
-      onUpdate: "CASCADE",
-    });
-  };
-
-  
-
-  return instance_settings;
+  return InstanceSettings;
 };

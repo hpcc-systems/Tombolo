@@ -1,7 +1,17 @@
-"use strict";
+'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const integrations = sequelize.define(
-    "integrations",
+  class Integration extends Model {
+    static associate(models) {
+      Integration.hasMany(models.IntegrationMapping, {
+        foreignKey: 'integration_id',
+      });
+    }
+  }
+
+  Integration.init(
     {
       id: {
         primaryKey: true,
@@ -19,18 +29,18 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.STRING,
       },
-      metaData:{
+      metaData: {
         allowNull: true,
         type: DataTypes.JSON,
       },
     },
-    { freezeTableName: true }
+    {
+      sequelize,
+      modelName: 'Integration',
+      tableName: 'integrations',
+      freezeTableName: true,
+    }
   );
-// Association to integration_mapping
-  integrations.associate = (models) => {
-    integrations.hasMany(models.integration_mapping, {
-      foreignKey: "integration_id",
-    });
-  };
-  return integrations;
+
+  return Integration;
 };

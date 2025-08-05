@@ -8,14 +8,14 @@ const {
   user: User,
   UserRoles,
   user_application,
-  application: Application,
+  Application,
   RoleTypes,
   RefreshTokens,
   notification_queue: NotificationQueue,
   PasswordResetLinks,
   AccountVerificationCode,
   sent_notifications,
-  instance_settings,
+  InstanceSetting,
 } = require('../models');
 const moment = require('moment');
 const {
@@ -1129,7 +1129,7 @@ const requestAccess = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const instance_setting = await instance_settings.findOne({
+    const instance_setting = await InstanceSetting.findOne({
       where: { name: 'contactEmail' },
     });
 

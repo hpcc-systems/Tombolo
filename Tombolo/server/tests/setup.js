@@ -62,7 +62,7 @@ jest.mock('../models', () => {
       create: jest.fn(),
       findOne: jest.fn(),
     },
-    instance_settings: {
+    InstanceSetting: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),

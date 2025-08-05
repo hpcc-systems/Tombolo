@@ -7,13 +7,13 @@ const Sequelize = require('sequelize');
 // Local Imports
 const {
   user_application: UserApplication,
-  application: Application,
+  Application,
   Group,
   File,
   FileValidation,
-  indexes: Index,
+  Indexes: Index,
   IndexKey,
-  index_payload: IndexPayload,
+  IndexPayload,
   job: Job,
   jobfile: JobFile,
   jobparam: JobParam,
