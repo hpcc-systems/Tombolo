@@ -17,6 +17,7 @@ const moment = require('moment');
 const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
+const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 
 // Add a cluster - Without sending progress updates to client
 const addCluster = async (req, res) => {
@@ -393,6 +394,7 @@ const getClusters = async (req, res) => {
       attributes: {
         exclude: ['hash', 'metaData', 'storageUsageHistory'],
       },
+      include: getUserFkIncludes(),
       order: [['name', 'ASC']],
     });
 
@@ -414,6 +416,7 @@ const getCluster = async (req, res) => {
       attributes: {
         exclude: ['hash', 'metaData'],
       },
+      include: getUserFkIncludes(),
       raw: true,
     });
 
