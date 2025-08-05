@@ -5,6 +5,8 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import FileExplorerModal from '../files/FileExplorerModal';
 import ObjectKeyValue from '../../common/ObjectKeyValue';
 
+import styles from './superfileMonitoring.module.css';
+
 const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSuperFileDetails, form, disabled }) => {
   useEffect(() => {
     if (superFileDetails === null) {
@@ -102,7 +104,7 @@ const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSu
     <>
       <Form.Item
         label="Cluster"
-        style={{ width: 'calc(47.5% - 8px)' }}
+        className="medium-form-item"
         name="cluster_id"
         disabled={disabled}
         rules={[{ required: true, message: 'Required field' }]}>
@@ -130,7 +132,7 @@ const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSu
             disabled={disabled}
             rules={[{ required: true, message: 'Required field' }]}>
             <Row gutter={[8, 0]}>
-              <Col style={{ width: 'calc(37.5% - 8px)' }}>
+              <Col className={styles.smallFormItem}>
                 <AutoComplete
                   options={superFileSuggestions}
                   onSelect={handleSuperFileSelect}
@@ -166,15 +168,8 @@ const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSu
         <>
           {displayFileInfo ? (
             <>
-              <div style={{ padding: '10px 18px', fontWeight: 'bold', border: '1px solid whitesmoke' }}>
-                SuperFile Details
-              </div>
-              <div
-                style={{
-                  height: 'fit-content',
-                  padding: '10px 18px',
-                  border: '1px solid whitesmoke',
-                }}>
+              <div className={styles.superFileDetailsHeader}>SuperFile Details</div>
+              <div className={styles.superFileDetails}>
                 <ObjectKeyValue obj={displayFileInfo} />
               </div>
             </>

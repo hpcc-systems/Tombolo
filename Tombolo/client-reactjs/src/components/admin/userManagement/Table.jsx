@@ -12,6 +12,8 @@ import {
 
 import { deleteUser, resetUserPassword, unlockUserAccount } from './Utils.js';
 
+import styles from './userManagement.module.css';
+
 const UserManagementTable = ({
   users,
   setSelectedUser,
@@ -173,7 +175,7 @@ const UserManagementTable = ({
             content={
               <div
                 style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }}
-                className="jobMonitoringTable__hidden_actions">
+                className={styles.userManagementTable__hidden_actions}>
                 <div style={{ color: 'var(--primary)' }}>
                   <Popconfirm
                     title={

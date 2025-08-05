@@ -21,10 +21,9 @@ const {
 const {
   scheduleClusterTimezoneOffset,
   createClusterUsageHistoryJob,
-  createClusterMonitoringBreeJob,
-  scheduleClusterMonitoringOnServerStart,
   checkClusterReachability,
   checkClusterContainerization,
+  startClusterStatusMonitoring,
 } = require('../jobSchedularMethods/clusterJobs.js');
 const {
   scheduleJobStatusPolling,
@@ -77,10 +76,6 @@ const {
   startLzFileCountMonitoring,
   startLzSpaceUsageMonitoring,
 } = require('../jobSchedularMethods/lzMonitoring.js');
-
-const {
-  startClusterStatusMonitoring,
-} = require('../jobSchedularMethods/clusterStatusMonitoring.js');
 
 class JobScheduler {
   constructor() {
@@ -160,7 +155,6 @@ class JobScheduler {
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
       await this.scheduleFileMonitoringOnServerStart();
       await this.scheduleSuperFileMonitoringOnServerStart();
-      await this.scheduleClusterMonitoringOnServerStart();
       await this.scheduleKeyCheck();
       await this.createClusterUsageHistoryJob();
       await this.scheduleEmailNotificationProcessing();
@@ -319,17 +313,6 @@ class JobScheduler {
   }
   createClusterUsageHistoryJob() {
     return createClusterUsageHistoryJob.call(this);
-  }
-
-  createClusterMonitoringBreeJob({ clusterMonitoring_id, cron }) {
-    return createClusterMonitoringBreeJob.call(this, {
-      clusterMonitoring_id,
-      cron,
-    });
-  }
-
-  scheduleClusterMonitoringOnServerStart() {
-    return scheduleClusterMonitoringOnServerStart.call(this);
   }
 
   scheduleJobStatusPolling() {

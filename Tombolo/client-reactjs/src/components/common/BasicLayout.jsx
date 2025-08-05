@@ -2,11 +2,13 @@ import React from 'react';
 import { Card } from 'antd';
 import logo from '../../images/logo.png';
 
+import styles from './common.module.css';
+
 const BasicLayout = ({ content, width }) => {
   return (
-    <div className="basicLayout">
-      <Card className="basicLayoutCard" style={{ maxWidth: width }}>
-        <div style={{ width: 'fit-content', margin: '0 auto', marginBottom: '1rem' }}>
+    <div className={styles.basicLayout}>
+      <Card className={styles.basicLayoutCard} style={{ maxWidth: width }}>
+        <div className={styles.basicLayoutCardContent}>
           <img src={logo} />
         </div>
         <div>{content}</div>

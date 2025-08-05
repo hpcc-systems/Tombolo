@@ -10,6 +10,8 @@ import UserMenu from './UserMenu.jsx';
 import ApplicationMenu from './ApplicationMenu.jsx';
 import { Layout } from 'antd';
 
+import styles from '../layout.module.css';
+
 const { Header } = Layout;
 
 const AppHeader = () => {
@@ -102,16 +104,7 @@ const AppHeader = () => {
   };
 
   return (
-    <Header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingRight: '10px',
-        position: 'fixed',
-        zIndex: 1,
-        width: '100%',
-      }}>
+    <Header className={styles.header}>
       <div>
         <Link to={'/'} style={{ marginRight: '70px' }}>
           <img src={logo} alt="Tombolo logo" width="80px" height="19px" />

@@ -6,7 +6,6 @@ import OrbitTable from './OrbitTable';
 import WorkUnitCharts from '../common/charts/WorkUnitCharts';
 import Filters from './Filters';
 import MetricBoxes from '../common/charts/MetricBoxes';
-import '../common/css/index.css';
 import ExportMenu from '../ExportMenu/ExportMenu';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { message } from 'antd';

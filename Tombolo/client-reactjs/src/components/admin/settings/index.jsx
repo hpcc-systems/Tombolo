@@ -9,7 +9,7 @@ import { fetchInstanceSettings } from './settingsUtils';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import EditSettingsButton from './EditSettingsButton';
 import EditSettingsModel from './EditSettingsModel';
-import './settings.css';
+import styles from './settings.module.css';
 
 // Destructuring Layout
 const { Sider, Content } = Layout;
@@ -50,7 +50,7 @@ function Settings() {
   };
 
   return (
-    <div className="settings">
+    <div className={styles.settings}>
       <BreadCrumbs
         extraContent={
           <EditSettingsButton
@@ -60,20 +60,20 @@ function Settings() {
           />
         }
       />
-      <Layout className="settings-layout">
-        <Sider theme="light" className="settings-sider">
-          <div className="setting-sider-items">
+      <Layout className={styles.settingsLayout}>
+        <Sider theme="light" className={styles.settingsSider}>
+          <div>
             {Object.keys(settings).map((setting) => (
               <div
                 key={settings[setting].id}
-                className={`setting-item ${selectedSetting === setting ? 'selected-setting' : ''}`}
+                className={`${styles.settingItem} ${selectedSetting === setting ? styles.selectedSetting : ''}`}
                 onClick={() => handleSettingChange(setting)}>
                 {settings[setting].name}
               </div>
             ))}
           </div>
         </Sider>
-        <Content className="settings-content">
+        <Content className={styles.settingsContent}>
           <div style={{ height: '82vh' }} size="small">
             {settings[selectedSetting].component}
           </div>

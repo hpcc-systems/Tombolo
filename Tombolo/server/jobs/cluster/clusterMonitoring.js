@@ -10,7 +10,7 @@ const { decryptString } = require('../../utils/cipher');
 
 // Destructure models
 const {
-  clusterStatusMonitoring: ClusterStatusMonitoring,
+  cluster_monitoring: ClusterMonitoring,
   Cluster,
   monitoring_types: MonitoringTypes,
   notification_queue: NotificationQueue,
@@ -19,7 +19,7 @@ const {
   monitoring_logs: MonitoringLogs,
 } = models;
 
-const monitoring_name = 'Cluster Status Monitoring';
+const monitoring_name = 'Cluster Monitoring';
 let monitoringTypeId;
 
 (async () => {
@@ -43,32 +43,30 @@ let monitoringTypeId;
     });
 
     // Get all cluster status monitoring with isActive = true and approvalStatus = approved
-    const activeClusterStatusMonitoring = await ClusterStatusMonitoring.findAll(
-      {
-        where: {
-          isActive: true,
-          approvalStatus: 'approved',
+    const activeClusterStatusMonitoring = await ClusterMonitoring.findAll({
+      where: {
+        isActive: true,
+        approvalStatus: 'approved',
+      },
+      include: [
+        {
+          model: Cluster,
+          required: true,
+          attributes: [
+            'id',
+            'name',
+            'thor_host',
+            'thor_port',
+            'username',
+            'hash',
+            'allowSelfSigned',
+            'timezone_offset',
+          ],
         },
-        include: [
-          {
-            model: Cluster,
-            required: true,
-            attributes: [
-              'id',
-              'name',
-              'thor_host',
-              'thor_port',
-              'username',
-              'hash',
-              'allowSelfSigned',
-              'timezone_offset',
-            ],
-          },
-        ],
-        raw: true,
-        nest: true,
-      }
-    );
+      ],
+      raw: true,
+      nest: true,
+    });
 
     // If no active monitoring found, log and exit
     if (activeClusterStatusMonitoring.length === 0) {
@@ -174,7 +172,7 @@ let monitoringTypeId;
           ...hThorClusterList,
         ];
         const problematicClusters = allClusters.filter(
-          cluster => cluster.ClusterStatus !== 0 // TODO - Change this to 1 to trigger  notification for tests
+          cluster => cluster.ClusterStatus !== 'Active' // TODO - Change this to 1 to trigger  notification for tests
         );
 
         // If no problematic cluster found, log and continue to next monitoring
@@ -233,8 +231,7 @@ let monitoringTypeId;
           timezoneOffset: clusterObject[clusterId].timezone_offset,
         });
 
-        const issueDescription = `${clusterObject[clusterId].name} has some clusters in undesired state.`;
-        // Issue object
+        const issueDescription = `${clusterObject[clusterId].name} has ${problematicClusters.length} cluster(s) in non-active state.`; // Issue object
         const issue = {
           'Issue Description': issueDescription,
           'Problematic Clusters': problematicClusters,

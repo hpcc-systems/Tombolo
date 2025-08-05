@@ -1053,19 +1053,6 @@ div.tooltip {
   font-size: 24px !important;
 }
 
-.clusterMonitoring_engines > .ant-input-wrapper > .ant-input-group-addon {
-  width: 85px;
-  text-align: left;
-}
-
-.monitoring_table_paused_monitorings {
-  background: #ffe7ba;
-}
-
-.cluster_monitoring_table .ant-table-tbody > tr.monitoring_table_paused_monitorings:hover > td {
-  background: #ffd591;
-}
-
 /*User Guide CSS*/
 .guide {
   width: 100%;
@@ -1112,38 +1099,6 @@ div.tooltip {
   display: none;
 }
 
-.OrbitTable .ant-table-column-has-sorters {
-  border-radius: 0px 8px 0px 0px;
-}
-
-.OrbitTable .ant-table-thead > tr > th {
-  background: #002140 !important;
-  color: white;
-}
-
-.OrbitTable .ant-table-thead > tr > .ant-table-column-sort:hover {
-  color: black;
-}
-
-.OrbitTable .ant-table-cell-scrollbar {
-  box-shadow: none;
-}
-
-.OrbitTable tr:nth-child(2n) {
-  background: lightgrey;
-}
-
-.OrbitTable tr:nth-child(2n) {
-  background: lightgrey;
-}
-
-.OrbitTable tr:nth-child(2n) {
-  background: lightgrey;
-}
-
-.OrbitTable .ant-table-row-level-0:nth-child(2n) .ant-table-column-sort {
-  background: lightgrey;
-}
 
 .chartLabel {
   color: rgb(71, 70, 70);
@@ -1186,29 +1141,6 @@ main > div {
   margin: 0.5rem;
 }
 
-.basicLayout {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f0f2f5;
-}
-
-.basicLayoutCard {
-  width: 80%;
-  max-width: 25rem;
-}
-
-.basicLayoutCard .fullWidth {
-  width: 100%;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  height: fit-content;
-  min-height: 3.5rem;
-  font-size: 1.25rem;
-  border-radius: 0.5rem;
-}
-
 .wizardSteps {
   display: block;
   top: 0;
@@ -1232,4 +1164,39 @@ main > div {
 .tiny-description .ant-descriptions-item-label {
   width: 240px;
   font-weight: 500;
+}
+
+/* notifications filters */
+.notifications__filter_label {
+  font-weight: 500;
+  padding-bottom: 5px;
+}
+
+.notifications__filters {
+  margin-bottom: 5px;
+  padding: 4px 10px;
+}
+
+.notifications_filters__form {
+  background-color: var(--light);
+}
+
+.notification__filters_count {
+  display: flex;
+  justify-content: right;
+  color: var(--primary);
+  background: none;
+  font-weight: 600;
+}
+
+.w_100 {
+  width: 100%;
+}
+
+.medium-form-item {
+  width: calc(47.5% - 8px);
+}
+
+.fullWidth {
+  width: 100%;
 }

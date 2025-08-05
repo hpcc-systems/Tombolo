@@ -7,6 +7,8 @@ import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
 
+import styles from './login.module.css';
+
 const Login = () => {
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
@@ -135,38 +137,21 @@ const Login = () => {
         <>
           <Form onFinish={onFinish} layout="vertical" form={loginForm}>
             {loading && (
-              <div
-                style={{
-                  textAlign: 'center',
-                  display: 'flex',
-                  width: '100%',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  position: 'absolute',
-                  zIndex: '2000',
-                  height: '100%',
-                  opacity: '.4',
-                  backgroundColor: 'black',
-                  top: '0',
-                  left: '0',
-                }}>
+              <div className={styles.spinner_container}>
                 <Spin size="large" style={{ margin: '0 auto' }} />
               </div>
             )}
             <Divider>Log In With</Divider>
             {azureEnabled && (
-              <>
-                <Form.Item>
-                  <Button
-                    size="large"
-                    style={{ background: 'black', color: 'white' }}
-                    className="fullWidth"
-                    onClick={() => azureLogin()}>
-                    <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
-                  </Button>
-                </Form.Item>
-              </>
+              <Form.Item>
+                <Button
+                  size="large"
+                  style={{ background: 'black', color: 'white' }}
+                  className="fullWidth"
+                  onClick={() => azureLogin()}>
+                  <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
+                </Button>
+              </Form.Item>
             )}
 
             {traditionalEnabled && azureEnabled && <Divider>Or</Divider>}
@@ -206,7 +191,7 @@ const Login = () => {
                     Log in
                   </Button>
                 </Form.Item>
-                <p style={{ width: '100%', textAlign: 'center', marginTop: '1rem' }}>
+                <p className={styles.helperLink}>
                   <span>Need an account?</span> <a href="/src/components/login/register">Register</a>
                 </p>
               </>

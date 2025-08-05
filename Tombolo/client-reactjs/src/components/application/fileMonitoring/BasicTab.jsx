@@ -176,7 +176,7 @@ function FileMonitoringBasicTab({
       <Form form={basicTabForm} layout="vertical">
         <Form.Item
           label="Monitor"
-          style={{ width: 'calc(47.5% - 8px)' }}
+          className="medium-form-item"
           name="monitoringAssetType"
           rules={[{ required: true, message: 'Required filed' }]}>
           <Select
@@ -189,7 +189,7 @@ function FileMonitoringBasicTab({
         {monitoringAssetType ? (
           <Form.Item
             label="Cluster"
-            style={{ width: 'calc(47.5% - 8px)' }}
+            className="medium-form-item"
             name="cluster_id"
             rules={[{ required: true, message: 'Required filed' }]}>
             <Select

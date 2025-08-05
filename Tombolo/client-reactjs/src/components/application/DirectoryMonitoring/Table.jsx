@@ -16,6 +16,8 @@ import { useSelector } from 'react-redux';
 
 import { handleDeleteDirectoryMonitoring, toggleDirectoryMonitoringStatus } from './Utils';
 
+import styles from './directoryMonitoring.module.css';
+
 //Approve button colorzx
 const approveButtonColor = (approvalStatus) => {
   if (approvalStatus === 'Pending') {
@@ -124,7 +126,7 @@ const DirectoryMonitoringTable = ({
                 content={
                   <div
                     style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }}
-                    className="jobMonitoringTable__hidden_actions">
+                    className={styles.directoryMonitoringTable__hidden_actions}>
                     <div title="Approve" onClick={() => evaluateMonitoring(record)}>
                       <CheckCircleFilled
                         style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}

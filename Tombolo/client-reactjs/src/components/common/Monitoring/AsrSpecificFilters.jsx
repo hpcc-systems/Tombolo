@@ -12,7 +12,7 @@ const AsrSpecificFilters = ({ integrations, domainOptions, productOptions, handl
   return (
     <>
       <Col span={4}>
-        <div className="notifications__filter-label">Domain</div>
+        <div className="notifications__filter_label">Domain</div>
         <Form.Item name="domain">
           <Select
             placeholder="Domain"
@@ -30,7 +30,7 @@ const AsrSpecificFilters = ({ integrations, domainOptions, productOptions, handl
         </Form.Item>
       </Col>
       <Col span={4} name="product">
-        <div className="notifications__filter-label">Product</div>
+        <div className="notifications__filter_label">Product</div>
         <Form.Item name="product">
           <Select placeholder="Product" allowClear disabled={false}>
             {productOptions.map((p) => (

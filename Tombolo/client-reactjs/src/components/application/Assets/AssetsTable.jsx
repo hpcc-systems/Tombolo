@@ -232,7 +232,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
             </Typography.Link>
           </Space>
           {keywords && keywords.length > 0 ? (
-            <span className={'group-name'}>
+            <span className="group-name">
               In Group:{' '}
               <Typography.Link onClick={() => handleGroupClick(record.groupId)}>
                 {record.group_name ? record.group_name : 'Groups'}

@@ -5,7 +5,6 @@ import { Form, Row, Col, DatePicker, Select } from 'antd';
 import dayjs from 'dayjs';
 
 // Local imports
-import './notifications.css';
 
 //Constants
 const { Option } = Select;
@@ -63,7 +62,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
       <Form form={form} onValuesChange={handleFormChange}>
         <Row gutter={16}>
           <Col span={5}>
-            <div className="notifications__filter-label">Created Date Range</div>
+            <div className="notifications__filter_label">Created Date Range</div>
             <Form.Item name="createdBetween">
               <DatePicker.RangePicker
                 style={{ width: '100%' }}
@@ -77,7 +76,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
           </Col>
 
           <Col span={5}>
-            <div className="notifications__filter-label">Origin</div>
+            <div className="notifications__filter_label">Origin</div>
             <Form.Item name="origin">
               <Select placeholder="Origin" allowClear>
                 {originOptions.map((o, i) => (
@@ -89,7 +88,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
             </Form.Item>
           </Col>
           <Col span={4}>
-            <div className="notifications__filter-label">Status</div>
+            <div className="notifications__filter_label">Status</div>
             <Form.Item name="status">
               <Select placeholder="Status" disabled={false} allowClear>
                 {statusOptions.map((s, i) => (
@@ -103,7 +102,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
           {integrations.some((i) => i.name === 'ASR') && (
             <>
               <Col span={5}>
-                <div className="notifications__filter-label">Domain</div>
+                <div className="notifications__filter_label">Domain</div>
                 <Form.Item name="domain">
                   <Select placeholder="Domain" disabled={false} allowClear>
                     {domainOptions.map((d, i) => (
@@ -115,7 +114,7 @@ function NotificationTableFilters({ setFilters, sentNotifications, monitorings, 
                 </Form.Item>
               </Col>
               <Col span={5} name="product">
-                <div className="notifications__filter-label">Product</div>
+                <div className="notifications__filter_label">Product</div>
                 <Form.Item name="product">
                   <Select placeholder="Product" disabled={false} allowClear>
                     {productOptions.map((p, i) => (

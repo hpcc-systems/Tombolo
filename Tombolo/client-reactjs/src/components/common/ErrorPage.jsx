@@ -2,9 +2,11 @@ import React from 'react';
 import { Alert, Button, Typography } from 'antd';
 import Text from '../common/Text';
 
+import styles from './common.module.css';
+
 const ErrorPage = ({ message }) => {
   return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className={styles.errorPageContainer}>
       <Alert
         type="error"
         showIcon

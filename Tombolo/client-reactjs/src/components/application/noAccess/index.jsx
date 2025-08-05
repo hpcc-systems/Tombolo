@@ -5,6 +5,8 @@ import { LockOutlined } from '@ant-design/icons';
 import RequestAccessModal from './requestAccessModal';
 import { getUser } from '../../common/userStorage';
 
+import styles from './noAccess.module.css';
+
 const NoAccess = () => {
   const [form] = Form.useForm();
   const [isOpen, setIsOpen] = useState(false);
@@ -45,24 +47,13 @@ const NoAccess = () => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '70%',
-        margin: '0 auto',
-        marginTop: '3rem',
-        color: '#001529',
-      }}>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+    <div className={styles.container}>
+      <div className={styles.container__child}>
         <RequestAccessModal form={form} isOpen={isOpen} onSubmit={onSubmit} setIsOpen={setIsOpen} />
-        <LockOutlined style={{ fontSize: '20rem' }} />
-        <div style={{ marginLeft: '3rem' }}>
-          <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>403</h1>
-          <p style={{ fontSize: '1rem' }}>
-            You do not currently have any assigned Roles or Applications. Both are required to access Tombolo.
-          </p>
+        <LockOutlined className={styles.lock_icon} />
+        <div className={styles.noAccess_info}>
+          <h1>403</h1>
+          <p>You do not currently have any assigned Roles or Applications. Both are required to access Tombolo.</p>
           <Button size="large" type="primary" onClick={() => setIsOpen(true)}>
             Request Access
           </Button>
