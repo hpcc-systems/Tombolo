@@ -164,7 +164,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     // User to verification codes
-    user.hasMany(models.AccountVerificationCodes, {
+    user.hasMany(models.AccountVerificationCode, {
       foreignKey: 'userId',
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
