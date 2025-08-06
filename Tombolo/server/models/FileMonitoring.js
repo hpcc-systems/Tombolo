@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       FileMonitoring.belongsTo(models.Cluster, { foreignKey: 'cluster_id' });
 
       FileMonitoring.belongsTo(models.Application, {
-        foreignKey: 'applicationId',
+        foreignKey: 'application_id',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
