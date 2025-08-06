@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-var {
+const {
   application: Application,
   user_application: UserApplication,
-  file_validation: FileValidation,
+  FileValidation,
   File,
   license: License,
   rules: Rules,
-  data_types: DataTypes,
+  DataType,
   AssetsGroup,
   ConsumerObject,
   jobfile: JobFile,
@@ -561,7 +561,7 @@ router.post(
 router.get('/dataTypes', async (req, res) => {
   try {
     var results = [];
-    const dataTypes = await DataTypes.findAll();
+    const dataTypes = await DataType.findAll();
     dataTypes.forEach(doc => results.push(doc.name));
 
     return res.status(200).json(results);

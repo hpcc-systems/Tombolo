@@ -2,7 +2,7 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('filemonitoring_superfiles', {
+    await queryInterface.createTable('superfile_monitorings', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -42,6 +42,36 @@ module.exports = {
       metaData: {
         type: Sequelize.JSON,
       },
+      createdBy: {
+        allowNull: false,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
+      updatedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
+      deletedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -56,15 +86,16 @@ module.exports = {
       },
     });
     await queryInterface.addIndex(
-      'filemonitoring_superfiles',
+      'superfile_monitorings',
       ['name', 'deletedAt'],
       {
         unique: true,
-        name: 'fmsf_unique_name_deleted_at',
+        name: 'fm_sf_unique_name_deleted_at',
       }
     );
   },
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('filemonitoring_superfiles');
+    await queryInterface.dropTable('superfile_monitorings');
   },
 };

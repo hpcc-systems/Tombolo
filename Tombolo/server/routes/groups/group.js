@@ -15,13 +15,13 @@ const {
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const {
-  groups: Groups,
+  Group,
   indexes: Index,
   File,
   query: Query,
   job: Job,
   AssetsGroup,
-  fileTemplate: FileTemplate,
+  FileTemplate,
   sequelize,
 } = require('../../models');
 const logger = require('../../config/logger');
@@ -72,7 +72,7 @@ let createGroupHierarchy = groups => {
 
 router.get('/details', validate(validateGetDetails), async (req, res) => {
   try {
-    const group = await Groups.findOne({
+    const group = await Group.findOne({
       where: { application_id: req.query.app_id, id: req.query.group_id },
     });
     return res.status(200).json(group);
@@ -84,7 +84,7 @@ router.get('/details', validate(validateGetDetails), async (req, res) => {
 
 router.get('/', validate(validateGetGroup), async (req, res) => {
   try {
-    const groups = await Groups.findAll({
+    const groups = await Group.findAll({
       where: { application_id: req.query.app_id },
       order: [['name', 'ASC']],
     });
@@ -108,7 +108,7 @@ let getChildGroups = async (appId, groupId) => {
     whereClause.parent_group = { [Op.or]: [null, ''] };
   }
 
-  const groups = await Groups.findAll({
+  const groups = await Group.findAll({
     where: whereClause,
     order: [['name', 'ASC']],
   });
@@ -175,7 +175,7 @@ let getKeywordsForQuery = keywords => {
 router.get('/assets', validate(validateGetAssets), (req, res) => {
   let finalAssets = [];
   if (req.query.group_id && req.query.group_id != undefined) {
-    Groups.findAll({
+    Group.findAll({
       where: {
         application_id: req.query.app_id,
         id: req.query.group_id,
@@ -394,7 +394,7 @@ router.get('/assets', validate(validateGetAssets), (req, res) => {
     );
 
     promises.push(
-      Groups.findAll({
+      Group.findAll({
         where: {
           application_id: req.query.app_id,
           parent_group: { [Op.or]: [null, ''] },
@@ -581,7 +581,7 @@ router.get(
 );
 
 let groupExistsWithSameName = async (parentGroupId, name, appId) => {
-  const results = Groups.findAll({
+  const results = Group.findAll({
     where: { parent_group: parentGroupId, name: name, application_id: appId },
   });
 
@@ -607,7 +607,7 @@ router.post('/', validate(validateCreateGroup), async (req, res) => {
             'There is already a group with the same name under the parent group. Please select a different name',
         });
 
-      const groupCreated = await Groups.create({
+      const groupCreated = await Group.create({
         name: req.body.name,
         description: req.body.description,
         application_id: req.body.applicationId,
@@ -616,7 +616,7 @@ router.post('/', validate(validateCreateGroup), async (req, res) => {
       return res.status(200).json({ success: true, id: groupCreated.id });
     }
 
-    const group = await Groups.findOne({
+    const group = await Group.findOne({
       where: { id: req.body.id, application_id: req.body.applicationId },
     });
 
@@ -634,7 +634,7 @@ router.post('/', validate(validateCreateGroup), async (req, res) => {
           'There is already a group with the same name under the parent group. Please select a different name',
       });
 
-    const groupUpdated = await Groups.update(
+    const groupUpdated = await Group.update(
       {
         name: req.body.name,
         description: req.body.description,
@@ -650,7 +650,7 @@ router.post('/', validate(validateCreateGroup), async (req, res) => {
 });
 
 let canDeleteGroup = async (group_id, appId) => {
-  const groups = await Groups.findAll({
+  const groups = await Group.findAll({
     where: { application_id: appId, id: group_id },
     include: [
       {
@@ -686,7 +686,7 @@ let canDeleteGroup = async (group_id, appId) => {
     return false;
   }
 
-  const secondGroups = await Groups.findAll({
+  const secondGroups = await Group.findAll({
     where: { parent_group: group_id, application_id: appId },
   });
 
@@ -706,7 +706,7 @@ router.delete('/', validate(validateDeleteGroup), async (req, res) => {
           'The selected Group is not empty. Please empty the content of the group before it can be deleted',
       });
 
-    await Groups.destroy({
+    await Group.destroy({
       where: { application_id: req.body.app_id, id: req.body.group_id },
     });
     return res.status(200).json({ success: true });
@@ -720,7 +720,7 @@ router.put('/move', validate(validateMoveGroup), async (req, res) => {
   try {
     let parentGroup = req.body.destGroupId ? req.body.destGroupId : '';
 
-    await Groups.update(
+    await Group.update(
       { parent_group: parentGroup },
       { where: { id: req.body.groupId, application_id: req.body.app_id } }
     );
@@ -735,7 +735,7 @@ router.put('/move/asset', validate(validateMoveAsset), async (req, res) => {
   const { app_id, assetId } = req.body;
   try {
     if (req.body.assetType === 'Group') {
-      await Groups.update(
+      await Group.update(
         { parent_group: req.body.destGroupId || '' },
         { where: { application_id: app_id, id: assetId } }
       );

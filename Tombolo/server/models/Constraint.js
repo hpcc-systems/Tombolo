@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'application_id',
       });
 
-      // Constraint.belongsToMany(models.groups, {
+      // Constraint.belongsToMany(models.Group, {
       //   constraints: false,
       //   foreignKeyConstraint: false,
       //   through: 'assets_groups',

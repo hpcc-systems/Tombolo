@@ -13,7 +13,7 @@ module.exports = sequelize => {
       });
 
       /* GITHUB SETTINGS */
-      this.hasMany(models.github_repo_settings, {
+      this.hasMany(models.GithubRepoSetting, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
@@ -70,24 +70,24 @@ module.exports = sequelize => {
         onDelete: 'CASCADE',
       });
 
-      this.hasMany(models.file_validation, {
+      this.hasMany(models.FileValidation, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
 
       /* FILE TEMPLATE */
-      this.hasMany(models.fileTemplate, {
+      this.hasMany(models.FileTemplate, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
 
-      this.hasMany(models.fileTemplateLayout, {
+      this.hasMany(models.FileTemplateLayout, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
 
       /* FILE MONITORING */
-      this.hasMany(models.fileMonitoring, {
+      this.hasMany(models.FileMonitoring, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });

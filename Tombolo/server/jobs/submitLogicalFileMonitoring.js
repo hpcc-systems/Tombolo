@@ -1,20 +1,18 @@
-const axios = require("axios");
-const { notify } = require("../routes/notifications/email-notification");
-const { parentPort, workerData } = require("worker_threads");
-const logger = require("../config/logger");
-const models = require("../models");
-const fileMonitoring = models.fileMonitoring;
-const hpccUtil = require("../utils/hpcc-util");
-const { v4: uuidv4 } = require("uuid");
-const monitoring_notifications = models.monitoring_notifications;
+const axios = require('axios');
+const { notify } = require('../routes/notifications/email-notification');
+const { parentPort, workerData } = require('worker_threads');
+const logger = require('../config/logger');
+const { FileMonitoring, monitoring_notifications } = require('../models');
+const hpccUtil = require('../utils/hpcc-util');
+const { v4: uuidv4 } = require('uuid');
 const {
   emailBody,
   messageCardBody,
-} = require("./messageCards/notificationTemplate");
+} = require('./messageCards/notificationTemplate');
 
 (async () => {
   try {
-    const fileMonitoringDetails = await fileMonitoring.findOne({
+    const fileMonitoringDetails = await FileMonitoring.findOne({
       where: { id: workerData.filemonitoring_id },
       raw: true,
     });
@@ -23,7 +21,6 @@ const {
       cluster_id,
       id: filemonitoring_id,
       application_id,
-      metaData,
       metaData: {
         notifications,
         fileInfo: {
@@ -43,18 +40,18 @@ const {
     // Get file details from HPCC to compare  if any things of interest have been changed
     let logicalFileDetail = await hpccUtil.logicalFileDetails(Name, cluster_id);
 
-    const notificationDetails = { details: { "File Name": Name } };
+    const notificationDetails = { details: { 'File Name': Name } };
 
     if (logicalFileDetail.Exception) {
       logger.verbose(logicalFileDetail.Exception[0].Message);
       const fileDeleted =
-        logicalFileDetail.Exception[0].Message.includes("Cannot find file");
+        logicalFileDetail.Exception[0].Message.includes('Cannot find file');
 
       // If file was deleted
-      if (fileDeleted && notifyCondition.includes("deleted")) {
-        notificationDetails.value = "file_deleted";
-        notificationDetails.title = `File below has been deleted - `;
-        notificationDetails.text = `File below has been deleted - `;
+      if (fileDeleted && notifyCondition.includes('deleted')) {
+        notificationDetails.value = 'file_deleted';
+        notificationDetails.title = 'File below has been deleted - ';
+        notificationDetails.text = 'File below has been deleted - ';
         logicalFileDetail = null;
       } else {
         // if notification for deleted file not set up
@@ -74,20 +71,20 @@ const {
         // File  modified,  Update file metaData before proceeding
       }
 
-      if (notifyCondition.includes("fileSizeChanged")) {
+      if (notifyCondition.includes('fileSizeChanged')) {
         // If file size is changed and user has subscribed
         const newFileSize = logicalFileDetail.FileSizeInt64 / 1000;
 
         if (newFileSize !== Filesize) {
           metaDifference.push({
-            attribute: "File size",
+            attribute: 'File size',
             oldValue: `${Filesize} KB`,
             newValue: `${newFileSize} KB`,
           });
         }
       }
 
-      if (notifyCondition.includes("incorrectFileSize")) {
+      if (notifyCondition.includes('incorrectFileSize')) {
         const { maximumFileSize, minimumFileSize } = monitoringCondition;
         const { FileSizeInt64 } = logicalFileDetail; // Actual file size
         const newFileSize = parseInt(FileSizeInt64) / 1000;
@@ -96,48 +93,48 @@ const {
 
         if (newFileSize > maximumFileSize || newFileSize < minimumFileSize) {
           let allDetails = { ...notificationDetails.details };
-          allDetails.Warning = "File size not in range";
-          allDetails["Expected Max Size"] = `${maximumFileSize} KB`;
-          allDetails["Expected Min Size"] = `${minimumFileSize} KB`;
-          allDetails["Actual Size"] = `${newFileSize} KB`;
+          allDetails.Warning = 'File size not in range';
+          allDetails['Expected Max Size'] = `${maximumFileSize} KB`;
+          allDetails['Expected Min Size'] = `${minimumFileSize} KB`;
+          allDetails['Actual Size'] = `${newFileSize} KB`;
           notificationDetails.details = allDetails;
         }
       }
 
-      if (notifyCondition.includes("owner")) {
+      if (notifyCondition.includes('owner')) {
         if (logicalFileDetail.Owner !== Owner) {
           metaDifference.push({
-            attribute: "Owner",
+            attribute: 'Owner',
             oldValue: Owner,
             newValue: logicalFileDetail.Owner,
           });
         }
       }
 
-      if (notifyCondition.includes("fileType")) {
+      if (notifyCondition.includes('fileType')) {
         if (logicalFileDetail.ContentType !== ContentType) {
           metaDifference.push({
-            attribute: "File Type",
+            attribute: 'File Type',
             oldValue: ContentType,
             newValue: logicalFileDetail.ContentType,
           });
         }
       }
 
-      if (notifyCondition.includes("compressed")) {
+      if (notifyCondition.includes('compressed')) {
         if (logicalFileDetail.IsCompressed !== IsCompressed) {
           metaDifference.push({
-            attribute: "Is Compressed",
+            attribute: 'Is Compressed',
             oldValue: IsCompressed,
             newValue: logicalFileDetail.IsCompressed,
           });
         }
       }
 
-      if (notifyCondition.includes("protected")) {
+      if (notifyCondition.includes('protected')) {
         if (logicalFileDetail.IsRestricted !== IsRestricted) {
           metaDifference.push({
-            attribute: "Is Restricted",
+            attribute: 'Is Restricted',
             oldValue: IsRestricted,
             newValue: logicalFileDetail.IsRestricted,
           });
@@ -150,10 +147,10 @@ const {
     let teamsNotificationDetails;
 
     for (let notification of notifications) {
-      if (notification.channel === "eMail") {
+      if (notification.channel === 'eMail') {
         emailNotificationDetails = notification;
       }
-      if (notification.channel === "msTeams") {
+      if (notification.channel === 'msTeams') {
         teamsNotificationDetails = notification;
       }
     }
@@ -162,9 +159,9 @@ const {
 
     if (metaDifference.length > 0) {
       // Note - this does not cover file size not in range
-      notificationDetails.value = "file_meta_changed";
-      notificationDetails.title = `Some file details have been changed `;
-      notificationDetails.text = `Some file details have been changed `;
+      notificationDetails.value = 'file_meta_changed';
+      notificationDetails.title = 'Some file details have been changed ';
+      notificationDetails.text = 'Some file details have been changed ';
     }
 
     // E-mail notification
@@ -184,10 +181,10 @@ const {
         if (notificationResponse.accepted) {
           sentNotifications.push({
             // file_name: notificationDetails.details["File Name"],
-            status: "notified",
-            monitoring_type: "file",
+            status: 'notified',
+            monitoring_type: 'file',
             notifiedTo: emailNotificationDetails.recipients,
-            notification_channel: "eMail",
+            notification_channel: 'eMail',
             application_id,
             notification_reason: notificationDetails.value,
             monitoring_id: filemonitoring_id,
@@ -216,13 +213,13 @@ const {
           sentNotifications.push({
             id: notification_id,
             // file_name: notificationDetails.details["File Name"],
-            status: "notified",
+            status: 'notified',
             notifiedTo: emailNotificationDetails.recipients,
-            notification_channel: "msTeams",
+            notification_channel: 'msTeams',
             application_id,
             notification_reason: notificationDetails.value,
             monitoring_id: filemonitoring_id,
-            monitoring_type: "file",
+            monitoring_type: 'file',
           });
         } catch (err) {
           logger.error(err);
@@ -241,6 +238,6 @@ const {
   } catch (err) {
     logger.error(err);
   } finally {
-    parentPort ? parentPort.postMessage("done") : process.exit(0);
+    parentPort ? parentPort.postMessage('done') : process.exit(0);
   }
 })();

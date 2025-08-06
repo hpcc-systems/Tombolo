@@ -1,7 +1,17 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const GHCredentials = sequelize.define(
-    'github_repo_settings',
+  class GithubRepoSetting extends Model {
+    static associate(models) {
+      GithubRepoSetting.belongsTo(models.Application, {
+        foreignKey: 'application_id',
+      });
+    }
+  }
+
+  GithubRepoSetting.init(
     {
       id: {
         primaryKey: true,
@@ -32,15 +42,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
       },
     },
-    { paranoid: true }
+    {
+      sequelize,
+      modelName: 'GithubRepoSetting',
+      tableName: 'github_repo_settings',
+      paranoid: true,
+    }
   );
 
-  GHCredentials.associate = function (models) {
-    // associations can be defined here
-    GHCredentials.belongsTo(models.Application, {
-      foreignKey: 'application_id',
-    });
-  };
-
-  return GHCredentials;
+  return GithubRepoSetting;
 };

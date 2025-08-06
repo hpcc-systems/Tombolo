@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('fileTemplate', {
+    return queryInterface.createTable('file_templates', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -63,6 +63,6 @@ module.exports = {
   },
   // eslint-disable-next-line no-unused-vars
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('fileTemplate');
+    return queryInterface.dropTable('file_templates');
   },
 };

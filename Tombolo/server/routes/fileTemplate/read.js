@@ -7,9 +7,9 @@ const Op = Sequelize.Op;
 const logger = require('../../config/logger');
 
 const {
-  fileTemplate: FileTemplate,
-  fileMonitoring: FileMonitoring,
-  fileTemplateLayout: FileTemplateLayout,
+  FileTemplate,
+  FileMonitoring,
+  FileTemplateLayout,
   AssetsGroup,
 } = require('../../models');
 

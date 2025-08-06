@@ -5,7 +5,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class File extends Model {
     static associate(models) {
-      File.hasMany(models.file_validation, {
+      File.hasMany(models.FileValidation, {
         foreignKey: 'file_id',
         onDelete: 'CASCADE',
       });
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
       });
       File.belongsTo(models.Application, { foreignKey: 'application_id' });
-      File.belongsToMany(models.groups, {
+      File.belongsToMany(models.Group, {
         constraints: false,
         foreignKeyConstraint: false,
         through: 'assets_groups',

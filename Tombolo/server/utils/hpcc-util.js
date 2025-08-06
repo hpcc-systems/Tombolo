@@ -3,7 +3,7 @@ const path = require('path');
 const {
   Cluster,
   DataflowClusterCredential,
-  github_repo_settings: GHprojects,
+  GithubRepoSetting,
 } = require('../models');
 let hpccJSComms = require('@hpcc-js/comms');
 const { decryptString } = require('./cipher');
@@ -832,9 +832,9 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
 
     const { selectedProjects } = gitHubFiles;
 
-    //Loop through the reposList(contains GHprojects ids that has all gh project data including tokens) and clone each repo into master folder;
+    //Loop through the reposList(contains GithubRepoSetting ids that has all gh project data including tokens) and clone each repo into master folder;
     for (const repoId of selectedProjects) {
-      let project = await GHprojects.findOne({ where: { id: repoId } });
+      let project = await GithubRepoSetting.findOne({ where: { id: repoId } });
       if (!project) throw new Error('Failed to find GitHub project');
 
       project = project.toJSON();

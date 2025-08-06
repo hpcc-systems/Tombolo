@@ -1,9 +1,6 @@
 const path = require('path');
 
-const {
-  filemonitoring_superfiles: filemonitoring_superfile,
-  fileMonitoring: FileMonitoring,
-} = require('../models');
+const { SuperfileMonitoring, FileMonitoring } = require('../models');
 const logger = require('../config/logger');
 
 const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
@@ -93,7 +90,7 @@ function createSuperFileMonitoringBreeJob({ filemonitoring_id, cron }) {
 async function scheduleSuperFileMonitoringOnServerStart() {
   try {
     logger.info('Super file monitoring initialized ...');
-    const superfileMonitoring = await filemonitoring_superfile.findAll({
+    const superfileMonitoring = await SuperfileMonitoring.findAll({
       raw: true,
     });
     for (let monitoring of superfileMonitoring) {
