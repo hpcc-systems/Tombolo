@@ -4,14 +4,39 @@ const logger = require('../config/logger');
 // Create a new cluster status monitoring
 const createClusterMonitoring = async (req, res) => {
   try {
-    await ClusterMonitoring.create({
+    const newMonitoring = await ClusterMonitoring.create({
       ...req.body,
       createdBy: req.user.id,
       lastUpdatedBy: req.user.id,
     });
-    res
-      .status(201)
-      .send({ message: 'Cluster status monitoring created successfully' });
+
+    // Get the monitoring data with associated models
+    const monitoring = await ClusterMonitoring.findOne({
+      where: { id: newMonitoring.id },
+      include: [
+        {
+          model: models.user,
+          as: 'creator',
+          attributes: ['id', 'firstName', 'lastName', 'email'],
+        },
+        {
+          model: models.user,
+          as: 'updater',
+          attributes: ['id', 'firstName', 'lastName', 'email'],
+        },
+        {
+          model: models.cluster,
+          as: 'cluster',
+          attributes: ['id', 'name', 'thor_host', 'thor_port'],
+        },
+      ],
+    });
+
+    return;
+    res.status(201).send({
+      message: 'Cluster status monitoring created successfully',
+      data: monitoring,
+    });
   } catch (err) {
     res.status(500).send({ message: err.message });
     logger.error('Failed to create cluster', err);
@@ -39,7 +64,25 @@ const getClusterMonitoringById = async (req, res) => {
 // Get all the cluster status monitoring
 const getAllClusterMonitoring = async (req, res) => {
   try {
-    const monitoring = await ClusterMonitoring.findAll();
+    const monitoring = await ClusterMonitoring.findAll({
+      include: [
+        {
+          model: models.user,
+          as: 'creator',
+          attributes: ['id', 'firstName', 'lastName', 'email'],
+        },
+        {
+          model: models.user,
+          as: 'updater',
+          attributes: ['id', 'firstName', 'lastName', 'email'],
+        },
+        {
+          model: models.cluster,
+          as: 'cluster',
+          attributes: ['id', 'name', 'thor_host', 'thor_port'],
+        },
+      ],
+    });
     res.status(200).send(monitoring);
   } catch (err) {
     res.status(500).send({ message: err.message });
