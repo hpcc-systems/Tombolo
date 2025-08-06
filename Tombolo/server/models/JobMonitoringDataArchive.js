@@ -46,7 +46,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'jobMonitoring',
+          model: 'job_monitorings',
           key: 'id',
         },
         onUpdate: 'CASCADE',

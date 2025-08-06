@@ -124,7 +124,7 @@ module.exports = {
     });
 
     await queryInterface.addIndex(
-      'jobMonitoring',
+      'job_monitorings',
       ['monitoringName', 'deletedAt'],
       {
         unique: true,
