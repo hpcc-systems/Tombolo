@@ -1,6 +1,7 @@
 'use strict';
 
 const { Model } = require('sequelize');
+
 const { DeleteMixin } = require('../utils/modelMixins/DeleteMixin');
 
 module.exports = (sequelize, DataTypes) => {
