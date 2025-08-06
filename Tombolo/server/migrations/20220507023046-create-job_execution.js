@@ -28,7 +28,7 @@ module.exports = {
         allowNull: true,
         type: Sequelize.UUID,
         references: {
-          model: 'dataflow',
+          model: 'dataflows',
           key: 'id',
         },
         onUpdate: 'NO ACTION',
@@ -47,7 +47,7 @@ module.exports = {
       jobId: {
         type: Sequelize.UUID,
         references: {
-          model: 'job',
+          model: 'jobs',
           key: 'id',
         },
         onUpdate: 'NO ACTION',
