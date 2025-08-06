@@ -5,12 +5,12 @@ const {
   user_application: UserApplication,
   FileValidation,
   File,
-  license: License,
+  License,
   rules: Rules,
   DataType,
   AssetsGroup,
   ConsumerObject,
-  jobfile: JobFile,
+  JobFile,
 } = require('../../models');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;

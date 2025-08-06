@@ -4,10 +4,7 @@ const Sequelize = require('sequelize');
 
 //Local imports
 const logger = require('../../config/logger');
-const {
-  jobMonitoring: JobMonitoring,
-  jobMonitoring_Data,
-} = require('../../models');
+const { JobMonitoring, JobMonitoringData } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
   validateCreateJobMonitoring,
@@ -31,7 +28,7 @@ router.post('/', validate(validateCreateJobMonitoring), async (req, res) => {
   try {
     //Save the job monitoring
     const response = await JobMonitoring.create(
-      { ...req.body, approvalStatus: 'Pending' },
+      { ...req.body, approvalStatus: 'Pending', createdBy: req.user.id },
       { raw: true }
     );
 
@@ -126,6 +123,7 @@ router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
     payload.approvedBy = null;
     payload.approvedAt = null;
     payload.isActive = false;
+    payload.updatedBy = req.user.id;
 
     //Update the job monitoring
     const updatedRows = await JobMonitoring.update(req.body, {
@@ -141,14 +139,14 @@ router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
     //If updated - Get the updated job monitoring
     const updatedJob = await JobMonitoring.findByPk(req.body.id);
 
-    // If the clusterId or jobName has changed, update the jobMonitoring_Data table ( Happens in background)
+    // If the clusterId or jobName has changed, update the JobMonitoringData table ( Happens in background)
 
     if (
       (clusterIdIsDifferent || jobNameIsDifferent || timeSeriesAnalysisAdded) &&
       notificationCondition.includes('TimeSeriesAnalysis')
     ) {
       // Delete existing job monitoring data permanently
-      await jobMonitoring_Data.destroy({
+      await JobMonitoringData.destroy({
         where: { monitoringId: req.body.id },
         force: true,
       });
@@ -175,13 +173,12 @@ router.patch(
   validate(validateEvaluateJobMonitoring),
   async (req, res) => {
     try {
-      const { ids, approverComment, approvalStatus, approvedBy, isActive } =
-        req.body;
+      const { ids, approverComment, approvalStatus, isActive } = req.body;
       await JobMonitoring.update(
         {
           approvalStatus,
           approverComment,
-          approvedBy,
+          approvedBy: req.user.id,
           approvedAt: new Date(),
           isActive,
         },
@@ -201,8 +198,9 @@ router.delete(
   validate(validateBulkDeleteJobMonitoring),
   async (req, res) => {
     try {
-      const response = await JobMonitoring.destroy({
-        where: { id: req.body.ids },
+      const response = await JobMonitoring.handleDelete({
+        id: req.body.ids,
+        deletedByUserId: req.user.id,
       });
       return res.status(200).json(response);
     } catch (err) {
@@ -218,7 +216,10 @@ router.delete(
   validate(validateDeleteJobMonitoring),
   async (req, res) => {
     try {
-      await JobMonitoring.destroy({ where: { id: req.params.id } });
+      await JobMonitoring.handleDelete({
+        id: req.params.id,
+        deletedByUserId: req.user.id,
+      });
       return res.status(200).send('success');
     } catch (err) {
       logger.error(err.message);
@@ -269,7 +270,7 @@ router.patch(
       if (action) {
         // If action is start or pause change isActive to true or false respectively
         await JobMonitoring.update(
-          { isActive: action === 'start' },
+          { isActive: action === 'start', updatedBy: req.user.id },
           {
             where: { id: { [Op.in]: approvedIds } },
             transaction,
@@ -278,7 +279,10 @@ router.patch(
       } else {
         // Toggle the isActive status for all approved job monitorings
         await JobMonitoring.update(
-          { isActive: Sequelize.literal('NOT isActive') },
+          {
+            isActive: Sequelize.literal('NOT isActive'),
+            updatedBy: req.user.id,
+          },
           {
             where: { id: { [Op.in]: approvedIds } },
             transaction,
@@ -320,6 +324,7 @@ router.patch(
             metaData: data.metaData,
             isActive: false,
             approvalStatus: 'Pending',
+            updatedBy: req.user.id,
           },
           {
             where: { id: data.id },
@@ -346,7 +351,7 @@ router.get(
     const { id } = req.params;
 
     try {
-      const jobMonitoringData = await jobMonitoring_Data.findAll({
+      const jobMonitoringData = await JobMonitoringData.findAll({
         where: { monitoringId: id },
         // latest ones first
         order: [['createdAt', 'DESC']],

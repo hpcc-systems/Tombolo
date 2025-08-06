@@ -18,8 +18,8 @@ const logger = require('../../config/logger');
 const {
   monitoring_notifications,
   FileMonitoring,
-  clusterMonitoring,
-  jobMonitoring,
+  ClusterMonitoring,
+  JobMonitoring,
 } = require('../../models');
 const ROOT = 'tombolo/server';
 
@@ -49,11 +49,11 @@ router.get('/filteredNotifications', async (req, res) => {
       raw: true,
       // include: [
       //   {
-      //     model: jobMonitoring,
+      //     model: JobMonitoring,
       //     attributes: ["name"],
       //   },
       //   {
-      //     model: clusterMonitoring,
+      //     model: ClusterMonitoring,
       //     attributes: ["name"],
       //   },
       //   {
@@ -80,11 +80,11 @@ router.get(
         where: { application_id },
         include: [
           {
-            model: jobMonitoring,
+            model: JobMonitoring,
             attributes: ['name'],
           },
           {
-            model: clusterMonitoring,
+            model: ClusterMonitoring,
             attributes: ['name'],
           },
           {
@@ -117,7 +117,7 @@ router.get(
             as: 'fileMonitoring',
           },
           {
-            model: clusterMonitoring,
+            model: ClusterMonitoring,
             as: 'clusterMonitoring',
           },
         ],

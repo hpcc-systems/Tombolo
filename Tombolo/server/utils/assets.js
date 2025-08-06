@@ -8,11 +8,11 @@ const {
   query_field: QueryField,
   IndexKey,
   IndexPayload,
-  job: Job,
-  jobfile: JobFile,
-  jobparam: JobParam,
+  Job,
+  JobFile,
+  JobParam,
   ConsumerObject,
-  job_execution: JobExecution,
+  JobExecution,
   Indexes: Index,
 } = require('../models');
 

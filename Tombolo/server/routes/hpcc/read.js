@@ -9,7 +9,7 @@ const {
   File,
   query: Query,
   Indexes: Index,
-  job: Job,
+  Job,
 } = require('../../models');
 let hpccJSComms = require('@hpcc-js/comms');
 

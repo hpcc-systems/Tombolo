@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('jobMonitoring_Data', {
+    await queryInterface.createTable('job_monitoring_data', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -30,7 +30,7 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: 'jobMonitoring',
+          model: 'job_monitorings',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -72,13 +72,14 @@ module.exports = {
     });
 
     // Add a composite unique constraint on clusterId, monitoringId, and wuId
-    await queryInterface.addConstraint('jobMonitoring_Data', {
+    await queryInterface.addConstraint('job_monitoring_data', {
       fields: ['monitoringId', 'wuId'],
       type: 'unique',
-      name: 'unique_monitoringId_wuId', // Custom name for the constraint
+      name: 'jmd_unique_monitoringId_wuId', // Custom name for the constraint
     });
   },
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('jobMonitoring_Data');
+    await queryInterface.dropTable('job_monitoring_data');
   },
 };

@@ -1,7 +1,22 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const JobMonitoringDataArchive = sequelize.define(
-    'jobMonitoring_Data_Archive',
+  class JobMonitoringData extends Model {
+    static associate(models) {
+      JobMonitoringData.belongsTo(models.Application, {
+        foreignKey: 'applicationId',
+        as: 'application',
+      });
+      JobMonitoringData.belongsTo(models.JobMonitoring, {
+        foreignKey: 'monitoringId',
+        as: 'jobMonitoring',
+      });
+    }
+  }
+
+  JobMonitoringData.init(
     {
       id: {
         allowNull: false,
@@ -31,7 +46,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'jobMonitoring',
+          model: 'job_monitorings',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -72,30 +87,20 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'jobMonitoring_Data_Archive',
+      sequelize,
+      modelName: 'JobMonitoringData',
+      tableName: 'job_monitoring_data',
       timestamps: true,
       paranoid: true,
       indexes: [
         {
           unique: true,
           fields: ['monitoringId', 'wuId'],
-          name: 'jm_data_archive_unique_monitoringId_wuId', // Match the migration constraint name
+          name: 'jmd_unique_monitoringId_wuId',
         },
       ],
     }
   );
 
-  // Associations
-  JobMonitoringDataArchive.associate = models => {
-    JobMonitoringDataArchive.belongsTo(models.Application, {
-      foreignKey: 'applicationId',
-      as: 'application',
-    });
-    JobMonitoringDataArchive.belongsTo(models.jobMonitoring, {
-      foreignKey: 'monitoringId',
-      as: 'jobMonitoring',
-    });
-  };
-
-  return JobMonitoringDataArchive;
+  return JobMonitoringData;
 };

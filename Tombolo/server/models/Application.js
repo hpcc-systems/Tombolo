@@ -19,7 +19,7 @@ module.exports = sequelize => {
       });
 
       /* JOB EXECUTION */
-      this.hasMany(models.job_execution, {
+      this.hasMany(models.JobExecution, {
         foreignKey: 'applicationId',
         onDelete: 'CASCADE',
       });
@@ -48,12 +48,12 @@ module.exports = sequelize => {
       });
 
       /* JOB */
-      this.hasMany(models.job, {
+      this.hasMany(models.Job, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
 
-      this.hasMany(models.jobparam, {
+      this.hasMany(models.JobParam, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
@@ -104,13 +104,13 @@ module.exports = sequelize => {
       });
 
       /* JOB MONITORING DATA */
-      this.hasMany(models.jobMonitoring_Data, {
+      this.hasMany(models.JobMonitoringData, {
         foreignKey: 'applicationId',
         onDelete: 'CASCADE',
       });
 
       /* JOB MONITORING DATA ARCHIVE */
-      this.hasMany(models.jobMonitoring_Data_Archive, {
+      this.hasMany(models.JobMonitoringDataArchive, {
         foreignKey: 'applicationId',
         onDelete: 'CASCADE',
       });

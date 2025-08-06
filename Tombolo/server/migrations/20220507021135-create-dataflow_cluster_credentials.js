@@ -13,7 +13,7 @@ module.exports = {
       dataflow_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'dataflow',
+          model: 'dataflows',
           key: 'id',
         },
         onUpdate: 'CASCADE',

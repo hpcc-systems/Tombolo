@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { File, job: Job, report: Report } = require('../../models');
+const { File, Job, report: Report } = require('../../models');
 const _ = require('lodash');
 
 router.get('/:applicationId', async (req, res) => {

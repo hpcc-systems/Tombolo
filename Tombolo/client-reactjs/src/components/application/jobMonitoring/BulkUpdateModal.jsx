@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Form, Button, Select, message } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, Form, message, Modal, Select } from 'antd';
 import { isEmail } from 'validator';
 import { handleBulkUpdateJobMonitorings } from './jobMonitoringUtils';
 import { useSelector } from 'react-redux';
@@ -119,10 +119,8 @@ const BulkUpdateModal = ({
           const combinedContacts = [...remainingContacts, ...newPrimaryContacts];
 
           // Remove duplicates by creating a Set (as Set only allows unique values) and then spreading it back into an array
-          const uniqueContacts = [...new Set(combinedContacts)];
-
           // Update 'primaryContacts' with the new unique contacts
-          meta.primaryContacts = uniqueContacts;
+          meta.primaryContacts = [...new Set(combinedContacts)];
         }
 
         if (secondaryContacts) {
@@ -133,10 +131,8 @@ const BulkUpdateModal = ({
           const combinedContacts = [...remainingContacts, ...newSecondaryContacts];
 
           // Remove duplicates by creating a Set (as Set only allows unique values) and then spreading it back into an array
-          const uniqueContacts = [...new Set(combinedContacts)];
-
           // Update 'secondaryContacts' with the new unique contacts
-          meta.secondaryContacts = uniqueContacts;
+          meta.secondaryContacts = [...new Set(combinedContacts)];
         }
 
         if (notifyContacts) {
@@ -147,9 +143,7 @@ const BulkUpdateModal = ({
           const combinedContacts = [...remainingContacts, ...newNotifyContacts];
 
           // Remove duplicates by creating a Set (as Set only allows unique values) and then spreading it back into an array
-          const uniqueContacts = [...new Set(combinedContacts)];
-
-          meta.notifyContacts = uniqueContacts;
+          meta.notifyContacts = [...new Set(combinedContacts)];
         }
 
         if (meta?.primaryContacts.length < 1) {

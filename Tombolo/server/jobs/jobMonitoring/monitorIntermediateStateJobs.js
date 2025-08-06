@@ -9,7 +9,7 @@ const {
   notification_queue,
   monitoring_types,
   monitoring_logs,
-  jobMonitoring_Data: JobMonitoringData,
+  JobMonitoringData,
 } = require('../../models');
 const { decryptString } = require('../../utils/cipher');
 
