@@ -3,7 +3,6 @@ const router = express.Router();
 const axios = require('axios');
 const hpccUtil = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
-const { encryptString } = require('../../utils/cipher');
 const {
   Cluster,
   File,
@@ -11,7 +10,7 @@ const {
   Indexes: Index,
   job: Job,
 } = require('../../models');
-let hpccJSComms = require('@hpcc-js/comms');
+const hpccJSComms = require('@hpcc-js/comms');
 
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
@@ -19,7 +18,6 @@ const {
   validateSuperfileSearch,
   validateQuerySearch,
   // validateJobSearch,
-  validateNewCluster,
   validateGetFileInfo,
   validateGetLogicalFileDetails,
   validateGetIndexInfo,
@@ -35,25 +33,11 @@ const {
   validateClusterMetaData,
 } = require('../../middlewares/hpccMiddleware');
 
-let lodash = require('lodash');
-const fs = require('fs');
-const path = require('path');
+const lodash = require('lodash');
 
 const logger = require('../../config/logger');
 const moment = require('moment');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
-
-// const userService = require('../user/userservice');
-
-let ClusterWhitelist = { clusters: [] };
-
-// check that cluster whitelist exists
-if (!fs.existsSync(path.join(__dirname, '../../cluster-whitelist.js'))) {
-  //log that cluster whitelist not found
-  logger.error('Cluster whitelist not found, please create one');
-} else {
-  ClusterWhitelist = require('../../cluster-whitelist');
-}
 
 router.post(
   '/filesearch',
@@ -176,8 +160,8 @@ router.post(
       logger.error(err);
       return res.status(500).send({
         success: 'false',
-        message: 'Error occured during search.',
-        message: 'Search failed. Please check if the cluster is running.',
+        message:
+          'Error occurred during search. Please check if the cluster is running.',
       });
     }
   }
@@ -219,7 +203,7 @@ router.post(
       });
 
       if (response.QuerysetQueries) {
-        querySearchResult = response.QuerysetQueries.QuerySetQuery;
+        const querySearchResult = response.QuerysetQueries.QuerySetQuery;
         querySearchResult.forEach(querySet => {
           querySearchAutoComplete.push({
             id: querySet.Id,
@@ -310,15 +294,6 @@ router.get('/getClusters', async (req, res) => {
   }
 });
 
-router.get('/getClusterWhitelist', function (req, res) {
-  try {
-    return res.status(200).json(ClusterWhitelist.clusters);
-  } catch (err) {
-    logger.error('err', err);
-    return res.status(500).json({ error: 'Failed to get cluster white list ' });
-  }
-});
-
 router.get('/getCluster', async function (req, res) {
   try {
     const clusters = await Cluster.findOne({
@@ -328,109 +303,6 @@ router.get('/getCluster', async function (req, res) {
   } catch (err) {
     logger.error('err', err);
     return res.status(500).json({ error: 'Failed to get cluster ' });
-  }
-});
-
-// TODO: This route isn't called from the front-end
-router.post(
-  '/newcluster',
-  validate(validateNewCluster),
-  async function (req, res) {
-    try {
-      let cluster = ClusterWhitelist.clusters.filter(
-        cluster => cluster.name == req.body.name
-      );
-      if (cluster && cluster.length > 0) {
-        const thorReachable = await hpccUtil.isClusterReachable(
-          cluster[0].thor,
-          cluster[0].thor_port,
-          req.body.username,
-          req.body.password
-        );
-        // const roxieReachable = await hpccUtil.isClusterReachable(cluster[0].roxie, cluster[0].roxie_port, req.body.username, req.body.password);
-        if (thorReachable.reached) {
-          let newCluster = {
-            name: req.body.name,
-            thor_host: cluster[0].thor,
-            thor_port: cluster[0].thor_port,
-            roxie_host: cluster[0].roxie,
-            roxie_port: cluster[0].roxie_port,
-            createdBy: req.user.id,
-          };
-          if (req.body.username && req.body.password) {
-            newCluster.username = req.body.username;
-            newCluster.hash = encryptString(req.body.password);
-          }
-          if (req.body.id === undefined || req.body.id === '') {
-            const result = await Cluster.create(newCluster);
-            //get clusterTimezoneOFfset once ID is available after cluster creation
-            const offset = await hpccUtil.getClusterTimezoneOffset(
-              result.dataValues.id
-            );
-            //if succesful, set timezone offset and update
-            if (offset || offset == 0) {
-              newCluster.timezone_offset = offset;
-              await Cluster.update(newCluster, {
-                where: { id: result.dataValues.id },
-              });
-              return res.status(200).json({
-                success: true,
-                message: 'Successfully added new cluster',
-              });
-            } else {
-              return res.status(400).json({
-                success: false,
-                message:
-                  'Failure to add Cluster, Timezone Offset could not be found',
-              });
-            }
-          } else {
-            //get clusterTimezoneOFfset once ID is available after cluster creation
-            const offset = await hpccUtil.getClusterTimezoneOffset(req.body.id);
-            if (offset) {
-              newCluster.timezone_offset = offset;
-              await Cluster.update(newCluster, { where: { id: req.body.id } });
-              return res.status(200).json({
-                success: true,
-                message: 'Successfully updated cluster',
-              });
-            } else {
-              return res.status(400).json({
-                success: false,
-                message:
-                  'Failure to add Cluster, Timezone Offset could not be found',
-              });
-            }
-          }
-        } else {
-          return res
-            .status(400)
-            .json({ success: false, message: 'Cluster could not be reached' });
-        }
-      }
-    } catch (err) {
-      logger.error('err', err);
-      return res.status(500).send({
-        success: 'false',
-        message: 'Error occurred while adding new Cluster',
-      });
-    }
-  }
-);
-
-// TODO: This route isn't called from the front-end
-router.post('/removecluster', function (req, res) {
-  logger.info(`Deleting clusters: ${req.body.clusterIdsToDelete}`);
-  try {
-    Cluster.destroy(
-      { where: { id: req.body.clusterIdsToDelete } },
-      function (err) {
-        logger.error(err);
-      }
-    );
-    return res.status(200).send({ result: 'success' });
-  } catch (err) {
-    logger.error('err', err);
   }
 });
 
@@ -578,11 +450,7 @@ router.get('/getData', validate(validateGetData), async function (req, res) {
       Count: 50,
     });
 
-    if (
-      response.Result != undefined &&
-      response.Result != undefined &&
-      response.Result.Row != undefined
-    ) {
+    if (response.Result !== undefined && response.Result.Row !== undefined) {
       const rows = response.Result.Row;
 
       if (rows.length > 0) {
