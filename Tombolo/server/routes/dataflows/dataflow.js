@@ -4,7 +4,7 @@ const {
   Cluster,
   Indexes: Index,
   File,
-  job: Job,
+  Job,
   DataflowClusterCredential,
   DataflowVersion,
   Dataflow,

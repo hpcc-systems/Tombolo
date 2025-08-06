@@ -5,12 +5,12 @@ const _ = require('lodash');
 
 // Local imports
 const {
-  jobMonitoring: JobMonitoring,
+  JobMonitoring,
   Cluster,
   monitoring_types: MonitoringTypes,
   monitoring_logs: MonitoringLogs,
   notification_queue: NotificationQueue,
-  jobMonitoring_Data: JobMonitoringData,
+  JobMonitoringData,
 } = require('../../models');
 const { decryptString } = require('../../utils/cipher');
 const {

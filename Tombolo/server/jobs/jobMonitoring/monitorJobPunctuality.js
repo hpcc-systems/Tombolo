@@ -16,7 +16,7 @@ const {
   nocAlertDescription,
 } = require('./monitorJobsUtil');
 const {
-  jobMonitoring: JobMonitoring,
+  JobMonitoring,
   Cluster,
   notification_queue: NotificationQueue,
   monitoring_types: MonitoringTypes,

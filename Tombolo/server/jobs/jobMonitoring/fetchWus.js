@@ -3,10 +3,7 @@ const { parentPort, workerData } = require('worker_threads');
 const { decryptString } = require('../../utils/cipher');
 
 // Local Imports
-const {
-  Cluster,
-  jobMonitoring_Data: JobMonitoringData,
-} = require('../../models');
+const { Cluster, JobMonitoringData } = require('../../models');
 const { WorkunitsService } = require('@hpcc-js/comms');
 const shallowCopyWithoutNested = require('../../utils/shallowCopyWithoutNested.js');
 const { WUInfoOptions } = require('./monitorJobsUtil');

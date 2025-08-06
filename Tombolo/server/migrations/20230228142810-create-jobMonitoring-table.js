@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('jobMonitoring', {
+    await queryInterface.createTable('job_monitorings', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -33,7 +33,13 @@ module.exports = {
       },
       approvedBy: {
         allowNull: true,
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       approvedAt: {
         allowNull: true,
@@ -75,11 +81,33 @@ module.exports = {
       },
       createdBy: {
         allowNull: false,
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       lastUpdatedBy: {
-        allowNull: false,
-        type: Sequelize.STRING,
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
+      deletedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       createdAt: {
         allowNull: false,
@@ -104,7 +132,8 @@ module.exports = {
       }
     );
   },
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('jobMonitoring');
+    await queryInterface.dropTable('job_monitorings');
   },
 };

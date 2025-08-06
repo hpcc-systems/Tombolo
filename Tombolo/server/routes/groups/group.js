@@ -19,7 +19,7 @@ const {
   indexes: Index,
   File,
   query: Query,
-  job: Job,
+  Job,
   AssetsGroup,
   FileTemplate,
   sequelize,

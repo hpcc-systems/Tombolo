@@ -25,15 +25,11 @@ const createUpdateJobMonitoringValidations = [
 const validateCreateJobMonitoring = [
   ...createUpdateJobMonitoringValidations,
   // body("isActive").isBoolean().withMessage("isActive must be a boolean"),
-  stringBody('createdBy', true),
-  stringBody('lastUpdatedBy', true),
 ];
 
 const validateUpdateJobMonitoring = [
   bodyUuids.id,
   ...createUpdateJobMonitoringValidations,
-  stringBody('createdBy', true),
-  stringBody('lastUpdatedBy', true),
 ];
 
 const validateEvaluateJobMonitoring = [
@@ -41,7 +37,6 @@ const validateEvaluateJobMonitoring = [
   ...arrayIds,
   stringBody('approvalStatus'),
   booleanBody('isActive'),
-  stringBody('approvedBy'),
 ];
 
 const validateBulkDeleteJobMonitoring = [...arrayIds];

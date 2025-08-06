@@ -2,8 +2,8 @@ const { v4: uuidv4 } = require('uuid');
 
 const {
   DataflowVersion,
-  job_execution: JobExecution,
-  job: Job,
+  JobExecution,
+  Job,
   message_based_jobs: MessageBasedJobs,
 } = require('../models');
 const logger = require('../config/logger');

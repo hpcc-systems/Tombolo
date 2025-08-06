@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class DataflowVersion extends Model {
     static associate(models) {
       DataflowVersion.belongsTo(models.Dataflow, { foreignKey: 'dataflowId' });
-      DataflowVersion.hasMany(models.job_execution, {
+      DataflowVersion.hasMany(models.JobExecution, {
         foreignKey: 'dataflowVersionId',
         onDelete: 'NO ACTION',
         onUpdate: 'NO ACTION',

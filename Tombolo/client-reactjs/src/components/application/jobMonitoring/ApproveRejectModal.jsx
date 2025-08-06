@@ -9,7 +9,6 @@ const ApproveRejectModal = ({
   displayAddRejectModal,
   setDisplayAddRejectModal,
   setSelectedMonitoring,
-  user,
   selectedMonitoring,
   setJobMonitorings,
   selectedRows,
@@ -76,14 +75,6 @@ const ApproveRejectModal = ({
         formData.ids = [id];
       }
       formData.isActive = formData.isActive || false;
-      const approverObj = {
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-      };
-      if (typeof user === 'object' && user !== null) {
-        formData.approvedBy = JSON.stringify(approverObj);
-      }
       const payload = {
         method: 'PATCH',
         headers: authHeader(),

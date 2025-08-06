@@ -21,7 +21,6 @@ import ApproveRejectModal from './ApproveRejectModal.jsx';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import JobMonitoringFilters from './JobMonitoringFilters.jsx';
-import { getUser } from '../../common/userStorage.js';
 import { useMonitorType } from '../../../hooks/useMonitoringType';
 import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
 import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
@@ -40,8 +39,6 @@ function JobMonitoring() {
       clusters,
     },
   } = useSelector((state) => state);
-
-  const user = getUser();
 
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
@@ -349,16 +346,8 @@ function JobMonitoring() {
         metaData.schedule = jobSchedule.schedule;
       }
 
-      //Add applicationId, createdBy, lastUpdatedBy to allInputs
+      //Add applicationId to allInputs
       allInputs.applicationId = applicationId;
-      const userDetails = JSON.stringify({
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-      });
-
-      allInputs.createdBy = userDetails;
-      allInputs.lastUpdatedBy = userDetails;
 
       //Add asrSpecificMetaData, notificationMetaData to metaData object
       metaData.asrSpecificMetaData = asrSpecificMetaData;
@@ -520,13 +509,6 @@ function JobMonitoring() {
       const otherFieldsValues = form.getFieldsValue(otherFields);
       const newOtherFields = { ...selectedMonitoring, ...otherFieldsValues };
       updatedData = { ...updatedData, ...newOtherFields };
-
-      // updated by
-      updatedData.lastUpdatedBy = JSON.stringify({
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-      });
 
       // Make api call
       await updateSelectedMonitoring({ updatedData });
@@ -758,7 +740,6 @@ function JobMonitoring() {
           setDisplayAddRejectModal={setDisplayAddRejectModal}
           selectedMonitoring={selectedMonitoring}
           setSelectedMonitoring={setSelectedMonitoring}
-          user={user}
           setJobMonitorings={setJobMonitorings}
         />
       )}

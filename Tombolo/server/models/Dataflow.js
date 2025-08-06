@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       Dataflow.hasOne(models.DataflowClusterCredential, {
         foreignKey: 'dataflow_id',
       });
-      Dataflow.hasMany(models.job_execution, {
+      Dataflow.hasMany(models.JobExecution, {
         foreignKey: 'dataflowId',
         onDelete: 'NO ACTION',
         onUpdate: 'NO ACTION',

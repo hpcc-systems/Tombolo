@@ -26,10 +26,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'assetId',
         otherKey: 'groupId',
       });
-      File.belongsToMany(models.job, {
+      File.belongsToMany(models.Job, {
         constraints: false,
         foreignKeyConstraint: false,
-        through: 'jobfile',
+        through: 'job_files',
         foreignKey: 'file_id',
         otherKey: 'job_id',
       });

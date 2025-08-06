@@ -4,8 +4,8 @@ const Sequelize = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const {
   notification_queue: NotificationQueue,
-  jobMonitoring_Data: JobMonitoringData,
-  jobMonitoring: JobMonitoring,
+  JobMonitoringData,
+  JobMonitoring,
 } = require('../../models');
 const {
   WUAlertDataPoints,

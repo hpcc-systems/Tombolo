@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const {
-  job: Job,
-  jobfile: JobFile,
-  jobparam: JobParam,
+  Job,
+  JobFile,
+  JobParam,
   File,
   FileValidation,
   FileTemplate,
   DataflowVersion,
   AssetsGroup,
-  job_execution: JobExecution,
+  JobExecution,
   message_based_jobs: MessageBasedJobs,
 } = require('../../models');
 let Sequelize = require('sequelize');

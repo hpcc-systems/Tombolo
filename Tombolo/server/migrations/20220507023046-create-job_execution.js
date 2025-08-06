@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('job_execution', {
+    return queryInterface.createTable('job_executions', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -29,6 +29,16 @@ module.exports = {
         type: Sequelize.UUID,
         references: {
           model: 'dataflow',
+          key: 'id',
+        },
+        onUpdate: 'NO ACTION',
+        onDelete: 'NO ACTION',
+      },
+      dataflowVersionId: {
+        type: Sequelize.UUID,
+        allowNull: true,
+        references: {
+          model: 'dataflow_versions',
           key: 'id',
         },
         onUpdate: 'NO ACTION',
@@ -66,7 +76,8 @@ module.exports = {
       },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('job_execution');
+    return queryInterface.dropTable('job_executions');
   },
 };
