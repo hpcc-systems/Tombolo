@@ -1,7 +1,20 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const IntegrationMapping = sequelize.define(
-    'integration_mapping',
+  class IntegrationMapping extends Model {
+    static associate(models) {
+      IntegrationMapping.belongsTo(models.Integration, {
+        foreignKey: 'integration_id',
+      });
+      IntegrationMapping.belongsTo(models.Application, {
+        foreignKey: 'application_id',
+      });
+    }
+  }
+
+  IntegrationMapping.init(
     {
       id: {
         type: DataTypes.UUID,
@@ -47,20 +60,12 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      freezeTableName: true,
-      paranoid: true, // This enables soft deletes
+      sequelize,
+      modelName: 'IntegrationMapping',
+      tableName: 'integration_mappings',
+      paranoid: true,
     }
   );
-
-  // Association to integrations and application
-  IntegrationMapping.associate = models => {
-    IntegrationMapping.belongsTo(models.integrations, {
-      foreignKey: 'integration_id',
-    });
-    IntegrationMapping.belongsTo(models.Application, {
-      foreignKey: 'application_id',
-    });
-  };
 
   return IntegrationMapping;
 };

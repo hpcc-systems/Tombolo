@@ -1,20 +1,19 @@
 const logger = require('../config/logger');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-const { sequelize } = require('../models');
-const models = require('../models');
-const {
-  trimURL,
-  checkPasswordSecurityViolations,
-} = require('../utils/authUtil');
 const {
   user,
   RoleTypes,
   UserRoles,
-  instance_settings,
+  InstanceSetting,
   AccountVerificationCode,
   notification_queue,
-} = models;
+  sequelize,
+} = require('../models');
+const {
+  trimURL,
+  checkPasswordSecurityViolations,
+} = require('../utils/authUtil');
 
 // Main controller function
 const createInstanceSettingFirstRun = async (req, res) => {
@@ -237,8 +236,8 @@ const manageInstanceSettings = async (
   { name, userId, description },
   transaction
 ) => {
-  await instance_settings.destroy({ where: {} }, { transaction });
-  await instance_settings.create(
+  await InstanceSetting.destroy({ where: {} }, { transaction });
+  await InstanceSetting.create(
     {
       name,
       metaData: {

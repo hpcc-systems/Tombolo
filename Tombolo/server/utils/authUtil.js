@@ -12,8 +12,8 @@ const {
   RoleTypes,
   userArchive,
   user_application,
-  application: Application,
-  instance_settings: InstanceSettings,
+  Application,
+  InstanceSetting,
   notification_queue: NotificationQueue,
   AccountVerificationCode,
 } = require('../models');
@@ -156,7 +156,7 @@ const setLastLoginAndReturn = user => {
 // Get Support Notification Recipient's Emails
 const getSupportContactEmails = async () => {
   // Get Instance Setting
-  const instanceSetting = await InstanceSettings.findOne({ raw: true });
+  const instanceSetting = await InstanceSetting.findOne({ raw: true });
 
   let supportEmailRecipientsEmail =
     instanceSetting.metaData.supportEmailRecipients || [];
@@ -204,7 +204,7 @@ const getSupportContactEmails = async () => {
 // Get Access Request Notification Recipient's Emails
 const getAccessRequestContactEmails = async () => {
   // Get Instance Setting
-  const instanceSetting = await InstanceSettings.findOne({ raw: true });
+  const instanceSetting = await InstanceSetting.findOne({ raw: true });
 
   let accessRequestEmailRecipientsEmail =
     instanceSetting.metaData.accessRequestEmailRecipientsEmail || [];

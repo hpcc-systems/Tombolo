@@ -8,7 +8,7 @@ const {
   Cluster,
   File,
   query: Query,
-  indexes: Index,
+  Indexes: Index,
   job: Job,
 } = require('../../models');
 let hpccJSComms = require('@hpcc-js/comms');

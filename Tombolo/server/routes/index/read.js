@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const {
-  indexes: Index,
+  Indexes: Index,
   IndexKey,
-  index_payload: IndexPayload,
+  IndexPayload,
   AssetsGroup,
 } = require('../../models');
 const assetUtil = require('../../utils/assets');

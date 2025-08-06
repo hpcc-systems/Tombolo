@@ -8,14 +8,14 @@ const {
   validateUpdateIntegrationSettings,
 } = require('../../middlewares/integrationsMiddleware');
 const logger = require('../../config/logger');
-const { integrations, integration_mapping } = require('../../models');
+const { Integration, IntegrationMapping } = require('../../models');
 
 const router = express.Router();
 
 //Get all integrations - active or not from integrations table
 router.get('/all', async (req, res) => {
   try {
-    const result = await integrations.findAll();
+    const result = await Integration.findAll();
     return res.status(200).send(result);
   } catch (err) {
     logger.error(err);
@@ -26,11 +26,11 @@ router.get('/all', async (req, res) => {
 // Get all active integrations from the integrations to application mapping table
 router.get('/getAllActive/', async (req, res) => {
   try {
-    const integrationMappingDetails = await integration_mapping.findAll(
+    const integrationMappingDetails = await IntegrationMapping.findAll(
       {
         include: [
           {
-            model: integrations,
+            model: Integration,
             as: 'integration',
             required: true,
             attributes: ['name', 'description', 'metaData'],
@@ -54,21 +54,21 @@ router.get(
   validate(validateIntegrationDetails),
   async (req, res) => {
     try {
-      const result = await integration_mapping.findOne({
+      const result = await IntegrationMapping.findOne({
         where: {
           id: req.params.id,
         },
         attributes: [
-          [sequelize.col('integration_mapping.id'), 'integrationMappingId'],
+          [sequelize.col('integration_mappings.id'), 'integrationMappingId'],
           [
-            sequelize.col('integration_mapping.metaData'),
+            sequelize.col('integration_mappings.metaData'),
             'appSpecificIntegrationMetaData',
           ],
-          'integration_mapping.application_id',
+          'integration_mappings.application_id',
         ],
         include: [
           {
-            model: integrations,
+            model: Integration,
             as: 'integration',
             required: true,
             attributes: [
@@ -103,7 +103,7 @@ router.post(
       1. destroy if exists
       */
       const { integrationId, application_id, active } = req.body;
-      const result = await integration_mapping.findOne({
+      const result = await IntegrationMapping.findOne({
         where: {
           application_id,
           integration_id: integrationId,
@@ -113,20 +113,20 @@ router.post(
 
       if (active) {
         if (result) {
-          await integration_mapping.restore({
+          await IntegrationMapping.restore({
             where: {
               application_id,
               integration_id: integrationId,
             },
           });
         } else {
-          await integration_mapping.create({
+          await IntegrationMapping.create({
             application_id,
             integration_id: integrationId,
           });
         }
       } else {
-        await integration_mapping.destroy({
+        await IntegrationMapping.destroy({
           where: {
             application_id,
             integration_id: integrationId,
@@ -149,7 +149,7 @@ router.put(
   validate(validateUpdateIntegrationSettings),
   async (req, res) => {
     try {
-      const result = await integration_mapping.update(
+      const result = await IntegrationMapping.update(
         {
           metaData: req.body.integrationSettings,
         },

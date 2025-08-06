@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'file_id',
         onDelete: 'CASCADE',
       });
-      File.hasMany(models.indexes, {
+      File.hasMany(models.Indexes, {
         foreignKey: 'parentFileId',
         onDelete: 'CASCADE',
       });

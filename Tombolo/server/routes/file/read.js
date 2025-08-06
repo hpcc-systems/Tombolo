@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  application: Application,
+  Application,
   user_application: UserApplication,
   FileValidation,
   File,

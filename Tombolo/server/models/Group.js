@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'groupId',
         otherKey: 'assetId',
       });
-      Group.belongsToMany(models.indexes, {
+      Group.belongsToMany(models.Indexes, {
         constraints: false,
         foreignKeyConstraint: false,
         through: 'assets_groups',

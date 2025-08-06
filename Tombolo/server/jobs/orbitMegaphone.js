@@ -1,7 +1,7 @@
 const logger = require('../config/logger');
 const {
-  integrations,
-  integration_mapping: integration_mappings,
+  Integration,
+  IntegrationMapping,
   orbitBuilds,
   monitoring_notifications,
   notification_queue: notification,
@@ -12,7 +12,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
 (async () => {
   try {
     //grab all orbit integrations that are active
-    const integrationList = await integrations.findAll({
+    const integrationList = await Integration.findAll({
       where: {
         name: 'ASR',
       },
@@ -23,7 +23,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
 
     if (!integrationId) return;
 
-    const orbitIntegrations = await integration_mappings.findAll({
+    const orbitIntegrations = await IntegrationMapping.findAll({
       where: {
         integration_id: integrationId,
       },

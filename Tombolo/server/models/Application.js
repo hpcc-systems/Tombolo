@@ -31,7 +31,7 @@ module.exports = sequelize => {
       });
 
       /* INDEX */
-      this.hasMany(models.indexes, {
+      this.hasMany(models.Indexes, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
@@ -98,7 +98,7 @@ module.exports = sequelize => {
         onDelete: 'CASCADE',
       });
 
-      this.hasMany(models.integration_mapping, {
+      this.hasMany(models.IntegrationMapping, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
