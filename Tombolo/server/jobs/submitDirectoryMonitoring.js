@@ -1,5 +1,5 @@
 const logger = require('../config/logger');
-const { directoryMonitoring } = require('../models');
+const { DirectoryMonitoring } = require('../models');
 const hpccUtil = require('../utils/hpcc-util');
 const wildCardStringMatch = require('../utils/wildCardStringMatch');
 const { workerData } = require('worker_threads');
@@ -9,7 +9,7 @@ const moment = require('moment');
   try {
     //grab all directory monitoring that are active
 
-    const directoryMonitoringDetails = await directoryMonitoring.findOne({
+    const directoryMonitoringDetails = await DirectoryMonitoring.findOne({
       where: {
         id: workerData.directoryMonitoring_id,
         active: true,
@@ -241,7 +241,7 @@ const moment = require('moment');
       ...newFilesToMonitor,
     ];
 
-    await directoryMonitoring.update(
+    await DirectoryMonitoring.update(
       { metaData },
       { where: { id: directorymonitoring_id } }
     );

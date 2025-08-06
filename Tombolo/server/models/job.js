@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
     { paranoid: true, freezeTableName: true }
   );
   job.associate = function (models) {
-    job.belongsToMany(models.file, {
+    job.belongsToMany(models.File, {
       constraints: false,
       foreignKeyConstraint: false,
       through: 'jobfile',

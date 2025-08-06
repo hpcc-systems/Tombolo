@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     file_validation.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });
-    file_validation.belongsTo(models.file, { foreignKey: 'file_id' });
+    file_validation.belongsTo(models.File, { foreignKey: 'file_id' });
   };
   return file_validation;
 };

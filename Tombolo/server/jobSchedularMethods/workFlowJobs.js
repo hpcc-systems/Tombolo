@@ -1,6 +1,11 @@
 const { v4: uuidv4 } = require('uuid');
 
-const models = require('../models');
+const {
+  DataflowVersion,
+  job_execution: JobExecution,
+  job: Job,
+  message_based_jobs: MessageBasedJobs,
+} = require('../models');
 const logger = require('../config/logger');
 const workflowUtil = require('../utils/workflow-util');
 
@@ -11,11 +16,6 @@ const SUBMIT_MANUAL_JOB_FILE_NAME = 'submitManualJob.js';
 const SUBMIT_GITHUB_JOB_FILE_NAME = 'submitGithubJob.js';
 const SUBMIT_QUERY_PUBLISH = 'submitQueryPublish.js';
 
-const DataflowVersions = models.dataflow_versions;
-const JobExecution = models.job_execution;
-const Job = models.job;
-const MessageBasedJobs = models.message_based_jobs;
-
 async function scheduleCheckForJobsWithSingleDependency({
   dependsOnJobId,
   dataflowId,
@@ -23,7 +23,7 @@ async function scheduleCheckForJobsWithSingleDependency({
   jobExecutionGroupId,
 }) {
   try {
-    const dataflowVersion = await DataflowVersions.findOne({
+    const dataflowVersion = await DataflowVersion.findOne({
       where: { id: dataflowVersionId },
       attributes: ['graph'],
     });
@@ -190,7 +190,7 @@ function executeJob(jobData) {
 async function scheduleActiveCronJobs() {
   try {
     // get all active graphs
-    const dataflowsVersions = await DataflowVersions.findAll({
+    const dataflowsVersions = await DataflowVersion.findAll({
       where: { isLive: true },
       attributes: ['id', 'graph', 'dataflowId'],
     });

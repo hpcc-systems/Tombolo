@@ -2,7 +2,6 @@ const path = require('path');
 
 //Local imports
 const logger = require('../config/logger');
-const models = require('../models');
 const {
   clusterReachabilityMonitoringInterval,
   cluster_monitoring_interval,

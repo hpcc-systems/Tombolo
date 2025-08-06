@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('costMonitoring', {
+    await queryInterface.createTable('cost_monitorings', {
       id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -85,6 +85,16 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'NO ACTION',
       },
+      deletedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -99,16 +109,16 @@ module.exports = {
     });
 
     await queryInterface.addIndex(
-      'costMonitoring',
+      'cost_monitorings',
       ['monitoringName', 'deletedAt'],
       {
         unique: true,
-        name: 'cm_unique_monitoring_name_deleted_at',
+        name: 'cost_mon_unique_monitoring_name_deleted_at',
       }
     );
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('costMonitoring');
+    await queryInterface.dropTable('cost_monitorings');
   },
 };

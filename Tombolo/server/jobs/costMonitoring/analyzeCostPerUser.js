@@ -1,11 +1,11 @@
 const logger = require('../../config/logger');
 const { parentPort } = require('worker_threads');
 const {
-  costMonitoring: CostMonitoring,
-  costMonitoringData: CostMonitoringData,
+  CostMonitoring,
+  CostMonitoringData,
   notification_queue: NotificationQueue,
   monitoring_types: MonitoringTypes,
-  costMonitoringDataTotals: CostMonitoringDataTotals,
+  CostMonitoringDataTotals,
   Cluster,
   AsrDomain,
   AsrProduct,

@@ -17,7 +17,7 @@ const Op = Sequelize.Op;
 const {
   groups: Groups,
   indexes: Index,
-  file: File,
+  File,
   query: Query,
   job: Job,
   AssetsGroup,

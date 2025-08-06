@@ -25,7 +25,7 @@ module.exports = sequelize => {
       });
 
       /* DATAFLOW */
-      this.hasMany(models.dataflow, {
+      this.hasMany(models.Dataflow, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
@@ -65,7 +65,7 @@ module.exports = sequelize => {
       });
 
       /* FILE */
-      this.hasMany(models.file, {
+      this.hasMany(models.File, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });

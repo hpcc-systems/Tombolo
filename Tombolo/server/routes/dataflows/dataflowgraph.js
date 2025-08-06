@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-var { Job, dataflow_versions: DataflowVersions } = require('../../models');
+const { Job, DataflowVersion } = require('../../models');
 
 const validatorUtil = require('../../utils/validator');
 const { body, query, validationResult } = require('express-validator');
@@ -22,7 +22,7 @@ router.get(
     try {
       const { dataflowId } = req.query;
 
-      const dataflowVersion = await DataflowVersions.findOne({
+      const dataflowVersion = await DataflowVersion.findOne({
         where: { dataflowId, isLive: true },
         attributes: ['graph', 'name'],
       });
@@ -54,7 +54,7 @@ router.get(
 
     try {
       const { dataflowId } = req.query;
-      const versions = await DataflowVersions.findAll({
+      const versions = await DataflowVersion.findAll({
         where: { dataflowId },
         attributes: [
           'id',
@@ -97,7 +97,7 @@ router.post(
       const createdBy =
         req.authInfo?.email || req.user?.email || 'unknown user';
 
-      const version = await DataflowVersions.create({
+      const version = await DataflowVersion.create({
         name,
         description,
         graph,
@@ -140,7 +140,7 @@ router.put(
     try {
       const { name, description, id } = req.body;
 
-      let version = await DataflowVersions.findOne({ where: { id } });
+      let version = await DataflowVersion.findOne({ where: { id } });
       if (!version) throw new Error('Version was not found');
 
       version = await version.update({ name, description });
@@ -175,7 +175,7 @@ router.delete(
     try {
       const { id } = req.query;
 
-      const isRemoved = await DataflowVersions.destroy({ where: { id } });
+      const isRemoved = await DataflowVersion.destroy({ where: { id } });
       if (!isRemoved) throw new Error('Version was not removed!');
 
       return res.status(200).send({ success: true, id });
@@ -201,7 +201,7 @@ router.get(
     try {
       const { id } = req.query;
 
-      const version = await DataflowVersions.findOne({
+      const version = await DataflowVersion.findOne({
         where: { id },
         attributes: ['id', 'graph', 'name', 'description'],
       });
@@ -234,7 +234,7 @@ router.put(
       const { id, action, dataflowId } = req.body;
 
       if (action === 'pause') {
-        const version = await DataflowVersions.findOne({
+        const version = await DataflowVersion.findOne({
           where: { id },
           attributes: ['graph', 'id'],
         });
@@ -252,14 +252,14 @@ router.put(
 
         await JobScheduler.removeAllFromBree(dataflowId);
         /* Update current dataflow with new version */
-        await DataflowVersions.update(
+        await DataflowVersion.update(
           { isLive: false },
           { where: { dataflowId } }
         );
         return res.status(200).send({ id: version.id, isLive: false });
       }
 
-      let newVersion = await DataflowVersions.findOne({
+      let newVersion = await DataflowVersion.findOne({
         where: { id },
         attributes: ['graph', 'id'],
       });
@@ -281,7 +281,7 @@ router.put(
       );
 
       // Get Live Version monitor Ids to adjust them
-      const liveVersion = await DataflowVersions.findOne({
+      const liveVersion = await DataflowVersion.findOne({
         where: { isLive: true, dataflowId },
         attributes: ['graph'],
       });
@@ -296,7 +296,7 @@ router.put(
 
       /* FileMonitoring steps:
         - remove filemonitorings that are not in selected graph;
-        - add file monitorings that were not in prev graph;  
+        - add file monitorings that were not in prev graph;
       */
       for (const id of prevMonitorIds) {
         if (!newMonitorIds.includes(id)) {
@@ -341,7 +341,7 @@ router.put(
       }
 
       /* Update current dataflow with new version */
-      await DataflowVersions.update(
+      await DataflowVersion.update(
         { isLive: false },
         { where: { dataflowId } }
       );

@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('costMonitoringDataArchive', {
+    await queryInterface.createTable('cost_monitoring_data_archive', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -34,7 +34,7 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: 'costMonitoring',
+          model: 'cost_monitorings',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -79,24 +79,28 @@ module.exports = {
     });
 
     // Add indexes for better query performance
-    await queryInterface.addIndex('costMonitoringDataArchive', ['archivedAt']);
-    await queryInterface.addIndex('costMonitoringDataArchive', [
+    await queryInterface.addIndex('cost_monitoring_data_archive', [
+      'archivedAt',
+    ]);
+    await queryInterface.addIndex('cost_monitoring_data_archive', [
       'monitoringId',
     ]);
-    await queryInterface.addIndex('costMonitoringDataArchive', [
+    await queryInterface.addIndex('cost_monitoring_data_archive', [
       'applicationId',
     ]);
-    await queryInterface.addIndex('costMonitoringDataArchive', ['clusterId']);
-    await queryInterface.addIndex('costMonitoringDataArchive', ['date']);
+    await queryInterface.addIndex('cost_monitoring_data_archive', [
+      'clusterId',
+    ]);
+    await queryInterface.addIndex('cost_monitoring_data_archive', ['date']);
 
     // Composite index for common queries
-    await queryInterface.addIndex('costMonitoringDataArchive', {
+    await queryInterface.addIndex('cost_monitoring_data_archive', {
       fields: ['monitoringId', 'applicationId', 'clusterId'],
       name: 'idx_cost_monitoring_data_archive_composite',
     });
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('costMonitoringDataArchive');
+    await queryInterface.dropTable('cost_monitoring_data_archive');
   },
 };

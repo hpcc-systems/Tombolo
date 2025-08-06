@@ -1,6 +1,9 @@
 const path = require('path');
 
-const models = require('../models');
+const {
+  filemonitoring_superfiles: filemonitoring_superfile,
+  fileMonitoring: FileMonitoring,
+} = require('../models');
 const logger = require('../config/logger');
 
 const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
@@ -10,10 +13,6 @@ const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
 const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = 'submitSuperFileMonitoring.js';
 const SUBMIT_DIRECTORY_MONITORING_FILE_NAME = 'submitDirectoryMonitoring.js';
 const FILE_MONITORING = 'fileMonitoringPoller.js';
-
-const filemonitoring_superfile = models.filemonitoring_superfiles;
-const FileMonitoring = models.fileMonitoring;
-const directoryMonitoring = models.directoryMonitoring;
 
 function createLandingZoneFileMonitoringBreeJob({
   filemonitoring_id,

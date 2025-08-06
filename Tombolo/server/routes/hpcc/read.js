@@ -6,7 +6,7 @@ const assetUtil = require('../../utils/assets');
 const { encryptString } = require('../../utils/cipher');
 const {
   Cluster,
-  file: File,
+  File,
   query: Query,
   indexes: Index,
   job: Job,

@@ -26,8 +26,8 @@ module.exports = (sequelize, DataTypes) => {
   );
   job_execution.associate = function (models) {
     job_execution.belongsTo(models.job, { foreignKey: 'jobId' });
-    job_execution.belongsTo(models.dataflow, { foreignKey: 'dataflowId' }); // can be executed without dataflow, migration will allow null
-    job_execution.belongsTo(models.dataflow_versions, {
+    job_execution.belongsTo(models.Dataflow, { foreignKey: 'dataflowId' }); // can be executed without dataflow, migration will allow null
+    job_execution.belongsTo(models.DataflowVersion, {
       foreignKey: 'dataflowVersionId',
     }); // can be executed without dataflow, migration will allow null
     job_execution.belongsTo(models.Application, {

@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('costMonitoringData', {
+    await queryInterface.createTable('cost_monitoring_data', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -24,7 +24,7 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: 'costMonitoring',
+          model: 'cost_monitorings',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -75,7 +75,7 @@ module.exports = {
       },
     });
 
-    // await queryInterface.addIndex('costMonitoringData', {
+    // await queryInterface.addIndex('cost_monitoring_data', {
     //   unique: true,
     //   fields: ['monitoringId', 'applicationId', 'clusterId', 'analyzed'],
     //   name: 'costMonitoringData_unique_monitoring_app_cluster_analyzed',
@@ -83,6 +83,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('costMonitoringData');
+    await queryInterface.dropTable('cost_monitoring_data');
   },
 };

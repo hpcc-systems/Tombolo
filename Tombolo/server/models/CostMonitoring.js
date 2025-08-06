@@ -1,7 +1,55 @@
 'use strict';
+
+const { Model } = require('sequelize');
+const { DeleteMixin } = require('../utils/modelMixins/DeleteMixin');
+
 module.exports = (sequelize, DataTypes) => {
-  const costMonitoring = sequelize.define(
-    'costMonitoring',
+  class CostMonitoring extends DeleteMixin(Model) {
+    static associate(models) {
+      CostMonitoring.belongsTo(models.Application, {
+        foreignKey: 'applicationId',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      });
+
+      CostMonitoring.hasMany(models.CostMonitoringData, {
+        foreignKey: 'monitoringId',
+        as: 'costMonitoringData',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      });
+
+      CostMonitoring.belongsTo(models.user, {
+        foreignKey: 'createdBy',
+        as: 'creator',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      CostMonitoring.belongsTo(models.user, {
+        foreignKey: 'lastUpdatedBy',
+        as: 'updater',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      CostMonitoring.belongsTo(models.user, {
+        foreignKey: 'approvedBy',
+        as: 'approver',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      CostMonitoring.belongsTo(models.user, {
+        foreignKey: 'deletedBy',
+        as: 'deleter',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+    }
+  }
+
+  CostMonitoring.init(
     {
       id: {
         allowNull: false,
@@ -58,7 +106,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.JSON,
         allowNull: true,
         validate: {
-          // Ensure the clusterIds are in an array and valid UUID
           isValidUUIDArray(value) {
             if (value === null) return;
             if (!Array.isArray(value)) {
@@ -103,6 +150,16 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
         onDelete: 'NO ACTION',
       },
+      deletedBy: {
+        allowNull: true,
+        type: DataTypes.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
@@ -117,8 +174,10 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      sequelize,
+      modelName: 'CostMonitoring',
+      tableName: 'cost_monitorings',
       paranoid: true,
-      freezeTableName: true,
       indexes: [
         {
           unique: true,
@@ -128,42 +187,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  // Associations
-  costMonitoring.associate = function (models) {
-    costMonitoring.belongsTo(models.Application, {
-      foreignKey: 'applicationId',
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    });
-
-    costMonitoring.hasMany(models.costMonitoringData, {
-      foreignKey: 'monitoringId',
-      as: 'costMonitoringData',
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    });
-
-    costMonitoring.belongsTo(models.user, {
-      foreignKey: 'createdBy',
-      as: 'creator',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-
-    costMonitoring.belongsTo(models.user, {
-      foreignKey: 'lastUpdatedBy',
-      as: 'updater',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-
-    costMonitoring.belongsTo(models.user, {
-      foreignKey: 'approvedBy',
-      as: 'approver',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-  };
-
-  return costMonitoring;
+  return CostMonitoring;
 };
