@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("monitoring_logs", {
+    await queryInterface.createTable('monitoring_logs', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -40,15 +40,16 @@ module.exports = {
       },
     });
     await queryInterface.addIndex(
-      "monitoring_logs",
-      ["cluster_id", "monitoring_type_id"],
+      'monitoring_logs',
+      ['cluster_id', 'monitoring_type_id', 'deletedAt'],
       {
         unique: true,
-        name: "monitoring_logs_cluster_id_monitoring_type_id",
+        name: 'monitoring_logs_cluster_id_monitoring_type_id',
       }
     );
   },
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("monitoring_logs");
+    await queryInterface.dropTable('monitoring_logs');
   },
 };

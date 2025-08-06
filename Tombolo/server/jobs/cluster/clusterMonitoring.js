@@ -11,7 +11,7 @@ const {
   notification_queue: NotificationQueue,
   AsrProduct,
   AsrDomain,
-  monitoring_logs: MonitoringLogs,
+  MonitoringLog,
 } = require('../../models');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 const { decryptString } = require('../../utils/cipher');
@@ -267,7 +267,7 @@ let monitoringTypeId;
         NotificationQueue.create(notificationPayload);
 
         //Update the monitoring log
-        await MonitoringLogs.upsert(
+        await MonitoringLog.upsert(
           {
             monitoring_type_id: monitoringTypeId,
             cluster_id: clusterId,

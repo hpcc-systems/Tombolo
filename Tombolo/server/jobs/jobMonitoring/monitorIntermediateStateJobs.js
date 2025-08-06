@@ -8,7 +8,7 @@ const {
   Cluster,
   notification_queue,
   monitoring_types,
-  monitoring_logs,
+  MonitoringLog,
   JobMonitoringData,
 } = require('../../models');
 const { decryptString } = require('../../utils/cipher');
@@ -54,7 +54,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
     const monitoringTypeId = monitoringType.id;
 
     // Get all monitoring logs with monitoring type ID ie - job monitoring
-    const monitoringLogs = await monitoring_logs.findAll({
+    const monitoringLogs = await MonitoringLog.findAll({
       where: { monitoring_type_id: monitoringTypeId },
       raw: true,
     });
@@ -466,7 +466,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
         // copy existingMetadata and update wuInIntermediateState and update the monitoring log
         const existingMetadata = { ...metaData };
         existingMetadata.wuInIntermediateState = wuStillInIntermediateState;
-        await monitoring_logs.update(
+        await MonitoringLog.update(
           { metaData: existingMetadata },
           { where: { id } }
         );

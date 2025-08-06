@@ -1,7 +1,26 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const monitoring_logs = sequelize.define(
-    'monitoring_logs',
+  class MonitoringLog extends Model {
+    static associate(models) {
+      MonitoringLog.belongsTo(models.Cluster, {
+        foreignKey: 'cluster_id',
+        as: 'cluster',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+      MonitoringLog.belongsTo(models.monitoring_types, {
+        foreignKey: 'monitoring_type_id',
+        as: 'monitoring_types',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+    }
+  }
+
+  MonitoringLog.init(
     {
       id: {
         allowNull: false,
@@ -41,29 +60,18 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      sequelize,
+      modelName: 'MonitoringLog',
+      tableName: 'monitoring_logs',
+      paranoid: true,
       indexes: [
         {
           unique: true,
-          fields: ['cluster_id', 'monitoring_type_id'],
+          fields: ['cluster_id', 'monitoring_type_id', 'deletedAt'],
         },
       ],
     }
   );
 
-  monitoring_logs.associate = function (models) {
-    monitoring_logs.belongsTo(models.Cluster, {
-      foreignKey: 'cluster_id',
-      as: 'cluster',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-    monitoring_logs.belongsTo(models.monitoring_types, {
-      foreignKey: 'monitoring_type_id',
-      as: 'monitoring_types',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-  };
-
-  return monitoring_logs;
+  return MonitoringLog;
 };
