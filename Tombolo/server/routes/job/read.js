@@ -10,7 +10,7 @@ const {
   DataflowVersion,
   AssetsGroup,
   JobExecution,
-  message_based_jobs: MessageBasedJobs,
+  MessageBasedJobs,
 } = require('../../models');
 let Sequelize = require('sequelize');
 const Op = Sequelize.Op;

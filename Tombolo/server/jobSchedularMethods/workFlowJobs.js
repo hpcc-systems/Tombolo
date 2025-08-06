@@ -4,7 +4,7 @@ const {
   DataflowVersion,
   JobExecution,
   Job,
-  message_based_jobs: MessageBasedJobs,
+  MessageBasedJobs,
 } = require('../models');
 const logger = require('../config/logger');
 const workflowUtil = require('../utils/workflow-util');
