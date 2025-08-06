@@ -169,8 +169,6 @@ function AddApplication({
       const user = getUser();
       const payload = {
         ...fieldValues,
-        user_id: user.id,
-        creator: user.id,
         id: selectedApplication?.id || '',
       };
 

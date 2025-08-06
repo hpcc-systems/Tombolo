@@ -5,14 +5,10 @@ import { isEmail } from 'validator';
 
 // Local Imports
 import { pingCluster, updateCluster } from './clusterUtils';
-import { getUser } from '../../common/userStorage';
 
 function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal, selectedCluster, setClusters }) {
   // Hooks
   const [form] = Form.useForm();
-
-  //Get user from Local Storage
-  const user = getUser();
 
   // States
   const [updateCredentials, setUpdateCredentials] = useState(false);
@@ -103,11 +99,9 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
 
     // Cluster is reachable, update the cluster
     try {
-      const fromValues = form.getFieldsValue();
+      const formValues = form.getFieldsValue();
 
-      // Add updated by info
-      fromValues.updatedBy = { name: `${user.firstName} ${user.lastName}`, email: user.email };
-      const updatedInfo = await updateCluster({ id: selectedCluster.id, clusterInfo: fromValues });
+      const updatedInfo = await updateCluster({ id: selectedCluster.id, clusterInfo: formValues });
       setClusters((clusters) => clusters.map((cluster) => (cluster.id === updatedInfo.id ? updatedInfo : cluster)));
 
       message.success('Cluster updated successfully');
