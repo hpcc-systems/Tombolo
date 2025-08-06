@@ -10,7 +10,7 @@ const {
 } = require('./lzFileMonitoringUtils');
 
 const {
-  landingZoneMonitoring: LandingZoneMonitoring,
+  LandingZoneMonitoring,
   Cluster,
   monitoring_types: MonitoringTypes,
   notification_queue: NotificationQueue,

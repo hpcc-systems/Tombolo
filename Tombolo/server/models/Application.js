@@ -116,7 +116,7 @@ module.exports = sequelize => {
       });
 
       /* LANDING ZONE MONITORING */
-      this.hasMany(models.landingZoneMonitoring, {
+      this.hasMany(models.LandingZoneMonitoring, {
         foreignKey: 'applicationId',
         onDelete: 'CASCADE',
       });

@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('landingZoneMonitoring', {
+    await queryInterface.createTable('landing_zone_monitorings', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -97,6 +97,16 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'NO ACTION',
       },
+      deletedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -112,7 +122,7 @@ module.exports = {
     });
 
     await queryInterface.addIndex(
-      'landingZoneMonitoring',
+      'landing_zone_monitorings',
       ['monitoringName', 'deletedAt'],
       {
         unique: true,
@@ -121,6 +131,6 @@ module.exports = {
     );
   },
   down: async queryInterface => {
-    await queryInterface.dropTable('landingZoneMonitoring');
+    await queryInterface.dropTable('landing_zone_monitorings');
   },
 };

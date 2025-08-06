@@ -4,11 +4,7 @@ const Sequelize = require('sequelize');
 
 // Local Imports
 const logger = require('../config/logger');
-const {
-  Cluster,
-  landingZoneMonitoring: LandingZoneMonitoring,
-  user: User,
-} = require('../models');
+const { Cluster, LandingZoneMonitoring, user: User } = require('../models');
 const { decryptString } = require('../utils/cipher');
 const { getClusterOptions } = require('../utils/getClusterOptions');
 const {
@@ -326,8 +322,9 @@ const deleteLandingZoneMonitoring = async (req, res) => {
     }
 
     // Soft delete the record (sets deletedAt timestamp)
-    await LandingZoneMonitoring.destroy({
-      where: { id },
+    await LandingZoneMonitoring.handleDelete({
+      id,
+      deletedByUserId: req.user.id,
     });
 
     logger.info(`Successfully deleted landing zone monitoring: ${id}`);
@@ -378,12 +375,9 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
     }
 
     // Soft delete the records
-    await LandingZoneMonitoring.destroy({
-      where: {
-        id: {
-          [Sequelize.Op.in]: ids,
-        },
-      },
+    await LandingZoneMonitoring.handleDelete({
+      id: ids,
+      deletedByUserId: req.user.id,
     });
 
     logger.info(`Successfully deleted landing zone monitoring: ${ids}`);
