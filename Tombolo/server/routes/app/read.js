@@ -18,7 +18,7 @@ const {
   JobFile,
   JobParam,
   Query,
-  query_field: QueryField,
+  QueryField,
   Dataflow,
   user: User,
 } = require('../../models');

@@ -1,14 +1,13 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('query_field', {
+    return queryInterface.createTable('query_fields', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      application_id: Sequelize.UUID,
       field_type: Sequelize.STRING,
       name: Sequelize.STRING,
       type: Sequelize.STRING,
@@ -44,7 +43,8 @@ module.exports = {
       },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('query_field');
+    return queryInterface.dropTable('query_fields');
   },
 };

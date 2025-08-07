@@ -42,7 +42,7 @@ module.exports = sequelize => {
         onDelete: 'CASCADE',
       });
 
-      this.hasMany(models.query_field, {
+      this.hasMany(models.QueryField, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });

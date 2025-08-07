@@ -5,7 +5,7 @@ const {
   FileValidation,
   Group,
   Query,
-  query_field: QueryField,
+  QueryField,
   IndexKey,
   IndexPayload,
   Job,
