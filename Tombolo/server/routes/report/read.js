@@ -1,12 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const {
-  Dataflow,
-  DataflowVersion,
-  File,
-  report: Report,
-} = require('../../models');
+const { Dataflow, DataflowVersion, File, Report } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
   validateApplicationId,

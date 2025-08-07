@@ -59,7 +59,7 @@ module.exports = sequelize => {
       });
 
       /* REPORT */
-      this.hasMany(models.report, {
+      this.hasMany(models.Report, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
