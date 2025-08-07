@@ -408,13 +408,6 @@ function CostMonitoring() {
       const newOtherFields = { ...selectedMonitoringWithoutMetaData, ...otherFieldsValues };
       updatedData = { ...updatedData, ...newOtherFields };
 
-      // Updated by
-      updatedData.lastUpdatedBy = {
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-      };
-
       if (touchedFields.includes('threshold')) {
         updatedData.metaData.notificationMetaData.notificationCondition = updatedData.threshold;
       }
@@ -532,9 +525,9 @@ function CostMonitoring() {
           productCategories={productCategories}>
           {selectedMonitoring.metaData.users && selectedMonitoring.metaData.users.length > 0 && (
             <Descriptions.Item label="Monitored Users">
-              {selectedMonitoring.metaData.users.map((user, index) => (
+              {selectedMonitoring.metaData.users.map((monitoredUser, index) => (
                 <Tag key={`cmu-${index}`} style={{ marginBottom: '4px' }}>
-                  {user}
+                  {monitoredUser}
                 </Tag>
               ))}
             </Descriptions.Item>
