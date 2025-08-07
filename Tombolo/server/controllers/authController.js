@@ -14,7 +14,7 @@ const {
   NotificationQueue,
   PasswordResetLink,
   AccountVerificationCode,
-  sent_notifications,
+  SentNotification,
   InstanceSetting,
 } = require('../models');
 const moment = require('moment');
@@ -1137,7 +1137,7 @@ const requestAccess = async (req, res) => {
       return res.status(404).json({ message: 'No contact email found.' });
     }
 
-    const existingNotification = await sent_notifications.findOne({
+    const existingNotification = await SentNotification.findOne({
       where: { notificationTitle: `User Access Request from ${user.email}` },
     });
 

@@ -1,7 +1,17 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const SentNotifications = sequelize.define(
-    'sent_notifications',
+  class SentNotification extends Model {
+    static associate(models) {
+      SentNotification.belongsTo(models.Application, {
+        foreignKey: 'applicationId',
+      });
+    }
+  }
+
+  SentNotification.init(
     {
       id: {
         allowNull: false,
@@ -18,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
       },
       notifiedAt: {
-        allowNull: true, // Some notifications are just logged and not sent
+        allowNull: true,
         type: DataTypes.DATE,
       },
       notificationOrigin: {
@@ -82,51 +92,13 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      sequelize,
+      modelName: 'SentNotification',
+      tableName: 'sent_notifications',
       freezeTableName: true,
       paranoid: true,
     }
   );
 
-  SentNotifications.associate = function (models) {
-    // associations
-    SentNotifications.belongsTo(models.Application, {
-      foreignKey: 'applicationId',
-    });
-  };
-
-  return SentNotifications;
+  return SentNotification;
 };
-
-/*
-{
-notifiedAt:
-notificationOrigin:
-notificationChannel:
-notificationTitle:
-status:
-intendedTo:
-deliveredTo:
-notificationContent:
-resolutionDateTime:
-Comment:
-createdBy:
-CreatedAt:
-updatedBy:
-updatedAt:
-deletedAt:
-metaData: {
-	notificationTemplate:
-	asrRelatedMetaData : {
-		Jira Tickets :
-		Domain:
-		Product:
-		Interception Stage:
-		asrlogId:
-		severity:
-		primaryContact:
-		secondaryContact:
-		IssueDescription
-	}
-}
-}
-*/

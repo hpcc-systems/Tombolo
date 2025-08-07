@@ -5,7 +5,7 @@ const axios = require('axios');
 //Local Imports
 const {
   NotificationQueue,
-  sent_notifications: SentNotification,
+  SentNotification,
   teams_hook: TeamsHook,
 } = require('../../models');
 const logger = require('../../config/logger');

@@ -15,16 +15,13 @@ const { Op } = require('sequelize');
 
 //Local imports
 const logger = require('../../config/logger');
-const {
-  sent_notifications: SentNotifications,
-  sequelize,
-} = require('../../models');
+const { SentNotification, sequelize } = require('../../models');
 const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode');
 
 // Create a new sent notification
 router.post('/', validate(validateCreateSentNotification), async (req, res) => {
   try {
-    const response = await SentNotifications.create(req.body, { raw: true });
+    const response = await SentNotification.create(req.body, { raw: true });
     return res.status(200).send(response);
   } catch (err) {
     logger.error(err);
@@ -41,7 +38,7 @@ router.get(
       // Get notifications from the last 60 days only
       const sixtyDaysAgo = moment().subtract(60, 'days').toDate();
 
-      const notifications = await SentNotifications.findAll({
+      const notifications = await SentNotification.findAll({
         where: {
           createdAt: {
             [Op.gte]: sixtyDaysAgo,
@@ -63,7 +60,7 @@ router.get(
   validate(validateGetSentNotificationById),
   async (req, res) => {
     try {
-      const notification = await SentNotifications.findByPk(req.params.id);
+      const notification = await SentNotification.findByPk(req.params.id);
       if (!notification) {
         return res.status(404).send('Sent notification not found');
       }
@@ -81,7 +78,7 @@ router.delete(
   validate(validateDeleteSentNotification),
   async (req, res) => {
     try {
-      await SentNotifications.destroy({ where: { id: req.params.id } });
+      await SentNotification.destroy({ where: { id: req.params.id } });
       return res.status(200).send('success');
     } catch (err) {
       logger.error(err);
@@ -96,7 +93,7 @@ router.delete(
   validate(validateBulkDeleteSentNotifications),
   async (req, res) => {
     try {
-      await SentNotifications.destroy({ where: { id: req.body.ids } });
+      await SentNotification.destroy({ where: { id: req.body.ids } });
       return res.status(200).send('success');
     } catch (err) {
       logger.error(err);
@@ -115,7 +112,7 @@ router.patch(
 
       // If anything that is part of metaData is to be updated - fetch existing metadata and update particular fields
       if (req.body.jiraTickets) {
-        const notificationsToBeUpdated = await SentNotifications.findAll({
+        const notificationsToBeUpdated = await SentNotification.findAll({
           where: { id: req.body.ids },
         });
 
@@ -144,7 +141,7 @@ router.patch(
         const transaction = await sequelize.transaction();
         try {
           for (let item of allNotificationToBeUpdated) {
-            await SentNotifications.update(item, { where: { id: item.id } });
+            await SentNotification.update(item, { where: { id: item.id } });
           }
           await transaction.commit();
         } catch (err) {
@@ -152,13 +149,13 @@ router.patch(
           throw new Error(err);
         }
       } else {
-        await SentNotifications.update(req.body, {
+        await SentNotification.update(req.body, {
           where: { id: { [Op.in]: req.body.ids } },
         });
       }
 
       // fetch and send updated data to the client
-      const updatedNotifications = await SentNotifications.findAll({
+      const updatedNotifications = await SentNotification.findAll({
         where: { id: req.body.ids },
         raw: true,
       });
@@ -177,7 +174,7 @@ router.post(
   validate(validateBodyId),
   async (req, res) => {
     try {
-      const notification = await SentNotifications.findByPk(req.body.id);
+      const notification = await SentNotification.findByPk(req.body.id);
       if (!notification) {
         return res.status(404).send('Sent notification not found');
       }

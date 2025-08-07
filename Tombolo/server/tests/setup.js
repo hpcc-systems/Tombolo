@@ -49,7 +49,7 @@ jest.mock('../models', () => {
       findOne: jest.fn(),
       findAll: jest.fn(),
     },
-    sent_notifications: {
+    SentNotification: {
       create: jest.fn(),
       findOne: jest.fn(),
       findAll: jest.fn(),
