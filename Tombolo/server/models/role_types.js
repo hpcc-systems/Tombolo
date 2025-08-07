@@ -1,48 +1,49 @@
-// role types model definition
 'use strict';
-module.exports = (sequelize, DataTypes) => {
 
-  // Define the RoleTypes
-  const RoleTypes = sequelize.define("RoleTypes",{
-    id: {
+const { Model } = require('sequelize');
+
+module.exports = (sequelize, DataTypes) => {
+  class RoleType extends Model {
+    static associate(models) {
+      RoleType.hasMany(models.UserRoles, {
+        foreignKey: 'roleId',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      });
+    }
+  }
+
+  RoleType.init(
+    {
+      id: {
         primaryKey: true,
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         allowNull: false,
-        }, 
-    roleName:{
+      },
+      roleName: {
         type: DataTypes.STRING,
         allowNull: false,
-    },
-    description:{
+      },
+      description: {
         type: DataTypes.STRING,
         allowNull: false,
+      },
     },
-},
-{ 
-    tableName: 'role_types',
-    freezeTableName: true,
-    timeStamps: true,
-    paranoid: true,
-    hooks: {
-      beforeBulkDestroy: async(roleType, options) => {
-        // Deleted associated user roles
-        const UserRoles = sequelize.models.UserRoles;
-        await UserRoles.destroy({where: {roleId: roleType.where.id,}});
+    {
+      sequelize,
+      modelName: 'RoleType',
+      tableName: 'role_types',
+      timestamps: true,
+      paranoid: true,
+      hooks: {
+        beforeBulkDestroy: async roleType => {
+          const UserRoles = sequelize.models.UserRoles;
+          await UserRoles.destroy({ where: { roleId: roleType.where.id } });
+        },
       },
     }
-}
-
   );
 
-  // Associations
-  RoleTypes.associate = function(models) {
-    RoleTypes.hasMany(models.UserRoles, {
-      foreignKey: 'roleId',
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    });
-  };
-  
-  return RoleTypes;
+  return RoleType;
 };

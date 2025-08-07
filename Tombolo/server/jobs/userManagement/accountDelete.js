@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 const {
   user: User,
   UserRoles,
-  RoleTypes,
+  RoleType,
   NotificationQueue,
 } = require('../../models');
 const { trimURL, deleteUser } = require('../../utils/authUtil');
@@ -83,7 +83,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
           as: 'roles',
           include: [
             {
-              model: RoleTypes,
+              model: RoleType,
               as: 'role_details',
               attributes: ['id', 'roleName'],
             },

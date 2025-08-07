@@ -9,7 +9,7 @@ const {
   UserRoles,
   user_application,
   Application,
-  RoleTypes,
+  RoleType,
   RefreshToken,
   NotificationQueue,
   PasswordResetLink,
@@ -42,7 +42,7 @@ const createApplicationOwner = async (req, res) => {
     const payload = req.body;
 
     // Find the role ID for the OWNER role type
-    const role = await RoleTypes.findOne({
+    const role = await RoleType.findOne({
       where: { roleName: roleTypes.OWNER },
     });
 
@@ -262,7 +262,7 @@ const verifyEmail = async (req, res) => {
           as: 'roles',
           include: [
             {
-              model: RoleTypes,
+              model: RoleType,
               as: 'role_details',
               attributes: ['id', 'roleName'],
             },
@@ -840,7 +840,7 @@ const handlePasswordResetRequest = async (req, res) => {
           as: 'roles',
           include: [
             {
-              model: RoleTypes,
+              model: RoleType,
               as: 'role_details',
               attributes: ['id', 'roleName'],
             },

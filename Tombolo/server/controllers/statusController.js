@@ -1,15 +1,13 @@
 const logger = require('../config/logger');
-const models = require('../models');
-const UserRoles = models.UserRoles;
-const Roles = models.RoleTypes;
+const { UserRoles, RoleType } = require('../models');
 
 const checkStatus = async (req, res) => {
-  return res.send("Tombolo's Backend is running succesfully");
+  return res.send("Tombolo's Backend is running successfully");
 };
 
 const checkOwnerExists = async (req, res) => {
   try {
-    const ownerRole = await Roles.findOne({
+    const ownerRole = await RoleType.findOne({
       where: { roleName: 'owner' },
     });
 
