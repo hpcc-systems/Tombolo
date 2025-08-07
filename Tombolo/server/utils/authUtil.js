@@ -10,7 +10,7 @@ const {
   User,
   UserRoles,
   RoleType,
-  userArchive,
+  UserArchive,
   UserApplication,
   Application,
   InstanceSetting,
@@ -526,7 +526,7 @@ const deleteUser = async (id, reason) => {
     //remove hash from user
     user.dataValues.hash = null;
 
-    const archivedUser = await userArchive.create({
+    const archivedUser = await UserArchive.create({
       ...user.dataValues,
       removedAt,
       removedBy,

@@ -2,7 +2,7 @@ const request = require('supertest');
 const { app } = require('../test_server');
 const {
   User,
-  userArchive: UserArchive,
+  UserArchive,
   NotificationQueue,
   sequelize,
 } = require('../../models');

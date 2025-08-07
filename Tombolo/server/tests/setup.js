@@ -111,7 +111,7 @@ jest.mock('../models', () => {
         __rollback: rollback, // Expose for test access
       },
     },
-    userArchive: {
+    UserArchive: {
       create: jest.fn(),
     },
     sequelize: {
