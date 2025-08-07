@@ -9,7 +9,7 @@ const { sequelize } = require('../models');
 const logger = require('../config/logger');
 const {
   User,
-  UserRoles,
+  UserRole,
   UserApplication,
   NotificationQueue,
   AccountVerificationCode,
@@ -173,7 +173,7 @@ const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
       include: [
-        { model: UserRoles, as: 'roles' },
+        { model: UserRole, as: 'roles' },
         { model: UserApplication, as: 'applications' },
       ],
       // descending order by date
@@ -391,13 +391,13 @@ const updateUserRoles = async (req, res) => {
     }));
 
     // Get all existing roles for a user
-    const existingRoles = await UserRoles.findAll({ where: { userId: id } });
+    const existingRoles = await UserRole.findAll({ where: { userId: id } });
 
     // Delete existing roles that are not in the new list
     const rolesToDelete = existingRoles.filter(
       role => !roles.includes(role.roleId)
     );
-    await UserRoles.destroy({
+    await UserRole.destroy({
       where: { id: rolesToDelete.map(role => role.id) },
     });
 
@@ -405,7 +405,7 @@ const updateUserRoles = async (req, res) => {
     const rolesToAdd = userRoles.filter(
       role => !existingRoles.map(role => role.roleId).includes(role.roleId)
     );
-    const newRoles = await UserRoles.bulkCreate(rolesToAdd);
+    const newRoles = await UserRole.bulkCreate(rolesToAdd);
 
     // Response
     return res.status(200).json({
@@ -529,7 +529,7 @@ const createUser = async (req, res) => {
       roleId: role,
       createdBy: req.user.id,
     }));
-    await UserRoles.bulkCreate(userRoles);
+    await UserRole.bulkCreate(userRoles);
 
     // Create user applications
     const userApplications = applications.map(application => ({
@@ -543,7 +543,7 @@ const createUser = async (req, res) => {
     const newUserData = await User.findOne({
       where: { id: newUser.id },
       include: [
-        { model: UserRoles, as: 'roles' },
+        { model: UserRole, as: 'roles' },
         { model: UserApplication, as: 'applications' },
       ],
     });

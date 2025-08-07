@@ -8,7 +8,7 @@ const moment = require('moment');
 const logger = require('../config/logger');
 const {
   User,
-  UserRoles,
+  UserRole,
   RoleType,
   UserArchive,
   UserApplication,
@@ -49,7 +49,7 @@ const getAUser = async identifier => {
     where: { ...identifier },
     include: [
       {
-        model: UserRoles,
+        model: UserRole,
         attributes: ['id'],
         as: 'roles',
         include: [
@@ -176,7 +176,7 @@ const getSupportContactEmails = async () => {
   const ownerAndAdminEmails = await User.findAll({
     include: [
       {
-        model: UserRoles,
+        model: UserRole,
         attributes: ['id'],
         as: 'roles',
         required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).
@@ -224,7 +224,7 @@ const getAccessRequestContactEmails = async () => {
   const ownerAndAdminEmails = await User.findAll({
     include: [
       {
-        model: UserRoles,
+        model: UserRole,
         attributes: ['id'],
         as: 'roles',
         required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).

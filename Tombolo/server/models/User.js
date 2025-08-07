@@ -1,11 +1,11 @@
 'use strict';
 
-const { Model, DataTypes } = require('sequelize');
+const { Model } = require('sequelize');
 
-module.exports = sequelize => {
+module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      User.hasMany(models.UserRoles, {
+      User.hasMany(models.UserRole, {
         foreignKey: 'userId',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
@@ -151,12 +151,6 @@ module.exports = sequelize => {
       });
 
       User.hasMany(models.AsrDomain, {
-        foreignKey: 'createdBy',
-        as: 'asrDomainCreator',
-        onDelete: 'NO ACTION',
-      });
-
-      User.hasMany(models.AsrDomain, {
         foreignKey: 'updatedBy',
         as: 'asrDomainUpdater',
         onDelete: 'NO ACTION',
@@ -290,8 +284,8 @@ module.exports = sequelize => {
             where: { userId: user.where.id },
           });
 
-          const UserRoles = sequelize.models.UserRoles;
-          await UserRoles.destroy({
+          const UserRole = sequelize.models.UserRole;
+          await UserRole.destroy({
             where: { userId: user.where.id },
           });
 

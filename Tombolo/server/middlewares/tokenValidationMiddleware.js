@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 
 const logger = require('../config/logger');
-const { RefreshToken, User, UserRoles, RoleType } = require('../models');
+const { RefreshToken, User, UserRole, RoleType } = require('../models');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -102,7 +102,7 @@ const handleExpiredToken = async token => {
       where: { id: userId },
       include: [
         {
-          model: UserRoles,
+          model: UserRole,
           attributes: ['id'],
           as: 'roles',
           include: [
