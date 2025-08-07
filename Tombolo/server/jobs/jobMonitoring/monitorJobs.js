@@ -7,7 +7,7 @@ const _ = require('lodash');
 const {
   JobMonitoring,
   Cluster,
-  monitoring_types: MonitoringTypes,
+  MonitoringType,
   MonitoringLog,
   notification_queue: NotificationQueue,
   JobMonitoringData,
@@ -42,7 +42,7 @@ const monitoring_name = 'Job Monitoring';
 
   try {
     // Get monitoring type ID for "Job Monitoring"
-    const { id } = await MonitoringTypes.findOne({
+    const { id } = await MonitoringType.findOne({
       where: { name: monitoring_name },
       raw: true,
     });

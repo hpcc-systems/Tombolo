@@ -5,7 +5,7 @@ const {
   CostMonitoringData,
   Cluster,
   MonitoringLog,
-  monitoring_types: MonitoringTypes,
+  MonitoringType,
 } = require('../../models');
 const { WorkunitsService } = require('@hpcc-js/comms');
 const { getCluster } = require('../../utils/hpcc-util');
@@ -158,7 +158,7 @@ async function monitorCostPerUser() {
       return;
     }
 
-    const monitoringType = await MonitoringTypes.findOne({
+    const monitoringType = await MonitoringType.findOne({
       where: { name: 'Cost Monitoring' },
     });
 

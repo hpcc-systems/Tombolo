@@ -19,7 +19,7 @@ const {
   JobMonitoring,
   Cluster,
   notification_queue: NotificationQueue,
-  monitoring_types: MonitoringTypes,
+  MonitoringType,
 } = require('../../models');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
@@ -91,7 +91,7 @@ const monitoringTypeName = 'Job Monitoring';
     }, {});
 
     // Get monitoring type ID for "Job Monitoring"
-    const monitoringTypeDetails = await MonitoringTypes.findOne({
+    const monitoringTypeDetails = await MonitoringType.findOne({
       where: { name: monitoringTypeName },
       raw: true,
     });

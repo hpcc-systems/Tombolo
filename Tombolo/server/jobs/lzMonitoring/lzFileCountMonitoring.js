@@ -12,7 +12,7 @@ const {
 const {
   LandingZoneMonitoring,
   Cluster,
-  monitoring_types: MonitoringTypes,
+  MonitoringType,
   notification_queue: NotificationQueue,
   AsrProduct,
   AsrDomain,
@@ -22,7 +22,7 @@ const monitoring_name = 'Landing Zone Monitoring';
 
 (async () => {
   // Get monitoring type ID for "Landing Zone Monitoring"
-  const { id } = await MonitoringTypes.findOne({
+  const { id } = await MonitoringType.findOne({
     where: { name: monitoring_name },
     raw: true,
   });

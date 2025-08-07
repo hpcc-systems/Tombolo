@@ -7,7 +7,7 @@ const _ = require('lodash');
 const {
   Cluster,
   notification_queue,
-  monitoring_types,
+  MonitoringType,
   MonitoringLog,
   JobMonitoringData,
 } = require('../../models');
@@ -38,7 +38,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
 
   try {
     // Get monitoring type ID for "Job Monitoring"
-    const monitoringType = await monitoring_types.findOne({
+    const monitoringType = await MonitoringType.findOne({
       where: { name: MONITORING_NAME },
       raw: true,
     });
@@ -124,7 +124,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
     const wuToKeepMonitoring = [];
 
     // Iterate through all the monitoring logs with intermediate state WUs
-    for (wuData of allIntermediateWus) {
+    for (const wuData of allIntermediateWus) {
       try {
         const { clusterId } = wuData;
         const clusterDetail = clustersInfoObj[clusterId];
@@ -409,12 +409,12 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
               nocAlertDescription;
             notificationPayloadForNoc.metaData.mainRecipients =
               severeEmailRecipients;
-            (notificationPayloadForNoc.metaData.notificationId =
+            notificationPayloadForNoc.metaData.notificationId =
               generateNotificationId({
                 notificationPrefix,
                 timezoneOffset: clusterDetail.timezone_offset || 0,
-              })),
-              delete notificationPayloadForNoc.metaData.cc;
+              });
+            delete notificationPayloadForNoc.metaData.cc;
             notificationsToBeQueued.push(notificationPayloadForNoc);
           }
         }

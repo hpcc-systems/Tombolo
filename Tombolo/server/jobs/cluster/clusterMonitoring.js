@@ -7,7 +7,7 @@ const { parentPort } = require('worker_threads');
 const {
   ClusterMonitoring,
   Cluster,
-  monitoring_types: MonitoringTypes,
+  MonitoringType,
   notification_queue: NotificationQueue,
   AsrProduct,
   AsrDomain,
@@ -24,7 +24,7 @@ let monitoringTypeId;
 
   try {
     // Get monitoring type ID for "Cluster Status Monitoring"
-    const monitoringType = await MonitoringTypes.findOne({
+    const monitoringType = await MonitoringType.findOne({
       where: { name: monitoring_name },
       raw: true,
     });

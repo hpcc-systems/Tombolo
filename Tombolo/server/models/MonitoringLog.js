@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
-      MonitoringLog.belongsTo(models.monitoring_types, {
+      MonitoringLog.belongsTo(models.MonitoringType, {
         foreignKey: 'monitoring_type_id',
         as: 'monitoring_types',
         onDelete: 'NO ACTION',

@@ -6,7 +6,7 @@ const { DeleteMixin } = require('../utils/modelMixins/DeleteMixin');
 module.exports = sequelize => {
   class AsrMonitoringTypeToDomainsRelation extends DeleteMixin(Model) {
     static associate(models) {
-      AsrMonitoringTypeToDomainsRelation.belongsTo(models.monitoring_types, {
+      AsrMonitoringTypeToDomainsRelation.belongsTo(models.MonitoringType, {
         foreignKey: 'monitoring_type_id',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
