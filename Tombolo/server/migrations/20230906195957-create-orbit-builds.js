@@ -20,7 +20,7 @@ module.exports = {
       monitoring_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'orbitMonitoring',
+          model: 'orbit_monitorings',
           key: 'id',
         },
         onUpdate: 'CASCADE',

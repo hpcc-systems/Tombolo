@@ -3,7 +3,7 @@ const { notify } = require('../routes/notifications/email-notification');
 const { parentPort, workerData } = require('worker_threads');
 const logger = require('../config/logger');
 const {
-  orbitMonitoring,
+  OrbitMonitoring,
   OrbitBuild,
   MonitoringNotification,
 } = require('../models');
@@ -21,7 +21,7 @@ const {
 
 (async () => {
   try {
-    const orbitMonitoringDetails = await orbitMonitoring.findOne({
+    const orbitMonitoringDetails = await OrbitMonitoring.findOne({
       where: { id: workerData.orbitMonitoring_id },
       raw: true,
     });
@@ -151,7 +151,7 @@ const {
       metaData = orbitMonitoringDetails.metaData;
       metaData.lastMonitored = currentTimeStamp;
 
-      await orbitMonitoring.update({ metaData }, { where: { id } });
+      await OrbitMonitoring.update({ metaData }, { where: { id } });
     }
 
     //------------------------------------------------------------------------------
