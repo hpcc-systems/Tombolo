@@ -4,13 +4,7 @@ const axios = require('axios');
 const hpccUtil = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
 const { encryptString } = require('../../utils/cipher');
-const {
-  Cluster,
-  File,
-  query: Query,
-  Indexes: Index,
-  Job,
-} = require('../../models');
+const { Cluster, File, Query, Indexes: Index, Job } = require('../../models');
 let hpccJSComms = require('@hpcc-js/comms');
 
 const { validate } = require('../../middlewares/validateRequestBody');

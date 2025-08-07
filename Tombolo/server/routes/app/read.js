@@ -17,7 +17,7 @@ const {
   Job,
   JobFile,
   JobParam,
-  query: Query,
+  Query,
   query_field: QueryField,
   Dataflow,
   user: User,

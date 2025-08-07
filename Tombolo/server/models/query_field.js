@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
   );
   query_field.associate = function (models) {
     // associations can be defined here
-    query_field.belongsTo(models.query, { foreignKey: 'query_id' });
+    query_field.belongsTo(models.Query, { foreignKey: 'query_id' });
     query_field.belongsTo(models.Application, { foreignKey: 'application_id' });
   };
   return query_field;

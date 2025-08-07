@@ -18,7 +18,7 @@ const {
   Group,
   indexes: Index,
   File,
-  query: Query,
+  Query,
   Job,
   AssetsGroup,
   FileTemplate,

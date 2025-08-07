@@ -37,7 +37,7 @@ module.exports = sequelize => {
       });
 
       /* QUERY */
-      this.hasMany(models.query, {
+      this.hasMany(models.Query, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });

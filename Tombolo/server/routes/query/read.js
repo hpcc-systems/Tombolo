@@ -1,11 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../../config/logger');
-const {
-  query: Query,
-  query_field: QueryField,
-  AssetsGroup,
-} = require('../../models');
+const { Query, query_field: QueryField, AssetsGroup } = require('../../models');
 const {
   validateSaveQuery,
   validateQueryList,
