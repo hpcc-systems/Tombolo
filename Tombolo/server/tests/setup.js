@@ -25,7 +25,7 @@ jest.mock('../models', () => {
     TokenBlackList: {
       findAll: jest.fn(),
     },
-    user: {
+    User: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       findByPk: jest.fn(),

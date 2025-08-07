@@ -2,7 +2,7 @@
 // const { app } = require('../test_server');
 // const jwt = require('jsonwebtoken');
 // const bcrypt = require('bcryptjs');
-// const { user: User, RefreshToken } = require('../../models');
+// const { User, RefreshToken } = require('../../models');
 // const { v4: uuidv4 } = require('uuid');
 
 // const invalidUuId = '897acab7-f5c8-4435-9847-97de16adf66';

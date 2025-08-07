@@ -2,7 +2,7 @@ const request = require('supertest');
 const { app } = require('../test_server');
 const {
   SentNotification,
-  user: User,
+  User,
   InstanceSetting,
   NotificationQueue,
   RefreshToken,

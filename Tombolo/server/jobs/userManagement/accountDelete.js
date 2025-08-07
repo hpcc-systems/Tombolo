@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 
 //Local Imports
 const {
-  user: User,
+  User,
   UserRoles,
   RoleType,
   NotificationQueue,

@@ -48,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   user_application.associate = function (models) {
-    user_application.belongsTo(models.user, { foreignKey: 'user_id' });
+    user_application.belongsTo(models.User, { foreignKey: 'user_id' });
     user_application.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });

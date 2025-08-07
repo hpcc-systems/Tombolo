@@ -122,7 +122,7 @@ module.exports = sequelize => {
       });
 
       /* User relationship */
-      this.belongsTo(models.user, {
+      this.belongsTo(models.User, {
         foreignKey: 'creator',
         as: 'application_creator',
         onDelete: 'CASCADE',

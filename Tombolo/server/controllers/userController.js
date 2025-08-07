@@ -8,7 +8,7 @@ const sequelize = require('../models').sequelize;
 // Local imports
 const logger = require('../config/logger');
 const {
-  user: User,
+  User,
   UserRoles,
   user_application,
   NotificationQueue,

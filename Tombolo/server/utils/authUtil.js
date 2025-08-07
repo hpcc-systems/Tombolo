@@ -7,7 +7,7 @@ const moment = require('moment');
 // Local Imports
 const logger = require('../config/logger');
 const {
-  user: User,
+  User,
   UserRoles,
   RoleType,
   userArchive,

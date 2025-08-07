@@ -5,7 +5,7 @@ const axios = require('axios');
 const logger = require('../config/logger');
 const roleTypes = require('../config/roleTypes');
 const {
-  user: User,
+  User,
   UserRoles,
   user_application,
   Application,

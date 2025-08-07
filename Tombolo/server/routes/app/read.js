@@ -20,7 +20,7 @@ const {
   Query,
   QueryField,
   Dataflow,
-  user: User,
+  User,
 } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {

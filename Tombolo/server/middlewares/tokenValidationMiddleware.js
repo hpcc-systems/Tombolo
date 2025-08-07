@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 
 const logger = require('../config/logger');
-const { RefreshToken, user: User, UserRoles, RoleType } = require('../models');
+const { RefreshToken, User, UserRoles, RoleType } = require('../models');
 const {
   generateAccessToken,
   generateRefreshToken,
