@@ -1,38 +1,39 @@
-"use strict";
-const { v4: uuidv4 } = require("uuid");
+'use strict';
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
+  // eslint-disable-next-line no-unused-vars
   up: (queryInterface, Sequelize) => {
     return queryInterface.bulkInsert(
-      "rules",
+      'rules',
       [
         {
           id: uuidv4(),
-          name: "Date Validate",
+          name: 'Date Validate',
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           id: uuidv4(),
-          name: "Phone Validate",
+          name: 'Phone Validate',
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           id: uuidv4(),
-          name: "Integer Validate",
+          name: 'Integer Validate',
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           id: uuidv4(),
-          name: "Not Empty",
+          name: 'Not Empty',
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           id: uuidv4(),
-          name: "Assert",
+          name: 'Assert',
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -41,7 +42,8 @@ module.exports = {
     );
   },
 
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
-    return queryInterface.bulkDelete("rules", null, {});
+    return queryInterface.bulkDelete('rules', null, {});
   },
 };
