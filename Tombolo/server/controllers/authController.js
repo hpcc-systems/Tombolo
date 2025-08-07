@@ -10,7 +10,7 @@ const {
   user_application,
   Application,
   RoleTypes,
-  RefreshTokens,
+  RefreshToken,
   NotificationQueue,
   PasswordResetLink,
   AccountVerificationCode,
@@ -307,7 +307,7 @@ const verifyEmail = async (req, res) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create({
+    await RefreshToken.create({
       id: tokenId,
       userId: user.id,
       token: refreshToken,
@@ -420,7 +420,7 @@ const resetPasswordWithToken = async (req, res) => {
     });
 
     //remove all sessions for user before initiating new session
-    await RefreshTokens.destroy({
+    await RefreshToken.destroy({
       where: { userId: user.id },
       transaction,
     });
@@ -438,7 +438,7 @@ const resetPasswordWithToken = async (req, res) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create(
+    await RefreshToken.create(
       {
         id: tokenId,
         userId: user.id,
@@ -586,7 +586,7 @@ const resetTempPassword = async (req, res) => {
     });
 
     //remove all sessions for user before initiating new session
-    await RefreshTokens.destroy({
+    await RefreshToken.destroy({
       where: { userId: user.id },
     });
 
@@ -603,7 +603,7 @@ const resetTempPassword = async (req, res) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create({
+    await RefreshToken.create({
       id: tokenId,
       userId: user.id,
       token: refreshToken,
@@ -761,7 +761,7 @@ const loginBasicUser = async (req, res) => {
     //get device info from request
 
     // Save refresh token in DB
-    await RefreshTokens.create({
+    await RefreshToken.create({
       id: tokenId,
       userId: user.id,
       token: refreshToken,
@@ -808,7 +808,7 @@ const logOutBasicUser = async (req, res) => {
     const { tokenId } = decodedToken;
 
     // Remove refresh token from the database
-    await RefreshTokens.destroy({
+    await RefreshToken.destroy({
       where: { id: tokenId },
     });
 
@@ -1049,7 +1049,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       const { iat, exp } = jwt.decode(refreshToken);
 
       // Save refresh token in DB
-      await RefreshTokens.create({
+      await RefreshToken.create({
         id: tokenId,
         userId: newUserPlain.id,
         token: refreshToken,
@@ -1086,7 +1086,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create({
+    await RefreshToken.create({
       id: tokenId,
       userId: user.id,
       token: refreshToken,

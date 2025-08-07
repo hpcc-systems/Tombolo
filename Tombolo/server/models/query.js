@@ -5,7 +5,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Query extends Model {
     static associate(models) {
-      Query.hasMany(models.query_field, {
+      Query.hasMany(models.QueryField, {
         constraints: false,
         foreignKeyConstraint: false,
         foreignKey: 'query_id',

@@ -36,7 +36,7 @@ jest.mock('../models', () => {
       save: jest.fn(),
       toJSON: jest.fn(),
     },
-    RefreshTokens: {
+    RefreshToken: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       create: jest.fn(),

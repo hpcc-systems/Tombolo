@@ -5,7 +5,7 @@ const {
   user: User,
   InstanceSetting,
   NotificationQueue,
-  RefreshTokens,
+  RefreshToken,
 } = require('../../models');
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
 const {
@@ -51,7 +51,7 @@ describe('Auth Routes', () => {
       ...user,
       toJSON: () => JSON.stringify(user, null, 4),
     });
-    RefreshTokens.create.mockResolvedValue(true);
+    RefreshToken.create.mockResolvedValue(true);
     User.update.mockResolvedValue([1]);
 
     const res = await request(app)
@@ -70,7 +70,7 @@ describe('Auth Routes', () => {
         .split('=')[1]
     ).toBeDefined();
     expect(User.findOne).toHaveBeenCalled();
-    expect(RefreshTokens.create).toHaveBeenCalled();
+    expect(RefreshToken.create).toHaveBeenCalled();
     expect(User.update).toHaveBeenCalled();
   });
 
@@ -90,7 +90,7 @@ describe('Auth Routes', () => {
     );
     expect(res.body.success).toBe(false);
     expect(User.findOne).toHaveBeenCalled();
-    expect(RefreshTokens.create).not.toHaveBeenCalled();
+    expect(RefreshToken.create).not.toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalled();
   });
@@ -110,7 +110,7 @@ describe('Auth Routes', () => {
     expect(res.body.message).toBe('unverified');
     expect(res.body.success).toBe(false);
     expect(User.findOne).toHaveBeenCalled();
-    expect(RefreshTokens.create).not.toHaveBeenCalled();
+    expect(RefreshToken.create).not.toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalled();
   });
@@ -132,7 +132,7 @@ describe('Auth Routes', () => {
     );
     expect(res.body.success).toBe(false);
     expect(User.findOne).toHaveBeenCalled();
-    expect(RefreshTokens.create).not.toHaveBeenCalled();
+    expect(RefreshToken.create).not.toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalled();
   });
@@ -154,7 +154,7 @@ describe('Auth Routes', () => {
     );
     expect(res.body.success).toBe(false);
     expect(User.findOne).toHaveBeenCalled();
-    expect(RefreshTokens.create).not.toHaveBeenCalled();
+    expect(RefreshToken.create).not.toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalled();
   });

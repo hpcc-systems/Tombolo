@@ -2,7 +2,7 @@
 // const { app } = require('../test_server');
 // const jwt = require('jsonwebtoken');
 // const bcrypt = require('bcryptjs');
-// const { user: User, RefreshTokens } = require('../../models');
+// const { user: User, RefreshToken } = require('../../models');
 // const { v4: uuidv4 } = require('uuid');
 
 // const invalidUuId = '897acab7-f5c8-4435-9847-97de16adf66';
@@ -50,7 +50,7 @@ describe('Session Controller', () => {
   //   jest.clearAllTimers();
   // });
   // it('get-active-sessions should get all active sessions for a user', async () => {
-  //   RefreshTokens.findAll.mockResolvedValue([
+  //   RefreshToken.findAll.mockResolvedValue([
   //     {
   //       ...session,
   //       dataValues: session,
@@ -86,7 +86,7 @@ describe('Session Controller', () => {
   // });
   // it('should destroy all active sessions for a user', async () => {
   //   // Create a second session for the same user
-  //   await RefreshTokens.create({
+  //   await RefreshToken.create({
   //     id: '4d3b5fb9-d3a4-4894-bc42-3f7e1c5c27d4',
   //     userId: user.id,
   //     token: jwt.sign({ id: user.id }, process.env.JWT_REFRESH_SECRET, {

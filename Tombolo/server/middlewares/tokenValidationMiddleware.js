@@ -2,12 +2,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 
 const logger = require('../config/logger');
-const {
-  RefreshTokens,
-  user: User,
-  UserRoles,
-  RoleTypes,
-} = require('../models');
+const { RefreshToken, user: User, UserRoles, RoleTypes } = require('../models');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -91,7 +86,7 @@ const handleExpiredToken = async token => {
     const { id: userId, tokenId } = decodedToken;
 
     // Check if corresponding refresh token exists in DB
-    const refreshToken = await RefreshTokens.findOne({
+    const refreshToken = await RefreshToken.findOne({
       where: { id: tokenId },
     });
 
@@ -132,7 +127,7 @@ const handleExpiredToken = async token => {
     const newRefreshToken = generateRefreshToken({ tokenId: newTokenId });
 
     // Save new refresh token in DB
-    await RefreshTokens.create({
+    await RefreshToken.create({
       id: newTokenId,
       userId: user.id,
       token: newRefreshToken,

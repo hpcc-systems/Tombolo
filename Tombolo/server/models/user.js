@@ -99,8 +99,8 @@ module.exports = (sequelize, DataTypes) => {
       hooks: {
         beforeBulkDestroy: async (user, options) => {
           // Delete refresh tokens
-          const RefreshTokens = sequelize.models.RefreshTokens;
-          await RefreshTokens.destroy({
+          const RefreshToken = sequelize.models.RefreshToken;
+          await RefreshToken.destroy({
             where: { userId: user.where.id },
           });
 
@@ -150,7 +150,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     // User to refresh token
-    user.hasMany(models.RefreshTokens, {
+    user.hasMany(models.RefreshToken, {
       foreignKey: 'userId',
       onDelete: 'CASCADE',
       hooks: true,
