@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("token_black_list", {
+    await queryInterface.createTable('token_black_list', {
       id: {
         primaryKey: true,
         type: Sequelize.STRING,
@@ -15,7 +15,8 @@ module.exports = {
     });
   },
 
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("token_black_list");
+    await queryInterface.dropTable('token_black_list');
   },
 };

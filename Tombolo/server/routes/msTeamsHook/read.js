@@ -8,7 +8,7 @@ const {
   validateDeleteMsTeamsHook,
 } = require('../../middlewares/msTeamsHookMiddleware');
 const logger = require('../../config/logger');
-const { teams_hook: TeamsHook } = require('../../models');
+const { TeamsHook } = require('../../models');
 
 // GET all teams hooks
 router.get('/', async (req, res) => {

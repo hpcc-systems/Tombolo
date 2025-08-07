@@ -2,7 +2,7 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("teams_hooks", {
+    await queryInterface.createTable('teams_hooks', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -53,7 +53,8 @@ module.exports = {
     });
   },
 
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('teams_hooks');
-  }
+  },
 };

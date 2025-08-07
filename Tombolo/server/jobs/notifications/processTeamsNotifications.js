@@ -6,7 +6,7 @@ const axios = require('axios');
 const {
   NotificationQueue,
   SentNotification,
-  teams_hook: TeamsHook,
+  TeamsHook,
 } = require('../../models');
 const logger = require('../../config/logger');
 const {
