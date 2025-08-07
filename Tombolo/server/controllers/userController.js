@@ -3,7 +3,7 @@ const { v4: UUIDV4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
 const { v4: uuidv4 } = require('uuid');
-const sequelize = require('../models').sequelize;
+const { sequelize } = require('../models');
 
 // Local imports
 const logger = require('../config/logger');

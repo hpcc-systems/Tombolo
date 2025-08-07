@@ -16,7 +16,9 @@ const {
   AccountVerificationCode,
   SentNotification,
   InstanceSetting,
+  sequelize,
 } = require('../models');
+const { Op } = require('sequelize');
 const moment = require('moment');
 const {
   generateAccessToken,
@@ -34,7 +36,6 @@ const {
   handleInvalidLoginAttempt,
 } = require('../utils/authUtil');
 const { blacklistToken } = require('../utils/tokenBlackListing');
-const sequelize = require('../models').sequelize;
 
 // Register application owner
 const createApplicationOwner = async (req, res) => {
@@ -883,9 +884,7 @@ const handlePasswordResetRequest = async (req, res) => {
       where: {
         userId: user.id,
         issuedAt: {
-          [models.Sequelize.Op.gte]: new Date(
-            new Date().getTime() - 60 * 60 * 1000
-          ),
+          [Op.gte]: new Date(new Date().getTime() - 60 * 60 * 1000),
         },
       },
     });
