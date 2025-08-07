@@ -6,7 +6,7 @@ module.exports = sequelize => {
   class Application extends Model {
     static associate(models) {
       /* USER_APPLICATION */
-      this.hasMany(models.user_application, {
+      this.hasMany(models.UserApplication, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
         hooks: true,

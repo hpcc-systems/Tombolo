@@ -2,7 +2,7 @@
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('user_application', {
+    return queryInterface.createTable('user_applications', {
       id: {
         primaryKey: true,
         type: Sequelize.UUID,
@@ -51,7 +51,8 @@ module.exports = {
       },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('user_application');
+    return queryInterface.dropTable('user_applications');
   },
 };

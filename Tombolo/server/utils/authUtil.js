@@ -11,7 +11,7 @@ const {
   UserRoles,
   RoleType,
   userArchive,
-  user_application,
+  UserApplication,
   Application,
   InstanceSetting,
   NotificationQueue,
@@ -61,7 +61,7 @@ const getAUser = async identifier => {
         ],
       },
       {
-        model: user_application,
+        model: UserApplication,
         attributes: ['id'],
         as: 'applications',
         include: [

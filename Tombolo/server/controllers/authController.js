@@ -7,7 +7,7 @@ const roleTypes = require('../config/roleTypes');
 const {
   User,
   UserRoles,
-  user_application,
+  UserApplication,
   Application,
   RoleType,
   RefreshToken,
@@ -269,7 +269,7 @@ const verifyEmail = async (req, res) => {
           ],
         },
         {
-          model: user_application,
+          model: UserApplication,
           attributes: ['id'],
           as: 'applications',
           include: [

@@ -10,7 +10,7 @@ const logger = require('../config/logger');
 const {
   User,
   UserRoles,
-  user_application,
+  UserApplication,
   NotificationQueue,
   AccountVerificationCode,
   PasswordResetLink,
@@ -174,7 +174,7 @@ const getAllUsers = async (req, res) => {
     const users = await User.findAll({
       include: [
         { model: UserRoles, as: 'roles' },
-        { model: user_application, as: 'applications' },
+        { model: UserApplication, as: 'applications' },
       ],
       // descending order by date
       order: [['createdAt', 'DESC']],
@@ -429,14 +429,14 @@ const updateUserApplications = async (req, res) => {
     const { applications } = req.body;
 
     // Find existing user details
-    const existing = await user_application.findAll({ where: { user_id } });
+    const existing = await UserApplication.findAll({ where: { user_id } });
     const existingApplications = existing.map(app => app.application_id);
 
     // Delete applications that are not in the new list
     const applicationsToDelete = existingApplications.filter(
       app => !applications.includes(app)
     );
-    await user_application.destroy({
+    await UserApplication.destroy({
       where: { application_id: applicationsToDelete },
     });
 
@@ -450,7 +450,7 @@ const updateUserApplications = async (req, res) => {
       createdBy: user.id,
     }));
     const newApplications =
-      await user_application.bulkCreate(applicationUserPair);
+      await UserApplication.bulkCreate(applicationUserPair);
 
     // Response
     return res.status(200).json({
@@ -537,14 +537,14 @@ const createUser = async (req, res) => {
       application_id: application,
       createdBy: req.user.id,
     }));
-    await user_application.bulkCreate(userApplications);
+    await UserApplication.bulkCreate(userApplications);
 
     // Refetch user information
     const newUserData = await User.findOne({
       where: { id: newUser.id },
       include: [
         { model: UserRoles, as: 'roles' },
-        { model: user_application, as: 'applications' },
+        { model: UserApplication, as: 'applications' },
       ],
     });
 

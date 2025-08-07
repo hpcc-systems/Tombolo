@@ -12,7 +12,7 @@ module.exports = sequelize => {
         as: 'roles',
       });
 
-      User.hasMany(models.user_application, {
+      User.hasMany(models.UserApplication, {
         foreignKey: 'user_id',
         as: 'applications',
         onDelete: 'CASCADE',
@@ -295,8 +295,8 @@ module.exports = sequelize => {
             where: { userId: user.where.id },
           });
 
-          const user_application = sequelize.models.user_application;
-          await user_application.destroy({
+          const UserApplication = sequelize.models.UserApplication;
+          await UserApplication.destroy({
             where: { user_id: user.where.id },
           });
 

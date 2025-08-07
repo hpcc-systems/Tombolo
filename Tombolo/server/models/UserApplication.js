@@ -1,7 +1,17 @@
 'use strict';
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const user_application = sequelize.define(
-    'user_application',
+  class UserApplication extends Model {
+    static associate(models) {
+      UserApplication.belongsTo(models.User, { foreignKey: 'user_id' });
+      UserApplication.belongsTo(models.Application, {
+        foreignKey: 'application_id',
+      });
+    }
+  }
+
+  UserApplication.init(
     {
       id: {
         primaryKey: true,
@@ -40,19 +50,13 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'user_application',
+      sequelize,
+      modelName: 'UserApplication',
+      tableName: 'user_applications',
       paranoid: true,
-      freezeTableName: true,
       timestamps: true,
     }
   );
 
-  user_application.associate = function (models) {
-    user_application.belongsTo(models.User, { foreignKey: 'user_id' });
-    user_application.belongsTo(models.Application, {
-      foreignKey: 'application_id',
-    });
-  };
-
-  return user_application;
+  return UserApplication;
 };

@@ -6,7 +6,7 @@ const Sequelize = require('sequelize');
 
 // Local Imports
 const {
-  user_application: UserApplication,
+  UserApplication,
   Application,
   Group,
   File,
