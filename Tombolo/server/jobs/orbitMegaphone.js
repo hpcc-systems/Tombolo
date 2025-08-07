@@ -3,7 +3,7 @@ const {
   Integration,
   IntegrationMapping,
   orbitBuilds,
-  monitoring_notifications,
+  MonitoringNotification,
   notification_queue: notification,
 } = require('../models');
 
@@ -209,7 +209,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
 
       // Record notifications
       if (sentNotifications.length > 0) {
-        monitoring_notifications.bulkCreate(sentNotifications);
+        await MonitoringNotification.bulkCreate(sentNotifications);
       }
       return;
     });

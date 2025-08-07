@@ -39,10 +39,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      metaData: {
-        type: DataTypes.JSON,
-        allowNull: true,
-      },
     },
     { paranoid: true, freezeTableName: true }
   );
@@ -51,7 +47,7 @@ module.exports = (sequelize, DataTypes) => {
     orbitBuilds.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });
-    orbitBuilds.hasMany(models.monitoring_notifications, {
+    orbitBuilds.hasMany(models.MonitoringNotification, {
       foreignKey: 'application_id',
       onDelete: 'CASCADE',
     });

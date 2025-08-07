@@ -2,7 +2,7 @@ const axios = require('axios');
 const { notify } = require('../routes/notifications/email-notification');
 const { parentPort, workerData } = require('worker_threads');
 const logger = require('../config/logger');
-const { SuperfileMonitoring, monitoring_notifications } = require('../models');
+const { SuperfileMonitoring, MonitoringNotification } = require('../models');
 const hpccUtil = require('../utils/hpcc-util');
 const { v4: uuidv4 } = require('uuid');
 const {
@@ -322,7 +322,7 @@ const {
     // Add sent notifications to notification table
     if (sentNotifications.length > 0) {
       try {
-        await monitoring_notifications.bulkCreate(sentNotifications);
+        await MonitoringNotification.bulkCreate(sentNotifications);
       } catch (err) {
         logger.error(err);
       }

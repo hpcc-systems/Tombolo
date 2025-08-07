@@ -1,7 +1,7 @@
 const {
   orbitBuilds,
   orbitMonitoring,
-  monitoring_notifications,
+  MonitoringNotification,
 } = require('../../models');
 const express = require('express');
 const { validate } = require('../../middlewares/validateRequestBody');
@@ -646,7 +646,7 @@ router.post(
 
       // Record notifications
       if (sentNotifications.length > 0) {
-        monitoring_notifications.bulkCreate(sentNotifications);
+        await MonitoringNotification.bulkCreate(sentNotifications);
       }
 
       return res.status(200).send(result);

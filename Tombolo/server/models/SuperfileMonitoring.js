@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'application_id',
       });
 
-      SuperfileMonitoring.hasMany(models.monitoring_notifications, {
+      SuperfileMonitoring.hasMany(models.MonitoringNotification, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });

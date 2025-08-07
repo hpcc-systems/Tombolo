@@ -16,7 +16,7 @@ const {
 
 const logger = require('../../config/logger');
 const {
-  monitoring_notifications,
+  MonitoringNotification,
   FileMonitoring,
   ClusterMonitoring,
   JobMonitoring,
@@ -43,7 +43,7 @@ router.get('/filteredNotifications', async (req, res) => {
       query.createdAt = { [Op.between]: range };
     }
 
-    const monitorings = await monitoring_notifications.findAll({
+    const monitorings = await MonitoringNotification.findAll({
       where: query,
       order: [['createdAt', 'DESC']],
       raw: true,
@@ -76,7 +76,7 @@ router.get(
     try {
       const { applicationId: application_id } = req.params;
       if (!application_id) throw Error('Invalid app ID');
-      const notifications = await monitoring_notifications.findAll({
+      const notifications = await MonitoringNotification.findAll({
         where: { application_id },
         include: [
           {
@@ -109,7 +109,7 @@ router.get(
     try {
       const { applicationId: application_id } = req.params;
       if (!application_id) throw Error('Invalid app ID');
-      const notifications = await monitoring_notifications.findAll({
+      const notifications = await MonitoringNotification.findAll({
         where: { application_id },
         include: [
           {
@@ -215,7 +215,7 @@ router.delete(
 router.delete('/', validate(validateDeleteNotifications), async (req, res) => {
   try {
     const { notifications } = req.body;
-    await monitoring_notifications.destroy({ where: { id: notifications } });
+    await MonitoringNotification.destroy({ where: { id: notifications } });
     return res
       .status(200)
       .send({ success: true, message: 'Deletion successful' });
@@ -232,14 +232,14 @@ router.put('/', validate(validatePutUpdateNotification), async (req, res) => {
     const { notifications, status, comment } = req.body;
 
     if (status) {
-      await monitoring_notifications.update(
+      await MonitoringNotification.update(
         { status },
         { where: { id: notifications } }
       );
     }
 
     if (comment || comment === '') {
-      await monitoring_notifications.update(
+      await MonitoringNotification.update(
         { comment },
         { where: { id: notifications } }
       );

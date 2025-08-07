@@ -3,10 +3,7 @@ const { parentPort, workerData } = require('worker_threads');
 
 const { notify } = require('../routes/notifications/email-notification');
 const logger = require('../config/logger');
-const {
-  FileMonitoring,
-  filemonitoring_notifications: fileMonitoring_notifications,
-} = require('../models');
+const { FileMonitoring, MonitoringNotification } = require('../models');
 const hpccUtil = require('../utils/hpcc-util');
 const { v4: uuidv4 } = require('uuid');
 const {
@@ -257,7 +254,7 @@ const {
     // Add sent notifications to notification table
     if (sentNotifications.length > 0) {
       try {
-        await fileMonitoring_notifications.bulkCreate(sentNotifications);
+        await MonitoringNotification.bulkCreate(sentNotifications);
       } catch (err) {
         logger.error(err);
       }
