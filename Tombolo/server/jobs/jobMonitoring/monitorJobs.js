@@ -9,7 +9,7 @@ const {
   Cluster,
   MonitoringType,
   MonitoringLog,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   JobMonitoringData,
 } = require('../../models');
 const { decryptString } = require('../../utils/cipher');

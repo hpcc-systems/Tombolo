@@ -18,7 +18,7 @@ const {
 const {
   JobMonitoring,
   Cluster,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   MonitoringType,
 } = require('../../models');
 const { getClusterOptions } = require('../../utils/getClusterOptions');

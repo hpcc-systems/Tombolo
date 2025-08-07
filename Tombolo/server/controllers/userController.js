@@ -11,7 +11,7 @@ const {
   user: User,
   UserRoles,
   user_application,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   AccountVerificationCode,
   PasswordResetLinks,
 } = require('../models');

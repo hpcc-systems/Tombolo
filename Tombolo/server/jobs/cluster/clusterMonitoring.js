@@ -8,7 +8,7 @@ const {
   ClusterMonitoring,
   Cluster,
   MonitoringType,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   AsrProduct,
   AsrDomain,
   MonitoringLog,

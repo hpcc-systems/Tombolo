@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("notification_queue", {
+    return queryInterface.createTable('notification_queue', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -10,7 +10,7 @@ module.exports = {
       },
       type: {
         allowNull: false,
-        type: Sequelize.ENUM("msTeams", "email"),
+        type: Sequelize.ENUM('msTeams', 'email'),
       },
       notificationOrigin: {
         allowNull: false,
@@ -22,7 +22,7 @@ module.exports = {
       },
       deliveryType: {
         allowNull: false,
-        type: Sequelize.ENUM("immediate", "scheduled"),
+        type: Sequelize.ENUM('immediate', 'scheduled'),
       },
       templateName: {
         allowNull: false,
@@ -52,7 +52,7 @@ module.exports = {
       createdBy: {
         allowNull: false,
         type: Sequelize.DataTypes.STRING,
-        defaultValue: "System",
+        defaultValue: 'System',
       },
       createdAt: {
         allowNull: false,
@@ -62,7 +62,7 @@ module.exports = {
       updatedBy: {
         allowNull: false,
         type: Sequelize.STRING,
-        defaultValue: "System",
+        defaultValue: 'System',
       },
       updatedAt: {
         allowNull: false,
@@ -75,7 +75,8 @@ module.exports = {
       },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("notification_queue");
+    return queryInterface.dropTable('notification_queue');
   },
 };

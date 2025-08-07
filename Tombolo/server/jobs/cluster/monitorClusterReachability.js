@@ -8,10 +8,7 @@ const {
   passwordExpiryInProximityNotificationPayload,
 } = require('./clusterReachabilityMonitoringUtils.js');
 const { decryptString } = require('../../utils/cipher');
-const {
-  Cluster,
-  notification_queue: NotificationQueue,
-} = require('../../models');
+const { Cluster, NotificationQueue } = require('../../models');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 (async () => {

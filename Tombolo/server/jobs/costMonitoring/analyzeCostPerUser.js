@@ -3,7 +3,7 @@ const { parentPort } = require('worker_threads');
 const {
   CostMonitoring,
   CostMonitoringData,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   MonitoringType,
   CostMonitoringDataTotals,
   Cluster,

@@ -4,7 +4,7 @@ const {
   sent_notifications: SentNotifications,
   user: User,
   InstanceSetting,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   RefreshTokens,
 } = require('../../models');
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');

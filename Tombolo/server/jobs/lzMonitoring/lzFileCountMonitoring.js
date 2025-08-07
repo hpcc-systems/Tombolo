@@ -13,7 +13,7 @@ const {
   LandingZoneMonitoring,
   Cluster,
   MonitoringType,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   AsrProduct,
   AsrDomain,
 } = models;

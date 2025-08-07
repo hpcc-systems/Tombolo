@@ -4,7 +4,7 @@ const {
   IntegrationMapping,
   orbitBuilds,
   MonitoringNotification,
-  notification_queue: notification,
+  NotificationQueue,
 } = require('../models');
 
 const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
@@ -86,7 +86,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
               integration.dataValues.metaData.megaPhoneAlerts?.emailContacts
             ) {
               //create a notification queue
-              await notification.create({
+              await NotificationQueue.create({
                 type: 'email',
                 notificationOrigin: 'orbitMegaphone',
                 templateName: 'orbitMegaphone',

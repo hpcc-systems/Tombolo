@@ -44,7 +44,7 @@ jest.mock('../models', () => {
       update: jest.fn(),
       destroy: jest.fn(),
     },
-    notification_queue: {
+    NotificationQueue: {
       create: jest.fn(),
       findOne: jest.fn(),
       findAll: jest.fn(),

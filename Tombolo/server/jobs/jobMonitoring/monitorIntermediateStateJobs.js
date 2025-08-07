@@ -6,7 +6,7 @@ const _ = require('lodash');
 // Local imports
 const {
   Cluster,
-  notification_queue,
+  NotificationQueue,
   MonitoringType,
   MonitoringLog,
   JobMonitoringData,
@@ -429,7 +429,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
 
     // Insert notification in queue
     for (let notification of notificationsToBeQueued) {
-      await notification_queue.create(notification);
+      await NotificationQueue.create(notification);
     }
 
     // if wuToStopMonitoring is empty, or state of intermediate wu has not changed return

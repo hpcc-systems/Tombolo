@@ -14,7 +14,7 @@ const {
   user_application,
   Application,
   InstanceSetting,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   AccountVerificationCode,
 } = require('../models');
 const { generateToken } = require('../middlewares/csrfMiddleware');

@@ -7,7 +7,7 @@ const {
   UserRoles,
   InstanceSetting,
   AccountVerificationCode,
-  notification_queue,
+  NotificationQueue,
   sequelize,
 } = require('../models');
 const {
@@ -266,7 +266,7 @@ const sendVerificationEmail = async (user, transaction) => {
     { transaction }
   );
 
-  await notification_queue.create(
+  await NotificationQueue.create(
     {
       type: 'email',
       templateName: 'verifyEmail',
