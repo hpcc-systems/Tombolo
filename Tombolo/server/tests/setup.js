@@ -58,7 +58,7 @@ jest.mock('../models', () => {
       create: jest.fn(),
       findOne: jest.fn(),
     },
-    PasswordResetLinks: {
+    PasswordResetLink: {
       create: jest.fn(),
       findOne: jest.fn(),
     },

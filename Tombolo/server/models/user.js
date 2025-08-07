@@ -117,8 +117,8 @@ module.exports = (sequelize, DataTypes) => {
           });
 
           // Delete password reset links
-          const PasswordResetLinks = sequelize.models.PasswordResetLinks;
-          await PasswordResetLinks.destroy({
+          const PasswordResetLink = sequelize.models.PasswordResetLink;
+          await PasswordResetLink.destroy({
             where: { userId: user.where.id },
           });
 
@@ -157,7 +157,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     // User to password reset links
-    user.hasMany(models.PasswordResetLinks, {
+    user.hasMany(models.PasswordResetLink, {
       foreignKey: 'userId',
       onDelete: 'CASCADE',
       hooks: true,

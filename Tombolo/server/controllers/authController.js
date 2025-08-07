@@ -12,7 +12,7 @@ const {
   RoleTypes,
   RefreshTokens,
   NotificationQueue,
-  PasswordResetLinks,
+  PasswordResetLink,
   AccountVerificationCode,
   sent_notifications,
   InstanceSetting,
@@ -414,7 +414,7 @@ const resetPasswordWithToken = async (req, res) => {
     });
 
     //delete password reset link
-    await PasswordResetLinks.destroy({
+    await PasswordResetLink.destroy({
       where: { id: token },
       transaction,
     });
@@ -581,7 +581,7 @@ const resetTempPassword = async (req, res) => {
     });
 
     //delete password reset link
-    await PasswordResetLinks.destroy({
+    await PasswordResetLink.destroy({
       where: { id: token },
     });
 
@@ -879,7 +879,7 @@ const handlePasswordResetRequest = async (req, res) => {
     }
 
     // Stop users form abusing this endpoint - allow 4 requests per hour
-    const passwordResetRequests = await PasswordResetLinks.findAll({
+    const passwordResetRequests = await PasswordResetLink.findAll({
       where: {
         userId: user.id,
         issuedAt: {
@@ -935,7 +935,7 @@ const handlePasswordResetRequest = async (req, res) => {
     });
 
     // Save the password reset token to the user object in the database
-    await PasswordResetLinks.create({
+    await PasswordResetLink.create({
       id: randomId,
       userId: user.id,
       resetLink: passwordRestLink,
@@ -1264,7 +1264,7 @@ const getUserDetailsWithToken = async (req, res) => {
     const { token } = req.params;
 
     //get the user id by the password reset link
-    const userId = await PasswordResetLinks.findOne({
+    const userId = await PasswordResetLink.findOne({
       where: { id: token },
 
       attributes: ['userId'],
