@@ -2,7 +2,7 @@ const logger = require('../config/logger');
 const {
   Integration,
   IntegrationMapping,
-  orbitBuilds,
+  OrbitBuild,
   MonitoringNotification,
   NotificationQueue,
 } = require('../models');
@@ -46,7 +46,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
       await Promise.all(
         result[0].map(async build => {
           //check if the build already exists
-          let orbitBuild = await orbitBuilds.findOne({
+          let orbitBuild = await OrbitBuild.findOne({
             where: {
               build_id: build.ReceiveInstanceIdKey,
               application_id: application_id,
@@ -57,7 +57,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
           //if it doesn't exist, create it and send a notification
           if (!orbitBuild) {
             //create build
-            const newBuild = await orbitBuilds.create({
+            const newBuild = await OrbitBuild.create({
               application_id: application_id,
               build_id: build.ReceiveInstanceIdKey,
               monitoring_id: null,
@@ -187,7 +187,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
           } else {
             //if it does exist, update the "final status metadata"
 
-            await orbitBuilds.update(
+            await OrbitBuild.update(
               {
                 metaData: {
                   ...orbitBuild.metaData,

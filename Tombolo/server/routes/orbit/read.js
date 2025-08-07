@@ -1,5 +1,5 @@
 const {
-  orbitBuilds,
+  OrbitBuild,
   orbitMonitoring,
   MonitoringNotification,
 } = require('../../models');
@@ -491,7 +491,7 @@ router.get(
       if (result?.length) {
         await Promise.all(
           result.map(async build => {
-            let wu = await orbitBuilds.findAll({
+            let wu = await OrbitBuild.findAll({
               where: { application_id, name: build.build },
               raw: true,
             });
@@ -539,7 +539,7 @@ router.post(
         await Promise.all(
           rows?.map(async build => {
             //check if the build already exists
-            let orbitBuild = await orbitBuilds.findOne({
+            let orbitBuild = await OrbitBuild.findOne({
               where: {
                 build_id: build.BuildInstanceIdKey,
                 application_id: application_id,
@@ -550,7 +550,7 @@ router.post(
             //if it doesn't exist, create it and send a notification
             if (!orbitBuild) {
               //create build
-              const newBuild = await orbitBuilds.create({
+              const newBuild = await OrbitBuild.create({
                 application_id: application_id,
                 build_id: build.BuildInstanceIdKey,
                 name: build.Name,
