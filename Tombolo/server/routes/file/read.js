@@ -6,7 +6,7 @@ const {
   FileValidation,
   File,
   License,
-  rules: Rules,
+  Rule,
   DataType,
   AssetsGroup,
   ConsumerObject,
@@ -207,7 +207,7 @@ router.get('/licenses', async (req, res) => {
 
 router.get('/rules', async (req, res) => {
   try {
-    const rules = await Rules.findAll();
+    const rules = await Rule.findAll();
     return res.status(200).json(rules);
   } catch (err) {
     logger.error(err);

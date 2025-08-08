@@ -2,9 +2,9 @@ const logger = require('../config/logger');
 const {
   Integration,
   IntegrationMapping,
-  orbitBuilds,
-  monitoring_notifications,
-  notification_queue: notification,
+  OrbitBuild,
+  MonitoringNotification,
+  NotificationQueue,
 } = require('../models');
 
 const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
@@ -46,7 +46,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
       await Promise.all(
         result[0].map(async build => {
           //check if the build already exists
-          let orbitBuild = await orbitBuilds.findOne({
+          let orbitBuild = await OrbitBuild.findOne({
             where: {
               build_id: build.ReceiveInstanceIdKey,
               application_id: application_id,
@@ -57,7 +57,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
           //if it doesn't exist, create it and send a notification
           if (!orbitBuild) {
             //create build
-            const newBuild = await orbitBuilds.create({
+            const newBuild = await OrbitBuild.create({
               application_id: application_id,
               build_id: build.ReceiveInstanceIdKey,
               monitoring_id: null,
@@ -86,7 +86,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
               integration.dataValues.metaData.megaPhoneAlerts?.emailContacts
             ) {
               //create a notification queue
-              await notification.create({
+              await NotificationQueue.create({
                 type: 'email',
                 notificationOrigin: 'orbitMegaphone',
                 templateName: 'orbitMegaphone',
@@ -187,7 +187,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
           } else {
             //if it does exist, update the "final status metadata"
 
-            await orbitBuilds.update(
+            await OrbitBuild.update(
               {
                 metaData: {
                   ...orbitBuild.metaData,
@@ -209,7 +209,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
 
       // Record notifications
       if (sentNotifications.length > 0) {
-        monitoring_notifications.bulkCreate(sentNotifications);
+        await MonitoringNotification.bulkCreate(sentNotifications);
       }
       return;
     });

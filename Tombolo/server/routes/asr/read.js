@@ -15,7 +15,7 @@ const { sequelize } = require('../../models');
 
 //Local Imports
 const {
-  monitoring_types: MonitoringTypes,
+  MonitoringType,
   AsrDomain,
   AsrMonitoringTypeToDomainsRelation: AsrDomainMonitoringTypeToDomains,
   AsrProduct,
@@ -93,7 +93,7 @@ router.get('/domains/', async (req, res) => {
       include: [
         ...getUserFkIncludes(),
         {
-          model: MonitoringTypes,
+          model: MonitoringType,
           through: {
             attributes: [], // Exclude the junction table from the result
           },

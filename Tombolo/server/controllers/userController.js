@@ -11,9 +11,9 @@ const {
   user: User,
   UserRoles,
   user_application,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   AccountVerificationCode,
-  PasswordResetLinks,
+  PasswordResetLink,
 } = require('../models');
 const {
   setPasswordExpiry,
@@ -652,7 +652,7 @@ const resetPasswordForUser = async (req, res) => {
     );
 
     // Save the password reset token to the user object in the database
-    await PasswordResetLinks.create(
+    await PasswordResetLink.create(
       {
         id: randomId,
         userId: user.id,

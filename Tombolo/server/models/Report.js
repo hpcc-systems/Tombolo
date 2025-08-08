@@ -1,7 +1,15 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const report = sequelize.define(
-    'report',
+  class Report extends Model {
+    static associate(models) {
+      Report.belongsTo(models.Application, { foreignKey: 'application_id' });
+    }
+  }
+
+  Report.init(
     {
       id: {
         primaryKey: true,
@@ -17,12 +25,13 @@ module.exports = (sequelize, DataTypes) => {
       report: DataTypes.JSON,
       application_id: DataTypes.UUID,
     },
-    { paranoid: true, freezeTableName: true }
+    {
+      sequelize,
+      modelName: 'report',
+      paranoid: true,
+      freezeTableName: true,
+    }
   );
 
-  report.associate = function (models) {
-    report.belongsTo(models.Application, { foreignKey: 'application_id' });
-  };
-
-  return report;
+  return Report;
 };

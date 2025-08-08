@@ -99,8 +99,8 @@ module.exports = (sequelize, DataTypes) => {
       hooks: {
         beforeBulkDestroy: async (user, options) => {
           // Delete refresh tokens
-          const RefreshTokens = sequelize.models.RefreshTokens;
-          await RefreshTokens.destroy({
+          const RefreshToken = sequelize.models.RefreshToken;
+          await RefreshToken.destroy({
             where: { userId: user.where.id },
           });
 
@@ -117,8 +117,8 @@ module.exports = (sequelize, DataTypes) => {
           });
 
           // Delete password reset links
-          const PasswordResetLinks = sequelize.models.PasswordResetLinks;
-          await PasswordResetLinks.destroy({
+          const PasswordResetLink = sequelize.models.PasswordResetLink;
+          await PasswordResetLink.destroy({
             where: { userId: user.where.id },
           });
 
@@ -150,14 +150,14 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     // User to refresh token
-    user.hasMany(models.RefreshTokens, {
+    user.hasMany(models.RefreshToken, {
       foreignKey: 'userId',
       onDelete: 'CASCADE',
       hooks: true,
     });
 
     // User to password reset links
-    user.hasMany(models.PasswordResetLinks, {
+    user.hasMany(models.PasswordResetLink, {
       foreignKey: 'userId',
       onDelete: 'CASCADE',
       hooks: true,
@@ -190,19 +190,19 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     // User to landing zone monitoring
-    user.hasMany(models.landingZoneMonitoring, {
+    user.hasMany(models.LandingZoneMonitoring, {
       foreignKey: 'createdBy',
       as: 'createdLandingZoneMonitorings',
       onDelete: 'NO ACTION',
     });
 
-    user.hasMany(models.landingZoneMonitoring, {
+    user.hasMany(models.LandingZoneMonitoring, {
       foreignKey: 'lastUpdatedBy',
       as: 'updatedLandingZoneMonitorings',
       onDelete: 'NO ACTION',
     });
 
-    user.hasMany(models.landingZoneMonitoring, {
+    user.hasMany(models.LandingZoneMonitoring, {
       foreignKey: 'approvedBy',
       as: 'approvedLandingZoneMonitorings',
       onDelete: 'NO ACTION',

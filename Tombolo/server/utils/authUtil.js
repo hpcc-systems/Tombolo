@@ -9,12 +9,12 @@ const logger = require('../config/logger');
 const {
   user: User,
   UserRoles,
-  RoleTypes,
+  RoleType,
   userArchive,
   user_application,
   Application,
   InstanceSetting,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   AccountVerificationCode,
 } = require('../models');
 const { generateToken } = require('../middlewares/csrfMiddleware');
@@ -54,7 +54,7 @@ const getAUser = async identifier => {
         as: 'roles',
         include: [
           {
-            model: RoleTypes,
+            model: RoleType,
             as: 'role_details',
             attributes: ['id', 'roleName'],
           },
@@ -182,7 +182,7 @@ const getSupportContactEmails = async () => {
         required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).
         include: [
           {
-            model: RoleTypes,
+            model: RoleType,
             as: 'role_details',
             attributes: ['id', 'roleName'],
             where: { roleName: { [Op.in]: supportEmailRecipientsRoles } },
@@ -230,7 +230,7 @@ const getAccessRequestContactEmails = async () => {
         required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).
         include: [
           {
-            model: RoleTypes,
+            model: RoleType,
             as: 'role_details',
             attributes: ['id', 'roleName'],
             where: { roleName: { [Op.in]: accessRequestEmailRecipientsRoles } },

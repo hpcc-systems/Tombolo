@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("password_reset_links", {
+    await queryInterface.createTable('password_reset_links', {
       id: {
         primaryKey: true,
         type: Sequelize.UUID,
@@ -12,11 +12,11 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: "users", // Name of the users model
-          key: "id",
+          model: 'users', // Name of the users model
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       resetLink: {
         type: Sequelize.STRING,
@@ -33,17 +33,17 @@ module.exports = {
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },
-
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("password_reset_links");
+    await queryInterface.dropTable('password_reset_links');
   },
 };

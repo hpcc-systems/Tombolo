@@ -3,8 +3,8 @@ const { parentPort } = require('worker_threads');
 const {
   CostMonitoring,
   CostMonitoringData,
-  notification_queue: NotificationQueue,
-  monitoring_types: MonitoringTypes,
+  NotificationQueue,
+  MonitoringType,
   CostMonitoringDataTotals,
   Cluster,
   AsrDomain,
@@ -28,7 +28,7 @@ async function analyzeCostPerUser(identifier, options) {
         text: 'Analyze Cost Per user: started ...',
       });
 
-    const monitoringType = await MonitoringTypes.findOne({
+    const monitoringType = await MonitoringType.findOne({
       where: { name: 'Cost Monitoring' },
       attributes: ['id'],
     });

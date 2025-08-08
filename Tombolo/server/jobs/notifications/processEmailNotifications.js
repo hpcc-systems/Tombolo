@@ -1,20 +1,17 @@
 // Packages
-const { Op } = require("sequelize");
+const { Op } = require('sequelize');
 
 //Local Imports
-const models = require("../../models");
-const logger = require("../../config/logger");
+const { NotificationQueue, SentNotification } = require('../../models');
+const logger = require('../../config/logger');
 const {
   sendEmail,
   retryOptions: { maxRetries },
-} = require("../../config/emailConfig");
+} = require('../../config/emailConfig');
 const {
   updateNotificationQueueOnError,
-} = require("./notificationsHelperFunctions");
-const emailNotificationHtmlCode = require("../../utils/emailNotificationHtmlCode");
-
-const NotificationQueue = models.notification_queue;
-const SentNotification = models.sent_notifications;
+} = require('./notificationsHelperFunctions');
+const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode');
 
 (async () => {
   try {
@@ -27,7 +24,7 @@ const SentNotification = models.sent_notifications;
     try {
       notifications = await NotificationQueue.findAll({
         where: {
-          type: "email",
+          type: 'email',
           attemptCount: { [Op.lt]: maxRetries },
         },
         raw: true,
@@ -44,9 +41,9 @@ const SentNotification = models.sent_notifications;
 
       // Check if it meets the criteria to be sent
       if (
-        (deliveryType === "immediate" && (reTryAfter < now || !reTryAfter)) ||
-        (deliveryType === "scheduled" && (reTryAfter < now || !reTryAfter)) ||
-        (deliveryType === "scheduled" &&
+        (deliveryType === 'immediate' && (reTryAfter < now || !reTryAfter)) ||
+        (deliveryType === 'scheduled' && (reTryAfter < now || !reTryAfter)) ||
+        (deliveryType === 'scheduled' &&
           deliveryTime < now &&
           deliveryTime > lastScanned)
       ) {
@@ -72,8 +69,8 @@ const SentNotification = models.sent_notifications;
       try {
         //Common email details applicable for all emails
         const commonEmailDetails = {
-          receiver: metaData?.mainRecipients?.join(",") || "",
-          cc: metaData?.cc?.join(",") || "",
+          receiver: metaData?.mainRecipients?.join(',') || '',
+          cc: metaData?.cc?.join(',') || '',
           subject: metaData.subject,
         };
 
@@ -81,7 +78,7 @@ const SentNotification = models.sent_notifications;
         let emailPayload;
 
         // Notification origin is manual - send the email as it is
-        if (notificationOrigin === "manual") {
+        if (notificationOrigin === 'manual') {
           emailPayload = {
             notificationQueueId,
             ...commonEmailDetails,
@@ -137,15 +134,15 @@ const SentNotification = models.sent_notifications;
         delete notificationCopy.notificationQueueId;
 
         notificationCopy.searchableNotificationId = notification.notificationId;
-        (notificationCopy.notificationChannel = "email"),
-          (notificationCopy.notificationTitle = notification.subject),
-          (notificationCopy.applicationId = notification.applicationId),
-          (notificationCopy.status = "Pending Review"),
-          (notificationCopy.createdBy = { name: "System" }),
-          (notificationCopy.createdAt = now),
-          (notificationCopy.updatedAt = now),
-          (notificationCopy.metaData = { notificationDetails: notification }),
-          await SentNotification.create(notificationCopy);
+        notificationCopy.notificationChannel = 'email';
+        notificationCopy.notificationTitle = notification.subject;
+        notificationCopy.applicationId = notification.applicationId;
+        notificationCopy.status = 'Pending Review';
+        notificationCopy.createdBy = { name: 'System' };
+        notificationCopy.createdAt = now;
+        notificationCopy.updatedAt = now;
+        notificationCopy.metaData = { notificationDetails: notification };
+        await SentNotification.create(notificationCopy);
       }
     } catch (error) {
       logger.error(error.message);
@@ -173,6 +170,6 @@ const SentNotification = models.sent_notifications;
 2. new Date().toISOString() - gives UTC time in ISO 8601 format
 3. Sequelize by default stores the date in UTC format
 4. Sequelize by default returns the date in local time
-5. Gotcha - If you console.log new Date() in node.js environment, It will log UTC time in ISO 8601 format. 
+5. Gotcha - If you console.log new Date() in node.js environment, It will log UTC time in ISO 8601 format.
    It is because node.js internally calls .toISOString() on the date object before logging it.
 */

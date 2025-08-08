@@ -1,7 +1,34 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const query = sequelize.define(
-    'query',
+  class Query extends Model {
+    static associate(models) {
+      Query.hasMany(models.QueryField, {
+        constraints: false,
+        foreignKeyConstraint: false,
+        foreignKey: 'query_id',
+        onDelete: 'CASCADE',
+        hooks: true,
+      });
+
+      Query.belongsTo(models.Application, {
+        foreignKey: 'application_id',
+      });
+
+      Query.belongsToMany(models.Group, {
+        constraints: false,
+        foreignKeyConstraint: false,
+        through: 'assets_groups',
+        as: 'groups',
+        foreignKey: 'assetId',
+        otherKey: 'groupId',
+      });
+    }
+  }
+
+  Query.init(
     {
       id: {
         primaryKey: true,
@@ -20,28 +47,13 @@ module.exports = (sequelize, DataTypes) => {
       backupService: DataTypes.STRING,
       type: DataTypes.STRING,
     },
-    { paranoid: true, freezeTableName: true }
+    {
+      sequelize,
+      modelName: 'Query',
+      tableName: 'queries',
+      paranoid: true,
+    }
   );
-  query.associate = function (models) {
-    query.hasMany(models.query_field, {
-      constraints: false,
-      foreignKeyConstraint: false,
-      foreignKey: 'query_id',
-      onDelete: 'CASCADE',
-      hooks: true,
-    });
 
-    query.belongsTo(models.Application, {
-      foreignKey: 'application_id',
-    });
-    query.belongsToMany(models.Group, {
-      constraints: false,
-      foreignKeyConstraint: false,
-      through: 'assets_groups',
-      as: 'groups',
-      foreignKey: 'assetId',
-      otherKey: 'groupId',
-    });
-  };
-  return query;
+  return Query;
 };

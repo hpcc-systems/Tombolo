@@ -1,27 +1,27 @@
-const axios = require("axios");
-const { notify } = require("../routes/notifications/email-notification");
-const { parentPort, workerData } = require("worker_threads");
-const logger = require("../config/logger");
-const models = require("../models");
-const orbitMonitoring = models.orbitMonitoring;
-const orbitBuilds = models.orbitBuilds;
-const { v4: uuidv4 } = require("uuid");
-const monitoring_notifications = models.monitoring_notifications;
+const axios = require('axios');
+const { notify } = require('../routes/notifications/email-notification');
+const { parentPort, workerData } = require('worker_threads');
+const logger = require('../config/logger');
+const {
+  OrbitMonitoring,
+  OrbitBuild,
+  MonitoringNotification,
+} = require('../models');
+const { v4: uuidv4 } = require('uuid');
 const {
   orbitMonitoringEmailBody,
   orbitMonitoringMessageCard,
-} = require("./messageCards/notificationTemplate");
-const { update } = require("lodash");
+} = require('./messageCards/notificationTemplate');
 
 const {
   runMySQLQuery,
 
   orbitDbConfig,
-} = require("../utils/runSQLQueries.js");
+} = require('../utils/runSQLQueries.js');
 
 (async () => {
   try {
-    const orbitMonitoringDetails = await orbitMonitoring.findOne({
+    const orbitMonitoringDetails = await OrbitMonitoring.findOne({
       where: { id: workerData.orbitMonitoring_id },
       raw: true,
     });
@@ -63,14 +63,14 @@ const {
     if (!wuResult || !wuResult[0] || !wuResult[0][0]) return;
 
     //check for most recent workunit changes and push to metadifference
-    if (notifyCondition.includes("buildStatus")) {
+    if (notifyCondition.includes('buildStatus')) {
       let newStatus = wuResult[0][0].Status;
       newStatus = newStatus.toLowerCase();
 
       if (monitoringCondition?.buildStatus.includes(newStatus)) {
         //build status has been detected, push difference.
         metaDifference.push({
-          attribute: "Build Status",
+          attribute: 'Build Status',
           oldValue: `${orbitMonitoringDetails.metaData.lastWorkUnit.lastWorkUnitStatus}`,
           newValue: `${newStatus}`,
         });
@@ -78,8 +78,8 @@ const {
     }
 
     if (
-      notifyCondition.includes("updateInterval") ||
-      notifyCondition.includes("updateIntervalDays")
+      notifyCondition.includes('updateInterval') ||
+      notifyCondition.includes('updateIntervalDays')
     ) {
       //update interval is in days, so multiply by 86400000 to get number of milliseconds between updates
       let updateInterval = monitoringCondition?.updateInterval;
@@ -107,7 +107,7 @@ const {
       //if difference in days !== update interval, and the Orbit Build has been updated, notify
       if (diffDays !== updateInterval && diffDays !== 0) {
         metaDifference.push({
-          attribute: "Orbit Build did not follow update schedule",
+          attribute: 'Orbit Build did not follow update schedule',
           oldValue: `${updateInterval} - days defined between updates`,
           newValue: `${diffDays} - days between last updates`,
         });
@@ -116,7 +116,7 @@ const {
       //if current amount of days is > defined
       if (diffDaysCurrent > updateInterval) {
         metaDifference.push({
-          attribute: "Orbit Build is overdue for update",
+          attribute: 'Orbit Build is overdue for update',
           oldValue: `${updateInterval} - days defined between updates`,
           newValue: `${diffDaysCurrent} - days since last update`,
         });
@@ -124,13 +124,13 @@ const {
       //if updateIntervalDays is set, check that most recent modified day of the week matches setting
       if (updateIntervalDays?.length) {
         const daysOfWeek = [
-          "sunday",
-          "monday",
-          "tuesday",
-          "wednesday",
-          "thursday",
-          "friday",
-          "saturday",
+          'sunday',
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
         ];
         const newDate = new Date(newModified);
         const newDayUpdated = daysOfWeek[newDate.getDay()];
@@ -138,7 +138,7 @@ const {
         if (!updateIntervalDays.includes(newDayUpdated)) {
           metaDifference.push({
             attribute:
-              "Orbit Build was updated on a day of the week not defined",
+              'Orbit Build was updated on a day of the week not defined',
             oldValue: `${updateIntervalDays} - days defined`,
             newValue: `${newDayUpdated} - day updated`,
           });
@@ -151,7 +151,7 @@ const {
       metaData = orbitMonitoringDetails.metaData;
       metaData.lastMonitored = currentTimeStamp;
 
-      await orbitMonitoring.update({ metaData }, { where: { id } });
+      await OrbitMonitoring.update({ metaData }, { where: { id } });
     }
 
     //------------------------------------------------------------------------------
@@ -159,9 +159,9 @@ const {
     //check for status changes of the all gathered workunits
 
     await Promise.all(
-      wuResult[0].map(async (result) => {
-        //check if result is is orbitbuilds table
-        const orbitBuild = await orbitBuilds.findOne({
+      wuResult[0].map(async result => {
+        //check if the result is in the OrbitBuild table
+        const orbitBuild = await OrbitBuild.findOne({
           where: {
             wuid: result.WorkUnit,
             monitoring_id: id,
@@ -172,7 +172,7 @@ const {
 
         if (orbitBuild) {
           //if it does, update it
-          await orbitBuilds.update(
+          await OrbitBuild.update(
             {
               metaData: {
                 ...orbitBuild.metaData,
@@ -183,12 +183,12 @@ const {
           );
         } else {
           //if it doesn't, create it
-          await orbitBuilds.create({
+          await OrbitBuild.create({
             application_id: application_id,
             build_id: result.BuildID,
             monitoring_id: id,
             name: result.Build,
-            type: "orbit",
+            type: 'orbit',
             wuid: result.WorkUnit,
             metaData: {
               lastRun: result.Date,
@@ -213,10 +213,10 @@ const {
     // notifications.channel === "eMail"
 
     for (let notification of notifications) {
-      if (notification.channel === "eMail") {
+      if (notification.channel === 'eMail') {
         emailNotificationDetails = notification;
       }
-      if (notification.channel === "msTeams") {
+      if (notification.channel === 'msTeams') {
         teamsNotificationDetails = notification;
       }
     }
@@ -228,9 +228,11 @@ const {
     if (metaDifference.length > 0) {
       // Note - this does not cover Orbit Build size not in range
       notificationDetails.value =
-        "Orbit Build alert has been triggered by Tombolo";
-      notificationDetails.title = `Orbit Build alert has been triggered by Tombolo`;
-      notificationDetails.text = `Orbit Build alert has been triggered by Tombolo`;
+        'Orbit Build alert has been triggered by Tombolo';
+      notificationDetails.title =
+        'Orbit Build alert has been triggered by Tombolo';
+      notificationDetails.text =
+        'Orbit Build alert has been triggered by Tombolo';
     }
 
     const notification_id = uuidv4();
@@ -241,15 +243,15 @@ const {
       title: notificationDetails.title,
       product: product,
       businessUnit: businessUnit,
-      region: "USA",
+      region: 'USA',
       severityCode: severityCode,
       date: wuResult[0].Date,
       remedy:
-        "Please Contact one of the following for assistance <br/>" +
-        "PRIMARY: " +
+        'Please Contact one of the following for assistance <br/>' +
+        'PRIMARY: ' +
         primaryContact +
-        "<br/>" +
-        "SECONDARY: " +
+        '<br/>' +
+        'SECONDARY: ' +
         secondaryContact,
       notification_id: notification_id,
       issue: {
@@ -278,10 +280,10 @@ const {
           sentNotifications.push({
             id: notification_id,
             file_name: build,
-            monitoring_type: "orbitMonitoring",
-            status: "notified",
+            monitoring_type: 'orbitMonitoring',
+            status: 'notified',
             notifiedTo: emailNotificationDetails.recipients,
-            notification_channel: "eMail",
+            notification_channel: 'eMail',
             application_id,
             notification_reason: notificationDetails.value,
             monitoring_id: id,
@@ -297,7 +299,7 @@ const {
       const { recipients } = teamsNotificationDetails;
 
       for (let recipient of recipients) {
-        let title = "Orbit Monitoring alert has been triggered by Tombolo";
+        let title = 'Orbit Monitoring alert has been triggered by Tombolo';
 
         try {
           let body = orbitMonitoringMessageCard(
@@ -311,10 +313,10 @@ const {
           sentNotifications.push({
             id: notification_id,
             file_name: build,
-            monitoring_type: "orbitMonitoring",
-            status: "notified",
+            monitoring_type: 'orbitMonitoring',
+            status: 'notified',
             notifiedTo: teamsNotificationDetails.recipients,
-            notification_channel: "msTeams",
+            notification_channel: 'msTeams',
             application_id,
             notification_reason: notificationDetails.value,
             monitoring_id: id,
@@ -328,7 +330,7 @@ const {
     // Add sent notifications to notification table
     if (sentNotifications.length > 0) {
       try {
-        await monitoring_notifications.bulkCreate(sentNotifications);
+        await MonitoringNotification.bulkCreate(sentNotifications);
       } catch (err) {
         logger.error(err);
       }
@@ -336,6 +338,6 @@ const {
   } catch (err) {
     logger.error(err);
   } finally {
-    parentPort ? parentPort.postMessage("done") : process.exit(0);
+    parentPort ? parentPort.postMessage('done') : process.exit(0);
   }
 })();

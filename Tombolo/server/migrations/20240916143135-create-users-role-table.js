@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("user_roles", {
+    await queryInterface.createTable('user_roles', {
       id: {
         primaryKey: true,
         type: Sequelize.UUID,
@@ -13,21 +13,21 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: "users", // Name of the users table
-          key: "id",
+          model: 'users', // Name of the users table
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       roleId: {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: "role_types", // Name of the role_types table
-          key: "id",
+          model: 'role_types', // Name of the role_types table
+          key: 'id',
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       createdBy: {
         type: Sequelize.UUID,
@@ -48,6 +48,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("user_roles");
+    await queryInterface.dropTable('user_roles');
   },
 };

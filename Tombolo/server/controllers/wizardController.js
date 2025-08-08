@@ -3,11 +3,11 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const {
   user,
-  RoleTypes,
+  RoleType,
   UserRoles,
   InstanceSetting,
   AccountVerificationCode,
-  notification_queue,
+  NotificationQueue,
   sequelize,
 } = require('../models');
 const {
@@ -218,7 +218,7 @@ const createUser = async (
 
 // Helper: Assign owner role
 const assignOwnerRole = async (userId, transaction) => {
-  const { id: ownerId } = await RoleTypes.findOne({
+  const { id: ownerId } = await RoleType.findOne({
     where: { roleName: 'owner' },
   });
   await UserRoles.create(
@@ -266,7 +266,7 @@ const sendVerificationEmail = async (user, transaction) => {
     { transaction }
   );
 
-  await notification_queue.create(
+  await NotificationQueue.create(
     {
       type: 'email',
       templateName: 'verifyEmail',

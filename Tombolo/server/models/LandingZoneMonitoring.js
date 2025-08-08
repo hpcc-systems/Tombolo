@@ -1,7 +1,54 @@
 'use strict';
+
+const { Model } = require('sequelize');
+const { DeleteMixin } = require('../utils/modelMixins/DeleteMixin');
+
 module.exports = (sequelize, DataTypes) => {
-  const LandingZoneMonitoring = sequelize.define(
-    'landingZoneMonitoring',
+  class LandingZoneMonitoring extends DeleteMixin(Model) {
+    static associate(models) {
+      LandingZoneMonitoring.belongsTo(models.Application, {
+        foreignKey: 'applicationId',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      });
+
+      LandingZoneMonitoring.belongsTo(models.Cluster, {
+        foreignKey: 'clusterId',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      LandingZoneMonitoring.belongsTo(models.user, {
+        foreignKey: 'createdBy',
+        as: 'creator',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      LandingZoneMonitoring.belongsTo(models.user, {
+        foreignKey: 'lastUpdatedBy',
+        as: 'updater',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      LandingZoneMonitoring.belongsTo(models.user, {
+        foreignKey: 'approvedBy',
+        as: 'approver',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      LandingZoneMonitoring.belongsTo(models.user, {
+        foreignKey: 'deletedBy',
+        as: 'deleter',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+    }
+  }
+
+  LandingZoneMonitoring.init(
     {
       id: {
         allowNull: false,
@@ -91,6 +138,16 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
         onDelete: 'NO ACTION',
       },
+      deletedBy: {
+        allowNull: true,
+        type: DataTypes.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
@@ -105,8 +162,10 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      sequelize,
+      modelName: 'LandingZoneMonitoring',
+      tableName: 'landing_zone_monitorings',
       paranoid: true,
-      freezeTableName: true,
       indexes: [
         {
           unique: true,
@@ -115,43 +174,6 @@ module.exports = (sequelize, DataTypes) => {
       ],
     }
   );
-
-  // Associations
-  LandingZoneMonitoring.associate = function (models) {
-    LandingZoneMonitoring.belongsTo(models.Application, {
-      foreignKey: 'applicationId',
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    });
-
-    LandingZoneMonitoring.belongsTo(models.Cluster, {
-      foreignKey: 'clusterId',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-
-    // User associations
-    LandingZoneMonitoring.belongsTo(models.user, {
-      foreignKey: 'createdBy',
-      as: 'creator',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-
-    LandingZoneMonitoring.belongsTo(models.user, {
-      foreignKey: 'lastUpdatedBy',
-      as: 'updater',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-
-    LandingZoneMonitoring.belongsTo(models.user, {
-      foreignKey: 'approvedBy',
-      as: 'approver',
-      onDelete: 'NO ACTION',
-      onUpdate: 'CASCADE',
-    });
-  };
 
   return LandingZoneMonitoring;
 };

@@ -1,21 +1,22 @@
 // imports from node modules
-const { parentPort } = require("worker_threads");
-const { Op } = require("sequelize");
-const { v4: uuidv4 } = require("uuid");
+const { parentPort } = require('worker_threads');
+const { Op } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 
 //Local Imports
-const models = require("../../models");
-const { trimURL, deleteUser } = require("../../utils/authUtil");
+const {
+  user: User,
+  UserRoles,
+  RoleType,
+  NotificationQueue,
+} = require('../../models');
+const { trimURL, deleteUser } = require('../../utils/authUtil');
 
 // Constants
-const User = models.user;
-const UserRoles = models.UserRoles;
-const RoleTypes = models.RoleTypes;
-const NotificationQueue = models.notification_queue;
 const accountUnlockLink = `${trimURL(process.env.WEB_URL)}`;
 
 const accountDeleteAlertDaysForUser =
-  require("../../config/monitorings.js").accountDeleteAlertDaysForUser;
+  require('../../config/monitorings.js').accountDeleteAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   const expiryDate = new Date(
@@ -24,19 +25,19 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
 
   // Queue notification
   await NotificationQueue.create({
-    type: "email",
-    templateName: "accountDeleteWarning",
-    notificationOrigin: "Account Delete Warning",
-    deliveryType: "immediate",
-    createdBy: "System",
-    updatedBy: "System",
+    type: 'email',
+    templateName: 'accountDeleteWarning',
+    notificationOrigin: 'Account Delete Warning',
+    deliveryType: 'immediate',
+    createdBy: 'System',
+    updatedBy: 'System',
     metaData: {
       notificationId: uuidv4(),
       recipientName: `${user.dataValues.firstName}`,
-      notificationOrigin: "Account Delete Warning",
-      subject: "Account Deletion Warning",
+      notificationOrigin: 'Account Delete Warning',
+      subject: 'Account Deletion Warning',
       mainRecipients: [user.dataValues.email],
-      notificationDescription: "Account Delete Warning",
+      notificationDescription: 'Account Delete Warning',
       daysToExpiry: daysToExpiry,
       expiryDate: expiryDate,
       accountUnlockLink: accountUnlockLink,
@@ -58,8 +59,8 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   try {
     parentPort &&
       parentPort.postMessage({
-        level: "info",
-        text: "Account Deletion Job started ...",
+        level: 'info',
+        text: 'Account Deletion Job started ...',
       });
 
     //get all relevant dates in easy to understand variables
@@ -78,13 +79,13 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       include: [
         {
           model: UserRoles,
-          attributes: ["id"],
-          as: "roles",
+          attributes: ['id'],
+          as: 'roles',
           include: [
             {
-              model: RoleTypes,
-              as: "role_details",
-              attributes: ["id", "roleName"],
+              model: RoleType,
+              as: 'role_details',
+              attributes: ['id', 'roleName'],
             },
           ],
         },
@@ -92,11 +93,11 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
     });
 
     //filter out admins and owners
-    const filteredUsers = users.filter((user) => {
-      return !user.roles.some((role) => {
+    const filteredUsers = users.filter(user => {
+      return !user.roles.some(role => {
         return (
-          role?.role_details?.roleName === "administrator" ||
-          role?.role_details?.roleName === "owner"
+          role?.role_details?.roleName === 'administrator' ||
+          role?.role_details?.roleName === 'owner'
         );
       });
     });
@@ -115,16 +116,16 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       ) {
         parentPort &&
           parentPort.postMessage({
-            level: "verbose",
+            level: 'verbose',
             text:
-              "User with email " +
+              'User with email ' +
               userInternal.email +
-              " is within " +
+              ' is within ' +
               daysToExpiry +
-              " days of account deletion due to inactivity.",
+              ' days of account deletion due to inactivity.',
           });
 
-        let version = "first";
+        let version = 'first';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
 
@@ -135,15 +136,15 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       ) {
         parentPort &&
           parentPort.postMessage({
-            level: "verbose",
+            level: 'verbose',
             text:
-              "User with email " +
+              'User with email ' +
               userInternal.email +
-              " is within " +
+              ' is within ' +
               daysToExpiry +
-              " days of account deletion due to inactivity.",
+              ' days of account deletion due to inactivity.',
           });
-        let version = "second";
+        let version = 'second';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
       if (
@@ -153,16 +154,16 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       ) {
         parentPort &&
           parentPort.postMessage({
-            level: "verbose",
+            level: 'verbose',
             text:
-              "User with email " +
+              'User with email ' +
               userInternal.email +
-              " is within " +
+              ' is within ' +
               daysToExpiry +
-              " days of account deletion due to inactivity",
+              ' days of account deletion due to inactivity',
           });
 
-        let version = "third";
+        let version = 'third';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
 
@@ -172,43 +173,43 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       ) {
         parentPort &&
           parentPort.postMessage({
-            level: "verbose",
+            level: 'verbose',
             text:
-              "User with email " +
+              'User with email ' +
               userInternal.email +
-              " has been removed due to inactivity.",
+              ' has been removed due to inactivity.',
           });
 
         const accountUnlockLink = `${trimURL(process.env.WEB_URL)}/register`;
         // Queue notification
         await NotificationQueue.create({
-          type: "email",
-          templateName: "accountDeleted",
-          notificationOrigin: "Account Deleted",
-          deliveryType: "immediate",
-          createdBy: "System",
-          updatedBy: "System",
+          type: 'email',
+          templateName: 'accountDeleted',
+          notificationOrigin: 'Account Deleted',
+          deliveryType: 'immediate',
+          createdBy: 'System',
+          updatedBy: 'System',
           metaData: {
             notificationId: uuidv4(),
             recipientName: `${userInternal.firstName}`,
-            notificationOrigin: "Account Deleted",
-            subject: "Account Deleted",
+            notificationOrigin: 'Account Deleted',
+            subject: 'Account Deleted',
             mainRecipients: [userInternal.email],
-            notificationDescription: "Account Deleted",
+            notificationDescription: 'Account Deleted',
             accountUnlockLink: accountUnlockLink,
           },
         });
 
         // delete user account
-        const deleted = await deleteUser(userInternal.id, "Inactivity");
+        const deleted = await deleteUser(userInternal.id, 'Inactivity');
         if (!deleted) {
           parentPort &&
             parentPort.postMessage({
-              level: "error",
+              level: 'error',
               text:
-                "Failed to delete userwith email " +
+                'Failed to delete userwith email ' +
                 userInternal.email +
-                ", due to inactivity.",
+                ', due to inactivity.',
             });
         }
       }
@@ -216,11 +217,11 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
 
     parentPort &&
       parentPort.postMessage({
-        level: "info",
-        text: "Account Delete check job completed ...",
+        level: 'info',
+        text: 'Account Delete check job completed ...',
       });
   } catch (error) {
     parentPort &&
-      parentPort.postMessage({ level: "error", text: error.message });
+      parentPort.postMessage({ level: 'error', text: error.message });
   }
 })();

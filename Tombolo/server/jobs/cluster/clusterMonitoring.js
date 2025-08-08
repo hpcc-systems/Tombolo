@@ -7,11 +7,11 @@ const { parentPort } = require('worker_threads');
 const {
   ClusterMonitoring,
   Cluster,
-  monitoring_types: MonitoringTypes,
-  notification_queue: NotificationQueue,
+  MonitoringType,
+  NotificationQueue,
   AsrProduct,
   AsrDomain,
-  monitoring_logs: MonitoringLogs,
+  MonitoringLog,
 } = require('../../models');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 const { decryptString } = require('../../utils/cipher');
@@ -24,7 +24,7 @@ let monitoringTypeId;
 
   try {
     // Get monitoring type ID for "Cluster Status Monitoring"
-    const monitoringType = await MonitoringTypes.findOne({
+    const monitoringType = await MonitoringType.findOne({
       where: { name: monitoring_name },
       raw: true,
     });
@@ -267,7 +267,7 @@ let monitoringTypeId;
         NotificationQueue.create(notificationPayload);
 
         //Update the monitoring log
-        await MonitoringLogs.upsert(
+        await MonitoringLog.upsert(
           {
             monitoring_type_id: monitoringTypeId,
             cluster_id: clusterId,

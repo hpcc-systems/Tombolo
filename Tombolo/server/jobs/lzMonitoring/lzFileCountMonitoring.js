@@ -10,10 +10,10 @@ const {
 } = require('./lzFileMonitoringUtils');
 
 const {
-  landingZoneMonitoring: LandingZoneMonitoring,
+  LandingZoneMonitoring,
   Cluster,
-  monitoring_types: MonitoringTypes,
-  notification_queue: NotificationQueue,
+  MonitoringType,
+  NotificationQueue,
   AsrProduct,
   AsrDomain,
 } = models;
@@ -22,7 +22,7 @@ const monitoring_name = 'Landing Zone Monitoring';
 
 (async () => {
   // Get monitoring type ID for "Landing Zone Monitoring"
-  const { id } = await MonitoringTypes.findOne({
+  const { id } = await MonitoringType.findOne({
     where: { name: monitoring_name },
     raw: true,
   });

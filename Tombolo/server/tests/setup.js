@@ -36,7 +36,7 @@ jest.mock('../models', () => {
       save: jest.fn(),
       toJSON: jest.fn(),
     },
-    RefreshTokens: {
+    RefreshToken: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       create: jest.fn(),
@@ -44,12 +44,12 @@ jest.mock('../models', () => {
       update: jest.fn(),
       destroy: jest.fn(),
     },
-    notification_queue: {
+    NotificationQueue: {
       create: jest.fn(),
       findOne: jest.fn(),
       findAll: jest.fn(),
     },
-    sent_notifications: {
+    SentNotification: {
       create: jest.fn(),
       findOne: jest.fn(),
       findAll: jest.fn(),
@@ -58,7 +58,7 @@ jest.mock('../models', () => {
       create: jest.fn(),
       findOne: jest.fn(),
     },
-    PasswordResetLinks: {
+    PasswordResetLink: {
       create: jest.fn(),
       findOne: jest.fn(),
     },
@@ -76,7 +76,7 @@ jest.mock('../models', () => {
       update: jest.fn(),
       destroy: jest.fn(),
     },
-    landingZoneMonitoring: {
+    LandingZoneMonitoring: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       findByPk: jest.fn(),
