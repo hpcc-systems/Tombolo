@@ -11,9 +11,7 @@ const {
 const jwt = require('jsonwebtoken');
 
 const logger = require('../config/logger');
-const models = require('../models');
-
-const User = models.user;
+const { User } = require('../models');
 
 // Validate registration payload
 const validateNewUserPayload = [

@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("user_archive", {
+    await queryInterface.createTable('user_archives', {
       id: {
         primaryKey: true,
         type: Sequelize.UUID,
@@ -36,7 +36,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          isIn: [["traditional", "microsoft"]],
+          isIn: [['traditional', 'microsoft']],
         },
       },
       verifiedUser: {
@@ -52,7 +52,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          isIn: [["pending", "active", "revoked"]],
+          isIn: [['pending', 'active', 'revoked']],
         },
       },
       forcePasswordReset: {
@@ -91,7 +91,8 @@ module.exports = {
       },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("users");
+    await queryInterface.dropTable('user_archives');
   },
 };

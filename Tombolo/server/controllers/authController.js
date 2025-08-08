@@ -5,9 +5,9 @@ const axios = require('axios');
 const logger = require('../config/logger');
 const roleTypes = require('../config/roleTypes');
 const {
-  user: User,
+  User,
   UserRoles,
-  user_application,
+  UserApplication,
   Application,
   RoleType,
   RefreshToken,
@@ -269,7 +269,7 @@ const verifyEmail = async (req, res) => {
           ],
         },
         {
-          model: user_application,
+          model: UserApplication,
           attributes: ['id'],
           as: 'applications',
           include: [

@@ -1,9 +1,20 @@
 // user and role types mapping table
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  // Define the UserRoles
-  const UserRoles = sequelize.define(
-    'UserRoles',
+  class UserRoles extends Model {
+    static associate(models) {
+      UserRoles.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+      UserRoles.belongsTo(models.RoleType, {
+        foreignKey: 'roleId',
+        as: 'role_details',
+      });
+    }
+  }
+
+  UserRoles.init(
     {
       id: {
         primaryKey: true,
@@ -33,21 +44,14 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      sequelize,
+      modelName: 'UserRole',
       tableName: 'user_roles',
       freezeTableName: true,
-      timeStamps: true,
+      timestamps: true,
       paranoid: true,
     }
   );
-
-  // Associations
-  UserRoles.associate = function (models) {
-    UserRoles.belongsTo(models.user, { foreignKey: 'userId', as: 'user' });
-    UserRoles.belongsTo(models.RoleType, {
-      foreignKey: 'roleId',
-      as: 'role_details',
-    });
-  };
 
   return UserRoles;
 };

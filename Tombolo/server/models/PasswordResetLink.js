@@ -5,7 +5,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class PasswordResetLink extends Model {
     static associate(models) {
-      PasswordResetLink.belongsTo(models.user, {
+      PasswordResetLink.belongsTo(models.User, {
         foreignKey: 'userId',
         onDelete: 'CASCADE',
         hooks: true,

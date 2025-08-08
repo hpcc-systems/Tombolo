@@ -1,8 +1,16 @@
-"use strict";
+'use strict';
+
+const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  const userArchive = sequelize.define(
-    "userArchive",
+  class UserArchive extends Model {
+    // eslint-disable-next-line no-unused-vars
+    static associate(models) {
+      // Define associations here if needed
+    }
+  }
+
+  UserArchive.init(
     {
       id: {
         primaryKey: true,
@@ -37,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          isIn: [["traditional", "azure"]],
+          isIn: [['traditional', 'azure']],
         },
       },
       verifiedUser: {
@@ -52,9 +60,9 @@ module.exports = (sequelize, DataTypes) => {
       registrationStatus: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: "pending",
+        defaultValue: 'pending',
         validate: {
-          isIn: [["pending", "active", "revoked"]], // Must be one of these values
+          isIn: [['pending', 'active', 'revoked']], // Must be one of these values
         },
       },
       forcePasswordReset: {
@@ -81,10 +89,12 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "user_archive",
+      sequelize,
+      modelName: 'UserArchive',
+      tableName: 'user_archives',
       timestamps: true,
     }
   );
 
-  return userArchive;
+  return UserArchive;
 };

@@ -12,21 +12,21 @@ module.exports = sequelize => {
         as: 'associatedDomains',
       });
 
-      AsrProduct.belongsTo(models.user, {
+      AsrProduct.belongsTo(models.User, {
         foreignKey: 'createdBy',
         as: 'creator',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
 
-      AsrProduct.belongsTo(models.user, {
+      AsrProduct.belongsTo(models.User, {
         foreignKey: 'updatedBy',
         as: 'updater',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
 
-      AsrProduct.belongsTo(models.user, {
+      AsrProduct.belongsTo(models.User, {
         foreignKey: 'deletedBy',
         as: 'deleter',
         onDelete: 'NO ACTION',

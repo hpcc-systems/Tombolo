@@ -6,7 +6,7 @@ const Sequelize = require('sequelize');
 
 // Local Imports
 const {
-  user_application: UserApplication,
+  UserApplication,
   Application,
   Group,
   File,
@@ -20,7 +20,7 @@ const {
   Query,
   QueryField,
   Dataflow,
-  user: User,
+  User,
 } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {

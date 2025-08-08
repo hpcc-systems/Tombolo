@@ -5,13 +5,13 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class InstanceSettings extends Model {
     static associate(models) {
-      InstanceSettings.belongsTo(models.user, {
+      InstanceSettings.belongsTo(models.User, {
         foreignKey: 'createdBy',
         as: 'creator',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
-      InstanceSettings.belongsTo(models.user, {
+      InstanceSettings.belongsTo(models.User, {
         foreignKey: 'updatedBy',
         as: 'updater',
         onDelete: 'NO ACTION',

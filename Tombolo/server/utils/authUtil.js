@@ -7,11 +7,11 @@ const moment = require('moment');
 // Local Imports
 const logger = require('../config/logger');
 const {
-  user: User,
+  User,
   UserRoles,
   RoleType,
-  userArchive,
-  user_application,
+  UserArchive,
+  UserApplication,
   Application,
   InstanceSetting,
   NotificationQueue,
@@ -61,7 +61,7 @@ const getAUser = async identifier => {
         ],
       },
       {
-        model: user_application,
+        model: UserApplication,
         attributes: ['id'],
         as: 'applications',
         include: [
@@ -526,7 +526,7 @@ const deleteUser = async (id, reason) => {
     //remove hash from user
     user.dataValues.hash = null;
 
-    const archivedUser = await userArchive.create({
+    const archivedUser = await UserArchive.create({
       ...user.dataValues,
       removedAt,
       removedBy,
