@@ -1,7 +1,19 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const MonitoringTypes = sequelize.define(
-    'monitoring_types',
+  class MonitoringType extends Model {
+    static associate(models) {
+      MonitoringType.belongsToMany(models.AsrDomain, {
+        through: 'asr_monitoring_type_to_domains_relations',
+        foreignKey: 'monitoring_type_id',
+        as: 'asr_domains',
+      });
+    }
+  }
+
+  MonitoringType.init(
     {
       id: {
         allowNull: false,
@@ -42,17 +54,12 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      sequelize,
+      modelName: 'MonitoringType',
+      tableName: 'monitoring_types',
       freezeTableName: true,
     }
   );
 
-  MonitoringTypes.associate = function (models) {
-    MonitoringTypes.belongsToMany(models.AsrDomain, {
-      through: 'asr_monitoring_type_to_domains_relations',
-      foreignKey: 'monitoring_type_id',
-      as: 'asr_domains',
-    });
-  };
-
-  return MonitoringTypes;
+  return MonitoringType;
 };

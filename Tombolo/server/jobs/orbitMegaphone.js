@@ -3,8 +3,8 @@ const {
   Integration,
   IntegrationMapping,
   orbitBuilds,
-  monitoring_notifications,
-  notification_queue: notification,
+  MonitoringNotification,
+  NotificationQueue,
 } = require('../models');
 
 const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
@@ -86,7 +86,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
               integration.dataValues.metaData.megaPhoneAlerts?.emailContacts
             ) {
               //create a notification queue
-              await notification.create({
+              await NotificationQueue.create({
                 type: 'email',
                 notificationOrigin: 'orbitMegaphone',
                 templateName: 'orbitMegaphone',
@@ -209,7 +209,7 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
 
       // Record notifications
       if (sentNotifications.length > 0) {
-        monitoring_notifications.bulkCreate(sentNotifications);
+        await MonitoringNotification.bulkCreate(sentNotifications);
       }
       return;
     });

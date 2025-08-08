@@ -1,17 +1,17 @@
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("monitoring_notifications", {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER,
-      },
+    await queryInterface.createTable('monitoring_notifications', {
       id: {
         type: Sequelize.UUID,
+        primaryKey: true,
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4,
       },
-      filemonitoring_id: {
+      monitoring_type: {
+        type: Sequelize.STRING,
+      },
+      monitoring_id: {
         type: Sequelize.UUID,
       },
       application_id: {
@@ -32,6 +32,10 @@ module.exports = {
       responded_on: {
         type: Sequelize.DATE,
       },
+      metaData: {
+        type: Sequelize.JSON,
+        allowNull: true,
+      },
       comment: {
         type: Sequelize.TEXT,
       },
@@ -46,10 +50,10 @@ module.exports = {
       deletedAt: {
         allowNull: true,
         type: Sequelize.DATE,
-      }
+      },
     });
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('monitoring_notifications');
-  }
+  },
 };

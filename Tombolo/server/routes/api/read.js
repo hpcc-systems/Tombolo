@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  monitoring_notifications,
+  MonitoringNotification,
   ApiKey,
   FileMonitoring,
   clusterMonitoring,
@@ -65,7 +65,7 @@ router.get(
         }
 
         //no errors, get notifications and return them.
-        const notifications = await monitoring_notifications.findAll({
+        const notifications = await MonitoringNotification.findAll({
           where: { application_id },
           include: [
             {

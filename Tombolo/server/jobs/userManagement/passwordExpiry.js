@@ -1,35 +1,33 @@
 // imports from node modules
-const { parentPort } = require("worker_threads");
-const { Op } = require("sequelize");
-const { v4: uuidv4 } = require("uuid");
+const { parentPort } = require('worker_threads');
+const { Op } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 
 //Local Imports
-const models = require("../../models");
-const { trimURL, getSupportContactEmails } = require("../../utils/authUtil");
+const { user, NotificationQueue } = require('../../models');
+const { trimURL, getSupportContactEmails } = require('../../utils/authUtil');
 
 // Constants
-const user = models.user;
-const NotificationQueue = models.notification_queue;
 const passwordResetLink = `${trimURL(process.env.WEB_URL)}/myaccount`;
 const passwordExpiryAlertDaysForUser =
-  require("../../config/monitorings.js").passwordExpiryAlertDaysForUser;
+  require('../../config/monitorings.js').passwordExpiryAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   // Queue notification
   await NotificationQueue.create({
-    type: "email",
-    templateName: "passwordExpiryWarning",
-    notificationOrigin: "Password Expiry Warning",
-    deliveryType: "immediate",
-    createdBy: "System",
-    updatedBy: "System",
+    type: 'email',
+    templateName: 'passwordExpiryWarning',
+    notificationOrigin: 'Password Expiry Warning',
+    deliveryType: 'immediate',
+    createdBy: 'System',
+    updatedBy: 'System',
     metaData: {
       notificationId: uuidv4(),
       recipientName: `${user.dataValues.firstName}`,
-      notificationOrigin: "Password Expiry Warning",
-      subject: "Password Expiry Warning",
+      notificationOrigin: 'Password Expiry Warning',
+      subject: 'Password Expiry Warning',
       mainRecipients: [user.dataValues.email],
-      notificationDescription: "Password Expiry Warning",
+      notificationDescription: 'Password Expiry Warning',
       daysToExpiry: daysToExpiry,
       expiryDate: new Date(user.dataValues.passwordExpiresAt).toDateString(),
       passwordResetLink: passwordResetLink,
@@ -51,8 +49,8 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   try {
     parentPort &&
       parentPort.postMessage({
-        level: "info",
-        text: "Password Expiry Job started ...",
+        level: 'info',
+        text: 'Password Expiry Job started ...',
       });
 
     const now = Date.now();
@@ -82,16 +80,16 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       ) {
         parentPort &&
           parentPort.postMessage({
-            level: "verbose",
+            level: 'verbose',
             text:
-              "User with email " +
+              'User with email ' +
               userInternal.email +
-              " is within " +
+              ' is within ' +
               daysToExpiry +
-              " days of password expiry.",
+              ' days of password expiry.',
           });
 
-        let version = "first";
+        let version = 'first';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
 
@@ -102,15 +100,15 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       ) {
         parentPort &&
           parentPort.postMessage({
-            level: "verbose",
+            level: 'verbose',
             text:
-              "User with email " +
+              'User with email ' +
               userInternal.email +
-              " is within " +
+              ' is within ' +
               daysToExpiry +
-              " days of password expiry.",
+              ' days of password expiry.',
           });
-        let version = "second";
+        let version = 'second';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
       if (
@@ -120,16 +118,16 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       ) {
         parentPort &&
           parentPort.postMessage({
-            level: "verbose",
+            level: 'verbose',
             text:
-              "User with email " +
+              'User with email ' +
               userInternal.email +
-              " is within " +
+              ' is within ' +
               daysToExpiry +
-              " days of password expiry.",
+              ' days of password expiry.',
           });
 
-        let version = "third";
+        let version = 'third';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
 
@@ -139,30 +137,30 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       ) {
         parentPort &&
           parentPort.postMessage({
-            level: "verbose",
+            level: 'verbose',
             text:
-              "User with email " +
+              'User with email ' +
               userInternal.email +
-              " has an expired password.",
+              ' has an expired password.',
           });
 
-        let emails = "mailto:" + (await getSupportContactEmails());
+        let emails = 'mailto:' + (await getSupportContactEmails());
 
         // Queue notification
         await NotificationQueue.create({
-          type: "email",
-          templateName: "passwordExpired",
-          notificationOrigin: "Password Expired",
-          deliveryType: "immediate",
-          createdBy: "System",
-          updatedBy: "System",
+          type: 'email',
+          templateName: 'passwordExpired',
+          notificationOrigin: 'Password Expired',
+          deliveryType: 'immediate',
+          createdBy: 'System',
+          updatedBy: 'System',
           metaData: {
             notificationId: uuidv4(),
             recipientName: `${userInternal.firstName}`,
-            notificationOrigin: "Password Expired",
-            subject: "Password Expired",
+            notificationOrigin: 'Password Expired',
+            subject: 'Password Expired',
             mainRecipients: [userInternal.email],
-            notificationDescription: "Password Expired",
+            notificationDescription: 'Password Expired',
             contactEmails: emails,
           },
         });
@@ -182,11 +180,11 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
 
     parentPort &&
       parentPort.postMessage({
-        level: "info",
-        text: "Password expiry check job completed ...",
+        level: 'info',
+        text: 'Password expiry check job completed ...',
       });
   } catch (error) {
     parentPort &&
-      parentPort.postMessage({ level: "error", text: error.message });
+      parentPort.postMessage({ level: 'error', text: error.message });
   }
 })();

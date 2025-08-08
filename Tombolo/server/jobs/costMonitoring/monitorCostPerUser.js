@@ -4,8 +4,8 @@ const {
   CostMonitoring,
   CostMonitoringData,
   Cluster,
-  monitoring_logs: MonitoringLogs,
-  monitoring_types: MonitoringTypes,
+  MonitoringLog,
+  MonitoringType,
 } = require('../../models');
 const { WorkunitsService } = require('@hpcc-js/comms');
 const { getCluster } = require('../../utils/hpcc-util');
@@ -97,7 +97,7 @@ async function getCostMonitoringData(
 
 /**
  * Handles the monitoring logs by either creating a new log entry or updating an existing one
- * @param {?import('../../models').monitoring_logs} inputMonitoringLog - The existing monitoring log entry or null if none exists
+ * @param {?import('../../models').MonitoringLog} inputMonitoringLog - The existing monitoring log entry or null if none exists
  * @param {number} clusterId - The ID of the cluster being monitored
  * @param {number} monitoringTypeId - The ID of the monitoring type
  * @param {Date} scanTime - The time when the work units were fetched
@@ -113,7 +113,7 @@ async function handleMonitorLogs(
     let monitoringLog = inputMonitoringLog;
 
     if (!monitoringLog) {
-      await MonitoringLogs.create({
+      await MonitoringLog.create({
         cluster_id: clusterId,
         monitoring_type_id: monitoringTypeId,
         scan_time: scanTime,
@@ -158,7 +158,7 @@ async function monitorCostPerUser() {
       return;
     }
 
-    const monitoringType = await MonitoringTypes.findOne({
+    const monitoringType = await MonitoringType.findOne({
       where: { name: 'Cost Monitoring' },
     });
 
@@ -223,7 +223,7 @@ async function monitorCostPerUser() {
           } = clusterDetail;
 
           // Check if a monitoring log exists
-          const monitoringLog = await MonitoringLogs.findOne({
+          const monitoringLog = await MonitoringLog.findOne({
             where: {
               cluster_id: clusterId,
               monitoring_type_id: monitoringType.id,

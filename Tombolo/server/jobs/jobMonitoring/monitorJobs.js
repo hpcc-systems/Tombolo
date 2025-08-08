@@ -7,9 +7,9 @@ const _ = require('lodash');
 const {
   JobMonitoring,
   Cluster,
-  monitoring_types: MonitoringTypes,
-  monitoring_logs: MonitoringLogs,
-  notification_queue: NotificationQueue,
+  MonitoringType,
+  MonitoringLog,
+  NotificationQueue,
   JobMonitoringData,
 } = require('../../models');
 const { decryptString } = require('../../utils/cipher');
@@ -42,7 +42,7 @@ const monitoring_name = 'Job Monitoring';
 
   try {
     // Get monitoring type ID for "Job Monitoring"
-    const { id } = await MonitoringTypes.findOne({
+    const { id } = await MonitoringType.findOne({
       where: { name: monitoring_name },
       raw: true,
     });
@@ -125,7 +125,7 @@ const monitoring_name = 'Job Monitoring';
     });
 
     // Get the last time the cluster was scanned for job monitoring purposes
-    const lastClusterScanDetails = await MonitoringLogs.findAll({
+    const lastClusterScanDetails = await MonitoringLog.findAll({
       where: { monitoring_type_id: monitoringTypeId, cluster_id: clusterIds },
       raw: true,
     });
@@ -208,7 +208,7 @@ const monitoring_name = 'Job Monitoring';
 
       for (let id of scanned_clusters) {
         // grab existing metaData
-        const log = await MonitoringLogs.findOne({
+        const log = await MonitoringLog.findOne({
           where: { monitoring_type_id: monitoringTypeId, cluster_id: id },
           raw: true,
         });
@@ -224,7 +224,7 @@ const monitoring_name = 'Job Monitoring';
         }
 
         try {
-          await MonitoringLogs.upsert(
+          await MonitoringLog.upsert(
             {
               cluster_id: id,
               monitoring_type_id: monitoringTypeId,
@@ -521,7 +521,7 @@ const monitoring_name = 'Job Monitoring';
     for (let id of scannedClusters) {
       try {
         //Get existing metadata
-        const log = await MonitoringLogs.findOne({
+        const log = await MonitoringLog.findOne({
           where: { monitoring_type_id: monitoringTypeId, cluster_id: id },
           raw: true,
         });
@@ -539,7 +539,7 @@ const monitoring_name = 'Job Monitoring';
           existingMetaData?.wuInIntermediateState || [];
 
         // Update or create monitoring logs
-        await MonitoringLogs.upsert({
+        await MonitoringLog.upsert({
           cluster_id: id,
           monitoring_type_id: monitoringTypeId,
           scan_time: now,

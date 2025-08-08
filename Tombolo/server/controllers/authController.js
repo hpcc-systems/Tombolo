@@ -11,7 +11,7 @@ const {
   Application,
   RoleTypes,
   RefreshTokens,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   PasswordResetLinks,
   AccountVerificationCode,
   sent_notifications,

@@ -75,7 +75,7 @@ module.exports = (sequelize, DataTypes) => {
     orbitMonitoring.belongsTo(models.Application, {
       foreignKey: 'application_id',
     });
-    orbitMonitoring.hasMany(models.monitoring_notifications, {
+    orbitMonitoring.hasMany(models.MonitoringNotification, {
       foreignKey: 'application_id',
       onDelete: 'CASCADE',
     });

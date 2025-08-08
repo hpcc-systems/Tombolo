@@ -1,7 +1,7 @@
 const { notify } = require('../routes/notifications/email-notification');
 const { parentPort } = require('worker_threads');
 const logger = require('../config/logger');
-const { ApiKey, monitoring_notifications } = require('../models');
+const { ApiKey, MonitoringNotification } = require('../models');
 const { v4: uuidv4 } = require('uuid');
 const { emailBody } = require('./messageCards/notificationTemplate');
 
@@ -20,7 +20,7 @@ const { emailBody } = require('./messageCards/notificationTemplate');
     }
     if (sentNotifications.length > 0) {
       try {
-        await monitoring_notifications.bulkCreate(sentNotifications);
+        await MonitoringNotification.bulkCreate(sentNotifications);
       } catch (err) {
         logger.error(err);
       }

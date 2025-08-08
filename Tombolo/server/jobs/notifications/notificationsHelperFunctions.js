@@ -1,7 +1,6 @@
-const models = require('../../models');
+const { NotificationQueue } = require('../../models');
 const logger = require('../../config/logger');
 
-const NotificationQueue = models.notification_queue;
 const {
   retryOptions: { maxRetries, retryDelays },
 } = require('../../config/emailConfig');

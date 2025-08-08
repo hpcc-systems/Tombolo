@@ -24,7 +24,7 @@ module.exports = sequelize => {
         foreignKey: 'cluster_id',
         onDelete: 'CASCADE',
       });
-      this.hasMany(models.landingZoneMonitoring, {
+      this.hasMany(models.LandingZoneMonitoring, {
         foreignKey: 'clusterId',
         onDelete: 'NO ACTION',
       });

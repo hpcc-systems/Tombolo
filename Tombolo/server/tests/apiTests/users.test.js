@@ -3,7 +3,7 @@ const { app } = require('../test_server');
 const {
   user: User,
   userArchive: UserArchive,
-  notification_queue: NotificationQueue,
+  NotificationQueue,
   sequelize,
 } = require('../../models');
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');

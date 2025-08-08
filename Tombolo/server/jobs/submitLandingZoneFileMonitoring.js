@@ -5,7 +5,7 @@ const moment = require('moment');
 
 const { notify } = require('../routes/notifications/email-notification');
 const logger = require('../config/logger');
-const { FileMonitoring, monitoring_notifications } = require('../models');
+const { FileMonitoring, MonitoringNotification } = require('../models');
 const hpccUtil = require('../utils/hpcc-util');
 const wildCardStringMatch = require('../utils/wildCardStringMatch');
 
@@ -180,7 +180,7 @@ const {
           logger.verbose(notificationResponse);
 
           if (notificationResponse.accepted) {
-            await monitoring_notifications.create({
+            await MonitoringNotification.create({
               // file_name: detail.details["File name"],
               status: 'notified',
               notifiedTo: emailNotificationDetails.recipients,
@@ -210,7 +210,7 @@ const {
 
             await axios.post(recipient, body);
 
-            await monitoring_notifications.create({
+            await MonitoringNotification.create({
               id: notification_id,
               // file_name: detail.details["File Name"],
               status: 'notified',
@@ -291,7 +291,7 @@ const {
 
           if (notificationResponse.accepted) {
             current.notified.push('eMail');
-            await monitoring_notifications.create({
+            await MonitoringNotification.create({
               file_name: current.name,
               status: 'notified',
               notifiedTo: emailNotificationDetails.recipients,
@@ -324,7 +324,7 @@ const {
             await axios.post(recipient, body);
             current.notified.push('msTeams');
 
-            await monitoring_notifications.create({
+            await MonitoringNotification.create({
               id: notification_id,
               file_name: current.name,
               status: 'notified',

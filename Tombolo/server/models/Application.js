@@ -93,7 +93,7 @@ module.exports = sequelize => {
       });
 
       /* FILE MONITORING NOTIFICATION */
-      this.hasMany(models.monitoring_notifications, {
+      this.hasMany(models.MonitoringNotification, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
@@ -116,7 +116,7 @@ module.exports = sequelize => {
       });
 
       /* LANDING ZONE MONITORING */
-      this.hasMany(models.landingZoneMonitoring, {
+      this.hasMany(models.LandingZoneMonitoring, {
         foreignKey: 'applicationId',
         onDelete: 'CASCADE',
       });

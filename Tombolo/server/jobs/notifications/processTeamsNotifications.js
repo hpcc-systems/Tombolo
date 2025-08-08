@@ -1,23 +1,20 @@
 // Packages
-const { Op } = require("sequelize");
-const path = require("path");
-const axios = require("axios");
+const { Op } = require('sequelize');
+const axios = require('axios');
 
 //Local Imports
-const models = require("../../models");
-const logger = require("../../config/logger");
+const {
+  NotificationQueue,
+  sent_notifications: SentNotification,
+  teams_hook: TeamsHook,
+} = require('../../models');
+const logger = require('../../config/logger');
 const {
   retryOptions: { maxRetries, retryDelays }, // use the same config for emails and teams
-} = require("../../config/emailConfig");
+} = require('../../config/emailConfig');
 const {
-  renderNotificationBody,
   updateNotificationQueueOnError,
-} = require("./notificationsHelperFunctions");
-const { application } = require("express");
-
-const NotificationQueue = models.notification_queue;
-const SentNotification = models.sent_notifications;
-const TeamsHook = models.teams_hook;
+} = require('./notificationsHelperFunctions');
 
 (async () => {
   try {
@@ -28,7 +25,7 @@ const TeamsHook = models.teams_hook;
     // Get notifications
     let notifications = await NotificationQueue.findAll({
       where: {
-        type: "msTeams",
+        type: 'msTeams',
         attemptCount: { [Op.lt]: maxRetries },
       },
       raw: true,
@@ -41,9 +38,9 @@ const TeamsHook = models.teams_hook;
 
       // Check if it meets the criteria to be sent
       if (
-        (deliveryType === "immediate" && (reTryAfter < now || !reTryAfter)) ||
-        (deliveryType === "scheduled" && (reTryAfter < now || !reTryAfter)) ||
-        (deliveryType === "scheduled" &&
+        (deliveryType === 'immediate' && (reTryAfter < now || !reTryAfter)) ||
+        (deliveryType === 'scheduled' && (reTryAfter < now || !reTryAfter)) ||
+        (deliveryType === 'scheduled' &&
           deliveryTime < now &&
           deliveryTime > lastScanned)
       ) {
@@ -99,15 +96,15 @@ const TeamsHook = models.teams_hook;
     try {
       // clean successfully delivered notifications
       const cleanedDeliveredNotification = successfulDelivery.map(
-        (notification) => {
+        notification => {
           return {
             ...notification,
             searchableNotificationId: notification.metaData.notificationId,
             notificationChannel: notification.type,
             notificationTitle: notification.metaData.subject,
             applicationId: notification.metaData.applicationId,
-            status: "Pending Review",
-            createdBy: { name: "System" },
+            status: 'Pending Review',
+            createdBy: { name: 'System' },
             createdAt: now,
             updatedAt: now,
           };
@@ -119,14 +116,13 @@ const TeamsHook = models.teams_hook;
     }
 
     // Bulk delete the sent notifications form notification queue
-    try{
+    try {
       await NotificationQueue.destroy({
-      where: { id: successfulDelivery.map(({ id }) => id) },
-    });
-    }catch(err){
+        where: { id: successfulDelivery.map(({ id }) => id) },
+      });
+    } catch (err) {
       logger.error(err);
     }
-    
   } catch (error) {
     logger.error(error);
   }

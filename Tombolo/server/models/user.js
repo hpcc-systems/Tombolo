@@ -190,19 +190,19 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     // User to landing zone monitoring
-    user.hasMany(models.landingZoneMonitoring, {
+    user.hasMany(models.LandingZoneMonitoring, {
       foreignKey: 'createdBy',
       as: 'createdLandingZoneMonitorings',
       onDelete: 'NO ACTION',
     });
 
-    user.hasMany(models.landingZoneMonitoring, {
+    user.hasMany(models.LandingZoneMonitoring, {
       foreignKey: 'lastUpdatedBy',
       as: 'updatedLandingZoneMonitorings',
       onDelete: 'NO ACTION',
     });
 
-    user.hasMany(models.landingZoneMonitoring, {
+    user.hasMany(models.LandingZoneMonitoring, {
       foreignKey: 'approvedBy',
       as: 'approvedLandingZoneMonitorings',
       onDelete: 'NO ACTION',

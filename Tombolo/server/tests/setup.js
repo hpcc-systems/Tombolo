@@ -44,7 +44,7 @@ jest.mock('../models', () => {
       update: jest.fn(),
       destroy: jest.fn(),
     },
-    notification_queue: {
+    NotificationQueue: {
       create: jest.fn(),
       findOne: jest.fn(),
       findAll: jest.fn(),
@@ -76,7 +76,7 @@ jest.mock('../models', () => {
       update: jest.fn(),
       destroy: jest.fn(),
     },
-    landingZoneMonitoring: {
+    LandingZoneMonitoring: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       findByPk: jest.fn(),

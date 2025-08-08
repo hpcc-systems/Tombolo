@@ -6,9 +6,9 @@ const _ = require('lodash');
 // Local imports
 const {
   Cluster,
-  notification_queue,
-  monitoring_types,
-  monitoring_logs,
+  NotificationQueue,
+  MonitoringType,
+  MonitoringLog,
   JobMonitoringData,
 } = require('../../models');
 const { decryptString } = require('../../utils/cipher');
@@ -38,7 +38,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
 
   try {
     // Get monitoring type ID for "Job Monitoring"
-    const monitoringType = await monitoring_types.findOne({
+    const monitoringType = await MonitoringType.findOne({
       where: { name: MONITORING_NAME },
       raw: true,
     });
@@ -54,7 +54,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
     const monitoringTypeId = monitoringType.id;
 
     // Get all monitoring logs with monitoring type ID ie - job monitoring
-    const monitoringLogs = await monitoring_logs.findAll({
+    const monitoringLogs = await MonitoringLog.findAll({
       where: { monitoring_type_id: monitoringTypeId },
       raw: true,
     });
@@ -124,7 +124,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
     const wuToKeepMonitoring = [];
 
     // Iterate through all the monitoring logs with intermediate state WUs
-    for (wuData of allIntermediateWus) {
+    for (const wuData of allIntermediateWus) {
       try {
         const { clusterId } = wuData;
         const clusterDetail = clustersInfoObj[clusterId];
@@ -409,12 +409,12 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
               nocAlertDescription;
             notificationPayloadForNoc.metaData.mainRecipients =
               severeEmailRecipients;
-            (notificationPayloadForNoc.metaData.notificationId =
+            notificationPayloadForNoc.metaData.notificationId =
               generateNotificationId({
                 notificationPrefix,
                 timezoneOffset: clusterDetail.timezone_offset || 0,
-              })),
-              delete notificationPayloadForNoc.metaData.cc;
+              });
+            delete notificationPayloadForNoc.metaData.cc;
             notificationsToBeQueued.push(notificationPayloadForNoc);
           }
         }
@@ -429,7 +429,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
 
     // Insert notification in queue
     for (let notification of notificationsToBeQueued) {
-      await notification_queue.create(notification);
+      await NotificationQueue.create(notification);
     }
 
     // if wuToStopMonitoring is empty, or state of intermediate wu has not changed return
@@ -466,7 +466,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
         // copy existingMetadata and update wuInIntermediateState and update the monitoring log
         const existingMetadata = { ...metaData };
         existingMetadata.wuInIntermediateState = wuStillInIntermediateState;
-        await monitoring_logs.update(
+        await MonitoringLog.update(
           { metaData: existingMetadata },
           { where: { id } }
         );

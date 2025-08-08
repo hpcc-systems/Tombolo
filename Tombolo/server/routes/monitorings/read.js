@@ -9,13 +9,13 @@ const {
   validateUpdateMonitoring,
   validateGetMonitoringByTypeName,
 } = require('../../middlewares/monitoringMiddleware');
-const { monitoring_types: MonitoringTypes } = require('../../models');
+const { MonitoringType } = require('../../models');
 const logger = require('../../config/logger');
 
 // Route to get all monitoring types
 router.get('/', async (req, res) => {
   try {
-    const monitoringTypes = await MonitoringTypes.findAll();
+    const monitoringTypes = await MonitoringType.findAll();
     return res.status(200).json(monitoringTypes);
   } catch (err) {
     logger.error(err);
@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
 // Route to post a new monitoring type
 router.post('/', validate(validateCreateMonitoring), async (req, res) => {
   try {
-    const monitoringType = await MonitoringTypes.create(req.body);
+    const monitoringType = await MonitoringType.create(req.body);
     return res.status(200).json(monitoringType);
   } catch (error) {
     logger.error(error);
@@ -42,7 +42,7 @@ router.post('/', validate(validateCreateMonitoring), async (req, res) => {
 // Delete a monitoring type
 router.delete('/:id', validate(validateDeleteMonitoring), async (req, res) => {
   try {
-    const monitoringType = await MonitoringTypes.findByPk(req.params.id);
+    const monitoringType = await MonitoringType.findByPk(req.params.id);
     if (!monitoringType) {
       return res.status(404).json({ message: 'Monitoring type not found' });
     }
@@ -61,7 +61,7 @@ router.delete('/:id', validate(validateDeleteMonitoring), async (req, res) => {
 // update a monitoring type
 router.put('/:id', validate(validateUpdateMonitoring), async (req, res) => {
   try {
-    const monitoringType = await MonitoringTypes.findByPk(req.params.id);
+    const monitoringType = await MonitoringType.findByPk(req.params.id);
     if (!monitoringType) {
       return res.status(404).json({ message: 'Monitoring type not found' });
     }
@@ -81,7 +81,7 @@ router.get(
   validate(validateGetMonitoringByTypeName),
   async (req, res) => {
     try {
-      const monitoringType = await MonitoringTypes.findOne({
+      const monitoringType = await MonitoringType.findOne({
         where: {
           name: req.params.monitoringTypeName,
         },

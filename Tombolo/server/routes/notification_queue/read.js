@@ -3,7 +3,7 @@ const router = express.Router();
 
 //Local imports
 const logger = require('../../config/logger');
-const { notification_queue: NotificationQueue } = require('../../models');
+const { NotificationQueue } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
   validateCreateNotificationQueue,
