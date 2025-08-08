@@ -4,12 +4,7 @@ const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 
 //Local Imports
-const {
-  user: User,
-  UserRoles,
-  RoleType,
-  NotificationQueue,
-} = require('../../models');
+const { User, UserRole, RoleType, NotificationQueue } = require('../../models');
 const { trimURL, deleteUser } = require('../../utils/authUtil');
 
 // Constants
@@ -78,7 +73,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       },
       include: [
         {
-          model: UserRoles,
+          model: UserRole,
           attributes: ['id'],
           as: 'roles',
           include: [

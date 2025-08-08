@@ -5,9 +5,9 @@ const axios = require('axios');
 const logger = require('../config/logger');
 const roleTypes = require('../config/roleTypes');
 const {
-  user: User,
-  UserRoles,
-  user_application,
+  User,
+  UserRole,
+  UserApplication,
   Application,
   RoleType,
   RefreshToken,
@@ -16,7 +16,9 @@ const {
   AccountVerificationCode,
   SentNotification,
   InstanceSetting,
+  sequelize,
 } = require('../models');
+const { Op } = require('sequelize');
 const moment = require('moment');
 const {
   generateAccessToken,
@@ -34,7 +36,6 @@ const {
   handleInvalidLoginAttempt,
 } = require('../utils/authUtil');
 const { blacklistToken } = require('../utils/tokenBlackListing');
-const sequelize = require('../models').sequelize;
 
 // Register application owner
 const createApplicationOwner = async (req, res) => {
@@ -55,7 +56,7 @@ const createApplicationOwner = async (req, res) => {
     }
 
     // Check if a user with the OWNER role already exists
-    const owner = await UserRoles.findOne({ where: { roleId: role.id } });
+    const owner = await UserRole.findOne({ where: { roleId: role.id } });
 
     // If an owner is found, return a 409 conflict response
     if (owner) {
@@ -94,7 +95,7 @@ const createApplicationOwner = async (req, res) => {
     const user = await User.create(payload);
 
     // Save user role
-    await UserRoles.create({
+    await UserRole.create({
       userId: user.id,
       roleId: role.id,
       createdBy: user.id,
@@ -257,7 +258,7 @@ const verifyEmail = async (req, res) => {
       where: { id: accountVerificationCode.userId },
       include: [
         {
-          model: UserRoles,
+          model: UserRole,
           attributes: ['id'],
           as: 'roles',
           include: [
@@ -269,7 +270,7 @@ const verifyEmail = async (req, res) => {
           ],
         },
         {
-          model: user_application,
+          model: UserApplication,
           attributes: ['id'],
           as: 'applications',
           include: [
@@ -650,7 +651,7 @@ const loginBasicUser = async (req, res) => {
 
     const genericError = 'Username and Password combination not found';
 
-    // find user - include user roles from UserRoles table
+    // find user - include user roles from UserRole table
     const user = await getAUser({ email });
 
     // User with the given email does not exist
@@ -835,7 +836,7 @@ const handlePasswordResetRequest = async (req, res) => {
       where: { email },
       include: [
         {
-          model: UserRoles,
+          model: UserRole,
           attributes: ['id'],
           as: 'roles',
           include: [
@@ -883,9 +884,7 @@ const handlePasswordResetRequest = async (req, res) => {
       where: {
         userId: user.id,
         issuedAt: {
-          [models.Sequelize.Op.gte]: new Date(
-            new Date().getTime() - 60 * 60 * 1000
-          ),
+          [Op.gte]: new Date(new Date().getTime() - 60 * 60 * 1000),
         },
       },
     });
@@ -1003,7 +1002,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       registrationMethod: null,
     };
 
-    // Find user by email - includes user roles from UserRoles table
+    // Find user by email - includes user roles from UserRole table
     const user = await getAUser({ email });
 
     // If user exists update userExists object

@@ -10,7 +10,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class AccountVerificationCode extends Model {
     static associate(models) {
-      AccountVerificationCode.belongsTo(models.user, {
+      AccountVerificationCode.belongsTo(models.User, {
         foreignKey: 'userId',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',

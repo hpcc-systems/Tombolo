@@ -1,8 +1,8 @@
 const request = require('supertest');
 const { app } = require('../test_server');
 const {
-  user: User,
-  userArchive: UserArchive,
+  User,
+  UserArchive,
   NotificationQueue,
   sequelize,
 } = require('../../models');

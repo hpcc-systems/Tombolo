@@ -25,7 +25,7 @@ jest.mock('../models', () => {
     TokenBlackList: {
       findAll: jest.fn(),
     },
-    user: {
+    User: {
       findAll: jest.fn(),
       findOne: jest.fn(),
       findByPk: jest.fn(),
@@ -111,7 +111,7 @@ jest.mock('../models', () => {
         __rollback: rollback, // Expose for test access
       },
     },
-    userArchive: {
+    UserArchive: {
       create: jest.fn(),
     },
     sequelize: {

@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const {
   user,
   RoleType,
-  UserRoles,
+  UserRole,
   InstanceSetting,
   AccountVerificationCode,
   NotificationQueue,
@@ -221,7 +221,7 @@ const assignOwnerRole = async (userId, transaction) => {
   const { id: ownerId } = await RoleType.findOne({
     where: { roleName: 'owner' },
   });
-  await UserRoles.create(
+  await UserRole.create(
     {
       userId,
       roleId: ownerId,

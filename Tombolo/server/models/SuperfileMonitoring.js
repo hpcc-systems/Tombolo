@@ -19,21 +19,21 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
       });
 
-      SuperfileMonitoring.belongsTo(models.user, {
+      SuperfileMonitoring.belongsTo(models.User, {
         foreignKey: 'createdBy',
         as: 'creator',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
 
-      SuperfileMonitoring.belongsTo(models.user, {
+      SuperfileMonitoring.belongsTo(models.User, {
         foreignKey: 'updatedBy',
         as: 'updater',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
 
-      SuperfileMonitoring.belongsTo(models.user, {
+      SuperfileMonitoring.belongsTo(models.User, {
         foreignKey: 'deletedBy',
         as: 'deleter',
         onDelete: 'NO ACTION',

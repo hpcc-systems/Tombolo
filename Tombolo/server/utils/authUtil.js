@@ -7,11 +7,11 @@ const moment = require('moment');
 // Local Imports
 const logger = require('../config/logger');
 const {
-  user: User,
-  UserRoles,
+  User,
+  UserRole,
   RoleType,
-  userArchive,
-  user_application,
+  UserArchive,
+  UserApplication,
   Application,
   InstanceSetting,
   NotificationQueue,
@@ -49,7 +49,7 @@ const getAUser = async identifier => {
     where: { ...identifier },
     include: [
       {
-        model: UserRoles,
+        model: UserRole,
         attributes: ['id'],
         as: 'roles',
         include: [
@@ -61,7 +61,7 @@ const getAUser = async identifier => {
         ],
       },
       {
-        model: user_application,
+        model: UserApplication,
         attributes: ['id'],
         as: 'applications',
         include: [
@@ -176,7 +176,7 @@ const getSupportContactEmails = async () => {
   const ownerAndAdminEmails = await User.findAll({
     include: [
       {
-        model: UserRoles,
+        model: UserRole,
         attributes: ['id'],
         as: 'roles',
         required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).
@@ -224,7 +224,7 @@ const getAccessRequestContactEmails = async () => {
   const ownerAndAdminEmails = await User.findAll({
     include: [
       {
-        model: UserRoles,
+        model: UserRole,
         attributes: ['id'],
         as: 'roles',
         required: true, // ensures only users with matching role types are included (INNER JOIN instead of LEFT JOIN).
@@ -526,7 +526,7 @@ const deleteUser = async (id, reason) => {
     //remove hash from user
     user.dataValues.hash = null;
 
-    const archivedUser = await userArchive.create({
+    const archivedUser = await UserArchive.create({
       ...user.dataValues,
       removedAt,
       removedBy,

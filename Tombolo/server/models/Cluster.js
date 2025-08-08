@@ -33,21 +33,21 @@ module.exports = sequelize => {
         onDelete: 'CASCADE',
       });
 
-      Cluster.belongsTo(models.user, {
+      Cluster.belongsTo(models.User, {
         foreignKey: 'createdBy',
         as: 'creator',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
 
-      Cluster.belongsTo(models.user, {
+      Cluster.belongsTo(models.User, {
         foreignKey: 'updatedBy',
         as: 'updater',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
 
-      Cluster.belongsTo(models.user, {
+      Cluster.belongsTo(models.User, {
         foreignKey: 'deletedBy',
         as: 'deleter',
         onDelete: 'NO ACTION',

@@ -1,4 +1,4 @@
-const TokenBlackList = require('../models').TokenBlackList;
+const { TokenBlackList } = require('../models');
 const logger = require('../config/logger');
 
 // Sync blacklisted tokens from DB to RAM
@@ -58,5 +58,3 @@ module.exports = {
   removeBlacklistedToken,
   blacklistTokenIntervalId,
 };
-
-1, 728, 662, 912, 283;

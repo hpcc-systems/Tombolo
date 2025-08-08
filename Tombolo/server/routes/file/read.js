@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   Application,
-  user_application: UserApplication,
+  UserApplication,
   FileValidation,
   File,
   License,

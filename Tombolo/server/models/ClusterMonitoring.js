@@ -13,28 +13,28 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
       });
 
-      ClusterMonitoring.belongsTo(models.user, {
+      ClusterMonitoring.belongsTo(models.User, {
         foreignKey: 'createdBy',
         as: 'creator',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
 
-      ClusterMonitoring.belongsTo(models.user, {
+      ClusterMonitoring.belongsTo(models.User, {
         foreignKey: 'lastUpdatedBy',
         as: 'updater',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
 
-      ClusterMonitoring.belongsTo(models.user, {
+      ClusterMonitoring.belongsTo(models.User, {
         foreignKey: 'approvedBy',
         as: 'approver',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
 
-      ClusterMonitoring.belongsTo(models.user, {
+      ClusterMonitoring.belongsTo(models.User, {
         foreignKey: 'deletedBy',
         as: 'deleter',
         onDelete: 'NO ACTION',
