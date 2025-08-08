@@ -46,7 +46,7 @@ module.exports = {
       },
       {
         id: uuidv4(),
-        name: 'Cluster  Monitoring',
+        name: 'Cluster Monitoring',
         createdAt: new Date(),
         createdBy: JSON.stringify({
           firstName: null,
