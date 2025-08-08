@@ -2,7 +2,7 @@ const logger = require('../config/logger');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const {
-  user,
+  User,
   RoleType,
   UserRole,
   InstanceSetting,
@@ -35,7 +35,7 @@ const createInstanceSettingFirstRun = async (req, res) => {
       step: 1,
       message: 'Verifying if the email is already in use ...',
     });
-    const existingUser = await user.findOne({ where: { email } });
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       sendUpdate(res, {
         event: 'error',
@@ -185,7 +185,7 @@ const createUser = async (
   }
   const salt = bcrypt.genSaltSync(10);
   const hash = bcrypt.hashSync(password, salt);
-  return user.create(
+  return User.create(
     {
       firstName,
       lastName,

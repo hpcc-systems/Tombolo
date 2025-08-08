@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
 
       LandingZoneMonitoring.belongsTo(models.Cluster, {
         foreignKey: 'clusterId',
+        as: 'cluster',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });

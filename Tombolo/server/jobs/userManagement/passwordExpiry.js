@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 
 //Local Imports
-const { user, NotificationQueue } = require('../../models');
+const { User, NotificationQueue } = require('../../models');
 const { trimURL, getSupportContactEmails } = require('../../utils/authUtil');
 
 // Constants
@@ -56,7 +56,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
     const now = Date.now();
 
     // get all users where passwordExpiresAt is within 10 days
-    const users = await user.findAll({
+    const users = await User.findAll({
       where: {
         passwordExpiresAt: {
           [Op.lt]: now + 10 * 24 * 60 * 60 * 1000,

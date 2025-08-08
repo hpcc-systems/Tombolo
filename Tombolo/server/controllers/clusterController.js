@@ -1,4 +1,4 @@
-const { clusters } = require('../cluster-whitelist.js');
+const clusters = require('../cluster-whitelist');
 const {
   AccountService,
   TopologyService,
