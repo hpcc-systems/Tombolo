@@ -1,14 +1,13 @@
 const path = require('path');
 const logger = require('../config/logger');
 
-const models = require('../models');
-orbitMonitoring = models.orbitMonitoring;
+const { OrbitMonitoring } = require('../models');
 
 const MEGAPHONE_JOB = 'orbitMegaphone.js';
 const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
 
 function createOrbitMegaphoneJob() {
-  const uniqueJobName = `Orbit Megaphone Job`;
+  const uniqueJobName = 'Orbit Megaphone Job';
   const job = {
     interval: '30m',
     name: uniqueJobName,
@@ -36,7 +35,7 @@ function createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
 async function scheduleOrbitMonitoringOnServerStart() {
   try {
     logger.info('Orbit monitoring initialized ...');
-    const orbitMonitorings = await orbitMonitoring.findAll({ raw: true });
+    const orbitMonitorings = await OrbitMonitoring.findAll({ raw: true });
     for (let monitoring of orbitMonitorings) {
       const { id, cron, isActive } = monitoring;
       if (isActive) {

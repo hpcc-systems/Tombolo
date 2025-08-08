@@ -2,10 +2,7 @@
 const { Op } = require('sequelize');
 
 //Local Imports
-const {
-  NotificationQueue,
-  sent_notifications: SentNotification,
-} = require('../../models');
+const { NotificationQueue, SentNotification } = require('../../models');
 const logger = require('../../config/logger');
 const {
   sendEmail,

@@ -1,7 +1,19 @@
-"use strict";
+'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const PasswordResetLinks = sequelize.define(
-    "PasswordResetLinks",
+  class PasswordResetLink extends Model {
+    static associate(models) {
+      PasswordResetLink.belongsTo(models.user, {
+        foreignKey: 'userId',
+        onDelete: 'CASCADE',
+        hooks: true,
+      });
+    }
+  }
+
+  PasswordResetLink.init(
     {
       id: {
         primaryKey: true,
@@ -26,20 +38,12 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "password_reset_links",
-      freezeTableName: true,
+      sequelize,
+      modelName: 'PasswordResetLink',
+      tableName: 'password_reset_links',
       timestamps: true,
     }
   );
 
-  // Associations
-  PasswordResetLinks.associate = function (models) {
-    PasswordResetLinks.belongsTo(models.user, {
-      foreignKey: "userId",
-      onDelete: "CASCADE",
-      hooks: true,
-    });
-  };
-
-  return PasswordResetLinks;
+  return PasswordResetLink;
 };

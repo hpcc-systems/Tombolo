@@ -1,7 +1,21 @@
 'use strict';
+
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const orbitMonitoring = sequelize.define(
-    'orbitMonitoring',
+  class OrbitMonitoring extends Model {
+    static associate(models) {
+      OrbitMonitoring.belongsTo(models.Application, {
+        foreignKey: 'application_id',
+      });
+      OrbitMonitoring.hasMany(models.MonitoringNotification, {
+        foreignKey: 'application_id',
+        onDelete: 'CASCADE',
+      });
+    }
+  }
+
+  OrbitMonitoring.init(
     {
       id: {
         primaryKey: true,
@@ -60,8 +74,10 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
+      sequelize,
+      modelName: 'OrbitMonitoring',
+      tableName: 'orbit_monitorings',
       paranoid: true,
-      freezeTableName: true,
       indexes: [
         {
           unique: true,
@@ -70,15 +86,6 @@ module.exports = (sequelize, DataTypes) => {
       ],
     }
   );
-  orbitMonitoring.associate = function (models) {
-    // Define association here
-    orbitMonitoring.belongsTo(models.Application, {
-      foreignKey: 'application_id',
-    });
-    orbitMonitoring.hasMany(models.MonitoringNotification, {
-      foreignKey: 'application_id',
-      onDelete: 'CASCADE',
-    });
-  };
-  return orbitMonitoring;
+
+  return OrbitMonitoring;
 };

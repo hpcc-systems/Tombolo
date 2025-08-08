@@ -9,12 +9,12 @@ const {
   UserRoles,
   user_application,
   Application,
-  RoleTypes,
-  RefreshTokens,
+  RoleType,
+  RefreshToken,
   NotificationQueue,
-  PasswordResetLinks,
+  PasswordResetLink,
   AccountVerificationCode,
-  sent_notifications,
+  SentNotification,
   InstanceSetting,
 } = require('../models');
 const moment = require('moment');
@@ -42,7 +42,7 @@ const createApplicationOwner = async (req, res) => {
     const payload = req.body;
 
     // Find the role ID for the OWNER role type
-    const role = await RoleTypes.findOne({
+    const role = await RoleType.findOne({
       where: { roleName: roleTypes.OWNER },
     });
 
@@ -262,7 +262,7 @@ const verifyEmail = async (req, res) => {
           as: 'roles',
           include: [
             {
-              model: RoleTypes,
+              model: RoleType,
               as: 'role_details',
               attributes: ['id', 'roleName'],
             },
@@ -307,7 +307,7 @@ const verifyEmail = async (req, res) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create({
+    await RefreshToken.create({
       id: tokenId,
       userId: user.id,
       token: refreshToken,
@@ -414,13 +414,13 @@ const resetPasswordWithToken = async (req, res) => {
     });
 
     //delete password reset link
-    await PasswordResetLinks.destroy({
+    await PasswordResetLink.destroy({
       where: { id: token },
       transaction,
     });
 
     //remove all sessions for user before initiating new session
-    await RefreshTokens.destroy({
+    await RefreshToken.destroy({
       where: { userId: user.id },
       transaction,
     });
@@ -438,7 +438,7 @@ const resetPasswordWithToken = async (req, res) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create(
+    await RefreshToken.create(
       {
         id: tokenId,
         userId: user.id,
@@ -581,12 +581,12 @@ const resetTempPassword = async (req, res) => {
     });
 
     //delete password reset link
-    await PasswordResetLinks.destroy({
+    await PasswordResetLink.destroy({
       where: { id: token },
     });
 
     //remove all sessions for user before initiating new session
-    await RefreshTokens.destroy({
+    await RefreshToken.destroy({
       where: { userId: user.id },
     });
 
@@ -603,7 +603,7 @@ const resetTempPassword = async (req, res) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create({
+    await RefreshToken.create({
       id: tokenId,
       userId: user.id,
       token: refreshToken,
@@ -761,7 +761,7 @@ const loginBasicUser = async (req, res) => {
     //get device info from request
 
     // Save refresh token in DB
-    await RefreshTokens.create({
+    await RefreshToken.create({
       id: tokenId,
       userId: user.id,
       token: refreshToken,
@@ -808,7 +808,7 @@ const logOutBasicUser = async (req, res) => {
     const { tokenId } = decodedToken;
 
     // Remove refresh token from the database
-    await RefreshTokens.destroy({
+    await RefreshToken.destroy({
       where: { id: tokenId },
     });
 
@@ -840,7 +840,7 @@ const handlePasswordResetRequest = async (req, res) => {
           as: 'roles',
           include: [
             {
-              model: RoleTypes,
+              model: RoleType,
               as: 'role_details',
               attributes: ['id', 'roleName'],
             },
@@ -879,7 +879,7 @@ const handlePasswordResetRequest = async (req, res) => {
     }
 
     // Stop users form abusing this endpoint - allow 4 requests per hour
-    const passwordResetRequests = await PasswordResetLinks.findAll({
+    const passwordResetRequests = await PasswordResetLink.findAll({
       where: {
         userId: user.id,
         issuedAt: {
@@ -935,7 +935,7 @@ const handlePasswordResetRequest = async (req, res) => {
     });
 
     // Save the password reset token to the user object in the database
-    await PasswordResetLinks.create({
+    await PasswordResetLink.create({
       id: randomId,
       userId: user.id,
       resetLink: passwordRestLink,
@@ -1049,7 +1049,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       const { iat, exp } = jwt.decode(refreshToken);
 
       // Save refresh token in DB
-      await RefreshTokens.create({
+      await RefreshToken.create({
         id: tokenId,
         userId: newUserPlain.id,
         token: refreshToken,
@@ -1086,7 +1086,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     const { iat, exp } = jwt.decode(refreshToken);
 
     // Save refresh token in DB
-    await RefreshTokens.create({
+    await RefreshToken.create({
       id: tokenId,
       userId: user.id,
       token: refreshToken,
@@ -1137,7 +1137,7 @@ const requestAccess = async (req, res) => {
       return res.status(404).json({ message: 'No contact email found.' });
     }
 
-    const existingNotification = await sent_notifications.findOne({
+    const existingNotification = await SentNotification.findOne({
       where: { notificationTitle: `User Access Request from ${user.email}` },
     });
 
@@ -1264,7 +1264,7 @@ const getUserDetailsWithToken = async (req, res) => {
     const { token } = req.params;
 
     //get the user id by the password reset link
-    const userId = await PasswordResetLinks.findOne({
+    const userId = await PasswordResetLink.findOne({
       where: { id: token },
 
       attributes: ['userId'],

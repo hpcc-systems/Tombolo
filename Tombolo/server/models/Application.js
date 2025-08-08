@@ -37,12 +37,12 @@ module.exports = sequelize => {
       });
 
       /* QUERY */
-      this.hasMany(models.query, {
+      this.hasMany(models.Query, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
 
-      this.hasMany(models.query_field, {
+      this.hasMany(models.QueryField, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });
@@ -59,7 +59,7 @@ module.exports = sequelize => {
       });
 
       /* REPORT */
-      this.hasMany(models.report, {
+      this.hasMany(models.Report, {
         foreignKey: 'application_id',
         onDelete: 'CASCADE',
       });

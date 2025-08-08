@@ -3,8 +3,8 @@ const { notify } = require('../routes/notifications/email-notification');
 const { parentPort, workerData } = require('worker_threads');
 const logger = require('../config/logger');
 const {
-  orbitMonitoring,
-  orbitBuilds,
+  OrbitMonitoring,
+  OrbitBuild,
   MonitoringNotification,
 } = require('../models');
 const { v4: uuidv4 } = require('uuid');
@@ -21,7 +21,7 @@ const {
 
 (async () => {
   try {
-    const orbitMonitoringDetails = await orbitMonitoring.findOne({
+    const orbitMonitoringDetails = await OrbitMonitoring.findOne({
       where: { id: workerData.orbitMonitoring_id },
       raw: true,
     });
@@ -151,7 +151,7 @@ const {
       metaData = orbitMonitoringDetails.metaData;
       metaData.lastMonitored = currentTimeStamp;
 
-      await orbitMonitoring.update({ metaData }, { where: { id } });
+      await OrbitMonitoring.update({ metaData }, { where: { id } });
     }
 
     //------------------------------------------------------------------------------
@@ -160,8 +160,8 @@ const {
 
     await Promise.all(
       wuResult[0].map(async result => {
-        //check if result is is orbitbuilds table
-        const orbitBuild = await orbitBuilds.findOne({
+        //check if the result is in the OrbitBuild table
+        const orbitBuild = await OrbitBuild.findOne({
           where: {
             wuid: result.WorkUnit,
             monitoring_id: id,
@@ -172,7 +172,7 @@ const {
 
         if (orbitBuild) {
           //if it does, update it
-          await orbitBuilds.update(
+          await OrbitBuild.update(
             {
               metaData: {
                 ...orbitBuild.metaData,
@@ -183,7 +183,7 @@ const {
           );
         } else {
           //if it doesn't, create it
-          await orbitBuilds.create({
+          await OrbitBuild.create({
             application_id: application_id,
             build_id: result.BuildID,
             monitoring_id: id,

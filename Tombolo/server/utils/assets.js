@@ -4,8 +4,8 @@ const {
   FileTemplate,
   FileValidation,
   Group,
-  query: Query,
-  query_field: QueryField,
+  Query,
+  QueryField,
   IndexKey,
   IndexPayload,
   Job,
@@ -14,6 +14,7 @@ const {
   ConsumerObject,
   JobExecution,
   Indexes: Index,
+  sequelize,
 } = require('../models');
 
 const hpccUtil = require('./hpcc-util');
@@ -107,8 +108,8 @@ exports.fileSearch = async (applicationId, keyword) => {
       "select f.id, f.name, f.title, f.cluster_id, f.description, f.createdAt, 'File' as type from file f where f.application_id = (:applicationId) and f.deletedAt IS NULL and (f.name REGEXP (:keyword) or f.title REGEXP (:keyword)) ";
     let replacements = { applicationId: applicationId, keyword: keyword };
 
-    const files = await models.sequelize.query(query, {
-      type: models.sequelize.QueryTypes.SELECT,
+    const files = await sequelize.query(query, {
+      type: sequelize.QueryTypes.SELECT,
       replacements: replacements,
     });
 

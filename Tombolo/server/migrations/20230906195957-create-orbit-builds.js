@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('orbitBuilds', {
+    await queryInterface.createTable('orbit_builds', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -20,7 +20,7 @@ module.exports = {
       monitoring_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'orbitMonitoring',
+          model: 'orbit_monitorings',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -60,7 +60,8 @@ module.exports = {
       },
     });
   },
+  // eslint-disable-next-line no-unused-vars
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('orbitBuilds');
+    await queryInterface.dropTable('orbit_builds');
   },
 };

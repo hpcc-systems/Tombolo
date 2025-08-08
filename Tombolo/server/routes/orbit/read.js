@@ -1,6 +1,6 @@
 const {
-  orbitBuilds,
-  orbitMonitoring,
+  OrbitBuild,
+  OrbitMonitoring,
   MonitoringNotification,
 } = require('../../models');
 const express = require('express');
@@ -89,7 +89,7 @@ router.post('/', validate(validateCreateOrbit), async (req, res) => {
       isActive: req.body.isActive,
     };
 
-    const newOrbitMonitoring = await orbitMonitoring.create(newBuildData);
+    const newOrbitMonitoring = await OrbitMonitoring.create(newBuildData);
 
     const { isActive } = req.body;
 
@@ -120,7 +120,7 @@ router.get(
     try {
       const { application_id } = req.params;
 
-      const result = await orbitMonitoring.findAll({
+      const result = await OrbitMonitoring.findAll({
         where: {
           application_id,
         },
@@ -142,7 +142,7 @@ router.get(
     try {
       const { application_id } = req.params;
       if (!application_id) throw Error('Invalid app ID');
-      const result = await orbitMonitoring.findAll({
+      const result = await OrbitMonitoring.findAll({
         where: {
           application_id,
         },
@@ -234,7 +234,7 @@ router.get(
 //update orbit monitoring
 router.put('/', validate(validateUpdateOrbitMonitor), async (req, res) => {
   try {
-    const oldInfo = await orbitMonitoring.findOne({
+    const oldInfo = await OrbitMonitoring.findOne({
       where: { id: req.body.id },
       raw: true,
     });
@@ -334,7 +334,7 @@ router.put('/', validate(validateUpdateOrbitMonitor), async (req, res) => {
     };
     // -------------------------------------------------------
 
-    await orbitMonitoring.update(newInfo, { where: { id } });
+    await OrbitMonitoring.update(newInfo, { where: { id } });
 
     // If start monitoring was changed to TRUE
     if (isActive && oldInfo.isActive === 0) {
@@ -385,14 +385,14 @@ router.put(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const monitoring = await orbitMonitoring.findOne({
+      const monitoring = await OrbitMonitoring.findOne({
         where: { id },
         raw: true,
       });
       const { isActive } = monitoring;
 
       // flipping isActive
-      await orbitMonitoring.update(
+      await OrbitMonitoring.update(
         { isActive: !isActive },
         { where: { id: id } }
       );
@@ -429,7 +429,7 @@ router.delete(
     try {
       // eslint-disable-next-line no-unused-vars
       const { id, name } = req.params;
-      const response = await orbitMonitoring.destroy({
+      const response = await OrbitMonitoring.destroy({
         where: { id },
       });
 
@@ -460,7 +460,7 @@ router.get(
     try {
       const { id, application_id } = req.params;
 
-      const result = await orbitMonitoring.findOne({
+      const result = await OrbitMonitoring.findOne({
         where: { id, application_id },
         raw: true,
       });
@@ -480,7 +480,7 @@ router.get(
     try {
       const { application_id } = req.params;
 
-      const result = await orbitMonitoring.findAll({
+      const result = await OrbitMonitoring.findAll({
         where: { application_id },
         raw: true,
       });
@@ -491,7 +491,7 @@ router.get(
       if (result?.length) {
         await Promise.all(
           result.map(async build => {
-            let wu = await orbitBuilds.findAll({
+            let wu = await OrbitBuild.findAll({
               where: { application_id, name: build.build },
               raw: true,
             });
@@ -539,7 +539,7 @@ router.post(
         await Promise.all(
           rows?.map(async build => {
             //check if the build already exists
-            let orbitBuild = await orbitBuilds.findOne({
+            let orbitBuild = await OrbitBuild.findOne({
               where: {
                 build_id: build.BuildInstanceIdKey,
                 application_id: application_id,
@@ -550,7 +550,7 @@ router.post(
             //if it doesn't exist, create it and send a notification
             if (!orbitBuild) {
               //create build
-              const newBuild = await orbitBuilds.create({
+              const newBuild = await OrbitBuild.create({
                 application_id: application_id,
                 build_id: build.BuildInstanceIdKey,
                 name: build.Name,

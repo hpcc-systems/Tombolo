@@ -1,10 +1,8 @@
 const jwt = require('jsonwebtoken');
-const models = require('../models');
+const { RefreshToken } = require('../models');
 const { blacklistToken } = require('../utils/tokenBlackListing');
 const logger = require('../config/logger');
 const { verifyToken } = require('../utils/authUtil');
-
-const RefreshTokens = models.RefreshTokens;
 
 // Get all active sessions
 const activeSessionsByUserId = async (req, res) => {
@@ -13,7 +11,7 @@ const activeSessionsByUserId = async (req, res) => {
     const { id } = req.params;
 
     // Find all sessions for the user
-    const sessions = await RefreshTokens.findAll({
+    const sessions = await RefreshToken.findAll({
       where: { userId: id },
     });
 
@@ -54,7 +52,7 @@ const destroyOneActiveSession = async (req, res) => {
     const { sessionId } = req.params;
 
     // Destroy session/refresh token by Id
-    const destroyedSessions = await RefreshTokens.destroy({
+    const destroyedSessions = await RefreshToken.destroy({
       where: { id: sessionId },
     });
 
@@ -87,12 +85,12 @@ const destroyActiveSessions = async (req, res) => {
     const { id } = req.params;
 
     // Find all sessions for the user
-    const sessions = await RefreshTokens.findAll({
+    const sessions = await RefreshToken.findAll({
       where: { userId: id },
     });
 
     // Destroy all sessions
-    const destroyedSessions = await RefreshTokens.destroy({
+    const destroyedSessions = await RefreshToken.destroy({
       where: { userId: id },
     });
 
