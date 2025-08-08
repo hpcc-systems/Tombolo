@@ -2,10 +2,10 @@ import { Alert, Button } from 'antd';
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
-import { propagationActions } from '../../../../redux/actions/Propagation';
 import Text from '../../../common/Text';
 
 import ReportTable from '../ReportTable/ReportTable';
+import { generateCurrentReport, getReports } from '@/redux/slices/PropagationSlice';
 
 const CurrentReport = () => {
   const dispatch = useDispatch();
@@ -13,11 +13,11 @@ const CurrentReport = () => {
 
   const history = useHistory();
 
-  const generateReport = () => dispatch(propagationActions.generateReport({ history, type: 'current' }));
+  const generateReport = () => dispatch(generateCurrentReport({ history }));
 
   useEffect(() => {
     if (propagation.reports.length === 0) {
-      dispatch(propagationActions.getReports({ callFrom: 'current' }));
+      dispatch(getReports({ callFrom: 'current' }));
     }
   }, []);
 

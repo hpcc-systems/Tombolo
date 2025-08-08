@@ -1,6 +1,6 @@
 //libraries and hooks
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { connect, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Layout, ConfigProvider } from 'antd';
 import { Router } from 'react-router-dom';
 import history from './components/common/History';
@@ -11,7 +11,7 @@ import LeftNav from './components/layout/LeftNav.jsx';
 import AppHeader from './components/layout/Header/Header.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
-import { checkBackendStatus, checkOwnerExists } from './redux/actions/Backend';
+import { checkBackendStatus, checkOwnerExists } from '@/redux/slices/BackendSlice';
 import { getRoleNameArray } from './components/common/AuthUtil.js';
 import { getUser } from './components/common/userStorage.js';
 
@@ -48,11 +48,10 @@ const App = () => {
   const appLinkRef = useRef(null);
   const clusterLinkRef = useRef(null);
 
-  //get redux states
-  const { applicationReducer, authenticationReducer, backendReducer } = useSelector((state) => state);
-
-  //get child objects from redux states for ease of use
-  const { application } = applicationReducer;
+  // get redux states
+  const application = useSelector((state) => state.application.application);
+  const authenticationReducer = useSelector((state) => state.auth);
+  const backendReducer = useSelector((state) => state.backend);
   const { isConnected, statusRetrieved, ownerExists, ownerRetrieved } = backendReducer;
 
   //redux dispatch
@@ -65,15 +64,15 @@ const App = () => {
       dispatch(checkBackendStatus());
       dispatch(checkOwnerExists());
     }
-  }, [backendReducer]);
+  }, [statusRetrieved, ownerRetrieved, dispatch]);
 
-  //Check if user matches what is currently in storage after authentiationReducer runs
+  //Check if user matches what is currently in storage after authenticationReducer runs
   useEffect(() => {
     const newUser = getUser();
-    if (user !== newUser) {
+    if (user?.id !== newUser?.id || user?.isAuthenticated !== newUser?.isAuthenticated) {
       setUser(newUser);
     }
-  }, [authenticationReducer]);
+  }, [authenticationReducer?.isAuthenticated, user]);
 
   //left nav collapse method
   const onCollapse = (collapsed) => {
@@ -121,13 +120,7 @@ const App = () => {
                           appLinkRef={appLinkRef}
                           clusterLinkRef={clusterLinkRef}
                         />
-                        {isOwnerOrAdmin && (
-                          <Tours
-                            appLinkRef={appLinkRef}
-                            clusterLinkRef={clusterLinkRef}
-                            applicationReducer={applicationReducer}
-                          />
-                        )}
+                        {isOwnerOrAdmin && <Tours appLinkRef={appLinkRef} clusterLinkRef={clusterLinkRef} />}
                         <Content
                           style={{
                             transition: '.1s linear',
@@ -159,6 +152,7 @@ const App = () => {
   );
 };
 
-export default connect((state) => state)(App);
+export default App;
+// export connect((state) => state)(App);
 
 <>{/* Main Application, Only enters if user is authenticated and backend is connected */}</>;

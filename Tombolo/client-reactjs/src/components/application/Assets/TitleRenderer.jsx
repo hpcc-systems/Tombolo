@@ -3,7 +3,7 @@ import { DeleteOutlined, EyeOutlined, FolderOutlined, PlusOutlined } from '@ant-
 import { useDispatch } from 'react-redux';
 import { Dropdown } from 'antd';
 
-import { selectGroup } from '../../../redux/actions/Groups';
+import { selectGroup } from '@/redux/slices/GroupSlice';
 import Text from '../../common/Text';
 
 const TitleRenderer = ({ nodeData, handleMenuClick }) => {

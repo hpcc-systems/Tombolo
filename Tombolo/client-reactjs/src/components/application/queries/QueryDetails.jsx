@@ -11,9 +11,9 @@ import AssociatedDataflows from '../AssociatedDataflows';
 import EditableTable from '../../common/EditableTable';
 import { eclTypes, omitDeep } from '../../common/CommonUtil';
 import MonacoEditor from '../../common/MonacoEditor';
-import { assetsActions } from '../../../redux/actions/Assets';
 import Text from '../../common/Text';
 import Files from './Files';
+import { clusterSelected } from '@/redux/slices/AssetSlice';
 
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
@@ -436,7 +436,7 @@ class QueryDetails extends PureComponent {
   };
 
   onClusterSelection = (value) => {
-    this.props.dispatch(assetsActions.clusterSelected(value));
+    this.props.dispatch(clusterSelected(value));
     this.setState({
       selectedCluster: value,
     });
@@ -828,9 +828,9 @@ class QueryDetails extends PureComponent {
 }
 
 function mapStateToProps(state, ownProps) {
-  let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
+  let { selectedAsset, newAsset = {}, clusterId } = state.asset;
 
-  const { application, clusters } = state.applicationReducer;
+  const { application, clusters } = state.application;
   const { isNew = false, groupId = '' } = newAsset;
 
   if (ownProps.selectedAsset) selectedAsset = ownProps.selectedAsset;

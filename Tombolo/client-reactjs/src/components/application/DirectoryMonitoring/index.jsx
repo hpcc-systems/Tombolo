@@ -28,12 +28,8 @@ import { getUser } from '../../common/userStorage.js';
 const monitoringTypeName = 'Directory Monitoring';
 
 const DirectoryMonitoring = () => {
-  const {
-    applicationReducer: {
-      application: { applicationId },
-    },
-    applicationReducer: { clusters },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const clusters = useSelector((state) => state.application.clusters);
 
   //form
   const [form] = Form.useForm();

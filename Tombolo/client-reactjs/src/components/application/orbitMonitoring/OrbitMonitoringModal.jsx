@@ -42,9 +42,7 @@ const OrbitMonitoringModal = ({
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [fetchingOrbitDetails, setFetchingOrbitDetails] = useState(false);
 
-  const {
-    application: { applicationId },
-  } = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   //set fields of form if monitoring is selected
   useEffect(() => {

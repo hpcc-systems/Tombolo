@@ -6,7 +6,7 @@ import styles from './userManagement.module.css';
 
 function UserDetailModal({ displayUserDetailsModal, setDisplayUserDetailsModal, selectedUser, roles }) {
   const [_selectedUserRoles, setSelectedUserRoles] = useState([]);
-  const { applications: allApps } = useSelector((state) => state.applicationReducer);
+  const allApps = useSelector((state) => state.application.applications);
 
   // Close model
   const closeModel = () => {

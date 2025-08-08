@@ -8,7 +8,7 @@ const { Panel } = Collapse;
 
 const DeleteAssetModal = ({ asset, show, hide, onDelete }) => {
   const [isInDataflow, setIsInDataflow] = useState({ error: '', loading: false, data: [] });
-  const applicationId = useSelector((state) => state.applicationReducer?.application?.applicationId);
+  const applicationId = useSelector((state) => state.application?.application?.applicationId);
 
   useEffect(() => {
     if (!show) return;

@@ -97,7 +97,7 @@ const ApproveRejectModal = ({
                 ...item,
                 approvalStatus: formData.approvalStatus,
                 isActive: formData.approvalStatus === 'Rejected' ? false : formData.isActive,
-                approvedBy: approverObj,
+                approvedBy: {},
                 approvedAt: new Date(),
                 approverComment: formData.approverComment,
               };

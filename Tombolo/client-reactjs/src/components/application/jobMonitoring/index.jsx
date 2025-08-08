@@ -33,12 +33,8 @@ const monitoringTypeName = 'Job Monitoring';
 
 function JobMonitoring() {
   //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      clusters,
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const clusters = useSelector((state) => state.application.clusters);
 
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;

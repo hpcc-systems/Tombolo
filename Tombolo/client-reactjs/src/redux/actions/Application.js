@@ -1,5 +1,5 @@
 import { Constants } from '../../components/common/Constants';
-import { authHeader, handleError } from '../../components/common/AuthHeader.js';
+import { authHeader, handleError } from '../../components/common/AuthHeader';
 
 export const applicationActions = {
   applicationSelected,

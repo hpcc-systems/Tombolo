@@ -7,7 +7,7 @@ const { DirectoryTree } = Tree;
 const { confirm } = Modal;
 
 function MoveAssetsDialog({ isShowing, toggle, application, assetToMove, reloadTable }) {
-  const groupsTree = useSelector((state) => state.groupsReducer.tree);
+  const groupsTree = useSelector((state) => state.groups.tree);
 
   const [moveDestinationGroup, setMoveDestinationGroup] = useState({ id: '', key: '', title: '' });
   const [expandedGroups, setExpandedGroups] = useState(['0-0']);

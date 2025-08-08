@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { message } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
-import { applicationActions } from '../../../redux/actions/Application';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import ClusterActionBtn from './ClusterActionBtn';
 import ClustersTable from './ClustersTable';
@@ -9,6 +8,7 @@ import ClusterDetailsModal from './ClusterDetailsModal';
 import AddClusterModal from './AddClusterModal';
 import EditClusterModal from './EditClusterModal';
 import { getAllClusters, getClusterWhiteList, getConfigurationDetails } from './clusterUtils';
+import { clustersAddButtonTourShown, clustersFound } from '@/redux/slices/ApplicationSlice';
 
 function Clusters() {
   // States
@@ -21,7 +21,7 @@ function Clusters() {
   const [tombolo_instance_name, setTombolo_instance_name] = useState(null);
 
   //tour management
-  const { applicationReducer } = useSelector((store) => store);
+  const noClusters = useSelector((store) => store.application.noClusters);
   const addClusterButtonRef = useRef(null);
   const [tourOpen, setTourOpen] = useState(false);
   const dispatch = useDispatch();
@@ -61,19 +61,15 @@ function Clusters() {
 
   useEffect(() => {
     //show tour if needed
-    if (
-      applicationReducer.noClusters.noClusters &&
-      applicationReducer.noClusters.firstTourShown &&
-      !applicationReducer.noClusters.addButtonTourShown
-    ) {
+    if (noClusters.noClusters && noClusters.firstTourShown && !noClusters.addButtonTourShown) {
       setTourOpen(true);
-      dispatch(applicationActions.updateClustersAddButtonTourShown(true));
+      dispatch(clustersAddButtonTourShown(true));
     }
-  }, [applicationReducer]);
+  }, [noClusters]);
 
   //when cluster state is adjusted, dispatch redux action to update clusters in redux
   useEffect(() => {
-    dispatch(applicationActions.updateClusters(clusters));
+    dispatch(clustersFound(clusters));
   }, [clusters]);
 
   return (

@@ -39,7 +39,7 @@ const SuperFileMonitoringModal = ({
     monitoringActive: true,
     monitoringConditions: [],
   });
-  const applicationReducer = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   const [entryForm] = Form.useForm();
   const windowSize = useWindowSize();
@@ -194,7 +194,7 @@ const SuperFileMonitoringModal = ({
       let emails = formData.emails;
       let msTeamsGroups = formData.msTeamsGroups;
 
-      formData.application_id = applicationReducer.application.applicationId;
+      formData.application_id = applicationId;
 
       // current UTC Time Stamp
       const date = new Date();

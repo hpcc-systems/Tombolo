@@ -12,8 +12,8 @@ import styles from './notifications.module.css';
 
 function NotificationDashboard({ sentNotifications, dashBoardFilter, monitorings, productCategories }) {
   const [filteredNotifications, setFilteredNotifications] = useState([]);
-  const { applicationReducer } = useSelector((state) => state);
-  const { integrations: allIntegrations = [] } = applicationReducer;
+  const allIntegrations = useSelector((state) => state.application.integrations);
+
   const integrationCodes = allIntegrations.map((integration) => integration.name);
 
   // Effects

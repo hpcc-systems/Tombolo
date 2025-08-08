@@ -14,8 +14,8 @@ const BulkUpdateModal = ({
   setSelectedRows,
   fetchAllDirectoryMonitorings,
 }) => {
-  const { application, integrations } = useSelector((state) => state.applicationReducer);
-  const { applicationId } = application;
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const integrations = useSelector((state) => state.application.integrations);
 
   // Original
   const [primaryContacts, setPrimaryContacts] = useState([]);

@@ -2,9 +2,9 @@ import { Alert, Button, Modal } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
-import { propagationActions } from '../../../../redux/actions/Propagation';
 import Text from '../../../common/Text';
 import ReportTable from '../ReportTable/ReportTable';
+import { generateChangesReport, getReports } from '@/redux/slices/PropagationSlice';
 
 const Propagation = () => {
   const dispatch = useDispatch();
@@ -20,23 +20,23 @@ const Propagation = () => {
     if (baseLineReport) {
       setModal({ isOpen: true });
     } else {
-      dispatch(propagationActions.generateReport({ history, type: 'changes' }));
+      dispatch(generateChangesReport({ history }));
     }
   };
 
   const handleUseBaseLine = () => {
-    dispatch(propagationActions.generateReport({ history, type: 'changes', baseLineId: baseLineReport.id }));
+    dispatch(generateChangesReport({ history, baseLineId: baseLineReport.id }));
     setModal({ isOpen: false });
   };
 
   const handleUseCurrentState = () => {
-    dispatch(propagationActions.generateReport({ history, type: 'changes' }));
+    dispatch(generateChangesReport({ history }));
     setModal({ isOpen: false });
   };
 
   useEffect(() => {
     if (propagation.reports.length === 0) {
-      dispatch(propagationActions.getReports({ callFrom: 'changes' }));
+      dispatch(getReports({ callFrom: 'changes' }));
     }
   }, []);
 

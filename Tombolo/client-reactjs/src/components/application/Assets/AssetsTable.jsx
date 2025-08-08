@@ -8,25 +8,21 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import MoveAssetsDialog from './MoveAssetsDialog';
 // import { hasEditPermission } from '../../common/AuthUtil.js';
 import { Constants } from '../../common/Constants';
-import { assetsActions } from '../../../redux/actions/Assets';
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../../common/DeleteAsset';
 import Text from '../../common/Text.jsx';
+import { assetInGroupSelected, assetSelected } from '@/redux/slices/AssetSlice';
 
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed }) {
-  const { applicationReducer, assetReducer, groupsReducer } = useSelector((state) => ({
-    groupsReducer: state.groupsReducer,
-    applicationReducer: state.applicationReducer,
-    assetReducer: state.assetReducer,
-  }));
+  const application = useSelector((state) => state.application.application);
+  const applicationId = application.applicationId || '';
+  const groups = useSelector((state) => state.groups);
+  const assetSearchParams = useSelector((state) => state.asset.searchParams);
 
-  const selectedGroup = groupsReducer;
   const history = useHistory();
   const dispatch = useDispatch();
 
-  const applicationId = applicationReducer?.application?.applicationId || '';
-
-  const { assetTypeFilter, keywords } = assetReducer.searchParams;
+  const { assetTypeFilter, keywords } = assetSearchParams;
   const [assetToMove, setAssetToMove] = useState({ id: '', type: '', title: '', selectedKeys: {} });
   const [assets, setAssets] = useState([]);
 
@@ -36,10 +32,10 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
       if (keywords) {
         url = '/api/groups/assetsSearch?app_id=' + applicationId + '&keywords=' + keywords;
         if (assetTypeFilter) url += '&assetTypeFilter=' + assetTypeFilter;
-        if (selectedGroup?.selectedKeys?.id) url += '&group_id=' + selectedGroup.selectedKeys.id;
+        if (groups?.selectedKeys?.id) url += '&group_id=' + groups.selectedKeys.id;
       } else {
         url = '/api/groups/assets?app_id=' + applicationId;
-        if (selectedGroup?.selectedKeys?.id) url += '&group_id=' + selectedGroup.selectedKeys.id;
+        if (groups?.selectedKeys?.id) url += '&group_id=' + groups.selectedKeys.id;
       }
       try {
         const response = await fetch(url, { headers: authHeader() });
@@ -57,11 +53,11 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
 
   useEffect(() => {
     fetchDataAndRenderTable();
-  }, [applicationId, assetTypeFilter, keywords, selectedGroup?.selectedKeys?.id]);
+  }, [applicationId, assetTypeFilter, keywords, groups?.selectedKeys?.id]);
 
   //When edit icon is clicked
   const handleEdit = (id, type, action) => {
-    dispatch(assetsActions.assetSelected(id, applicationId, ''));
+    dispatch(assetSelected({ id, applicationId, title: '' }));
 
     switch (type) {
       case 'File':
@@ -159,7 +155,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
 
   const handleGroupClick = (groupId) => {
     if (!groupId) groupId = 'root';
-    dispatch(assetsActions.assetInGroupSelected(groupId));
+    dispatch(assetInGroupSelected(groupId));
   };
 
   const generateAssetIcon = (type) => {
@@ -319,7 +315,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
           <Tooltip placement="right" title={<Text text="Move" />}>
             <FolderOpenOutlined
               className="asset-action-icon"
-              onClick={() => openMoveAssetDialog(record.id, record.type, record.name, selectedGroup)}
+              onClick={() => openMoveAssetDialog(record.id, record.type, record.name, groups)}
             />
           </Tooltip>
         </Space>
@@ -361,7 +357,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
           assetToMove={assetToMove}
           refreshGroups={refreshGroups}
           reloadTable={fetchDataAndRenderTable}
-          application={applicationReducer.application}
+          application={application}
         />
       ) : null}
     </React.Fragment>

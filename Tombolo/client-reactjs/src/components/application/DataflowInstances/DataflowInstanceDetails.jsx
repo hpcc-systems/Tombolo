@@ -15,12 +15,10 @@ import Text from '../../common/Text';
 const { TabPane } = Tabs;
 
 const DataflowInstanceDetails = () => {
-  const [applicationReducer, dataflowReducer] = useSelector((state) => [
-    state.applicationReducer,
-    state.dataflowReducer,
-  ]);
+  const storeApplication = useSelector((state) => state.application.application);
+  const storeDataflowId = useSelector((state) => state.dataflow.id);
   const params = useParams();
-  const dataflowId = dataflowReducer.id || params.dataflowId;
+  const dataflowId = storeDataflowId || params.dataflowId;
 
   const [graphSize, setGraphSize] = useState({ width: '100%', height: 200 });
   const [jobExecutions, setJobExecutions] = useState({
@@ -35,7 +33,7 @@ const DataflowInstanceDetails = () => {
 
   const getJobExecutionDetails = async (stopPolling) => {
     try {
-      const applicationId = applicationReducer.application.applicationId || params.applicationId;
+      const applicationId = storeApplication.applicationId || params.applicationId;
 
       const response = await fetch(
         '/api/job/jobExecutionDetails?dataflowId=' + dataflowId + '&applicationId=' + applicationId,
@@ -111,7 +109,7 @@ const DataflowInstanceDetails = () => {
     }
   }, [jobExecutions.data]);
 
-  if (!applicationReducer.application || !applicationReducer.application.applicationId) return null;
+  if (!storeApplication || !storeApplication.applicationId) return null;
 
   if (!isDataflowReady) return <Spin size="large" spinning={true} />;
 

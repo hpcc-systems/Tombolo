@@ -20,7 +20,7 @@ function ClusterMonitoringTable({
   setNotificationDetails,
   isReader,
 }) {
-  const { clusters } = useSelector((state) => state.applicationReducer);
+  const clusters = useSelector((state) => state.application.clusters);
 
   //Delete cluster monitoring
   const deleteClusterMonitoring = async (id) => {

@@ -42,11 +42,7 @@ const DirectoryMonitoringTable = ({
   isReader,
 }) => {
   //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   // Columns for the table
   const columns = [

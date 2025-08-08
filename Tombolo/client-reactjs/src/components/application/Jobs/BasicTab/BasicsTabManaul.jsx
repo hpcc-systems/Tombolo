@@ -2,21 +2,21 @@ import { Col, Form, Input, Row, Select } from 'antd';
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useDispatch, useSelector } from 'react-redux';
-import { assetsActions } from '../../../../redux/actions/Assets';
 import MonacoEditor from '../../../common/MonacoEditor.jsx';
 import Text from '../../../common/Text.jsx';
 import LandingZoneFileExplorer from '../../../common/LandingZoneFileExplorer';
+import { clusterSelected } from '@/redux/slices/AssetSlice';
 
 function BasicsTabManul(props) {
   const { enableEdit, localState, editingAllowed, onChange, formRef, addingNewAsset, inTabView } = props;
-  const assetReducer = useSelector((state) => state.assetReducer);
-  const applicationReducer = useSelector((state) => state.applicationReducer);
+  const storeClusterId = useSelector((state) => state.asset.clusterId);
+  const storeClusters = useSelector((state) => state.application.clusters);
   const readOnlyView = !enableEdit || !addingNewAsset;
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [landingZoneRootPath, setLandingZoneRootPath] = useState({ landingZonePath: '' });
-  const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId || localState.selectedCluster);
-  const [clusters, _setClusters] = useState(applicationReducer.clusters);
+  const [selectedCluster, setSelectedCluster] = useState(storeClusterId || localState.selectedCluster);
+  const [clusters, _setClusters] = useState(storeClusters);
   const { Option } = Select;
   const dispatch = useDispatch();
 
@@ -31,7 +31,7 @@ function BasicsTabManul(props) {
 
   //When cluster is selected
   const onClusterSelection = (value) => {
-    dispatch(assetsActions.clusterSelected(value));
+    dispatch(clusterSelected(value));
     setSelectedCluster(value);
     localState.selectedCluster = value;
   };

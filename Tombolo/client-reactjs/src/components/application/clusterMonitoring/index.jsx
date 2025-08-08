@@ -17,10 +17,8 @@ const { TabPane } = Tabs;
 
 function ClusterMonitoring() {
   //Redux
-  const {
-    clusters,
-    application: { applicationId },
-  } = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const clusters = useSelector((state) => state.application.clusters);
 
   //get user roles
   const roleArray = getRoleNameArray();

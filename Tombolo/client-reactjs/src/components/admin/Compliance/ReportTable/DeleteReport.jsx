@@ -1,10 +1,10 @@
 import { DeleteOutlined } from '@ant-design/icons';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { propagationActions } from '../../../../redux/actions/Propagation';
 import { authHeader } from '../../../common/AuthHeader';
 import ConfirmAction from '../../../common/ConfirmAction';
 import Text from '../../../common/Text';
+import { updateReports } from '@/redux/slices/PropagationSlice';
 
 const DeleteReport = ({ record }) => {
   const dispatch = useDispatch();
@@ -23,7 +23,7 @@ const DeleteReport = ({ record }) => {
     if (!data.id) throw new Error('Failed to remove report');
 
     const newReports = propagation.reports.filter((el) => el.id !== data.id);
-    dispatch(propagationActions.updateReports(newReports));
+    dispatch(updateReports(newReports));
   };
 
   return (

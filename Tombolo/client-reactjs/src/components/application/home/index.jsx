@@ -8,11 +8,7 @@ import styles from './home.module.css';
 
 const Home = () => {
   //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   return (
     <section className={styles.container}>

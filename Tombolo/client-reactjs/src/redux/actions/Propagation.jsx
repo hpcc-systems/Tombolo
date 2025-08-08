@@ -1,17 +1,22 @@
-/* eslint-disable react/react-in-jsx-scope */
 import { notification, message, Typography } from 'antd';
 import { authHeader } from '../../components/common/AuthHeader';
-import { Constants } from '../../components/common/Constants';
+import {
+  propagationsChangesInitiate,
+  propagationsChangesSuccess,
+  propagationsChangesError,
+  propagationsCurrentInitiate,
+  propagationsCurrentSuccess,
+  propagationsCurrentError,
+  updateReports,
+} from '../slices/PropagationSlice';
 
 const generateReport = ({ history, type, baseLineId = null }) => {
   return async (dispatch, getState) => {
     try {
-      const { applicationReducer } = getState();
-      const applicationId = applicationReducer?.application?.applicationId;
+      const { application } = getState();
+      const applicationId = application?.application?.applicationId;
 
-      dispatch({
-        type: type === 'changes' ? Constants.PROPAGATIONS_CHANGES_INITIATE : Constants.PROPAGATIONS_CURRENT_INITIATE,
-      });
+      dispatch(type === 'changes' ? propagationsChangesInitiate() : propagationsCurrentInitiate());
 
       let url =
         type === 'changes' ? `/api/propagation/${applicationId}` : `/api/report/read/generate_current/${applicationId}`;
@@ -43,16 +48,10 @@ const generateReport = ({ history, type, baseLineId = null }) => {
         ),
       });
 
-      dispatch({
-        type: type === 'changes' ? Constants.PROPAGATIONS_CHANGES_SUCCESS : Constants.PROPAGATIONS_CURRENT_SUCCESS,
-        payload: data,
-      });
+      dispatch(type === 'changes' ? propagationsChangesSuccess(data) : propagationsCurrentSuccess(data));
     } catch (error) {
       message.error(error.message);
-      dispatch({
-        type: type === 'changes' ? Constants.PROPAGATIONS_CHANGES_ERROR : Constants.PROPAGATIONS_CURRENT_ERROR,
-        payload: error.message,
-      });
+      dispatch(type === 'changes' ? propagationsChangesError(error.message) : propagationsCurrentError(error.message));
     }
   };
 };
@@ -60,8 +59,8 @@ const generateReport = ({ history, type, baseLineId = null }) => {
 const getReports = ({ callFrom }) => {
   return async (dispatch, getState) => {
     try {
-      const { applicationReducer } = getState();
-      const applicationId = applicationReducer?.application?.applicationId;
+      const { application } = getState();
+      const applicationId = application?.application?.applicationId;
 
       const response = await fetch(`/api/report/read/${applicationId}`, { headers: authHeader() });
       if (!response.ok) throw Error(response.statusText);
@@ -70,16 +69,11 @@ const getReports = ({ callFrom }) => {
       dispatch(updateReports(data));
     } catch (error) {
       message.error(error.message);
-      dispatch({
-        type: callFrom === 'changes' ? Constants.PROPAGATIONS_CHANGES_ERROR : Constants.PROPAGATIONS_CURRENT_ERROR,
-        payload: error.message,
-      });
+      dispatch(
+        callFrom === 'changes' ? propagationsChangesError(error.message) : propagationsCurrentError(error.message)
+      );
     }
   };
-};
-
-const updateReports = (data) => {
-  return { type: Constants.UPDATE_REPORTS, payload: data };
 };
 
 export const propagationActions = {

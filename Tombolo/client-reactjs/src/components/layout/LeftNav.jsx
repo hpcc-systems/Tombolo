@@ -42,8 +42,9 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   const history = useHistory();
 
   //get states from redux
-  const { applicationReducer } = useSelector((state) => state);
-  const { application, integrations, clusters } = applicationReducer;
+  const application = useSelector((state) => state.application.application);
+  const integrations = useSelector((state) => state.application.integrations);
+  const clusters = useSelector((state) => state.application.clusters);
 
   const applicationId = application?.applicationId;
   const clusterConnectionIssue = clusters?.some((c) => c.reachabilityInfo?.reachable === false);

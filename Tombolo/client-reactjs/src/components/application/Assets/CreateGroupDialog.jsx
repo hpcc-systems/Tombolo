@@ -5,13 +5,13 @@ import ReactMarkdown from 'react-markdown';
 import MonacoEditor from '../../common/MonacoEditor.jsx';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector, useDispatch } from 'react-redux';
-import { expandGroups } from '../../../redux/actions/Groups.js';
+import { groupsExpanded } from '@/redux/slices/GroupSlice';
 import Text from '../../common/Text';
 
 export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle }) => {
-  const [groupsReducer] = useSelector((state) => [state.groupsReducer]);
+  const [groups] = useSelector((state) => state.groups);
 
-  const { selectedKeys, expandedKeys } = groupsReducer;
+  const { selectedKeys, expandedKeys } = groups;
 
   const dispatch = useDispatch();
 
@@ -50,7 +50,7 @@ export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle 
 
       if (data?.success) {
         if (!expandedKeys.includes(selectedKeys.key)) {
-          dispatch(expandGroups([...expandedKeys, selectedKeys.key]));
+          dispatch(groupsExpanded([...expandedKeys, selectedKeys.key]));
         }
         toggle({ saved: true });
       }

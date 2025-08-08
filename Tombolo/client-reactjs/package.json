@@ -11,6 +11,7 @@
     "@antv/x6-react-components": "^2.0.8",
     "@antv/x6-react-shape": "^2.2.3",
     "@monaco-editor/react": "^4.4.5",
+    "@reduxjs/toolkit": "^2.8.2",
     "antd": "^5.13.2",
     "bcryptjs-react": "^2.4.6",
     "cronstrue": "^2.14.0",
