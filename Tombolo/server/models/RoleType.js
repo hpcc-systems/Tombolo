@@ -5,7 +5,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class RoleType extends Model {
     static associate(models) {
-      RoleType.hasMany(models.UserRoles, {
+      RoleType.hasMany(models.UserRole, {
         foreignKey: 'roleId',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
@@ -38,8 +38,8 @@ module.exports = (sequelize, DataTypes) => {
       paranoid: true,
       hooks: {
         beforeBulkDestroy: async roleType => {
-          const UserRoles = sequelize.models.UserRoles;
-          await UserRoles.destroy({ where: { roleId: roleType.where.id } });
+          const UserRole = sequelize.models.UserRole;
+          await UserRole.destroy({ where: { roleId: roleType.where.id } });
         },
       },
     }

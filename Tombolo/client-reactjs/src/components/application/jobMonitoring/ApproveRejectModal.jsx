@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, message, Tooltip, Select, Checkbox } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, Checkbox, Form, Input, message, Modal, Select, Tooltip } from 'antd';
 
 import { authHeader } from '../../common/AuthHeader.js';
 import { Constants } from '../../common/Constants';
+import { getUser } from '../../common/userStorage';
 
 const ApproveRejectModal = ({
   id,
@@ -17,6 +18,8 @@ const ApproveRejectModal = ({
   const [savingEvaluation, setSavingEvaluation] = useState(false);
   const [monitoringEvaluated, setMonitoringEvaluated] = useState(false);
   const [isActive, setIsActive] = useState(true);
+
+  const user = getUser();
 
   //When component mounts check if monitoring is already evaluated
   useEffect(() => {
@@ -75,6 +78,13 @@ const ApproveRejectModal = ({
         formData.ids = [id];
       }
       formData.isActive = formData.isActive || false;
+
+      const approverObj = {
+        id: user.id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+      };
+
       const payload = {
         method: 'PATCH',
         headers: authHeader(),
@@ -91,7 +101,7 @@ const ApproveRejectModal = ({
         setSelectedMonitoring(null);
         setDisplayAddRejectModal(false);
         setJobMonitorings((prev) => {
-          const updatedJobMonitorings = prev.map((item) => {
+          return prev.map((item) => {
             if (formData.ids.includes(item.id)) {
               return {
                 ...item,
@@ -104,7 +114,6 @@ const ApproveRejectModal = ({
             }
             return item;
           });
-          return updatedJobMonitorings;
         });
       }
     } catch (error) {
