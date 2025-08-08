@@ -36,11 +36,6 @@ const validateJobSearch = [
   regexBody('clusterType', true, { regex: strictLetterRegex }),
 ];
 
-const validateNewCluster = [
-  regexBody('name', false, { regex: /^[a-zA-Z0-9_:\s\-]*$/ }),
-  uuidBody('id', true, { checkFalsy: true }),
-];
-
 const validateGetFileInfo = [...fileDetailsShared, uuidQuery('applicationId')];
 
 const validateGetLogicalFileDetails = [...fileDetailsShared];
@@ -101,7 +96,6 @@ module.exports = {
   validateSuperfileSearch,
   validateQuerySearch,
   validateJobSearch,
-  validateNewCluster,
   validateGetFileInfo,
   validateGetLogicalFileDetails,
   validateGetIndexInfo,
