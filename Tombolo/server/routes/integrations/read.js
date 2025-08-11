@@ -59,12 +59,12 @@ router.get(
           id: req.params.id,
         },
         attributes: [
-          [sequelize.col('integration_mappings.id'), 'integrationMappingId'],
+          [sequelize.col('IntegrationMapping.id'), 'integrationMappingId'],
           [
-            sequelize.col('integration_mappings.metaData'),
+            sequelize.col('IntegrationMapping.metaData'),
             'appSpecificIntegrationMetaData',
           ],
-          'integration_mappings.application_id',
+          'IntegrationMapping.application_id',
         ],
         include: [
           {

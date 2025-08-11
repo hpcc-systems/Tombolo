@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class IntegrationMapping extends Model {
     static associate(models) {
       IntegrationMapping.belongsTo(models.Integration, {
+        as: 'integration',
         foreignKey: 'integration_id',
       });
       IntegrationMapping.belongsTo(models.Application, {
