@@ -48,6 +48,7 @@ let monitoringTypeId;
       include: [
         {
           model: Cluster,
+          as: 'cluster',
           required: true,
           attributes: [
             'id',

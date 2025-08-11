@@ -51,6 +51,7 @@ const monitoring_name = 'Landing Zone Monitoring';
       include: [
         {
           model: Cluster,
+          as: 'cluster',
           required: true,
           attributes: [
             'id',
