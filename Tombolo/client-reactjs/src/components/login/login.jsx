@@ -32,6 +32,8 @@ const Login = () => {
 
     const test = await dispatch(login({ email, password, deviceInfo }));
 
+    console.log('loginAttemptData', test);
+
     if (test?.type === 'temp-pw') {
       setLoading(false);
 

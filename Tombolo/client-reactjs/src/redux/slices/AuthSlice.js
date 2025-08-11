@@ -1,7 +1,7 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { authHeader, handleError } from '@/components/common/AuthHeader';
 import { message } from 'antd';
-import { setUser, getUser } from '@/components/common/userStorage';
+import { getUser, setUser } from '@/components/common/userStorage';
 import { Constants } from '@/components/common/Constants';
 
 const initialState = {
@@ -135,8 +135,7 @@ export const registerBasicUser = createAsyncThunk('auth/registerBasicUser', asyn
     throw new Error('Registration failed');
   }
 
-  const data = await response.json();
-  return data;
+  return await response.json();
 });
 
 export const registerOwner = createAsyncThunk('auth/registerOwner', async (values) => {
@@ -156,8 +155,7 @@ export const registerOwner = createAsyncThunk('auth/registerOwner', async (value
     throw new Error('Owner registration failed');
   }
 
-  const data = await response.json();
-  return data;
+  return await response.json();
 });
 
 export const loginOrRegisterAzureUser = createAsyncThunk('auth/loginOrRegisterAzureUser', async (code) => {
@@ -201,9 +199,7 @@ export const azureLoginRedirect = () => {
     const client_id = import.meta.env.VITE_AZURE_CLIENT_ID;
     const tenant_id = import.meta.env.VITE_AZURE_TENENT_ID;
 
-    const url = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
-
-    window.location.href = url;
+    window.location.href = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
   } catch (e) {
     console.log(e);
     message.error('An error occurred while trying to login with Microsoft.');

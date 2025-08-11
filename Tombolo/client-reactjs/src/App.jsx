@@ -1,6 +1,6 @@
 //libraries and hooks
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { useSelector } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import { Layout, ConfigProvider } from 'antd';
 import { Router } from 'react-router-dom';
 import history from './components/common/History';
@@ -152,7 +152,6 @@ const App = () => {
   );
 };
 
-export default App;
-// export connect((state) => state)(App);
+export default connect((state) => state)(App);
 
 <>{/* Main Application, Only enters if user is authenticated and backend is connected */}</>;
