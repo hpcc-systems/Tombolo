@@ -159,6 +159,7 @@ router.patch(
             id: req.params.id,
             deletedByUserId: req.user.id,
             transaction: t,
+            deleteKey: 'domain_id',
           });
 
           // create domain monitoring type mapping
@@ -167,7 +168,7 @@ router.patch(
               {
                 domain_id: req.params.id,
                 monitoring_type_id: monitoringId,
-                updatedBy: req.user.id,
+                createdBy: req.user.id,
               },
               { transaction: t }
             );
@@ -192,7 +193,7 @@ router.patch(
         response[0] === 0 ? 'Domain not found' : 'Successfully updated domain';
       return res.status(200).json({ message });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Failed to update domain: ', err);
       return res.status(500).json({ message: 'Failed to update domain' });
     }
   }
