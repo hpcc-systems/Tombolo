@@ -38,8 +38,13 @@ module.exports = {
       },
       createdBy: {
         allowNull: false,
-        type: Sequelize.JSON,
-        defaultValue: { email: 'NA', lastName: 'System', firstName: 'NA' },
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       updatedBy: {
         allowNull: true,

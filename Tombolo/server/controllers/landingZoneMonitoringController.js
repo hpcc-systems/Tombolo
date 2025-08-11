@@ -4,7 +4,7 @@ const Sequelize = require('sequelize');
 
 // Local Imports
 const logger = require('../config/logger');
-const { Cluster, LandingZoneMonitoring, user: User } = require('../models');
+const { Cluster, LandingZoneMonitoring, User } = require('../models');
 const { decryptString } = require('../utils/cipher');
 const { getClusterOptions } = require('../utils/getClusterOptions');
 const {
@@ -185,7 +185,7 @@ const getAllLandingZoneMonitorings = async (req, res) => {
       count: landingZoneMonitorings.length,
     });
   } catch (err) {
-    logger.error(`Error getting landing zone monitorings: ${err.message}`);
+    logger.error('Error getting landing zone monitorings: ', err);
     res.status(500).json({
       success: false,
       message: 'Failed to get landing zone monitorings',

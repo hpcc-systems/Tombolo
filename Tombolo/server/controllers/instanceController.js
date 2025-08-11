@@ -1,4 +1,4 @@
-const { InstanceSetting, user: User } = require('../models');
+const { InstanceSetting, User } = require('../models');
 const logger = require('../config/logger');
 
 // Get a single instance setting by name

@@ -129,19 +129,17 @@ router.post(
   async function (req, res) {
     try {
       if (req.body.id === '') {
-        req.body.createdBy = req.body.creator;
         const application = await Application.create({
           title: req.body.title,
           description: req.body.description,
-          creator: req.body.creator,
+          creator: req.user.id,
           visibility: req.body.visibility,
-          createdBy: req.user.id,
         });
-        if (req.body.user_id) {
+        if (req.user.id) {
           const userApp = await UserApplication.create({
             user_id: req.user.id,
             application_id: application.id,
-            createdBy: req.body.createdBy,
+            createdBy: req.user.id,
             user_app_relation: 'created',
           });
 
