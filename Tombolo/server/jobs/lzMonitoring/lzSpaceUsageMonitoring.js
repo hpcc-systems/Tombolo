@@ -52,9 +52,11 @@ const monitoring_name = 'Landing Zone Monitoring';
       include: [
         {
           model: Cluster,
+          as: 'cluster',
           required: true,
           attributes: [
             'id',
+            'name',
             'thor_host',
             'thor_port',
             'username',

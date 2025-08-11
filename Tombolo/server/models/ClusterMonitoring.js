@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       ClusterMonitoring.belongsTo(models.Cluster, {
         foreignKey: 'clusterId',
+        as: 'cluster',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });

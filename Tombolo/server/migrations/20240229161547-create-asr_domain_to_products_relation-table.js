@@ -75,7 +75,7 @@ module.exports = {
 
     //Create constraint - domain_id, product_id pair should be unique
     await queryInterface.addConstraint('asr_domain_to_products_relations', {
-      fields: ['domain_id', 'product_id'],
+      fields: ['domain_id', 'product_id', 'deletedAt'],
       type: 'unique',
       name: 'unique_domain_product_pair',
     });
