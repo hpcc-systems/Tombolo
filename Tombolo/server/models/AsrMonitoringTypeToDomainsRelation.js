@@ -108,6 +108,12 @@ module.exports = sequelize => {
       modelName: 'AsrMonitoringTypeToDomainsRelation',
       tableName: 'asr_monitoring_type_to_domains_relations',
       paranoid: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['monitoring_type_id', 'domain_id', 'deletedAt'],
+        },
+      ],
     }
   );
 

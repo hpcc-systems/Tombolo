@@ -45,16 +45,33 @@ module.exports = {
         },
         createdBy: {
           allowNull: false,
-          type: DataTypes.JSON,
-          defaultValue: { email: 'NA', lastName: 'NA', firstName: 'System' },
+          type: DataTypes.UUID,
+          references: {
+            model: 'users',
+            key: 'id',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'NO ACTION',
         },
         updatedBy: {
           allowNull: true,
-          type: DataTypes.JSON,
+          type: DataTypes.UUID,
+          references: {
+            model: 'users',
+            key: 'id',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'NO ACTION',
         },
         deletedBy: {
           allowNull: true,
-          type: DataTypes.JSON,
+          type: DataTypes.UUID,
+          references: {
+            model: 'users',
+            key: 'id',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'NO ACTION',
         },
       }
     );
@@ -64,7 +81,7 @@ module.exports = {
       'asr_monitoring_type_to_domains_relations',
       {
         type: 'unique',
-        fields: ['monitoring_type_id', 'domain_id'],
+        fields: ['monitoring_type_id', 'domain_id', 'deletedAt'],
         name: 'unique_monitoring_type_id_domain_id',
       }
     );
