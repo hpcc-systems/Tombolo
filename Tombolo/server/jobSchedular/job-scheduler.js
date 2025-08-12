@@ -79,8 +79,8 @@ const {
 } = require('../jobSchedularMethods/lzMonitoring.js');
 
 const {
-  startClusterStatusMonitoring,
-} = require('../jobSchedularMethods/clusterStatusMonitoring.js');
+  startClusterMonitoring,
+} = require('../jobSchedularMethods/clusterMonitoring.js');
 
 class JobScheduler {
   constructor() {
@@ -181,7 +181,7 @@ class JobScheduler {
       await startLzFileMovementMonitoring.call(this);
       await startLzFileCountMonitoring.call(this);
       await startLzSpaceUsageMonitoring.call(this);
-      await startClusterStatusMonitoring.call(this);
+      await startClusterMonitoring.call(this);
       logger.info('-----------------------------');
       logger.info('Server is finished intializing, and is now running');
       logger.info('-----------------------------');
@@ -461,8 +461,8 @@ class JobScheduler {
   }
 
   // Cluster Status Monitoring
-  startClusterStatusMonitoring() {
-    return startClusterStatusMonitoring.call(this);
+  startClusterMonitoring() {
+    return startClusterMonitoring.call(this);
   }
 }
 
