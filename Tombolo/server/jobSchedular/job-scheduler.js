@@ -59,8 +59,8 @@ const {
 } = require('../jobSchedularMethods/jobMonitoring.js');
 
 const {
-  createMonitorCostPerUserJob,
-  createAnalyzeCostPerUserJob,
+  createMonitorCostJob,
+  createAnalyzeCostJob,
 } = require('../jobSchedularMethods/costMonitoring');
 
 const { createDataArchiveJob } = require('../jobSchedularMethods/archive');
@@ -103,10 +103,10 @@ class JobScheduler {
 
         if (
           worker.message?.type &&
-          worker.message?.type === 'monitor-cost-per-user' &&
+          worker.message?.type === 'monitor-cost' &&
           worker.message?.action === 'trigger'
         ) {
-          await this.createAnalyzeCostPerUserJob();
+          await this.createAnalyzeCostJob();
         }
 
         const message = worker.message;
@@ -138,7 +138,7 @@ class JobScheduler {
           this.bree.remove(worker.name);
           logger.info(`Job removed:  ${workerName}`);
         }
-        if (message?.action == 'scheduleNext') {
+        if (message?.action === 'scheduleNext') {
           await this.scheduleCheckForJobsWithSingleDependency({
             ...message.data,
           });
@@ -167,7 +167,7 @@ class JobScheduler {
       await this.startTimeSeriesAnalysisMonitoring();
       await this.checkClusterReachability();
       await this.checkClusterContainerization();
-      await this.createMonitorCostPerUserJob();
+      await this.createMonitorCostJob();
       await this.createDataArchiveJob();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
@@ -287,12 +287,12 @@ class JobScheduler {
     return createDataArchiveJob.call(this);
   }
 
-  createMonitorCostPerUserJob() {
-    return createMonitorCostPerUserJob.call(this);
+  createMonitorCostJob() {
+    return createMonitorCostJob.call(this);
   }
 
-  createAnalyzeCostPerUserJob() {
-    return createAnalyzeCostPerUserJob.call(this);
+  createAnalyzeCostJob() {
+    return createAnalyzeCostJob.call(this);
   }
 
   scheduleActiveCronJobs() {

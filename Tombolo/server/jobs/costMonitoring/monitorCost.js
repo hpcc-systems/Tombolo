@@ -73,7 +73,7 @@ async function markDataAnalyzed(costMonitoringId, clusterId, applicationId) {
     parentPort &&
       parentPort.postMessage({
         level: 'error',
-        text: `monitorCostPerUser: Error in markDataAnalyzed: ${err.message}`,
+        text: `monitorCost: Error in markDataAnalyzed: ${err.message}`,
       });
   }
 }
@@ -139,7 +139,7 @@ async function getCostMonitorings() {
   });
 }
 
-async function monitorCostPerUser() {
+async function monitorCost() {
   try {
     parentPort &&
       parentPort.postMessage({
@@ -170,7 +170,7 @@ async function monitorCostPerUser() {
       let clusterDetails;
       if (clusterIds === null || clusterIds.length === 0) {
         // Then get all active clusters details
-        const allClusters = Cluster.findAll({
+        const allClusters = await Cluster.findAll({
           attributes: ['id'],
           where: { deletedAt: null },
         });
@@ -183,7 +183,7 @@ async function monitorCostPerUser() {
                 parentPort &&
                   parentPort.postMessage({
                     level: 'error',
-                    text: `monitorCostPerUser: Failed to get cluster ${cluster.name}: ${err.message}, ...skipping`,
+                    text: `monitorCost: Failed to get cluster ${cluster.name}: ${err.message}, ...skipping`,
                   });
               }
             })
@@ -199,7 +199,7 @@ async function monitorCostPerUser() {
                 parentPort &&
                   parentPort.postMessage({
                     level: 'error',
-                    text: `monitorCostPerUser: Failed to get cluster ${clusterId}: ${err.message}, ...skipping`,
+                    text: `monitorCost: Failed to get cluster ${clusterId}: ${err.message}, ...skipping`,
                   });
               }
             })
@@ -316,14 +316,11 @@ async function monitorCostPerUser() {
             newScanTime
           );
         } catch (perClusterError) {
-          logger.error(
-            '>>> monitorCostPerUser: Error in cluster ',
-            perClusterError
-          );
+          logger.error('>>> monitorCost: Error in cluster ', perClusterError);
           parentPort &&
             parentPort.postMessage({
               level: 'error',
-              text: `monitorCostPerUser: Failed in cluster ${clusterDetail.name}: ${perClusterError.message}, ...skipping`,
+              text: `monitorCost: Failed in cluster ${clusterDetail.name}: ${perClusterError.message}, ...skipping`,
             });
         }
       }
@@ -334,11 +331,11 @@ async function monitorCostPerUser() {
         text: 'Cost Monitor Per user: Monitoring Finished ...',
       });
 
-    // Trigger the analyzeCostPerUser job
+    // Trigger the analyzeCost job
     if (parentPort) {
       parentPort.postMessage({
         action: 'trigger',
-        type: 'monitor-cost-per-user',
+        type: 'monitor-cost',
       });
     }
   } catch (err) {
@@ -351,5 +348,5 @@ async function monitorCostPerUser() {
 }
 
 (async () => {
-  await monitorCostPerUser();
+  await monitorCost();
 })();

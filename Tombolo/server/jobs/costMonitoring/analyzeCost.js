@@ -5,7 +5,6 @@ const {
   CostMonitoringData,
   NotificationQueue,
   MonitoringType,
-  CostMonitoringDataTotals,
   Cluster,
   AsrDomain,
   AsrProduct,
@@ -20,7 +19,7 @@ const { Op } = require('sequelize');
 const moment = require('moment');
 const _ = require('lodash');
 
-async function analyzeCostPerUser(identifier, options) {
+async function analyzeCost() {
   try {
     parentPort &&
       parentPort.postMessage({
@@ -39,9 +38,9 @@ async function analyzeCostPerUser(identifier, options) {
       const monitoredUsers = costMonitoring.metaData.users; // ["*"] means all users
       const clusterIds = costMonitoring.clusterIds;
 
-      const allCostMonitoringTotals = await CostMonitoringDataTotals.findAll({
-        where: { monitoringId: costMonitoring.id },
-      });
+      const allCostMonitoringTotals = await CostMonitoringData.getDataTotals(
+        costMonitoring.id
+      );
 
       // If required, filter costMonitoringTotals to only monitored users
       let costMonitoringTotals;
@@ -66,7 +65,7 @@ async function analyzeCostPerUser(identifier, options) {
         parentPort &&
           parentPort.postMessage({
             level: 'info',
-            text: `No thresholds passed for analyzeCostPerUser: ${costMonitoring.id}`,
+            text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
           });
         continue;
       }
@@ -99,7 +98,7 @@ async function analyzeCostPerUser(identifier, options) {
         parentPort &&
           parentPort.postMessage({
             level: 'info',
-            text: `Notification already sent for analyzeCostPerUser: ${costMonitoring.id}`,
+            text: `Notification already sent for analyzeCost: ${costMonitoring.id}`,
           });
         continue;
       }
@@ -163,7 +162,7 @@ async function analyzeCostPerUser(identifier, options) {
       parentPort &&
         parentPort.postMessage({
           level: 'info',
-          text: 'Notification(s) sent for analyzeCostPerUser',
+          text: 'Notification(s) sent for analyzeCost',
         });
 
       try {
@@ -190,11 +189,11 @@ async function analyzeCostPerUser(identifier, options) {
         if (parentPort) {
           parentPort.postMessage({
             level: 'error',
-            text: `Error in analyzeCostPerUser, failed to send noc Notification: ${nocError.message}`,
+            text: `Error in analyzeCost, failed to send noc Notification: ${nocError.message}`,
           });
         } else {
           logger.error(
-            'Error in analyzeCostPerUser, failed to send noc Notification: ',
+            'Error in analyzeCost, failed to send noc Notification: ',
             nocError
           );
         }
@@ -207,14 +206,14 @@ async function analyzeCostPerUser(identifier, options) {
     if (parentPort) {
       parentPort.postMessage({
         level: 'error',
-        text: `Error in analyzeCostPerUser: ${err.message}`,
+        text: `Error in analyzeCost: ${err.message}`,
       });
     } else {
-      logger.error('Error in analyzeCostPerUser: ', err);
+      logger.error('Error in analyzeCost: ', err);
     }
   }
 }
 
 (async () => {
-  await analyzeCostPerUser();
+  await analyzeCost();
 })();
