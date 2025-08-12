@@ -90,7 +90,6 @@ const regulations = require('./routes/controlsAndRegulations/read');
 const fileMonitoring = require('./routes/filemonitoring/read');
 const updateNotifications = require('./routes/notifications/update');
 const notifications = require('./routes/notifications/read');
-const clustermonitoring = require('./routes/clustermonitoring/read');
 const key = require('./routes/key/read');
 const api = require('./routes/api/read');
 const jobmonitoring = require('./routes/jobmonitoring/read');
@@ -116,7 +115,7 @@ const status = require('./routes/statusRoutes');
 const instanceSettings = require('./routes/instanceRoutes');
 const costMonitoring = require('./routes/costMonitoringRoutes');
 const landingZoneMonitoring = require('./routes/landingZoneMonitoring');
-const clusterStatusMonitoring = require('./routes/clusterStatusMonitoring');
+const clusterMonitoring = require('./routes/clusterMonitoringRoutes.js');
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -156,7 +155,6 @@ app.use('/api/fileTemplate/read', fileTemplateRead);
 app.use('/api/fileMonitoring/read', fileMonitoring);
 app.use('/api/notifications/read', notifications);
 app.use('/api/superfilemonitoring/read', superfileMonitoring);
-app.use('/api/clustermonitoring', clustermonitoring);
 app.use('/api/key', key);
 app.use('/api/jobmonitoring', jobmonitoring);
 app.use('/api/cluster', cluster);
@@ -173,7 +171,7 @@ app.use('/api/roles', roles);
 app.use('/api/instanceSettings', instanceSettings);
 app.use('/api/costMonitoring', costMonitoring);
 app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
-app.use('/api/clusterStatusMonitoring', clusterStatusMonitoring);
+app.use('/api/clusterMonitoring', clusterMonitoring);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {

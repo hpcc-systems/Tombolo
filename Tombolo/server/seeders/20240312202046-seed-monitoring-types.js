@@ -2,7 +2,7 @@
 const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
-  up: async (queryInterface) => {
+  up: async queryInterface => {
     return queryInterface.bulkInsert('monitoring_types', [
       {
         id: uuidv4(),
@@ -46,7 +46,7 @@ module.exports = {
       },
       {
         id: uuidv4(),
-        name: 'Cluster Status Monitoring',
+        name: 'Cluster Monitoring',
         createdAt: new Date(),
         createdBy: JSON.stringify({
           firstName: null,
@@ -57,7 +57,7 @@ module.exports = {
     ]);
   },
 
-  down: async (queryInterface) => {
+  down: async queryInterface => {
     return queryInterface.bulkDelete('monitoring_types', null, {});
   },
 };

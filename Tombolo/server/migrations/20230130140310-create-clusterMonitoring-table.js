@@ -1,28 +1,59 @@
 'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('clusterMonitoring', {
+    await queryInterface.createTable('cluster_monitoring', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      name: {
+      monitoringName: {
         allowNull: false,
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.STRING,
       },
-      cron: {
+      clusterMonitoringType: {
         allowNull: false,
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.JSON,
+        defaultValue: ['status', 'usage'],
       },
       isActive: {
         allowNull: false,
-        type: Sequelize.DataTypes.BOOLEAN,
+        type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
-      cluster_id: {
+      approvalStatus: {
+        allowNull: false,
+        type: Sequelize.ENUM('approved', 'rejected', 'pending'),
+        defaultValue: 'pending',
+      },
+      approvedBy: {
+        allowNull: true,
         type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
+      approvedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+      approverComment: {
+        allowNull: true,
+        type: Sequelize.STRING,
+      },
+      description: {
+        allowNull: false,
+        type: Sequelize.TEXT,
+      },
+      clusterId: {
+        type: Sequelize.UUID,
+        allowNull: false,
         references: {
           model: 'cluster',
           key: 'id',
@@ -30,18 +61,42 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      application_id: {
+      lastRunDetails: {
+        allowNull: true,
+        type: Sequelize.JSON,
+      },
+      metaData: {
+        allowNull: false,
+        type: Sequelize.JSON,
+        defaultValue: {
+          contacts: {
+            primaryContacts: [],
+            secondaryContacts: [],
+            notifyContacts: [],
+          },
+          monitoringData: {},
+          asrSpecificMetaData: {},
+        },
+      },
+      createdBy: {
+        allowNull: false,
         type: Sequelize.UUID,
         references: {
-          model: 'application',
+          model: 'users',
           key: 'id',
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
-      metaData: {
-        type: Sequelize.JSON,
-        allowNull: true,
+      lastUpdatedBy: {
+        allowNull: false,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       createdAt: {
         allowNull: false,
@@ -55,14 +110,28 @@ module.exports = {
         allowNull: true,
         type: Sequelize.DATE,
       },
+      deletedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
     });
 
-    await queryInterface.addIndex('clusterMonitoring', ['name', 'deletedAt'], {
-      unique: true,
-      name: 'clm_unique_name_deleted_at',
-    });
+    await queryInterface.addIndex(
+      'cluster_monitoring',
+      ['monitoringName', 'deletedAt'],
+      {
+        unique: true,
+        name: 'cluster_mon_unique_monitoring_name_deleted_at',
+      }
+    );
   },
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('clusterMonitoring');
+  down: async queryInterface => {
+    await queryInterface.dropTable('cluster_monitoring');
   },
 };
