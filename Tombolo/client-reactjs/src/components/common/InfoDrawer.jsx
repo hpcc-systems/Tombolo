@@ -15,6 +15,7 @@ import JobMonitoringScopeTypes from '../userGuides/JobMonitoringScopeTypes';
 import JobNamePattern from '../userGuides/JobNamePattern';
 import LandingZoneMonitoringTypes from '../userGuides/LandingZoneMonitoringTypes';
 import MaximumDepthGuide from '../userGuides/MaximumDepthGuide';
+import CostMonitoringSumGuide from '../userGuides/CostMonitoringSumGuide';
 
 const GuideDrawer = ({ content, open, onClose, width }) => {
   /* Example Usage
@@ -69,6 +70,8 @@ const GuideDrawer = ({ content, open, onClose, width }) => {
             return <LandingZoneMonitoringTypes />;
           case 'maximumDepth':
             return <MaximumDepthGuide />;
+          case 'costMonitoringSum':
+            return <CostMonitoringSumGuide />;
           default:
             return <h2>Guide Not Found</h2>;
         }

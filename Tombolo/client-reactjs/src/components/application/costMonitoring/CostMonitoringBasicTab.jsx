@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Form, Select, Input } from 'antd';
+import { Form, Select, Input, Checkbox, Card } from 'antd';
 import { matches } from 'validator';
 import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
 import { useSelector } from 'react-redux';
+import InfoDrawer from '../../common/InfoDrawer';
+import { InfoCircleOutlined } from '@ant-design/icons';
+
+import styles from './costMonitoring.module.css';
 
 const { Option } = Select;
 
@@ -18,6 +22,8 @@ function CostMonitoringBasicTab({
   productCategories,
   setSelectedDomain,
 }) {
+  const [monitoringScope, setMonitoringScope] = useState('');
+  const [showUserGuide, setShowUserGuide] = useState(false);
   const [clusterOffset, setClusterOffset] = useState(null);
   const monitoringNameInputRef = useRef(null);
 
@@ -42,10 +48,16 @@ function CostMonitoringBasicTab({
   }, [selectedClusters]);
 
   useEffect(() => {
+    if (form && isEditing) {
+      setMonitoringScope(form.getFieldValue('monitoringScope'));
+    }
+
     if (form && !isEditing) {
       monitoringNameInputRef.current?.input.focus();
     }
+  }, [form, isEditing, setMonitoringScope]);
 
+  useEffect(() => {
     if (isDuplicating) {
       // This function is a temporary fix and only works on the application level
       const doesNameExist = (newName) => {
@@ -73,72 +85,105 @@ function CostMonitoringBasicTab({
   }, [isDuplicating, form, costMonitorings, isEditing]);
 
   return (
-    <Form form={form} layout="vertical">
-      <Form.Item
-        label="Monitoring Name"
-        name="monitoringName"
-        rules={[{ required: true, message: 'Please enter a monitoring name' }]}>
-        <Input placeholder="Enter monitoring name" ref={monitoringNameInputRef} />
-      </Form.Item>
-      <Form.Item
-        label="Description"
-        name="description"
-        rules={[{ required: true, message: 'Please enter a description' }]}>
-        <Input.TextArea placeholder="Enter description" />
-      </Form.Item>
-      <Form.Item
-        label="Clusters"
-        name="clusterIds"
-        rules={[{ required: true, message: 'Select at least one cluster' }]}>
-        <Select
-          placeholder="Select at least one cluster"
-          mode="multiple"
-          onChange={(value) => handleClusterChange(value)}>
-          {clusters.map((cluster) => {
-            return (
-              <Option key={cluster.id} value={cluster.id}>
-                {cluster.name}
-              </Option>
-            );
-          })}
-        </Select>
-      </Form.Item>
-      <Form.Item
-        label="Users"
-        name="users"
-        rules={[
-          {
-            required: true,
-            message: 'Enter at least one user',
-            validator: (_, value) => {
-              if (!value || value.length === 0) {
-                return Promise.reject(new Error('Please add at least one email!'));
-              }
-              if (!value.every((v) => v === '*' || matches(v, '^[a-zA-Z0-9._-]+$'))) {
-                return Promise.reject(new Error('Please enter only alphanumeric characters or "*"'));
-              }
+    <Card>
+      <Form form={form} layout="vertical">
+        <Form.Item
+          label="Monitoring Name"
+          name="monitoringName"
+          rules={[{ required: true, message: 'Please enter a monitoring name' }]}>
+          <Input placeholder="Enter monitoring name" ref={monitoringNameInputRef} />
+        </Form.Item>
+        <Form.Item
+          label="Description"
+          name="description"
+          rules={[{ required: true, message: 'Please enter a description' }]}>
+          <Input.TextArea placeholder="Enter description" />
+        </Form.Item>
+        <Form.Item
+          label="Scope"
+          name="monitoringScope"
+          rules={[{ required: true, message: 'Select at least one cluster' }]}>
+          <Select placeholder="Select a moniotoring scope" onChange={(value) => setMonitoringScope(value)}>
+            <Option key="cm-scope-users" value="users">
+              Users
+            </Option>
+            <Option key="cm-scope-users" value="clusters">
+              Clusters
+            </Option>
+          </Select>
+        </Form.Item>
+        <div className={styles.basicTabSummedContainer}>
+          <Form.Item label={null} name="isSummed" valuePropName="checked" style={{ marginBottom: 0 }}>
+            <Checkbox name="isSummed">Sum Costs</Checkbox>
+          </Form.Item>
+          <InfoCircleOutlined
+            className={styles.infoIcon}
+            onClick={() => {
+              setShowUserGuide(true);
+            }}
+          />
+        </div>
+        <Form.Item
+          label="Clusters"
+          name="clusterIds"
+          rules={[{ required: true, message: 'Select at least one cluster' }]}>
+          <Select
+            placeholder="Select at least one cluster"
+            mode="multiple"
+            onChange={(value) => handleClusterChange(value)}>
+            {clusters.map((cluster) => {
+              return (
+                <Option key={cluster.id} value={cluster.id}>
+                  {cluster.name}
+                </Option>
+              );
+            })}
+          </Select>
+        </Form.Item>
+        {monitoringScope === 'users' && (
+          <Form.Item
+            label="Users"
+            name="users"
+            rules={[
+              {
+                required: true,
+                message: 'Enter at least one user',
+                validator: (_, value) => {
+                  if (!value || value.length === 0) {
+                    return Promise.reject(new Error('Please add at least one email!'));
+                  }
+                  if (!value.every((v) => v === '*' || matches(v, '^[a-zA-Z0-9._-]+$'))) {
+                    return Promise.reject(new Error('Please enter only alphanumeric characters or "*"'));
+                  }
 
-              return Promise.resolve();
-            },
-          },
-        ]}>
-        <Select
-          mode="tags"
-          allowClear
-          placeholder="Enter a comma-delimited list of HPCC users"
-          tokenSeparators={[',']}
-        />
-      </Form.Item>
-      {asrIntegration && (
-        <AsrSpecificMonitoringDetails
-          form={form}
-          clusterOffset={clusterOffset}
-          domains={domains}
-          productCategories={productCategories}
-          setSelectedDomain={setSelectedDomain}
-        />
-      )}
-    </Form>
+                  return Promise.resolve();
+                },
+              },
+            ]}>
+            <Select
+              mode="tags"
+              allowClear
+              placeholder="Enter a comma-delimited list of HPCC users"
+              tokenSeparators={[',']}
+            />
+          </Form.Item>
+        )}
+        {asrIntegration && (
+          <AsrSpecificMonitoringDetails
+            form={form}
+            clusterOffset={clusterOffset}
+            domains={domains}
+            productCategories={productCategories}
+            setSelectedDomain={setSelectedDomain}
+          />
+        )}
+      </Form>
+      <InfoDrawer
+        open={showUserGuide}
+        onClose={() => setShowUserGuide(false)}
+        width="500px"
+        content="costMonitoringSum"></InfoDrawer>
+    </Card>
   );
 }
 
