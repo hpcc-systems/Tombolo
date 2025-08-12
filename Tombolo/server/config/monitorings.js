@@ -21,6 +21,10 @@ const cluster_monitoring = {
   clusterContainerizationCheckInterval: '0 2 * * *', // Daily at 2 AM
 };
 
+const cost_monitoring_intervals = {
+  monitor_cost_interval: '1 hours',
+};
+
 // User account monitoring configuration
 const userAccountMonitoring = {
   passwordExpiryAlertDaysForUser: [10, 3, 1],
@@ -33,4 +37,5 @@ module.exports = {
   ...cluster_monitoring,
   ...lz_monitoring_intervals,
   ...userAccountMonitoring,
+  ...cost_monitoring_intervals,
 };
