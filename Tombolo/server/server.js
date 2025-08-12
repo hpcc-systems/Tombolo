@@ -115,7 +115,7 @@ const status = require('./routes/statusRoutes');
 const instanceSettings = require('./routes/instanceRoutes');
 const costMonitoring = require('./routes/costMonitoringRoutes');
 const landingZoneMonitoring = require('./routes/landingZoneMonitoring');
-const clusterMonitoring = require('./routes/clusterMonitoring');
+const clusterMonitoring = require('./routes/clusterMonitoringRoutes');
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -130,7 +130,7 @@ app.use('/api/apikeys', api);
 
 // Validate access token and csrf tokens, all routes below require these
 app.use(validateToken);
-// app.use(doubleCsrfProtection);
+app.use(doubleCsrfProtection);
 
 // Authenticated routes
 app.use('/api/user', users);

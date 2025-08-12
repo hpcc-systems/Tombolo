@@ -21,9 +21,9 @@ const {
 const {
   scheduleClusterTimezoneOffset,
   createClusterUsageHistoryJob,
+  startClusterMonitoring,
   checkClusterReachability,
   checkClusterContainerization,
-  startClusterStatusMonitoring,
 } = require('../jobSchedularMethods/clusterJobs.js');
 const {
   scheduleJobStatusPolling,
@@ -175,7 +175,7 @@ class JobScheduler {
       await startLzFileMovementMonitoring.call(this);
       await startLzFileCountMonitoring.call(this);
       await startLzSpaceUsageMonitoring.call(this);
-      await startClusterStatusMonitoring.call(this);
+      await startClusterMonitoring.call(this);
       logger.info('-----------------------------');
       logger.info('Server is finished intializing, and is now running');
       logger.info('-----------------------------');
@@ -315,6 +315,13 @@ class JobScheduler {
     return createClusterUsageHistoryJob.call(this);
   }
 
+  startClusterMonitoring({ clusterMonitoring_id, cron }) {
+    return startClusterMonitoring.call(this, {
+      clusterMonitoring_id,
+      cron,
+    });
+  }
+
   scheduleJobStatusPolling() {
     return scheduleJobStatusPolling.call(this);
   }
@@ -444,8 +451,8 @@ class JobScheduler {
   }
 
   // Cluster Status Monitoring
-  startClusterStatusMonitoring() {
-    return startClusterStatusMonitoring.call(this);
+  startClusterMonitoring() {
+    return startClusterMonitoring.call(this);
   }
 }
 

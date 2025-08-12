@@ -17,7 +17,7 @@ const CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME =
   'checkIfClusterIsContainerized.js';
 
 // Cluster status monitoring bree job
-async function startClusterStatusMonitoring() {
+async function startClusterMonitoring() {
   try {
     let jobName = 'cluster-monitoring' + new Date().getTime();
     this.bree.add({
@@ -154,5 +154,5 @@ module.exports = {
   createClusterUsageHistoryJob,
   checkClusterReachability,
   checkClusterContainerization,
-  startClusterStatusMonitoring,
+  startClusterMonitoring,
 };

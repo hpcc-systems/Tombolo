@@ -424,7 +424,7 @@ router.get(
 
       // Remove junction table attributes and rename the domain object keys
       const response = domains.map(domain => {
-        return { id: domain['asr_domain.id'], name: domain['asr_domain.name'] };
+        return { id: domain['AsrDomain.id'], name: domain['AsrDomain.name'] };
       });
 
       return res.status(200).json(response);
@@ -459,10 +459,10 @@ router.get(
       // remove junction table attributes and rename the product object keys
       const response = productCategories.map(product => {
         return {
-          id: product['asr_product.id'],
-          name: product['asr_product.name'],
-          shortCode: product['asr_product.shortCode'],
-          tier: product['asr_product.tier'],
+          id: product['AsrProduct.id'],
+          name: product['AsrProduct.name'],
+          shortCode: product['AsrProduct.shortCode'],
+          tier: product['AsrProduct.tier'],
         };
       });
 
