@@ -60,7 +60,7 @@ function MonitoringDetailsModal({
 
   // Get cluster names from cluster IDs
   const getClusterNames = (clusterIds) => {
-    if (!clusterIds || clusterIds.length === 0) return 'None';
+    if (!clusterIds || clusterIds.length === 0) return [];
 
     // "*" means all clusters
     if (clusterIds[0] === '*') return clusters.map((cluster) => cluster.name);
