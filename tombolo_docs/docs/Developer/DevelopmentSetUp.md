@@ -1,5 +1,5 @@
 ---
-sidebar_position: -96
+sidebar_position: -95
 title: Development Setup
 ---
 
