@@ -47,7 +47,7 @@ fi
 
 git fetch origin --quiet
 
-# Check for uncommitted changes before switching
+# Check for uncommitted changes
 UNSTAGED=$(git status --porcelain)
 if [[ -n $UNSTAGED ]]; then
     warn "You have uncommitted changes:"
@@ -56,14 +56,12 @@ if [[ -n $UNSTAGED ]]; then
     exit 1
 fi
 
-# Check if source branch exists locally or remotely
+# Check if branches exist
 if ! git show-ref --verify --quiet "refs/heads/$source_branch" &&
    ! git ls-remote --exit-code --heads origin "$source_branch" &>/dev/null; then
     error "Source branch '$source_branch' does not exist locally or remotely."
     exit 1
 fi
-
-# Check if target branch exists locally or remotely
 if ! git show-ref --verify --quiet "refs/heads/$target_branch" &&
    ! git ls-remote --exit-code --heads origin "$target_branch" &>/dev/null; then
     error "Target branch '$target_branch' does not exist locally or remotely."
@@ -81,28 +79,39 @@ fi
 git merge --ff-only "origin/$target_branch" &>/dev/null
 ok "Target branch '$target_branch' is up to date with 'origin/$target_branch'"
 
-# Attempt merge quietly
-ok "Checking for changes to merge from '$source_branch' into '$target_branch'"
-git merge "$source_branch" --no-commit --no-ff &>/dev/null
-MERGE_STATUS=$?
+ok "Merging from '$source_branch' into '$target_branch'"
 
-if [[ $MERGE_STATUS -eq 0 ]]; then
-    # Check if there are actual changes
+if [[ "$target_branch" == "master" ]]; then
+    # Squash merge to keep master linear
+    git merge --squash "$source_branch" &>/dev/null
     if git diff-index --quiet HEAD --; then
         warn "Target branch '$target_branch' is already up-to-date with '$source_branch'. Nothing to merge."
         git merge --abort &>/dev/null
         exit 0
     fi
-
-    git commit -s --no-edit &>/dev/null
-    git push origin "$target_branch" &>/dev/null
-    ok "Upmerge completed to '$target_branch'"
+    git commit -s -m "Upmerge from $source_branch" &>/dev/null
 else
-    error "Merge conflicts detected during upmerge. Please resolve manually."
-    exit 1
+    # Regular merge for candidates (preserve history)
+    git merge "$source_branch" --no-commit --no-ff &>/dev/null
+    MERGE_STATUS=$?
+    if [[ $MERGE_STATUS -eq 0 ]]; then
+        if git diff-index --quiet HEAD --; then
+            warn "Target branch '$target_branch' is already up-to-date with '$source_branch'. Nothing to merge."
+            git merge --abort &>/dev/null
+            exit 0
+        fi
+        git commit -s --no-edit &>/dev/null
+    else
+        error "Merge conflicts detected during upmerge. Please resolve manually."
+        exit 1
+    fi
 fi
 
-# Warn about untracked files after merge
+# Push the updated target branch
+git push origin "$target_branch" &>/dev/null
+ok "Upmerge completed to '$target_branch'"
+
+# Warn about untracked files
 UNTRACKED_COUNT=$(git ls-files --others --exclude-standard | wc -l | xargs)
 if [[ $UNTRACKED_COUNT -gt 0 ]]; then
     warn "There are still $UNTRACKED_COUNT untracked files after upmerge."
