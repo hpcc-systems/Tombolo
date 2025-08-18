@@ -209,9 +209,6 @@ module.exports = (sequelize, DataTypes) => {
         }
 
         if (costInfo === null || !('clusterCostData' in costInfo)) {
-          logger.info(
-            'getClusterDataTotals: clusterCostData not found in metaData'
-          );
           continue;
         }
         const clusterCostInfo = costInfo.clusterCostData;

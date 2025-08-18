@@ -224,9 +224,6 @@ async function monitorCost() {
             true
           );
 
-          logger.info('>>>>>>> startDate', startDate);
-          logger.info('>>>>>>> endDate', endDate);
-
           // NOTE: If making changes for daily, weekly, etc. Update this logic
           if (isNewDay) {
             await markDataAnalyzed(costMonitor.id, clusterId, applicationId);
@@ -265,11 +262,6 @@ async function monitorCost() {
             StartDate: startDate,
             EndDate: endDate,
           });
-
-          // logger.info(
-          //   '>>>>>>> response',
-          //   JSON.stringify(response.Workunits?.ECLWorkunit, null, 2)
-          // );
 
           // Filter for failed or completed workunits
           const terminalWorkUnits =

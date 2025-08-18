@@ -59,7 +59,6 @@ function createCMNotificationPayload({
       Issue: `Cost threshold of ${threshold} passed`,
       'Total Summed Cost': summedCost,
       clusters: erroringClusters.map(cluster => {
-        logger.error('clusterObj in create notification', cluster);
         return {
           totalCost: cluster.totalCost,
           fileAccessCost: cluster.fileAccessCost,
@@ -340,8 +339,6 @@ async function analyzeClusterCost(
     asrSpecificMetaData,
   } = await getAsrData(costMonitoring);
 
-  logger.error('erroringClusters', erroringClusters);
-
   // Build a notification and include all of the clusters past threshold.
   const notificationPayload = createCMNotificationPayload({
     isSummed,
@@ -382,7 +379,6 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       (sum, costObj) => sum + costObj.totalCost,
       0
     );
-    logger.info('summedAmount', summedCost);
     if (summedCost < threshold) {
       parentPort &&
         parentPort.postMessage({
@@ -568,7 +564,6 @@ async function analyzeCost() {
             level: 'error',
             text: `Failed to analyzeCost ${costMonitoring.id}: ${err.message}`,
           });
-          logger.error(`Failed to analyzeCost ${costMonitoring.id}: `, err);
         } else {
           logger.error(`Failed to analyzeCost ${costMonitoring.id}: `, err);
         }
