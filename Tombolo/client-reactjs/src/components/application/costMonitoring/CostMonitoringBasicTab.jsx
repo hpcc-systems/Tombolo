@@ -1,12 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Form, Select, Input, Checkbox, Card } from 'antd';
+import { Form, Select, Input, Card } from 'antd';
 import { matches } from 'validator';
 import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
 import { useSelector } from 'react-redux';
 import InfoDrawer from '../../common/InfoDrawer';
-import { InfoCircleOutlined } from '@ant-design/icons';
-
-import styles from './costMonitoring.module.css';
 
 const { Option } = Select;
 
@@ -100,29 +97,18 @@ function CostMonitoringBasicTab({
           <Input.TextArea placeholder="Enter description" />
         </Form.Item>
         <Form.Item
-          label="Scope"
+          label="Monitor By"
           name="monitoringScope"
-          rules={[{ required: true, message: 'Select at least one cluster' }]}>
-          <Select placeholder="Select a moniotoring scope" onChange={(value) => setMonitoringScope(value)}>
+          rules={[{ required: true, message: 'Select a scope to monitor by' }]}>
+          <Select placeholder="Select a scope to monitor by" onChange={(value) => setMonitoringScope(value)}>
             <Option key="cm-scope-users" value="users">
               Users
             </Option>
-            <Option key="cm-scope-users" value="clusters">
+            <Option key="cm-scope-clusters" value="clusters">
               Clusters
             </Option>
           </Select>
         </Form.Item>
-        <div className={styles.basicTabSummedContainer}>
-          <Form.Item label={null} name="isSummed" valuePropName="checked" style={{ marginBottom: 0 }}>
-            <Checkbox name="isSummed">Sum Costs</Checkbox>
-          </Form.Item>
-          <InfoCircleOutlined
-            className={styles.infoIcon}
-            onClick={() => {
-              setShowUserGuide(true);
-            }}
-          />
-        </div>
         <Form.Item
           label="Clusters"
           name="clusterIds"
