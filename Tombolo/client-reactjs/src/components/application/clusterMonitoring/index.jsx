@@ -14,7 +14,6 @@ import AddEditModal from './AddEditModal/AddEditModal.jsx';
 import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '../../../hooks/useMonitoringType';
 import ApproveRejectModal from './ApproveRejectModal.jsx';
-import ClusterMonitoringFilters from './ClusterMonitoringFilters';
 
 // Constants
 const monitoringTypeName = 'Cluster Monitoring';
@@ -23,7 +22,6 @@ function ClusterMonitoring() {
   //Redux
   const {
     application: { applicationId },
-    clusters,
   } = useSelector((state) => state.applicationReducer);
 
   //get user roles
@@ -42,8 +40,8 @@ function ClusterMonitoring() {
   const [displayApproveRejectModal, setApproveRejectModal] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [duplicatingData, setDuplicatingData] = useState({ isDuplicating: false }); // CM to be duplicated
-  const [filters, setFilters] = useState({});
-  const [filtersVisible, setFiltersVisible] = useState(true);
+
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const [searchTerm, setSearchTerm] = useState('');
 
   // Hooks
@@ -85,15 +83,7 @@ function ClusterMonitoring() {
   //JSX
   return (
     <>
-      <BreadCrumbs
-        extraContent={
-          <ActionButton
-            filtersVisible={filtersVisible}
-            setFiltersVisible={setFiltersVisible}
-            setDisplayAddEditModal={setDisplayAddEditModal}
-          />
-        }
-      />
+      <BreadCrumbs extraContent={<ActionButton setDisplayAddEditModal={setDisplayAddEditModal} />} />
 
       {displayAddEditModal && (
         <AddEditModal
@@ -123,14 +113,7 @@ function ClusterMonitoring() {
           productCategories={productCategories}
         />
       )}
-      <ClusterMonitoringFilters
-        setFiltersVisible={setFiltersVisible}
-        setFilters={setFilters}
-        filters={filters}
-        clusters={clusters}
-        filtersVisible={filtersVisible}
-        setSearchTerm={setSearchTerm}
-      />
+
       <ApproveRejectModal
         displayApproveRejectModal={displayApproveRejectModal}
         setApproveRejectModal={setApproveRejectModal}

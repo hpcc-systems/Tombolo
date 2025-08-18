@@ -288,9 +288,9 @@ const deleteClusterMonitoring = async (req, res) => {
       { where: { id: ids }, transaction }
     );
 
-    // Soft-delete rows (sets deletedAt)
-    await ClusterMonitoring.destroy({
-      where: { id: ids },
+    await ClusterMonitoring.handleDelete({
+      id: ids,
+      deletedByUserId: req.user.id,
       transaction,
     });
 
