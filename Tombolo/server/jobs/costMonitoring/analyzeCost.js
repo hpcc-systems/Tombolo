@@ -8,6 +8,7 @@ const {
   Cluster,
   AsrDomain,
   AsrProduct,
+  Integration,
 } = require('../../models');
 const {
   createNotificationPayload,
@@ -21,6 +22,17 @@ const _ = require('lodash');
 const notificationPrefix = 'CM';
 const domainMap = new Map();
 const productMap = new Map();
+let asrEnabled = null;
+
+async function checkIfAsrEnabled() {
+  if (asrEnabled === null) {
+    const asrIntegration = await Integration.findOne({
+      where: { name: 'ASR' },
+    });
+    asrEnabled = !!asrIntegration;
+  }
+  return asrEnabled;
+}
 
 function createCMNotificationPayload({
   isSummed,
@@ -103,7 +115,9 @@ async function getAsrData(costMonitoring) {
     domainId = null,
     product = null,
     domain = null;
-  if (costMonitoring.metaData.asrSpecificMetaData?.domain) {
+
+  const asrEnabled = await checkIfAsrEnabled();
+  if (asrEnabled && costMonitoring.metaData.asrSpecificMetaData?.domain) {
     productId = costMonitoring.metaData.asrSpecificMetaData.productCategory;
     domainId = costMonitoring.metaData.asrSpecificMetaData.domain;
 
@@ -159,6 +173,9 @@ async function sendNocNotification(
   timezoneOffset
 ) {
   try {
+    const asrEnabled = await checkIfAsrEnabled();
+    if (!asrEnabled || !domain) return;
+
     const severityRecipients = domain.severityAlertRecipients;
     const severityThresholdPassed =
       costMonitoring.metaData.asrSpecificMetaData.severity >=

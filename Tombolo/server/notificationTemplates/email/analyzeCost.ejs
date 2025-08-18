@@ -116,7 +116,7 @@
                     <tr class="section-table-td">
                         <td class="section-table-td"> Issue</td>
                         <td class="section-table-td">
-                            <% if (Object.keys(issue).includes('Users')) { %>>
+                            <% if (Object.keys(issue).includes('Users')) { %>
                                 <% Object.keys(issue).forEach(function(key) { %>
                                     <% if (key === 'Users' && Array.isArray(issue[key])) { %>
                                         <div class='list'>
