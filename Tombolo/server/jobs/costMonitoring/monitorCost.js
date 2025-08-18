@@ -78,23 +78,6 @@ async function markDataAnalyzed(costMonitoringId, clusterId, applicationId) {
   }
 }
 
-// TODO: Need a way to mark old data if not the start of day (isNewDay !== true)
-async function getCostMonitoringData(
-  monitoringId,
-  clusterId,
-  applicationId,
-  monitoringDate
-) {
-  return await CostMonitoringData.create({
-    monitoringId,
-    applicationId,
-    date: monitoringDate,
-    clusterId,
-    usersCostInfo: {},
-    analyzed: false,
-  });
-}
-
 /**
  * Handles the monitoring logs by either creating a new log entry or updating an existing one
  * @param {?import('../../models').MonitoringLog} inputMonitoringLog - The existing monitoring log entry or null if none exists
@@ -232,8 +215,8 @@ async function monitorCost() {
 
           // Get start and end date
           const {
-            nowWithOffset: endDate,
-            hourAgoWithOffset: startDate,
+            endTime: endDate,
+            startTime: startDate,
             isNewDay,
           } = getStartAndEndTime(
             monitoringLog ? monitoringLog.scan_time : null,
@@ -241,18 +224,24 @@ async function monitorCost() {
             true
           );
 
+          logger.info('>>>>>>> startDate', startDate);
+          logger.info('>>>>>>> endDate', endDate);
+
           // NOTE: If making changes for daily, weekly, etc. Update this logic
           if (isNewDay) {
             await markDataAnalyzed(costMonitor.id, clusterId, applicationId);
           }
 
           // Get costMonitoringData
-          const costMonitoringData = await getCostMonitoringData(
-            costMonitor.id,
-            clusterId,
+          const costMonitoringData = {
+            monitoringId: costMonitor.id,
             applicationId,
-            new Date()
-          );
+            date: new Date(),
+            clusterId,
+            usersCostInfo: {},
+            metaData: {},
+            analyzed: false,
+          };
 
           // Get cluster options
           const clusterOptions = getClusterOptions(
@@ -277,6 +266,11 @@ async function monitorCost() {
             EndDate: endDate,
           });
 
+          // logger.info(
+          //   '>>>>>>> response',
+          //   JSON.stringify(response.Workunits?.ECLWorkunit, null, 2)
+          // );
+
           // Filter for failed or completed workunits
           const terminalWorkUnits =
             response.Workunits?.ECLWorkunit?.filter(
@@ -286,27 +280,80 @@ async function monitorCost() {
 
           // Iterate work Units
           terminalWorkUnits.forEach(
-            ({ Owner, CompileCost, FileAccessCost, ExecuteCost }) => {
-              if (!costMonitoringData.usersCostInfo[Owner]) {
-                costMonitoringData.usersCostInfo[Owner] = {
-                  compileCost: CompileCost,
-                  fileAccessCost: FileAccessCost,
-                  executeCost: ExecuteCost,
+            ({
+              Owner,
+              CompileCost,
+              FileAccessCost,
+              ExecuteCost,
+              Wuid,
+              Jobname,
+            }) => {
+              if (!costMonitoringData.hasOwnProperty('metaData'))
+                costMonitoringData.metaData = {};
+              if (!costMonitoringData.metaData.hasOwnProperty('wuCostData'))
+                costMonitoringData.metaData.wuCostData = {};
+              if (!costMonitoringData.metaData.wuCostData.hasOwnProperty(Wuid))
+                costMonitoringData.metaData.wuCostData[Wuid] = {
+                  jobName: '',
+                  compileCost: 0,
+                  executeCost: 0,
+                  fileAccessCost: 0,
+                  totalCost: 0,
                 };
-                return;
-              }
+              if (!costMonitoringData.usersCostInfo.hasOwnProperty(Owner))
+                costMonitoringData.usersCostInfo[Owner] = {
+                  compileCost: 0,
+                  executeCost: 0,
+                  fileAccessCost: 0,
+                  totalCost: 0,
+                };
 
+              if (
+                !costMonitoringData.metaData.hasOwnProperty('clusterCostData')
+              )
+                costMonitoringData.metaData.clusterCostData = {
+                  compileCost: 0,
+                  executeCost: 0,
+                  fileAccessCost: 0,
+                  totalCost: 0,
+                };
+
+              const totalCost = CompileCost + ExecuteCost + FileAccessCost;
+
+              // Set clusterCostData to aggregate cost for all workunits
+              costMonitoringData.metaData.clusterCostData.fileAccessCost +=
+                FileAccessCost;
+              costMonitoringData.metaData.clusterCostData.compileCost +=
+                CompileCost;
+              costMonitoringData.metaData.clusterCostData.executeCost +=
+                ExecuteCost;
+              costMonitoringData.metaData.clusterCostData.totalCost +=
+                totalCost;
+
+              // Set wuCostData for specific workunit
+              costMonitoringData.metaData.wuCostData[Wuid].jobName = Jobname;
+              costMonitoringData.metaData.wuCostData[Wuid].compileCost =
+                CompileCost;
+              costMonitoringData.metaData.wuCostData[Wuid].executeCost =
+                ExecuteCost;
+              costMonitoringData.metaData.wuCostData[Wuid].fileAccessCost =
+                FileAccessCost;
+              costMonitoringData.metaData.wuCostData[Wuid].totalCost =
+                totalCost;
+
+              // Set userCostInfo for a specific user
               costMonitoringData.usersCostInfo[Owner].compileCost +=
                 CompileCost;
               costMonitoringData.usersCostInfo[Owner].executeCost +=
                 ExecuteCost;
               costMonitoringData.usersCostInfo[Owner].fileAccessCost +=
                 FileAccessCost;
+              costMonitoringData.usersCostInfo[Owner].totalCost += totalCost;
             }
           );
 
           // Save costMonitoringData on each iteration
-          await costMonitoringData.save();
+          await CostMonitoringData.create({ ...costMonitoringData });
 
           // If monitoring log doesn't exist create it. If it does update scan time
           await handleMonitorLogs(
