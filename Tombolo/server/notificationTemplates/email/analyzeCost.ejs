@@ -54,6 +54,10 @@
       .indented {
         margin-left: 12px;
       }
+
+      .indented-2 {
+        margin-left: 18px;
+      }
     </style>
 </head>
 
@@ -112,28 +116,50 @@
                     <tr class="section-table-td">
                         <td class="section-table-td"> Issue</td>
                         <td class="section-table-td">
-                            <% Object.keys(issue).forEach(function(key) { %>
-                                <% if (key === 'Users' && Array.isArray(issue[key])) { %>
-                                    <div class='list'>
-                                        <% issue[key].forEach(function(user) { %>
-                                            <span><%= user.username %>&apos;s cost: <%= user.totalCost %></span><br>
-                                        <% }) %>
-                                    </div>
-                                <% } else if (key === 'clusters' && Array.isArray(issue[key])) { %>
-                                    <div class="list">
-                                        <% issue[key].forEach(function(cluster, index) { %>
-                                            <div>
-                                                <strong>Cluster <%= index + 1 %>:</strong><br>
-                                                <span class="indented">Name: <%= cluster.ClusterName || 'N/A' %></span><br>
-                                                <span class="indented">Discovered At: <%= cluster['Discovered At'] || 'N/A' %></span>
+                            <% if (Object.keys(issue).includes('Users')) { %>>
+                                <% Object.keys(issue).forEach(function(key) { %>
+                                    <% if (key === 'Users' && Array.isArray(issue[key])) { %>
+                                        <div class='list'>
+                                            <% issue[key].forEach(function(user) { %>
+                                                <span><%= user.username %>&apos;s cost: <%= user.totalCost %></span><br>
+                                            <% }) %>
+                                        </div>
+                                    <% } else if (key === 'clusters' && Array.isArray(issue[key])) { %>
+                                        <div class="list">
+                                            <% issue[key].forEach(function(cluster, index) { %>
+                                                <div>
+                                                    <strong>Cluster <%= index + 1 %>:</strong><br>
+                                                    <span class="indented">Name: <%= cluster.ClusterName || 'N/A' %></span><br>
+                                                    <span class="indented">Discovered At: <%= cluster['Discovered At'] || 'N/A' %></span>
+                                                </div>
+                                                <% if (index < issue[key].length - 1) { %><br><% } %>
+                                            <% }) %>
+                                        </div>
+                                    <% } else { %>
+                                        <div><span> <%= key %> : </span> <%= issue[key] %></div>
+                                    <% } %>
+                                <%}) %>
+                            <% } else { %>
+                                    <% Object.keys(issue).forEach(function(key) { %>
+                                        <% if (key === 'clusters' && Array.isArray(issue[key])) { %>
+                                            <div class="list">
+                                                <% issue[key].forEach(function(cluster, index) { %>
+                                                    <div>
+                                                        <strong><%= cluster.clusterName %>:</strong><br>
+                                                        <span class="indented">Total Cost: <%= cluster.totalCost %></span><br>
+                                                        <span class="indented-2">Compile Cost: <%= cluster.compileCost %></span><br>
+                                                        <span class="indented-2">Execute Cost: <%= cluster.executeCost %></span><br>
+                                                        <span class="indented-2">File Access Cost: <%= cluster.fileAccessCost %></span><br>
+                                                        <span class="indented">Discovered At: <%= cluster['Discovered At'] || 'N/A' %></span>
+                                                    </div>
+                                                    <% if (index < issue[key].length - 1) { %><br><% } %>
+                                                <% }) %>
                                             </div>
-                                            <% if (index < issue[key].length - 1) { %><br><% } %>
-                                        <% }) %>
-                                    </div>
-                                <% } else { %>
-                                    <div><span> <%= key %> : </span> <%= issue[key] %></div>
-                                <% } %>
-                            <%}) %>
+                                        <% } else { %>
+                                            <div><span> <%= key %> : </span> <%= issue[key] %></div>
+                                        <% } %>
+                                    <%}) %>
+                            <% } %>
                         </td>
                     </tr>
 
