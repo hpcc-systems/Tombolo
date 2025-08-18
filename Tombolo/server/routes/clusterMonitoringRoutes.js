@@ -19,7 +19,7 @@ const {
   evaluateMonitoringPayload,
   bulkUpdateContacts,
   deleteMonitoringPayload,
-} = require('../middlewares/clusterStatusMonitoringMiddleware');
+} = require('../middlewares/clusterMonitoringMiddleware');
 
 // Create
 router.post(
@@ -44,7 +44,7 @@ router.put(
 
 // Start and pause
 router.patch(
-  '/toggleStatus',
+  '/toggle',
   validate(monitoringIdOnBody),
   toggleClusterMonitoringStatus
 );

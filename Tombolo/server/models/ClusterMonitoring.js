@@ -2,7 +2,7 @@
 
 const { Model } = require('sequelize');
 const { DeleteMixin } = require('../utils/modelMixins/DeleteMixin');
-const CLUSTER_MONITORING_TYPES = ['status', 'usage'];
+const clusterMonitoringTypes = ['status', 'usage'];
 
 module.exports = (sequelize, DataTypes) => {
   class ClusterMonitoring extends DeleteMixin(Model) {
@@ -59,7 +59,7 @@ module.exports = (sequelize, DataTypes) => {
       clusterMonitoringType: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: false,
-        defaultValue: ['status', 'usage'],
+        defaultValue: clusterMonitoringTypes,
       },
       isActive: {
         allowNull: false,
