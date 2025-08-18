@@ -7,7 +7,7 @@ const {
   MonitoringLog,
   MonitoringType,
 } = require('../../models');
-const { WorkunitsService } = require('@hpcc-js/comms');
+const { Workunit } = require('@hpcc-js/comms');
 const { getCluster } = require('../../utils/hpcc-util');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
@@ -20,40 +20,50 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
  * with applied offset, either as Date objects or ISO strings based on toIso parameter
  */
 function getStartAndEndTime(lastScanTime, offset = 0, toIso = false) {
-  const now = new Date();
-  const offsetMs = offset * 60 * 1000; // 240 minutes = 4 hours
+  const nowUtc = new Date();
+  const offsetMs = offset * 60 * 1000;
 
-  const nowWithOffset = new Date(now.getTime() + offsetMs);
+  // Convert to "local" time by adding the offset for both points
+  const nowLocal = new Date(nowUtc.getTime() + offsetMs);
 
-  let startTime;
+  let startLocal;
   let isNewDay = false;
+
   if (lastScanTime) {
-    const lastScanWithOffset = new Date(
-      new Date(lastScanTime).getTime() - offsetMs
-    );
-    isNewDay = lastScanWithOffset.getDate() !== nowWithOffset.getDate();
+    const lastLocal = new Date(new Date(lastScanTime).getTime() + offsetMs);
+
+    // Compare local calendar dates
+    isNewDay =
+      lastLocal.getFullYear() !== nowLocal.getFullYear() ||
+      lastLocal.getMonth() !== nowLocal.getMonth() ||
+      lastLocal.getDate() !== nowLocal.getDate();
 
     if (isNewDay) {
-      startTime = new Date(nowWithOffset);
-      startTime.setHours(0, 0, 0, 0);
+      // Start at local midnight of the current day
+      startLocal = new Date(nowLocal);
+      startLocal.setHours(0, 0, 0, 0);
     } else {
-      startTime = lastScanWithOffset;
+      startLocal = lastLocal;
     }
   } else {
-    const oneHourMs = 60 * 60 * 1000;
-    startTime = new Date(now.getTime() - oneHourMs + offsetMs);
+    // First run: take the last hour in local time
+    startLocal = new Date(nowLocal.getTime() - 60 * 60 * 1000);
   }
+
+  // Convert back to UTC instants for return/consumption
+  const endUtc = new Date(nowLocal.getTime() - offsetMs);
+  const startUtc = new Date(startLocal.getTime() - offsetMs);
 
   if (toIso) {
     return {
-      endTime: nowWithOffset.toISOString(),
-      startTime: startTime.toISOString(),
+      endTime: endUtc.toISOString(),
+      startTime: startUtc.toISOString(),
       isNewDay,
     };
   }
   return {
-    endTime: nowWithOffset,
-    startTime,
+    endTime: endUtc,
+    startTime: startUtc,
     isNewDay,
   };
 }
@@ -253,19 +263,16 @@ async function monitorCost() {
           // Set the new scanTime
           newScanTime = new Date();
 
-          const connection = new WorkunitsService(clusterOptions);
-
           // Get work Units for the last hour where their state is terminal
 
           // Query for workunits during timeframe
-          const response = await connection.WUQuery({
+          const response = await Workunit.query(clusterOptions, {
             StartDate: startDate,
             EndDate: endDate,
           });
 
-          // Filter for failed or completed workunits
           const terminalWorkUnits =
-            response.Workunits?.ECLWorkunit?.filter(
+            response.filter(
               workUnit =>
                 workUnit.State === 'failed' || workUnit.State === 'completed'
             ) || [];
@@ -280,6 +287,7 @@ async function monitorCost() {
               Wuid,
               Jobname,
             }) => {
+              // Ensure expected fields are present in costMonitoringData for JSON fields
               if (!costMonitoringData.hasOwnProperty('metaData'))
                 costMonitoringData.metaData = {};
               if (!costMonitoringData.metaData.hasOwnProperty('wuCostData'))
@@ -345,7 +353,7 @@ async function monitorCost() {
           );
 
           // Save costMonitoringData on each iteration
-          await CostMonitoringData.create({ ...costMonitoringData });
+          await CostMonitoringData.create(costMonitoringData);
 
           // If monitoring log doesn't exist create it. If it does update scan time
           await handleMonitorLogs(
