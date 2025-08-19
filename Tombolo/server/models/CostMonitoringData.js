@@ -239,18 +239,9 @@ module.exports = (sequelize, DataTypes) => {
           parseFloat(clusterCostInfo.totalCost) || 0;
 
         overallTotalCost += parseFloat(clusterCostInfo.totalCost) || 0;
-
-        // results.push({
-        //   monitoringId,
-        //   clusterId,
-        //   clusterName,
-        //   timezone_offset,
-        //   ...clusterCostInfo,
-        // });
       }
 
       return {
-        // results,
         aggregatedCostsByCluster,
         overallTotalCost,
       };
@@ -302,15 +293,6 @@ module.exports = (sequelize, DataTypes) => {
       usersCostInfo: {
         allowNull: false,
         type: DataTypes.JSON,
-      },
-      analyzed: {
-        allowNull: false,
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
-      notificationSentDate: {
-        allowNull: true,
-        type: DataTypes.DATE,
       },
       metaData: {
         allowNull: true,

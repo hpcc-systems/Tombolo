@@ -68,26 +68,6 @@ function getStartAndEndTime(lastScanTime, offset = 0, toIso = false) {
   };
 }
 
-async function markDataAnalyzed(costMonitoringId, clusterId, applicationId) {
-  try {
-    const costMonitoringData = await CostMonitoringData.findOne({
-      where: { monitoringId: costMonitoringId, clusterId, applicationId },
-    });
-    if (!costMonitoringData) {
-      return;
-    }
-
-    costMonitoringData.analyzed = true;
-    await costMonitoringData.save();
-  } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `monitorCost: Error in markDataAnalyzed: ${err.message}`,
-      });
-  }
-}
-
 /**
  * Handles the monitoring logs by either creating a new log entry or updating an existing one
  * @param {?import('../../models').MonitoringLog} inputMonitoringLog - The existing monitoring log entry or null if none exists
@@ -224,20 +204,11 @@ async function monitorCost() {
           });
 
           // Get start and end date
-          const {
-            endTime: endDate,
-            startTime: startDate,
-            isNewDay,
-          } = getStartAndEndTime(
+          const { endTime: endDate, startTime: startDate } = getStartAndEndTime(
             monitoringLog ? monitoringLog.scan_time : null,
             timezoneOffset,
             true
           );
-
-          // NOTE: If making changes for daily, weekly, etc. Update this logic
-          if (isNewDay) {
-            await markDataAnalyzed(costMonitor.id, clusterId, applicationId);
-          }
 
           // Get costMonitoringData
           const costMonitoringData = {

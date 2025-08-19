@@ -48,15 +48,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.JSON,
       },
-      analyzed: {
-        allowNull: false,
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
-      },
-      notificationSentDate: {
-        allowNull: true,
-        type: Sequelize.DATE,
-      },
       metaData: {
         allowNull: true,
         type: Sequelize.JSON,

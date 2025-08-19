@@ -9,12 +9,14 @@ const {
   AsrDomain,
   AsrProduct,
   Integration,
+  SentNotification,
 } = require('../../models');
 const {
   createNotificationPayload,
   findLocalDateTimeAtCluster,
   generateNotificationId,
   nocAlertDescription,
+  generateNotificationIdempotencyKey,
 } = require('../jobMonitoring/monitorJobsUtil');
 const { Op } = require('sequelize');
 const _ = require('lodash');
@@ -35,8 +37,23 @@ async function checkIfAsrEnabled() {
   return asrEnabled;
 }
 
+function buildCMIdempotencyKey({ costMonitoring, totalCost }) {
+  const threshold =
+    costMonitoring.metaData.notificationMetaData.notificationCondition;
+  const thresholdSignature = `sum:${costMonitoring.isSummed}:gte:${threshold}`;
+  const usersSignature = costMonitoring.metaData.users?.join(',') ?? '';
+  return generateNotificationIdempotencyKey({
+    prefix: notificationPrefix,
+    applicationId: costMonitoring.applicationId,
+    monitoringId: costMonitoring.id,
+    scope: costMonitoring.monitoringScope,
+    clusterIds: costMonitoring.clusterIds,
+    dayBucket: new Date().toISOString().split('T')[0],
+    specificSignature: `${usersSignature}|${thresholdSignature}|total:${totalCost.toFixed(2)}`,
+  });
+}
+
 function createCMNotificationPayload({
-  isSummed,
   monitoringType,
   costMonitoring,
   threshold,
@@ -48,7 +65,7 @@ function createCMNotificationPayload({
   secondaryContacts,
   notifyContacts,
   asrSpecificMetaData,
-  totalErroringCost,
+  idempotencyKey,
 }) {
   let description = '';
   let issueObject = {};
@@ -77,7 +94,7 @@ function createCMNotificationPayload({
     description = `Cost Monitoring (${costMonitoring.monitoringName}) detected that users have passed the cost threshold`;
     issueObject = {
       Issue: `Cost monitoring threshold of ${threshold} passed`,
-      'Total Cost': totalErroringCost,
+      'Total Cost': summedCost,
       Users: erroringUsers,
       clusters: clusters.map(cluster => ({
         ClusterName: cluster.name || cluster.clusterName,
@@ -107,6 +124,7 @@ function createCMNotificationPayload({
     }),
     notificationOrigin: 'Cost Monitoring',
     wuId: undefined,
+    idempotencyKey,
   });
 }
 
@@ -122,7 +140,7 @@ async function getClusters(clusterIds) {
     }
   }
 
-  const retrievedClusters = Cluster.findAll({
+  const retrievedClusters = await Cluster.findAll({
     where: { id: { [Op.in]: clustersToGet } },
   });
 
@@ -216,6 +234,8 @@ async function sendNocNotification(
         timezoneOffset: timezoneOffset || 0,
       });
       delete nocNotificationPayload.metaData.cc;
+      nocNotificationPayload.metaData.idempotencyKey =
+        nocNotificationPayload.metaData.idempotencyKey + '|NOC';
       await NotificationQueue.create(nocNotificationPayload);
     }
   } catch (nocError) {
@@ -233,34 +253,21 @@ async function sendNocNotification(
   }
 }
 
-async function emailAlreadySent(monitoringId, clusterId = null) {
-  // const whereClause = { monitoringId };
-  // if (clusterId) {
-  //   whereClause.clusterId = clusterId;
-  // }
-  // Get the most recent notificationSentDate from costMonitoringData by monitoringId
-  // const lastCostMonitoringData = await CostMonitoringData.findOne({
-  //   where: whereClause,
-  //   order: [['notificationSentDate', 'DESC']],
-  // });
-  //
-  // // NOTE: Maybe allow for setting notificationFrequency on costMonitoring
-  // // Check if more than 2 hours since last notification
-  // if (
-  //   lastCostMonitoringData &&
-  //   moment().diff(
-  //     moment(lastCostMonitoringData.notificationSentDate),
-  //     'hours'
-  //   ) < 2
-  // ) {
-  //   parentPort &&
-  //     parentPort.postMessage({
-  //       level: 'info',
-  //       text: `Notification already sent for analyzeCost: ${monitoringId}`,
-  //     });
-  //   return true;
-  // }
-  return false;
+async function emailAlreadySent(idempotencyKey) {
+  const existingNotification = await SentNotification.findOne({
+    where: { idempotencyKey },
+  });
+  if (parentPort) {
+    parentPort.postMessage({
+      level: 'info',
+      text: `Cost Monitoring email already sent for idempotencyKey: ${idempotencyKey}`,
+    });
+  } else {
+    logger.info(
+      `Cost Monitoring email already sent for idempotencyKey: ${idempotencyKey}`
+    );
+  }
+  return !!existingNotification;
 }
 
 async function analyzeClusterCost(
@@ -292,9 +299,13 @@ async function analyzeClusterCost(
         });
       return;
     }
-    const alreadySent = await emailAlreadySent(costMonitoring.id);
+
+    const idempotencyKey = buildCMIdempotencyKey({
+      costMonitoring,
+      totalCost: summedCost,
+    });
+    const alreadySent = await emailAlreadySent(idempotencyKey);
     if (alreadySent) return;
-    // Build email template and send one
 
     const {
       primaryContacts,
@@ -308,7 +319,6 @@ async function analyzeClusterCost(
     );
 
     const notificationPayload = createCMNotificationPayload({
-      isSummed,
       monitoringType,
       costMonitoring,
       threshold,
@@ -318,6 +328,7 @@ async function analyzeClusterCost(
       secondaryContacts,
       notifyContacts,
       asrSpecificMetaData,
+      idempotencyKey,
     });
     await NotificationQueue.create(notificationPayload);
     parentPort &&
@@ -354,7 +365,13 @@ async function analyzeClusterCost(
     return;
   }
 
-  const alreadySent = await emailAlreadySent(costMonitoring.id);
+  const summedCost = clusterCostTotals.overallTotalCost;
+
+  const idempotencyKey = buildCMIdempotencyKey({
+    costMonitoring,
+    totalCost: summedCost,
+  });
+  const alreadySent = await emailAlreadySent(idempotencyKey);
   if (alreadySent) return;
 
   const {
@@ -366,15 +383,16 @@ async function analyzeClusterCost(
 
   // Build a notification and include all of the clusters past threshold.
   const notificationPayload = createCMNotificationPayload({
-    isSummed,
     monitoringType,
     costMonitoring,
+    summedCost,
     threshold,
     erroringClusters,
     primaryContacts,
     secondaryContacts,
     notifyContacts,
     asrSpecificMetaData,
+    idempotencyKey,
   });
 
   await NotificationQueue.create(notificationPayload);
@@ -413,10 +431,13 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       return;
     }
 
-    const alreadySent = await emailAlreadySent(costMonitoring.id);
-    if (alreadySent) return;
+    const idempotencyKey = buildCMIdempotencyKey({
+      costMonitoring,
+      totalCost: summedCost,
+    });
 
-    const totalErroringCost = summedCost;
+    const alreadySent = await emailAlreadySent(idempotencyKey);
+    if (alreadySent) return;
 
     const {
       domain,
@@ -433,7 +454,6 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       .slice(0, 5);
 
     const notificationPayload = createCMNotificationPayload({
-      isSummed: false,
       monitoringType,
       costMonitoring,
       threshold,
@@ -443,7 +463,8 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       secondaryContacts,
       notifyContacts,
       asrSpecificMetaData,
-      totalErroringCost,
+      summedCost,
+      idempotencyKey,
     });
 
     await NotificationQueue.create(notificationPayload);
@@ -483,12 +504,16 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     totalCost: total.totalCost,
   }));
 
-  const totalErroringCost = totalsCausingNotification.reduce(
+  const summedCost = totalsCausingNotification.reduce(
     (sum, total) => sum + total.totalCost,
     0
   );
 
-  const alreadySent = await emailAlreadySent(costMonitoring.id);
+  const idempotencyKey = buildCMIdempotencyKey({
+    costMonitoring,
+    totalCost: summedCost,
+  });
+  const alreadySent = await emailAlreadySent(idempotencyKey);
   if (alreadySent) return;
 
   const {
@@ -502,7 +527,6 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
   const clusters = await getClusters(clusterIds);
 
   const notificationPayload = createCMNotificationPayload({
-    isSummed: false,
     monitoringType,
     costMonitoring,
     threshold,
@@ -512,7 +536,8 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     secondaryContacts,
     notifyContacts,
     asrSpecificMetaData,
-    totalErroringCost,
+    summedCost,
+    idempotencyKey,
   });
 
   await NotificationQueue.create(notificationPayload);
@@ -528,13 +553,6 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     notificationPayload,
     clusters[0].timezone_offset
   );
-
-  const lastCostMonitoringData = await CostMonitoringData.findOne({
-    where: { monitoringId: costMonitoring.id },
-    order: [['notificationSentDate', 'DESC']],
-  });
-  lastCostMonitoringData.notificationSentDate = new Date();
-  await lastCostMonitoringData.save();
 }
 
 async function analyzeCost() {

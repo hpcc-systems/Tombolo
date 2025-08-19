@@ -626,6 +626,57 @@ async function getDomain(domainId) {
   });
 }
 
+/**
+ * Generate a deterministic, pipe-delimited notification idempotency key
+ * that can be stored and searched (e.g., as searchableNotificationId).
+ *
+ * Notes:
+ * - clusterIds and usernames (if provided) are joined by comma; if null/empty, an empty segment is used.
+ * - dayBucketIso should represent the cluster-local start-of-day expressed as a UTC ISO string.
+ * - thresholdSignature should encode the threshold logic (e.g., "sum:true:gte:500").
+ * - costSignature can encode additional cost-related invariants (e.g., a hash/version).
+ *
+ * @param {Object} params
+ * @param {string} params.prefix - A short prefix identifying the monitoring domain (e.g., "CM").
+ * @param {string} params.applicationId - Application identifier (UUID or string).
+ * @param {string} params.monitoringId - Monitoring identifier (UUID or string).
+ * @param {string} params.scope - Scope of monitoring (e.g., "clusters")
+ * @param {string[]|null} [params.clusterIds=null] - One or more cluster IDs; joined by comma if present.
+ * @param {string} params.dayBucket - ISO 8601 UTC string for the local-day bucket (start-of-day).
+ * @param {string|null} [params.specificSignature] - Optional extra signature for cost invariants or versioning.
+ * @returns {string} A pipe-delimited idempotency key suitable for indexing and lookups.
+ * @example
+ * const key = generateSearchableNotificationId({
+ *   prefix: 'CM',
+ *   applicationId: UUID,
+ *   monitoringId: UUID,
+ *   scope: 'cluster',
+ *   clusterIds: ['c1','c2'], // Could be 1 or more cluster IDs
+ *   dayBucket: '2025-08-18',
+ *   specificSignature: 'user_1,user_2|sum:true:gte:15|total:47.53'
+ * });
+ */
+function generateNotificationIdempotencyKey({
+  prefix,
+  applicationId,
+  monitoringId,
+  scope,
+  clusterIds = null,
+  dayBucket,
+  specificSignature = null,
+}) {
+  const key = [
+    prefix,
+    applicationId,
+    monitoringId,
+    scope,
+    clusterIds?.join(',') ?? '',
+    dayBucket,
+    specificSignature,
+  ];
+  return key.join('|');
+}
+
 // Generate a human readable notification ID in the format of <TEXT>_YYYYMMDD_HHMMSS_MS
 const generateNotificationId = ({ notificationPrefix, timezoneOffset }) => {
   // Get current date and time in UTC
@@ -646,9 +697,7 @@ const generateNotificationId = ({ notificationPrefix, timezoneOffset }) => {
   let milliseconds = String(now.getUTCMilliseconds()).padStart(3, '0'); // Milliseconds can be 3 digits
 
   // Construct the unique ID
-  let uniqueId = `${notificationPrefix}_${year}${month}${day}_${hours}${minutes}${seconds}_${milliseconds}`;
-
-  return uniqueId;
+  return `${notificationPrefix}_${year}${month}${day}_${hours}${minutes}${seconds}_${milliseconds}`;
 };
 
 // Generate notification payload
@@ -667,6 +716,7 @@ const createNotificationPayload = ({
   lastLogged,
   notificationDescription,
   notificationOrigin = 'Job Monitoring',
+  idempotencyKey = null,
 }) => {
   const payload = {
     type,
@@ -675,6 +725,7 @@ const createNotificationPayload = ({
     originationId,
     deliveryType: 'immediate',
     metaData: {
+      idempotencyKey,
       notificationOrigin: notificationOrigin,
       applicationId,
       subject,
@@ -966,4 +1017,5 @@ module.exports = {
   convertSecondsToHumanReadableTime,
   inferWuStartTime,
   getOwnerEmailFromUsername,
+  generateNotificationIdempotencyKey,
 };
