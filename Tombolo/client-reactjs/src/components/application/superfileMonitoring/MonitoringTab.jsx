@@ -3,6 +3,7 @@ import { Form, Input, Typography, Checkbox, Select, DatePicker } from 'antd';
 import cronstrue from 'cronstrue';
 import InfoDrawer from '../../common/InfoDrawer';
 import { InfoCircleOutlined } from '@ant-design/icons';
+import { MonitoringNameFormRules } from '../../common/FormRules';
 
 const MonitoringTab = ({
   monitoringDetails,
@@ -110,11 +111,7 @@ const MonitoringTab = ({
         }}
         disabled={disabled}
         rules={[
-          { required: true, message: 'Required filed' },
-          {
-            max: 256,
-            message: 'Maximum of 256 characters allowed',
-          },
+          ...MonitoringNameFormRules,
           {
             message: 'Monitoring with same name already exists',
             validator: (_, value) => {
