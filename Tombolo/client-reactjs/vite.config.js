@@ -18,6 +18,17 @@ export default function config({ mode }) {
         },
       }),
     ],
+    optimizeDeps: {
+      include: [
+        '@ant-design/plots',
+        '@ant-design/charts',
+        '@antv/g2',
+        '@antv/component',
+        '@antv/coord',
+        '@antv/scale',
+        'color-string',
+      ],
+    },
     css: {
       modules: {
         localsConvention: 'camelCase',
