@@ -22,6 +22,7 @@ const _ = require('lodash');
 const notificationPrefix = 'CM';
 const domainMap = new Map();
 const productMap = new Map();
+const clusterMap = new Map();
 let asrEnabled = null;
 
 async function checkIfAsrEnabled() {
@@ -107,6 +108,30 @@ function createCMNotificationPayload({
     notificationOrigin: 'Cost Monitoring',
     wuId: undefined,
   });
+}
+
+// Use the clusterMap to reduce database calls when the cluster has already been retrieved during job execution
+async function getClusters(clusterIds) {
+  let resultClusters = [];
+  let clustersToGet = [];
+  for (const clusterId of clusterIds) {
+    if (clusterMap.has(clusterId)) {
+      resultClusters.push(clusterMap.get(clusterId));
+    } else {
+      clustersToGet.push(clusterId);
+    }
+  }
+
+  const retrievedClusters = Cluster.findAll({
+    where: { id: { [Op.in]: clustersToGet } },
+  });
+
+  for (const cluster of retrievedClusters) {
+    clusterMap.set(cluster.id, cluster);
+    resultClusters.push(cluster);
+  }
+
+  return resultClusters;
 }
 
 async function getAsrData(costMonitoring) {
@@ -401,9 +426,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       asrSpecificMetaData,
     } = await getAsrData(costMonitoring);
 
-    const clusters = await Cluster.findAll({
-      where: { id: { [Op.in]: clusterIds } },
-    });
+    const clusters = await getClusters(clusterIds);
 
     const top5Users = costMonitoringTotals
       .sort((a, b) => b.totalCost - a.totalCost)
@@ -476,9 +499,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     asrSpecificMetaData,
   } = await getAsrData(costMonitoring);
 
-  const clusters = await Cluster.findAll({
-    where: { id: { [Op.in]: clusterIds } },
-  });
+  const clusters = await getClusters(clusterIds);
 
   const notificationPayload = createCMNotificationPayload({
     isSummed: false,
