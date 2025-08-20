@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const moment = require('moment');
 const { v4: uuidv4 } = require('uuid');
 const { sequelize } = require('../models');
+const { Op } = require('sequelize');
 
 // Local imports
 const logger = require('../config/logger');
@@ -23,7 +24,16 @@ const {
   generatePassword,
   sendAccountUnlockedEmail,
   deleteUser: deleteUserUtil,
+  checkIfSystemUser,
 } = require('../utils/authUtil');
+
+const whereNotSystemUser = {
+  firstName: {
+    [Op.ne]: 'System',
+  },
+  lastName: { [Op.ne]: 'User' },
+  email: { [Op.ne]: 'system-user@example.com' },
+};
 
 // Delete user with ID
 const deleteUser = async (req, res) => {
@@ -32,7 +42,7 @@ const deleteUser = async (req, res) => {
 
     const deleted = await deleteUserUtil(id, 'Admin Removal');
 
-    // If deleted count is 0, user not found
+    // If the deleted count is 0, user not found
     if (!deleted) {
       throw { status: 404, message: 'Error Removing User.' };
     }
@@ -67,7 +77,7 @@ const updateBasicUserInfo = async (req, res) => {
     const existingUser = await User.findOne({ where: { id }, transaction: t });
 
     // If user not found
-    if (!existingUser) {
+    if (!existingUser || checkIfSystemUser(existingUser)) {
       throw { status: 404, message: 'User not found' };
     }
 
@@ -151,7 +161,7 @@ const getUser = async (req, res) => {
     const { id } = req.params;
     const user = await User.findOne({ where: { id } });
 
-    if (!user) {
+    if (!user || checkIfSystemUser(user)) {
       throw { status: 404, message: 'User not found' };
     }
 
@@ -172,6 +182,7 @@ const getUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
+      where: whereNotSystemUser,
       include: [
         { model: UserRole, as: 'roles' },
         { model: UserApplication, as: 'applications' },
@@ -203,7 +214,7 @@ const changePassword = async (req, res) => {
     // Find existing user details
     const existingUser = await User.findOne({ where: { id }, transaction: t });
 
-    if (!existingUser) {
+    if (!existingUser || checkIfSystemUser(existingUser)) {
       throw { status: 404, message: 'User not found' };
     }
 
@@ -330,7 +341,7 @@ const bulkUpdateUsers = async (req, res) => {
       try {
         const existing = await User.findOne({ where: { id } });
 
-        if (!existing) {
+        if (!existing || checkIfSystemUser(existing)) {
           errors.push({ id, status: 404, message: 'User not found' });
           continue; // Skip to the next user
         }
@@ -380,7 +391,7 @@ const updateUserRoles = async (req, res) => {
     const existingUser = await User.findOne({ where: { id } });
 
     // If user not found
-    if (!existingUser) {
+    if (!existingUser || checkIfSystemUser(existingUser)) {
       throw { status: 404, message: 'User not found' };
     }
     // Create id and role pair
@@ -610,7 +621,7 @@ const resetPasswordForUser = async (req, res) => {
     const user = await User.findOne({ where: { id }, transaction });
 
     // If user not found
-    if (!user) {
+    if (!user || checkIfSystemUser(user)) {
       await transaction.rollback(); // Rollback if user is not found
       return res
         .status(404)
@@ -697,7 +708,7 @@ const unlockAccount = async (req, res) => {
     const user = await User.findOne({ where: { id } });
 
     // If user not found
-    if (!user) {
+    if (!user || checkIfSystemUser(user)) {
       return res
         .status(404)
         .json({ success: false, message: 'User not found' });
