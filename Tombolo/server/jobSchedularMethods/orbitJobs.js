@@ -46,7 +46,7 @@ async function scheduleOrbitMonitoringOnServerStart() {
       }
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('Failed to start orbit monitoring', err);
   }
 }
 

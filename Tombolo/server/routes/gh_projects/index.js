@@ -54,10 +54,7 @@ router.post('/', validate(validateCreateGhProject), async (req, res) => {
 
     return res.status(200).send({ success: true, id: project.id });
   } catch (error) {
-    logger.error('-error-----------------------------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
-
+    logger.error('gh_projects/index create: ', error);
     return res.status(500).send('Error occurred while saving project');
   }
 });
@@ -73,10 +70,7 @@ router.delete('/', validate(validateDeleteGhProject), async (req, res) => {
 
     return res.status(200).send({ success: true });
   } catch (error) {
-    logger.error('-error-----------------------------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
-
+    logger.error('gh_projects/index delete: ', error);
     return res.status(500).send('Error occurred while saving project');
   }
 });
@@ -101,9 +95,7 @@ router.get('/', validate(validateGetGhProjects), async (req, res) => {
 
     return res.status(200).send(projectList);
   } catch (error) {
-    logger.error('-error-----------------------------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
+    logger.error('gh_projects/index get: ', error);
 
     return res.status(500).send('Error occurred while retreiving credentials');
   }

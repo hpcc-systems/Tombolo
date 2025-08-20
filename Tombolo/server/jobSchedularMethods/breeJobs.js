@@ -67,7 +67,7 @@ async function removeJobFromScheduler(name) {
     }
   } catch (err) {
     // Handle error
-    logger.error(err);
+    logger.error('removeJobFromScheduler: ', err);
     return {
       success: false,
       message: err.message,
@@ -87,12 +87,15 @@ async function removeAllFromBree(namePart) {
           await this.bree.remove(job.name);
           logger.info(`📢 -Job removed from Bree ${job.name}`);
         } catch (error) {
-          logger.error(error);
+          logger.error(
+            `removeAllFromBree - Failed to remove job ${job.name}: `,
+            error
+          );
         }
       }
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('removeAllFromBree: ', err);
   }
 }
 
@@ -114,6 +117,7 @@ async function stopJob(jobName) {
       };
     }
   } catch (err) {
+    logger.error('stopJob: ', err);
     return {
       success: false,
       message: err.message,
@@ -128,6 +132,7 @@ async function stopAllJobs() {
     await this.bree.stop();
     return { success: true, jobs: allJobs };
   } catch (err) {
+    logger.error('stopAllJobs: ', err);
     return {
       success: false,
       message: err.message,
@@ -150,6 +155,7 @@ function startJob(jobName) {
       };
     }
   } catch (err) {
+    logger.error('startJob: ', err);
     return {
       success: false,
       message: err.message,
@@ -164,6 +170,7 @@ function startAllJobs() {
     this.bree.start();
     return { success: true, jobs: allJobs };
   } catch (err) {
+    logger.error('startAllJobs: ', err);
     return {
       success: false,
       message: err.message,

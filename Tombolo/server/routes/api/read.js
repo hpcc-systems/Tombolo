@@ -150,7 +150,7 @@ router.get(
         res.status(200).send(data);
       }
     } catch (err) {
-      logger.error(err);
+      logger.error('getClusterUsage: ', err);
       res.status(503).json({
         success: false,
         message: 'Failed to fetch current cluster usage',

@@ -26,7 +26,7 @@ const checkOwnerExists = async (req, res) => {
 
     return res.status(200).json({ success: true, data: exists });
   } catch (err) {
-    logger.error(`Check owner exists: ${err.message}`);
+    logger.error('Check owner exists: ', err);
     return res.status(500).json({
       success: false,
       message: err.message,

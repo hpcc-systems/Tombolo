@@ -42,7 +42,7 @@ const deleteUser = async (req, res) => {
       .status(200)
       .json({ success: true, message: 'User deleted successfully' });
   } catch (err) {
-    logger.error(`Delete user: ${err.message}`);
+    logger.error('Delete user: ', err);
     res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
@@ -185,7 +185,7 @@ const getAllUsers = async (req, res) => {
       data: users,
     });
   } catch (err) {
-    logger.error(`Get all users: ${err.message}`);
+    logger.error('Get all users: ', err);
     return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
@@ -311,7 +311,7 @@ const bulkDeleteUsers = async (req, res) => {
       data: { deletedCount },
     });
   } catch (err) {
-    logger.error(`Bulk Delete Users: ${err.message}`);
+    logger.error('Failed to bulk delete users: ', err);
     res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
@@ -362,7 +362,7 @@ const bulkUpdateUsers = async (req, res) => {
       .status(200)
       .json({ success: true, message: 'Users updated successfully' });
   } catch (err) {
-    logger.error(`Bulk update users: ${err.message}`);
+    logger.error('Failed to bulk update users: ', err);
     return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
@@ -414,7 +414,7 @@ const updateUserRoles = async (req, res) => {
       data: newRoles,
     });
   } catch (err) {
-    logger.error(`Update user roles: ${err.message}`);
+    logger.error('Update user roles: ', err);
     return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });

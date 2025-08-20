@@ -71,7 +71,7 @@ router.post(
         jobScheduler.scheduleFileMonitoringBreeJob(schedularOptions);
       }
     } catch (error) {
-      logger.error(error);
+      logger.error('superfileMonitoring/read create: ', error);
       return res
         .status(500)
         .json({ message: 'Unable to save file monitoring details' });
@@ -95,7 +95,7 @@ router.get(
 
       return res.status(200).send(superfileMonitoring);
     } catch (error) {
-      logger.error(error);
+      logger.error('superfileMonitoring/read getAll: ', error);
       return res.status(500).json({ message: 'Unable to get file monitoring' });
     }
   }
@@ -175,7 +175,7 @@ router.put(
 
       return res.status(200).send('Update successful');
     } catch (err) {
-      logger.error(err);
+      logger.error('superfileMonitoring/read update: ', err);
       return res
         .status(500)
         .json({ message: 'Failed to update monitoring status' });
@@ -198,7 +198,7 @@ router.get(
 
       return res.status(200).send(fileMonitoring);
     } catch (error) {
-      logger.error(error);
+      logger.error('superfileMonitoring/read getOne: ', error);
       return res.status(500).json({ message: 'Unable to get file monitoring' });
     }
   }
@@ -355,7 +355,7 @@ router.put(
 
       return res.status(200).send(newInfo);
     } catch (error) {
-      logger.error(error);
+      logger.error('superfileMonitoring/read update: ', error);
       return res
         .status(500)
         .json({ message: 'Unable to save file monitoring details' });

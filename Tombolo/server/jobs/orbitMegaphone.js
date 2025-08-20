@@ -214,6 +214,6 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
       return;
     });
   } catch (error) {
-    logger.error('Error while running Orbit Jobs: ' + error);
+    logger.error('Error while running Orbit Jobs: ', error);
   }
 })();

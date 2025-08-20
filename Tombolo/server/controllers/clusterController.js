@@ -599,11 +599,11 @@ const clusterUsage = async (req, res) => {
     }));
     return res.status(200).send(maxUsage);
   } catch (err) {
+    logger.error('clusterControllers clusterUsage: ', err);
     return res.status(503).json({
       success: false,
       message: 'Failed to fetch current cluster usage',
     });
-    logger.error(err);
   }
 };
 
@@ -643,7 +643,7 @@ const clusterStorageHistory = async (req, res) => {
 
     return res.status(200).send(filtered_data);
   } catch (err) {
-    logger.error(err);
+    logger.error('clusterController clusterStorageHistory: ', err);
     return res.status(503).json({
       success: false,
       message: 'Failed to fetch current cluster usage',

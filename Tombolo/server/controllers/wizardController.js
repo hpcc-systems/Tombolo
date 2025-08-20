@@ -84,7 +84,7 @@ const createInstanceSettingFirstRun = async (req, res) => {
       await assignOwnerRole(newUser.id, transaction);
       sendUpdate(res, { event: 'success', message: 'Owner role assigned.' });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Wizard failed to assign owner role: ', err);
       sendUpdate(res, {
         event: 'error',
         message: 'Failed to assign owner role.',
@@ -109,7 +109,7 @@ const createInstanceSettingFirstRun = async (req, res) => {
         message: 'Instance settings created.',
       });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Wizard failed to create instance settings: ', err);
       sendUpdate(res, {
         event: 'error',
         message: 'Failed to create instance settings.',
@@ -131,7 +131,7 @@ const createInstanceSettingFirstRun = async (req, res) => {
         message: 'Verification email sent.',
       });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Wizard failed to send verification email: ', err);
       sendUpdate(res, {
         event: 'error',
         message: 'Failed to send verification email.',
@@ -155,7 +155,7 @@ const createInstanceSettingFirstRun = async (req, res) => {
     res.end();
   } catch (err) {
     await transaction.rollback();
-    logger.error(err.message);
+    logger.error('Wizard failed: ', err);
     sendUpdate(res, {
       event: 'error',
       message: 'Setup failed due to a server error',

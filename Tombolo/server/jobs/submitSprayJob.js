@@ -93,7 +93,7 @@ const {
           );
           logger.verbose(`Metadata updated for ${Name} `);
         } catch (err) {
-          logger.error(err);
+          logger.error('submitSprayJob - updateMetaData: ', err);
         }
       }
 
@@ -216,7 +216,7 @@ const {
           });
         }
       } catch (err) {
-        logger.error(err);
+        logger.error('submitSprayJob - emailNotification: ', err);
       }
     }
 
@@ -246,7 +246,7 @@ const {
             filemonitoring_id,
           });
         } catch (err) {
-          logger.error(err);
+          logger.error('submitSprayJob - teamsNotification: ', err);
         }
       }
     }
@@ -256,11 +256,11 @@ const {
       try {
         await MonitoringNotification.bulkCreate(sentNotifications);
       } catch (err) {
-        logger.error(err);
+        logger.error('submitSprayJob - bulkCreateSentNotifications: ', err);
       }
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('submitSprayJob: ', err);
   } finally {
     parentPort ? parentPort.postMessage('done') : process.exit(0);
   }

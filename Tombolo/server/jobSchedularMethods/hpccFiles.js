@@ -103,7 +103,7 @@ async function scheduleSuperFileMonitoringOnServerStart() {
       }
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('hpccFiles - scheduleSuperFileMonitoringOnServerStart: ', err);
   }
 }
 
@@ -155,7 +155,7 @@ async function scheduleFileMonitoringOnServerStart() {
       });
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('hpccFiles - scheduleFileMonitoringOnServerStart: ', err);
   }
 }
 
@@ -177,7 +177,7 @@ async function scheduleFileMonitoring() {
 
     this.bree.start(jobName);
   } catch (err) {
-    logger.error(err);
+    logger.error('hpccFiles - scheduleFileMonitoring: ', err);
   }
 }
 

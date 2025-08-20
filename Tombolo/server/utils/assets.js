@@ -72,9 +72,7 @@ exports.fileInfo = async (applicationId, file_id) => {
           fileSizeInt64: response.FileDetail.FileSizeInt64,
         };
       } catch (error) {
-        logger.error('-error DFUInfo-----------------------------------------');
-        logger.error(error);
-        logger.error('------------------------------------------');
+        logger.error('assets DFUInfo: ', error);
         results.basic.superFileData = {
           error: error.message,
         };
@@ -115,7 +113,7 @@ exports.fileSearch = async (applicationId, keyword) => {
 
     return files || [];
   } catch (err) {
-    logger.error(err);
+    logger.error('utils/assets - fileSearch: ', err);
     throw err;
   }
 };
@@ -134,7 +132,7 @@ exports.indexInfo = async (applicationId, indexId) => {
     results.basic = index;
     return results;
   } catch (err) {
-    logger.error(err);
+    logger.error('utils/assets - indexInfo: ', err);
     throw err;
   }
 };
@@ -149,7 +147,7 @@ exports.queryInfo = async (applicationId, indexId) => {
     results.basic = query;
     return results;
   } catch (err) {
-    logger.error(err);
+    logger.error('utils/assets - queryInfo: ', err);
     throw err;
   }
 };
@@ -199,8 +197,8 @@ exports.jobInfo = async (applicationId, jobId) => {
     }
     return jobData;
   } catch (err) {
-    logger.error(err);
-    reject(err);
+    logger.error('utils/assets - jobInfo: ', err);
+    throw err;
   }
 };
 
@@ -261,7 +259,7 @@ exports.recordJobExecution = async (workerData, wuid) => {
 
     return result.dataValues.id;
   } catch (err) {
-    logger.error(err);
+    logger.error('utils/assets - recordJobExecution: ', err);
     throw err;
   }
 };
@@ -296,9 +294,7 @@ exports.createFilesandJobfiles = async ({
       job_id: id,
     });
   } catch (error) {
-    logger.error('--Error in createFilesandJobfiles--------------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
+    logger.error('utils/assets - createFilesandJobfiles:', error);
     throw error;
   }
 };
@@ -356,10 +352,7 @@ exports.createGithubFlow = async ({
       jobExecutionGroupId,
       jobName,
     });
-    logger.error('------------------------------------------');
-    logger.error('❌ createGithubFlow: "Error happened"');
-    logger.error(error);
-    logger.error('------------------------------------------');
+    logger.error('utils/assets - createGithubFlow: ', error);
   }
 };
 
@@ -392,9 +385,7 @@ const manuallyUpdateJobExecutionFailure = async ({
       exceptions: tasks.error,
     });
   } catch (error) {
-    logger.error('------------------------------------------');
-    logger.error('❌ createGithubFlow: Failed to notify', error);
-    logger.error('------------------------------------------');
+    logger.error('utils/assets - manuallyUpdateJobExecutionFailure: ', error);
   }
 };
 
@@ -413,7 +404,7 @@ exports.getJobEXecutionForProcessing = async () => {
     });
     return jobExecution;
   } catch (error) {
-    logger.error('Failed to find job executions', error);
+    logger.error('utils/assets - getJobEXecutionForProcessing: ', error);
   }
 };
 
