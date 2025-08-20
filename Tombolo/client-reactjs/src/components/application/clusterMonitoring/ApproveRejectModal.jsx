@@ -97,7 +97,7 @@ function ApproveRejectModal({
       onCancel={handleCancel}
       maskClosable={false}
       width={600}
-      title={selectedRows.length > 0 ? 'Bulk Approve/Reject Cost Monitoring' : 'Approve/Reject Cost Monitoring'}
+      title={selectedRows.length > 0 ? 'Bulk Approve/Reject Cluster Monitoring' : 'Approve/Reject Cost Monitoring'}
       footer={
         !monitoringEvaluated
           ? [
@@ -133,11 +133,6 @@ function ApproveRejectModal({
           </div>
         ) : (
           <Form form={form} layout="vertical" initialValues={{ isActive: true }}>
-            {selectedRows.length > 0 && (
-              <div style={{ marginBottom: '16px', padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
-                <strong>Bulk Action:</strong> You are about to approve/reject {selectedRows.length} cost monitoring(s).
-              </div>
-            )}
             <Form.Item
               label="Action"
               name="approvalStatus"

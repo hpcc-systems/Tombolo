@@ -16,8 +16,9 @@ import {
 } from '@ant-design/icons';
 
 // Local imports
-import { toggleClusterMonitoringActiveStatus, deleteClusterMonitoring } from './clusterMonitoringUtils.js';
-import './clusterMonitoring.css';
+import { toggleSingleClusterMonitoringActiveStatus, deleteClusterMonitoring } from './clusterMonitoringUtils.js';
+import styles from './clusterMonitoring.module.css';
+import commonStyles from '../../common/common.module.css';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
@@ -72,7 +73,7 @@ function ClusterMonitoringTable({
         message.error('Monitoring cannot be started as it is not approved.');
         return;
       }
-      await toggleClusterMonitoringActiveStatus(record.id);
+      await toggleSingleClusterMonitoringActiveStatus(record.id);
 
       setClusterMonitoring((prev) =>
         prev.map((monitoring) =>
@@ -148,7 +149,7 @@ function ClusterMonitoringTable({
                 content={
                   <div
                     style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }}
-                    className="clusterMonitoringTable__hidden_actions">
+                    className={styles.clusterMonitoringTable__hidden_actions}>
                     <div title="Approve" onClick={() => evaluateMonitoring(record)}>
                       <CheckCircleFilled
                         style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}
@@ -220,7 +221,7 @@ function ClusterMonitoringTable({
       size="small"
       columns={columns}
       dataSource={clusterMonitoring}
-      className="cluster_monitoring_table"
+      className={styles.cluster_monitoring_table}
       rowKey={(record) => record.id}
       rowSelectedBgColor="var(--danger)"
       rowSelection={{
@@ -231,12 +232,11 @@ function ClusterMonitoringTable({
       }}
       pagination={{ pageSize: 20 }}
       rowClassName={(record) => {
-        let className = record?.isActive
-          ? 'clusterMonitoringTable__active-monitoring'
-          : 'clusterMonitoringTable__inactive-monitoring';
+        let className = record?.isActive ? commonStyles.table_active_row : commonStyles.table_inactive_row;
+
         const idsOfSelectedRows = selectedRows.map((row) => row.id);
         if (idsOfSelectedRows.includes(record.id)) {
-          className += ' clusterMonitoringTable__selected-row';
+          className += styles.clusterMonitoringTable__selected_row;
         }
         return className;
       }}

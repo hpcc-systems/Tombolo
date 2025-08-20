@@ -1,12 +1,19 @@
-.clusterMonitoring_engines > .ant-input-wrapper > .ant-input-group-addon {
-  width: 85px;
-  text-align: left;
+.clusterMonitoringTable__inactive-monitoring {
+  background-color: var(--paused);
 }
 
-.cluster_monitoring_table .ant-table-tbody > tr.monitoring_table_paused_monitorings:hover > td {
-  background: #ffd591;
+.clusterMonitoringTable__active-monitoring {
+  background-color: var(--active);
 }
 
-.monitoring_table_paused_monitorings {
-  background: #ffe7ba;
+.clusterMonitoringTable__hidden_actions > * {
+  padding: 5px;
+}
+
+.clusterMonitoringTable__hidden_actions > *:hover {
+  background-color: var(--secondary-light);
+}
+
+.clusterMonitoringTable__selected_row > .ant-table-cell {
+  background-color: rgba(255, 255, 0, 0.1) !important;
 }

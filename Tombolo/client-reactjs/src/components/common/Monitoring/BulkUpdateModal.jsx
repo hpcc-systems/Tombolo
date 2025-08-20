@@ -82,8 +82,8 @@ const BulkUpdateModal = ({
 
     // selected rows details
     selectedRows.forEach(({ metaData }) => {
-      const { notificationMetaData } = metaData || {};
-      const { primaryContacts, secondaryContacts, notifyContacts } = notificationMetaData || {};
+      const { notificationMetaData, contacts } = metaData || {};
+      const { primaryContacts, secondaryContacts, notifyContacts } = notificationMetaData || contacts || {};
 
       if (primaryContacts) {
         setPrimaryContacts((prev) => [...new Set([...prev, ...primaryContacts])]);
@@ -112,8 +112,12 @@ const BulkUpdateModal = ({
     try {
       selectedRows.forEach((row) => {
         const { metaData } = row || {};
-        const { notificationMetaData } = metaData || {};
-        const { primaryContacts = [], secondaryContacts = [], notifyContacts = [] } = notificationMetaData || {};
+        const { notificationMetaData, contacts } = metaData || {};
+        const {
+          primaryContacts = [],
+          secondaryContacts = [],
+          notifyContacts = [],
+        } = notificationMetaData || contacts || {}; // For backward compatibility
 
         let meta = {};
 
@@ -174,6 +178,7 @@ const BulkUpdateModal = ({
           metaData: {
             ...metaData,
             notificationMetaData: updatedNotificationMetaData,
+            contacts: updatedNotificationMetaData, // For backward compatibility
           },
         });
       });

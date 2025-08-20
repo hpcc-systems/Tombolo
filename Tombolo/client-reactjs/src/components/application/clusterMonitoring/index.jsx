@@ -7,7 +7,11 @@ import { Form } from 'antd';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import ClusterMonitoringTable from './ClusterMonitoringTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
-import { getAllClusterMonitoring, findUniqueName } from './clusterMonitoringUtils.js';
+import {
+  getAllClusterMonitoring,
+  findUniqueName,
+  handleBulkUpdateClusterMonitoring,
+} from './clusterMonitoringUtils.js';
 import ViewDetailsModal from './ViewDetailsModal';
 import ActionButton from './ActionButton';
 import AddEditModal from './AddEditModal/AddEditModal.jsx';
@@ -16,6 +20,7 @@ import { useMonitorType } from '../../../hooks/useMonitoringType';
 import ApproveRejectModal from './ApproveRejectModal.jsx';
 import ClusterMonitoringFilters from './ClusterMonitoringFilters';
 import { getAllProductCategories } from '../../common/ASRTools';
+import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
 
 // Constants
 const monitoringTypeName = 'Cluster Monitoring';
@@ -50,6 +55,7 @@ function ClusterMonitoring() {
   const [allProductCategories, setAllProductCategories] = useState([]);
   const [filtering, setFiltering] = useState(false);
   const [filteredClusterMonitoring, setFilteredClusterMonitoring] = useState([]);
+  const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
 
   // Hooks
   const { monitoringTypeId } = useMonitorType(monitoringTypeName);
@@ -68,7 +74,6 @@ function ClusterMonitoring() {
     })();
   }, []);
 
-  // ----------------------------------------------------------------
   // When filter changes, filter the cost monitorings
   useEffect(() => {
     setFiltering(true);
@@ -140,7 +145,6 @@ function ClusterMonitoring() {
     setFilteredClusterMonitoring(filteredCm);
     setFiltering(false);
   }, [filters, clusterMonitoring, searchTerm]);
-  // ----------------------------------------------------------------
 
   // If editing data is passed, set the form values
   useEffect(() => {
@@ -166,7 +170,20 @@ function ClusterMonitoring() {
   //JSX
   return (
     <>
-      <BreadCrumbs extraContent={<ActionButton setDisplayAddEditModal={setDisplayAddEditModal} />} />
+      <BreadCrumbs
+        extraContent={
+          <ActionButton
+            setClusterMonitoring={setClusterMonitoring}
+            setDisplayAddEditModal={setDisplayAddEditModal}
+            selectedRows={selectedRows}
+            setSelectedRows={setSelectedRows}
+            setBulkEditModalVisibility={setBulkEditModalVisibility}
+            setApproveRejectModal={setApproveRejectModal}
+            clusterMonitoring={clusterMonitoring}
+            isReader={isReader}
+          />
+        }
+      />
 
       {displayAddEditModal && (
         <AddEditModal
@@ -240,6 +257,20 @@ function ClusterMonitoring() {
         setDuplicatingData={setDuplicatingData}
         filtering={filtering}
       />
+
+      {/* Bulk Update Modal */}
+      {bulkEditModalVisibility && (
+        <BulkUpdateModal
+          bulkEditModalVisibility={bulkEditModalVisibility}
+          setBulkEditModalVisibility={setBulkEditModalVisibility}
+          monitorings={clusterMonitoring}
+          setMonitorings={setClusterMonitoring}
+          selectedRows={selectedRows}
+          setSelectedRows={setSelectedRows}
+          monitoringType="cluster"
+          handleBulkUpdateMonitorings={handleBulkUpdateClusterMonitoring}
+        />
+      )}
     </>
   );
 }
