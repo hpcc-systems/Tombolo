@@ -29,12 +29,9 @@ function MonitoringDetailsModal({
     approvedBy,
     createdBy,
     lastUpdatedBy,
-    // ---
-    // New fields that may not be accessible on older designed models
     approver,
     creator,
     updater,
-    // ---
     monitoringName,
     description,
     createdAt,
@@ -93,12 +90,14 @@ function MonitoringDetailsModal({
             on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
           </Descriptions.Item>
 
-          <Descriptions.Item label="Last updated by">
-            <Tooltip title={<div>Email: {updater.email}</div>}>
-              <span style={{ color: 'var(--primary)' }}>{`${updater.firstName} ${updater.lastName}`}</span>
-            </Tooltip>{' '}
-            on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
-          </Descriptions.Item>
+          {updater && (
+            <Descriptions.Item label="Last updated by">
+              <Tooltip title={<div>Email: {updater.email}</div>}>
+                <span style={{ color: 'var(--primary)' }}>{`${updater.firstName} ${updater.lastName}`}</span>
+              </Tooltip>{' '}
+              on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
+            </Descriptions.Item>
+          )}
         </>
       );
     }
