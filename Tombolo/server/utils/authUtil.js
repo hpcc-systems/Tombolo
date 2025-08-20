@@ -507,6 +507,15 @@ const sendAccountUnlockedEmail = async ({
   });
 };
 
+const checkIfSystemUser = userObj => {
+  if (!userObj) return false;
+  return (
+    userObj.firstName === 'System' &&
+    userObj.lastName === 'User' &&
+    userObj.email === 'system-user@example.com'
+  );
+};
+
 const deleteUser = async (id, reason) => {
   try {
     if (!reason || reason === '') {
@@ -518,6 +527,10 @@ const deleteUser = async (id, reason) => {
 
     if (!user) {
       throw new Error('User not found');
+    }
+
+    if (checkIfSystemUser(user)) {
+      throw new Error('System user cannot be deleted');
     }
 
     const removedAt = Date.now();
@@ -573,4 +586,5 @@ module.exports = {
   handleInvalidLoginAttempt,
   sendAccountUnlockedEmail,
   deleteUser,
+  checkIfSystemUser,
 };
