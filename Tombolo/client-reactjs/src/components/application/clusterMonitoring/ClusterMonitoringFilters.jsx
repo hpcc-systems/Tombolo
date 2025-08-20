@@ -7,7 +7,6 @@ import { SearchOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import useMonitoringFilters from '../../../hooks/useMonitoringFilters';
 import AsrSpecificFilters from '../../common/Monitoring/AsrSpecificFilters';
-// import { set } from 'lodash';
 
 //Constants
 const { Option } = Select;
@@ -44,7 +43,6 @@ function CostMonitoringFilters({
   const [activeStatusOptions, setActiveStatusOptions] = useState([]);
   const [domainOptions, setDomainOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
-  const [clusterOptions, setClusterOptions] = useState([]);
 
   const { filterCount, clearFilters, handleFilterCountClick, handleDomainChange, handleFormChange, loadFilters } =
     useMonitoringFilters(
@@ -95,28 +93,13 @@ function CostMonitoringFilters({
       users: [],
     };
 
-    const clusterFilters = [];
-    const uniqueClusters = [];
-    clusterMonitoring.forEach((monitoring) => {
-      const { cluster } = monitoring;
-      if (clusterFilters.includes(cluster.id)) {
-        return;
-      } else {
-        uniqueClusters.push(cluster.id);
-      }
-      clusterFilters.push({ id: cluster.id, name: cluster.name });
-    });
-    const filterOptions = loadFilters(initialFilterOptions, clusterMonitoring, loadCostMonitoringFilters);
-
-    console.log('------------------------');
-    console.log('Filter options : ', filterOptions);
-    console.log('------------------------');
+    let filterOptions = loadFilters(initialFilterOptions, clusterMonitoring, loadCostMonitoringFilters);
 
     setApprovalStatusOptions(filterOptions.approvalStatus);
     setActiveStatusOptions(filterOptions.activeStatus);
     setDomainOptions(filterOptions.domain);
     setProductOptions(filterOptions.products);
-    setClusterOptions(filterOptions.clusters);
+    // setClusterOptions(filterOptions.clusters);
   }, [clusterMonitoring, clusters, domains, allProductCategories, productCategories, selectedDomain, loadFilters]);
 
   //JSX
@@ -178,19 +161,6 @@ function CostMonitoringFilters({
               productOptions={productOptions}
               handleDomainChange={handleDomainChange}
             />
-
-            <Col span={4}>
-              <div className="notifications__filter_label">Clusters</div>
-              <Form.Item name="clusters">
-                <Select placeholder="Clusters" allowClear disabled={false} mode="multiple">
-                  {clusterOptions.map((c) => (
-                    <Option key={c.id} value={c.id}>
-                      {c.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
           </Row>
         </Form>
       )}
