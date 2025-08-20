@@ -1,8 +1,8 @@
 import React from 'react';
-import { Menu, Dropdown, Button } from 'antd';
+import { Menu, Dropdown, Button, message, Popconfirm } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
-// import { handleLzBulkDelete } from './Utils';
+import { deleteClusterMonitoring } from './clusterMonitoringUtils';
 // import { toggleLzMonitoringStatus } from './Utils';
 
 // const { Option } = Select;
@@ -10,11 +10,11 @@ import { DownOutlined } from '@ant-design/icons';
 const ActionButton = ({
   setDisplayAddEditModal,
   //   // handleAddNewLzMonitoringBtnClick,
-  //   // selectedRows,
-  //   // setSelectedRows,
-  //   // setLandingZoneMonitoring,
-  //   // setBulkEditModalVisibility,
-  //   // setBulkApprovalModalVisibility,
+  selectedRows,
+  setSelectedRows,
+  setClusterMonitoring,
+  setBulkEditModalVisibility,
+  // setBulkApprovalModalVisibility,
   //   // isReader,
   //   // setFiltersVisible,
   //   // filtersVisible,
@@ -28,62 +28,64 @@ const ActionButton = ({
   //     setFiltersVisible((prev) => !prev);
   //   };
 
-  //   const deleteSelected = async () => {
-  //     try {
-  //       const selectedRowIds = selectedRows.map((row) => row.id);
-  //       // const res = await handleLzBulkDelete({ ids: selectedRowIds });
-  //       setLandingZoneMonitoring((prev) =>
-  //         prev.filter((landingZoneMonitoring) => !selectedRowIds.includes(landingZoneMonitoring.id))
-  //       );
-  //       setSelectedRows([]);
+  const deleteSelected = async () => {
+    try {
+      const selectedRowIds = selectedRows.map((row) => row.id);
+      const res = await deleteClusterMonitoring(selectedRowIds);
+      setClusterMonitoring((prev) =>
+        prev.filter((landingZoneMonitoring) => !selectedRowIds.includes(landingZoneMonitoring.id))
+      );
 
-  //       // if (res) {
-  //       //   message.success('Selected landing zone monitorings deleted successfully');
-  //       // }
-  //     } catch (err) {
-  //       message.error('Unable to delete selected landing zone monitorings: ' + err);
-  //     }
-  //   };
+      if (!res.errors) {
+        message.success('Selected cluster monitoring deleted successfully');
+        setSelectedRows([]);
+      } else {
+        throw new Error(res.errors[0].message);
+      }
+    } catch (err) {
+      message.error(err.message);
+    }
+  };
 
   const handleMenuSelection = (key) => {
     if (key === '1') {
       setDisplayAddEditModal(true);
+    } else if (key === '2') {
+      setBulkEditModalVisibility(true);
     }
-    // else if (key === '2') {
-    //       setBulkEditModalVisibility(true);
-    //     } else if (key === '3') {
-    //       setBulkApprovalModalVisibility(true);
-    //     } else if (key === '5') {
-    //       changeFilterVisibility();
-    //     }
-    //   };
-
-    //   // Bulk start/pause job monitorings
-    //   const bulkStartPauseJobMonitorings = async () => {
-    //     try {
-    //       const action = bulkStartPauseForm.getFieldValue('action'); // Ensure correct usage of bulkStartPauseForm
-    //       if (action === 'start') {
-    //         const selectedIncludesUnApprovedMonitorings = selectedRows.some((row) => row.approvalStatus !== 'approved');
-    //         if (selectedIncludesUnApprovedMonitorings) {
-    //           message.error('Selected job monitorings must be approved before starting');
-    //           return;
-    //         }
-    //       }
-    //       const startMonitoring = action === 'start' ? true : false;
-    //       const selectedRowIds = selectedRows.map((row) => row.id);
-    //       // await toggleLzMonitoringStatus({ ids: selectedRowIds, isActive: startMonitoring });
-    //       const updatedLandingZoneMonitorings = landingZoneMonitoring.map((lz) => {
-    //         if (selectedRowIds.includes(lz.id)) {
-    //           return { ...lz, isActive: startMonitoring };
-    //         }
-    //         return lz;
-    //       });
-    //       setLandingZoneMonitoring(updatedLandingZoneMonitorings);
-    //       message.success(`Selected ${action === 'start' ? 'Job Monitorings started' : 'Job Monitorings paused'}`);
-    //     } catch (err) {
-    //       message.error('Unable to start/pause selected job monitorings');
-    //     }
+    // else if (key === '3') {
+    //   setBulkApprovalModalVisibility(true);
+    // } else if (key === '5') {
+    //   changeFilterVisibility();
+    // }
   };
+
+  // Bulk start/pause job monitorings
+  // const bulkStartPauseJobMonitorings = async () => {
+  //   try {
+  //     const action = bulkStartPauseForm.getFieldValue('action'); // Ensure correct usage of bulkStartPauseForm
+  //     if (action === 'start') {
+  //       const selectedIncludesUnApprovedMonitorings = selectedRows.some((row) => row.approvalStatus !== 'approved');
+  //       if (selectedIncludesUnApprovedMonitorings) {
+  //         message.error('Selected job monitorings must be approved before starting');
+  //         return;
+  //       }
+  //     }
+  //     const startMonitoring = action === 'start' ? true : false;
+  //     const selectedRowIds = selectedRows.map((row) => row.id);
+  //     // await toggleLzMonitoringStatus({ ids: selectedRowIds, isActive: startMonitoring });
+  //     const updatedLandingZoneMonitorings = landingZoneMonitoring.map((lz) => {
+  //       if (selectedRowIds.includes(lz.id)) {
+  //         return { ...lz, isActive: startMonitoring };
+  //       }
+  //       return lz;
+  //     });
+  //     setLandingZoneMonitoring(updatedLandingZoneMonitorings);
+  //     message.success(`Selected ${action === 'start' ? 'Job Monitorings started' : 'Job Monitorings paused'}`);
+  //   } catch (err) {
+  //     message.error('Unable to start/pause selected job monitorings');
+  //   }
+  // };
 
   // Action button menu items
   const menuItems = [
@@ -91,11 +93,11 @@ const ActionButton = ({
       key: '1',
       label: 'Add New',
     },
-    //     {
-    //       key: '2',
-    //       label: 'Bulk Edit',
-    //       disabled: selectedRows.length < 2,
-    //     },
+    {
+      key: '2',
+      label: 'Bulk Edit',
+      disabled: selectedRows.length < 2,
+    },
     //     {
     //       key: '3',
     //       label: 'Bulk Approve or Reject',
@@ -135,19 +137,19 @@ const ActionButton = ({
     //       ),
     //       disabled: selectedRows.length < 2,
     //     },
-    //     {
-    //       key: '4',
-    //       label: (
-    //         <Popconfirm
-    //           title={`Are you sure you want to delete selected ${selectedRows.length} monitorings?`}
-    //           okButtonProps={{ type: 'primary', danger: true }}
-    //           okText="Delete"
-    //           onConfirm={deleteSelected}>
-    //           Bulk Delete
-    //         </Popconfirm>
-    //       ),
-    //       disabled: selectedRows.length < 2,
-    //     },
+    {
+      key: '4',
+      label: (
+        <Popconfirm
+          title={`Are you sure you want to delete selected ${selectedRows.length} monitorings?`}
+          okButtonProps={{ type: 'primary', danger: true }}
+          okText="Delete"
+          onConfirm={deleteSelected}>
+          Bulk Delete
+        </Popconfirm>
+      ),
+      disabled: selectedRows.length < 2,
+    },
     //     {
     //       key: '5',
     //       label: filtersVisible ? 'Hide filters' : 'Show filters',

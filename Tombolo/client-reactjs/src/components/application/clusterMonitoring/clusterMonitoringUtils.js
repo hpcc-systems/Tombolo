@@ -135,3 +135,19 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
 
   return erroneousTabs;
 };
+
+export const handleBulkUpdateClusterMonitoring = async ({ updatedData }) => {
+  const payload = {
+    method: 'PATCH',
+    headers: authHeader(),
+    body: JSON.stringify({ clusterMonitoring: updatedData }),
+  };
+
+  const response = await fetch(`/api/clusterMonitoring/bulk`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to bulk update cluster monitoring');
+  }
+
+  return await response.json();
+};
