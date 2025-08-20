@@ -4,6 +4,7 @@ import { matches } from 'validator';
 import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
 import { useSelector } from 'react-redux';
 import InfoDrawer from '../../common/InfoDrawer';
+import { DescriptionFormRules, MonitoringNameFormRules } from '../../common/FormRules';
 
 const { Option } = Select;
 
@@ -84,16 +85,10 @@ function CostMonitoringBasicTab({
   return (
     <Card>
       <Form form={form} layout="vertical">
-        <Form.Item
-          label="Monitoring Name"
-          name="monitoringName"
-          rules={[{ required: true, message: 'Please enter a monitoring name' }]}>
+        <Form.Item label="Monitoring Name" name="monitoringName" rules={MonitoringNameFormRules}>
           <Input placeholder="Enter monitoring name" ref={monitoringNameInputRef} />
         </Form.Item>
-        <Form.Item
-          label="Description"
-          name="description"
-          rules={[{ required: true, message: 'Please enter a description' }]}>
+        <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
           <Input.TextArea placeholder="Enter description" />
         </Form.Item>
         <Form.Item

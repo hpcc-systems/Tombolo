@@ -4,6 +4,7 @@ import { Form, Input, Card } from 'antd';
 // import LandingZoneFileExplorer from '../../../common/LandingZoneFileExplorer';
 import AsrSpecificMonitoring from './ASRSpecificMonitoring';
 import { useSelector } from 'react-redux';
+import { DescriptionFormRules, MonitoringNameFormRules } from '../../../common/FormRules';
 
 const { TextArea } = Input;
 
@@ -84,8 +85,7 @@ function BasicTab({
             label="Monitoring Name"
             name="monitoringName"
             rules={[
-              { required: true, message: 'Required field' },
-              { max: 100, message: 'Maximum of 100 characters allowed' },
+              ...MonitoringNameFormRules,
               () => ({
                 validator(_, value) {
                   if (isEditing) return Promise.resolve();
@@ -113,11 +113,7 @@ function BasicTab({
           <Form.Item
             label="Description"
             name="description"
-            rules={[
-              { max: 150, message: 'Max character limit is 150' },
-              { min: 10, message: 'Minimum of 1 character required' },
-              { required: true, message: 'Add short description' },
-            ]}>
+            rules={DescriptionFormRules}>
             <TextArea
               type="text-area"
               placeholder="Enter a short description"

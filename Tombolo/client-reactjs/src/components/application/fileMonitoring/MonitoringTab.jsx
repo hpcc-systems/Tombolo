@@ -3,6 +3,7 @@ import { Form, Input, Typography, Select, Checkbox } from 'antd';
 import cronstrue from 'cronstrue';
 import InfoDrawer from '../../common/InfoDrawer';
 import { InfoCircleOutlined } from '@ant-design/icons';
+import { MonitoringNameFormRules } from '../../common/FormRules';
 
 // Notify conditions / options
 const notificationConditionForLandingZoneFiles = [
@@ -108,13 +109,7 @@ function MonitoringTab({
         name="name"
         validateTrigger={['onChange', 'onBlur']}
         rules={[
-          { required: true, message: 'Required filed' },
-
-          {
-            max: 256,
-            message: 'Maximum of 256 characters allowed',
-          },
-
+          ...MonitoringNameFormRules,
           {
             message: 'File Monitoring with same name already exists',
             validator: (_, value) => {
