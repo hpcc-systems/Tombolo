@@ -47,7 +47,8 @@ function getStartAndEndTime(lastScanTime, offset = 0, toIso = false) {
     }
   } else {
     // First run: take the last hour in local time
-    startLocal = new Date(nowLocal.getTime() - 60 * 60 * 1000);
+    startLocal = new Date(nowLocal);
+    startLocal.setHours(0, 0, 0, 0);
   }
 
   // Convert back to UTC instants for return/consumption
@@ -227,6 +228,7 @@ async function monitorCost() {
               baseUrl: `${thorHost}:${thorPort}`,
               userID: username || '',
               password: hash || '',
+              timeoutSecs: 180,
             },
             allowSelfSigned
           );
@@ -266,6 +268,7 @@ async function monitorCost() {
               if (!costMonitoringData.metaData.wuCostData.hasOwnProperty(Wuid))
                 costMonitoringData.metaData.wuCostData[Wuid] = {
                   jobName: '',
+                  owner: '',
                   compileCost: 0,
                   executeCost: 0,
                   fileAccessCost: 0,
@@ -303,6 +306,7 @@ async function monitorCost() {
 
               // Set wuCostData for specific workunit
               costMonitoringData.metaData.wuCostData[Wuid].jobName = Jobname;
+              costMonitoringData.metaData.wuCostData[Wuid].owner = Owner;
               costMonitoringData.metaData.wuCostData[Wuid].compileCost =
                 CompileCost;
               costMonitoringData.metaData.wuCostData[Wuid].executeCost =
