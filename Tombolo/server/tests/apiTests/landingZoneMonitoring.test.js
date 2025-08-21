@@ -436,6 +436,7 @@ describe('Landing Zone Monitoring Routes', () => {
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toBe('Landing zone monitoring not found');
+      expect(LandingZoneMonitoring.handleDelete).not.toHaveBeenCalled();
     });
 
     it('should return 422 for invalid ID format', async () => {

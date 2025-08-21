@@ -116,18 +116,12 @@ describe('Cluster Monitoring routes Routes', () => {
       approvalStatus: 'pending',
     });
 
-    monitoring.update = jest.fn().mockResolvedValue({
-      ...monitoring,
-      approvalStatus: 'approved',
-      approverComment: 'Approved by admin',
-    });
-
-    ClusterMonitoring.findOne.mockResolvedValue(monitoring);
+    ClusterMonitoring.findAll.mockResolvedValue([monitoring]);
 
     const res = await request(app)
       .patch('/api/clusterMonitoring/evaluate')
       .send({
-        id: monitoringId,
+        ids: [monitoringId],
         approvalStatus: 'approved',
         approverComment: 'Approved by admin',
       });
