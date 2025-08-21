@@ -167,7 +167,7 @@ describe('costMonitoring Routes', () => {
     const reqBody = {
       ids: uuids,
     };
-    CostMonitoring.destroy.mockResolvedValue(true);
+    CostMonitoring.handleDelete.mockResolvedValue(true);
 
     const res = await request(app)
       .delete('/api/costMonitoring/bulk')
@@ -175,8 +175,10 @@ describe('costMonitoring Routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.message).toBe('Cost monitoring(s) deleted successfully');
-    expect(CostMonitoring.destroy).toHaveBeenCalledWith({
-      where: { id: { [Op.in]: uuids } },
+    expect(CostMonitoring.handleDelete).toHaveBeenCalledWith({
+      id: uuids,
+      deletedByUserId: AUTHED_USER_ID,
+      transaction: expect.any(Object),
     });
   });
 
@@ -306,21 +308,23 @@ describe('costMonitoring Routes', () => {
 
   it('DELETE / should delete a cost monitoring', async () => {
     const costMonitoringId = uuidv4();
-    CostMonitoring.destroy.mockResolvedValue(true);
+    CostMonitoring.handleDelete.mockResolvedValue(true);
     const res = await request(app).delete(
       `/api/costMonitoring/${costMonitoringId}`
     );
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.message).toEqual('Cost monitoring deleted successfully');
-    expect(CostMonitoring.destroy).toHaveBeenCalledWith({
-      where: { id: costMonitoringId },
+    expect(CostMonitoring.handleDelete).toHaveBeenCalledWith({
+      id: costMonitoringId,
+      deletedByUserId: AUTHED_USER_ID,
+      transaction: expect.any(Object),
     });
   });
 
   it('DELETE / should 404 if no rows deleted', async () => {
     const costMonitoringId = uuidv4();
-    CostMonitoring.destroy.mockResolvedValue(0);
+    CostMonitoring.handleDelete.mockResolvedValue(0);
 
     const res = await request(app).delete(
       `/api/costMonitoring/${costMonitoringId}`
@@ -329,8 +333,10 @@ describe('costMonitoring Routes', () => {
     expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toEqual('Cost monitoring not found');
-    expect(CostMonitoring.destroy).toHaveBeenCalledWith({
-      where: { id: costMonitoringId },
+    expect(CostMonitoring.handleDelete).toHaveBeenCalledWith({
+      id: costMonitoringId,
+      deletedByUserId: AUTHED_USER_ID,
+      transaction: expect.any(Object),
     });
   });
 });

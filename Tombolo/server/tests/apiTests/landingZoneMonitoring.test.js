@@ -10,6 +10,7 @@ const {
   getMockClusterForApi,
   getFileListQuery,
   nonExistentID,
+  AUTHED_USER_ID,
 } = require('../helpers');
 
 // Mock HPCC-JS services
@@ -408,7 +409,7 @@ describe('Landing Zone Monitoring Routes', () => {
     it('should delete landing zone monitoring successfully', async () => {
       const monitoring = getLandingZoneMonitoring();
       LandingZoneMonitoring.findByPk.mockResolvedValue(monitoring);
-      LandingZoneMonitoring.destroy.mockResolvedValue(1);
+      LandingZoneMonitoring.handleDelete.mockResolvedValue(1);
 
       const res = await request(app).delete(
         `/api/landingZoneMonitoring/${monitoring.id}`
@@ -419,8 +420,9 @@ describe('Landing Zone Monitoring Routes', () => {
       expect(res.body.message).toBe(
         'Landing zone monitoring deleted successfully'
       );
-      expect(LandingZoneMonitoring.destroy).toHaveBeenCalledWith({
-        where: { id: monitoring.id },
+      expect(LandingZoneMonitoring.handleDelete).toHaveBeenCalledWith({
+        id: monitoring.id,
+        deletedByUserId: AUTHED_USER_ID,
       });
     });
 
