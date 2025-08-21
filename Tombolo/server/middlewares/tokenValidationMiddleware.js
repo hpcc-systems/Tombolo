@@ -145,7 +145,7 @@ const handleExpiredToken = async token => {
     };
   } catch (err) {
     // Log error and return error object instead of using res directly
-    logger.error(`Error in handleExpiredToken: ${err.message}`);
+    logger.error('Error in handleExpiredToken: ', err);
     return {
       sessionExpired: true,
       newAccessToken: null,

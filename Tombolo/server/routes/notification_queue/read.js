@@ -20,7 +20,7 @@ router.post(
       const response = await NotificationQueue.create(req.body, { raw: true });
       return res.status(200).send(response);
     } catch (err) {
-      logger.error(err);
+      logger.error('createNotificationQueue: ', err);
       return res.status(500).send('Failed to save notification');
     }
   }
@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
     const notifications = await NotificationQueue.findAll();
     return res.status(200).json(notifications);
   } catch (err) {
-    logger.error(err);
+    logger.error('getNotificationQueue: ', err);
     return res.status(500).send('Failed to get notifications');
   }
 });
@@ -55,7 +55,7 @@ router.patch(
       const updatedNotification = await NotificationQueue.findByPk(req.body.id);
       return res.status(200).send(updatedNotification);
     } catch (err) {
-      logger.error(err);
+      logger.error('patchNotificationQueue: ', err);
       return res.status(500).send('Failed to update notification');
     }
   }
@@ -70,7 +70,7 @@ router.delete(
       await NotificationQueue.destroy({ where: { id: req.params.id } });
       return res.status(200).send('success');
     } catch (err) {
-      logger.error(err);
+      logger.error('deleteNotificationQueue: ', err);
       return res.status(500).send('Failed to delete notification');
     }
   }

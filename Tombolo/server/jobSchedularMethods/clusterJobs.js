@@ -69,7 +69,7 @@ async function scheduleClusterTimezoneOffset() {
 
     this.bree.start(jobName);
   } catch (err) {
-    logger.error(err);
+    logger.error('clusterJobs - scheduleClusterTimezoneOffset: ', err);
   }
 }
 
@@ -116,7 +116,7 @@ async function checkClusterReachability() {
     this.bree.start(jobName);
     logger.info('Cluster reachability checker job initialized ...');
   } catch (err) {
-    logger.error(err);
+    logger.error('clusterJobs - checkClusterReachability: ', err);
   }
 }
 
@@ -145,7 +145,7 @@ async function checkClusterContainerization() {
     this.bree.start(jobName);
     logger.info('Cluster containerization check job initialized ...');
   } catch (err) {
-    logger.error(err);
+    logger.error('clusterJobs - checkClusterContainerization: ', err);
   }
 }
 

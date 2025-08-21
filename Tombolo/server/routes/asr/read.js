@@ -106,7 +106,7 @@ router.get('/domains/', async (req, res) => {
 
     return res.status(200).json(domains);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('Get domains: ', err);
     return res.status(500).json({ message: 'Failed to fetch domains' });
   }
 });
@@ -121,7 +121,7 @@ router.get('/domainsOnly/', async (req, res) => {
 
     return res.status(200).json(domains);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('Get domainsOnly: ', err);
     return res.status(500).json({ message: 'Failed to fetch domains' });
   }
 });
@@ -214,7 +214,7 @@ router.delete(
         response === 0 ? 'Domain not found' : 'Domain deleted successfully';
       return res.status(200).json({ message });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Delete domain: ', err);
       return res.status(500).json({ message: 'Failed to delete domain' });
     }
   }
@@ -294,7 +294,7 @@ router.get('/products/', async (req, res) => {
 
     return res.status(200).json(products);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('Get products: ', err);
     return res.status(500).json({ message: 'Failed to fetch domains' });
   }
 });
@@ -310,7 +310,7 @@ router.get('/productsOnly/', async (req, res) => {
 
     return res.status(200).json(products);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('Get productsOnly: ', err);
     return res.status(500).json({ message: 'Failed to fetch products' });
   }
 });
@@ -366,7 +366,7 @@ router.put(
           : 'Successfully updated product';
       return res.status(200).json({ message });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Update product: ', err);
       return res.status(500).json({ message: 'Failed to update product' });
     }
   }
@@ -387,7 +387,7 @@ router.delete(
         response === 0 ? 'Product not found' : 'Product deleted successfully';
       return res.status(200).json({ message });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Delete product: ', err);
       return res.status(500).json({ message: 'Failed to delete product' });
     }
   }
@@ -429,7 +429,7 @@ router.get(
 
       return res.status(200).json(response);
     } catch (error) {
-      logger.error(error.message);
+      logger.error('Get domain for monitoring type: ', error);
       return res.status(500).send('Unable to fetch domains');
     }
   }
@@ -468,7 +468,7 @@ router.get(
 
       return res.status(200).json(response);
     } catch (error) {
-      logger.error(error.message);
+      logger.error('Get product categories for domain: ', error);
       return res.status(500).send('Unable to fetch product categories');
     }
   }

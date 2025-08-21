@@ -290,7 +290,7 @@ const {
           });
         }
       } catch (err) {
-        logger.error(err);
+        logger.error('submitOrbitMonitoring emailNotification: ', err);
       }
     }
 
@@ -322,7 +322,7 @@ const {
             monitoring_id: id,
           });
         } catch (err) {
-          logger.error(err);
+          logger.error('submitOrbitMonitoring teamsNotification: ', err);
         }
       }
     }
@@ -332,11 +332,14 @@ const {
       try {
         await MonitoringNotification.bulkCreate(sentNotifications);
       } catch (err) {
-        logger.error(err);
+        logger.error(
+          'submitOrbitMonitoring - bulkCreateSentNotifications: ',
+          err
+        );
       }
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('submitOrbitMonitoring - err: ', err);
   } finally {
     parentPort ? parentPort.postMessage('done') : process.exit(0);
   }

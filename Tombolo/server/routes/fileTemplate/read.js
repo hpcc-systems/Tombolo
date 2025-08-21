@@ -126,7 +126,7 @@ router.post(
         message: `Successfully created file template -> ${title}`,
       });
     } catch (err) {
-      logger.error(err);
+      logger.error('fileTemplate/read - saveFileTemplate: ', err);
       return res.status(500).json({
         success: false,
         message: 'Error occurred while saving file template details',
@@ -183,7 +183,7 @@ router.get(
 
       return res.status(200).json(assetList);
     } catch (error) {
-      logger.error(error);
+      logger.error('fileTemplate/read - fileTemplate_list: ', error);
       return res.status(500).json({
         success: false,
         message: 'Error occurred while retrieving assets',
@@ -221,7 +221,7 @@ router.post(
         monitoring: fileMonitoring ? true : false,
       });
     } catch (err) {
-      logger.error(err);
+      logger.error('fileTemplate/read - getFileTemplate: ', err);
       return res.status(500).json({
         success: false,
         message: 'Error occurred while trying to fetch file template details',
@@ -251,7 +251,7 @@ router.post(
         .status(200)
         .json({ success: true, message: 'File template deleted successfully' });
     } catch (err) {
-      logger.error(err);
+      logger.error('fileTemplate/read - deleteFileTemplate: ', err);
       return res
         .status(500)
         .json({ success: false, message: 'Unable to delete File Template' });
@@ -280,7 +280,7 @@ router.post(
 
       return res.status(200).json(associateLicenses);
     } catch (err) {
-      logger.error(err);
+      logger.error('fileTemplate/read - getAssociatedLicenses: ', err);
       return res
         .status(500)
         .json({ success: false, message: 'Unable to get associated licenses' });

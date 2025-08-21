@@ -143,7 +143,7 @@ const createOrUpdateFile = async ({
       return relatedFile;
     }
   } catch (error) {
-    logger.error(error);
+    logger.error('job/read createOrUpdateFile: ', error);
     return null;
   }
 };
@@ -368,9 +368,7 @@ router.post(
       // END of matching template ------------------
       return res.status(200).send(relatedFiles);
     } catch (error) {
-      logger.error('-error /jobFileRelation--------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
+      logger.error('job/read jobFileRelation: ', error);
       return res.status(500).send('Could not find related files');
     }
   }
@@ -439,7 +437,7 @@ router.post(
             }
             resolve({ job: job.id, relatedFiles });
           } catch (error) {
-            logger.error(error);
+            logger.error('job/read syncDataflow: ', error);
             reject();
           }
         });
@@ -476,7 +474,7 @@ router.post(
               });
               logger.info('syncDataFlow deleted: ', deleted);
             } catch (error) {
-              logger.error(error);
+              logger.error('job/read syncDataflow delete failed: ', error);
             }
           }
         }
@@ -582,7 +580,7 @@ router.post(
       const allJobs = [...jobsWithRelatedFiles, ...jobWithoutRelatedFiles];
       return res.status(200).send({ result: allJobs, assetsIds: allAssetsIds });
     } catch (error) {
-      logger.error(error);
+      logger.error('job/read syncDataflow: ', error);
       return res
         .status(500)
         .json({ success: false, message: 'Error occurred while updating' });
@@ -693,9 +691,7 @@ router.post('/saveJob', validate(validateSaveJob), async (req, res) => {
       await JobParam.destroy({ where: { application_id, job_id: job.id } });
       await JobParam.bulkCreate(updateParams);
     } catch (error) {
-      logger.error('FAILED TO UPDATE JOBFILE AND JOB PARAMS --');
-      logger.error(error);
-      logger.error('------------------------------------------');
+      logger.error('job/read failed to update jobfile and params: ', error);
     }
 
     logger.info(`---JOB SAVED ${job.name}-${job.title}-${job.id}-----------`);
@@ -706,9 +702,7 @@ router.post('/saveJob', validate(validateSaveJob), async (req, res) => {
       jobId: job.id,
     });
   } catch (error) {
-    logger.error('-error- /saveJob----------------------------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
+    logger.error('job/read saveJob: ', error);
     return res
       .status(422)
       .send({ success: false, message: 'Failed to Save job' });
@@ -743,7 +737,7 @@ router.get('/job_list', validate(validateJobList), async (req, res) => {
 
     return res.status(200).json(assetList);
   } catch (error) {
-    logger.error(error);
+    logger.error('job/read job_list: ', error);
     return res.status(500).json({
       success: false,
       message: 'Error occurred while retrieving assets',
@@ -805,9 +799,10 @@ router.get('/job_details', validate(validateJobDetails), async (req, res) => {
               job.set('ecl', hpccJobInfo.ecl);
               await job.save();
             } catch (error) {
-              logger.error(`FAILED TO UPDATE ECL FOR "${job.name}"`);
-              logger.error(error);
-              logger.error('------------------------------------------');
+              logger.error(
+                `job/read FAILED TO UPDATE ECL FOR ${job.name}`,
+                error
+              );
             }
           }
 
@@ -935,10 +930,13 @@ router.get('/job_details', validate(validateJobDetails), async (req, res) => {
         res.json(jobData);
       })
       .catch(function (err) {
-        logger.error(err);
+        logger.error(
+          'job/read Error occurred while retrieving job details: ',
+          err
+        );
       });
   } catch (err) {
-    logger.error(err);
+    logger.error('job/read job_details: ', err);
   }
 });
 
@@ -947,7 +945,7 @@ router.post('/delete', validate(validateDeleteJob), async (req, res) => {
     await deleteJob(req.body.jobId, req.body.application_id);
     return res.status(200).json({ result: 'success' });
   } catch (error) {
-    logger.error(error);
+    logger.error('job/read delete: ', error);
     return res.status(500).json({
       success: false,
       message: 'Error occurred while deleting the job',
@@ -1029,10 +1027,10 @@ router.post('/executeJob', validate(validateExecuteJob), async (req, res) => {
 
     return res.status(200).json({ success: true });
   } catch (err) {
-    console.error('err', err);
+    logger.error('job/read executeJob: ', err);
     return res.status(500).json({
       success: false,
-      message: 'Error occured while submiting the job',
+      message: 'Error occurred while submitting the job',
     });
   }
 });
@@ -1118,9 +1116,7 @@ router.post(
 
       res.status(200).json({ success: true, message: 'Job execution updated' }); // Response to client if no error
     } catch (error) {
-      logger.error('-- Update manual job metadata -------------');
-      logger.error(error);
-      logger.error('-------------------------------------------');
+      logger.error('job/read manualJobResponse: ', error);
       return res
         .status(501)
         .json({ success: false, message: 'Error occurred while saving data' }); // response to client when error and return
@@ -1140,9 +1136,10 @@ router.post(
         jobExecution.manualJob_meta
       ); // Sends confirmation email
     } catch (error) {
-      logger.error('-Manual job confirmation & dependent job checking -----');
-      logger.error(error);
-      logger.error('-------------------------------------------------------');
+      logger.error(
+        'job/read - Manual job confirmation & dependent job checking - manualJobResponse: ',
+        error
+      );
     }
   }
 );

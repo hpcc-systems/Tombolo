@@ -139,7 +139,6 @@ const createApplicationOwner = async (req, res) => {
       message: 'User created successfully',
     });
   } catch (err) {
-    logger.error(err);
     logger.error(`Create user: ${err.message}`);
 
     res
@@ -331,7 +330,7 @@ const verifyEmail = async (req, res) => {
       data: { ...user.toJSON() },
     });
   } catch (err) {
-    logger.error(`Verify email: ${err.message}`);
+    logger.error('Failed to verify email', err);
     res
       .status(err.status || 500)
       .json({ success: false, message: err.message });

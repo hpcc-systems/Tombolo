@@ -26,7 +26,7 @@ const getInstanceSetting = async (req, res) => {
     }
     return res.status(200).json(instance);
   } catch (error) {
-    logger.error(error.message);
+    logger.error('getInstanceSetting: ', error);
     return res.status(500).json({ message: error.message });
   }
 };

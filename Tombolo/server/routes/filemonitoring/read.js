@@ -60,7 +60,7 @@ router.get(
 
       return res.status(200).send(fileMonitoring);
     } catch (error) {
-      logger.error(error);
+      logger.error('fileMonitoring/read getAll: ', error);
       return res.status(500).json({ message: 'Unable to get file monitoring' });
     }
   }
@@ -81,7 +81,7 @@ router.get(
 
       return res.status(200).send(fileMonitoring);
     } catch (error) {
-      logger.error(error);
+      logger.error('fileMonitoring/read getOne: ', error);
       return res.status(500).json({ message: 'Unable to get file monitoring' });
     }
   }
@@ -112,7 +112,7 @@ router.delete(
         }
       }
     } catch (err) {
-      logger.error(err);
+      logger.error('fileMonitoring/read delete: ', err);
       return res.status(500).json({ message: err.message });
     }
   }
@@ -154,7 +154,7 @@ router.put(
 
       return res.status(200).send('Update successful');
     } catch (err) {
-      logger.error(err);
+      logger.error('fileMonitoring/read update: ', err);
       return res.status(500).send('Failed to update monitoring status');
     }
   }
@@ -215,7 +215,7 @@ router.put('/', validate(validateUpdateFileMonitoring), async (req, res) => {
       }
     }
   } catch (error) {
-    logger.error(error);
+    logger.error('fileMonitoring/read update: ', error);
     return res
       .status(500)
       .json({ message: 'Unable to save file monitoring details' });

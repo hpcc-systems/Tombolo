@@ -51,7 +51,7 @@ router.get('/index_list', validate(validateIndexList), async (req, res) => {
 
     return res.json(assetList);
   } catch (error) {
-    logger.error(error);
+    logger.error('index/read - index_list: ', error);
     return res.status(500).json({
       success: false,
       message: 'Error occurred while retrieving assets',
@@ -146,7 +146,7 @@ router.post('/saveIndex', validate(validateSaveIndex), async (req, res) => {
     await updateIndexDetails(index.id, application_id, req);
     return res.status(200).json({ success: true, message: 'Save successful' });
   } catch (err) {
-    logger.error(err);
+    logger.error('index/read - saveIndex: ', err);
     return res.status(503).json({ success: false, message: err.message });
   }
 });
@@ -168,7 +168,7 @@ router.get(
         'Index details not found. Please check if the index exists in Assets.'
       );
     } catch (err) {
-      logger.error(err);
+      logger.error('index/read - index_details: ', err);
       return res.status(500).json({
         success: false,
         message: err.message,
@@ -190,7 +190,7 @@ router.post('/delete', validate(validateDeleteIndex), async (req, res) => {
 
     return res.status(200).json({ result: 'success' });
   } catch (err) {
-    logger.error(err);
+    logger.error('index/read - delete: ', err);
     return res.status(500).json({ message: 'Failed to delete index' });
   }
 });

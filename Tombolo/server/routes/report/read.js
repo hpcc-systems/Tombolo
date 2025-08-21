@@ -174,9 +174,7 @@ router.get(
 
       return res.status(200).send(inDataflows);
     } catch (error) {
-      logger.error('-error-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
+      logger.error('report/read associatedDataflows: ', error);
 
       return res
         .status(500)

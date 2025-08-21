@@ -77,7 +77,7 @@ router.get('/details', validate(validateGetDetails), async (req, res) => {
     });
     return res.status(200).json(group);
   } catch (err) {
-    logger.error(err);
+    logger.error('group details: ', err);
     return res.status(500).json({ error: err });
   }
 });
@@ -92,7 +92,7 @@ router.get('/', validate(validateGetGroup), async (req, res) => {
     const groupHierarchy = await createGroupHierarchy(groups);
     return res.status(200).json(groupHierarchy);
   } catch (err) {
-    logger.error(err);
+    logger.error('getGroups: ', err);
     return res.status(500).json({ message: 'Failed to get groups' });
   }
 });
@@ -274,7 +274,7 @@ router.get('/assets', validate(validateGetAssets), (req, res) => {
         res.json(finalAssets);
       })
       .catch(function (err) {
-        logger.error(err);
+        logger.error('Error occurred while retrieving assets for group: ', err);
       });
   } else {
     let promises = [],
@@ -439,8 +439,8 @@ router.get(
       });
       return res.status(200).json(assets);
     } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Error occured while retrieving assets');
+      logger.error('group nestedAssets: ', err);
+      return res.status(500).send('Error occurred while retrieving assets');
     }
   }
 );
@@ -574,8 +574,8 @@ router.get(
       });
       return res.status(200).json(assets);
     } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Error occured while retrieving assets');
+      logger.error('assetsSearch: ', err);
+      return res.status(500).send('Error occurred while retrieving assets');
     }
   }
 );
@@ -644,7 +644,7 @@ router.post('/', validate(validateCreateGroup), async (req, res) => {
 
     return res.status(200).json({ success: true, id: groupUpdated.id });
   } catch (err) {
-    logger.error(err);
+    logger.error('group create: ', err);
     return res.status(500).send('Error occured while saving Group');
   }
 });
@@ -711,7 +711,7 @@ router.delete('/', validate(validateDeleteGroup), async (req, res) => {
     });
     return res.status(200).json({ success: true });
   } catch (err) {
-    logger.error(err);
+    logger.error('group delete: ', err);
     return res.status(500).send('Error occured while deleting the Group');
   }
 });
@@ -726,8 +726,8 @@ router.put('/move', validate(validateMoveGroup), async (req, res) => {
     );
     return res.status(200).json({ success: true });
   } catch (err) {
-    logger.error(err);
-    return res.status(500).send('Error occured while moving group');
+    logger.error('group move: ', err);
+    return res.status(500).send('Error occurred while moving group');
   }
 });
 
@@ -759,7 +759,7 @@ router.put('/move/asset', validate(validateMoveAsset), async (req, res) => {
 
     return res.status(200).json({ success: true });
   } catch (err) {
-    logger.error(err);
+    logger.error('group move asset: ', err);
     return res.status(500).send('Error occured while moving asset');
   }
 });

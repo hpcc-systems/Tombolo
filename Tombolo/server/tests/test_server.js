@@ -26,13 +26,13 @@ const session = require('../routes/sessionRoutes');
 const roles = require('../routes/roleTypesRoute');
 const landingZoneMonitoring = require('../routes/landingZoneMonitoring');
 const costMonitoring = require('../routes/costMonitoringRoutes');
-const clusterMonitoring = require('../routes/clusterMonitoring');
+const clusterMonitoring = require('../routes/clusterMonitoringRoutes');
 
 // Use routes
 app.use('/api/auth', auth);
 app.use('/api/users', fakeValidateTokenMiddleware, user);
 app.use('/api/instance', instance);
-app.use('/api/cluster', cluster);
+app.use('/api/cluster', fakeValidateTokenMiddleware, cluster);
 app.use('/api/session', session);
 app.use('/api/roles', roles);
 app.use(

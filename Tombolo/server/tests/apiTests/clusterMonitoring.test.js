@@ -4,8 +4,13 @@ const { app } = require('../test_server');
 const models = require('../../models');
 const { ClusterMonitoring } = models;
 
-const { getClusterMonitoring } = require('../helpers');
+const {
+  getClusterMonitoring,
+  UUID_REGEX,
+  AUTHED_USER_ID,
+} = require('../helpers');
 const { v4: uuidv4 } = require('uuid');
+const { UUID } = require('sequelize');
 
 const monitoringId = uuidv4();
 
@@ -79,29 +84,29 @@ describe('Cluster Monitoring routes Routes', () => {
   it('PATCH /toggleStatus should toggle monitoring status', async () => {
     const monitoring = getClusterMonitoring({
       id: monitoringId,
+      approvalStatus: 'approved',
       isActive: false,
-    });
-
-    // Mock the instance update method
-    monitoring.update = jest.fn().mockResolvedValue({
-      ...monitoring,
-      isActive: true,
     });
 
     ClusterMonitoring.findOne.mockResolvedValue(monitoring);
 
     const res = await request(app)
-      .patch('/api/clusterMonitoring/toggleStatus')
+      .patch('/api/clusterMonitoring/toggle')
       .send({ id: monitoringId }); // Send ID in body!
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe(
       'Cluster status monitoring status updated successfully'
     );
-    expect(monitoring.update).toHaveBeenCalledWith({
-      isActive: !monitoring.isActive,
-      updatedBy: expect.any(String),
-    });
+    expect(ClusterMonitoring.update).toHaveBeenCalledWith(
+      {
+        isActive: !monitoring.isActive,
+        updatedBy: expect.stringMatching(UUID_REGEX),
+      },
+      {
+        where: { id: monitoringId },
+      }
+    );
   });
 
   // Update approval status of cluster status monitoring
@@ -111,18 +116,12 @@ describe('Cluster Monitoring routes Routes', () => {
       approvalStatus: 'pending',
     });
 
-    monitoring.update = jest.fn().mockResolvedValue({
-      ...monitoring,
-      approvalStatus: 'approved',
-      approverComment: 'Approved by admin',
-    });
-
-    ClusterMonitoring.findOne.mockResolvedValue(monitoring);
+    ClusterMonitoring.findAll.mockResolvedValue([monitoring]);
 
     const res = await request(app)
       .patch('/api/clusterMonitoring/evaluate')
       .send({
-        id: monitoringId,
+        ids: [monitoringId],
         approvalStatus: 'approved',
         approverComment: 'Approved by admin',
       });
@@ -158,12 +157,17 @@ describe('Cluster Monitoring routes Routes', () => {
   // delete cluster status monitoring
   it('DELETE / should delete a monitoring', async () => {
     const monitoringIds = [uuidv4(), uuidv4()];
-    ClusterMonitoring.destroy.mockResolvedValue(1);
+    ClusterMonitoring.handleDelete.mockResolvedValue(1);
 
     const res = await request(app)
       .delete('/api/clusterMonitoring')
       .send({ ids: monitoringIds });
 
     expect(res.status).toBe(200);
+    expect(ClusterMonitoring.handleDelete).toHaveBeenCalledWith({
+      id: monitoringIds,
+      deletedByUserId: AUTHED_USER_ID,
+      transaction: expect.any(Object),
+    });
   });
 });

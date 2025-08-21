@@ -4,7 +4,7 @@ const { Cluster } = require('../../models');
 const { v4: uuidv4 } = require('uuid');
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
 const logger = require('../../config/logger');
-const { getCluster } = require('../helpers');
+const { getCluster, AUTHED_USER_ID, UUID_REGEX } = require('../helpers');
 
 const nonExistentID = uuidv4();
 
@@ -69,7 +69,6 @@ describe('Cluster Routes', () => {
 
   it('update-cluster should update a cluster by ID', async () => {
     const updatedUsername = 'UpdatedUsername';
-    const updatedBy = { name: 'Admin', email: 'admin@example.com' };
 
     const cluster = { ...getCluster(), save: jest.fn() };
     Cluster.findOne.mockResolvedValue(cluster);
@@ -77,13 +76,12 @@ describe('Cluster Routes', () => {
 
     const res = await request(app).patch(`/api/cluster/${cluster.id}`).send({
       username: updatedUsername,
-      updatedBy: updatedBy,
     });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.username).toBe(updatedUsername);
-    expect(res.body.data.updatedBy).toMatchObject(updatedBy);
+    expect(res.body.data.updatedBy).toMatch(UUID_REGEX);
     expect(Cluster.findOne).toHaveBeenCalledTimes(1);
     expect(cluster.save).toHaveBeenCalledTimes(1);
   });
@@ -113,26 +111,28 @@ describe('Cluster Routes', () => {
 
   it('delete-cluster should delete a cluster by ID', async () => {
     const cluster = getCluster();
-    Cluster.destroy.mockResolvedValue(true);
+    Cluster.handleDelete.mockResolvedValue(true);
 
     const res = await request(app).delete(`/api/cluster/${cluster.id}`);
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(Cluster.destroy).toHaveBeenCalledWith({
-      where: { id: cluster.id },
+    expect(Cluster.handleDelete).toHaveBeenCalledWith({
+      id: cluster.id,
+      deletedByUserId: AUTHED_USER_ID,
     });
   });
 
   it('delete-cluster should 404 if cluster not found', async () => {
-    Cluster.destroy.mockResolvedValue(false);
+    Cluster.handleDelete.mockResolvedValue(0);
 
     const res = await request(app).delete(`/api/cluster/${nonExistentID}`);
 
     expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe('Cluster not found');
-    expect(Cluster.destroy).toHaveBeenCalledWith({
-      where: { id: nonExistentID },
+    expect(Cluster.handleDelete).toHaveBeenCalledWith({
+      id: nonExistentID,
+      deletedByUserId: AUTHED_USER_ID,
     });
     expect(logger.error).toHaveBeenCalled();
   });

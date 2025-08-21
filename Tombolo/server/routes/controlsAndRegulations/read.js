@@ -19,7 +19,7 @@ router.get('/controlsAndRegulations', async (req, res) => {
     });
     return res.status(200).json(regulations);
   } catch (err) {
-    logger.error(err);
+    logger.error('getControlsAndRegulations: ', err);
     return res.status(500).json({ error: err });
   }
 });
@@ -32,7 +32,7 @@ router.get('/getRegulation', async (req, res) => {
 
     return res.status(200).json(regulations);
   } catch (err) {
-    logger.error('err', err);
+    logger.error('getRegulation: ', err);
     return res.status(500).json({ error: err });
   }
 });
@@ -45,6 +45,7 @@ router.post('/delete', async (req, res) => {
 
     return res.status(200).json({ result: 'success' });
   } catch (err) {
+    logger.error('regulations/read delete: ', err);
     logger.error('err', err);
     return res.status(500).json({ error: err });
   }
@@ -65,7 +66,7 @@ router.post('/saveRegulations', async function (req, res) {
 
     return res.status(200).json({ result: 'success ' });
   } catch (err) {
-    logger.error('err', err);
+    logger.error('regulations/read saveRegulations: ', err);
     return res.status(500).json({ error: err });
   }
 });
@@ -75,7 +76,7 @@ router.get('/dataTypes', async (req, res) => {
     const data_types = await DataType.findAll();
     return res.status(200).json(data_types);
   } catch (err) {
-    logger.error('err', err);
+    logger.error('regulations/read dataTypes: ', err);
     return res.status(500).json({ error: err });
   }
 });
@@ -98,7 +99,7 @@ router.get('/getComplianceByDataType', async (req, res) => {
 
     return res.status(200).json(compliance);
   } catch (err) {
-    logger.error(err);
+    logger.error('regulations/read getComplianceByDataType: ', err);
     return res.status(500).json({ error: err });
   }
 });
