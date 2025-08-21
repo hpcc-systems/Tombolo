@@ -11,22 +11,25 @@ import AsrSpecificFilters from '../../common/Monitoring/AsrSpecificFilters';
 //Constants
 const { Option } = Select;
 
-function ClusterMonitoringFilters({
+function CostMonitoringFilters({
+  clusterMonitoring,
   setFilters,
-  costMonitorings,
+  // filters,
   clusters,
   filtersVisible,
   setFiltersVisible,
+  // isReader,
+  searchTerm,
   setSearchTerm,
   matchCount,
-  searchTerm,
   domains,
-  setSelectedDomain,
   selectedDomain,
+  setSelectedDomain,
   productCategories,
+  // setProductCategories,
   allProductCategories,
 }) {
-  const LOCAL_STORAGE_KEY = 'cMFilters';
+  const LOCAL_STORAGE_KEY = 'clusterMonitoringFilters';
   //Redux
   const {
     applicationReducer: { integrations },
@@ -40,8 +43,6 @@ function ClusterMonitoringFilters({
   const [activeStatusOptions, setActiveStatusOptions] = useState([]);
   const [domainOptions, setDomainOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
-  const [clusterOptions, setClusterOptions] = useState([]);
-  const [userOptions, setUserOptions] = useState([]);
 
   const { filterCount, clearFilters, handleFilterCountClick, handleDomainChange, handleFormChange, loadFilters } =
     useMonitoringFilters(
@@ -57,8 +58,8 @@ function ClusterMonitoringFilters({
     );
 
   useEffect(() => {
-    const loadCostMonitoringFilters = (costMonitoring, filterOptions) => {
-      const { clusterIds, metaData } = costMonitoring;
+    const loadCostMonitoringFilters = (clusterMonitoring, filterOptions) => {
+      const { clusterIds, metaData } = clusterMonitoring;
       // Cluster options
       if (clusterIds && clusterIds.length > 0 && clusters.length > 0) {
         clusterIds.forEach((clusterId) => {
@@ -91,15 +92,15 @@ function ClusterMonitoringFilters({
       clusters: [],
       users: [],
     };
-    const filterOptions = loadFilters(initialFilterOptions, costMonitorings, loadCostMonitoringFilters);
+
+    let filterOptions = loadFilters(initialFilterOptions, clusterMonitoring, loadCostMonitoringFilters);
 
     setApprovalStatusOptions(filterOptions.approvalStatus);
     setActiveStatusOptions(filterOptions.activeStatus);
     setDomainOptions(filterOptions.domain);
     setProductOptions(filterOptions.products);
-    setClusterOptions(filterOptions.clusters);
-    setUserOptions(filterOptions.users);
-  }, [costMonitorings, clusters, domains, allProductCategories, productCategories, selectedDomain, loadFilters]);
+    // setClusterOptions(filterOptions.clusters);
+  }, [clusterMonitoring, clusters, domains, allProductCategories, productCategories, selectedDomain, loadFilters]);
 
   //JSX
   return (
@@ -160,32 +161,6 @@ function ClusterMonitoringFilters({
               productOptions={productOptions}
               handleDomainChange={handleDomainChange}
             />
-
-            <Col span={4}>
-              <div className="notifications__filter_label">Clusters</div>
-              <Form.Item name="clusters">
-                <Select placeholder="Clusters" allowClear disabled={false} mode="multiple">
-                  {clusterOptions.map((c) => (
-                    <Option key={c.id} value={c.id}>
-                      {c.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col span={4}>
-              <div className="notifications__filter_label">Users</div>
-              <Form.Item name="users">
-                <Select placeholder="Users" allowClear disabled={false} mode="multiple">
-                  {userOptions.map((u) => (
-                    <Option key={u} value={u}>
-                      {u}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
           </Row>
         </Form>
       )}
@@ -208,4 +183,4 @@ function ClusterMonitoringFilters({
   );
 }
 
-export default ClusterMonitoringFilters;
+export default CostMonitoringFilters;

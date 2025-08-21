@@ -84,6 +84,37 @@ function ViewDetailsModal({
             ))}
           </Descriptions.Item>
         )}
+
+        {/* Primary contacts -> selectedMonitoring.metaData.contacts.primaryContacts */}
+        {selectedMonitoring?.metaData?.contacts?.primaryContacts && (
+          <Descriptions.Item label={<b>Primary Contacts</b>}>
+            {selectedMonitoring.metaData.contacts.primaryContacts.map((contact) => (
+              <Tag key={contact} color="blue">
+                {contact}
+              </Tag>
+            ))}
+          </Descriptions.Item>
+        )}
+        {/* Secondary contacts -> selectedMonitoring.metaData.contacts.secondaryContacts */}
+        {selectedMonitoring?.metaData?.contacts?.secondaryContacts && (
+          <Descriptions.Item label={<b>Secondary Contacts</b>}>
+            {selectedMonitoring.metaData.contacts.secondaryContacts.map((contact) => (
+              <Tag key={contact} color="blue">
+                {contact}
+              </Tag>
+            ))}
+          </Descriptions.Item>
+        )}
+        {/* Notify contacts -> selectedMonitoring.metaData.contacts.notifyContacts */}
+        {selectedMonitoring?.metaData?.contacts?.notifyContacts && (
+          <Descriptions.Item label={<b>Notify Contacts</b>}>
+            {selectedMonitoring.metaData.contacts.notifyContacts.map((contact) => (
+              <Tag key={contact} color="blue">
+                {contact}
+              </Tag>
+            ))}
+          </Descriptions.Item>
+        )}
         <Descriptions.Item label={<b>Approval Status</b>}>
           {selectedMonitoring.approvalStatus === 'pending' ? (
             <Tag color={approvalStatusTagColors[selectedMonitoring.approvalStatus]}> Pending </Tag>
@@ -92,8 +123,8 @@ function ViewDetailsModal({
               <Tag color={approvalStatusTagColors[selectedMonitoring.approvalStatus]}>
                 {_.capitalize(selectedMonitoring.approvalStatus)}
               </Tag>{' '}
-              {`by ${selectedMonitoring.approver.firstName}
-              ${selectedMonitoring.approver.lastName} on ${formatDateTimeShort(selectedMonitoring.approvedAt)}`}
+              {`by ${selectedMonitoring?.approver?.firstName}
+              ${selectedMonitoring?.approver?.lastName} on ${formatDateTimeShort(selectedMonitoring.approvedAt)}`}
             </>
           )}
         </Descriptions.Item>

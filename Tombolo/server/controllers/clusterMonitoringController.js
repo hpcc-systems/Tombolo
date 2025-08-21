@@ -1,27 +1,14 @@
+const { Op } = require('sequelize');
 const models = require('../models');
 const logger = require('../config/logger');
-const { Op } = require('sequelize');
+const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 
 const { ClusterMonitoring, sequelize } = models;
 
 // Common includes for cluster monitoring - customize with additional  if needed
 const getCommonIncludes = ({ customIncludes = [] }) => {
   return [
-    {
-      model: models.User,
-      as: 'creator',
-      attributes: ['id', 'firstName', 'lastName', 'email'],
-    },
-    {
-      model: models.User,
-      as: 'updater',
-      attributes: ['id', 'firstName', 'lastName', 'email'],
-    },
-    {
-      model: models.User,
-      as: 'approver',
-      attributes: ['firstName', 'lastName', 'email'],
-    },
+    ...getUserFkIncludes(true),
     {
       model: models.Cluster,
       as: 'cluster',
@@ -173,6 +160,56 @@ const toggleClusterMonitoringStatus = async (req, res) => {
   }
 };
 
+// Bulk toggle req.body (ids: [], isActive: true/false)
+const toggleBulkClusterMonitoringStatus = async (req, res) => {
+  try {
+    const { ids, isActive } = req.body;
+
+    // Fetch all monitoring records to be updated
+    const monitorings = await ClusterMonitoring.findAll({
+      where: { id: { [Op.in]: ids } },
+      raw: true,
+    });
+
+    if (monitorings.length === 0) {
+      return res
+        .status(404)
+        .send({ message: 'No cluster status monitoring records found' });
+    }
+
+    // Check if any monitoring is not approved
+    const unapprovedMonitorings = monitorings.filter(
+      mon => mon.approvalStatus !== 'approved'
+    );
+
+    if (unapprovedMonitorings.length > 0) {
+      return res.status(400).send({
+        message:
+          'All selected cluster status monitoring must be approved to change active status',
+        unapprovedIds: unapprovedMonitorings.map(mon => mon.id),
+      });
+    }
+
+    // Update isActive status for all specified IDs
+    await ClusterMonitoring.update(
+      {
+        isActive,
+        updatedBy: req.user.id,
+      },
+      {
+        where: { id: { [Op.in]: ids } },
+      }
+    );
+
+    res.status(200).send({
+      message: 'Cluster status monitoring active status updated successfully',
+    });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+    logger.error('Failed to bulk toggle monitoring status', err);
+  }
+};
+
 // Change approval status (evaluate -> approved, rejected)
 const evaluateClusterMonitoring = async (req, res) => {
   try {
@@ -215,48 +252,49 @@ const evaluateClusterMonitoring = async (req, res) => {
 // Bulk update ( only contacts can be bulk updated)
 const bulkUpdateClusterMonitoring = async (req, res) => {
   try {
-    const { monitoring } = req.body;
+    const { clusterMonitoring } = req.body;
+
+    // Ids of all monitoring to be updated
+    const ids = clusterMonitoring.map(data => data.id);
+
+    // Get existing monitoring to be updated
+    const existingMonitoring = await ClusterMonitoring.findAll({
+      where: { id: { [Op.in]: ids } },
+      raw: true,
+    });
+
+    // convert clusterMonitoring to an object for easy access
+    const updateDataObj = {};
+    clusterMonitoring.forEach(data => {
+      updateDataObj[data.id] = data?.metaData?.contacts || data;
+    });
+
     const results = {
       successful: [],
       failed: [],
     };
 
-    await Promise.all(
-      monitoring.map(async data => {
-        try {
-          const monitoringRecord = await ClusterMonitoring.findOne({
-            where: { id: data.id },
-          });
-
-          if (!monitoringRecord) {
-            results.failed.push({
-              id: data.id,
-              error: 'Record not found',
-            });
-            return;
-          }
-
-          await monitoringRecord.update({
+    for (const monitoring of existingMonitoring) {
+      try {
+        await ClusterMonitoring.update(
+          {
             metaData: {
-              ...monitoringRecord.metaData,
-              contacts: {
-                primaryContacts: data.primaryContacts,
-                secondaryContacts: data.secondaryContacts || [],
-                notifyContacts: data.notifyContacts || [],
-              },
+              ...monitoring.metaData,
+              contacts: updateDataObj[monitoring.id],
             },
             updatedBy: req.user.id,
-          });
-
-          results.successful.push(data.id);
-        } catch (error) {
-          results.failed.push({
-            id: data.id,
-            error: error.message,
-          });
-        }
-      })
-    );
+          },
+          { where: { id: monitoring.id } }
+        );
+        results.successful.push(monitoring.id);
+      } catch (error) {
+        results.failed.push({
+          id: monitoring.id,
+          error: error.message,
+        });
+        logger.error(`Failed to update monitoring id: ${monitoring.id}`, error);
+      }
+    }
 
     const statusCode = results.failed.length > 0 ? 207 : 200;
 
@@ -317,4 +355,5 @@ module.exports = {
   evaluateClusterMonitoring,
   bulkUpdateClusterMonitoring,
   deleteClusterMonitoring,
+  toggleBulkClusterMonitoringStatus,
 };

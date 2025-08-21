@@ -19,6 +19,7 @@ import { useSelector } from 'react-redux';
 import { handleDeleteJobMonitoring, toggleJobMonitoringStatus } from './jobMonitoringUtils';
 
 import styles from './jobMonitoring.module.css';
+import commonStyles from '../../common/common.module.css';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
@@ -112,19 +113,13 @@ const JobMonitoringTable = ({
     },
     {
       title: 'Created By',
-      dataIndex: 'createdBy',
+      dataIndex: 'creator',
       key: 'createdBy',
-      render: (text) => {
-        const { name, email, id } = JSON.parse(text);
+      render: (creator) => {
+        const { firstName, lastName, email } = creator;
         return (
-          <Tooltip
-            title={
-              <>
-                <div>ID : {id}</div>
-                <div>E-mail: {email}</div>
-              </>
-            }>
-            <span style={{ color: 'var(--primary' }}>{name}</span>
+          <Tooltip title={<div> {email}</div>}>
+            <span style={{ color: 'var(--primary' }}>{`${firstName} ${lastName}`}</span>
           </Tooltip>
         );
       },
@@ -376,13 +371,7 @@ const JobMonitoringTable = ({
       }}
       pagination={{ pageSize: 20 }}
       rowClassName={(record) => {
-        let className = record?.isActive
-          ? styles.jobMonitoringTable__activeMonitoring
-          : styles.jobMonitoringTable__inactiveMonitoring;
-        const idsOfSelectedRows = selectedRows.map((row) => row.id);
-        if (idsOfSelectedRows.includes(record.id)) {
-          className += ' ' + styles.jobMonitoringTable__selectedRow;
-        }
+        let className = record?.isActive ? commonStyles.table_active_row : commonStyles.table_inactive_row;
         return className;
       }}
     />

@@ -73,11 +73,30 @@ export const evaluateClusterMonitoring = async (data) => {
 };
 
 // Toggle cluster monitoring is active status
-export const toggleClusterMonitoringActiveStatus = async (id) => {
+export const toggleClusterMonitoringActiveStatus = async ({ ids, isActive }) => {
   const payload = {
     method: 'PATCH',
     headers: authHeader(),
-    body: JSON.stringify({ id }),
+    body: JSON.stringify({ ids, isActive }),
+  };
+
+  const response = await fetch(`/api/clusterMonitoring/bulkToggle`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to toggle cluster monitoring status');
+  }
+  return await response.json();
+};
+
+// Toggle single -> /toggle
+export const toggleSingleClusterMonitoringActiveStatus = async (id) => {
+  const payload = {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeader(),
+    },
+    body: JSON.stringify({ id: [id] }),
   };
 
   const response = await fetch(`/api/clusterMonitoring/toggle`, payload);
@@ -134,4 +153,20 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
   if (tab1ErroneousFields.length > 0) erroneousTabs.push((1).toString());
 
   return erroneousTabs;
+};
+
+export const handleBulkUpdateClusterMonitoring = async ({ updatedData }) => {
+  const payload = {
+    method: 'PATCH',
+    headers: authHeader(),
+    body: JSON.stringify({ clusterMonitoring: updatedData }),
+  };
+
+  const response = await fetch(`/api/clusterMonitoring/bulkUpdate`, payload);
+
+  if (!response.ok) {
+    throw new Error('Failed to bulk update cluster monitoring');
+  }
+
+  return await response.json();
 };
