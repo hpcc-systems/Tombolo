@@ -35,6 +35,7 @@ jest.mock('../models', () => {
       destroy: jest.fn(),
       save: jest.fn(),
       toJSON: jest.fn(),
+      handleDelete: jest.fn(),
     },
     RefreshToken: {
       findAll: jest.fn(),
@@ -75,6 +76,7 @@ jest.mock('../models', () => {
       bulkCreate: jest.fn(),
       update: jest.fn(),
       destroy: jest.fn(),
+      handleDelete: jest.fn(),
     },
     LandingZoneMonitoring: {
       findAll: jest.fn(),
@@ -85,6 +87,7 @@ jest.mock('../models', () => {
       bulkCreate: jest.fn(),
       update: jest.fn(),
       destroy: jest.fn(),
+      handleDelete: jest.fn(),
     },
     ClusterMonitoring: {
       findAll: jest.fn(),
@@ -95,6 +98,7 @@ jest.mock('../models', () => {
       bulkCreate: jest.fn(),
       update: jest.fn(),
       destroy: jest.fn(),
+      handleDelete: jest.fn(),
     },
     CostMonitoring: {
       findAll: jest.fn(),
@@ -105,6 +109,7 @@ jest.mock('../models', () => {
       bulkCreate: jest.fn(),
       update: jest.fn(),
       destroy: jest.fn(),
+      handleDelete: jest.fn(),
       sequelize: {
         transaction,
         __commit: commit, // Expose for test access
