@@ -10,6 +10,7 @@ const {
   evaluateClusterMonitoring,
   bulkUpdateClusterMonitoring,
   deleteClusterMonitoring,
+  toggleBulkClusterMonitoringStatus,
 } = require('../controllers/clusterMonitoringController');
 
 const {
@@ -17,9 +18,8 @@ const {
   monitoringIdAsParam,
   monitoringIdOnBody,
   evaluateMonitoringPayload,
-  bulkUpdateContacts,
   deleteMonitoringPayload,
-} = require('../middlewares/clusterStatusMonitoringMiddleware');
+} = require('../middlewares/clusterMonitoringMiddleware');
 
 // Create
 router.post(
@@ -44,10 +44,13 @@ router.put(
 
 // Start and pause
 router.patch(
-  '/toggleStatus',
+  '/toggle',
   validate(monitoringIdOnBody),
   toggleClusterMonitoringStatus
 );
+
+// Bulk toggle active status
+router.patch('/bulkToggle', toggleBulkClusterMonitoringStatus);
 
 // Approve and reject
 router.patch(
@@ -57,11 +60,7 @@ router.patch(
 );
 
 // Bulk update
-router.patch(
-  '/bulkUpdate',
-  validate(bulkUpdateContacts),
-  bulkUpdateClusterMonitoring
-);
+router.patch('/bulkUpdate', bulkUpdateClusterMonitoring);
 
 // Delete (handles single ID or array of IDs)
 router.delete('/', validate(deleteMonitoringPayload), deleteClusterMonitoring);

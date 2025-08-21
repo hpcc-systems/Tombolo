@@ -3,6 +3,7 @@ import { Form, Select, Input, Card } from 'antd';
 import LandingZoneFileExplorer from '../../../common/LandingZoneFileExplorer';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../../common/InfoDrawer';
+import { DescriptionFormRules, MonitoringNameFormRules } from '../../../common/FormRules';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -67,8 +68,7 @@ function BasicTab({
             label="Monitoring Name"
             name="name"
             rules={[
-              { required: true, message: 'Required field' },
-              { max: 100, message: 'Maximum of 100 characters allowed' },
+              ...MonitoringNameFormRules,
               () => ({
                 validator(_, value) {
                   if (isEditing) return Promise.resolve();
@@ -93,13 +93,7 @@ function BasicTab({
             />
           </Form.Item>
 
-          <Form.Item
-            label="Description"
-            name="description"
-            rules={[
-              { max: 150, message: 'Max character limit is 150' },
-              { required: true, message: 'Add short description' },
-            ]}>
+          <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
             <TextArea
               type="text-area"
               placeholder="Enter a short description"

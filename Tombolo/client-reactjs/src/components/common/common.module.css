@@ -47,3 +47,11 @@
   align-items: center;
   justify-content: center;
 }
+
+.table_active_row {
+  background-color: var(--active);
+}
+
+.table_inactive_row {
+  background-color: var(--paused);
+}
