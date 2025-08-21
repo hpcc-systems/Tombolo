@@ -22,11 +22,11 @@ const { emailBody } = require('./messageCards/notificationTemplate');
       try {
         await MonitoringNotification.bulkCreate(sentNotifications);
       } catch (err) {
-        logger.error(err);
+        logger.error('submitApiKeyMonitoring: ', err);
       }
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('Error in submitApiKeyMonitoring: ', err);
   } finally {
     parentPort ? parentPort.postMessage('done') : process.exit(0);
   }
@@ -125,7 +125,7 @@ const keyCheck = async (key, sentNotifications) => {
         });
       }
     } catch (err) {
-      logger.error(err);
+      logger.error('Error in submitApiKeyMonitoring: ', err);
     }
   }
 };

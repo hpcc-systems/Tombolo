@@ -38,7 +38,7 @@ const activeSessionsByUserId = async (req, res) => {
     // response
     return res.status(200).json({ success: true, data: activeSessions });
   } catch (err) {
-    logger.error(`Get active sessions: ${err.message}`);
+    logger.error('Get active sessions: ', err);
     return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
@@ -71,7 +71,7 @@ const destroyOneActiveSession = async (req, res) => {
       message: `${destroyedSessions} sessions destroyed`,
     });
   } catch (err) {
-    logger.error(`Destroy active sessions: ${err.message}`);
+    logger.error('Destroy active sessions: ', err);
     return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });
@@ -106,7 +106,7 @@ const destroyActiveSessions = async (req, res) => {
       message: `${destroyedSessions} sessions destroyed`,
     });
   } catch (err) {
-    logger.error(`Destroy active sessions: ${err.message}`);
+    logger.error('Destroy active sessions: ', err);
     return res
       .status(err.status || 500)
       .json({ success: false, message: err.message });

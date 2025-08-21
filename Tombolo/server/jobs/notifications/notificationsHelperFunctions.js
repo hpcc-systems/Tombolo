@@ -41,7 +41,7 @@ async function updateNotificationQueueOnError({
       { where: { id: notificationId } }
     );
   } catch (updateError) {
-    logger.error(updateError);
+    logger.error('Error updating notification queue on error', updateError);
   }
 }
 

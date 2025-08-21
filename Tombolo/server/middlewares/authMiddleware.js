@@ -81,8 +81,7 @@ const verifyValidTokenExists = (req, res, next) => {
     req.accessToken = accessToken;
     next(); // Proceed to the controller
   } catch (err) {
-    logger.error('Authorization: Invalid or expired access token');
-    logger.error(err);
+    logger.error('Authorization: Invalid or expired access token', err);
     return res
       .status(401)
       .json({ success: false, message: 'Invalid or expired access token' });

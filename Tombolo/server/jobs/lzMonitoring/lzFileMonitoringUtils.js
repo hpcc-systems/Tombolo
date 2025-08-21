@@ -100,7 +100,10 @@ const getFilesFromLandingZoneRecursivly = async ({
 
     return files;
   } catch (error) {
-    logger.error(error);
+    logger.error(
+      'lzFileMonitoringUtils.getFilesFromLandingZoneRecursively: ',
+      error
+    );
   }
 };
 

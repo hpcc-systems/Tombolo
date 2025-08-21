@@ -55,7 +55,7 @@ router.post('/update', async (req, res) => {
 
     return res.status(200).send('Success updating');
   } catch (err) {
-    logger.error(err);
+    logger.error('notifications/update: ', err);
     return res.status(503).send('Failed to make update');
   }
 });

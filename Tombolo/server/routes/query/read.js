@@ -66,8 +66,8 @@ router.post('/saveQuery', validate(validateSaveQuery), async (req, res) => {
 
     return res.status(200).json(response);
   } catch (err) {
-    logger.error(err);
-    return res.status(500).send('Error occured while saving Query');
+    logger.error('query/read - saveQuery: ', err);
+    return res.status(500).send('Error occurred while saving Query');
   }
 });
 
@@ -80,7 +80,7 @@ router.get('/query_list', validate(validateQueryList), async (req, res) => {
 
     return res.status(200).json(queries);
   } catch (err) {
-    logger.error(err);
+    logger.error('query/read - query_list: ', err);
     return res.status(500).json({ message: 'Failed to get query list' });
   }
 });
@@ -97,7 +97,7 @@ router.get(
 
       return res.status(200).json(query);
     } catch (err) {
-      logger.error(err);
+      logger.error('query/read - query_details: ', err);
       return res.status(500).json({ message: 'Failed to get query details' });
     }
   }
@@ -116,7 +116,7 @@ router.post('/delete', validate(validateDeleteQuery), async (req, res) => {
 
     return res.status(200).json({ result: 'success' });
   } catch (err) {
-    logger.error(err);
+    logger.error('query/read - delete: ', err);
     return res.status(500).json({ message: 'Failed to delete query' });
   }
 });

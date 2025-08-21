@@ -106,10 +106,10 @@ router.post(
 
       return res.status(200).json(results);
     } catch (err) {
-      logger.error(err);
+      logger.error('hpcc/read fileSearch: ', err);
       return res.status(500).send({
         success: 'false',
-        message: 'Error occured during search.',
+        message: 'Error occurred during search.',
       });
     }
   }
@@ -122,9 +122,10 @@ router.post(
     try {
       await hpccUtil.getCluster(req.body.clusterid);
     } catch (err) {
-      logger.error('------------------------------------------');
-      logger.error('Cluster not reachable', +JSON.stringify(err));
-      logger.error('------------------------------------------');
+      logger.error(
+        'hpcc/read - superfileSearch - Cluster not reachable: ',
+        err
+      );
       return res.status(500).send({
         success: 'false',
         message: 'Search failed. Please check if the cluster is running.',
@@ -152,7 +153,7 @@ router.post(
 
       return res.status(200).json(superfile);
     } catch (err) {
-      logger.error(err);
+      logger.error('hpcc/read superfileSearch: ', err);
       return res.status(500).send({
         success: 'false',
         message:
@@ -281,7 +282,7 @@ router.get('/getClusters', async (req, res) => {
 
     return res.status(200).json(clusters);
   } catch (err) {
-    logger.error(err);
+    logger.error('hpcc/read getClusters: ', err);
     return res.status(500).json({
       success: 'false',
       message: 'Error occurred while retrieving cluster list',
@@ -296,7 +297,7 @@ router.get('/getCluster', async function (req, res) {
     });
     return res.status(200).json(clusters);
   } catch (err) {
-    logger.error('err', err);
+    logger.error('hpcc/read getCluster: ', err);
     return res.status(500).json({ error: 'Failed to get cluster ' });
   }
 });
@@ -313,7 +314,7 @@ router.get('/getFileInfo', validate(validateGetFileInfo), async (req, res) => {
       : await hpccUtil.fileInfo(fileName, clusterid);
     return res.status(200).json(data);
   } catch (error) {
-    logger.error(error);
+    logger.error('hpcc/read getFileInfo: ', error);
     return res.status(500).send('Error occurred while getting file details');
   }
 });
@@ -334,7 +335,7 @@ router.get(
       details.Stat ? delete details.Stat : null;
       return res.status(200).json(details);
     } catch (error) {
-      logger.error(error);
+      logger.error('hpcc/read getLogicalFileDetails: ', error);
       return res.status(500).send('Error occurred while getting file details');
     }
   }
@@ -368,8 +369,8 @@ router.get(
         return res.status(200).json(indexInfo);
       }
     } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Error occured while getting file details');
+      logger.error('hpcc getIndexInfo: ', err);
+      return res.status(500).send('Error occurred while getting file details');
     }
   }
 );
@@ -419,7 +420,7 @@ router.get(
 //       return columns;
 //     })
 //     .catch(function (err) {
-//       logger.error(err);
+//       logger.error('hpcc/read getIndexColumns: ', err);
 //     });
 // }
 
@@ -456,7 +457,7 @@ router.get('/getData', validate(validateGetData), async function (req, res) {
 
     return res.status(200).json([]);
   } catch (err) {
-    logger.error(err);
+    logger.error('hpcc/read getData: ', err);
     return res.status(500).send('Error occured while getting file data');
   }
 });
@@ -492,7 +493,7 @@ router.get('/getFileProfile', async function (req, res) {
     }
     return res.status(200).json();
   } catch (err) {
-    logger.error(err);
+    logger.error('hpcc/read getFileProfile: ', err);
     return res.status(500).send('Error');
   }
 });
@@ -538,7 +539,7 @@ router.get('/getFileProfileHTML', async function (req, res) {
     logger.info(`URL's: ${JSON.stringify(filteredUrl)}`);
     return res.status(200).json(filteredUrl);
   } catch (err) {
-    logger.error(err);
+    logger.error('hpcc/read getFileProfileHTML: ', err);
     return res.status(500).send('Error');
   }
 });
@@ -569,8 +570,8 @@ router.get(
         return res.status(200).json(queryInfo);
       }
     } catch (err) {
-      logger.error(err);
-      return res.status(500).send('Error occured while getting file details');
+      logger.error('hpcc/read getQueryInfo: ', err);
+      return res.status(500).send('Error occurred while getting file details');
     }
   }
 );
@@ -593,7 +594,7 @@ router.get(
         superFiles: response?.SuperFiles?.SuperFile || [],
       });
     } catch (err) {
-      logger.error(err);
+      logger.error('hpcc/read getQueryFiles: ', err);
       return res
         .status(503)
         .json({ success: false, message: 'Error while fetching query files' });
@@ -631,7 +632,7 @@ router.get(
 
       return res.status(200).json(existingJobInfo);
     } catch (err) {
-      logger.error(err);
+      logger.error('hpcc/read getJobInfo: ', err);
       return res.status(500).send('Error occurred while getting job info');
     }
   }
@@ -678,7 +679,7 @@ router.get(
         return res.status(200).json(_dropZones);
       }
     } catch (err) {
-      logger.error(err);
+      logger.error('hpcc/read getDropZones: ', err);
       return res.status(500).json({
         success: false,
         message: 'Error occurred while getting dropzones',
@@ -697,7 +698,7 @@ router.get('/dropZoneDirectories', async (req, res) => {
     });
     return res.status(200).send(directories);
   } catch (error) {
-    logger.error('Failed to find directories', error);
+    logger.error('hpcc/read dropZoneDirectories: ', error);
     return res.status(500).send({ message: error.message });
   }
 });
@@ -757,7 +758,7 @@ router.get(
       };
       return res.status(200).json(directoryDetails);
     } catch (err) {
-      logger.error(err);
+      logger.error('hpcc/read dropZoneDirectoryDetails: ', err);
       return res.status(503).json({ success: false, message: err.message });
     }
   }
@@ -793,7 +794,7 @@ router.post(
       }
       return res.status(200).send(files);
     } catch (err) {
-      logger.error(err);
+      logger.error('hpcc/read dropZoneFileSearch: ', err);
       return res.status(500).send('Error occurred during dropzone file search');
     }
   }
@@ -810,7 +811,7 @@ router.get(
 
       return res.status(200).json(details);
     } catch (error) {
-      logger.error(error);
+      logger.error('hpcc/read getSuperFileDetails: ', error);
       return res.status(500).send('Error occurred while getting file details');
     }
   }
@@ -856,7 +857,7 @@ router.post(
 
       return res.status(200).send(response.data);
     } catch (err) {
-      logger.error(err);
+      logger.error('hpcc/read executeSprayJob: ', err);
       return res.status(500).send('Error occurred during dropzone file search');
     }
   }
@@ -896,7 +897,7 @@ router.get(
 
       return res.status(200).send(clusterMetaData);
     } catch (err) {
-      logger.error(err);
+      logger.error('hpcc/read clusterMetaData: ', err);
       return res.status(503).json({ success: false, message: err });
     }
   }

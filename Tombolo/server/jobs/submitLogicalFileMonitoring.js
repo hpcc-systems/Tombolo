@@ -191,7 +191,7 @@ const {
           });
         }
       } catch (err) {
-        logger.error(err);
+        logger.error('submitLogicalFileMonitoring - emailNotification: ', err);
       }
     }
 
@@ -222,7 +222,10 @@ const {
             monitoring_type: 'file',
           });
         } catch (err) {
-          logger.error(err);
+          logger.error(
+            'submitLogicalFileMonitoring - teamsNotification: ',
+            err
+          );
         }
       }
     }
@@ -232,11 +235,14 @@ const {
       try {
         await MonitoringNotification.bulkCreate(sentNotifications);
       } catch (err) {
-        logger.error(err);
+        logger.error(
+          'submitLogicalFileMonitoring - bulkCreatedSentNotifications: ',
+          err
+        );
       }
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('submitLogicalFileMonitoring: ', err);
   } finally {
     parentPort ? parentPort.postMessage('done') : process.exit(0);
   }

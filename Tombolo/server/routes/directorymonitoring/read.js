@@ -51,7 +51,7 @@ router.post(
 
       return res.status(201).json(directoryMonitoring);
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read create: ', error);
       return res.status(500).json({
         error: 'Failed to create directory monitoring entry: ' + error.message,
       });
@@ -106,7 +106,7 @@ router.put(
 
       return res.status(200).json(updatedMonitoring);
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read approve: ', error);
       return res
         .status(500)
         .json({ error: 'Failed to approve directory monitoring entry' });
@@ -145,7 +145,7 @@ router.put(
 
       return res.status(200).json(directoryMonitoring);
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read update: ', error);
       res
         .status(500)
         .json({ error: 'Failed to update directory monitoring entry' });
@@ -177,7 +177,7 @@ router.delete(
 
       return res.status(204).end();
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read delete: ', error);
       return res
         .status(500)
         .json({ error: 'Failed to delete directory monitoring entry' });
@@ -205,7 +205,7 @@ router.get(
       }
       return res.status(200).json(directoryMonitoring);
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read get: ', error);
       return res
         .status(500)
         .json({ error: 'Failed to get directory monitoring entry' });
@@ -237,7 +237,7 @@ router.get(
 
       return res.status(200).send(directoryMonitorings);
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read all: ', error);
       return res
         .status(500)
         .json({ message: 'Unable to get directory monitoring' });
@@ -271,7 +271,7 @@ router.patch(
       logger.verbose('Directory monitoring active status updated');
       return res.status(200).json(directoryMonitoring);
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read active: ', error);
       return res
         .status(500)
         .json({ error: 'Failed to update directory monitoring entry' });
@@ -302,7 +302,7 @@ router.patch(
 
       return res.status(200).json({ message: 'Directory monitorings updated' });
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read bulkUpdate:');
       return res
         .status(500)
         .json({ error: 'Failed to update directory monitoring entries' });
@@ -330,7 +330,7 @@ router.delete(
       }
       return res.status(204).end();
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read bulkDelete: ', error);
       return res
         .status(500)
         .json({ error: 'Failed to delete directory monitoring entries' });
@@ -397,7 +397,7 @@ router.patch(
         .status(200)
         .json({ message: 'Directory monitorings approved' });
     } catch (error) {
-      logger.error(error);
+      logger.error('directorymonitoring/read bulkApprove: ', error);
       return res
         .status(500)
         .json({ error: 'Failed to approve directory monitoring entries' });

@@ -30,7 +30,7 @@ const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode
         raw: true,
       });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Failed to retrieve notifications from db: ', err);
       return;
     }
 
@@ -106,7 +106,7 @@ const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode
         }
       } catch (error) {
         // If sending fails update the notification queue
-        logger.error(error.message);
+        logger.error('Failed to send email: ', error);
 
         // Update notification queue
         await updateNotificationQueueOnError({
@@ -122,7 +122,10 @@ const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode
     try {
       await NotificationQueue.update({ lastScanned: now }, { where: {} });
     } catch (error) {
-      logger.error(error.message);
+      logger.error(
+        'processEmailNotifications: Failed to update last scanned: ',
+        error
+      );
     }
 
     //Update sent notifications table
@@ -145,7 +148,10 @@ const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode
         await SentNotification.create(notificationCopy);
       }
     } catch (error) {
-      logger.error(error.message);
+      logger.error(
+        'processEmailNotifications: Failed to create sent notification: ',
+        error
+      );
     }
 
     // Bulk delete the sent notifications form notification queue
@@ -158,10 +164,13 @@ const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode
         where: { id: successfulDeliveryIds },
       });
     } catch (err) {
-      logger.error(err.message);
+      logger.error(
+        'Failed to delete sent notifications from queue table: ',
+        err
+      );
     }
   } catch (error) {
-    logger.error(error.message);
+    logger.error('Failed to process email notifications: ', error);
   }
 })();
 

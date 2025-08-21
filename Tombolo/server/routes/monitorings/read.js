@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
     const monitoringTypes = await MonitoringType.findAll();
     return res.status(200).json(monitoringTypes);
   } catch (err) {
-    logger.error(err);
+    logger.error('get monitoringTypes: ', err);
     return res
       .status(500)
       .json({ message: 'Failed to fetch monitoring types' });
@@ -32,7 +32,7 @@ router.post('/', validate(validateCreateMonitoring), async (req, res) => {
     const monitoringType = await MonitoringType.create(req.body);
     return res.status(200).json(monitoringType);
   } catch (error) {
-    logger.error(error);
+    logger.error('create monitoringType: ', error);
     return res
       .status(500)
       .json({ message: 'Failed to create monitoring type' });
@@ -51,7 +51,7 @@ router.delete('/:id', validate(validateDeleteMonitoring), async (req, res) => {
       .status(200)
       .json({ message: 'Monitoring type deleted successfully' });
   } catch (error) {
-    logger.error(error);
+    logger.error('delete monitoringType: ', error);
     return res
       .status(500)
       .json({ message: 'Failed to delete monitoring type' });
@@ -68,7 +68,7 @@ router.put('/:id', validate(validateUpdateMonitoring), async (req, res) => {
     await monitoringType.update(req.body);
     return res.status(200).json(monitoringType);
   } catch (error) {
-    logger.error(error);
+    logger.error('update monitoringType: ', error);
     return res
       .status(500)
       .json({ message: 'Failed to update monitoring type' });
@@ -91,7 +91,7 @@ router.get(
       }
       return res.status(200).json(monitoringType.id);
     } catch (error) {
-      logger.error(error);
+      logger.error('get monitoringTypeId', error);
       return res
         .status(500)
         .json({ message: 'Failed to get monitoring type id' });

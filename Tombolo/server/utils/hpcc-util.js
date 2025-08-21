@@ -48,9 +48,7 @@ exports.fileInfo = async (fileName, clusterId) => {
       file_validations: [],
     };
   } catch (error) {
-    logger.error('-error fileInfo---------------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
+    logger.error('hpcc-util - fileInfo: ', error);
     throw error;
   }
 };
@@ -368,9 +366,7 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
       return createJobInfoObj(wuInfo.Workunit, sourceFiles);
     }
   } catch (error) {
-    logger.error('-error getJobInfo--------------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
+    logger.error('hpcc-util - getJobInfo: ', error);
     throw error;
   }
 };
@@ -422,9 +418,7 @@ exports.getJobWuDetails = async (
       ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster, wuService }
       : null;
   } catch (error) {
-    logger.error('-ERROR getJobWuDetails--------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
+    logger.error('hpcc-util - getJobWuDetails: ', error);
     throw error;
   }
 };
@@ -443,7 +437,7 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
         password: decryptString(clusterCred.dataValues.cluster_hash),
       };
     } catch (error) {
-      logger.error(error);
+      logger.error('hpcc-util - resubmitWU: ', error);
     }
   }
 
@@ -482,7 +476,7 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
           : JSON.stringify(error.response.data);
 
       if (responseBody.indexOf('Access Denied') > -1) {
-        logger.error(error);
+        logger.error('hpcc-util - resubmitWU - access denied: ', error);
         throw new Error(
           'Access Denied -- Valid username and password required!'
         );
@@ -492,12 +486,12 @@ exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
       try {
         return error.response.data;
       } catch (parseError) {
-        logger.error('ERROR - ', error);
-        throw error;
+        logger.error('hpcc-util - resubmitWU - parse error: ', parseError);
+        throw parseError;
       }
     } else {
+      logger.error('hpcc-util - resubmitWU: ', error);
       // Network or other errors
-      logger.error('ERROR - ', error);
       throw error;
     }
   }
@@ -525,9 +519,7 @@ exports.workUnitOutput = async ({ wuid, clusterId }) => {
     const wuService = await module.exports.getWorkunitsService(clusterId);
     return await wuService.WUResult({ Wuid: wuid });
   } catch (err) {
-    logger.error('-- Error -----------------------------------------');
-    logger.error(err);
-    logger.error('---------------------------------------------------');
+    logger.error('hpcc-util - workUnitOutput: ', err);
   }
 };
 
@@ -592,9 +584,7 @@ const getFileLayout = async (cluster, fileName, format) => {
 
     return layoutResults;
   } catch (error) {
-    logger.error('-Error getFileLayout----------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
+    logger.error('hpcc-util - getFileLayout: ', error);
   }
 };
 
@@ -634,7 +624,7 @@ exports.getCluster = clusterId => {
         reject(`${cluster.name} is  not reachable...`);
       }
     } catch (err) {
-      logger.error('Error occured while getting Cluster info.....' + err);
+      logger.error('hpcc-util - getCluster: ', err);
       reject(err);
     }
   });
@@ -728,8 +718,7 @@ exports.createWorkUnit = async (clusterId, WUbody = {}) => {
     if (!wuid) throw respond;
     return wuid;
   } catch (error) {
-    logger.error('create workunit error------------------------------------');
-    logger.error(error);
+    logger.error('hpcc-util - createWorkUnit: ', error);
     const customError = new Error('Failed to create new Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
@@ -743,8 +732,7 @@ exports.updateWorkUnit = async (clusterId, WUupdateBody) => {
     if (!respond.Workunit?.Wuid) throw respond; // assume that Wuid field is always gonna be in "happy" response
     return respond;
   } catch (error) {
-    logger.error('update workunit error------------------------------------');
-    logger.error(error);
+    logger.error('hpcc-util - updateWorkUnit: ', error);
     const customError = new Error('Failed to update Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
@@ -758,8 +746,7 @@ exports.submitWU = async (clusterId, WUsubmitBody) => {
     if (respond.Exceptions) throw respond;
     return respond;
   } catch (error) {
-    logger.error('submit workunit error-----------------------------------');
-    logger.error(error);
+    logger.error('hpcc-util - submitWU: ', error);
     const customError = new Error('Failed to submit Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
@@ -776,8 +763,7 @@ exports.updateWUAction = async (clusterId, WUactionBody) => {
     logger.verbose('------------------------------------------');
     return respond;
   } catch (error) {
-    logger.error('update workunit action error----------------------------');
-    logger.error(error);
+    logger.error('hpcc-util - updateWUAction: ', error);
     const customError = new Error('Failed to update Work Unit action');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
@@ -879,9 +865,9 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
         );
       } catch (error) {
         logger.error(
-          '❌  pullFilesFromGithub: git submodule update error----------------------------------------'
+          'hpcc-util - pullFilesFromGithub - submoduleUpdate: ',
+          error
         );
-        logger.error(error);
       } finally {
         // Switch back to root folder after updating submodules
         await git.cwd({ path: masterFolder, root: true });
@@ -955,10 +941,7 @@ exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
     }
 
     tasks.error = error;
-    logger.error(
-      '❌  pullFilesFromGithub: ERROR IN MAIN CATCH------------------------------------'
-    );
-    logger.error(error);
+    logger.error('hpcc-util - pullFilesFromGithub: ', error);
   } finally {
     // Delete repo;
     const isDeleted = deleteRepo(masterFolder);
@@ -977,11 +960,10 @@ const deleteRepo = masterFolder => {
     fs.rmSync(masterFolder, { recursive: true, maxRetries: 5, force: true });
     isRepoDeleted = true;
   } catch (err) {
-    logger.error('------------------------------------------');
+    logger.error('hpcc-util - deleteRepo: ', err);
     logger.error(
       `❌  pullFilesFromGithub: Failed to delete a repo ${masterFolder}`
     );
-    logger.error(err);
     isRepoDeleted = false;
   }
   return isRepoDeleted;
@@ -1192,11 +1174,7 @@ exports.getSuperFile = async (clusterId, fileName) => {
 
     return output;
   } catch (err) {
-    logger.error(
-      'ERROR GETTING SUPERFILE---------------------------------------'
-    );
-    logger.error(err);
-    logger.error('----------------------------------------');
+    logger.error('hpcc-util - getSuperFile: ', err);
   }
 };
 
@@ -1245,11 +1223,7 @@ exports.getSuperFiles = async (clusterId, fileName) => {
     }
     return output;
   } catch (err) {
-    logger.error(
-      'ERROR GETTING SUPERFILE---------------------------------------'
-    );
-    logger.error(err);
-    loggger.error('----------------------------------------');
+    logger.error('hpcc-util - getSuperFiles: ', err);
   }
 };
 
@@ -1321,9 +1295,7 @@ exports.getAllSubFiles = async (clusterId, fileName) => {
 
     return output;
   } catch (err) {
-    logger.error('ERROR GETTING SUPERFILE SUBFILES------------------');
-    logger.error(err);
-    logger.error('----------------------------------------');
+    logger.error('hpcc-util - getAllSubFiles: ', err);
   }
 };
 
@@ -1378,8 +1350,6 @@ exports.getRecentSubFile = async (clusterId, fileName) => {
       subfileCount: logicalFileCount,
     };
   } catch (err) {
-    logger.error('ERROR GETTING MOST RECENT SUBFILE-----------------');
-    logger.error(err);
-    logger.error('----------------------------------------');
+    logger.error('hpcc-util - getRecentSubFile: ', err);
   }
 };

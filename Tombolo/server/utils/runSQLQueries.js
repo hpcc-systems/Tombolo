@@ -49,7 +49,7 @@ const runSQLQuery = async (query, config) => {
     sql.close();
     return result;
   } catch (err) {
-    logger.error(err);
+    logger.error('runSqlQuery: ', err);
     return {
       err,
       message: 'There was an issue contacting the server',

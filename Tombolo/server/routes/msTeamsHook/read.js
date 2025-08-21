@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
     const response = await TeamsHook.findAll({ raw: true });
     return res.status(200).send(response);
   } catch (err) {
-    logger.error(err);
+    logger.error('getMsTeamsHook: ', err);
     return res
       .status(500)
       .send('Error while fetching teams hooks. Try again later.');
@@ -29,7 +29,7 @@ router.post('/', validate(validateCreateMsTeamsHook), async (req, res) => {
     const response = await TeamsHook.create(req.body);
     return res.status(200).send(response);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('createMsTeamsHook: ', err);
     return res
       .status(500)
       .send('Error while creating teams hook. Try again later.');
@@ -56,7 +56,7 @@ router.patch(
       });
       return res.status(200).send(response);
     } catch (err) {
-      logger.error(err);
+      logger.error('updateMsTeamsHook: ', err);
       return res
         .status(500)
         .send('Error while updating teams hook. Try again later.');
@@ -72,7 +72,7 @@ router.delete('/:id', validate(validateDeleteMsTeamsHook), async (req, res) => {
     });
     return res.status(200).send('Successfully deleted teams hook');
   } catch (err) {
-    logger.error(err);
+    logger.error('deleteMsTeamsHook: ', err);
     return res
       .status(500)
       .send('Error while deleting teams hook. Try again later.');
