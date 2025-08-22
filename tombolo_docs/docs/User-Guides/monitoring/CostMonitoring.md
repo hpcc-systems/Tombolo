@@ -10,9 +10,20 @@ title: "Cost Monitoring"
 
 # Monitoring Types and Frequency
 
-As of right now Tombolo only supports one type of cost monitoring
+### Frequency:
 
-- **Aggregated Daily Cost Monitoring**: Tracks cost for a user or list of users for the day, combining all three workunit costs (compile, execute, and file access) across all workunits.
+Cost monitoring runs every hour and analyzes the current day's cost data to determine if thresholds have been exceeded.
+Only costs accumulated during the current calendar day (00:00 to 23:59) are considered when evaluating against the
+configured thresholds.
+
+### Monitoring Types:
+Tombolo supports two types of cost monitoring:
+
+- **Cluster Cost Monitoring**: Tracks and analyzes the cost of a cluster or list of clusters across all Workunits.
+- **User Cost Monitoring**: Tracks and analyzes cost for a user or list of users across all Workunits for the specified clusters.
+
+Both monitoring types can be configured to track either individual costs (per cluster/user) or combined costs across
+multiple clusters/users, allowing for flexible threshold monitoring based on summed resource utilization.
 
 ---
 
@@ -24,12 +35,15 @@ To access the Cost Monitoring page, click on **Monitoring** from the left naviga
 
 - **Monitoring Name**: A unique, descriptive name for your monitor
 - **Description** : Detailed description of what this monitor does and its purpose
+- **Monitor By/Type**: Select either user or cluster cost monitoring
 - **Clusters**: Select cluster(s) which you want to be monitored
-- **Users**: Enter user(s) that you want to monitor. These would be the owner of a workunit
+- **Users**: Enter user(s) that you want to monitor. These would be the owner of a workunit (only shown when "Monitor
+  By" is set to user)
 
 **Notifications Tab:**
 
 - **Cost Threshold**: The threshold for combined workunit cost across the cluster(s) and user(s) entered in the basic tab for 24 hours.
+  - **Per Item or Total Dropdown**: This dropdown allows you to specify if the threshold is for each individual user/cluster or the summed cost of all users/clusters.
 - **Primary Contact(s)**: Main recipients who will receive all alerts (required)
 
 Once saved, the monitor will be created with **Pending** approval status. All monitors require approval before they can be activated. When approved by authorized personnel, the monitor can be set to run by clicking the power button to activate monitoring.
@@ -68,8 +82,18 @@ Once a monitor is approved and activated, the backend monitoring system automati
 3. **Threshold Evaluation**: The system checks if the total costs for a monitor exceeds the Cost threshold.
 4. **Alert Generation**: If a threshold is exceeded, notifications are generated and sent.
 
-Each monitoring cycle performs the following actions: establish connection to the HPCC cluster using Workunit services, retrieve current workunit information and cost data for the monitored time period, extract user-specific cost breakdowns from workunit metadata, calculate cumulative costs across compilation, file access, and execution activities, aggregate total costs per user for the current day, and compare aggregated costs against configured thresholds.
+Each monitoring cycle performs the following actions:
 
-The system detects and alerts on cost threshold breaches when given user(s) costs across given cluster(s) exceed the specified dollar amounts, budget overruns that occur during the monitoring period (full day).
+- Establish connection to the HPCC cluster using Workunit services
+- Retrieve current workunit information and cost data for the monitored time period
+- Extract user-specific cost breakdowns from workunit metadata
+- Calculate cumulative costs across:
+  - Compilation
+  - File access
+  - Execution activities
+- Aggregate total costs based on scope for the current day
+- Compare aggregated costs against configured thresholds
 
-When cost thresholds are exceeded, alerts are sent immediately when limits are breached with detailed information including total cost amount, individual user cost contributions, and timestamp of when the threshold was exceeded. Notifications are sent via configured channels (email) and delivered to all configured contact groups including primary contacts, secondary contacts, and notification recipients based on the monitoring configuration.
+The system detects and alerts on cost threshold breaches when given the given scopes costs across given cluster(s) exceed the specified dollar amounts, budget overruns that occur during the monitoring period (full day).
+
+When cost thresholds are exceeded, alerts are sent immediately with detailed information including total cost amount, individual user cost contributions, and timestamp of when the threshold was exceeded. Notifications are sent via configured channels (email) and delivered to all configured contact groups including primary contacts, secondary contacts, and notification recipients based on the monitoring configuration.
