@@ -1,6 +1,6 @@
 import { authHeader } from '../../common/AuthHeader.js';
 
-// Create a directory monitoring
+// Create a landingzone monitoring
 export const createLandingZoneMonitoring = async ({ inputData }) => {
   const payload = {
     method: 'POST',
@@ -11,7 +11,7 @@ export const createLandingZoneMonitoring = async ({ inputData }) => {
   const response = await fetch(`/api/landingZoneMonitoring`, payload);
 
   if (!response.ok) {
-    throw new Error('Failed to save directory monitoring');
+    throw new Error('Failed to save landingzone monitoring');
   }
 
   const { data } = await response.json();
@@ -35,7 +35,7 @@ export const getAllLzMonitorings = async ({ applicationId }) => {
   return data;
 };
 
-// Update a directory monitoring
+// Update a landingzone monitoring
 export const updateMonitoring = async ({ updatedData }) => {
   const payload = {
     method: 'PATCH',
@@ -46,14 +46,14 @@ export const updateMonitoring = async ({ updatedData }) => {
   const response = await fetch(`/api/landingZoneMonitoring`, payload);
 
   if (!response.ok) {
-    throw new Error('Failed to update directory monitoring');
+    throw new Error('Failed to update landingzone monitoring');
   }
 
   const data = await response.json();
   return data;
 };
 
-// Update a directory monitoring
+// Update a landingzone monitoring
 export const approveSelectedMonitoring = async (formData) => {
   const payload = {
     method: 'PATCH',
@@ -64,7 +64,7 @@ export const approveSelectedMonitoring = async (formData) => {
   const response = await fetch(`/api/landingZoneMonitoring/evaluate`, payload);
 
   if (!response.ok) {
-    throw new Error('Failed to update directory monitoring');
+    throw new Error('Failed to update landingzone monitoring');
   }
 
   const data = await response.json();
@@ -126,7 +126,7 @@ export const toggleLzMonitoringStatus = async ({ ids, isActive }) => {
   return data;
 };
 
-// Bulk delete directory monitorings
+// Bulk delete landingzone monitorings
 export const handleLzBulkDelete = async ({ ids }) => {
   const payload = {
     method: 'DELETE',
@@ -178,7 +178,7 @@ export const handleBulkApproveDirectoryMonitorings = async ({ selectedDirectoryM
   const response = await fetch(`/api/DirectoryMonitoring/bulkApprove`, payload);
 
   if (!response.ok) {
-    throw new Error('Failed to bulk approve directory monitorings');
+    throw new Error('Failed to bulk approve landingzone monitorings');
   }
   const data = await response.json();
   return data;
