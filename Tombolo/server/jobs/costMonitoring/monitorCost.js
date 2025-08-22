@@ -7,7 +7,7 @@ const {
   MonitoringLog,
   MonitoringType,
 } = require('../../models');
-const { WorkunitsService } = require('@hpcc-js/comms');
+const { Workunit } = require('@hpcc-js/comms');
 const { getCluster } = require('../../utils/hpcc-util');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
@@ -20,79 +20,53 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
  * with applied offset, either as Date objects or ISO strings based on toIso parameter
  */
 function getStartAndEndTime(lastScanTime, offset = 0, toIso = false) {
-  const now = new Date();
-  const offsetMs = offset * 60 * 1000; // 240 minutes = 4 hours
+  const nowUtc = new Date();
+  const offsetMs = offset * 60 * 1000;
 
-  const nowWithOffset = new Date(now.getTime() + offsetMs);
+  // Convert to "local" time by adding the offset for both points
+  const nowLocal = new Date(nowUtc.getTime() + offsetMs);
 
-  let startTime;
+  let startLocal;
   let isNewDay = false;
+
   if (lastScanTime) {
-    const lastScanWithOffset = new Date(
-      new Date(lastScanTime).getTime() - offsetMs
-    );
-    isNewDay = lastScanWithOffset.getDate() !== nowWithOffset.getDate();
+    const lastLocal = new Date(new Date(lastScanTime).getTime() + offsetMs);
+
+    // Compare local calendar dates
+    isNewDay =
+      lastLocal.getFullYear() !== nowLocal.getFullYear() ||
+      lastLocal.getMonth() !== nowLocal.getMonth() ||
+      lastLocal.getDate() !== nowLocal.getDate();
 
     if (isNewDay) {
-      startTime = new Date(nowWithOffset);
-      startTime.setHours(0, 0, 0, 0);
+      // Start at local midnight of the current day
+      startLocal = new Date(nowLocal);
+      startLocal.setHours(0, 0, 0, 0);
     } else {
-      startTime = lastScanWithOffset;
+      startLocal = lastLocal;
     }
   } else {
-    const oneHourMs = 60 * 60 * 1000;
-    startTime = new Date(now.getTime() - oneHourMs + offsetMs);
+    // First run: take the last hour in local time
+    startLocal = new Date(nowLocal);
+    startLocal.setHours(0, 0, 0, 0);
   }
+
+  // Convert back to UTC instants for return/consumption
+  const endUtc = new Date(nowLocal.getTime() - offsetMs);
+  const startUtc = new Date(startLocal.getTime() - offsetMs);
 
   if (toIso) {
     return {
-      endTime: nowWithOffset.toISOString(),
-      startTime: startTime.toISOString(),
+      endTime: endUtc.toISOString(),
+      startTime: startUtc.toISOString(),
       isNewDay,
     };
   }
   return {
-    endTime: nowWithOffset,
-    startTime,
+    endTime: endUtc,
+    startTime: startUtc,
     isNewDay,
   };
-}
-
-async function markDataAnalyzed(costMonitoringId, clusterId, applicationId) {
-  try {
-    const costMonitoringData = await CostMonitoringData.findOne({
-      where: { monitoringId: costMonitoringId, clusterId, applicationId },
-    });
-    if (!costMonitoringData) {
-      return;
-    }
-
-    costMonitoringData.analyzed = true;
-    await costMonitoringData.save();
-  } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `monitorCost: Error in markDataAnalyzed: ${err.message}`,
-      });
-  }
-}
-
-// TODO: Need a way to mark old data if not the start of day (isNewDay !== true)
-async function getCostMonitoringData(
-  monitoringId,
-  clusterId,
-  applicationId,
-  monitoringDate
-) {
-  return await CostMonitoringData.create({
-    monitoringId,
-    applicationId,
-    date: monitoringDate,
-    clusterId,
-    usersCostInfo: {},
-    analyzed: false,
-  });
 }
 
 /**
@@ -231,28 +205,22 @@ async function monitorCost() {
           });
 
           // Get start and end date
-          const {
-            nowWithOffset: endDate,
-            hourAgoWithOffset: startDate,
-            isNewDay,
-          } = getStartAndEndTime(
+          const { endTime: endDate, startTime: startDate } = getStartAndEndTime(
             monitoringLog ? monitoringLog.scan_time : null,
             timezoneOffset,
             true
           );
 
-          // NOTE: If making changes for daily, weekly, etc. Update this logic
-          if (isNewDay) {
-            await markDataAnalyzed(costMonitor.id, clusterId, applicationId);
-          }
-
           // Get costMonitoringData
-          const costMonitoringData = await getCostMonitoringData(
-            costMonitor.id,
-            clusterId,
+          const costMonitoringData = {
+            monitoringId: costMonitor.id,
             applicationId,
-            new Date()
-          );
+            date: new Date(),
+            clusterId,
+            usersCostInfo: {},
+            metaData: {},
+            analyzed: false,
+          };
 
           // Get cluster options
           const clusterOptions = getClusterOptions(
@@ -260,6 +228,7 @@ async function monitorCost() {
               baseUrl: `${thorHost}:${thorPort}`,
               userID: username || '',
               password: hash || '',
+              timeoutSecs: 180,
             },
             allowSelfSigned
           );
@@ -267,46 +236,99 @@ async function monitorCost() {
           // Set the new scanTime
           newScanTime = new Date();
 
-          const connection = new WorkunitsService(clusterOptions);
-
           // Get work Units for the last hour where their state is terminal
 
           // Query for workunits during timeframe
-          const response = await connection.WUQuery({
+          const response = await Workunit.query(clusterOptions, {
             StartDate: startDate,
             EndDate: endDate,
           });
 
-          // Filter for failed or completed workunits
           const terminalWorkUnits =
-            response.Workunits?.ECLWorkunit?.filter(
+            response.filter(
               workUnit =>
                 workUnit.State === 'failed' || workUnit.State === 'completed'
             ) || [];
 
           // Iterate work Units
           terminalWorkUnits.forEach(
-            ({ Owner, CompileCost, FileAccessCost, ExecuteCost }) => {
-              if (!costMonitoringData.usersCostInfo[Owner]) {
-                costMonitoringData.usersCostInfo[Owner] = {
-                  compileCost: CompileCost,
-                  fileAccessCost: FileAccessCost,
-                  executeCost: ExecuteCost,
+            ({
+              Owner,
+              CompileCost,
+              FileAccessCost,
+              ExecuteCost,
+              Wuid,
+              Jobname,
+            }) => {
+              // Ensure expected fields are present in costMonitoringData for JSON fields
+              if (!costMonitoringData.hasOwnProperty('metaData'))
+                costMonitoringData.metaData = {};
+              if (!costMonitoringData.metaData.hasOwnProperty('wuCostData'))
+                costMonitoringData.metaData.wuCostData = {};
+              if (!costMonitoringData.metaData.wuCostData.hasOwnProperty(Wuid))
+                costMonitoringData.metaData.wuCostData[Wuid] = {
+                  jobName: '',
+                  owner: '',
+                  compileCost: 0,
+                  executeCost: 0,
+                  fileAccessCost: 0,
+                  totalCost: 0,
                 };
-                return;
-              }
+              if (!costMonitoringData.usersCostInfo.hasOwnProperty(Owner))
+                costMonitoringData.usersCostInfo[Owner] = {
+                  compileCost: 0,
+                  executeCost: 0,
+                  fileAccessCost: 0,
+                  totalCost: 0,
+                };
 
+              if (
+                !costMonitoringData.metaData.hasOwnProperty('clusterCostData')
+              )
+                costMonitoringData.metaData.clusterCostData = {
+                  compileCost: 0,
+                  executeCost: 0,
+                  fileAccessCost: 0,
+                  totalCost: 0,
+                };
+
+              const totalCost = CompileCost + ExecuteCost + FileAccessCost;
+
+              // Set clusterCostData to aggregate cost for all workunits
+              costMonitoringData.metaData.clusterCostData.fileAccessCost +=
+                FileAccessCost;
+              costMonitoringData.metaData.clusterCostData.compileCost +=
+                CompileCost;
+              costMonitoringData.metaData.clusterCostData.executeCost +=
+                ExecuteCost;
+              costMonitoringData.metaData.clusterCostData.totalCost +=
+                totalCost;
+
+              // Set wuCostData for specific workunit
+              costMonitoringData.metaData.wuCostData[Wuid].jobName = Jobname;
+              costMonitoringData.metaData.wuCostData[Wuid].owner = Owner;
+              costMonitoringData.metaData.wuCostData[Wuid].compileCost =
+                CompileCost;
+              costMonitoringData.metaData.wuCostData[Wuid].executeCost =
+                ExecuteCost;
+              costMonitoringData.metaData.wuCostData[Wuid].fileAccessCost =
+                FileAccessCost;
+              costMonitoringData.metaData.wuCostData[Wuid].totalCost =
+                totalCost;
+
+              // Set userCostInfo for a specific user
               costMonitoringData.usersCostInfo[Owner].compileCost +=
                 CompileCost;
               costMonitoringData.usersCostInfo[Owner].executeCost +=
                 ExecuteCost;
               costMonitoringData.usersCostInfo[Owner].fileAccessCost +=
                 FileAccessCost;
+              costMonitoringData.usersCostInfo[Owner].totalCost += totalCost;
             }
           );
 
           // Save costMonitoringData on each iteration
-          await costMonitoringData.save();
+          await CostMonitoringData.create(costMonitoringData);
 
           // If monitoring log doesn't exist create it. If it does update scan time
           await handleMonitorLogs(

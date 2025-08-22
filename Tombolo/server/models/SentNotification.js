@@ -23,6 +23,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.STRING,
       },
+      idempotencyKey: {
+        allowNull: true,
+        type: DataTypes.STRING,
+      },
       applicationId: {
         allowNull: true,
         type: DataTypes.UUID,
@@ -95,8 +99,13 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: 'SentNotification',
       tableName: 'sent_notifications',
-      freezeTableName: true,
       paranoid: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['idempotencyKey', 'deletedAt'],
+        },
+      ],
     }
   );
 

@@ -15,6 +15,8 @@ const {
   paramUuids,
 } = require('./commonMiddleware');
 
+const usersRegex = /^(?:[a-zA-Z][a-zA-Z0-9_:.\-]*|\*)$/;
+
 const createUpdateValidations = [
   bodyUuids.applicationId,
   stringBody('monitoringName', false, {
@@ -23,8 +25,8 @@ const createUpdateValidations = [
   stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
   arrayBody('clusterIds'),
   objectBody('metaData'),
-  arrayBody('metaData.users'),
-  regexBody('metaData.users.*', false, { regex: TITLE_REGEX }),
+  arrayBody('metaData.users', true),
+  regexBody('metaData.users.*', true, { regex: usersRegex }),
   objectBody('metaData.notificationMetaData'),
   arrayBody('metaData.notificationMetaData.primaryContacts'),
   numericBody('metaData.notificationMetaData.notificationCondition'),
