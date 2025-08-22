@@ -9,7 +9,9 @@
     "migrations": "npx sequelize db:migrate",
     "seeds": "npx sequelize db:seed:all",
     "dropSchema": "npx sequelize db:drop",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --detectOpenHandles",
+    "test:jobs": "jest --detectOpenHandles --selectProjects jobs",
+    "test:api": "jest --detectOpenHandles --selectProjects api"
   },
   "author": "",
   "license": "ISC",
