@@ -132,7 +132,7 @@ describe('Cluster Monitoring routes Routes', () => {
   // Bulk update cluster status monitoring contacts
   it('PATCH /bulkUpdate should bulk update monitoring contacts', async () => {
     const completePayload = {
-      monitoring: [
+      clusterMonitoring: [
         {
           id: uuidv4(),
           primaryContacts: ['primary@test.com'],
