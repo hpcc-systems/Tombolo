@@ -159,14 +159,14 @@ export const handleBulkUpdateLzMonitorings = async (updatedData) => {
   return data;
 };
 
-export const handleBulkApproveDirectoryMonitorings = async ({ selectedDirectoryMonitorings, formData }) => {
+export const handleBulkApproveLandingZoneMonitoring = async ({ selectedLandingZoneMonitoring, formData }) => {
   const { approved, approvedAt, approvedBy, approvalStatus, active } = formData;
 
   const payload = {
     method: 'PATCH',
     headers: authHeader(),
     body: JSON.stringify({
-      ids: selectedDirectoryMonitorings,
+      ids: selectedLandingZoneMonitoring,
       approved,
       approvedAt,
       approvedBy,
@@ -175,7 +175,7 @@ export const handleBulkApproveDirectoryMonitorings = async ({ selectedDirectoryM
     }),
   };
 
-  const response = await fetch(`/api/DirectoryMonitoring/bulkApprove`, payload);
+  const response = await fetch(`/api/landingZoneMonitoring/bulkApprove`, payload);
 
   if (!response.ok) {
     throw new Error('Failed to bulk approve landingzone monitorings');

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Form, Button, message, Input, Select, Checkbox } from 'antd';
-import { handleBulkApproveDirectoryMonitorings, getAllDirectoryMonitorings } from './Utils';
+import { handleBulkApproveLandingZoneMonitoring, getAllLandingZoneMonitoring } from './Utils';
 
 const { useForm } = Form;
 
@@ -10,7 +10,7 @@ const BulkApprovalModal = ({
   selectedRows,
   user,
   applicationId,
-  setDirectoryMonitorings,
+  setLandingZoneMonitoring,
 }) => {
   const [form] = useForm();
 
@@ -47,8 +47,8 @@ const BulkApprovalModal = ({
         formData.active = false;
       }
 
-      const response = await handleBulkApproveDirectoryMonitorings({
-        selectedDirectoryMonitorings: selectedRows,
+      const response = await handleBulkApproveLandingZoneMonitoring({
+        selectedLandingZoneMonitoring: selectedRows,
         formData,
       });
 
@@ -57,9 +57,9 @@ const BulkApprovalModal = ({
       } else {
         message.success('Your response has been saved');
         form.resetFields();
-        const allDirectoryMonitorings = await getAllDirectoryMonitorings({ applicationId });
+        const allLandingZoneMonitoring = await getAllLandingZoneMonitoring({ applicationId });
 
-        setDirectoryMonitorings(allDirectoryMonitorings);
+        setLandingZoneMonitoring(allLandingZoneMonitoring);
       }
     } catch (error) {
       message.error(error.message);
