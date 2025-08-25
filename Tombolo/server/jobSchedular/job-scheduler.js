@@ -32,7 +32,6 @@ const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   createSuperFileMonitoringBreeJob,
-  createDirectoryMonitoringBreeJob,
   scheduleSuperFileMonitoringOnServerStart,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
@@ -346,14 +345,6 @@ class JobScheduler {
   createSuperFileMonitoringBreeJob({ filemonitoring_id, cron }) {
     return createSuperFileMonitoringBreeJob.call(this, {
       filemonitoring_id,
-      cron,
-    });
-  }
-
-  createDirectoryMonitoringBreeJob({ directoryMonitoring_id, name, cron }) {
-    return createDirectoryMonitoringBreeJob.call(this, {
-      directoryMonitoring_id,
-      name,
       cron,
     });
   }

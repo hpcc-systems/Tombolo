@@ -20,7 +20,7 @@ module.exports = sequelize => {
         foreignKey: 'cluster_id',
         onDelete: 'CASCADE',
       });
-      this.hasMany(models.DirectoryMonitoring, {
+      this.hasMany(models.landingZoneMonitoring, {
         foreignKey: 'cluster_id',
         onDelete: 'CASCADE',
       });

@@ -3,18 +3,18 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class DirectoryMonitoring extends Model {
+  class landingZoneMonitoring extends Model {
     static associate(models) {
-      DirectoryMonitoring.belongsTo(models.Application, {
+      landingZoneMonitoring.belongsTo(models.Application, {
         foreignKey: 'application_id',
       });
-      DirectoryMonitoring.belongsTo(models.Cluster, {
+      landingZoneMonitoring.belongsTo(models.Cluster, {
         foreignKey: 'cluster_id',
       });
     }
   }
 
-  DirectoryMonitoring.init(
+  landingZoneMonitoring.init(
     {
       id: {
         primaryKey: true,
@@ -102,7 +102,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'DirectoryMonitoring',
+      modelName: 'landingZoneMonitoring',
       tableName: 'directory_monitorings',
       paranoid: true,
       indexes: [
@@ -114,5 +114,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  return DirectoryMonitoring;
+  return landingZoneMonitoring;
 };
