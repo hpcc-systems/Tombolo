@@ -137,15 +137,16 @@ async function monitorCost() {
     });
 
     if (!monitoringType) {
-      if (parentPort)
+      if (parentPort) {
         parentPort.postMessage({
           level: 'error',
           text: 'monitorCost: MonitoringType, "Cost Monitoring" not found',
         });
-      else
+      } else {
         logger.error(
           'monitorCost: MonitoringType, "Cost Monitoring" not found'
         );
+      }
       return;
     }
 
@@ -273,6 +274,11 @@ async function monitorCost() {
               Wuid,
               Jobname,
             }) => {
+              // Ensure the costs are a number and not null/undefined
+              CompileCost = CompileCost ?? 0;
+              FileAccessCost = FileAccessCost ?? 0;
+              ExecuteCost = ExecuteCost ?? 0;
+
               // Ensure expected fields are present in costMonitoringData for JSON fields
               if (!costMonitoringData.hasOwnProperty('metaData'))
                 costMonitoringData.metaData = {};

@@ -3,7 +3,6 @@ const {
   createCMNotificationPayload,
   getClusters,
   getAsrData,
-  sendNocNotification,
   emailAlreadySent,
   analyzeClusterCost,
   analyzeUserCost,
@@ -22,7 +21,6 @@ const {
   MonitoringType,
 } = require('../../models');
 const {
-  generateNotificationId,
   findLocalDateTimeAtCluster,
 } = require('../../jobs/jobMonitoring/monitorJobsUtil');
 const { getCostMonitoring } = require('../helpers');

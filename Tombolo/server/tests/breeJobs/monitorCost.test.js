@@ -157,5 +157,280 @@ describe('monitorCost', () => {
         type: 'monitor-cost',
       });
     });
+
+    it('should post error if getCluster throws', async () => {
+      CostMonitoring.findAll.mockResolvedValue([
+        { id: 1, clusterIds: [1], applicationId: 123 },
+      ]);
+      MonitoringType.findOne.mockResolvedValue({
+        id: 1,
+        name: 'Cost Monitoring',
+      });
+      getCluster.mockRejectedValue(new Error('Cluster error'));
+      await monitorCost();
+      expect(parentPort.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          level: 'error',
+          text: expect.stringContaining('Failed to get cluster'),
+        })
+      );
+    });
+
+    it('should post error if Workunit.query throws', async () => {
+      CostMonitoring.findAll.mockResolvedValue([
+        { id: 1, clusterIds: [1], applicationId: 123 },
+      ]);
+      MonitoringType.findOne.mockResolvedValue({
+        id: 1,
+        name: 'Cost Monitoring',
+      });
+      getCluster.mockResolvedValue({ id: 1 });
+      Workunit.query.mockRejectedValue(new Error('WU error'));
+      Cluster.findAll.mockResolvedValue([{ id: 1 }]);
+      MonitoringLog.findOne.mockResolvedValue(null);
+      getClusterOptions.mockReturnValue({});
+      await monitorCost();
+      expect(parentPort.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          level: 'error',
+          text: expect.stringContaining('Failed in cluster'),
+        })
+      );
+    });
+
+    it('should post error if CostMonitoringData.create throws', async () => {
+      CostMonitoring.findAll.mockResolvedValue([
+        { id: 1, clusterIds: [1], applicationId: 123 },
+      ]);
+      MonitoringType.findOne.mockResolvedValue({
+        id: 1,
+        name: 'Cost Monitoring',
+      });
+      getCluster.mockResolvedValue({ id: 1 });
+      Workunit.query.mockResolvedValue([
+        {
+          State: 'completed',
+          Owner: 'user1',
+          CompileCost: 1,
+          FileAccessCost: 2,
+          ExecuteCost: 3,
+          Wuid: 'W1',
+          Jobname: 'Job1',
+        },
+      ]);
+      CostMonitoringData.create.mockRejectedValue(new Error('Create error'));
+      Cluster.findAll.mockResolvedValue([{ id: 1 }]);
+      MonitoringLog.findOne.mockResolvedValue(null);
+      getClusterOptions.mockReturnValue({});
+      await monitorCost();
+      expect(parentPort.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          level: 'error',
+          text: expect.stringContaining('Failed in cluster'),
+        })
+      );
+    });
+
+    it('should post error if MonitoringLog.create throws', async () => {
+      CostMonitoring.findAll.mockResolvedValue([
+        { id: 1, clusterIds: [1], applicationId: 123 },
+      ]);
+      MonitoringType.findOne.mockResolvedValue({
+        id: 1,
+        name: 'Cost Monitoring',
+      });
+      getCluster.mockResolvedValue({ id: 1 });
+      Workunit.query.mockResolvedValue([
+        {
+          State: 'completed',
+          Owner: 'user1',
+          CompileCost: 1,
+          FileAccessCost: 2,
+          ExecuteCost: 3,
+          Wuid: 'W1',
+          Jobname: 'Job1',
+        },
+      ]);
+      CostMonitoringData.create.mockResolvedValue({});
+      MonitoringLog.create.mockRejectedValue(new Error('Log create error'));
+      Cluster.findAll.mockResolvedValue([{ id: 1 }]);
+      MonitoringLog.findOne.mockResolvedValue(null);
+      getClusterOptions.mockReturnValue({});
+      await monitorCost();
+      expect(parentPort.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          level: 'error',
+          text: expect.stringContaining('Failed in cluster'),
+        })
+      );
+    });
+
+    it('should log error if parentPort is undefined and MonitoringType not found', async () => {
+      jest.resetModules();
+      jest.doMock('worker_threads', () => ({ parentPort: undefined }));
+      const logger = require('../../config/logger');
+      logger.error = jest.fn();
+
+      // Re-require dependencies after mocking worker_threads
+      const { CostMonitoring, MonitoringType } = require('../../models');
+      const { monitorCost } = require('../../jobs/costMonitoring/monitorCost');
+
+      CostMonitoring.findAll.mockResolvedValue([{ id: 'some-id' }]);
+      MonitoringType.findOne.mockResolvedValue(null);
+
+      await monitorCost();
+      expect(logger.error).toHaveBeenCalledWith(
+        'monitorCost: MonitoringType, "Cost Monitoring" not found'
+      );
+    });
+
+    it('should fetch all clusters if clusterIds is null', async () => {
+      CostMonitoring.findAll.mockResolvedValue([
+        { id: 1, clusterIds: null, applicationId: 123 },
+      ]);
+      MonitoringType.findOne.mockResolvedValue({
+        id: 1,
+        name: 'Cost Monitoring',
+      });
+      Cluster.findAll.mockResolvedValue([{ id: 1 }]);
+      getCluster.mockResolvedValue({ id: 1 });
+      MonitoringLog.findOne.mockResolvedValue(null);
+      getClusterOptions.mockReturnValue({});
+      Workunit.query.mockResolvedValue([
+        {
+          State: 'completed',
+          Owner: 'user1',
+          CompileCost: 1,
+          FileAccessCost: 2,
+          ExecuteCost: 3,
+          Wuid: 'W1',
+          Jobname: 'Job1',
+        },
+      ]);
+      CostMonitoringData.create.mockResolvedValue({});
+      MonitoringLog.create.mockResolvedValue({});
+      await monitorCost();
+      expect(Cluster.findAll).toHaveBeenCalledWith({
+        attributes: ['id'],
+        where: { deletedAt: null },
+      });
+    });
+
+    it('should handle multiple clusters and workunits', async () => {
+      CostMonitoring.findAll.mockResolvedValue([
+        { id: 1, clusterIds: [1, 2], applicationId: 123 },
+      ]);
+      MonitoringType.findOne.mockResolvedValue({
+        id: 1,
+        name: 'Cost Monitoring',
+      });
+      Cluster.findAll.mockResolvedValue([{ id: 1 }, { id: 2 }]);
+      getCluster.mockImplementation(id => Promise.resolve({ id }));
+      MonitoringLog.findOne.mockResolvedValue(null);
+      getClusterOptions.mockReturnValue({});
+      Workunit.query.mockResolvedValue([
+        {
+          State: 'completed',
+          Owner: 'user1',
+          CompileCost: 1,
+          FileAccessCost: 2,
+          ExecuteCost: 3,
+          Wuid: 'W1',
+          Jobname: 'Job1',
+        },
+        {
+          State: 'completed',
+          Owner: 'user2',
+          CompileCost: 2,
+          FileAccessCost: 3,
+          ExecuteCost: 4,
+          Wuid: 'W2',
+          Jobname: 'Job2',
+        },
+      ]);
+      CostMonitoringData.create.mockResolvedValue({});
+      MonitoringLog.create.mockResolvedValue({});
+      await monitorCost();
+      expect(CostMonitoringData.create).toHaveBeenCalled();
+      expect(MonitoringLog.create).toHaveBeenCalled();
+    });
+
+    it('should handle empty workunit results', async () => {
+      CostMonitoring.findAll.mockResolvedValue([
+        { id: 1, clusterIds: [1], applicationId: 123 },
+      ]);
+      MonitoringType.findOne.mockResolvedValue({
+        id: 1,
+        name: 'Cost Monitoring',
+      });
+      Cluster.findAll.mockResolvedValue([{ id: 1 }]);
+      getCluster.mockResolvedValue({ id: 1 });
+      MonitoringLog.findOne.mockResolvedValue(null);
+      getClusterOptions.mockReturnValue({});
+      Workunit.query.mockResolvedValue([]);
+      CostMonitoringData.create.mockResolvedValue({});
+      MonitoringLog.create.mockResolvedValue({});
+      await monitorCost();
+      expect(CostMonitoringData.create).toHaveBeenCalled();
+      expect(MonitoringLog.create).toHaveBeenCalled();
+    });
+
+    it('should process failed workunits', async () => {
+      CostMonitoring.findAll.mockResolvedValue([
+        { id: 1, clusterIds: [1], applicationId: 123 },
+      ]);
+      MonitoringType.findOne.mockResolvedValue({
+        id: 1,
+        name: 'Cost Monitoring',
+      });
+      Cluster.findAll.mockResolvedValue([{ id: 1 }]);
+      getCluster.mockResolvedValue({ id: 1 });
+      MonitoringLog.findOne.mockResolvedValue(null);
+      getClusterOptions.mockReturnValue({});
+      Workunit.query.mockResolvedValue([
+        {
+          State: 'failed',
+          Owner: 'user1',
+          CompileCost: 1,
+          FileAccessCost: 2,
+          ExecuteCost: 3,
+          Wuid: 'W1',
+          Jobname: 'Job1',
+        },
+      ]);
+      CostMonitoringData.create.mockResolvedValue({});
+      MonitoringLog.create.mockResolvedValue({});
+      await monitorCost();
+      expect(CostMonitoringData.create).toHaveBeenCalled();
+      expect(MonitoringLog.create).toHaveBeenCalled();
+    });
+
+    it('should handle workunits with missing cost fields', async () => {
+      CostMonitoring.findAll.mockResolvedValue([
+        { id: 1, clusterIds: [1], applicationId: 123 },
+      ]);
+      MonitoringType.findOne.mockResolvedValue({
+        id: 1,
+        name: 'Cost Monitoring',
+      });
+      Cluster.findAll.mockResolvedValue([{ id: 1 }]);
+      getCluster.mockResolvedValue({ id: 1 });
+      MonitoringLog.findOne.mockResolvedValue(null);
+      getClusterOptions.mockReturnValue({});
+      Workunit.query.mockResolvedValue([
+        {
+          State: 'completed',
+          Owner: 'user1',
+          Wuid: 'W1',
+          Jobname: 'Job1',
+          // missing CompileCost, FileAccessCost, ExecuteCost
+        },
+      ]);
+      CostMonitoringData.create.mockResolvedValue({});
+      MonitoringLog.create.mockResolvedValue({});
+      await monitorCost();
+      expect(CostMonitoringData.create).toHaveBeenCalled();
+      expect(MonitoringLog.create).toHaveBeenCalled();
+    });
   });
 });
