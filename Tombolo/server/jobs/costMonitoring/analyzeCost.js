@@ -140,6 +140,8 @@ async function getClusters(clusterIds) {
     }
   }
 
+  if (clustersToGet.length === 0) return resultClusters;
+
   const retrievedClusters = await Cluster.findAll({
     where: { id: { [Op.in]: clustersToGet } },
   });
@@ -623,3 +625,15 @@ async function analyzeCost() {
 (async () => {
   await analyzeCost();
 })();
+
+module.exports = {
+  buildCMIdempotencyKey,
+  createCMNotificationPayload,
+  getClusters,
+  getAsrData,
+  sendNocNotification,
+  emailAlreadySent,
+  analyzeClusterCost,
+  analyzeUserCost,
+  analyzeCost,
+};
