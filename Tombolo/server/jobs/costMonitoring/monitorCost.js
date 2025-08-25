@@ -256,6 +256,7 @@ async function monitorCost() {
           const response = await Workunit.query(clusterOptions, {
             StartDate: startDate,
             EndDate: endDate,
+            PageSize: 99999, // Ensure we get all workunits
           });
 
           const terminalWorkUnits =

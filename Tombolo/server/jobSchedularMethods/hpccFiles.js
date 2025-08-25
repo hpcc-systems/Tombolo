@@ -8,7 +8,6 @@ const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
 const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
   'submitLogicalFileMonitoring.js';
 const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = 'submitSuperFileMonitoring.js';
-const SUBMIT_DIRECTORY_MONITORING_FILE_NAME = 'submitDirectoryMonitoring.js';
 const FILE_MONITORING = 'fileMonitoringPoller.js';
 
 function createLandingZoneFileMonitoringBreeJob({
@@ -30,25 +29,6 @@ function createLandingZoneFileMonitoringBreeJob({
     },
   };
   this.bree.add(job);
-}
-
-function createDirectoryMonitoringBreeJob({ directoryMonitoring_id, cron }) {
-  const uniqueJobName = `Directory Monitoring - ${directoryMonitoring_id}`;
-  const job = {
-    cron,
-    name: uniqueJobName,
-    path: path.join(
-      __dirname,
-      '..',
-      'jobs',
-      SUBMIT_DIRECTORY_MONITORING_FILE_NAME
-    ),
-    worker: {
-      workerData: { directoryMonitoring_id },
-    },
-  };
-  this.bree.add(job);
-  this.bree.start(uniqueJobName);
 }
 
 function createLogicalFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
@@ -185,7 +165,6 @@ module.exports = {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   createSuperFileMonitoringBreeJob,
-  createDirectoryMonitoringBreeJob,
   scheduleSuperFileMonitoringOnServerStart,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,

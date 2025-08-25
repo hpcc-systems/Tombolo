@@ -410,6 +410,7 @@ const monitoring_name = 'Job Monitoring';
       let notificationPrefix = 'JM';
       let product;
       let domain;
+      let domainRegion;
       let severity;
 
       if (asrSpecificMetaData && asrSpecificMetaData.productCategory) {
@@ -421,10 +422,11 @@ const monitoring_name = 'Job Monitoring';
         product = productName;
 
         //Domain
-        const { name: domainName } = await getDomain(
+        const { name: domainName, region } = await getDomain(
           asrSpecificMetaData.domain
         );
         domain = domainName;
+        domainRegion = region;
 
         //Severity
         severity = asrSpecificMetaData.severity;
@@ -479,7 +481,7 @@ const monitoring_name = 'Job Monitoring';
           timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
         }),
         asrSpecificMetaData: {
-          region: 'USA',
+          region: domainRegion,
           product,
           domain,
           severity,

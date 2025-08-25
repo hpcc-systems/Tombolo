@@ -192,26 +192,6 @@ const monitoringTypeName = 'Job Monitoring';
           continue;
         }
 
-        // --------------------------------------------------
-        // let alertTimePassed = false;
-        // let lateByInMinutes = 0;
-
-        /* jobLevelSeverity < severityThreshHold means the job is not so severe.
-        We can wait until expected completion time before notifying about unpunctuality */
-
-        // if (jobLevelSeverity < severityThreshHold || !severityThreshHold) {
-        //   alertTimePassed = window.end < window.currentTime;
-
-        //   lateByInMinutes = Math.floor(
-        //     (window.currentTime - window.end) / 60000
-        //   );
-        // } else {
-        //   lateByInMinutes = Math.floor(
-        //     (window.currentTime - window.start) / 60000
-        //   );
-        // }
-        // ----------------------------------------------------
-
         alertTimePassed = window.start < window.currentTime;
 
         lateByInMinutes = Math.floor(
@@ -314,6 +294,7 @@ const monitoringTypeName = 'Job Monitoring';
         let notificationPrefix = 'JM';
         let prodName;
         let domain;
+        let domainRegion;
         let severity;
         const offSet = clusterInfo?.timezone_offset || 0;
 
@@ -325,10 +306,11 @@ const monitoringTypeName = 'Job Monitoring';
           notificationPrefix = shortCode;
           prodName = productName;
 
-          const { name: domainName } = await getDomain(
+          const { name: domainName, region } = await getDomain(
             asrSpecificMetaData.domain
           );
           domain = domainName;
+          domainRegion = region;
 
           severity = asrSpecificMetaData.severity;
         }
@@ -370,7 +352,7 @@ const monitoringTypeName = 'Job Monitoring';
               timezoneOffset: offSet || 0,
             }),
             asrSpecificMetaData: {
-              region: 'USA',
+              region: domainRegion,
               product: prodName,
               domain,
               severity,

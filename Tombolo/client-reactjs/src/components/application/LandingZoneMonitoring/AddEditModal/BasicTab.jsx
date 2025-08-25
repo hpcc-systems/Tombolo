@@ -1,7 +1,5 @@
-/* eslint-disable */
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Card } from 'antd';
-// import LandingZoneFileExplorer from '../../../common/LandingZoneFileExplorer';
 import AsrSpecificMonitoring from './ASRSpecificMonitoring';
 import { useSelector } from 'react-redux';
 import { DescriptionFormRules, MonitoringNameFormRules } from '../../../common/FormRules';
@@ -10,16 +8,13 @@ const { TextArea } = Input;
 
 function BasicTab({
   form,
-  directoryMonitorings,
+  landingZoneMonitoring,
   isEditing,
   selectedCluster,
-  setSelectedCluster,
-  setDirectory,
   copying,
   domains,
   productCategories,
   setSelectedDomain,
-  landingZoneMonitoring,
 }) {
   //Local State
   const nameRef = useRef(null);
@@ -110,10 +105,7 @@ function BasicTab({
             />
           </Form.Item>
 
-          <Form.Item
-            label="Description"
-            name="description"
-            rules={DescriptionFormRules}>
+          <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
             <TextArea
               type="text-area"
               placeholder="Enter a short description"

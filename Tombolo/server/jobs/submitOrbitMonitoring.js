@@ -243,7 +243,7 @@ const {
       title: notificationDetails.title,
       product: product,
       businessUnit: businessUnit,
-      region: 'USA',
+      // region: 'USA',
       severityCode: severityCode,
       date: wuResult[0].Date,
       remedy:

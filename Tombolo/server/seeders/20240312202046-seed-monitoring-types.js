@@ -15,16 +15,6 @@ module.exports = {
       },
       {
         id: uuidv4(),
-        name: 'Directory Monitoring',
-        createdAt: new Date(),
-        createdBy: JSON.stringify({
-          firstName: null,
-          lastName: 'System',
-          email: 'NA',
-        }),
-      },
-      {
-        id: uuidv4(),
         name: 'Landing Zone Monitoring',
         createdAt: new Date(),
         createdBy: JSON.stringify({
