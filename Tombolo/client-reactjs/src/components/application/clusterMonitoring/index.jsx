@@ -15,8 +15,8 @@ import {
 import ViewDetailsModal from './ViewDetailsModal';
 import ActionButton from './ActionButton';
 import AddEditModal from './AddEditModal/AddEditModal.jsx';
-import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
-import { useMonitorType } from '../../../hooks/useMonitoringType';
+import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
+import { useMonitorType } from '@/hooks/useMonitoringType';
 import ApproveRejectModal from './ApproveRejectModal.jsx';
 import ClusterMonitoringFilters from './ClusterMonitoringFilters';
 import { getAllProductCategories } from '../../common/ASRTools';
@@ -27,10 +27,8 @@ const monitoringTypeName = 'Cluster Monitoring';
 
 function ClusterMonitoring() {
   //Redux
-  const {
-    application: { applicationId },
-    clusters,
-  } = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const clusters = useSelector((state) => state.application.clusters);
 
   //get user roles
   const roleArray = getRoleNameArray();
