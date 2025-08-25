@@ -106,7 +106,7 @@ router.get('/domains/', async (req, res) => {
 
     return res.status(200).json(domains);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('Get domains: ', err);
     return res.status(500).json({ message: 'Failed to fetch domains' });
   }
 });
@@ -121,7 +121,7 @@ router.get('/domainsOnly/', async (req, res) => {
 
     return res.status(200).json(domains);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('Get domainsOnly: ', err);
     return res.status(500).json({ message: 'Failed to fetch domains' });
   }
 });
@@ -159,6 +159,7 @@ router.patch(
             id: req.params.id,
             deletedByUserId: req.user.id,
             transaction: t,
+            deleteKey: 'domain_id',
           });
 
           // create domain monitoring type mapping
@@ -167,7 +168,7 @@ router.patch(
               {
                 domain_id: req.params.id,
                 monitoring_type_id: monitoringId,
-                updatedBy: req.user.id,
+                createdBy: req.user.id,
               },
               { transaction: t }
             );
@@ -192,7 +193,7 @@ router.patch(
         response[0] === 0 ? 'Domain not found' : 'Successfully updated domain';
       return res.status(200).json({ message });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Failed to update domain: ', err);
       return res.status(500).json({ message: 'Failed to update domain' });
     }
   }
@@ -213,7 +214,7 @@ router.delete(
         response === 0 ? 'Domain not found' : 'Domain deleted successfully';
       return res.status(200).json({ message });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Delete domain: ', err);
       return res.status(500).json({ message: 'Failed to delete domain' });
     }
   }
@@ -293,7 +294,7 @@ router.get('/products/', async (req, res) => {
 
     return res.status(200).json(products);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('Get products: ', err);
     return res.status(500).json({ message: 'Failed to fetch domains' });
   }
 });
@@ -309,7 +310,7 @@ router.get('/productsOnly/', async (req, res) => {
 
     return res.status(200).json(products);
   } catch (err) {
-    logger.error(err.message);
+    logger.error('Get productsOnly: ', err);
     return res.status(500).json({ message: 'Failed to fetch products' });
   }
 });
@@ -365,7 +366,7 @@ router.put(
           : 'Successfully updated product';
       return res.status(200).json({ message });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Update product: ', err);
       return res.status(500).json({ message: 'Failed to update product' });
     }
   }
@@ -386,7 +387,7 @@ router.delete(
         response === 0 ? 'Product not found' : 'Product deleted successfully';
       return res.status(200).json({ message });
     } catch (err) {
-      logger.error(err.message);
+      logger.error('Delete product: ', err);
       return res.status(500).json({ message: 'Failed to delete product' });
     }
   }
@@ -423,12 +424,12 @@ router.get(
 
       // Remove junction table attributes and rename the domain object keys
       const response = domains.map(domain => {
-        return { id: domain['asr_domain.id'], name: domain['asr_domain.name'] };
+        return { id: domain['AsrDomain.id'], name: domain['AsrDomain.name'] };
       });
 
       return res.status(200).json(response);
     } catch (error) {
-      logger.error(error.message);
+      logger.error('Get domain for monitoring type: ', error);
       return res.status(500).send('Unable to fetch domains');
     }
   }
@@ -458,16 +459,16 @@ router.get(
       // remove junction table attributes and rename the product object keys
       const response = productCategories.map(product => {
         return {
-          id: product['asr_product.id'],
-          name: product['asr_product.name'],
-          shortCode: product['asr_product.shortCode'],
-          tier: product['asr_product.tier'],
+          id: product['AsrProduct.id'],
+          name: product['AsrProduct.name'],
+          shortCode: product['AsrProduct.shortCode'],
+          tier: product['AsrProduct.tier'],
         };
       });
 
       return res.status(200).json(response);
     } catch (error) {
-      logger.error(error.message);
+      logger.error('Get product categories for domain: ', error);
       return res.status(500).send('Unable to fetch product categories');
     }
   }

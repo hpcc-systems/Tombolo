@@ -31,7 +31,6 @@ module.exports = (sequelize, DataTypes) => {
       modelName: 'DataflowClusterCredential',
       tableName: 'dataflow_cluster_credentials',
       paranoid: true,
-      freezeTableName: true,
     }
   );
 

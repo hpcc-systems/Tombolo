@@ -136,7 +136,7 @@ const LandingZoneMonitoringTable = ({
           {!isReader ? (
             <>
               <Tooltip title="Edit">
-                <EditOutlined className={styles.icons} onClick={() => editDirectoryMonitoring(record)} />
+                <EditOutlined className={styles.icons} onClick={() => editLandingZoneMonitoring(record)} />
               </Tooltip>
 
               <Popover
@@ -197,7 +197,8 @@ const LandingZoneMonitoringTable = ({
               </Popover>
             </>
           ) : (
-            <Link to={`/${applicationId}/dashboard/notifications?monitoringId=124&monitoringType=directoryMonitoring`}>
+            <Link
+              to={`/${applicationId}/dashboard/notifications?monitoringId=124&monitoringType=landingZoneMonitoring`}>
               <BellOutlined style={{ marginRight: 15 }} />
             </Link>
           )}
@@ -213,7 +214,7 @@ const LandingZoneMonitoringTable = ({
   };
 
   // When edit icon is clicked, display the add landing zone monitoring modal and set the selected monitoring
-  const editDirectoryMonitoring = (record) => {
+  const editLandingZoneMonitoring = (record) => {
     setEditingData({ isEditing: true, selectedMonitoring: record });
 
     setSelectedMonitoring(record);

@@ -45,7 +45,7 @@ const getDropzonesForACluster = async (req, res) => {
 
     res.status(200).send(TpDropZone);
   } catch (err) {
-    logger.error(`Error in getDropzones: ${err.message}`);
+    logger.error('Error in getDropzones: ', err);
     res.status(500).send({ message: 'Internal server error' });
   }
 };
@@ -99,7 +99,7 @@ const getFileList = async (req, res) => {
       data: fileListResponse,
     });
   } catch (err) {
-    logger.error(`Error in getFileList: ${err.message}`);
+    logger.error('Error in getFileList: ', err);
     res.status(500).send({
       success: false,
       message: 'Internal server error',
@@ -215,7 +215,7 @@ const getLandingZoneMonitoringById = async (req, res) => {
       data: landingZoneMonitoring,
     });
   } catch (err) {
-    logger.error(`Error getting landing zone monitoring by ID: ${err.message}`);
+    logger.error('Error getting landing zone monitoring by ID: ', err);
     res.status(500).json({
       success: false,
       message: 'Failed to get landing zone monitoring',
@@ -273,7 +273,7 @@ const updateLandingZoneMonitoring = async (req, res) => {
       data: updatedMonitoring,
     });
   } catch (err) {
-    logger.error(`Error updating landing zone monitoring: ${err.message}`);
+    logger.error('Error updating landing zone monitoring: ', err);
 
     // Handle specific error types
     if (err.name === 'SequelizeValidationError') {
@@ -333,7 +333,7 @@ const deleteLandingZoneMonitoring = async (req, res) => {
       message: 'Landing zone monitoring deleted successfully',
     });
   } catch (err) {
-    logger.error(`Error deleting landing zone monitoring: ${err.message}`);
+    logger.error('Error deleting landing zone monitoring: ', err);
 
     // Handle specific error types
     if (err.name === 'SequelizeForeignKeyConstraintError') {
@@ -386,7 +386,7 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
       message: 'Landing zone monitoring deleted successfully',
     });
   } catch (err) {
-    logger.error(`Error deleting landing zone monitoring: ${err.message}`);
+    logger.error('Error deleting landing zone monitoring: ', err);
 
     res.status(500).json({
       success: false,

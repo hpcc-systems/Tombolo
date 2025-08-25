@@ -1,16 +1,21 @@
-"use strict";
+'use strict';
+
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("sent_notifications", {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('sent_notifications', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      searchableNotificationId:{
+      searchableNotificationId: {
         allowNull: false,
         type: Sequelize.STRING,
+      },
+      idempotencyKey: {
+        type: Sequelize.STRING,
+        allowNull: true,
       },
       applicationId: {
         allowNull: true,
@@ -79,8 +84,17 @@ module.exports = {
         type: Sequelize.JSON,
       },
     });
+
+    await queryInterface.addIndex(
+      'sent_notifications',
+      ['idempotencyKey', 'deletedAt'],
+      {
+        name: 'uniq_sent_notifications_idempotencyKey',
+        unique: true,
+      }
+    );
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("sent_notifications");
+    return queryInterface.dropTable('sent_notifications');
   },
 };

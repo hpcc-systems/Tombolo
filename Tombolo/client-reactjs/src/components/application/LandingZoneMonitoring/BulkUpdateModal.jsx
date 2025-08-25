@@ -11,7 +11,7 @@ const { useForm } = Form;
 const BulkUpdateModal = ({
   bulkEditModalVisibility,
   setBulkEditModalVisibility,
-  directoryMonitorings,
+  landingZoneMonitoring,
   selectedRows,
   setLandingZoneMonitoring,
 }) => {
@@ -92,7 +92,7 @@ const BulkUpdateModal = ({
         setNotifyContacts((prev) => [...new Set([...prev, ...notifyContacts])]);
       }
     });
-  }, [directoryMonitorings, selectedRows]);
+  }, [landingZoneMonitoring, selectedRows]);
 
   // Set fields value when primary, secondary and notify contacts change
   useEffect(() => {

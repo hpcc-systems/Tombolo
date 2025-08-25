@@ -15,10 +15,14 @@ const lz_monitoring_intervals = {
 
 // Cluster reachability monitoring configuration
 const cluster_monitoring = {
-  cluster_monitoring_interval: 10,
   clusterReachabilityMonitoringInterval: '10m', // in minutes
   passwordExpiryAlertDaysForCluster: [10, 5, 4, 3, 2, 1],
+  cluster_monitoring_interval: 10,
   clusterContainerizationCheckInterval: '0 2 * * *', // Daily at 2 AM
+};
+
+const cost_monitoring_intervals = {
+  monitor_cost_interval: '1 hours',
 };
 
 // User account monitoring configuration
@@ -33,4 +37,5 @@ module.exports = {
   ...cluster_monitoring,
   ...lz_monitoring_intervals,
   ...userAccountMonitoring,
+  ...cost_monitoring_intervals,
 };

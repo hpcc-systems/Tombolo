@@ -3,6 +3,7 @@ const router = express.Router();
 
 const { File, Job, Report } = require('../../models');
 const _ = require('lodash');
+const logger = require('../../config/logger');
 
 router.get('/:applicationId', async (req, res) => {
   try {
@@ -343,10 +344,8 @@ router.get('/:applicationId', async (req, res) => {
 
     return res.status(200).send(newReport);
   } catch (error) {
-    logger.error('-PROPAGATE ERROR-----------------------------------------');
-    logger.error(error);
-    logger.error('------------------------------------------');
-    return res.status(500).send('Error occurred while retreiving credentials');
+    logger.error('propagation/index get: ', error);
+    return res.status(500).send('Error occurred while retrieving credentials');
   }
 });
 

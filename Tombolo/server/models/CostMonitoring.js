@@ -67,9 +67,22 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      monitoringScope: {
+        allowNull: false,
+        type: DataTypes.STRING,
+        defaultValue: 'clusters',
+        validate: {
+          isIn: [['clusters', 'users']],
+        },
+      },
       monitoringName: {
         allowNull: false,
         type: DataTypes.STRING,
+      },
+      isSummed: {
+        allowNull: false,
+        defaultValue: false,
+        type: DataTypes.BOOLEAN,
       },
       isActive: {
         allowNull: false,

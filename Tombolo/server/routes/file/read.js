@@ -127,7 +127,7 @@ router.get(
 
       return res.status(200).json(assetList);
     } catch (error) {
-      logger.error(error);
+      logger.error('file/read getFileList: ', error);
       return res.status(500).json({
         success: false,
         message: 'Error occurred while retrieving assets',
@@ -210,7 +210,7 @@ router.get('/rules', async (req, res) => {
     const rules = await Rule.findAll();
     return res.status(200).json(rules);
   } catch (err) {
-    logger.error(err);
+    logger.error('file/read getRules: ', err);
     return res
       .status(500)
       .json({ success: false, message: 'Error occured while getting rules' });
@@ -226,7 +226,7 @@ router.get('/files/:fileId/validation-rules', async (req, res) => {
     });
     return res.status(200).json(rules);
   } catch (err) {
-    logger.error(err);
+    logger.error('file/read getValidationRules: ', err);
     return res.status(500).json({
       message: 'An error occurred',
     });
@@ -251,7 +251,7 @@ router.get('/files/:fileId/validation-rules/validations', async (req, res) => {
       ecl: validations,
     });
   } catch (err) {
-    logger.error(err);
+    logger.error('file/read getValidationRuleValidations: ', err);
     return res.status(500).json({
       message: 'An error occurred',
     });
@@ -277,7 +277,7 @@ router.get('/files/:fileId/validation-rules/fixes', async (req, res) => {
       ecl: fixes,
     });
   } catch (err) {
-    logger.error(err);
+    logger.error('file/read getValidationRuleFixes: ', err);
     return res.status(500).json({
       message: 'An error occurred',
     });
@@ -307,7 +307,7 @@ router.get(
 
       return res.status(200).json(false);
     } catch (err) {
-      logger.error(err);
+      logger.error('file CheckFileId: ', err);
       return res.status(500).json({ error: err });
     }
   }
@@ -340,7 +340,7 @@ router.get(
 
       return res.status(200).json(results);
     } catch (err) {
-      logger.error(err);
+      logger.error('file/read getFilesByIds: ', err);
       return res.status(500).json({ error: err });
     }
   }
@@ -366,7 +366,7 @@ router.get(
       );
       return res.status(200).json(fileInfo);
     } catch (err) {
-      logger.error(err);
+      logger.error('file/read getFileDetails: ', err);
       return res
         .status(500)
         .json({ success: false, message: 'Error occured while file details' });
@@ -397,9 +397,7 @@ router.get(
 
       return res.status(200).send(response.FileDetail.subfiles.Item);
     } catch (error) {
-      logger.error('---- error while fetching sub-files ---------');
-      logger.error(error);
-      logger.error('---------------------------------------------');
+      logger.error('file/read getSubFiles: ', error);
       return res
         .status(404)
         .json({ success: false, message: 'Unable to fetch subfiles' });
@@ -508,7 +506,7 @@ router.post(
       const response = this.updateFileDetails(fileId, applicationId, req);
       return res.status(200).json(response);
     } catch (err) {
-      logger.error(err);
+      logger.error('file/read saveFile: ', err);
       return res.status(500).json({
         success: false,
         message: 'Error occured while saving file details',
@@ -549,7 +547,7 @@ router.post(
         }),
       ]);
     } catch (err) {
-      logger.error(err);
+      logger.error('deleteFile: ', err);
       return res.status(500).json({
         success: false,
         message: 'Error occured while deleting file details',
@@ -566,7 +564,7 @@ router.get('/dataTypes', async (req, res) => {
 
     return res.status(200).json(results);
   } catch (err) {
-    logger.error(err);
+    logger.error('file/read getDataTypes: ', err);
     return res.status(500).json({ error: err });
   }
 });
@@ -591,10 +589,10 @@ router.post(
       let files = await assetUtil.fileSearch(req.body.app_id, req.body.keyword);
       return res.status(200).json(files);
     } catch (err) {
-      logger.error(err);
+      logger.error('file/read tomboloFileSearch: ', err);
       return res
         .status(500)
-        .send('Error occured while retrieving file details');
+        .send('Error occurred while retrieving file details');
     }
   }
 );
@@ -627,7 +625,7 @@ router.get(
 
       return res.status(200).send(cleanedLogicalItems);
     } catch (err) {
-      logger.error(err);
+      logger.error('file/read browseLogicalFile: ', err);
       return res
         .status(500)
         .json({ message: 'Error occured while searching for logical file' });
@@ -699,7 +697,7 @@ router.get(
       //return non-duplicate array
       return res.status(200).send(uniqueArray);
     } catch (err) {
-      logger.error(err);
+      logger.error('file/read browseSuperFile: ', err);
       return res
         .status(500)
         .json({ message: 'Error occured while searching for Superfiles' });

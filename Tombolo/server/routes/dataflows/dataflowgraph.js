@@ -33,10 +33,7 @@ router.get(
         graph: dataflowVersion?.graph,
       });
     } catch (error) {
-      logger.error('-error-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
-
+      logger.error('dataflowgraph - get: ', error);
       return res.status(500).json({ message: 'Unable to fetch the graph' });
     }
   }
@@ -68,9 +65,7 @@ router.get(
       });
       return res.status(200).send(versions);
     } catch (error) {
-      logger.error('-error-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
+      logger.error('dataflowgraph - get: ', error);
 
       return res.status(500).json({ message: error.message });
     }
@@ -114,10 +109,7 @@ router.post(
         createdAt: version.createdAt,
       });
     } catch (error) {
-      logger.error('-error /save-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
-
+      logger.error('dataflowgraph - save: ', error);
       return res.status(500).send({ message: error.message });
     }
   }
@@ -153,10 +145,7 @@ router.put(
         createdAt: version.createdAt,
       });
     } catch (error) {
-      logger.error('-error /save-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
-
+      logger.error('dataflowgraph - edit: ', error);
       return res.status(500).send({ message: error.message });
     }
   }
@@ -180,10 +169,7 @@ router.delete(
 
       return res.status(200).send({ success: true, id });
     } catch (error) {
-      logger.error('-error /save-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
-
+      logger.error('dataflowgraph - remove_version: ', error);
       return res.status(500).send({ message: error.message });
     }
   }
@@ -209,9 +195,7 @@ router.get(
 
       return res.status(200).send(version);
     } catch (error) {
-      logger.error('-error-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
+      logger.error('dataflowgraph - change_versions: ', error);
       return res.status(500).json({ message: error.message });
     }
   }
@@ -350,10 +334,7 @@ router.put(
 
       return res.status(200).send({ id: newVersion.id, isLive: true });
     } catch (error) {
-      logger.error('-error /save-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
-
+      logger.error('dataflowgraph - version_live: ', error);
       return res.status(500).send({ message: error.message });
     }
   }
@@ -393,7 +374,7 @@ router.put(
 //       }
 //       resolve(nodesWithName);
 //     } catch (err) {
-//       logger.error(err);
+//       logger.error('dataflowgraph - updateNodeNameAndTitle - error', err);
 //       reject(err);
 //     }
 //   });

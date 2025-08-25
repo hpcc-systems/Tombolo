@@ -31,7 +31,7 @@ async function scheduleKeyCheck() {
     this.bree.start(jobName);
     logger.info('API key monitoring initialized ...');
   } catch (err) {
-    logger.error(err);
+    logger.error('apiKeys - scheduleKeyCheck: ', err);
   }
 }
 

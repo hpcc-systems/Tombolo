@@ -65,7 +65,7 @@ router.get('/filteredNotifications', async (req, res) => {
 
     return res.status(200).send(monitorings);
   } catch (err) {
-    logger.error(err);
+    logger.error('notifications/read getFilteredNotifications: ', err);
   }
 });
 
@@ -96,7 +96,7 @@ router.get(
       });
       return res.status(200).send(notifications);
     } catch (error) {
-      logger.error(error);
+      logger.error('notifications/read getNotifications: ', error);
       return res.status(500).json({ message: 'Unable to get notifications' });
     }
   }
@@ -176,6 +176,7 @@ router.get(
 
       return res.status(200).download(filePath);
     } catch (error) {
+      logger.error('notifications/read getNotificationsFileByType: ', error);
       return res
         .status(500)
         .json({ message: 'Unable to get notifications: ' + error });
@@ -205,7 +206,7 @@ router.delete(
 
       return res.status(200).json({ message: 'File Deleted' });
     } catch (error) {
-      logger.error(error);
+      logger.error('notifications/read deleteNotificationFileByType: ', error);
       return res.status(500).json({ message: 'Failed to delete file' });
     }
   }
@@ -220,7 +221,7 @@ router.delete('/', validate(validateDeleteNotifications), async (req, res) => {
       .status(200)
       .send({ success: true, message: 'Deletion successful' });
   } catch (err) {
-    logger.error(err.message);
+    logger.error('notifications/read deleteNotifications: ', err);
     return res
       .status(503)
       .send({ success: false, message: 'Failed to delete' });
@@ -249,7 +250,7 @@ router.put('/', validate(validatePutUpdateNotification), async (req, res) => {
       .status(200)
       .send({ success: true, message: 'Update successful' });
   } catch (err) {
-    logger.error(err.message);
+    logger.error('notifications/read putUpdateNotification: ', err);
     return res
       .status(503)
       .send({ success: false, message: 'Failed to update status' });

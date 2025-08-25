@@ -144,7 +144,10 @@ async function scheduleCheckForJobsWithSingleDependency({
       }
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(
+      'workflowJobs - scheduleCheckForJobsWithSingleDependency: ',
+      error
+    );
     const message = `Error happened while trying to execute workflow, try to 'Save version' and execute it again. | Error: ${error.message} `;
     await workflowUtil.notifyWorkflow({
       dataflowId,
@@ -175,7 +178,7 @@ function executeJob(jobData) {
       message: `Successfully executed ${jobData.jobName}`,
     };
   } catch (err) {
-    logger.error(err);
+    logger.error('workflowJobs - executeJob: ', err);
     return {
       success: false,
       contact: jobData.contact,
@@ -253,13 +256,13 @@ async function scheduleActiveCronJobs() {
             // finally add the job to the scheduler
             this.addJobToScheduler(workerData);
           } catch (error) {
-            logger.error(error);
+            logger.error('workFlowJobs - scheduleActiveCronJobs: ', error);
           }
         }
       }
     }
   } catch (error) {
-    logger.error(error);
+    logger.error('workFlowJobs - scheduleActiveCronJobs: ', error);
   }
   logger.verbose(
     `📢 ACTIVE CRON JOBS (${this.bree.config.jobs.length}) (does not include dependent jobs):`
@@ -298,7 +301,7 @@ async function scheduleMessageBasedJobs(message) {
       logger.warn('📢 COULD NOT FIND JOB WITH NAME ' + message.jobName);
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('workflowJobs - scheduleMessageBasedJobs: ', err);
   }
 }
 
@@ -316,7 +319,7 @@ function addJobToScheduler({ skipLog = false, ...jobData }) {
 
     return { success: true };
   } catch (err) {
-    logger.error(err);
+    logger.error('workflowJobs - addJobToScheduler: ', err);
     const part2 = err.message.split(' an ')?.[1]; // error message is not user friendly, we will trim it to have everything after "an".
     if (part2) err.message = part2;
     return { success: false, error: err.message };

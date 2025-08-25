@@ -8,6 +8,7 @@ import { authHeader, handleError } from '../../common/AuthHeader.js';
 import InfoDrawer from '../../common/InfoDrawer';
 import { doesNameExist } from './jobMonitoringUtils';
 import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
+import { DescriptionFormRules, MonitoringNameFormRules } from '../../common/FormRules';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -162,8 +163,7 @@ function JobMonitoringBasicTab({
           name="monitoringName"
           // validateTrigger="onBlur"
           rules={[
-            { required: true, message: 'Required field' },
-            { max: 100, message: 'Maximum of 100 characters allowed' },
+            ...MonitoringNameFormRules,
             () => ({
               validator(_, value) {
                 if (isEditing) return Promise.resolve();
@@ -177,13 +177,7 @@ function JobMonitoringBasicTab({
           <Input placeholder="Enter a name" ref={monitoringNameInputRef} />
         </Form.Item>
 
-        <Form.Item
-          label="Description"
-          name="description"
-          rules={[
-            { max: 150, message: 'Max character limit is 150' },
-            { required: true, message: 'Add short description' },
-          ]}>
+        <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
           <TextArea
             type="text-area"
             placeholder="Enter a short description"

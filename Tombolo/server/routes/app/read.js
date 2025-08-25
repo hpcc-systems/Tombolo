@@ -160,10 +160,10 @@ router.post(
         return res.json({ result: 'success', id: result.id });
       }
     } catch (err) {
-      logger.error(err);
+      logger.error('saveApplication: ', err);
       return res.status(500).json({
         success: false,
-        message: 'Error occured while creating application',
+        message: 'Error occurred while creating application',
       });
     }
   }
@@ -219,17 +219,12 @@ router.post('/shareApplication', async (req, res) => {
       );
     } catch (err) {
       logger.error(
-        '--- [app/read.js] Error sending application share notification -----------'
-      );
-      logger.error(err);
-      logger.error(
-        '--------------------------------------------------------------------------'
+        'app/read.js - Error sending application share notification: ',
+        err
       );
     }
   } catch (err) {
-    logger.error('--- Share app error [app/read.js] --------------');
-    logger.error(err);
-    logger.error('------------------------------------------------');
+    logger.error('app/read.js - Share app error: ', err);
     return res.status(500).json({
       success: false,
       message: 'Error occurred while saving user application mapping',
@@ -247,7 +242,7 @@ router.post(
       await UserApplication.destroy({ where: { application_id, user_id } });
       return res.status(200).json({ success: true, message: 'Success' });
     } catch (err) {
-      logger.error(err);
+      logger.error('stopApplicationShare: ', err);
       return res.status(405).json({ success: false, message: err.message });
     }
   }
@@ -412,21 +407,20 @@ router.post('/export', validate(validateExportApp), (req, res) => {
           if (err)
             return res
               .status(500)
-              .send('Error occured while exporting application');
+              .send('Error occurred while exporting application');
           res.download(exportFile, function (err) {
             if (err) {
-              logger.error(err);
-              logger.error('Error occurred during download...');
+              logger.error('app/read - Error downloading file:');
               return res
                 .status(500)
-                .send('Error occured while exporting application');
+                .send('Error occurred while exporting application');
             } else {
               logger.verbose('Download completed....');
               fs.unlink(exportFile, err => {
                 if (err)
                   return res
                     .status(500)
-                    .send('Error occured while exporting application');
+                    .send('Error occurred while exporting application');
                 logger.info(exportFile + ' was deleted after download');
               });
             }

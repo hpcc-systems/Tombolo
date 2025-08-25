@@ -281,6 +281,9 @@ function CostMonitoring() {
       // Add notificationMetaData to metaData object
       metaData.notificationMetaData = notificationMetaData;
 
+      // Parse value from isSummed to boolean
+      allInputs.isSummed = allInputs.isSummed === 'true';
+
       // Add metaData to allInputs
       allInputs = { ...allInputs, metaData, approvalStatus: 'Pending', isActive: false };
 
@@ -519,15 +522,27 @@ function CostMonitoring() {
           clusters={clusters}
           domains={domains}
           productCategories={productCategories}>
+          <Descriptions.Item label="Monitoring scope">{selectedMonitoring.monitoringScope}</Descriptions.Item>
           {selectedMonitoring.metaData.users && selectedMonitoring.metaData.users.length > 0 && (
             <Descriptions.Item label="Monitored Users">
               {selectedMonitoring.metaData.users.map((monitoredUser, index) => (
-                <Tag key={`cmu-${index}`} style={{ marginBottom: '4px' }}>
+                <Tag key={`cmdu-${index}`} style={{ marginBottom: '4px' }}>
                   {monitoredUser}
                 </Tag>
               ))}
             </Descriptions.Item>
           )}
+          <Descriptions.Item label="Is Summed">
+            {selectedMonitoring.isSummed ? (
+              <Tag color="var(--success)" key={'yes'}>
+                Yes
+              </Tag>
+            ) : (
+              <Tag color="var(--danger)" key={'no'}>
+                No
+              </Tag>
+            )}
+          </Descriptions.Item>
 
           {selectedMonitoring.metaData.costThreshold && (
             <Descriptions.Item label="Cost Threshold">${selectedMonitoring.metaData.costThreshold}</Descriptions.Item>

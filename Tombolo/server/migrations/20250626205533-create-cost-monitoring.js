@@ -19,9 +19,19 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      monitoringScope: {
+        allowNull: false,
+        type: Sequelize.STRING,
+        defaultValue: 'clusters',
+      },
       monitoringName: {
         allowNull: false,
         type: Sequelize.STRING,
+      },
+      isSummed: {
+        allowNull: false,
+        defaultValue: false,
+        type: Sequelize.BOOLEAN,
       },
       isActive: {
         allowNull: false,

@@ -133,7 +133,7 @@ const CostMonitoringActionButton = ({
             </Card>
           }
           trigger="click"
-          onVisibleChange={(visible) => {
+          onOpenChange={(visible) => {
             if (!visible) {
               bulkStartPauseForm.resetFields();
             }

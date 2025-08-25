@@ -1,21 +1,22 @@
 const path = require('path');
+const { monitor_cost_interval } = require('../config/monitorings.js');
 
 const logger = require('../config/logger');
-const MONITOR_COST_PER_USER_FILE_NAME = 'monitorCostPerUser.js';
-const ANALYZE_COST_PER_USER_FILE_NAME = 'analyzeCostPerUser.js';
+const MONITOR_COST_FILE_NAME = 'monitorCost.js';
+const ANALYZE_COST_FILE_NAME = 'analyzeCost.js';
 
-function createMonitorCostPerUserJob() {
+function createMonitorCostJob() {
   try {
-    let jobName = 'monitor-cost-per-user' + new Date().getTime();
+    let jobName = 'monitor-cost-' + new Date().getTime();
     this.bree.add({
       name: jobName,
-      interval: '1 hours',
+      interval: monitor_cost_interval,
       path: path.join(
         __dirname,
         '..',
         'jobs',
         'costMonitoring',
-        MONITOR_COST_PER_USER_FILE_NAME
+        MONITOR_COST_FILE_NAME
       ),
       worker: {
         workerData: {
@@ -31,32 +32,32 @@ function createMonitorCostPerUserJob() {
   }
 }
 
-function createAnalyzeCostPerUserJob() {
-  const analyzeCostPerUserJobName = `analyze-cost-per-user-${new Date().getTime()}`;
+function createAnalyzeCostJob() {
+  const analyzeCostJobName = `analyze-cost-${new Date().getTime()}`;
   try {
     this.bree.add({
-      name: analyzeCostPerUserJobName,
+      name: analyzeCostJobName,
       path: path.join(
         __dirname,
         '..',
         'jobs',
         'costMonitoring',
-        ANALYZE_COST_PER_USER_FILE_NAME
+        ANALYZE_COST_FILE_NAME
       ),
       timeout: 0, // Run immediately
       worker: {
         workerData: {
-          jobName: analyzeCostPerUserJobName,
+          jobName: analyzeCostJobName,
         },
       },
     });
-    this.bree.start(analyzeCostPerUserJobName);
+    this.bree.start(analyzeCostJobName);
   } catch (err) {
-    logger.error('Failed to add analyze-cost-per-user job', err);
+    logger.error('Failed to add analyze-cost job', err);
   }
 }
 
 module.exports = {
-  createMonitorCostPerUserJob,
-  createAnalyzeCostPerUserJob,
+  createMonitorCostJob,
+  createAnalyzeCostJob,
 };

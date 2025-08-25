@@ -21,9 +21,9 @@ const {
 const {
   scheduleClusterTimezoneOffset,
   createClusterUsageHistoryJob,
+  startClusterMonitoring,
   checkClusterReachability,
   checkClusterContainerization,
-  startClusterStatusMonitoring,
 } = require('../jobSchedularMethods/clusterJobs.js');
 const {
   scheduleJobStatusPolling,
@@ -32,7 +32,6 @@ const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   createSuperFileMonitoringBreeJob,
-  createDirectoryMonitoringBreeJob,
   scheduleSuperFileMonitoringOnServerStart,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
@@ -59,8 +58,8 @@ const {
 } = require('../jobSchedularMethods/jobMonitoring.js');
 
 const {
-  createMonitorCostPerUserJob,
-  createAnalyzeCostPerUserJob,
+  createMonitorCostJob,
+  createAnalyzeCostJob,
 } = require('../jobSchedularMethods/costMonitoring');
 
 const { createDataArchiveJob } = require('../jobSchedularMethods/archive');
@@ -103,10 +102,10 @@ class JobScheduler {
 
         if (
           worker.message?.type &&
-          worker.message?.type === 'monitor-cost-per-user' &&
+          worker.message?.type === 'monitor-cost' &&
           worker.message?.action === 'trigger'
         ) {
-          await this.createAnalyzeCostPerUserJob();
+          await this.createAnalyzeCostJob();
         }
 
         const message = worker.message;
@@ -138,7 +137,7 @@ class JobScheduler {
           this.bree.remove(worker.name);
           logger.info(`Job removed:  ${workerName}`);
         }
-        if (message?.action == 'scheduleNext') {
+        if (message?.action === 'scheduleNext') {
           await this.scheduleCheckForJobsWithSingleDependency({
             ...message.data,
           });
@@ -167,7 +166,7 @@ class JobScheduler {
       await this.startTimeSeriesAnalysisMonitoring();
       await this.checkClusterReachability();
       await this.checkClusterContainerization();
-      await this.createMonitorCostPerUserJob();
+      await this.createMonitorCostJob();
       await this.createDataArchiveJob();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
@@ -175,7 +174,7 @@ class JobScheduler {
       await startLzFileMovementMonitoring.call(this);
       await startLzFileCountMonitoring.call(this);
       await startLzSpaceUsageMonitoring.call(this);
-      await startClusterStatusMonitoring.call(this);
+      await startClusterMonitoring.call(this);
       logger.info('-----------------------------');
       logger.info('Server is finished intializing, and is now running');
       logger.info('-----------------------------');
@@ -287,12 +286,12 @@ class JobScheduler {
     return createDataArchiveJob.call(this);
   }
 
-  createMonitorCostPerUserJob() {
-    return createMonitorCostPerUserJob.call(this);
+  createMonitorCostJob() {
+    return createMonitorCostJob.call(this);
   }
 
-  createAnalyzeCostPerUserJob() {
-    return createAnalyzeCostPerUserJob.call(this);
+  createAnalyzeCostJob() {
+    return createAnalyzeCostJob.call(this);
   }
 
   scheduleActiveCronJobs() {
@@ -313,6 +312,13 @@ class JobScheduler {
   }
   createClusterUsageHistoryJob() {
     return createClusterUsageHistoryJob.call(this);
+  }
+
+  startClusterMonitoring({ clusterMonitoring_id, cron }) {
+    return startClusterMonitoring.call(this, {
+      clusterMonitoring_id,
+      cron,
+    });
   }
 
   scheduleJobStatusPolling() {
@@ -339,14 +345,6 @@ class JobScheduler {
   createSuperFileMonitoringBreeJob({ filemonitoring_id, cron }) {
     return createSuperFileMonitoringBreeJob.call(this, {
       filemonitoring_id,
-      cron,
-    });
-  }
-
-  createDirectoryMonitoringBreeJob({ directoryMonitoring_id, name, cron }) {
-    return createDirectoryMonitoringBreeJob.call(this, {
-      directoryMonitoring_id,
-      name,
       cron,
     });
   }
@@ -444,8 +442,8 @@ class JobScheduler {
   }
 
   // Cluster Status Monitoring
-  startClusterStatusMonitoring() {
-    return startClusterStatusMonitoring.call(this);
+  startClusterMonitoring() {
+    return startClusterMonitoring.call(this);
   }
 }
 

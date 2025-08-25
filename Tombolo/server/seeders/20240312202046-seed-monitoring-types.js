@@ -1,4 +1,3 @@
-'use strict';
 const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
@@ -7,16 +6,6 @@ module.exports = {
       {
         id: uuidv4(),
         name: 'Job Monitoring',
-        createdAt: new Date(),
-        createdBy: JSON.stringify({
-          firstName: null,
-          lastName: 'System',
-          email: 'NA',
-        }),
-      },
-      {
-        id: uuidv4(),
-        name: 'Directory Monitoring',
         createdAt: new Date(),
         createdBy: JSON.stringify({
           firstName: null,

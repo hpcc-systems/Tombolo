@@ -67,7 +67,7 @@ const {
           );
           teamsCardData = module.teamsCardData;
         } catch (error) {
-          logger.error(error);
+          logger.error('processTeamsNotifications - teamsCardData: ', error);
         }
 
         // message card
@@ -75,7 +75,7 @@ const {
         await axios.post(url, card);
         successfulDelivery.push(notification);
       } catch (err) {
-        logger.error(err);
+        logger.error('Failed to push teams notification to channel: ', err);
         updateNotificationQueueOnError({
           notificationId: notification.id,
           attemptCount,
@@ -89,7 +89,10 @@ const {
     try {
       await NotificationQueue.update({ lastScanned: now }, { where: {} });
     } catch (error) {
-      logger.error(error);
+      logger.error(
+        'processTeamsNotifications, failed to update last scanned: ',
+        error
+      );
     }
 
     //Update sent notifications table
@@ -112,7 +115,10 @@ const {
       );
       await SentNotification.bulkCreate(cleanedDeliveredNotification);
     } catch (error) {
-      logger.error(error);
+      logger.error(
+        'processTeamsNotifications, failed to create sent notification: ',
+        error
+      );
     }
 
     // Bulk delete the sent notifications form notification queue
@@ -121,9 +127,12 @@ const {
         where: { id: successfulDelivery.map(({ id }) => id) },
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(
+        'processTeamsNotifications, failed to delete sent notifications from queue table: ',
+        err
+      );
     }
   } catch (error) {
-    logger.error(error);
+    logger.error('processTeamsNotifications: ', error);
   }
 })();

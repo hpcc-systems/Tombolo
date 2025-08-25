@@ -13,7 +13,6 @@ module.exports = {
       },
       name: {
         allowNull: false,
-        unique: true,
         type: Sequelize.STRING,
       },
       region: {
@@ -77,7 +76,14 @@ module.exports = {
         onDelete: 'NO ACTION',
       },
     });
+
+    await queryInterface.addConstraint('asr_domains', {
+      fields: ['name', 'deletedAt'],
+      type: 'unique',
+      name: 'unique_asr_domain_name',
+    });
   },
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('asr_domains');
   },

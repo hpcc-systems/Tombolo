@@ -1,371 +1,278 @@
-/* eslint-disable unused-imports/no-unused-vars */
+// Library Imports
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Tooltip, Button, message, Form, Tabs, Modal } from 'antd';
-import { getRoleNameArray } from '../../common/AuthUtil.js';
+import { Form } from 'antd';
 
+// Local Imports
+import { getRoleNameArray } from '../../common/AuthUtil.js';
 import ClusterMonitoringTable from './ClusterMonitoringTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
-import Text from '../../common/Text';
-import ClusterMonitoringBasicTab from './ClusterMonitoringBasicTab';
-import ClusterMonitoringTab from './ClusterMonitoringTab';
-import ClusterMonitoringNotificationTab from './ClusterMonitoringNotificationTab';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
+import {
+  getAllClusterMonitoring,
+  findUniqueName,
+  handleBulkUpdateClusterMonitoring,
+} from './clusterMonitoringUtils.js';
+import ViewDetailsModal from './ViewDetailsModal';
+import ActionButton from './ActionButton';
+import AddEditModal from './AddEditModal/AddEditModal.jsx';
+import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
+import { useMonitorType } from '../../../hooks/useMonitoringType';
+import ApproveRejectModal from './ApproveRejectModal.jsx';
+import ClusterMonitoringFilters from './ClusterMonitoringFilters';
+import { getAllProductCategories } from '../../common/ASRTools';
+import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
 
-//Constants
-const { TabPane } = Tabs;
+// Constants
+const monitoringTypeName = 'Cluster Monitoring';
 
 function ClusterMonitoring() {
   //Redux
-  const applicationId = useSelector((state) => state.application.application.applicationId);
-  const clusters = useSelector((state) => state.application.clusters);
+  const {
+    application: { applicationId },
+    clusters,
+  } = useSelector((state) => state.applicationReducer);
 
   //get user roles
   const roleArray = getRoleNameArray();
-
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   //Local State
-  const [clusterMonitorings, setClusterMonitorings] = useState([]);
-  const [form] = Form.useForm();
-  const [visible, setVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState('1');
-  const [selectedCluster, setSelectedCluster] = useState(null);
-  const [engines, setEngines] = useState([]);
-  const [selectedEngines, setSelectedEngines] = useState([]);
-  const [fetchingEngines, setFetchingEngines] = useState(false);
-  const [notifyConditions, setNotifyConditions] = useState([]);
+  const [clusterMonitoring, setClusterMonitoring] = useState([]);
+  const [displayAddEditModal, setDisplayAddEditModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [notificationDetails, setNotificationDetails] = useState({});
+  const [displayViewDetailsModal, setDisplayViewDetailsModal] = useState(false);
+  const [editingMonitoring, setEditingMonitoring] = useState(false);
+  const [form] = Form.useForm();
+  const [displayApproveRejectModal, setApproveRejectModal] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [duplicatingData, setDuplicatingData] = useState({ isDuplicating: false }); // CM to be duplicated
+  const [filters, setFilters] = useState({});
+  const [filtersVisible, setFiltersVisible] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  const [matchCount, setMatchCount] = useState(0);
+  const [allProductCategories, setAllProductCategories] = useState([]);
+  const [filtering, setFiltering] = useState(false);
+  const [filteredClusterMonitoring, setFilteredClusterMonitoring] = useState([]);
+  const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
+
+  // Hooks
+  const { monitoringTypeId } = useMonitorType(monitoringTypeName);
+
+  // Get domains and product categories
+  const { domains, productCategories, setProductCategories, selectedDomain, setSelectedDomain } =
+    useDomainAndCategories(monitoringTypeId, selectedMonitoring);
 
   //When component loads get all file monitoring
   useEffect(() => {
-    if (applicationId) getClusterMonitorings(applicationId);
-  }, [applicationId]);
+    (async () => {
+      const cm = await getAllClusterMonitoring();
+      setClusterMonitoring(cm);
+      const prods = await getAllProductCategories();
+      setAllProductCategories(prods);
+    })();
+  }, []);
 
-  // When selected Monitoring is not null, pass selected monitoring data to form instance
+  // When filter changes, filter the cost monitorings
   useEffect(() => {
-    if (!selectedMonitoring) return;
-
-    form.setFieldsValue(selectedMonitoring);
-  }, [selectedMonitoring]);
-
-  //When submit btn is clicked
-  const handleFinish = (values) => {
-    console.log('Success:', values);
-  };
-
-  // Show modal func
-  const showModal = () => {
-    setVisible(true);
-  };
-
-  //When submit btn on modal is clicked
-  const handleOk = async () => {
-    try {
-      await validateForms();
-      // await form.validateFields(); // if errs will be caught by catch block
-      const payload = form.getFieldsValue();
-      payload.app_id = applicationId;
-      // await form.validateFields();
-      await saveClusterMonitoring(payload);
-    } catch (err) {
-      handleError(err);
+    setFiltering(true);
+    if (clusterMonitoring.length === 0) {
+      setFiltering(false);
+      return;
     }
-  };
 
-  //Cancel / close modal
-  const handleCancel = () => {
-    form.resetFields();
-    setSelectedMonitoring(null);
-    setVisible(false);
+    const { approvalStatus, activeStatus, clusters: filterClusters } = filters;
 
-    setActiveTab('1');
-    setSelectedCluster(null);
-    setEngines([]);
-    setSelectedEngines([]);
-    setNotifyConditions([]);
-    setNotificationDetails({});
-  };
+    // Convert activeStatus to boolean
+    let activeStatusBool;
+    if (activeStatus === 'Active') {
+      activeStatusBool = true;
+    } else if (activeStatus === 'Inactive') {
+      activeStatusBool = false;
+    }
 
-  //Function to get all cluster monitoring
-  const getClusterMonitorings = async (applicationId) => {
-    try {
-      const payload = {
-        method: 'GET',
-        headers: authHeader(),
-      };
+    let filteredCm = clusterMonitoring.filter((costMonitoring) => {
+      let include = true;
 
-      const response = await fetch(`/api/clustermonitoring/all/${applicationId}`, payload);
-
-      if (!response.ok) handleError(response);
-
-      const data = await response.json();
-      if (data) {
-        setClusterMonitorings(data);
+      if (approvalStatus && costMonitoring.approvalStatus !== approvalStatus) {
+        include = false;
       }
-    } catch (err) {
-      console.log(err);
-      message.error('Failed to fetch cluster monitoring');
-    }
-  };
-
-  //validate forms before saving
-  const validateForms = async () => {
-    let validationError = null;
-    let formData = {};
-
-    try {
-      formData = await form.validateFields();
-    } catch (err) {
-      validationError = err;
-    }
-
-    return { validationError, formData };
-  };
-
-  const saveClusterMonitoring = async (formData) => {
-    try {
-      const { monitoring_engines, engineSizeLimit, notificationChannels, emails, msTeamsGroups, notifyCondition } =
-        formData;
-
-      const monitoringConditions = {};
-
-      if (engineSizeLimit) {
-        const engineSizeMonitoringDetails = [];
-
-        for (let key in engineSizeLimit) {
-          const details = {
-            engine: key.split('engineLimit-')[1],
-            maxSize: engineSizeLimit[key],
-            maxSizeExceeded: false,
-            notified: [],
-          };
-
-          engineSizeMonitoringDetails.push(details);
+      if (activeStatusBool !== undefined && costMonitoring.isActive !== activeStatusBool) {
+        include = false;
+      }
+      if (filterClusters && filterClusters.length > 0) {
+        const hasMatchingCluster = costMonitoring.clusterIds?.some((clusterId) => filterClusters.includes(clusterId));
+        if (!hasMatchingCluster) {
+          include = false;
         }
-        monitoringConditions.monitorEngineSize = engineSizeMonitoringDetails;
       }
 
-      const notifications = [];
-      if (notificationChannels.includes('eMail')) {
-        notifications.push({ channel: 'eMail', recipients: emails });
-      }
+      return include;
+    });
 
-      if (notificationChannels.includes('msTeams')) {
-        notifications.push({ channel: 'msTeams', recipients: msTeamsGroups });
-      }
+    const matchedCostIds = [];
 
-      const metaData = {
-        last_monitored: null,
-        monitoring_engines,
-        monitoringConditions,
-        notifications,
-        notifyCondition,
-      };
+    // Calculate the number of matched string instances
+    if (searchTerm) {
+      let instanceCount = 0;
+      filteredCm.forEach((cost) => {
+        const monitoringName = cost.monitoringName.toLowerCase();
+        const description = cost.description?.toLowerCase() || '';
 
-      //Delete since these items are nested inside metaData object
-      const keysToDelete = [
-        'monitoring_engines',
-        'engineSizeLimit',
-        'notificationChannels',
-        'emails',
-        'msTeamsGroups',
-        'notifyCondition',
-      ];
-      for (let key of keysToDelete) {
-        delete formData[key];
-      }
-      formData = { ...formData, application_id: applicationId, metaData };
-      if (selectedMonitoring) formData.id = selectedMonitoring.id;
+        if (monitoringName.includes(searchTerm.toLowerCase())) {
+          matchedCostIds.push(cost.id);
+          instanceCount++;
+        }
 
-      const payload = {
-        method: selectedMonitoring ? 'PUT' : 'POST',
-        headers: authHeader(),
-        body: JSON.stringify(formData),
-      };
+        if (description.includes(searchTerm.toLowerCase())) {
+          matchedCostIds.push(cost.id);
+          instanceCount++;
+        }
+      });
 
-      const response = await fetch(`/api/clustermonitoring/`, payload);
-
-      if (!response.ok) handleError(response);
-
-      const data = await response.json();
-      //If editing - no need to add to monitoring list
-      if (data && !selectedMonitoring) {
-        setClusterMonitorings((prev) => [...prev, data]);
-      }
-
-      // If any monitoring updated. update the monitoring list
-      // so changes are reflected without refreshing page
-      const updatedMonitoringList = [];
-      if (selectedMonitoring) {
-        clusterMonitorings.forEach((monitoring) => {
-          if (monitoring.id === selectedMonitoring.id) {
-            const newFormData = {
-              ...formData,
-              createdAt: selectedMonitoring.createdAt,
-              metaData: { ...metaData, last_monitored: selectedMonitoring?.metaData?.last_monitored },
-            };
-            updatedMonitoringList.push(newFormData);
-          } else {
-            updatedMonitoringList.push(monitoring);
-          }
-        });
-        setClusterMonitorings(updatedMonitoringList);
-        setSelectedMonitoring(null);
-      }
-      handleCancel();
-    } catch (err) {
-      console.log(err);
-      message.error('Failed to save cluster monitoring');
+      setMatchCount(instanceCount);
+    } else {
+      setMatchCount(0);
     }
-  };
 
-  //Handle Cluster change
-  const handleClusterChange = (value) => {
-    setSelectedCluster(value);
-    setEngines([]);
-    form.setFieldsValue({ engine: [] });
-    getExecutionEngines(value);
-  };
-
-  //Function to get all engines for selected cluster ->  clusterMetaData
-  const getExecutionEngines = async (clusterId) => {
-    try {
-      setFetchingEngines(true);
-      setEngines([]);
-      const payload = {
-        method: 'GET',
-        headers: authHeader(),
-      };
-
-      const response = await fetch(`/api/hpcc/read/clusterMetaData?clusterId=${clusterId}`, payload);
-      if (!response.ok) handleError(response);
-
-      const { tpLogicalCluster } = await response.json();
-      if (tpLogicalCluster) {
-        setEngines(tpLogicalCluster);
-      }
-    } catch (err) {
-      console.log(err);
-      message.error('Failed to fetch cluster monitoring');
-    } finally {
-      setFetchingEngines(false);
+    if (matchedCostIds.length > 0) {
+      filteredCm = filteredCm.filter((cost) => matchedCostIds.includes(cost.id));
+    } else if (matchedCostIds.length === 0 && searchTerm) {
+      filteredCm = [];
     }
-  };
 
-  //Modal footer btns -------------------------------------------------------------------------
-  const nextBtn = (
-    <Button
-      key="next"
-      type="primary"
-      ghost
-      onClick={() => {
-        setActiveTab((parseInt(activeTab) + 1).toString());
-      }}>
-      Next
-    </Button>
-  );
+    setFilteredClusterMonitoring(filteredCm);
+    setFiltering(false);
+  }, [filters, clusterMonitoring, searchTerm]);
 
-  const backBtn = (
-    <Button
-      key="back"
-      type="primary"
-      ghost
-      onClick={() => {
-        setActiveTab((parseInt(activeTab) - 1).toString());
-      }}>
-      Back
-    </Button>
-  );
+  // If editing data is passed, set the form values
+  useEffect(() => {
+    if (editingMonitoring || duplicatingData?.isDuplicating) {
+      form.setFieldsValue({
+        ...selectedMonitoring,
+        ...selectedMonitoring?.metaData?.contacts,
+        ...selectedMonitoring?.metaData?.asrSpecificMetaData,
+      });
+      if (duplicatingData?.isDuplicating) {
+        const newName = findUniqueName(selectedMonitoring.monitoringName, clusterMonitoring);
+        form.setFields([
+          {
+            name: 'monitoringName',
+            value: newName,
+            warnings: ['Auto generated name'],
+          },
+        ]);
+      }
+    }
+  }, [editingMonitoring, duplicatingData, selectedMonitoring]);
 
-  const saveBtn = (
-    <Button key="save" type="primary" onClick={() => handleOk()} disabled={isReader}>
-      Save
-    </Button>
-  );
-  const btns = {
-    0: null,
-    1: [nextBtn],
-    2: [backBtn, nextBtn],
-    3: [backBtn, saveBtn],
-  };
-  //JSX ---------------------------------------------------------------------------------------------
+  //JSX
   return (
     <>
       <BreadCrumbs
         extraContent={
-          <Tooltip placement="bottom" title={'Click to add a new Application'} onClick={showModal}>
-            <Button type="primary">{<Text text="Add Cluster Monitoring" />}</Button>
-          </Tooltip>
+          <ActionButton
+            setClusterMonitoring={setClusterMonitoring}
+            setDisplayAddEditModal={setDisplayAddEditModal}
+            selectedRows={selectedRows}
+            setSelectedRows={setSelectedRows}
+            setBulkEditModalVisibility={setBulkEditModalVisibility}
+            setApproveRejectModal={setApproveRejectModal}
+            clusterMonitoring={clusterMonitoring}
+            isReader={isReader}
+          />
         }
       />
-      <ClusterMonitoringTable
-        clusterMonitorings={clusterMonitorings}
-        applicationId={applicationId}
-        setClusterMonitorings={setClusterMonitorings}
+
+      {displayAddEditModal && (
+        <AddEditModal
+          displayAddEditModal={displayAddEditModal}
+          setDisplayAddEditModal={setDisplayAddEditModal}
+          form={form}
+          domains={domains}
+          productCategories={productCategories}
+          setProductCategories={setProductCategories}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          clusterMonitoring={clusterMonitoring}
+          setClusterMonitoring={setClusterMonitoring}
+          setEditingMonitoring={setEditingMonitoring}
+          editingMonitoring={editingMonitoring}
+          selectedMonitoring={selectedMonitoring}
+          setDuplicatingData={setDuplicatingData}
+          isDuplicating={duplicatingData.isDuplicating}
+        />
+      )}
+      <ClusterMonitoringFilters
+        clusterMonitoring={clusterMonitoring}
+        setFilters={setFilters}
+        filters={filters}
+        clusters={clusters}
+        filtersVisible={filtersVisible}
+        setFiltersVisible={setFiltersVisible}
+        isReader={isReader}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        matchCount={matchCount}
+        domains={domains}
+        productCategories={productCategories}
+        setProductCategories={setProductCategories}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+        allProductCategories={allProductCategories}
+      />
+      {displayViewDetailsModal && (
+        <ViewDetailsModal
+          setDisplayViewDetailsModal={setDisplayViewDetailsModal}
+          selectedMonitoring={selectedMonitoring}
+          setSelectedMonitoring={setSelectedMonitoring}
+          domains={domains}
+          productCategories={productCategories}
+        />
+      )}
+
+      <ApproveRejectModal
+        displayApproveRejectModal={displayApproveRejectModal}
+        setApproveRejectModal={setApproveRejectModal}
+        selectedRows={selectedRows}
+        selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
-        setVisible={setVisible}
-        setSelectedCluster={setSelectedCluster}
-        setNotifyConditions={setNotifyConditions}
-        setEngines={setEngines}
-        setSelectedEngines={setSelectedEngines}
+        setClusterMonitoring={setClusterMonitoring}
+      />
+      <ClusterMonitoringTable
+        clusterMonitoring={filteredClusterMonitoring}
+        applicationId={applicationId}
+        setClusterMonitoring={setClusterMonitoring}
+        setSelectedMonitoring={setSelectedMonitoring}
         notificationDetails={notificationDetails}
         setNotificationDetails={setNotificationDetails}
         isReader={isReader}
+        setDisplayViewDetailsModal={setDisplayViewDetailsModal}
+        setDisplayAddEditModal={setDisplayAddEditModal}
+        setEditingMonitoring={setEditingMonitoring}
+        setApproveRejectModal={setApproveRejectModal}
+        selectedRows={selectedRows}
+        setSelectedRows={setSelectedRows}
+        setDuplicatingData={setDuplicatingData}
+        filtering={filtering}
       />
 
-      <Modal
-        open={visible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        footer={btns[activeTab]}
-        destroyOnClose
-        maskClosable={false}>
-        <Form
-          form={form}
-          onFinish={handleFinish}
-          layout="vertical"
-          initialValues={{ msTeamsGroups: [''], emails: [''] }}>
-          <Tabs
-            activeKey={activeTab}
-            type="card"
-            onTabClick={(record) => {
-              setActiveTab(record);
-            }}>
-            <TabPane tab={<span>Basic</span>} key="1" forceRender>
-              <ClusterMonitoringBasicTab
-                clusters={clusters}
-                handleClusterChange={handleClusterChange}
-                selectedCluster={selectedCluster}
-                fetchingEngines={fetchingEngines}
-                setSelectedEngines={setSelectedEngines}
-                engines={engines}
-              />
-            </TabPane>
-
-            <TabPane tab={<span>Monitoring </span>} key="2" forceRender>
-              <ClusterMonitoringTab
-                clusterMonitorings={clusterMonitorings}
-                setNotifyConditions={setNotifyConditions}
-                selectedEngines={selectedEngines}
-                notifyConditions={notifyConditions}
-                selectedMonitoring={selectedMonitoring}
-              />
-            </TabPane>
-            <TabPane tab={<span>Notifications </span>} key="3" forceRender>
-              <ClusterMonitoringNotificationTab
-                notificationDetails={notificationDetails}
-                setNotificationDetails={setNotificationDetails}
-              />
-            </TabPane>
-          </Tabs>
-        </Form>
-      </Modal>
+      {/* Bulk Update Modal */}
+      {bulkEditModalVisibility && (
+        <BulkUpdateModal
+          bulkEditModalVisibility={bulkEditModalVisibility}
+          setBulkEditModalVisibility={setBulkEditModalVisibility}
+          monitorings={clusterMonitoring}
+          setMonitorings={setClusterMonitoring}
+          selectedRows={selectedRows}
+          setSelectedRows={setSelectedRows}
+          monitoringType="cluster"
+          handleBulkUpdateMonitorings={handleBulkUpdateClusterMonitoring}
+        />
+      )}
     </>
   );
 }
 
 export default ClusterMonitoring;
-
-// 546

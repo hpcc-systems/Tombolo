@@ -10,12 +10,10 @@ module.exports = {
       },
       name: {
         allowNull: false,
-        unique: true,
         type: Sequelize.STRING,
       },
       shortCode: {
         allowNull: false,
-        unique: true,
         type: Sequelize.STRING,
       },
       tier: {
@@ -67,7 +65,20 @@ module.exports = {
         onDelete: 'NO ACTION',
       },
     });
+
+    await queryInterface.addConstraint('asr_products', {
+      fields: ['name', 'deletedAt'],
+      type: 'unique',
+      name: 'unique_asr_product_name',
+    });
+
+    await queryInterface.addConstraint('asr_products', {
+      fields: ['shortCode', 'deletedAt'],
+      type: 'unique',
+      name: 'unique_asr_short_code',
+    });
   },
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('asr_products');
   },

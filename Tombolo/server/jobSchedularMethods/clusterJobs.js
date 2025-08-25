@@ -17,7 +17,7 @@ const CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME =
   'checkIfClusterIsContainerized.js';
 
 // Cluster status monitoring bree job
-async function startClusterStatusMonitoring() {
+async function startClusterMonitoring() {
   try {
     let jobName = 'cluster-monitoring' + new Date().getTime();
     this.bree.add({
@@ -69,7 +69,7 @@ async function scheduleClusterTimezoneOffset() {
 
     this.bree.start(jobName);
   } catch (err) {
-    logger.error(err);
+    logger.error('clusterJobs - scheduleClusterTimezoneOffset: ', err);
   }
 }
 
@@ -116,7 +116,7 @@ async function checkClusterReachability() {
     this.bree.start(jobName);
     logger.info('Cluster reachability checker job initialized ...');
   } catch (err) {
-    logger.error(err);
+    logger.error('clusterJobs - checkClusterReachability: ', err);
   }
 }
 
@@ -145,7 +145,7 @@ async function checkClusterContainerization() {
     this.bree.start(jobName);
     logger.info('Cluster containerization check job initialized ...');
   } catch (err) {
-    logger.error(err);
+    logger.error('clusterJobs - checkClusterContainerization: ', err);
   }
 }
 
@@ -154,5 +154,5 @@ module.exports = {
   createClusterUsageHistoryJob,
   checkClusterReachability,
   checkClusterContainerization,
-  startClusterStatusMonitoring,
+  startClusterMonitoring,
 };

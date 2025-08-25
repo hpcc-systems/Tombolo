@@ -689,9 +689,9 @@ function JobMonitoring() {
           domains={domains}
           productCategories={productCategories}>
           <Descriptions.Item label="Monitoring scope">
-            {monitoringScope?.replace(/([A-Z])/g, ' $1').trim()}
+            {selectedMonitoring.monitoringScope?.replace(/([A-Z])/g, ' $1').trim()}
           </Descriptions.Item>
-          {monitoringScope && monitoringScope !== 'ClusterWideMonitoring' && (
+          {selectedMonitoring.jobName && (
             <Descriptions.Item label="Job name / pattern">{selectedMonitoring.jobName}</Descriptions.Item>
           )}
           {selectedMonitoring.metaData.schedule && (
