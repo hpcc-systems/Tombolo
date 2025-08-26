@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin, message } from 'antd';
 import msLogo from '../../images/mslogo.png';
 import { getDeviceInfo } from './utils';
@@ -31,8 +31,6 @@ const Login = () => {
     const deviceInfo = getDeviceInfo();
 
     const test = await dispatch(login({ email, password, deviceInfo }));
-
-    console.log('loginAttemptData', test);
 
     if (test?.type === 'temp-pw') {
       setLoading(false);

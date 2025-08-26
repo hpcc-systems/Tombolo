@@ -1,5 +1,5 @@
 //libraries and hooks
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { connect, useSelector } from 'react-redux';
 import { Layout, ConfigProvider } from 'antd';
 import { Router } from 'react-router-dom';
@@ -14,6 +14,7 @@ import Fallback from './components/common/Fallback';
 import { checkBackendStatus, checkOwnerExists } from '@/redux/slices/BackendSlice';
 import { getRoleNameArray } from './components/common/AuthUtil.js';
 import { getUser } from './components/common/userStorage.js';
+import { loadUserFromStorage } from '@/redux/slices/AuthSlice';
 
 // Loading screen
 import LoadingScreen from './components/layout/LoadingScreen.jsx';
@@ -38,6 +39,14 @@ const App = () => {
   //left nav collapsed state
   const [collapsed, setCollapsed] = useState(localStorage.getItem('collapsed') === 'true');
 
+  //redux dispatch
+  const dispatch = useDispatch();
+
+  // Sync Redux auth state with local storage on app mount
+  useEffect(() => {
+    dispatch(loadUserFromStorage());
+  }, [dispatch]);
+
   //login page states
   const [user, setUser] = useState(getUser());
 
@@ -53,9 +62,6 @@ const App = () => {
   const authenticationReducer = useSelector((state) => state.auth);
   const backendReducer = useSelector((state) => state.backend);
   const { isConnected, statusRetrieved, ownerExists, ownerRetrieved } = backendReducer;
-
-  //redux dispatch
-  const dispatch = useDispatch();
 
   //retrieve backend status on load to display message to user or application
   useEffect(() => {

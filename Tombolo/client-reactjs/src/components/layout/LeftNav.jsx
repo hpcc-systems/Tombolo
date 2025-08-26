@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, withRouter, useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Layout, Menu, Typography, Tooltip } from 'antd';
@@ -45,6 +45,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   const application = useSelector((state) => state.application.application);
   const integrations = useSelector((state) => state.application.integrations);
   const clusters = useSelector((state) => state.application.clusters);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const applicationId = application?.applicationId;
   const clusterConnectionIssue = clusters?.some((c) => c.reachabilityInfo?.reachable === false);
@@ -101,6 +102,9 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       }
     }
   }, [history.location.pathname]);
+
+  // Only render if authenticated
+  if (!isAuthenticated) return null;
 
   const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
 

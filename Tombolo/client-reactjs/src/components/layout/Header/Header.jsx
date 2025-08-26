@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import logo from '../../../images/logo.png';
@@ -28,6 +28,7 @@ const AppHeader = () => {
   const { application, applications, applicationsRetrieved, clusters, noClusters } = useSelector(
     (state) => state.application
   );
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   //redux tools
   const dispatch = useDispatch();
@@ -84,6 +85,9 @@ const AppHeader = () => {
       dispatch(getAllActiveIntegrations());
     }
   }, [application, clusters.length, dispatch]);
+
+  // Only render if authenticated
+  if (!isAuthenticated) return null;
 
   // log out user, clear relevant data in redux related to current application and log user out
   const handleLogOut = () => {
