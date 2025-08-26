@@ -20,6 +20,8 @@ function AddEditModel({
   selectedMonitoring,
   setDuplicatingData,
   isDuplicating,
+  monitoringType,
+  setMonitoringType,
 }) {
   // Local states
   const [activeTab, setActiveTab] = useState('0');
@@ -52,6 +54,8 @@ function AddEditModel({
           isDuplicating={isDuplicating}
           clusterMonitoring={clusterMonitoring}
           selectedMonitoring={selectedMonitoring}
+          monitoringType={monitoringType}
+          setMonitoringType={setMonitoringType}
         />
       ),
       id: 1,
@@ -206,7 +210,7 @@ function AddEditModel({
       });
 
       const asrSpecificMetaData = {};
-      const { domain, productCategory, severity } = allInputs;
+      const { domain, productCategory, severity, usageThreshold } = allInputs;
       const asrSpecificFields = { domain, productCategory, severity };
       for (let key in asrSpecificFields) {
         if (asrSpecificFields[key] !== undefined) {
@@ -230,12 +234,20 @@ function AddEditModel({
         delete allInputs[key];
       }
 
+      // Other monitoring details
+      const monitoringDetails = {};
+      if (allInputs.clusterMonitoringType.includes('usage') && usageThreshold !== undefined) {
+        monitoringDetails.usageThreshold = usageThreshold;
+        delete allInputs['usageThreshold'];
+      }
+
       // Create metaData object
       const metaData = {};
 
       //Add asrSpecificMetaData, notificationMetaData to metaData object
       metaData.asrSpecificMetaData = asrSpecificMetaData;
       metaData.contacts = contacts;
+      metaData.monitoringDetails = monitoringDetails;
 
       // Add metaData to allInputs
       allInputs = { ...allInputs, metaData };
