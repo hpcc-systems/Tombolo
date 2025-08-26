@@ -9,16 +9,16 @@ import {
   getAllCostMonitorings,
   handleBulkUpdateCostMonitorings,
   updateSelectedCostMonitoring,
+  evaluateCostMonitoring,
 } from './costMonitoringUtils';
 
 import { identifyErroneousTabs } from '../jobMonitoring/jobMonitoringUtils';
 
 import { getRoleNameArray } from '../../common/AuthUtil';
 import CostMonitoringTable from './CostMonitoringTable';
-import CostMonitoringApproveRejectModal from './ApproveRejectModal';
+import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import CostMonitoringFilters from './CostMonitoringFilters';
-import { getUser } from '../../common/userStorage';
 import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
 import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
 import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
@@ -35,8 +35,6 @@ function CostMonitoring() {
       clusters,
     },
   } = useSelector((state) => state);
-
-  const user = getUser();
 
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
@@ -559,15 +557,15 @@ function CostMonitoring() {
       )}
       {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
       {displayAddRejectModal && (
-        <CostMonitoringApproveRejectModal
-          id={selectedMonitoring?.id}
-          selectedRows={selectedRows}
-          displayAddRejectModal={displayAddRejectModal}
-          setDisplayAddRejectModal={setDisplayAddRejectModal}
+        <ApproveRejectModal
+          visible={displayAddRejectModal}
+          onCancel={() => setDisplayAddRejectModal(false)}
           selectedMonitoring={selectedMonitoring}
           setSelectedMonitoring={setSelectedMonitoring}
-          user={user}
-          setCostMonitorings={setCostMonitorings}
+          selectedRows={selectedRows}
+          setMonitoring={setCostMonitorings}
+          monitoringTypeLabel={monitoringTypeName}
+          evaluateMonitoring={evaluateCostMonitoring}
         />
       )}
 

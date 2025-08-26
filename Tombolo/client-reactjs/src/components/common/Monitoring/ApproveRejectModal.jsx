@@ -1,27 +1,35 @@
-// Libraries
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Button, Tooltip, Form, Select, Input, Checkbox, message } from 'antd';
 
-// local imports
-import { Constants } from '../../common/Constants';
-import { evaluateClusterMonitoring } from './clusterMonitoringUtils.js';
-
-// Component for Approve/Reject Modal
-function ApproveRejectModal({
-  displayApproveRejectModal,
-  setApproveRejectModal,
-  selectedRows,
+/**
+ * Shared Approve/Reject Modal for monitoring types
+ * @param {object} props
+ * @param {boolean} props.visible
+ * @param {function} props.onCancel
+ * @param {object} props.selectedMonitoring
+ * @param {function} props.setSelectedMonitoring
+ * @param {array} props.selectedRows
+ * @param {function} props.setMonitoring
+ * @param {string} [props.monitoringTypeLabel]
+ * @param {function(any): Promise<any>} props.evaluateMonitoring
+ * @param {import('react').ReactNode} modalProps
+ */
+const ApproveRejectModal = ({
+  visible,
+  onCancel,
   selectedMonitoring,
   setSelectedMonitoring,
-  setClusterMonitoring,
-}) {
-  // Local States
+  selectedRows = [],
+  setMonitoring,
+  monitoringTypeLabel = 'Monitoring',
+  evaluateMonitoring,
+  ...modalProps
+}) => {
   const [form] = Form.useForm();
   const [monitoringEvaluated, setMonitoringEvaluated] = useState(false);
   const [savingEvaluation, setSavingEvaluation] = useState(false);
   const [isActive, setIsActive] = useState(true);
 
-  //When component mounts check if monitoring is already evaluated
   useEffect(() => {
     if (selectedMonitoring) {
       if (selectedMonitoring?.approvalStatus !== 'pending') {
@@ -32,50 +40,64 @@ function ApproveRejectModal({
     }
   }, [selectedMonitoring]);
 
-  // Handle Cancel
   const handleCancel = () => {
-    setApproveRejectModal(false);
+    onCancel();
     setSavingEvaluation(false);
   };
 
-  // Handle Submit
   const handleSubmit = async () => {
     setSavingEvaluation(true);
-    let fromErr = false;
+    let formErr = false;
     try {
       await form.validateFields();
     } catch (error) {
-      fromErr = true;
+      formErr = true;
     }
-
-    if (fromErr) {
+    if (formErr) {
       setSavingEvaluation(false);
       return;
     }
-
     try {
       const formData = form.getFieldsValue();
       if (selectedRows.length > 0) {
         formData.ids = selectedRows.map((row) => row.id);
-      } else {
+      } else if (selectedMonitoring?.id) {
         formData.ids = [selectedMonitoring.id];
       }
       formData.isActive = formData.isActive || false;
 
-      const response = await evaluateClusterMonitoring(formData);
-
-      const updatedMonitoring = response.data;
-      setClusterMonitoring((prevMonitoring) => {
-        const updatedIds = updatedMonitoring.map((mon) => mon.id);
-        return prevMonitoring.map((mon) =>
-          updatedIds.includes(mon.id) ? updatedMonitoring.find((updatedMon) => updatedMon.id === mon.id) || mon : mon
-        );
-      });
-
-      message.success('Your response has been saved');
-      form.resetFields();
-      setSelectedMonitoring(null);
-      setApproveRejectModal(false);
+      // Extensibility: expects a setMonitoring function to update the list after evaluation
+      // You should pass an async function via props to handle the evaluation and update
+      if (typeof evaluateMonitoring === 'function') {
+        const response = await evaluateMonitoring(formData);
+        const updatedMonitoring = response?.data;
+        if (Array.isArray(updatedMonitoring)) {
+          setMonitoring((prevMonitoring) => {
+            const updatedIds = updatedMonitoring.map((mon) => mon.id);
+            return prevMonitoring.map((mon) =>
+              updatedIds.includes(mon.id)
+                ? updatedMonitoring.find((updatedMon) => updatedMon.id === mon.id) || mon
+                : mon
+            );
+          });
+          message.success('Your response has been saved');
+          form.resetFields();
+          setSelectedMonitoring(null);
+          onCancel();
+        } else if (response?.success || typeof response === 'string') {
+          // If response is a success object or a string message, show success and close
+          message.success(
+            response?.message || (typeof response === 'string' ? response : 'Your response has been saved')
+          );
+          form.resetFields();
+          setSelectedMonitoring(null);
+          onCancel();
+        } else {
+          message.error('Evaluation did not return a valid array.');
+        }
+      } else {
+        message.error('No evaluation handler provided.');
+      }
     } catch (error) {
       message.error(error.message);
     } finally {
@@ -83,7 +105,6 @@ function ApproveRejectModal({
     }
   };
 
-  // Handle Action Change
   const handleActionChange = (value) => {
     if (value === 'rejected') {
       setIsActive(false);
@@ -91,13 +112,16 @@ function ApproveRejectModal({
       setIsActive(true);
     }
   };
+
   return (
     <Modal
-      open={displayApproveRejectModal}
+      open={visible}
       onCancel={handleCancel}
       maskClosable={false}
       width={600}
-      title={selectedRows.length > 0 ? 'Bulk Approve/Reject Cluster Monitoring' : 'Approve/Reject Cost Monitoring'}
+      title={
+        selectedRows.length > 0 ? `Bulk Approve/Reject ${monitoringTypeLabel}` : `Approve/Reject ${monitoringTypeLabel}`
+      }
       footer={
         !monitoringEvaluated
           ? [
@@ -116,11 +140,12 @@ function ApproveRejectModal({
                 Modify
               </Button>,
             ]
-      }>
+      }
+      {...modalProps}>
       <div style={{ padding: '5px' }}>
         {monitoringEvaluated && selectedMonitoring ? (
           <div style={{ marginTop: '15px' }}>
-            This Cluster monitoring was{' '}
+            This monitoring was{' '}
             <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{selectedMonitoring?.approvalStatus}</span> by{' '}
             <Tooltip title={<div>{selectedMonitoring?.approver ? selectedMonitoring?.approver?.email : ''}</div>}>
               <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
@@ -129,7 +154,10 @@ function ApproveRejectModal({
                   : ''}{' '}
               </span>
             </Tooltip>
-            on {new Date(selectedMonitoring?.approvedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}.
+            {selectedMonitoring?.approvedAt && (
+              <> on {new Date(selectedMonitoring?.approvedAt).toLocaleDateString('en-US')}</>
+            )}
+            .
           </div>
         ) : (
           <Form form={form} layout="vertical" initialValues={{ isActive: true }}>
@@ -160,6 +188,6 @@ function ApproveRejectModal({
       </div>
     </Modal>
   );
-}
+};
 
 export default ApproveRejectModal;

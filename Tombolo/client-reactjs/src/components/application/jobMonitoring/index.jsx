@@ -12,12 +12,13 @@ import {
   identifyErroneousTabs,
   isScheduleUpdated,
   updateSelectedMonitoring,
+  evaluateJobMonitoring,
 } from './jobMonitoringUtils.js';
 
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal.jsx';
-import ApproveRejectModal from './ApproveRejectModal.jsx';
+import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import JobMonitoringFilters from './JobMonitoringFilters.jsx';
@@ -734,13 +735,14 @@ function JobMonitoring() {
       {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
       {displayAddRejectModal && (
         <ApproveRejectModal
-          id={selectedMonitoring?.id}
-          selectedRows={selectedRows}
-          displayAddRejectModal={displayAddRejectModal}
-          setDisplayAddRejectModal={setDisplayAddRejectModal}
+          visible={displayAddRejectModal}
+          onCancel={() => setDisplayAddRejectModal(false)}
           selectedMonitoring={selectedMonitoring}
           setSelectedMonitoring={setSelectedMonitoring}
-          setJobMonitorings={setJobMonitorings}
+          selectedRows={selectedRows}
+          setMonitoring={setJobMonitorings}
+          monitoringTypeLabel={monitoringTypeName}
+          evaluateMonitoring={evaluateJobMonitoring}
         />
       )}
       {bulkEditModalVisibility && (
