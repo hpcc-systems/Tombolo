@@ -136,6 +136,20 @@ async function monitorCost() {
       where: { name: 'Cost Monitoring' },
     });
 
+    if (!monitoringType) {
+      if (parentPort) {
+        parentPort.postMessage({
+          level: 'error',
+          text: 'monitorCost: MonitoringType, "Cost Monitoring" not found',
+        });
+      } else {
+        logger.error(
+          'monitorCost: MonitoringType, "Cost Monitoring" not found'
+        );
+      }
+      return;
+    }
+
     // Get cluster details for each monitoring
     for (const costMonitor of costMonitorings) {
       const applicationId = costMonitor.applicationId;
@@ -261,6 +275,11 @@ async function monitorCost() {
               Wuid,
               Jobname,
             }) => {
+              // Ensure the costs are a number and not null/undefined
+              CompileCost = CompileCost ?? 0;
+              FileAccessCost = FileAccessCost ?? 0;
+              ExecuteCost = ExecuteCost ?? 0;
+
               // Ensure expected fields are present in costMonitoringData for JSON fields
               if (!costMonitoringData.hasOwnProperty('metaData'))
                 costMonitoringData.metaData = {};
@@ -373,3 +392,10 @@ async function monitorCost() {
 (async () => {
   await monitorCost();
 })();
+
+module.exports = {
+  getStartAndEndTime,
+  handleMonitorLogs,
+  getCostMonitorings,
+  monitorCost,
+};
