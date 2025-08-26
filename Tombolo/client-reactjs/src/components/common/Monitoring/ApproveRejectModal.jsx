@@ -12,6 +12,7 @@ import { Modal, Button, Tooltip, Form, Select, Input, Checkbox, message } from '
  * @param {function} props.setMonitoring
  * @param {string} [props.monitoringTypeLabel]
  * @param {function(any): Promise<any>} props.evaluateMonitoring
+ * @param {function(): Promise<void> | undefined} props.onSuccess
  * @param {import('react').ReactNode} modalProps
  */
 const ApproveRejectModal = ({
@@ -23,6 +24,7 @@ const ApproveRejectModal = ({
   setMonitoring,
   monitoringTypeLabel = 'Monitoring',
   evaluateMonitoring,
+  onSuccess,
   ...modalProps
 }) => {
   const [form] = Form.useForm();
@@ -89,6 +91,9 @@ const ApproveRejectModal = ({
           message.success(
             response?.message || (typeof response === 'string' ? response : 'Your response has been saved')
           );
+          if (onSuccess) {
+            await onSuccess();
+          }
           form.resetFields();
           setSelectedMonitoring(null);
           onCancel();

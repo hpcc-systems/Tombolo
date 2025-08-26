@@ -586,6 +586,10 @@ const LandigZoneMonitoring = () => {
         setMonitoring={setLandingZoneMonitoring}
         monitoringTypeLabel={monitoringTypeName}
         evaluateMonitoring={approveSelectedMonitoring}
+        onSuccess={async () => {
+          const updatedLzMonitoringData = await getAllLzMonitorings({ applicationId });
+          setLandingZoneMonitoring(updatedLzMonitoringData);
+        }}
       />
       {bulkEditModalVisibility && (
         <BulkUpdateModal
