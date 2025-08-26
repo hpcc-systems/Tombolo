@@ -14,9 +14,8 @@ import Text from '../../common/Text.jsx';
 import { assetInGroupSelected, assetSelected } from '@/redux/slices/AssetSlice';
 
 function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed }) {
-  const application = useSelector((state) => state.application.application);
-  const applicationId = application.applicationId || '';
-  const groups = useSelector((state) => state.groups);
+  const applicationId = useSelector((state) => state.application.application.applicationId) || '';
+  const selectedKeys = useSelector((state) => state.groups.selectedKeys);
   const assetSearchParams = useSelector((state) => state.asset.searchParams);
 
   const history = useHistory();
@@ -32,10 +31,10 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
       if (keywords) {
         url = '/api/groups/assetsSearch?app_id=' + applicationId + '&keywords=' + keywords;
         if (assetTypeFilter) url += '&assetTypeFilter=' + assetTypeFilter;
-        if (groups?.selectedKeys?.id) url += '&group_id=' + groups.selectedKeys.id;
+        if (selectedKeys?.id) url += '&group_id=' + selectedKeys.id;
       } else {
         url = '/api/groups/assets?app_id=' + applicationId;
-        if (groups?.selectedKeys?.id) url += '&group_id=' + groups.selectedKeys.id;
+        if (selectedKeys?.id) url += '&group_id=' + selectedKeys.id;
       }
       try {
         const response = await fetch(url, { headers: authHeader() });
@@ -53,7 +52,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
 
   useEffect(() => {
     fetchDataAndRenderTable();
-  }, [applicationId, assetTypeFilter, keywords, groups?.selectedKeys?.id]);
+  }, [applicationId, assetTypeFilter, keywords, selectedKeys?.id]);
 
   //When edit icon is clicked
   const handleEdit = (id, type, action) => {
@@ -315,7 +314,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
           <Tooltip placement="right" title={<Text text="Move" />}>
             <FolderOpenOutlined
               className="asset-action-icon"
-              onClick={() => openMoveAssetDialog(record.id, record.type, record.name, groups)}
+              onClick={() => openMoveAssetDialog(record.id, record.type, record.name, { selectedKeys })}
             />
           </Tooltip>
         </Space>
@@ -357,7 +356,7 @@ function AssetsTable({ openGroup, handleEditGroup, refreshGroups, editingAllowed
           assetToMove={assetToMove}
           refreshGroups={refreshGroups}
           reloadTable={fetchDataAndRenderTable}
-          application={application}
+          applicationId={applicationId}
         />
       ) : null}
     </React.Fragment>

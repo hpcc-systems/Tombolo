@@ -1,6 +1,6 @@
 //libraries and hooks
-import { useState, useEffect, useRef, Suspense } from 'react';
-import { connect, useSelector } from 'react-redux';
+import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Layout, ConfigProvider } from 'antd';
 import { Router } from 'react-router-dom';
 import history from './components/common/History';
@@ -57,11 +57,13 @@ const App = () => {
   const appLinkRef = useRef(null);
   const clusterLinkRef = useRef(null);
 
-  // get redux states
+  // get redux states (select only needed properties)
   const application = useSelector((state) => state.application.application);
-  const authenticationReducer = useSelector((state) => state.auth);
-  const backendReducer = useSelector((state) => state.backend);
-  const { isConnected, statusRetrieved, ownerExists, ownerRetrieved } = backendReducer;
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const isConnected = useSelector((state) => state.backend.isConnected);
+  const statusRetrieved = useSelector((state) => state.backend.statusRetrieved);
+  const ownerExists = useSelector((state) => state.backend.ownerExists);
+  const ownerRetrieved = useSelector((state) => state.backend.ownerRetrieved);
 
   //retrieve backend status on load to display message to user or application
   useEffect(() => {
@@ -72,13 +74,13 @@ const App = () => {
     }
   }, [statusRetrieved, ownerRetrieved, dispatch]);
 
-  //Check if user matches what is currently in storage after authenticationReducer runs
+  //Check if user matches what is currently in storage after authentication runs
   useEffect(() => {
     const newUser = getUser();
     if (user?.id !== newUser?.id || user?.isAuthenticated !== newUser?.isAuthenticated) {
       setUser(newUser);
     }
-  }, [authenticationReducer?.isAuthenticated, user]);
+  }, [isAuthenticated, user]);
 
   //left nav collapse method
   const onCollapse = (collapsed) => {
@@ -86,17 +88,12 @@ const App = () => {
     localStorage.setItem('collapsed', collapsed);
   };
 
-  let roleArray = [];
-  let isOwnerOrAdmin = false;
-  let isReader = false;
-
-  roleArray = getRoleNameArray();
-  if (roleArray?.includes('administrator') || roleArray?.includes('owner')) {
-    isOwnerOrAdmin = true;
-  }
-  if (roleArray?.includes('reader') && roleArray.length === 1) {
-    isReader = true;
-  }
+  const roleArray = useMemo(() => getRoleNameArray(), []);
+  const isOwnerOrAdmin = useMemo(
+    () => roleArray?.includes('administrator') || roleArray?.includes('owner'),
+    [roleArray]
+  );
+  const isReader = useMemo(() => roleArray?.includes('reader') && roleArray.length === 1, [roleArray]);
 
   const userHasRoleandApplication = user?.roles?.length > 0 && user?.applications?.length > 0;
 
@@ -138,7 +135,7 @@ const App = () => {
                               {!userHasRoleandApplication && !isOwnerOrAdmin ? (
                                 <NoAccessRoutes />
                               ) : (
-                                <AppRoutes application={application} authenticationReducer={authenticationReducer} />
+                                <AppRoutes application={application} isAuthenticated={isAuthenticated} />
                               )}
 
                               {isOwnerOrAdmin && <AdminRoutes />}
@@ -158,6 +155,6 @@ const App = () => {
   );
 };
 
-export default connect((state) => state)(App);
+export default App;
 
 <>{/* Main Application, Only enters if user is authenticated and backend is connected */}</>;

@@ -28,7 +28,7 @@ const { Search } = Input;
 const Assets = () => {
   const application = useSelector((state) => state.application.application);
   const assetInGroupId = useSelector((state) => state.asset.assetInGroupId);
-  const groups = useSelector((state) => state.groups);
+  const { selectedKeys, expandedKeys, groupsTree, dataList, groupsError } = useSelector((state) => state.groups);
 
   const roleArray = getRoleNameArray();
   const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
@@ -37,9 +37,6 @@ const Assets = () => {
   const history = useHistory();
   // const user = getUser();
   //TODO, get this from user roles to check if editing is allowed
-
-  // all data related to file explorer is in redux
-  const { selectedKeys, expandedKeys, tree, dataList } = groups;
 
   const { isShowing: showMoveDialog, toggle: toggleMoveDialog } = useModal();
   const { isShowing: showCreateGroup, toggle: toggleCreateGroup } = useModal();
@@ -75,7 +72,7 @@ const Assets = () => {
   useEffect(() => {
     //application changed
     if (application?.applicationId) {
-      if (groups.tree.length === 0 || groups.error) {
+      if (groupsTree.length === 0 || groupsError) {
         fetchGroups(); // run this function on initial load to populate tree and datalist;
       }
     }
@@ -322,7 +319,7 @@ const Assets = () => {
 
             <DirectoryTree
               draggable
-              treeData={tree}
+              treeData={groupsTree}
               blockNode={true}
               onSelect={onSelect}
               onExpand={onExpand}

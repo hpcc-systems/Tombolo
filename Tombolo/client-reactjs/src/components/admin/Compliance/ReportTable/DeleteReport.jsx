@@ -8,7 +8,7 @@ import { updateReports } from '@/redux/slices/PropagationSlice';
 
 const DeleteReport = ({ record }) => {
   const dispatch = useDispatch();
-  const propagation = useSelector((state) => state.propagation);
+  const reports = useSelector((state) => state.propagation.reports);
 
   const removeReport = async () => {
     const config = {
@@ -22,7 +22,7 @@ const DeleteReport = ({ record }) => {
     const data = await response.json();
     if (!data.id) throw new Error('Failed to remove report');
 
-    const newReports = propagation.reports.filter((el) => el.id !== data.id);
+    const newReports = reports.filter((el) => el.id !== data.id);
     dispatch(updateReports(newReports));
   };
 

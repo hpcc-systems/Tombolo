@@ -9,9 +9,7 @@ import { groupsExpanded } from '@/redux/slices/GroupSlice';
 import Text from '../../common/Text';
 
 export const CreateGroupDialog = ({ editGroup, applicationId, isShowing, toggle }) => {
-  const [groups] = useSelector((state) => state.groups);
-
-  const { selectedKeys, expandedKeys } = groups;
+  const { selectedKeys, expandedKeys } = useSelector((state) => state.groups);
 
   const dispatch = useDispatch();
 

@@ -8,9 +8,9 @@ import { generateChangesReport, getReports } from '@/redux/slices/PropagationSli
 
 const Propagation = () => {
   const dispatch = useDispatch();
-  const propagation = useSelector((state) => state.propagation);
+  const { reports, changes } = useSelector((state) => state.propagation);
 
-  const baseLineReport = propagation.reports.find((report) => report.isBaseLine);
+  const baseLineReport = reports.find((report) => report.isBaseLine);
 
   const [modal, setModal] = useState({ isOpen: false });
 
@@ -35,7 +35,7 @@ const Propagation = () => {
   };
 
   useEffect(() => {
-    if (propagation.reports.length === 0) {
+    if (reports.length === 0) {
       dispatch(getReports({ callFrom: 'changes' }));
     }
   }, []);
@@ -43,8 +43,8 @@ const Propagation = () => {
   return (
     <>
       <div style={{ maxWidth: '500px', marginBottom: '15px' }}>
-        {propagation.changes.error ? (
-          <Alert style={{ margin: '10px 0' }} closable type="error" showIcon message={propagation.changes.error} />
+        {changes.error ? (
+          <Alert style={{ margin: '10px 0' }} closable type="error" showIcon message={changes.error} />
         ) : null}
 
         <Alert
@@ -57,7 +57,7 @@ const Propagation = () => {
           }
           showIcon
           action={
-            <Button block type="primary" loading={propagation.changes.loading} onClick={handlePropagate}>
+            <Button block type="primary" loading={changes.loading} onClick={handlePropagate}>
               <Text>Propagate</Text>
             </Button>
           }

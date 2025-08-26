@@ -9,14 +9,14 @@ import { generateCurrentReport, getReports } from '@/redux/slices/PropagationSli
 
 const CurrentReport = () => {
   const dispatch = useDispatch();
-  const propagation = useSelector((state) => state.propagation);
+  const { reports, current } = useSelector((state) => state.propagation);
 
   const history = useHistory();
 
   const generateReport = () => dispatch(generateCurrentReport({ history }));
 
   useEffect(() => {
-    if (propagation.reports.length === 0) {
+    if (reports.length === 0) {
       dispatch(getReports({ callFrom: 'current' }));
     }
   }, []);
@@ -24,8 +24,8 @@ const CurrentReport = () => {
   return (
     <>
       <div style={{ maxWidth: '500px', marginBottom: '15px' }}>
-        {propagation.current.error ? (
-          <Alert style={{ margin: '10px 0' }} closable type="error" showIcon message={propagation.current.error} />
+        {current.error ? (
+          <Alert style={{ margin: '10px 0' }} closable type="error" showIcon message={current.error} />
         ) : null}
 
         <Alert
@@ -33,7 +33,7 @@ const CurrentReport = () => {
           description={<Text>Generate report of currently active constraints attached to fields of the files</Text>}
           showIcon
           action={
-            <Button key="propagate" loading={propagation.current.loading} type="primary" block onClick={generateReport}>
+            <Button key="propagate" loading={current.loading} type="primary" block onClick={generateReport}>
               <Text>Generate report</Text>
             </Button>
           }

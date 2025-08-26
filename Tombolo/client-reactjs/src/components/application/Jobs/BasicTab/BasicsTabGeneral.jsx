@@ -28,8 +28,7 @@ function BasicsTabGeneral({
   onClusterSelection,
   inTabView,
 }) {
-  const assets = useSelector((state) => state.asset);
-  const clusterId = assets.clusterId || formRef.current?.getFieldValue('clusters');
+  const clusterId = useSelector((state) => state.asset.clusterId) || formRef.current?.getFieldValue('clusters');
 
   const [search, setSearch] = useState({ loading: false, error: '', data: [] });
   const [job, setJob] = useState({ loading: false, disableFields: false, jobExists: false });

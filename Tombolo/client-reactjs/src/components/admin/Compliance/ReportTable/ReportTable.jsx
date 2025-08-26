@@ -11,7 +11,8 @@ import Text from '../../../common/Text';
 
 const ReportTable = ({ type = 'current', data = null }) => {
   const applicationId = useSelector((state) => state.application.application.applicationId);
-  const propagation = useSelector((state) => state.propagation);
+  const reports = useSelector((state) => state.propagation.reports);
+  const report = useSelector((state) => state.propagation[type]);
 
   let columns = [
     {
@@ -54,8 +55,7 @@ const ReportTable = ({ type = 'current', data = null }) => {
     return columns;
   };
 
-  const dataSource = data || propagation.reports.filter((report) => report.type === type);
-  const report = propagation[type];
+  const dataSource = data || reports.filter((r) => r.type === type);
 
   if (!report) return 'Wrong report type passed!';
 
