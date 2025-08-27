@@ -34,13 +34,10 @@ const capitalizeString = (text) => {
 };
 
 function FileTemplate({ match, selectedAsset = {}, displayingInModal, onClose }) {
-  const { clusters, application, groupId, licenses } = useSelector((state) => ({
-    groupId: state.groupsReducer?.selectedKeys?.id,
-
-    clusters: state.applicationReducer.clusters,
-    application: state.applicationReducer.application,
-    licenses: state.applicationReducer.licenses,
-  }));
+  const groupId = useSelector((state) => state.groups?.selectedKeys?.id);
+  const clusters = useSelector((state) => state.application.clusters);
+  const application = useSelector((state) => state.application.application);
+  const licenses = useSelector((state) => state.application.licenses);
 
   /*Asset can be passed from graph (selectedAsset prop), via asset table (params), and when link was shared (params).
   in order to get info about asset we will take its id from params if selected asset is no available and send request to populate fields.

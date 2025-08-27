@@ -8,8 +8,8 @@ import Text from '../../common/Text.jsx';
 function DataflowAssetsTable() {
   const [dataflowAssets, setDataflowAssets] = useState([]);
   const [dataflowId, applicationId] = useSelector((state) => [
-    state.dataflowReducer?.id,
-    state.applicationReducer?.application?.applicationId,
+    state.dataflow?.id,
+    state.application?.application?.applicationId,
   ]);
 
   const fetchDataAndRenderTable = async () => {

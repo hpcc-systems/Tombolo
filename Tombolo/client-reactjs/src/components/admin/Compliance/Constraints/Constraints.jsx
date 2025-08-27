@@ -9,7 +9,7 @@ import ConstraintForm from './ConstraintForm';
 import RemoveContraint from './RemoveContraint';
 
 function Constraints() {
-  const constraints = useSelector((state) => state.applicationReducer.constraints);
+  const constraints = useSelector((state) => state.application.constraints);
 
   const [modal, setModal] = useState({ isOpen: false, constraint: null });
 

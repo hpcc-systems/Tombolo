@@ -3,13 +3,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Divider, message, Popconfirm, Table, Tooltip, Tour } from 'antd';
 import { DeleteOutlined, EditOutlined, EyeOutlined, GlobalOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { applicationActions } from '../../../redux/actions/Application';
 import { authHeader, handleError } from '../../common/AuthHeader';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
 import AddApplication from './AddApplication';
 import { getUser } from '../../common/userStorage';
 import Text from '../../common/Text';
+
+import { getApplications, applicationSelected, applicationAddButtonTourShown } from '@/redux/slices/ApplicationSlice';
 
 // Table column configuration
 const getApplicationColumns = (user, handleApplicationView, handleApplicationEdit, handleRemove) => [
@@ -111,7 +112,8 @@ const Applications = () => {
   // State and Redux hooks
   const user = getUser();
   const dispatch = useDispatch();
-  const { applications, noApplication } = useSelector((state) => state.applicationReducer);
+  const applications = useSelector((state) => state.application.applications);
+  const noApplication = useSelector((state) => state.application.noApplication);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showAddApplicationModal, setShowAddApplicationModal] = useState(false);
   const [mode, setMode] = useState(null);
@@ -126,13 +128,13 @@ const Applications = () => {
 
   // Fetch applications on mount
   useEffect(() => {
-    dispatch(applicationActions.getApplications());
+    dispatch(getApplications());
   }, [dispatch]);
 
   // Trigger tour if no applications exist
   useEffect(() => {
     if (noApplication.noApplication && !noApplication.addButtonTourShown) {
-      dispatch(applicationActions.updateApplicationAddButtonTourShown(true));
+      dispatch(applicationAddButtonTourShown(true));
       setShowTour(true);
     }
   }, [noApplication, dispatch]);
@@ -165,11 +167,11 @@ const Applications = () => {
       // Clear active project ID if deleted
       if (localStorage.getItem('activeProjectId') === app_id) {
         localStorage.removeItem('activeProjectId');
-        dispatch(applicationActions.applicationSelected(null, null));
+        dispatch(applicationSelected({ applicationId: null, applicationTitle: null }));
       }
 
       // Fetch updated applications
-      dispatch(applicationActions.getApplications());
+      dispatch(getApplications());
       message.success('Application has been removed successfully.');
     } catch (error) {
       // Revert optimistic update
@@ -236,7 +238,7 @@ const Applications = () => {
           selectedApplication={selectedApplication}
           user={user}
           applications={localApplications}
-          getApplications={() => dispatch(applicationActions.getApplications())}
+          getApplications={() => dispatch(getApplications())}
         />
       )}
     </>

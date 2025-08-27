@@ -1,6 +1,3 @@
-// import { userActions } from '../../redux/actions/User';
-import { store } from '../../redux/store/Store';
-import { authActions } from '../../redux/actions/Auth';
 import { message } from 'antd';
 import { getRoleNameArray } from './AuthUtil';
 
@@ -11,7 +8,10 @@ export function handleError(response) {
 
   //if response is false, it means that we cannot communicate with backend, set backend status to false so UI will show error message
   if (response === false) {
-    store.dispatch({ type: 'SET_BACKEND_STATUS', payload: false });
+    import('@/redux/store/Store').then(async ({ store }) => {
+      const { setBackendStatus } = await import('@/redux/slices/backendSlice'); // if needed
+      store.dispatch(setBackendStatus(false));
+    });
     return;
   }
 
@@ -60,11 +60,13 @@ window.fetch = async (...args) => {
 
     //if response.status is 401, it means the refresh token has expired, so we need to log the user out
     if (response.status === 401 && resource !== '/api/auth/loginBasicUser') {
-      authActions.logout();
+      import('@/redux/store/Store').then(async ({ store }) => {
+        const { logout } = await import('@/redux/slices/AuthSlice'); // if needed
+        store.dispatch(logout());
+      });
+
       localStorage.setItem('sessionExpired', true);
       window.location.href = '/login';
-
-      return {};
     }
 
     return response;

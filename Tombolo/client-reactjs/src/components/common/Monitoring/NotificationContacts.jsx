@@ -6,12 +6,9 @@ import AsrSpecificNotificationsDetails from './AsrSpecificNotificationDetails';
 
 export default function NotificationContacts({ form, children }) {
   // Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      integrations,
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const integrations = useSelector((state) => state.application.integrations);
+
   const asrIntegration = integrations.some(
     (integration) => integration.name === 'ASR' && integration.application_id === applicationId
   );

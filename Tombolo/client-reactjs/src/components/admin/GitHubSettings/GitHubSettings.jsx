@@ -24,7 +24,7 @@ const GitHubSettings = () => {
   const [editingKey, setEditingKey] = useState('');
   const [branchAndTagList, setBranchAndTagList] = useState({ ...initialBranchAndTagList });
 
-  const applicationId = useSelector((state) => state.applicationReducer?.application?.applicationId);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   const [projects, setProjects] = useGitHubProjectList();
 

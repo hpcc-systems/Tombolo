@@ -2,15 +2,15 @@ import { Alert, Button, Modal } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
-import { propagationActions } from '../../../../redux/actions/Propagation';
 import Text from '../../../common/Text';
 import ReportTable from '../ReportTable/ReportTable';
+import { generateChangesReport, getReports } from '@/redux/slices/PropagationSlice';
 
 const Propagation = () => {
   const dispatch = useDispatch();
-  const propagation = useSelector((state) => state.propagation);
+  const { reports, changes } = useSelector((state) => state.propagation);
 
-  const baseLineReport = propagation.reports.find((report) => report.isBaseLine);
+  const baseLineReport = reports.find((report) => report.isBaseLine);
 
   const [modal, setModal] = useState({ isOpen: false });
 
@@ -20,31 +20,31 @@ const Propagation = () => {
     if (baseLineReport) {
       setModal({ isOpen: true });
     } else {
-      dispatch(propagationActions.generateReport({ history, type: 'changes' }));
+      dispatch(generateChangesReport({ history }));
     }
   };
 
   const handleUseBaseLine = () => {
-    dispatch(propagationActions.generateReport({ history, type: 'changes', baseLineId: baseLineReport.id }));
+    dispatch(generateChangesReport({ history, baseLineId: baseLineReport.id }));
     setModal({ isOpen: false });
   };
 
   const handleUseCurrentState = () => {
-    dispatch(propagationActions.generateReport({ history, type: 'changes' }));
+    dispatch(generateChangesReport({ history }));
     setModal({ isOpen: false });
   };
 
   useEffect(() => {
-    if (propagation.reports.length === 0) {
-      dispatch(propagationActions.getReports({ callFrom: 'changes' }));
+    if (reports.length === 0) {
+      dispatch(getReports({ callFrom: 'changes' }));
     }
   }, []);
 
   return (
     <>
       <div style={{ maxWidth: '500px', marginBottom: '15px' }}>
-        {propagation.changes.error ? (
-          <Alert style={{ margin: '10px 0' }} closable type="error" showIcon message={propagation.changes.error} />
+        {changes.error ? (
+          <Alert style={{ margin: '10px 0' }} closable type="error" showIcon message={changes.error} />
         ) : null}
 
         <Alert
@@ -57,7 +57,7 @@ const Propagation = () => {
           }
           showIcon
           action={
-            <Button block type="primary" loading={propagation.changes.loading} onClick={handlePropagate}>
+            <Button block type="primary" loading={changes.loading} onClick={handlePropagate}>
               <Text>Propagate</Text>
             </Button>
           }

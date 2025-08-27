@@ -1,10 +1,10 @@
 import { Button, Col, Form, Input, message, Row, Select, Spin } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { assetsActions } from '../../../../redux/actions/Assets';
 import { authHeader, handleError } from '../../../common/AuthHeader';
 import { formItemLayout } from '../../../common/CommonUtil';
 import Text from '../../../common/Text';
+import { clusterSelected } from '@/redux/slices/AssetSlice';
 const { Option, OptGroup } = Select;
 
 function BasicsTabSpray({
@@ -17,8 +17,8 @@ function BasicsTabSpray({
   localState,
   formRef,
 }) {
-  const assetReducer = useSelector((state) => state.assetReducer);
-  const [selectedCluster, setSelectedCluster] = useState(assetReducer.clusterId);
+  const storeClusterId = useSelector((state) => state.asset.clusterId);
+  const [selectedCluster, setSelectedCluster] = useState(storeClusterId);
   const [jobSearchErrorShown, setJobSearchErrorShown] = useState(false);
   const [searchResultsLoaded, setSearchResultsLoaded] = useState(false);
   const [dropZoneFileSearchSuggestions, setDropZoneFileSearchSuggestions] = useState([]);
@@ -39,7 +39,7 @@ function BasicsTabSpray({
   };
 
   const onClusterSelection = (value) => {
-    dispatch(assetsActions.clusterSelected(value));
+    dispatch(clusterSelected(value));
     setSelectedCluster(value);
     getDropZones(value);
     setSelectedDropZoneIP('');

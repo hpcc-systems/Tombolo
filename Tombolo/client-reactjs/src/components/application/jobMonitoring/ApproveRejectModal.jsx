@@ -107,7 +107,7 @@ const ApproveRejectModal = ({
                 ...item,
                 approvalStatus: formData.approvalStatus,
                 isActive: formData.approvalStatus === 'Rejected' ? false : formData.isActive,
-                approvedBy: approverObj,
+                approver: approverObj,
                 approvedAt: new Date(),
                 approverComment: formData.approverComment,
               };
@@ -153,9 +153,9 @@ const ApproveRejectModal = ({
           <div style={{ marginTop: '15px' }}>
             This monitoring was{' '}
             <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{selectedMonitoring?.approvalStatus}</span> by{' '}
-            <Tooltip title={<div>{selectedMonitoring?.approvedBy ? selectedMonitoring?.approvedBy?.email : ''}</div>}>
+            <Tooltip title={<div>{selectedMonitoring?.approver ? selectedMonitoring?.approver?.email : ''}</div>}>
               <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
-                {selectedMonitoring?.approvedBy ? selectedMonitoring?.approvedBy?.name : ''}{' '}
+                {selectedMonitoring?.approver ? selectedMonitoring?.approver?.firstName : ''}{' '}
               </span>
             </Tooltip>
             on {new Date(selectedMonitoring?.approvedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}.

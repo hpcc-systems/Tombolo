@@ -19,7 +19,7 @@ function ClusterUsage() {
   const [viewExpandedGraph, setViewExpandedGraph] = useState(false);
   const [expandedGraphData, setExpandedGraphData] = useState([]);
   const [clusterOptions, setClusterOptions] = useState([]);
-  const clusters = useSelector((state) => state.applicationReducer.clusters);
+  const clusters = useSelector((state) => state.application.clusters);
 
   // Sets default cluster and cluster options when clusters from redux store are loaded
   useEffect(() => {

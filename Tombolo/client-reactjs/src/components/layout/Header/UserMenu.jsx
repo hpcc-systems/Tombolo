@@ -17,9 +17,9 @@ const UserMenu = ({ handleLogOut }) => {
   });
 
   const handleUserActionMenuClick = (e) => {
-    if (e.key == 1) {
+    if (e.key === '1') {
       history.push('/myaccount');
-    } else if (e.key == 2) {
+    } else if (e.key === '2') {
       handleLogOut();
     }
   };

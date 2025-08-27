@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin, message } from 'antd';
 import msLogo from '../../images/mslogo.png';
 import { getDeviceInfo } from './utils';
-import { authActions } from '../../redux/actions/Auth';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
+import { useDispatch } from 'react-redux';
+import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 
 import styles from './login.module.css';
 
 const Login = () => {
+  const dispatch = useDispatch();
+
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,39 +30,40 @@ const Login = () => {
     //get browser and os info and put in deviceInfo variable
     const deviceInfo = getDeviceInfo();
 
-    const test = await authActions.login({ email, password, deviceInfo });
+    const test = await dispatch(login({ email, password, deviceInfo }));
 
     if (test?.type === 'temp-pw') {
       setLoading(false);
 
-      if (test.resetLink) {
-        window.location.href = test.resetLink;
+      const resetLink = test.payload?.user?.resetLink;
+      if (resetLink) {
+        window.location.href = resetLink;
       } else {
         message.error('Please check your email for link to reset you temporary password.');
       }
       return;
     }
 
-    if (test?.type === 'unverified') {
+    if (test.payload?.type === Constants.LOGIN_UNVERIFIED) {
       setUnverifiedUserLoginAttempt(true);
       setLoading(false);
       return;
     }
 
-    if (test?.type === 'password-expired') {
+    if (test.payload?.type === Constants.LOGIN_PW_EXPIRED) {
       // window.location.href = '/expired-password';
       setExpiredPassword(true);
       return;
     }
 
-    if (test?.type === Constants.LOGIN_SUCCESS) {
-      //reload page if login is succesful
+    if (test.payload?.type === Constants.LOGIN_SUCCESS) {
+      // reload the page if login is successful
       window.location.href = '/';
       return;
     }
 
     //handle login failed
-    if (test?.type === Constants.LOGIN_FAILED) {
+    if (test.payload?.type === Constants.LOGIN_FAILED) {
       loginForm.setFieldsValue({ password: null });
       setLoading(false);
       return;
@@ -95,15 +99,15 @@ const Login = () => {
   }, [azureLoginAttempted, loading]);
 
   const azureLogin = () => {
-    authActions.azureLoginRedirect();
+    azureLoginRedirect();
   };
 
   const azureLoginFunc = async (code) => {
     try {
       setLoading(true);
-      const res = await authActions.loginOrRegisterAzureUser({ code });
+      const res = await dispatch(loginOrRegisterAzureUser(code));
 
-      if (res?.type === Constants.LOGIN_SUCCESS) {
+      if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
         //reload page if login is succesful
         window.location.href = '/';
         return;

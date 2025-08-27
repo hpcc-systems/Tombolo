@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 
 const useGitHubProjectList = () => {
   const [projects, setProjects] = useState({ error: '', loading: false, data: [] });
-  const applicationId = useSelector((state) => state.applicationReducer?.application?.applicationId);
+  const applicationId = useSelector((state) => state.application?.application?.applicationId);
 
   useEffect(() => {
     (async () => {

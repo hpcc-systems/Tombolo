@@ -3,12 +3,12 @@ import { CloseCircleOutlined, TagOutlined } from '@ant-design/icons';
 import { authHeader } from '../../../common/AuthHeader';
 import ConfirmAction from '../../../common/ConfirmAction';
 import { useDispatch, useSelector } from 'react-redux';
-import { propagationActions } from '../../../../redux/actions/Propagation';
 import Text from '../../../common/Text';
+import { updateReports } from '@/redux/slices/PropagationSlice';
 
 const BaseLine = ({ record }) => {
   const [applicationId, propagation] = useSelector((state) => [
-    state.applicationReducer.application.applicationId,
+    state.application.application.applicationId,
     state.propagation,
   ]);
 
@@ -32,12 +32,12 @@ const BaseLine = ({ record }) => {
         ...report,
         isBaseLine: data.id === report.id ? true : false,
       }));
-      dispatch(propagationActions.updateReports(newReports));
+      dispatch(updateReports(newReports));
     }
 
     if (action === 'remove') {
       const newReports = propagation.reports.map((report) => ({ ...report, isBaseLine: false }));
-      dispatch(propagationActions.updateReports(newReports));
+      dispatch(updateReports(newReports));
     }
   };
 

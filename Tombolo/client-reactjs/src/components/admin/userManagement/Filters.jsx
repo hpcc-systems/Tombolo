@@ -16,9 +16,7 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
   const [registrationStatusOptions, setRegistrationStatusOptions] = useState([]);
 
   // Redux
-  const {
-    applicationReducer: { applications: allApplications },
-  } = useSelector((state) => state);
+  const allApplications = useSelector((state) => state.application.applications);
 
   //Effects
   useEffect(() => {

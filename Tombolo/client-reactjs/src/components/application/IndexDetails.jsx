@@ -9,12 +9,12 @@ import AssociatedDataflows from './AssociatedDataflows';
 import EditableTable from '../common/EditableTable.jsx';
 import MonacoEditor from '../common/MonacoEditor.jsx';
 import { connect } from 'react-redux';
-import { assetsActions } from '../../redux/actions/Assets';
 import { debounce } from 'lodash';
 
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../common/DeleteAsset';
 import Text from '../common/Text.jsx';
+import { clusterSelected } from '@/redux/slices/AssetSlice';
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 message.config({ top: 130 });
@@ -417,7 +417,7 @@ class IndexDetails extends PureComponent {
   };
 
   onClusterSelection = (value) => {
-    this.props.dispatch(assetsActions.clusterSelected(value));
+    this.props.dispatch(clusterSelected(value));
     this.setState({
       selectedCluster: value,
     });
@@ -854,9 +854,9 @@ class IndexDetails extends PureComponent {
 }
 
 function mapStateToProps(state, ownProps) {
-  let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
-  const { user } = state.authenticationReducer;
-  const { application, clusters } = state.applicationReducer;
+  let { selectedAsset, newAsset = {}, clusterId } = state.asset;
+  const { user } = state.auth;
+  const { application, clusters } = state.application;
   const { isNew = false, groupId = '' } = newAsset;
 
   if (ownProps.selectedAsset) selectedAsset = ownProps.selectedAsset;

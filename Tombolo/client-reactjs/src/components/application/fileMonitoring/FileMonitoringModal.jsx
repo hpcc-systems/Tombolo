@@ -21,7 +21,7 @@ function FileMonitoringModal({
   isReader,
 }) {
   const [modalWidth, setModalWidth] = useState(0);
-  const applicationReducer = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [tabsWithError, setTabsWithError] = useState([]);
@@ -155,7 +155,7 @@ function FileMonitoringModal({
       if (selectedFileMonitoringDetails) {
         formData.id = selectedFileMonitoringDetails.id;
       }
-      formData.application_id = applicationReducer.application.applicationId;
+      formData.application_id = applicationId;
 
       const {
         monitoringAssetType,

@@ -23,7 +23,7 @@ function FileMonitoringBasicTab({
   setMonitoringAssetType,
   selectedFileMonitoringDetails,
 }) {
-  const { clusters } = useSelector((state) => state.applicationReducer); // List of cluster from redux-store. Clusters that are already added to DB
+  const clusters = useSelector((state) => state.application.clusters); // List of cluster from redux-store. Clusters that are already added to DB
   const [selectedFile, setSelectedFile] = useState('');
   const [fileSuggestions, setFileSuggestions] = useState([]);
   const [_landingZoneRootPath, setLandingZoneRootPath] = useState('');
