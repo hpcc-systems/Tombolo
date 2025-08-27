@@ -38,13 +38,13 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
   const data = await response.json();
 
   if (response.status === 401 || response.status === 403) {
-    if (data.message === 'unverified') {
+    if (data.message === Constants.LOGIN_UNVERIFIED) {
       return data;
-    } else if (data.message === 'temp-pw') {
+    } else if (data.message === Constants.LOGIN_TEMP_PW) {
       return data;
     } else {
       message.error(data.message);
-      throw new Error(data.message);
+      return { message: data.message, type: Constants.LOGIN_FAILED };
     }
   } else if (!response.ok) {
     handleError(response);
@@ -278,6 +278,17 @@ const authSlice = createSlice({
           state.lastName = user.lastName;
           state.id = user.id;
           state.user = user;
+        } else if (action.payload.type === Constants.LOGIN_FAILED) {
+          // Ensure UI sees a non-loading state and an error message
+          state.isAuthenticated = false;
+          state.token = null;
+          state.roles = [];
+          state.applications = [];
+          state.user = null;
+          state.firstName = '';
+          state.lastName = '';
+          state.id = '';
+          state.error = action.payload.error || 'Login failed';
         }
         // For temp-pw, password-expired, unverified cases,
         // the component will handle based on the returned payload
