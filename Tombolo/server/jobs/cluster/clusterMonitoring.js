@@ -17,7 +17,7 @@ const {
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 const { decryptString } = require('../../utils/cipher');
 
-// Helper functions ------------------
+// Helper functions
 async function enrichAsrMetaData(asrSpecificMetaData) {
   let notificationPrefix = 'CSM';
   if (asrSpecificMetaData?.domain) {
@@ -125,7 +125,6 @@ function buildNotificationPayload({
     createdBy,
   };
 }
-// ------------------------------------
 
 const monitoring_name = 'Cluster Monitoring';
 let monitoringTypeId;
