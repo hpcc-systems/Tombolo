@@ -17,6 +17,116 @@ const {
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 const { decryptString } = require('../../utils/cipher');
 
+// Helper functions ------------------
+async function enrichAsrMetaData(asrSpecificMetaData) {
+  let notificationPrefix = 'CSM';
+  if (asrSpecificMetaData?.domain) {
+    try {
+      const { productCategory } = asrSpecificMetaData;
+      const asrProduct = await AsrProduct.findOne({
+        where: { id: productCategory },
+        attributes: ['shortCode', 'name'],
+        raw: true,
+      });
+      asrSpecificMetaData.productName = `${asrProduct.name} (${asrProduct.shortCode})`;
+      notificationPrefix = asrProduct.shortCode;
+    } catch (error) {
+      parentPort.postMessage({
+        level: 'warn',
+        text: `Error while getting ASR product category: ${error.message}`,
+      });
+    }
+    try {
+      const asrDomain = await AsrDomain.findOne({
+        where: { id: asrSpecificMetaData.domain },
+        attributes: ['name'],
+        raw: true,
+      });
+      asrSpecificMetaData.domainName = asrDomain.name;
+    } catch (error) {
+      parentPort.postMessage({
+        level: 'warn',
+        text: `Error while getting ASR domain: ${error.message}`,
+      });
+    }
+  }
+  return { asrSpecificMetaData, notificationPrefix };
+}
+
+function getLocalTime(offset) {
+  const newDate = new Date();
+  return new Date(newDate.getTime() + offset * 60 * 1000).toLocaleString();
+}
+
+function extractClusterLists(response) {
+  const lists = {
+    thorClusterList: [],
+    roxieClusterList: [],
+    hThorClusterList: [],
+  };
+  if (response?.data?.ActivityResponse?.ThorClusterList) {
+    const list = response.data.ActivityResponse.ThorClusterList.TargetCluster;
+    lists.thorClusterList = list.map(cluster => ({
+      ClusterName: cluster.ClusterName,
+      ClusterStatus: _.capitalize(cluster.QueueStatus),
+    }));
+  }
+  if (response?.data?.ActivityResponse?.RoxieClusterList) {
+    const list = response.data.ActivityResponse.RoxieClusterList.TargetCluster;
+    lists.roxieClusterList = list.map(cluster => ({
+      ClusterName: cluster.ClusterName,
+      ClusterStatus: _.capitalize(cluster.QueueStatus),
+    }));
+  }
+  if (response?.data?.ActivityResponse?.HThorClusterList) {
+    const list = response.data.ActivityResponse.HThorClusterList.TargetCluster;
+    lists.hThorClusterList = list.map(cluster => ({
+      ClusterName: cluster.ClusterName,
+      ClusterStatus: _.capitalize(cluster.QueueStatus),
+    }));
+  }
+  return lists;
+}
+
+function buildNotificationPayload({
+  type = 'email',
+  templateName,
+  clusterId,
+  metaData,
+  subject,
+  issue,
+  mainRecipients = [],
+  cc = [],
+  asrSpecificMetaData,
+  notificationId,
+  clusterUrl,
+  timezone_offset,
+  createdBy = 'System',
+}) {
+  return {
+    type,
+    notificationOrigin: metaData.notificationOrigin,
+    originationId: metaData.originationId,
+    deliveryType: 'immediate',
+    templateName,
+    clusterId,
+    metaData: {
+      ...metaData,
+      clusterUrl,
+      notificationId,
+      subject,
+      mainRecipients,
+      cc,
+      notificationDescription: subject,
+      asrSpecificMetaData,
+      issue,
+      firstLogged: getLocalTime(timezone_offset),
+    },
+    createdBy,
+  };
+}
+// ------------------------------------
+
 const monitoring_name = 'Cluster Monitoring';
 let monitoringTypeId;
 
@@ -109,17 +219,11 @@ let monitoringTypeId;
       }
     });
 
-    // Common notification payload
-    const commonPayload = {
-      type: 'email',
+    // Common notification payload metaData
+    const commonMetaData = {
+      instanceName: process.env.INSTANCE_NAME,
       notificationOrigin: monitoring_name,
       originationId: monitoringType.id,
-      deliveryType: 'immediate',
-      metaData: {
-        instanceName: process.env.INSTANCE_NAME,
-        notificationOrigin: monitoring_name,
-      },
-      createdBy: 'System',
     };
 
     const notificationToBeQueued = [];
@@ -162,35 +266,8 @@ let monitoringTypeId;
           }
         );
 
-        let thorClusterList = [];
-        let roxieClusterList = [];
-        let hThorClusterList = [];
-        if (response?.data?.ActivityResponse?.ThorClusterList) {
-          const list =
-            response.data.ActivityResponse.ThorClusterList.TargetCluster;
-          thorClusterList = list.map(cluster => ({
-            ClusterName: cluster.ClusterName,
-            ClusterStatus: _.capitalize(cluster.QueueStatus),
-          }));
-        }
-
-        if (response?.data?.ActivityResponse?.RoxieClusterList) {
-          const list =
-            response.data.ActivityResponse.RoxieClusterList.TargetCluster;
-          roxieClusterList = list.map(cluster => ({
-            ClusterName: cluster.ClusterName,
-            ClusterStatus: _.capitalize(cluster.QueueStatus),
-          }));
-        }
-
-        if (response?.data?.ActivityResponse?.HThorClusterList) {
-          const list =
-            response.data.ActivityResponse.HThorClusterList.TargetCluster;
-          hThorClusterList = list.map(cluster => ({
-            ClusterName: cluster.ClusterName,
-            ClusterStatus: _.capitalize(cluster.QueueStatus),
-          }));
-        }
+        const { thorClusterList, roxieClusterList, hThorClusterList } =
+          extractClusterLists(response);
 
         // Iterate over list (thorClusterList, roxieClusterList, hThorClusterList) and check if any cluster is down
         const allClusters = [
@@ -199,7 +276,7 @@ let monitoringTypeId;
           ...hThorClusterList,
         ];
         const problematicClusters = allClusters.filter(
-          cluster => cluster.ClusterStatus !== 'Active' // Change this to 1 to trigger  notification for tests
+          cluster => cluster.ClusterStatus !== 'Active'
         );
 
         // If no problematic cluster found, log and continue to next monitoring
@@ -217,83 +294,37 @@ let monitoringTypeId;
           text: `Detected ${problematicClusters.length} problematic cluster(s) for ${clusterObject[clusterId].name}`,
         });
 
-        // If asr related the notification ID must be prefixed with the asr product short code
-        let notificationPrefix = 'CSM';
-        if (asrSpecificMetaData?.domain) {
-          try {
-            const { productCategory } = asrSpecificMetaData;
-            // Get product category
-            const asrProduct = await AsrProduct.findOne({
-              where: { id: productCategory },
-              attributes: ['shortCode', 'name'],
-              raw: true,
-            });
-            asrSpecificMetaData.productName = `${asrProduct.name} (${asrProduct.shortCode})`;
-            notificationPrefix = asrProduct.shortCode;
-          } catch (error) {
-            parentPort.postMessage({
-              level: 'warn',
-              text: `Error while getting ASR product category: ${error.message}`,
-            });
-          }
-
-          // Get Domain
-          try {
-            const asrDomain = await AsrDomain.findOne({
-              where: { id: asrSpecificMetaData.domain },
-              attributes: ['name'],
-              raw: true,
-            });
-            asrSpecificMetaData.domainName = asrDomain.name;
-          } catch (error) {
-            parentPort.postMessage({
-              level: 'warn',
-              text: `Error while getting ASR domain: ${error.message}`,
-            });
-          }
-        }
+        // ASR MetaData
+        const { asrSpecificMetaData: enrichedMeta, notificationPrefix } =
+          await enrichAsrMetaData(asrSpecificMetaData);
 
         let notificationId = generateNotificationId({
           notificationPrefix,
           timezoneOffset: clusterObject[clusterId].timezone_offset,
         });
 
-        const issueDescription = `${clusterObject[clusterId].name} has ${problematicClusters.length} cluster(s) in non-active state.`; // Issue object
+        const issueDescription = `${clusterObject[clusterId].name} has ${problematicClusters.length} cluster(s) in non-active state.`;
         const issue = {
           'Issue Description': issueDescription,
           'Problematic Clusters': problematicClusters,
         };
 
-        // Time at the cluster
-        const newDate = new Date();
-        const localTime = new Date(
-          newDate.getTime() +
-            clusterObject[clusterId].timezone_offset * 60 * 1000
-        );
-
-        const notificationPayload = {
-          type: 'email',
-          notificationOrigin: monitoring_name,
-          originationId: monitoringType.id,
-          deliveryType: 'immediate',
+        const notificationPayload = buildNotificationPayload({
           templateName: 'clusterStatusMonitoring',
           clusterId,
           metaData: {
-            instanceName: process.env.INSTANCE_NAME,
+            ...commonMetaData,
             monitoringName: clusterStatusMonitoringName,
-            notificationOrigin: monitoring_name,
-            clusterUrl: clusterObject[clusterId].baseUrl,
-            notificationId,
-            subject: issueDescription,
-            mainRecipients: primaryContacts,
-            cc: [...secondaryContacts, ...notifyContacts],
-            notificationDescription: issueDescription,
-            asrSpecificMetaData,
-            issue,
-            firstLogged: localTime.toLocaleString(),
           },
-          createdBy: 'System',
-        };
+          subject: issueDescription,
+          issue,
+          mainRecipients: primaryContacts,
+          cc: [...secondaryContacts, ...notifyContacts],
+          asrSpecificMetaData: enrichedMeta,
+          notificationId,
+          clusterUrl: clusterObject[clusterId].baseUrl,
+          timezone_offset: clusterObject[clusterId].timezone_offset,
+        });
 
         notificationToBeQueued.push(notificationPayload);
       } catch (error) {
@@ -325,94 +356,47 @@ let monitoringTypeId;
           continue;
         }
 
-        // -------------------------------------------------
-        // If asr related the notification ID must be prefixed with the asr product short code
-        let notificationPrefix = 'CSM';
-        if (asrSpecificMetaData?.domain) {
-          try {
-            const { productCategory } = asrSpecificMetaData;
-            // Get product category
-            const asrProduct = await AsrProduct.findOne({
-              where: { id: productCategory },
-              attributes: ['shortCode', 'name'],
-              raw: true,
-            });
-            asrSpecificMetaData.productName = `${asrProduct.name} (${asrProduct.shortCode})`;
-            notificationPrefix = asrProduct.shortCode;
-          } catch (error) {
-            parentPort.postMessage({
-              level: 'warn',
-              text: `Error while getting ASR product category: ${error.message}`,
-            });
-          }
-
-          // Get Domain
-          try {
-            const asrDomain = await AsrDomain.findOne({
-              where: { id: asrSpecificMetaData.domain },
-              attributes: ['name'],
-              raw: true,
-            });
-            asrSpecificMetaData.domainName = asrDomain.name;
-          } catch (error) {
-            parentPort.postMessage({
-              level: 'warn',
-              text: `Error while getting ASR domain: ${error.message}`,
-            });
-          }
-        }
+        // ASR MetaData
+        const { asrSpecificMetaData: enrichedMeta, notificationPrefix } =
+          await enrichAsrMetaData(asrSpecificMetaData);
 
         let notificationId = generateNotificationId({
           notificationPrefix,
           timezoneOffset: clusterObject[clusterId].timezone_offset,
         });
-        // -------------------------------------------------
 
         res.forEach(r => {
           if (r.max > usageThreshold) {
-            console.log('------------------------');
-            console.log('Queue this one : ', r.max, r.Name, usageThreshold);
-            console.log('------------------------');
+            const subject = `${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity`;
+            const issueDescription = `Cluster ${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity which is above the threshold of ${usageThreshold}%.`;
+            const issue = {
+              'Issue Description': issueDescription,
+              Resource: r.Name,
+              Usage: `${r.max}%`,
+              Threshold: `${usageThreshold}%`,
+            };
 
-            // ---------------
-            // Time at the cluster
-            const newDate = new Date();
-            const localTime = new Date(
-              newDate.getTime() +
-                clusterObject[clusterId].timezone_offset * 60 * 1000
-            );
-
-            // ---------------
-
-            const notificationPayload = {
-              ...commonPayload,
+            const notificationPayload = buildNotificationPayload({
               templateName: 'clusterUsageMonitoring',
               clusterId,
               metaData: {
-                ...commonPayload.metaData,
+                ...commonMetaData,
                 monitoringName: monitoring.monitoringName,
-                notificationOrigin: monitoring_name,
-                clusterUrl: clusterObject[monitoring.clusterId].baseUrl,
-                notificationId,
-                subject: `${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity`,
-                mainRecipients: contacts?.primaryContacts || [],
-                cc: [
-                  ...(contacts?.secondaryContacts || []),
-                  ...(contacts?.notifyContacts || []),
-                ],
-                notificationDescription: `Cluster ${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity which is above the threshold of ${usageThreshold}%.`,
-                asrSpecificMetaData,
-                issue: {
-                  'Issue Description': `Cluster ${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity which is above the threshold of ${usageThreshold}%.`,
-                  Resource: r.Name,
-                  Usage: `${r.max}%`,
-                  Threshold: `${usageThreshold}%`,
-                },
-                firstLogged: localTime.toLocaleString(),
               },
-            };
+              subject,
+              issue,
+              mainRecipients: contacts?.primaryContacts || [],
+              cc: [
+                ...(contacts?.secondaryContacts || []),
+                ...(contacts?.notifyContacts || []),
+              ],
+              asrSpecificMetaData: enrichedMeta,
+              notificationId,
+              clusterUrl: clusterObject[monitoring.clusterId].baseUrl,
+              timezone_offset:
+                clusterObject[monitoring.clusterId].timezone_offset,
+            });
 
-            //-------------
             notificationToBeQueued.push(notificationPayload);
           }
         });
@@ -436,7 +420,6 @@ let monitoringTypeId;
               scan_time: new Date(),
             },
             {
-              // Add unique constraint fields to the upsert object
               conflictFields: ['monitoring_type_id', 'cluster_id'],
             }
           );
