@@ -2,6 +2,7 @@
 const axios = require('axios');
 const _ = require('lodash');
 const { parentPort } = require('worker_threads');
+const { MachineService } = require('@hpcc-js/comms');
 
 // Local Imports
 const {
@@ -95,8 +96,36 @@ let monitoringTypeId;
       text: `Found ${activeClusterStatusMonitoring.length} active cluster status monitoring(s)`,
     });
 
-    // Iterate over each active monitoring and make asycn calls to check the status of the cluster
-    for (const monitoring of activeClusterStatusMonitoring) {
+    // Separate monitoring by clusterMonitoringType [["status", "usage"]]
+    const monitoringTrackingUsage = [];
+    const monitoringTrackingStatus = [];
+
+    activeClusterStatusMonitoring.forEach(monitoring => {
+      if (monitoring.clusterMonitoringType.includes('status')) {
+        monitoringTrackingStatus.push(monitoring);
+      }
+      if (monitoring.clusterMonitoringType.includes('usage')) {
+        monitoringTrackingUsage.push(monitoring);
+      }
+    });
+
+    // Common notification payload
+    const commonPayload = {
+      type: 'email',
+      notificationOrigin: monitoring_name,
+      originationId: monitoringType.id,
+      deliveryType: 'immediate',
+      metaData: {
+        instanceName: process.env.INSTANCE_NAME,
+        notificationOrigin: monitoring_name,
+      },
+      createdBy: 'System',
+    };
+
+    const notificationToBeQueued = [];
+
+    // Iterate over monitoring tracking cluster status and make async calls to check the status of the cluster
+    for (const monitoring of monitoringTrackingStatus) {
       try {
         const {
           id,
@@ -170,7 +199,7 @@ let monitoringTypeId;
           ...hThorClusterList,
         ];
         const problematicClusters = allClusters.filter(
-          cluster => cluster.ClusterStatus !== 'Active' // TODO - Change this to 1 to trigger  notification for tests
+          cluster => cluster.ClusterStatus !== 'Active' // Change this to 1 to trigger  notification for tests
         );
 
         // If no problematic cluster found, log and continue to next monitoring
@@ -248,6 +277,7 @@ let monitoringTypeId;
           originationId: monitoringType.id,
           deliveryType: 'immediate',
           templateName: 'clusterStatusMonitoring',
+          clusterId,
           metaData: {
             instanceName: process.env.INSTANCE_NAME,
             monitoringName: clusterStatusMonitoringName,
@@ -265,25 +295,157 @@ let monitoringTypeId;
           createdBy: 'System',
         };
 
-        NotificationQueue.create(notificationPayload);
-
-        //Update the monitoring log
-        await MonitoringLog.upsert(
-          {
-            monitoring_type_id: monitoringTypeId,
-            cluster_id: clusterId,
-            scan_time: new Date(),
-          },
-          {
-            // Add unique constraint fields to the upsert object
-            conflictFields: ['monitoring_type_id', 'cluster_id'],
-          }
-        );
+        notificationToBeQueued.push(notificationPayload);
       } catch (error) {
         parentPort.postMessage({
           level: 'error',
           text: `Error while monitoring cluster status: ${error}`,
         });
+      }
+    }
+
+    // iterate over monitoring tracking cluster usage and make async calls to check the usage of the cluster
+    for (const monitoring of monitoringTrackingUsage) {
+      try {
+        const { metaData = {}, clusterId } = monitoring;
+        const {
+          contacts = {},
+          asrSpecificMetaData = {},
+          monitoringDetails = {},
+        } = metaData;
+        const { usageThreshold } = monitoringDetails;
+        const ms = new MachineService(clusterObject[monitoring.clusterId]);
+        const res = await ms.GetTargetClusterUsageEx();
+
+        if (res.length < 1) {
+          parentPort.postMessage({
+            level: 'warn',
+            text: `No usage data returned for cluster ID ${monitoring.clusterId}`,
+          });
+          continue;
+        }
+
+        // -------------------------------------------------
+        // If asr related the notification ID must be prefixed with the asr product short code
+        let notificationPrefix = 'CSM';
+        if (asrSpecificMetaData?.domain) {
+          try {
+            const { productCategory } = asrSpecificMetaData;
+            // Get product category
+            const asrProduct = await AsrProduct.findOne({
+              where: { id: productCategory },
+              attributes: ['shortCode', 'name'],
+              raw: true,
+            });
+            asrSpecificMetaData.productName = `${asrProduct.name} (${asrProduct.shortCode})`;
+            notificationPrefix = asrProduct.shortCode;
+          } catch (error) {
+            parentPort.postMessage({
+              level: 'warn',
+              text: `Error while getting ASR product category: ${error.message}`,
+            });
+          }
+
+          // Get Domain
+          try {
+            const asrDomain = await AsrDomain.findOne({
+              where: { id: asrSpecificMetaData.domain },
+              attributes: ['name'],
+              raw: true,
+            });
+            asrSpecificMetaData.domainName = asrDomain.name;
+          } catch (error) {
+            parentPort.postMessage({
+              level: 'warn',
+              text: `Error while getting ASR domain: ${error.message}`,
+            });
+          }
+        }
+
+        let notificationId = generateNotificationId({
+          notificationPrefix,
+          timezoneOffset: clusterObject[clusterId].timezone_offset,
+        });
+        // -------------------------------------------------
+
+        res.forEach(r => {
+          if (r.max > usageThreshold) {
+            console.log('------------------------');
+            console.log('Queue this one : ', r.max, r.Name, usageThreshold);
+            console.log('------------------------');
+
+            // ---------------
+            // Time at the cluster
+            const newDate = new Date();
+            const localTime = new Date(
+              newDate.getTime() +
+                clusterObject[clusterId].timezone_offset * 60 * 1000
+            );
+
+            // ---------------
+
+            const notificationPayload = {
+              ...commonPayload,
+              templateName: 'clusterUsageMonitoring',
+              clusterId,
+              metaData: {
+                ...commonPayload.metaData,
+                monitoringName: monitoring.monitoringName,
+                notificationOrigin: monitoring_name,
+                clusterUrl: clusterObject[monitoring.clusterId].baseUrl,
+                notificationId,
+                subject: `${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity`,
+                mainRecipients: contacts?.primaryContacts || [],
+                cc: [
+                  ...(contacts?.secondaryContacts || []),
+                  ...(contacts?.notifyContacts || []),
+                ],
+                notificationDescription: `Cluster ${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity which is above the threshold of ${usageThreshold}%.`,
+                asrSpecificMetaData,
+                issue: {
+                  'Issue Description': `Cluster ${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity which is above the threshold of ${usageThreshold}%.`,
+                  Resource: r.Name,
+                  Usage: `${r.max}%`,
+                  Threshold: `${usageThreshold}%`,
+                },
+                firstLogged: localTime.toLocaleString(),
+              },
+            };
+
+            //-------------
+            notificationToBeQueued.push(notificationPayload);
+          }
+        });
+      } catch (error) {
+        parentPort.postMessage({
+          level: 'error',
+          text: `Error while monitoring cluster usage: ${error}`,
+        });
+      }
+
+      // Queue notification that are to be sent
+      await NotificationQueue.bulkCreate(notificationToBeQueued);
+
+      // Iterate over the notificationToBeQueued and do upsert
+      for (const n of notificationToBeQueued) {
+        try {
+          await MonitoringLog.upsert(
+            {
+              monitoring_type_id: monitoringTypeId,
+              cluster_id: n.clusterId,
+              scan_time: new Date(),
+            },
+            {
+              // Add unique constraint fields to the upsert object
+              conflictFields: ['monitoring_type_id', 'cluster_id'],
+            }
+          );
+        } catch (error) {
+          parentPort.postMessage({
+            level: 'error',
+            text: `Error while upserting monitoring log: ${error}`,
+          });
+        }
       }
     }
   } catch (error) {
