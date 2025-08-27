@@ -365,41 +365,51 @@ let monitoringTypeId;
           timezoneOffset: clusterObject[clusterId].timezone_offset,
         });
 
+        const problematicEngines = [];
         res.forEach(r => {
           if (r.max > usageThreshold) {
-            const subject = `${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity`;
-            const issueDescription = `Cluster ${clusterObject[monitoring.clusterId].name} is at ${r.max}% capacity which is above the threshold of ${usageThreshold}%.`;
-            const issue = {
-              'Issue Description': issueDescription,
-              Resource: r.Name,
+            problematicEngines.push({
+              Name: r.Name,
               Usage: `${r.max}%`,
               Threshold: `${usageThreshold}%`,
-            };
-
-            const notificationPayload = buildNotificationPayload({
-              templateName: 'clusterUsageMonitoring',
-              clusterId,
-              metaData: {
-                ...commonMetaData,
-                monitoringName: monitoring.monitoringName,
-              },
-              subject,
-              issue,
-              mainRecipients: contacts?.primaryContacts || [],
-              cc: [
-                ...(contacts?.secondaryContacts || []),
-                ...(contacts?.notifyContacts || []),
-              ],
-              asrSpecificMetaData: enrichedMeta,
-              notificationId,
-              clusterUrl: clusterObject[monitoring.clusterId].baseUrl,
-              timezone_offset:
-                clusterObject[monitoring.clusterId].timezone_offset,
             });
-
-            notificationToBeQueued.push(notificationPayload);
           }
         });
+
+        // If problematic engines found, queue notification
+        if (problematicEngines.length > 0) {
+          const subject = `${clusterObject[monitoring.clusterId].name} has some engine(s) above the usage threshold of ${usageThreshold}%.`;
+          const issueDescription = `Cluster ${clusterObject[monitoring.clusterId].name} has the following engines that are above the usage threshold of ${usageThreshold}%.`;
+          const issue = {
+            'Issue Description': issueDescription,
+            // Engine: r.Name,
+            // Usage: `${r.max}%`,
+            // Threshold: `${usageThreshold}%`,
+            problematicEngines,
+          };
+          const notificationPayload = buildNotificationPayload({
+            templateName: 'clusterUsageMonitoring',
+            clusterId,
+            metaData: {
+              ...commonMetaData,
+              monitoringName: monitoring.monitoringName,
+              problematicEngines,
+            },
+            subject,
+            issue,
+            mainRecipients: contacts?.primaryContacts || [],
+            cc: [
+              ...(contacts?.secondaryContacts || []),
+              ...(contacts?.notifyContacts || []),
+            ],
+            asrSpecificMetaData: enrichedMeta,
+            notificationId,
+            clusterUrl: clusterObject[monitoring.clusterId].baseUrl,
+            timezone_offset:
+              clusterObject[monitoring.clusterId].timezone_offset,
+          });
+          notificationToBeQueued.push(notificationPayload);
+        }
       } catch (error) {
         parentPort.postMessage({
           level: 'error',
