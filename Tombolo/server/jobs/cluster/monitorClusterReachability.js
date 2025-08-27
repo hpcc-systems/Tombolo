@@ -11,7 +11,7 @@ const { decryptString } = require('../../utils/cipher');
 const { Cluster, NotificationQueue } = require('../../models');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
-(async () => {
+async function monitorClusterReachability() {
   // UTC time
   const now = new Date();
   parentPort &&
@@ -154,4 +154,12 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
       process.exit(0);
     }
   }
+}
+
+(async () => {
+  await monitorClusterReachability();
 })();
+
+module.exports = {
+  monitorClusterReachability,
+};

@@ -19,7 +19,7 @@ const { decryptString } = require('../../utils/cipher');
 const monitoring_name = 'Cluster Monitoring';
 let monitoringTypeId;
 
-(async () => {
+async function monitorCluster() {
   const startTime = new Date().getTime();
 
   try {
@@ -300,4 +300,12 @@ let monitoringTypeId;
       text: `Cluster Status Monitoring completed in ${duration} ms`,
     });
   }
+}
+
+(async () => {
+  await monitorCluster();
 })();
+
+module.exports = {
+  monitorCluster,
+};
