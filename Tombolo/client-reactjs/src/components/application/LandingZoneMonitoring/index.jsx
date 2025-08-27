@@ -41,7 +41,7 @@ const LandigZoneMonitoring = () => {
   const [displayViewDetailsModal, setDisplayViewDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [editingData, setEditingData] = useState({ isEditing: false }); // Data to be edited
-  const [displayAddRejectModal, setDisplayAddRejectModal] = useState(false);
+  const [displayApprovalModal, setDisplayApprovalModal] = useState(false);
   const [savingLzMonitoring, setSavingLzMonitoring] = useState(false); // Flag to indicate if landing zone monitoring is being saved
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
   const [selectedCluster, setSelectedCluster] = useState(null);
@@ -495,7 +495,7 @@ const LandigZoneMonitoring = () => {
             landingZoneMonitoring={landingZoneMonitoring}
             setLandingZoneMonitoring={setLandingZoneMonitoring}
             setBulkEditModalVisibility={setBulkEditModalVisibility}
-            setBulkApprovalModalVisibility={setDisplayAddRejectModal}
+            setBulkApprovalModalVisibility={setDisplayApprovalModal}
             isReader={isReader}
             setFiltersVisible={setFiltersVisible}
             filtersVisible={filtersVisible}
@@ -555,7 +555,7 @@ const LandigZoneMonitoring = () => {
         setSelectedMonitoring={setSelectedMonitoring}
         setDisplayAddEditModal={setDisplayAddEditModal}
         setEditingData={setEditingData}
-        setDisplayAddRejectModal={setDisplayAddRejectModal}
+        setDisplayAddRejectModal={setDisplayApprovalModal}
         applicationId={applicationId}
         setSelectedRows={setSelectedRows}
         setCopying={setCopying}
@@ -574,8 +574,8 @@ const LandigZoneMonitoring = () => {
         productCategories={productCategories}
       />
       <ApproveRejectModal
-        visible={displayAddRejectModal}
-        onCancel={() => setDisplayAddRejectModal(false)}
+        visible={displayApprovalModal}
+        onCancel={() => setDisplayApprovalModal(false)}
         selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
         selectedRows={selectedRows}

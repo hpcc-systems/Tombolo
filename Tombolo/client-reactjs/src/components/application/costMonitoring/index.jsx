@@ -20,9 +20,9 @@ import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import CostMonitoringFilters from './CostMonitoringFilters';
 import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
-import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
-import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
-import { useMonitorType } from '../../../hooks/useMonitoringType';
+import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAndAllProductCategories';
+import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
+import { useMonitorType } from '@/hooks/useMonitoringType';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal';
 
 const monitoringTypeName = 'Cost Monitoring';
