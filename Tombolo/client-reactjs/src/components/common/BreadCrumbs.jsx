@@ -71,8 +71,8 @@ class BreadCrumbs extends Component {
 }
 
 function mapStateToProps(state) {
-  const application = state.applicationReducer.application;
-  const dataflow = state.dataflowReducer;
+  const application = state.application.application;
+  const dataflow = state.dataflow;
 
   return { application, dataflow };
 }

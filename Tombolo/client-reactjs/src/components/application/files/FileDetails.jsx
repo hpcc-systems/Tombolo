@@ -1199,9 +1199,9 @@ class FileDetails extends Component {
 }
 
 function mapStateToProps(state, _ownProps) {
-  let { newAsset = {}, clusterId } = state.assetReducer;
-  const { user } = state.authenticationReducer;
-  const { application, clusters, consumers, licenses, constraints } = state.applicationReducer;
+  let { newAsset = {}, clusterId } = state.asset;
+  const { user } = state.auth;
+  const { application, clusters, consumers, licenses, constraints } = state.application;
   const { isNew = false, groupId = '' } = newAsset;
 
   return {

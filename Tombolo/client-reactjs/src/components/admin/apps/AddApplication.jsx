@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button, Form, Input, Radio, message, Card, Descriptions, Tooltip } from 'antd';
 import { useDispatch } from 'react-redux';
-import { applicationActions } from '../../../redux/actions/Application';
-import { emptyGroupTree } from '../../../redux/actions/Groups';
 import { authHeader } from '../../common/AuthHeader';
 import Text from '../../common/Text';
 import { InfoCircleOutlined } from '@ant-design/icons';
@@ -11,6 +9,8 @@ import { setUser, getUser } from '../../common/userStorage';
 import { Typography } from 'antd';
 import dayjs from 'dayjs';
 const { Text: AntText } = Typography;
+import { getApplications, applicationSelected } from '@/redux/slices/ApplicationSlice';
+import { emptyGroupsTree } from '@/redux/slices/GroupSlice';
 
 // Description component for view mode
 const AppDescription = ({ application }) => {
@@ -183,7 +183,7 @@ function AddApplication({
         return;
       }
 
-      dispatch(emptyGroupTree());
+      dispatch(emptyGroupsTree());
       message.success('Application saved successfully');
       form.resetFields();
       closeAddApplicationModal();
@@ -193,9 +193,9 @@ function AddApplication({
       user.applications.push({ id: user_app_id, application: { id, title, description } });
       setUser(JSON.stringify(user));
 
-      dispatch(applicationActions.applicationSelected(id, title));
+      dispatch(applicationSelected({ applicationId: id, applicationTitle: title }));
       localStorage.setItem('activeProjectId', responseData.id);
-      dispatch(applicationActions.getApplications());
+      dispatch(getApplications());
     } catch (err) {
       console.error(err);
       message.error(err.message);

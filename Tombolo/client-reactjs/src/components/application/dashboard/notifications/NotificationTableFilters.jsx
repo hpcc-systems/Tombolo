@@ -11,9 +11,7 @@ const { Option } = Select;
 
 function NotificationTableFilters({ setFilters, sentNotifications, monitorings, domains, productCategories }) {
   //Redux
-  const {
-    applicationReducer: { integrations },
-  } = useSelector((state) => state);
+  const integrations = useSelector((state) => state.application.integrations);
 
   // Form instance
   const [form] = Form.useForm();

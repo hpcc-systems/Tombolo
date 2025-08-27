@@ -5,7 +5,7 @@ const { Cluster } = require('../../models');
 
 const { log } = require('../workerUtils')(parentPort);
 
-(async () => {
+async function getClusterTimezoneOffset() {
   const startTime = new Date();
   parentPort &&
     parentPort.postMessage({
@@ -17,7 +17,7 @@ const { log } = require('../workerUtils')(parentPort);
   const clusters = await Cluster.findAll();
 
   //If no clusters, log so to the console and return
-  if (clusters.length === 0) {
+  if (!clusters || clusters.length === 0) {
     log('verbose', 'No clusters to get timezone offset for');
     parentPort &&
       parentPort.postMessage({
@@ -84,4 +84,10 @@ const { log } = require('../workerUtils')(parentPort);
     });
   if (parentPort) parentPort.postMessage('done');
   else process.exit(0);
+}
+
+(async () => {
+  await getClusterTimezoneOffset();
 })();
+
+module.exports = getClusterTimezoneOffset;

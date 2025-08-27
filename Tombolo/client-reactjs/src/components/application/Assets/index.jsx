@@ -10,9 +10,7 @@ import { getRoleNameArray } from '../../common/AuthUtil.js';
 
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { authHeader } from '../../common/AuthHeader.js';
-// import { hasEditPermission } from '../../common/AuthUtil.js';
-import { assetsActions } from '../../../redux/actions/Assets';
-import { getGroupsTree, selectGroup, expandGroups } from '../../../redux/actions/Groups';
+import { selectGroup, getGroupsTree, groupsExpanded } from '@/redux/slices/GroupSlice';
 import AssetsTable from './AssetsTable';
 import TitleRenderer from './TitleRenderer.jsx';
 import MoveAssetsDialog from './MoveAssetsDialog';
@@ -20,6 +18,7 @@ import useModal from '../../../hooks/useModal';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import Text from '../../common/Text';
 import InfoDrawer from '../../common/InfoDrawer';
+import { assetInGroupSelected, newAsset, searchAsset } from '@/redux/slices/AssetSlice';
 
 const { DirectoryTree } = Tree;
 const { confirm } = Modal;
@@ -27,11 +26,9 @@ const { Search } = Input;
 // const CheckboxGroup = Checkbox.Group;
 
 const Assets = () => {
-  const [groupsReducer, assetReducer, applicationReducer] = useSelector((state) => [
-    state.groupsReducer,
-    state.assetReducer,
-    state.applicationReducer,
-  ]);
+  const application = useSelector((state) => state.application.application);
+  const assetInGroupId = useSelector((state) => state.asset.assetInGroupId);
+  const { selectedKeys, expandedKeys, groupsTree, dataList, groupsError } = useSelector((state) => state.groups);
 
   const roleArray = getRoleNameArray();
   const editingAllowed = !(roleArray.includes('reader') && roleArray.length === 1);
@@ -41,11 +38,6 @@ const Assets = () => {
   // const user = getUser();
   //TODO, get this from user roles to check if editing is allowed
 
-  // all data related to file explorer is in redux
-  const { selectedKeys, expandedKeys, tree, dataList } = groupsReducer;
-  const application = applicationReducer.application;
-  //id of the group clicked from Asset table after a search
-  const { assetInGroupId } = assetReducer;
   const { isShowing: showMoveDialog, toggle: toggleMoveDialog } = useModal();
   const { isShowing: showCreateGroup, toggle: toggleCreateGroup } = useModal();
   const prevSelectedApplicationRef = useRef();
@@ -80,7 +72,7 @@ const Assets = () => {
   useEffect(() => {
     //application changed
     if (application?.applicationId) {
-      if (groupsReducer.tree.length === 0 || groupsReducer.error) {
+      if (groupsTree.length === 0 || groupsError) {
         fetchGroups(); // run this function on initial load to populate tree and datalist;
       }
     }
@@ -90,7 +82,7 @@ const Assets = () => {
       prevSelectedApplicationRef.current &&
       application.applicationId !== prevSelectedApplicationRef.current.applicationId
     ) {
-      dispatch(expandGroups(['0-0']));
+      dispatch(groupsExpanded(['0-0']));
       dispatch(selectGroup({ id: '', key: '0-0' }));
     }
     if (assetInGroupId) {
@@ -102,7 +94,7 @@ const Assets = () => {
 
   const clearSearch = () => {
     setSearchKeyword('');
-    dispatch(assetsActions.searchAsset('', ''));
+    dispatch(searchAsset({ assetTypeFilter: '', keywords: '' }));
   };
 
   const onSelect = (keys, event) => {
@@ -111,7 +103,7 @@ const Assets = () => {
   };
 
   const onExpand = async (expandedKeys, _event) => {
-    dispatch(expandGroups(expandedKeys));
+    dispatch(groupsExpanded(expandedKeys));
   };
 
   const getParentKeys = (node, keys = ['0-0']) => {
@@ -130,14 +122,14 @@ const Assets = () => {
       if (match) {
         const parentKeys = getParentKeys(match);
         const uniqueKeys = [...new Set([...expandedKeys, ...parentKeys])]; // will keep all previously opened keys plus new path
-        dispatch(expandGroups(uniqueKeys));
+        dispatch(groupsExpanded(uniqueKeys));
         dispatch(selectGroup({ id: match.id, key: match.key }));
       }
     } else if (groupId === '') {
-      dispatch(expandGroups(['0-0']));
+      dispatch(groupsExpanded(['0-0']));
       dispatch(selectGroup({ id: '', key: '0-0' }));
     }
-    dispatch(assetsActions.assetInGroupSelected(''));
+    dispatch(assetInGroupSelected(''));
     clearSearch();
   };
 
@@ -155,7 +147,7 @@ const Assets = () => {
 
   const handleMenuClick = (e, group) => {
     const goTo = (point) => {
-      dispatch(assetsActions.newAsset(application.applicationId, selectedKeys.id));
+      dispatch(newAsset({ groupId: selectedKeys.id, applicationId: application.applicationId, isNew: true }));
       history.push(`/${application.applicationId}/assets/${point}`);
     };
 
@@ -271,7 +263,7 @@ const Assets = () => {
       if (assetTypeFilter.current.length === 0) return message.error('Please select at least one asset type');
       const assetFilter =
         assetTypeFilter.current.length !== searchOptions.length ? assetTypeFilter.current.join(',') : '';
-      dispatch(assetsActions.searchAsset(assetFilter, value));
+      dispatch(searchAsset({ assetTypeFilter: assetFilter, keywords: value }));
     }, 300),
     [assetTypeFilter.current]
   );
@@ -327,7 +319,7 @@ const Assets = () => {
 
             <DirectoryTree
               draggable
-              treeData={tree}
+              treeData={groupsTree}
               blockNode={true}
               onSelect={onSelect}
               onExpand={onExpand}
@@ -356,7 +348,7 @@ const Assets = () => {
           editGroup={editGroup}
           isShowing={showCreateGroup}
           toggle={closeCreateGroupDialog}
-          applicationId={applicationReducer.application.applicationId}
+          applicationId={application.applicationId}
         />
       ) : null}
 
@@ -365,7 +357,7 @@ const Assets = () => {
           assetToMove={itemToMove}
           isShowing={showMoveDialog}
           toggle={closeMoveAssetDialog}
-          application={applicationReducer.application}
+          application={application}
         />
       ) : null}
       <InfoDrawer open={openHelp} onClose={onHelpDrawerClose} width="25%" content="assets"></InfoDrawer>

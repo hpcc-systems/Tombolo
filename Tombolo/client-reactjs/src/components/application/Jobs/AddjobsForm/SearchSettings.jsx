@@ -41,12 +41,9 @@ const config = {
 };
 
 const SearchSettings = ({ form, panes, removeTab, addTab }) => {
-  const { application } = useSelector((state) => ({
-    application: state.applicationReducer,
-  }));
-
   // References available clusters from redux store;
-  const clusters = application.clusters;
+  const clusters = useSelector((state) => state.application.clusters);
+
   // Collapsing Search Setting div
   const [hide, setHide] = useState(false);
   const toggleHide = () => setHide((prev) => !prev);

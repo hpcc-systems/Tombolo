@@ -11,7 +11,7 @@ const { Option } = Select;
 
 function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
   const [currentUsage, setCurrentUsage] = useState([]);
-  const clusters = useSelector((state) => state.applicationReducer.clusters);
+  const clusters = useSelector((state) => state.application.clusters);
 
   useEffect(() => {
     if (selectedCluster) {

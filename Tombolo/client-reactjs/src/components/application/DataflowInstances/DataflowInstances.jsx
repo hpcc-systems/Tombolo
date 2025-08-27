@@ -5,11 +5,11 @@ import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 
-import { dataflowAction } from '../../../redux/actions/Dataflow';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
 import Text from '../../common/Text';
+import { dataflowSelected } from '@/redux/slices/DataflowSlice';
 
 class DataflowInstances extends Component {
   state = {
@@ -30,7 +30,7 @@ class DataflowInstances extends Component {
   handleViewDetails = (record) => {
     const { id, title, clusterId } = record;
     const { dispatch, history, applicationId } = this.props;
-    dispatch(dataflowAction.dataflowSelected({ id, title, clusterId }));
+    dispatch(dataflowSelected({ id, title, clusterId }));
     history.push(`/${applicationId}/dataflowinstances/dataflowInstanceDetails/${id}`);
   };
 
@@ -88,7 +88,7 @@ class DataflowInstances extends Component {
 }
 
 function mapStateToProps(state) {
-  const { applicationTitle, applicationId } = state.applicationReducer.application;
+  const { applicationTitle, applicationId } = state.application.application;
   return { applicationTitle, applicationId };
 }
 

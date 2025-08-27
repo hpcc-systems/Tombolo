@@ -32,10 +32,7 @@ function AddDataflow({
   setEnableEdit,
 }) {
   const [form] = Form.useForm();
-  const [application, clusters] = useSelector((state) => [
-    state.applicationReducer?.application,
-    state.applicationReducer?.clusters,
-  ]);
+  const [application, clusters] = useSelector((state) => [state.application?.application, state.application?.clusters]);
   const [notifyStatus, setNotifyStatus] = useState('Never');
   const [showDetails, setShowDetails] = useState(false);
   //  // t for translate -> getting namespaces relevant to this file

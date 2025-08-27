@@ -1,16 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import logo from '../../../images/logo.png';
-import { applicationActions } from '../../../redux/actions/Application.js';
-import { assetsActions } from '../../../redux/actions/Assets.js';
-import { expandGroups, selectGroup } from '../../../redux/actions/Groups.js';
-import { authActions } from '../../../redux/actions/Auth.js';
 import UserMenu from './UserMenu.jsx';
 import ApplicationMenu from './ApplicationMenu.jsx';
 import { Layout } from 'antd';
 
+import {
+  applicationSelected,
+  getClusters,
+  getApplications,
+  getAllActiveIntegrations,
+} from '@/redux/slices/applicationSlice';
+
 import styles from '../layout.module.css';
+import { logout } from '@/redux/slices/AuthSlice';
+import { clusterSelected } from '@/redux/slices/AssetSlice';
+import { groupsExpanded, selectGroup } from '@/redux/slices/GroupSlice';
 
 const { Header } = Layout;
 
@@ -19,8 +25,10 @@ const AppHeader = () => {
   const [selected, setSelected] = useState('Select an Application');
 
   //states needed from redux
-  const applicationReducer = useSelector((state) => state.applicationReducer);
-  const { application, applications, applicationsRetrieved, clusters, noClusters } = applicationReducer;
+  const { application, applications, applicationsRetrieved, clusters, noClusters } = useSelector(
+    (state) => state.application
+  );
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   //redux tools
   const dispatch = useDispatch();
@@ -33,7 +41,7 @@ const AppHeader = () => {
       const app = applications.find((app) => app.id === activeApplicationId);
       if (app && selected !== app?.title) {
         setSelected(app.title);
-        dispatch(applicationActions.applicationSelected(app.id, app.title));
+        dispatch(applicationSelected({ applicationId: app.id, applicationTitle: app.title }));
       }
     }
 
@@ -49,7 +57,7 @@ const AppHeader = () => {
     if (activeApplicationId && applications.length > 0 && !applications.find((app) => app.id === activeApplicationId)) {
       const app = applications[0];
       setSelected(app.title);
-      dispatch(applicationActions.applicationSelected(app.id, app.title));
+      dispatch(applicationSelected({ applicationId: app.id, applicationTitle: app.title }));
       localStorage.setItem('activeProjectId', app.id);
     }
 
@@ -57,38 +65,41 @@ const AppHeader = () => {
     if (!activeApplicationId && applications.length > 0) {
       const app = applications[0];
       setSelected(app.title);
-      dispatch(applicationActions.applicationSelected(app.id, app.title));
+      dispatch(applicationSelected({ applicationId: app.id, applicationTitle: app.title }));
       localStorage.setItem('activeProjectId', app.id);
     }
-  }, [application, applications, applicationReducer, dispatch]);
+  }, [application, applications, dispatch]);
 
-  //if there are no applications, get list from the server for selection
+  // if there are no applications, get list from the server for selection
   useEffect(() => {
     //if applications is null, fetch list from server
     if (!applicationsRetrieved) {
-      dispatch(applicationActions.getApplications());
+      dispatch(getApplications());
     }
   }, [applications, dispatch]);
 
-  //if application is selected in redux, get other relevant data into redux for use
+  // if the application is selected in redux, get other relevant data into redux for use
   useEffect(() => {
     if (application?.applicationId && !clusters.length && !noClusters.noClusters) {
-      dispatch(applicationActions.getClusters());
-      dispatch(applicationActions.getAllActiveIntegrations());
+      dispatch(getClusters());
+      dispatch(getAllActiveIntegrations());
     }
   }, [application, clusters.length, dispatch]);
 
-  //log out user, clear relevant data in redux related to current application and log user out
+  // Only render if authenticated
+  if (!isAuthenticated) return null;
+
+  // log out user, clear relevant data in redux related to current application and log user out
   const handleLogOut = () => {
     //clear data
     setSelected('Select an Application');
-    dispatch(applicationActions.applicationSelected('', ''));
-    dispatch(expandGroups(['0-0']));
+    dispatch(applicationSelected({ applicationId: '', applicationTitle: '' }));
+    dispatch(groupsExpanded(['0-0']));
     dispatch(selectGroup({ id: '', key: '0-0' }));
-    dispatch(assetsActions.clusterSelected(''));
+    dispatch(clusterSelected(''));
 
     //log user out
-    dispatch(authActions.logout());
+    dispatch(logout());
   };
 
   //handle application change
@@ -97,7 +108,7 @@ const AppHeader = () => {
     const applicationTitle = applications.find((app) => app.id === value)?.title;
 
     if (application?.applicationId !== applicationId) {
-      dispatch(applicationActions.applicationSelected(applicationId, applicationTitle));
+      dispatch(applicationSelected({ applicationId: applicationId, applicationTitle: applicationTitle }));
       localStorage.setItem('activeProjectId', applicationId);
       setSelected(applicationTitle);
     }

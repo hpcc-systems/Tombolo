@@ -18,7 +18,7 @@ const BasicTab = ({ selectedCluster, setSelectedCluster, superFileDetails, setSu
     }
   }, [superFileDetails]);
 
-  const { clusters } = useSelector((state) => state.applicationReducer);
+  const clusters = useSelector((state) => state.application.clusters);
   const [superFileVisibility, setSuperFileVisibility] = useState(false);
   const [superFileSuggestions, setSuperFileSuggestions] = useState([]);
   const [selectedSuperFile, setSelectedSuperFile] = useState('');

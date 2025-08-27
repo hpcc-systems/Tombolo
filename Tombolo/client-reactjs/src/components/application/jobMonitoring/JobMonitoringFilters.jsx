@@ -28,9 +28,7 @@ function NotificationTableFilters({
 }) {
   const LOCAL_STORAGE_KEY = 'jMFilters';
   //Redux
-  const {
-    applicationReducer: { integrations },
-  } = useSelector((state) => state);
+  const integrations = useSelector((state) => state.application.integrations);
 
   // Form instance
   const [form] = Form.useForm();

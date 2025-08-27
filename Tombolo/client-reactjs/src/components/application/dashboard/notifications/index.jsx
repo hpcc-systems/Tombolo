@@ -45,7 +45,7 @@ const Index = () => {
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   //Redux
-  const { applicationId } = useSelector((state) => state.applicationReducer.application);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   // When the component loads
   useEffect(() => {

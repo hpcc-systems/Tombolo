@@ -528,9 +528,9 @@ class JobDetails extends Component {
 }
 
 function mapStateToProps(state, ownProps) {
-  let { selectedAsset, newAsset = {}, clusterId } = state.assetReducer;
-  const { application, clusters } = state.applicationReducer;
-  const { user } = state.authenticationReducer;
+  let { selectedAsset, newAsset = {}, clusterId } = state.asset;
+  const { application, clusters } = state.application;
+  const { user } = state.auth;
   let { isNew = false, groupId = '' } = newAsset;
 
   if (ownProps.selectedAsset) selectedAsset = ownProps.selectedAsset;

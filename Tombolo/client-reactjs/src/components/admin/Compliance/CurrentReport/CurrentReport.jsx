@@ -2,30 +2,30 @@ import { Alert, Button } from 'antd';
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
-import { propagationActions } from '../../../../redux/actions/Propagation';
 import Text from '../../../common/Text';
 
 import ReportTable from '../ReportTable/ReportTable';
+import { generateCurrentReport, getReports } from '@/redux/slices/PropagationSlice';
 
 const CurrentReport = () => {
   const dispatch = useDispatch();
-  const propagation = useSelector((state) => state.propagation);
+  const { reports, current } = useSelector((state) => state.propagation);
 
   const history = useHistory();
 
-  const generateReport = () => dispatch(propagationActions.generateReport({ history, type: 'current' }));
+  const generateReport = () => dispatch(generateCurrentReport({ history }));
 
   useEffect(() => {
-    if (propagation.reports.length === 0) {
-      dispatch(propagationActions.getReports({ callFrom: 'current' }));
+    if (reports.length === 0) {
+      dispatch(getReports({ callFrom: 'current' }));
     }
   }, []);
 
   return (
     <>
       <div style={{ maxWidth: '500px', marginBottom: '15px' }}>
-        {propagation.current.error ? (
-          <Alert style={{ margin: '10px 0' }} closable type="error" showIcon message={propagation.current.error} />
+        {current.error ? (
+          <Alert style={{ margin: '10px 0' }} closable type="error" showIcon message={current.error} />
         ) : null}
 
         <Alert
@@ -33,7 +33,7 @@ const CurrentReport = () => {
           description={<Text>Generate report of currently active constraints attached to fields of the files</Text>}
           showIcon
           action={
-            <Button key="propagate" loading={propagation.current.loading} type="primary" block onClick={generateReport}>
+            <Button key="propagate" loading={current.loading} type="primary" block onClick={generateReport}>
               <Text>Generate report</Text>
             </Button>
           }

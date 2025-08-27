@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory, useParams } from 'react-router';
-import { authHeader, handleError } from '../components/common/AuthHeader';
-// import { hasEditPermission } from '../components/common/AuthUtil';
-import { dataflowAction } from '../redux/actions/Dataflow';
-import { getRoleNameArray } from '../components/common/AuthUtil';
+import { authHeader, handleError } from '@/components/common/AuthHeader';
+import { getRoleNameArray } from '@/components/common/AuthUtil';
+import { dataflowReset, dataflowSelected } from '@/redux/slices/DataflowSlice';
 
 const useSelectDataflow = () => {
-  const [dataflowReducer] = useSelector((state) => [state.dataflowReducer]);
+  const dataflowReducer = useSelector((state) => state.dataflow);
   const [isDataflowReady, setIsDataflowReady] = useState(false);
 
   const dispatch = useDispatch();
@@ -32,7 +31,7 @@ const useSelectDataflow = () => {
 
           if (!dataflow) throw new Error('No Dataflow found');
           const { title, id, clusterId } = dataflow;
-          dispatch(dataflowAction.dataflowSelected({ title, id, clusterId }));
+          dispatch(dataflowSelected({ title, id, clusterId }));
         } catch (error) {
           return history.push('/');
         }
@@ -41,8 +40,8 @@ const useSelectDataflow = () => {
     })();
 
     return () => {
-      // when component unmounted, reset selected dataflow
-      dispatch(dataflowAction.dataflowReset());
+      // when the component is unmounted, reset the selected dataflow
+      dispatch(dataflowReset());
     };
   }, []);
 

@@ -8,9 +8,7 @@ import { useLocation } from 'react-router-dom';
 import DashboardModal from './DashboardModal';
 
 const ExportMenu = () => {
-  const {
-    application: { applicationId },
-  } = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [dataType, setDataType] = useState('');

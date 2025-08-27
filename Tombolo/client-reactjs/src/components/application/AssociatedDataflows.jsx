@@ -3,12 +3,12 @@ import { useHistory } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { Table } from 'antd';
 import { authHeader, handleError } from '../common/AuthHeader.js';
-import { dataflowAction } from '../../redux/actions/Dataflow';
 import Text from '../common/Text.jsx';
+import { dataflowSelected } from '@/redux/slices/DataflowSlice';
 
 function AssociatedDataflows({ assetId, assetType }) {
   const history = useHistory();
-  const applicationReducer = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
   const [data, setData] = useState([]);
   const dispatch = useDispatch();
 
@@ -23,7 +23,7 @@ function AssociatedDataflows({ assetId, assetType }) {
         '&type=' +
         assetType +
         '&application_id=' +
-        applicationReducer.application.applicationId,
+        applicationId,
       {
         headers: authHeader(),
       }
@@ -43,7 +43,7 @@ function AssociatedDataflows({ assetId, assetType }) {
   };
 
   const onDataflowClick = ({ id, title, clusterId, application_id }) => {
-    dispatch(dataflowAction.dataflowSelected({ id, title, clusterId }));
+    dispatch(dataflowSelected({ id, title, clusterId }));
     history.push(`/${application_id}/dataflow/details/${id}`);
   };
 

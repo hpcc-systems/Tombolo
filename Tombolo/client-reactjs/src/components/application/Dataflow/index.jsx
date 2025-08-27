@@ -7,8 +7,8 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import DataflowTable from './DataflowTable';
 import AddDataflow from './AddDataflows';
-import { dataflowAction } from '../../../redux/actions/Dataflow';
 import InfoDrawer from '../../common/InfoDrawer';
+import { dataflowSelected } from '@/redux/slices/DataflowSlice';
 
 function Dataflow({ applicationId, history }) {
   let flowsRetrieved = useRef(false);
@@ -69,7 +69,7 @@ function Dataflow({ applicationId, history }) {
   // When DF is selected
   const onSelectDataflow = (selectedDataflow) => {
     const { title, id, clusterId } = selectedDataflow;
-    dispatch(dataflowAction.dataflowSelected({ title, id, clusterId }));
+    dispatch(dataflowSelected({ title, id, clusterId }));
     history.push(`/${applicationId}/dataflow/details/${id}`);
   };
 

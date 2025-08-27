@@ -26,12 +26,8 @@ const monitoringTypeName = 'Landing Zone Monitoring';
 
 const LandigZoneMonitoring = () => {
   // Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      clusters,
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const clusters = useSelector((state) => state.application.clusters);
 
   // Constants
   const [form] = Form.useForm();

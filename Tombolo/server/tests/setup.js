@@ -102,6 +102,7 @@ jest.mock('../models', () => {
     MonitoringLog: {
       findOne: jest.fn(),
       create: jest.fn(),
+      upsert: jest.fn(),
       update: jest.fn(),
     },
     LandingZoneMonitoring: {

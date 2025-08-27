@@ -28,10 +28,8 @@ const monitoringTypeName = 'Cluster Monitoring';
 
 function ClusterMonitoring() {
   //Redux
-  const {
-    application: { applicationId },
-    clusters,
-  } = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const clusters = useSelector((state) => state.application.clusters);
 
   //get user roles
   const roleArray = getRoleNameArray();

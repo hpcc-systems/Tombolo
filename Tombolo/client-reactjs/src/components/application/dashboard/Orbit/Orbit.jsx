@@ -50,9 +50,7 @@ function Orbit() {
   const [loading, setLoading] = useState(false);
 
   //grab the application ID from redux
-  const {
-    application: { applicationId },
-  } = useSelector((item) => item.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   // Step 1 - first we are loading the initial builds and workunits into state
   useEffect(() => {

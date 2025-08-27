@@ -14,10 +14,8 @@ function SuperFileMonitoring() {
   const [successAddingMonitoring, setSuccessAddingMonitoring] = useState(0);
   const [selectedFileMonitoring, setSelectedFileMonitoring] = useState(null);
 
-  const {
-    clusters,
-    application: { applicationId },
-  } = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const clusters = useSelector((state) => state.application.clusters);
 
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;

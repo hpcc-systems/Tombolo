@@ -8,20 +8,17 @@ import { useSelector, useDispatch } from 'react-redux';
 //Local Imports
 import styles from './integrations.module.css';
 import { toggleIntegration } from './integration-utils.js';
-import { applicationActions } from '../../../redux/actions/Application.js';
+
+import { getAllActiveIntegrations } from '@/redux/slices/ApplicationSlice';
 
 //JSX
 function IntegrationsTable({ allIntegrations }) {
   const history = useHistory();
   const dispatch = useDispatch();
 
-  // Get list of active integrations and current app ID from redux store
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      integrations,
-    },
-  } = useSelector((state) => state);
+  // Get a list of active integrations and current app ID from the redux store
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const integrations = useSelector((state) => state.application.integrations);
 
   // Check if an integration is active
   const isIntegrationActive = ({ integration_id, applicationId }) => {
@@ -34,7 +31,7 @@ function IntegrationsTable({ allIntegrations }) {
       await toggleIntegration({ integrationId: record.id, application_id, active });
 
       // dispatch below actions so redux store gets fresh data
-      dispatch(applicationActions.getAllActiveIntegrations());
+      dispatch(getAllActiveIntegrations());
     } catch (error) {
       message.error('Failed to toggle integration', error);
     }

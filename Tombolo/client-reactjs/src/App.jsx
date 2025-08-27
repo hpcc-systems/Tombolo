@@ -1,6 +1,6 @@
 //libraries and hooks
-import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { connect, useSelector } from 'react-redux';
+import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Layout, ConfigProvider } from 'antd';
 import { Router } from 'react-router-dom';
 import history from './components/common/History';
@@ -11,9 +11,10 @@ import LeftNav from './components/layout/LeftNav.jsx';
 import AppHeader from './components/layout/Header/Header.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
-import { checkBackendStatus, checkOwnerExists } from './redux/actions/Backend';
+import { checkBackendStatus, checkOwnerExists } from '@/redux/slices/BackendSlice';
 import { getRoleNameArray } from './components/common/AuthUtil.js';
 import { getUser } from './components/common/userStorage.js';
+import { loadUserFromStorage } from '@/redux/slices/AuthSlice';
 
 // Loading screen
 import LoadingScreen from './components/layout/LoadingScreen.jsx';
@@ -38,6 +39,14 @@ const App = () => {
   //left nav collapsed state
   const [collapsed, setCollapsed] = useState(localStorage.getItem('collapsed') === 'true');
 
+  //redux dispatch
+  const dispatch = useDispatch();
+
+  // Sync Redux auth state with local storage on app mount
+  useEffect(() => {
+    dispatch(loadUserFromStorage());
+  }, [dispatch]);
+
   //login page states
   const [user, setUser] = useState(getUser());
 
@@ -48,15 +57,13 @@ const App = () => {
   const appLinkRef = useRef(null);
   const clusterLinkRef = useRef(null);
 
-  //get redux states
-  const { applicationReducer, authenticationReducer, backendReducer } = useSelector((state) => state);
-
-  //get child objects from redux states for ease of use
-  const { application } = applicationReducer;
-  const { isConnected, statusRetrieved, ownerExists, ownerRetrieved } = backendReducer;
-
-  //redux dispatch
-  const dispatch = useDispatch();
+  // get redux states (select only needed properties)
+  const application = useSelector((state) => state.application.application);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const isConnected = useSelector((state) => state.backend.isConnected);
+  const statusRetrieved = useSelector((state) => state.backend.statusRetrieved);
+  const ownerExists = useSelector((state) => state.backend.ownerExists);
+  const ownerRetrieved = useSelector((state) => state.backend.ownerRetrieved);
 
   //retrieve backend status on load to display message to user or application
   useEffect(() => {
@@ -65,15 +72,15 @@ const App = () => {
       dispatch(checkBackendStatus());
       dispatch(checkOwnerExists());
     }
-  }, [backendReducer]);
+  }, [statusRetrieved, ownerRetrieved, dispatch]);
 
-  //Check if user matches what is currently in storage after authentiationReducer runs
+  //Check if user matches what is currently in storage after authentication runs
   useEffect(() => {
     const newUser = getUser();
-    if (user !== newUser) {
+    if (user?.id !== newUser?.id || user?.isAuthenticated !== newUser?.isAuthenticated) {
       setUser(newUser);
     }
-  }, [authenticationReducer]);
+  }, [isAuthenticated, user]);
 
   //left nav collapse method
   const onCollapse = (collapsed) => {
@@ -81,17 +88,12 @@ const App = () => {
     localStorage.setItem('collapsed', collapsed);
   };
 
-  let roleArray = [];
-  let isOwnerOrAdmin = false;
-  let isReader = false;
-
-  roleArray = getRoleNameArray();
-  if (roleArray?.includes('administrator') || roleArray?.includes('owner')) {
-    isOwnerOrAdmin = true;
-  }
-  if (roleArray?.includes('reader') && roleArray.length === 1) {
-    isReader = true;
-  }
+  const roleArray = useMemo(() => getRoleNameArray(), []);
+  const isOwnerOrAdmin = useMemo(
+    () => roleArray?.includes('administrator') || roleArray?.includes('owner'),
+    [roleArray]
+  );
+  const isReader = useMemo(() => roleArray?.includes('reader') && roleArray.length === 1, [roleArray]);
 
   const userHasRoleandApplication = user?.roles?.length > 0 && user?.applications?.length > 0;
 
@@ -121,13 +123,7 @@ const App = () => {
                           appLinkRef={appLinkRef}
                           clusterLinkRef={clusterLinkRef}
                         />
-                        {isOwnerOrAdmin && (
-                          <Tours
-                            appLinkRef={appLinkRef}
-                            clusterLinkRef={clusterLinkRef}
-                            applicationReducer={applicationReducer}
-                          />
-                        )}
+                        {isOwnerOrAdmin && <Tours appLinkRef={appLinkRef} clusterLinkRef={clusterLinkRef} />}
                         <Content
                           style={{
                             transition: '.1s linear',
@@ -139,7 +135,7 @@ const App = () => {
                               {!userHasRoleandApplication && !isOwnerOrAdmin ? (
                                 <NoAccessRoutes />
                               ) : (
-                                <AppRoutes application={application} authenticationReducer={authenticationReducer} />
+                                <AppRoutes application={application} isAuthenticated={isAuthenticated} />
                               )}
 
                               {isOwnerOrAdmin && <AdminRoutes />}
@@ -159,6 +155,6 @@ const App = () => {
   );
 };
 
-export default connect((state) => state)(App);
+export default App;
 
 <>{/* Main Application, Only enters if user is authenticated and backend is connected */}</>;

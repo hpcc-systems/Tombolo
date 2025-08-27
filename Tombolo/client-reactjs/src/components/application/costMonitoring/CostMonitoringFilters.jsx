@@ -28,9 +28,7 @@ function CostMonitoringFilters({
 }) {
   const LOCAL_STORAGE_KEY = 'cMFilters';
   //Redux
-  const {
-    applicationReducer: { integrations },
-  } = useSelector((state) => state);
+  const integrations = useSelector((state) => state.application.integrations);
 
   // Form instance
   const [form] = Form.useForm();
