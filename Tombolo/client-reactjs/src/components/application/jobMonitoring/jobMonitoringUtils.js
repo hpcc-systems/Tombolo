@@ -1,6 +1,17 @@
 import { authHeader } from '../../common/AuthHeader.js';
 import { message } from 'antd';
 
+export const evaluateJobMonitoring = async (formData) => {
+  const payload = {
+    method: 'PATCH',
+    headers: authHeader(),
+    body: JSON.stringify(formData),
+  };
+  const response = await fetch(`/api/jobmonitoring/evaluate`, payload);
+  if (!response.ok) throw new Error('Error saving your response');
+  return await response.text();
+};
+
 // Create a job monitoring
 export const createJobMonitoring = async ({ inputData }) => {
   const payload = {

@@ -1,5 +1,15 @@
 import { authHeader } from '../../common/AuthHeader';
 
+export const evaluateCostMonitoring = async (formData) => {
+  const response = await fetch(`/api/costMonitoring/evaluate`, {
+    method: 'PATCH',
+    headers: authHeader(),
+    body: JSON.stringify(formData),
+  });
+  if (!response.ok) throw new Error('Error saving your response');
+  return await response.json();
+};
+
 export const getAllCostMonitorings = async ({ applicationId }) => {
   const response = await fetch(`/api/costMonitoring/${applicationId}`, {
     headers: authHeader(),

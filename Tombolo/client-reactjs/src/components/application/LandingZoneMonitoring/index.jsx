@@ -1,8 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
-import { identifyErroneousTabs, getAllLzMonitorings, updateMonitoring, createLandingZoneMonitoring } from './Utils';
+import {
+  identifyErroneousTabs,
+  getAllLzMonitorings,
+  updateMonitoring,
+  createLandingZoneMonitoring,
+  approveSelectedMonitoring,
+} from './Utils';
 import { flattenObject } from '../../common/CommonUtil';
 
 import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools';
@@ -11,10 +17,9 @@ import { getRoleNameArray } from '../../common/AuthUtil';
 import AddEditModal from './AddEditModal/Modal';
 import ActionButton from './ActionButton.jsx';
 import LandingZoneMonitoringTable from './LandingZoneMonitoringTable';
-import ApproveRejectModal from './ApproveRejectModal';
+import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import BulkUpdateModal from './BulkUpdateModal';
 import ViewDetailsModal from './ViewDetailsModal';
-import { getUser } from '../../common/userStorage';
 import LzFilters from './LzFilters';
 
 const monitoringTypeName = 'Landing Zone Monitoring';
@@ -27,7 +32,6 @@ const LandigZoneMonitoring = () => {
   // Constants
   const [form] = Form.useForm();
   const isMonitoringTypeIdFetched = useRef(false);
-  const user = getUser();
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
@@ -37,7 +41,7 @@ const LandigZoneMonitoring = () => {
   const [displayViewDetailsModal, setDisplayViewDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [editingData, setEditingData] = useState({ isEditing: false }); // Data to be edited
-  const [displayAddRejectModal, setDisplayAddRejectModal] = useState(false);
+  const [displayApprovalModal, setDisplayApprovalModal] = useState(false);
   const [savingLzMonitoring, setSavingLzMonitoring] = useState(false); // Flag to indicate if landing zone monitoring is being saved
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
   const [selectedCluster, setSelectedCluster] = useState(null);
@@ -491,7 +495,7 @@ const LandigZoneMonitoring = () => {
             landingZoneMonitoring={landingZoneMonitoring}
             setLandingZoneMonitoring={setLandingZoneMonitoring}
             setBulkEditModalVisibility={setBulkEditModalVisibility}
-            setBulkApprovalModalVisibility={setDisplayAddRejectModal}
+            setBulkApprovalModalVisibility={setDisplayApprovalModal}
             isReader={isReader}
             setFiltersVisible={setFiltersVisible}
             filtersVisible={filtersVisible}
@@ -551,7 +555,7 @@ const LandigZoneMonitoring = () => {
         setSelectedMonitoring={setSelectedMonitoring}
         setDisplayAddEditModal={setDisplayAddEditModal}
         setEditingData={setEditingData}
-        setDisplayAddRejectModal={setDisplayAddRejectModal}
+        setDisplayAddRejectModal={setDisplayApprovalModal}
         applicationId={applicationId}
         setSelectedRows={setSelectedRows}
         setCopying={setCopying}
@@ -570,15 +574,18 @@ const LandigZoneMonitoring = () => {
         productCategories={productCategories}
       />
       <ApproveRejectModal
-        id={selectedMonitoring?.id}
-        displayAddRejectModal={displayAddRejectModal}
-        setDisplayAddRejectModal={setDisplayAddRejectModal}
+        visible={displayApprovalModal}
+        onCancel={() => setDisplayApprovalModal(false)}
         selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
-        user={user}
         selectedRows={selectedRows}
-        applicationId={applicationId}
-        setLandingZoneMonitoring={setLandingZoneMonitoring}
+        setMonitoring={setLandingZoneMonitoring}
+        monitoringTypeLabel={monitoringTypeName}
+        evaluateMonitoring={approveSelectedMonitoring}
+        onSuccess={async () => {
+          const updatedLzMonitoringData = await getAllLzMonitorings({ applicationId });
+          setLandingZoneMonitoring(updatedLzMonitoringData);
+        }}
       />
       {bulkEditModalVisibility && (
         <BulkUpdateModal
