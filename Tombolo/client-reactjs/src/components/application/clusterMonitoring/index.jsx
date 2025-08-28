@@ -1,5 +1,5 @@
 // Library Imports
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
 
@@ -13,13 +13,14 @@ import {
   handleBulkUpdateClusterMonitoring,
   deleteClusterMonitoring,
   toggleClusterMonitoringActiveStatus,
-} from './clusterMonitoringUtils.js';
+  evaluateClusterMonitoring,
+} from './clusterMonitoringUtils';
 import ViewDetailsModal from './ViewDetailsModal';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditModal from './AddEditModal/AddEditModal.jsx';
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';
-import ApproveRejectModal from './ApproveRejectModal.jsx';
+import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import ClusterMonitoringFilters from './ClusterMonitoringFilters';
 import { getAllProductCategories } from '../../common/ASRTools';
 import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
@@ -268,12 +269,14 @@ function ClusterMonitoring() {
       )}
 
       <ApproveRejectModal
-        displayApproveRejectModal={displayApproveRejectModal}
-        setApproveRejectModal={setApproveRejectModal}
-        selectedRows={selectedRows}
+        visible={displayApproveRejectModal}
+        onCancel={() => setApproveRejectModal(false)}
         selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
-        setClusterMonitoring={setClusterMonitoring}
+        selectedRows={selectedRows}
+        setMonitoring={setClusterMonitoring}
+        monitoringTypeLabel={monitoringTypeName}
+        evaluateMonitoring={evaluateClusterMonitoring}
       />
       <ClusterMonitoringTable
         clusterMonitoring={filteredClusterMonitoring}
