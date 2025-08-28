@@ -41,22 +41,22 @@ function ClusterMonitoring() {
   const [notificationDetails, setNotificationDetails] = useState({});
   const [displayViewDetailsModal, setDisplayViewDetailsModal] = useState(false);
   const [editingMonitoring, setEditingMonitoring] = useState(false);
-  const [form] = Form.useForm();
   const [displayApproveRejectModal, setApproveRejectModal] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [duplicatingData, setDuplicatingData] = useState({ isDuplicating: false }); // CM to be duplicated
   const [filters, setFilters] = useState({});
   const [filtersVisible, setFiltersVisible] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const [matchCount, setMatchCount] = useState(0);
   const [allProductCategories, setAllProductCategories] = useState([]);
   const [filtering, setFiltering] = useState(false);
   const [filteredClusterMonitoring, setFilteredClusterMonitoring] = useState([]);
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
+  const [monitoringType, setMonitoringType] = useState([]);
 
   // Hooks
   const { monitoringTypeId } = useMonitorType(monitoringTypeName);
+  const [form] = Form.useForm();
 
   // Get domains and product categories
   const { domains, productCategories, setProductCategories, selectedDomain, setSelectedDomain } =
@@ -72,7 +72,7 @@ function ClusterMonitoring() {
     })();
   }, []);
 
-  // When filter changes, filter the cost monitorings
+  // When filter changes, filter the cost monitoring
   useEffect(() => {
     setFiltering(true);
     if (clusterMonitoring.length === 0) {
@@ -162,6 +162,14 @@ function ClusterMonitoring() {
           },
         ]);
       }
+      const selectedType = selectedMonitoring.clusterMonitoringType || [];
+      setMonitoringType(selectedType);
+
+      if (selectedType.includes('usage')) {
+        form.setFieldsValue({
+          usageThreshold: selectedMonitoring?.metaData?.monitoringDetails?.usageThreshold || undefined,
+        });
+      }
     }
   }, [editingMonitoring, duplicatingData, selectedMonitoring]);
 
@@ -200,6 +208,8 @@ function ClusterMonitoring() {
           selectedMonitoring={selectedMonitoring}
           setDuplicatingData={setDuplicatingData}
           isDuplicating={duplicatingData.isDuplicating}
+          monitoringType={monitoringType}
+          setMonitoringType={setMonitoringType}
         />
       )}
       <ClusterMonitoringFilters

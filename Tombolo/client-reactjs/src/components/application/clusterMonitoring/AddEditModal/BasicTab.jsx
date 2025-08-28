@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Form, Input, InputNumber, Select, Row, Col } from 'antd';
 import AsrSpecificMonitoringDetails from '../../../common/Monitoring/AsrSpecificMonitoringDetails';
 import { useSelector } from 'react-redux';
@@ -10,10 +10,7 @@ const monitoringTypes = [
   { label: 'Cluster Usage', value: 'usage' },
 ];
 
-function BasicTab({ form, domains, productCategories, setSelectedDomain }) {
-  // States
-  const [monitoringType, setMonitoringType] = useState(null);
-
+function BasicTab({ form, domains, productCategories, setSelectedDomain, monitoringType, setMonitoringType }) {
   // Redux
   const {
     applicationReducer: {
@@ -47,8 +44,20 @@ function BasicTab({ form, domains, productCategories, setSelectedDomain }) {
         <Input.TextArea placeholder="Enter description" />
       </Form.Item>
 
+      <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Select a cluster' }]}>
+        <Select placeholder="Select a cluster">
+          {clusters.map((cluster) => {
+            return (
+              <Option key={cluster.id} value={cluster.id}>
+                {cluster.name}
+              </Option>
+            );
+          })}
+        </Select>
+      </Form.Item>
+
       <Row gutter={16}>
-        <Col span={monitoringType === 'usage' ? 12 : 24}>
+        <Col span={monitoringType.includes('usage') ? 12 : 24}>
           <Form.Item
             label="Monitoring Type"
             name="clusterMonitoringType"
@@ -57,6 +66,7 @@ function BasicTab({ form, domains, productCategories, setSelectedDomain }) {
               placeholder="Select monitoring type"
               mode="multiple"
               onChange={(value) => {
+                // setMonitoringType(value);
                 setMonitoringType(value);
               }}>
               {monitoringTypes.map((type) => {
@@ -69,29 +79,17 @@ function BasicTab({ form, domains, productCategories, setSelectedDomain }) {
             </Select>
           </Form.Item>
         </Col>
-        {monitoringType === 'usage' && (
+        {monitoringType.includes('usage') && (
           <Col span={12}>
             <Form.Item
-              label="Threshold %"
-              name="threshold"
+              label="Usage Threshold"
+              name="usageThreshold"
               rules={[{ required: true, message: 'Please enter a threshold percentage' }]}>
-              <InputNumber placeholder="Enter threshold percentage" style={{ width: '100%' }} />
+              <InputNumber placeholder="Enter threshold percentage" style={{ width: '100%' }} suffix="%" />
             </Form.Item>
           </Col>
         )}
       </Row>
-
-      <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Select a cluster' }]}>
-        <Select placeholder="Select a cluster">
-          {clusters.map((cluster) => {
-            return (
-              <Option key={cluster.id} value={cluster.id}>
-                {cluster.name}
-              </Option>
-            );
-          })}
-        </Select>
-      </Form.Item>
 
       {asrIntegration && (
         <AsrSpecificMonitoringDetails
