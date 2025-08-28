@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, message, Tag, Descriptions } from 'antd';
 
-import CostMonitoringActionButton from './CostMonitoringActionButton';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditCostMonitoringModal from './AddEditCostMonitoringModal';
 import {
   createCostMonitoring,
   getAllCostMonitorings,
   handleBulkUpdateCostMonitorings,
   updateSelectedCostMonitoring,
+  handleBulkDeleteCostMonitorings,
+  toggleCostMonitoringStatus,
 } from './costMonitoringUtils';
 
 import { identifyErroneousTabs } from '../jobMonitoring/jobMonitoringUtils';
@@ -172,6 +174,10 @@ function CostMonitoring() {
     setFilteredCostMonitoring(filteredCm);
     setFilteringCosts(false);
   }, [filters, costMonitorings, searchTerm]);
+
+  const handleOpenBulkEdit = () => setBulkEditModalVisibility(true);
+  const handleOpenApproveReject = () => setDisplayAddRejectModal(true);
+  const handleToggleFilters = () => setFiltersVisible((prev) => !prev);
 
   // Function reset states when modal is closed
   const resetStates = () => {
@@ -434,22 +440,45 @@ function CostMonitoring() {
     }
   };
 
+  const handleBulkDeleteSelectedCostMonitorings = async (ids) => {
+    try {
+      await handleBulkDeleteCostMonitorings(ids);
+      setCostMonitorings((prev) => prev.filter((cm) => !ids.includes(cm.id)));
+      setSelectedRows([]);
+      message.success('Selected cost monitorings deleted successfully');
+    } catch (_) {
+      message.error('Unable to delete selected cost monitorings');
+    }
+  };
+
+  const handleBulkStartPauseCostMonitorings = async ({ ids, action }) => {
+    try {
+      const updatedMonitorings = await toggleCostMonitoringStatus(ids, action);
+      const updatedMap = new Map(updatedMonitorings.map((u) => [u.id, u]));
+      setCostMonitorings((prev) => prev.map((m) => updatedMap.get(m.id) || m));
+    } catch (_) {
+      message.error('Unable to start/pause selected cost monitorings');
+    }
+  };
+
   // JSX
   return (
     <>
       <BreadCrumbs
         extraContent={
-          <CostMonitoringActionButton
-            handleAddCostMonitoringButtonClick={handleAddCostMonitoringButtonClick}
-            selectedRows={selectedRows}
-            setSelectedRows={setSelectedRows}
-            setCostMonitorings={setCostMonitorings}
-            setFiltersVisible={setFiltersVisible}
-            filtersVisible={filtersVisible}
+          <MonitoringActionButton
+            label="Cost Monitoring Actions"
             isReader={isReader}
-            displayAddRejectModal={displayAddRejectModal}
-            setDisplayAddRejectModal={setDisplayAddRejectModal}
-            setBulkEditModalVisibility={setBulkEditModalVisibility}
+            selectedRows={selectedRows}
+            onAdd={handleAddCostMonitoringButtonClick}
+            onBulkEdit={handleOpenBulkEdit}
+            onBulkApproveReject={handleOpenApproveReject}
+            onToggleFilters={handleToggleFilters}
+            showBulkApproveReject={true}
+            showFiltersToggle={true}
+            filtersStorageKey="cMFiltersVisible"
+            onBulkDelete={handleBulkDeleteSelectedCostMonitorings}
+            onBulkStartPause={handleBulkStartPauseCostMonitorings}
           />
         }
       />

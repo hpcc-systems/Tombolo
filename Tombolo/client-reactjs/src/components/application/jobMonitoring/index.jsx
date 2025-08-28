@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Descriptions, Form, message, Tag } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
-import JobMonitoringActionButton from './JobMonitoringActionButton.jsx';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
 import {
   checkScheduleValidity,
@@ -13,6 +13,7 @@ import {
   isScheduleUpdated,
   updateSelectedMonitoring,
 } from './jobMonitoringUtils.js';
+import { handleBulkDeleteJobMonitorings, toggleJobMonitoringStatus } from './jobMonitoringUtils';
 
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
@@ -203,6 +204,27 @@ function JobMonitoring() {
     setFilteringJobs(false);
   }, [filters, jobMonitorings, searchTerm]);
 
+  const handleBulkDeleteSelectedJobMonitorings = async (ids) => {
+    try {
+      await handleBulkDeleteJobMonitorings({ selectedJobMonitorings: ids });
+      setJobMonitorings((prev) => prev.filter((jm) => !ids.includes(jm.id)));
+      setSelectedRows([]);
+    } catch (_) {
+      message.error('Unable to delete selected job monitorings');
+    }
+  };
+
+  const handleBulkStartPauseJobMonitorings = async ({ ids, action }) => {
+    try {
+      const updatedMonitorings = await toggleJobMonitoringStatus({ ids, action });
+      setJobMonitorings((prev) =>
+        prev.map((monitoring) => updatedMonitorings.find((u) => u.id === monitoring.id) || monitoring)
+      );
+    } catch (_) {
+      message.error('Unable to start/pause selected job monitorings');
+    }
+  };
+
   // Function reset states when modal is closed
   const resetStates = () => {
     setIntermittentScheduling({
@@ -224,6 +246,10 @@ function JobMonitoring() {
     setCron('');
     form.resetFields();
   };
+
+  const handleOpenBulkEdit = () => setBulkEditModalVisibility(true);
+  const handleOpenApproveReject = () => setDisplayAddRejectModal(true);
+  const handleToggleFilters = () => setFiltersVisible((prev) => !prev);
 
   //When add button new job monitoring button clicked
   const handleAddJobMonitoringButtonClick = () => {
@@ -592,17 +618,19 @@ function JobMonitoring() {
     <>
       <BreadCrumbs
         extraContent={
-          <JobMonitoringActionButton
-            handleAddJobMonitoringButtonClick={handleAddJobMonitoringButtonClick}
-            selectedRows={selectedRows}
-            setSelectedRows={setSelectedRows}
-            setJobMonitorings={setJobMonitorings}
-            setBulkEditModalVisibility={setBulkEditModalVisibility}
-            setFiltersVisible={setFiltersVisible}
-            filtersVisible={filtersVisible}
+          <MonitoringActionButton
+            label="Job Monitoring Actions"
             isReader={isReader}
-            displayAddRejectModal={displayAddRejectModal}
-            setDisplayAddRejectModal={setDisplayAddRejectModal}
+            selectedRows={selectedRows}
+            onAdd={handleAddJobMonitoringButtonClick}
+            onBulkEdit={handleOpenBulkEdit}
+            onBulkApproveReject={handleOpenApproveReject}
+            onToggleFilters={handleToggleFilters}
+            showBulkApproveReject={true}
+            showFiltersToggle={true}
+            filtersStorageKey="jMFiltersVisible"
+            onBulkDelete={handleBulkDeleteSelectedJobMonitorings}
+            onBulkStartPause={handleBulkStartPauseJobMonitorings}
           />
         }
       />
