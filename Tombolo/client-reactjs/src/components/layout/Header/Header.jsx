@@ -21,10 +21,9 @@ import { groupsExpanded, selectGroup } from '@/redux/slices/GroupSlice';
 const { Header } = Layout;
 
 const AppHeader = () => {
-  //states needed
   const [selected, setSelected] = useState('Select an Application');
 
-  //states needed from redux
+  // Redux
   const { application, applications, applicationsRetrieved, clusters, noClusters } = useSelector(
     (state) => state.application
   );

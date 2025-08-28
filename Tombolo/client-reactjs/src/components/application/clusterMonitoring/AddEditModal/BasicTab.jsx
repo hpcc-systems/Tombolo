@@ -12,13 +12,9 @@ const monitoringTypes = [
 
 function BasicTab({ form, domains, productCategories, setSelectedDomain, monitoringType, setMonitoringType }) {
   // Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      integrations,
-      clusters,
-    },
-  } = useSelector((state) => state);
+  const { clusters } = useSelector((state) => state.application);
+  const integrations = useSelector((state) => state.application.integrations);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   // Check if ASR integration is enabled
   const asrIntegration = integrations.some(
