@@ -510,7 +510,7 @@ const LandigZoneMonitoring = () => {
   };
 
   const handleOpenBulkEdit = () => setBulkEditModalVisibility(true);
-  const handleOpenApproveReject = () => setDisplayAddRejectModal(true);
+  const handleOpenApproveReject = () => setDisplayApprovalModal(true);
   const handleToggleFilters = () => setFiltersVisible((prev) => !prev);
 
   //JSX
@@ -528,7 +528,7 @@ const LandigZoneMonitoring = () => {
             onToggleFilters={handleToggleFilters}
             showBulkApproveReject={true}
             showFiltersToggle={true}
-            filtersStorageKey="jMFiltersVisible"
+            filtersStorageKey="lzMFiltersVisible"
             onBulkDelete={handleBulkDeleteSelectedLandingZones}
             onBulkStartPause={handleBulkStartPauseLandingZones}
           />

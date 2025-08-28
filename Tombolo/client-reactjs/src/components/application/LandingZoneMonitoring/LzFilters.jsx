@@ -42,8 +42,8 @@ function LzFilters({
   //Effects
   useEffect(() => {
     // Display filters if true in local storage
-    const filtersVisibility = localStorage.getItem('jMFiltersVisible');
-    const existingFilters = localStorage.getItem('jMFilters');
+    const filtersVisibility = localStorage.getItem('lzMFiltersVisible');
+    const existingFilters = localStorage.getItem('lzMFilters');
 
     if (filtersVisibility) {
       setFiltersVisible(filtersVisibility === 'true');
@@ -134,7 +134,7 @@ function LzFilters({
     const allFilters = form.getFieldsValue();
     setFilters(allFilters);
 
-    localStorage.setItem('jMFilters', JSON.stringify(allFilters));
+    localStorage.setItem('lzMFilters', JSON.stringify(allFilters));
 
     // Set new filter count
     let count = 0;
@@ -162,9 +162,9 @@ function LzFilters({
     form.resetFields();
     setFilterCount(0);
     setFilters({});
-    // If exists remove jMFilters from local storage
-    if (localStorage.getItem('jMFilters')) {
-      localStorage.removeItem('jMFilters');
+    // If exists remove lzMFilters from local storage
+    if (localStorage.getItem('lzMFilters')) {
+      localStorage.removeItem('lzMFilters');
     }
   };
 
