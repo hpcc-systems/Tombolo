@@ -131,8 +131,8 @@ const monitoring_name = 'Landing Zone Monitoring';
           directory,
           minThreshold,
           maxThreshold,
-          minSizeThreasoldUnit,
-          maxSizeThreasoldUnit,
+          minSizeThresholdUnit,
+          maxSizeThresholdUnit,
         } = monitoringData;
 
         // Get FileSprayService instance
@@ -167,11 +167,11 @@ const monitoring_name = 'Landing Zone Monitoring';
         // Convert to threshold units for comparison
         const directorySizeInMinUnit = convertBytes(
           totalSizeBytes,
-          minSizeThreasoldUnit
+          minSizeThresholdUnit
         );
         const directorySizeInMaxUnit = convertBytes(
           totalSizeBytes,
-          maxSizeThreasoldUnit
+          maxSizeThresholdUnit
         );
 
         // Check if space usage violates thresholds
@@ -233,8 +233,8 @@ const monitoring_name = 'Landing Zone Monitoring';
               directory,
               minThreshold,
               maxThreshold,
-              minSizeThreasoldUnit,
-              maxSizeThreasoldUnit,
+              minSizeThresholdUnit,
+              maxSizeThresholdUnit,
             },
           },
         } = monitoring;
@@ -283,9 +283,9 @@ const monitoring_name = 'Landing Zone Monitoring';
         // Create violation description
         let violationDescription;
         if (violationType === 'below_minimum') {
-          violationDescription = `Directory ${directory} has ${formatSize(totalSizeBytes, minSizeThreasoldUnit)}, which is below the minimum threshold of ${minThreshold} ${minSizeThreasoldUnit}`;
+          violationDescription = `Directory ${directory} has ${formatSize(totalSizeBytes, minSizeThresholdUnit)}, which is below the minimum threshold of ${minThreshold} ${minSizeThresholdUnit}`;
         } else {
-          violationDescription = `Directory ${directory} has ${formatSize(totalSizeBytes, maxSizeThreasoldUnit)}, which is above the maximum threshold of ${maxThreshold} ${maxSizeThreasoldUnit}`;
+          violationDescription = `Directory ${directory} has ${formatSize(totalSizeBytes, maxSizeThresholdUnit)}, which is above the maximum threshold of ${maxThreshold} ${maxSizeThresholdUnit}`;
         }
 
         // Issue object
@@ -298,11 +298,11 @@ const monitoring_name = 'Landing Zone Monitoring';
           'Current Size': formatSize(
             totalSizeBytes,
             violationType === 'below_minimum'
-              ? minSizeThreasoldUnit
-              : maxSizeThreasoldUnit
+              ? minSizeThresholdUnit
+              : maxSizeThresholdUnit
           ),
-          'Minimum Threshold': `${minThreshold} ${minSizeThreasoldUnit}`,
-          'Maximum Threshold': `${maxThreshold} ${maxSizeThreasoldUnit}`,
+          'Minimum Threshold': `${minThreshold} ${minSizeThresholdUnit}`,
+          'Maximum Threshold': `${maxThreshold} ${maxSizeThresholdUnit}`,
           'Violation Type':
             violationType === 'below_minimum'
               ? 'Below Minimum'
@@ -320,14 +320,14 @@ const monitoring_name = 'Landing Zone Monitoring';
             notificationOrigin: monitoring_name,
             applicationId,
             notificationId,
-            subject: `Space usage violation in ${directory}: ${formatSize(totalSizeBytes, violationType === 'below_minimum' ? minSizeThreasoldUnit : maxSizeThreasoldUnit)}`,
+            subject: `Space usage violation in ${directory}: ${formatSize(totalSizeBytes, violationType === 'below_minimum' ? minSizeThresholdUnit : maxSizeThresholdUnit)}`,
             mainRecipients: primaryContacts,
             cc: [...secondaryContacts, ...notifyContacts],
             notificationDescription: violationDescription,
             asrSpecificMetaData,
             issue,
             remedy: {
-              instruction: `Check the directory ${directory} on ${machine} and ensure the space usage is within the expected range (${minThreshold} ${minSizeThreasoldUnit} - ${maxThreshold} ${maxSizeThreasoldUnit}).`,
+              instruction: `Check the directory ${directory} on ${machine} and ensure the space usage is within the expected range (${minThreshold} ${minSizeThresholdUnit} - ${maxThreshold} ${maxSizeThresholdUnit}).`,
             },
             firstLogged: findLocalDateTimeAtCluster(
               uniqueClustersObj[clusterId].timezone_offset
