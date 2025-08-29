@@ -17,6 +17,7 @@ import { useSelector } from 'react-redux';
 import { deleteLzMonitoring, toggleLzMonitoringStatus } from './Utils';
 
 import styles from './lzMonitoring.module.css';
+import commonStyles from '../../common/common.module.css';
 
 //Approve button colors
 const approveButtonColor = (approvalStatus) => {
@@ -276,9 +277,7 @@ const LandingZoneMonitoringTable = ({
         },
       }}
       pagination={{ pageSize: 20 }}
-      rowClassName={(record) =>
-        record?.isActive ? styles.lzMonitoring__activeMonitoring : styles.lzMonitoring__inactiveMonitoring
-      }
+      rowClassName={(record) => (record?.isActive ? commonStyles.table_active_row : commonStyles.table_inactive_row)}
     />
   );
 };
