@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { Modal, Tabs, Form, Input, Select, AutoComplete, Spin, message, Button, Radio, Row, Col } from 'antd';
 import { connect } from 'react-redux';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import ReactMarkdown from 'react-markdown';
 import { getRoleNameArray } from '../../common/AuthUtil';
 

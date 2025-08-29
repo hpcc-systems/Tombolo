@@ -9,7 +9,7 @@ import AssociatedDataflows from './AssociatedDataflows';
 import EditableTable from '../common/EditableTable.jsx';
 import MonacoEditor from '../common/MonacoEditor.jsx';
 import { connect } from 'react-redux';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 
 import ReactMarkdown from 'react-markdown';
 import DeleteAsset from '../common/DeleteAsset';

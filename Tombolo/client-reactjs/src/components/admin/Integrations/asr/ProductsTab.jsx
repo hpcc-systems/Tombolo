@@ -5,7 +5,7 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 
 // Local imports
 import { getProducts, deleteProduct } from './asr-integration-util';
-import useWindowSize from '../../../../hooks/useWindowSize';
+import useWindowSize from '@/hooks/useWindowSize';
 
 const ProductsTab = ({ products, setSelectedProduct, setProductModalOpen, setProducts }) => {
   // Local State

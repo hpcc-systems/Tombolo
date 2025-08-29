@@ -23,6 +23,7 @@ import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import BulkUpdateModal from './BulkUpdateModal';
 import ViewDetailsModal from './ViewDetailsModal';
 import LzFilters from './LzFilters';
+import { Constants } from '@/components/common/Constants';
 
 const monitoringTypeName = 'Landing Zone Monitoring';
 
@@ -528,7 +529,7 @@ const LandigZoneMonitoring = () => {
             onToggleFilters={handleToggleFilters}
             showBulkApproveReject={true}
             showFiltersToggle={true}
-            filtersStorageKey="lzMFiltersVisible"
+            filtersStorageKey={Constants.LZM_FILTERS_VS_KEY}
             onBulkDelete={handleBulkDeleteSelectedLandingZones}
             onBulkStartPause={handleBulkStartPauseLandingZones}
           />

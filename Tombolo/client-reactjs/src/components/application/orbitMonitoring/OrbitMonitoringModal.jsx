@@ -4,7 +4,7 @@ import { Modal, Button, Tabs, Form, message, Spin } from 'antd';
 import BasicTab from './BasicTab';
 import MonitoringTab from './MonitoringTab';
 import NotificationsTab from './NotificationsTab';
-import useWindowSize from '../../../hooks/useWindowSize';
+import useWindowSize from '@/hooks/useWindowSize';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 
 const { TabPane } = Tabs;

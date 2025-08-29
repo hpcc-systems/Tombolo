@@ -1,7 +1,7 @@
 /* eslint-disable no-async-promise-executor */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Tree, Button, Modal, Input, Dropdown, message } from 'antd';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import { DownOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
@@ -14,7 +14,7 @@ import { selectGroup, getGroupsTree, groupsExpanded } from '@/redux/slices/Group
 import AssetsTable from './AssetsTable';
 import TitleRenderer from './TitleRenderer.jsx';
 import MoveAssetsDialog from './MoveAssetsDialog';
-import useModal from '../../../hooks/useModal';
+import useModal from '@/hooks/useModal';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import Text from '../../common/Text';
 import InfoDrawer from '../../common/InfoDrawer';

@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, Row, Col, Select, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import _ from 'lodash';
+import startCase from 'lodash/startCase';
 
 // Local imports
-import useMonitoringFilters from '../../../hooks/useMonitoringFilters';
+import useMonitoringFilters from '@/hooks/useMonitoringFilters';
 import AsrSpecificFilters from '../../common/Monitoring/AsrSpecificFilters';
+import { Constants } from '@/components/common/Constants';
 
 //Constants
 const { Option } = Select;
@@ -26,7 +27,6 @@ function NotificationTableFilters({
   matchCount,
   searchTerm,
 }) {
-  const LOCAL_STORAGE_KEY = 'jMFilters';
   //Redux
   const integrations = useSelector((state) => state.application.integrations);
 
@@ -50,7 +50,8 @@ function NotificationTableFilters({
       productCategories,
       selectedDomain,
       allProductCategories,
-      LOCAL_STORAGE_KEY
+      Constants.JM_FILTERS_KEY,
+      Constants.JM_FILTERS_VS_KEY
     );
 
   useEffect(() => {
@@ -138,7 +139,7 @@ function NotificationTableFilters({
                 <Select placeholder="Frequency" allowClear disabled={false}>
                   {frequencyOptions.map((f) => (
                     <Option key={f} value={f}>
-                      {_.startCase(f)}
+                      {startCase(f)}
                     </Option>
                   ))}
                 </Select>

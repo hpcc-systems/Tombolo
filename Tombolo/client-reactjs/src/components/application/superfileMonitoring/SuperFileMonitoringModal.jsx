@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Modal, Form, Tabs, Button, message, Spin } from 'antd';
-import useWindowSize from '../../../hooks/useWindowSize';
+import useWindowSize from '@/hooks/useWindowSize';
 import NotificationTab from './NotificationTab';
 import BasicTab from './BasicTab';
 import MonitoringTab from './MonitoringTab';

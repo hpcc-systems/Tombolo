@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, Row, Col, Select, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import _, { set } from 'lodash';
+import startCase from 'lodash/startCase';
+import { Constants } from '../../common/Constants';
 
 // Local imports
 import styles from './lzMonitoring.module.css';
@@ -42,8 +43,8 @@ function LzFilters({
   //Effects
   useEffect(() => {
     // Display filters if true in local storage
-    const filtersVisibility = localStorage.getItem('lzMFiltersVisible');
-    const existingFilters = localStorage.getItem('lzMFilters');
+    const filtersVisibility = localStorage.getItem(Constants.LZM_FILTERS_VS_KEY);
+    const existingFilters = localStorage.getItem(Constants.LZM_FILTERS_KEY);
 
     if (filtersVisibility) {
       setFiltersVisible(filtersVisibility === 'true');
@@ -134,7 +135,7 @@ function LzFilters({
     const allFilters = form.getFieldsValue();
     setFilters(allFilters);
 
-    localStorage.setItem('lzMFilters', JSON.stringify(allFilters));
+    localStorage.setItem(Constants.LZM_FILTERS_KEY, JSON.stringify(allFilters));
 
     // Set new filter count
     let count = 0;
@@ -163,8 +164,8 @@ function LzFilters({
     setFilterCount(0);
     setFilters({});
     // If exists remove lzMFilters from local storage
-    if (localStorage.getItem('lzMFilters')) {
-      localStorage.removeItem('lzMFilters');
+    if (localStorage.getItem(Constants.LZM_FILTERS_KEY)) {
+      localStorage.removeItem(Constants.LZM_FILTERS_KEY);
     }
   };
 
@@ -202,7 +203,7 @@ function LzFilters({
                 <Select placeholder="Cluster" allowClear disabled={false}>
                   {clusterOptions.map((f) => (
                     <Option key={f.id} value={f.id}>
-                      {_.startCase(f.name)}
+                      {startCase(f.name)}
                     </Option>
                   ))}
                 </Select>

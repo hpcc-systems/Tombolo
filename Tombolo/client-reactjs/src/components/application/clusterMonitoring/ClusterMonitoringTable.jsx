@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, Space, Tooltip, Popconfirm, Popover, Tag, message } from 'antd';
 import { Link } from 'react-router-dom';
-import _ from 'lodash';
+import startCase from 'lodash/startCase';
 import {
   EyeOutlined,
   EditOutlined,
@@ -125,7 +125,7 @@ function ClusterMonitoringTable({
       render: (type) => type.map((t) => <Tag key={t}>{t}</Tag>),
     },
     { title: 'Active', dataIndex: 'isActive', render: (isActive) => (isActive ? 'Yes' : 'No') },
-    { title: 'Approval Status', dataIndex: 'approvalStatus', render: (status) => _.startCase(status) },
+    { title: 'Approval Status', dataIndex: 'approvalStatus', render: (status) => startCase(status) },
 
     {
       title: 'Actions',

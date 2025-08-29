@@ -26,9 +26,10 @@ import JobMonitoringFilters from './JobMonitoringFilters.jsx';
 import { useMonitorType } from '@/hooks/useMonitoringType';
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAndAllProductCategories';
-import _ from 'lodash';
+import capitalize from 'lodash/capitalize';
 import { getDateLabel, getDayLabel, getMonthLabel, getWeekLabel } from '../../common/scheduleOptions';
 import cronstrue from 'cronstrue';
+import { Constants } from '@/components/common/Constants';
 
 // Constants
 const monitoringTypeName = 'Job Monitoring';
@@ -562,7 +563,7 @@ function JobMonitoring() {
       return '';
     } else if (runWindow === 'daily') return 'Anytime';
     else {
-      return _.capitalize(runWindow);
+      return capitalize(runWindow);
     }
   };
 
@@ -629,7 +630,7 @@ function JobMonitoring() {
             onToggleFilters={handleToggleFilters}
             showBulkApproveReject={true}
             showFiltersToggle={true}
-            filtersStorageKey="jMFiltersVisible"
+            filtersStorageKey={Constants.JM_FILTERS_VS_KEY}
             onBulkDelete={handleBulkDeleteSelectedJobMonitorings}
             onBulkStartPause={handleBulkStartPauseJobMonitorings}
           />
@@ -725,7 +726,7 @@ function JobMonitoring() {
           )}
           {selectedMonitoring.metaData.schedule && (
             <Descriptions.Item label="Frequency">
-              {_.capitalize(selectedMonitoring.metaData.schedule[0].frequency)}
+              {capitalize(selectedMonitoring.metaData.schedule[0].frequency)}
             </Descriptions.Item>
           )}
           {selectedMonitoring.metaData.schedule && selectedMonitoring.metaData.schedule.length > 0 && (

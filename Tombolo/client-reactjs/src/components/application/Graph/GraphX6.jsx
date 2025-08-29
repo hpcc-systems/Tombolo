@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import '@antv/x6-react-shape';
 import { message, notification } from 'antd';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import { useSelector } from 'react-redux';
 import './GraphX6.css';
 

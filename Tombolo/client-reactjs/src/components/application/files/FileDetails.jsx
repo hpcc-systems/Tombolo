@@ -15,7 +15,7 @@ import {
   Tag,
   Typography,
 } from 'antd';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import React, { Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';

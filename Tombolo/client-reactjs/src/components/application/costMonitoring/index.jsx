@@ -26,6 +26,7 @@ import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAnd
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal';
+import { Constants } from '@/components/common/Constants';
 
 const monitoringTypeName = 'Cost Monitoring';
 
@@ -474,7 +475,7 @@ function CostMonitoring() {
             onToggleFilters={handleToggleFilters}
             showBulkApproveReject={true}
             showFiltersToggle={true}
-            filtersStorageKey="cMFiltersVisible"
+            filtersStorageKey={Constants.CM_FILTERS_VS_KEY}
             onBulkDelete={handleBulkDeleteSelectedCostMonitorings}
             onBulkStartPause={handleBulkStartPauseCostMonitorings}
           />

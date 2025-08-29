@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, message, Tabs, Button, Input } from 'antd';
 import InfoDrawer from '../../../common/InfoDrawer.jsx';
-import useWindowSize from '../../../../hooks/useWindowSize';
+import useWindowSize from '@/hooks/useWindowSize';
 import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import { InfoCircleOutlined, CopyOutlined } from '@ant-design/icons';
 import DashboardApiTable from './DashboardApiTable.jsx';

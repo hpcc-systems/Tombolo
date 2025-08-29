@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { message, Modal, Tabs, Form, Badge, Button, Spin } from 'antd';
 import { useSelector } from 'react-redux';
 
-import useWindowSize from '../../../hooks/useWindowSize';
+import useWindowSize from '@/hooks/useWindowSize';
 import BasicTab from './BasicTab';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import NotificationTab from './NotificationTab';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Tabs, Select, Input, message, Table, Button, Space, Radio } from 'antd';
 import { useSelector } from 'react-redux';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import { useHistory } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
