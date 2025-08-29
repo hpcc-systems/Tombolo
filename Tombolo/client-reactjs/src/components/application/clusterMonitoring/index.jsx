@@ -1,7 +1,7 @@
 // Library Imports
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Form } from 'antd';
+import { Form, message } from 'antd';
 
 // Local Imports
 import { getRoleNameArray } from '../../common/AuthUtil.js';
@@ -11,13 +11,15 @@ import {
   getAllClusterMonitoring,
   findUniqueName,
   handleBulkUpdateClusterMonitoring,
+  deleteClusterMonitoring,
+  toggleClusterMonitoringActiveStatus,
   evaluateClusterMonitoring,
 } from './clusterMonitoringUtils';
 import ViewDetailsModal from './ViewDetailsModal';
-import ActionButton from './ActionButton';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditModal from './AddEditModal/AddEditModal.jsx';
-import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
-import { useMonitorType } from '../../../hooks/useMonitoringType';
+import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
+import { useMonitorType } from '@/hooks/useMonitoringType';
 import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import ClusterMonitoringFilters from './ClusterMonitoringFilters';
 import { getAllProductCategories } from '../../common/ASRTools';
@@ -172,20 +174,45 @@ function ClusterMonitoring() {
     }
   }, [editingMonitoring, duplicatingData, selectedMonitoring]);
 
+  // Handlers for actions menu
+  const handleAdd = () => setDisplayAddEditModal(true);
+  const handleOpenBulkEdit = () => setBulkEditModalVisibility(true);
+  const handleOpenApproveReject = () => setApproveRejectModal(true);
+  const handleBulkDelete = async (ids) => {
+    // deleteClusterMonitoring expects single id; call for each
+    try {
+      await Promise.all(ids.map((id) => deleteClusterMonitoring(id)));
+      setClusterMonitoring((prev) => prev.filter((m) => !ids.includes(m.id)));
+      setSelectedRows([]);
+    } catch (err) {
+      // cluster util throws proper message already; keep generic here
+    }
+  };
+  const handleBulkStartPause = async ({ ids, action }) => {
+    try {
+      const isActive = action === 'start';
+      await toggleClusterMonitoringActiveStatus({ ids, isActive });
+      setClusterMonitoring((prev) => prev.map((m) => (ids.includes(m.id) ? { ...m, isActive } : m)));
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
   //JSX
   return (
     <>
       <BreadCrumbs
         extraContent={
-          <ActionButton
-            setClusterMonitoring={setClusterMonitoring}
-            setDisplayAddEditModal={setDisplayAddEditModal}
-            selectedRows={selectedRows}
-            setSelectedRows={setSelectedRows}
-            setBulkEditModalVisibility={setBulkEditModalVisibility}
-            setApproveRejectModal={setApproveRejectModal}
-            clusterMonitoring={clusterMonitoring}
+          <MonitoringActionButton
+            label="Cluster Monitoring Actions"
             isReader={isReader}
+            selectedRows={selectedRows}
+            onAdd={handleAdd}
+            onBulkEdit={handleOpenBulkEdit}
+            onBulkApproveReject={handleOpenApproveReject}
+            onBulkDelete={handleBulkDelete}
+            onBulkStartPause={handleBulkStartPause}
+            showBulkApproveReject={true}
           />
         }
       />

@@ -7,6 +7,8 @@ import {
   getAllLzMonitorings,
   updateMonitoring,
   createLandingZoneMonitoring,
+  handleLzBulkDelete,
+  toggleLzMonitoringStatus,
   approveSelectedMonitoring,
 } from './Utils';
 import { flattenObject } from '../../common/CommonUtil';
@@ -15,7 +17,7 @@ import { getMonitoringTypeId, getDomains, getProductCategories } from '../../com
 import { getRoleNameArray } from '../../common/AuthUtil';
 
 import AddEditModal from './AddEditModal/Modal';
-import ActionButton from './ActionButton.jsx';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import LandingZoneMonitoringTable from './LandingZoneMonitoringTable';
 import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import BulkUpdateModal from './BulkUpdateModal';
@@ -483,24 +485,52 @@ const LandigZoneMonitoring = () => {
     setFilteredLzMonitorings(filteredlzm);
     setFilteringLzMonitorings(false);
   }, [filters, landingZoneMonitoring, searchTerm]);
+
+  const handleBulkDeleteSelectedLandingZones = async (ids) => {
+    try {
+      const res = await handleLzBulkDelete({ ids });
+      setLandingZoneMonitoring((prev) => prev.filter((lz) => !ids.includes(lz.id)));
+      setSelectedRows([]);
+      if (res) message.success('Selected landing zone monitorings deleted successfully');
+    } catch (err) {
+      message.error('Unable to delete selected landing zone monitorings: ' + err);
+    }
+  };
+
+  const handleBulkStartPauseLandingZones = async ({ ids, action }) => {
+    try {
+      const startMonitoring = action === 'start';
+      await toggleLzMonitoringStatus({ ids, isActive: startMonitoring });
+      setLandingZoneMonitoring((prev) =>
+        prev.map((lz) => (ids.includes(lz.id) ? { ...lz, isActive: startMonitoring } : lz))
+      );
+    } catch (_) {
+      message.error('Unable to start/pause selected job monitorings');
+    }
+  };
+
+  const handleOpenBulkEdit = () => setBulkEditModalVisibility(true);
+  const handleOpenApproveReject = () => setDisplayApprovalModal(true);
+  const handleToggleFilters = () => setFiltersVisible((prev) => !prev);
+
   //JSX
   return (
     <>
       <BreadCrumbs
         extraContent={
-          <ActionButton
-            handleAddNewLzMonitoringBtnClick={handleAddNewLzMonitoringBtnClick}
-            selectedRows={selectedRows}
-            setSelectedRows={setSelectedRows}
-            landingZoneMonitoring={landingZoneMonitoring}
-            setLandingZoneMonitoring={setLandingZoneMonitoring}
-            setBulkEditModalVisibility={setBulkEditModalVisibility}
-            setBulkApprovalModalVisibility={setDisplayApprovalModal}
+          <MonitoringActionButton
+            label="Landing Zone Monitoring Actions"
             isReader={isReader}
-            setFiltersVisible={setFiltersVisible}
-            filtersVisible={filtersVisible}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
+            selectedRows={selectedRows}
+            onAdd={handleAddNewLzMonitoringBtnClick}
+            onBulkEdit={handleOpenBulkEdit}
+            onBulkApproveReject={handleOpenApproveReject}
+            onToggleFilters={handleToggleFilters}
+            showBulkApproveReject={true}
+            showFiltersToggle={true}
+            filtersStorageKey="lzMFiltersVisible"
+            onBulkDelete={handleBulkDeleteSelectedLandingZones}
+            onBulkStartPause={handleBulkStartPauseLandingZones}
           />
         }
       />
