@@ -14,11 +14,8 @@ const { Option } = Select;
 function CostMonitoringFilters({
   clusterMonitoring,
   setFilters,
-  // filters,
-  clusters,
   filtersVisible,
   setFiltersVisible,
-  // isReader,
   searchTerm,
   setSearchTerm,
   matchCount,
@@ -26,7 +23,6 @@ function CostMonitoringFilters({
   selectedDomain,
   setSelectedDomain,
   productCategories,
-  // setProductCategories,
   allProductCategories,
 }) {
   const LOCAL_STORAGE_KEY = 'clusterMonitoringFilters';
@@ -41,6 +37,7 @@ function CostMonitoringFilters({
   const [activeStatusOptions, setActiveStatusOptions] = useState([]);
   const [domainOptions, setDomainOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
+  const [clusterOptions, setClusterOptions] = useState([]);
 
   const { filterCount, clearFilters, handleFilterCountClick, handleDomainChange, handleFormChange, loadFilters } =
     useMonitoringFilters(
@@ -56,49 +53,31 @@ function CostMonitoringFilters({
     );
 
   useEffect(() => {
-    const loadCostMonitoringFilters = (clusterMonitoring, filterOptions) => {
-      const { clusterIds, metaData } = clusterMonitoring;
-      // Cluster options
-      if (clusterIds && clusterIds.length > 0 && clusters.length > 0) {
-        clusterIds.forEach((clusterId) => {
-          const cluster = clusters.find((c) => c.id === clusterId);
-          if (cluster) {
-            const existingClusters = filterOptions.clusters.map((c) => JSON.stringify(c));
-            const currentCluster = { id: clusterId, name: cluster.name };
-            if (!existingClusters.includes(JSON.stringify(currentCluster))) {
-              filterOptions.clusters.push(currentCluster);
-            }
-          }
-        });
-      }
-
-      // User options
-      if (metaData && metaData.users && Array.isArray(metaData.users)) {
-        metaData.users.forEach((user) => {
-          if (user !== '*' && !filterOptions.users.includes(user)) {
-            filterOptions.users.push(user);
-          }
-        });
-      }
-    };
-
     const initialFilterOptions = {
       approvalStatus: [],
       activeStatus: [],
       domain: [],
       products: [],
-      clusters: [],
-      users: [],
     };
 
-    let filterOptions = loadFilters(initialFilterOptions, clusterMonitoring, loadCostMonitoringFilters);
+    let filterOptions = loadFilters(initialFilterOptions, clusterMonitoring);
+
+    // Unique clusters
+    const uniqueClusterIds = [];
+    const uniqueClusterObjs = [];
+    clusterMonitoring.forEach((c) => {
+      if (!uniqueClusterIds.includes(c.clusterId)) {
+        uniqueClusterIds.push(c.clusterId);
+        uniqueClusterObjs.push({ id: c.cluster.id, name: c.cluster.name });
+      }
+    });
 
     setApprovalStatusOptions(filterOptions.approvalStatus);
     setActiveStatusOptions(filterOptions.activeStatus);
     setDomainOptions(filterOptions.domain);
     setProductOptions(filterOptions.products);
-    // setClusterOptions(filterOptions.clusters);
-  }, [clusterMonitoring, clusters, domains, allProductCategories, productCategories, selectedDomain, loadFilters]);
+    setClusterOptions(uniqueClusterObjs);
+  }, [clusterMonitoring, domains, allProductCategories, productCategories, selectedDomain, loadFilters]);
 
   //JSX
   return (
@@ -147,6 +126,18 @@ function CostMonitoringFilters({
                   {activeStatusOptions.map((a) => (
                     <Option key={a} value={a}>
                       {a}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <div className="notifications__filter_label">Clusters</div>
+              <Form.Item name="clusters">
+                <Select placeholder="Clusters" allowClear disabled={false} mode="multiple">
+                  {clusterOptions.map((c) => (
+                    <Option key={c.id} value={c.id}>
+                      {c.name}
                     </Option>
                   ))}
                 </Select>

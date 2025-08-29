@@ -83,7 +83,7 @@ function ClusterMonitoring() {
       return;
     }
 
-    const { approvalStatus, activeStatus, clusters: filterClusters } = filters;
+    const { approvalStatus, activeStatus, clusters: clusterInFilters = [] } = filters;
 
     // Convert activeStatus to boolean
     let activeStatusBool;
@@ -93,20 +93,18 @@ function ClusterMonitoring() {
       activeStatusBool = false;
     }
 
-    let filteredCm = clusterMonitoring.filter((costMonitoring) => {
+    let filteredCm = clusterMonitoring.filter((cm) => {
       let include = true;
 
-      if (approvalStatus && costMonitoring.approvalStatus !== approvalStatus) {
+      if (approvalStatus && cm.approvalStatus !== approvalStatus) {
         include = false;
       }
-      if (activeStatusBool !== undefined && costMonitoring.isActive !== activeStatusBool) {
+      if (activeStatusBool !== undefined && cm.isActive !== activeStatusBool) {
         include = false;
       }
-      if (filterClusters && filterClusters.length > 0) {
-        const hasMatchingCluster = costMonitoring.clusterIds?.some((clusterId) => filterClusters.includes(clusterId));
-        if (!hasMatchingCluster) {
-          include = false;
-        }
+
+      if (clusterInFilters.length > 0 && !clusterInFilters.includes(cm.clusterId)) {
+        include = false;
       }
 
       return include;
