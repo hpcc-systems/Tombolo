@@ -1,18 +1,22 @@
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('file_monitorings', {
+    await queryInterface.createTable('file_monitoring', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      name: {
+      monitoringName: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      application_id: {
+      description: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      applicationId: {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
@@ -22,37 +26,9 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      cron: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      monitoringAssetType: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      monitoringActive: {
-        type: Sequelize.BOOLEAN,
-        allowNull: true,
-      },
-      wuid: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      metaData: {
-        type: Sequelize.JSON,
-        allowNull: true,
-      },
-      fileTemplateId: {
+      clusterId: {
         type: Sequelize.UUID,
-        references: {
-          model: 'file_templates',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
-      cluster_id: {
-        type: Sequelize.UUID,
+        allowNull: false,
         references: {
           model: 'clusters',
           key: 'id',
@@ -60,28 +36,42 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      fileMonitoringType: {
+        type: Sequelize.ENUM('stdLogicalFile', 'superFile'),
+        allowNull: false,
+      },
+      isActive: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      approvalStatus: {
+        type: Sequelize.ENUM('approved', 'rejected', 'pending'),
+        allowNull: false,
+      },
+      metaData: {
+        type: Sequelize.JSON,
+        allowNull: true,
+        defaultValue: {},
+      },
+      approvedBy: {
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
+      approvedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      approverComment: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       createdBy: {
         allowNull: false,
-        type: Sequelize.UUID,
-        references: {
-          model: 'users',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'NO ACTION',
-      },
-      updatedBy: {
-        allowNull: true,
-        type: Sequelize.UUID,
-        references: {
-          model: 'users',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'NO ACTION',
-      },
-      deletedBy: {
-        allowNull: true,
         type: Sequelize.UUID,
         references: {
           model: 'users',
@@ -94,24 +84,38 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       },
+      lastUpdatedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
       updatedAt: {
         allowNull: true,
         type: Sequelize.DATE,
+      },
+      deletedBy: {
+        allowNull: true,
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
       },
       deletedAt: {
         allowNull: true,
         type: Sequelize.DATE,
       },
     });
-
-    await queryInterface.addIndex('file_monitorings', ['name', 'deletedAt'], {
-      unique: true,
-      name: 'fm_unique_name_deleted_at',
-    });
   },
 
-  // eslint-disable-next-line no-unused-vars
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('file_monitorings');
+  down: async queryInterface => {
+    await queryInterface.dropTable('file_monitoring');
   },
 };
