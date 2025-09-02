@@ -6,21 +6,17 @@ const { DeleteMixin } = require('../utils/modelMixins/DeleteMixin');
 module.exports = (sequelize, DataTypes) => {
   class FileMonitoring extends DeleteMixin(Model) {
     static associate(models) {
-      FileMonitoring.belongsTo(models.FileTemplate, {
-        foreignKey: 'fileTemplateId',
-      });
-
-      FileMonitoring.belongsTo(models.Cluster, { foreignKey: 'cluster_id' });
-
       FileMonitoring.belongsTo(models.Application, {
-        foreignKey: 'application_id',
+        foreignKey: 'applicationId',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
 
-      FileMonitoring.hasMany(models.MonitoringNotification, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
+      FileMonitoring.belongsTo(models.Cluster, {
+        foreignKey: 'clusterId',
+        as: 'cluster',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
       });
 
       FileMonitoring.belongsTo(models.User, {
@@ -31,8 +27,15 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       FileMonitoring.belongsTo(models.User, {
-        foreignKey: 'updatedBy',
+        foreignKey: 'lastUpdatedBy',
         as: 'updater',
+        onDelete: 'NO ACTION',
+        onUpdate: 'CASCADE',
+      });
+
+      FileMonitoring.belongsTo(models.User, {
+        foreignKey: 'approvedBy',
+        as: 'approver',
         onDelete: 'NO ACTION',
         onUpdate: 'CASCADE',
       });
@@ -49,14 +52,20 @@ module.exports = (sequelize, DataTypes) => {
   FileMonitoring.init(
     {
       id: {
+        allowNull: false,
         primaryKey: true,
         type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
       },
-      name: {
+      monitoringName: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      application_id: {
+      description: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      applicationId: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
@@ -66,20 +75,47 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      cron: {
-        type: DataTypes.STRING,
+      clusterId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: 'clusters',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      fileMonitoringType: {
+        type: DataTypes.ENUM('stdLogicalFile', 'superFile'),
         allowNull: false,
       },
-      monitoringAssetType: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      monitoringActive: {
+      isActive: {
         type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      approvalStatus: {
+        type: DataTypes.ENUM('approved', 'rejected', 'pending'),
+        allowNull: false,
+      },
+      metaData: {
+        type: DataTypes.JSON,
         allowNull: true,
       },
-      wuid: {
-        type: DataTypes.BOOLEAN,
+      approvedBy: {
+        type: DataTypes.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'NO ACTION',
+      },
+      approvedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      approverComment: {
+        type: DataTypes.STRING,
         allowNull: true,
       },
       createdBy: {
@@ -92,7 +128,11 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
         onDelete: 'NO ACTION',
       },
-      updatedBy: {
+      createdAt: {
+        allowNull: false,
+        type: DataTypes.DATE,
+      },
+      lastUpdatedBy: {
         allowNull: true,
         type: DataTypes.UUID,
         references: {
@@ -101,6 +141,10 @@ module.exports = (sequelize, DataTypes) => {
         },
         onUpdate: 'CASCADE',
         onDelete: 'NO ACTION',
+      },
+      updatedAt: {
+        allowNull: true,
+        type: DataTypes.DATE,
       },
       deletedBy: {
         allowNull: true,
@@ -112,14 +156,6 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
         onDelete: 'NO ACTION',
       },
-      createdAt: {
-        allowNull: false,
-        type: DataTypes.DATE,
-      },
-      updatedAt: {
-        allowNull: true,
-        type: DataTypes.DATE,
-      },
       deletedAt: {
         allowNull: true,
         type: DataTypes.DATE,
@@ -130,13 +166,6 @@ module.exports = (sequelize, DataTypes) => {
       modelName: 'FileMonitoring',
       tableName: 'file_monitorings',
       paranoid: true,
-      indexes: [
-        {
-          unique: true,
-          fields: ['name', 'deletedAt'],
-          name: 'file_mon_unique_name_deleted_at',
-        },
-      ],
     }
   );
 
