@@ -1,16 +1,12 @@
 // Packages
 import React, { useState, useEffect } from 'react';
-import { Form, Row, Col, Select, Input } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Form } from 'antd';
 
 // Local imports
 import { useSelector } from 'react-redux';
 import useMonitoringFilters from '@/hooks/useMonitoringFilters';
-import AsrSpecificFilters from '../../common/Monitoring/AsrSpecificFilters';
+import MonitoringFilters from '@/components/common/Monitoring/MonitoringFilters';
 import { Constants } from '@/components/common/Constants';
-
-//Constants
-const { Option } = Select;
 
 function CostMonitoringFilters({
   setFilters,
@@ -103,91 +99,33 @@ function CostMonitoringFilters({
   //JSX
   return (
     <div className="notifications__filters">
-      {filtersVisible && (
-        <Form form={form} onValuesChange={handleFormChange}>
-          <Row gutter={8}>
-            <Col span={4}>
-              <div className="notifications__filter_label">Monitoring Name</div>
-              <Input
-                placeholder="Search by monitoring name"
-                prefix={<SearchOutlined />}
-                suffix={
-                  searchTerm ? (
-                    <span style={{ color: matchCount > 0 ? 'var(--primary)' : 'var(--danger)' }}>
-                      {matchCount} match{matchCount > 1 ? 'es' : ''}{' '}
-                    </span>
-                  ) : (
-                    ''
-                  )
-                }
-                onChange={(e) => {
-                  setSearchTerm(e.target.value.toLowerCase());
-                }}
-                allowClear
-                disabled={false}
-              />
-            </Col>
-            <Col span={4}>
-              <div className="notifications__filter_label">Approval Status</div>
-              <Form.Item name="approvalStatus">
-                <Select placeholder="Approval Status" allowClear disabled={false}>
-                  {approvalStatusOptions.map((s) => (
-                    <Option key={s} value={s}>
-                      {s}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col span={4}>
-              <div className="notifications__filter_label">Active Status</div>
-              <Form.Item name="activeStatus">
-                <Select placeholder="Active statuses" allowClear disabled={false}>
-                  {activeStatusOptions.map((a) => (
-                    <Option key={a} value={a}>
-                      {a}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <AsrSpecificFilters
-              integrations={integrations}
-              domainOptions={domainOptions}
-              productOptions={productOptions}
-              handleDomainChange={handleDomainChange}
-            />
-
-            <Col span={4}>
-              <div className="notifications__filter_label">Clusters</div>
-              <Form.Item name="clusters">
-                <Select placeholder="Clusters" allowClear disabled={false} mode="multiple">
-                  {clusterOptions.map((c) => (
-                    <Option key={c.id} value={c.id}>
-                      {c.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col span={4}>
-              <div className="notifications__filter_label">Users</div>
-              <Form.Item name="users">
-                <Select placeholder="Users" allowClear disabled={false} mode="multiple">
-                  {userOptions.map((u) => (
-                    <Option key={u} value={u}>
-                      {u}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      )}
+      <MonitoringFilters
+        form={form}
+        filtersVisible={filtersVisible}
+        onValuesChange={handleFormChange}
+        searchLabel="Monitoring Name"
+        searchPlaceholder="Search by monitoring name"
+        searchTerm={searchTerm}
+        setSearchTerm={(v) => setSearchTerm(v)}
+        matchCount={matchCount}
+        showAsr={true}
+        showClusters={true}
+        clustersMode="multiple"
+        showUsers={true}
+        showFrequency={false}
+        options={{
+          approvalStatusOptions,
+          activeStatusOptions,
+          domainOptions,
+          productOptions,
+          clusterOptions,
+          userOptions,
+        }}
+        integrations={integrations}
+        handleDomainChange={handleDomainChange}
+        className={undefined}
+        labelClassName="notifications__filter_label"
+      />
 
       {filterCount > 0 && !filtersVisible && (
         <div className="notification__filters_count">
