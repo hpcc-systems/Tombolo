@@ -8,7 +8,7 @@ import GraphX6 from '../Graph/GraphX6';
 import JobExecutionDetails from './JobExecutionDetails';
 import ManualJobsStatus from './ManualJobsStatus';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
-import useSelectDataflow from '../../../hooks/useSelectDataflow';
+import useSelectDataflow from '@/hooks/useSelectDataflow';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import Text from '../../common/Text';
 

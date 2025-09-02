@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from 'antd';
-import _ from 'lodash';
+import startCase from 'lodash/startCase';
 
 function MetricBoxes({ metrics, bordered }) {
   return (
@@ -10,7 +10,7 @@ function MetricBoxes({ metrics, bordered }) {
         return (
           <Card
             key={metric.title}
-            title={_.startCase(title)}
+            title={startCase(title)}
             style={{ textAlign: 'center', marginRight: '25px' }}
             bordered={bordered}>
             <span style={{ fontSize: '2rem', fontWeight: '700' }}> {metric.description}</span>

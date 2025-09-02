@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import GHMainFile from './GHMainFile';
 import GHRepoSelect from './GHRepoSelect';
-import useGitHubProjectList from '../../../../hooks/useGitHubProjectList';
+import useGitHubProjectList from '@/hooks/useGitHubProjectList';
 
 function GitHubForm({ form, enableEdit }) {
   const [projects] = useGitHubProjectList();

@@ -5,7 +5,7 @@ import { Tabs, Button, Spin } from 'antd';
 import DataflowAssetsTable from './DataflowAssetsTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import GraphX6 from '../Graph/GraphX6';
-import useSelectDataflow from '../../../hooks/useSelectDataflow';
+import useSelectDataflow from '@/hooks/useSelectDataflow';
 import Text from '../../common/Text';
 
 function DataflowDetails() {

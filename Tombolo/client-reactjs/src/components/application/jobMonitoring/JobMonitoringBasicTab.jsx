@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Select, AutoComplete, Input, Card, Row, Col } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import { useSelector } from 'react-redux';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';

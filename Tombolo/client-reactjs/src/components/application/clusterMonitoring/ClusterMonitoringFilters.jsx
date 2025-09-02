@@ -5,8 +5,9 @@ import { SearchOutlined } from '@ant-design/icons';
 
 // Local imports
 import { useSelector } from 'react-redux';
-import useMonitoringFilters from '../../../hooks/useMonitoringFilters';
+import useMonitoringFilters from '@/hooks/useMonitoringFilters';
 import AsrSpecificFilters from '../../common/Monitoring/AsrSpecificFilters';
+import { Constants } from '../../common/Constants';
 
 //Constants
 const { Option } = Select;
@@ -25,7 +26,6 @@ function CostMonitoringFilters({
   productCategories,
   allProductCategories,
 }) {
-  const LOCAL_STORAGE_KEY = 'clusterMonitoringFilters';
   //Redux
   const integrations = useSelector((state) => state.application.integrations);
 
@@ -49,7 +49,8 @@ function CostMonitoringFilters({
       productCategories,
       selectedDomain,
       allProductCategories,
-      LOCAL_STORAGE_KEY
+      Constants.CLUSTER_M_FILTERS_KEY,
+      Constants.CLUSTER_M_FILTERS_VS_KEY
     );
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 // Libraries
 import React from 'react';
 import { Modal, Card, Form, message } from 'antd';
-import _ from 'lodash';
+import capitalize from 'lodash/capitalize';
 
 // Local Imports
 import GeneralSettingsForm from './GeneralSettingsForm';
@@ -72,7 +72,7 @@ function EditSettingsModel({
       onCancel={handleClose}
       onOk={handleSaveEdit}
       width={800}
-      title={`Edit ${_.capitalize(selectedSetting)} Settings`}
+      title={`Edit ${capitalize(selectedSetting)} Settings`}
       okText="Save">
       <Card>{getForm()}</Card>
     </Modal>

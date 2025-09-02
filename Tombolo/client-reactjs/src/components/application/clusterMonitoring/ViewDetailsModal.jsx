@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Descriptions, Modal, Button, Tooltip, Tag } from 'antd';
 import { formatDateTimeShort } from '../../common/CommonUtil';
-
-import _ from 'lodash';
+import capitalize from 'lodash/capitalize';
 
 function ViewDetailsModal({
   setDisplayViewDetailsModal,
@@ -121,7 +120,7 @@ function ViewDetailsModal({
           ) : (
             <>
               <Tag color={approvalStatusTagColors[selectedMonitoring.approvalStatus]}>
-                {_.capitalize(selectedMonitoring.approvalStatus)}
+                {capitalize(selectedMonitoring.approvalStatus)}
               </Tag>{' '}
               {`by ${selectedMonitoring?.approver?.firstName}
               ${selectedMonitoring?.approver?.lastName} on ${formatDateTimeShort(selectedMonitoring.approvedAt)}`}

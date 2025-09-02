@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Typography, Space } from 'antd';
-import _ from 'lodash';
+import startCase from 'lodash/startCase';
 
 const { Text } = Typography;
 
@@ -12,14 +12,14 @@ function SupportSettings({ instanceSettings }) {
   // If supportEmailRecipientsRoles is not empty, capitalize
   if (metaData?.supportEmailRecipientsRoles) {
     supportEmailRecipientsRoles = metaData.supportEmailRecipientsRoles.map((role) => {
-      return _.startCase(role);
+      return startCase(role);
     });
   }
 
   // if accessRequestEmailRecipientsRoles is not empty, capitalize
   if (metaData?.accessRequestEmailRecipientsRoles) {
     accessRequestEmailRecipientsRoles = metaData.accessRequestEmailRecipientsRoles.map((role) => {
-      return _.startCase(role);
+      return startCase(role);
     });
   }
 
