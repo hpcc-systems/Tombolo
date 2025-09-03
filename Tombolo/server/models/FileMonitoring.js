@@ -164,7 +164,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'FileMonitoring',
-      tableName: 'file_monitorings',
+      tableName: 'file_monitoring',
       paranoid: true,
     }
   );
