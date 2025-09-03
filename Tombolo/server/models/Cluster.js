@@ -17,7 +17,7 @@ module.exports = sequelize => {
         onDelete: 'CASCADE',
       });
       this.hasMany(models.FileMonitoring, {
-        foreignKey: 'cluster_id',
+        foreignKey: 'clusterId',
         onDelete: 'CASCADE',
       });
       this.hasMany(models.landingZoneMonitoring, {
