@@ -279,9 +279,8 @@ async function bulkUpdateFileMonitoring(req, res) {
 
       results.success.push(id);
     } catch (err) {
-      console.error(`Failed to update FileMonitoring with id ${id}:`, err);
+      logger.error('Failed to update FileMonitoring', err);
       results.failed.push({ id, reason: err.message });
-      // continue loop without stopping
     }
   }
 
@@ -298,7 +297,7 @@ async function bulkUpdateFileMonitoring(req, res) {
       errors: results.failed,
     });
   } catch (err) {
-    console.error('Failed to fetch updated records:', err);
+    logger.error('Failed to fetch updated records:', err);
     return res.status(200).json({
       success: false,
       message:
