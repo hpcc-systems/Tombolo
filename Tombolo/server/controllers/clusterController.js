@@ -349,13 +349,16 @@ const addClusterWithProgress = async (req, res) => {
         if (nv.Name === 'CONTAINERIZED' && nv.Value === 'ON') {
           clusterPayload.containerized = true;
         }
+        if (nv.Name === 'currencyCode' && nv.Value) {
+          clusterPayload.currencyCode = nv.Value;
+        }
       });
     }
 
     sendUpdate({
       step: 4,
       success: true,
-      message: 'Cluster containerization check complete',
+      message: 'Cluster build info check complete',
     });
 
     sendUpdate({
