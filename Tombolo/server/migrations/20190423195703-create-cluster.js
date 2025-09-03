@@ -1,5 +1,4 @@
 'use strict';
-const { DataTypes } = require('sequelize');
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('clusters', {
@@ -54,6 +53,11 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+      },
+      currencyCode: {
+        type: Sequelize.STRING(10),
+        allowNull: false,
+        defaultValue: 'USD',
       },
       accountMetaData: {
         type: Sequelize.JSON,

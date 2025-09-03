@@ -110,6 +110,11 @@ module.exports = sequelize => {
         allowNull: false,
         defaultValue: false,
       },
+      currencyCode: {
+        type: DataTypes.STRING(10),
+        allowNull: false,
+        defaultValue: 'USD',
+      },
       accountMetaData: {
         type: DataTypes.JSON,
         defaultValue: {},
