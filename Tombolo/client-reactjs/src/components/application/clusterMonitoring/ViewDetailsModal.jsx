@@ -60,8 +60,8 @@ function ViewDetailsModal({
         </Descriptions.Item>
         <Descriptions.Item label={<b>Monitoring Type</b>}>{selectedMonitoring.description}</Descriptions.Item>
         <Descriptions.Item label={<b>Monitoring Description</b>}>
-          <Tooltip title={`${selectedMonitoring.cluster.thor_host}:${selectedMonitoring.cluster.thor_port}`}>
-            {selectedMonitoring.cluster.name}
+          <Tooltip title={`${selectedMonitoring.cluster?.thor_host}:${selectedMonitoring.cluster?.thor_port}`}>
+            {selectedMonitoring.cluster?.name}
           </Tooltip>
         </Descriptions.Item>
         {/* ASR Specific Meta Data */}
