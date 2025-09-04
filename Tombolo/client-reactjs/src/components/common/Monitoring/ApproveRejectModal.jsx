@@ -77,7 +77,6 @@ const ApproveRejectModal = ({
       // You should pass an async function via props to handle the evaluation and update
       if (typeof evaluateMonitoring === 'function') {
         const response = await evaluateMonitoring(formData);
-        console.log('response', response);
         const updatedMonitoring = response?.data;
         if (Array.isArray(updatedMonitoring)) {
           // When API returns an array of updated items
