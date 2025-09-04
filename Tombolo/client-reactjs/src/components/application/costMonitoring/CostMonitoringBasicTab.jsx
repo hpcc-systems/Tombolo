@@ -43,14 +43,17 @@ function CostMonitoringBasicTab({
   }, [selectedClusters]);
 
   useEffect(() => {
-    if (form && isEditing) {
-      setMonitoringScope(form.getFieldValue('monitoringScope'));
+    if (form) {
+      const scope = form.getFieldValue('monitoringScope');
+      if (scope) {
+        setMonitoringScope(scope);
+      }
     }
 
     if (form && !isEditing) {
       monitoringNameInputRef.current?.input.focus();
     }
-  }, [form, isEditing, setMonitoringScope]);
+  }, [form, isEditing, isDuplicating]);
 
   useEffect(() => {
     if (isDuplicating) {
