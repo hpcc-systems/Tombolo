@@ -33,16 +33,20 @@ async function createCostMonitoring(req, res) {
 async function updateCostMonitoring(req, res) {
   try {
     const updatedData = { ...req.body, lastUpdatedBy: req.user.id };
-    const result = await CostMonitoring.update(updatedData, {
+    const affected = await CostMonitoring.update(updatedData, {
       where: { id: updatedData.id },
     });
 
-    if (result[0] === 0) {
+    if (affected[0] === 0) {
       return res.status(404).json({
         success: false,
         message: 'Cost monitoring not found',
       });
     }
+
+    const result = await CostMonitoring.findByPk(updatedData.id, {
+      include: getUserFkIncludes(true),
+    });
 
     return res.status(200).json({
       success: true,
@@ -132,9 +136,16 @@ async function evaluateCostMonitoring(req, res) {
         include: getUserFkIncludes(true),
       }
     );
+
+    const result = await CostMonitoring.findAll({
+      where: { id: { [Op.in]: req.body.ids } },
+      include: getUserFkIncludes(true),
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Cost monitoring(s) evaluated successfully',
+      data: result,
     });
   } catch (err) {
     logger.error('Failed to evaluate cost monitoring', err);
