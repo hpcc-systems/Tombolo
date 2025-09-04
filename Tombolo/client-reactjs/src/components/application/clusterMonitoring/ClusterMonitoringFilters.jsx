@@ -65,7 +65,7 @@ function CostMonitoringFilters({
     clusterMonitoring.forEach((c) => {
       if (!uniqueClusterIds.includes(c.clusterId)) {
         uniqueClusterIds.push(c.clusterId);
-        uniqueClusterObjs.push({ id: c.cluster.id, name: c.cluster.name });
+        uniqueClusterObjs.push({ id: c.clusterId, name: c.name });
       }
     });
 
