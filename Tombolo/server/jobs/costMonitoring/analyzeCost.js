@@ -20,6 +20,7 @@ const {
 } = require('../jobMonitoring/monitorJobsUtil');
 const { Op } = require('sequelize');
 const _ = require('lodash');
+const currencyCodeToSymbol = require('../../utils/currencyCodeToSymbol');
 
 const notificationPrefix = 'CM';
 const domainMap = new Map();
@@ -57,7 +58,6 @@ function createCMNotificationPayload({
   monitoringType,
   costMonitoring,
   threshold,
-  summedCost,
   erroringClusters,
   clusters,
   erroringUsers,
@@ -66,16 +66,17 @@ function createCMNotificationPayload({
   notifyContacts,
   asrSpecificMetaData,
   idempotencyKey,
+  currencyCode = 'USD',
 }) {
+  const currencySymbol = currencyCodeToSymbol(currencyCode);
   let description = '';
   let issueObject = {};
   let tzOffset = 0;
   if (costMonitoring.monitoringScope === 'clusters') {
     tzOffset = erroringClusters[0].timezone_offset || 0;
-    description = `Cost Monitoring (${costMonitoring.monitoringName}) detected that clusters have passed the cost threshold`;
+    description = `Cost Monitoring (${costMonitoring.monitoringName}) detected that cluster(s) have passed the cost threshold`;
     issueObject = {
-      Issue: `Cost threshold of ${threshold} passed`,
-      'Total Summed Cost': summedCost,
+      Issue: `Cost threshold of ${currencySymbol}${threshold} passed`,
       clusters: erroringClusters.map(cluster => {
         return {
           totalCost: cluster.totalCost,
@@ -91,10 +92,9 @@ function createCMNotificationPayload({
     };
   } else if (costMonitoring.monitoringScope === 'users') {
     tzOffset = clusters[0].timezone_offset || 0;
-    description = `Cost Monitoring (${costMonitoring.monitoringName}) detected that users have passed the cost threshold`;
+    description = `Cost Monitoring (${costMonitoring.monitoringName}) detected that user(s) have passed the cost threshold`;
     issueObject = {
-      Issue: `Cost monitoring threshold of ${threshold} passed`,
-      'Total Cost': summedCost,
+      Issue: `Cost threshold of ${currencySymbol}${threshold} passed`,
       Users: erroringUsers,
       clusters: clusters.map(cluster => ({
         ClusterName: cluster.name || cluster.clusterName,
@@ -113,10 +113,10 @@ function createCMNotificationPayload({
     templateName: 'analyzeCost',
     originationId: monitoringType.id,
     applicationId: costMonitoring.applicationId,
-    subject: `Cost Monitoring Alert from ${process.env.INSTANCE_NAME} : Cost threshold $${threshold} passed`,
+    subject: `Cost Monitoring Alert from ${process.env.INSTANCE_NAME} : Cost threshold ${currencySymbol}${threshold} passed`,
     recipients: { primaryContacts, secondaryContacts, notifyContacts },
     monitoringName: costMonitoring.monitoringName,
-    issue: issueObject,
+    issue: { currencySymbol, ...issueObject },
     asrSpecificMetaData,
     notificationId: generateNotificationId({
       notificationPrefix,
@@ -282,6 +282,12 @@ async function analyzeClusterCost(
   const isSummed = costMonitoring.isSummed;
   const aggregatedCostsByCluster = clusterCostTotals.aggregatedCostsByCluster;
 
+  // Get clusterIds from clusterCostTotals
+  const clusterIds = Object.keys(clusterCostTotals.aggregatedCostsByCluster);
+  // Get clusters from clusterIds and use currencyCode from the first cluster
+  const clusters = await getClusters(clusterIds);
+  const currencyCode = clusters[0]?.currencyCode || 'USD';
+
   if (!aggregatedCostsByCluster) {
     parentPort &&
       parentPort.postMessage({
@@ -324,14 +330,15 @@ async function analyzeClusterCost(
       monitoringType,
       costMonitoring,
       threshold,
-      summedCost,
       erroringClusters,
       primaryContacts,
       secondaryContacts,
       notifyContacts,
       asrSpecificMetaData,
       idempotencyKey,
+      currencyCode,
     });
+
     await NotificationQueue.create(notificationPayload);
     parentPort &&
       parentPort.postMessage({
@@ -387,7 +394,6 @@ async function analyzeClusterCost(
   const notificationPayload = createCMNotificationPayload({
     monitoringType,
     costMonitoring,
-    summedCost,
     threshold,
     erroringClusters,
     primaryContacts,
@@ -395,6 +401,7 @@ async function analyzeClusterCost(
     notifyContacts,
     asrSpecificMetaData,
     idempotencyKey,
+    currencyCode,
   });
 
   await NotificationQueue.create(notificationPayload);
@@ -418,6 +425,10 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       monitoredUsers.includes(costMonitoringDataTotal.username)
     );
   }
+
+  const clusters = await getClusters(clusterIds);
+  // We only need the first cluster to get the currency code as differing currency codes in a single monitoring are not supported
+  const currencyCode = clusters[0].currencyCode || 'USD';
 
   if (costMonitoring.isSummed) {
     const summedCost = costMonitoringTotals.reduce(
@@ -449,8 +460,6 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       asrSpecificMetaData,
     } = await getAsrData(costMonitoring);
 
-    const clusters = await getClusters(clusterIds);
-
     const top5Users = costMonitoringTotals
       .sort((a, b) => b.totalCost - a.totalCost)
       .slice(0, 5);
@@ -465,8 +474,8 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       secondaryContacts,
       notifyContacts,
       asrSpecificMetaData,
-      summedCost,
       idempotencyKey,
+      currencyCode,
     });
 
     await NotificationQueue.create(notificationPayload);
@@ -503,6 +512,10 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
 
   const erroringUsers = totalsCausingNotification.map(total => ({
     username: total.username,
+    fileAccessCost: total.fileAccessCost,
+    compileCost: total.compileCost,
+    executeCost: total.executeCost,
+    clusterName: total.clusterName,
     totalCost: total.totalCost,
   }));
 
@@ -526,8 +539,6 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     asrSpecificMetaData,
   } = await getAsrData(costMonitoring);
 
-  const clusters = await getClusters(clusterIds);
-
   const notificationPayload = createCMNotificationPayload({
     monitoringType,
     costMonitoring,
@@ -538,8 +549,8 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     secondaryContacts,
     notifyContacts,
     asrSpecificMetaData,
-    summedCost,
     idempotencyKey,
+    currencyCode,
   });
 
   await NotificationQueue.create(notificationPayload);

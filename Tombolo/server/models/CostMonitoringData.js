@@ -59,7 +59,9 @@ module.exports = (sequelize, DataTypes) => {
         attributes: [
           'monitoringId',
           'usersCostInfo',
+          'clusterId',
           [col('Cluster.timezone_offset'), 'timezone_offset'],
+          [col('Cluster.name'), 'clusterName'],
         ],
         include: [
           {
@@ -78,7 +80,7 @@ module.exports = (sequelize, DataTypes) => {
       const groupedData = {};
 
       for (const record of records) {
-        const { monitoringId, usersCostInfo, timezone_offset } = record;
+        const { monitoringId, usersCostInfo, timezone_offset, clusterId, clusterName } = record;
 
         const costInfo =
           typeof usersCostInfo === 'string'
@@ -88,12 +90,14 @@ module.exports = (sequelize, DataTypes) => {
         const usernames = Object.keys(costInfo);
 
         for (const username of usernames) {
-          const key = `${monitoringId}-${username}`;
+          const key = `${monitoringId}-${clusterId}-${username}`;
           if (!groupedData[key]) {
             groupedData[key] = {
               id: key,
               monitoringId,
               username,
+              clusterId,
+              clusterName,
               timezone_offset,
               compileCost: 0,
               fileAccessCost: 0,
@@ -122,12 +126,14 @@ module.exports = (sequelize, DataTypes) => {
 
       // Convert groupedData to array
       Object.values(groupedData).forEach(result => {
-        // Ensure timezone_offset is the minimum (though typically the same for a monitoringId)
+        // Ensure timezone_offset is stable per (monitoringId, clusterId)
         results.push({
           ...result,
           timezone_offset: Math.min(
             ...records
-              .filter(r => r.monitoringId === result.monitoringId)
+              .filter(
+                r => r.monitoringId === result.monitoringId && r.clusterId === result.clusterId
+              )
               .map(r => r.timezone_offset)
           ),
         });
