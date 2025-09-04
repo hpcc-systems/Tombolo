@@ -1,33 +1,67 @@
+const e = require('express');
 const {
+  DESCRIPTION_LENGTH,
+  MONITORING_NAME_LENGTH,
+  COMMENT_LENGTH,
   uuidBody,
+  stringBody,
   arrayBody,
-  emailBody,
-  cronBody,
-  uuidParam,
+  objectBody,
+  regexBody,
+  booleanBody,
   bodyUuids,
   paramUuids,
 } = require('./commonMiddleware');
 
-const validateCreateFileMonitoring = [
-  bodyUuids.application_id,
-  uuidBody('cluster_id', true),
-  arrayBody('dirToMonitor', true),
-  arrayBody('email', true),
-  emailBody('email.*', true),
-  cronBody('cron'),
+const usersRegex = /^(?:[a-zA-Z][a-zA-Z0-9_:.\-]*|\*)$/;
+
+const createUpdateValidations = [
+  bodyUuids.applicationId,
+  stringBody('monitoringName', false, {
+    length: { ...MONITORING_NAME_LENGTH },
+  }),
+  stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
+  uuidBody('clusterId'),
+  objectBody('metaData'),
+  arrayBody('metaData.users', true),
+  regexBody('metaData.users.*', true, { regex: usersRegex }),
 ];
 
-const validateUpdateFileMonitoring = [bodyUuids.id, cronBody('cron')];
-const validateGetFileMonitorings = [paramUuids.application_id];
-const validateGetFileMonitoring = [uuidParam('file_monitoring_id')];
-const validateDeleteFileMonitoring = [uuidParam('fileMonitoringId')];
-const validateToggleFileMonitoring = [paramUuids.id];
+const validateUpdateFileMonitoring = [
+  paramUuids.id,
+  ...createUpdateValidations,
+];
+const validateCreateFileMonitoring = [...createUpdateValidations];
+const validateGetFileMonitoringById = [paramUuids.id];
+
+const validateEvaluateFileMonitoring = [
+  ...bodyUuids.arrayIds,
+  stringBody('approverComment', false, { length: { ...COMMENT_LENGTH } }),
+  stringBody('approvalStatus'),
+  booleanBody('isActive', true),
+];
+
+const validateToggleStatus = [...bodyUuids.arrayIds, booleanBody('isActive')];
+
+const validateBulkDelete = [...bodyUuids.arrayIds];
+
+const validateBulkUpdate = [
+  arrayBody('updatedData', false, { arrMin: 1 }),
+  objectBody('updatedData.*', false),
+  uuidBody('updatedData.*.id'),
+  objectBody('updatedData.*.contacts', false),
+  arrayBody('updatedData.*.contacts.primaryContacts'),
+];
+
+const validateGetFileMonitoringByAppId = [paramUuids.applicationId];
 
 module.exports = {
-  validateCreateFileMonitoring,
-  validateGetFileMonitorings,
-  validateGetFileMonitoring,
-  validateDeleteFileMonitoring,
-  validateToggleFileMonitoring,
   validateUpdateFileMonitoring,
+  validateCreateFileMonitoring,
+  validateGetFileMonitoringById,
+  validateEvaluateFileMonitoring,
+  validateToggleStatus,
+  validateBulkDelete,
+  validateBulkUpdate,
+  validateGetFileMonitoringByAppId,
 };

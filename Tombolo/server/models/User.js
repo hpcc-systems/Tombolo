@@ -90,6 +90,30 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'NO ACTION',
       });
 
+      User.hasMany(models.FileMonitoring, {
+        foreignKey: 'createdBy',
+        as: 'createdFileMonitorings',
+        onDelete: 'NO ACTION',
+      });
+
+      User.hasMany(models.FileMonitoring, {
+        foreignKey: 'lastUpdatedBy',
+        as: 'updatedFileMonitorings',
+        onDelete: 'NO ACTION',
+      });
+
+      User.hasMany(models.FileMonitoring, {
+        foreignKey: 'approvedBy',
+        as: 'approvedFileMonitorings',
+        onDelete: 'NO ACTION',
+      });
+
+      User.hasMany(models.FileMonitoring, {
+        foreignKey: 'deletedBy',
+        as: 'deletedFileMonitorings',
+        onDelete: 'NO ACTION',
+      });
+
       User.hasMany(models.CostMonitoring, {
         foreignKey: 'lastUpdatedBy',
         as: 'updatedCostMonitorings',
