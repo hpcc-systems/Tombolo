@@ -12,48 +12,61 @@ const { getCluster } = require('../../utils/hpcc-util');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 /**
- * Gets the current time and time from lastScanTime, with optional timezone offset
- * @param {?string} lastScanTime
- * @param {number} [offset=0] - Timezone offset in minutes (e.g., 240 for UTC+4)
- * @param {boolean} [toIso=false] - Whether to return dates as ISO strings
- * @returns {{endTime: (Date|string), startTime: (Date|string), isNewDay: (boolean)}} Object containing current time and lastScanTime
- * with applied offset, either as Date objects or ISO strings based on toIso parameter
+ * Gets the current time and time from lastScanTime in UTC without applying any timezone conversions.
+ * The input and output are treated strictly as UTC.
+ * @param {?string} lastScanTime - An ISO timestamp string in UTC or null.
+ * @param {number} [offset=0] - Deprecated. Ignored to ensure UTC-in/UTC-out behavior.
+ * @param {boolean} [toIso=false] - Whether to return dates as ISO strings.
+ * @returns {{endTime: (Date|string), startTime: (Date|string), isNewDay: (boolean)}}
  */
 function getStartAndEndTime(lastScanTime, offset = 0, toIso = false) {
+  // Always operate in UTC; do not apply any timezone offset.
   const nowUtc = new Date();
-  const offsetMs = offset * 60 * 1000;
 
-  // Convert to "local" time by adding the offset for both points
-  const nowLocal = new Date(nowUtc.getTime() + offsetMs);
-
-  let startLocal;
+  let startUtc;
   let isNewDay = false;
 
   if (lastScanTime) {
-    const lastLocal = new Date(new Date(lastScanTime).getTime() + offsetMs);
+    const lastUtc = new Date(lastScanTime);
 
-    // Compare local calendar dates
+    // Compare UTC calendar dates
     isNewDay =
-      lastLocal.getFullYear() !== nowLocal.getFullYear() ||
-      lastLocal.getMonth() !== nowLocal.getMonth() ||
-      lastLocal.getDate() !== nowLocal.getDate();
+      lastUtc.getUTCFullYear() !== nowUtc.getUTCFullYear() ||
+      lastUtc.getUTCMonth() !== nowUtc.getUTCMonth() ||
+      lastUtc.getUTCDate() !== nowUtc.getUTCDate();
 
     if (isNewDay) {
-      // Start at local midnight of the current day
-      startLocal = new Date(nowLocal);
-      startLocal.setHours(0, 0, 0, 0);
+      // Start at UTC midnight of the current day
+      startUtc = new Date(
+        Date.UTC(
+          nowUtc.getUTCFullYear(),
+          nowUtc.getUTCMonth(),
+          nowUtc.getUTCDate(),
+          0,
+          0,
+          0,
+          0
+        )
+      );
     } else {
-      startLocal = lastLocal;
+      startUtc = lastUtc;
     }
   } else {
-    // First run: take the last hour in local time
-    startLocal = new Date(nowLocal);
-    startLocal.setHours(0, 0, 0, 0);
+    // First run: start from UTC midnight today
+    startUtc = new Date(
+      Date.UTC(
+        nowUtc.getUTCFullYear(),
+        nowUtc.getUTCMonth(),
+        nowUtc.getUTCDate(),
+        0,
+        0,
+        0,
+        0
+      )
+    );
   }
 
-  // Convert back to UTC instants for return/consumption
-  const endUtc = new Date(nowLocal.getTime() - offsetMs);
-  const startUtc = new Date(startLocal.getTime() - offsetMs);
+  const endUtc = nowUtc;
 
   if (toIso) {
     return {

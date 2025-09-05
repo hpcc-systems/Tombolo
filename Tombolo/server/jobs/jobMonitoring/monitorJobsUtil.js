@@ -718,7 +718,15 @@ const createNotificationPayload = ({
   notificationOrigin = 'Job Monitoring',
   idempotencyKey = null,
 }) => {
-  const payload = {
+  const secondary = Array.isArray(recipients.secondaryContacts)
+    ? recipients.secondaryContacts
+    : [];
+  const notify = Array.isArray(recipients.notifyContacts)
+    ? recipients.notifyContacts
+    : [];
+  const ccList = [...secondary, ...notify];
+
+  return {
     type,
     templateName,
     notificationOrigin: notificationOrigin,
@@ -730,7 +738,7 @@ const createNotificationPayload = ({
       applicationId,
       subject,
       mainRecipients: recipients.primaryContacts || [],
-      cc: [...recipients.secondaryContacts, ...recipients.notifyContacts],
+      cc: ccList,
       notificationDescription,
       notificationId,
       ...asrSpecificMetaData,
@@ -742,15 +750,10 @@ const createNotificationPayload = ({
         Instruction:
           'Please contact one of the following to facilitate issue resolution:',
         'Primary Contact': recipients.primaryContacts,
-        'Secondary Contact': [
-          ...recipients.secondaryContacts,
-          ...recipients.notifyContacts,
-        ],
+        ...(ccList.length > 0 ? { 'Secondary Contact': ccList } : {}),
       },
     },
   };
-
-  return payload;
 };
 
 function extractDateSubstring(inputString) {
