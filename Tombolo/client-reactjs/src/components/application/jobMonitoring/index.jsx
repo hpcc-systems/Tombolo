@@ -711,6 +711,7 @@ function JobMonitoring() {
       />
       {displayMonitoringDetailsModal && (
         <MonitoringDetailsModal
+          monitoringTypeName={monitoringTypeName}
           displayMonitoringDetailsModal={displayMonitoringDetailsModal}
           setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
           selectedMonitoring={selectedMonitoring}
