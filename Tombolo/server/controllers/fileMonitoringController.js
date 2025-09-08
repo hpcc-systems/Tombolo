@@ -1,9 +1,19 @@
-const { FileMonitoring, sequelize } = require('../models');
+const { FileMonitoring, Cluster, sequelize } = require('../models');
 const logger = require('../config/logger');
 const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
+
+// Wrapper function to get common includes
+const getCommonIncludes = () => [
+  ...getUserFkIncludes(true),
+  {
+    model: Cluster,
+    as: 'cluster',
+    attributes: ['id', 'name', 'thor_host', 'thor_port'],
+  },
+];
 
 async function createFileMonitoring(req, res) {
   try {
@@ -13,10 +23,12 @@ async function createFileMonitoring(req, res) {
       ...req.body,
       createdBy: userId,
       lastUpdatedBy: userId,
+      approvalStatus: 'pending',
+      isActive: false,
     });
 
     const result = await FileMonitoring.findByPk(createResult.id, {
-      include: getUserFkIncludes(true),
+      include: getCommonIncludes(),
     });
     return res.status(201).json({
       success: true,
@@ -47,7 +59,7 @@ async function updateFileMonitoring(req, res) {
 
     // Get the updated file monitoring entry
     const updatedFileMonitoring = await FileMonitoring.findByPk(id, {
-      include: getUserFkIncludes(true),
+      include: getCommonIncludes(),
     });
 
     return res.status(200).json({
@@ -93,7 +105,7 @@ async function getFileMonitoring(req, res) {
     const { applicationId } = req.params;
     const result = await FileMonitoring.findAll({
       where: { applicationId },
-      include: getUserFkIncludes(true),
+      include: getCommonIncludes(),
       order: [['createdAt', 'DESC']],
     });
     return res.status(200).json({
@@ -140,7 +152,7 @@ async function evaluateFileMonitoring(req, res) {
     // Fetch the updated entries to return
     const updatedFileMonitoring = await FileMonitoring.findAll({
       where: { id: ids },
-      include: getUserFkIncludes(true),
+      include: getCommonIncludes(),
     });
 
     return res.status(200).json({
@@ -194,7 +206,7 @@ async function toggleFileMonitoringActive(req, res) {
     // Fetch the updated entries to return
     const updatedFileMonitoring = await FileMonitoring.findAll({
       where: { id: ids },
-      include: getUserFkIncludes(true),
+      include: getCommonIncludes(),
     });
 
     return res.status(200).json({
@@ -254,7 +266,10 @@ async function bulkUpdateFileMonitoring(req, res) {
     failed: [],
   };
 
-  for (const { id, contacts } of updatedData) {
+  for (const {
+    id,
+    metaData: { contacts },
+  } of updatedData) {
     try {
       const fileMonitoring = await FileMonitoring.findByPk(id);
 
