@@ -66,7 +66,12 @@ const ApproveRejectModal = ({
       } else if (selectedMonitoring?.id) {
         formData.ids = [selectedMonitoring.id];
       }
-      formData.isActive = formData.isActive || false;
+      // Ensure isActive is false when rejecting
+      if (formData.approvalStatus === 'rejected') {
+        formData.isActive = false;
+      } else {
+        formData.isActive = !!formData.isActive;
+      }
 
       // Extensibility: expects a setMonitoring function to update the list after evaluation
       // You should pass an async function via props to handle the evaluation and update
@@ -74,6 +79,7 @@ const ApproveRejectModal = ({
         const response = await evaluateMonitoring(formData);
         const updatedMonitoring = response?.data;
         if (Array.isArray(updatedMonitoring)) {
+          // When API returns an array of updated items
           setMonitoring((prevMonitoring) => {
             const updatedIds = updatedMonitoring.map((mon) => mon.id);
             return prevMonitoring.map((mon) =>
@@ -82,9 +88,31 @@ const ApproveRejectModal = ({
                 : mon
             );
           });
-          message.success('Your response has been saved');
+          message.success(response?.message || 'Your response has been saved');
           form.resetFields();
-          setSelectedMonitoring(null);
+          // If a single item was selected, keep the modal display consistent by updating it as well
+          if (selectedMonitoring && updatedMonitoring.length === 1) {
+            setSelectedMonitoring(updatedMonitoring[0]);
+          } else {
+            setSelectedMonitoring(null);
+          }
+          onCancel();
+        } else if (updatedMonitoring && typeof updatedMonitoring === 'object') {
+          // When API returns a single updated object in data
+          const updatedObj = updatedMonitoring;
+          if (typeof setMonitoring === 'function') {
+            setMonitoring((prevMonitoring) =>
+              Array.isArray(prevMonitoring)
+                ? prevMonitoring.map((mon) => (mon.id === updatedObj.id ? updatedObj : mon))
+                : prevMonitoring
+            );
+          }
+          // Update the selected item in-place so UI reflects latest values without refetch
+          if (selectedMonitoring && selectedMonitoring.id === updatedObj.id) {
+            setSelectedMonitoring(updatedObj);
+          }
+          message.success(response?.message || 'Your response has been saved');
+          form.resetFields();
           onCancel();
         } else if (response?.success || typeof response === 'string') {
           // If response is a success object or a string message, show success and close
@@ -98,7 +126,7 @@ const ApproveRejectModal = ({
           setSelectedMonitoring(null);
           onCancel();
         } else {
-          message.error('Evaluation did not return a valid array.');
+          message.error('Evaluation did not return a valid array or object.');
         }
       } else {
         message.error('No evaluation handler provided.');
@@ -113,8 +141,15 @@ const ApproveRejectModal = ({
   const handleActionChange = (value) => {
     if (value === 'rejected') {
       setIsActive(false);
+      // Also ensure the form value reflects disabled/false state
+      form.setFieldsValue({ isActive: false });
     } else {
       setIsActive(true);
+      // Default to true when not rejected, unless user unchecks
+      const current = form.getFieldValue('isActive');
+      if (typeof current === 'undefined') {
+        form.setFieldsValue({ isActive: true });
+      }
     }
   };
 
@@ -185,7 +220,7 @@ const ApproveRejectModal = ({
               ]}>
               <Input.TextArea rows={3} maxLength={200} showCount placeholder="Comments" />
             </Form.Item>
-            <Form.Item name="isActive" valuePropName={isActive ? 'checked' : 'unchecked'}>
+            <Form.Item name="isActive" valuePropName="checked">
               <Checkbox disabled={!isActive}>Start monitoring</Checkbox>
             </Form.Item>
           </Form>

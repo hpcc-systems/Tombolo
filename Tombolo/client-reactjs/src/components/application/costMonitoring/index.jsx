@@ -417,19 +417,17 @@ function CostMonitoring() {
       }
       delete updatedData.threshold;
 
-      await updateSelectedCostMonitoring({ updatedData });
+      const response = await updateSelectedCostMonitoring({ updatedData });
 
       // If no error thrown set state with new data
       setCostMonitorings((prev) => {
-        return prev.map((costMonitoring) => {
-          updatedData.approvalStatus = 'Pending';
-          updatedData.isActive = false;
-          if (costMonitoring.id === updatedData.id) {
-            return updatedData;
-          }
-          return costMonitoring;
-        });
+        const updatedArray = Array.isArray(response?.data) ? response.data : [response?.data].filter(Boolean);
+        if (updatedArray.length === 0) return prev;
+
+        const updatedMap = new Map(updatedArray.map((u) => [u.id, u]));
+        return prev.map((cm) => (updatedMap.has(cm.id) ? updatedMap.get(cm.id) : cm));
       });
+
       resetStates();
       message.success('Cost monitoring updated successfully');
     } catch (err) {
