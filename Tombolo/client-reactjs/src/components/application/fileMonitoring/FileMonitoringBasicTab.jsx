@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Form, Select, Input, Card, Row, Col, Space } from 'antd';
+import { Form, Select, Input, Card, Row, Col } from 'antd';
 import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
 import { useSelector } from 'react-redux';
 import { DescriptionFormRules, MonitoringNameFormRules } from '../../common/FormRules';
