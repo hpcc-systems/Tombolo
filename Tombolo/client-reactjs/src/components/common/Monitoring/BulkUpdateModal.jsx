@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, message, Modal, Select } from 'antd';
+import { Button, Form, message, Modal, Select, Card } from 'antd';
 import { isEmail } from 'validator';
 import { useSelector } from 'react-redux';
 
@@ -217,7 +217,6 @@ const BulkUpdateModal = ({
 
   return (
     <Modal
-      title="Bulk Edit Cost Monitoring"
       open={bulkEditModalVisibility}
       onCancel={resetState}
       destroyOnClose
@@ -230,86 +229,88 @@ const BulkUpdateModal = ({
           Save
         </Button>,
       ]}>
-      <Form form={form} layout="vertical">
-        <Form.Item
-          label="Primary Contact(s)"
-          name="primaryContacts"
-          required
-          rules={[
-            {
-              validator: (_, value) => {
-                if (!value || value.length === 0) {
-                  return Promise.reject(new Error('Please add at least one email!'));
-                }
-                if (!value.every((v) => isEmail(v))) {
-                  return Promise.reject(new Error('One or more emails are invalid'));
-                }
-                return Promise.resolve();
+      <Card>
+        <Form form={form} layout="vertical">
+          <Form.Item
+            label="Primary Contact(s)"
+            name="primaryContacts"
+            required
+            rules={[
+              {
+                validator: (_, value) => {
+                  if (!value || value.length === 0) {
+                    return Promise.reject(new Error('Please add at least one email!'));
+                  }
+                  if (!value.every((v) => isEmail(v))) {
+                    return Promise.reject(new Error('One or more emails are invalid'));
+                  }
+                  return Promise.resolve();
+                },
               },
-            },
-          ]}>
-          <Select
-            mode="tags"
-            open={false}
-            allowClear
-            placeholder="Enter a comma-delimited list of email addresses"
-            tokenSeparators={[',']}
-            onChange={handlePrimaryContactsChange}
-          />
-        </Form.Item>
+            ]}>
+            <Select
+              mode="tags"
+              open={false}
+              allowClear
+              placeholder="Enter a comma-delimited list of email addresses"
+              tokenSeparators={[',']}
+              onChange={handlePrimaryContactsChange}
+            />
+          </Form.Item>
 
-        {monitoringType !== 'cost' &&
-          integrations &&
-          integrations.some(
-            (integration) => integration.name === 'ASR' && integration.application_id === applicationId
-          ) && (
-            <>
-              <Form.Item
-                label="Secondary Contact(s)"
-                name="secondaryContacts"
-                rules={[
-                  {
-                    validator: (_, value) => {
-                      if (value && !value.every((v) => isEmail(v))) {
-                        return Promise.reject(new Error('One or more emails are invalid'));
-                      }
-                      return Promise.resolve();
+          {monitoringType !== 'cost' &&
+            integrations &&
+            integrations.some(
+              (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+            ) && (
+              <>
+                <Form.Item
+                  label="Secondary Contact(s)"
+                  name="secondaryContacts"
+                  rules={[
+                    {
+                      validator: (_, value) => {
+                        if (value && !value.every((v) => isEmail(v))) {
+                          return Promise.reject(new Error('One or more emails are invalid'));
+                        }
+                        return Promise.resolve();
+                      },
                     },
-                  },
-                ]}>
-                <Select
-                  onChange={handleSecondaryContactsChange}
-                  mode="tags"
-                  allowClear
-                  placeholder="Enter a comma-delimited list of email addresses"
-                  tokenSeparators={[',']}
-                />
-              </Form.Item>
+                  ]}>
+                  <Select
+                    onChange={handleSecondaryContactsChange}
+                    mode="tags"
+                    allowClear
+                    placeholder="Enter a comma-delimited list of email addresses"
+                    tokenSeparators={[',']}
+                  />
+                </Form.Item>
 
-              <Form.Item
-                label="Notify Contact(s)"
-                name="notifyContacts"
-                rules={[
-                  {
-                    validator: (_, value) => {
-                      if (value && !value.every((v) => isEmail(v))) {
-                        return Promise.reject(new Error('One or more emails are invalid'));
-                      }
-                      return Promise.resolve();
+                <Form.Item
+                  label="Notify Contact(s)"
+                  name="notifyContacts"
+                  rules={[
+                    {
+                      validator: (_, value) => {
+                        if (value && !value.every((v) => isEmail(v))) {
+                          return Promise.reject(new Error('One or more emails are invalid'));
+                        }
+                        return Promise.resolve();
+                      },
                     },
-                  },
-                ]}>
-                <Select
-                  onChange={handleNotifyContactsChange}
-                  mode="tags"
-                  allowClear
-                  placeholder="Enter a comma-delimited list of email addresses"
-                  tokenSeparators={[',']}
-                />
-              </Form.Item>
-            </>
-          )}
-      </Form>
+                  ]}>
+                  <Select
+                    onChange={handleNotifyContactsChange}
+                    mode="tags"
+                    allowClear
+                    placeholder="Enter a comma-delimited list of email addresses"
+                    tokenSeparators={[',']}
+                  />
+                </Form.Item>
+              </>
+            )}
+        </Form>
+      </Card>
     </Modal>
   );
 };
