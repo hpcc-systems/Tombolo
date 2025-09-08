@@ -290,7 +290,7 @@ function CostMonitoring() {
       allInputs.isSummed = allInputs.isSummed === 'true';
 
       // Add metaData to allInputs
-      allInputs = { ...allInputs, metaData, approvalStatus: 'Pending', isActive: false };
+      allInputs = { ...allInputs, metaData, approvalStatus: 'pending', isActive: false };
 
       const responseData = await createCostMonitoring({ inputData: allInputs });
 

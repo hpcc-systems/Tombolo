@@ -120,7 +120,7 @@ async function evaluateCostMonitoring(req, res) {
   try {
     const { id: approverId } = req.user;
     const approvalStatus = req.body.approvalStatus;
-    const isApproved = approvalStatus === 'Approved';
+    const isApproved = approvalStatus === 'approved';
     await CostMonitoring.update(
       {
         approvalStatus,
@@ -161,7 +161,7 @@ async function toggleCostMonitoringActive(req, res) {
     const { id: userId } = req.user;
 
     const costMonitorings = await CostMonitoring.findAll({
-      where: { id: { [Op.in]: ids }, approvalStatus: 'Approved' },
+      where: { id: { [Op.in]: ids }, approvalStatus: 'approved' },
       attributes: ['id', 'approvalStatus'],
     });
 

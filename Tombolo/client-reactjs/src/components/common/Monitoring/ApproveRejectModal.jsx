@@ -34,11 +34,16 @@ const ApproveRejectModal = ({
 
   useEffect(() => {
     if (selectedMonitoring) {
-      if (selectedMonitoring?.approvalStatus !== 'pending') {
+      const status = selectedMonitoring?.approvalStatus;
+      const hasApprover = !!selectedMonitoring?.approver;
+      // Consider evaluated only when explicitly approved or rejected AND approver exists
+      if ((status === 'approved' || status === 'rejected') && hasApprover) {
         setMonitoringEvaluated(true);
       } else {
         setMonitoringEvaluated(false);
       }
+    } else {
+      setMonitoringEvaluated(false);
     }
   }, [selectedMonitoring]);
 
@@ -183,7 +188,7 @@ const ApproveRejectModal = ({
       }
       {...modalProps}>
       <div style={{ padding: '5px' }}>
-        {monitoringEvaluated && selectedMonitoring ? (
+        {monitoringEvaluated && selectedMonitoring && selectedMonitoring?.approver ? (
           <div style={{ marginTop: '15px' }}>
             This monitoring was{' '}
             <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{selectedMonitoring?.approvalStatus}</span> by{' '}
