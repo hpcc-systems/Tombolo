@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Tooltip, Popconfirm, message, Popover, Tag } from 'antd';
+import startCase from 'lodash/startCase';
 import {
   EyeOutlined,
   EditOutlined,
@@ -21,9 +22,9 @@ import styles from './costMonitoring.module.css';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'Pending') {
+  if (approvalStatus === 'pending') {
     return 'var(--primary)';
-  } else if (approvalStatus === 'Approved') {
+  } else if (approvalStatus === 'approved') {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -170,6 +171,7 @@ const CostMonitoringTable = ({
       title: 'Approval Status',
       dataIndex: 'approvalStatus',
       key: 'approvalStatus',
+      render: (approvalStatus) => startCase(approvalStatus) || 'N/A',
     },
     {
       title: 'Actions',
@@ -208,7 +210,7 @@ const CostMonitoringTable = ({
                       {record.isActive ? (
                         <div onClick={() => toggleMonitoringStatus(record, 'pause')}>
                           <PauseCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== 'approved'}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Pause
@@ -216,7 +218,7 @@ const CostMonitoringTable = ({
                       ) : (
                         <div onClick={() => toggleMonitoringStatus(record, 'start')}>
                           <PlayCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== 'approved'}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Start
@@ -383,7 +385,7 @@ const CostMonitoringTable = ({
    */
   const toggleMonitoringStatus = async (record, status) => {
     try {
-      if (record.approvalStatus !== 'Approved') {
+      if (record.approvalStatus !== 'approved') {
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }

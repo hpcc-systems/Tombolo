@@ -163,7 +163,7 @@ const BulkUpdateModal = ({
       const newJobMonitoringData = jobMonitorings.map((job) => {
         if (allUpdatedIds.includes(job.id)) {
           const updatedJob = updatedMetaData.find((data) => data.id === job.id);
-          return { ...job, metaData: updatedJob.metaData, isActive: false, approvalStatus: 'Pending' };
+          return { ...job, metaData: updatedJob.metaData, isActive: false, approvalStatus: 'pending' };
         }
         return job;
       });
@@ -172,7 +172,7 @@ const BulkUpdateModal = ({
       setSelectedRows((prev) =>
         prev.map((row) => {
           const updatedRow = updatedMetaData.find((data) => data.id === row.id);
-          return { ...row, metaData: updatedRow.metaData, isActive: false, approvalStatus: 'Pending' };
+          return { ...row, metaData: updatedRow.metaData, isActive: false, approvalStatus: 'pending' };
         })
       );
 

@@ -53,7 +53,7 @@ const monitoring_name = 'Job Monitoring';
 
     // Find all active job monitorings.
     const jobMonitorings = await JobMonitoring.findAll({
-      where: { isActive: 1, approvalStatus: 'Approved' },
+      where: { isActive: 1, approvalStatus: 'approved' },
       raw: true,
     });
 

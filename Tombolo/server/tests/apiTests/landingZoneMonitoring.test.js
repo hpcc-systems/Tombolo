@@ -383,7 +383,7 @@ describe('Landing Zone Monitoring Routes', () => {
       LandingZoneMonitoring.findByPk.mockResolvedValueOnce({
         ...existingMonitoring,
         ...updatePayload,
-        approvalStatus: 'Pending',
+        approvalStatus: 'pending',
         approvedBy: null,
         approverComment: null,
       });
@@ -395,7 +395,7 @@ describe('Landing Zone Monitoring Routes', () => {
       expect(res.status).toBe(200);
       expect(LandingZoneMonitoring.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          approvalStatus: 'Pending',
+          approvalStatus: 'pending',
           approverComment: null,
           approvedBy: null,
           approvedAt: null,

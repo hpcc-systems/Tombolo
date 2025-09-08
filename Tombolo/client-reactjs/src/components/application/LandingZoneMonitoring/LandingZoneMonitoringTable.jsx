@@ -21,9 +21,9 @@ import commonStyles from '../../common/common.module.css';
 
 //Approve button colors
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'Pending') {
+  if (approvalStatus === 'pending') {
     return 'var(--primary)';
-  } else if (approvalStatus === 'Approved') {
+  } else if (approvalStatus === 'approved') {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -153,12 +153,12 @@ const LandingZoneMonitoringTable = ({
 
                     {record.isActive ? (
                       <div onClick={() => toggleMonitoringStatus(record)}>
-                        <PauseCircleOutlined disabled={record.approvalStatus !== 'Approved'} className={styles.icons} />
+                        <PauseCircleOutlined disabled={record.approvalStatus !== 'approved'} className={styles.icons} />
                         Pause
                       </div>
                     ) : (
                       <div onClick={() => toggleMonitoringStatus(record)}>
-                        <PlayCircleOutlined disabled={record.approvalStatus !== 'Approved'} className={styles.icons} />
+                        <PlayCircleOutlined disabled={record.approvalStatus !== 'approved'} className={styles.icons} />
                         Start
                       </div>
                     )}

@@ -29,7 +29,7 @@ describe('costMonitoring Routes', () => {
     const reqBody = {
       ids: [uuid],
       isActive: true,
-      approvalStatus: 'Approved',
+      approvalStatus: 'approved',
       approverComment: 'Test Approval Comment',
     };
 
@@ -41,7 +41,7 @@ describe('costMonitoring Routes', () => {
     expect(res.body.message).toBe('Cost monitoring(s) evaluated successfully');
     expect(CostMonitoring.update).toHaveBeenCalledWith(
       {
-        approvalStatus: 'Approved',
+        approvalStatus: 'approved',
         isActive: true,
         approvedBy: AUTHED_USER_ID,
         approvedAt: expect.any(Date),
@@ -61,7 +61,7 @@ describe('costMonitoring Routes', () => {
     const reqBody = {
       ids: uuids,
       isActive: true,
-      approvalStatus: 'Approved',
+      approvalStatus: 'approved',
       approverComment: 'Test Approval Comment',
     };
 
@@ -73,7 +73,7 @@ describe('costMonitoring Routes', () => {
     expect(res.body.message).toBe('Cost monitoring(s) evaluated successfully');
     expect(CostMonitoring.update).toHaveBeenCalledWith(
       {
-        approvalStatus: 'Approved',
+        approvalStatus: 'approved',
         isActive: true,
         approvedBy: AUTHED_USER_ID,
         approvedAt: expect.any(Date),

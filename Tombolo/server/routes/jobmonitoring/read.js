@@ -39,7 +39,7 @@ router.post('/', validate(validateCreateJobMonitoring), async (req, res) => {
   try {
     //Save the job monitoring
     const response = await JobMonitoring.create(
-      { ...req.body, approvalStatus: 'Pending', createdBy: req.user.id },
+      { ...req.body, approvalStatus: 'pending', createdBy: req.user.id },
       { raw: true }
     );
 
@@ -141,7 +141,7 @@ router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
 
     //Payload
     const payload = req.body;
-    payload.approvalStatus = 'Pending';
+    payload.approvalStatus = 'pending';
     payload.approverComment = null;
     payload.approvedBy = null;
     payload.approvedAt = null;
@@ -278,7 +278,7 @@ router.patch(
 
       // Filter out the job monitorings that are not approved
       const approvedJobMonitorings = jobMonitorings.filter(
-        jobMonitoring => jobMonitoring.approvalStatus === 'Approved'
+        jobMonitoring => jobMonitoring.approvalStatus === 'approved'
       );
 
       if (approvedJobMonitorings.length === 0) {
@@ -350,7 +350,7 @@ router.patch(
           {
             metaData: data.metaData,
             isActive: false,
-            approvalStatus: 'Pending',
+            approvalStatus: 'pending',
             updatedBy: req.user.id,
           },
           {

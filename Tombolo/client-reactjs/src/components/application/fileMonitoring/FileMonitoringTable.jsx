@@ -22,9 +22,9 @@ import commonStyles from '../../common/common.module.css';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'Pending') {
+  if (approvalStatus === 'pending') {
     return 'var(--primary)';
-  } else if (approvalStatus === 'Approved') {
+  } else if (approvalStatus === 'approved') {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -178,7 +178,7 @@ const FileMonitoringTable = ({
                       {record.isActive ? (
                         <div onClick={() => toggleMonitoringStatus(record, 'pause')}>
                           <PauseCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== 'approved'}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Pause
@@ -186,7 +186,7 @@ const FileMonitoringTable = ({
                       ) : (
                         <div onClick={() => toggleMonitoringStatus(record, 'start')}>
                           <PlayCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== 'approved'}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Start

@@ -540,7 +540,7 @@ function JobMonitoring() {
       // If no error thrown set state with new data
       setJobMonitorings((prev) => {
         return prev.map((jobMonitoring) => {
-          updatedData.approvalStatus = 'Pending';
+          updatedData.approvalStatus = 'pending';
           updatedData.isActive = false;
           if (jobMonitoring.id === updatedData.id) {
             return updatedData;

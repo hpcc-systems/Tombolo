@@ -420,7 +420,7 @@ function FileMonitoring() {
       // If no error thrown set state with new data
       setFileMonitoring((prev) => {
         return prev.map((fm) => {
-          updatedData.approvalStatus = 'Pending';
+          updatedData.approvalStatus = 'pending';
           updatedData.isActive = false;
           if (fm.id === updatedData.id) {
             return updatedData;

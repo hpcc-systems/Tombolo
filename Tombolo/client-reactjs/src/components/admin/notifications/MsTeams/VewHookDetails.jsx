@@ -20,7 +20,7 @@ function VewHookDetails({ showHooksDetailModal, setShowHooksDetailModal, selecte
           </Descriptions.Item>
           <Descriptions.Item label="Created By">{selectedHook.createdBy}</Descriptions.Item>
           <Descriptions.Item label="Approval Status">
-            {selectedHook.approved ? 'Approved' : 'Not Approved'}
+            {selectedHook.approved ? 'approved' : 'Not Approved'}
           </Descriptions.Item>
           <Descriptions.Item label="Approved By">{selectedHook.approvedBy}</Descriptions.Item>
           <Descriptions.Item label="Last Modified By">{selectedHook.lastModifiedBy}</Descriptions.Item>

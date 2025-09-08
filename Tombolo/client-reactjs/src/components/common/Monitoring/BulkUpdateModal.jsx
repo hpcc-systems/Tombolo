@@ -194,7 +194,7 @@ const BulkUpdateModal = ({
       const newCostMonitoringData = monitorings.map((cost) => {
         if (allUpdatedIds.includes(cost.id)) {
           const updatedCost = updatedMetaData.find((data) => data.id === cost.id);
-          return { ...cost, metaData: updatedCost.metaData, isActive: false, approvalStatus: 'Pending' };
+          return { ...cost, metaData: updatedCost.metaData, isActive: false, approvalStatus: 'pending' };
         }
         return cost;
       });
@@ -203,7 +203,7 @@ const BulkUpdateModal = ({
       setSelectedRows((prev) =>
         prev.map((row) => {
           const updatedRow = updatedMetaData.find((data) => data.id === row.id);
-          return { ...row, metaData: updatedRow.metaData, isActive: false, approvalStatus: 'Pending' };
+          return { ...row, metaData: updatedRow.metaData, isActive: false, approvalStatus: 'pending' };
         })
       );
 
