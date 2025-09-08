@@ -1,15 +1,16 @@
 // Packages
 import React, { useState, useEffect } from 'react';
-import { Form } from 'antd';
-
-// Local imports
 import { useSelector } from 'react-redux';
-import useMonitoringFilters from '@/hooks/useMonitoringFilters';
-import MonitoringFilters from '@/components/common/Monitoring/MonitoringFilters';
+import { Form } from 'antd';
 import { Constants } from '../../common/Constants';
 
-function CostMonitoringFilters({
-  clusterMonitoring,
+// Local imports
+import styles from './fileMonitoring.module.css';
+import useMonitoringFilters from '@/hooks/useMonitoringFilters';
+import MonitoringFilters from '@/components/common/Monitoring/MonitoringFilters';
+
+function FileMonitoringFilters({
+  fileMonitoring,
   setFilters,
   filtersVisible,
   setFiltersVisible,
@@ -17,10 +18,9 @@ function CostMonitoringFilters({
   setSearchTerm,
   matchCount,
   domains,
+  allProductCategories,
   selectedDomain,
   setSelectedDomain,
-  productCategories,
-  allProductCategories,
 }) {
   //Redux
   const integrations = useSelector((state) => state.application.integrations);
@@ -29,12 +29,11 @@ function CostMonitoringFilters({
   const [form] = Form.useForm();
 
   // Local states
+  const [clusterOptions, setClusterOptions] = useState([]);
   const [approvalStatusOptions, setApprovalStatusOptions] = useState([]);
   const [activeStatusOptions, setActiveStatusOptions] = useState([]);
   const [domainOptions, setDomainOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
-  const [clusterOptions, setClusterOptions] = useState([]);
-
   const { filterCount, clearFilters, handleFilterCountClick, handleDomainChange, handleFormChange, loadFilters } =
     useMonitoringFilters(
       form,
@@ -42,30 +41,23 @@ function CostMonitoringFilters({
       setFilters,
       setSelectedDomain,
       domains,
-      productCategories,
+      [],
       selectedDomain,
       allProductCategories,
-      Constants.CLUSTER_M_FILTERS_KEY,
-      Constants.CLUSTER_M_FILTERS_VS_KEY
+      Constants.FM_FILTERS_KEY,
+      Constants.FM_FILTERS_VS_KEY
     );
 
   useEffect(() => {
-    const initialFilterOptions = {
-      approvalStatus: [],
-      activeStatus: [],
-      domain: [],
-      products: [],
-    };
-
-    let filterOptions = loadFilters(initialFilterOptions, clusterMonitoring);
-
-    // Unique clusters
-    const uniqueClusterIds = [];
-    const uniqueClusterObjs = [];
-    clusterMonitoring.forEach((c) => {
-      if (!uniqueClusterIds.includes(c.clusterId)) {
-        uniqueClusterIds.push(c.clusterId);
-        uniqueClusterObjs.push({ id: c.clusterId, name: c.name });
+    const initialFilterOptions = { approvalStatus: [], activeStatus: [], domain: [], products: [], clusters: [] };
+    const filterOptions = loadFilters(initialFilterOptions, fileMonitoring, (monitoring, fo) => {
+      const cluster = monitoring.cluster || {};
+      if (monitoring.clusterId) {
+        const current = { ...cluster, id: monitoring.clusterId };
+        const exists = fo.clusters.find((c) => c.id === current.id);
+        if (!exists) {
+          fo.clusters.push(current);
+        }
       }
     });
 
@@ -73,26 +65,23 @@ function CostMonitoringFilters({
     setActiveStatusOptions(filterOptions.activeStatus);
     setDomainOptions(filterOptions.domain);
     setProductOptions(filterOptions.products);
-    setClusterOptions(uniqueClusterObjs);
-  }, [clusterMonitoring, domains, allProductCategories, productCategories, selectedDomain, loadFilters]);
+    setClusterOptions(filterOptions.clusters);
+  }, [fileMonitoring, domains, allProductCategories, selectedDomain]);
 
-  //JSX
   return (
-    <div className="notifications__filters">
+    <div>
       <MonitoringFilters
         form={form}
         filtersVisible={filtersVisible}
         onValuesChange={handleFormChange}
         searchLabel="Monitoring Name"
-        searchPlaceholder="Search by monitoring name"
+        searchPlaceholder="Search monitoring name"
         searchTerm={searchTerm}
         setSearchTerm={(v) => setSearchTerm(v)}
         matchCount={matchCount}
         showAsr={true}
         showClusters={true}
-        clustersMode="multiple"
-        showUsers={false}
-        showFrequency={false}
+        clustersMode="single"
         options={{
           approvalStatusOptions,
           activeStatusOptions,
@@ -102,11 +91,11 @@ function CostMonitoringFilters({
         }}
         integrations={integrations}
         handleDomainChange={handleDomainChange}
-        labelClassName="notifications__filter_label"
+        className={styles.lz__filters_form}
+        labelClassName={styles.lz__filterLabel}
       />
-
       {filterCount > 0 && !filtersVisible && (
-        <div className="notification__filters_count">
+        <div className={styles.notification__filters_count}>
           <div style={{ cursor: 'pointer' }}>
             <span style={{ color: 'var(--danger)' }}>{`${filterCount} filter(s) active`}</span>
             <span style={{ color: 'var(--primary)', paddingLeft: '5px' }} onClick={handleFilterCountClick}>
@@ -123,4 +112,4 @@ function CostMonitoringFilters({
   );
 }
 
-export default CostMonitoringFilters;
+export default FileMonitoringFilters;

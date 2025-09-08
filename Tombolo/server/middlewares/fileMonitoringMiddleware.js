@@ -11,6 +11,7 @@ const {
   booleanBody,
   bodyUuids,
   paramUuids,
+  emailBody,
 } = require('./commonMiddleware');
 
 const usersRegex = /^(?:[a-zA-Z][a-zA-Z0-9_:.\-]*|\*)$/;
@@ -46,11 +47,9 @@ const validateToggleStatus = [...bodyUuids.arrayIds, booleanBody('isActive')];
 const validateBulkDelete = [...bodyUuids.arrayIds];
 
 const validateBulkUpdate = [
-  arrayBody('updatedData', false, { arrMin: 1 }),
-  objectBody('updatedData.*', false),
-  uuidBody('updatedData.*.id'),
-  objectBody('updatedData.*.contacts', false),
-  arrayBody('updatedData.*.contacts.primaryContacts'),
+  arrayBody('updatedData', false),
+  uuidBody('updatedData.*.id', false),
+  objectBody('updatedData.*.metaData.contacts', false),
 ];
 
 const validateGetFileMonitoringByAppId = [paramUuids.applicationId];

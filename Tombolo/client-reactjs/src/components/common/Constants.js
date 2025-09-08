@@ -76,4 +76,7 @@ export const Constants = {
 
   USERS_FILTER_KEY: 'usersFilters',
   USERS_FILTER_VS_KEY: 'usersFiltersVisible',
+
+  FM_FILTERS_KEY: 'fMFilters',
+  FM_FILTERS_VS_KEY: 'fMFiltersVisible',
 };

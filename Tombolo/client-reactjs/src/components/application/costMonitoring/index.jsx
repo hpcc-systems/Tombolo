@@ -541,6 +541,7 @@ function CostMonitoring() {
       />
       {displayMonitoringDetailsModal && (
         <MonitoringDetailsModal
+          monitoringTypeName={monitoringTypeName}
           displayMonitoringDetailsModal={displayMonitoringDetailsModal}
           setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
           selectedMonitoring={selectedMonitoring}

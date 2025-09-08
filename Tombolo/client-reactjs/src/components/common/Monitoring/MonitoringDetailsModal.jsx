@@ -14,6 +14,7 @@ function MonitoringDetailsModal({
   domains,
   productCategories,
   children,
+  monitoringTypeName,
 }) {
   // When the cancel button is clicked, close the modal and reset the selectedMonitoring
   const handleCancel = () => {
@@ -152,7 +153,7 @@ function MonitoringDetailsModal({
         bordered={true}
         size="small"
         className={styles.monitoring_tiny_description}
-        title="Cost Monitoring Details">
+        title={`${monitoringTypeName} Details`}>
         <Descriptions.Item label="Monitoring name" className="tiny-description">
           {monitoringName}
         </Descriptions.Item>
