@@ -19,6 +19,7 @@ const {
 } = require('../../middlewares/jobMonitoringMiddleware');
 const JobScheduler = require('../../jobSchedular/job-scheduler');
 const { getUserFkIncludes } = require('../..//utils/getUserFkIncludes');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 //Constants
 const Op = Sequelize.Op;
@@ -39,7 +40,11 @@ router.post('/', validate(validateCreateJobMonitoring), async (req, res) => {
   try {
     //Save the job monitoring
     const response = await JobMonitoring.create(
-      { ...req.body, approvalStatus: 'pending', createdBy: req.user.id },
+      {
+        ...req.body,
+        approvalStatus: APPROVAL_STATUS.PENDING,
+        createdBy: req.user.id,
+      },
       { raw: true }
     );
 
@@ -141,7 +146,7 @@ router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
 
     //Payload
     const payload = req.body;
-    payload.approvalStatus = 'pending';
+    payload.approvalStatus = APPROVAL_STATUS.PENDING;
     payload.approverComment = null;
     payload.approvedBy = null;
     payload.approvedAt = null;
@@ -278,7 +283,8 @@ router.patch(
 
       // Filter out the job monitorings that are not approved
       const approvedJobMonitorings = jobMonitorings.filter(
-        jobMonitoring => jobMonitoring.approvalStatus === 'approved'
+        jobMonitoring =>
+          jobMonitoring.approvalStatus === APPROVAL_STATUS.APPROVED
       );
 
       if (approvedJobMonitorings.length === 0) {
@@ -350,7 +356,7 @@ router.patch(
           {
             metaData: data.metaData,
             isActive: false,
-            approvalStatus: 'pending',
+            approvalStatus: APPROVAL_STATUS.PENDING,
             updatedBy: req.user.id,
           },
           {

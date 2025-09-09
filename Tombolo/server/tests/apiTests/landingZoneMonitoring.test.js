@@ -12,6 +12,7 @@ const {
   nonExistentID,
   AUTHED_USER_ID,
 } = require('../helpers');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 // Mock HPCC-JS services
 jest.mock('@hpcc-js/comms', () => ({
@@ -369,7 +370,7 @@ describe('Landing Zone Monitoring Routes', () => {
 
     it('should reset approval status to pending on update', async () => {
       const existingMonitoring = getLandingZoneMonitoring({
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         approvedBy: validUserId,
         approverComment: 'Previously approved',
       });
@@ -383,7 +384,7 @@ describe('Landing Zone Monitoring Routes', () => {
       LandingZoneMonitoring.findByPk.mockResolvedValueOnce({
         ...existingMonitoring,
         ...updatePayload,
-        approvalStatus: 'pending',
+        approvalStatus: APPROVAL_STATUS.PENDING,
         approvedBy: null,
         approverComment: null,
       });
@@ -395,7 +396,7 @@ describe('Landing Zone Monitoring Routes', () => {
       expect(res.status).toBe(200);
       expect(LandingZoneMonitoring.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          approvalStatus: 'pending',
+          approvalStatus: APPROVAL_STATUS.PENDING,
           approverComment: null,
           approvedBy: null,
           approvedAt: null,
@@ -454,7 +455,7 @@ describe('Landing Zone Monitoring Routes', () => {
       const monitoringIds = [uuidv4(), uuidv4()];
       const evaluatePayload = {
         ids: monitoringIds,
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         approverComment: 'Looks good, approved for production use',
         approvedBy: validUserId,
         isActive: true,
@@ -477,7 +478,7 @@ describe('Landing Zone Monitoring Routes', () => {
       const monitoringIds = [uuidv4()];
       const evaluatePayload = {
         ids: monitoringIds,
-        approvalStatus: 'rejected',
+        approvalStatus: APPROVAL_STATUS.REJECTED,
         approverComment: 'Security concerns, needs revision',
         approvedBy: validUserId,
         isActive: false,
@@ -499,7 +500,7 @@ describe('Landing Zone Monitoring Routes', () => {
     it('should return 404 when no records found to evaluate', async () => {
       const evaluatePayload = {
         ids: [nonExistentID],
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         approverComment: 'Test comment',
         approvedBy: validUserId,
       };
@@ -536,7 +537,7 @@ describe('Landing Zone Monitoring Routes', () => {
     it('should handle missing isActive field gracefully', async () => {
       const evaluatePayload = {
         ids: [uuidv4()],
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         approverComment: 'Approved without explicit isActive',
         approvedBy: validUserId,
         // isActive is optional
@@ -569,12 +570,12 @@ describe('Landing Zone Monitoring Routes', () => {
       {
         id: monitoringIds[0],
         isActive: false,
-        approvalStatus: 'approved', // Add this - must be approved to activate
+        approvalStatus: APPROVAL_STATUS.APPROVED, // Add this - must be approved to activate
       },
       {
         id: monitoringIds[1],
         isActive: false,
-        approvalStatus: 'approved', // Add this - must be approved to activate
+        approvalStatus: APPROVAL_STATUS.APPROVED, // Add this - must be approved to activate
       },
     ]);
     LandingZoneMonitoring.update.mockResolvedValue([2]);

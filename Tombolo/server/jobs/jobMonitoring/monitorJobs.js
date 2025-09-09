@@ -28,6 +28,7 @@ const {
 } = require('./monitorJobsUtil');
 const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 // Variables
 const monitoring_name = 'Job Monitoring';
@@ -53,7 +54,7 @@ const monitoring_name = 'Job Monitoring';
 
     // Find all active job monitorings.
     const jobMonitorings = await JobMonitoring.findAll({
-      where: { isActive: 1, approvalStatus: 'approved' },
+      where: { isActive: 1, approvalStatus: APPROVAL_STATUS.APPROVED },
       raw: true,
     });
 

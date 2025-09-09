@@ -5,6 +5,7 @@ const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
+const { APPROVAL_STATUS } = require('../config/constants');
 
 async function createCostMonitoring(req, res) {
   try {
@@ -120,7 +121,7 @@ async function evaluateCostMonitoring(req, res) {
   try {
     const { id: approverId } = req.user;
     const approvalStatus = req.body.approvalStatus;
-    const isApproved = approvalStatus === 'approved';
+    const isApproved = approvalStatus === APPROVAL_STATUS.APPROVED;
     await CostMonitoring.update(
       {
         approvalStatus,
@@ -161,7 +162,7 @@ async function toggleCostMonitoringActive(req, res) {
     const { id: userId } = req.user;
 
     const costMonitorings = await CostMonitoring.findAll({
-      where: { id: { [Op.in]: ids }, approvalStatus: 'approved' },
+      where: { id: { [Op.in]: ids }, approvalStatus: APPROVAL_STATUS.APPROVED },
       attributes: ['id', 'approvalStatus'],
     });
 

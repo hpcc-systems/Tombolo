@@ -12,6 +12,7 @@ const {
 } = require('../helpers');
 const { Op } = require('sequelize');
 const { getUserFkIncludes } = require('../../utils/getUserFkIncludes');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 describe('costMonitoring Routes', () => {
   beforeEach(() => {
@@ -29,7 +30,7 @@ describe('costMonitoring Routes', () => {
     const reqBody = {
       ids: [uuid],
       isActive: true,
-      approvalStatus: 'approved',
+      approvalStatus: APPROVAL_STATUS.APPROVED,
       approverComment: 'Test Approval Comment',
     };
 
@@ -41,7 +42,7 @@ describe('costMonitoring Routes', () => {
     expect(res.body.message).toBe('Cost monitoring(s) evaluated successfully');
     expect(CostMonitoring.update).toHaveBeenCalledWith(
       {
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         isActive: true,
         approvedBy: AUTHED_USER_ID,
         approvedAt: expect.any(Date),
@@ -61,7 +62,7 @@ describe('costMonitoring Routes', () => {
     const reqBody = {
       ids: uuids,
       isActive: true,
-      approvalStatus: 'approved',
+      approvalStatus: APPROVAL_STATUS.APPROVED,
       approverComment: 'Test Approval Comment',
     };
 
@@ -73,7 +74,7 @@ describe('costMonitoring Routes', () => {
     expect(res.body.message).toBe('Cost monitoring(s) evaluated successfully');
     expect(CostMonitoring.update).toHaveBeenCalledWith(
       {
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         isActive: true,
         approvedBy: AUTHED_USER_ID,
         approvedAt: expect.any(Date),

@@ -10,6 +10,7 @@ const { getClusterOptions } = require('../utils/getClusterOptions');
 const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
+const { APPROVAL_STATUS } = require('../config/constants');
 
 // Function to get dropzones and associated machines when a cluster id is provided
 const getDropzonesForACluster = async (req, res) => {
@@ -117,7 +118,7 @@ const createLandingZoneMonitoring = async (req, res) => {
     const response = await LandingZoneMonitoring.create(
       {
         ...req.body,
-        approvalStatus: 'pending',
+        approvalStatus: APPROVAL_STATUS.PENDING,
         createdBy: userId,
         lastUpdatedBy: userId,
       },
@@ -242,7 +243,7 @@ const updateLandingZoneMonitoring = async (req, res) => {
     // Reset approval status to pending when updating
     const payload = {
       ...req.body,
-      approvalStatus: 'pending',
+      approvalStatus: APPROVAL_STATUS.PENDING,
       isActive: false,
       approverComment: null,
       approvedBy: null,
@@ -462,7 +463,7 @@ const toggleLandingZoneMonitoringStatus = async (req, res) => {
 
     if (isActive) {
       const pending = records.some(record => {
-        return record.approvalStatus !== 'approved';
+        return record.approvalStatus !== APPROVAL_STATUS.APPROVED;
       });
 
       if (pending) {
