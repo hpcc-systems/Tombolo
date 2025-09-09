@@ -80,3 +80,9 @@ export const Constants = {
   FM_FILTERS_KEY: 'fMFilters',
   FM_FILTERS_VS_KEY: 'fMFiltersVisible',
 };
+
+export const APPROVAL_STATUS = {
+  APPROVED: 'approved',
+  PENDING: 'pending',
+  REJECTED: 'rejected',
+};

@@ -24,7 +24,7 @@ import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAnd
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal';
-import { Constants } from '@/components/common/Constants';
+import { APPROVAL_STATUS, Constants } from '@/components/common/Constants';
 
 const monitoringTypeName = 'File Monitoring';
 
@@ -420,7 +420,7 @@ function FileMonitoring() {
       // If no error thrown set state with new data
       setFileMonitoring((prev) => {
         return prev.map((fm) => {
-          updatedData.approvalStatus = 'pending';
+          updatedData.approvalStatus = APPROVAL_STATUS.PENDING;
           updatedData.isActive = false;
           if (fm.id === updatedData.id) {
             return updatedData;

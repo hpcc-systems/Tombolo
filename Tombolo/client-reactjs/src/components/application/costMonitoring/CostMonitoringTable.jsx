@@ -19,12 +19,13 @@ import { useSelector } from 'react-redux';
 import { handleDeleteCostMonitoring, toggleCostMonitoringStatus } from './costMonitoringUtils';
 
 import styles from './costMonitoring.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'pending') {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
     return 'var(--primary)';
-  } else if (approvalStatus === 'approved') {
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -210,7 +211,7 @@ const CostMonitoringTable = ({
                       {record.isActive ? (
                         <div onClick={() => toggleMonitoringStatus(record, 'pause')}>
                           <PauseCircleOutlined
-                            disabled={record.approvalStatus !== 'approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Pause
@@ -218,7 +219,7 @@ const CostMonitoringTable = ({
                       ) : (
                         <div onClick={() => toggleMonitoringStatus(record, 'start')}>
                           <PlayCircleOutlined
-                            disabled={record.approvalStatus !== 'approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Start
@@ -385,7 +386,7 @@ const CostMonitoringTable = ({
    */
   const toggleMonitoringStatus = async (record, status) => {
     try {
-      if (record.approvalStatus !== 'approved') {
+      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED) {
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }

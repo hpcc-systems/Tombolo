@@ -3,6 +3,7 @@ import { Button, Form, message, Modal, Select } from 'antd';
 import { isEmail } from 'validator';
 import { handleBulkUpdateJobMonitorings } from './jobMonitoringUtils';
 import { useSelector } from 'react-redux';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 const { useForm } = Form;
 
@@ -163,7 +164,7 @@ const BulkUpdateModal = ({
       const newJobMonitoringData = jobMonitorings.map((job) => {
         if (allUpdatedIds.includes(job.id)) {
           const updatedJob = updatedMetaData.find((data) => data.id === job.id);
-          return { ...job, metaData: updatedJob.metaData, isActive: false, approvalStatus: 'pending' };
+          return { ...job, metaData: updatedJob.metaData, isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
         }
         return job;
       });
@@ -172,7 +173,7 @@ const BulkUpdateModal = ({
       setSelectedRows((prev) =>
         prev.map((row) => {
           const updatedRow = updatedMetaData.find((data) => data.id === row.id);
-          return { ...row, metaData: updatedRow.metaData, isActive: false, approvalStatus: 'pending' };
+          return { ...row, metaData: updatedRow.metaData, isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
         })
       );
 

@@ -19,12 +19,13 @@ import {
 import { toggleSingleClusterMonitoringActiveStatus, deleteClusterMonitoring } from './clusterMonitoringUtils.js';
 import styles from './clusterMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'pending') {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
     return 'var(--primary)';
-  } else if (approvalStatus === 'approved') {
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -69,7 +70,7 @@ function ClusterMonitoringTable({
   const toggleMonitoringStatus = async (record, action) => {
     try {
       // If approval status is not approved, do not allow to start monitoring
-      if (record.approvalStatus !== 'approved' && action === 'start') {
+      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED && action === 'start') {
         message.error('Monitoring cannot be started as it is not approved.');
         return;
       }
@@ -160,7 +161,7 @@ function ClusterMonitoringTable({
                     {record.isActive ? (
                       <div onClick={() => toggleMonitoringStatus(record, 'pause')}>
                         <PauseCircleOutlined
-                          disabled={record.approvalStatus !== 'approved'}
+                          disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                           style={{ color: 'var(--primary)', marginRight: 15 }}
                         />
                         Pause
@@ -168,7 +169,7 @@ function ClusterMonitoringTable({
                     ) : (
                       <div onClick={() => toggleMonitoringStatus(record, 'start')}>
                         <PlayCircleOutlined
-                          disabled={record.approvalStatus !== 'approved'}
+                          disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                           style={{ color: 'var(--primary)', marginRight: 15 }}
                         />
                         Start

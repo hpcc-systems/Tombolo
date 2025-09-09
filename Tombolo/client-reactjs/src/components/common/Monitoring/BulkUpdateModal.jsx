@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Form, message, Modal, Select, Card } from 'antd';
 import { isEmail } from 'validator';
 import { useSelector } from 'react-redux';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 const { useForm } = Form;
 
@@ -194,7 +195,7 @@ const BulkUpdateModal = ({
       const newCostMonitoringData = monitorings.map((cost) => {
         if (allUpdatedIds.includes(cost.id)) {
           const updatedCost = updatedMetaData.find((data) => data.id === cost.id);
-          return { ...cost, metaData: updatedCost.metaData, isActive: false, approvalStatus: 'pending' };
+          return { ...cost, metaData: updatedCost.metaData, isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
         }
         return cost;
       });
@@ -203,7 +204,7 @@ const BulkUpdateModal = ({
       setSelectedRows((prev) =>
         prev.map((row) => {
           const updatedRow = updatedMetaData.find((data) => data.id === row.id);
-          return { ...row, metaData: updatedRow.metaData, isActive: false, approvalStatus: 'pending' };
+          return { ...row, metaData: updatedRow.metaData, isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
         })
       );
 
