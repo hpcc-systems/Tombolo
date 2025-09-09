@@ -24,7 +24,7 @@ import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAnd
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal';
-import { APPROVAL_STATUS, Constants } from '@/components/common/Constants';
+import { Constants } from '@/components/common/Constants';
 
 const monitoringTypeName = 'File Monitoring';
 
@@ -75,7 +75,7 @@ function FileMonitoring() {
 
       // Set states that are responsible for hiding/displaying dependent fields
       setSelectedNotificationCondition(selectedMonitoring?.metaData?.monitoringData?.notificationCondition || []);
-      setMonitoringFileType(selectedMonitoring?.monitoringFileType || 'stdLogicalFile');
+      setMonitoringFileType(selectedMonitoring?.metaData?.monitoringData?.monitoringFileType || 'stdLogicalFile');
 
       // Set form values from metadata
       form.setFieldsValue({
@@ -415,19 +415,10 @@ function FileMonitoring() {
       // Add metaData to allInputs
       const updatedData = { ...allInputs, metaData };
 
-      await updateSelectedFileMonitoring(updatedData, selectedMonitoring.id);
+      const response = await updateSelectedFileMonitoring(updatedData, selectedMonitoring.id);
 
       // If no error thrown set state with new data
-      setFileMonitoring((prev) => {
-        return prev.map((fm) => {
-          updatedData.approvalStatus = APPROVAL_STATUS.PENDING;
-          updatedData.isActive = false;
-          if (fm.id === updatedData.id) {
-            return updatedData;
-          }
-          return fm;
-        });
-      });
+      setFileMonitoring((prev) => prev.map((fm) => (fm.id === response.data.id ? response.data : fm)));
       resetStates();
       message.success('File monitoring updated successfully');
     } catch (err) {
