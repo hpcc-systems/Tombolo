@@ -15,19 +15,27 @@ const IsSummedDropdown = ({ form }) => {
 
   if (scope === 'users') {
     return (
-      <Form.Item noStyle={true} name="isSummed">
-        <Select defaultValue="false">
-          <Option value="false">Per user</Option>
-          <Option value="true">Total</Option>
+      <Form.Item noStyle={true} name="isSummed" initialValue={false}>
+        <Select
+          popupMatchSelectWidth={false}
+          dropdownStyle={{ minWidth: 'max-content' }}
+          getPopupContainer={() => document.body}
+          style={{ minWidth: 120 }}>
+          <Option value={false}>Per user</Option>
+          <Option value={true}>Total</Option>
         </Select>
       </Form.Item>
     );
   } else if (scope === 'clusters') {
     return (
-      <Form.Item noStyle={true} name="isSummed">
-        <Select defaultValue="false">
-          <Option value="false">Per cluster</Option>
-          <Option value="true">Total</Option>
+      <Form.Item noStyle={true} name="isSummed" initialValue={false}>
+        <Select
+          popupMatchSelectWidth={false}
+          dropdownStyle={{ minWidth: 'max-content' }}
+          getPopupContainer={() => document.body}
+          style={{ minWidth: 120 }}>
+          <Option value={false}>Per cluster</Option>
+          <Option value={true}>Total</Option>
         </Select>
       </Form.Item>
     );
