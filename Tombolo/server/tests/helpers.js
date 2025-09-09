@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
+const { APPROVAL_STATUS } = require('../config/constants');
 
 const testingPassword = 'Password123!';
 const AUTHED_USER_ID = uuidv4();
@@ -205,7 +206,7 @@ const commonLzPayload = {
   monitoringName: 'New LZ Monitor',
   isActive: false,
   lzMonitoringType: 'fileCount',
-  approvalStatus: 'pending',
+  approvalStatus: APPROVAL_STATUS.PENDING,
   approvedBy: null,
   approvedAt: null,
   approverComment: null,
@@ -267,7 +268,7 @@ function getCostMonitoring(overrides = {}, dateStrings = false) {
     isActive: false,
     monitoringScope: 'clusters',
     isSummed: false,
-    approvalStatus: 'pending',
+    approvalStatus: APPROVAL_STATUS.PENDING,
     approvedBy: null,
     approvedAt: null,
     approverComment: null,
@@ -297,7 +298,7 @@ function getClusterMonitoring(overrides = {}) {
     id: uuidv4(),
     monitoringName: 'Test cluster status Monitor',
     isActive: false,
-    approvalStatus: 'pending',
+    approvalStatus: APPROVAL_STATUS.PENDING,
     approvedBy: null,
     approvedAt: null,
     approverComment: null,

@@ -10,7 +10,7 @@ const {
   AUTHED_USER_ID,
 } = require('../helpers');
 const { v4: uuidv4 } = require('uuid');
-const { UUID } = require('sequelize');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 const monitoringId = uuidv4();
 
@@ -84,7 +84,7 @@ describe('Cluster Monitoring routes Routes', () => {
   it('PATCH /toggleStatus should toggle monitoring status', async () => {
     const monitoring = getClusterMonitoring({
       id: monitoringId,
-      approvalStatus: 'approved',
+      approvalStatus: APPROVAL_STATUS.APPROVED,
       isActive: false,
     });
 
@@ -113,7 +113,7 @@ describe('Cluster Monitoring routes Routes', () => {
   it('PATCH /evaluate should evaluate monitoring approval status', async () => {
     const monitoring = getClusterMonitoring({
       id: monitoringId,
-      approvalStatus: 'pending',
+      approvalStatus: APPROVAL_STATUS.PENDING,
     });
 
     ClusterMonitoring.findAll.mockResolvedValue([monitoring]);
@@ -122,7 +122,7 @@ describe('Cluster Monitoring routes Routes', () => {
       .patch('/api/clusterMonitoring/evaluate')
       .send({
         ids: [monitoringId],
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         approverComment: 'Approved by admin',
       });
 

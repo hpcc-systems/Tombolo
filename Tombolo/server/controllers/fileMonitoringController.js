@@ -4,6 +4,7 @@ const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
+const { APPROVAL_STATUS } = require('../config/constants');
 
 // Wrapper function to get common includes
 const getCommonIncludes = () => [
@@ -23,7 +24,7 @@ async function createFileMonitoring(req, res) {
       ...req.body,
       createdBy: userId,
       lastUpdatedBy: userId,
-      approvalStatus: 'pending',
+      approvalStatus: APPROVAL_STATUS.PENDING,
       isActive: false,
     });
 
@@ -143,7 +144,7 @@ async function evaluateFileMonitoring(req, res) {
         fileMonitoring.update({
           approvalStatus,
           approverComment,
-          isActive: approvalStatus === 'approved' && isActive ? true : false,
+          isActive: !!(approvalStatus === APPROVAL_STATUS.APPROVED && isActive),
           lastUpdatedBy: req.user.id,
         })
       )
@@ -187,7 +188,10 @@ async function toggleFileMonitoringActive(req, res) {
 
     // If trying to activate and approvalStatues is not 'approved' remove that from ids to update
     const eligibleForToggle = fm.filter(fileMonitoring => {
-      if (isActive && fileMonitoring.approvalStatus !== 'approved') {
+      if (
+        isActive &&
+        fileMonitoring.approvalStatus !== APPROVAL_STATUS.APPROVED
+      ) {
         return false;
       }
       return true;
@@ -325,7 +329,6 @@ async function bulkUpdateFileMonitoring(req, res) {
 module.exports = {
   createFileMonitoring,
   updateFileMonitoring,
-  deleteFileMonitoring,
   getFileMonitoringById,
   getFileMonitoring,
   evaluateFileMonitoring,

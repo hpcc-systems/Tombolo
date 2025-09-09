@@ -26,7 +26,7 @@ import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAnd
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal';
-import { Constants } from '@/components/common/Constants';
+import { APPROVAL_STATUS, Constants } from '@/components/common/Constants';
 
 const monitoringTypeName = 'Cost Monitoring';
 
@@ -290,7 +290,7 @@ function CostMonitoring() {
       allInputs.isSummed = allInputs.isSummed === 'true';
 
       // Add metaData to allInputs
-      allInputs = { ...allInputs, metaData, approvalStatus: 'Pending', isActive: false };
+      allInputs = { ...allInputs, metaData, approvalStatus: APPROVAL_STATUS.PENDING, isActive: false };
 
       const responseData = await createCostMonitoring({ inputData: allInputs });
 

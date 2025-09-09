@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Tooltip, Popconfirm, message, Popover, Tag } from 'antd';
+import startCase from 'lodash/startCase';
 import {
   EyeOutlined,
   EditOutlined,
@@ -18,12 +19,13 @@ import { useSelector } from 'react-redux';
 import { handleDeleteCostMonitoring, toggleCostMonitoringStatus } from './costMonitoringUtils';
 
 import styles from './costMonitoring.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'Pending') {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
     return 'var(--primary)';
-  } else if (approvalStatus === 'Approved') {
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -170,6 +172,7 @@ const CostMonitoringTable = ({
       title: 'Approval Status',
       dataIndex: 'approvalStatus',
       key: 'approvalStatus',
+      render: (approvalStatus) => startCase(approvalStatus) || 'N/A',
     },
     {
       title: 'Actions',
@@ -208,7 +211,7 @@ const CostMonitoringTable = ({
                       {record.isActive ? (
                         <div onClick={() => toggleMonitoringStatus(record, 'pause')}>
                           <PauseCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Pause
@@ -216,7 +219,7 @@ const CostMonitoringTable = ({
                       ) : (
                         <div onClick={() => toggleMonitoringStatus(record, 'start')}>
                           <PlayCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Start
@@ -383,7 +386,7 @@ const CostMonitoringTable = ({
    */
   const toggleMonitoringStatus = async (record, status) => {
     try {
-      if (record.approvalStatus !== 'Approved') {
+      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED) {
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }

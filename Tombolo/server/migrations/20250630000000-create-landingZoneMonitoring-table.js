@@ -36,6 +36,7 @@ module.exports = {
       approvalStatus: {
         allowNull: false,
         type: Sequelize.ENUM('approved', 'rejected', 'pending'),
+        defaultValue: 'pending',
       },
       approvedBy: {
         allowNull: true,

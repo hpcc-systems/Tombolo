@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 const models = require('../models');
 const logger = require('../config/logger');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
+const { APPROVAL_STATUS } = require('../config/constants');
 
 const { ClusterMonitoring, sequelize } = models;
 
@@ -95,7 +96,7 @@ const updateClusterMonitoring = async (req, res) => {
       {
         ...req.body,
         isActive: false,
-        approvalStatus: 'pending',
+        approvalStatus: APPROVAL_STATUS.PENDING,
         updatedBy: req.user.id,
       },
       {
@@ -136,7 +137,7 @@ const toggleClusterMonitoringStatus = async (req, res) => {
     }
 
     // If approvalStatus is not 'approved', return 400
-    if (monitoring.approvalStatus !== 'approved') {
+    if (monitoring.approvalStatus !== APPROVAL_STATUS.APPROVED) {
       return res.status(400).send({
         message: 'Cluster status monitoring must be approved to activate',
       });
@@ -179,7 +180,7 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
 
     // Check if any monitoring is not approved
     const unapprovedMonitorings = monitorings.filter(
-      mon => mon.approvalStatus !== 'approved'
+      mon => mon.approvalStatus !== APPROVAL_STATUS.APPROVED
     );
 
     if (unapprovedMonitorings.length > 0) {
@@ -220,7 +221,8 @@ const evaluateClusterMonitoring = async (req, res) => {
         approvalStatus,
         approverComment,
         approvedAt: new Date(),
-        isActive: approvalStatus === 'rejected' ? false : isActive,
+        isActive:
+          approvalStatus === APPROVAL_STATUS.REJECTED ? false : isActive,
       }, // fields to update
       { where: { id: { [Op.in]: ids } } }
     );

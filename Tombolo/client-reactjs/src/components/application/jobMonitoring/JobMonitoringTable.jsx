@@ -20,12 +20,13 @@ import { handleDeleteJobMonitoring, toggleJobMonitoringStatus } from './jobMonit
 
 import styles from './jobMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'Pending') {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
     return 'var(--primary)';
-  } else if (approvalStatus === 'Approved') {
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -167,7 +168,7 @@ const JobMonitoringTable = ({
                       {record.isActive ? (
                         <div onClick={() => toggleMonitoringStatus(record)}>
                           <PauseCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             className={styles.pause_play_icon}
                           />
                           Pause
@@ -175,7 +176,7 @@ const JobMonitoringTable = ({
                       ) : (
                         <div onClick={() => toggleMonitoringStatus(record)}>
                           <PlayCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             className={styles.pause_play_icon}
                           />
                           Start
@@ -326,7 +327,7 @@ const JobMonitoringTable = ({
   // Start or pause monitoring
   const toggleMonitoringStatus = async (record) => {
     try {
-      if (record.approvalStatus !== 'Approved') {
+      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED) {
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }
