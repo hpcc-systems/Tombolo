@@ -107,7 +107,30 @@ function CostMonitoringBasicTab({
         <Form.Item
           label="Clusters"
           name="clusterIds"
-          rules={[{ required: true, message: 'Select at least one cluster' }]}>
+          rules={[
+            { required: true, message: 'Select at least one cluster' },
+            () => ({
+              validator(_, value) {
+                if (!value || value.length === 0) {
+                  return Promise.resolve();
+                }
+                try {
+                  const selected = clusters.filter((c) => value.includes(c.id));
+                  if (selected.length <= 1) return Promise.resolve();
+                  const firstCode = selected[0]?.currencyCode;
+                  const allSame = selected.every((c) => c.currencyCode === firstCode);
+                  if (!allSame) {
+                    return Promise.reject(
+                      new Error('Selected clusters will not be compatible due to differing currency codes')
+                    );
+                  }
+                  return Promise.resolve();
+                } catch (e) {
+                  return Promise.resolve();
+                }
+              },
+            }),
+          ]}>
           <Select
             placeholder="Select at least one cluster"
             mode="multiple"

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, InputNumber, Select } from 'antd';
 import NotificationContacts from '../../common/Monitoring/NotificationContacts';
+import currencyCodeToSymbol from '@/components/common/currencyCodeToSymbol';
 const { Option } = Select;
 
 const IsSummedDropdown = ({ form }) => {
@@ -35,7 +36,23 @@ const IsSummedDropdown = ({ form }) => {
   }
 };
 
-function CostMonitoringNotificationTab({ form }) {
+function CostMonitoringNotificationTab({ form, clusters }) {
+  const [currencySymbol, setCurrencySymbol] = useState('$');
+
+  useEffect(() => {
+    if (!form) return;
+
+    const clusterIds = form.getFieldValue('clusterIds');
+    const selectedClusters = clusters.filter((cluster) => clusterIds.includes(cluster.id));
+    if (selectedClusters.length === 0) return;
+
+    const currencyCode = selectedClusters[0].currencyCode;
+    const symbol = currencyCodeToSymbol(currencyCode);
+    if (symbol) {
+      setCurrencySymbol(symbol);
+    }
+  }, [form, form.getFieldValue('clusterIds')]);
+
   return (
     <NotificationContacts form={form}>
       <Form.Item
@@ -46,6 +63,7 @@ function CostMonitoringNotificationTab({ form }) {
           min={1}
           style={{ width: '100%' }}
           placeholder="Enter threshold value"
+          addonBefore={currencySymbol}
           addonAfter={<IsSummedDropdown form={form} />}
         />
       </Form.Item>
