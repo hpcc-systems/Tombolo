@@ -10,7 +10,6 @@ Tombolo's user interface is divded into three major zones.
 
 - [User Interface](#user-interface)
   - [Left Hand Navigation](#left-hand-navigation)
-    - [Workflows](#workflows)
     - [Monitoring](#monitoring)
     - [Connections](#connections)
     - [Admin](#admin)
@@ -23,26 +22,15 @@ The left hand navigation is the primary method Tombolo uses to navigate to it's 
 
 - [User Interface](#user-interface)
   - [Left Hand Navigation](#left-hand-navigation)
-    - [Workflows](#workflows)
     - [Monitoring](#monitoring)
     - [Connections](#connections)
     - [Admin](#admin)
   - [Top User Menu](#top-user-menu)
   - [Main Display Space](#main-display-space)
 
-### Workflows
-
-The workflows section contains all of Tombolo's functionalities for setting up, monitoring, and running workflows within an HPCC system.
-
-<ul>
-    <li>[Workflow Setup](/docs/User-Guides/workflows)</li>
-    <li>[Asset Management](/docs/User-Guides/assets)</li>
-
-</ul>
-
 ### Monitoring
 
-The monitoring section contain's a set of tools to monitor assets within HPCC.
+The monitoring section contains a set of tools to monitor assets within HPCC.
 
 <ul>
     <li>[Cluster Monitoring](/docs/User-Guides/monitoring/ClusterMonitoring)</li>

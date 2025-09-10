@@ -42,8 +42,8 @@ Administrators also have access to all functionalities inside of Tombolo. The on
 
 ### Contributor
 
-Contributors have access to view, create, edit, and delete all types of monitoring, workflows, assets, and dashboards. They also only have access to the applications that are assigned to them by the Administrator's or Owner's.
+Contributors have access to view, create, edit, and delete all types of monitoring and dashboards. They also only have access to the applications that are assigned to them by the Administrator's or Owner's.
 
 ### Reader
 
-Contributors have access to view all types of monitoring, workflows, assets, and dashboards. They also only have access to the applications that are assigned to them by the Administrator's or Owner's.
+Contributors have access to view all types of monitoring and dashboards. They also only have access to the applications that are assigned to them by the Administrator's or Owner's.

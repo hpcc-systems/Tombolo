@@ -11,7 +11,7 @@ const { fakeValidateTokenMiddleware } = require('./helpers');
 process.env.NODE_ENV = 'test';
 
 const app = express();
-const port = process.env.TEST_SERVER_PORT;
+const port = process.env.TEST_SERVER_PORT || 3004;
 
 // Middlewares
 app.use(express.json());
