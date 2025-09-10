@@ -8,7 +8,6 @@ import {
   ClusterOutlined,
   NotificationOutlined,
   ClockCircleOutlined,
-  ContainerOutlined,
   BarChartOutlined,
   CloudServerOutlined,
   ApiOutlined,
@@ -79,7 +78,6 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       landingZone: '4b',
       clustermonitoring: '4c',
       jobmonitoring: '4d',
-      superfileMonitoring: '4e',
       orbitMonitoring: '4f',
       notifications: '5a',
       clusterUsage: '5b',
@@ -236,18 +234,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
           null,
           clusterDisabled
         ),
-        getItem(
-          <Link to={'/' + applicationId + '/superfileMonitoring'}>
-            <span>
-              <ContainerOutlined /> Superfiles
-            </span>
-          </Link>,
-          '4e',
-          null,
-          null,
-          null,
-          clusterDisabled
-        ),
+
         asrActive
           ? getItem(
               <Link to={'/' + applicationId + '/orbitMonitoring'}>
