@@ -20,7 +20,7 @@ const IndexDetailsForm = React.lazy(() => import('./IndexDetails'));
 const QueryDetailsForm = React.lazy(() => import('./queries/QueryDetails'));
 const ManualJobDetail = React.lazy(() => import('./Jobs/ManualJobDetail'));
 const AddJobsForm = React.lazy(() => import('./Jobs/AddjobsForm/AddJobsForm'));
-const FileMonitoring = React.lazy(() => import('./fileMonitoring/FileMonitoring'));
+const FileMonitoring = React.lazy(() => import('./fileMonitoring'));
 // const OrbitMonitoring = React.lazy(() => import('./orbitMonitoring/OrbitMonitoring'));
 // const Orbit = React.lazy(() => import('./dashboard/Orbit/Orbit'));
 const Notifications = React.lazy(() => import('./dashboard/notifications'));

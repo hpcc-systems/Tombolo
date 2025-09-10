@@ -9,7 +9,7 @@ import {
   NotificationOutlined,
   ClockCircleOutlined,
   BarChartOutlined,
-  CloudServerOutlined,
+  // CloudServerOutlined,
   ApiOutlined,
   // BellOutlined,
   SettingOutlined,
@@ -42,7 +42,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
 
   //get states from redux
   const application = useSelector((state) => state.application.application);
-  const integrations = useSelector((state) => state.application.integrations);
+  // const integrations = useSelector((state) => state.application.integrations);
   const clusters = useSelector((state) => state.application.clusters);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
@@ -104,7 +104,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   // Only render if authenticated
   if (!isAuthenticated) return null;
 
-  const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
+  // const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
 
   //TODO - check if user has edit permission
   const ownerOrAdmin = roleArray?.includes('administrator') || roleArray?.includes('owner');
@@ -283,28 +283,28 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
           null,
           null
         ),
-        getItem(
-          <Link to={'/' + applicationId + '/dashboard/clusterUsage'}>
-            <span>
-              <ClusterOutlined /> Cluster
-            </span>
-          </Link>,
-          '5b',
-          null,
-          null
-        ),
-        asrActive
-          ? getItem(
-              <Link to={'/' + applicationId + '/dashboard/Orbit'}>
-                <span>
-                  <CloudServerOutlined /> Orbit
-                </span>
-              </Link>,
-              '5c',
-              null,
-              null
-            )
-          : null,
+        // getItem(
+        //   <Link to={'/' + applicationId + '/dashboard/clusterUsage'}>
+        //     <span>
+        //       <ClusterOutlined /> Cluster
+        //     </span>
+        //   </Link>,
+        //   '5b',
+        //   null,
+        //   null
+        // ),
+        // asrActive
+        //   ? getItem(
+        //       <Link to={'/' + applicationId + '/dashboard/Orbit'}>
+        //         <span>
+        //           <CloudServerOutlined /> Orbit
+        //         </span>
+        //       </Link>,
+        //       '5c',
+        //       null,
+        //       null
+        //     )
+        //   : null,
       ],
       null,
       clusterDisabled
