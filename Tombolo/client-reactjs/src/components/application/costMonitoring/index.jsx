@@ -286,8 +286,12 @@ function CostMonitoring() {
       // Add notificationMetaData to metaData object
       metaData.notificationMetaData = notificationMetaData;
 
-      // Parse value from isSummed to boolean
-      allInputs.isSummed = allInputs.isSummed === 'true';
+      // Parse value from isSummed to boolean (handles boolean or string)
+      if (typeof allInputs.isSummed === 'string') {
+        allInputs.isSummed = allInputs.isSummed === 'true';
+      } else {
+        allInputs.isSummed = !!allInputs.isSummed;
+      }
 
       // Add metaData to allInputs
       allInputs = { ...allInputs, metaData, approvalStatus: APPROVAL_STATUS.PENDING, isActive: false };

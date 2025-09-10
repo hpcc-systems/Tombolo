@@ -4,6 +4,7 @@ import { Modal, Descriptions, Tag, Tooltip } from 'antd';
 
 import { formatDateTime } from '../../common/CommonUtil';
 import styles from './clusters.module.css';
+import currencyCodeToSymbol from '@/components/common/currencyCodeToSymbol';
 
 function ClusterDetailsModal({
   displayClusterDetailsModal,
@@ -27,6 +28,9 @@ function ClusterDetailsModal({
       <Descriptions column={1} bordered={true} size="small" className={styles.clusters__details_tiny_description}>
         <Descriptions.Item label="Name">{selectedCluster?.name}</Descriptions.Item>
         <Descriptions.Item label="Containerized">{selectedCluster?.containerized ? 'Yes' : 'No'}</Descriptions.Item>
+        <Descriptions.Item label="Currency Code">
+          {currencyCodeToSymbol(selectedCluster?.currencyCode)} {selectedCluster?.currencyCode}
+        </Descriptions.Item>
         <Descriptions.Item label="Thor URL">{`${selectedCluster?.thor_host}:${selectedCluster?.thor_port}`}</Descriptions.Item>
         <Descriptions.Item label="Roxie URL">{`${selectedCluster?.roxie_host}:${selectedCluster?.thor_port}`}</Descriptions.Item>
         {selectedCluster?.username && <Descriptions.Item label="User ID">{selectedCluster.username}</Descriptions.Item>}
