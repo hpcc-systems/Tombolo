@@ -48,7 +48,6 @@ The monitoring section contain's a set of tools to monitor assets within HPCC.
     <li>[Cluster Monitoring](/docs/User-Guides/monitoring/ClusterMonitoring)</li>
     <li>[Landingzone Monitoring](/docs/User-Guides/monitoring/LandingZoneMonitoring)</li>
     <li>[Job Monitoring](/docs/User-Guides/monitoring/jobMonitoring)</li>
-    <li>[Superfile Monitoring](/docs/User-Guides/monitoring/SuperFilesMonitoring)</li>
     <li>[Dashboards](/docs/User-Guides/dashboards)</li>
 
 </ul>
