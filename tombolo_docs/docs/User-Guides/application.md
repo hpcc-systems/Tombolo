@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Applications
 
-Applications provide a way to seperate groups of data and settings inside of Tombolo. Each application has its own set of Assets, Dataflows, Jobs, Monitorings, and Notifications as well as administration settings. You can switch application instances at any time by utilizing the selector in the top left corner of the navigation bar, by the Tombolo logo.
+Applications provide a way to seperate groups of data and settings inside of Tombolo. Each application has its own set of Monitorings, and Notifications as well as administration settings. You can switch application instances at any time by utilizing the selector in the top left corner of the navigation bar, by the Tombolo logo.
 
 Common use cases for multiple applications are departments with several divisions where each division wants to maintain its own data and notifications, but be hosted on the same instance.
 
@@ -17,12 +17,6 @@ Database
 Host Machine Settings, such as firewalls.
 
 ### Applications do not share:
-
-Assets
-
-DataFlows
-
-Jobs
 
 Monitorings
 

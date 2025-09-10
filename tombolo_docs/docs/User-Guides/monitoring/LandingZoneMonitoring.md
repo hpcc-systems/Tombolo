@@ -16,8 +16,6 @@ Tombolo supports three types of landing zone monitoring:
 - **File Count Monitoring**: Monitors the number of files in specified directories over time, alerting when file counts exceed expected thresholds
 - **Space Usage Monitoring**: Tracks storage space utilization in landing zone directories, alerting when storage usage exceeds configured limits
 
-**Note**: Currently, only File Movement Monitoring is fully implemented and available for use. File Count and Space Usage monitoring are work in progress features.
-
 ---
 
 ## Setting up Landing Zone Monitoring
@@ -34,17 +32,24 @@ To access the Landing Zone Monitoring page, click on **Monitoring** from the lef
 
 **Monitoring Details Tab:**
 
-- **Monitoring Type**: Currently only "File Movement" is available
+- **Monitoring Type**: File Movement, File Count, or Space Usage
 - **Cluster**: Choose the HPCC cluster to monitor
 - **Dropzone**: Select the landing zone from the dropdown (populated based on cluster selection)
 - **Machine**: Choose the specific machine/server within the dropzone
 - **Directory**: Navigate to the directory you want to monitor using the directory browser
 
-For File Movement monitoring type:
+Monitoring type-specific fields:
 
-- **Threshold (in minutes)**: Maximum time a file should remain in the directory before alerting
-- **Maximum Depth**: Number of subdirectory levels to monitor (0 for all directories)
-- **File Name**: Use wildcards to match files (e.g., `data_*.csv`, `report_??_*.txt`)
+File Movement:
+  - **Threshold (in minutes)**: Maximum time a file should remain in the directory before alerting
+  - **Maximum Depth**: Number of subdirectory levels to monitor (0 for all directories)
+  - **File Name**: Use [wildcards](/docs/User-Guides/Wildcards) to match files (e.g., `data_*.csv`, `report_??_*.txt`)
+- File Count:
+  - **Minimum File Count**: Minimum number of files allowed in the directory before alerting
+  - **Maximum File Count**: Maximum number of files allowed in the directory before alerting
+- Space Usage:
+  - **Minimum Threshold (in MB/GB/TB/PB)**: Minimum storage space allowed in the directory before alerting
+  - **Maximum Threshold (in MB/GB/TB/PB)**: Maximum storage space allowed in the directory before alerting
 
 **Notification Tab:**
 
@@ -86,7 +91,7 @@ Once a monitor is approved and activated, the backend monitoring system automati
 1. **Job Scheduling**: The monitoring job is scheduled to run at regular intervals (default: every 30 minutes)
 2. **Directory Access**: The system connects to the specified cluster and accesses the designated landing zone directory
 3. **File Analysis**: Files in the directory are analyzed based on your configured parameters:
-   - File name pattern matching using wildcards
+   - File name pattern matching using [wildcards](/docs/User-Guides/Wildcards)
    - File timestamps to track how long files have been present
    - File movement tracking between monitoring cycles
 4. **Threshold Evaluation**: The system compares actual file behavior against your configured thresholds
@@ -96,6 +101,6 @@ Each monitoring cycle performs the following actions: establish connection to th
 
 The system detects and alerts on stuck files that remain in the directory longer than the specified threshold, new file detection when new files matching your pattern arrive (if configured), file size issues that fall outside expected size ranges (if configured), and processing delays when files haven't moved within expected timeframes.
 
-When anomalies are detected, alerts are sent immediately when thresholds are breached with detailed information including file name and location, how long the file has been present, expected vs. actual processing time, and cluster and directory information. Notifications are sent via configured channels (email, Microsoft Teams) and escalated to all configured contact groups based on severity.
+When anomalies are detected, alerts are sent immediately when thresholds are breached with detailed information including file name and location, how long the file has been present, expected vs. actual processing time, and cluster and directory information. Notifications are sent via email and escalated to all configured contact groups based on severity.
 
 ---
