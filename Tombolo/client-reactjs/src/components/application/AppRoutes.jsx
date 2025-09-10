@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-vars */
 import React from 'react';
 import { Switch } from 'react-router-dom';
 import { PrivateRoute } from '../common/PrivateRoute';
@@ -6,10 +7,10 @@ import { PrivateRoute } from '../common/PrivateRoute';
 const Home = React.lazy(() => import('./home'));
 //Dataflow & Asset pages
 const Assets = React.lazy(() => import('./Assets'));
-const Dataflow = React.lazy(() => import('./Dataflow'));
-const DataflowDetails = React.lazy(() => import('./Dataflow/DataflowDetails'));
-const DataflowInstances = React.lazy(() => import('./DataflowInstances/DataflowInstances'));
-const DataflowInstanceDetails = React.lazy(() => import('./DataflowInstances/DataflowInstanceDetails'));
+// const Dataflow = React.lazy(() => import('./Dataflow'));
+// const DataflowDetails = React.lazy(() => import('./Dataflow/DataflowDetails'));
+// const DataflowInstances = React.lazy(() => import('./DataflowInstances/DataflowInstances'));
+// const DataflowInstanceDetails = React.lazy(() => import('./DataflowInstances/DataflowInstanceDetails'));
 
 // Application pages
 const FileDetailsForm = React.lazy(() => import('./files/FileDetails'));
@@ -19,7 +20,7 @@ const IndexDetailsForm = React.lazy(() => import('./IndexDetails'));
 const QueryDetailsForm = React.lazy(() => import('./queries/QueryDetails'));
 const ManualJobDetail = React.lazy(() => import('./Jobs/ManualJobDetail'));
 const AddJobsForm = React.lazy(() => import('./Jobs/AddjobsForm/AddJobsForm'));
-const FileMonitoring = React.lazy(() => import('./fileMonitoring'));
+const FileMonitoring = React.lazy(() => import('./fileMonitoring/FileMonitoring'));
 const OrbitMonitoring = React.lazy(() => import('./orbitMonitoring/OrbitMonitoring'));
 const Orbit = React.lazy(() => import('./dashboard/Orbit/Orbit'));
 const Notifications = React.lazy(() => import('./dashboard/notifications'));
@@ -32,11 +33,11 @@ const LandingZoneMonitoring = React.lazy(() => import('./LandingZoneMonitoring')
 const MyAccount = React.lazy(() => import('./myAccount/myAccount'));
 
 const AppRoutes = ({ application, authenticationReducer }) => {
-  const dataFlowComp = () => {
-    let applicationId = application ? application.applicationId : '';
-    let applicationTitle = application ? application.applicationTitle : '';
-    return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={authenticationReducer} />;
-  };
+  // const dataFlowComp = () => {
+  //   let applicationId = application ? application.applicationId : '';
+  //   let applicationTitle = application ? application.applicationTitle : '';
+  //   return <Dataflow applicationId={applicationId} applicationTitle={applicationTitle} user={authenticationReducer} />;
+  // };
   return (
     <Switch>
       <PrivateRoute exact path="/" component={Home} />
@@ -58,15 +59,15 @@ const AppRoutes = ({ application, authenticationReducer }) => {
       <PrivateRoute path="/:applicationId/assets/index/:assetId?" component={IndexDetailsForm} />
       <PrivateRoute path="/:applicationId/assets/query/:assetId?" component={QueryDetailsForm} />
       <PrivateRoute path="/:applicationId/assets" component={Assets} />
-      <PrivateRoute path="/:applicationId/dataflow/details/:dataflowId?" component={DataflowDetails} />
+      {/* <PrivateRoute path="/:applicationId/dataflow/details/:dataflowId?" component={DataflowDetails} />
       <PrivateRoute
         path="/:applicationId/dataflowinstances/dataflowInstanceDetails/:dataflowId?/:executionGroupId?"
         component={DataflowInstanceDetails}
       />
       <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />{' '}
-      <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />
+      <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} /> */}
       <PrivateRoute path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId" component={ManualJobDetail} />
-      <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} />
+      {/* <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} /> */}
     </Switch>
   );
 };
