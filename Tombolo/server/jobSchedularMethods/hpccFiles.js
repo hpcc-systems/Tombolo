@@ -1,13 +1,12 @@
 const path = require('path');
 
-const { SuperfileMonitoring, FileMonitoring } = require('../models');
+const { FileMonitoring } = require('../models');
 const logger = require('../config/logger');
 
 const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
   'submitLandingZoneFileMonitoring.js';
 const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
   'submitLogicalFileMonitoring.js';
-const SUBMIT_SUPER_FILEMONITORING_FILE_NAME = 'submitSuperFileMonitoring.js';
 const FILE_MONITORING = 'fileMonitoringPoller.js';
 
 function createLandingZoneFileMonitoringBreeJob({
@@ -46,75 +45,6 @@ function createLogicalFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
     },
   };
   this.bree.add(job);
-}
-
-function createSuperFileMonitoringBreeJob({ filemonitoring_id, cron }) {
-  const uniqueJobName = `Superfile Monitoring - ${filemonitoring_id}`;
-  const job = {
-    cron,
-    name: uniqueJobName,
-    path: path.join(
-      __dirname,
-      '..',
-      'jobs',
-      SUBMIT_SUPER_FILEMONITORING_FILE_NAME
-    ),
-    worker: {
-      workerData: { filemonitoring_id },
-    },
-  };
-  this.bree.add(job);
-  this.bree.start(uniqueJobName);
-}
-
-async function scheduleSuperFileMonitoringOnServerStart() {
-  try {
-    logger.info('Super file monitoring initialized ...');
-    const superfileMonitoring = await SuperfileMonitoring.findAll({
-      raw: true,
-    });
-    for (let monitoring of superfileMonitoring) {
-      const { id, cron, monitoringActive } = monitoring;
-      if (monitoringActive) {
-        this.createSuperFileMonitoringBreeJob({
-          filemonitoring_id: id,
-          cron,
-        });
-      }
-    }
-  } catch (err) {
-    logger.error('hpccFiles - scheduleSuperFileMonitoringOnServerStart: ', err);
-  }
-}
-
-async function scheduleFileMonitoringBreeJob({
-  filemonitoring_id,
-  name,
-  cron,
-  monitoringAssetType,
-}) {
-  const uniqueName = `${name}-${filemonitoring_id}`;
-  if (monitoringAssetType === 'landingZoneFile') {
-    this.createLandingZoneFileMonitoringBreeJob({
-      filemonitoring_id,
-      name: uniqueName,
-      cron,
-    });
-    this.bree.start(uniqueName); // Starts the recently added bree job
-  } else if (monitoringAssetType === 'logicalFiles') {
-    this.createLogicalFileMonitoringBreeJob({
-      filemonitoring_id,
-      name: uniqueName,
-      cron,
-    });
-    this.bree.start(uniqueName);
-  } else if (monitoringAssetType === 'superFiles') {
-    this.createSuperFileMonitoringBreeJob({
-      filemonitoring_id,
-      name: uniqueName,
-      cron,
-    });
-  }
 }
 
 async function scheduleFileMonitoringOnServerStart() {
@@ -164,9 +94,6 @@ async function scheduleFileMonitoring() {
 module.exports = {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
-  createSuperFileMonitoringBreeJob,
-  scheduleSuperFileMonitoringOnServerStart,
-  scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
   scheduleFileMonitoring,
 };
