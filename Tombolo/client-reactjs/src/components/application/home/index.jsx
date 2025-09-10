@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Steps } from 'antd';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -12,42 +12,76 @@ const Home = () => {
   // Redux
   const applicationId = useSelector((state) => state.application.application.applicationId);
 
-  const [currentStep, setCurrentStep] = useState([0, 1, 2]);
+  // State for current step
+  const [currentStep, setCurrentStep] = useState(0);
+
+  // State to handle fade-in animation for each step
+  const [visibleSteps, setVisibleSteps] = useState([false, false, false]);
+
+  // Animate steps on component load
+  useEffect(() => {
+    const stepsSequence = [0, 1, 2]; // indices of steps
+    let index = 0;
+
+    const interval = setInterval(() => {
+      setCurrentStep(stepsSequence[index]);
+
+      setVisibleSteps((prev) => {
+        const newVisible = [...prev];
+        newVisible[index] = true;
+        return newVisible;
+      });
+
+      index += 1;
+      if (index >= stepsSequence.length) clearInterval(interval);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section className={styles.container}>
       <div className={styles.innerContainer}>
         <div className={styles.header}>
           <h1>Welcome to Tombolo!</h1>
-          <h2>Transform and Process Data with Ease: Your Low-Code Bridge to HPCC Systems.</h2>
+          <h2>Monitor, Receive Alerts, Visualize — Take Action and Address Issues Proactively.</h2>
         </div>
 
         <div className={styles.middle}>
           <Card className={styles.workflowCard}>
-            <Steps
-              direction="vertical"
-              className={styles.customSteps}
-              current={currentStep}
-              onChange={setCurrentStep}
-              status="error">
+            <Steps direction="vertical" className={styles.customSteps} current={currentStep} onChange={setCurrentStep}>
               <Step
-                style={{ color: 'red' }}
-                disabled
                 title={<span className={styles.stepHeading}>Connect</span>}
-                description={<p className={styles.stepsContents}>Connect to your HPCC Systems cluster.</p>}
+                description={
+                  <p
+                    className={styles.stepsContents}
+                    style={{ opacity: visibleSteps[0] ? 1 : 0, transition: 'opacity 0.5s ease-in' }}>
+                    Connect to your HPCC Systems cluster.
+                  </p>
+                }
               />
               <Step
                 title={<span className={styles.stepHeading}>Monitor</span>}
-                description={<p className={styles.stepsContents}>Setup Monitoring in Tombolo</p>}
-                disabled
+                description={
+                  <p
+                    className={styles.stepsContents}
+                    style={{ opacity: visibleSteps[1] ? 1 : 0, transition: 'opacity 0.5s ease-in' }}>
+                    Setup Monitoring in Tombolo
+                  </p>
+                }
               />
               <Step
-                disabled
                 title={<span className={styles.stepHeading}>Receive Alerts</span>}
-                description={<p className={styles.stepsContents}>Proactively address issues</p>}
+                description={
+                  <p
+                    className={styles.stepsContents}
+                    style={{ opacity: visibleSteps[2] ? 1 : 0, transition: 'opacity 0.5s ease-in' }}>
+                    Proactively address issues
+                  </p>
+                }
               />
             </Steps>
           </Card>
+
           <Card className={styles.monitoringCard}>
             <h2>Monitoring</h2>
             <p>Setup monitoring and alerts for when things go awry with your data processing jobs and files.</p>
@@ -69,6 +103,7 @@ const Home = () => {
               </li>
             </ul>
           </Card>
+
           <Card className={styles.dashboardCard}>
             <h2>Dashboards</h2>
             <p>Visualize all of the notifications produced by Tombolo, and cluster usage with dashboards.</p>
@@ -79,6 +114,7 @@ const Home = () => {
             </ul>
           </Card>
         </div>
+
         <div className={styles.footer}>
           <div className={styles.footerRow}>
             <div className={`${styles.sub} ${styles.footerLogoContainer}`}>
@@ -86,6 +122,7 @@ const Home = () => {
                 <img src={logo} alt="HPCC Systems" />
               </a>
             </div>
+
             <div className={styles.sub}>
               <h4>About</h4>
               <ul>
@@ -109,6 +146,7 @@ const Home = () => {
                 </li>
               </ul>
             </div>
+
             <div className={styles.sub}>
               <h4>Documentation</h4>
               <ul>
@@ -138,6 +176,7 @@ const Home = () => {
                 </li>
               </ul>
             </div>
+
             <div className={styles.sub}>
               <h4>Support</h4>
               <ul>
@@ -161,6 +200,7 @@ const Home = () => {
                 </li>
               </ul>
             </div>
+
             <div className={styles.sub}>
               <h4>Project Resources</h4>
               <ul>
