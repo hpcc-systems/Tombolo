@@ -78,10 +78,10 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       landingZone: '4b',
       clustermonitoring: '4c',
       jobmonitoring: '4d',
-      orbitMonitoring: '4f',
+      // orbitMonitoring: '4f',
       notifications: '5a',
       clusterUsage: '5b',
-      Orbit: '5c',
+      // Orbit: '5c',
       clusters: '6',
       github: '8',
       consumers: '9',
@@ -235,20 +235,20 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
           clusterDisabled
         ),
 
-        asrActive
-          ? getItem(
-              <Link to={'/' + applicationId + '/orbitMonitoring'}>
-                <span>
-                  <CloudServerOutlined /> Orbit
-                </span>
-              </Link>,
-              '4f',
-              null,
-              null,
-              null,
-              clusterDisabled
-            )
-          : null,
+        // asrActive
+        //   ? getItem(
+        //       <Link to={'/' + applicationId + '/orbitMonitoring'}>
+        //         <span>
+        //           <CloudServerOutlined /> Orbit
+        //         </span>
+        //       </Link>,
+        //       '4f',
+        //       null,
+        //       null,
+        //       null,
+        //       clusterDisabled
+        //     )
+        //   : null,
         getItem(
           <Link to={'/' + applicationId + '/costMonitoring'}>
             <span>
