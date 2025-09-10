@@ -15,22 +15,13 @@ const Home = () => {
   // State for current step
   const [currentStep, setCurrentStep] = useState(0);
 
-  // State to handle fade-in animation for each step
-  const [visibleSteps, setVisibleSteps] = useState([false, false, false]);
-
   // Animate steps on component load
   useEffect(() => {
-    const stepsSequence = [0, 1, 2]; // indices of steps
+    const stepsSequence = [0, 1, 2];
     let index = 0;
 
     const interval = setInterval(() => {
       setCurrentStep(stepsSequence[index]);
-
-      setVisibleSteps((prev) => {
-        const newVisible = [...prev];
-        newVisible[index] = true;
-        return newVisible;
-      });
 
       index += 1;
       if (index >= stepsSequence.length) clearInterval(interval);
@@ -51,33 +42,15 @@ const Home = () => {
             <Steps direction="vertical" className={styles.customSteps} current={currentStep} onChange={setCurrentStep}>
               <Step
                 title={<span className={styles.stepHeading}>Connect</span>}
-                description={
-                  <p
-                    className={styles.stepsContents}
-                    style={{ opacity: visibleSteps[0] ? 1 : 0, transition: 'opacity 0.5s ease-in' }}>
-                    Connect to your HPCC Systems cluster.
-                  </p>
-                }
+                description={<p className={styles.stepsContents}>Connect to your HPCC Systems cluster.</p>}
               />
               <Step
                 title={<span className={styles.stepHeading}>Monitor</span>}
-                description={
-                  <p
-                    className={styles.stepsContents}
-                    style={{ opacity: visibleSteps[1] ? 1 : 0, transition: 'opacity 0.5s ease-in' }}>
-                    Setup Monitoring in Tombolo
-                  </p>
-                }
+                description={<p className={styles.stepsContents}>Setup Monitoring in Tombolo</p>}
               />
               <Step
                 title={<span className={styles.stepHeading}>Receive Alerts</span>}
-                description={
-                  <p
-                    className={styles.stepsContents}
-                    style={{ opacity: visibleSteps[2] ? 1 : 0, transition: 'opacity 0.5s ease-in' }}>
-                    Proactively address issues
-                  </p>
-                }
+                description={<p className={styles.stepsContents}>Proactively address issues</p>}
               />
             </Steps>
           </Card>
