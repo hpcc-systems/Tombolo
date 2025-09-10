@@ -31,8 +31,6 @@ const {
 const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
-  createSuperFileMonitoringBreeJob,
-  scheduleSuperFileMonitoringOnServerStart,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
   scheduleFileMonitoring,
@@ -153,7 +151,6 @@ class JobScheduler {
       await this.scheduleClusterTimezoneOffset();
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
       await this.scheduleFileMonitoringOnServerStart();
-      await this.scheduleSuperFileMonitoringOnServerStart();
       await this.scheduleKeyCheck();
       await this.createClusterUsageHistoryJob();
       await this.scheduleEmailNotificationProcessing();
@@ -340,17 +337,6 @@ class JobScheduler {
       name,
       cron,
     });
-  }
-
-  createSuperFileMonitoringBreeJob({ filemonitoring_id, cron }) {
-    return createSuperFileMonitoringBreeJob.call(this, {
-      filemonitoring_id,
-      cron,
-    });
-  }
-
-  scheduleSuperFileMonitoringOnServerStart() {
-    return scheduleSuperFileMonitoringOnServerStart.call(this);
   }
 
   scheduleFileMonitoringBreeJob({
