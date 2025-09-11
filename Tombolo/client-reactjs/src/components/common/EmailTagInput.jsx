@@ -1,6 +1,7 @@
 import { isEmail } from 'validator';
-import { Form, Select } from 'antd';
+import { Form } from 'antd';
 import React from 'react';
+import TagsInput from '@/components/common/TagsInput';
 
 export default function EmailTagInput({ label, name, required }) {
   return (
@@ -31,12 +32,7 @@ export default function EmailTagInput({ label, name, required }) {
           },
         },
       ]}>
-      <Select
-        mode="tags"
-        allowClear
-        placeholder="Enter a comma-delimited list of email addresses"
-        tokenSeparators={[',']}
-      />
+      <TagsInput tokenSeparators={[',']} placeholder="Enter a comma-delimited list of email addresses" />
     </Form.Item>
   );
 }

@@ -165,7 +165,7 @@ function CostMonitoringBasicTab({
                 },
               },
             ]}>
-            <TagsInput form={form} name="users" placeholder="Enter a list of HPCC users" />
+            <TagsInput form={form} name="users" placeholder="Enter a list of HPCC users" tokenSeparators={[',']} />
           </Form.Item>
         )}
         {asrIntegration && (
