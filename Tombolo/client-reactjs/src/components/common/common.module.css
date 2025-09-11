@@ -55,3 +55,78 @@
 .table_inactive_row {
   background-color: var(--paused);
 }
+
+.tagsInputContainer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.tagsInputContainerFocused {
+  border-color: #1677ff !important;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+}
+
+/* Legacy aliases to avoid breaking existing usage elsewhere (if any) */
+.tags-input { composes: tagsInputContainer; }
+.tags-input.tags-input--focused { border-color: #1677ff !important; box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2); }
+
+/* Tag chip styling akin to Ant Design checkable tag/token */
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  color: rgba(0, 0, 0, 0.88);
+  border-radius: 6px; /* less rounded */
+  line-height: 22px; /* closer to input height */
+  padding: 0 6px; /* tighten vertical space to match ~24px total with border */
+  height: 24px;
+  font-size: 12px;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.tagChip:hover {
+  background: #eee;
+  border-color: #bfbfbf;
+}
+
+.tagRemoveButton {
+  margin-left: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.45);
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.tagRemoveButton:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.88);
+}
+.tagRemoveButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.3);
+}
+
+.tagsInputField {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  outline: none;
+  height: 24px;
+}
+

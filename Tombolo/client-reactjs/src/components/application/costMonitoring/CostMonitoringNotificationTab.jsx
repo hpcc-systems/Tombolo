@@ -51,6 +51,7 @@ function CostMonitoringNotificationTab({ form, clusters }) {
     if (!form) return;
 
     const clusterIds = form.getFieldValue('clusterIds');
+    if (!clusterIds) return;
     const selectedClusters = clusters.filter((cluster) => clusterIds.includes(cluster.id));
     if (selectedClusters.length === 0) return;
 
