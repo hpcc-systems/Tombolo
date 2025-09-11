@@ -5,6 +5,7 @@ import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMon
 import { useSelector } from 'react-redux';
 import InfoDrawer from '../../common/InfoDrawer';
 import { DescriptionFormRules, MonitoringNameFormRules } from '../../common/FormRules';
+import TagsInput from '@/components/common/TagsInput';
 
 const { Option } = Select;
 
@@ -164,12 +165,7 @@ function CostMonitoringBasicTab({
                 },
               },
             ]}>
-            <Select
-              mode="tags"
-              allowClear
-              placeholder="Enter a comma-delimited list of HPCC users"
-              tokenSeparators={[',']}
-            />
+            <TagsInput form={form} name="users" placeholder="Enter a list of HPCC users" />
           </Form.Item>
         )}
         {asrIntegration && (
