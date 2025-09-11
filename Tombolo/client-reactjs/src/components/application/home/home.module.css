@@ -46,10 +46,36 @@ div.header > h1 {
   margin-bottom: 1rem;
 }
 
-.middle .ant-card {
-  width: 30%;
+.middle > * {
+  margin: 1rem;
+}
 
-  font-size: 1.25rem;
+.workflowCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 33.33%;
+}
+
+.customSteps .ant-steps-item-tail {
+  display: none; /* Hide the tail line */
+}
+
+.customSteps .ant-steps-item-icon .ant-steps-icon {
+  color: #2b6cb0;
+  font-weight: bold;
+}
+
+.customSteps .ant-steps-item-title {
+  color: #2b6cb0;
+  font-size: 1rem;
+}
+
+.workflowCard,
+.monitoringCard,
+.dashboardCard {
+  background: #f9fafb;
+  width: 33.33%;
 }
 
 .footer {
@@ -87,13 +113,13 @@ div.header > h1 {
 }
 
 .footerRow p {
-  /* margin: 0 auto; */
   font-size: 1rem;
 }
 
 .footerRow a:hover {
   border-bottom: 1px solid var(--light);
 }
+
 .footerRow a:focus {
   text-decoration: 1px solid var(--light);
 }
@@ -125,9 +151,11 @@ div.header > h1 {
     margin-bottom: 3rem;
     flex-direction: column;
   }
+
   .middle .ant-card {
     width: 100%;
     margin-bottom: 2rem;
+    min-height: 0; /* Reset min-height for mobile */
   }
 
   .footerRow {
@@ -137,4 +165,13 @@ div.header > h1 {
   .sub {
     width: 100%;
   }
+}
+
+.stepsContents {
+  color: var(--dark);
+}
+
+.stepHeading {
+  color: rgb(48, 56, 70);
+  font-weight: bold;
 }
