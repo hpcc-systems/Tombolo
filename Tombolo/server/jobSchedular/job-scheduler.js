@@ -20,14 +20,14 @@ const {
 } = require('../jobSchedularMethods/workFlowJobs.js');
 const {
   scheduleClusterTimezoneOffset,
-  createClusterUsageHistoryJob,
+  // createClusterUsageHistoryJob,
   startClusterMonitoring,
   checkClusterReachability,
   checkClusterContainerization,
 } = require('../jobSchedularMethods/clusterJobs.js');
-const {
-  scheduleJobStatusPolling,
-} = require('../jobSchedularMethods/hpccJobs.js');
+// const {
+//   scheduleJobStatusPolling,
+// } = require('../jobSchedularMethods/hpccJobs.js');
 const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
@@ -35,17 +35,17 @@ const {
   scheduleFileMonitoringOnServerStart,
   scheduleFileMonitoring,
 } = require('../jobSchedularMethods/hpccFiles.js');
-const { scheduleKeyCheck } = require('../jobSchedularMethods/apiKeys.js');
+// const { scheduleKeyCheck } = require('../jobSchedularMethods/apiKeys.js');
 const {
   scheduleEmailNotificationProcessing,
-  scheduleTeamsNotificationProcessing,
+  //   scheduleTeamsNotificationProcessing,
 } = require('../jobSchedularMethods/notificationJobs.js');
 
-const {
-  createOrbitMegaphoneJob,
-  createOrbitMonitoringJob,
-  scheduleOrbitMonitoringOnServerStart,
-} = require('../jobSchedularMethods/orbitJobs.js');
+// const {
+//   createOrbitMegaphoneJob,
+//   createOrbitMonitoringJob,
+//   scheduleOrbitMonitoringOnServerStart,
+// } = require('../jobSchedularMethods/orbitJobs.js');
 
 const {
   startJobMonitoring,
@@ -147,16 +147,16 @@ class JobScheduler {
   bootstrap() {
     (async () => {
       await this.scheduleActiveCronJobs();
-      await this.scheduleJobStatusPolling();
+      // await this.scheduleJobStatusPolling();
       await this.scheduleClusterTimezoneOffset();
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
       await this.scheduleFileMonitoringOnServerStart();
-      await this.scheduleKeyCheck();
-      await this.createClusterUsageHistoryJob();
+      // await this.scheduleKeyCheck();
+      // await this.createClusterUsageHistoryJob();
       await this.scheduleEmailNotificationProcessing();
-      await this.scheduleTeamsNotificationProcessing();
-      await this.scheduleOrbitMonitoringOnServerStart();
-      await this.createOrbitMegaphoneJob();
+      // await this.scheduleTeamsNotificationProcessing();
+      // await this.scheduleOrbitMonitoringOnServerStart();
+      // await this.createOrbitMegaphoneJob();
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
@@ -307,9 +307,9 @@ class JobScheduler {
   scheduleClusterTimezoneOffset() {
     return scheduleClusterTimezoneOffset.call(this);
   }
-  createClusterUsageHistoryJob() {
-    return createClusterUsageHistoryJob.call(this);
-  }
+  // createClusterUsageHistoryJob() {
+  //   return createClusterUsageHistoryJob.call(this);
+  // }
 
   startClusterMonitoring({ clusterMonitoring_id, cron }) {
     return startClusterMonitoring.call(this, {
@@ -318,9 +318,9 @@ class JobScheduler {
     });
   }
 
-  scheduleJobStatusPolling() {
-    return scheduleJobStatusPolling.call(this);
-  }
+  // scheduleJobStatusPolling() {
+  //   return scheduleJobStatusPolling.call(this);
+  // }
 
   // file Monitoring
   createLandingZoneFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
@@ -362,9 +362,9 @@ class JobScheduler {
   }
 
   // API keys check
-  scheduleKeyCheck() {
-    return scheduleKeyCheck.call(this);
-  }
+  // scheduleKeyCheck() {
+  //   return scheduleKeyCheck.call(this);
+  // }
 
   // Job monitoring
   startJobMonitoring() {
@@ -386,16 +386,16 @@ class JobScheduler {
   scheduleEmailNotificationProcessing() {
     return scheduleEmailNotificationProcessing.call(this);
   }
-  scheduleTeamsNotificationProcessing() {
-    return scheduleTeamsNotificationProcessing.call(this);
-  }
+  // scheduleTeamsNotificationProcessing() {
+  //   return scheduleTeamsNotificationProcessing.call(this);
+  // }
   //orbit jobs
-  createOrbitMegaphoneJob() {
-    return createOrbitMegaphoneJob.call(this);
-  }
-  scheduleOrbitMonitoringOnServerStart() {
-    return scheduleOrbitMonitoringOnServerStart.call(this);
-  }
+  // createOrbitMegaphoneJob() {
+  //   return createOrbitMegaphoneJob.call(this);
+  // }
+  // scheduleOrbitMonitoringOnServerStart() {
+  //   return scheduleOrbitMonitoringOnServerStart.call(this);
+  // }
 
   createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
