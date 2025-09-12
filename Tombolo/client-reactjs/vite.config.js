@@ -60,7 +60,7 @@ export default function config({ mode }) {
     test: {
       environment: 'jsdom', // For React component testing
       globals: true, // Avoid importing `describe`, `it`, etc.
-      setupFiles: './src/setupTests.js', // Optional for custom setup
+      setupFiles: './src/tests/setupTests.js', // Optional for custom setup
     },
   });
 }
