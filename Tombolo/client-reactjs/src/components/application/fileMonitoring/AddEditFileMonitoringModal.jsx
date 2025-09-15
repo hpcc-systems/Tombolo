@@ -77,6 +77,7 @@ const AddEditFileMonitoringModal = ({
           form={form}
           monitoringFileType={monitoringFileType}
           setMonitoringFileType={setMonitoringFileType}
+          isEditing={isEditing}
         />
       ),
     },

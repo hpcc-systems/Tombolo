@@ -19,12 +19,13 @@ import { handleDeleteFileMonitoring, toggleFileMonitoringStatus } from './fileMo
 
 import styles from './fileMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'Pending') {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
     return 'var(--primary)';
-  } else if (approvalStatus === 'Approved') {
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -178,7 +179,7 @@ const FileMonitoringTable = ({
                       {record.isActive ? (
                         <div onClick={() => toggleMonitoringStatus(record, 'pause')}>
                           <PauseCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Pause
@@ -186,7 +187,7 @@ const FileMonitoringTable = ({
                       ) : (
                         <div onClick={() => toggleMonitoringStatus(record, 'start')}>
                           <PlayCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             style={{ color: 'var(--primary)', marginRight: 15 }}
                           />
                           Start
@@ -357,7 +358,7 @@ const FileMonitoringTable = ({
   const toggleMonitoringStatus = async (record, status) => {
     try {
       const lowercaseStatus = record.approvalStatus.toLowerCase();
-      if (lowercaseStatus !== 'approved') {
+      if (lowercaseStatus !== APPROVAL_STATUS.APPROVED) {
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }

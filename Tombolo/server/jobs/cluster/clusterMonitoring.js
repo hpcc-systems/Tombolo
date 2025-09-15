@@ -16,6 +16,7 @@ const {
 } = require('../../models');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 const { decryptString } = require('../../utils/cipher');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 // Helper functions
 async function enrichAsrMetaData(asrSpecificMetaData) {
@@ -153,7 +154,7 @@ async function monitorCluster() {
     const activeClusterStatusMonitoring = await ClusterMonitoring.findAll({
       where: {
         isActive: true,
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
       },
       include: [
         {

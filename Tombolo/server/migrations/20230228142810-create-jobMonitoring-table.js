@@ -29,7 +29,7 @@ module.exports = {
       },
       approvalStatus: {
         allowNull: false,
-        type: Sequelize.ENUM('Approved', 'Rejected', 'Pending'),
+        type: Sequelize.ENUM('approved', 'rejected', 'pending'),
       },
       approvedBy: {
         allowNull: true,

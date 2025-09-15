@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Tooltip, Form, Select, Input, Checkbox, message } from 'antd';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 /**
  * Shared Approve/Reject Modal for monitoring types
@@ -34,11 +35,16 @@ const ApproveRejectModal = ({
 
   useEffect(() => {
     if (selectedMonitoring) {
-      if (selectedMonitoring?.approvalStatus !== 'pending') {
+      const status = selectedMonitoring?.approvalStatus;
+      const hasApprover = !!selectedMonitoring?.approver;
+      // Consider evaluated only when explicitly approved or rejected AND approver exists
+      if ((status === APPROVAL_STATUS.APPROVED || status === APPROVAL_STATUS.REJECTED) && hasApprover) {
         setMonitoringEvaluated(true);
       } else {
         setMonitoringEvaluated(false);
       }
+    } else {
+      setMonitoringEvaluated(false);
     }
   }, [selectedMonitoring]);
 
@@ -67,7 +73,7 @@ const ApproveRejectModal = ({
         formData.ids = [selectedMonitoring.id];
       }
       // Ensure isActive is false when rejecting
-      if (formData.approvalStatus === 'rejected') {
+      if (formData.approvalStatus === APPROVAL_STATUS.REJECTED) {
         formData.isActive = false;
       } else {
         formData.isActive = !!formData.isActive;
@@ -139,7 +145,7 @@ const ApproveRejectModal = ({
   };
 
   const handleActionChange = (value) => {
-    if (value === 'rejected') {
+    if (value === APPROVAL_STATUS.REJECTED) {
       setIsActive(false);
       // Also ensure the form value reflects disabled/false state
       form.setFieldsValue({ isActive: false });
@@ -183,7 +189,7 @@ const ApproveRejectModal = ({
       }
       {...modalProps}>
       <div style={{ padding: '5px' }}>
-        {monitoringEvaluated && selectedMonitoring ? (
+        {monitoringEvaluated && selectedMonitoring && selectedMonitoring?.approver ? (
           <div style={{ marginTop: '15px' }}>
             This monitoring was{' '}
             <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{selectedMonitoring?.approvalStatus}</span> by{' '}

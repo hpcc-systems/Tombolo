@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Descriptions, Modal, Button, Tooltip, Tag } from 'antd';
 import { formatDateTimeShort } from '../../common/CommonUtil';
 import capitalize from 'lodash/capitalize';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 function ViewDetailsModal({
   setDisplayViewDetailsModal,
@@ -115,7 +116,7 @@ function ViewDetailsModal({
           </Descriptions.Item>
         )}
         <Descriptions.Item label={<b>Approval Status</b>}>
-          {selectedMonitoring.approvalStatus === 'pending' ? (
+          {selectedMonitoring.approvalStatus === APPROVAL_STATUS.PENDING ? (
             <Tag color={approvalStatusTagColors[selectedMonitoring.approvalStatus]}> Pending </Tag>
           ) : (
             <>

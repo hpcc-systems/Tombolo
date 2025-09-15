@@ -26,7 +26,7 @@ import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAnd
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal';
-import { Constants } from '@/components/common/Constants';
+import { APPROVAL_STATUS, Constants } from '@/components/common/Constants';
 
 const monitoringTypeName = 'Cost Monitoring';
 
@@ -286,11 +286,15 @@ function CostMonitoring() {
       // Add notificationMetaData to metaData object
       metaData.notificationMetaData = notificationMetaData;
 
-      // Parse value from isSummed to boolean
-      allInputs.isSummed = allInputs.isSummed === 'true';
+      // Parse value from isSummed to boolean (handles boolean or string)
+      if (typeof allInputs.isSummed === 'string') {
+        allInputs.isSummed = allInputs.isSummed === 'true';
+      } else {
+        allInputs.isSummed = !!allInputs.isSummed;
+      }
 
       // Add metaData to allInputs
-      allInputs = { ...allInputs, metaData, approvalStatus: 'Pending', isActive: false };
+      allInputs = { ...allInputs, metaData, approvalStatus: APPROVAL_STATUS.PENDING, isActive: false };
 
       const responseData = await createCostMonitoring({ inputData: allInputs });
 

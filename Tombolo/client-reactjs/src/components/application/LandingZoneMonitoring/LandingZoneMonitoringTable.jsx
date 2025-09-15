@@ -18,12 +18,13 @@ import { deleteLzMonitoring, toggleLzMonitoringStatus } from './Utils';
 
 import styles from './lzMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 //Approve button colors
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'Pending') {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
     return 'var(--primary)';
-  } else if (approvalStatus === 'Approved') {
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -153,12 +154,18 @@ const LandingZoneMonitoringTable = ({
 
                     {record.isActive ? (
                       <div onClick={() => toggleMonitoringStatus(record)}>
-                        <PauseCircleOutlined disabled={record.approvalStatus !== 'Approved'} className={styles.icons} />
+                        <PauseCircleOutlined
+                          disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
+                          className={styles.icons}
+                        />
                         Pause
                       </div>
                     ) : (
                       <div onClick={() => toggleMonitoringStatus(record)}>
-                        <PlayCircleOutlined disabled={record.approvalStatus !== 'Approved'} className={styles.icons} />
+                        <PlayCircleOutlined
+                          disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
+                          className={styles.icons}
+                        />
                         Start
                       </div>
                     )}
@@ -248,7 +255,7 @@ const LandingZoneMonitoringTable = ({
   // Start or pause monitoring
   const toggleMonitoringStatus = async (record) => {
     try {
-      if (record.approvalStatus !== 'approved') {
+      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED) {
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }

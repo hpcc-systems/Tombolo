@@ -10,6 +10,7 @@ const {
   convertBytes,
   formatSize,
 } = require('./lzFileMonitoringUtils');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 const {
   LandingZoneMonitoring,
@@ -45,7 +46,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     const activeLzMonitorings = await LandingZoneMonitoring.findAll({
       where: {
         isActive: true,
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         lzMonitoringType: 'spaceUsage',
       },
 

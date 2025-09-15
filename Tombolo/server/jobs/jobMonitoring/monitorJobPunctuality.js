@@ -22,6 +22,7 @@ const {
   MonitoringType,
 } = require('../../models');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 const monitoringTypeName = 'Job Monitoring';
 
@@ -36,7 +37,7 @@ const monitoringTypeName = 'Job Monitoring';
   try {
     // Find all active job monitorings.
     const jobMonitorings = await JobMonitoring.findAll({
-      where: { isActive: 1, approvalStatus: 'Approved' },
+      where: { isActive: 1, approvalStatus: APPROVAL_STATUS.APPROVED },
       raw: true,
     });
 

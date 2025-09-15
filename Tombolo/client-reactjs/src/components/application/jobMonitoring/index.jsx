@@ -29,7 +29,7 @@ import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAnd
 import capitalize from 'lodash/capitalize';
 import { getDateLabel, getDayLabel, getMonthLabel, getWeekLabel } from '../../common/scheduleOptions';
 import cronstrue from 'cronstrue';
-import { Constants } from '@/components/common/Constants';
+import { APPROVAL_STATUS, Constants } from '@/components/common/Constants';
 
 // Constants
 const monitoringTypeName = 'Job Monitoring';
@@ -540,7 +540,7 @@ function JobMonitoring() {
       // If no error thrown set state with new data
       setJobMonitorings((prev) => {
         return prev.map((jobMonitoring) => {
-          updatedData.approvalStatus = 'Pending';
+          updatedData.approvalStatus = APPROVAL_STATUS.PENDING;
           updatedData.isActive = false;
           if (jobMonitoring.id === updatedData.id) {
             return updatedData;

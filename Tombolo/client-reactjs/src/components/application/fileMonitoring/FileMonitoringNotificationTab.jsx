@@ -35,12 +35,16 @@ function FileMonitoringNotificationTab({
   monitoringFileType,
   selectedNotificationCondition,
   setSelectedNotificationCondition,
+  isEditing,
 }) {
   const [minSizeThresholdUnit, setMinSizeThresholdUnit] = useState('MB');
   const [maxSizeThresholdUnit, setMaxSizeThresholdUnit] = useState('MB');
 
   // Reset fields when monitoringFileType changes
   useEffect(() => {
+    if (isEditing) {
+      return;
+    }
     setSelectedNotificationCondition([]);
     form.setFieldsValue({
       notificationCondition: [],

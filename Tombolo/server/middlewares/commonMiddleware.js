@@ -1,4 +1,5 @@
 const { body, param, query } = require('express-validator');
+const { APPROVAL_STATUS } = require('../config/constants');
 
 const NAME_LENGTH = { min: 2, max: 50 };
 const DESCRIPTION_LENGTH = { min: 10, max: 500 };
@@ -8,7 +9,11 @@ const EMAIL_LENGTH = { max: 100 };
 const PASSWORD_LENGTH = { min: 8, max: 75 };
 const DEFAULT_LENGTH = { max: 200 };
 const TITLE_REGEX = /^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/;
-const APPROVAL_STATUSES = ['pending', 'approved', 'rejected'];
+const APPROVAL_STATUSES = [
+  APPROVAL_STATUS.APPROVED,
+  APPROVAL_STATUS.REJECTED,
+  APPROVAL_STATUS.PENDING,
+];
 
 /**
  * Configuration options for validation middleware.
