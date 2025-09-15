@@ -362,9 +362,7 @@ const FileMonitoringTable = ({
         return;
       }
 
-      const activate = status === 'start' ? true : false;
-
-      const updatedData = await toggleFileMonitoringStatus([record.id], activate);
+      const updatedData = await toggleFileMonitoringStatus({ ids: [record.id], action: status });
 
       const updatedMonitoringIds = updatedData.map((monitoring) => monitoring.id);
 
