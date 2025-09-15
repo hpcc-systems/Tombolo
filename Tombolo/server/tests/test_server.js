@@ -27,6 +27,7 @@ const roles = require('../routes/roleTypesRoute');
 const landingZoneMonitoring = require('../routes/landingZoneMonitoring');
 const costMonitoring = require('../routes/costMonitoringRoutes');
 const clusterMonitoring = require('../routes/clusterMonitoringRoutes');
+const fileMonitoring = require('../routes/fileMonitoringRoutes');
 
 // Use routes
 app.use('/api/auth', auth);
@@ -46,6 +47,7 @@ app.use(
   clusterMonitoring
 );
 app.use('/api/costMonitoring', fakeValidateTokenMiddleware, costMonitoring);
+app.use('/api/fileMonitoring', fakeValidateTokenMiddleware, fileMonitoring);
 
 // Function to start the server
 let server;
