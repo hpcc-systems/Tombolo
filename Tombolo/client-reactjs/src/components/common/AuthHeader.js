@@ -9,7 +9,7 @@ export function handleError(response) {
   //if response is false, it means that we cannot communicate with backend, set backend status to false so UI will show error message
   if (response === false) {
     import('@/redux/store/Store').then(async ({ store }) => {
-      const { setBackendStatus } = await import('@/redux/slices/backendSlice'); // if needed
+      const { setBackendStatus } = await import('@/redux/slices/BackendSlice'); // if needed
       store.dispatch(setBackendStatus(false));
     });
     return;

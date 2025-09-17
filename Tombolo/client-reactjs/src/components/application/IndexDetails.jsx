@@ -3,8 +3,7 @@ import { Tabs, Form, Input, Select, Table, AutoComplete, message, Spin, Button, 
 
 import { authHeader, handleError } from '../common/AuthHeader.js';
 // import { hasEditPermission } from '../common/AuthUtil.js';
-import { eclTypes } from '../common/CommonUtil.js';
-import { omitDeep } from '../common/CommonUtil.js';
+import { eclTypes, omitDeep } from '../common/CommonUtil';
 import AssociatedDataflows from './AssociatedDataflows';
 import EditableTable from '../common/EditableTable.jsx';
 import MonacoEditor from '../common/MonacoEditor.jsx';
