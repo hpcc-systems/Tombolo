@@ -62,5 +62,13 @@ export default function config({ mode }) {
       globals: true, // Avoid importing `describe`, `it`, etc.
       setupFiles: './src/setupTests.js', // Optional for custom setup
     },
+    build: {
+      outDir: 'build',
+      rollupOptions: {
+         output: {
+            chunkFileNames: 'static/js/[name].chunk.js', // makes Dockerfile glob match
+      },
+  },
+},
   });
 }
