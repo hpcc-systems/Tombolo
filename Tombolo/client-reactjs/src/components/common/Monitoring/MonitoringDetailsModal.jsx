@@ -30,18 +30,22 @@ function MonitoringDetailsModal({
     approvedBy,
     createdBy,
     lastUpdatedBy,
+    updatedBy,
     approver,
     creator,
     updater,
     monitoringName,
     description,
     createdAt,
+    updatedAt,
     isActive,
     approvalStatus,
     approvedAt,
     metaData,
     approverComment,
   } = selectedMonitoring;
+
+  let updatedByVal = lastUpdatedBy ? lastUpdatedBy : updatedBy;
 
   let clusterIds;
   if (selectedMonitoring.clusterIds) {
@@ -96,14 +100,14 @@ function MonitoringDetailsModal({
               <Tooltip title={<div>Email: {updater.email}</div>}>
                 <span style={{ color: 'var(--primary)' }}>{`${updater.firstName} ${updater.lastName}`}</span>
               </Tooltip>{' '}
-              on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
+              on {new Date(updatedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
             </Descriptions.Item>
           )}
         </>
       );
     }
 
-    const updatedByObj = JSON.parse(lastUpdatedBy || '{}');
+    const updatedByObj = JSON.parse(updatedByVal || '{}');
     const createdByObj = JSON.parse(createdBy || '{}');
     const approvedByObj = approvedBy ? JSON.parse(approvedBy || '{}') : null;
 
@@ -129,7 +133,7 @@ function MonitoringDetailsModal({
           <Tooltip title={<div>Email: {updatedByObj.email}</div>}>
             <span style={{ color: 'var(--primary)' }}>{updatedByObj.name}</span>
           </Tooltip>{' '}
-          on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
+          on {new Date(updatedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
         </Descriptions.Item>
       </>
     );

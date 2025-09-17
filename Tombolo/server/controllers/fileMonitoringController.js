@@ -138,17 +138,19 @@ async function evaluateFileMonitoring(req, res) {
       });
     }
 
-    // Update each file monitoring entry
-    await Promise.all(
-      fileMonitorings.map(fileMonitoring =>
-        fileMonitoring.update({
+    for (const fileMonitoring of fileMonitorings) {
+      await FileMonitoring.update(
+        {
           approvalStatus,
           approverComment,
           isActive: !!(approvalStatus === APPROVAL_STATUS.APPROVED && isActive),
           lastUpdatedBy: req.user.id,
-        })
-      )
-    );
+        },
+        {
+          where: { id: fileMonitoring.id },
+        }
+      );
+    }
 
     // Fetch the updated entries to return
     const updatedFileMonitoring = await FileMonitoring.findAll({
