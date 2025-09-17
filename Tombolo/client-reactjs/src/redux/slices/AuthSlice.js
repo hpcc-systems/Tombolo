@@ -158,36 +158,58 @@ export const registerOwner = createAsyncThunk('auth/registerOwner', async (value
   return await response.json();
 });
 
-export const loginOrRegisterAzureUser = createAsyncThunk('auth/loginOrRegisterAzureUser', async (code) => {
-  clearStorage();
-  const url = '/api/auth/loginOrRegisterAzureUser';
+export const loginOrRegisterAzureUser = createAsyncThunk(
+  'auth/loginOrRegisterAzureUser',
+  async (code, { rejectWithValue }) => {
+    clearStorage();
+    const url = '/api/auth/loginOrRegisterAzureUser';
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(code),
-  });
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
 
-  if (!response.ok) {
-    handleError(response);
-    throw new Error('Azure login failed');
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          message.error(data.message);
+        } else {
+          handleError(response);
+        }
+        // Handle non-2xx responses (e.g., 409 Conflict)
+        return rejectWithValue({
+          status: response.status,
+          message: data.message || 'Azure login failed',
+        });
+      }
+
+      if (data.success) {
+        data.data.isAuthenticated = true;
+        setUser(JSON.stringify(data.data));
+        return {
+          type: 'success',
+          user: data.data,
+        };
+      } else {
+        return rejectWithValue({
+          status: response.status,
+          message: data.message || 'Azure login failed',
+        });
+      }
+    } catch (error) {
+      // Handle network errors or other unexpected issues
+      return rejectWithValue({
+        status: null,
+        message: error.message || 'Network error during Azure login',
+      });
+    }
   }
-
-  const data = await response.json();
-
-  if (data.success) {
-    data.data.isAuthenticated = true;
-    setUser(JSON.stringify(data.data));
-    return {
-      type: 'success',
-      user: data.data,
-    };
-  } else {
-    throw new Error('Azure login failed');
-  }
-});
+);
 
 // Sync action for Azure login redirect
 export const azureLoginRedirect = () => {
@@ -398,7 +420,7 @@ const authSlice = createSlice({
       })
       .addCase(loginOrRegisterAzureUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload.message;
         state.isAuthenticated = false;
         state.token = null;
         state.roles = [];
