@@ -259,16 +259,19 @@ async function emailAlreadySent(idempotencyKey) {
   const existingNotification = await SentNotification.findOne({
     where: { idempotencyKey },
   });
-  if (parentPort) {
-    parentPort.postMessage({
-      level: 'info',
-      text: `Cost Monitoring email already sent for idempotencyKey: ${idempotencyKey}`,
-    });
-  } else {
-    logger.info(
-      `Cost Monitoring email already sent for idempotencyKey: ${idempotencyKey}`
-    );
+  if (existingNotification) {
+    if (parentPort) {
+      parentPort.postMessage({
+        level: 'info',
+        text: `Cost Monitoring email already sent for idempotencyKey: ${idempotencyKey}`,
+      });
+    } else {
+      logger.info(
+        `Cost Monitoring email already sent for idempotencyKey: ${idempotencyKey}`
+      );
+    }
   }
+
   return !!existingNotification;
 }
 
