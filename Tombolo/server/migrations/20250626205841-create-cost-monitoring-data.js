@@ -10,26 +10,6 @@ module.exports = {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      applicationId: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'applications',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
-      monitoringId: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'cost_monitorings',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
       clusterId: {
         type: Sequelize.UUID,
         allowNull: false,
@@ -65,12 +45,6 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
-
-    // await queryInterface.addIndex('cost_monitoring_data', {
-    //   unique: true,
-    //   fields: ['monitoringId', 'applicationId', 'clusterId', 'analyzed'],
-    //   name: 'costMonitoringData_unique_monitoring_app_cluster_analyzed',
-    // });
   },
 
   async down(queryInterface, Sequelize) {
