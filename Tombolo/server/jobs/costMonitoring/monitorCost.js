@@ -324,7 +324,7 @@ async function monitorCost() {
         parentPort &&
           parentPort.postMessage({
             level: 'error',
-            text: `monitorCost: Failed in cluster ${clusterRecord.name || clusterId}: ${perClusterError.message}, ...skipping`,
+            text: `monitorCost: Failed in cluster ${clusterId}: ${perClusterError.message}, ...skipping`,
           });
       }
     }
