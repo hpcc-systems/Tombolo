@@ -5,6 +5,22 @@ const logger = require('../config/logger');
 
 module.exports = (sequelize, DataTypes) => {
   class CostMonitoringData extends Model {
+    static async #buildWhereClauseForMonitoring(monitoringId = null) {
+      const whereClause = this.#getStartOfDayWhereClause();
+      if (monitoringId) {
+        // Dynamically require CostMonitoring to avoid circular dependency
+        const CostMonitoring = this.sequelize.models.CostMonitoring;
+        const monitoring = await CostMonitoring.findOne({
+          where: { id: monitoringId },
+        });
+        if (!monitoring) return null;
+        const clusterIds = monitoring.clusterIds;
+        if (Array.isArray(clusterIds) && clusterIds.length > 0) {
+          whereClause.clusterId = clusterIds;
+        }
+      }
+      return whereClause;
+    }
     static associate(models) {
       CostMonitoringData.belongsTo(models.Cluster, {
         foreignKey: 'clusterId',
@@ -12,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
 
-    static getStartOfDayWhereClause() {
+    static #getStartOfDayWhereClause() {
       return {
         deletedAt: null,
         [Op.and]: [
@@ -40,20 +56,9 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     static async getDataTotals(monitoringId = null) {
-      const whereClause = this.getStartOfDayWhereClause();
-      let clusterIds = null;
-      if (monitoringId) {
-        // Dynamically require CostMonitoring to avoid circular dependency
-        const CostMonitoring = this.sequelize.models.CostMonitoring;
-        const monitoring = await CostMonitoring.findOne({
-          where: { id: monitoringId },
-        });
-        if (!monitoring) return [];
-        clusterIds = monitoring.clusterIds;
-        if (Array.isArray(clusterIds) && clusterIds.length > 0) {
-          whereClause.clusterId = clusterIds;
-        }
-      }
+      const whereClause =
+        await this.#buildWhereClauseForMonitoring(monitoringId);
+      if (monitoringId && !whereClause) return [];
 
       const records = await this.findAll({
         attributes: [
@@ -160,21 +165,10 @@ module.exports = (sequelize, DataTypes) => {
      * @returns {Promise<CostClusterTotals[]>} Promise resolving to an array of clustered totals with cluster metadata.
      */
     static async getClusterDataTotals(monitoringId = null) {
-      const whereClause = this.getStartOfDayWhereClause();
-      let clusterIds = null;
-      if (monitoringId) {
-        // Dynamically require CostMonitoring to avoid circular dependency
-        const CostMonitoring = this.sequelize.models.CostMonitoring;
-        const monitoring = await CostMonitoring.findOne({
-          where: { id: monitoringId },
-        });
-        if (!monitoring)
-          return { aggregatedCostsByCluster: {}, overallTotalCost: 0 };
-        clusterIds = monitoring.clusterIds;
-        if (Array.isArray(clusterIds) && clusterIds.length > 0) {
-          whereClause.clusterId = clusterIds;
-        }
-      }
+      const whereClause =
+        await this.#buildWhereClauseForMonitoring(monitoringId);
+      if (monitoringId && !whereClause)
+        return { aggregatedCostsByCluster: {}, overallTotalCost: 0 };
 
       const records = await this.findAll({
         attributes: [
