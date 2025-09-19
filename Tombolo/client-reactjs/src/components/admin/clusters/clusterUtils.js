@@ -44,7 +44,9 @@ export const getClusterWhiteList = async () => {
   }
 
   const responseJson = await response.json();
-  return responseJson.data;
+  const clusters = responseJson.data;
+
+  return Array.isArray(clusters) ? clusters : [];
 };
 
 //Ping a cluster
