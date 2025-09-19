@@ -83,7 +83,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       clusterUsage: '5b',
       // Orbit: '5c',
       clusters: '6',
-      github: '8',
+      // github: '8',
       consumers: '9',
       applications: '10',
       userManagement: '11',
@@ -340,26 +340,26 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       null,
       disabled
     ),
-    getItem(
-      <>
-        {disabled || clusterDisabled ? (
-          <>
-            <i className="fa fa-fw fa-github" />
-            <span style={{ marginLeft: '1rem' }}>Github</span>
-          </>
-        ) : (
-          <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/github'}>
-            <i className="fa fa-fw fa-github" />
-            <span style={{ marginLeft: '1rem' }}>Github</span>
-          </Link>
-        )}
-      </>,
-      '8',
-      null,
-      null,
-      null,
-      clusterDisabled
-    ),
+    // getItem(
+    //   <>
+    //     {disabled || clusterDisabled ? (
+    //       <>
+    //         <i className="fa fa-fw fa-github" />
+    //         <span style={{ marginLeft: '1rem' }}>Github</span>
+    //       </>
+    //     ) : (
+    //       <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/github'}>
+    //         <i className="fa fa-fw fa-github" />
+    //         <span style={{ marginLeft: '1rem' }}>Github</span>
+    //       </Link>
+    //     )}
+    //   </>,
+    //   '8',
+    //   null,
+    //   null,
+    //   null,
+    //   clusterDisabled
+    // ),
   ];
 
   const adminItems = [
