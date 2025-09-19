@@ -5,22 +5,30 @@ const logger = require('../config/logger');
 
 module.exports = (sequelize, DataTypes) => {
   class CostMonitoringData extends Model {
+    static async #buildWhereClauseForMonitoring(monitoringId = null) {
+      const whereClause = this.#getStartOfDayWhereClause();
+      if (monitoringId) {
+        // Dynamically require CostMonitoring to avoid circular dependency
+        const CostMonitoring = this.sequelize.models.CostMonitoring;
+        const monitoring = await CostMonitoring.findOne({
+          where: { id: monitoringId },
+        });
+        if (!monitoring) return null;
+        const clusterIds = monitoring.clusterIds;
+        if (Array.isArray(clusterIds) && clusterIds.length > 0) {
+          whereClause.clusterId = clusterIds;
+        }
+      }
+      return whereClause;
+    }
     static associate(models) {
-      CostMonitoringData.belongsTo(models.Application, {
-        foreignKey: 'applicationId',
-        as: 'application',
-      });
-      CostMonitoringData.belongsTo(models.CostMonitoring, {
-        foreignKey: 'monitoringId',
-        as: 'costMonitoring',
-      });
       CostMonitoringData.belongsTo(models.Cluster, {
         foreignKey: 'clusterId',
         as: 'cluster',
       });
     }
 
-    static getStartOfDayWhereClause() {
+    static #getStartOfDayWhereClause() {
       return {
         deletedAt: null,
         [Op.and]: [
@@ -48,16 +56,12 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     static async getDataTotals(monitoringId = null) {
-      const whereClause = this.getStartOfDayWhereClause();
-
-      // Add monitoringId filter if provided
-      if (monitoringId) {
-        whereClause.monitoringId = monitoringId;
-      }
+      const whereClause =
+        await this.#buildWhereClauseForMonitoring(monitoringId);
+      if (monitoringId && !whereClause) return [];
 
       const records = await this.findAll({
         attributes: [
-          'monitoringId',
           'usersCostInfo',
           'clusterId',
           [col('Cluster.timezone_offset'), 'timezone_offset'],
@@ -80,7 +84,8 @@ module.exports = (sequelize, DataTypes) => {
       const groupedData = {};
 
       for (const record of records) {
-        const { monitoringId, usersCostInfo, timezone_offset, clusterId, clusterName } = record;
+        const { usersCostInfo, timezone_offset, clusterId, clusterName } =
+          record;
 
         const costInfo =
           typeof usersCostInfo === 'string'
@@ -90,11 +95,10 @@ module.exports = (sequelize, DataTypes) => {
         const usernames = Object.keys(costInfo);
 
         for (const username of usernames) {
-          const key = `${monitoringId}-${clusterId}-${username}`;
+          const key = `${clusterId}-${username}`;
           if (!groupedData[key]) {
             groupedData[key] = {
               id: key,
-              monitoringId,
               username,
               clusterId,
               clusterName,
@@ -126,14 +130,12 @@ module.exports = (sequelize, DataTypes) => {
 
       // Convert groupedData to array
       Object.values(groupedData).forEach(result => {
-        // Ensure timezone_offset is stable per (monitoringId, clusterId)
+        // Ensure timezone_offset is stable per clusterId
         results.push({
           ...result,
           timezone_offset: Math.min(
             ...records
-              .filter(
-                r => r.monitoringId === result.monitoringId && r.clusterId === result.clusterId
-              )
+              .filter(r => r.clusterId === result.clusterId)
               .map(r => r.timezone_offset)
           ),
         });
@@ -163,15 +165,13 @@ module.exports = (sequelize, DataTypes) => {
      * @returns {Promise<CostClusterTotals[]>} Promise resolving to an array of clustered totals with cluster metadata.
      */
     static async getClusterDataTotals(monitoringId = null) {
-      const whereClause = this.getStartOfDayWhereClause();
-
-      if (monitoringId) {
-        whereClause.monitoringId = monitoringId;
-      }
+      const whereClause =
+        await this.#buildWhereClauseForMonitoring(monitoringId);
+      if (monitoringId && !whereClause)
+        return { aggregatedCostsByCluster: {}, overallTotalCost: 0 };
 
       const records = await this.findAll({
         attributes: [
-          'monitoringId',
           'clusterId',
           'metaData',
           [col('Cluster.timezone_offset'), 'timezone_offset'],
@@ -189,18 +189,11 @@ module.exports = (sequelize, DataTypes) => {
         raw: true,
       });
 
-      // const results = [];
       const aggregatedCostsByCluster = {};
       let overallTotalCost = 0;
 
       for (const record of records) {
-        const {
-          monitoringId,
-          metaData,
-          timezone_offset,
-          clusterName,
-          clusterId,
-        } = record;
+        const { metaData, timezone_offset, clusterName, clusterId } = record;
 
         let costInfo;
         try {
@@ -208,7 +201,7 @@ module.exports = (sequelize, DataTypes) => {
             typeof metaData === 'string' ? JSON.parse(metaData) : metaData;
         } catch (error) {
           logger.error(
-            `Failed to parse metaData for monitoringId ${monitoringId}:`,
+            `Failed to parse metaData for clusterId ${clusterId}:`,
             error
           );
           continue;
@@ -262,31 +255,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
       },
-      applicationId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: 'applications',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
       clusterId: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
           model: 'clusters',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
-      monitoringId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: 'cost_monitorings',
           key: 'id',
         },
         onUpdate: 'CASCADE',

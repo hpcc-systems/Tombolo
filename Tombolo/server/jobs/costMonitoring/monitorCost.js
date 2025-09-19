@@ -163,221 +163,169 @@ async function monitorCost() {
       return;
     }
 
-    // Get cluster details for each monitoring
+    // 1. Gather all unique cluster IDs referenced by any cost monitoring (or all clusters if any monitoring has clusterIds null/empty)
+    let allClusterIds = new Set();
+    let useAllClusters = false;
     for (const costMonitor of costMonitorings) {
-      const applicationId = costMonitor.applicationId;
-      const clusterIds = costMonitor.clusterIds;
-
-      let clusterDetails;
-      if (clusterIds === null || clusterIds.length === 0) {
-        // Then get all active clusters details
-        const allClusters = await Cluster.findAll({
-          attributes: ['id'],
-          where: { deletedAt: null },
-        });
-        clusterDetails = (
-          await Promise.all(
-            allClusters.map(async cluster => {
-              try {
-                return await getCluster(cluster.id);
-              } catch (err) {
-                parentPort &&
-                  parentPort.postMessage({
-                    level: 'error',
-                    text: `monitorCost: Failed to get cluster ${cluster.name}: ${err.message}, ...skipping`,
-                  });
-              }
-            })
-          )
-        ).filter(Boolean);
-      } else {
-        clusterDetails = (
-          await Promise.all(
-            clusterIds.map(async clusterId => {
-              try {
-                return await getCluster(clusterId);
-              } catch (err) {
-                parentPort &&
-                  parentPort.postMessage({
-                    level: 'error',
-                    text: `monitorCost: Failed to get cluster ${clusterId}: ${err.message}, ...skipping`,
-                  });
-              }
-            })
-          )
-        ).filter(Boolean);
+      if (!costMonitor.clusterIds || costMonitor.clusterIds.length === 0) {
+        useAllClusters = true;
+        break;
       }
+      costMonitor.clusterIds.forEach(id => allClusterIds.add(id));
+    }
 
-      // Iterate clusters
-      for (const clusterDetail of clusterDetails) {
-        try {
-          let newScanTime;
-          // spread timezone offset for each cluster and cluster details
-          const {
-            id: clusterId,
-            thor_host: thorHost,
-            thor_port: thorPort,
-            username,
-            hash,
-            timezone_offset: timezoneOffset,
-            allowSelfSigned,
-          } = clusterDetail;
+    let clusterRecords;
+    if (useAllClusters) {
+      clusterRecords = await Cluster.findAll({
+        attributes: ['id'],
+        where: { deletedAt: null },
+      });
+      allClusterIds = new Set(clusterRecords.map(c => c.id));
+    } else {
+      clusterRecords = await Cluster.findAll({
+        attributes: ['id'],
+        where: { id: Array.from(allClusterIds), deletedAt: null },
+      });
+    }
 
-          // Check if a monitoring log exists
-          const monitoringLog = await MonitoringLog.findOne({
-            where: {
-              cluster_id: clusterId,
-              monitoring_type_id: monitoringType.id,
-            },
-          });
+    // 2. For each cluster, aggregate all cost monitoring data into a single CostMonitoringData row
+    for (const clusterRecord of clusterRecords) {
+      const clusterId = clusterRecord.id;
+      try {
+        const clusterDetail = await getCluster(clusterId);
+        const {
+          thor_host: thorHost,
+          thor_port: thorPort,
+          username,
+          hash,
+          timezone_offset: timezoneOffset,
+          allowSelfSigned,
+        } = clusterDetail;
 
-          // Get start and end date
-          const { endTime: endDate, startTime: startDate } = getStartAndEndTime(
-            monitoringLog ? monitoringLog.scan_time : null,
-            timezoneOffset,
-            true
-          );
+        // Check if a monitoring log exists
+        const monitoringLog = await MonitoringLog.findOne({
+          where: {
+            cluster_id: clusterId,
+            monitoring_type_id: monitoringType.id,
+          },
+        });
 
-          // Get costMonitoringData
-          const costMonitoringData = {
-            monitoringId: costMonitor.id,
-            applicationId,
-            date: new Date(),
-            clusterId,
-            usersCostInfo: {},
-            metaData: {},
-            analyzed: false,
-          };
+        // Get start and end date
+        const { endTime: endDate, startTime: startDate } = getStartAndEndTime(
+          monitoringLog ? monitoringLog.scan_time : null,
+          timezoneOffset,
+          true
+        );
 
-          // Get cluster options
-          const clusterOptions = getClusterOptions(
-            {
-              baseUrl: `${thorHost}:${thorPort}`,
-              userID: username || '',
-              password: hash || '',
-              timeoutSecs: 180,
-            },
-            allowSelfSigned
-          );
+        // Get cluster options
+        const clusterOptions = getClusterOptions(
+          {
+            baseUrl: `${thorHost}:${thorPort}`,
+            userID: username || '',
+            password: hash || '',
+            timeoutSecs: 180,
+          },
+          allowSelfSigned
+        );
 
-          // Set the new scanTime
-          newScanTime = new Date();
+        // Set the new scanTime
+        const newScanTime = new Date();
 
-          // Get work Units for the last hour where their state is terminal
+        // Query for workunits during timeframe
+        const response = await Workunit.query(clusterOptions, {
+          StartDate: startDate,
+          EndDate: endDate,
+          PageSize: 99999, // Ensure we get all workunits
+        });
 
-          // Query for workunits during timeframe
-          const response = await Workunit.query(clusterOptions, {
-            StartDate: startDate,
-            EndDate: endDate,
-            PageSize: 99999, // Ensure we get all workunits
-          });
+        const terminalWorkUnits =
+          response.filter(
+            workUnit =>
+              workUnit.State === 'failed' || workUnit.State === 'completed'
+          ) || [];
 
-          const terminalWorkUnits =
-            response.filter(
-              workUnit =>
-                workUnit.State === 'failed' || workUnit.State === 'completed'
-            ) || [];
+        // Aggregate cost data for this cluster
+        const usersCostInfo = {};
+        const metaData = {
+          wuCostData: {},
+          clusterCostData: {
+            compileCost: 0,
+            executeCost: 0,
+            fileAccessCost: 0,
+            totalCost: 0,
+          },
+        };
 
-          // Iterate work Units
-          terminalWorkUnits.forEach(
-            ({
-              Owner,
-              CompileCost,
-              FileAccessCost,
-              ExecuteCost,
-              Wuid,
-              Jobname,
-            }) => {
-              // Ensure the costs are a number and not null/undefined
-              CompileCost = CompileCost ?? 0;
-              FileAccessCost = FileAccessCost ?? 0;
-              ExecuteCost = ExecuteCost ?? 0;
+        terminalWorkUnits.forEach(
+          ({
+            Owner,
+            CompileCost,
+            FileAccessCost,
+            ExecuteCost,
+            Wuid,
+            Jobname,
+          }) => {
+            // Ensure the costs are a number and not null/undefined
+            CompileCost = CompileCost ?? 0;
+            FileAccessCost = FileAccessCost ?? 0;
+            ExecuteCost = ExecuteCost ?? 0;
 
-              // Ensure expected fields are present in costMonitoringData for JSON fields
-              if (!costMonitoringData.hasOwnProperty('metaData'))
-                costMonitoringData.metaData = {};
-              if (!costMonitoringData.metaData.hasOwnProperty('wuCostData'))
-                costMonitoringData.metaData.wuCostData = {};
-              if (!costMonitoringData.metaData.wuCostData.hasOwnProperty(Wuid))
-                costMonitoringData.metaData.wuCostData[Wuid] = {
-                  jobName: '',
-                  owner: '',
-                  compileCost: 0,
-                  executeCost: 0,
-                  fileAccessCost: 0,
-                  totalCost: 0,
-                };
-              if (!costMonitoringData.usersCostInfo.hasOwnProperty(Owner))
-                costMonitoringData.usersCostInfo[Owner] = {
-                  compileCost: 0,
-                  executeCost: 0,
-                  fileAccessCost: 0,
-                  totalCost: 0,
-                };
-
-              if (
-                !costMonitoringData.metaData.hasOwnProperty('clusterCostData')
-              )
-                costMonitoringData.metaData.clusterCostData = {
-                  compileCost: 0,
-                  executeCost: 0,
-                  fileAccessCost: 0,
-                  totalCost: 0,
-                };
-
-              const totalCost = CompileCost + ExecuteCost + FileAccessCost;
-
-              // Set clusterCostData to aggregate cost for all workunits
-              costMonitoringData.metaData.clusterCostData.fileAccessCost +=
-                FileAccessCost;
-              costMonitoringData.metaData.clusterCostData.compileCost +=
-                CompileCost;
-              costMonitoringData.metaData.clusterCostData.executeCost +=
-                ExecuteCost;
-              costMonitoringData.metaData.clusterCostData.totalCost +=
-                totalCost;
-
-              // Set wuCostData for specific workunit
-              costMonitoringData.metaData.wuCostData[Wuid].jobName = Jobname;
-              costMonitoringData.metaData.wuCostData[Wuid].owner = Owner;
-              costMonitoringData.metaData.wuCostData[Wuid].compileCost =
-                CompileCost;
-              costMonitoringData.metaData.wuCostData[Wuid].executeCost =
-                ExecuteCost;
-              costMonitoringData.metaData.wuCostData[Wuid].fileAccessCost =
-                FileAccessCost;
-              costMonitoringData.metaData.wuCostData[Wuid].totalCost =
-                totalCost;
-
-              // Set userCostInfo for a specific user
-              costMonitoringData.usersCostInfo[Owner].compileCost +=
-                CompileCost;
-              costMonitoringData.usersCostInfo[Owner].executeCost +=
-                ExecuteCost;
-              costMonitoringData.usersCostInfo[Owner].fileAccessCost +=
-                FileAccessCost;
-              costMonitoringData.usersCostInfo[Owner].totalCost += totalCost;
+            if (!metaData.wuCostData[Wuid]) {
+              metaData.wuCostData[Wuid] = {
+                jobName: Jobname,
+                owner: Owner,
+                compileCost: CompileCost,
+                executeCost: ExecuteCost,
+                fileAccessCost: FileAccessCost,
+                totalCost: CompileCost + ExecuteCost + FileAccessCost,
+              };
             }
-          );
 
-          // Save costMonitoringData on each iteration
-          await CostMonitoringData.create(costMonitoringData);
+            if (!usersCostInfo[Owner]) {
+              usersCostInfo[Owner] = {
+                compileCost: 0,
+                executeCost: 0,
+                fileAccessCost: 0,
+                totalCost: 0,
+              };
+            }
 
-          // If monitoring log doesn't exist create it. If it does update scan time
-          await handleMonitorLogs(
-            monitoringLog,
-            clusterId,
-            monitoringType.id,
-            newScanTime
-          );
-        } catch (perClusterError) {
-          logger.error('>>> monitorCost: Error in cluster ', perClusterError);
-          parentPort &&
-            parentPort.postMessage({
-              level: 'error',
-              text: `monitorCost: Failed in cluster ${clusterDetail.name}: ${perClusterError.message}, ...skipping`,
-            });
-        }
+            usersCostInfo[Owner].compileCost += CompileCost;
+            usersCostInfo[Owner].executeCost += ExecuteCost;
+            usersCostInfo[Owner].fileAccessCost += FileAccessCost;
+            usersCostInfo[Owner].totalCost +=
+              CompileCost + ExecuteCost + FileAccessCost;
+
+            metaData.clusterCostData.compileCost += CompileCost;
+            metaData.clusterCostData.executeCost += ExecuteCost;
+            metaData.clusterCostData.fileAccessCost += FileAccessCost;
+            metaData.clusterCostData.totalCost +=
+              CompileCost + ExecuteCost + FileAccessCost;
+          }
+        );
+
+        // Save a single CostMonitoringData row per cluster
+        await CostMonitoringData.create({
+          date: new Date(),
+          clusterId,
+          usersCostInfo,
+          metaData,
+        });
+
+        // If monitoring log doesn't exist create it. If it does update scan time
+        await handleMonitorLogs(
+          monitoringLog,
+          clusterId,
+          monitoringType.id,
+          newScanTime
+        );
+      } catch (perClusterError) {
+        logger.error('>>> monitorCost: Error in cluster ', perClusterError);
+        parentPort &&
+          parentPort.postMessage({
+            level: 'error',
+            text: `monitorCost: Failed in cluster ${clusterId}: ${perClusterError.message}, ...skipping`,
+          });
       }
     }
     parentPort &&
