@@ -11,13 +11,7 @@ const {
   startJob,
   startAllJobs,
 } = require('../jobSchedularMethods/breeJobs.js');
-// const {
-//   scheduleCheckForJobsWithSingleDependency,
-//   executeJob,
-//   scheduleActiveCronJobs,
-//   scheduleMessageBasedJobs,
-//   addJobToScheduler,
-// } = require('../jobSchedularMethods/workFlowJobs.js');
+
 const {
   scheduleClusterTimezoneOffset,
   startClusterMonitoring,
@@ -124,11 +118,6 @@ class JobScheduler {
           this.bree.remove(worker.name);
           logger.info(`Job removed:  ${workerName}`);
         }
-        // if (message?.action === 'scheduleNext') {
-        //   await this.scheduleCheckForJobsWithSingleDependency({
-        //     ...message.data,
-        //   });
-        // }
       },
     });
   }
