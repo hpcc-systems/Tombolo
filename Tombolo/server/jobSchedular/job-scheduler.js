@@ -135,17 +135,9 @@ class JobScheduler {
 
   bootstrap() {
     (async () => {
-      // await this.scheduleActiveCronJobs();
-      // await this.scheduleJobStatusPolling();
       await this.scheduleClusterTimezoneOffset();
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
-      // await this.scheduleFileMonitoringOnServerStart();
-      // await this.scheduleKeyCheck();
-      // await this.createClusterUsageHistoryJob();
       await this.scheduleEmailNotificationProcessing();
-      // await this.scheduleTeamsNotificationProcessing();
-      // await this.scheduleOrbitMonitoringOnServerStart();
-      // await this.createOrbitMegaphoneJob();
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
@@ -244,25 +236,6 @@ class JobScheduler {
     return startAllJobs.call(this);
   }
 
-  // Jobs in a workflow
-  // scheduleCheckForJobsWithSingleDependency({
-  //   dependsOnJobId,
-  //   dataflowId,
-  //   dataflowVersionId,
-  //   jobExecutionGroupId,
-  // }) {
-  //   scheduleCheckForJobsWithSingleDependency.call(this, {
-  //     dependsOnJobId,
-  //     dataflowId,
-  //     dataflowVersionId,
-  //     jobExecutionGroupId,
-  //   });
-  // }
-
-  // executeJob(jobData) {
-  //   return executeJob.call(this, jobData);
-  // }
-
   // Job that fetches workunit info
   createWuInfoFetchingJob(data) {
     return createWuInfoFetchingJob.call(this, data);
@@ -279,18 +252,6 @@ class JobScheduler {
   createAnalyzeCostJob() {
     return createAnalyzeCostJob.call(this);
   }
-
-  // scheduleActiveCronJobs() {
-  //   return scheduleActiveCronJobs.call(this);
-  // }
-
-  // scheduleMessageBasedJobs(message) {
-  //   return scheduleMessageBasedJobs.call(this, message);
-  // }
-
-  // addJobToScheduler(jobData) {
-  //   return addJobToScheduler.call(this, jobData);
-  // }
 
   // Cluster jobs
   scheduleClusterTimezoneOffset() {
@@ -338,11 +299,6 @@ class JobScheduler {
   scheduleFileMonitoring() {
     return scheduleFileMonitoring.call(this);
   }
-
-  // API keys check
-  // scheduleKeyCheck() {
-  //   return scheduleKeyCheck.call(this);
-  // }
 
   // Job monitoring
   startJobMonitoring() {
