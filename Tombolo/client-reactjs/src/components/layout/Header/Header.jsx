@@ -11,7 +11,7 @@ import {
   getClusters,
   getApplications,
   getAllActiveIntegrations,
-} from '@/redux/slices/applicationSlice';
+} from '@/redux/slices/ApplicationSlice';
 
 import styles from '../layout.module.css';
 import { logout } from '@/redux/slices/AuthSlice';
