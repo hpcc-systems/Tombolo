@@ -1,10 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
-import applicationReducer from '../slices/applicationSlice';
-import assetReducer from '../slices/assetSlice';
-import authReducer from '../slices/authSlice';
-import backendReducer from '../slices/backendSlice';
-import dataflowReducer from '../slices/dataflowSlice';
-import groupsReducer from '../slices/groupSlice';
+import applicationReducer from '../slices/ApplicationSlice';
+import assetReducer from '../slices/AssetSlice';
+import authReducer from '../slices/AuthSlice';
+import backendReducer from '../slices/BackendSlice';
+import dataflowReducer from '../slices/DataflowSlice';
+import groupsReducer from '../slices/GroupSlice';
 import propagationReducer from '../slices/PropagationSlice';
 
 export const store = configureStore({
