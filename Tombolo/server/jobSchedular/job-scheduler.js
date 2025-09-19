@@ -11,41 +11,24 @@ const {
   startJob,
   startAllJobs,
 } = require('../jobSchedularMethods/breeJobs.js');
-const {
-  scheduleCheckForJobsWithSingleDependency,
-  executeJob,
-  scheduleActiveCronJobs,
-  scheduleMessageBasedJobs,
-  addJobToScheduler,
-} = require('../jobSchedularMethods/workFlowJobs.js');
+
 const {
   scheduleClusterTimezoneOffset,
-  // createClusterUsageHistoryJob,
   startClusterMonitoring,
   checkClusterReachability,
   checkClusterContainerization,
 } = require('../jobSchedularMethods/clusterJobs.js');
-// const {
-//   scheduleJobStatusPolling,
-// } = require('../jobSchedularMethods/hpccJobs.js');
+
 const {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   scheduleFileMonitoringBreeJob,
-  scheduleFileMonitoringOnServerStart,
   scheduleFileMonitoring,
 } = require('../jobSchedularMethods/hpccFiles.js');
-// const { scheduleKeyCheck } = require('../jobSchedularMethods/apiKeys.js');
 const {
   scheduleEmailNotificationProcessing,
   //   scheduleTeamsNotificationProcessing,
 } = require('../jobSchedularMethods/notificationJobs.js');
-
-// const {
-//   createOrbitMegaphoneJob,
-//   createOrbitMonitoringJob,
-//   scheduleOrbitMonitoringOnServerStart,
-// } = require('../jobSchedularMethods/orbitJobs.js');
 
 const {
   startJobMonitoring,
@@ -135,28 +118,15 @@ class JobScheduler {
           this.bree.remove(worker.name);
           logger.info(`Job removed:  ${workerName}`);
         }
-        if (message?.action === 'scheduleNext') {
-          await this.scheduleCheckForJobsWithSingleDependency({
-            ...message.data,
-          });
-        }
       },
     });
   }
 
   bootstrap() {
     (async () => {
-      await this.scheduleActiveCronJobs();
-      // await this.scheduleJobStatusPolling();
       await this.scheduleClusterTimezoneOffset();
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
-      await this.scheduleFileMonitoringOnServerStart();
-      // await this.scheduleKeyCheck();
-      // await this.createClusterUsageHistoryJob();
       await this.scheduleEmailNotificationProcessing();
-      // await this.scheduleTeamsNotificationProcessing();
-      // await this.scheduleOrbitMonitoringOnServerStart();
-      // await this.createOrbitMegaphoneJob();
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
@@ -255,25 +225,6 @@ class JobScheduler {
     return startAllJobs.call(this);
   }
 
-  // Jobs in a workflow
-  scheduleCheckForJobsWithSingleDependency({
-    dependsOnJobId,
-    dataflowId,
-    dataflowVersionId,
-    jobExecutionGroupId,
-  }) {
-    scheduleCheckForJobsWithSingleDependency.call(this, {
-      dependsOnJobId,
-      dataflowId,
-      dataflowVersionId,
-      jobExecutionGroupId,
-    });
-  }
-
-  executeJob(jobData) {
-    return executeJob.call(this, jobData);
-  }
-
   // Job that fetches workunit info
   createWuInfoFetchingJob(data) {
     return createWuInfoFetchingJob.call(this, data);
@@ -291,25 +242,10 @@ class JobScheduler {
     return createAnalyzeCostJob.call(this);
   }
 
-  scheduleActiveCronJobs() {
-    return scheduleActiveCronJobs.call(this);
-  }
-
-  scheduleMessageBasedJobs(message) {
-    return scheduleMessageBasedJobs.call(this, message);
-  }
-
-  addJobToScheduler(jobData) {
-    return addJobToScheduler.call(this, jobData);
-  }
-
   // Cluster jobs
   scheduleClusterTimezoneOffset() {
     return scheduleClusterTimezoneOffset.call(this);
   }
-  // createClusterUsageHistoryJob() {
-  //   return createClusterUsageHistoryJob.call(this);
-  // }
 
   startClusterMonitoring({ clusterMonitoring_id, cron }) {
     return startClusterMonitoring.call(this, {
@@ -317,10 +253,6 @@ class JobScheduler {
       cron,
     });
   }
-
-  // scheduleJobStatusPolling() {
-  //   return scheduleJobStatusPolling.call(this);
-  // }
 
   // file Monitoring
   createLandingZoneFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
@@ -353,18 +285,9 @@ class JobScheduler {
     });
   }
 
-  scheduleFileMonitoringOnServerStart() {
-    return scheduleFileMonitoringOnServerStart.call(this);
-  }
-
   scheduleFileMonitoring() {
     return scheduleFileMonitoring.call(this);
   }
-
-  // API keys check
-  // scheduleKeyCheck() {
-  //   return scheduleKeyCheck.call(this);
-  // }
 
   // Job monitoring
   startJobMonitoring() {
@@ -386,16 +309,6 @@ class JobScheduler {
   scheduleEmailNotificationProcessing() {
     return scheduleEmailNotificationProcessing.call(this);
   }
-  // scheduleTeamsNotificationProcessing() {
-  //   return scheduleTeamsNotificationProcessing.call(this);
-  // }
-  //orbit jobs
-  // createOrbitMegaphoneJob() {
-  //   return createOrbitMegaphoneJob.call(this);
-  // }
-  // scheduleOrbitMonitoringOnServerStart() {
-  //   return scheduleOrbitMonitoringOnServerStart.call(this);
-  // }
 
   createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
     return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
