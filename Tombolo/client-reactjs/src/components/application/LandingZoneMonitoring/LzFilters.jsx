@@ -67,7 +67,7 @@ function LzFilters({
     setDomainOptions(filterOptions.domain);
     setProductOptions(filterOptions.products);
     setClusterOptions(filterOptions.clusters);
-  }, [landingZoneMonitoring, domains, allProductCategories, selectedDomain, loadFilters]);
+  }, [landingZoneMonitoring, domains, allProductCategories, selectedDomain]);
 
   return (
     <div>
