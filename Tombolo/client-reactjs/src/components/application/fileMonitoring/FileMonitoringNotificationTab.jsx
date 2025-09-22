@@ -1,6 +1,5 @@
-/* eslint-disable */
 // Packages
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Form, InputNumber, Select, Row, Col } from 'antd';
 
 // Local Imports
@@ -36,16 +35,18 @@ function FileMonitoringNotificationTab({
   selectedNotificationCondition,
   setSelectedNotificationCondition,
   isEditing,
+  isDuplicating,
+  setMinSizeThresholdUnit,
+  setMaxSizeThresholdUnit,
+  minSizeThresholdUnit,
+  maxSizeThresholdUnit,
 }) {
-  const [minSizeThresholdUnit, setMinSizeThresholdUnit] = useState('MB');
-  const [maxSizeThresholdUnit, setMaxSizeThresholdUnit] = useState('MB');
-
   // Reset fields when monitoringFileType changes
   useEffect(() => {
-    if (isEditing) {
+    if (isEditing || isDuplicating) {
       return;
     }
-    setSelectedNotificationCondition([]);
+    // setSelectedNotificationCondition([]);
     form.setFieldsValue({
       notificationCondition: [],
       minFileSize: null,
@@ -55,27 +56,79 @@ function FileMonitoringNotificationTab({
     });
   }, [monitoringFileType]);
 
-  // Set Threshold Unit
-  const setThresholdUnit = (value, field) => {
+  // Handle Threshold Unit Change, re calulate and set error if min is greater than max and vice versa
+  const handleThresholdUnitChange = (value, field) => {
     if (field === 'minThreshold') {
       setMinSizeThresholdUnit(value);
+      // Calculate min and max in MB
+      const minInMB = convertToMB(form.getFieldValue('minFileSize'), value);
+      const maxInMB = convertToMB(form.getFieldValue('maxFileSize'), maxSizeThresholdUnit);
+
+      // Set error if min is greater than max
+      if (minInMB > maxInMB) {
+        form.setFields([
+          {
+            name: 'minFileSize',
+            errors: ['Minimum size cannot be greater than maximum size'],
+          },
+        ]);
+      } else {
+        // remoe error if exists
+        form.setFields([
+          {
+            name: 'minFileSize',
+            errors: [],
+          },
+        ]);
+      }
     } else if (field === 'maxThreshold') {
       setMaxSizeThresholdUnit(value);
+      // Calculate min and max in MB
+      const minInMB = convertToMB(form.getFieldValue('minFileSize'), minSizeThresholdUnit);
+      const maxInMB = convertToMB(form.getFieldValue('maxFileSize'), value);
+
+      // Set error if min is greater than max
+      if (minInMB > maxInMB) {
+        form.setFields([
+          {
+            name: 'maxFileSize',
+            errors: ['Maximum size cannot be smaller than minimum size'],
+          },
+          {
+            name: 'minFileSize',
+            errors: [],
+          },
+        ]);
+      } else {
+        // remove  error if exists
+        form.setFields([
+          {
+            name: 'maxFileSize',
+            errors: [],
+          },
+          {
+            name: 'minFileSize',
+            errors: [],
+          },
+        ]);
+      }
     }
   };
 
   // Threshold Addons
   const renderThresholdAddon = (field) => (
-    <Select
-      defaultValue={field === 'minThreshold' ? minSizeThresholdUnit : maxSizeThresholdUnit}
-      style={{ width: 80 }}
-      onChange={(value) => setThresholdUnit(value, field)}>
-      {storageUnits.map((unit) => (
-        <Option key={unit.id} value={unit.value}>
-          {unit.label}
-        </Option>
-      ))}
-    </Select>
+    <Form.Item noStyle name={field === 'minThreshold' ? 'minSizeThresholdUnit' : 'maxSizeThresholdUnit'}>
+      <Select
+        // defaultValue={field === 'minThreshold' ? minSizeThresholdUnit : maxSizeThresholdUnit}
+        style={{ width: 80 }}
+        onChange={(value) => handleThresholdUnitChange(value, field)}>
+        {storageUnits.map((unit) => (
+          <Option key={unit.id} value={unit.value}>
+            {unit.label}
+          </Option>
+        ))}
+      </Select>
+    </Form.Item>
   );
 
   return (
@@ -138,6 +191,11 @@ function FileMonitoringNotificationTab({
 
                       const minInMB = convertToMB(min, minSizeThresholdUnit);
                       const maxInMB = convertToMB(value, maxSizeThresholdUnit);
+
+                      console.log('------------------------');
+                      console.log(minSizeThresholdUnit, maxSizeThresholdUnit);
+                      console.log(minInMB, maxInMB);
+                      console.log('------------------------');
 
                       if (maxInMB < minInMB) {
                         return Promise.reject(new Error('Maximum size cannot be smaller than minimum size'));
