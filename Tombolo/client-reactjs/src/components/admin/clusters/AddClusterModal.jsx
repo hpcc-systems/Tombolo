@@ -114,7 +114,6 @@ function AddClusterModal({
   const submitNewCluster = async () => {
     // Reset all step related states
     resetAllClusterAddSteps();
-    setDisplaySteps(true);
 
     // Validate all the form fields
     let validationErrors = false;
@@ -127,6 +126,8 @@ function AddClusterModal({
     if (validationErrors) {
       return;
     }
+
+    setDisplaySteps(true);
 
     // Ping the cluster to check if the credentials present
     if (requireCredentials) {
