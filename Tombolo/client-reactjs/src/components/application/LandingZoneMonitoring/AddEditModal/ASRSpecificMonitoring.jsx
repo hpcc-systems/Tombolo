@@ -18,7 +18,7 @@ function AsrSpecificMonitoring({ form, domains, productCategories, setSelectedDo
     <>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item label="Domain" name="domain" rules={[{ required: false, message: 'Please select an option' }]}>
+          <Form.Item label="Domain" name="domain">
             <Select onChange={(value) => handleDomainChange(value)} placeholder="Domain">
               {domains.length > 0 &&
                 domains.map((d, i) => {
