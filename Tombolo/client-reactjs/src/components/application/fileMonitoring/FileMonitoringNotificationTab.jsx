@@ -80,7 +80,7 @@ function FileMonitoringNotificationTab({
 
   return (
     <Form form={form} layout="vertical">
-      <NotificationContacts form={form}>
+      <NotificationContacts>
         <Form.Item
           name="notificationCondition"
           label="Notify when"
