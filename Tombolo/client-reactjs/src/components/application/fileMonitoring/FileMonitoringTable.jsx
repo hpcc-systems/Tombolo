@@ -224,7 +224,7 @@ const FileMonitoringTable = ({
                       </div>
                     </div>
                   }>
-                  <span style={{ color: 'var(--secondary)' }}>
+                  <span style={{ color: 'var(--secondary)' }} className={styles.monitoringTable__hidden_actions}>
                     More <DownOutlined style={{ fontSize: '10px' }} />
                   </span>
                 </Popover>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Form, message } from 'antd';
+import { Form, message, Descriptions, Tag } from 'antd';
 
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditFileMonitoringModal from './AddEditFileMonitoringModal';
@@ -28,6 +28,11 @@ import { Constants } from '@/components/common/Constants';
 
 const monitoringTypeName = 'File Monitoring';
 
+const notificationConditionsObj = {
+  sizeNotInRange: 'File size not in range',
+  subFileCountNotInRange: 'Subfile count not in range',
+};
+
 function FileMonitoring() {
   // Redux
   const applicationId = useSelector((state) => state.application.application.applicationId);
@@ -42,7 +47,7 @@ function FileMonitoring() {
   const [displayMonitoringDetailsModal, setDisplayMonitoringDetailsModal] = useState(false);
   const [selectedMonitoring, setSelectedMonitoring] = useState(null);
   const [editingData, setEditingData] = useState({ isEditing: false }); // Data to be edited
-  const [duplicatingData, setDuplicatingData] = useState({ isDuplicating: false }); // CM to be duplicated
+  const [duplicatingData, setDuplicatingData] = useState({ isDuplicating: false }); // FM to be duplicated
   const [displayAddRejectModal, setDisplayAddRejectModal] = useState(false);
   const [savingFileMonitoring, setSavingFileMonitoring] = useState(false);
   const [erroneousTabs, setErroneousTabs] = useState([]); // Tabs with erroneous fields
@@ -60,6 +65,11 @@ function FileMonitoring() {
   // Form instance
   const [form] = Form.useForm();
 
+  const fileTypes = {
+    stdLogicalFile: 'Standard Logical File',
+    superFile: 'Super File',
+  };
+
   // When component mounts and appid change get all file monitoring
   const {
     monitorings: fileMonitoring,
@@ -75,7 +85,7 @@ function FileMonitoring() {
 
       // Set states that are responsible for hiding/displaying dependent fields
       setSelectedNotificationCondition(selectedMonitoring?.metaData?.monitoringData?.notificationCondition || []);
-      setMonitoringFileType(selectedMonitoring?.metaData?.monitoringData?.monitoringFileType || 'stdLogicalFile');
+      setMonitoringFileType(selectedMonitoring?.fileMonitoringType || 'stdLogicalFile');
 
       // Set form values from metadata
       form.setFieldsValue({
@@ -248,8 +258,16 @@ function FileMonitoring() {
 
       // Group monitoring data
       const monitoringData = {};
-      const { notificationCondition, minFileSize, maxFileSize, minSubFileCount, maxSubFileCount, fileNamePattern } =
-        allInputs;
+      const {
+        notificationCondition,
+        minFileSize,
+        maxFileSize,
+        minSubFileCount,
+        maxSubFileCount,
+        fileNamePattern,
+        minSizeThresholdUnit,
+        maxSizeThresholdUnit,
+      } = allInputs;
       const monitoringFields = {
         fileNamePattern,
         notificationCondition,
@@ -257,6 +275,8 @@ function FileMonitoring() {
         maxFileSize,
         minSubFileCount,
         maxSubFileCount,
+        minSizeThresholdUnit,
+        maxSizeThresholdUnit,
       };
       for (let key in monitoringFields) {
         if (monitoringFields[key] !== undefined) {
@@ -499,6 +519,7 @@ function FileMonitoring() {
         setSelectedNotificationCondition={setSelectedNotificationCondition}
         monitoringFileType={monitoringFileType}
         setMonitoringFileType={setMonitoringFileType}
+        fileTypes={fileTypes}
       />
       <FileMonitoringTable
         fileMonitoring={filteredFileMonitoring}
@@ -522,11 +543,41 @@ function FileMonitoring() {
           monitoringTypeName={monitoringTypeName}
           displayMonitoringDetailsModal={displayMonitoringDetailsModal}
           setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
-          selectedMonitoring={selectedMonitoring}
-          setSelectedMonitoring={setSelectedMonitoring}
+          selectedMonitoring={{
+            ...selectedMonitoring,
+            metaData: {
+              ...selectedMonitoring.metaData,
+              notificationMetaData: selectedMonitoring?.metaData?.contacts,
+            },
+          }}
           clusters={clusters}
           domains={domains}
-          productCategories={productCategories}></MonitoringDetailsModal>
+          productCategories={productCategories}>
+          <Descriptions.Item label="File Type "> {fileTypes[selectedMonitoring.fileMonitoringType]}</Descriptions.Item>
+          <Descriptions.Item label="File Name / Pattern">
+            {selectedMonitoring?.metaData?.monitoringData?.fileNamePattern}
+          </Descriptions.Item>
+          <Descriptions.Item label="Notify when">
+            {selectedMonitoring?.metaData?.monitoringData?.notificationCondition?.map((condition, i) => (
+              <Tag key={i}>{notificationConditionsObj[condition]}</Tag>
+            ))}
+          </Descriptions.Item>
+
+          {selectedMonitoring?.metaData?.monitoringData?.minFileSize &&
+            selectedMonitoring?.metaData?.monitoringData?.minFileSize && (
+              <Descriptions.Item label="File Size Range">
+                {`${selectedMonitoring?.metaData?.monitoringData?.minFileSize} ${selectedMonitoring?.metaData?.monitoringData?.minSizeThresholdUnit}
+            -  ${selectedMonitoring?.metaData?.monitoringData?.maxFileSize} ${selectedMonitoring?.metaData?.monitoringData?.maxSizeThresholdUnit}`}
+              </Descriptions.Item>
+            )}
+
+          {/* File count range  */}
+          {selectedMonitoring?.metaData?.monitoringData?.minSubFileCount && (
+            <Descriptions.Item label="File Count Range">
+              {`${selectedMonitoring?.metaData?.monitoringData?.minSubFileCount} - ${selectedMonitoring?.metaData?.monitoringData?.maxSubFileCount}`}
+            </Descriptions.Item>
+          )}
+        </MonitoringDetailsModal>
       )}
       {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
       {displayAddRejectModal && (

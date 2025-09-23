@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Tabs, Button, Badge } from 'antd';
+import { Modal, Tabs, Button, Badge, Form } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 
 import FileMonitoringBasicTab from './FileMonitoringBasicTab';
@@ -29,9 +29,12 @@ const AddEditFileMonitoringModal = ({
   setSelectedNotificationCondition,
   monitoringFileType,
   setMonitoringFileType,
+  fileTypes,
 }) => {
   // Keep track of visited tabs, some form fields are loaded only when the tab is visited. This is to avoid validation errors
   const [visitedTabs, setVisitedTabs] = useState(['0']);
+  const [minSizeThresholdUnit, setMinSizeThresholdUnit] = useState('MB');
+  const [maxSizeThresholdUnit, setMaxSizeThresholdUnit] = useState('MB');
 
   // Handle tab change
   const handleTabChange = (key) => {
@@ -63,6 +66,7 @@ const AddEditFileMonitoringModal = ({
           selectedClusters={selectedClusters}
           setSelectedDomain={setSelectedDomain}
           setMonitoringFileType={setMonitoringFileType}
+          fileTypes={fileTypes}
         />
       ),
       id: 1,
@@ -78,6 +82,11 @@ const AddEditFileMonitoringModal = ({
           monitoringFileType={monitoringFileType}
           setMonitoringFileType={setMonitoringFileType}
           isEditing={isEditing}
+          isDuplicating={isDuplicating}
+          setMinSizeThresholdUnit={setMinSizeThresholdUnit}
+          setMaxSizeThresholdUnit={setMaxSizeThresholdUnit}
+          maxSizeThresholdUnit={maxSizeThresholdUnit}
+          minSizeThresholdUnit={minSizeThresholdUnit}
         />
       ),
     },
@@ -186,13 +195,15 @@ const AddEditFileMonitoringModal = ({
       footer={renderFooter()}
       destroyOnClose={true}
       maskClosable={false}>
-      <Tabs
-        type="card"
-        activeKey={activeTab.toString()}
-        onChange={(key) => handleTabChange(key)}
-        items={tabItems}
-        destroyInactiveTabPane={false}
-      />
+      <Form form={form} layout="vertical" initialValues={{ maxSizeThresholdUnit, minSizeThresholdUnit }}>
+        <Tabs
+          type="card"
+          activeKey={activeTab.toString()}
+          onChange={(key) => handleTabChange(key)}
+          items={tabItems}
+          destroyInactiveTabPane={false}
+        />
+      </Form>
     </Modal>
   );
 };
