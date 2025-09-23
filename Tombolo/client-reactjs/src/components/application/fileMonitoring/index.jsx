@@ -563,12 +563,13 @@ function FileMonitoring() {
             ))}
           </Descriptions.Item>
 
-          {selectedMonitoring?.metaData?.monitoringData?.minFileSize && selectedMonitoring?.metaData?.monitoringData?.minFileSize && &&(
-            <Descriptions.Item label="File Size Range">
-              {`${selectedMonitoring?.metaData?.monitoringData?.minFileSize} ${selectedMonitoring?.metaData?.monitoringData?.minSizeThresholdUnit}
+          {selectedMonitoring?.metaData?.monitoringData?.minFileSize &&
+            selectedMonitoring?.metaData?.monitoringData?.minFileSize && (
+              <Descriptions.Item label="File Size Range">
+                {`${selectedMonitoring?.metaData?.monitoringData?.minFileSize} ${selectedMonitoring?.metaData?.monitoringData?.minSizeThresholdUnit}
             -  ${selectedMonitoring?.metaData?.monitoringData?.maxFileSize} ${selectedMonitoring?.metaData?.monitoringData?.maxSizeThresholdUnit}`}
-            </Descriptions.Item>
-          )}
+              </Descriptions.Item>
+            )}
 
           {/* File count range  */}
           {selectedMonitoring?.metaData?.monitoringData?.minSubFileCount && (
