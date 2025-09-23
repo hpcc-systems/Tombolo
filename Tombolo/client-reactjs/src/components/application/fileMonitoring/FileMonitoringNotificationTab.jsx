@@ -73,7 +73,7 @@ function FileMonitoringNotificationTab({
           },
         ]);
       } else {
-        // remoe error if exists
+        // remove error if exists
         form.setFields([
           {
             name: 'minFileSize',
@@ -191,11 +191,6 @@ function FileMonitoringNotificationTab({
 
                       const minInMB = convertToMB(min, minSizeThresholdUnit);
                       const maxInMB = convertToMB(value, maxSizeThresholdUnit);
-
-                      console.log('------------------------');
-                      console.log(minSizeThresholdUnit, maxSizeThresholdUnit);
-                      console.log(minInMB, maxInMB);
-                      console.log('------------------------');
 
                       if (maxInMB < minInMB) {
                         return Promise.reject(new Error('Maximum size cannot be smaller than minimum size'));

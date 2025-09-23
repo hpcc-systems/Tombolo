@@ -83,10 +83,6 @@ function FileMonitoring() {
       form.setFieldsValue(selectedMonitoring);
       setSelectedClusters(selectedMonitoring.clusterIds || []);
 
-      console.log('------------------------');
-      console.log('XX: ', editingData);
-      console.log('------------------------');
-
       // Set states that are responsible for hiding/displaying dependent fields
       setSelectedNotificationCondition(selectedMonitoring?.metaData?.monitoringData?.notificationCondition || []);
       setMonitoringFileType(selectedMonitoring?.fileMonitoringType || 'stdLogicalFile');
@@ -562,12 +558,12 @@ function FileMonitoring() {
             {selectedMonitoring?.metaData?.monitoringData?.fileNamePattern}
           </Descriptions.Item>
           <Descriptions.Item label="Notify when">
-            {selectedMonitoring.metaData.monitoringData.notificationCondition.map((condition, i) => (
+            {selectedMonitoring?.metaData?.monitoringData?.notificationCondition?.map((condition, i) => (
               <Tag key={i}>{notificationConditionsObj[condition]}</Tag>
             ))}
           </Descriptions.Item>
 
-          {selectedMonitoring?.metaData?.monitoringData?.minFileSize && (
+          {selectedMonitoring?.metaData?.monitoringData?.minFileSize && selectedMonitoring?.metaData?.monitoringData?.minFileSize && &&(
             <Descriptions.Item label="File Size Range">
               {`${selectedMonitoring?.metaData?.monitoringData?.minFileSize} ${selectedMonitoring?.metaData?.monitoringData?.minSizeThresholdUnit}
             -  ${selectedMonitoring?.metaData?.monitoringData?.maxFileSize} ${selectedMonitoring?.metaData?.monitoringData?.maxSizeThresholdUnit}`}
