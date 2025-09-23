@@ -35,20 +35,22 @@ function JobMonitoringNotificationTab({ form, intermittentScheduling }) {
 
   // JSX
   return (
-    <NotificationContacts form={form}>
-      <Form.Item
-        name="notificationCondition"
-        label="Notify when"
-        rules={[{ required: true, message: 'Select one or more options' }]}>
-        <Select mode="multiple" placeholder="Select one">
-          {jobStatuses.map((status) => (
-            <Option key={status.value} value={status.value}>
-              {status.label}
-            </Option>
-          ))}
-        </Select>
-      </Form.Item>
-    </NotificationContacts>
+    <Form form={form} layout="vertical">
+      <NotificationContacts>
+        <Form.Item
+          name="notificationCondition"
+          label="Notify when"
+          rules={[{ required: true, message: 'Select one or more options' }]}>
+          <Select mode="multiple" placeholder="Select one">
+            {jobStatuses.map((status) => (
+              <Option key={status.value} value={status.value}>
+                {status.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </NotificationContacts>
+    </Form>
   );
 }
 

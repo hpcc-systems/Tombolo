@@ -1,9 +1,14 @@
 //Packages
 import React from 'react';
+import { Form } from 'antd';
 import NotificationContacts from '../../../common/Monitoring/NotificationContacts';
 
 function NotificationTab({ form }) {
-  return <NotificationContacts form={form}>{/* To render extra inputs insert here */}</NotificationContacts>;
+  return (
+    <Form form={form} layout="vertical">
+      <NotificationContacts />
+    </Form>
+  );
 }
 
 export default NotificationTab;

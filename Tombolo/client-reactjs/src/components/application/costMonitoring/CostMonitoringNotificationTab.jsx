@@ -63,20 +63,22 @@ function CostMonitoringNotificationTab({ form, clusters }) {
   }, [form, form.getFieldValue('clusterIds')]);
 
   return (
-    <NotificationContacts form={form}>
-      <Form.Item
-        label="Cost Threshold"
-        name="threshold"
-        rules={[{ required: true, message: 'Please enter a threshold' }]}>
-        <InputNumber
-          min={1}
-          style={{ width: '100%' }}
-          placeholder="Enter threshold value"
-          addonBefore={currencySymbol}
-          addonAfter={<IsSummedDropdown form={form} />}
-        />
-      </Form.Item>
-    </NotificationContacts>
+    <Form form={form} layout="vertical">
+      <NotificationContacts>
+        <Form.Item
+          label="Cost Threshold"
+          name="threshold"
+          rules={[{ required: true, message: 'Please enter a threshold' }]}>
+          <InputNumber
+            min={1}
+            style={{ width: '100%' }}
+            placeholder="Enter threshold value"
+            addonBefore={currencySymbol}
+            addonAfter={<IsSummedDropdown form={form} />}
+          />
+        </Form.Item>
+      </NotificationContacts>
+    </Form>
   );
 }
 

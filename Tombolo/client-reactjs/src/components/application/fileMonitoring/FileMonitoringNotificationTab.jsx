@@ -79,7 +79,7 @@ function FileMonitoringNotificationTab({
   );
 
   return (
-    <>
+    <Form form={form} layout="vertical">
       <NotificationContacts form={form}>
         <Form.Item
           name="notificationCondition"
@@ -201,7 +201,7 @@ function FileMonitoringNotificationTab({
           </Row>
         )}
       </NotificationContacts>
-    </>
+    </Form>
   );
 }
 

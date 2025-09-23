@@ -11,7 +11,7 @@ import NotificationTab from '@/components/application/LandingZoneMonitoring/AddE
 describe('LandingZoneMonitoring NotificationTab', () => {
   it('renders NotificationContacts with provided form', () => {
     const form = {};
-    render(<NotificationTab form={form} />);
+    render(<NotificationTab />);
     expect(screen.getByTestId('notification-contacts')).toBeInTheDocument();
   });
 });

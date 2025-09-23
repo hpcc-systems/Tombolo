@@ -69,64 +69,62 @@ function BasicTab({
   };
 
   return (
-    <>
-      <Card size="small" style={{ marginBottom: '1rem' }}>
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="Monitoring Name"
-            name="monitoringName"
-            rules={[
-              ...MonitoringNameFormRules,
-              () => ({
-                validator(_, value) {
-                  if (isEditing) return Promise.resolve();
-                  if (!value || !landingZoneMonitoring.find((directory) => directory.name === value)) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('Monitoring name must be unique'));
+    <Card size="small" style={{ marginBottom: '1rem' }}>
+      <Form form={form} layout="vertical">
+        <Form.Item
+          label="Monitoring Name"
+          name="monitoringName"
+          rules={[
+            ...MonitoringNameFormRules,
+            () => ({
+              validator(_, value) {
+                if (isEditing) return Promise.resolve();
+                if (!value || !landingZoneMonitoring.find((directory) => directory.name === value)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Monitoring name must be unique'));
+              },
+            }),
+          ]}>
+          <Input
+            placeholder="Enter a name"
+            ref={nameRef}
+            onBlur={() =>
+              form.setFields([
+                {
+                  name: 'name',
+                  warnings: [],
                 },
-              }),
-            ]}>
-            <Input
-              placeholder="Enter a name"
-              ref={nameRef}
-              onBlur={() =>
-                form.setFields([
-                  {
-                    name: 'name',
-                    warnings: [],
-                  },
-                ])
-              }
-            />
-          </Form.Item>
+              ])
+            }
+          />
+        </Form.Item>
 
-          <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
-            <TextArea
-              type="text-area"
-              placeholder="Enter a short description"
-              rows="2"
-              maxLength={150}
-              showCount
-              autoSize={{
-                minRows: 2,
-                maxRows: 4,
-              }}
-            />
-          </Form.Item>
+        <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
+          <TextArea
+            type="text-area"
+            placeholder="Enter a short description"
+            rows="2"
+            maxLength={150}
+            showCount
+            autoSize={{
+              minRows: 2,
+              maxRows: 4,
+            }}
+          />
+        </Form.Item>
 
-          {asrIntegration && (
-            <AsrSpecificMonitoring
-              form={form}
-              clusterOffset={clusterOffset}
-              domains={domains}
-              productCategories={productCategories}
-              setSelectedDomain={setSelectedDomain}
-            />
-          )}
-        </Form>
-      </Card>
-    </>
+        {asrIntegration && (
+          <AsrSpecificMonitoring
+            form={form}
+            clusterOffset={clusterOffset}
+            domains={domains}
+            productCategories={productCategories}
+            setSelectedDomain={setSelectedDomain}
+          />
+        )}
+      </Form>
+    </Card>
   );
 }
 
