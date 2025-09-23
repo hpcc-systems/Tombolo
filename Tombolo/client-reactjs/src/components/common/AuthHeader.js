@@ -58,15 +58,19 @@ window.fetch = async (...args) => {
 
     const response = await originalFetch(resource, config);
 
-    //if response.status is 401, it means the refresh token has expired, so we need to log the user out
+    // Prevent infinite redirect loop: only redirect if not already on an auth route
     if (response.status === 401 && resource !== '/api/auth/loginBasicUser') {
-      import('@/redux/store/Store').then(async ({ store }) => {
-        const { logout } = await import('@/redux/slices/AuthSlice'); // if needed
-        store.dispatch(logout());
-      });
-
-      localStorage.setItem('sessionExpired', true);
-      window.location.href = '/login';
+      const currentPath = window.location.pathname;
+      const authRoutes = ['/login', '/register', '/reset-password', '/forgot-password', '/reset-temporary-password'];
+      const isAuthRoute = authRoutes.some((route) => currentPath.startsWith(route));
+      if (!isAuthRoute) {
+        import('@/redux/store/Store').then(async ({ store }) => {
+          const { logout } = await import('@/redux/slices/AuthSlice');
+          store.dispatch(logout());
+        });
+        localStorage.setItem('sessionExpired', true);
+        window.location.href = '/login';
+      }
     }
 
     return response;
