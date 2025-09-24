@@ -58,19 +58,14 @@ window.fetch = async (...args) => {
 
     const response = await originalFetch(resource, config);
 
-    // Prevent infinite redirect loop: only redirect if not already on an auth route
     if (response.status === 401 && resource !== '/api/auth/loginBasicUser') {
-      const currentPath = window.location.pathname;
-      const authRoutes = ['/login', '/register', '/reset-password', '/forgot-password', '/reset-temporary-password'];
-      const isAuthRoute = authRoutes.some((route) => currentPath.startsWith(route));
-      if (!isAuthRoute) {
-        import('@/redux/store/Store').then(async ({ store }) => {
-          const { logout } = await import('@/redux/slices/AuthSlice');
-          store.dispatch(logout());
-        });
-        localStorage.setItem('sessionExpired', true);
-        window.location.href = '/login';
-      }
+      // Just trigger logout - let logout handle the redirect
+      import('@/redux/store/Store').then(async ({ store }) => {
+        const { logout } = await import('@/redux/slices/AuthSlice');
+        store.dispatch(logout());
+      });
+      localStorage.setItem('sessionExpired', true);
+      return; // Don't return the 401 response
     }
 
     return response;
