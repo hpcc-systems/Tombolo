@@ -166,14 +166,12 @@ async function monitorCost() {
     // 2. For each cluster, aggregate all cost monitoring data into a single CostMonitoringData row
     for (const clusterDetail of clusterDetails) {
       const clusterId = clusterDetail.id;
-      // TODO: Call logOrPost here
-      // Check if the cluster had an errors during getClusters
+      // Check if the cluster had any errors during getClusters
       if ('error' in clusterDetail) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `monitorCost: Failed to get cluster ${clusterId}: ${clusterDetail.error}, ...skipping`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `monitorCost: Failed to get cluster ${clusterId}: ${clusterDetail.error}, ...skipping`,
+        });
         continue;
       }
       try {
