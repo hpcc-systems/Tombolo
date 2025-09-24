@@ -273,334 +273,332 @@ function MonitoringTab({
   };
 
   return (
-    <div>
-      <Form form={form} layout="vertical" initialValues={{ maxDepth: 0 }}>
-        <Card size="small">
+    <Form form={form} layout="vertical" initialValues={{ maxDepth: 0 }}>
+      <Card size="small">
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required field' }]}>
+              <Select onChange={(value) => handleClusterChange(value)}>
+                {clusters.map((cluster) => {
+                  return (
+                    <Option key={cluster.id} value={cluster.id}>
+                      {cluster.name}
+                    </Option>
+                  );
+                })}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label={
+                <>
+                  <span>Monitoring Type</span>
+                  <InfoCircleOutlined
+                    style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
+                    onClick={() => {
+                      setShowUserGuide(true);
+                      setSelectedUserGuideName('lzMonitoringTypes');
+                    }}
+                  />
+                </>
+              }
+              name="lzMonitoringType"
+              rules={[{ required: true, message: 'Required field' }]}>
+              <Select onChange={(value) => setLzMonitoringType(value)}>
+                {monitoringTypes.map((type) => (
+                  <Option
+                    key={type.id}
+                    value={type.value}
+                    disbaled={type.value === 'spaceUsage' && selectedCluster?.containerized}>
+                    {type.label}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+        {/* Monitoring type select element */}
+
+        <Row gutter={16}>
+          <Col span={12}>
+            {/* select element for Dropzone, %0% width */}
+            <Form.Item label="Dropzone" name="dropzone" rules={[{ required: true, message: 'Required field' }]}>
+              <Select onChange={handleDropzoneChange}>
+                {dropzones
+                  .sort((a, b) => a.Name.localeCompare(b.Name))
+                  .map((dropzone) => (
+                    <Option key={dropzone.Name} value={dropzone.Name}>
+                      {`${dropzone.Name} - ${dropzone.Path}`}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item label="Machine" name="machine" rules={[{ required: true, message: 'Required field' }]}>
+              <Select onChange={handleMachineChange}>
+                {machines.map((machine) => (
+                  <Option key={machine.Name} value={machine.Netaddress}>
+                    {`${machine.Name} - ${machine.Netaddress}`}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item label="Directory" name="directory" rules={[{ required: true, message: 'Required field' }]}>
+          <Cascader
+            options={directoryOptions}
+            loadData={loadDirectoryData}
+            allowClear={true}
+            changeOnSelect={true}
+            expandTrigger="hover"
+            placeholder="Select directory"
+            loading={directoryLoading}
+            notFoundContent={directoryLoading ? 'Loading directories...' : 'No directories found'}
+            fieldNames={{ label: 'label', value: 'value', children: 'children' }}
+            showSearch={{
+              filter: (inputValue, path) =>
+                path.some((option) => option.label.toLowerCase().includes(inputValue.toLowerCase())),
+            }}
+            onChange={(value) => {
+              // Allow selection at any level without closing panel
+              if (value && value.length > 0) {
+                const fullPath = value[value.length - 1];
+                form.setFieldsValue({ directory: fullPath });
+              }
+            }}
+            displayRender={(labels) => {
+              // Show the full path in the input
+              return labels.join(' / ');
+            }}
+          />
+        </Form.Item>
+
+        {lzMonitoringType === 'fileMovement' && (
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required field' }]}>
-                <Select onChange={(value) => handleClusterChange(value)}>
-                  {clusters.map((cluster) => {
-                    return (
-                      <Option key={cluster.id} value={cluster.id}>
-                        {cluster.name}
-                      </Option>
-                    );
-                  })}
-                </Select>
+              <Form.Item
+                label="Threshold (in minutes)"
+                name="threshold"
+                rules={[{ required: true, message: 'Required field' }]}>
+                <InputNumber style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 label={
                   <>
-                    <span>Monitoring Type</span>
+                    <span>Maximum Depth</span>
                     <InfoCircleOutlined
                       style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
                       onClick={() => {
                         setShowUserGuide(true);
-                        setSelectedUserGuideName('lzMonitoringTypes');
+                        setSelectedUserGuideName('maximumDepth');
                       }}
                     />
                   </>
                 }
-                name="lzMonitoringType"
-                rules={[{ required: true, message: 'Required field' }]}>
-                <Select onChange={(value) => setLzMonitoringType(value)}>
-                  {monitoringTypes.map((type) => (
-                    <Option
-                      key={type.id}
-                      value={type.value}
-                      disbaled={type.value === 'spaceUsage' && selectedCluster?.containerized}>
-                      {type.label}
-                    </Option>
-                  ))}
-                </Select>
+                name="maxDepth"
+                rules={[
+                  { required: true, message: 'Required field' },
+                  {
+                    validator: (_, value) => {
+                      if (value < 0 || value > 99) {
+                        return Promise.reject(new Error('Value must be between 0 and 99'));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}>
+                <InputNumber style={{ width: '100%' }} />
               </Form.Item>
             </Col>
+            <Col span={24}>
+              {/* {lzMonitoringType === 'fileMovement' && ( */}
+              <Form.Item
+                label={
+                  <>
+                    <span>File Name </span>
+                    <InfoCircleOutlined
+                      style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
+                      onClick={() => {
+                        setShowUserGuide(true);
+                        setSelectedUserGuideName('wildcard');
+                      }}
+                    />
+                  </>
+                }
+                name="fileName"
+                rules={[{ required: true, max: 256, message: 'Maximum of 256 characters allowed' }]}>
+                <Input placeholder="Enter a pattern" />
+              </Form.Item>
+              {/* )} */}
+            </Col>
           </Row>
-          {/* Monitoring type select element */}
+        )}
 
+        {lzMonitoringType === 'fileCount' && (
           <Row gutter={16}>
             <Col span={12}>
-              {/* select element for Dropzone, %0% width */}
-              <Form.Item label="Dropzone" name="dropzone" rules={[{ required: true, message: 'Required field' }]}>
-                <Select onChange={handleDropzoneChange}>
-                  {dropzones
-                    .sort((a, b) => a.Name.localeCompare(b.Name))
-                    .map((dropzone) => (
-                      <Option key={dropzone.Name} value={dropzone.Name}>
-                        {`${dropzone.Name} - ${dropzone.Path}`}
-                      </Option>
-                    ))}
-                </Select>
+              <Form.Item
+                label="Minimum File Count"
+                name="minFileCount"
+                rules={[
+                  { required: true, message: 'Required field' },
+                  {
+                    validator: (_, value) => {
+                      if (value < 0 || value > 999999) {
+                        return Promise.reject(new Error('Value must be between 0 and 999999'));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                  {
+                    validator: (_, value) => {
+                      // Only validate comparison if value exists (not empty/null/undefined)
+                      if (value != null && value !== '') {
+                        const minFileCount = form.getFieldValue('maxFileCount');
+                        if (minFileCount != null && value > minFileCount) {
+                          return Promise.reject(
+                            new Error('Max file count must be smaller than or equal to max file count')
+                          );
+                        }
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}>
+                <InputNumber style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Machine" name="machine" rules={[{ required: true, message: 'Required field' }]}>
-                <Select onChange={handleMachineChange}>
-                  {machines.map((machine) => (
-                    <Option key={machine.Name} value={machine.Netaddress}>
-                      {`${machine.Name} - ${machine.Netaddress}`}
-                    </Option>
-                  ))}
-                </Select>
+              <Form.Item
+                label="Maximum File Count"
+                name="maxFileCount"
+                rules={[
+                  { required: true, message: 'Required field' },
+                  {
+                    validator: (_, value) => {
+                      if (value < 0 || value > 999999) {
+                        return Promise.reject(new Error('Value must be between 0 and 999999'));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                  {
+                    validator: (_, value) => {
+                      // Only validate comparison if value exists (not empty/null/undefined)
+                      if (value != null && value !== '') {
+                        const minFileCount = form.getFieldValue('minFileCount');
+                        if (minFileCount != null && value < minFileCount) {
+                          return Promise.reject(
+                            new Error('Max file count must be greater than or equal to min file count')
+                          );
+                        }
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}>
+                <InputNumber style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>
+        )}
 
-          <Form.Item label="Directory" name="directory" rules={[{ required: true, message: 'Required field' }]}>
-            <Cascader
-              options={directoryOptions}
-              loadData={loadDirectoryData}
-              allowClear={true}
-              changeOnSelect={true}
-              expandTrigger="hover"
-              placeholder="Select directory"
-              loading={directoryLoading}
-              notFoundContent={directoryLoading ? 'Loading directories...' : 'No directories found'}
-              fieldNames={{ label: 'label', value: 'value', children: 'children' }}
-              showSearch={{
-                filter: (inputValue, path) =>
-                  path.some((option) => option.label.toLowerCase().includes(inputValue.toLowerCase())),
-              }}
-              onChange={(value) => {
-                // Allow selection at any level without closing panel
-                if (value && value.length > 0) {
-                  const fullPath = value[value.length - 1];
-                  form.setFieldsValue({ directory: fullPath });
-                }
-              }}
-              displayRender={(labels) => {
-                // Show the full path in the input
-                return labels.join(' / ');
-              }}
-            />
-          </Form.Item>
-
-          {lzMonitoringType === 'fileMovement' && (
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="Threshold (in minutes)"
-                  name="threshold"
-                  rules={[{ required: true, message: 'Required field' }]}>
-                  <InputNumber style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label={
-                    <>
-                      <span>Maximum Depth</span>
-                      <InfoCircleOutlined
-                        style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
-                        onClick={() => {
-                          setShowUserGuide(true);
-                          setSelectedUserGuideName('maximumDepth');
-                        }}
-                      />
-                    </>
-                  }
-                  name="maxDepth"
-                  rules={[
-                    { required: true, message: 'Required field' },
-                    {
-                      validator: (_, value) => {
-                        if (value < 0 || value > 99) {
-                          return Promise.reject(new Error('Value must be between 0 and 99'));
-                        }
-                        return Promise.resolve();
-                      },
+        {lzMonitoringType === 'spaceUsage' && (
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Minimum Threshold"
+                name="minThreshold"
+                rules={[
+                  { required: true, message: 'Required field' },
+                  {
+                    validator: (_, value) => {
+                      if (value < 0 || value > 999999) {
+                        return Promise.reject(new Error('Value must be between 0 and 999999'));
+                      }
+                      return Promise.resolve();
                     },
-                  ]}>
-                  <InputNumber style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-              <Col span={24}>
-                {/* {lzMonitoringType === 'fileMovement' && ( */}
-                <Form.Item
-                  label={
-                    <>
-                      <span>File Name </span>
-                      <InfoCircleOutlined
-                        style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
-                        onClick={() => {
-                          setShowUserGuide(true);
-                          setSelectedUserGuideName('wildcard');
-                        }}
-                      />
-                    </>
-                  }
-                  name="fileName"
-                  rules={[{ required: true, max: 256, message: 'Maximum of 256 characters allowed' }]}>
-                  <Input placeholder="Enter a pattern" />
-                </Form.Item>
-                {/* )} */}
-              </Col>
-            </Row>
-          )}
-
-          {lzMonitoringType === 'fileCount' && (
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="Minimum File Count"
-                  name="minFileCount"
-                  rules={[
-                    { required: true, message: 'Required field' },
-                    {
-                      validator: (_, value) => {
-                        if (value < 0 || value > 999999) {
-                          return Promise.reject(new Error('Value must be between 0 and 999999'));
-                        }
-                        return Promise.resolve();
-                      },
-                    },
-                    {
-                      validator: (_, value) => {
-                        // Only validate comparison if value exists (not empty/null/undefined)
-                        if (value != null && value !== '') {
-                          const minFileCount = form.getFieldValue('maxFileCount');
-                          if (minFileCount != null && value > minFileCount) {
-                            return Promise.reject(
-                              new Error('Max file count must be smaller than or equal to max file count')
-                            );
+                  },
+                  {
+                    validator: (_, value) => {
+                      // Only validate comparison if value exists (not empty/null/undefined)
+                      if (value != null && value !== '') {
+                        const maxThreshold = form.getFieldValue('maxThreshold');
+                        if (maxThreshold != null) {
+                          const minValueInMB = convertToMB(value, minSizeThresholdUnit);
+                          const maxValueInMB = convertToMB(maxThreshold, maxSizeThresholdUnit);
+                          if (minValueInMB >= maxValueInMB) {
+                            return Promise.reject(new Error('Min threshold must be less than max threshold'));
                           }
                         }
-                        return Promise.resolve();
-                      },
+                      }
+                      return Promise.resolve();
                     },
-                  ]}>
-                  <InputNumber style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Maximum File Count"
-                  name="maxFileCount"
-                  rules={[
-                    { required: true, message: 'Required field' },
-                    {
-                      validator: (_, value) => {
-                        if (value < 0 || value > 999999) {
-                          return Promise.reject(new Error('Value must be between 0 and 999999'));
-                        }
-                        return Promise.resolve();
-                      },
+                  },
+                ]}>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  addonAfter={renderThresholdAddon('minThreshold')}
+                  min={0}
+                  max={999999}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Max Threshold"
+                name="maxThreshold"
+                rules={[
+                  { required: true, message: 'Required field' },
+                  {
+                    validator: (_, value) => {
+                      if (value < 0 || value > 999999) {
+                        return Promise.reject(new Error('Value must be between 0 and 999999'));
+                      }
+                      return Promise.resolve();
                     },
-                    {
-                      validator: (_, value) => {
-                        // Only validate comparison if value exists (not empty/null/undefined)
-                        if (value != null && value !== '') {
-                          const minFileCount = form.getFieldValue('minFileCount');
-                          if (minFileCount != null && value < minFileCount) {
-                            return Promise.reject(
-                              new Error('Max file count must be greater than or equal to min file count')
-                            );
+                  },
+                  {
+                    validator: (_, value) => {
+                      // Only validate comparison if value exists (not empty/null/undefined)
+                      if (value != null && value !== '') {
+                        const minThreshold = form.getFieldValue('minThreshold');
+                        if (minThreshold != null) {
+                          const minValueInMB = convertToMB(minThreshold, minSizeThresholdUnit);
+                          const maxValueInMB = convertToMB(value, maxSizeThresholdUnit);
+                          if (maxValueInMB <= minValueInMB) {
+                            return Promise.reject(new Error('Max threshold must be greater than min threshold'));
                           }
                         }
-                        return Promise.resolve();
-                      },
+                      }
+                      return Promise.resolve();
                     },
-                  ]}>
-                  <InputNumber style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-            </Row>
-          )}
+                  },
+                ]}>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  addonAfter={renderThresholdAddon('maxThreshold')}
+                  min={0}
+                  max={999999}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        )}
+      </Card>
 
-          {lzMonitoringType === 'spaceUsage' && (
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="Minimum Threshold"
-                  name="minThreshold"
-                  rules={[
-                    { required: true, message: 'Required field' },
-                    {
-                      validator: (_, value) => {
-                        if (value < 0 || value > 999999) {
-                          return Promise.reject(new Error('Value must be between 0 and 999999'));
-                        }
-                        return Promise.resolve();
-                      },
-                    },
-                    {
-                      validator: (_, value) => {
-                        // Only validate comparison if value exists (not empty/null/undefined)
-                        if (value != null && value !== '') {
-                          const maxThreshold = form.getFieldValue('maxThreshold');
-                          if (maxThreshold != null) {
-                            const minValueInMB = convertToMB(value, minSizeThresholdUnit);
-                            const maxValueInMB = convertToMB(maxThreshold, maxSizeThresholdUnit);
-                            if (minValueInMB >= maxValueInMB) {
-                              return Promise.reject(new Error('Min threshold must be less than max threshold'));
-                            }
-                          }
-                        }
-                        return Promise.resolve();
-                      },
-                    },
-                  ]}>
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    addonAfter={renderThresholdAddon('minThreshold')}
-                    min={0}
-                    max={999999}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Max Threshold"
-                  name="maxThreshold"
-                  rules={[
-                    { required: true, message: 'Required field' },
-                    {
-                      validator: (_, value) => {
-                        if (value < 0 || value > 999999) {
-                          return Promise.reject(new Error('Value must be between 0 and 999999'));
-                        }
-                        return Promise.resolve();
-                      },
-                    },
-                    {
-                      validator: (_, value) => {
-                        // Only validate comparison if value exists (not empty/null/undefined)
-                        if (value != null && value !== '') {
-                          const minThreshold = form.getFieldValue('minThreshold');
-                          if (minThreshold != null) {
-                            const minValueInMB = convertToMB(minThreshold, minSizeThresholdUnit);
-                            const maxValueInMB = convertToMB(value, maxSizeThresholdUnit);
-                            if (maxValueInMB <= minValueInMB) {
-                              return Promise.reject(new Error('Max threshold must be greater than min threshold'));
-                            }
-                          }
-                        }
-                        return Promise.resolve();
-                      },
-                    },
-                  ]}>
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    addonAfter={renderThresholdAddon('maxThreshold')}
-                    min={0}
-                    max={999999}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          )}
-        </Card>
-
-        <InfoDrawer
-          open={showUserGuide}
-          onClose={() => setShowUserGuide(false)}
-          width="500px"
-          content={selectedUserGuideName}></InfoDrawer>
-      </Form>
-    </div>
+      <InfoDrawer
+        open={showUserGuide}
+        onClose={() => setShowUserGuide(false)}
+        width="500px"
+        content={selectedUserGuideName}></InfoDrawer>
+    </Form>
   );
 }
 

@@ -5,16 +5,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('antd', async (importOriginal) => {
   const antd = await importOriginal();
-  const MockModal = ({ open, title, footer, children, onCancel }) => (
+  const MockModal = ({ open, title, footer, children, onCancel }) =>
     open ? (
       <div>
         <div data-testid="title">{title}</div>
         <div>{children}</div>
         <div>{footer}</div>
-        <button aria-label="modal-cancel" onClick={onCancel}>x</button>
+        <button aria-label="modal-cancel" onClick={onCancel}>
+          x
+        </button>
       </div>
-    ) : null
-  );
+    ) : null;
   const MockTabs = ({ items, activeKey, onChange }) => (
     <div>
       <div data-testid="tabs">
@@ -48,7 +49,6 @@ describe('AddEditFileMonitoringModal', () => {
       displayAddFileMonitoringModal: true,
       handleSaveFileMonitoring: vi.fn(),
       handleUpdateFileMonitoring: vi.fn(),
-      form: { setFieldsValue: vi.fn() },
       clusters: [],
       savingFileMonitoring: false,
       isEditing: false,

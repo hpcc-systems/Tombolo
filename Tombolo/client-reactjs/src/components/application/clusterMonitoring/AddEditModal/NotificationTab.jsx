@@ -1,8 +1,13 @@
 import React from 'react';
 import NotificationContacts from '../../../common/Monitoring/NotificationContacts';
+import { Form } from 'antd';
 
 function NotificationTab({ form }) {
-  return <NotificationContacts form={form}></NotificationContacts>;
+  return (
+    <Form form={form} layout="vertical">
+      <NotificationContacts />
+    </Form>
+  );
 }
 
 export default NotificationTab;
