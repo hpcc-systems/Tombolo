@@ -1,5 +1,6 @@
 const MONITORING_NAME = 'Job Monitoring';
 const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const { WorkunitsService } = require('@hpcc-js/comms');
 const _ = require('lodash');
 
@@ -29,11 +30,10 @@ const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested')
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 (async () => {
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: 'Intermediate state JM: Monitoring started ...',
-    });
+  logOrPostMessage({
+    level: 'info',
+    text: 'Intermediate state JM: Monitoring started ...',
+  });
   const now = new Date(); // UTC time
 
   try {
@@ -93,11 +93,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
           clusterInfo.timezone_offset || 0
         );
       } catch (error) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Intermediate State Job Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Intermediate State Job Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
+        });
       }
     });
 
@@ -167,11 +166,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
         try {
           newWuDetails = (await wuService.WUInfo(WUInfoOptions(Wuid))).Workunit;
         } catch (err) {
-          parentPort &&
-            parentPort.postMessage({
-              level: 'error',
-              text: `Intermediate state JM : Error getting WU details for ${Wuid} on cluster ${clusterDetail.id}: ${err.message}`,
-            });
+          logOrPostMessage({
+            level: 'error',
+            text: `Intermediate state JM : Error getting WU details for ${Wuid} on cluster ${clusterDetail.id}: ${err.message}`,
+          });
 
           // If  err.message include Invalid Workunit ID", remove the WU from monitoring
           if (err.message.includes('Invalid Workunit ID')) {
@@ -214,11 +212,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
                 analyzed: false,
               });
             } catch (err) {
-              parentPort &&
-                parentPort.postMessage({
-                  level: 'error',
-                  text: `Monitoring Intermediate State Job: Error while trying to save wuInfo for ${err.message} : ${err.message}`,
-                });
+              logOrPostMessage({
+                level: 'error',
+                text: `Monitoring Intermediate State Job: Error while trying to save wuInfo for ${err.message} : ${err.message}`,
+              });
               continue;
             }
           }
@@ -246,11 +243,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
               analyzed: false,
             });
           } catch (err) {
-            parentPort &&
-              parentPort.postMessage({
-                level: 'error',
-                text: `Monitoring Intermediate State Job: Error while trying to save wuInfo for ${err.message} : ${err.message}`,
-              });
+            logOrPostMessage({
+              level: 'error',
+              text: `Monitoring Intermediate State Job: Error while trying to save wuInfo for ${err.message} : ${err.message}`,
+            });
             continue;
           }
         } else if (intermediateStates.includes(currentStateLowerCase)) {
@@ -278,11 +274,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
                 keepWu = true;
               }
             } catch (err) {
-              parentPort &&
-                parentPort.postMessage({
-                  level: 'error',
-                  text: `Intermediate job monitoring: Error while trying calculate if job ran too long ${wu.Wuid} : ${err.message}`,
-                });
+              logOrPostMessage({
+                level: 'error',
+                text: `Intermediate job monitoring: Error while trying calculate if job ran too long ${wu.Wuid} : ${err.message}`,
+              });
             }
           }
 
@@ -302,11 +297,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
             sendAlert = true;
             keepWu = false;
           } else {
-            parentPort &&
-              parentPort.postMessage({
-                level: 'verbose',
-                text: `Intermediate state JM : ${Wuid} on cluster ${clusterDetail.id} is in intermediate state ${currentWuState} not covered by any condition`,
-              });
+            logOrPostMessage({
+              level: 'verbose',
+              text: `Intermediate state JM : ${Wuid} on cluster ${clusterDetail.id} is in intermediate state ${currentWuState} not covered by any condition`,
+            });
           }
         }
 
@@ -419,11 +413,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
           }
         }
       } catch (err) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Intermediate State Job Monitoring: ${err.message}`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Intermediate State Job Monitoring: ${err.message}`,
+        });
       }
     }
 
@@ -437,11 +430,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
       wuToStopMonitoring.length === 0 &&
       Object.keys(wuWithNewIntermediateState).length === 0
     ) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'info',
-          text: 'Intermediate state JM: No WU to remove or update. Exiting...',
-        });
+      logOrPostMessage({
+        level: 'info',
+        text: 'Intermediate state JM: No WU to remove or update. Exiting...',
+      });
       return;
     }
 
@@ -471,27 +463,21 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
           { where: { id } }
         );
       } catch (error) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Intermediate state JM: Error updating log with id ${log.id}: ${error.message}`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Intermediate state JM: Error updating log with id ${log.id}: ${error.message}`,
+        });
       }
     }
   } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `Intermediate state JM: ${err.message}`,
-      });
+    logOrPostMessage({
+      level: 'error',
+      text: `Intermediate state JM: ${err.message}`,
+    });
   } finally {
-    if (parentPort) {
-      parentPort.postMessage({
-        level: 'info',
-        text: `Intermediate state JM: Job completed successfully in ${new Date() - now} ms`,
-      });
-    } else {
-      process.exit(0);
-    }
+    logOrPostMessage({
+      level: 'info',
+      text: `Intermediate state JM: Job completed successfully in ${new Date() - now} ms`,
+    });
   }
 })();

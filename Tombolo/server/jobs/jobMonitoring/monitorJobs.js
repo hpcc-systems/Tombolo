@@ -1,5 +1,5 @@
 // Imports from libraries
-const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const { WorkunitsService } = require('@hpcc-js/comms');
 const _ = require('lodash');
 
@@ -34,11 +34,10 @@ const { APPROVAL_STATUS } = require('../../config/constants');
 const monitoring_name = 'Job Monitoring';
 
 (async () => {
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: 'Job Monitoring:  Monitoring started',
-    });
+  logOrPostMessage({
+    level: 'info',
+    text: 'Job Monitoring:  Monitoring started',
+  });
   const now = new Date(); // UTC time
 
   try {
@@ -60,20 +59,18 @@ const monitoring_name = 'Job Monitoring';
 
     /* if no job monitorings are found - return */
     if (jobMonitorings.length < 1) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'info',
-          text: 'Job Monitoring: No active job monitorings found.',
-        });
+      logOrPostMessage({
+        level: 'info',
+        text: 'Job Monitoring: No active job monitorings found.',
+      });
 
       return;
     }
 
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: `Job Monitoring: Found ${jobMonitorings.length} active job monitorings.`,
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: `Job Monitoring: Found ${jobMonitorings.length} active job monitorings.`,
+    });
 
     /* Organize job monitoring based on cluster ID. This approach simplifies interaction with
     the HPCC cluster and minimizes the number of necessary API calls. */
@@ -82,11 +79,10 @@ const monitoring_name = 'Job Monitoring';
       const clusterId = jobMonitoring.clusterId;
 
       if (!clusterId) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: 'Job monitoring missing cluster ID. Skipping...',
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: 'Job monitoring missing cluster ID. Skipping...',
+        });
         return;
       }
 
@@ -117,11 +113,10 @@ const monitoring_name = 'Job Monitoring';
           clusterInfo.password = null;
         }
       } catch (error) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
+        });
       }
     });
 
@@ -182,11 +177,10 @@ const monitoring_name = 'Job Monitoring';
         wuBasicInfoByCluster[clusterInfo.id] = [...wuWithClusterIds];
       } catch (err) {
         failedToReachClusters.push(clusterInfo.id);
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Job monitoring: Error while reaching out to cluster ${clusterInfo.id} : ${err}`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Job monitoring: Error while reaching out to cluster ${clusterInfo.id} : ${err}`,
+        });
       }
     }
 
@@ -241,18 +235,16 @@ const monitoring_name = 'Job Monitoring';
             }
           );
         } catch (err) {
-          parentPort &&
-            parentPort.postMessage({
-              level: 'error',
-              text: `Job monitoring:  ${err.message}`,
-            });
+          logOrPostMessage({
+            level: 'error',
+            text: `Job monitoring:  ${err.message}`,
+          });
         }
       }
-      parentPort &&
-        parentPort.postMessage({
-          level: 'info',
-          text: 'Job Monitoring: No new work units found for any clusters.',
-        });
+      logOrPostMessage({
+        level: 'info',
+        text: 'Job Monitoring: No new work units found for any clusters.',
+      });
       return;
     }
 
@@ -300,11 +292,10 @@ const monitoring_name = 'Job Monitoring';
 
         jmWithNewWUs[id] = matchedWus;
       } catch (err) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Job monitoring. Looping job monitorings ${monitoringName}. id:  ${id}. ERR -  ${err.message}`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Job monitoring. Looping job monitorings ${monitoringName}. id:  ${id}. ERR -  ${err.message}`,
+        });
       }
     }
 
@@ -358,11 +349,10 @@ const monitoring_name = 'Job Monitoring';
               date: now,
             });
           } catch (err) {
-            parentPort &&
-              parentPort.postMessage({
-                level: 'error',
-                text: `Job monitoring: Error while trying to retrieve/save wuInfo for ${wu.Wuid} : ${err.message}`,
-              });
+            logOrPostMessage({
+              level: 'error',
+              text: `Job monitoring: Error while trying to retrieve/save wuInfo for ${wu.Wuid} : ${err.message}`,
+            });
           } finally {
             continue;
           }
@@ -446,11 +436,10 @@ const monitoring_name = 'Job Monitoring';
             severeEmailRecipients = domain.severityAlertRecipients;
           }
         } catch (error) {
-          parentPort &&
-            parentPort.postMessage({
-              level: 'error',
-              text: `Job Monitoring : Error while getting Domain level severity : ${error.message}`,
-            });
+          logOrPostMessage({
+            level: 'error',
+            text: `Job Monitoring : Error while getting Domain level severity : ${error.message}`,
+          });
         }
       }
 
@@ -557,29 +546,23 @@ const monitoring_name = 'Job Monitoring';
           conflictTarget: ['cluster_id', 'monitoring_type_id'],
         });
       } catch (err) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Job monitoring - ${err.message}`,
-            error: err,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Job monitoring - ${err.message}`,
+          error: err,
+        });
       }
     }
   } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `Job Monitoring:  Error while monitoring jobs: ${err.message}`,
-        error: err,
-      });
+    logOrPostMessage({
+      level: 'error',
+      text: `Job Monitoring:  Error while monitoring jobs: ${err.message}`,
+      error: err,
+    });
   } finally {
-    if (parentPort) {
-      parentPort.postMessage({
-        level: 'info',
-        text: `Job Monitoring: Monitoring completed in ${new Date() - now} ms`,
-      });
-    } else {
-      process.exit(0);
-    }
+    logOrPostMessage({
+      level: 'info',
+      text: `Job Monitoring: Monitoring completed in ${new Date() - now} ms`,
+    });
   }
 })();

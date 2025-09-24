@@ -1,5 +1,5 @@
 const logger = require('../../config/logger');
-const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const Sequelize = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const {
@@ -19,11 +19,10 @@ const { trimURL } = require('../../utils/authUtil');
 // Models
 
 (async () => {
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: 'Job Monitoring:  Time Series Analysis started',
-    });
+  logOrPostMessage({
+    level: 'info',
+    text: 'Job Monitoring:  Time Series Analysis started',
+  });
   const now = new Date(); // UTC time
   try {
     //get all job monitoring data that has not been analyzed
@@ -65,10 +64,12 @@ const { trimURL } = require('../../utils/authUtil');
 
       if (!currentRun.monitoringId) {
         //this should never happen, but throw an error if it does
-        logger.error(
-          'No monitoring ID was provided for Time series analysis - ' +
-            JSON.stringify(currentRun)
-        );
+        logOrPostMessage({
+          level: 'error',
+          text:
+            'No monitoring ID was provided for Time series analysis - ' +
+            JSON.stringify(currentRun),
+        });
         return;
       }
 
@@ -207,12 +208,10 @@ const { trimURL } = require('../../utils/authUtil');
 
         //create an alert
         const alert = `Job Monitoring Time Series Analysis:  Job ${currentRun.wuTopLevelInfo['Wuid']} has a data point that is outside of the expected range`;
-        if (parentPort) {
-          parentPort.postMessage({
-            level: 'info',
-            text: alert,
-          });
-        }
+        logOrPostMessage({
+          level: 'info',
+          text: alert,
+        });
         //create a notification
         const notificationId = uuidv4();
         alertPoints.forEach(point => {
@@ -310,20 +309,17 @@ const { trimURL } = require('../../utils/authUtil');
       await instance.save();
     }
   } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `Job Monitoring Time Series Analysis:  Error while monitoring jobs: ${err.message}`,
-        error: err,
-      });
+    logOrPostMessage({
+      level: 'error',
+      text: `Job Monitoring Time Series Analysis:  Error while monitoring jobs: ${err.message}`,
+      error: err,
+    });
   } finally {
-    if (parentPort) {
-      parentPort.postMessage({
-        level: 'info',
-        text: `Job Monitoring Time Series Analysis: Monitoring completed in ${
-          new Date() - now
-        } ms`,
-      });
-    }
+    logOrPostMessage({
+      level: 'info',
+      text: `Job Monitoring Time Series Analysis: Monitoring completed in ${
+        new Date() - now
+      } ms`,
+    });
   }
 })();
