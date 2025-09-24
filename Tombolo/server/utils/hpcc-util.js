@@ -668,7 +668,7 @@ exports.getClusters = async clusterIds => {
           };
         } else {
           return {
-            error: `${cluster.name} is  not reachable...`,
+            error: `${cluster.name} is not reachable...`,
             ...cluster,
           };
         }
