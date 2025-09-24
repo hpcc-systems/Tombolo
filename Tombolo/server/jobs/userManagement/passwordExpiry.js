@@ -1,9 +1,9 @@
 // imports from node modules
-const { parentPort } = require('worker_threads');
 const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 
 //Local Imports
+const { logOrPostMessage } = require('../jobUtils');
 const { User, NotificationQueue } = require('../../models');
 const { trimURL, getSupportContactEmails } = require('../../utils/authUtil');
 
@@ -47,11 +47,10 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
 
 (async () => {
   try {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Password Expiry Job started ...',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Password Expiry Job started ...',
+    });
 
     const now = Date.now();
 
@@ -78,16 +77,15 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
         daysToExpiry > passwordExpiryAlertDaysForUser[1] &&
         !userInternal.metaData?.passwordExpiryEmailSent?.first
       ) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'verbose',
-            text:
-              'User with email ' +
-              userInternal.email +
-              ' is within ' +
-              daysToExpiry +
-              ' days of password expiry.',
-          });
+        logOrPostMessage({
+          level: 'verbose',
+          text:
+            'User with email ' +
+            userInternal.email +
+            ' is within ' +
+            daysToExpiry +
+            ' days of password expiry.',
+        });
 
         let version = 'first';
         await updateUserAndSendNotification(user, daysToExpiry, version);
@@ -98,16 +96,15 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
         daysToExpiry > passwordExpiryAlertDaysForUser[2] &&
         !userInternal.metaData?.passwordExpiryEmailSent?.second
       ) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'verbose',
-            text:
-              'User with email ' +
-              userInternal.email +
-              ' is within ' +
-              daysToExpiry +
-              ' days of password expiry.',
-          });
+        logOrPostMessage({
+          level: 'verbose',
+          text:
+            'User with email ' +
+            userInternal.email +
+            ' is within ' +
+            daysToExpiry +
+            ' days of password expiry.',
+        });
         let version = 'second';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
@@ -116,16 +113,15 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
         daysToExpiry > 0 &&
         !userInternal.metaData?.passwordExpiryEmailSent?.third
       ) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'verbose',
-            text:
-              'User with email ' +
-              userInternal.email +
-              ' is within ' +
-              daysToExpiry +
-              ' days of password expiry.',
-          });
+        logOrPostMessage({
+          level: 'verbose',
+          text:
+            'User with email ' +
+            userInternal.email +
+            ' is within ' +
+            daysToExpiry +
+            ' days of password expiry.',
+        });
 
         let version = 'third';
         await updateUserAndSendNotification(user, daysToExpiry, version);
@@ -135,14 +131,13 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
         daysToExpiry <= 0 &&
         !userInternal.metaData?.passwordExpiryEmailSent?.final
       ) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'verbose',
-            text:
-              'User with email ' +
-              userInternal.email +
-              ' has an expired password.',
-          });
+        logOrPostMessage({
+          level: 'verbose',
+          text:
+            'User with email ' +
+            userInternal.email +
+            ' has an expired password.',
+        });
 
         let emails = 'mailto:' + (await getSupportContactEmails());
 
@@ -178,13 +173,11 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       }
     }
 
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Password expiry check job completed ...',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Password expiry check job completed ...',
+    });
   } catch (error) {
-    parentPort &&
-      parentPort.postMessage({ level: 'error', text: error.message });
+    logOrPostMessage({ level: 'error', text: error.message });
   }
 })();

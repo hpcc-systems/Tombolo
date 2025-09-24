@@ -1,4 +1,5 @@
 const logger = require('../../config/logger');
+const { logOrPostMessage } = require('../jobUtils');
 const { parentPort } = require('worker_threads');
 const {
   CostMonitoring,
@@ -241,17 +242,10 @@ async function sendNocNotification(
       await NotificationQueue.create(nocNotificationPayload);
     }
   } catch (nocError) {
-    if (parentPort) {
-      parentPort.postMessage({
-        level: 'error',
-        text: `Error in analyzeCost, failed to send noc Notification: ${nocError.message}`,
-      });
-    } else {
-      logger.error(
-        'Error in analyzeCost, failed to send noc Notification: ',
-        nocError
-      );
-    }
+    logOrPostMessage({
+      level: 'error',
+      text: `Error in analyzeCost, failed to send noc Notification: ${nocError.message}`,
+    });
   }
 }
 
@@ -260,16 +254,10 @@ async function emailAlreadySent(idempotencyKey) {
     where: { idempotencyKey },
   });
   if (existingNotification) {
-    if (parentPort) {
-      parentPort.postMessage({
-        level: 'info',
-        text: `Cost Monitoring email already sent for idempotencyKey: ${idempotencyKey}`,
-      });
-    } else {
-      logger.info(
-        `Cost Monitoring email already sent for idempotencyKey: ${idempotencyKey}`
-      );
-    }
+    logOrPostMessage({
+      level: 'info',
+      text: `Cost Monitoring email already sent for idempotencyKey: ${idempotencyKey}`,
+    });
   }
 
   return !!existingNotification;
@@ -292,22 +280,20 @@ async function analyzeClusterCost(
   const currencyCode = clusters[0]?.currencyCode || 'USD';
 
   if (!aggregatedCostsByCluster) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
+    });
     return;
   }
 
   if (isSummed) {
     const summedCost = clusterCostTotals.overallTotalCost;
     if (summedCost < threshold) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'info',
-          text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
-        });
+      logOrPostMessage({
+        level: 'info',
+        text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
+      });
       return;
     }
 
@@ -343,11 +329,10 @@ async function analyzeClusterCost(
     });
 
     await NotificationQueue.create(notificationPayload);
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Notification(s) sent for analyzeCost (per cluster)',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Notification(s) sent for analyzeCost (per cluster)',
+    });
     // Return after email sent
     return;
   }
@@ -369,11 +354,10 @@ async function analyzeClusterCost(
   );
 
   if (erroringClusters.length === 0) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
+    });
     return;
   }
 
@@ -408,11 +392,10 @@ async function analyzeClusterCost(
   });
 
   await NotificationQueue.create(notificationPayload);
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: 'Notification(s) sent for analyzeCost (per cluster)',
-    });
+  logOrPostMessage({
+    level: 'info',
+    text: 'Notification(s) sent for analyzeCost (per cluster)',
+  });
 }
 
 async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
@@ -439,11 +422,10 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       0
     );
     if (summedCost < threshold) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'info',
-          text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
-        });
+      logOrPostMessage({
+        level: 'info',
+        text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
+      });
       return;
     }
 
@@ -482,11 +464,10 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     });
 
     await NotificationQueue.create(notificationPayload);
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Notification(s) sent for analyzeCost',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Notification(s) sent for analyzeCost',
+    });
 
     await sendNocNotification(
       costMonitoring,
@@ -505,11 +486,10 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
   );
 
   if (totalsCausingNotification.length === 0) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: `No thresholds passed for analyzeCost: ${costMonitoring.id}`,
+    });
     return;
   }
 
@@ -557,11 +537,10 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
   });
 
   await NotificationQueue.create(notificationPayload);
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: 'Notification(s) sent for analyzeCost',
-    });
+  logOrPostMessage({
+    level: 'info',
+    text: 'Notification(s) sent for analyzeCost',
+  });
 
   await sendNocNotification(
     costMonitoring,
@@ -573,11 +552,10 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
 
 async function analyzeCost() {
   try {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Analyze Cost Per user: started ...',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Analyze Cost Per user: started ...',
+    });
 
     const monitoringType = await MonitoringType.findOne({
       where: { name: 'Cost Monitoring' },
@@ -607,32 +585,23 @@ async function analyzeCost() {
             monitoringType
           );
         } else {
-          parentPort &&
-            parentPort.postMessage({
-              level: 'error',
-              text: `Invalid monitoring scope (${monitoringScope}) for analyzeCost: ${costMonitoring.id}`,
-            });
+          logOrPostMessage({
+            level: 'error',
+            text: `Invalid monitoring scope (${monitoringScope}) for analyzeCost: ${costMonitoring.id}`,
+          });
         }
       } catch (err) {
-        if (parentPort) {
-          parentPort.postMessage({
-            level: 'error',
-            text: `Failed to analyzeCost ${costMonitoring.id}: ${err.message}`,
-          });
-        } else {
-          logger.error(`Failed to analyzeCost ${costMonitoring.id}: `, err);
-        }
+        logOrPostMessage({
+          level: 'error',
+          text: `Failed to analyzeCost ${costMonitoring.id}: ${err.message}`,
+        });
       }
     }
   } catch (err) {
-    if (parentPort) {
-      parentPort.postMessage({
-        level: 'error',
-        text: `Error in analyzeCost: ${err.message}`,
-      });
-    } else {
-      logger.error('Error in analyzeCost: ', err);
-    }
+    logOrPostMessage({
+      level: 'error',
+      text: `Error in analyzeCost: ${err.message}`,
+    });
   }
 }
 

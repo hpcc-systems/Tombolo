@@ -1,4 +1,4 @@
-const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const { AccountService } = require('@hpcc-js/comms');
 
 const {
@@ -14,11 +14,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
 async function monitorClusterReachability() {
   // UTC time
   const now = new Date();
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: 'Cluster reachability monitoring started ...',
-    });
+  logOrPostMessage({
+    level: 'info',
+    text: 'Cluster reachability monitoring started ...',
+  });
 
   try {
     // Get clusters and decrypt passwords
@@ -90,11 +89,10 @@ async function monitorClusterReachability() {
               newAccountMetaData.passwordExpiryAlertSentForDay =
                 passwordDaysRemaining;
             } catch (err) {
-              parentPort &&
-                parentPort.postMessage({
-                  level: 'error',
-                  text: `Cluster reachability:  ${cluster.name} failed to queue notification - ${err.message}`,
-                });
+              logOrPostMessage({
+                level: 'error',
+                text: `Cluster reachability:  ${cluster.name} failed to queue notification - ${err.message}`,
+              });
             }
           }
         } else {
@@ -102,11 +100,10 @@ async function monitorClusterReachability() {
           newAccountMetaData.passwordExpiryAlertSentForDay = null;
         }
 
-        parentPort &&
-          parentPort.postMessage({
-            level: 'info',
-            text: `Cluster reachability:  ${cluster.name} is reachable`,
-          });
+        logOrPostMessage({
+          level: 'info',
+          text: `Cluster reachability:  ${cluster.name} is reachable`,
+        });
         // Update accountMetaData
         const newMetaData = { ...metaData };
         newMetaData.reachabilityInfo = {
@@ -120,11 +117,10 @@ async function monitorClusterReachability() {
           { where: { id: cluster.id } }
         );
       } catch (err) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Cluster reachability:  ${cluster.name} is not reachable -  ${err.message}`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Cluster reachability:  ${cluster.name} is not reachable -  ${err.message}`,
+        });
         const newMetaData = { ...metaData };
         let lastReachabilityInfo = { ...newMetaData.reachabilityInfo };
         lastReachabilityInfo.reachable = false;
@@ -138,21 +134,15 @@ async function monitorClusterReachability() {
       }
     }
   } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `Cluster reachability:  monitoring failed - ${err.message}`,
-      });
+    logOrPostMessage({
+      level: 'error',
+      text: `Cluster reachability:  monitoring failed - ${err.message}`,
+    });
   } finally {
-    if (parentPort) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'info',
-          text: `Cluster reachability:  monitoring completed in ${new Date() - now} ms`,
-        });
-    } else {
-      process.exit(0);
-    }
+    logOrPostMessage({
+      level: 'info',
+      text: `Cluster reachability:  monitoring completed in ${new Date() - now} ms`,
+    });
   }
 }
 

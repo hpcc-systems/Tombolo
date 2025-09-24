@@ -1,5 +1,6 @@
 const models = require('../../models');
 const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const { decryptString } = require('../../utils/cipher');
 const { FileSprayService } = require('@hpcc-js/comms');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
@@ -36,7 +37,7 @@ const monitoring_name = 'Landing Zone Monitoring';
   // Start time
   const startTime = new Date().getTime();
   try {
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'info',
       text: 'Landing Zone (file movement) Monitoring started',
     });
@@ -71,7 +72,7 @@ const monitoring_name = 'Landing Zone Monitoring';
 
     // If 0 activeLzMonitorings, log and return
     if (activeLzMonitorings.length === 0) {
-      parentPort.postMessage({
+      logOrPostMessage({
         level: 'verbose',
         text: 'No active landing zone (file movement) monitoring found',
       });
@@ -98,7 +99,7 @@ const monitoring_name = 'Landing Zone Monitoring';
       }
     });
 
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'verobse',
       text: `${activeLzMonitorings.length} active landing zone monitoring(s) tracking file movement`,
     });
@@ -150,7 +151,7 @@ const monitoring_name = 'Landing Zone Monitoring';
 
         allMatchedFiles.push(...matches);
       } catch (error) {
-        parentPort.postMessage({
+        logOrPostMessage({
           level: 'error',
           text: `Error while getting files from File Spray service: ${error.message}`,
         });
@@ -159,7 +160,7 @@ const monitoring_name = 'Landing Zone Monitoring';
 
     // If no files found, log and return
     if (allMatchedFiles.length === 0) {
-      parentPort.postMessage({
+      logOrPostMessage({
         level: 'verbose',
         text: 'Landing zone (file movement) monitoring did not find any matching file in specified landing zones',
       });
@@ -196,14 +197,14 @@ const monitoring_name = 'Landing Zone Monitoring';
 
     // If FilesThatPassedThreshold is empty, log and return
     if (filesThatPassedThreshold.length === 0) {
-      parentPort.postMessage({
+      logOrPostMessage({
         level: 'verbose',
         text: 'Landing zone (file movement) monitoring did not find any file that passed the threshold',
       });
       return;
     }
     // Queue notification for each file that passed the threshold
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'info',
       text: `Queing notification for ${filesThatPassedThreshold.length} file(s) that passed the threshold`,
     });
@@ -246,7 +247,7 @@ const monitoring_name = 'Landing Zone Monitoring';
             asrSpecificMetaData.productName = `${asrProduct.name} (${asrProduct.shortCode})`;
             notificationPrefix = asrProduct.shortCode;
           } catch (error) {
-            parentPort.postMessage({
+            logOrPostMessage({
               level: 'warn',
               text: `Error while getting ASR product category: ${error.message}`,
             });
@@ -261,7 +262,7 @@ const monitoring_name = 'Landing Zone Monitoring';
             });
             asrSpecificMetaData.domainName = asrDomain.name;
           } catch (error) {
-            parentPort.postMessage({
+            logOrPostMessage({
               level: 'warn',
               text: `Error while getting ASR domain: ${error.message}`,
             });
@@ -312,7 +313,7 @@ const monitoring_name = 'Landing Zone Monitoring';
           createdBy: 'System',
         });
       } catch (error) {
-        parentPort.postMessage({
+        logOrPostMessage({
           level: 'error',
           text: `Error while queuing notification for file ${file.fileName}: ${error.message}`,
         });
@@ -320,7 +321,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     }
   } catch (error) {
     // Log error
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'error',
       text: `Error while monitoring landing zone for file movement: ${error.message}`,
     });
@@ -328,7 +329,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     // End time
     const endTime = new Date().getTime();
     const duration = endTime - startTime;
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'info',
       text: `Landing Zone (file movement) Monitoring completed in ${duration} ms`,
     });

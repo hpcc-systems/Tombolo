@@ -1,17 +1,18 @@
 // imports
-const { parentPort } = require("worker_threads");
-const { Op } = require("sequelize");
-const { deleteUser } = require("../../utils/authUtil");
-
+const { Op } = require('sequelize');
+const { deleteUser } = require('../../utils/authUtil');
 
 //Local Imports
-const models = require("../../models");
-const { user} = models;
-
+const { logOrPostMessage } = require('../jobUtils');
+const models = require('../../models');
+const { user } = models;
 
 (async () => {
   try {
-    parentPort && parentPort.postMessage({level: "info", text : "Job to remove unverified users started ..."});
+    logOrPostMessage({
+      level: 'info',
+      text: 'Job to remove unverified users started ...',
+    });
 
     const now = Date.now();
 
@@ -20,20 +21,25 @@ const { user} = models;
       where: {
         verifiedUser: false,
         createdAt: {
-          [Op.lt]: now - 24 * 60 * 60 * 1000
-        }
-      }
+          [Op.lt]: now - 24 * 60 * 60 * 1000,
+        },
+      },
     });
 
-    parentPort && parentPort.postMessage({level: "info", text : `Number of unverified users to be removed: ${unverifiedUsers.length}`});
+    logOrPostMessage({
+      level: 'info',
+      text: `Number of unverified users to be removed: ${unverifiedUsers.length}`,
+    });
 
     for (const user of unverifiedUsers) {
-      await deleteUser(user.id, "unverified user deleted by system");
+      await deleteUser(user.id, 'unverified user deleted by system');
     }
 
-    parentPort && parentPort.postMessage({level: "info", text : "Job to remove unverified user completed ..."});
-
+    logOrPostMessage({
+      level: 'info',
+      text: 'Job to remove unverified user completed ...',
+    });
   } catch (error) {
-    parentPort && parentPort.postMessage({level: "error", text : error.message});
+    logOrPostMessage({ level: 'error', text: error.message });
   }
 })();
