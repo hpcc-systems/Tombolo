@@ -1,5 +1,6 @@
 const logger = require('../../config/logger');
 const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const {
   CostMonitoring,
   CostMonitoringData,
@@ -127,20 +128,18 @@ async function getCostMonitorings() {
 
 async function monitorCost() {
   try {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Cost Monitor Per user: Monitoring started ...',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Cost Monitor Per user: Monitoring started ...',
+    });
 
     // Check if there are any monitorings for cost per user
     const costMonitorings = await getCostMonitorings();
     if (costMonitorings.length === 0) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'info',
-          text: 'No cost monitorings found',
-        });
+      logOrPostMessage({
+        level: 'info',
+        text: 'No cost monitorings found',
+      });
       return;
     }
 
@@ -149,16 +148,10 @@ async function monitorCost() {
     });
 
     if (!monitoringType) {
-      if (parentPort) {
-        parentPort.postMessage({
-          level: 'error',
-          text: 'monitorCost: MonitoringType, "Cost Monitoring" not found',
-        });
-      } else {
-        logger.error(
-          'monitorCost: MonitoringType, "Cost Monitoring" not found'
-        );
-      }
+      logOrPostMessage({
+        level: 'error',
+        text: 'monitorCost: MonitoringType, "Cost Monitoring" not found',
+      });
       return;
     }
 
@@ -312,18 +305,16 @@ async function monitorCost() {
         );
       } catch (perClusterError) {
         logger.error('>>> monitorCost: Error in cluster ', perClusterError);
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `monitorCost: Failed in cluster ${clusterId}: ${perClusterError.message}, ...skipping`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `monitorCost: Failed in cluster ${clusterId}: ${perClusterError.message}, ...skipping`,
+        });
       }
     }
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Cost Monitor Per user: Monitoring Finished ...',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Cost Monitor Per user: Monitoring Finished ...',
+    });
 
     // Trigger the analyzeCost job
     if (parentPort) {
@@ -331,13 +322,17 @@ async function monitorCost() {
         action: 'trigger',
         type: 'monitor-cost',
       });
+    } else {
+      logOrPostMessage({
+        level: 'error',
+        text: 'Failed to trigger monitor cost, parentPort is nullish',
+      });
     }
   } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `Cost Monitor Per user: ${err.message}`,
-      });
+    logOrPostMessage({
+      level: 'error',
+      text: `Cost Monitor Per user: ${err.message}`,
+    });
   }
 }
 

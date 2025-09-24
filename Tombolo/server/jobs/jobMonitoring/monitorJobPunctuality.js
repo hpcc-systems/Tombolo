@@ -1,6 +1,6 @@
 // Import from libraries
 const { WorkunitsService } = require('@hpcc-js/comms');
-const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const _ = require('lodash');
 
 // Local imports
@@ -27,11 +27,10 @@ const { APPROVAL_STATUS } = require('../../config/constants');
 const monitoringTypeName = 'Job Monitoring';
 
 (async () => {
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: 'Job Punctuality Monitoring: Monitoring started',
-    });
+  logOrPostMessage({
+    level: 'info',
+    text: 'Job Punctuality Monitoring: Monitoring started',
+  });
   const now = new Date(); // UTC time
 
   try {
@@ -47,11 +46,10 @@ const monitoringTypeName = 'Job Monitoring';
     }
 
     // Log info saying how many job monitorings are being processed
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: `Job Punctuality Monitoring: Processing  ${jobMonitorings.length} job monitoring(s)`,
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: `Job Punctuality Monitoring: Processing  ${jobMonitorings.length} job monitoring(s)`,
+    });
 
     // Get all unique clusters for the job monitorings
     const clusterIds = jobMonitorings.map(
@@ -77,11 +75,10 @@ const monitoringTypeName = 'Job Monitoring';
           clusterInfo.password = null;
         }
       } catch (error) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Job Punctuality Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Job Punctuality Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
+        });
       }
     });
 
@@ -129,11 +126,10 @@ const monitoringTypeName = 'Job Monitoring';
         const clusterInfo = clustersObj[clusterId];
 
         if (!clusterInfo) {
-          parentPort &&
-            parentPort.postMessage({
-              level: 'error',
-              text: `Job Punctuality Monitoring: No cluster found for clusterId ${clusterId} in jobMonitoring ${id}`,
-            });
+          logOrPostMessage({
+            level: 'error',
+            text: `Job Punctuality Monitoring: No cluster found for clusterId ${clusterId} in jobMonitoring ${id}`,
+          });
           continue;
         }
 
@@ -150,11 +146,10 @@ const monitoringTypeName = 'Job Monitoring';
               severeEmailRecipients = domain.severityAlertRecipients;
             }
           } catch (error) {
-            parentPort &&
-              parentPort.postMessage({
-                level: 'error',
-                text: `Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}`,
-              });
+            logOrPostMessage({
+              level: 'error',
+              text: `Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}`,
+            });
           }
         }
 
@@ -319,11 +314,10 @@ const monitoringTypeName = 'Job Monitoring';
         // If no workunits are found, send out notifications
         if (ECLWorkunit.length === 0) {
           // Log which job did not start on time
-          parentPort &&
-            parentPort.postMessage({
-              level: 'info',
-              text: `Job Punctuality Monitoring:  ( ${monitoringName} ) is unpunctual. Expected start time: ${window.start.toLocaleString()}`,
-            });
+          logOrPostMessage({
+            level: 'info',
+            text: `Job Punctuality Monitoring:  ( ${monitoringName} ) is unpunctual. Expected start time: ${window.start.toLocaleString()}`,
+          });
 
           // Notification payload
           const notificationPayload = createNotificationPayload({
@@ -368,11 +362,10 @@ const monitoringTypeName = 'Job Monitoring';
 
           // Queue email notification
           await NotificationQueue.create(notificationPayload);
-          parentPort &&
-            parentPort.postMessage({
-              level: 'verbose',
-              text: `Job Punctuality Monitoring: Notification queued for ${monitoringName},  job not started on time`,
-            });
+          logOrPostMessage({
+            level: 'verbose',
+            text: `Job Punctuality Monitoring: Notification queued for ${monitoringName},  job not started on time`,
+          });
 
           // NOC email notification
           if (jobLevelSeverity >= severityThreshHold && severeEmailRecipients) {
@@ -388,11 +381,10 @@ const monitoringTypeName = 'Job Monitoring';
               });
             delete notificationPayloadForNoc.metaData.cc;
             await NotificationQueue.create(notificationPayloadForNoc);
-            parentPort &&
-              parentPort.postMessage({
-                level: 'verbose',
-                text: `Job Punctuality Monitoring: NOC Notification queued for ${monitoringName},  job not started on time`,
-              });
+            logOrPostMessage({
+              level: 'verbose',
+              text: `Job Punctuality Monitoring: NOC Notification queued for ${monitoringName},  job not started on time`,
+            });
           }
           // Update the job monitoring
           await JobMonitoring.update(
@@ -411,34 +403,29 @@ const monitoringTypeName = 'Job Monitoring';
             },
             { where: { id } }
           );
-          parentPort &&
-            parentPort.postMessage({
-              level: 'verbose',
-              text: `Job Punctuality Monitoring: Last run details updated for ${monitoringName}`,
-            });
+          logOrPostMessage({
+            level: 'verbose',
+            text: `Job Punctuality Monitoring: Last run details updated for ${monitoringName}`,
+          });
         }
       } catch (error) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'error',
-            text: `Job Punctuality Monitoring: Error while processing jobs for  punctuality check ${jobMonitoring.id}: ${error.message}`,
-          });
+        logOrPostMessage({
+          level: 'error',
+          text: `Job Punctuality Monitoring: Error while processing jobs for  punctuality check ${jobMonitoring.id}: ${error.message}`,
+        });
       }
     }
   } catch (error) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `Job Punctuality Monitoring: Error in job punctuality monitoring script: ${error.message}`,
-      });
+    logOrPostMessage({
+      level: 'error',
+      text: `Job Punctuality Monitoring: Error in job punctuality monitoring script: ${error.message}`,
+    });
   } finally {
-    if (parentPort) {
-      parentPort.postMessage({
-        level: 'info',
-        text: `Job Punctuality Monitoring: monitoring completed in ${(
-          new Date().getTime() - now.getTime()
-        ).toLocaleString()} ms`,
-      });
-    } else process.exit(0);
+    logOrPostMessage({
+      level: 'info',
+      text: `Job Punctuality Monitoring: monitoring completed in ${(
+        new Date().getTime() - now.getTime()
+      ).toLocaleString()} ms`,
+    });
   }
 })();

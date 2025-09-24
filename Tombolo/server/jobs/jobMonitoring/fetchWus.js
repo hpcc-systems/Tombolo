@@ -1,5 +1,6 @@
 // Imports
 const { parentPort, workerData } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const { decryptString } = require('../../utils/cipher');
 
 // Local Imports
@@ -15,11 +16,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
   const { clusterId, jobName, monitoringId, applicationId } = job.data;
   try {
     const startTime = new Date().getTime();
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Fetch Workunit Info - started',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Fetch Workunit Info - started',
+    });
 
     // Get cluster information
     const clusterInfo = await Cluster.findOne({
@@ -38,11 +38,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
 
     // If no cluster info is present, return
     if (!clusterInfo) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'error',
-          text: `Fetch Workunit Info - Cluster with id ${clusterId} not found`,
-        });
+      logOrPostMessage({
+        level: 'error',
+        text: `Fetch Workunit Info - Cluster with id ${clusterId} not found`,
+      });
       return;
     }
 
@@ -78,11 +77,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
 
     // If no workunits found, return
     if (ECLWorkunit.length === 0) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'info',
-          text: `Fetch Workunit Info - No workunits found for job ${jobName}`,
-        });
+      logOrPostMessage({
+        level: 'info',
+        text: `Fetch Workunit Info - No workunits found for job ${jobName}`,
+      });
       return;
     }
 
@@ -125,16 +123,14 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
     // Save job Monitoring data
     await JobMonitoringData.bulkCreate(jmDataRows);
 
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: `Fetch Workunit Info completed in ${new Date().getTime() - startTime} ms`,
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: `Fetch Workunit Info completed in ${new Date().getTime() - startTime} ms`,
+    });
   } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `Cluster reachability:  monitoring failed - ${err.message}`,
-      });
+    logOrPostMessage({
+      level: 'error',
+      text: `Cluster reachability:  monitoring failed - ${err.message}`,
+    });
   }
 })();

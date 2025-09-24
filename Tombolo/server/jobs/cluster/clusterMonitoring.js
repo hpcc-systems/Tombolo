@@ -1,7 +1,7 @@
 // Library Imports
 const axios = require('axios');
 const _ = require('lodash');
-const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const { MachineService } = require('@hpcc-js/comms');
 
 // Local Imports
@@ -32,7 +32,7 @@ async function enrichAsrMetaData(asrSpecificMetaData) {
       asrSpecificMetaData.productName = `${asrProduct.name} (${asrProduct.shortCode})`;
       notificationPrefix = asrProduct.shortCode;
     } catch (error) {
-      parentPort.postMessage({
+      logOrPostMessage({
         level: 'warn',
         text: `Error while getting ASR product category: ${error.message}`,
       });
@@ -45,7 +45,7 @@ async function enrichAsrMetaData(asrSpecificMetaData) {
       });
       asrSpecificMetaData.domainName = asrDomain.name;
     } catch (error) {
-      parentPort.postMessage({
+      logOrPostMessage({
         level: 'warn',
         text: `Error while getting ASR domain: ${error.message}`,
       });
@@ -145,7 +145,7 @@ async function monitorCluster() {
     monitoringTypeId = monitoringType.id;
 
     // Start time
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'info',
       text: 'Cluster Status Monitoring started',
     });
@@ -179,7 +179,7 @@ async function monitorCluster() {
 
     // If no active monitoring found, log and exit
     if (activeClusterStatusMonitoring.length === 0) {
-      parentPort.postMessage({
+      logOrPostMessage({
         level: 'info',
         text: 'No active cluster status monitoring found',
       });
@@ -201,7 +201,7 @@ async function monitorCluster() {
     });
 
     // Log the results
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'info',
       text: `Found ${activeClusterStatusMonitoring.length} active cluster status monitoring(s)`,
     });
@@ -245,7 +245,7 @@ async function monitorCluster() {
         } = contacts;
         const cluster = clusterObject[clusterId];
         if (!cluster) {
-          parentPort.postMessage({
+          logOrPostMessage({
             level: 'error',
             text: `Cluster not found for monitoring ID ${id}`,
           });
@@ -281,7 +281,7 @@ async function monitorCluster() {
 
         // If no problematic cluster found, log and continue to next monitoring
         if (problematicClusters.length === 0) {
-          parentPort.postMessage({
+          logOrPostMessage({
             level: 'verbose',
             text: `No problematic cluster found for ${clusterObject[clusterId].name}`,
           });
@@ -289,7 +289,7 @@ async function monitorCluster() {
         }
 
         // Log the problematic cluster count and cluster name
-        parentPort.postMessage({
+        logOrPostMessage({
           level: 'verbose',
           text: `Detected ${problematicClusters.length} problematic cluster(s) for ${clusterObject[clusterId].name}`,
         });
@@ -328,7 +328,7 @@ async function monitorCluster() {
 
         notificationToBeQueued.push(notificationPayload);
       } catch (error) {
-        parentPort.postMessage({
+        logOrPostMessage({
           level: 'error',
           text: `Error while monitoring cluster status: ${error}`,
         });
@@ -349,7 +349,7 @@ async function monitorCluster() {
         const res = await ms.GetTargetClusterUsageEx();
 
         if (res.length < 1) {
-          parentPort.postMessage({
+          logOrPostMessage({
             level: 'warn',
             text: `No usage data returned for cluster ID ${monitoring.clusterId}`,
           });
@@ -411,7 +411,7 @@ async function monitorCluster() {
           notificationToBeQueued.push(notificationPayload);
         }
       } catch (error) {
-        parentPort.postMessage({
+        logOrPostMessage({
           level: 'error',
           text: `Error while monitoring cluster usage: ${error}`,
         });
@@ -434,7 +434,7 @@ async function monitorCluster() {
             }
           );
         } catch (error) {
-          parentPort.postMessage({
+          logOrPostMessage({
             level: 'error',
             text: `Error while upserting monitoring log: ${error}`,
           });
@@ -442,7 +442,7 @@ async function monitorCluster() {
       }
     }
   } catch (error) {
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'error',
       text: `Error while monitoring cluster status: ${error}`,
     });
@@ -450,7 +450,7 @@ async function monitorCluster() {
     // End time
     const endTime = new Date().getTime();
     const duration = endTime - startTime;
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'info',
       text: `Cluster Status Monitoring completed in ${duration} ms`,
     });

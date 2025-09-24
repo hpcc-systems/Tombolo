@@ -12,9 +12,11 @@ import { registerBasicUser } from '@/redux/slices/AuthSlice';
 import { useDispatch } from 'react-redux';
 
 import styles from './login.module.css';
+import { useHistory } from 'react-router-dom';
 
 const Register = () => {
   const dispatch = useDispatch();
+  const history = useHistory();
 
   const [form] = Form.useForm();
   const [registrationComplete, setRegistrationComplete] = useState(false);
@@ -45,11 +47,11 @@ const Register = () => {
             throw new Error(response?.data?.message || 'Verification failed');
           }
 
-          message.success('Verification completed successfully');
+          message.success('Your email has been verified!');
           setRegistrationComplete(true);
           setVerifying(false);
           setUser(JSON.stringify(response.data));
-          window.location.href = '/';
+          history.push('/');
         } catch (err) {
           setVerifying(false);
           setVerificationFailed(err.message);
