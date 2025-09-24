@@ -166,6 +166,7 @@ const Wizard = () => {
             } else if (e.step === 999) {
               setCompleteSuccessfully(true);
               setSubmitting(false);
+              message.success('Verification E-mail sent!');
             }
           });
 
