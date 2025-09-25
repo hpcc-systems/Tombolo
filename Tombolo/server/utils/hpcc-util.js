@@ -630,6 +630,63 @@ exports.getCluster = clusterId => {
   });
 };
 
+/**
+ * Retrieves cluster objects for the given array of cluster IDs, including reachability and credential status.
+ *
+ * For each cluster:
+ *   - Decrypts the password hash if present
+ *   - Checks if the cluster is reachable and credentials are valid
+ *   - Returns the cluster object if reachable and authorized
+ *   - Returns an object with an error property if unreachable or unauthorized
+ *
+ * @param {string[]} clusterIds - Array of cluster IDs to fetch
+ * @returns {Promise<Object[]>} Resolves to an array of cluster objects with an error key included if there were errors
+ * @throws {Error} If there is a database or internal error
+ */
+exports.getClusters = async clusterIds => {
+  try {
+    const clusters = await Cluster.findAll({ where: { id: clusterIds } });
+    const clusterPromises = clusters.map(async cluster => {
+      try {
+        if (cluster.hash) {
+          cluster.hash = decryptString(cluster.hash);
+        }
+
+        const isReachable = await module.exports.isClusterReachable(
+          cluster.thor_host,
+          cluster.thor_port,
+          cluster.username,
+          cluster.hash
+        );
+        const { reached, statusCode } = isReachable;
+        if (reached && statusCode === 200) {
+          return cluster;
+        } else if (reached && statusCode === 403) {
+          return {
+            error: 'Invalid cluster credentials',
+            ...cluster,
+          };
+        } else {
+          return {
+            error: `${cluster.name} is not reachable...`,
+            ...cluster,
+          };
+        }
+      } catch (err) {
+        return {
+          error: `Error with cluster ${cluster.name}: ${err.message}`,
+          ...cluster,
+        };
+      }
+    });
+
+    return await Promise.all(clusterPromises);
+  } catch (error) {
+    logger.error('hpcc-util - getClusters: ', error);
+    throw error;
+  }
+};
+
 /*
 response :  undefined -> cluster not reached network issue or cluster not available
 response.status : 200 -> Cluster reachable

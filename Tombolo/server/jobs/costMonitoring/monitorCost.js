@@ -4,12 +4,11 @@ const { logOrPostMessage } = require('../jobUtils');
 const {
   CostMonitoring,
   CostMonitoringData,
-  Cluster,
   MonitoringLog,
   MonitoringType,
 } = require('../../models');
 const { Workunit } = require('@hpcc-js/comms');
-const { getCluster } = require('../../utils/hpcc-util');
+const { getClusters } = require('../../utils/hpcc-util');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
 /**
@@ -158,34 +157,24 @@ async function monitorCost() {
 
     // 1. Gather all unique cluster IDs referenced by any cost monitoring (or all clusters if any monitoring has clusterIds null/empty)
     let allClusterIds = new Set();
-    let useAllClusters = false;
     for (const costMonitor of costMonitorings) {
-      if (!costMonitor.clusterIds || costMonitor.clusterIds.length === 0) {
-        useAllClusters = true;
-        break;
-      }
       costMonitor.clusterIds.forEach(id => allClusterIds.add(id));
     }
 
-    let clusterRecords;
-    if (useAllClusters) {
-      clusterRecords = await Cluster.findAll({
-        attributes: ['id'],
-        where: { deletedAt: null },
-      });
-      allClusterIds = new Set(clusterRecords.map(c => c.id));
-    } else {
-      clusterRecords = await Cluster.findAll({
-        attributes: ['id'],
-        where: { id: Array.from(allClusterIds), deletedAt: null },
-      });
-    }
+    const clusterDetails = await getClusters(Array.from(allClusterIds));
 
     // 2. For each cluster, aggregate all cost monitoring data into a single CostMonitoringData row
-    for (const clusterRecord of clusterRecords) {
-      const clusterId = clusterRecord.id;
+    for (const clusterDetail of clusterDetails) {
+      const clusterId = clusterDetail.id;
+      // Check if the cluster had any errors during getClusters
+      if ('error' in clusterDetail) {
+        logOrPostMessage({
+          level: 'error',
+          text: `monitorCost: Failed to get cluster ${clusterId}: ${clusterDetail.error}, ...skipping`,
+        });
+        continue;
+      }
       try {
-        const clusterDetail = await getCluster(clusterId);
         const {
           thor_host: thorHost,
           thor_port: thorPort,
