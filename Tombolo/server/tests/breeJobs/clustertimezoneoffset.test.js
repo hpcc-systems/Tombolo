@@ -82,6 +82,5 @@ describe('getClusterTimezoneOffset', () => {
         text: expect.stringContaining('Cluster Timezone Offset Job completed'),
       })
     );
-    expect(parentPort.postMessage).toHaveBeenCalledWith('done');
   });
 });

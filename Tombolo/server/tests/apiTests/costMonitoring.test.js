@@ -281,7 +281,9 @@ describe('costMonitoring Routes', () => {
 
   it('PATCH / should update cost monitoring', async () => {
     const costMonitoring = getCostMonitoring({}, true);
-    CostMonitoring.update.mockResolvedValue(costMonitoring);
+    // Update now returns number of affected rows; then controller fetches the updated record
+    CostMonitoring.update.mockResolvedValue([1]);
+    CostMonitoring.findByPk.mockResolvedValue(costMonitoring);
 
     const res = await request(app)
       .patch('/api/costMonitoring/')
@@ -291,6 +293,9 @@ describe('costMonitoring Routes', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data).toEqual(costMonitoring);
     expect(CostMonitoring.update).toHaveBeenCalledTimes(1);
+    expect(CostMonitoring.findByPk).toHaveBeenCalledWith(costMonitoring.id, {
+      include: expect.any(Array),
+    });
   });
 
   it('PATCH / should 404 if ID not found', async () => {

@@ -79,9 +79,10 @@ describe('analyzeCost.js', () => {
         idempotencyKey: 'key',
       };
       const payload = createCMNotificationPayload(input);
-      expect(payload.metaData.issue).toEqual({
-        Issue: `Cost threshold of ${input.threshold} passed`,
-        'Total Summed Cost': input.summedCost,
+      expect(payload.metaData.issue).toMatchObject({
+        Issue: `Cost threshold of $${input.threshold} passed`,
+        // summed total moved into cluster rows; currency symbol provided separately
+        // 'Total Summed Cost': input.summedCost,
         clusters: input.erroringClusters.map(cluster => {
           return {
             totalCost: cluster.totalCost,
@@ -179,7 +180,7 @@ describe('analyzeCost.js', () => {
         isSummed: true,
       };
       const monitoringType = { id: 1 };
-      const clusterCostTotals = { aggregatedCostsByCluster: null };
+      const clusterCostTotals = { aggregatedCostsByCluster: {}, overallTotalCost: 50 };
       await analyzeClusterCost(
         clusterCostTotals,
         costMonitoring,
