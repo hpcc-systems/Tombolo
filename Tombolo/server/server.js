@@ -53,6 +53,14 @@ app.use((req, res, next) => {
 
 const server = require('http').Server(app);
 server.maxHeadersCount = 1000;
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
+
+const sockets = new Set();
+server.on('connection', socket => {
+  sockets.add(socket);
+  socket.on('close', () => sockets.delete(socket));
+});
 
 app.set('trust proxy', 1);
 
@@ -181,6 +189,10 @@ app.use((err, req, res, next) => {
 // Disables SSL verification for self-signed certificates in development mode
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] =
   process.env.NODE_ENV === 'production' ? 1 : 0;
+
+// Attach graceful shutdown handlers
+const setupGracefulShutdown = require('./utils/setupGracefulShutdown');
+setupGracefulShutdown({ server, sockets, dbConnection, JobScheduler });
 
 /* Start server */
 server.listen(port, '0.0.0.0', async () => {
