@@ -24,6 +24,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       },
+      localDay: {
+        type: Sequelize.DATEONLY,
+        comment: 'Precomputed local day for fast queries',
+      },
       usersCostInfo: {
         allowNull: false,
         type: Sequelize.JSON,
@@ -45,6 +49,15 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    // Composite index for fast queries by cluster, local_day, and deletedAt
+    await queryInterface.addIndex(
+      'cost_monitoring_data',
+      ['clusterId', 'local_day', 'deletedAt'],
+      {
+        name: 'idx_cmd_cluster_localday_notdeleted',
+      }
+    );
   },
 
   async down(queryInterface, Sequelize) {

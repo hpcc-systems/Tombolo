@@ -287,8 +287,21 @@ async function monitorCost() {
         );
 
         // Save a single CostMonitoringData row per cluster
+        // Compute localDay for the cluster
+        function dateAtOffset(date, offsetMinutes) {
+          return new Date(date.getTime() + offsetMinutes * 60 * 1000);
+        }
+        function toLocalDay(date, offsetMinutes) {
+          const d = dateAtOffset(date, offsetMinutes);
+          return new Date(
+            Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+          );
+        }
+        const now = new Date();
+        const localDay = toLocalDay(now, timezoneOffset);
         await CostMonitoringData.create({
-          date: new Date(),
+          date: now,
+          localDay: localDay.toISOString().slice(0, 10), // 'YYYY-MM-DD'
           clusterId,
           usersCostInfo,
           metaData,
