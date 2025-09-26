@@ -71,8 +71,8 @@ export const errorInterceptor = (apiClient) => {
             message: response.data?.message,
             description: (
               <>
-                {errors.map((error) => (
-                  <div key={error}>{error}</div>
+                {errors.map((error, index) => (
+                  <div key={index}>{error}</div>
                 ))}
               </>
             ),

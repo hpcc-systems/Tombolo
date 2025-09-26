@@ -9,7 +9,7 @@ import { retryInterceptor } from './interceptors/retry.interceptor';
 
 // Base axios configuration
 const apiClient = axios.create({
-  baseURL: `/api`, // Commented out to avoid CORS issues
+  baseURL: `/api`,
   timeout: 30000,
   withCredentials: true, // Include cookies for CSRF
   headers: {
@@ -18,7 +18,6 @@ const apiClient = axios.create({
     'X-Requested-With': 'XMLHttpRequest', // CSRF protection
   },
   //Request size limits
-  //   maxContentLength: 50 * 1024 * 1024, //  response limit
   maxBodyLength: 50 * 1024 * 1024, // 50MB request limit
   maxRedirects: 5,
   //CSRF configuration
