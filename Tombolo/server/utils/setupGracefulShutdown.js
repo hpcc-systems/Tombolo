@@ -26,13 +26,19 @@ module.exports = function setupGracefulShutdown({
       })
     );
 
-    setTimeout(() => {
-      for (const socket of sockets) {
-        try {
-          socket.destroy();
-        } catch (_) {}
-      }
-    }, 5000);
+    // 1a) Destroy open sockets after 5 seconds
+    tasks.push(
+      new Promise(resolve => {
+        setTimeout(() => {
+          for (const socket of sockets) {
+            try {
+              socket.destroy();
+            } catch (_) {}
+          }
+          resolve();
+        }, 5000);
+      })
+    );
 
     // 2) Stop background jobs (best-effort)
     try {
