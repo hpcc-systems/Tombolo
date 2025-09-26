@@ -1,10 +1,15 @@
 import React from 'react';
-import { Card, Spin } from 'antd';
+import { Card, Spin, Button } from 'antd';
 import logo from '../../images/logo.png';
 
 import styles from './layout.module.css';
+import { ReloadOutlined } from '@ant-design/icons';
 
 const LoadingScreen = ({ isConnected, statusRetrieved, message }) => {
+  const refreshPage = () => {
+    window.location.reload();
+  };
+
   return (
     <>
       {/* Loading screens to communicate a loading sequence */}
@@ -15,6 +20,10 @@ const LoadingScreen = ({ isConnected, statusRetrieved, message }) => {
               Tombolo has encountered a network issue, please refresh the page. If the issue persists, contact your
               system administrator.
             </h2>
+            <Button type="primary" onClick={refreshPage}>
+              <ReloadOutlined />
+              Refresh
+            </Button>
           </Card>
         ) : (
           <div className={styles.infoDiv}>
