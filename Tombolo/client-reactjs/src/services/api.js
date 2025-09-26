@@ -17,15 +17,15 @@ const apiClient = axios.create({
     Accept: 'application/json',
     'X-Requested-With': 'XMLHttpRequest', // CSRF protection
   },
-  //Request size limits
+  // Request size limits
   maxBodyLength: 50 * 1024 * 1024, // 50MB request limit
   maxRedirects: 5,
-  //CSRF configuration
+  // CSRF configuration
   xsrfCookieName: 'x-csrf-token',
   xsrfHeaderName: 'x-csrf-token',
 });
 
-//Retry configuration
+// Retry configuration
 axiosRetry(apiClient, {
   retries: 2,
   retryDelay: axiosRetry.exponentialDelay,
