@@ -53,7 +53,7 @@ module.exports = {
     // Composite index for fast queries by cluster, local_day, and deletedAt
     await queryInterface.addIndex(
       'cost_monitoring_data',
-      ['clusterId', 'local_day', 'deletedAt'],
+      ['clusterId', 'localDay', 'deletedAt'],
       {
         name: 'idx_cmd_cluster_localday_notdeleted',
       }

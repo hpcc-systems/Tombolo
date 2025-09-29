@@ -283,7 +283,7 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [
         {
           name: 'idx_cmd_cluster_localday_notdeleted',
-          fields: ['clusterId', 'local_day', 'deletedAt'],
+          fields: ['clusterId', 'localDay', 'deletedAt'],
         },
       ],
     }
