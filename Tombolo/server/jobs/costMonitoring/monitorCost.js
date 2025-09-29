@@ -301,7 +301,7 @@ async function monitorCost() {
         const localDay = toLocalDay(now, timezoneOffset);
         await CostMonitoringData.create({
           date: now,
-          localDay: localDay.toISOString().slice(0, 10), // 'YYYY-MM-DD'
+          localDay: localDay.toISOString().split('T')[0], // 'YYYY-MM-DD'
           clusterId,
           usersCostInfo,
           metaData,
