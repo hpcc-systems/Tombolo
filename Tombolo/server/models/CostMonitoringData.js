@@ -31,27 +31,7 @@ module.exports = (sequelize, DataTypes) => {
     static #getStartOfDayWhereClause() {
       return {
         deletedAt: null,
-        [Op.and]: [
-          this.sequelize.where(
-            fn(
-              'DATE',
-              fn(
-                'DATE_ADD',
-                col('CostMonitoringData.date'),
-                this.sequelize.literal('INTERVAL timezone_offset MINUTE')
-              )
-            ),
-            '=',
-            fn(
-              'DATE',
-              fn(
-                'DATE_ADD',
-                fn('CURRENT_TIMESTAMP'),
-                this.sequelize.literal('INTERVAL timezone_offset MINUTE')
-              )
-            )
-          ),
-        ],
+        localDay: this.sequelize.literal('CURRENT_DATE'),
       };
     }
 
@@ -269,6 +249,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.DATE,
       },
+      localDay: {
+        type: DataTypes.DATEONLY,
+        comment: 'Precomputed local day for fast queries',
+      },
       usersCostInfo: {
         allowNull: false,
         type: DataTypes.JSON,
@@ -296,7 +280,12 @@ module.exports = (sequelize, DataTypes) => {
       tableName: 'cost_monitoring_data',
       timestamps: true,
       paranoid: true,
-      indexes: [],
+      indexes: [
+        {
+          name: 'idx_cmd_cluster_localday_notdeleted',
+          fields: ['clusterId', 'localDay', 'deletedAt'],
+        },
+      ],
     }
   );
 

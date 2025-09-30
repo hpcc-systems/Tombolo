@@ -11,6 +11,17 @@ const { Workunit } = require('@hpcc-js/comms');
 const { getClusters } = require('../../utils/hpcc-util');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
+function dateAtOffset(date, offsetMinutes) {
+  return new Date(date.getTime() + offsetMinutes * 60 * 1000);
+}
+
+function toLocalDay(date, offsetMinutes) {
+  const d = dateAtOffset(date, offsetMinutes);
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  );
+}
+
 /**
  * Gets the current time and time from lastScanTime in UTC without applying any timezone conversions.
  * The input and output are treated strictly as UTC.
@@ -180,7 +191,7 @@ async function monitorCost() {
           thor_port: thorPort,
           username,
           hash,
-          timezone_offset: timezoneOffset,
+          timezone_offset: timezoneOffset = 0,
           allowSelfSigned,
         } = clusterDetail;
 
@@ -287,8 +298,13 @@ async function monitorCost() {
         );
 
         // Save a single CostMonitoringData row per cluster
+        // Compute localDay for the cluster
+
+        const now = new Date();
+        const localDay = toLocalDay(now, timezoneOffset);
         await CostMonitoringData.create({
-          date: new Date(),
+          date: now,
+          localDay: localDay.toISOString().split('T')[0], // 'YYYY-MM-DD'
           clusterId,
           usersCostInfo,
           metaData,
