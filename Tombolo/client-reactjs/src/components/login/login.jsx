@@ -25,7 +25,7 @@ const hasAllAzureEnv = [
   import.meta.env.VITE_AZURE_CLIENT_ID,
   import.meta.env.VITE_AZURE_TENENT_ID,
   import.meta.env.VITE_AZURE_REDIRECT_URI,
-].every((v) => (typeof v === 'string' ? v.trim().length > 0 : Boolean(v)));
+].every((v) => typeof v === 'string' && v.trim().length > 0);
 
 // Warn once if Azure requested but misconfigured
 if (methods.includes('azure') && !hasAllAzureEnv) {
