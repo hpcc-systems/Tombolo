@@ -16,6 +16,10 @@
   --highlight: #fffb8f;
 }
 
+.error-notification > .ant-notification-notice-progress {
+  background: var(--danger) !important;
+}
+
 .link-text {
   color: var(--primary);
   cursor: pointer;
@@ -1098,7 +1102,6 @@ div.tooltip {
 .sentNotificationBody p:last-child {
   display: none;
 }
-
 
 .chartLabel {
   color: rgb(71, 70, 70);
