@@ -10,6 +10,28 @@ import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/sli
 
 import styles from './login.module.css';
 
+// Static auth config and Azure env validation (computed once per module load)
+const authMethodsRaw = import.meta.env.VITE_AUTH_METHODS;
+const methods = Array.isArray(authMethodsRaw)
+  ? authMethodsRaw
+  : typeof authMethodsRaw === 'string'
+  ? authMethodsRaw
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+  : [];
+
+const hasAllAzureEnv = [
+  import.meta.env.VITE_AZURE_CLIENT_ID,
+  import.meta.env.VITE_AZURE_TENENT_ID,
+  import.meta.env.VITE_AZURE_REDIRECT_URI,
+].every((v) => (typeof v === 'string' ? v.trim().length > 0 : Boolean(v)));
+
+// Warn once if Azure requested but misconfigured
+if (methods.includes('azure') && !hasAllAzureEnv) {
+  console.warn('[Login] Azure auth is enabled but missing/invalid environment variables');
+}
+
 const Login = () => {
   const dispatch = useDispatch();
 
@@ -122,14 +144,9 @@ const Login = () => {
     }
   };
 
-  const authMethods = import.meta.env.VITE_AUTH_METHODS;
-  let azureEnabled = false;
-  let traditionalEnabled = false;
-
-  if (authMethods) {
-    azureEnabled = authMethods.split(',').includes('azure');
-    traditionalEnabled = authMethods.split(',').includes('traditional');
-  }
+  // Determine which login methods are enabled by configuration
+  const azureEnabled = methods.includes('azure') && hasAllAzureEnv;
+  const traditionalEnabled = methods.includes('traditional');
 
   return (
     <>
