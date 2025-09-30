@@ -59,7 +59,7 @@ export const authInterceptor = (apiClient) => {
       return config;
     },
     (error) => {
-      console.error('API  Request Error:', error);
+      console.error('API Request Error:', error);
       return Promise.reject(error);
     }
   );
