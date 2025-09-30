@@ -41,7 +41,7 @@ services:
       driver: "none" # This line disables Docker logs. All logs are written to the file system
 
   mysql_db:
-    image: mysql:5.7
+    image: mysql:8.0
     restart: always
     command: --innodb_use_native_aio=0 --sql_mode=""
     volumes:
