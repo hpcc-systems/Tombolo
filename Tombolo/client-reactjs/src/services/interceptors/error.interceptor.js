@@ -43,13 +43,10 @@ export const errorInterceptor = (apiClient) => {
       const data = response?.data || {};
       let messages = ['An error occurred'];
 
-      if (Array.isArray(data.errors) && data.errors.length > 0) {
-        messages = data.errors; // Prefer 'errors' array first
+     if (Array.isArray(data.messages) && data.messages.length > 0) {
+        messages = data.messages; // Prefer 'messages' array first
       } else if (typeof data.message === 'string' && data.message.trim() !== '') {
-        messages = [data.message];
-      } else if (Array.isArray(data.messages) && data.messages.length > 0) {
-        messages = data.messages; // Fallback to 'messages' if present
-      }
+        messages = [data.message]; // Fallback to 'message' if present
 
       return Promise.reject({
         type: 'API_ERROR',

@@ -1,7 +1,5 @@
 // apiClient.js
 import axios from 'axios';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import axiosRetry from 'axios-retry';
 
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
