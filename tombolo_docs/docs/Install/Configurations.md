@@ -168,15 +168,26 @@ Some services we recommend are: [SendGrid](https://sendgrid.com/), [Mailgun](htt
 
 - **EMAIL_SMTP_HOST**
   The SMTP host for sending emails.
+
   _Example:_ `smtp.mailserver.com`
 
 - **EMAIL_PORT**
   The port number for the SMTP server.
+
   _Example:_ `25`
 
 - **EMAIL_SENDER**
   The default sender email address.
+
   _Example:_ `donotreply@tombolo.com`
+
+- **EMAIL_USER (optional)**
+  The SMTP auth username.
+
+  _Example:_ `testuser1`
+
+- **EMAIL_PASS (optional)**
+  The SMTP auth password.
 
 ---
 
@@ -223,7 +234,6 @@ If you have any integrations enabled and they have environment variables, they c
 <div class="important_block">
 > **Important**: Azure AD authentication is optional, and you are not required to set Azure configuration variables
 </div>
-
 
 - **VITE_AZURE_CLIENT_ID**
   The client ID for Azure AD authentication.
