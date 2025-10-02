@@ -2,75 +2,74 @@
 <html>
 
 <head>
-  <style>
-    .main_body {
-      width: 100%;
-      text-align: left;
-    }
+    <style>
+      .main_body {
+        width: 100%;
+        text-align: left;
+        font-family: Arial;
 
-    .section {
-      margin: 0 auto !important;
-      max-width: 800px;
-      border-collapse: collapse;
-      font-family: Arial;
-      font-size: 14px;
-    }
+      }
+  
+      .section {
+        margin: 0 auto !important;
+        max-width: 800px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+  
+      td{
+          min-width: 150px!important;
+          text-align: left !important;
+  
+      }
+  
+      .section-table-td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 5px;
+  
+      }
+  
+      .section-footer {
+        background: none;
+        text-align: center;
+        border-top: 1px solid #dddddd;
+        font-size: 12px;
+      }
+  
+      .section-footer-td {
+        padding-top: 50px;
+        padding-bottom: 50px;
+        color: #808080;
+      }
 
-    td{
-        min-width: 150px!important;
-        text-align: left !important;
-
-    }
-
-    .section-table-td {
-      border: 1px solid #dddddd;
-      text-align: left;
-      padding: 5px;
-
-    }
-
-    .section-footer {
-      background: none;
-      text-align: center;
-      border-top: 1px solid #dddddd;
-      font-size: 12px;
-    }
-
-    .section-footer-td {
-      padding-top: 50px;
-      padding-bottom: 50px;
-      color: #808080;
-    }
-
-    .section-header {
-      background: none !important;
-    }
-
-    .section-header{
-      background: none;
-      text-align: center;
-      font-size: 18px;
-    }
-
-    .list {
-      padding: 10px;
-    }
-  </style>
+ 
+      .section-header{
+        color: #000000;
+        padding-bottom: 50px;
+      }
+  
+      .list {
+        padding: 10px;
+      }
+    </style>
 </head>
 
 <table class="main_body">
-       <table class="section section-footer">
+
+  <tbody>
+    <tr>
+      <td>
+        <table >
           <tbody>
             <tr>
-              <td class="section-footer-td">
+              <td class="section-header">
                 Analysis detected space usage violation in directory exceeding configured threshold
               </td>
             </tr>
           </tbody>
         </table>
-  <tbody>
-    <tr>
-      <td>
+
         <table class="section section-table">
           <tbody>
             <% if (typeof notificationId !== 'undefined') { %>
@@ -139,6 +138,7 @@
             <% } %>
           </tbody>
         </table>
+
         <table class="section section-footer">
           <tbody>
             <tr>

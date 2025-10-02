@@ -65,7 +65,7 @@ router.get('/filteredNotifications', async (req, res) => {
 
     return res.status(200).send(monitorings);
   } catch (err) {
-    logger.error(err);
+    logger.error('notifications/read getFilteredNotifications: ', err);
   }
 });
 
@@ -96,117 +96,8 @@ router.get(
       });
       return res.status(200).send(notifications);
     } catch (error) {
-      logger.error(error);
+      logger.error('notifications/read getNotifications: ', error);
       return res.status(500).json({ message: 'Unable to get notifications' });
-    }
-  }
-);
-
-router.get(
-  '/:applicationId/file/:type',
-  validate(validateNotificationByType),
-  async (req, res) => {
-    try {
-      const { applicationId: application_id } = req.params;
-      if (!application_id) throw Error('Invalid app ID');
-      const notifications = await MonitoringNotification.findAll({
-        where: { application_id },
-        include: [
-          {
-            model: FileMonitoring,
-            as: 'fileMonitoring',
-          },
-          {
-            model: ClusterMonitoring,
-            as: 'clusterMonitoring',
-          },
-        ],
-        raw: true,
-      });
-
-      const type = req.params.type;
-
-      let output;
-
-      if (type === 'CSV') {
-        output = 'id,monitoringId,Channel,Reason,Status,Created,Deleted';
-        notifications.map(notification => {
-          output +=
-            '\n' +
-            notification.id +
-            ',' +
-            notification.monitoring_id +
-            ',' +
-            notification.notification_channel +
-            ',' +
-            notification.notification_reason +
-            ',' +
-            notification.status +
-            ',' +
-            notification.createdAt +
-            ',' +
-            notification.deletedAt;
-        });
-      } else if (type === 'JSON') {
-        output = [];
-        notifications.map(notification => {
-          output.push({
-            ID: notification.id,
-            MonitoringID: notification.monitoring_id,
-            Channel: notification.notification_channel,
-            Reason: notification.notification_reason,
-            Status: notification.status,
-            Created: notification.createdAt,
-            Deleted: notification.deletedAt,
-          });
-        });
-
-        output = JSON.stringify(output);
-      }
-
-      let filePath = path.join(
-        __dirname,
-        '..',
-        '..',
-        'tempFiles',
-        `Tombolo-Notifications.${type}`
-      );
-
-      await createPromise;
-
-      return res.status(200).download(filePath);
-    } catch (error) {
-      return res
-        .status(500)
-        .json({ message: 'Unable to get notifications: ' + error });
-    }
-  }
-);
-
-//method for removing file after download on front-end
-router.delete(
-  '/:applicationId/file/:type',
-  validate(validateDeleteNotificationByType),
-  async (req, res) => {
-    try {
-      const type = req.params.type;
-
-      const filePath = path.join(
-        __dirname,
-        '..',
-        '..',
-        'tempFiles',
-        `Tombolo-Notifications.${type}`
-      );
-
-      const createPromise = fsPromises.unlink(filePath);
-
-      await createPromise;
-
-      return res.status(200).json({ message: 'File Deleted' });
-    } catch (error) {
-      logger.error(error);
-      return res.status(500).json({ message: 'Failed to delete file' });
     }
   }
 );
@@ -220,7 +111,7 @@ router.delete('/', validate(validateDeleteNotifications), async (req, res) => {
       .status(200)
       .send({ success: true, message: 'Deletion successful' });
   } catch (err) {
-    logger.error(err.message);
+    logger.error('notifications/read deleteNotifications: ', err);
     return res
       .status(503)
       .send({ success: false, message: 'Failed to delete' });
@@ -249,7 +140,7 @@ router.put('/', validate(validatePutUpdateNotification), async (req, res) => {
       .status(200)
       .send({ success: true, message: 'Update successful' });
   } catch (err) {
-    logger.error(err.message);
+    logger.error('notifications/read putUpdateNotification: ', err);
     return res
       .status(503)
       .send({ success: false, message: 'Failed to update status' });

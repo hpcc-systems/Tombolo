@@ -1,6 +1,3 @@
-// import { userActions } from '../../redux/actions/User';
-import { store } from '../../redux/store/Store';
-import { authActions } from '../../redux/actions/Auth';
 import { message } from 'antd';
 import { getRoleNameArray } from './AuthUtil';
 
@@ -11,7 +8,10 @@ export function handleError(response) {
 
   //if response is false, it means that we cannot communicate with backend, set backend status to false so UI will show error message
   if (response === false) {
-    store.dispatch({ type: 'SET_BACKEND_STATUS', payload: false });
+    import('@/redux/store/Store').then(async ({ store }) => {
+      const { setBackendStatus } = await import('@/redux/slices/BackendSlice'); // if needed
+      store.dispatch(setBackendStatus(false));
+    });
     return;
   }
 
@@ -58,13 +58,19 @@ window.fetch = async (...args) => {
 
     const response = await originalFetch(resource, config);
 
-    //if response.status is 401, it means the refresh token has expired, so we need to log the user out
+    // Prevent infinite redirect loop: only redirect if not already on an auth route
     if (response.status === 401 && resource !== '/api/auth/loginBasicUser') {
-      authActions.logout();
-      localStorage.setItem('sessionExpired', true);
-      window.location.href = '/login';
-
-      return {};
+      const currentPath = window.location.pathname;
+      const authRoutes = ['/login', '/register', '/reset-password', '/forgot-password', '/reset-temporary-password'];
+      const isAuthRoute = authRoutes.some((route) => currentPath.startsWith(route));
+      if (!isAuthRoute) {
+        import('@/redux/store/Store').then(async ({ store }) => {
+          const { logout } = await import('@/redux/slices/AuthSlice');
+          store.dispatch(logout());
+        });
+        localStorage.setItem('sessionExpired', true);
+        window.location.href = '/login';
+      }
     }
 
     return response;

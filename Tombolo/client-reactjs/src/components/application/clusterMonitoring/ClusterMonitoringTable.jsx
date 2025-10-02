@@ -1,235 +1,246 @@
+// Library imports
 import React from 'react';
-import { Table, Badge, Space, Tooltip, message } from 'antd';
-import { EyeOutlined, DeleteOutlined, PauseCircleOutlined, PlayCircleOutlined, BellOutlined } from '@ant-design/icons';
+import { Table, Space, Tooltip, Popconfirm, Popover, Tag, message } from 'antd';
 import { Link } from 'react-router-dom';
+import startCase from 'lodash/startCase';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleFilled,
+  BellOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  CopyOutlined,
+  DownOutlined,
+} from '@ant-design/icons';
 
-import { useSelector } from 'react-redux';
-import { authHeader, handleError } from '../../common/AuthHeader.js';
+// Local imports
+import { toggleSingleClusterMonitoringActiveStatus, deleteClusterMonitoring } from './clusterMonitoringUtils.js';
 import styles from './clusterMonitoring.module.css';
+import commonStyles from '../../common/common.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
+
+//Approve button color
+const approveButtonColor = (approvalStatus) => {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
+    return 'var(--primary)';
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
+    return 'var(--success)';
+  } else {
+    return 'var(--danger)';
+  }
+};
 
 function ClusterMonitoringTable({
-  clusterMonitorings,
-  setClusterMonitorings,
+  clusterMonitoring,
   applicationId,
   setSelectedMonitoring,
-  setVisible,
-  setSelectedCluster,
-  setNotifyConditions,
-  setEngines,
-  setSelectedEngines,
-  setNotificationDetails,
   isReader,
+  setDisplayViewDetailsModal,
+  setDisplayAddEditModal,
+  setEditingMonitoring,
+  setApproveRejectModal,
+  selectedRows,
+  setSelectedRows,
+  setDuplicatingData,
+  setClusterMonitoring,
 }) {
-  const { clusters } = useSelector((state) => state.applicationReducer);
+  //Actions
+  const editClusterMonitoring = (record) => {
+    setEditingMonitoring(true);
+    setSelectedMonitoring(record);
+    setDisplayAddEditModal(true);
+  };
 
-  //Delete cluster monitoring
-  const deleteClusterMonitoring = async (id) => {
+  // Approve or reject monitoring
+  const evaluateMonitoring = (record) => {
+    setSelectedMonitoring(record);
+    setApproveRejectModal(true);
+  };
+
+  // When the copy/duplicate icon is clicked
+  const duplicateClusterMonitoring = (record) => {
+    setDuplicatingData({ isDuplicating: true, selectedMonitoring: record });
+    setSelectedMonitoring(record);
+    setDisplayAddEditModal(true);
+  };
+
+  // Toggle monitoring status
+  const toggleMonitoringStatus = async (record, action) => {
     try {
-      const payload = {
-        method: 'DELETE',
-        headers: authHeader(),
-      };
+      // If approval status is not approved, do not allow to start monitoring
+      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED && action === 'start') {
+        message.error('Monitoring cannot be started as it is not approved.');
+        return;
+      }
+      await toggleSingleClusterMonitoringActiveStatus(record.id);
 
-      const response = await fetch(`/api/clustermonitoring/${id}`, payload);
-      if (!response.ok) return handleError(response);
-      const newClusterMonitoringList = clusterMonitorings.filter((monitoring) => monitoring.id !== id);
-      setClusterMonitorings(newClusterMonitoringList);
-    } catch (err) {
-      message.error(err.message);
+      setClusterMonitoring((prev) =>
+        prev.map((monitoring) =>
+          monitoring.id === record.id ? { ...monitoring, isActive: !monitoring.isActive } : monitoring
+        )
+      );
+      message.success(`Monitoring ${record.isActive ? 'paused' : 'started'} successfully.`);
+    } catch (error) {
+      message.error('Failed to toggle monitoring status');
     }
   };
 
-  // Pause or start cluster monitoring
-  const changeClusterMonitoringStatus = async (id) => {
+  // Handle delete
+  const handleDelete = async (id) => {
     try {
-      const payload = {
-        method: 'PUT',
-        headers: authHeader(),
-      };
-
-      const response = await fetch(`/api/clustermonitoring/clusterMonitoringStatus/${id}`, payload);
-      if (!response.ok) return handleError(response);
-      const newClusterMonitoringList = clusterMonitorings.map((monitoring) => {
-        if (monitoring.id === id) {
-          return { ...monitoring, isActive: !monitoring.isActive };
-        } else {
-          return monitoring;
-        }
-      });
-      setClusterMonitorings(newClusterMonitoringList);
-    } catch (err) {
-      message.error(err.message);
+      await deleteClusterMonitoring(id);
+      setClusterMonitoring((prev) => prev.filter((monitoring) => monitoring.id !== id));
+      message.success('Monitoring deleted successfully.');
+    } catch (error) {
+      message.error('Failed to delete monitoring:', error);
     }
   };
 
   // Filter and get  particular cluster monitoring from list
   // When component loads and if there is selected monitoring pass data to form instance
-  const viewExistingClusterMonitoring = (monitoringId) => {
-    const selectedMonitoringDetails = clusterMonitorings.filter((monitoring) =>
-      monitoringId === monitoring.id ? monitoring : null
-    )[0];
-
-    const {
-      metaData: {
-        monitoring_engines,
-        monitoringConditions: { monitorEngineSize },
-        notifications,
-        notifyCondition,
-      },
-      cluster_id,
-    } = selectedMonitoringDetails;
-
-    setNotifyConditions(notifyCondition);
-
-    const engineMaxSizes = {};
-    monitorEngineSize.forEach((monitor) => {
-      engineMaxSizes[`engineLimit-${monitor.engine}`] = monitor.maxSize;
-    });
-
-    const notificationChannels = [];
-    const notificationRecipients = {};
-    notifications.forEach((notification) => {
-      notificationChannels.push(notification.channel);
-      notificationRecipients[notification.channel] = notification.recipients;
-    });
-
-    const updatedMonitoringDetails = {
-      ...selectedMonitoringDetails,
-      monitoring_engines,
-      notifyCondition: notifyCondition,
-      engineSizeLimit: engineMaxSizes,
-      notificationChannels,
-      emails: notificationRecipients.eMail,
-      msTeamsGroups: notificationRecipients.msTeams,
-    };
-
-    setSelectedMonitoring(updatedMonitoringDetails);
-    setSelectedCluster(cluster_id);
-    setEngines(monitoring_engines);
-    setSelectedEngines(monitoring_engines);
-    setNotificationDetails({ notificationChannel: notificationChannels });
-    setVisible(true);
+  const viewDetails = (monitoringId) => {
+    setDisplayViewDetailsModal(true);
+    const selectedMonitoring = clusterMonitoring.find((monitoring) => monitoring.id === monitoringId);
+    setSelectedMonitoring(selectedMonitoring);
   };
 
   //Columns
   const columns = [
-    {
-      title: 'Status',
-      render: (_, record) => (
-        <>
-          <Badge color={record.isActive ? 'green' : 'red'} text={record.isActive ? 'Active' : 'Paused'} />
-        </>
-      ),
-    },
-    { title: 'Display Name', dataIndex: 'name' },
-    {
-      title: 'Monitoring type',
-      render: () => {
-        return 'Cluster';
-      },
-    },
+    { title: 'Name', dataIndex: 'monitoringName' },
     {
       title: 'Cluster',
       dataIndex: 'cluster_id',
-      render: (record) => {
-        if (!clusters) {
-          return record.cluster_id;
-        } else {
-          const cluster = clusters.find((cluster) => cluster.id === record);
-          if (cluster) return cluster.name;
-        }
-      },
-    },
-    { title: 'Schedule', dataIndex: 'cron' },
-    {
-      title: 'Monitoring Created',
-      render: (record) => {
-        let createdAt = new Date(record.createdAt);
-        return createdAt.toLocaleString();
+      render: (_, record) => {
+        return (
+          <Tooltip title={`${record?.cluster?.thor_host}:${record?.cluster?.thor_port}`}>
+            {record?.cluster?.name}
+          </Tooltip>
+        );
       },
     },
     {
-      title: 'Last Monitored',
-      dataIndex: 'metaData',
-      render: (record) => {
-        let last_monitored = 'NA';
-        if (record?.last_monitored) {
-          last_monitored = new Date(record.last_monitored);
-          last_monitored = last_monitored.toLocaleString();
-        }
-        return last_monitored;
-      },
+      title: 'Monitoring Type',
+      dataIndex: 'clusterMonitoringType',
+      render: (type) => type.map((t) => <Tag key={t}>{t}</Tag>),
     },
+    { title: 'Active', dataIndex: 'isActive', render: (isActive) => (isActive ? 'Yes' : 'No') },
+    { title: 'Approval Status', dataIndex: 'approvalStatus', render: (status) => startCase(status) },
+
     {
       title: 'Actions',
       dataIndex: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <a>
-            <Tooltip title="View">
-              <EyeOutlined onClick={() => viewExistingClusterMonitoring(record.id)} />
-            </Tooltip>
-          </a>
+          <Tooltip title="View">
+            <EyeOutlined onClick={() => viewDetails(record.id)} style={{ color: 'var(--primary)' }} />
+          </Tooltip>
           {!isReader ? (
             <>
-              {record.isActive ? (
-                <a>
-                  <Tooltip title="Pause Monitoring">
-                    <PauseCircleOutlined onClick={() => changeClusterMonitoringStatus(record.id)} />
-                  </Tooltip>
-                </a>
-              ) : (
-                <a>
-                  <Tooltip title="Resume Monitoring">
-                    <PlayCircleOutlined onClick={() => changeClusterMonitoringStatus(record.id)} />
-                  </Tooltip>
-                </a>
-              )}
-
-              <a>
-                <Tooltip title="Delete Monitoring">
-                  <DeleteOutlined
-                    onClick={() => {
-                      console.log(record);
-                      deleteClusterMonitoring(record.id);
-                    }}
-                  />
-                </Tooltip>
-              </a>
-
-              <Tooltip title="Notifications">
-                <Link to={`/${applicationId}/notifications?monitoringId=${record.id}`}>
-                  <BellOutlined />
-                </Link>
+              <Tooltip title="Edit">
+                <EditOutlined
+                  style={{ color: 'var(--primary)', marginRight: 15 }}
+                  onClick={() => editClusterMonitoring(record)}
+                />
               </Tooltip>
+
+              <Popover
+                placement="bottom"
+                content={
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }}
+                    className={styles.clusterMonitoringTable__hidden_actions}>
+                    <div title="Approve" onClick={() => evaluateMonitoring(record)}>
+                      <CheckCircleFilled
+                        style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }}
+                      />{' '}
+                      Approve / Reject
+                    </div>
+
+                    {record.isActive ? (
+                      <div onClick={() => toggleMonitoringStatus(record, 'pause')}>
+                        <PauseCircleOutlined
+                          disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
+                          style={{ color: 'var(--primary)', marginRight: 15 }}
+                        />
+                        Pause
+                      </div>
+                    ) : (
+                      <div onClick={() => toggleMonitoringStatus(record, 'start')}>
+                        <PlayCircleOutlined
+                          disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
+                          style={{ color: 'var(--primary)', marginRight: 15 }}
+                        />
+                        Start
+                      </div>
+                    )}
+
+                    <Popconfirm
+                      title={
+                        <>
+                          <div style={{ fontWeight: 'bold' }}>{`Delete ${record.monitoringName}`} </div>
+                          <div style={{ maxWidth: 400 }}>
+                            This action will delete all related data including notifications generated by this
+                            monitoring. If you would like to keep the data, you can deactivate the monitoring instead.
+                          </div>
+                        </>
+                      }
+                      onConfirm={() => handleDelete(record.id)}
+                      okText="Continue"
+                      okButtonProps={{ danger: true }}
+                      cancelText="Close"
+                      cancelButtonProps={{ type: 'primary', ghost: true }}
+                      style={{ width: '500px !important' }}>
+                      <DeleteOutlined style={{ marginRight: 15 }} />
+                      Delete
+                    </Popconfirm>
+                    <Link
+                      to={`/${applicationId}/dashboard/notifications?monitoringId=${record.id}&monitoringType=costMonitoring`}>
+                      <BellOutlined style={{ marginRight: 15 }} />
+                      Notifications
+                    </Link>
+                    <div style={{ color: 'var(--primary)' }} onClick={() => duplicateClusterMonitoring(record)}>
+                      <CopyOutlined style={{ marginRight: 15 }} />
+                      Duplicate
+                    </div>
+                  </div>
+                }>
+                <span style={{ color: 'var(--primary)' }}>
+                  More <DownOutlined style={{ fontSize: '10px' }} />
+                </span>
+              </Popover>
             </>
-          ) : (
-            <Tooltip title="Notifications">
-              <Link to={`/${applicationId}/notifications?monitoringId=${record.id}`}>
-                <BellOutlined />
-              </Link>
-            </Tooltip>
-          )}
+          ) : null}
         </Space>
       ),
     },
   ];
 
-  // Table row class name
-  const getRowClassName = (record) => {
-    if (!record.isActive) {
-      return `${styles.monitoring_table_paused_monitorings}`;
-    }
-  };
-
   return (
     <Table
+      size="small"
       columns={columns}
-      dataSource={clusterMonitorings}
-      size={'small'}
-      rowClassName={getRowClassName}
+      dataSource={clusterMonitoring}
       className={styles.cluster_monitoring_table}
       rowKey={(record) => record.id}
+      rowSelectedBgColor="var(--danger)"
+      rowSelection={{
+        type: 'checkbox',
+        onChange: (_selectedRowKeys, selectedRowsData) => {
+          setSelectedRows(selectedRowsData);
+        },
+      }}
+      pagination={{ pageSize: 20 }}
+      rowClassName={(record) => {
+        let className = record?.isActive ? commonStyles.table_active_row : commonStyles.table_inactive_row;
+
+        const idsOfSelectedRows = selectedRows.map((row) => row.id);
+        if (idsOfSelectedRows.includes(record.id)) {
+          className += styles.clusterMonitoringTable__selected_row;
+        }
+        return className;
+      }}
     />
   );
 }

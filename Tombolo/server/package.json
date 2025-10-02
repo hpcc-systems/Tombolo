@@ -9,7 +9,9 @@
     "migrations": "npx sequelize db:migrate",
     "seeds": "npx sequelize db:seed:all",
     "dropSchema": "npx sequelize db:drop",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --detectOpenHandles",
+    "test:jobs": "jest --detectOpenHandles --selectProjects jobs",
+    "test:api": "jest --detectOpenHandles --selectProjects api"
   },
   "author": "",
   "license": "ISC",
@@ -29,6 +31,7 @@
     "express-rate-limit": "^5.5.1",
     "express-validator": "^6.13.0",
     "helmet": "^8.1.0",
+    "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.20",
     "moment": "^2.29.4",

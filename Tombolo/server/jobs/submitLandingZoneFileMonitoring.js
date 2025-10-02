@@ -192,7 +192,10 @@ const {
             });
           }
         } catch (err) {
-          logger.error(err);
+          logger.error(
+            'submitLandingZoneFileMonitoring emailNotification: ',
+            err
+          );
         }
       }
     }
@@ -222,7 +225,10 @@ const {
               monitoring_type: 'file',
             });
           } catch (err) {
-            logger.error(err);
+            logger.error(
+              'submitLandingZoneFileMonitoring teamsNotification: ',
+              err
+            );
           }
         }
       }
@@ -303,7 +309,10 @@ const {
             });
           }
         } catch (err) {
-          logger.error(err);
+          logger.error(
+            'submitLandingZoneFileMonitoring emailNotification: ',
+            err
+          );
         }
       }
 
@@ -336,7 +345,10 @@ const {
               monitoring_type: 'file',
             });
           } catch (err) {
-            logger.error(err);
+            logger.error(
+              'submitLandingZoneFileMonitoring teamsNotification: ',
+              err
+            );
           }
         }
       }
@@ -353,7 +365,7 @@ const {
       { where: { id: filemonitoring_id } }
     );
   } catch (err) {
-    logger.error(err);
+    logger.error('submitLandingZoneFileMonitoring: ', err);
   } finally {
     parentPort ? parentPort.postMessage('done') : process.exit(0);
   }

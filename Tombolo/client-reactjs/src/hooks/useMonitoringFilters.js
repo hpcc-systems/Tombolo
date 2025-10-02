@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 
 /**
  * A custom React hook for managing monitoring filters, including form state, filter count,
@@ -15,6 +15,7 @@ import { debounce } from 'lodash';
  * @param {string|null} selectedDomain - The currently selected domain ID.
  * @param {Array<{id: string, name: string}>} allProductCategories - Array of all product categories across domains.
  * @param {string} lsKey - The localStorage key used to persist filter data.
+ * @param {string} visibleLsKey - The localStorage key used to persist filter visibility.
  * @returns {Object} An object containing filter management utilities and state:
  * @returns {number} filterCount - The number of active filters applied.
  * @returns {Function} setFilterCount - Function to update the filter count state.
@@ -33,7 +34,8 @@ const useMonitoringFilters = (
   productCategories,
   selectedDomain,
   allProductCategories,
-  lsKey
+  lsKey,
+  visibleLsKey
 ) => {
   const [filterCount, setFilterCount] = useState(0);
 
@@ -43,7 +45,7 @@ const useMonitoringFilters = (
 
   useEffect(() => {
     // Load filter visibility from localStorage
-    const filtersVisibility = localStorage.getItem(`${lsKey}Visible`);
+    const filtersVisibility = localStorage.getItem(visibleLsKey);
     if (filtersVisibility) {
       setFiltersVisible(filtersVisibility === 'true');
     }
@@ -89,7 +91,7 @@ const useMonitoringFilters = (
     form.resetFields();
     setFilterCount(0);
     setFilters({});
-    // If exists, remove jMFilters from local storage
+    // If exists, remove the filter key from local storage
     if (localStorage.getItem(lsKey)) {
       localStorage.removeItem(lsKey);
     }

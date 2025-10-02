@@ -5,6 +5,7 @@ import InfoDrawer from '../../common/InfoDrawer';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
 import styles from './orbitMonitoring.module.css';
+import { MonitoringNameFormRules } from '../../common/FormRules';
 
 const { Title, Text } = Typography;
 
@@ -122,11 +123,7 @@ const MonitoringTab = ({
         validateTrigger={['onChange', 'onBlur']}
         className="medium-form-item"
         rules={[
-          { required: true, message: 'Required field' },
-          {
-            max: 256,
-            message: 'Maximum of 256 characters allowed',
-          },
+          ...MonitoringNameFormRules,
           {
             message: 'Monitoring with same name already exists',
             validator: (_, value) => {

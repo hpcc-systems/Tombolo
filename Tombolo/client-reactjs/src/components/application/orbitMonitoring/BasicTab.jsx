@@ -27,9 +27,7 @@ const BasicTab = ({
 
   const searchRef = useRef(null);
 
-  const {
-    application: { applicationId },
-  } = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   const handleOrbitBuildSelect = async (selectedOrbitBuild) => {
     setSelectedOrbitBuild(selectedOrbitBuild);

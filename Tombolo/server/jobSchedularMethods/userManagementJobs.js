@@ -25,7 +25,7 @@ async function removeUnverifiedUser() {
     this.bree.start(jobName);
     logger.info('User management (remove unverified user) initialized ...');
   } catch (err) {
-    logger.error(err);
+    logger.error('userManagementJobs - removeUnverifiedUser: ', err);
   }
 }
 
@@ -55,7 +55,7 @@ async function sendPasswordExpiryEmails() {
       'User management (send password expiry emails) initialized ...'
     );
   } catch (err) {
-    logger.error(err);
+    logger.error('userManagementJobs - sendPasswordExpiryEmails: ', err);
   }
 }
 
@@ -83,7 +83,7 @@ async function sendAccountDeleteEmails() {
     this.bree.start(jobName);
     logger.info('User management (account inactivity emails) initialized ...');
   } catch (err) {
-    logger.error(err);
+    logger.error('userManagementJobs - sendAccountDeleteEmails: ', err);
   }
 }
 

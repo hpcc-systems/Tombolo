@@ -88,7 +88,7 @@ module.exports = sequelize => {
 
       /* FILE MONITORING */
       this.hasMany(models.FileMonitoring, {
-        foreignKey: 'application_id',
+        foreignKey: 'applicationId',
         onDelete: 'CASCADE',
       });
 

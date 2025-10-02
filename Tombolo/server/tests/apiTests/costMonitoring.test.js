@@ -12,6 +12,7 @@ const {
 } = require('../helpers');
 const { Op } = require('sequelize');
 const { getUserFkIncludes } = require('../../utils/getUserFkIncludes');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 describe('costMonitoring Routes', () => {
   beforeEach(() => {
@@ -29,7 +30,7 @@ describe('costMonitoring Routes', () => {
     const reqBody = {
       ids: [uuid],
       isActive: true,
-      approvalStatus: 'Approved',
+      approvalStatus: APPROVAL_STATUS.APPROVED,
       approverComment: 'Test Approval Comment',
     };
 
@@ -41,7 +42,7 @@ describe('costMonitoring Routes', () => {
     expect(res.body.message).toBe('Cost monitoring(s) evaluated successfully');
     expect(CostMonitoring.update).toHaveBeenCalledWith(
       {
-        approvalStatus: 'Approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         isActive: true,
         approvedBy: AUTHED_USER_ID,
         approvedAt: expect.any(Date),
@@ -61,7 +62,7 @@ describe('costMonitoring Routes', () => {
     const reqBody = {
       ids: uuids,
       isActive: true,
-      approvalStatus: 'Approved',
+      approvalStatus: APPROVAL_STATUS.APPROVED,
       approverComment: 'Test Approval Comment',
     };
 
@@ -73,7 +74,7 @@ describe('costMonitoring Routes', () => {
     expect(res.body.message).toBe('Cost monitoring(s) evaluated successfully');
     expect(CostMonitoring.update).toHaveBeenCalledWith(
       {
-        approvalStatus: 'Approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         isActive: true,
         approvedBy: AUTHED_USER_ID,
         approvedAt: expect.any(Date),
@@ -167,7 +168,7 @@ describe('costMonitoring Routes', () => {
     const reqBody = {
       ids: uuids,
     };
-    CostMonitoring.destroy.mockResolvedValue(true);
+    CostMonitoring.handleDelete.mockResolvedValue(true);
 
     const res = await request(app)
       .delete('/api/costMonitoring/bulk')
@@ -175,8 +176,10 @@ describe('costMonitoring Routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.message).toBe('Cost monitoring(s) deleted successfully');
-    expect(CostMonitoring.destroy).toHaveBeenCalledWith({
-      where: { id: { [Op.in]: uuids } },
+    expect(CostMonitoring.handleDelete).toHaveBeenCalledWith({
+      id: uuids,
+      deletedByUserId: AUTHED_USER_ID,
+      transaction: expect.any(Object),
     });
   });
 
@@ -278,7 +281,9 @@ describe('costMonitoring Routes', () => {
 
   it('PATCH / should update cost monitoring', async () => {
     const costMonitoring = getCostMonitoring({}, true);
-    CostMonitoring.update.mockResolvedValue(costMonitoring);
+    // Update now returns number of affected rows; then controller fetches the updated record
+    CostMonitoring.update.mockResolvedValue([1]);
+    CostMonitoring.findByPk.mockResolvedValue(costMonitoring);
 
     const res = await request(app)
       .patch('/api/costMonitoring/')
@@ -288,6 +293,9 @@ describe('costMonitoring Routes', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data).toEqual(costMonitoring);
     expect(CostMonitoring.update).toHaveBeenCalledTimes(1);
+    expect(CostMonitoring.findByPk).toHaveBeenCalledWith(costMonitoring.id, {
+      include: expect.any(Array),
+    });
   });
 
   it('PATCH / should 404 if ID not found', async () => {
@@ -306,21 +314,23 @@ describe('costMonitoring Routes', () => {
 
   it('DELETE / should delete a cost monitoring', async () => {
     const costMonitoringId = uuidv4();
-    CostMonitoring.destroy.mockResolvedValue(true);
+    CostMonitoring.handleDelete.mockResolvedValue(true);
     const res = await request(app).delete(
       `/api/costMonitoring/${costMonitoringId}`
     );
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.message).toEqual('Cost monitoring deleted successfully');
-    expect(CostMonitoring.destroy).toHaveBeenCalledWith({
-      where: { id: costMonitoringId },
+    expect(CostMonitoring.handleDelete).toHaveBeenCalledWith({
+      id: costMonitoringId,
+      deletedByUserId: AUTHED_USER_ID,
+      transaction: expect.any(Object),
     });
   });
 
   it('DELETE / should 404 if no rows deleted', async () => {
     const costMonitoringId = uuidv4();
-    CostMonitoring.destroy.mockResolvedValue(0);
+    CostMonitoring.handleDelete.mockResolvedValue(0);
 
     const res = await request(app).delete(
       `/api/costMonitoring/${costMonitoringId}`
@@ -329,8 +339,10 @@ describe('costMonitoring Routes', () => {
     expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toEqual('Cost monitoring not found');
-    expect(CostMonitoring.destroy).toHaveBeenCalledWith({
-      where: { id: costMonitoringId },
+    expect(CostMonitoring.handleDelete).toHaveBeenCalledWith({
+      id: costMonitoringId,
+      deletedByUserId: AUTHED_USER_ID,
+      transaction: expect.any(Object),
     });
   });
 });

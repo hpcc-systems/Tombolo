@@ -17,10 +17,10 @@ module.exports = sequelize => {
         onDelete: 'CASCADE',
       });
       this.hasMany(models.FileMonitoring, {
-        foreignKey: 'cluster_id',
+        foreignKey: 'clusterId',
         onDelete: 'CASCADE',
       });
-      this.hasMany(models.DirectoryMonitoring, {
+      this.hasMany(models.landingZoneMonitoring, {
         foreignKey: 'cluster_id',
         onDelete: 'CASCADE',
       });
@@ -109,6 +109,11 @@ module.exports = sequelize => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+      },
+      currencyCode: {
+        type: DataTypes.STRING(10),
+        allowNull: false,
+        defaultValue: 'USD',
       },
       accountMetaData: {
         type: DataTypes.JSON,

@@ -1,6 +1,10 @@
 export const Constants = {
-  LOGIN_SUCCESS: 'USERS_LOGIN_SUCCESS',
-  LOGIN_FAILED: 'USERS_LOGIN_FAILED',
+  LOGIN_SUCCESS: 'success',
+  LOGIN_FAILED: 'failed',
+  LOGIN_TEMP_PW: 'temp-pw',
+  LOGIN_PW_EXPIRED: 'password-expired',
+  LOGIN_UNVERIFIED: 'unverified',
+
   LOGOUT_SUCCESS: 'USERS_LOGOUT',
   LOGOUT_FAILED: 'USERS_LOGOUT_FAILED',
   CHANGE_PASSWORD_SUCCESS: 'USERS_CHANGE_PASSWORD_SUCCESS',
@@ -60,4 +64,25 @@ export const Constants = {
   PROPAGATIONS_CURRENT_SUCCESS: 'PROPAGATIONS_CURRENT_SUCCESS',
   PROPAGATIONS_CURRENT_ERROR: 'PROPAGATIONS_CURRENT_ERROR',
   UPDATE_REPORTS: 'UPDATE_REPORTS',
+
+  CM_FILTERS_KEY: 'cMFilters',
+  CM_FILTERS_VS_KEY: 'cMFiltersVisible',
+  JM_FILTERS_KEY: 'jMFilters',
+  JM_FILTERS_VS_KEY: 'jMFiltersVisible',
+  LZM_FILTERS_KEY: 'lzMFilters',
+  LZM_FILTERS_VS_KEY: 'lzMFiltersVisible',
+  CLUSTER_M_FILTERS_KEY: 'clusterMFilters',
+  CLUSTER_M_FILTERS_VS_KEY: 'clusterMFiltersVisible',
+
+  USERS_FILTER_KEY: 'usersFilters',
+  USERS_FILTER_VS_KEY: 'usersFiltersVisible',
+
+  FM_FILTERS_KEY: 'fMFilters',
+  FM_FILTERS_VS_KEY: 'fMFiltersVisible',
+};
+
+export const APPROVAL_STATUS = {
+  APPROVED: 'approved',
+  PENDING: 'pending',
+  REJECTED: 'rejected',
 };

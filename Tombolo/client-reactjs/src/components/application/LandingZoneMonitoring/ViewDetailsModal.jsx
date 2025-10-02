@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Descriptions, Modal, Button, Tooltip, Tag } from 'antd';
 import { formatDateTimeShort } from '../../common/CommonUtil';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 function ViewDetailsModal({
   displayViewDetailsModal,
@@ -108,7 +109,7 @@ function ViewDetailsModal({
 
         <Descriptions.Item label="Approval Status ">
           <Tag color={approvalStatusTagColors[approvalStatus]}>{approvalStatus}</Tag>
-          {approvalStatus !== 'pending' && (
+          {approvalStatus !== APPROVAL_STATUS.PENDING && (
             <span style={{ color: 'var(--primary)' }}>
               by {selectedMonitoring['approver.firstName'] || ''} {selectedMonitoring['approver.lastName'] || ''} on{' '}
               <span style={{ color: 'var(--primary)' }}>{formatDateTimeShort(selectedMonitoring.approvedAt)}</span>

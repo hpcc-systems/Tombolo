@@ -4,7 +4,7 @@ import { Modal, Button, Tabs, Form, message, Spin } from 'antd';
 import BasicTab from './BasicTab';
 import MonitoringTab from './MonitoringTab';
 import NotificationsTab from './NotificationsTab';
-import useWindowSize from '../../../hooks/useWindowSize';
+import useWindowSize from '@/hooks/useWindowSize';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 
 const { TabPane } = Tabs;
@@ -42,9 +42,7 @@ const OrbitMonitoringModal = ({
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [fetchingOrbitDetails, setFetchingOrbitDetails] = useState(false);
 
-  const {
-    application: { applicationId },
-  } = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   //set fields of form if monitoring is selected
   useEffect(() => {

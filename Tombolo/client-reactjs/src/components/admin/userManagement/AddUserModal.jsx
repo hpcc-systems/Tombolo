@@ -21,9 +21,7 @@ function AddUserModal({ displayAddUserModal, setDisplayAddUserModal, roles, setU
   const [form] = Form.useForm();
 
   // Get applications fro redux
-  const {
-    applicationReducer: { applications },
-  } = useSelector((state) => state);
+  const applications = useSelector((state) => state.application.applications);
 
   // Handle form submission - use async await
   const handleFormSubmission = async () => {

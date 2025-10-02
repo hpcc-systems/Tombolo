@@ -1,8 +1,7 @@
 const hpccJSComms = require('@hpcc-js/comms');
-const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 
 const { Cluster } = require('../../models');
-// const logger = require('../../config/logger');
 const hpccUtil = require('../../utils/hpcc-util');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
@@ -10,12 +9,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
   const startTime = Date.now();
 
   // Log job start
-  if (parentPort) {
-    parentPort.postMessage({
-      level: 'info',
-      text: 'Cluster usage tracker job started...',
-    });
-  }
+  logOrPostMessage({
+    level: 'info',
+    text: 'Cluster usage tracker job started...',
+  });
 
   try {
     const allClusters = await Cluster.findAll({
@@ -39,12 +36,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
         };
         allClusterDetails.push(clusterDetails);
       } catch (err) {
-        if (parentPort) {
-          parentPort.postMessage({
-            level: 'error',
-            text: `Error getting cluster details for cluster ID ${cl.id}: ${err.message}`,
-          });
-        }
+        logOrPostMessage({
+          level: 'error',
+          text: `Error getting cluster details for cluster ID ${cl.id}: ${err.message}`,
+        });
       }
     }
 
@@ -100,32 +95,23 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
           await Cluster.update({ storageUsageHistory }, { where: { id } });
         }
       } catch (err) {
-        if (parentPort) {
-          parentPort.postMessage({
-            level: 'error',
-            text: `Unable to get cluster storage usage for ${detail.name} cluster: ${err.message}`,
-          });
-        }
+        logOrPostMessage({
+          level: 'error',
+          text: `Unable to get cluster storage usage for ${detail.name} cluster: ${err.message}`,
+        });
       }
     }
   } catch (err) {
-    if (parentPort) {
-      parentPort.postMessage({
-        level: 'error',
-        text: `Error in Cluster Monitoring Poller: ${err.message}`,
-      });
-    }
+    logOrPostMessage({
+      level: 'error',
+      text: `Error in Cluster Monitoring Poller: ${err.message}`,
+    });
   } finally {
     const endTime = Date.now();
     const durationSec = ((endTime - startTime) / 1000).toFixed(2);
-    if (parentPort) {
-      parentPort.postMessage({
-        level: 'info',
-        text: `Cluster usage tracker job completed in ${durationSec} seconds.`,
-      });
-      parentPort.postMessage('done');
-    } else {
-      process.exit(0);
-    }
+    logOrPostMessage({
+      level: 'info',
+      text: `Cluster usage tracker job completed in ${durationSec} seconds.`,
+    });
   }
 })();

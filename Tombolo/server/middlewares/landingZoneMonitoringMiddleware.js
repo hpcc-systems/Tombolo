@@ -12,6 +12,7 @@ const {
   bodyUuids,
   queryUuids,
   paramUuids,
+  APPROVAL_STATUSES,
 } = require('./commonMiddleware');
 
 // Validate cluster id from the query parameters
@@ -69,7 +70,7 @@ const validateEvaluateLandingZoneMonitoring = [
   ...bodyUuids.arrayIds,
   booleanBody('isActive', true),
   stringBody('approvalStatus', false, {
-    isIn: ['approved', 'rejected', 'pending'],
+    isIn: APPROVAL_STATUSES,
   }),
   stringBody('approverComment', false, { length: { ...COMMENT_LENGTH } }),
 ];

@@ -15,6 +15,12 @@ global.console = {
   error: jest.fn(() => {}),
 };
 
+jest.mock('worker_threads', () => ({
+  parentPort: {
+    postMessage: jest.fn(),
+  },
+}));
+
 // Replace all calls of models to simulate database interactions
 jest.mock('../models', () => {
   const commit = jest.fn();
@@ -24,6 +30,17 @@ jest.mock('../models', () => {
   return {
     TokenBlackList: {
       findAll: jest.fn(),
+    },
+    Integration: {
+      findOne: jest.fn(),
+    },
+    AsrDomain: {
+      findOne: jest.fn(),
+      findByPk: jest.fn(),
+    },
+    AsrProduct: {
+      findOne: jest.fn(),
+      findByPk: jest.fn(),
     },
     User: {
       findAll: jest.fn(),
@@ -35,6 +52,7 @@ jest.mock('../models', () => {
       destroy: jest.fn(),
       save: jest.fn(),
       toJSON: jest.fn(),
+      handleDelete: jest.fn(),
     },
     RefreshToken: {
       findAll: jest.fn(),
@@ -75,6 +93,17 @@ jest.mock('../models', () => {
       bulkCreate: jest.fn(),
       update: jest.fn(),
       destroy: jest.fn(),
+      handleDelete: jest.fn(),
+    },
+    MonitoringType: {
+      findOne: jest.fn(),
+      findAll: jest.fn(),
+    },
+    MonitoringLog: {
+      findOne: jest.fn(),
+      create: jest.fn(),
+      upsert: jest.fn(),
+      update: jest.fn(),
     },
     LandingZoneMonitoring: {
       findAll: jest.fn(),
@@ -85,6 +114,7 @@ jest.mock('../models', () => {
       bulkCreate: jest.fn(),
       update: jest.fn(),
       destroy: jest.fn(),
+      handleDelete: jest.fn(),
     },
     ClusterMonitoring: {
       findAll: jest.fn(),
@@ -95,6 +125,7 @@ jest.mock('../models', () => {
       bulkCreate: jest.fn(),
       update: jest.fn(),
       destroy: jest.fn(),
+      handleDelete: jest.fn(),
     },
     CostMonitoring: {
       findAll: jest.fn(),
@@ -105,11 +136,21 @@ jest.mock('../models', () => {
       bulkCreate: jest.fn(),
       update: jest.fn(),
       destroy: jest.fn(),
+      handleDelete: jest.fn(),
       sequelize: {
         transaction,
         __commit: commit, // Expose for test access
         __rollback: rollback, // Expose for test access
       },
+    },
+    CostMonitoringData: {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findByPk: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      getClusterDataTotals: jest.fn(),
+      getDataTotals: jest.fn(),
     },
     UserArchive: {
       create: jest.fn(),

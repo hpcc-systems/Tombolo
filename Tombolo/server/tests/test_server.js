@@ -11,7 +11,7 @@ const { fakeValidateTokenMiddleware } = require('./helpers');
 process.env.NODE_ENV = 'test';
 
 const app = express();
-const port = process.env.TEST_SERVER_PORT;
+const port = process.env.TEST_SERVER_PORT || 3004;
 
 // Middlewares
 app.use(express.json());
@@ -26,13 +26,14 @@ const session = require('../routes/sessionRoutes');
 const roles = require('../routes/roleTypesRoute');
 const landingZoneMonitoring = require('../routes/landingZoneMonitoring');
 const costMonitoring = require('../routes/costMonitoringRoutes');
-const clusterMonitoring = require('../routes/clusterMonitoring');
+const clusterMonitoring = require('../routes/clusterMonitoringRoutes');
+const fileMonitoring = require('../routes/fileMonitoringRoutes');
 
 // Use routes
 app.use('/api/auth', auth);
 app.use('/api/users', fakeValidateTokenMiddleware, user);
 app.use('/api/instance', instance);
-app.use('/api/cluster', cluster);
+app.use('/api/cluster', fakeValidateTokenMiddleware, cluster);
 app.use('/api/session', session);
 app.use('/api/roles', roles);
 app.use(
@@ -46,6 +47,7 @@ app.use(
   clusterMonitoring
 );
 app.use('/api/costMonitoring', fakeValidateTokenMiddleware, costMonitoring);
+app.use('/api/fileMonitoring', fakeValidateTokenMiddleware, fileMonitoring);
 
 // Function to start the server
 let server;

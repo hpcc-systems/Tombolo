@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message, Alert, Typography, Checkbox } from 'antd';
-import { isEmail } from 'validator';
 
 import { pingCluster, addCluster } from './clusterUtils';
 import AddClusterSteps from './AddClusterSteps';
+import EmailTagInput from '@/components/common/EmailTagInput';
 
 // Constants
 const { Option } = Select;
@@ -114,7 +114,6 @@ function AddClusterModal({
   const submitNewCluster = async () => {
     // Reset all step related states
     resetAllClusterAddSteps();
-    setDisplaySteps(true);
 
     // Validate all the form fields
     let validationErrors = false;
@@ -127,6 +126,8 @@ function AddClusterModal({
     if (validationErrors) {
       return;
     }
+
+    setDisplaySteps(true);
 
     // Ping the cluster to check if the credentials present
     if (requireCredentials) {
@@ -285,34 +286,7 @@ function AddClusterModal({
                   </a>
                 )}
 
-                <Form.Item
-                  label="Admin Emails"
-                  name="adminEmails"
-                  required
-                  rules={[
-                    {
-                      validator: (_, value) => {
-                        if (!value || value.length === 0) {
-                          return Promise.reject(new Error('Please add at least one email!'));
-                        }
-                        if (value.length > 20) {
-                          return Promise.reject(new Error('Too many emails'));
-                        }
-                        if (!value.every((v) => isEmail(v))) {
-                          return Promise.reject(new Error('One or more emails are invalid'));
-                        }
-                        return Promise.resolve();
-                      },
-                    },
-                  ]}>
-                  <Select
-                    suffixIcon={null}
-                    mode="tags"
-                    allowClear
-                    placeholder="Enter a comma-delimited list of email addresses"
-                    tokenSeparators={[',', ' ']}
-                  />
-                </Form.Item>
+                <EmailTagInput label="Admin Emails" name="adminEmails" required />
 
                 {requireCredentials && (
                   <>

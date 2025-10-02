@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, Row, Col, Select, DatePicker } from 'antd';
+import { Constants } from '@/components/common/Constants';
 
 //Constants
 const { Option } = Select;
@@ -16,14 +17,12 @@ const UserFilters = ({ setFilters, users, setFiltersVisible, roles }) => {
   const [registrationStatusOptions, setRegistrationStatusOptions] = useState([]);
 
   // Redux
-  const {
-    applicationReducer: { applications: allApplications },
-  } = useSelector((state) => state);
+  const allApplications = useSelector((state) => state.application.applications);
 
   //Effects
   useEffect(() => {
     // Display filters if true in local storage
-    const filtersVisibility = localStorage.getItem('userFiltersVisible');
+    const filtersVisibility = localStorage.getItem(`${Constants.USERS_FILTER_VS_KEY}`);
 
     if (filtersVisibility) {
       setFiltersVisible(filtersVisibility === 'true');

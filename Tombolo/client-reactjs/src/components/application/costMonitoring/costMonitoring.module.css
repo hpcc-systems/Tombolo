@@ -57,3 +57,14 @@
   background: none;
   font-weight: 600;
 }
+
+.basic-tab-summed-container {
+  display: flex;
+  align-items: center; /* Vertically centers the checkbox and icon */
+  gap: 0.5rem; /* Optional: Adds spacing between the checkbox and icon */
+}
+
+.basic-tab-summed-container .info-icon {
+  margin-bottom: 7px;
+  color: var(--primary)
+}

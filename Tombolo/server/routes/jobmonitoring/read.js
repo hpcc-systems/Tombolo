@@ -4,7 +4,7 @@ const Sequelize = require('sequelize');
 
 //Local imports
 const logger = require('../../config/logger');
-const { JobMonitoring, JobMonitoringData } = require('../../models');
+const { JobMonitoring, JobMonitoringData, Cluster } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
   validateCreateJobMonitoring,
@@ -18,18 +18,40 @@ const {
   validateGetJobMonitoringById,
 } = require('../../middlewares/jobMonitoringMiddleware');
 const JobScheduler = require('../../jobSchedular/job-scheduler');
+const { getUserFkIncludes } = require('../..//utils/getUserFkIncludes');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 //Constants
 const Op = Sequelize.Op;
 
+const getCommonIncludes = ({ customIncludes = [] }) => {
+  return [
+    ...getUserFkIncludes(true),
+    {
+      model: Cluster,
+      attributes: ['id', 'name', 'thor_host', 'thor_port'],
+    },
+    ...customIncludes,
+  ];
+};
 // Create new job monitoring
 router.post('/', validate(validateCreateJobMonitoring), async (req, res) => {
   // Handle the POST request here
   try {
     //Save the job monitoring
     const response = await JobMonitoring.create(
-      { ...req.body, approvalStatus: 'Pending', createdBy: req.user.id },
+      {
+        ...req.body,
+        approvalStatus: APPROVAL_STATUS.PENDING,
+        createdBy: req.user.id,
+      },
       { raw: true }
+    );
+
+    // re fetch with associations
+    const jobMonitoringWithAssociations = await JobMonitoring.findByPk(
+      response.id,
+      { include: getCommonIncludes({}) }
     );
 
     // If TimeSeriesAnalysis is part of the notification condition, create a job to fetch WU info (Runs in background)
@@ -48,7 +70,7 @@ router.post('/', validate(validateCreateJobMonitoring), async (req, res) => {
       });
     }
 
-    return res.status(200).send(response);
+    return res.status(200).send(jobMonitoringWithAssociations);
   } catch (err) {
     logger.error('Failed to save job monitoring: ', err);
     return res.status(500).send('Failed to save job monitoring');
@@ -63,6 +85,9 @@ router.get(
     try {
       const jobMonitorings = await JobMonitoring.findAll({
         where: { applicationId: req.params.applicationId },
+        // Get user association
+        include: getCommonIncludes({}),
+
         order: [['createdAt', 'DESC']],
       });
       return res.status(200).json(jobMonitorings);
@@ -76,7 +101,10 @@ router.get(
 // Get a single job monitoring
 router.get('/:id', async (req, res) => {
   try {
-    const jobMonitoring = await JobMonitoring.findByPk(req.params.id);
+    const jobMonitoring = await JobMonitoring.findOne({
+      where: { id: req.params.id },
+      include: getCommonIncludes({}),
+    });
     return res.status(200).json(jobMonitoring);
   } catch (err) {
     logger.error(err.message);
@@ -118,7 +146,7 @@ router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
 
     //Payload
     const payload = req.body;
-    payload.approvalStatus = 'Pending';
+    payload.approvalStatus = APPROVAL_STATUS.PENDING;
     payload.approverComment = null;
     payload.approvedBy = null;
     payload.approvedAt = null;
@@ -137,7 +165,10 @@ router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
     }
 
     //If updated - Get the updated job monitoring
-    const updatedJob = await JobMonitoring.findByPk(req.body.id);
+    const updatedJob = await JobMonitoring.findOne({
+      where: { id: req.body.id },
+      include: getCommonIncludes({}),
+    });
 
     // If the clusterId or jobName has changed, update the JobMonitoringData table ( Happens in background)
 
@@ -252,7 +283,8 @@ router.patch(
 
       // Filter out the job monitorings that are not approved
       const approvedJobMonitorings = jobMonitorings.filter(
-        jobMonitoring => jobMonitoring.approvalStatus === 'Approved'
+        jobMonitoring =>
+          jobMonitoring.approvalStatus === APPROVAL_STATUS.APPROVED
       );
 
       if (approvedJobMonitorings.length === 0) {
@@ -295,6 +327,7 @@ router.patch(
       // Get all updated job monitorings
       const updatedJobMonitorings = await JobMonitoring.findAll({
         where: { id: { [Op.in]: approvedIds } },
+        include: getCommonIncludes({}),
       });
 
       return res.status(200).send({
@@ -323,7 +356,7 @@ router.patch(
           {
             metaData: data.metaData,
             isActive: false,
-            approvalStatus: 'Pending',
+            approvalStatus: APPROVAL_STATUS.PENDING,
             updatedBy: req.user.id,
           },
           {

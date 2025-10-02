@@ -81,8 +81,7 @@ const verifyValidTokenExists = (req, res, next) => {
     req.accessToken = accessToken;
     next(); // Proceed to the controller
   } catch (err) {
-    logger.error('Authorization: Invalid or expired access token');
-    logger.error(err);
+    logger.error('Authorization: Invalid or expired access token', err);
     return res
       .status(401)
       .json({ success: false, message: 'Invalid or expired access token' });
@@ -111,7 +110,12 @@ const validateResetPasswordPayload = [
 ];
 
 // Verify if the request body has code -> Auth code from azure
-const validateAzureAuthCode = [stringBody('code')];
+const validateAzureAuthCode = [
+  stringBody('code', false, {
+    length: { min: 1, max: 1000 },
+    alphaNumeric: false, // Explicitly disable alphanumeric check
+  }),
+];
 
 const validateAccessRequest = [
   bodyUuids.id,

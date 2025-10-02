@@ -17,12 +17,14 @@ import { useSelector } from 'react-redux';
 import { deleteLzMonitoring, toggleLzMonitoringStatus } from './Utils';
 
 import styles from './lzMonitoring.module.css';
+import commonStyles from '../../common/common.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 //Approve button colors
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'Pending') {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
     return 'var(--primary)';
-  } else if (approvalStatus === 'Approved') {
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -43,11 +45,7 @@ const LandingZoneMonitoringTable = ({
   searchTerm,
 }) => {
   //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   // Columns for the table
   const columns = [
@@ -140,7 +138,7 @@ const LandingZoneMonitoringTable = ({
           {!isReader ? (
             <>
               <Tooltip title="Edit">
-                <EditOutlined className={styles.icons} onClick={() => editDirectoryMonitoring(record)} />
+                <EditOutlined className={styles.icons} onClick={() => editLandingZoneMonitoring(record)} />
               </Tooltip>
 
               <Popover
@@ -156,12 +154,18 @@ const LandingZoneMonitoringTable = ({
 
                     {record.isActive ? (
                       <div onClick={() => toggleMonitoringStatus(record)}>
-                        <PauseCircleOutlined disabled={record.approvalStatus !== 'Approved'} className={styles.icons} />
+                        <PauseCircleOutlined
+                          disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
+                          className={styles.icons}
+                        />
                         Pause
                       </div>
                     ) : (
                       <div onClick={() => toggleMonitoringStatus(record)}>
-                        <PlayCircleOutlined disabled={record.approvalStatus !== 'Approved'} className={styles.icons} />
+                        <PlayCircleOutlined
+                          disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
+                          className={styles.icons}
+                        />
                         Start
                       </div>
                     )}
@@ -201,7 +205,8 @@ const LandingZoneMonitoringTable = ({
               </Popover>
             </>
           ) : (
-            <Link to={`/${applicationId}/dashboard/notifications?monitoringId=124&monitoringType=directoryMonitoring`}>
+            <Link
+              to={`/${applicationId}/dashboard/notifications?monitoringId=124&monitoringType=landingZoneMonitoring`}>
               <BellOutlined style={{ marginRight: 15 }} />
             </Link>
           )}
@@ -217,7 +222,7 @@ const LandingZoneMonitoringTable = ({
   };
 
   // When edit icon is clicked, display the add landing zone monitoring modal and set the selected monitoring
-  const editDirectoryMonitoring = (record) => {
+  const editLandingZoneMonitoring = (record) => {
     setEditingData({ isEditing: true, selectedMonitoring: record });
 
     setSelectedMonitoring(record);
@@ -250,7 +255,7 @@ const LandingZoneMonitoringTable = ({
   // Start or pause monitoring
   const toggleMonitoringStatus = async (record) => {
     try {
-      if (record.approvalStatus !== 'approved') {
+      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED) {
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }
@@ -279,9 +284,7 @@ const LandingZoneMonitoringTable = ({
         },
       }}
       pagination={{ pageSize: 20 }}
-      rowClassName={(record) =>
-        record?.isActive ? styles.lzMonitoring__activeMonitoring : styles.lzMonitoring__inactiveMonitoring
-      }
+      rowClassName={(record) => (record?.isActive ? commonStyles.table_active_row : commonStyles.table_inactive_row)}
     />
   );
 };

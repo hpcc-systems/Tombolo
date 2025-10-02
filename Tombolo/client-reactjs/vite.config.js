@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import checker from 'vite-plugin-checker';
+import path from 'path';
 
 export default function config({ mode }) {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
@@ -18,6 +19,17 @@ export default function config({ mode }) {
         },
       }),
     ],
+    optimizeDeps: {
+      include: [
+        '@ant-design/plots',
+        '@ant-design/charts',
+        '@antv/g2',
+        '@antv/component',
+        '@antv/coord',
+        '@antv/scale',
+        'color-string',
+      ],
+    },
     css: {
       modules: {
         localsConvention: 'camelCase',
@@ -41,14 +53,22 @@ export default function config({ mode }) {
     resolve: {
       extensions: ['.js', '.jsx', '.css', '.module.css'],
       alias: {
-        '@': '/src', // Optional: for absolute imports (e.g., '@/components')
-        '~': '/node_modules', // Alias for node_modules
+        '@': path.resolve(__dirname, './src'), // Optional: for absolute imports (e.g., '@/components')
+        '~': path.resolve(__dirname, './node_modules'), // Alias for node_modules
       },
     },
     test: {
       environment: 'jsdom', // For React component testing
       globals: true, // Avoid importing `describe`, `it`, etc.
-      setupFiles: './src/setupTests.js', // Optional for custom setup
+      setupFiles: './src/tests/setupTests.js', // Optional for custom setup
     },
+    build: {
+      outDir: 'build',
+      rollupOptions: {
+         output: {
+            chunkFileNames: 'static/js/[name].chunk.js', // makes Dockerfile glob match
+      },
+  },
+},
   });
 }

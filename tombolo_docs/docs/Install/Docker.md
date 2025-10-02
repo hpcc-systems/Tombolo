@@ -88,7 +88,19 @@ Docker Compose is used to define and run the multi-container Docker applications
 
 To build and start the application using Docker, run the following commands. The first command builds the application image, while the second command starts the application in detached mode, allowing it to run in the background.
 
-```
+NOTE: If you are receiving errors when executing the commands on linux you may ned to run them with `sudo`
+
+```bash
+# Navigate to the project root directory
+cd /path/to/Tombolo/Tombolo
+
+# Execute docker compose commands
+
+# Linux
+docker compose build
+docker compose up -d
+
+# Mac/Windows
 docker-compose build
 docker-compose up -d
 ```

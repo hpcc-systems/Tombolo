@@ -91,7 +91,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       approvalStatus: {
         allowNull: false,
-        type: DataTypes.ENUM('Approved', 'Rejected', 'Pending'),
+        type: DataTypes.ENUM('approved', 'rejected', 'pending'),
       },
       approvedBy: {
         allowNull: true,

@@ -19,12 +19,14 @@ import { useSelector } from 'react-redux';
 import { handleDeleteJobMonitoring, toggleJobMonitoringStatus } from './jobMonitoringUtils';
 
 import styles from './jobMonitoring.module.css';
+import commonStyles from '../../common/common.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 //Approve button color
 const approveButtonColor = (approvalStatus) => {
-  if (approvalStatus === 'Pending') {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
     return 'var(--primary)';
-  } else if (approvalStatus === 'Approved') {
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
     return 'var(--success)';
   } else {
     return 'var(--danger)';
@@ -51,13 +53,9 @@ const JobMonitoringTable = ({
 }) => {
   // States
   const [unreachableClusters, setUnreachableClusters] = useState([]);
-  //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      integrations,
-    },
-  } = useSelector((state) => state);
+  // Redux
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const integrations = useSelector((state) => state.application.integrations);
 
   const asrIntegration = integrations.some(
     (integration) => integration.name === 'ASR' && integration.application_id === applicationId
@@ -112,19 +110,13 @@ const JobMonitoringTable = ({
     },
     {
       title: 'Created By',
-      dataIndex: 'createdBy',
+      dataIndex: 'creator',
       key: 'createdBy',
-      render: (text) => {
-        const { name, email, id } = JSON.parse(text);
+      render: (creator) => {
+        const { firstName, lastName, email } = creator;
         return (
-          <Tooltip
-            title={
-              <>
-                <div>ID : {id}</div>
-                <div>E-mail: {email}</div>
-              </>
-            }>
-            <span style={{ color: 'var(--primary' }}>{name}</span>
+          <Tooltip title={<div> {email}</div>}>
+            <span style={{ color: 'var(--primary' }}>{`${firstName} ${lastName}`}</span>
           </Tooltip>
         );
       },
@@ -176,7 +168,7 @@ const JobMonitoringTable = ({
                       {record.isActive ? (
                         <div onClick={() => toggleMonitoringStatus(record)}>
                           <PauseCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             className={styles.pause_play_icon}
                           />
                           Pause
@@ -184,7 +176,7 @@ const JobMonitoringTable = ({
                       ) : (
                         <div onClick={() => toggleMonitoringStatus(record)}>
                           <PlayCircleOutlined
-                            disabled={record.approvalStatus !== 'Approved'}
+                            disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED}
                             className={styles.pause_play_icon}
                           />
                           Start
@@ -335,7 +327,7 @@ const JobMonitoringTable = ({
   // Start or pause monitoring
   const toggleMonitoringStatus = async (record) => {
     try {
-      if (record.approvalStatus !== 'Approved') {
+      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED) {
         message.error('Monitoring must be in approved state before it can be started');
         return;
       }
@@ -376,13 +368,7 @@ const JobMonitoringTable = ({
       }}
       pagination={{ pageSize: 20 }}
       rowClassName={(record) => {
-        let className = record?.isActive
-          ? styles.jobMonitoringTable__activeMonitoring
-          : styles.jobMonitoringTable__inactiveMonitoring;
-        const idsOfSelectedRows = selectedRows.map((row) => row.id);
-        if (idsOfSelectedRows.includes(record.id)) {
-          className += ' ' + styles.jobMonitoringTable__selectedRow;
-        }
+        let className = record?.isActive ? commonStyles.table_active_row : commonStyles.table_inactive_row;
         return className;
       }}
     />

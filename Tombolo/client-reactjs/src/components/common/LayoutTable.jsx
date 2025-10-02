@@ -84,7 +84,7 @@ const LayoutTable = ({ dataSource, setData, enableEdit }) => {
 export default LayoutTable;
 
 const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
-  const constraints = useSelector((state) => state.applicationReducer.constraints);
+  const constraints = useSelector((state) => state.application.constraints);
 
   const [editing, setEditing] = useState(false);
 

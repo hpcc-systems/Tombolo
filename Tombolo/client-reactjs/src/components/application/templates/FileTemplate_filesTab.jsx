@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Table } from 'antd';
-import useWindowSize from '../../../hooks/useWindowSize';
+import useWindowSize from '@/hooks/useWindowSize';
 import Text from '../../common/Text';
 
 function FileTemplateTable({ data }) {

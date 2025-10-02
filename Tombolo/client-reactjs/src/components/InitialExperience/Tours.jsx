@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Tour } from 'antd';
-import { applicationActions } from '../../redux/actions/Application';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { applicationLeftTourShown, clustersLeftTourShown } from '@/redux/slices/ApplicationSlice';
 
-const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
+const Tours = ({ appLinkRef, clusterLinkRef }) => {
   //tour states
   const [tourOpen, setTourOpen] = useState(false);
   const [clusterTourOpen, setClusterTourOpen] = useState(false);
-  const { application, applicationsRetrieved, noApplication, noClusters, clusters } = applicationReducer;
+
+  const application = useSelector((state) => state.application.application);
+  const applicationsRetrieved = useSelector((state) => state.application.applicationsRetrieved);
+  const noApplication = useSelector((state) => state.application.noApplication);
+  const noClusters = useSelector((state) => state.application.noClusters);
+  const clusters = useSelector((state) => state.application.clusters);
 
   const dispatch = useDispatch();
 
@@ -15,23 +20,38 @@ const Tours = ({ applicationReducer, appLinkRef, clusterLinkRef }) => {
   useEffect(() => {
     if (
       !application?.applicationId &&
-      noApplication.noApplication &&
-      !noApplication.firstTourShown &&
+      noApplication?.noApplication &&
+      !noApplication?.firstTourShown &&
       applicationsRetrieved
     ) {
       if (window.location.pathname !== '/admin/applications') {
         setTourOpen(true);
-        dispatch(applicationActions.updateApplicationLeftTourShown(true));
+        dispatch(applicationLeftTourShown(true));
       }
     }
 
-    if (application?.applicationId && noClusters.noClusters && !noClusters.firstTourShown && !clusters.length) {
+    if (
+      application?.applicationId &&
+      noClusters?.noClusters &&
+      !noClusters?.firstTourShown &&
+      Array.isArray(clusters) &&
+      clusters.length === 0
+    ) {
       if (window.location.pathname !== '/admin/clusters') {
         setClusterTourOpen(true);
-        dispatch(applicationActions.updateClustersLeftTourShown(true));
+        dispatch(clustersLeftTourShown(true));
       }
     }
-  }, [applicationReducer]);
+  }, [
+    application?.applicationId,
+    noApplication?.noApplication,
+    noApplication?.firstTourShown,
+    applicationsRetrieved,
+    noClusters?.noClusters,
+    noClusters?.firstTourShown,
+    dispatch,
+    clusters.length,
+  ]);
 
   //click handler for tour closing
   const handleClick = (e) => {

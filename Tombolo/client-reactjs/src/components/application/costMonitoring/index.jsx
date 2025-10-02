@@ -2,41 +2,38 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Form, message, Tag, Descriptions } from 'antd';
 
-import CostMonitoringActionButton from './CostMonitoringActionButton';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditCostMonitoringModal from './AddEditCostMonitoringModal';
 import {
   createCostMonitoring,
   getAllCostMonitorings,
   handleBulkUpdateCostMonitorings,
   updateSelectedCostMonitoring,
+  handleBulkDeleteCostMonitorings,
+  toggleCostMonitoringStatus,
+  evaluateCostMonitoring,
 } from './costMonitoringUtils';
 
 import { identifyErroneousTabs } from '../jobMonitoring/jobMonitoringUtils';
 
 import { getRoleNameArray } from '../../common/AuthUtil';
 import CostMonitoringTable from './CostMonitoringTable';
-import CostMonitoringApproveRejectModal from './ApproveRejectModal';
+import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import CostMonitoringFilters from './CostMonitoringFilters';
-import { getUser } from '../../common/userStorage';
 import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
-import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
-import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
-import { useMonitorType } from '../../../hooks/useMonitoringType';
+import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAndAllProductCategories';
+import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
+import { useMonitorType } from '@/hooks/useMonitoringType';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal';
+import { APPROVAL_STATUS, Constants } from '@/components/common/Constants';
 
 const monitoringTypeName = 'Cost Monitoring';
 
 function CostMonitoring() {
   // Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      clusters,
-    },
-  } = useSelector((state) => state);
-
-  const user = getUser();
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const clusters = useSelector((state) => state.application.clusters);
 
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
@@ -177,6 +174,10 @@ function CostMonitoring() {
     setFilteringCosts(false);
   }, [filters, costMonitorings, searchTerm]);
 
+  const handleOpenBulkEdit = () => setBulkEditModalVisibility(true);
+  const handleOpenApproveReject = () => setDisplayAddRejectModal(true);
+  const handleToggleFilters = () => setFiltersVisible((prev) => !prev);
+
   // Function reset states when modal is closed
   const resetStates = () => {
     setDisplayAddCostMonitoringModal(false);
@@ -285,8 +286,15 @@ function CostMonitoring() {
       // Add notificationMetaData to metaData object
       metaData.notificationMetaData = notificationMetaData;
 
+      // Parse value from isSummed to boolean (handles boolean or string)
+      if (typeof allInputs.isSummed === 'string') {
+        allInputs.isSummed = allInputs.isSummed === 'true';
+      } else {
+        allInputs.isSummed = !!allInputs.isSummed;
+      }
+
       // Add metaData to allInputs
-      allInputs = { ...allInputs, metaData, approvalStatus: 'Pending', isActive: false };
+      allInputs = { ...allInputs, metaData, approvalStatus: APPROVAL_STATUS.PENDING, isActive: false };
 
       const responseData = await createCostMonitoring({ inputData: allInputs });
 
@@ -413,19 +421,17 @@ function CostMonitoring() {
       }
       delete updatedData.threshold;
 
-      await updateSelectedCostMonitoring({ updatedData });
+      const response = await updateSelectedCostMonitoring({ updatedData });
 
       // If no error thrown set state with new data
       setCostMonitorings((prev) => {
-        return prev.map((costMonitoring) => {
-          updatedData.approvalStatus = 'Pending';
-          updatedData.isActive = false;
-          if (costMonitoring.id === updatedData.id) {
-            return updatedData;
-          }
-          return costMonitoring;
-        });
+        const updatedArray = Array.isArray(response?.data) ? response.data : [response?.data].filter(Boolean);
+        if (updatedArray.length === 0) return prev;
+
+        const updatedMap = new Map(updatedArray.map((u) => [u.id, u]));
+        return prev.map((cm) => (updatedMap.has(cm.id) ? updatedMap.get(cm.id) : cm));
       });
+
       resetStates();
       message.success('Cost monitoring updated successfully');
     } catch (err) {
@@ -435,22 +441,45 @@ function CostMonitoring() {
     }
   };
 
+  const handleBulkDeleteSelectedCostMonitorings = async (ids) => {
+    try {
+      await handleBulkDeleteCostMonitorings(ids);
+      setCostMonitorings((prev) => prev.filter((cm) => !ids.includes(cm.id)));
+      setSelectedRows([]);
+      message.success('Selected cost monitorings deleted successfully');
+    } catch (_) {
+      message.error('Unable to delete selected cost monitorings');
+    }
+  };
+
+  const handleBulkStartPauseCostMonitorings = async ({ ids, action }) => {
+    try {
+      const updatedMonitorings = await toggleCostMonitoringStatus(ids, action);
+      const updatedMap = new Map(updatedMonitorings.map((u) => [u.id, u]));
+      setCostMonitorings((prev) => prev.map((m) => updatedMap.get(m.id) || m));
+    } catch (_) {
+      message.error('Unable to start/pause selected cost monitorings');
+    }
+  };
+
   // JSX
   return (
     <>
       <BreadCrumbs
         extraContent={
-          <CostMonitoringActionButton
-            handleAddCostMonitoringButtonClick={handleAddCostMonitoringButtonClick}
-            selectedRows={selectedRows}
-            setSelectedRows={setSelectedRows}
-            setCostMonitorings={setCostMonitorings}
-            setFiltersVisible={setFiltersVisible}
-            filtersVisible={filtersVisible}
+          <MonitoringActionButton
+            label="Cost Monitoring Actions"
             isReader={isReader}
-            displayAddRejectModal={displayAddRejectModal}
-            setDisplayAddRejectModal={setDisplayAddRejectModal}
-            setBulkEditModalVisibility={setBulkEditModalVisibility}
+            selectedRows={selectedRows}
+            onAdd={handleAddCostMonitoringButtonClick}
+            onBulkEdit={handleOpenBulkEdit}
+            onBulkApproveReject={handleOpenApproveReject}
+            onToggleFilters={handleToggleFilters}
+            showBulkApproveReject={true}
+            showFiltersToggle={true}
+            filtersStorageKey={Constants.CM_FILTERS_VS_KEY}
+            onBulkDelete={handleBulkDeleteSelectedCostMonitorings}
+            onBulkStartPause={handleBulkStartPauseCostMonitorings}
           />
         }
       />
@@ -516,6 +545,7 @@ function CostMonitoring() {
       />
       {displayMonitoringDetailsModal && (
         <MonitoringDetailsModal
+          monitoringTypeName={monitoringTypeName}
           displayMonitoringDetailsModal={displayMonitoringDetailsModal}
           setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
           selectedMonitoring={selectedMonitoring}
@@ -523,15 +553,27 @@ function CostMonitoring() {
           clusters={clusters}
           domains={domains}
           productCategories={productCategories}>
+          <Descriptions.Item label="Monitoring scope">{selectedMonitoring.monitoringScope}</Descriptions.Item>
           {selectedMonitoring.metaData.users && selectedMonitoring.metaData.users.length > 0 && (
             <Descriptions.Item label="Monitored Users">
               {selectedMonitoring.metaData.users.map((monitoredUser, index) => (
-                <Tag key={`cmu-${index}`} style={{ marginBottom: '4px' }}>
+                <Tag key={`cmdu-${index}`} style={{ marginBottom: '4px' }}>
                   {monitoredUser}
                 </Tag>
               ))}
             </Descriptions.Item>
           )}
+          <Descriptions.Item label="Is Summed">
+            {selectedMonitoring.isSummed ? (
+              <Tag color="var(--success)" key={'yes'}>
+                Yes
+              </Tag>
+            ) : (
+              <Tag color="var(--danger)" key={'no'}>
+                No
+              </Tag>
+            )}
+          </Descriptions.Item>
 
           {selectedMonitoring.metaData.costThreshold && (
             <Descriptions.Item label="Cost Threshold">${selectedMonitoring.metaData.costThreshold}</Descriptions.Item>
@@ -544,15 +586,15 @@ function CostMonitoring() {
       )}
       {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
       {displayAddRejectModal && (
-        <CostMonitoringApproveRejectModal
-          id={selectedMonitoring?.id}
-          selectedRows={selectedRows}
-          displayAddRejectModal={displayAddRejectModal}
-          setDisplayAddRejectModal={setDisplayAddRejectModal}
+        <ApproveRejectModal
+          visible={displayAddRejectModal}
+          onCancel={() => setDisplayAddRejectModal(false)}
           selectedMonitoring={selectedMonitoring}
           setSelectedMonitoring={setSelectedMonitoring}
-          user={user}
-          setCostMonitorings={setCostMonitorings}
+          selectedRows={selectedRows}
+          setMonitoring={setCostMonitorings}
+          monitoringTypeLabel={monitoringTypeName}
+          evaluateMonitoring={evaluateCostMonitoring}
         />
       )}
 

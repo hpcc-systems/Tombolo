@@ -10,26 +10,6 @@ module.exports = {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
       },
-      applicationId: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'applications',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
-      monitoringId: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'cost_monitorings',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
       clusterId: {
         type: Sequelize.UUID,
         allowNull: false,
@@ -44,18 +24,13 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       },
+      localDay: {
+        type: Sequelize.DATEONLY,
+        comment: 'Precomputed local day for fast queries',
+      },
       usersCostInfo: {
         allowNull: false,
         type: Sequelize.JSON,
-      },
-      analyzed: {
-        allowNull: false,
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
-      },
-      notificationSentDate: {
-        allowNull: true,
-        type: Sequelize.DATE,
       },
       metaData: {
         allowNull: true,
@@ -75,11 +50,14 @@ module.exports = {
       },
     });
 
-    // await queryInterface.addIndex('cost_monitoring_data', {
-    //   unique: true,
-    //   fields: ['monitoringId', 'applicationId', 'clusterId', 'analyzed'],
-    //   name: 'costMonitoringData_unique_monitoring_app_cluster_analyzed',
-    // });
+    // Composite index for fast queries by cluster, local_day, and deletedAt
+    await queryInterface.addIndex(
+      'cost_monitoring_data',
+      ['clusterId', 'localDay', 'deletedAt'],
+      {
+        name: 'idx_cmd_cluster_localday_notdeleted',
+      }
+    );
   },
 
   async down(queryInterface, Sequelize) {

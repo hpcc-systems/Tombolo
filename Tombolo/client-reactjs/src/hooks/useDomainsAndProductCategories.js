@@ -13,10 +13,12 @@ export const useDomainAndCategories = (monitoringTypeId, selectedMonitoring) => 
       if (!monitoringTypeId) return;
       try {
         let domainData = await getDomains({ monitoringTypeId });
+
         domainData = domainData.map((d) => ({
           label: d.name,
           value: d.id,
         }));
+
         setDomains(domainData);
       } catch (error) {
         message.error('Error fetching domains');

@@ -15,7 +15,6 @@ class CostMonitoringDataArchiveService extends ArchiveService {
     try {
       const archivedCount = await this.archiveRecords(this.modelName, {
         date: { [Op.lt]: cutoffDate },
-        analyzed: true,
       });
 
       logger.info(

@@ -10,6 +10,7 @@ const { getClusterOptions } = require('../utils/getClusterOptions');
 const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
+const { APPROVAL_STATUS } = require('../config/constants');
 
 // Function to get dropzones and associated machines when a cluster id is provided
 const getDropzonesForACluster = async (req, res) => {
@@ -45,7 +46,7 @@ const getDropzonesForACluster = async (req, res) => {
 
     res.status(200).send(TpDropZone);
   } catch (err) {
-    logger.error(`Error in getDropzones: ${err.message}`);
+    logger.error('Error in getDropzones: ', err);
     res.status(500).send({ message: 'Internal server error' });
   }
 };
@@ -99,7 +100,7 @@ const getFileList = async (req, res) => {
       data: fileListResponse,
     });
   } catch (err) {
-    logger.error(`Error in getFileList: ${err.message}`);
+    logger.error('Error in getFileList: ', err);
     res.status(500).send({
       success: false,
       message: 'Internal server error',
@@ -117,7 +118,7 @@ const createLandingZoneMonitoring = async (req, res) => {
     const response = await LandingZoneMonitoring.create(
       {
         ...req.body,
-        approvalStatus: 'Pending',
+        approvalStatus: APPROVAL_STATUS.PENDING,
         createdBy: userId,
         lastUpdatedBy: userId,
       },
@@ -215,7 +216,7 @@ const getLandingZoneMonitoringById = async (req, res) => {
       data: landingZoneMonitoring,
     });
   } catch (err) {
-    logger.error(`Error getting landing zone monitoring by ID: ${err.message}`);
+    logger.error('Error getting landing zone monitoring by ID: ', err);
     res.status(500).json({
       success: false,
       message: 'Failed to get landing zone monitoring',
@@ -242,7 +243,7 @@ const updateLandingZoneMonitoring = async (req, res) => {
     // Reset approval status to pending when updating
     const payload = {
       ...req.body,
-      approvalStatus: 'Pending',
+      approvalStatus: APPROVAL_STATUS.PENDING,
       isActive: false,
       approverComment: null,
       approvedBy: null,
@@ -273,7 +274,7 @@ const updateLandingZoneMonitoring = async (req, res) => {
       data: updatedMonitoring,
     });
   } catch (err) {
-    logger.error(`Error updating landing zone monitoring: ${err.message}`);
+    logger.error('Error updating landing zone monitoring: ', err);
 
     // Handle specific error types
     if (err.name === 'SequelizeValidationError') {
@@ -333,7 +334,7 @@ const deleteLandingZoneMonitoring = async (req, res) => {
       message: 'Landing zone monitoring deleted successfully',
     });
   } catch (err) {
-    logger.error(`Error deleting landing zone monitoring: ${err.message}`);
+    logger.error('Error deleting landing zone monitoring: ', err);
 
     // Handle specific error types
     if (err.name === 'SequelizeForeignKeyConstraintError') {
@@ -386,7 +387,7 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
       message: 'Landing zone monitoring deleted successfully',
     });
   } catch (err) {
-    logger.error(`Error deleting landing zone monitoring: ${err.message}`);
+    logger.error('Error deleting landing zone monitoring: ', err);
 
     res.status(500).json({
       success: false,
@@ -399,13 +400,11 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
 const evaluateLandingZoneMonitoring = async (req, res) => {
   try {
     const { id: approver } = req.user;
-    const { ids, approvalStatus, approverComment, approvedBy, isActive } =
-      req.body;
+    const { ids, approvalStatus, approverComment, isActive } = req.body;
 
     const updateData = {
       approvalStatus,
       approverComment,
-      approvedBy,
       isActive: isActive !== undefined ? isActive : false,
       approvedAt: new Date(),
       approvedBy: approver,
@@ -464,7 +463,7 @@ const toggleLandingZoneMonitoringStatus = async (req, res) => {
 
     if (isActive) {
       const pending = records.some(record => {
-        return record.approvalStatus !== 'approved';
+        return record.approvalStatus !== APPROVAL_STATUS.APPROVED;
       });
 
       if (pending) {

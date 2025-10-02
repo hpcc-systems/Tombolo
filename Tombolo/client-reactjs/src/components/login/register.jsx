@@ -5,13 +5,19 @@ import { useLocation } from 'react-router-dom';
 
 import RegisterUserForm from './registerUserForm';
 import { getDeviceInfo } from './utils';
-import { authActions } from '../../redux/actions/Auth';
 import { verifyEmail } from './utils';
 import { setUser } from '../common/userStorage';
 
+import { registerBasicUser } from '@/redux/slices/AuthSlice';
+import { useDispatch } from 'react-redux';
+
 import styles from './login.module.css';
+import { useHistory } from 'react-router-dom';
 
 const Register = () => {
+  const dispatch = useDispatch();
+  const history = useHistory();
+
   const [form] = Form.useForm();
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [regId, setRegId] = useState(null);
@@ -41,11 +47,11 @@ const Register = () => {
             throw new Error(response?.data?.message || 'Verification failed');
           }
 
-          message.success('Verification completed successfully');
+          message.success('Your email has been verified!');
           setRegistrationComplete(true);
           setVerifying(false);
           setUser(JSON.stringify(response.data));
-          window.location.href = '/';
+          history.push('/');
         } catch (err) {
           setVerifying(false);
           setVerificationFailed(err.message);
@@ -60,9 +66,9 @@ const Register = () => {
   const onFinish = async (values) => {
     try {
       values.deviceInfo = getDeviceInfo();
-      const res = await authActions.registerBasicUser(values);
+      const res = await dispatch(registerBasicUser(values));
 
-      if (!res.success) {
+      if (!registerBasicUser.fulfilled.match(res)) {
         return;
       }
 

@@ -105,7 +105,7 @@ router.post('/', validate(validateCreateOrbit), async (req, res) => {
 
     return res.status(201).send(newOrbitMonitoring);
   } catch (error) {
-    logger.error(error);
+    logger.error('orbit/read create: ', error);
     return res
       .status(500)
       .json({ message: 'Unable to save Orbit monitoring details' });
@@ -128,7 +128,8 @@ router.get(
 
       return res.status(200).send(result);
     } catch (err) {
-      logger.error(err);
+      logger.error('getOrbitMonitorings: ', err);
+      res.status(500).json({ message: err.message });
       // ... error checks
     }
   }
@@ -150,7 +151,7 @@ router.get(
 
       return res.status(200).send(result);
     } catch (err) {
-      logger.error(err);
+      logger.error('getOrbitMonitorings: ', err);
       // ... error checks
     }
   }
@@ -192,7 +193,7 @@ router.get(
       return res.status(200).json(unique);
     } catch (err) {
       // ... error checks
-      logger.error(err);
+      logger.error('orbit/read keywordSearch: ', err);
       return res
         .status(400)
         .send('There was an issue contacting the orbit reports server');
@@ -223,7 +224,7 @@ router.get(
       return res.status(200).json(result[0][0]);
     } catch (err) {
       // ... error checks
-      logger.error(err);
+      logger.error('getOrbitBuildDetails: ', err);
       return res
         .status(400)
         .send('There was an issue contacting the orbit reports server');
@@ -369,7 +370,7 @@ router.put('/', validate(validateUpdateOrbitMonitor), async (req, res) => {
 
     return res.status(200).send(newInfo);
   } catch (error) {
-    logger.error(error);
+    logger.error('orbit/read update: ', error);
     return res
       .status(500)
       .json({ message: 'Unable to save orbit build monitoring details' });
@@ -415,7 +416,7 @@ router.put(
 
       return res.status(200).send('Update successful');
     } catch (err) {
-      logger.error(err);
+      logger.error('orbit/read toggleStatus: ', err);
       return res.status(500).json({ message: 'Failed to toggle status' });
     }
   }
@@ -447,7 +448,7 @@ router.delete(
         }
       }
     } catch (err) {
-      logger.error(err);
+      logger.error('orbit/read delete: ', err);
       return res.status(500).json({ message: err.message });
     }
   }
@@ -467,7 +468,7 @@ router.get(
 
       return res.status(200).send(result);
     } catch (err) {
-      logger.error(err);
+      logger.error('orbit/read getOne: ', err);
       return res.status(500).json({ message: err.message });
     }
   }
@@ -509,7 +510,7 @@ router.get(
 
       return res.status(200).send(wuList);
     } catch (err) {
-      logger.error(err);
+      logger.error('orbit/read getWorkunits: ', err);
       return res.status(500).json({ message: err.message });
     }
   }
@@ -651,7 +652,7 @@ router.post(
 
       return res.status(200).send(result);
     } catch (err) {
-      logger.error(err);
+      logger.error('orbit/read updateList: ', err);
       return res
         .status(400)
         .send('There was an issue contacting the orbit reports server');
@@ -675,7 +676,7 @@ router.get(
 
       throw Error('No domains found on Fido Server: ' + query);
     } catch (err) {
-      logger.error(err);
+      logger.error('orbit/read getDomains: ', err);
       return res
         .status(400)
         .send('There was an issue contacting the orbit reports server');
@@ -698,7 +699,7 @@ router.get(
 
       throw Error('No products found on Fido Server: ' + query);
     } catch (err) {
-      logger.error(err);
+      logger.error('orbit/read getProducts: ', err);
       return res
         .status(400)
         .send('There was an issue contacting the orbit reports server');

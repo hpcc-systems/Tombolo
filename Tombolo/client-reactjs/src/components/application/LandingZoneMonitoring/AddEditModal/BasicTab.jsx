@@ -1,36 +1,28 @@
-/* eslint-disable */
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Card } from 'antd';
-// import LandingZoneFileExplorer from '../../../common/LandingZoneFileExplorer';
 import AsrSpecificMonitoring from './ASRSpecificMonitoring';
 import { useSelector } from 'react-redux';
+import { DescriptionFormRules, MonitoringNameFormRules } from '../../../common/FormRules';
 
 const { TextArea } = Input;
 
 function BasicTab({
   form,
-  directoryMonitorings,
+  landingZoneMonitoring,
   isEditing,
   selectedCluster,
-  setSelectedCluster,
-  setDirectory,
   copying,
   domains,
   productCategories,
   setSelectedDomain,
-  landingZoneMonitoring,
 }) {
   //Local State
   const nameRef = useRef(null);
   const [clusterOffset, setClusterOffset] = useState(null);
 
   //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      integrations,
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const integrations = useSelector((state) => state.application.integrations);
 
   const asrIntegration = integrations.some(
     (integration) => integration.name === 'ASR' && integration.application_id === applicationId
@@ -77,72 +69,62 @@ function BasicTab({
   };
 
   return (
-    <>
-      <Card size="small" style={{ marginBottom: '1rem' }}>
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="Monitoring Name"
-            name="monitoringName"
-            rules={[
-              { required: true, message: 'Required field' },
-              { max: 100, message: 'Maximum of 100 characters allowed' },
-              () => ({
-                validator(_, value) {
-                  if (isEditing) return Promise.resolve();
-                  if (!value || !landingZoneMonitoring.find((directory) => directory.name === value)) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('Monitoring name must be unique'));
+    <Card size="small" style={{ marginBottom: '1rem' }}>
+      <Form form={form} layout="vertical">
+        <Form.Item
+          label="Monitoring Name"
+          name="monitoringName"
+          rules={[
+            ...MonitoringNameFormRules,
+            () => ({
+              validator(_, value) {
+                if (isEditing) return Promise.resolve();
+                if (!value || !landingZoneMonitoring.find((directory) => directory.name === value)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Monitoring name must be unique'));
+              },
+            }),
+          ]}>
+          <Input
+            placeholder="Enter a name"
+            ref={nameRef}
+            onBlur={() =>
+              form.setFields([
+                {
+                  name: 'name',
+                  warnings: [],
                 },
-              }),
-            ]}>
-            <Input
-              placeholder="Enter a name"
-              ref={nameRef}
-              onBlur={() =>
-                form.setFields([
-                  {
-                    name: 'name',
-                    warnings: [],
-                  },
-                ])
-              }
-            />
-          </Form.Item>
+              ])
+            }
+          />
+        </Form.Item>
 
-          <Form.Item
-            label="Description"
-            name="description"
-            rules={[
-              { max: 150, message: 'Max character limit is 150' },
-              { min: 10, message: 'Minimum of 1 character required' },
-              { required: true, message: 'Add short description' },
-            ]}>
-            <TextArea
-              type="text-area"
-              placeholder="Enter a short description"
-              rows="2"
-              maxLength={150}
-              showCount
-              autoSize={{
-                minRows: 2,
-                maxRows: 4,
-              }}
-            />
-          </Form.Item>
+        <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
+          <TextArea
+            type="text-area"
+            placeholder="Enter a short description"
+            rows="2"
+            maxLength={150}
+            showCount
+            autoSize={{
+              minRows: 2,
+              maxRows: 4,
+            }}
+          />
+        </Form.Item>
 
-          {asrIntegration && (
-            <AsrSpecificMonitoring
-              form={form}
-              clusterOffset={clusterOffset}
-              domains={domains}
-              productCategories={productCategories}
-              setSelectedDomain={setSelectedDomain}
-            />
-          )}
-        </Form>
-      </Card>
-    </>
+        {asrIntegration && (
+          <AsrSpecificMonitoring
+            form={form}
+            clusterOffset={clusterOffset}
+            domains={domains}
+            productCategories={productCategories}
+            setSelectedDomain={setSelectedDomain}
+          />
+        )}
+      </Form>
+    </Card>
   );
 }
 

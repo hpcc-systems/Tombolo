@@ -24,7 +24,7 @@ router.post('/', validate(validateCreateSentNotification), async (req, res) => {
     const response = await SentNotification.create(req.body, { raw: true });
     return res.status(200).send(response);
   } catch (err) {
-    logger.error(err);
+    logger.error('createSentNotification: ', err);
     return res.status(500).send('Failed to save sent notification');
   }
 });
@@ -48,7 +48,7 @@ router.get(
       });
       return res.status(200).json(notifications);
     } catch (err) {
-      logger.error(err);
+      logger.error('getSentNotifications: ', err);
       return res.status(500).send('Failed to get sent notifications');
     }
   }
@@ -66,7 +66,7 @@ router.get(
       }
       return res.status(200).json(notification);
     } catch (err) {
-      logger.error(err);
+      logger.error('getSentNotification: ', err);
       return res.status(500).send('Failed to get sent notification');
     }
   }
@@ -81,7 +81,7 @@ router.delete(
       await SentNotification.destroy({ where: { id: req.params.id } });
       return res.status(200).send('success');
     } catch (err) {
-      logger.error(err);
+      logger.error('deleteSentNotification: ', err);
       return res.status(500).send('Failed to delete sent notification');
     }
   }
@@ -96,7 +96,7 @@ router.delete(
       await SentNotification.destroy({ where: { id: req.body.ids } });
       return res.status(200).send('success');
     } catch (err) {
-      logger.error(err);
+      logger.error('bulkDeleteSentNotifications: ', err);
       return res.status(500).send('Failed to delete sent notifications');
     }
   }
@@ -162,7 +162,7 @@ router.patch(
 
       return res.status(200).json(updatedNotifications);
     } catch (err) {
-      logger.error(err);
+      logger.error('updateSentNotifications: ', err);
       return res.status(500).send('Failed to update sent notifications');
     }
   }

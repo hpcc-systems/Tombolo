@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, withRouter, useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Layout, Menu, Typography, Tooltip } from 'antd';
@@ -8,9 +8,8 @@ import {
   ClusterOutlined,
   NotificationOutlined,
   ClockCircleOutlined,
-  ContainerOutlined,
   BarChartOutlined,
-  CloudServerOutlined,
+  // CloudServerOutlined,
   ApiOutlined,
   // BellOutlined,
   SettingOutlined,
@@ -42,8 +41,10 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   const history = useHistory();
 
   //get states from redux
-  const { applicationReducer } = useSelector((state) => state);
-  const { application, integrations, clusters } = applicationReducer;
+  const application = useSelector((state) => state.application.application);
+  // const integrations = useSelector((state) => state.application.integrations);
+  const clusters = useSelector((state) => state.application.clusters);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const applicationId = application?.applicationId;
   const clusterConnectionIssue = clusters?.some((c) => c.reachabilityInfo?.reachable === false);
@@ -70,20 +71,19 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   //adjust the current highlighted menu item based on the current path
   useEffect(() => {
     const options = {
-      assets: '1',
-      dataflow: '2',
-      dataflowinstances: '3',
+      // assets: '1',
+      // dataflow: '2',
+      // dataflowinstances: '3',
       fileMonitoring: '4a',
       landingZone: '4b',
       clustermonitoring: '4c',
       jobmonitoring: '4d',
-      superfileMonitoring: '4e',
-      orbitMonitoring: '4f',
+      // orbitMonitoring: '4f',
       notifications: '5a',
       clusterUsage: '5b',
-      Orbit: '5c',
+      // Orbit: '5c',
       clusters: '6',
-      github: '8',
+      // github: '8',
       consumers: '9',
       applications: '10',
       userManagement: '11',
@@ -101,78 +101,81 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
     }
   }, [history.location.pathname]);
 
-  const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
+  // Only render if authenticated
+  if (!isAuthenticated) return null;
+
+  // const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
 
   //TODO - check if user has edit permission
   const ownerOrAdmin = roleArray?.includes('administrator') || roleArray?.includes('owner');
 
-  const urlPrefix = () => {
-    if (applicationId) return '/' + applicationId;
-    else return '';
-  };
+  // const urlPrefix = () => {
+  //   if (applicationId) return '/' + applicationId;
+  //   else return '';
+  // };
 
-  const workflowItems = [
-    getItem(
-      <>
-        {disabled || clusterDisabled ? (
-          <>
-            <i className="fa fa-fw fa-cubes" />
-            <span style={{ marginLeft: '1rem' }}>Assets</span>{' '}
-          </>
-        ) : (
-          <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/assets'}>
-            <i className="fa fa-fw fa-cubes" />
-            <span style={{ marginLeft: '1rem' }}>Assets</span>
-          </Link>
-        )}
-      </>,
-      '1',
-      null,
-      null,
-      null,
-      clusterDisabled
-    ),
-    getItem(
-      <>
-        {disabled || clusterDisabled ? (
-          <>
-            <i className="fa fa-fw fa-random" />
-            <span style={{ marginLeft: '1rem' }}>Workflows</span>
-          </>
-        ) : (
-          <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/dataflow'}>
-            <i className="fa fa-fw fa-random" />
-            <span style={{ marginLeft: '1rem' }}>Workflows</span>
-          </Link>
-        )}
-      </>,
-      '2',
-      null,
-      null,
-      null,
-      clusterDisabled
-    ),
-    getItem(
-      <>
-        {disabled || clusterDisabled ? (
-          <>
-            <i className="fa fa-fw fa-microchip" />
-            <span style={{ marginLeft: '1rem' }}>Workflow History</span>
-          </>
-        ) : (
-          <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={urlPrefix() + '/dataflowinstances'}>
-            <i className="fa fa-fw fa-microchip" />
-            <span style={{ marginLeft: '1rem' }}>Workflow History</span>
-          </Link>
-        )}
-      </>,
-      '3',
-      null,
-      null,
-      null,
-      clusterDisabled
-    ),
-  ];
+  // const workflowItems = [
+  // getItem(
+  //   <>
+  //     {disabled || clusterDisabled ? (
+  //       <>
+  //         <i className="fa fa-fw fa-cubes" />
+  //         <span style={{ marginLeft: '1rem' }}>Assets</span>{' '}
+  //       </>
+  //     ) : (
+  //       <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/assets'}>
+  //         <i className="fa fa-fw fa-cubes" />
+  //         <span style={{ marginLeft: '1rem' }}>Assets</span>
+  //       </Link>
+  //     )}
+  //   </>,
+  //   '1',
+  //   null,
+  //   null,
+  //   null,
+  //   clusterDisabled
+  // ),
+  // getItem(
+  //   <>
+  //     {disabled || clusterDisabled ? (
+  //       <>
+  //         <i className="fa fa-fw fa-random" />
+  //         <span style={{ marginLeft: '1rem' }}>Workflows</span>
+  //       </>
+  //     ) : (
+  //       <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/' + applicationId + '/dataflow'}>
+  //         <i className="fa fa-fw fa-random" />
+  //         <span style={{ marginLeft: '1rem' }}>Workflows</span>
+  //       </Link>
+  //     )}
+  //   </>,
+  //   '2',
+  //   null,
+  //   null,
+  //   null,
+  //   clusterDisabled
+  // ),
+  // getItem(
+  //   <>
+  //     {disabled || clusterDisabled ? (
+  //       <>
+  //         <i className="fa fa-fw fa-microchip" />
+  //         <span style={{ marginLeft: '1rem' }}>Workflow History</span>
+  //       </>
+  //     ) : (
+  //       <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={urlPrefix() + '/dataflowinstances'}>
+  //         <i className="fa fa-fw fa-microchip" />
+  //         <span style={{ marginLeft: '1rem' }}>Workflow History</span>
+  //       </Link>
+  //     )}
+  //   </>,
+  //   '3',
+  //   null,
+  //   null,
+  //   null,
+  //   clusterDisabled
+  // ),
+  // ];
 
   const monitoringItems = [
     getItem(
@@ -231,32 +234,21 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
           null,
           clusterDisabled
         ),
-        getItem(
-          <Link to={'/' + applicationId + '/superfileMonitoring'}>
-            <span>
-              <ContainerOutlined /> Superfiles
-            </span>
-          </Link>,
-          '4e',
-          null,
-          null,
-          null,
-          clusterDisabled
-        ),
-        asrActive
-          ? getItem(
-              <Link to={'/' + applicationId + '/orbitMonitoring'}>
-                <span>
-                  <CloudServerOutlined /> Orbit
-                </span>
-              </Link>,
-              '4f',
-              null,
-              null,
-              null,
-              clusterDisabled
-            )
-          : null,
+
+        // asrActive
+        //   ? getItem(
+        //       <Link to={'/' + applicationId + '/orbitMonitoring'}>
+        //         <span>
+        //           <CloudServerOutlined /> Orbit
+        //         </span>
+        //       </Link>,
+        //       '4f',
+        //       null,
+        //       null,
+        //       null,
+        //       clusterDisabled
+        //     )
+        //   : null,
         getItem(
           <Link to={'/' + applicationId + '/costMonitoring'}>
             <span>
@@ -291,28 +283,28 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
           null,
           null
         ),
-        getItem(
-          <Link to={'/' + applicationId + '/dashboard/clusterUsage'}>
-            <span>
-              <ClusterOutlined /> Cluster
-            </span>
-          </Link>,
-          '5b',
-          null,
-          null
-        ),
-        asrActive
-          ? getItem(
-              <Link to={'/' + applicationId + '/dashboard/Orbit'}>
-                <span>
-                  <CloudServerOutlined /> Orbit
-                </span>
-              </Link>,
-              '5c',
-              null,
-              null
-            )
-          : null,
+        // getItem(
+        //   <Link to={'/' + applicationId + '/dashboard/clusterUsage'}>
+        //     <span>
+        //       <ClusterOutlined /> Cluster
+        //     </span>
+        //   </Link>,
+        //   '5b',
+        //   null,
+        //   null
+        // ),
+        // asrActive
+        //   ? getItem(
+        //       <Link to={'/' + applicationId + '/dashboard/Orbit'}>
+        //         <span>
+        //           <CloudServerOutlined /> Orbit
+        //         </span>
+        //       </Link>,
+        //       '5c',
+        //       null,
+        //       null
+        //     )
+        //   : null,
       ],
       null,
       clusterDisabled
@@ -348,26 +340,26 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       null,
       disabled
     ),
-    getItem(
-      <>
-        {disabled || clusterDisabled ? (
-          <>
-            <i className="fa fa-fw fa-github" />
-            <span style={{ marginLeft: '1rem' }}>Github</span>
-          </>
-        ) : (
-          <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/github'}>
-            <i className="fa fa-fw fa-github" />
-            <span style={{ marginLeft: '1rem' }}>Github</span>
-          </Link>
-        )}
-      </>,
-      '8',
-      null,
-      null,
-      null,
-      clusterDisabled
-    ),
+    // getItem(
+    //   <>
+    //     {disabled || clusterDisabled ? (
+    //       <>
+    //         <i className="fa fa-fw fa-github" />
+    //         <span style={{ marginLeft: '1rem' }}>Github</span>
+    //       </>
+    //     ) : (
+    //       <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/github'}>
+    //         <i className="fa fa-fw fa-github" />
+    //         <span style={{ marginLeft: '1rem' }}>Github</span>
+    //       </Link>
+    //     )}
+    //   </>,
+    //   '8',
+    //   null,
+    //   null,
+    //   null,
+    //   clusterDisabled
+    // ),
   ];
 
   const adminItems = [
@@ -470,7 +462,16 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   };
 
   const menu = (items) => {
-    return <Menu theme="dark" mode="inline" items={items} selectedKeys={[current]} onClick={onClick} />;
+    return (
+      <Menu
+        theme="dark"
+        mode="inline"
+        items={items}
+        selectedKeys={[current]}
+        onClick={onClick}
+        defaultOpenKeys={['4']}
+      />
+    );
   };
 
   return (
@@ -490,8 +491,8 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
         bottom: 0,
         zIndex: 100,
       }}>
-      {collapsed ? null : title('Workflows')}
-      {menu(workflowItems)}
+      {/* {collapsed ? null : title('Workflows')} */}
+      {/* {menu(workflowItems)} */}
       {collapsed ? null : title('Monitoring')}
       {menu(monitoringItems)}
       {ownerOrAdmin && (

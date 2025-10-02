@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Descriptions, Form, message, Tag } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
-import JobMonitoringActionButton from './JobMonitoringActionButton.jsx';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
 import {
   checkScheduleValidity,
@@ -12,33 +12,32 @@ import {
   identifyErroneousTabs,
   isScheduleUpdated,
   updateSelectedMonitoring,
+  evaluateJobMonitoring,
 } from './jobMonitoringUtils.js';
+import { handleBulkDeleteJobMonitorings, toggleJobMonitoringStatus } from './jobMonitoringUtils';
 
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal.jsx';
-import ApproveRejectModal from './ApproveRejectModal.jsx';
+import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import BulkUpdateModal from './BulkUpdateModal.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import JobMonitoringFilters from './JobMonitoringFilters.jsx';
-import { useMonitorType } from '../../../hooks/useMonitoringType';
-import { useDomainAndCategories } from '../../../hooks/useDomainsAndProductCategories';
-import { useMonitoringsAndAllProductCategories } from '../../../hooks/useMonitoringsAndAllProductCategories';
-import _ from 'lodash';
+import { useMonitorType } from '@/hooks/useMonitoringType';
+import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
+import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAndAllProductCategories';
+import capitalize from 'lodash/capitalize';
 import { getDateLabel, getDayLabel, getMonthLabel, getWeekLabel } from '../../common/scheduleOptions';
 import cronstrue from 'cronstrue';
+import { APPROVAL_STATUS, Constants } from '@/components/common/Constants';
 
 // Constants
 const monitoringTypeName = 'Job Monitoring';
 
 function JobMonitoring() {
   //Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      clusters,
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const clusters = useSelector((state) => state.application.clusters);
 
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
@@ -207,6 +206,27 @@ function JobMonitoring() {
     setFilteringJobs(false);
   }, [filters, jobMonitorings, searchTerm]);
 
+  const handleBulkDeleteSelectedJobMonitorings = async (ids) => {
+    try {
+      await handleBulkDeleteJobMonitorings({ selectedJobMonitorings: ids });
+      setJobMonitorings((prev) => prev.filter((jm) => !ids.includes(jm.id)));
+      setSelectedRows([]);
+    } catch (_) {
+      message.error('Unable to delete selected job monitorings');
+    }
+  };
+
+  const handleBulkStartPauseJobMonitorings = async ({ ids, action }) => {
+    try {
+      const updatedMonitorings = await toggleJobMonitoringStatus({ ids, action });
+      setJobMonitorings((prev) =>
+        prev.map((monitoring) => updatedMonitorings.find((u) => u.id === monitoring.id) || monitoring)
+      );
+    } catch (_) {
+      message.error('Unable to start/pause selected job monitorings');
+    }
+  };
+
   // Function reset states when modal is closed
   const resetStates = () => {
     setIntermittentScheduling({
@@ -228,6 +248,10 @@ function JobMonitoring() {
     setCron('');
     form.resetFields();
   };
+
+  const handleOpenBulkEdit = () => setBulkEditModalVisibility(true);
+  const handleOpenApproveReject = () => setDisplayAddRejectModal(true);
+  const handleToggleFilters = () => setFiltersVisible((prev) => !prev);
 
   //When add button new job monitoring button clicked
   const handleAddJobMonitoringButtonClick = () => {
@@ -516,7 +540,7 @@ function JobMonitoring() {
       // If no error thrown set state with new data
       setJobMonitorings((prev) => {
         return prev.map((jobMonitoring) => {
-          updatedData.approvalStatus = 'Pending';
+          updatedData.approvalStatus = APPROVAL_STATUS.PENDING;
           updatedData.isActive = false;
           if (jobMonitoring.id === updatedData.id) {
             return updatedData;
@@ -539,7 +563,7 @@ function JobMonitoring() {
       return '';
     } else if (runWindow === 'daily') return 'Anytime';
     else {
-      return _.capitalize(runWindow);
+      return capitalize(runWindow);
     }
   };
 
@@ -596,17 +620,19 @@ function JobMonitoring() {
     <>
       <BreadCrumbs
         extraContent={
-          <JobMonitoringActionButton
-            handleAddJobMonitoringButtonClick={handleAddJobMonitoringButtonClick}
-            selectedRows={selectedRows}
-            setSelectedRows={setSelectedRows}
-            setJobMonitorings={setJobMonitorings}
-            setBulkEditModalVisibility={setBulkEditModalVisibility}
-            setFiltersVisible={setFiltersVisible}
-            filtersVisible={filtersVisible}
+          <MonitoringActionButton
+            label="Job Monitoring Actions"
             isReader={isReader}
-            displayAddRejectModal={displayAddRejectModal}
-            setDisplayAddRejectModal={setDisplayAddRejectModal}
+            selectedRows={selectedRows}
+            onAdd={handleAddJobMonitoringButtonClick}
+            onBulkEdit={handleOpenBulkEdit}
+            onBulkApproveReject={handleOpenApproveReject}
+            onToggleFilters={handleToggleFilters}
+            showBulkApproveReject={true}
+            showFiltersToggle={true}
+            filtersStorageKey={Constants.JM_FILTERS_VS_KEY}
+            onBulkDelete={handleBulkDeleteSelectedJobMonitorings}
+            onBulkStartPause={handleBulkStartPauseJobMonitorings}
           />
         }
       />
@@ -685,6 +711,7 @@ function JobMonitoring() {
       />
       {displayMonitoringDetailsModal && (
         <MonitoringDetailsModal
+          monitoringTypeName={monitoringTypeName}
           displayMonitoringDetailsModal={displayMonitoringDetailsModal}
           setDisplayMonitoringDetailsModal={setDisplayMonitoringDetailsModal}
           selectedMonitoring={selectedMonitoring}
@@ -693,14 +720,14 @@ function JobMonitoring() {
           domains={domains}
           productCategories={productCategories}>
           <Descriptions.Item label="Monitoring scope">
-            {monitoringScope?.replace(/([A-Z])/g, ' $1').trim()}
+            {selectedMonitoring.monitoringScope?.replace(/([A-Z])/g, ' $1').trim()}
           </Descriptions.Item>
-          {monitoringScope && monitoringScope !== 'ClusterWideMonitoring' && (
+          {selectedMonitoring.jobName && (
             <Descriptions.Item label="Job name / pattern">{selectedMonitoring.jobName}</Descriptions.Item>
           )}
           {selectedMonitoring.metaData.schedule && (
             <Descriptions.Item label="Frequency">
-              {_.capitalize(selectedMonitoring.metaData.schedule[0].frequency)}
+              {capitalize(selectedMonitoring.metaData.schedule[0].frequency)}
             </Descriptions.Item>
           )}
           {selectedMonitoring.metaData.schedule && selectedMonitoring.metaData.schedule.length > 0 && (
@@ -734,13 +761,14 @@ function JobMonitoring() {
       {/* Approve Reject Modal - only add if setDisplayAddRejectModal is true */}
       {displayAddRejectModal && (
         <ApproveRejectModal
-          id={selectedMonitoring?.id}
-          selectedRows={selectedRows}
-          displayAddRejectModal={displayAddRejectModal}
-          setDisplayAddRejectModal={setDisplayAddRejectModal}
+          visible={displayAddRejectModal}
+          onCancel={() => setDisplayAddRejectModal(false)}
           selectedMonitoring={selectedMonitoring}
           setSelectedMonitoring={setSelectedMonitoring}
-          setJobMonitorings={setJobMonitorings}
+          selectedRows={selectedRows}
+          setMonitoring={setJobMonitorings}
+          monitoringTypeLabel={monitoringTypeName}
+          evaluateMonitoring={evaluateJobMonitoring}
         />
       )}
       {bulkEditModalVisibility && (

@@ -40,11 +40,7 @@ const CreateNotificationModal = ({
   const [form] = Form.useForm();
 
   // Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   // Get user from local storage
   const { user } = getUser();

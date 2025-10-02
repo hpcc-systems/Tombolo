@@ -11,11 +11,6 @@ module.exports = (sequelize, DataTypes) => {
         hooks: true,
       });
 
-      FileTemplate.hasMany(models.FileMonitoring, {
-        foreignKey: 'fileTemplateId',
-        onDelete: 'CASCADE',
-      });
-
       FileTemplate.hasMany(models.FileTemplateLayout, {
         foreignKey: 'fileTemplate_id',
         onDelete: 'CASCADE',

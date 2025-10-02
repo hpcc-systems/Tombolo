@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Descriptions, Button } from 'antd';
-import { startCase } from 'lodash';
+import startCase from 'lodash/startCase';
 import { useSelector } from 'react-redux';
 import styles from './userManagement.module.css';
 
 function UserDetailModal({ displayUserDetailsModal, setDisplayUserDetailsModal, selectedUser, roles }) {
   const [_selectedUserRoles, setSelectedUserRoles] = useState([]);
-  const { applications: allApps } = useSelector((state) => state.applicationReducer);
+  const allApps = useSelector((state) => state.application.applications);
 
   // Close model
   const closeModel = () => {

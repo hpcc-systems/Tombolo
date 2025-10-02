@@ -44,7 +44,7 @@ router.post(
       clusterHost = cluster.thor_host;
       port = cluster.thor_port;
     } catch (err) {
-      logger.error(err);
+      logger.error('dataflow save - failed to get cluster: ', err);
     }
 
     //Check if cluster is reachable
@@ -129,7 +129,7 @@ router.post(
         .status(200)
         .json({ success: true, message: 'Dataflow updated' });
     } catch (err) {
-      logger.error(err);
+      logger.error('dataflow save: ', err);
       return res
         .status(409)
         .json({ success: false, message: 'Unable to create dataflow' });
@@ -225,9 +225,7 @@ router.post(
 
       return res.status(200).json({ result: 'success' });
     } catch (error) {
-      logger.error('-error-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
+      logger.error('dataflow delete: ', error);
       return res.status(422).json({ result: false, message: error.message });
     }
   }
@@ -297,7 +295,7 @@ router.get(
 
       return res.status(200).json(results);
     } catch (err) {
-      logger.error(err);
+      logger.error('dataflow assets: ', err);
       return res.status(500).json({ error: err });
     }
 
@@ -357,7 +355,7 @@ router.get(
       })
       return res.status(200).json(results);
     }).catch(function(err) {
-        logger.error(err);
+        logger.error('dataflow: ', err);
         return res.status(500).json({ error: err });
     });
   */
@@ -400,10 +398,7 @@ router.get(
 
       return res.status(200).send(inDataflows);
     } catch (error) {
-      logger.error('-error-----------------------------------------');
-      logger.error(error);
-      logger.error('------------------------------------------');
-
+      logger.error('dataflow/checkDataflows: ', error);
       return res
         .status(500)
         .send('Error occurred while checking asset in dataflows');

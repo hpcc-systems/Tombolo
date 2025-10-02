@@ -44,7 +44,9 @@ export const getClusterWhiteList = async () => {
   }
 
   const responseJson = await response.json();
-  return responseJson.data;
+  const clusters = responseJson.data;
+
+  return Array.isArray(clusters) ? clusters : [];
 };
 
 //Ping a cluster
@@ -149,6 +151,6 @@ export const allStepsToAddCluster = [
   { step: 1, message: 'Authenticate cluster' },
   { step: 2, message: 'Select default engine' },
   { step: 3, message: 'Get UTC time zone offset' },
-  { step: 4, message: 'Check if cluster is containerized' },
+  { step: 4, message: 'Get cluster build info' },
   { step: 5, message: 'Save cluster' },
 ];

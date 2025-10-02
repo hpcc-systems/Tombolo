@@ -7,7 +7,7 @@ const { Option } = Select;
 
 function EditUserApplicationsTab({ userApplicationsForm, selectedUser, setUnsavedFields }) {
   // Get all applications from the redux store
-  const { applications: allApps } = useSelector((state) => state.applicationReducer);
+  const allApps = useSelector((state) => state.application.applications);
 
   // Pre-populate existing applications
   useEffect(() => {

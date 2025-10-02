@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Table, Input, Popconfirm, Form, Typography, Space, Button, message, Select } from 'antd';
 import { useSelector } from 'react-redux';
 
-import useGitHubProjectList from '../../../hooks/useGitHubProjectList';
+import useGitHubProjectList from '@/hooks/useGitHubProjectList';
 import { authHeader, handleError } from '../../common/AuthHeader';
 import Text from '../../common/Text';
 import { InfoCircleOutlined } from '@ant-design/icons';
@@ -24,7 +24,7 @@ const GitHubSettings = () => {
   const [editingKey, setEditingKey] = useState('');
   const [branchAndTagList, setBranchAndTagList] = useState({ ...initialBranchAndTagList });
 
-  const applicationId = useSelector((state) => state.applicationReducer?.application?.applicationId);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   const [projects, setProjects] = useGitHubProjectList();
 

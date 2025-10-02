@@ -1,15 +1,40 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin, message } from 'antd';
 import msLogo from '../../images/mslogo.png';
 import { getDeviceInfo } from './utils';
-import { authActions } from '../../redux/actions/Auth';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
+import { useDispatch } from 'react-redux';
+import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 
 import styles from './login.module.css';
 
+// Static auth config and Azure env validation (computed once per module load)
+const authMethodsRaw = import.meta.env.VITE_AUTH_METHODS;
+const methods = Array.isArray(authMethodsRaw)
+  ? authMethodsRaw
+  : typeof authMethodsRaw === 'string'
+  ? authMethodsRaw
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+  : [];
+
+const hasAllAzureEnv = [
+  import.meta.env.VITE_AZURE_CLIENT_ID,
+  import.meta.env.VITE_AZURE_TENENT_ID,
+  import.meta.env.VITE_AZURE_REDIRECT_URI,
+].every((v) => typeof v === 'string' && v.trim().length > 0);
+
+// Warn once if Azure requested but misconfigured
+if (methods.includes('azure') && !hasAllAzureEnv) {
+  console.warn('[Login] Azure auth is enabled but missing/invalid environment variables');
+}
+
 const Login = () => {
+  const dispatch = useDispatch();
+
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,39 +52,40 @@ const Login = () => {
     //get browser and os info and put in deviceInfo variable
     const deviceInfo = getDeviceInfo();
 
-    const test = await authActions.login({ email, password, deviceInfo });
+    const test = await dispatch(login({ email, password, deviceInfo }));
 
     if (test?.type === 'temp-pw') {
       setLoading(false);
 
-      if (test.resetLink) {
-        window.location.href = test.resetLink;
+      const resetLink = test.payload?.user?.resetLink;
+      if (resetLink) {
+        window.location.href = resetLink;
       } else {
         message.error('Please check your email for link to reset you temporary password.');
       }
       return;
     }
 
-    if (test?.type === 'unverified') {
+    if (test.payload?.type === Constants.LOGIN_UNVERIFIED) {
       setUnverifiedUserLoginAttempt(true);
       setLoading(false);
       return;
     }
 
-    if (test?.type === 'password-expired') {
+    if (test.payload?.type === Constants.LOGIN_PW_EXPIRED) {
       // window.location.href = '/expired-password';
       setExpiredPassword(true);
       return;
     }
 
-    if (test?.type === Constants.LOGIN_SUCCESS) {
-      //reload page if login is succesful
+    if (test.payload?.type === Constants.LOGIN_SUCCESS) {
+      // reload the page if login is successful
       window.location.href = '/';
       return;
     }
 
     //handle login failed
-    if (test?.type === Constants.LOGIN_FAILED) {
+    if (test.payload?.type === Constants.LOGIN_FAILED) {
       loginForm.setFieldsValue({ password: null });
       setLoading(false);
       return;
@@ -95,15 +121,15 @@ const Login = () => {
   }, [azureLoginAttempted, loading]);
 
   const azureLogin = () => {
-    authActions.azureLoginRedirect();
+    azureLoginRedirect();
   };
 
   const azureLoginFunc = async (code) => {
     try {
       setLoading(true);
-      const res = await authActions.loginOrRegisterAzureUser({ code });
+      const res = await dispatch(loginOrRegisterAzureUser(code));
 
-      if (res?.type === Constants.LOGIN_SUCCESS) {
+      if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
         //reload page if login is succesful
         window.location.href = '/';
         return;
@@ -118,14 +144,9 @@ const Login = () => {
     }
   };
 
-  const authMethods = import.meta.env.VITE_AUTH_METHODS;
-  let azureEnabled = false;
-  let traditionalEnabled = false;
-
-  if (authMethods) {
-    azureEnabled = authMethods.split(',').includes('azure');
-    traditionalEnabled = authMethods.split(',').includes('traditional');
-  }
+  // Determine which login methods are enabled by configuration
+  const azureEnabled = methods.includes('azure') && hasAllAzureEnv;
+  const traditionalEnabled = methods.includes('traditional');
 
   return (
     <>
@@ -192,7 +213,7 @@ const Login = () => {
                   </Button>
                 </Form.Item>
                 <p className={styles.helperLink}>
-                  <span>Need an account?</span> <a href="/src/components/login/register">Register</a>
+                  <span>Need an account?</span> <a href="/register">Register</a>
                 </p>
               </>
             )}

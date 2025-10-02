@@ -1,14 +1,13 @@
 import { Form, Input, message, Modal } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { applicationActions } from '../../../../redux/actions/Application';
+import { useSelector } from 'react-redux';
 import { authHeader, handleError } from '../../../common/AuthHeader';
 import MonacoEditor from '../../../common/MonacoEditor';
 import Text from '../../../common/Text';
 
 const ConstraintForm = ({ modal, onClose }) => {
-  const constraints = useSelector((state) => state.applicationReducer.constraints);
-  const dispatch = useDispatch();
+  const constraints = useSelector((state) => state.application.constraints);
+  // const dispatch = useDispatch();
 
   const [form] = Form.useForm();
 
@@ -52,11 +51,12 @@ const ConstraintForm = ({ modal, onClose }) => {
       setSending((prev) => ({ ...prev, loading: false, success: true }));
       const data = await response.json();
 
+      // eslint-disable-next-line unused-imports/no-unused-vars
       const newConstraints = isEditing
         ? constraints.map((el) => (el.id == data.id ? data : el))
         : [data, ...constraints];
 
-      dispatch(applicationActions.updateConstraints(newConstraints));
+      // dispatch(updateConstraints(newConstraints));
 
       message.success('Success');
       onClose();

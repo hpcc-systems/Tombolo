@@ -13,10 +13,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'monitoring_id',
       });
 
-      MonitoringNotification.belongsTo(models.SuperfileMonitoring, {
-        foreignKey: 'monitoring_id',
-      });
-
       MonitoringNotification.belongsTo(models.Application, {
         foreignKey: 'application_id',
       });

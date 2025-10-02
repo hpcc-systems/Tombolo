@@ -18,9 +18,8 @@ const NotificationActions = ({
   isReader,
 }) => {
   //Redux
-  const {
-    applicationReducer: { integrations, application },
-  } = useSelector((state) => state);
+  const application = useSelector((state) => state.application.application);
+  const integrations = useSelector((state) => state.application.integrations);
 
   // Delete selected notifications
   const deleteSelectedNotifications = async () => {

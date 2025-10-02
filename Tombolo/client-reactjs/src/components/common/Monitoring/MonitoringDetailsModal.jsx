@@ -14,6 +14,7 @@ function MonitoringDetailsModal({
   domains,
   productCategories,
   children,
+  monitoringTypeName,
 }) {
   // When the cancel button is clicked, close the modal and reset the selectedMonitoring
   const handleCancel = () => {
@@ -29,21 +30,22 @@ function MonitoringDetailsModal({
     approvedBy,
     createdBy,
     lastUpdatedBy,
-    // ---
-    // New fields that may not be accessible on older designed models
+    updatedBy,
     approver,
     creator,
     updater,
-    // ---
     monitoringName,
     description,
     createdAt,
+    updatedAt,
     isActive,
     approvalStatus,
     approvedAt,
     metaData,
     approverComment,
   } = selectedMonitoring;
+
+  let updatedByVal = lastUpdatedBy ? lastUpdatedBy : updatedBy;
 
   let clusterIds;
   if (selectedMonitoring.clusterIds) {
@@ -60,7 +62,7 @@ function MonitoringDetailsModal({
 
   // Get cluster names from cluster IDs
   const getClusterNames = (clusterIds) => {
-    if (!clusterIds || clusterIds.length === 0) return 'None';
+    if (!clusterIds || clusterIds.length === 0) return [];
 
     // "*" means all clusters
     if (clusterIds[0] === '*') return clusters.map((cluster) => cluster.name);
@@ -93,17 +95,19 @@ function MonitoringDetailsModal({
             on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
           </Descriptions.Item>
 
-          <Descriptions.Item label="Last updated by">
-            <Tooltip title={<div>Email: {updater.email}</div>}>
-              <span style={{ color: 'var(--primary)' }}>{`${updater.firstName} ${updater.lastName}`}</span>
-            </Tooltip>{' '}
-            on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
-          </Descriptions.Item>
+          {updater && (
+            <Descriptions.Item label="Last updated by">
+              <Tooltip title={<div>Email: {updater.email}</div>}>
+                <span style={{ color: 'var(--primary)' }}>{`${updater.firstName} ${updater.lastName}`}</span>
+              </Tooltip>{' '}
+              on {new Date(updatedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
+            </Descriptions.Item>
+          )}
         </>
       );
     }
 
-    const updatedByObj = JSON.parse(lastUpdatedBy || '{}');
+    const updatedByObj = JSON.parse(updatedByVal || '{}');
     const createdByObj = JSON.parse(createdBy || '{}');
     const approvedByObj = approvedBy ? JSON.parse(approvedBy || '{}') : null;
 
@@ -129,7 +133,7 @@ function MonitoringDetailsModal({
           <Tooltip title={<div>Email: {updatedByObj.email}</div>}>
             <span style={{ color: 'var(--primary)' }}>{updatedByObj.name}</span>
           </Tooltip>{' '}
-          on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
+          on {new Date(updatedAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
         </Descriptions.Item>
       </>
     );
@@ -153,7 +157,7 @@ function MonitoringDetailsModal({
         bordered={true}
         size="small"
         className={styles.monitoring_tiny_description}
-        title="Cost Monitoring Details">
+        title={`${monitoringTypeName} Details`}>
         <Descriptions.Item label="Monitoring name" className="tiny-description">
           {monitoringName}
         </Descriptions.Item>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import LinePlot from './LinePlot';
 import { Empty, Popover } from 'antd';
 import { ExpandOutlined } from '@ant-design/icons';
-import _ from 'lodash';
+import capitalize from 'lodash/capitalize';
 
 import styles from '../clusterUsage.module.css';
 
@@ -64,7 +64,7 @@ function StorageUsageHistoryCharts({ clusterUsageHistory, setViewExpandedGraph, 
                   <span className={styles.storageUsageHistoryCharts__engineName__additionalText}>
                     <Popover
                       content={clusterHistory.engines.map((item, index) => (
-                        <div key={index}>{index === 0 ? null : _.capitalize(item)}</div>
+                        <div key={index}>{index === 0 ? null : capitalize(item)}</div>
                       ))}>
                       {clusterHistory.engines.length > 1 ? (
                         <span> &nbsp; {`[ +${clusterHistory.engines.length - 1} more ]`}</span>

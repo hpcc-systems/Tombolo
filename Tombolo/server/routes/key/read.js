@@ -57,7 +57,7 @@ router.post(
       newKey.apiKey = key;
       return res.status(200).send(newKey);
     } catch (error) {
-      logger.error(error);
+      logger.error('key/read - newKey: ', error);
       return res.status(500).json({ message: 'Unable to generate new key' });
     }
   }
@@ -79,7 +79,7 @@ router.get(
 
       return res.status(200).send(keys);
     } catch (error) {
-      logger.error(error);
+      logger.error('key/read - all: ', error);
       return res.status(500).json({ message: 'Unable to fetch keys' });
     }
   }

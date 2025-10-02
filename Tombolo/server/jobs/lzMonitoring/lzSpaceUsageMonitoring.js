@@ -1,5 +1,5 @@
 const models = require('../../models');
-const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const { decryptString } = require('../../utils/cipher');
 const { FileSprayService } = require('@hpcc-js/comms');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
@@ -10,6 +10,7 @@ const {
   convertBytes,
   formatSize,
 } = require('./lzFileMonitoringUtils');
+const { APPROVAL_STATUS } = require('../../config/constants');
 
 const {
   LandingZoneMonitoring,
@@ -36,7 +37,7 @@ const monitoring_name = 'Landing Zone Monitoring';
   // Start time
   const startTime = new Date().getTime();
   try {
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'info',
       text: 'Landing Zone (space usage) Monitoring started',
     });
@@ -45,7 +46,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     const activeLzMonitorings = await LandingZoneMonitoring.findAll({
       where: {
         isActive: true,
-        approvalStatus: 'approved',
+        approvalStatus: APPROVAL_STATUS.APPROVED,
         lzMonitoringType: 'spaceUsage',
       },
 
@@ -72,7 +73,7 @@ const monitoring_name = 'Landing Zone Monitoring';
 
     // If 0 activeLzMonitorings, log and return
     if (activeLzMonitorings.length === 0) {
-      parentPort.postMessage({
+      logOrPostMessage({
         level: 'verbose',
         text: 'No active landing zone (space usage) monitoring found',
       });
@@ -99,7 +100,7 @@ const monitoring_name = 'Landing Zone Monitoring';
       }
     });
 
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'verbose',
       text: `${activeLzMonitorings.length} active landing zone monitoring(s) tracking space usage`,
     });
@@ -131,8 +132,8 @@ const monitoring_name = 'Landing Zone Monitoring';
           directory,
           minThreshold,
           maxThreshold,
-          minSizeThreasoldUnit,
-          maxSizeThreasoldUnit,
+          minSizeThresholdUnit,
+          maxSizeThresholdUnit,
         } = monitoringData;
 
         // Get FileSprayService instance
@@ -167,11 +168,11 @@ const monitoring_name = 'Landing Zone Monitoring';
         // Convert to threshold units for comparison
         const directorySizeInMinUnit = convertBytes(
           totalSizeBytes,
-          minSizeThreasoldUnit
+          minSizeThresholdUnit
         );
         const directorySizeInMaxUnit = convertBytes(
           totalSizeBytes,
-          maxSizeThreasoldUnit
+          maxSizeThresholdUnit
         );
 
         // Check if space usage violates thresholds
@@ -191,7 +192,7 @@ const monitoring_name = 'Landing Zone Monitoring';
           });
         }
       } catch (error) {
-        parentPort.postMessage({
+        logOrPostMessage({
           level: 'error',
           text: `Error while calculating space usage from File Spray service: ${error.message}`,
         });
@@ -200,7 +201,7 @@ const monitoring_name = 'Landing Zone Monitoring';
 
     // If no violations found, log and return
     if (directoriesViolatingThreshold.length === 0) {
-      parentPort.postMessage({
+      logOrPostMessage({
         level: 'verbose',
         text: 'Landing zone (space usage) monitoring did not find any directories violating space usage thresholds',
       });
@@ -208,7 +209,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     }
 
     // Queue notification for each directory violating threshold
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'info',
       text: `Queuing notification for ${directoriesViolatingThreshold.length} director(ies) violating space usage thresholds`,
     });
@@ -233,8 +234,8 @@ const monitoring_name = 'Landing Zone Monitoring';
               directory,
               minThreshold,
               maxThreshold,
-              minSizeThreasoldUnit,
-              maxSizeThreasoldUnit,
+              minSizeThresholdUnit,
+              maxSizeThresholdUnit,
             },
           },
         } = monitoring;
@@ -253,7 +254,7 @@ const monitoring_name = 'Landing Zone Monitoring';
             asrSpecificMetaData.productName = `${asrProduct.name} (${asrProduct.shortCode})`;
             notificationPrefix = asrProduct.shortCode;
           } catch (error) {
-            parentPort.postMessage({
+            logOrPostMessage({
               level: 'warn',
               text: `Error while getting ASR product category: ${error.message}`,
             });
@@ -268,7 +269,7 @@ const monitoring_name = 'Landing Zone Monitoring';
             });
             asrSpecificMetaData.domainName = asrDomain.name;
           } catch (error) {
-            parentPort.postMessage({
+            logOrPostMessage({
               level: 'warn',
               text: `Error while getting ASR domain: ${error.message}`,
             });
@@ -283,9 +284,9 @@ const monitoring_name = 'Landing Zone Monitoring';
         // Create violation description
         let violationDescription;
         if (violationType === 'below_minimum') {
-          violationDescription = `Directory ${directory} has ${formatSize(totalSizeBytes, minSizeThreasoldUnit)}, which is below the minimum threshold of ${minThreshold} ${minSizeThreasoldUnit}`;
+          violationDescription = `Directory ${directory} has ${formatSize(totalSizeBytes, minSizeThresholdUnit)}, which is below the minimum threshold of ${minThreshold} ${minSizeThresholdUnit}`;
         } else {
-          violationDescription = `Directory ${directory} has ${formatSize(totalSizeBytes, maxSizeThreasoldUnit)}, which is above the maximum threshold of ${maxThreshold} ${maxSizeThreasoldUnit}`;
+          violationDescription = `Directory ${directory} has ${formatSize(totalSizeBytes, maxSizeThresholdUnit)}, which is above the maximum threshold of ${maxThreshold} ${maxSizeThresholdUnit}`;
         }
 
         // Issue object
@@ -298,11 +299,11 @@ const monitoring_name = 'Landing Zone Monitoring';
           'Current Size': formatSize(
             totalSizeBytes,
             violationType === 'below_minimum'
-              ? minSizeThreasoldUnit
-              : maxSizeThreasoldUnit
+              ? minSizeThresholdUnit
+              : maxSizeThresholdUnit
           ),
-          'Minimum Threshold': `${minThreshold} ${minSizeThreasoldUnit}`,
-          'Maximum Threshold': `${maxThreshold} ${maxSizeThreasoldUnit}`,
+          'Minimum Threshold': `${minThreshold} ${minSizeThresholdUnit}`,
+          'Maximum Threshold': `${maxThreshold} ${maxSizeThresholdUnit}`,
           'Violation Type':
             violationType === 'below_minimum'
               ? 'Below Minimum'
@@ -320,14 +321,14 @@ const monitoring_name = 'Landing Zone Monitoring';
             notificationOrigin: monitoring_name,
             applicationId,
             notificationId,
-            subject: `Space usage violation in ${directory}: ${formatSize(totalSizeBytes, violationType === 'below_minimum' ? minSizeThreasoldUnit : maxSizeThreasoldUnit)}`,
+            subject: `Space usage violation in ${directory}: ${formatSize(totalSizeBytes, violationType === 'below_minimum' ? minSizeThresholdUnit : maxSizeThresholdUnit)}`,
             mainRecipients: primaryContacts,
             cc: [...secondaryContacts, ...notifyContacts],
             notificationDescription: violationDescription,
             asrSpecificMetaData,
             issue,
             remedy: {
-              instruction: `Check the directory ${directory} on ${machine} and ensure the space usage is within the expected range (${minThreshold} ${minSizeThreasoldUnit} - ${maxThreshold} ${maxSizeThreasoldUnit}).`,
+              instruction: `Check the directory ${directory} on ${machine} and ensure the space usage is within the expected range (${minThreshold} ${minSizeThresholdUnit} - ${maxThreshold} ${maxSizeThresholdUnit}).`,
             },
             firstLogged: findLocalDateTimeAtCluster(
               uniqueClustersObj[clusterId].timezone_offset
@@ -336,7 +337,7 @@ const monitoring_name = 'Landing Zone Monitoring';
           createdBy: 'System',
         });
       } catch (error) {
-        parentPort.postMessage({
+        logOrPostMessage({
           level: 'error',
           text: `Error while queuing notification for space usage violation: ${error.message}`,
         });
@@ -344,7 +345,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     }
   } catch (error) {
     // Log error
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'error',
       text: `Error while monitoring landing zone for space usage: ${error.message}`,
     });
@@ -352,7 +353,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     // End time
     const endTime = new Date().getTime();
     const duration = endTime - startTime;
-    parentPort.postMessage({
+    logOrPostMessage({
       level: 'info',
       text: `Landing Zone (space usage) Monitoring completed in ${duration} ms`,
     });

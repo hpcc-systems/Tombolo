@@ -1,37 +1,31 @@
-const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 
 const hpccUtil = require('../../utils/hpcc-util');
 const { Cluster } = require('../../models');
 
-const { log } = require('../workerUtils')(parentPort);
-
-(async () => {
+async function getClusterTimezoneOffset() {
   const startTime = new Date();
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: 'Starting Cluster Timezone Offset Job',
-    });
+  logOrPostMessage({
+    level: 'info',
+    text: 'Starting Cluster Timezone Offset Job',
+  });
 
   //grab all clusters
   const clusters = await Cluster.findAll();
 
   //If no clusters, log so to the console and return
-  if (clusters.length === 0) {
-    log('verbose', 'No clusters to get timezone offset for');
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'No clusters to get timezone offset for',
-      });
+  if (!clusters || clusters.length === 0) {
+    logOrPostMessage({
+      level: 'info',
+      text: 'No clusters to get timezone offset for',
+    });
     return;
   }
 
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: `Getting timezone offset for ${clusters.length} cluster(s)`,
-    });
+  logOrPostMessage({
+    level: 'info',
+    text: `Getting timezone offset for ${clusters.length} cluster(s)`,
+  });
 
   //loop through clusters
   for (const c of clusters) {
@@ -47,11 +41,10 @@ const { log } = require('../workerUtils')(parentPort);
 
       //compare if clusters timezone is the same as the retrieved
       if (newCluster.timezone_offset === offset) {
-        parentPort &&
-          parentPort.postMessage({
-            level: 'info',
-            text: 'Cluster timezone offset is up to date',
-          });
+        logOrPostMessage({
+          level: 'info',
+          text: 'Cluster timezone offset is up to date',
+        });
       } else {
         newCluster.timezone_offset = offset;
 
@@ -61,27 +54,28 @@ const { log } = require('../workerUtils')(parentPort);
           { where: { id: c.id } }
         );
 
-        parentPort &&
-          parentPort.postMessage({
-            level: 'info',
-            text: `Cluster timezone offset updated for ${c.id}`,
-          });
+        logOrPostMessage({
+          level: 'info',
+          text: `Cluster timezone offset updated for ${c.id}`,
+        });
       }
     } catch (err) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'error',
-          text: `Error checking cluster timezone offset: ${err}, cid:  ${c.id}`,
-        });
+      logOrPostMessage({
+        level: 'error',
+        text: `Error checking cluster timezone offset: ${err}, cid:  ${c.id}`,
+      });
     }
   }
 
   //once function is done, exit and report finished
-  parentPort &&
-    parentPort.postMessage({
-      level: 'info',
-      text: `Cluster Timezone Offset Job completed in ${(new Date() - startTime) / 1000} seconds`,
-    });
-  if (parentPort) parentPort.postMessage('done');
-  else process.exit(0);
+  logOrPostMessage({
+    level: 'info',
+    text: `Cluster Timezone Offset Job completed in ${(new Date() - startTime) / 1000} seconds`,
+  });
+}
+
+(async () => {
+  await getClusterTimezoneOffset();
 })();
+
+module.exports = getClusterTimezoneOffset;

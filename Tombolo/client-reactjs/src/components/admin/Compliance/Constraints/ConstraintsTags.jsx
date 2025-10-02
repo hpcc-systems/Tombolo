@@ -11,9 +11,9 @@ import ConstraintDescription from './ConstraintDescription';
  */
 
 const ConstraintsTags = ({ list, file, showAll }) => {
-  // const constraints = useSelector((state) => state.applicationReducer.constraints);
+  // const constraints = useSelector((state) => state.application.constraints);
   let constraints = [];
-  const constraintsFromRedux = useSelector((state) => state.applicationReducer.constraints);
+  const constraintsFromRedux = useSelector((state) => state.application.constraints);
   if (constraintsFromRedux) constraints = constraintsFromRedux;
   // if no value is passed return list of all constraints
   if (showAll) return constraints.map((record) => <TagWithPopUp key={record.id} showAll={showAll} record={record} />);

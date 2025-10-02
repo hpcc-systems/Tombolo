@@ -25,7 +25,7 @@ async function scheduleJobStatusPolling() {
 
     this.bree.start(jobName);
   } catch (err) {
-    logger.error(err);
+    logger.error('hpccJobs - scheduleJobStatusPolling: ', err);
   }
 }
 

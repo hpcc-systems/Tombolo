@@ -18,7 +18,7 @@ function AsrSpecificMonitoring({ form, domains, productCategories, setSelectedDo
     <>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item label="Domain" name="domain" rules={[{ required: true, message: 'Please select an option' }]}>
+          <Form.Item label="Domain" name="domain">
             <Select onChange={(value) => handleDomainChange(value)} placeholder="Domain">
               {domains.length > 0 &&
                 domains.map((d, i) => {
@@ -32,10 +32,7 @@ function AsrSpecificMonitoring({ form, domains, productCategories, setSelectedDo
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item
-            label="Product Category"
-            name="productCategory"
-            rules={[{ required: true, message: 'Please select an option' }]}>
+          <Form.Item label="Product Category" name="productCategory">
             <Select placeholder="Product Category">
               {productCategories.map((c, i) => (
                 <Option key={i} value={c.value}>
@@ -49,10 +46,7 @@ function AsrSpecificMonitoring({ form, domains, productCategories, setSelectedDo
 
       {/* <Row gutter={16}>
         <Col span={12}> */}
-      <Form.Item
-        label="Severity"
-        name="severity"
-        rules={[{ required: true, message: 'Please select a severity level!' }]}>
+      <Form.Item label="Severity" name="severity">
         <Select placeholder="Select a severity level">
           {severityLevels.map((level, i) => (
             <Option key={i} value={level}>

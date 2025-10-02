@@ -1,50 +1,61 @@
 const {
-  stringBody,
+  DESCRIPTION_LENGTH,
+  MONITORING_NAME_LENGTH,
+  COMMENT_LENGTH,
+  APPROVAL_STATUSES,
   uuidBody,
-  cronBody,
+  stringBody,
   objectBody,
+  uuidParam,
+  enumBody,
   arrayBody,
-  paramUuids,
-  bodyUuids,
+  emailBody,
 } = require('./commonMiddleware');
 
-const createUpdateClusterMonitoringValidations = [
-  stringBody('name'),
-  bodyUuids.application_id,
-  bodyUuids.cluster_id,
-  cronBody('cron'),
+// Creating and updating monitoring
+const createOrUpdateMonitoringPayload = [
+  stringBody('monitoringName', false, {
+    length: { ...MONITORING_NAME_LENGTH },
+  }),
+  stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
+  uuidBody('clusterId'),
   objectBody('metaData'),
 ];
 
-const validateCreateClusterMonitoring = [
-  //Validation middleware
-  ...createUpdateClusterMonitoringValidations,
+// Id on request params
+const monitoringIdAsParam = [uuidParam('id')];
+
+// UUID on body
+const monitoringIdOnBody = [uuidBody('id')];
+
+// evaluateMonitoringPayload
+const evaluateMonitoringPayload = [
+  [arrayBody('ids'), uuidBody('ids.*')],
+  stringBody('approverComment', false, {
+    length: { ...COMMENT_LENGTH },
+  }),
+  enumBody('approvalStatus', false, APPROVAL_STATUSES),
 ];
 
-const validateUpdateClusterMonitoring = [
-  uuidBody('id'),
-  ...createUpdateClusterMonitoringValidations,
+// Bulk update contacts
+const bulkUpdateContacts = [
+  arrayBody('monitoring'),
+  objectBody('monitoring.*'),
+  uuidBody('monitoring.*.id'),
+  emailBody('monitoring.*.primaryContacts'),
+  emailBody('monitoring.*.secondaryContacts', true),
+  emailBody('monitoring.*.notifyContacts', true),
 ];
 
-const validateGetClusterMonitorings = [paramUuids.application_id];
+// Delete payload
+const deleteMonitoringPayload = [arrayBody('ids'), uuidBody('ids.*')];
 
-const validateGetClusterMonitoring = [paramUuids.id];
-
-const validateDeleteClusterMonitoring = [paramUuids.id];
-
-const validateStartStopClusterMonitoring = [paramUuids.id];
-
-const validateGetClusterMonitoringEngines = [paramUuids.cluster_id];
-
-const validateGetClusterUsage = [paramUuids.cluster_id, arrayBody('engines')];
-
+// Exports
 module.exports = {
-  validateCreateClusterMonitoring,
-  validateGetClusterMonitorings,
-  validateGetClusterMonitoring,
-  validateDeleteClusterMonitoring,
-  validateStartStopClusterMonitoring,
-  validateUpdateClusterMonitoring,
-  validateGetClusterMonitoringEngines,
-  validateGetClusterUsage,
+  createOrUpdateMonitoringPayload,
+  monitoringIdAsParam,
+  monitoringIdOnBody,
+  evaluateMonitoringPayload,
+  bulkUpdateContacts,
+  deleteMonitoringPayload,
 };

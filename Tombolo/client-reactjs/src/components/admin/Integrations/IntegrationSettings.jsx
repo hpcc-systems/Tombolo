@@ -6,12 +6,8 @@ import IntegrationNotFound from './IntegrationNotFound';
 
 function IntegrationSettings() {
   // Redux
-  const {
-    applicationReducer: {
-      integrations,
-      application: { applicationId },
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const integrations = useSelector((state) => state.application.integrations);
 
   // Integration name from URL
   let { integrationName } = useParams();

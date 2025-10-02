@@ -67,7 +67,7 @@ const AddEditCostMonitoringModal = ({
     {
       label: 'Notifications',
       id: 2,
-      component: () => <CostMonitoringNotificationTab form={form} />,
+      component: () => <CostMonitoringNotificationTab form={form} clusters={clusters} />,
     },
   ];
 

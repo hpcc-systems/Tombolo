@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Select, AutoComplete, Input, Card, Row, Col } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import { useSelector } from 'react-redux';
 
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import InfoDrawer from '../../common/InfoDrawer';
 import { doesNameExist } from './jobMonitoringUtils';
 import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
+import { DescriptionFormRules, MonitoringNameFormRules } from '../../common/FormRules';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -48,12 +49,9 @@ function JobMonitoringBasicTab({
   const monitoringNameInputRef = useRef(null);
 
   // Redux
-  const {
-    applicationReducer: {
-      application: { applicationId },
-      integrations,
-    },
-  } = useSelector((state) => state);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
+  const integrations = useSelector((state) => state.application.integrations);
+
   const asrIntegration = integrations.some(
     (integration) => integration.name === 'ASR' && integration.application_id === applicationId
   );
@@ -165,8 +163,7 @@ function JobMonitoringBasicTab({
           name="monitoringName"
           // validateTrigger="onBlur"
           rules={[
-            { required: true, message: 'Required field' },
-            { max: 100, message: 'Maximum of 100 characters allowed' },
+            ...MonitoringNameFormRules,
             () => ({
               validator(_, value) {
                 if (isEditing) return Promise.resolve();
@@ -180,13 +177,7 @@ function JobMonitoringBasicTab({
           <Input placeholder="Enter a name" ref={monitoringNameInputRef} />
         </Form.Item>
 
-        <Form.Item
-          label="Description"
-          name="description"
-          rules={[
-            { max: 150, message: 'Max character limit is 150' },
-            { required: true, message: 'Add short description' },
-          ]}>
+        <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
           <TextArea
             type="text-area"
             placeholder="Enter a short description"

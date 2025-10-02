@@ -22,9 +22,7 @@ const OrbitMonitoring = () => {
   const [productLoading, setProductLoading] = useState(false);
   const [productStatus, setProductStatus] = useState(null);
 
-  const {
-    application: { applicationId },
-  } = useSelector((state) => state.applicationReducer);
+  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   const addOrbitMonitoring = async () => {
     await setSelectedOrbitBuild(null);

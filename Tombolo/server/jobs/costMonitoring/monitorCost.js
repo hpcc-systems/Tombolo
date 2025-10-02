@@ -1,98 +1,96 @@
 const logger = require('../../config/logger');
 const { parentPort } = require('worker_threads');
+const { logOrPostMessage } = require('../jobUtils');
 const {
   CostMonitoring,
   CostMonitoringData,
-  Cluster,
   MonitoringLog,
   MonitoringType,
 } = require('../../models');
-const { WorkunitsService } = require('@hpcc-js/comms');
-const { getCluster } = require('../../utils/hpcc-util');
+const { Workunit } = require('@hpcc-js/comms');
+const { getClusters } = require('../../utils/hpcc-util');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
+function dateAtOffset(date, offsetMinutes) {
+  return new Date(date.getTime() + offsetMinutes * 60 * 1000);
+}
+
+function toLocalDay(date, offsetMinutes) {
+  const d = dateAtOffset(date, offsetMinutes);
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  );
+}
+
 /**
- * Gets the current time and time from lastScanTime, with optional timezone offset
- * @param {?string} lastScanTime
- * @param {number} [offset=0] - Timezone offset in minutes (e.g., 240 for UTC+4)
- * @param {boolean} [toIso=false] - Whether to return dates as ISO strings
- * @returns {{endTime: (Date|string), startTime: (Date|string), isNewDay: (boolean)}} Object containing current time and lastScanTime
- * with applied offset, either as Date objects or ISO strings based on toIso parameter
+ * Gets the current time and time from lastScanTime in UTC without applying any timezone conversions.
+ * The input and output are treated strictly as UTC.
+ * @param {?string} lastScanTime - An ISO timestamp string in UTC or null.
+ * @param {number} [offset=0] - Deprecated. Ignored to ensure UTC-in/UTC-out behavior.
+ * @param {boolean} [toIso=false] - Whether to return dates as ISO strings.
+ * @returns {{endTime: (Date|string), startTime: (Date|string), isNewDay: (boolean)}}
  */
 function getStartAndEndTime(lastScanTime, offset = 0, toIso = false) {
-  const now = new Date();
-  const offsetMs = offset * 60 * 1000; // 240 minutes = 4 hours
+  // Always operate in UTC; do not apply any timezone offset.
+  const nowUtc = new Date();
 
-  const nowWithOffset = new Date(now.getTime() + offsetMs);
-
-  let startTime;
+  let startUtc;
   let isNewDay = false;
+
   if (lastScanTime) {
-    const lastScanWithOffset = new Date(
-      new Date(lastScanTime).getTime() - offsetMs
-    );
-    isNewDay = lastScanWithOffset.getDate() !== nowWithOffset.getDate();
+    const lastUtc = new Date(lastScanTime);
+
+    // Compare UTC calendar dates
+    isNewDay =
+      lastUtc.getUTCFullYear() !== nowUtc.getUTCFullYear() ||
+      lastUtc.getUTCMonth() !== nowUtc.getUTCMonth() ||
+      lastUtc.getUTCDate() !== nowUtc.getUTCDate();
 
     if (isNewDay) {
-      startTime = new Date(nowWithOffset);
-      startTime.setHours(0, 0, 0, 0);
+      // Start at UTC midnight of the current day
+      startUtc = new Date(
+        Date.UTC(
+          nowUtc.getUTCFullYear(),
+          nowUtc.getUTCMonth(),
+          nowUtc.getUTCDate(),
+          0,
+          0,
+          0,
+          0
+        )
+      );
     } else {
-      startTime = lastScanWithOffset;
+      startUtc = lastUtc;
     }
   } else {
-    const oneHourMs = 60 * 60 * 1000;
-    startTime = new Date(now.getTime() - oneHourMs + offsetMs);
+    // First run: start from UTC midnight today
+    startUtc = new Date(
+      Date.UTC(
+        nowUtc.getUTCFullYear(),
+        nowUtc.getUTCMonth(),
+        nowUtc.getUTCDate(),
+        0,
+        0,
+        0,
+        0
+      )
+    );
   }
+
+  const endUtc = nowUtc;
 
   if (toIso) {
     return {
-      endTime: nowWithOffset.toISOString(),
-      startTime: startTime.toISOString(),
+      endTime: endUtc.toISOString(),
+      startTime: startUtc.toISOString(),
       isNewDay,
     };
   }
   return {
-    endTime: nowWithOffset,
-    startTime,
+    endTime: endUtc,
+    startTime: startUtc,
     isNewDay,
   };
-}
-
-async function markDataAnalyzed(costMonitoringId, clusterId, applicationId) {
-  try {
-    const costMonitoringData = await CostMonitoringData.findOne({
-      where: { monitoringId: costMonitoringId, clusterId, applicationId },
-    });
-    if (!costMonitoringData) {
-      return;
-    }
-
-    costMonitoringData.analyzed = true;
-    await costMonitoringData.save();
-  } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `monitorCost: Error in markDataAnalyzed: ${err.message}`,
-      });
-  }
-}
-
-// TODO: Need a way to mark old data if not the start of day (isNewDay !== true)
-async function getCostMonitoringData(
-  monitoringId,
-  clusterId,
-  applicationId,
-  monitoringDate
-) {
-  return await CostMonitoringData.create({
-    monitoringId,
-    applicationId,
-    date: monitoringDate,
-    clusterId,
-    usersCostInfo: {},
-    analyzed: false,
-  });
 }
 
 /**
@@ -141,20 +139,18 @@ async function getCostMonitorings() {
 
 async function monitorCost() {
   try {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Cost Monitor Per user: Monitoring started ...',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Cost Monitor Per user: Monitoring started ...',
+    });
 
     // Check if there are any monitorings for cost per user
     const costMonitorings = await getCostMonitorings();
     if (costMonitorings.length === 0) {
-      parentPort &&
-        parentPort.postMessage({
-          level: 'info',
-          text: 'No cost monitorings found',
-        });
+      logOrPostMessage({
+        level: 'info',
+        text: 'No cost monitorings found',
+      });
       return;
     }
 
@@ -162,174 +158,177 @@ async function monitorCost() {
       where: { name: 'Cost Monitoring' },
     });
 
-    // Get cluster details for each monitoring
+    if (!monitoringType) {
+      logOrPostMessage({
+        level: 'error',
+        text: 'monitorCost: MonitoringType, "Cost Monitoring" not found',
+      });
+      return;
+    }
+
+    // 1. Gather all unique cluster IDs referenced by any cost monitoring (or all clusters if any monitoring has clusterIds null/empty)
+    let allClusterIds = new Set();
     for (const costMonitor of costMonitorings) {
-      const applicationId = costMonitor.applicationId;
-      const clusterIds = costMonitor.clusterIds;
+      costMonitor.clusterIds.forEach(id => allClusterIds.add(id));
+    }
 
-      let clusterDetails;
-      if (clusterIds === null || clusterIds.length === 0) {
-        // Then get all active clusters details
-        const allClusters = await Cluster.findAll({
-          attributes: ['id'],
-          where: { deletedAt: null },
+    const clusterDetails = await getClusters(Array.from(allClusterIds));
+
+    // 2. For each cluster, aggregate all cost monitoring data into a single CostMonitoringData row
+    for (const clusterDetail of clusterDetails) {
+      const clusterId = clusterDetail.id;
+      // Check if the cluster had any errors during getClusters
+      if ('error' in clusterDetail) {
+        logOrPostMessage({
+          level: 'error',
+          text: `monitorCost: Failed to get cluster ${clusterId}: ${clusterDetail.error}, ...skipping`,
         });
-        clusterDetails = (
-          await Promise.all(
-            allClusters.map(async cluster => {
-              try {
-                return await getCluster(cluster.id);
-              } catch (err) {
-                parentPort &&
-                  parentPort.postMessage({
-                    level: 'error',
-                    text: `monitorCost: Failed to get cluster ${cluster.name}: ${err.message}, ...skipping`,
-                  });
-              }
-            })
-          )
-        ).filter(Boolean);
-      } else {
-        clusterDetails = (
-          await Promise.all(
-            clusterIds.map(async clusterId => {
-              try {
-                return await getCluster(clusterId);
-              } catch (err) {
-                parentPort &&
-                  parentPort.postMessage({
-                    level: 'error',
-                    text: `monitorCost: Failed to get cluster ${clusterId}: ${err.message}, ...skipping`,
-                  });
-              }
-            })
-          )
-        ).filter(Boolean);
+        continue;
       }
+      try {
+        const {
+          thor_host: thorHost,
+          thor_port: thorPort,
+          username,
+          hash,
+          timezone_offset: timezoneOffset = 0,
+          allowSelfSigned,
+        } = clusterDetail;
 
-      // Iterate clusters
-      for (const clusterDetail of clusterDetails) {
-        try {
-          let newScanTime;
-          // spread timezone offset for each cluster and cluster details
-          const {
-            id: clusterId,
-            thor_host: thorHost,
-            thor_port: thorPort,
-            username,
-            hash,
-            timezone_offset: timezoneOffset,
-            allowSelfSigned,
-          } = clusterDetail;
+        // Check if a monitoring log exists
+        const monitoringLog = await MonitoringLog.findOne({
+          where: {
+            cluster_id: clusterId,
+            monitoring_type_id: monitoringType.id,
+          },
+        });
 
-          // Check if a monitoring log exists
-          const monitoringLog = await MonitoringLog.findOne({
-            where: {
-              cluster_id: clusterId,
-              monitoring_type_id: monitoringType.id,
-            },
-          });
+        // Get start and end date
+        const { endTime: endDate, startTime: startDate } = getStartAndEndTime(
+          monitoringLog ? monitoringLog.scan_time : null,
+          timezoneOffset,
+          true
+        );
 
-          // Get start and end date
-          const {
-            nowWithOffset: endDate,
-            hourAgoWithOffset: startDate,
-            isNewDay,
-          } = getStartAndEndTime(
-            monitoringLog ? monitoringLog.scan_time : null,
-            timezoneOffset,
-            true
-          );
+        // Get cluster options
+        const clusterOptions = getClusterOptions(
+          {
+            baseUrl: `${thorHost}:${thorPort}`,
+            userID: username || '',
+            password: hash || '',
+            timeoutSecs: 180,
+          },
+          allowSelfSigned
+        );
 
-          // NOTE: If making changes for daily, weekly, etc. Update this logic
-          if (isNewDay) {
-            await markDataAnalyzed(costMonitor.id, clusterId, applicationId);
-          }
+        // Set the new scanTime
+        const newScanTime = new Date();
 
-          // Get costMonitoringData
-          const costMonitoringData = await getCostMonitoringData(
-            costMonitor.id,
-            clusterId,
-            applicationId,
-            new Date()
-          );
+        // Query for workunits during timeframe
+        const response = await Workunit.query(clusterOptions, {
+          StartDate: startDate,
+          EndDate: endDate,
+          PageSize: 99999, // Ensure we get all workunits
+        });
 
-          // Get cluster options
-          const clusterOptions = getClusterOptions(
-            {
-              baseUrl: `${thorHost}:${thorPort}`,
-              userID: username || '',
-              password: hash || '',
-            },
-            allowSelfSigned
-          );
+        const terminalWorkUnits =
+          response.filter(
+            workUnit =>
+              workUnit.State === 'failed' || workUnit.State === 'completed'
+          ) || [];
 
-          // Set the new scanTime
-          newScanTime = new Date();
+        // Aggregate cost data for this cluster
+        const usersCostInfo = {};
+        const metaData = {
+          wuCostData: {},
+          clusterCostData: {
+            compileCost: 0,
+            executeCost: 0,
+            fileAccessCost: 0,
+            totalCost: 0,
+          },
+        };
 
-          const connection = new WorkunitsService(clusterOptions);
+        terminalWorkUnits.forEach(
+          ({
+            Owner,
+            CompileCost,
+            FileAccessCost,
+            ExecuteCost,
+            Wuid,
+            Jobname,
+          }) => {
+            // Ensure the costs are a number and not null/undefined
+            CompileCost = CompileCost ?? 0;
+            FileAccessCost = FileAccessCost ?? 0;
+            ExecuteCost = ExecuteCost ?? 0;
 
-          // Get work Units for the last hour where their state is terminal
-
-          // Query for workunits during timeframe
-          const response = await connection.WUQuery({
-            StartDate: startDate,
-            EndDate: endDate,
-          });
-
-          // Filter for failed or completed workunits
-          const terminalWorkUnits =
-            response.Workunits?.ECLWorkunit?.filter(
-              workUnit =>
-                workUnit.State === 'failed' || workUnit.State === 'completed'
-            ) || [];
-
-          // Iterate work Units
-          terminalWorkUnits.forEach(
-            ({ Owner, CompileCost, FileAccessCost, ExecuteCost }) => {
-              if (!costMonitoringData.usersCostInfo[Owner]) {
-                costMonitoringData.usersCostInfo[Owner] = {
-                  compileCost: CompileCost,
-                  fileAccessCost: FileAccessCost,
-                  executeCost: ExecuteCost,
-                };
-                return;
-              }
-
-              costMonitoringData.usersCostInfo[Owner].compileCost +=
-                CompileCost;
-              costMonitoringData.usersCostInfo[Owner].executeCost +=
-                ExecuteCost;
-              costMonitoringData.usersCostInfo[Owner].fileAccessCost +=
-                FileAccessCost;
+            if (!metaData.wuCostData[Wuid]) {
+              metaData.wuCostData[Wuid] = {
+                jobName: Jobname,
+                owner: Owner,
+                compileCost: CompileCost,
+                executeCost: ExecuteCost,
+                fileAccessCost: FileAccessCost,
+                totalCost: CompileCost + ExecuteCost + FileAccessCost,
+              };
             }
-          );
 
-          // Save costMonitoringData on each iteration
-          await costMonitoringData.save();
+            if (!usersCostInfo[Owner]) {
+              usersCostInfo[Owner] = {
+                compileCost: 0,
+                executeCost: 0,
+                fileAccessCost: 0,
+                totalCost: 0,
+              };
+            }
 
-          // If monitoring log doesn't exist create it. If it does update scan time
-          await handleMonitorLogs(
-            monitoringLog,
-            clusterId,
-            monitoringType.id,
-            newScanTime
-          );
-        } catch (perClusterError) {
-          logger.error('>>> monitorCost: Error in cluster ', perClusterError);
-          parentPort &&
-            parentPort.postMessage({
-              level: 'error',
-              text: `monitorCost: Failed in cluster ${clusterDetail.name}: ${perClusterError.message}, ...skipping`,
-            });
-        }
+            usersCostInfo[Owner].compileCost += CompileCost;
+            usersCostInfo[Owner].executeCost += ExecuteCost;
+            usersCostInfo[Owner].fileAccessCost += FileAccessCost;
+            usersCostInfo[Owner].totalCost +=
+              CompileCost + ExecuteCost + FileAccessCost;
+
+            metaData.clusterCostData.compileCost += CompileCost;
+            metaData.clusterCostData.executeCost += ExecuteCost;
+            metaData.clusterCostData.fileAccessCost += FileAccessCost;
+            metaData.clusterCostData.totalCost +=
+              CompileCost + ExecuteCost + FileAccessCost;
+          }
+        );
+
+        // Save a single CostMonitoringData row per cluster
+        // Compute localDay for the cluster
+
+        const now = new Date();
+        const localDay = toLocalDay(now, timezoneOffset);
+        await CostMonitoringData.create({
+          date: now,
+          localDay: localDay.toISOString().split('T')[0], // 'YYYY-MM-DD'
+          clusterId,
+          usersCostInfo,
+          metaData,
+        });
+
+        // If monitoring log doesn't exist create it. If it does update scan time
+        await handleMonitorLogs(
+          monitoringLog,
+          clusterId,
+          monitoringType.id,
+          newScanTime
+        );
+      } catch (perClusterError) {
+        logger.error('>>> monitorCost: Error in cluster ', perClusterError);
+        logOrPostMessage({
+          level: 'error',
+          text: `monitorCost: Failed in cluster ${clusterId}: ${perClusterError.message}, ...skipping`,
+        });
       }
     }
-    parentPort &&
-      parentPort.postMessage({
-        level: 'info',
-        text: 'Cost Monitor Per user: Monitoring Finished ...',
-      });
+    logOrPostMessage({
+      level: 'info',
+      text: 'Cost Monitor Per user: Monitoring Finished ...',
+    });
 
     // Trigger the analyzeCost job
     if (parentPort) {
@@ -337,16 +336,27 @@ async function monitorCost() {
         action: 'trigger',
         type: 'monitor-cost',
       });
+    } else {
+      logOrPostMessage({
+        level: 'error',
+        text: 'Failed to trigger monitor cost, parentPort is nullish',
+      });
     }
   } catch (err) {
-    parentPort &&
-      parentPort.postMessage({
-        level: 'error',
-        text: `Cost Monitor Per user: ${err.message}`,
-      });
+    logOrPostMessage({
+      level: 'error',
+      text: `Cost Monitor Per user: ${err.message}`,
+    });
   }
 }
 
 (async () => {
   await monitorCost();
 })();
+
+module.exports = {
+  getStartAndEndTime,
+  handleMonitorLogs,
+  getCostMonitorings,
+  monitorCost,
+};

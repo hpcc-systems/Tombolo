@@ -349,13 +349,16 @@ const addClusterWithProgress = async (req, res) => {
         if (nv.Name === 'CONTAINERIZED' && nv.Value === 'ON') {
           clusterPayload.containerized = true;
         }
+        if (nv.Name === 'currencyCode' && nv.Value) {
+          clusterPayload.currencyCode = nv.Value;
+        }
       });
     }
 
     sendUpdate({
       step: 4,
       success: true,
-      message: 'Cluster containerization check complete',
+      message: 'Cluster build info check complete',
     });
 
     sendUpdate({
@@ -599,11 +602,11 @@ const clusterUsage = async (req, res) => {
     }));
     return res.status(200).send(maxUsage);
   } catch (err) {
+    logger.error('clusterControllers clusterUsage: ', err);
     return res.status(503).json({
       success: false,
       message: 'Failed to fetch current cluster usage',
     });
-    logger.error(err);
   }
 };
 
@@ -643,7 +646,7 @@ const clusterStorageHistory = async (req, res) => {
 
     return res.status(200).send(filtered_data);
   } catch (err) {
-    logger.error(err);
+    logger.error('clusterController clusterStorageHistory: ', err);
     return res.status(503).json({
       success: false,
       message: 'Failed to fetch current cluster usage',
