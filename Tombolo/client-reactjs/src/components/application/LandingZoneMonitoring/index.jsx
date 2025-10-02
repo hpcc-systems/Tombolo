@@ -1,21 +1,23 @@
+/* eslint-disable */
 import { useState, useEffect, useRef } from 'react';
+
+// Local Imports
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { useSelector } from 'react-redux';
 import { Form, message } from 'antd';
+import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service.js';
 import {
   identifyErroneousTabs,
-  getAllLzMonitorings,
-  updateMonitoring,
-  createLandingZoneMonitoring,
-  handleLzBulkDelete,
+  // getAllLzMonitorings,
+  // updateMonitoring,
+  // createLandingZoneMonitoring,
+  // handleLzBulkDelete,
   toggleLzMonitoringStatus,
   approveSelectedMonitoring,
 } from './Utils';
 import { flattenObject } from '../../common/CommonUtil';
-
 import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools';
 import { getRoleNameArray } from '../../common/AuthUtil';
-
 import AddEditModal from './AddEditModal/Modal';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import LandingZoneMonitoringTable from './LandingZoneMonitoringTable';
@@ -24,7 +26,9 @@ import BulkUpdateModal from './BulkUpdateModal';
 import ViewDetailsModal from './ViewDetailsModal';
 import LzFilters from './LzFilters';
 import { Constants } from '@/components/common/Constants';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 
+// Constants
 const monitoringTypeName = 'Landing Zone Monitoring';
 
 const LandigZoneMonitoring = () => {
@@ -111,7 +115,8 @@ const LandigZoneMonitoring = () => {
     if (!applicationId) return;
     (async () => {
       try {
-        const allLzMonitoring = await getAllLzMonitorings({ applicationId });
+        // const allLzMonitoring = await getAllLzMonitorings({ applicationId });
+        const allLzMonitoring = await landingZoneMonitoringService.getAll(applicationId);
         // Flatten each object in the array
         const flattenedMonitorings = allLzMonitoring.map((monitoring) => {
           const flat = flattenObject(monitoring);
@@ -120,7 +125,7 @@ const LandigZoneMonitoring = () => {
 
         setLandingZoneMonitoring(flattenedMonitorings);
       } catch (error) {
-        message.error('Error fetching landing zone monitorings');
+        handleError('Failed to fetch all landing zone monitoring');
       }
     })();
   }, [applicationId, displayAddEditModal]);
@@ -287,7 +292,10 @@ const LandigZoneMonitoring = () => {
       // Add appliationId to userFieldInputs
       userFieldInputs.applicationId = applicationId;
 
-      await createLandingZoneMonitoring({ inputData: userFieldInputs });
+      // await createLandingZoneMonitoring({ inputData: userFieldInputs });
+      await landingZoneMonitoringService.create(userFieldInputs);
+
+      return;
 
       // Rest states and Close model if saved successfully
       resetStates();
@@ -390,11 +398,11 @@ const LandigZoneMonitoring = () => {
       updatedData = { ...updatedData, ...newOtherFields };
 
       // Make api call
-      await updateMonitoring({ updatedData });
-      message.success('Landingzone monitoring saved successfully');
+      await landingZoneMonitoringService.updateOne(updatedData);
+      handleSuccess('Landingzone monitoring saved successfully');
       resetStates();
     } catch (err) {
-      message.error('Failed to update landing zone monitoring');
+      handleError('Failed to save landing zone monitoring');
     } finally {
       setSavingLzMonitoring(false);
     }
@@ -489,19 +497,20 @@ const LandigZoneMonitoring = () => {
 
   const handleBulkDeleteSelectedLandingZones = async (ids) => {
     try {
-      const res = await handleLzBulkDelete({ ids });
+      await landingZoneMonitoringService.bulkDelete(ids);
       setLandingZoneMonitoring((prev) => prev.filter((lz) => !ids.includes(lz.id)));
       setSelectedRows([]);
-      if (res) message.success('Selected landing zone monitorings deleted successfully');
+      handleSuccess('Selected landing zone monitoring deleted successfully');
     } catch (err) {
-      message.error('Unable to delete selected landing zone monitorings: ' + err);
+      handleError('Failed to delete selected landing zone monitoring');
     }
   };
 
   const handleBulkStartPauseLandingZones = async ({ ids, action }) => {
     try {
       const startMonitoring = action === 'start';
-      await toggleLzMonitoringStatus({ ids, isActive: startMonitoring });
+      // await toggleLzMonitoringStatus({ ids, isActive: startMonitoring });
+      await landingZoneMonitoringService.toggle(ids, startMonitoring);
       setLandingZoneMonitoring((prev) =>
         prev.map((lz) => (ids.includes(lz.id) ? { ...lz, isActive: startMonitoring } : lz))
       );
@@ -614,8 +623,12 @@ const LandigZoneMonitoring = () => {
         monitoringTypeLabel={monitoringTypeName}
         evaluateMonitoring={approveSelectedMonitoring}
         onSuccess={async () => {
-          const updatedLzMonitoringData = await getAllLzMonitorings({ applicationId });
-          setLandingZoneMonitoring(updatedLzMonitoringData);
+          try {
+            const updatedLzMonitoringData = await landingZoneMonitoringService.getAll(applicationId);
+            setLandingZoneMonitoring(updatedLzMonitoringData);
+          } catch (error) {
+            handleError('Failed to updated landing zone monitoring');
+          }
         }}
       />
       {bulkEditModalVisibility && (
@@ -625,7 +638,6 @@ const LandigZoneMonitoring = () => {
           landingZoneMonitoring={landingZoneMonitoring}
           setLandingZoneMonitoring={setLandingZoneMonitoring}
           selectedRows={selectedRows}
-          getAllLzMonitorings={getAllLzMonitorings}
         />
       )}
     </>

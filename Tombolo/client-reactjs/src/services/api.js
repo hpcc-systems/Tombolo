@@ -3,7 +3,7 @@ import axios from 'axios';
 
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
-import { retryInterceptor } from './interceptors/retry.interceptor';
+// import { retryInterceptor } from './interceptors/retry.interceptor';
 import { dataExtractorInterceptor } from './interceptors/dataExtractor.interceptor';
 
 // ------------------
@@ -45,7 +45,7 @@ const apiClient = axios.create({
 // ------------------
 // Apply interceptors
 // ------------------
-retryInterceptor(apiClient);
+// retryInterceptor(apiClient);
 authInterceptor(apiClient);
 errorInterceptor(apiClient);
 dataExtractorInterceptor(apiClient);

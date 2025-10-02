@@ -1,5 +1,5 @@
 // Imports from libraries
-const { TopologyService, FileSprayService } = require('@hpcc-js/comms');
+const { TopologyService, FileSprayService, send } = require('@hpcc-js/comms');
 const Sequelize = require('sequelize');
 
 // Local Imports
@@ -11,6 +11,8 @@ const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
 const { APPROVAL_STATUS } = require('../config/constants');
+const { sendError, sendSuccess } = require('../utils/response');
+const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 
 // Function to get dropzones and associated machines when a cluster id is provided
 const getDropzonesForACluster = async (req, res) => {
@@ -145,30 +147,13 @@ const createLandingZoneMonitoring = async (req, res) => {
 const getAllLandingZoneMonitorings = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    logger.info(
-      `Getting all landing zone monitorings for application: ${applicationId}`
-    );
 
-    const landingZoneMonitorings = await LandingZoneMonitoring.findAll({
+    const landingZoneMonitoring = await LandingZoneMonitoring.findAll({
       where: { applicationId },
       order: [['createdAt', 'DESC']],
       // Include user details for createdBy , lastUpdatedBy and cluster
       include: [
-        {
-          model: User,
-          attributes: ['firstName', 'lastName', 'email'],
-          as: 'creator',
-        },
-        {
-          model: User,
-          attributes: ['firstName', 'lastName', 'email'],
-          as: 'updater',
-        },
-        {
-          model: User,
-          attributes: ['firstName', 'lastName', 'email'],
-          as: 'approver',
-        },
+        ...getUserFkIncludes(),
         {
           model: Cluster,
           attributes: ['name', 'thor_host', 'thor_port'],
@@ -177,20 +162,10 @@ const getAllLandingZoneMonitorings = async (req, res) => {
       ],
     });
 
-    logger.info(
-      `Found ${landingZoneMonitorings.length} landing zone monitorings`
-    );
-    res.status(200).json({
-      success: true,
-      data: landingZoneMonitorings,
-      count: landingZoneMonitorings.length,
-    });
+    sendSuccess(res, landingZoneMonitoring);
   } catch (err) {
-    logger.error('Error getting landing zone monitorings: ', err);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get landing zone monitorings',
-    });
+    logger.error('Error getting landing zone monitoring: ', err);
+    sendError(res, 'Failed to get landing zone monitoring');
   }
 };
 
@@ -228,12 +203,10 @@ const getLandingZoneMonitoringById = async (req, res) => {
 const updateLandingZoneMonitoring = async (req, res) => {
   try {
     const { id } = req.body;
-    logger.info(`Updating landing zone monitoring with ID: ${id}`);
 
     // Check if the record exists
     const existingMonitoring = await LandingZoneMonitoring.findByPk(id);
     if (!existingMonitoring) {
-      logger.warn(`Landing zone monitoring not found with ID: ${id}`);
       return res.status(404).json({
         success: false,
         message: 'Landing zone monitoring not found',
@@ -257,52 +230,16 @@ const updateLandingZoneMonitoring = async (req, res) => {
     });
 
     if (updatedRowsCount === 0) {
-      logger.warn(`No rows updated for landing zone monitoring ID: ${id}`);
-      return res.status(404).json({
-        success: false,
-        message: 'Landing zone monitoring not found',
-      });
+      sendError(res, 'Landing zone monitoring not found');
     }
 
     // Get the updated record
     const updatedMonitoring = await LandingZoneMonitoring.findByPk(id);
 
-    logger.info(`Successfully updated landing zone monitoring: ${id}`);
-    res.status(200).json({
-      success: true,
-      message: 'Landing zone monitoring updated successfully',
-      data: updatedMonitoring,
-    });
+    sendSuccess(res, updatedMonitoring);
   } catch (err) {
     logger.error('Error updating landing zone monitoring: ', err);
-
-    // Handle specific error types
-    if (err.name === 'SequelizeValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation error',
-        errors: err.errors.map(e => e.message),
-      });
-    }
-
-    if (err.name === 'SequelizeUniqueConstraintError') {
-      return res.status(409).json({
-        success: false,
-        message: 'A landing zone monitoring with this name already exists',
-      });
-    }
-
-    if (err.name === 'SequelizeForeignKeyConstraintError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid reference to application, cluster, or user',
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update landing zone monitoring',
-    });
+    sendError(res, err);
   }
 };
 
@@ -356,10 +293,12 @@ const deleteLandingZoneMonitoring = async (req, res) => {
 const bulkDeleteLandingZoneMonitoring = async (req, res) => {
   try {
     const { ids } = req.body;
-    logger.info(`Bulk deleting landing zone monitoring: ${ids}`);
+    console.log('------------------------');
+    console.log('Body: ', ids);
+    console.log('------------------------');
 
     // Check if the records exist
-    const existingMonitorings = await LandingZoneMonitoring.findAll({
+    const existingMonitoring = await LandingZoneMonitoring.findAll({
       where: {
         id: {
           [Sequelize.Op.in]: ids,
@@ -367,12 +306,8 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
       },
     });
 
-    if (existingMonitorings.length === 0) {
-      logger.warn(`No landing zone monitoring found with IDs: ${ids}`);
-      return res.status(404).json({
-        success: false,
-        message: 'Landing zone monitoring not found',
-      });
+    if (existingMonitoring.length === 0) {
+      sendError(res, 'Landing zone monitoring not found', 404);
     }
 
     // Soft delete the records
@@ -381,18 +316,11 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
       deletedByUserId: req.user.id,
     });
 
-    logger.info(`Successfully deleted landing zone monitoring: ${ids}`);
-    res.status(200).json({
-      success: true,
-      message: 'Landing zone monitoring deleted successfully',
-    });
+    sendSuccess(res, 'Landing zone monitoring deleted successfully');
   } catch (err) {
     logger.error('Error deleting landing zone monitoring: ', err);
 
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete landing zone monitoring',
-    });
+    sendError(res, 'Failed to delete landing zone monitoring');
   }
 };
 
@@ -467,23 +395,16 @@ const toggleLandingZoneMonitoringStatus = async (req, res) => {
       });
 
       if (pending) {
-        logger.warn(
-          'Cannot activate landing zone monitoring with pending approval'
+        return sendError(
+          res,
+          'Cannot activate landing zone monitoring with pending approval',
+          422
         );
-        return res.status(400).json({
-          success: false,
-          message:
-            'Cannot activate landing zone monitoring with pending approval',
-        });
       }
     }
 
     if (records.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'No landing zone monitoring records found with the provided IDs',
-      });
+      return sendError(res, 'Landing zone monitoring not found', 404);
     }
 
     const [updatedCount] = await LandingZoneMonitoring.update(
@@ -498,31 +419,20 @@ const toggleLandingZoneMonitoringStatus = async (req, res) => {
     );
 
     if (updatedCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'No landing zone monitoring records found with the provided IDs',
-      });
+      return sendError(
+        res,
+        'No landing zone monitoring records found with the provided IDs',
+        404
+      );
     }
 
     const statusAction = isActive ? 'activated' : 'deactivated';
-    logger.info(
-      `Successfully ${statusAction} ${updatedCount} landing zone monitoring record(s)`
-    );
 
-    res.status(200).json({
-      success: true,
-      message: `Successfully ${statusAction} ${updatedCount} landing zone monitoring record(s)`,
-      updatedCount,
-      newStatus: isActive,
-    });
+    throw new Error('Test error');
+    sendSuccess(res, { updatedCount, newStatus: isActive });
   } catch (error) {
     logger.error('Error toggling landing zone monitoring status:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to toggle landing zone monitoring status',
-      error: error.message,
-    });
+    sendError(res, 'Failed to toggle landing zone monitoring status');
   }
 };
 

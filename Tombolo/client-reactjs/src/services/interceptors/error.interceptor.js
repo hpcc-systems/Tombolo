@@ -6,6 +6,10 @@ export const errorInterceptor = (apiClient) => {
     async (error) => {
       const { response, config } = error;
 
+      console.log('------------------------');
+      console.log('Err catcher: ', response);
+      console.log('------------------------');
+
       // ---- Network / connection errors (no response at all) ----
       if (!response) {
         return Promise.reject({
@@ -43,10 +47,11 @@ export const errorInterceptor = (apiClient) => {
       const data = response?.data || {};
       let messages = ['An error occurred'];
 
-     if (Array.isArray(data.messages) && data.messages.length > 0) {
+      if (Array.isArray(data.messages) && data.messages.length > 0) {
         messages = data.messages; // Prefer 'messages' array first
       } else if (typeof data.message === 'string' && data.message.trim() !== '') {
         messages = [data.message]; // Fallback to 'message' if present
+      }
 
       return Promise.reject({
         type: 'API_ERROR',

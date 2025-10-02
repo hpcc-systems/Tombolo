@@ -128,12 +128,16 @@ export const toggleLzMonitoringStatus = async ({ ids, isActive }) => {
 
 // Bulk delete landingzone monitorings
 export const handleLzBulkDelete = async ({ ids }) => {
+  alert('handleLzBulkDelete');
   const payload = {
     method: 'DELETE',
     headers: authHeader(),
     body: JSON.stringify({ ids }),
   };
 
+  console.log('------------------------');
+  console.log('body: ', JSON.stringify({ ids }));
+  console.log('------------------------');
   const response = await fetch(`/api/landingZoneMonitoring/bulkDelete`, payload);
   if (!response.ok) {
     throw new Error('Failed to bulk delete landing zone monitorings');

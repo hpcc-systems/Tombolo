@@ -21,9 +21,6 @@ export const handleError = (error) => {
     className: 'error-notification',
     showProgress: true,
     duration: 8,
-    style: {
-      borderBottomColor: 'red !important',
-    },
     description: (
       <>
         {messages.map((msg, idx) => (
@@ -31,5 +28,14 @@ export const handleError = (error) => {
         ))}
       </>
     ),
+  });
+};
+
+export const handleSuccess = (message) => {
+  notification.success({
+    message,
+    className: 'success-notification',
+    showProgress: true,
+    duration: 5,
   });
 };
