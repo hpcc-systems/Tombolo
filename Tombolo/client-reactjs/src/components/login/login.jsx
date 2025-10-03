@@ -204,7 +204,7 @@ const Login = () => {
                     { required: true, message: 'Please input your password!' },
                     { max: 64, message: 'Maximum of 64 characters allowed' },
                   ]}>
-                  <Input.Password size="large" autoComplete="new-password" />
+                  <Input.Password name="password" size="large" autoComplete="new-password" />
                 </Form.Item>
                 <a href="/forgot-password">Forgot password?</a>
                 <Form.Item>
