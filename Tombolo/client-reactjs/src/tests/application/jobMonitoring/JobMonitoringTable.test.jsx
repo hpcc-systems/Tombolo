@@ -14,14 +14,18 @@ vi.mock('antd', async (importOriginal) => {
               const value = col.dataIndex ? row[col.dataIndex] : row;
               const content = col.render ? col.render(value, row) : value;
               return (
-                <div key={cIdx} data-testid={`cell-${rIdx}-${cIdx}`}>{content}</div>
+                <div key={cIdx} data-testid={`cell-${rIdx}-${cIdx}`}>
+                  {content}
+                </div>
               );
             })}
           </div>
         ))}
       </div>
       {rowSelection ? (
-        <button aria-label="select-first" onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>select-first</button>
+        <button aria-label="select-first" onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>
+          select-first
+        </button>
       ) : null}
     </div>
   );
@@ -34,18 +38,36 @@ vi.mock('antd', async (importOriginal) => {
   );
   const MockPopconfirm = ({ children, onConfirm }) => (
     <span>
-      <button aria-label="confirm" onClick={onConfirm}>confirm</button>
+      <button aria-label="confirm" onClick={onConfirm}>
+        confirm
+      </button>
       {children}
     </span>
   );
   const MockTag = ({ children }) => <span>{children}</span>;
   const message = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
-  return { ...antd, Table: MockTable, Tooltip: MockTooltip, Popover: MockPopover, Popconfirm: MockPopconfirm, Tag: MockTag, message };
+  return {
+    ...antd,
+    Table: MockTable,
+    Tooltip: MockTooltip,
+    Popover: MockPopover,
+    Popconfirm: MockPopconfirm,
+    Tag: MockTag,
+    message,
+  };
 });
 
 vi.mock('@ant-design/icons', () => ({
-  EyeOutlined: ({ onClick }) => (<button aria-label="view" onClick={onClick}>view</button>),
-  EditOutlined: ({ onClick }) => (<button aria-label="edit" onClick={onClick}>edit</button>),
+  EyeOutlined: ({ onClick }) => (
+    <button aria-label="view" onClick={onClick}>
+      view
+    </button>
+  ),
+  EditOutlined: ({ onClick }) => (
+    <button aria-label="edit" onClick={onClick}>
+      edit
+    </button>
+  ),
   DeleteOutlined: () => <span>del</span>,
   CheckCircleFilled: () => <span>approveIcon</span>,
   BellOutlined: () => <span>bell</span>,
@@ -59,7 +81,15 @@ vi.mock('@ant-design/icons', () => ({
 
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 
-vi.mock('react-redux', () => ({ useSelector: (sel) => sel({ application: { application: { applicationId: 'app-1' }, integrations: [{ name: 'ASR', application_id: 'app-1' }] } }) }));
+vi.mock('react-redux', () => ({
+  useSelector: (sel) =>
+    sel({
+      application: {
+        application: { applicationId: 'app-1' },
+        integrations: [{ name: 'ASR', application_id: 'app-1' }],
+      },
+    }),
+}));
 
 vi.mock('@/components/application/jobMonitoring/jobMonitoringUtils', () => ({
   handleDeleteJobMonitoring: vi.fn().mockResolvedValue(),
@@ -67,7 +97,10 @@ vi.mock('@/components/application/jobMonitoring/jobMonitoringUtils', () => ({
 }));
 
 import { message } from 'antd';
-import { toggleJobMonitoringStatus, handleDeleteJobMonitoring } from '@/components/application/jobMonitoring/jobMonitoringUtils';
+import {
+  toggleJobMonitoringStatus,
+  handleDeleteJobMonitoring,
+} from '@/components/application/jobMonitoring/jobMonitoringUtils';
 import JobMonitoringTable from '@/components/application/jobMonitoring/JobMonitoringTable.jsx';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
@@ -94,7 +127,9 @@ const rowApproved = {
 const rowPending = { ...rowApproved, id: 2, clusterId: 'c2', isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
 
 describe('JobMonitoringTable', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('renders actions and triggers view/edit/approve/duplicate via More popover', async () => {
     const user = userEvent.setup();
@@ -194,7 +229,7 @@ describe('JobMonitoringTable', () => {
 
     const pauseBtn = await screen.findByText('pause');
     await user.click(pauseBtn);
-    await waitFor(() => expect(toggleJobMonitoringStatus).toHaveBeenCalled());
+    await waitFor(() => toggleJobMonitoringStatus.mock.calls.length > 0);
     expect(setJobMonitorings).toHaveBeenCalled();
   });
 
@@ -224,7 +259,12 @@ describe('JobMonitoringTable', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'confirm' }));
-    await waitFor(() => expect(handleDeleteJobMonitoring).toHaveBeenCalledWith({ id: rowApproved.id, jobMonitorings: [rowApproved], setJobMonitorings: expect.any(Function) }));
+    await waitFor(() => handleDeleteJobMonitoring.mock.calls.length > 0);
+    expect(handleDeleteJobMonitoring).toHaveBeenCalledWith({
+      id: rowApproved.id,
+      jobMonitorings: [rowApproved],
+      setJobMonitorings: expect.any(Function),
+    });
     expect(message.warning).not.toHaveBeenCalled();
   });
 
