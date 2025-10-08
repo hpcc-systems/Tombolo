@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Button, Select, message } from 'antd';
+import { Modal, Form, Button, Select } from 'antd';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import { isEmail } from 'validator';
-import { handleBulkUpdateLzMonitorings } from './Utils';
 import { useSelector } from 'react-redux';
 
 import { flattenObject } from '../../common/CommonUtil';
+import landingZoneMonitoringService from '../../../services/landingZoneMonitoring.service';
 
 const { useForm } = Form;
 
@@ -159,7 +160,7 @@ const BulkUpdateModal = ({
         }
 
         if (newContacts?.primaryContacts.length < 1) {
-          message.error(`Primary contact is mandatory. ${row.monitoringName} does not have any`);
+          handleError(`Primary contact is mandatory. ${row.monitoringName} does not have any`);
           return;
         }
 
@@ -167,9 +168,13 @@ const BulkUpdateModal = ({
       });
 
       // Update
-      await handleBulkUpdateLzMonitorings(updatedRows);
+      // await handleBulkUpdateLzMonitorings(updatedRows);
+      console.log('------------------------');
+      console.log('updatedRows', updatedRows);
+      console.log('------------------------');
+      await landingZoneMonitoringService.bulkUpdate(updatedRows);
 
-      message.success('Landing zone  monitoring updated successfully');
+      handleSuccess('Landing zone monitoring updated successfully');
 
       // Set selected monitoring to the updated monitoring
       setLandingZoneMonitoring((prev) =>
@@ -181,7 +186,7 @@ const BulkUpdateModal = ({
 
       resetState();
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     }
   };
 

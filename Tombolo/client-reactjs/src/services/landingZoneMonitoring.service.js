@@ -17,7 +17,7 @@ const landingZoneMonitoringService = {
   },
 
   approveMonitoring: async (formData) => {
-    const response = await apiClient.post('/landingZoneMonitoring/evaluate', formData);
+    const response = await apiClient.patch('/landingZoneMonitoring/evaluate', formData);
     return response.data;
   },
 
@@ -27,9 +27,7 @@ const landingZoneMonitoringService = {
   },
 
   toggle: async (ids, isActive) => {
-    console.log('Hitting toggle service', response);
-
-    const response = await apiClient.patch('/landingZoneMonitoring/toggle', { ids, isActive });
+    const response = await apiClient.patch('/landingZoneMonitoring/toggleStatus', { ids, isActive });
     return response.data;
   },
 
@@ -41,7 +39,7 @@ const landingZoneMonitoringService = {
   },
 
   bulkUpdate: async (updateData) => {
-    const response = await apiClient.patch('/landingZoneMonitoring/bulkUpdate', updateData);
+    const response = await apiClient.patch('/landingZoneMonitoring/bulkUpdate', { updatedData: updateData });
     return response.data;
   },
 
