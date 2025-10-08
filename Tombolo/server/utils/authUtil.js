@@ -96,9 +96,6 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
     req.cookies.token = accessToken;
 
     const csrfToken = generateToken(req, res, true);
-    console.log('------------------------');
-    console.log('CSRF token set to cookies during login: ', csrfToken);
-    console.log('------------------------');
 
     //attach csrfToken to x-csrf-token header
     res.setHeader(csrfHeaderName, csrfToken);
