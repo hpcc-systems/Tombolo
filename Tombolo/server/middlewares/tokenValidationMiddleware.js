@@ -53,9 +53,6 @@ const tokenValidationMiddleware = async (req, res, next) => {
         // Token expired, but session is still valid block so we need to refresh the token cookie and the csrf token
         await setTokenCookie(res, tokenDetails.newAccessToken);
 
-        console.log('------------------------');
-        console.log('NEW TOKEN IS ABOUT TO BE SET ');
-        console.log('------------------------');
         await generateAndSetCSRFToken(req, res, tokenDetails.newAccessToken);
 
         // Update req.user with new token details
