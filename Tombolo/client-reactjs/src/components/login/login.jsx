@@ -1,14 +1,38 @@
 import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin, message } from 'antd';
+import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+
 import msLogo from '../../images/mslogo.png';
 import { getDeviceInfo } from './utils';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
-import { useDispatch } from 'react-redux';
 import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 
 import styles from './login.module.css';
+
+// Static auth config and Azure env validation (computed once per module load)
+const authMethodsRaw = import.meta.env.VITE_AUTH_METHODS;
+const methods = Array.isArray(authMethodsRaw)
+  ? authMethodsRaw
+  : typeof authMethodsRaw === 'string'
+  ? authMethodsRaw
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+  : [];
+
+const hasAllAzureEnv = [
+  import.meta.env.VITE_AZURE_CLIENT_ID,
+  import.meta.env.VITE_AZURE_TENENT_ID,
+  import.meta.env.VITE_AZURE_REDIRECT_URI,
+].every((v) => typeof v === 'string' && v.trim().length > 0);
+
+// Warn once if Azure requested but misconfigured
+if (methods.includes('azure') && !hasAllAzureEnv) {
+  console.warn('[Login] Azure auth is enabled but missing/invalid environment variables');
+}
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -122,14 +146,9 @@ const Login = () => {
     }
   };
 
-  const authMethods = import.meta.env.VITE_AUTH_METHODS;
-  let azureEnabled = false;
-  let traditionalEnabled = false;
-
-  if (authMethods) {
-    azureEnabled = authMethods.split(',').includes('azure');
-    traditionalEnabled = authMethods.split(',').includes('traditional');
-  }
+  // Determine which login methods are enabled by configuration
+  const azureEnabled = methods.includes('azure') && hasAllAzureEnv;
+  const traditionalEnabled = methods.includes('traditional');
 
   return (
     <>
@@ -189,14 +208,14 @@ const Login = () => {
                   ]}>
                   <Input.Password size="large" autoComplete="new-password" />
                 </Form.Item>
-                <a href="/forgot-password">Forgot password?</a>
+                <Link to="/forgot-password">Forgot password?</Link>
                 <Form.Item>
                   <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">
                     Log in
                   </Button>
                 </Form.Item>
                 <p className={styles.helperLink}>
-                  <span>Need an account?</span> <a href="/src/components/login/register">Register</a>
+                  <span>Need an account?</span> <Link to="/register">Register</Link>
                 </p>
               </>
             )}

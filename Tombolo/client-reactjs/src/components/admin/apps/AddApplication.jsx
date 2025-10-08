@@ -80,6 +80,7 @@ const FormContent = ({ form, mode }) => {
           rules={[
             { required: isEditable, message: 'Description is required' },
             { max: 1024, message: 'Maximum of 1024 characters allowed' },
+            { min: 10, message: 'Minimum of 10 characters required' },
           ]}>
           <TextArea
             autoSize={{ minRows: isEditable ? 4 : 1 }}

@@ -1,17 +1,17 @@
 /*
-1. The send Email function treats emails as sent if the SMTP server accepts the email for delivery. 
-2. It does not guarantee that the email will be delivered to the recipient's inbox. 
-   For example -  if the user provided email is correctly formatted but not a valid email address, 
+1. The send Email function treats emails as sent if the SMTP server accepts the email for delivery.
+2. It does not guarantee that the email will be delivered to the recipient's inbox.
+   For example -  if the user provided email is correctly formatted but not a valid email address,
    the SMTP server will accept the email for delivery but will not deliver it to the recipient's inbox.
-3. To Debug email delivery issues, first check notification_queue table. if it does not exists there check  table that stores sent notification. 
+3. To Debug email delivery issues, first check notification_queue table. if it does not exists there check  table that stores sent notification.
    Next application Logs and SMTP server logs if available.
 */
 
 //Packages imports
-const nodemailer = require("nodemailer");
+const nodemailer = require('nodemailer');
 
 //Local imports
-const logger = require("./logger");
+const logger = require('./logger');
 
 // SMTP configuration
 const smtpConfig = {
@@ -24,12 +24,21 @@ const smtpConfig = {
   debug: true, // set debug to true to see debug logs
 };
 
+if (
+  process.env.EMAIL_USER === 'string' &&
+  process.env.EMAIL_USER.trim().length > 0
+) {
+  smtpConfig.auth = {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  };
+}
 
 //Create transporter
 const transporter = nodemailer.createTransport(smtpConfig);
 
 // Send email function
-const sendEmail = ({receiver, cc, subject, plainTextBody, htmlBody}) => {
+const sendEmail = ({ receiver, cc, subject, plainTextBody, htmlBody }) => {
   return new Promise((resolve, reject) => {
     const mailOptions = {
       from: smtpConfig.sender,
@@ -54,7 +63,7 @@ const retryOptions = {
   retryDelays: [1, 2, 3], // in minutes - Exponential backoff strategy
 };
 
-// Exports 
+// Exports
 module.exports = {
   sendEmail,
   retryOptions,

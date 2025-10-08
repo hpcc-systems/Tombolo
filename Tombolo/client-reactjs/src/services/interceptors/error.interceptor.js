@@ -52,7 +52,6 @@ export const errorInterceptor = (apiClient) => {
       } else if (typeof data.message === 'string' && data.message.trim() !== '') {
         messages = [data.message]; // Fallback to 'message' if present
       }
-
       return Promise.reject({
         type: 'API_ERROR',
         status: response.status,
