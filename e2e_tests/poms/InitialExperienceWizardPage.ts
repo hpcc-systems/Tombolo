@@ -51,10 +51,11 @@ export class InitialExperienceWizardPage {
 
     // Step helpers
     async expectOnInstanceSettings(): Promise<void> {
-        this.page
+        await this.page
             .getByRole('heading', { name: /instance settings|instance information/i })
             .or(this.page.getByText(/instance settings/i))
-            .first();
+            .first()
+            .waitFor();
         // The form uses labels "Instance Name" and "Instance Description"
         await this.page.getByLabel(/^instance name$/i).waitFor();
     }
