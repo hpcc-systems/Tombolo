@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { authHeader, handleError } from '../components/common/AuthHeader';
-import { message } from 'antd';
+import { authHeader, handleError as authHandleError } from '../components/common/AuthHeader';
+import { handleError } from '@/components/common/handleResponse';
 import { useSelector } from 'react-redux';
 
 const useGitHubProjectList = () => {
@@ -17,17 +17,14 @@ const useGitHubProjectList = () => {
           headers: authHeader(),
         });
 
-        if (!response.ok) handleError(response);
+        if (!response.ok) authHandleError(response);
         const projectsList = await response.json();
         const projectsWithKeys = projectsList.map((project, index) => ({ ...project, key: index })); // we need keys for editing
 
         setProjects((prev) => ({ ...prev, loading: false, data: projectsWithKeys }));
       } catch (error) {
-        console.log('-error-/api/gh_projects----------------------------------------');
-        console.dir({ error }, { depth: null });
-        console.log('------------------------------------------');
         setProjects((prev) => ({ ...prev, loading: false, error: error.message }));
-        message.error(error.message);
+        handleError(error.message);
       }
     })();
   }, []);

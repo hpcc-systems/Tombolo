@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { message } from 'antd';
-import { getDomains, getProductCategories } from '../components/common/ASRTools';
+import { handleError } from '@/components/common/handleResponse';
+import asrService from '@/services/asr.service';
 
 export const useDomainAndCategories = (monitoringTypeId, selectedMonitoring) => {
   const [domains, setDomains] = useState([]);
@@ -12,8 +12,9 @@ export const useDomainAndCategories = (monitoringTypeId, selectedMonitoring) => 
     const fetchDomains = async () => {
       if (!monitoringTypeId) return;
       try {
-        let domainData = await getDomains({ monitoringTypeId });
-
+        console.log('HERE', monitoringTypeId);
+        // let domainData = await getDomains({ monitoringTypeId });
+        let domainData = await asrService.getDomains({ monitoringTypeId });
         domainData = domainData.map((d) => ({
           label: d.name,
           value: d.id,
@@ -21,7 +22,7 @@ export const useDomainAndCategories = (monitoringTypeId, selectedMonitoring) => 
 
         setDomains(domainData);
       } catch (error) {
-        message.error('Error fetching domains');
+        handleError('Error fetching domains');
       }
     };
 
@@ -40,14 +41,15 @@ export const useDomainAndCategories = (monitoringTypeId, selectedMonitoring) => 
     const fetchProductCategories = async () => {
       if (!selectedDomain) return;
       try {
-        const productCategories = await getProductCategories({ domainId: selectedDomain });
+        // const productCategories = await getProductCategories({ domainId: selectedDomain });
+        const productCategories = await asrService.getProductCategories({ domainId: selectedDomain });
         const formattedProductCategories = productCategories.map((c) => ({
           label: `${c.shortCode} - ${c.name}`,
           value: c.id,
         }));
         setProductCategories(formattedProductCategories);
       } catch (error) {
-        message.error('Error fetching product category');
+        handleError('Error fetching product category');
       }
     };
 
