@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Tabs, Badge, Button, message, Card } from 'antd';
+import { Modal, Tabs, Badge, Button, Card } from 'antd';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import BasicTab from './BasicTab';
 import NotificationTab from './NotificationTab';
 import { createClusterMonitoring, updateClusterMonitoring, identifyErroneousTabs } from '../clusterMonitoringUtils';
@@ -267,10 +268,10 @@ function AddEditModel({
       }
 
       form.resetFields();
-      message.success('Cost monitoring saved successfully');
+      handleSuccess('Cost monitoring saved successfully');
       setDisplayAddEditModal(false);
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     } finally {
       setSavingClusterMonitoring(false);
       setDuplicatingData({ isDuplicating: false });

@@ -1,8 +1,11 @@
 // Library imports
 import React from 'react';
-import { Table, Space, Tooltip, Popconfirm, Popover, Tag, message } from 'antd';
+import { Table, Space, Tooltip, Popconfirm, Popover, Tag } from 'antd';
 import { Link } from 'react-router-dom';
 import startCase from 'lodash/startCase';
+
+// Local imports
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import {
   EyeOutlined,
   EditOutlined,
@@ -71,7 +74,7 @@ function ClusterMonitoringTable({
     try {
       // If approval status is not approved, do not allow to start monitoring
       if (record.approvalStatus !== APPROVAL_STATUS.APPROVED && action === 'start') {
-        message.error('Monitoring cannot be started as it is not approved.');
+        handleError('Monitoring cannot be started as it is not approved.');
         return;
       }
       await toggleSingleClusterMonitoringActiveStatus(record.id);
@@ -81,9 +84,9 @@ function ClusterMonitoringTable({
           monitoring.id === record.id ? { ...monitoring, isActive: !monitoring.isActive } : monitoring
         )
       );
-      message.success(`Monitoring ${record.isActive ? 'paused' : 'started'} successfully.`);
+      handleSuccess(`Monitoring ${record.isActive ? 'paused' : 'started'} successfully.`);
     } catch (error) {
-      message.error('Failed to toggle monitoring status');
+      handleError('Failed to toggle monitoring status');
     }
   };
 
@@ -92,9 +95,9 @@ function ClusterMonitoringTable({
     try {
       await deleteClusterMonitoring(id);
       setClusterMonitoring((prev) => prev.filter((monitoring) => monitoring.id !== id));
-      message.success('Monitoring deleted successfully.');
+      handleSuccess('Monitoring deleted successfully.');
     } catch (error) {
-      message.error('Failed to delete monitoring:', error);
+      handleError(error);
     }
   };
 

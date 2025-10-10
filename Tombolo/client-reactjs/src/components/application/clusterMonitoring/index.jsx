@@ -1,9 +1,10 @@
 // Library Imports
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Form, message } from 'antd';
+import { Form } from 'antd';
 
 // Local Imports
+import { handleError } from '@/components/common/handleResponse';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import ClusterMonitoringTable from './ClusterMonitoringTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
@@ -194,7 +195,7 @@ function ClusterMonitoring() {
       await toggleClusterMonitoringActiveStatus({ ids, isActive });
       setClusterMonitoring((prev) => prev.map((m) => (ids.includes(m.id) ? { ...m, isActive } : m)));
     } catch (error) {
-      message.error(error.message);
+      handleError(error.message);
     }
   };
 
