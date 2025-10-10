@@ -19,7 +19,7 @@ import {
 } from '@ant-design/icons';
 
 // Local imports
-import { toggleSingleClusterMonitoringActiveStatus, deleteClusterMonitoring } from './clusterMonitoringUtils.js';
+import clusterMonitoringService from '@/services/clusterMonitoring.service';
 import styles from './clusterMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
@@ -77,7 +77,7 @@ function ClusterMonitoringTable({
         handleError('Monitoring cannot be started as it is not approved.');
         return;
       }
-      await toggleSingleClusterMonitoringActiveStatus(record.id);
+      await clusterMonitoringService.toggleSingle(record.id);
 
       setClusterMonitoring((prev) =>
         prev.map((monitoring) =>
@@ -93,7 +93,7 @@ function ClusterMonitoringTable({
   // Handle delete
   const handleDelete = async (id) => {
     try {
-      await deleteClusterMonitoring(id);
+      await clusterMonitoringService.delete(id);
       setClusterMonitoring((prev) => prev.filter((monitoring) => monitoring.id !== id));
       handleSuccess('Monitoring deleted successfully.');
     } catch (error) {

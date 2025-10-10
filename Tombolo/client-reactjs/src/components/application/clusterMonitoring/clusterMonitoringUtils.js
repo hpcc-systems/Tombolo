@@ -1,39 +1,4 @@
-import clusterMonitoringService from '@/services/clusterMonitoring.service';
-
-// Create a new cluster monitoring
-export const createClusterMonitoring = async (data) => {
-  return await clusterMonitoringService.create(data);
-};
-
-// Get all cluster monitoring data
-export const getAllClusterMonitoring = async () => {
-  return await clusterMonitoringService.getAll();
-};
-
-// Update existing cluster monitoring
-export const updateClusterMonitoring = async (data) => {
-  return await clusterMonitoringService.update(data);
-};
-
-// Approve or Reject cluster monitoring
-export const evaluateClusterMonitoring = async (data) => {
-  return await clusterMonitoringService.evaluate(data);
-};
-
-// Toggle cluster monitoring is active status
-export const toggleClusterMonitoringActiveStatus = async ({ ids, isActive }) => {
-  return await clusterMonitoringService.toggleBulk({ ids, isActive });
-};
-
-// Toggle single -> /toggle
-export const toggleSingleClusterMonitoringActiveStatus = async (id) => {
-  return await clusterMonitoringService.toggleSingle(id);
-};
-
-// Delete cluster monitoring
-export const deleteClusterMonitoring = async (id) => {
-  return await clusterMonitoringService.delete(id);
-};
+// Utility functions with actual business logic
 
 // Find a unique name for the monitoring
 export const findUniqueName = (name, clusterMonitoring) => {
@@ -64,6 +29,4 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
   return erroneousTabs;
 };
 
-export const handleBulkUpdateClusterMonitoring = async ({ updatedData }) => {
-  return await clusterMonitoringService.bulkUpdate({ updatedData });
-};
+// handleBulkUpdateClusterMonitoring removed - use clusterMonitoringService.bulkUpdate directly

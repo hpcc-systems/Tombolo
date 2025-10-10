@@ -7,14 +7,8 @@ import { Form } from 'antd';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import ClusterMonitoringTable from './ClusterMonitoringTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
-import {
-  getAllClusterMonitoring,
-  findUniqueName,
-  handleBulkUpdateClusterMonitoring,
-  deleteClusterMonitoring,
-  toggleClusterMonitoringActiveStatus,
-  evaluateClusterMonitoring,
-} from './clusterMonitoringUtils';
+import clusterMonitoringService from '@/services/clusterMonitoring.service';
+import { findUniqueName } from './clusterMonitoringUtils';
 import ViewDetailsModal from './ViewDetailsModal';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditModal from './AddEditModal/AddEditModal.jsx';
@@ -68,7 +62,7 @@ function ClusterMonitoring() {
   //When component loads get all file monitoring
   useEffect(() => {
     (async () => {
-      const cm = await getAllClusterMonitoring();
+      const cm = await clusterMonitoringService.getAll();
       setClusterMonitoring(cm);
       const prods = await getAllProductCategories();
       setAllProductCategories(prods);
@@ -163,7 +157,7 @@ function ClusterMonitoring() {
           },
         ]);
       }
-      const selectedType = selectedMonitoring.clusterMonitoringType || [];
+      const selectedType = selectedMonitoring?.clusterMonitoringType || [];
       setMonitoringType(selectedType);
 
       if (selectedType.includes('usage')) {
@@ -179,9 +173,9 @@ function ClusterMonitoring() {
   const handleOpenBulkEdit = () => setBulkEditModalVisibility(true);
   const handleOpenApproveReject = () => setApproveRejectModal(true);
   const handleBulkDelete = async (ids) => {
-    // deleteClusterMonitoring expects single id; call for each
+    // clusterMonitoringService.delete expects single id; call for each
     try {
-      await Promise.all(ids.map((id) => deleteClusterMonitoring(id)));
+      await Promise.all(ids.map((id) => clusterMonitoringService.delete(id)));
       setClusterMonitoring((prev) => prev.filter((m) => !ids.includes(m.id)));
       setSelectedRows([]);
     } catch (err) {
@@ -189,7 +183,8 @@ function ClusterMonitoring() {
     }
   };
   const handleBulkStartPause = async ({ ids, action }) => {
-    await toggleClusterMonitoringActiveStatus({ ids, action });
+    const isActive = action === 'start';
+    await clusterMonitoringService.toggleBulk({ ids, isActive });
   };
 
   //JSX
@@ -268,7 +263,7 @@ function ClusterMonitoring() {
         selectedRows={selectedRows}
         setMonitoring={setClusterMonitoring}
         monitoringTypeLabel={monitoringTypeName}
-        evaluateMonitoring={evaluateClusterMonitoring}
+        evaluateMonitoring={clusterMonitoringService.evaluate}
       />
       <ClusterMonitoringTable
         clusterMonitoring={filteredClusterMonitoring}
@@ -298,7 +293,7 @@ function ClusterMonitoring() {
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
           monitoringType="cluster"
-          handleBulkUpdateMonitorings={handleBulkUpdateClusterMonitoring}
+          handleBulkUpdateMonitorings={clusterMonitoringService.bulkUpdate}
         />
       )}
     </>

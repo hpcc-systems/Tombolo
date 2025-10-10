@@ -3,7 +3,8 @@ import { Modal, Tabs, Badge, Button, Card } from 'antd';
 import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import BasicTab from './BasicTab';
 import NotificationTab from './NotificationTab';
-import { createClusterMonitoring, updateClusterMonitoring, identifyErroneousTabs } from '../clusterMonitoringUtils';
+import clusterMonitoringService from '@/services/clusterMonitoring.service';
+import { identifyErroneousTabs } from '../clusterMonitoringUtils';
 
 function AddEditModel({
   setDisplayAddEditModal,
@@ -254,7 +255,7 @@ function AddEditModel({
       allInputs = { ...allInputs, metaData };
 
       if (editingMonitoring) {
-        const responseData = await updateClusterMonitoring({ ...allInputs, id: selectedMonitoring.id });
+        const responseData = await clusterMonitoringService.update({ ...allInputs, id: selectedMonitoring.id });
         let updatedMonitoring = responseData;
 
         setClusterMonitoring(
@@ -263,7 +264,7 @@ function AddEditModel({
           )
         );
       } else {
-        let responseData = await createClusterMonitoring(allInputs);
+        let responseData = await clusterMonitoringService.create(allInputs);
         setClusterMonitoring([responseData, ...clusterMonitoring]);
       }
 
