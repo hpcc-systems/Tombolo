@@ -126,11 +126,10 @@ export class ClustersPage {
       console.log(
         `Match ${i}: "${await element.textContent()}" (Visible: ${await element.isVisible()}, Enabled: ${await element.isEnabled()})`
       );
-      // @ts-ignore
       console.log(
         `Attributes: ${await element.evaluate((el) =>
           JSON.stringify(
-            [...el.attributes].map((attr) => `${attr.name}: ${attr.value}`)
+            [...(el as Element).attributes].map((attr) => `${attr.name}: ${attr.value}`)
           )
         )}`
       );

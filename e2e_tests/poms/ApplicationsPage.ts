@@ -89,29 +89,27 @@ export class ApplicationsPage {
     return this.modal().locator(".ant-modal-title");
   }
 
-  titleInput(): Locator {
+  async titleInput(): Promise<Locator> {
     // Prefer label association; fallback to first input in Title Form.Item
     const byLabel = this.page.getByLabel(/^title$/i);
-    return byLabel.count().then((c) =>
-      c
-        ? byLabel
-        : this.modal()
-            .locator(".ant-form-item")
-            .filter({ hasText: /^\s*Title\s*$/i })
-            .locator("input")
-    ) as unknown as Locator;
+    const c = await byLabel.count();
+    return c
+      ? byLabel
+      : this.modal()
+          .locator(".ant-form-item")
+          .filter({ hasText: /^\s*Title\s*$/i })
+          .locator("input");
   }
 
-  descriptionInput(): Locator {
+  async descriptionInput(): Promise<Locator> {
     const byLabel = this.page.getByLabel(/description/i);
-    return byLabel.count().then((c) =>
-      c
-        ? byLabel
-        : this.modal()
-            .locator(".ant-form-item")
-            .filter({ hasText: /\bDescription\b/i })
-            .locator("textarea")
-    ) as unknown as Locator;
+    const c = await byLabel.count();
+    return c
+      ? byLabel
+      : this.modal()
+          .locator(".ant-form-item")
+          .filter({ hasText: /\bDescription\b/i })
+          .locator("textarea");
   }
 
   visibilityPrivate(): Locator {
