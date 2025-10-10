@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import { useState, useEffect, useRef } from 'react';
 
 // Local Imports
@@ -7,7 +8,9 @@ import { Form } from 'antd';
 import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service.js';
 import { identifyErroneousTabs } from './Utils';
 import { flattenObject } from '../../common/CommonUtil';
-import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools';
+import { getProductCategories } from '../../common/ASRTools'; // TODO - change
+import asrService from '@/services/asr.service.js';
+import monitoringTypeService from '@/services/monitoringType.service.js';
 import { getRoleNameArray } from '../../common/AuthUtil';
 import AddEditModal from './AddEditModal/Modal';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
@@ -124,7 +127,8 @@ const LandigZoneMonitoring = () => {
     if (!isMonitoringTypeIdFetched.current) {
       (async () => {
         try {
-          const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
+          // const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
+          const monitoringTypeId = await monitoringTypeService.getId({ monitoringTypeName });
           setMonitoringTypeId(monitoringTypeId);
         } catch (error) {
           handleError('Error fetching monitoring type ID');
@@ -140,7 +144,8 @@ const LandigZoneMonitoring = () => {
     if (!monitoringTypeId) return;
     (async () => {
       try {
-        let domainData = await getDomains({ monitoringTypeId });
+        let domainData = await asrService.getDomains({ monitoringTypeId });
+
         domainData = domainData.map((d) => ({
           label: d.name,
           value: d.id,
@@ -160,7 +165,7 @@ const LandigZoneMonitoring = () => {
     if (!selectedDomain) return;
     (async () => {
       try {
-        const productCategories = await getProductCategories({ domainId: selectedDomain });
+        const productCategories = await asrService.getProductCategories({ domainId: selectedDomain });
         const formattedProductCategories = productCategories.map((c) => ({
           label: `${c.name} (${c.shortCode})`,
           value: c.id,
