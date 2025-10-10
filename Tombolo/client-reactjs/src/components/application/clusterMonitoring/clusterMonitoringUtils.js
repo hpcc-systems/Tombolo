@@ -1,129 +1,38 @@
-import { authHeader } from '../../common/AuthHeader';
+import clusterMonitoringService from '@/services/clusterMonitoring.service';
 
 // Create a new cluster monitoring
 export const createClusterMonitoring = async (data) => {
-  const payload = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader(),
-    },
-    body: JSON.stringify(data),
-  };
-
-  const response = await fetch(`/api/clusterMonitoring`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to create cluster monitoring');
-  }
-  return await response.json();
+  return await clusterMonitoringService.create(data);
 };
 
 // Get all cluster monitoring data
 export const getAllClusterMonitoring = async () => {
-  const payload = {
-    method: 'GET',
-    headers: authHeader(),
-  };
-
-  const response = await fetch(`/api/clusterMonitoring`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch cost monitoring data');
-  }
-  return await response.json();
+  return await clusterMonitoringService.getAll();
 };
 
 // Update existing cluster monitoring
 export const updateClusterMonitoring = async (data) => {
-  const payload = {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader(),
-    },
-    body: JSON.stringify(data),
-  };
-
-  const response = await fetch(`/api/clusterMonitoring`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to update cluster monitoring');
-  }
-  return await response.json();
+  return await clusterMonitoringService.update(data);
 };
 
 // Approve or Reject cluster monitoring
 export const evaluateClusterMonitoring = async (data) => {
-  const payload = {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader(),
-    },
-    body: JSON.stringify(data),
-  };
-
-  const response = await fetch(`/api/clusterMonitoring/evaluate`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to evaluate cluster monitoring');
-  }
-  return await response.json();
+  return await clusterMonitoringService.evaluate(data);
 };
 
 // Toggle cluster monitoring is active status
 export const toggleClusterMonitoringActiveStatus = async ({ ids, isActive }) => {
-  const payload = {
-    method: 'PATCH',
-    headers: authHeader(),
-    body: JSON.stringify({ ids, isActive }),
-  };
-
-  const response = await fetch(`/api/clusterMonitoring/bulkToggle`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to toggle cluster monitoring status');
-  }
-  return await response.json();
+  return await clusterMonitoringService.toggleBulk({ ids, isActive });
 };
 
 // Toggle single -> /toggle
 export const toggleSingleClusterMonitoringActiveStatus = async (id) => {
-  const payload = {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader(),
-    },
-    body: JSON.stringify({ id: [id] }),
-  };
-
-  const response = await fetch(`/api/clusterMonitoring/toggle`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to toggle cluster monitoring status');
-  }
-  return await response.json();
+  return await clusterMonitoringService.toggleSingle(id);
 };
 
 // Delete cluster monitoring
 export const deleteClusterMonitoring = async (id) => {
-  const payload = {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader(),
-    },
-    body: JSON.stringify({ ids: [id] }),
-  };
-
-  const response = await fetch(`/api/clusterMonitoring`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to delete cluster monitoring');
-  }
-  return await response.json();
+  return await clusterMonitoringService.delete(id);
 };
 
 // Find a unique name for the monitoring
@@ -156,17 +65,5 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
 };
 
 export const handleBulkUpdateClusterMonitoring = async ({ updatedData }) => {
-  const payload = {
-    method: 'PATCH',
-    headers: authHeader(),
-    body: JSON.stringify({ clusterMonitoring: updatedData }),
-  };
-
-  const response = await fetch(`/api/clusterMonitoring/bulkUpdate`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to bulk update cluster monitoring');
-  }
-
-  return await response.json();
+  return await clusterMonitoringService.bulkUpdate({ updatedData });
 };

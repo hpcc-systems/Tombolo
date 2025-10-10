@@ -182,12 +182,20 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
       mon => mon.approvalStatus !== APPROVAL_STATUS.APPROVED
     );
 
-    if (unapprovedMonitorings.length > 0) {
+    // iterate and remove unapproved monitoring from the list
+    const idsToProceedWith = [];
+    monitorings.forEach(m => {
+      if (m.approvalStatus == APPROVAL_STATUS.APPROVED) {
+        // remove from ids
+        idsToProceedWith.push(m.id);
+      }
+    });
+
+    if (idsToProceedWith.length === 0) {
       return sendError(
         res,
         {
-          message:
-            'All selected cluster status monitoring must be approved to change active status',
+          message: 'No monitorings to toggle. All are in unapproved state',
           unapprovedIds: unapprovedMonitorings.map(mon => mon.id),
         },
         400
@@ -201,7 +209,7 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
         updatedBy: req.user.id,
       },
       {
-        where: { id: { [Op.in]: ids } },
+        where: { id: { [Op.in]: idsToProceedWith } },
       }
     );
 

@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import { Form } from 'antd';
 
 // Local Imports
-import { handleError } from '@/components/common/handleResponse';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import ClusterMonitoringTable from './ClusterMonitoringTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
@@ -190,13 +189,7 @@ function ClusterMonitoring() {
     }
   };
   const handleBulkStartPause = async ({ ids, action }) => {
-    try {
-      const isActive = action === 'start';
-      await toggleClusterMonitoringActiveStatus({ ids, isActive });
-      setClusterMonitoring((prev) => prev.map((m) => (ids.includes(m.id) ? { ...m, isActive } : m)));
-    } catch (error) {
-      handleError(error.message);
-    }
+    await toggleClusterMonitoringActiveStatus({ ids, action });
   };
 
   //JSX

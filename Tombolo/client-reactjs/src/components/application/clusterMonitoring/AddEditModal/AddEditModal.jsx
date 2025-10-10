@@ -255,7 +255,7 @@ function AddEditModel({
 
       if (editingMonitoring) {
         const responseData = await updateClusterMonitoring({ ...allInputs, id: selectedMonitoring.id });
-        let updatedMonitoring = responseData.data;
+        let updatedMonitoring = responseData;
 
         setClusterMonitoring(
           clusterMonitoring.map((monitoring) =>
@@ -264,7 +264,7 @@ function AddEditModel({
         );
       } else {
         let responseData = await createClusterMonitoring(allInputs);
-        setClusterMonitoring([responseData.data, ...clusterMonitoring]);
+        setClusterMonitoring([responseData, ...clusterMonitoring]);
       }
 
       form.resetFields();
