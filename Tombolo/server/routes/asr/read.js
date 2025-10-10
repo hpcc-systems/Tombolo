@@ -12,6 +12,7 @@ const {
   validateGetCategoriesForDomain,
 } = require('../../middlewares/asrMiddleware');
 const { sequelize } = require('../../models');
+const { sendError, sendSuccess } = require('../../utils/response');
 
 //Local Imports
 const {
@@ -72,16 +73,18 @@ router.post('/domains/', validate(validateCreateDomain), async (req, res) => {
         createdBy: req.user.id,
       });
     }
-    return res
-      .status(200)
-      .json({ message: 'Domain created successfully', domain });
+    return sendSuccess(res, domain, 'Domain created successfully');
   } catch (error) {
     logger.error('Failed to create domain: ', error);
     const errorResult = uniqueConstraintErrorHandler(
       error,
       'Failed to create domain'
     );
-    return res.status(errorResult.statusCode).json(errorResult.responseObject);
+    return sendError(
+      res,
+      errorResult.responseObject.message || 'Failed to create domain',
+      errorResult.statusCode
+    );
   }
 });
 
@@ -104,10 +107,10 @@ router.get('/domains/', async (req, res) => {
       raw: true,
     });
 
-    return res.status(200).json(domains);
+    return sendSuccess(res, domains);
   } catch (err) {
     logger.error('Get domains: ', err);
-    return res.status(500).json({ message: 'Failed to fetch domains' });
+    return sendError(res, 'Failed to fetch domains');
   }
 });
 
@@ -119,10 +122,10 @@ router.get('/domainsOnly/', async (req, res) => {
       include: getUserFkIncludes(),
     });
 
-    return res.status(200).json(domains);
+    return sendSuccess(res, domains);
   } catch (err) {
     logger.error('Get domainsOnly: ', err);
-    return res.status(500).json({ message: 'Failed to fetch domains' });
+    return sendError(res, 'Failed to fetch domains');
   }
 });
 
@@ -189,12 +192,13 @@ router.patch(
         );
       }
 
-      const message =
-        response[0] === 0 ? 'Domain not found' : 'Successfully updated domain';
-      return res.status(200).json({ message });
+      if (response[0] === 0) {
+        return sendError(res, 'Domain not found', 404);
+      }
+      return sendSuccess(res, null, 'Successfully updated domain');
     } catch (err) {
       logger.error('Failed to update domain: ', err);
-      return res.status(500).json({ message: 'Failed to update domain' });
+      return sendError(res, 'Failed to update domain');
     }
   }
 );
@@ -210,12 +214,13 @@ router.delete(
         deletedByUserId: req.user.id,
       });
 
-      const message =
-        response === 0 ? 'Domain not found' : 'Domain deleted successfully';
-      return res.status(200).json({ message });
+      if (response === 0) {
+        return sendError(res, 'Domain not found', 404);
+      }
+      return sendSuccess(res, null, 'Domain deleted successfully');
     } catch (err) {
       logger.error('Delete domain: ', err);
-      return res.status(500).json({ message: 'Failed to delete domain' });
+      return sendError(res, 'Failed to delete domain');
     }
   }
 );
@@ -253,16 +258,18 @@ router.post('/products/', validate(validateCreateProduct), async (req, res) => {
         createdBy: req.user.id,
       });
     }
-    return res
-      .status(200)
-      .json({ message: 'Product created successfully', product });
+    return sendSuccess(res, product, 'Product created successfully');
   } catch (error) {
     logger.error('Failed to create product: ', error);
     const errorResult = uniqueConstraintErrorHandler(
       error,
       'Failed to create product'
     );
-    return res.status(errorResult.statusCode).json(errorResult.responseObject);
+    return sendError(
+      res,
+      errorResult.responseObject.message || 'Failed to create product',
+      errorResult.statusCode
+    );
   }
 });
 
@@ -292,10 +299,10 @@ router.get('/products/', async (req, res) => {
       raw: true,
     });
 
-    return res.status(200).json(products);
+    return sendSuccess(res, products);
   } catch (err) {
     logger.error('Get products: ', err);
-    return res.status(500).json({ message: 'Failed to fetch domains' });
+    return sendError(res, 'Failed to fetch products');
   }
 });
 
@@ -308,10 +315,10 @@ router.get('/productsOnly/', async (req, res) => {
       include: getUserFkIncludes(),
     });
 
-    return res.status(200).json(products);
+    return sendSuccess(res, products);
   } catch (err) {
     logger.error('Get productsOnly: ', err);
-    return res.status(500).json({ message: 'Failed to fetch products' });
+    return sendError(res, 'Failed to fetch products');
   }
 });
 
@@ -360,14 +367,13 @@ router.put(
         );
       }
 
-      const message =
-        response[0] === 0
-          ? 'Product not found'
-          : 'Successfully updated product';
-      return res.status(200).json({ message });
+      if (response[0] === 0) {
+        return sendError(res, 'Product not found', 404);
+      }
+      return sendSuccess(res, null, 'Successfully updated product');
     } catch (err) {
       logger.error('Update product: ', err);
-      return res.status(500).json({ message: 'Failed to update product' });
+      return sendError(res, 'Failed to update product');
     }
   }
 );
@@ -383,12 +389,13 @@ router.delete(
         deletedByUserId: req.user.id,
       });
 
-      const message =
-        response === 0 ? 'Product not found' : 'Product deleted successfully';
-      return res.status(200).json({ message });
+      if (response === 0) {
+        return sendError(res, 'Product not found', 404);
+      }
+      return sendSuccess(res, null, 'Product deleted successfully');
     } catch (err) {
       logger.error('Delete product: ', err);
-      return res.status(500).json({ message: 'Failed to delete product' });
+      return sendError(res, 'Failed to delete product');
     }
   }
 );
@@ -427,10 +434,10 @@ router.get(
         return { id: domain['AsrDomain.id'], name: domain['AsrDomain.name'] };
       });
 
-      return res.status(200).json(response);
+      return sendSuccess(res, response);
     } catch (error) {
       logger.error('Get domain for monitoring type: ', error);
-      return res.status(500).send('Unable to fetch domains');
+      return sendError(res, 'Unable to fetch domains');
     }
   }
 );
@@ -466,10 +473,10 @@ router.get(
         };
       });
 
-      return res.status(200).json(response);
+      return sendSuccess(res, response);
     } catch (error) {
       logger.error('Get product categories for domain: ', error);
-      return res.status(500).send('Unable to fetch product categories');
+      return sendError(res, 'Unable to fetch product categories');
     }
   }
 );
