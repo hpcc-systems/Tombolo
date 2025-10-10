@@ -1,7 +1,10 @@
+// Imports from libraries
 import React, { useEffect, useRef, useState } from 'react';
 import { Form, Select, Input, Card, Row, Col } from 'antd';
-import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
 import { useSelector } from 'react-redux';
+
+// Local imports
+import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
 import { DescriptionFormRules, MonitoringNameFormRules } from '../../common/FormRules';
 
 const { Option } = Select;
