@@ -12,7 +12,6 @@ export const useDomainAndCategories = (monitoringTypeId, selectedMonitoring) => 
     const fetchDomains = async () => {
       if (!monitoringTypeId) return;
       try {
-        console.log('HERE', monitoringTypeId);
         // let domainData = await getDomains({ monitoringTypeId });
         let domainData = await asrService.getDomains({ monitoringTypeId });
         domainData = domainData.map((d) => ({
