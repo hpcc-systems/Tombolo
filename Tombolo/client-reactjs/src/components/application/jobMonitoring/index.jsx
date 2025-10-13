@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Descriptions, Form, message, Tag } from 'antd';
+import { Descriptions, Form, Tag } from 'antd';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditJobMonitoringModal from './AddEditJobMonitoringModal.jsx';
 import {
   checkScheduleValidity,
-  createJobMonitoring,
-  getAllJobMonitorings,
   identifyErroneousTabs,
   isScheduleUpdated,
-  updateSelectedMonitoring,
-  evaluateJobMonitoring,
+  handleJobMonitoringEvaluation,
 } from './jobMonitoringUtils.js';
-import { handleBulkDeleteJobMonitorings, toggleJobMonitoringStatus } from './jobMonitoringUtils';
+import jobMonitoringService from '@/services/jobMonitoring.service';
 
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import JobMonitoringTable from './JobMonitoringTable.jsx';
@@ -80,7 +78,7 @@ function JobMonitoring() {
     monitorings: jobMonitorings,
     setMonitorings: setJobMonitorings,
     allProductCategories,
-  } = useMonitoringsAndAllProductCategories(applicationId, getAllJobMonitorings);
+  } = useMonitoringsAndAllProductCategories(applicationId, jobMonitoringService.getAll);
 
   //When intention to edit a monitoring is discovered
   useEffect(() => {
@@ -208,22 +206,23 @@ function JobMonitoring() {
 
   const handleBulkDeleteSelectedJobMonitorings = async (ids) => {
     try {
-      await handleBulkDeleteJobMonitorings({ selectedJobMonitorings: ids });
+      await jobMonitoringService.bulkDelete({ ids });
       setJobMonitorings((prev) => prev.filter((jm) => !ids.includes(jm.id)));
       setSelectedRows([]);
     } catch (_) {
-      message.error('Unable to delete selected job monitorings');
+      handleError('Unable to delete selected job monitorings');
     }
   };
 
   const handleBulkStartPauseJobMonitorings = async ({ ids, action }) => {
     try {
-      const updatedMonitorings = await toggleJobMonitoringStatus({ ids, action });
+      const response = await jobMonitoringService.toggle({ ids, action });
+      const updatedMonitorings = response.updatedJobMonitorings;
       setJobMonitorings((prev) =>
         prev.map((monitoring) => updatedMonitorings.find((u) => u.id === monitoring.id) || monitoring)
       );
     } catch (_) {
-      message.error('Unable to start/pause selected job monitorings');
+      handleError('Unable to start/pause selected job monitorings');
     }
   };
 
@@ -380,16 +379,16 @@ function JobMonitoring() {
       //Add metaData to allInputs
       allInputs = { ...allInputs, metaData };
 
-      const responseData = await createJobMonitoring({ inputData: allInputs });
+      const responseData = await jobMonitoringService.create({ inputData: allInputs });
 
       setJobMonitorings([responseData, ...jobMonitorings]);
-      message.success('Job monitoring saved successfully');
+      handleSuccess('Job monitoring saved successfully');
 
       // Rest states and Close model if saved successfully
       resetStates();
       setDisplayAddJobMonitoringModal(false);
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     } finally {
       setSavingJobMonitoring(false);
     }
@@ -468,7 +467,7 @@ function JobMonitoring() {
 
       // If no touched fields
       if (touchedFields.length === 0) {
-        return message.error('No changes detected');
+        return handleError('No changes detected');
       }
 
       // updated monitoring
@@ -535,7 +534,7 @@ function JobMonitoring() {
       updatedData = { ...updatedData, ...newOtherFields };
 
       // Make api call
-      await updateSelectedMonitoring({ updatedData });
+      await jobMonitoringService.updateOne({ updatedData });
 
       // If no error thrown set state with new data
       setJobMonitorings((prev) => {
@@ -550,7 +549,7 @@ function JobMonitoring() {
       });
       resetStates();
     } catch (err) {
-      message.error('Failed to update job monitoring');
+      handleError('Failed to update job monitoring');
     } finally {
       setSavingJobMonitoring(false);
     }
@@ -768,7 +767,18 @@ function JobMonitoring() {
           selectedRows={selectedRows}
           setMonitoring={setJobMonitorings}
           monitoringTypeLabel={monitoringTypeName}
-          evaluateMonitoring={evaluateJobMonitoring}
+          evaluateMonitoring={jobMonitoringService.evaluate}
+          onSubmit={(formData) =>
+            handleJobMonitoringEvaluation({
+              formData,
+              jobMonitoringService,
+              handleSuccess,
+              handleError,
+              applicationId,
+              setJobMonitorings,
+              setDisplayAddRejectModal,
+            })
+          }
         />
       )}
       {bulkEditModalVisibility && (

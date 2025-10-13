@@ -5,6 +5,7 @@ const {
 } = require('../utils/uniqueConstraintErrorHandler');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 const { APPROVAL_STATUS } = require('../config/constants');
+const { sendError, sendSuccess } = require('../utils/response');
 
 // Wrapper function to get common includes
 const getCommonIncludes = () => [
@@ -31,14 +32,15 @@ async function createFileMonitoring(req, res) {
     const result = await FileMonitoring.findByPk(createResult.id, {
       include: getCommonIncludes(),
     });
-    return res.status(201).json({
-      success: true,
-      data: result,
-    });
+    return sendSuccess(res, result, 'File monitoring created successfully');
   } catch (err) {
     logger.error('Failed to create file monitoring', err);
     const errorResult = uniqueConstraintErrorHandler(err, err.message);
-    return res.status(errorResult.statusCode).json(errorResult.responseObject);
+    return sendError(
+      res,
+      errorResult.responseObject.message || 'Failed to create file monitoring',
+      errorResult.statusCode
+    );
   }
 }
 
@@ -52,10 +54,7 @@ async function updateFileMonitoring(req, res) {
     });
 
     if (result[0] === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'File monitoring not found',
-      });
+      return sendError(res, 'File monitoring not found', 404);
     }
 
     // Get the updated file monitoring entry
@@ -63,14 +62,19 @@ async function updateFileMonitoring(req, res) {
       include: getCommonIncludes(),
     });
 
-    return res.status(200).json({
-      success: true,
-      data: updatedFileMonitoring,
-    });
+    return sendSuccess(
+      res,
+      updatedFileMonitoring,
+      'File monitoring updated successfully'
+    );
   } catch (err) {
     logger.error('Failed to update file monitoring', err);
     const errorResult = uniqueConstraintErrorHandler(err, err.message);
-    return res.status(errorResult.statusCode).json(errorResult.responseObject);
+    return sendError(
+      res,
+      errorResult.responseObject.message || 'Failed to update file monitoring',
+      errorResult.statusCode
+    );
   }
 }
 
@@ -82,22 +86,13 @@ async function getFileMonitoringById(req, res) {
     });
 
     if (!result) {
-      return res.status(404).json({
-        success: false,
-        message: 'File monitoring not found',
-      });
+      return sendError(res, 'File monitoring not found', 404);
     }
 
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
+    return sendSuccess(res, result);
   } catch (err) {
     logger.error('Failed to fetch file monitoring by ID', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    return sendError(res, 'Internal server error');
   }
 }
 
@@ -109,16 +104,10 @@ async function getFileMonitoring(req, res) {
       include: getCommonIncludes(),
       order: [['createdAt', 'DESC']],
     });
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
+    return sendSuccess(res, result);
   } catch (err) {
     logger.error('Failed to fetch file monitoring', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    return sendError(res, 'Internal server error');
   }
 }
 
@@ -132,10 +121,11 @@ async function evaluateFileMonitoring(req, res) {
     });
 
     if (fileMonitorings.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No file monitoring entries found for the provided IDs',
-      });
+      return sendError(
+        res,
+        'No file monitoring entries found for the provided IDs',
+        404
+      );
     }
 
     for (const fileMonitoring of fileMonitorings) {
@@ -158,17 +148,14 @@ async function evaluateFileMonitoring(req, res) {
       include: getCommonIncludes(),
     });
 
-    return res.status(200).json({
-      success: true,
-      data: updatedFileMonitoring,
-      message: 'File monitoring evaluated successfully',
-    });
+    return sendSuccess(
+      res,
+      updatedFileMonitoring,
+      'File monitoring evaluated successfully'
+    );
   } catch (err) {
     logger.error('Failed to evaluate file monitoring', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    return sendError(res, 'Internal server error');
   }
 }
 
@@ -182,10 +169,11 @@ async function toggleFileMonitoringActive(req, res) {
     });
 
     if (fm.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No file monitoring entries found for the provided IDs',
-      });
+      return sendError(
+        res,
+        'No file monitoring entries found for the provided IDs',
+        404
+      );
     }
 
     // If trying to activate and approvalStatues is not 'approved' remove that from ids to update
@@ -215,17 +203,14 @@ async function toggleFileMonitoringActive(req, res) {
       include: getCommonIncludes(),
     });
 
-    return res.status(200).json({
-      data: updatedFileMonitoring,
-      success: true,
-      message: 'File monitoring status updated successfully',
-    });
+    return sendSuccess(
+      res,
+      updatedFileMonitoring,
+      'File monitoring status updated successfully'
+    );
   } catch (err) {
     logger.error('Failed to toggle file monitoring active status', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    return sendError(res, 'Internal server error');
   }
 }
 
@@ -249,18 +234,16 @@ async function deleteFileMonitoring(req, res) {
     // Commit transaction if everything succeeds
     await transaction.commit();
 
-    return res.status(200).json({
-      success: true,
-      message: `${result} file monitoring entries deleted successfully`,
-    });
+    return sendSuccess(
+      res,
+      null,
+      `${result} file monitoring entries deleted successfully`
+    );
   } catch (err) {
     // Rollback transaction on error
     await transaction.rollback();
     logger.error('Failed to bulk delete file monitoring', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    return sendError(res, 'Internal server error');
   }
 }
 
@@ -311,20 +294,17 @@ async function bulkUpdateFileMonitoring(req, res) {
       include: getUserFkIncludes(true),
     });
 
-    return res.status(200).json({
-      success: true,
-      message: `Bulk update completed: ${results.success.length} succeeded, ${results.failed.length} failed`,
-      data: updatedFileMonitoring,
-      errors: results.failed,
-    });
+    return sendSuccess(
+      res,
+      { data: updatedFileMonitoring, errors: results.failed },
+      `Bulk update completed: ${results.success.length} succeeded, ${results.failed.length} failed`
+    );
   } catch (err) {
     logger.error('Failed to fetch updated records:', err);
-    return res.status(200).json({
-      success: false,
-      message:
-        'Bulk update partially completed, but fetching updated records failed',
-      errors: results.failed,
-    });
+    return sendError(
+      res,
+      'Bulk update partially completed, but fetching updated records failed'
+    );
   }
 }
 

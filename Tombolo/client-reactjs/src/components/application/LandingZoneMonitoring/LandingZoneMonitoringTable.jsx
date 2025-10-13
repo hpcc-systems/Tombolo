@@ -1,5 +1,6 @@
 import React from 'react';
-import { Table, Tooltip, Popconfirm, message, Popover } from 'antd';
+import { Table, Tooltip, Popconfirm, Popover } from 'antd';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import {
   EyeOutlined,
   EditOutlined,
@@ -14,7 +15,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-import { deleteLzMonitoring, toggleLzMonitoringStatus } from './Utils';
+import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service.js';
 
 import styles from './lzMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';
@@ -237,11 +238,11 @@ const LandingZoneMonitoringTable = ({
 
   const handleLzMonitoringDeletion = async (record) => {
     try {
-      await deleteLzMonitoring({ id: record.id });
+      await landingZoneMonitoringService.delete(record.id);
       setLandingZoneMonitoring((prev) => prev.filter((lz) => lz.id !== record.id));
-      message.success('Landing zone monitoring deleted successfully');
+      handleSuccess('Landing zone monitoring deleted successfully');
     } catch (err) {
-      message.error('Failed to delete landing zone monitoring');
+      handleError('Failed to delete landing zone monitoring');
     }
   };
 
@@ -256,18 +257,19 @@ const LandingZoneMonitoringTable = ({
   const toggleMonitoringStatus = async (record) => {
     try {
       if (record.approvalStatus !== APPROVAL_STATUS.APPROVED) {
-        message.error('Monitoring must be in approved state before it can be started');
+        handleError('Monitoring must be in approved state before it can be started');
         return;
       }
 
-      await toggleLzMonitoringStatus({ ids: [record.id], isActive: !record.isActive });
+      // await toggleLzMonitoringStatus({ ids: [record.id], isActive: !record.isActive });
+      await landingZoneMonitoringService.toggle([record.id], !record.isActive);
       setLandingZoneMonitoring((prev) =>
         prev.map((lz) => (lz.id === record.id ? { ...lz, isActive: !lz.isActive } : lz))
       );
 
-      message.success('Monitoring status toggled successfully');
+      handleSuccess('Monitoring status toggled successfully');
     } catch (err) {
-      message.error('Failed to toggle monitoring status');
+      handleError('Failed to toggle monitoring status');
     }
   };
   return (

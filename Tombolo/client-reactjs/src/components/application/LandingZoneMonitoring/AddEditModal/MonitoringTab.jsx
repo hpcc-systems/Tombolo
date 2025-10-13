@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Form, InputNumber, Row, Col, Select, Cascader, Input, message } from 'antd';
-import { getDropzones, getDirectoryList, convertToMB } from '../Utils';
+import { Card, Form, InputNumber, Row, Col, Select, Cascader, Input } from 'antd';
+import { handleError } from '@/components/common/handleResponse';
+import { convertToMB } from '../Utils';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../../common/InfoDrawer';
+import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service.js';
 
 //  Constants
 const { Option } = Select;
@@ -73,7 +75,7 @@ function MonitoringTab({
       // Call getDropzones async function
       const fetchDropzones = async () => {
         try {
-          const dz = await getDropzones(selectedCluster);
+          const dz = await landingZoneMonitoringService.getDropZones(selectedCluster.id);
           setDropzones(dz);
         } catch (error) {
           console.error('Error fetching dropzones:', error);
@@ -147,7 +149,7 @@ function MonitoringTab({
     const targetOption = selectedOptions[selectedOptions.length - 1];
 
     if (!selectedCluster || !selectedDropzone || !selectedMachine) {
-      message.error('Please select cluster, dropzone, and machine first');
+      handleError('Please select cluster, dropzone, and machine first');
       return;
     }
 
@@ -178,7 +180,7 @@ function MonitoringTab({
       setDirectoryOptions([...directoryOptions]); // Trigger re-render to show loading
 
       try {
-        const response = await getDirectoryList({
+        const response = await landingZoneMonitoringService.getDirectoryList({
           clusterId: selectedCluster.id,
           dropzoneName: selectedDropzone.Name,
           netaddr: selectedMachine.Netaddress,
@@ -225,7 +227,7 @@ function MonitoringTab({
         delete targetOption.children;
 
         // Show user-friendly error message
-        message.error('Failed to load directory contents. Please try again.');
+        handleError('Failed to load directory contents. Please try again.');
       } finally {
         // Only clear loading states if request wasn't aborted
         if (!currentAbortSignal.aborted) {

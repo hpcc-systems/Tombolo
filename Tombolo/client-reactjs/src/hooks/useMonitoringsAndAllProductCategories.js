@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { message } from 'antd';
-import { getAllProductCategories } from '../components/common/ASRTools';
+import { handleError } from '@/components/common/handleResponse';
+// import { getAllProductCategories } from '../components/common/ASRTools';
+import asrService from '@/services/asr.service';
 import { flattenObject } from '../components/common/CommonUtil';
 
 export const useMonitoringsAndAllProductCategories = (applicationId, getAllMonitorings, flatten = false) => {
@@ -27,17 +28,17 @@ export const useMonitoringsAndAllProductCategories = (applicationId, getAllMonit
           setMonitorings(allMonitorings.data);
         }
       } catch (error) {
-        message.error('Error fetching job monitorings');
+        handleError('Error fetching job monitorings');
       }
     };
 
     // Fetch all product categories
     const fetchAllProductCategories = async () => {
       try {
-        const allProducts = await getAllProductCategories();
+        const allProducts = await asrService.getAllProductCategories();
         setAllProductCategories(allProducts);
       } catch (error) {
-        message.error('Error fetching list of all products categories');
+        handleError('Error fetching list of all products categories');
       }
     };
 
