@@ -3,7 +3,7 @@ export const retryInterceptor = (apiClient) => {
   // Request logging
   apiClient.interceptors.request.use(
     (config) => {
-      console.log(`[Request] ${config.method?.toUpperCase()} ${config.url}`);
+      // Request logging handled by development tools
       return config;
     },
     (error) => {
@@ -15,7 +15,7 @@ export const retryInterceptor = (apiClient) => {
   // Response logging
   apiClient.interceptors.response.use(
     (response) => {
-      console.log(`[Response] ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
+      // Response logging handled by development tools
       return response;
     },
     (error) => {

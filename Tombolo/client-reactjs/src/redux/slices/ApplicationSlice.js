@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authHeader, handleError } from '@/components/common/AuthHeader';
+import integrationsService from '@/services/integrations.service.js';
 
 const initialState = {
   application: {},
@@ -43,10 +44,10 @@ export const getApplications = createAsyncThunk('application/getApplications', a
 });
 
 export const getAllActiveIntegrations = createAsyncThunk('application/getAllActiveIntegrations', async () => {
-  const response = await fetch('/api/integrations/getAllActive', { headers: authHeader() });
-  if (!response.ok) throw await handleError(response);
+  // const response = await fetch('/api/integrations/getAllActive', { headers: authHeader() });
+  const data = await integrationsService.getAllActive();
+  // if (!response.ok) throw await handleError(response);
 
-  const data = await response.json();
   const integrations = [];
 
   if (data.length > 0) {
@@ -110,8 +111,8 @@ const applicationSlice = createSlice({
           state.clusters = action.payload;
         }
       })
-      .addCase(getClusters.rejected, (state, action) => {
-        console.log('Failed to fetch clusters:', action.error.message);
+      .addCase(getClusters.rejected, (_state, _action) => {
+        // Error handled by global error interceptor
       })
 
       // getApplications
@@ -119,8 +120,7 @@ const applicationSlice = createSlice({
         state.applications = action.payload;
         state.applicationsRetrieved = true;
       })
-      .addCase(getApplications.rejected, (state, action) => {
-        console.log('Failed to fetch applications:', action.error.message);
+      .addCase(getApplications.rejected, (state, _action) => {
         state.noApplication.noApplication = true;
         state.applications = [];
         state.application = { applicationId: null, applicationTitle: null };
@@ -130,8 +130,8 @@ const applicationSlice = createSlice({
       .addCase(getAllActiveIntegrations.fulfilled, (state, action) => {
         state.integrations = action.payload;
       })
-      .addCase(getAllActiveIntegrations.rejected, (state, action) => {
-        console.log('Failed to fetch integrations:', action.error.message);
+      .addCase(getAllActiveIntegrations.rejected, (_state, _action) => {
+        // Error handled by global error interceptor
       });
   },
 });

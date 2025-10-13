@@ -1,10 +1,11 @@
 // Package imports
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, message, Row, Col } from 'antd';
+import { Modal, Form, Input, Select, Row, Col } from 'antd';
 import { isEmail } from 'validator';
+import { handleError, handleSuccess } from '../../../common/handleResponse';
 
 //Local Imports
-import { createNewDomain, getDomains, updateDomain } from './asr-integration-util.js';
+import asrService from '@/services/asr.service';
 
 // Constants
 const { Option } = Select;
@@ -49,16 +50,16 @@ const DomainModal = ({
     // Save domain
     try {
       const payload = form.getFieldsValue();
-      await updateDomain({ id: selectedDomain.id, payload });
+      await asrService.updateDomain({ id: selectedDomain.id, payload });
       // Get all domains and replace the current domains with the new ones
-      const domains = await getDomains();
+      const domains = await asrService.getAllDomains();
       setDomains(domains);
-      message.success('Domain updated successfully');
+      handleSuccess('Domain updated successfully');
       setSelectedDomain(null);
       form.resetFields();
       setDomainModalOpen(false);
     } catch (err) {
-      message.error('Failed to update domain');
+      handleError('Failed to update domain');
     }
   };
 
@@ -75,7 +76,7 @@ const DomainModal = ({
     const name = form.getFieldValue('name');
     const domainExists = domains.some((domain) => domain.name === name);
     if (domainExists) {
-      message.error('Domain  already exists');
+      handleError('Domain already exists');
       return;
     }
 
@@ -83,15 +84,15 @@ const DomainModal = ({
     try {
       const payload = form.getFieldsValue();
 
-      await createNewDomain({ payload });
+      await asrService.createDomain({ payload });
       // Get all domains and replace the current domains with the new ones
-      const domains = await getDomains();
+      const domains = await asrService.getAllDomains();
       setDomains(domains);
-      message.success('Domain saved successfully');
+      handleSuccess('Domain saved successfully');
       form.resetFields();
       setDomainModalOpen(false);
     } catch (err) {
-      message.error('Failed to save domain');
+      handleError('Failed to save domain');
     }
   };
 

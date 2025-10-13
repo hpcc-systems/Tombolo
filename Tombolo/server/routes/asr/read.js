@@ -1,4 +1,7 @@
+// Imports from libraries
 const express = require('express');
+
+// Local imports
 const router = express.Router();
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
@@ -13,8 +16,6 @@ const {
 } = require('../../middlewares/asrMiddleware');
 const { sequelize } = require('../../models');
 const { sendError, sendSuccess } = require('../../utils/response');
-
-//Local Imports
 const {
   MonitoringType,
   AsrDomain,
@@ -157,12 +158,11 @@ router.patch(
             { where: { id: req.params.id }, transaction: t }
           );
 
-          // delete all monitoring types for the domain
-          await AsrDomainMonitoringTypeToDomains.handleDelete({
-            id: req.params.id,
-            deletedByUserId: req.user.id,
+          // delete all monitoring types for the domain (hard delete)
+          await AsrDomainMonitoringTypeToDomains.destroy({
+            where: { domain_id: req.params.id },
+            force: true, // Hard delete - completely removes records
             transaction: t,
-            deleteKey: 'domain_id',
           });
 
           // create domain monitoring type mapping
@@ -339,10 +339,10 @@ router.put(
             { where: { id: req.params.id }, transaction: t }
           );
 
-          // delete all domains for the product
-          await AsrDomainToProductsRelation.handleDelete({
-            id: req.params.id,
-            deletedByUserId: req.user.id,
+          // delete all domains for the product (hard delete)
+          await AsrDomainToProductsRelation.destroy({
+            where: { product_id: req.params.id },
+            force: true, // Hard delete - completely removes records
             transaction: t,
           });
 
@@ -353,6 +353,7 @@ router.put(
                 product_id: req.params.id,
                 domain_id: domainId,
                 updatedBy: req.user.id,
+                createdBy: req.user.id,
               },
               { transaction: t }
             );
