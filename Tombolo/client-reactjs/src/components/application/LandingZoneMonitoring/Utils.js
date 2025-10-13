@@ -32,3 +32,29 @@ export const convertToMB = (value, unit) => {
   const multipliers = { MB: 1, GB: 1024, TB: 1024 * 1024, PB: 1024 * 1024 * 1024 };
   return value * (multipliers[unit] || 1);
 };
+
+// Handle landing zone monitoring approval with success/error handling and data refresh
+export async function handleLandingZoneMonitoringApproval({
+  formData,
+  landingZoneMonitoringService,
+  handleSuccess,
+  handleError,
+  applicationId,
+  setLandingZoneMonitoring,
+  setDisplayApprovalModal,
+  flattenObject,
+}) {
+  try {
+    await landingZoneMonitoringService.approveMonitoring(formData);
+    const updatedLzMonitoringData = await landingZoneMonitoringService.getAll(applicationId);
+    const flattenedMonitoring = updatedLzMonitoringData.map((monitoring) => {
+      const flat = flattenObject(monitoring);
+      return { ...flat, ...monitoring }; // Flat also keep the original object - make it easier to update
+    });
+    setLandingZoneMonitoring(flattenedMonitoring);
+    handleSuccess('Response saved successfully');
+    setDisplayApprovalModal(false);
+  } catch (error) {
+    handleError('Failed to updated landing zone monitoring');
+  }
+}

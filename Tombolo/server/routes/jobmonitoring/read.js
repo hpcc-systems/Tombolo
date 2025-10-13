@@ -4,6 +4,7 @@ const Sequelize = require('sequelize');
 
 //Local imports
 const logger = require('../../config/logger');
+const { sendError, sendSuccess } = require('../../utils/response');
 const { JobMonitoring, JobMonitoringData, Cluster } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
@@ -70,10 +71,10 @@ router.post('/', validate(validateCreateJobMonitoring), async (req, res) => {
       });
     }
 
-    return res.status(200).send(jobMonitoringWithAssociations);
+    return sendSuccess(res, jobMonitoringWithAssociations);
   } catch (err) {
     logger.error('Failed to save job monitoring: ', err);
-    return res.status(500).send('Failed to save job monitoring');
+    return sendError(res, 'Failed to save job monitoring');
   }
 });
 
@@ -90,10 +91,10 @@ router.get(
 
         order: [['createdAt', 'DESC']],
       });
-      return res.status(200).json(jobMonitorings);
+      return sendSuccess(res, jobMonitorings);
     } catch (err) {
       logger.error(err.message);
-      return res.status(500).send('Failed to get job monitorings');
+      return sendError(res, 'Failed to get job monitorings');
     }
   }
 );
@@ -105,10 +106,10 @@ router.get('/:id', async (req, res) => {
       where: { id: req.params.id },
       include: getCommonIncludes({}),
     });
-    return res.status(200).json(jobMonitoring);
+    return sendSuccess(res, jobMonitoring);
   } catch (err) {
     logger.error(err.message);
-    return res.status(500).send('Failed to get job monitoring');
+    return sendError(res, 'Failed to get job monitoring');
   }
 });
 
@@ -118,7 +119,7 @@ router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
     // Get existing monitoring
     const existingMonitoring = await JobMonitoring.findByPk(req.body.id);
     if (!existingMonitoring) {
-      return res.status(404).send('Job monitoring not found');
+      return sendError(res, 'Job monitoring not found', 404);
     }
 
     const {
@@ -161,7 +162,7 @@ router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
 
     //If no rows were updated, then the job monitoring does not exist
     if (updatedRows[0] === 0) {
-      return res.status(404).send('Job monitoring not found');
+      return sendError(res, 'Job monitoring not found', 404);
     }
 
     //If updated - Get the updated job monitoring
@@ -191,10 +192,10 @@ router.patch('/', validate(validateUpdateJobMonitoring), async (req, res) => {
       });
     }
 
-    return res.status(200).send(updatedJob);
+    return sendSuccess(res, updatedJob);
   } catch (err) {
     logger.error(err.message);
-    return res.status(500).send('Failed to update job monitoring');
+    return sendError(res, 'Failed to update job monitoring');
   }
 });
 
@@ -215,10 +216,10 @@ router.patch(
         },
         { where: { id: { [Op.in]: ids } } }
       );
-      return res.status(200).send('Successfully saved your evaluation');
+      return sendSuccess(res, 'Successfully saved your evaluation');
     } catch (err) {
       logger.error(err.message);
-      return res.status(500).send('Failed to evaluate job monitoring');
+      return sendError(res, 'Failed to evaluate job monitoring');
     }
   }
 );
@@ -233,10 +234,10 @@ router.delete(
         id: req.body.ids,
         deletedByUserId: req.user.id,
       });
-      return res.status(200).json(response);
+      return sendSuccess(res, response);
     } catch (err) {
       logger.error(err.message);
-      return res.status(500).send('Failed to delete job monitoring');
+      return sendError(res, 'Failed to delete job monitoring');
     }
   }
 );
@@ -251,10 +252,10 @@ router.delete(
         id: req.params.id,
         deletedByUserId: req.user.id,
       });
-      return res.status(200).send('success');
+      return sendSuccess(res, 'success');
     } catch (err) {
       logger.error(err.message);
-      return res.status(500).send('Failed to delete job monitoring');
+      return sendError(res, 'Failed to delete job monitoring');
     }
   }
 );
@@ -278,20 +279,19 @@ router.patch(
 
       if (jobMonitorings.length === 0) {
         logger.error('Toggle Job monitoring - Job monitorings not found');
-        return res.status(404).send('Job monitorings not found');
+        return sendError(res, 'Job monitorings not found', 404);
       }
 
       // Filter out the job monitorings that are not approved
       const approvedJobMonitorings = jobMonitorings.filter(
-        jobMonitoring =>
-          jobMonitoring.approvalStatus === APPROVAL_STATUS.APPROVED
+        jobMonitoring => jobMonitoring.approvalStatus === 'Approved' // Issue created to use Constant
       );
 
       if (approvedJobMonitorings.length === 0) {
         logger.error(
           'Toggle Job monitoring - No approved job monitorings found'
         );
-        return res.status(400).send('No approved job monitorings to toggle'); // Use a valid status code
+        return sendError(res, 'No approved job monitorings to toggle', 400);
       }
 
       // Get the IDs of the approved job monitorings
@@ -330,15 +330,21 @@ router.patch(
         include: getCommonIncludes({}),
       });
 
-      return res.status(200).send({
+      return sendSuccess(res, {
         success: true,
         message: 'Toggled successfully',
         updatedJobMonitorings,
       }); // Send the updated job monitorings
     } catch (err) {
-      await transaction.rollback();
+      try {
+        if (transaction) {
+          await transaction.rollback();
+        }
+      } catch (rollbackErr) {
+        logger.error('Failed to rollback transaction:', rollbackErr.message);
+      }
       logger.error(err.message);
-      return res.status(500).send('Failed to toggle job monitoring');
+      return sendError(res, 'Failed to toggle job monitoring');
     }
   }
 );
@@ -365,13 +371,13 @@ router.patch(
         );
       }
 
-      return res.status(200).json({
+      return sendSuccess(res, {
         success: true,
         message: 'Successfully updated job monitorings',
       });
     } catch (err) {
       logger.error(err.message);
-      return res.status(500).send('Failed to update job monitoring');
+      return sendError(res, 'Failed to update job monitoring');
     }
   }
 );
@@ -403,10 +409,10 @@ router.get(
       const sortedTopLevelInfo = topLevelInfo.sort(
         (a, b) => b.sequenceNumber - a.sequenceNumber
       );
-      return res.status(200).json(sortedTopLevelInfo);
+      return sendSuccess(res, sortedTopLevelInfo);
     } catch (err) {
       logger.error(err.message);
-      return res.status(500).send('Failed to get job monitoring data');
+      return sendError(res, 'Failed to get job monitoring data');
     }
   }
 );

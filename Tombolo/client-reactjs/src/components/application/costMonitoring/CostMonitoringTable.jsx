@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tooltip, Popconfirm, message, Popover, Tag } from 'antd';
+import { Table, Tooltip, Popconfirm, Popover, Tag } from 'antd';
 import startCase from 'lodash/startCase';
+import { handleError } from '@/components/common/handleResponse';
 import {
   EyeOutlined,
   EditOutlined,
@@ -16,7 +17,8 @@ import {
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-import { handleDeleteCostMonitoring, toggleCostMonitoringStatus } from './costMonitoringUtils';
+import costMonitoringService from '@/services/costMonitoring.service';
+import { handleSuccess } from '@/components/common/handleResponse';
 
 import styles from './costMonitoring.module.css';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
@@ -236,9 +238,16 @@ const CostMonitoringTable = ({
                             </div>
                           </>
                         }
-                        onConfirm={() =>
-                          handleDeleteCostMonitoring({ id: record.id, costMonitorings, setCostMonitorings })
-                        }
+                        onConfirm={async () => {
+                          try {
+                            await costMonitoringService.delete({ id: record.id });
+                            const filteredCostMonitorings = costMonitorings.filter((item) => item.id !== record.id);
+                            setCostMonitorings(filteredCostMonitorings);
+                            handleSuccess('Cost monitoring deleted successfully');
+                          } catch (err) {
+                            handleError(err.message || 'Failed to delete cost monitoring');
+                          }
+                        }}
                         okText="Continue"
                         okButtonProps={{ danger: true }}
                         cancelText="Close"
@@ -343,7 +352,7 @@ const CostMonitoringTable = ({
     try {
       // Ensure record is a valid object
       if (!record || typeof record !== 'object') {
-        message.error('Invalid monitoring data');
+        handleError('Invalid monitoring data');
         return;
       }
 
@@ -351,7 +360,7 @@ const CostMonitoringTable = ({
       setDisplayMonitoringDetailsModal(true);
     } catch (error) {
       console.error('Error in viewMonitoringDetails:', error);
-      message.error('Failed to view monitoring details');
+      handleError('Failed to view monitoring details');
     }
     // setSelectedMonitoring(record);
     // setDisplayMonitoringDetailsModal(true);
@@ -386,12 +395,14 @@ const CostMonitoringTable = ({
    */
   const toggleMonitoringStatus = async (record, status) => {
     try {
-      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED) {
-        message.error('Monitoring must be in approved state before it can be started');
+      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED && record.approvalStatus !== 'Approved') {
+        // Issue created to fix this
+        handleError('Monitoring must be in approved state before it can be started');
         return;
       }
 
-      const updatedData = await toggleCostMonitoringStatus([record.id], status);
+      const response = await costMonitoringService.toggle({ ids: [record.id], action: status });
+      const updatedData = response.updatedCostMonitorings;
       const updatedMonitoringIds = updatedData.map((monitoring) => monitoring.id);
 
       setCostMonitorings((prev) =>
@@ -402,7 +413,7 @@ const CostMonitoringTable = ({
         )
       );
     } catch (err) {
-      message.error('Failed to toggle monitoring status');
+      handleError('Failed to toggle monitoring status');
     }
   };
 

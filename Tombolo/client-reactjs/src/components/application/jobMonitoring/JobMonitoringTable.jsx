@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tooltip, Popconfirm, message, Popover, Tag } from 'antd';
+import { Table, Tooltip, Popconfirm, Popover, Tag } from 'antd';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import {
   EyeOutlined,
   EditOutlined,
@@ -16,7 +17,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-import { handleDeleteJobMonitoring, toggleJobMonitoringStatus } from './jobMonitoringUtils';
+import jobMonitoringService from '@/services/jobMonitoring.service';
 
 import styles from './jobMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';
@@ -193,9 +194,16 @@ const JobMonitoringTable = ({
                             </div>
                           </>
                         }
-                        onConfirm={() =>
-                          handleDeleteJobMonitoring({ id: record.id, jobMonitorings, setJobMonitorings })
-                        }
+                        onConfirm={async () => {
+                          try {
+                            await jobMonitoringService.delete({ id: record.id });
+                            const filteredJobMonitorings = jobMonitorings.filter((item) => item.id !== record.id);
+                            setJobMonitorings(filteredJobMonitorings);
+                            handleSuccess('Job monitoring deleted successfully');
+                          } catch (err) {
+                            handleError(err.message || 'Failed to delete job monitoring');
+                          }
+                        }}
                         okText="Continue"
                         okButtonProps={{ danger: true }}
                         cancelText="Close"
@@ -327,12 +335,13 @@ const JobMonitoringTable = ({
   // Start or pause monitoring
   const toggleMonitoringStatus = async (record) => {
     try {
-      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED) {
-        message.error('Monitoring must be in approved state before it can be started');
+      if (record?.approvalStatus !== APPROVAL_STATUS.APPROVED && record?.approvalStatus !== 'Approved') {
+        handleError('Monitoring must be in approved state before it can be started');
         return;
       }
 
-      const updatedData = await toggleJobMonitoringStatus({ ids: [record.id] });
+      const response = await jobMonitoringService.toggle({ ids: [record.id] });
+      const updatedData = response.updatedJobMonitorings;
       const updatedMonitoringIds = updatedData.map((monitoring) => monitoring.id);
 
       setJobMonitorings((prev) =>
@@ -343,7 +352,7 @@ const JobMonitoringTable = ({
         )
       );
     } catch (err) {
-      message.error('Failed to toggle monitoring status');
+      handleError('Failed to toggle monitoring status');
     }
   };
 

@@ -1,18 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Form, message, Tag, Descriptions } from 'antd';
+import { Form, Tag, Descriptions } from 'antd';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditCostMonitoringModal from './AddEditCostMonitoringModal';
-import {
-  createCostMonitoring,
-  getAllCostMonitorings,
-  handleBulkUpdateCostMonitorings,
-  updateSelectedCostMonitoring,
-  handleBulkDeleteCostMonitorings,
-  toggleCostMonitoringStatus,
-  evaluateCostMonitoring,
-} from './costMonitoringUtils';
+import costMonitoringService from '@/services/costMonitoring.service';
 
 import { identifyErroneousTabs } from '../jobMonitoring/jobMonitoringUtils';
 
@@ -66,7 +59,7 @@ function CostMonitoring() {
     monitorings: costMonitorings,
     setMonitorings: setCostMonitorings,
     allProductCategories,
-  } = useMonitoringsAndAllProductCategories(applicationId, getAllCostMonitorings);
+  } = useMonitoringsAndAllProductCategories(applicationId, costMonitoringService.getAll);
 
   // When intention to edit a monitoring is discovered
   useEffect(() => {
@@ -296,16 +289,16 @@ function CostMonitoring() {
       // Add metaData to allInputs
       allInputs = { ...allInputs, metaData, approvalStatus: APPROVAL_STATUS.PENDING, isActive: false };
 
-      const responseData = await createCostMonitoring({ inputData: allInputs });
+      const responseData = await costMonitoringService.create({ inputData: allInputs });
 
-      setCostMonitorings([responseData.data, ...costMonitorings]);
-      message.success('Cost monitoring saved successfully');
+      setCostMonitorings([responseData, ...costMonitorings]);
+      handleSuccess('Cost monitoring saved successfully');
 
       // Reset states and Close modal if saved successfully
       resetStates();
       setDisplayAddCostMonitoringModal(false);
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     } finally {
       setSavingCostMonitoring(false);
     }
@@ -368,7 +361,7 @@ function CostMonitoring() {
       });
       // If no touched fields
       if (touchedFields.length === 0) {
-        return message.error('No changes detected');
+        return handleError('No changes detected');
       }
 
       // Updated monitoring
@@ -421,7 +414,7 @@ function CostMonitoring() {
       }
       delete updatedData.threshold;
 
-      const response = await updateSelectedCostMonitoring({ updatedData });
+      const response = await costMonitoringService.updateOne({ updatedData });
 
       // If no error thrown set state with new data
       setCostMonitorings((prev) => {
@@ -433,9 +426,9 @@ function CostMonitoring() {
       });
 
       resetStates();
-      message.success('Cost monitoring updated successfully');
+      handleSuccess('Cost monitoring updated successfully');
     } catch (err) {
-      message.error('Failed to update cost monitoring');
+      handleError('Failed to update cost monitoring');
     } finally {
       setSavingCostMonitoring(false);
     }
@@ -443,22 +436,23 @@ function CostMonitoring() {
 
   const handleBulkDeleteSelectedCostMonitorings = async (ids) => {
     try {
-      await handleBulkDeleteCostMonitorings(ids);
+      await costMonitoringService.bulkDelete({ ids });
       setCostMonitorings((prev) => prev.filter((cm) => !ids.includes(cm.id)));
       setSelectedRows([]);
-      message.success('Selected cost monitorings deleted successfully');
+      handleSuccess('Selected cost monitorings deleted successfully');
     } catch (_) {
-      message.error('Unable to delete selected cost monitorings');
+      handleError('Unable to delete selected cost monitorings');
     }
   };
 
   const handleBulkStartPauseCostMonitorings = async ({ ids, action }) => {
     try {
-      const updatedMonitorings = await toggleCostMonitoringStatus(ids, action);
+      const response = await costMonitoringService.toggle({ ids, action });
+      const updatedMonitorings = response.updatedCostMonitorings;
       const updatedMap = new Map(updatedMonitorings.map((u) => [u.id, u]));
       setCostMonitorings((prev) => prev.map((m) => updatedMap.get(m.id) || m));
     } catch (_) {
-      message.error('Unable to start/pause selected cost monitorings');
+      handleError('Unable to start/pause selected cost monitorings');
     }
   };
 
@@ -594,7 +588,7 @@ function CostMonitoring() {
           selectedRows={selectedRows}
           setMonitoring={setCostMonitorings}
           monitoringTypeLabel={monitoringTypeName}
-          evaluateMonitoring={evaluateCostMonitoring}
+          evaluateMonitoring={costMonitoringService.evaluate}
         />
       )}
 
@@ -608,7 +602,7 @@ function CostMonitoring() {
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
           monitoringType="cost"
-          handleBulkUpdateMonitorings={handleBulkUpdateCostMonitorings}
+          handleBulkUpdateMonitorings={costMonitoringService.bulkUpdate}
         />
       )}
     </>

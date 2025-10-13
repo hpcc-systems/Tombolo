@@ -1,4 +1,3 @@
-/* eslint-disable unused-imports/no-unused-imports */
 import { useState, useEffect, useRef } from 'react';
 
 // Local Imports
@@ -6,9 +5,8 @@ import BreadCrumbs from '../../common/BreadCrumbs';
 import { useSelector } from 'react-redux';
 import { Form } from 'antd';
 import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service.js';
-import { identifyErroneousTabs } from './Utils';
+import { identifyErroneousTabs, handleLandingZoneMonitoringApproval } from './Utils';
 import { flattenObject } from '../../common/CommonUtil';
-import { getProductCategories } from '../../common/ASRTools'; // TODO - change
 import asrService from '@/services/asr.service.js';
 import monitoringTypeService from '@/services/monitoringType.service.js';
 import { getRoleNameArray } from '../../common/AuthUtil';
@@ -612,21 +610,18 @@ const LandigZoneMonitoring = () => {
         // setMonitoring={setLandingZoneMonitoring}
         monitoringTypeLabel={monitoringTypeName}
         evaluateMonitoring={landingZoneMonitoringService.approveMonitoring}
-        onSubmit={async (formData) => {
-          try {
-            await landingZoneMonitoringService.approveMonitoring(formData);
-            const updatedLzMonitoringData = await landingZoneMonitoringService.getAll(applicationId);
-            const flattenedMonitoring = updatedLzMonitoringData.map((monitoring) => {
-              const flat = flattenObject(monitoring);
-              return { ...flat, ...monitoring }; // Flat also keep the original object - make it easier to update
-            });
-            setLandingZoneMonitoring(flattenedMonitoring);
-            handleSuccess('Response saved successfully');
-            setDisplayApprovalModal(false);
-          } catch (error) {
-            handleError('Failed to updated landing zone monitoring');
-          }
-        }}
+        onSubmit={(formData) =>
+          handleLandingZoneMonitoringApproval({
+            formData,
+            landingZoneMonitoringService,
+            handleSuccess,
+            handleError,
+            applicationId,
+            setLandingZoneMonitoring,
+            setDisplayApprovalModal,
+            flattenObject,
+          })
+        }
       />
       {bulkEditModalVisibility && (
         <BulkUpdateModal

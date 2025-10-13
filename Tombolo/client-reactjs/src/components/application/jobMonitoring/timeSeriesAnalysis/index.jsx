@@ -5,7 +5,7 @@ import { FilterOutlined } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
 
 // Local imports
-import { getJobMonitoringData } from '../jobMonitoringUtils';
+import jobMonitoringService from '@/services/jobMonitoring.service';
 import BreadCrumbs from '../../../common/BreadCrumbs';
 import { performTimeSeriesAnalysis } from './timeSeriesFunc';
 import styles from '../jobMonitoring.module.css';
@@ -96,7 +96,7 @@ const TimeSeriesAnalysis = () => {
     if (id) {
       (async () => {
         try {
-          const data = await getJobMonitoringData({ id });
+          const data = await jobMonitoringService.getData({ id });
 
           setWus(data);
           // Set the initial selected left wuid to the first item
