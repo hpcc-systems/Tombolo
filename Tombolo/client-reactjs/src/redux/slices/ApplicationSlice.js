@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authHeader, handleError } from '@/components/common/AuthHeader';
 import integrationsService from '@/services/integrations.service.js';
+import applicationsService from '@/services/applications.service';
+import clustersService from '@/services/clusters.service';
 
 const initialState = {
   application: {},
@@ -14,10 +15,7 @@ const initialState = {
 
 // Async thunks
 export const getClusters = createAsyncThunk('application/getClusters', async (_, { dispatch }) => {
-  const response = await fetch('/api/cluster', { headers: authHeader() });
-  if (!response.ok) throw await handleError(response);
-
-  const clusters = await response.json();
+  const clusters = await clustersService.getAll();
 
   // If there are no clusters, set this to null for later checks
   if (clusters.data.length === 0) {
@@ -29,10 +27,7 @@ export const getClusters = createAsyncThunk('application/getClusters', async (_,
 });
 
 export const getApplications = createAsyncThunk('application/getApplications', async (_, { dispatch }) => {
-  const response = await fetch('/api/app/read/app_list', { headers: authHeader() });
-  if (!response.ok) throw await handleError(response);
-
-  const applications = await response.json();
+  const applications = await applicationsService.getAll();
 
   if (!applications || applications.length === 0) {
     dispatch(noApplicationFound(true));
