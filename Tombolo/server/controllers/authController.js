@@ -384,7 +384,11 @@ const resetPasswordWithToken = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
-      await transaction.rollback();
+      try {
+        await transaction.rollback();
+      } catch (rollbackError) {
+        logger.error('Rollback failed:', rollbackError);
+      }
       return res.status(400).json({
         success: false,
         message: 'Password does not meet security requirements',
