@@ -167,11 +167,6 @@ const BulkUpdateModal = ({
         updatedRows.push({ metaData: { ...metaData, contacts: newContacts }, id: row.id });
       });
 
-      // Update
-      // await handleBulkUpdateLzMonitorings(updatedRows);
-      console.log('------------------------');
-      console.log('updatedRows', updatedRows);
-      console.log('------------------------');
       await landingZoneMonitoringService.bulkUpdate(updatedRows);
 
       handleSuccess('Landing zone monitoring updated successfully');
