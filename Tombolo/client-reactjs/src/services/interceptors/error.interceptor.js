@@ -6,10 +6,6 @@ export const errorInterceptor = (apiClient) => {
     async (error) => {
       const { response, config } = error;
 
-      console.log('------------------------');
-      console.log('Err catcher: ', response);
-      console.log('------------------------');
-
       // ---- Network / connection errors (no response at all) ----
       if (!response) {
         return Promise.reject({

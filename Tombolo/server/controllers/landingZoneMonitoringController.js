@@ -362,10 +362,6 @@ const toggleLandingZoneMonitoringStatus = async (req, res) => {
       return record.approvalStatus === APPROVAL_STATUS.APPROVED;
     });
 
-    console.log('------------------------');
-    console.log(records);
-    console.log('------------------------');
-
     // if (isActive) {
     //   const pending = records.some(record => {
     //     return record.approvalStatus !== APPROVAL_STATUS.APPROVED;
