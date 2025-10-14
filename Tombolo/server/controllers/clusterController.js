@@ -561,7 +561,7 @@ const checkClusterHealth = async (req, res) => {
           ? 'Cluster healthy but requires authentication'
           : err.message;
       // send success response
-      sendSuccess(res, (data = []), message, statusCode);
+      sendSuccess(res, [], message, statusCode);
     } else {
       logger.error(`Checking cluster health ${baseUrl}: ${err.message}`);
       return sendError(res, `Cluster unreachable ${err.message}`, 503);
