@@ -139,7 +139,11 @@ const addCluster = async (req, res) => {
   } catch (err) {
     logger.error('Failed to add cluster: ', err);
     const errorResult = uniqueConstraintErrorHandler(err, err.message);
-    return sendError(res, errorResult.responseObject?.message || err.message, err.statusCode || errorResult.statusCode || 500);
+    return sendError(
+      res,
+      errorResult.responseObject?.message || err.message,
+      err.statusCode || errorResult.statusCode || 500
+    );
   }
 };
 
@@ -552,9 +556,10 @@ const checkClusterHealth = async (req, res) => {
       logger.error(
         `Check cluster health: ${err?.response?.status === 401 ? `${baseUrl} Healthy but requires authentication` : err.message}`
       );
-      const message = err.response.status === 401
-        ? 'Cluster healthy but requires authentication'
-        : err.message;
+      const message =
+        err.response.status === 401
+          ? 'Cluster healthy but requires authentication'
+          : err.message;
       return sendError(res, message, statusCode);
     } else {
       logger.error(`Checking cluster health ${baseUrl}: ${err.message}`);
