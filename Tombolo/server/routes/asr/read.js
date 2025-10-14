@@ -161,7 +161,7 @@ router.patch(
           // delete all monitoring types for the domain (hard delete)
           await AsrDomainMonitoringTypeToDomains.destroy({
             where: { domain_id: req.params.id },
-            force: true, // Hard delete - completely removes records
+            force: true,
             transaction: t,
           });
 
