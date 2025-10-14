@@ -488,7 +488,7 @@ const getClusterWhiteList = async (req, res) => {
   }
 };
 
-// Ping HPCC cluster to check if it is reachable
+// Ping HPCC cluster to check if it is reachable (with given username and password)
 const pingCluster = async (req, res) => {
   let baseUrl;
   try {
@@ -530,6 +530,60 @@ const pingCluster = async (req, res) => {
         .json({ success: false, message: err.message });
     } else {
       logger.error(`Pinging  cluster ${baseUrl}: ${err.message}`);
+      return res.status(503).json({
+        success: false,
+        message: `Cluster unreachable ${err.message}`,
+      });
+    }
+  }
+};
+
+// Check if cluster is alive - pings with no username and password
+const checkClusterHealth = async (req, res) => {
+  let baseUrl;
+  try {
+    logger.verbose(`Checking HPCC cluster health: ${req.body.name}`);
+    const { name } = req.body;
+
+    // Validate cluster
+    const cluster = clusters.find(c => c.name === name);
+
+    if (!cluster) {
+      logger.error(`Cluster not whitelisted: ${name}`);
+      throw new CustomError('Cluster not whitelisted', 400);
+    }
+
+    // Construct base URL
+    baseUrl = `${cluster.thor}:${cluster.thor_port}`;
+
+    // Attempt to check cluster health without credentials
+    await axios.get(`${baseUrl}`, {
+      timeout: 25000,
+      auth: {
+        username: null,
+        password: null,
+      },
+    });
+
+    return res
+      .status(200)
+      .json({ success: true, message: 'Cluster is healthy' });
+  } catch (err) {
+    if (err?.response?.status) {
+      const statusCode =
+        err.response.status === 401 ? 403 : err.response.status; // 401 means healthy but needs authentication
+      logger.error(
+        `Check cluster health: ${err?.response?.status === 401 ? `${baseUrl} Healthy but requires authentication` : err.message}`
+      );
+      return res.status(err.response.status).json({
+        success: err.response.status === 401 ? true : false,
+        message:
+          err.response.status === 401
+            ? 'Cluster healthy but requires authentication'
+            : err.message,
+      });
+    } else {
+      logger.error(`Checking cluster health ${baseUrl}: ${err.message}`);
       return res.status(503).json({
         success: false,
         message: `Cluster unreachable ${err.message}`,
@@ -663,6 +717,7 @@ module.exports = {
   updateCluster,
   getClusterWhiteList,
   pingCluster,
+  checkClusterHealth,
   pingExistingCluster,
   clusterUsage,
   clusterStorageHistory,
