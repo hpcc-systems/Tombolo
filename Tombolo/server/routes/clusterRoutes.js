@@ -46,7 +46,7 @@ router.get(
 // All routes below is accessible only by users with role "owner" and "administrator"
 router.use(validateUserRole([role.OWNER, role.ADMIN]));
 
-router.post('/post', validate(validateClusterPingPayload), pingCluster); // GET - Ping cluster
+router.post('/ping', validate(validateClusterPingPayload), pingCluster); // GET - Ping cluster
 router.post(
   '/clusterHealth',
   validate(validateClusterPingPayload),
