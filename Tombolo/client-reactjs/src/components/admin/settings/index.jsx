@@ -1,11 +1,12 @@
-// Libraries
+// Imports from libraries
 import React, { useState, useEffect } from 'react';
-import { Layout, message } from 'antd';
+import { Layout } from 'antd';
 
-// Local Imports
+// Local imports
 const GeneralSettings = React.lazy(() => import('./GeneralSettings'));
 const SupportSettings = React.lazy(() => import('./SupportSettings'));
-import { fetchInstanceSettings } from './settingsUtils';
+import { handleError } from '@/components/common/handleResponse';
+import instanceSettingsService from '@/services/instanceSettings.service';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import EditSettingsButton from './EditSettingsButton';
 import EditSettingsModel from './EditSettingsModel';
@@ -34,10 +35,10 @@ function Settings() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const instanceSettings = await fetchInstanceSettings();
+        const instanceSettings = await instanceSettingsService.getAll();
         setInstanceSettings(instanceSettings);
       } catch (error) {
-        message.error(error.message);
+        handleError(error.message);
       }
     };
 

@@ -25,7 +25,11 @@ const getInstanceSetting = async (req, res) => {
     if (!instance) {
       return sendError(res, 'Instance setting not found', 404);
     }
-    return sendSuccess(res, instance, 'Instance setting retrieved successfully');
+    return sendSuccess(
+      res,
+      instance,
+      'Instance setting retrieved successfully'
+    );
   } catch (error) {
     logger.error('getInstanceSetting: ', error);
     return sendError(res, error);
@@ -85,7 +89,11 @@ const updateInstanceSetting = async (req, res) => {
     });
 
     // Send response to the client
-    return sendSuccess(res, updatedInstance, 'Instance setting updated successfully');
+    return sendSuccess(
+      res,
+      updatedInstance,
+      'Instance setting updated successfully'
+    );
   } catch (error) {
     return sendError(res, error, 400);
   }
