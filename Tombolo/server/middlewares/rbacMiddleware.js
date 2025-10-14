@@ -1,4 +1,6 @@
 // rbacMiddleware.js
+const { sendError } = require('../utils/response');
+
 const validateUserRole = allowedRoles => {
   return (req, res, next) => {
     // Skip role validation for test environment
@@ -13,12 +15,7 @@ const validateUserRole = allowedRoles => {
     const hasRole = allowedRoles.some(role => allUserRoles.includes(role));
 
     if (!hasRole) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: 'Access denied: Insufficient privileges',
-        });
+      return sendError(res, 'Access denied: Insufficient privileges', 403);
     }
 
     next();
