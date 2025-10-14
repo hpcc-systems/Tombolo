@@ -552,7 +552,7 @@ const checkClusterHealth = async (req, res) => {
   } catch (err) {
     if (err?.response?.status) {
       const statusCode =
-        err.response.status === 401 ? 403 : err.response.status; // 401 means healthy but needs authentication
+        err.response.status === 401 ? 202 : err.response.status; // 401 means healthy but needs authentication
       logger.error(
         `Check cluster health: ${err?.response?.status === 401 ? `${baseUrl} Healthy but requires authentication` : err.message}`
       );
@@ -560,7 +560,8 @@ const checkClusterHealth = async (req, res) => {
         err.response.status === 401
           ? 'Cluster healthy but requires authentication'
           : err.message;
-      return sendError(res, message, statusCode);
+      // send success response
+      sendSuccess(res, (data = []), message, statusCode);
     } else {
       logger.error(`Checking cluster health ${baseUrl}: ${err.message}`);
       return sendError(res, `Cluster unreachable ${err.message}`, 503);
