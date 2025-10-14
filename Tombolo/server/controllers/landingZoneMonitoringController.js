@@ -334,7 +334,7 @@ const evaluateLandingZoneMonitoring = async (req, res) => {
     sendSuccess(res, updatedData);
   } catch (error) {
     logger.error('Error evaluating landing zone monitoring:', error);
-    sendError(res, error);
+    sendError(res, error.message || 'Failed to evaluate landing zone monitoring');
   }
 };
 
