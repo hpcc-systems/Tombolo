@@ -1,9 +1,10 @@
-// Libraries
+// Imports from libraries
 import React, { useState } from 'react';
-import { Modal, Form, message, Tabs, Button, Space, Badge } from 'antd';
+import { Modal, Form, Tabs, Button, Space, Badge } from 'antd';
 
 // Local imports
-import { updateUser, updateUserRoles, updateUserApplications } from './Utils';
+import { handleSuccess, handleError } from '@/components/common/handleResponse';
+import usersService from '@/services/users.service';
 import EditUserBasicTab from './EditUserBasicTab';
 import EditUserRolesTab from './EditUserRolesTab';
 import EditUserApplicationsTab from './EditUsersApplicationTab';
@@ -58,7 +59,7 @@ function EditUserModel({
       try {
         await basicUserDetailsForm.validateFields();
       } catch (err) {
-        message.error('Failed to update user');
+        handleError('Failed to update user');
         return;
       }
 
@@ -73,12 +74,12 @@ function EditUserModel({
         registrationStatus === selectedUser.registrationStatus &&
         verifiedUser === selectedUser.verifiedUser
       ) {
-        message.info('No changes detected');
+        handleSuccess('No changes detected');
         return;
       }
 
       // Update user
-      await updateUser({ userId: selectedUser.id, updatedUser: fieldValues });
+      await usersService.update({ userId: selectedUser.id, userData: fieldValues });
       setTabsToMarkUnsaved((prev) => prev.filter((tab) => tab !== '1'));
       setUnsavedFields((prev) => ({ ...prev, userDetails: [] }));
 
@@ -104,9 +105,9 @@ function EditUserModel({
         return updatedUsers;
       });
 
-      message.success('User updated successfully');
+      handleSuccess('User updated successfully');
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
       return;
     }
   };
@@ -123,11 +124,11 @@ function EditUserModel({
 
       // Check if there are any changes
       if (existingRoleIds.length === newRoleIds.length && existingRoleIds.every((id) => newRoleIds.includes(id))) {
-        message.info('No changes detected');
+        handleSuccess('No changes detected');
         return;
       }
 
-      await updateUserRoles({ userId: selectedUser.id, roles: newRoleIds });
+      await usersService.updateRoles({ userId: selectedUser.id, roles: newRoleIds });
       setTabsToMarkUnsaved((prev) => prev.filter((tab) => tab !== '2'));
       setUnsavedFields((prev) => ({ ...prev, roles: [] }));
 
@@ -160,9 +161,9 @@ function EditUserModel({
         return updatedUsers;
       });
 
-      message.success('User roles updated successfully');
+      handleSuccess('User roles updated successfully');
     } catch (err) {
-      message.error('Failed to update user roles');
+      handleError('Failed to update user roles');
     }
   };
 
@@ -180,12 +181,12 @@ function EditUserModel({
       const removed = existingApplications.filter((app) => !newApplications.includes(app));
 
       if (added.length === 0 && removed.length === 0) {
-        message.info('No changes detected');
+        handleSuccess('No changes detected');
         return;
       }
 
       // request to update user applications
-      const updatedData = await updateUserApplications({
+      const updatedData = await usersService.updateApplications({
         userId: selectedUser.id,
         applications: userApplicationsForm.getFieldsValue().applications,
       });
@@ -216,9 +217,9 @@ function EditUserModel({
         return updatedUsers;
       });
 
-      message.success('User applications updated successfully');
+      handleSuccess('User applications updated successfully');
     } catch (err) {
-      message.error('Failed to update user applications');
+      handleError('Failed to update user applications');
     }
   };
 

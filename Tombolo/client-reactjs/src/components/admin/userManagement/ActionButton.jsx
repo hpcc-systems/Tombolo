@@ -1,7 +1,11 @@
+// Imports from libraries
 import React from 'react';
-import { Menu, Dropdown, Button, message, Popconfirm } from 'antd';
+import { Menu, Dropdown, Button, Popconfirm } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import { bulkDeleteUsers } from './Utils';
+
+// Local imports
+import { handleSuccess, handleError } from '@/components/common/handleResponse';
+import usersService from '@/services/users.service';
 
 const UserManagementActionButton = ({
   handleAddUserButtonClick,
@@ -14,14 +18,13 @@ const UserManagementActionButton = ({
   const deleteSelected = async () => {
     try {
       const ids = selectedRows.map((row) => row.id);
-      await bulkDeleteUsers({ ids });
+      await usersService.bulkDelete({ ids });
       setSelectedRows([]);
       setUsers((prev) => prev.filter((user) => !ids.includes(user.id)));
       setFilteredUsers((prev) => prev.filter((user) => !ids.includes(user.id)));
-      message.success('Selected users deleted successfully');
+      handleSuccess('Selected users deleted successfully');
     } catch (err) {
-      message.error('Unable to delete selected users');
-      console.log(err);
+      handleError('Unable to delete selected users');
     }
   };
 
