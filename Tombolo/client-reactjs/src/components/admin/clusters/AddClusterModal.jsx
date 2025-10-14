@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message, Alert, Typography, Checkbox } from 'antd';
 
-import { pingCluster, addCluster } from './clusterUtils';
+import { pingCluster, checkClusterHealth, addCluster } from './clusterUtils';
 import AddClusterSteps from './AddClusterSteps';
 import EmailTagInput from '@/components/common/EmailTagInput';
 
@@ -86,7 +86,8 @@ function AddClusterModal({
       ]);
 
       const clusterInfo = form.getFieldsValue(['name', 'username', 'password']);
-      const response = await pingCluster({ clusterInfo, abortController });
+      // const response = await pingCluster({ clusterInfo, abortController });
+      const response = await checkClusterHealth({ clusterInfo, abortController });
 
       // Based on response set if cluster requires credentials
       if (response === 200) {

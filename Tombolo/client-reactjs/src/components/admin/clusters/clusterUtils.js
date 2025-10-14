@@ -67,6 +67,24 @@ export const pingCluster = async ({ clusterInfo, abortController }) => {
   return response.status;
 };
 
+// Check cluster health
+export const checkClusterHealth = async ({ clusterInfo, abortController }) => {
+  const payload = {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify(clusterInfo),
+    signal: abortController.signal,
+  };
+
+  const response = await fetch(`/api/cluster/clusterHealth`, payload);
+
+  if (response.status !== 200 && response.status !== 403) {
+    throw new Error('Failed to establish connection with cluster');
+  }
+
+  return response.status;
+};
+
 //Ping existing cluster
 export const pingExistingCluster = async ({ clusterId }) => {
   const payload = {
