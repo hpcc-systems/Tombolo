@@ -1,4 +1,5 @@
-// interceptors/error.interceptor.js
+const ignore401Routes = ['/auth/loginBasicUser'];
+const ignore403Routes = ['cluster/clusterHealth'];
 
 export const errorInterceptor = (apiClient) => {
   apiClient.interceptors.response.use(
@@ -18,7 +19,7 @@ export const errorInterceptor = (apiClient) => {
       }
 
       // ---- 401 Unauthorized ----
-      if (response.status === 401 && config.url !== '/auth/loginBasicUser') {
+      if (response.status === 401 && !ignore401Routes.includes(config.url)) {
         return Promise.reject({
           type: 'AUTH_ERROR',
           status: 401,
@@ -29,7 +30,7 @@ export const errorInterceptor = (apiClient) => {
       }
 
       // ---- 403 Forbidden ----
-      if (response.status === 403) {
+      if (response.status === 403 && !ignore403Routes.includes(config.url)) {
         return Promise.reject({
           type: 'FORBIDDEN',
           status: 403,
