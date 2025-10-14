@@ -21,3 +21,6 @@ cert.pem
 key.pem
 tombolo_docs/.docusaurus/*
 **/.idea
+e2e_tests/test-results
+e2e_tests/playwright-report
+e2e_tests/state.json

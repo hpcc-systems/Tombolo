@@ -203,6 +203,22 @@ Some services we recommend are: [SendGrid](https://sendgrid.com/), [Mailgun](htt
 
 If you have any integrations enabled and they have environment variables, they can be added to this configuration file as well. There is a placeholder section for those integration-specific variables. Please add them there.
 
+### 10. Test Configuration
+
+- **RATE_LIMIT_REQUEST_MAX**
+  The amount of requests per 15 minutes that will rate limit a user.
+
+  _Example:_ `400`
+
+---
+
+- **TEST_MODE**
+  This should only be set to true if end to end tests are being executed.
+
+  _Example:_ `false`
+
+---
+
 </details>
 </div>
 
