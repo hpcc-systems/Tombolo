@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message, Alert, Typography, Checkbox } from 'antd';
+import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, Alert, Typography, Checkbox } from 'antd';
 
 import { pingCluster, checkClusterHealth, addCluster } from './clusterUtils';
 import AddClusterSteps from './AddClusterSteps';
 import EmailTagInput from '@/components/common/EmailTagInput';
+import { handleSuccess } from '@/components/common/handleResponse';
 
 // Constants
 const { Option } = Select;
@@ -202,7 +203,7 @@ function AddClusterModal({
             if (event.cluster) {
               setClusters([...clusters, event.cluster]);
               setRequireCredentials(false);
-              message.success('Cluster added successfully');
+              handleSuccess('Cluster added successfully');
               form.resetFields();
               setDisplayAddClusterModal(false);
               setAddingCluster(false);

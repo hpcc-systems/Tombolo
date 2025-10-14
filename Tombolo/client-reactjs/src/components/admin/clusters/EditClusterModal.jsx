@@ -1,10 +1,11 @@
 // Libraries
 import React, { useEffect, useState } from 'react';
-import { Modal, Card, Form, Button, Row, Col, Input, Select, Checkbox, message } from 'antd';
+import { Modal, Card, Form, Button, Row, Col, Input, Select, Checkbox } from 'antd';
 import { isEmail } from 'validator';
 
 // Local Imports
 import { pingCluster, updateCluster } from './clusterUtils';
+import { handleSuccess, handleError } from '@/components/common/handleResponse';
 
 function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal, selectedCluster, setClusters }) {
   // Hooks
@@ -104,10 +105,10 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
       const updatedInfo = await updateCluster({ id: selectedCluster.id, clusterInfo: formValues });
       setClusters((clusters) => clusters.map((cluster) => (cluster.id === updatedInfo.id ? updatedInfo : cluster)));
 
-      message.success('Cluster updated successfully');
+      handleSuccess('Cluster updated successfully');
       handleModalCancel();
     } catch (err) {
-      message.error('Failed to update cluster');
+      handleError('Failed to update cluster');
     }
   };
   return (

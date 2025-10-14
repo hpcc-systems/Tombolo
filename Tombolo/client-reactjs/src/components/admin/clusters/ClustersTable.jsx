@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Table, Space, message, Popconfirm, Button, Tooltip } from 'antd';
+import { Table, Space, Popconfirm, Button, Tooltip } from 'antd';
 import { EyeOutlined, EditOutlined, DeleteOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
 
 import { deleteCluster, pingExistingCluster, getCluster } from './clusterUtils';
 import { formatDateTime } from '../../common/CommonUtil';
+import { handleSuccess, handleError } from '@/components/common/handleResponse';
 import styles from './clusters.module.css';
 
 function ClustersTable({
@@ -115,10 +116,10 @@ function ClustersTable({
   const handleDeleteCluster = async (id) => {
     try {
       await deleteCluster(id);
-      message.success('Cluster deleted successfully');
+      handleSuccess('Cluster deleted successfully');
       setClusters((clusters) => clusters.filter((cluster) => cluster.id !== id));
     } catch (e) {
-      message.error('Failed to delete cluster');
+      handleError('Failed to delete cluster');
     }
   };
 
@@ -140,7 +141,7 @@ function ClustersTable({
       setTestingConnection(record.id);
       await pingExistingCluster({ clusterId: record.id });
     } catch (e) {
-      message.error('Failed to establish connection with cluster');
+      handleError('Failed to establish connection with cluster');
     } finally {
       setTestingConnection(false);
     }
@@ -150,7 +151,7 @@ function ClustersTable({
       const updatedCluster = await getCluster(record.id);
       setClusters((clusters) => clusters.map((cluster) => (cluster.id === record.id ? updatedCluster : cluster)));
     } catch (err) {
-      message.error('Failed to get updated cluster');
+      handleError('Failed to get updated cluster');
     }
   };
 

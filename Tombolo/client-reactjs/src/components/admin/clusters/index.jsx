@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { message } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
+import { handleError } from '@/components/common/handleResponse';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import ClusterActionBtn from './ClusterActionBtn';
 import ClustersTable from './ClustersTable';
@@ -34,7 +34,7 @@ function Clusters() {
         const clusters = await getAllClusters();
         setClusters(clusters);
       } catch (e) {
-        message.error('Failed to fetch clusters');
+        handleError('Failed to fetch clusters');
       }
     })();
 
@@ -44,7 +44,7 @@ function Clusters() {
         const clusterWhiteList = await getClusterWhiteList();
         setClusterWhiteList(clusterWhiteList);
       } catch (e) {
-        message.error('Failed to fetch cluster white list');
+        handleError('Failed to fetch cluster white list');
       }
     })();
 
@@ -54,7 +54,7 @@ function Clusters() {
         const { instanceName } = await getConfigurationDetails();
         setTombolo_instance_name(instanceName);
       } catch (e) {
-        message.error('Failed to fetch instance name');
+        handleError('Failed to fetch instance name');
       }
     })();
   }, []);
