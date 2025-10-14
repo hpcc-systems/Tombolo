@@ -7,7 +7,8 @@ import ClustersTable from './ClustersTable';
 import ClusterDetailsModal from './ClusterDetailsModal';
 import AddClusterModal from './AddClusterModal';
 import EditClusterModal from './EditClusterModal';
-import { getAllClusters, getClusterWhiteList, getConfigurationDetails } from './clusterUtils';
+import clustersService from '@/services/clusters.service';
+import configurationsService from '@/services/configurations.service';
 import { clustersAddButtonTourShown, clustersFound } from '@/redux/slices/ApplicationSlice';
 
 function Clusters() {
@@ -31,7 +32,7 @@ function Clusters() {
     // Get all saved clusters
     (async () => {
       try {
-        const clusters = await getAllClusters();
+        const clusters = await clustersService.getAll();
         setClusters(clusters);
       } catch (e) {
         handleError('Failed to fetch clusters');
@@ -41,7 +42,7 @@ function Clusters() {
     // Get cluster white list
     (async () => {
       try {
-        const clusterWhiteList = await getClusterWhiteList();
+        const clusterWhiteList = await clustersService.getWhiteList();
         setClusterWhiteList(clusterWhiteList);
       } catch (e) {
         handleError('Failed to fetch cluster white list');
@@ -51,7 +52,7 @@ function Clusters() {
     // Get tombolo instance name
     (async () => {
       try {
-        const { instanceName } = await getConfigurationDetails();
+        const { instanceName } = await configurationsService.getInstanceDetails();
         setTombolo_instance_name(instanceName);
       } catch (e) {
         handleError('Failed to fetch instance name');

@@ -4,7 +4,7 @@ import { Modal, Card, Form, Button, Row, Col, Input, Select, Checkbox } from 'an
 import { isEmail } from 'validator';
 
 // Local Imports
-import { pingCluster, updateCluster } from './clusterUtils';
+import clustersService from '@/services/clusters.service';
 import { handleSuccess, handleError } from '@/components/common/handleResponse';
 
 function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal, selectedCluster, setClusters }) {
@@ -67,7 +67,7 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
       try {
         const clusterInfo = form.getFieldsValue(['username', 'password']);
         clusterInfo.name = selectedCluster.name;
-        const response = await pingCluster({ clusterInfo, abortController });
+        const response = await clustersService.ping({ clusterInfo, abortController });
 
         // Invalid credentials provided
         if (response === 403) {
@@ -102,7 +102,7 @@ function EditClusterModal({ displayEditClusterModal, setDisplayEditClusterModal,
     try {
       const formValues = form.getFieldsValue();
 
-      const updatedInfo = await updateCluster({ id: selectedCluster.id, clusterInfo: formValues });
+      const updatedInfo = await clustersService.update({ id: selectedCluster.id, clusterInfo: formValues });
       setClusters((clusters) => clusters.map((cluster) => (cluster.id === updatedInfo.id ? updatedInfo : cluster)));
 
       handleSuccess('Cluster updated successfully');
