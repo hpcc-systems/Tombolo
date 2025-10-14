@@ -290,7 +290,7 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
       deletedByUserId: req.user.id,
     });
 
-    sendSuccess(res, 'Landing zone monitoring deleted successfully');
+    sendSuccess(res, null, 'Landing zone monitoring deleted successfully');
   } catch (err) {
     logger.error('Error deleting landing zone monitoring: ', err);
 
