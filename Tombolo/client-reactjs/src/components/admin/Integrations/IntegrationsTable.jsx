@@ -1,4 +1,3 @@
-/* eslint-disable */
 //Package imports
 import React from 'react';
 import { Table, Switch, Button } from 'antd';
