@@ -18,12 +18,12 @@ export const getClusters = createAsyncThunk('application/getClusters', async (_,
   const clusters = await clustersService.getAll();
 
   // If there are no clusters, set this to null for later checks
-  if (clusters.data.length === 0) {
+  if (clusters.length === 0) {
     dispatch(noClustersFound(true));
     return null;
   }
 
-  return clusters.data;
+  return clusters;
 });
 
 export const getApplications = createAsyncThunk('application/getApplications', async (_, { dispatch }) => {
