@@ -14,7 +14,7 @@ const validateCreateSentNotification = [
   stringBody('notificationTitle'),
   objectBody('recipients', true),
   stringBody('status'),
-  stringBody('createdBy'),
+  // stringBody('createdBy'),
   objectBody('metaData', true),
   dateTimeBody('notifiedAt', true),
 ];
