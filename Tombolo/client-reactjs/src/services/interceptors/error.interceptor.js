@@ -1,5 +1,4 @@
 const ignore401Routes = ['/auth/loginBasicUser'];
-const ignore403Routes = ['cluster/clusterHealth'];
 
 export const errorInterceptor = (apiClient) => {
   apiClient.interceptors.response.use(
@@ -30,7 +29,7 @@ export const errorInterceptor = (apiClient) => {
       }
 
       // ---- 403 Forbidden ----
-      if (response.status === 403 && !ignore403Routes.includes(config.url)) {
+      if (response.status === 403) {
         return Promise.reject({
           type: 'FORBIDDEN',
           status: 403,
