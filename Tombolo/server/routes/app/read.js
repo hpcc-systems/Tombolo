@@ -30,6 +30,7 @@ const {
   validateUnshareApp,
   validateExportApp,
 } = require('../../middlewares/appMiddleware');
+const { sendError, sendSuccess } = require('../../utils/response');
 const NotificationModule = require('../notifications/email-notification');
 const jobScheduler = require('../../jobSchedular/job-scheduler');
 const logger = require('../../config/logger');
@@ -66,13 +67,10 @@ router.get('/app_list', async (req, res) => {
       order: [['updatedAt', 'DESC']],
     });
 
-    return res.status(200).json(applications);
+    return sendSuccess(res, applications);
   } catch (err) {
     logger.error(`Error occurred while getting application list: ${err}`);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occurred while getting application list',
-    });
+    return sendError(res, 'Error occurred while getting application list');
   }
 });
 
@@ -97,13 +95,10 @@ router.get(
         raw: true,
         order: [['updatedAt', 'DESC']],
       }); // this includes user created, public and shared apps
-      return res.status(200).json(allApplications);
+      return sendSuccess(res, allApplications);
     } catch (err) {
       logger.error('err', err);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occurred while getting application list',
-      });
+      return sendError(res, 'Error occurred while getting application list');
     }
   }
 );
@@ -113,13 +108,10 @@ router.get('/app', validate(validateGetAppById), async (req, res) => {
     const application = await Application.findOne({
       where: { id: req.query.app_id },
     });
-    return res.status(200).json(application);
+    return sendSuccess(res, application);
   } catch (err) {
     logger.error('err', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occured while getting application details',
-    });
+    return sendError(res, 'Error occurred while getting application details');
   }
 });
 
@@ -143,28 +135,36 @@ router.post(
             user_app_relation: 'created',
           });
 
-          return res.json({
-            result: 'success',
-            id: application.id,
-            title: application.title,
-            description: application.description,
-            user_app_id: userApp.id,
-          });
+          return sendSuccess(
+            res,
+            {
+              id: application.id,
+              title: application.title,
+              description: application.description,
+              user_app_id: userApp.id,
+            },
+            'Application created successfully'
+          );
         } else {
-          return res.json({ result: 'success', id: application.id });
+          return sendSuccess(
+            res,
+            { id: application.id },
+            'Application created successfully'
+          );
         }
       } else {
         const result = await Application.update(req.body, {
           where: { id: req.body.id },
         });
-        return res.json({ result: 'success', id: result.id });
+        return sendSuccess(
+          res,
+          { id: result.id },
+          'Application updated successfully'
+        );
       }
     } catch (err) {
       logger.error('saveApplication: ', err);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occurred while creating application',
-      });
+      return sendError(res, 'Error occurred while creating application');
     }
   }
 );
@@ -194,13 +194,10 @@ router.post('/deleteApplication', async function (req, res) {
     });
     if (app.creator === req.body.user)
       await Application.destroy({ where: { id: req.body.appIdToDelete } });
-    return res.status(200).send({ result: 'success' });
+    return sendSuccess(res, null, 'Application deleted successfully');
   } catch (err) {
     logger.error('err', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occurred while removing application',
-    });
+    return sendError(res, 'Error occurred while removing application');
   }
 });
 
@@ -211,7 +208,7 @@ router.post('/shareApplication', async (req, res) => {
   try {
     await UserApplication.create(appShareDetails);
     // Can't wait for notification  email to be sent - might take longer ->Sending response to client as soon as the data is saved in userApplication table
-    res.status(200).json({ result: 'success' });
+    sendSuccess(res, null, 'Application shared successfully');
     try {
       NotificationModule.notifyApplicationShare(
         appShareDetails.user_id,
@@ -225,10 +222,10 @@ router.post('/shareApplication', async (req, res) => {
     }
   } catch (err) {
     logger.error('app/read.js - Share app error: ', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occurred while saving user application mapping',
-    });
+    return sendError(
+      res,
+      'Error occurred while saving user application mapping'
+    );
   }
 });
 
@@ -240,10 +237,10 @@ router.post(
     try {
       const { application_id, username: user_id } = req.body;
       await UserApplication.destroy({ where: { application_id, user_id } });
-      return res.status(200).json({ success: true, message: 'Success' });
+      return sendSuccess(res, null, 'Application sharing stopped successfully');
     } catch (err) {
       logger.error('stopApplicationShare: ', err);
-      return res.status(405).json({ success: false, message: err.message });
+      return sendError(res, err.message, 405);
     }
   }
 );
@@ -432,10 +429,7 @@ router.post('/export', validate(validateExportApp), (req, res) => {
     });
   } catch (err) {
     logger.error('err', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occured while removing application',
-    });
+    return sendError(res, 'Error occurred while exporting application');
   }
 });
 

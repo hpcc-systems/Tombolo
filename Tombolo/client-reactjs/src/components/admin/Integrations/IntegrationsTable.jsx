@@ -1,13 +1,14 @@
 //Package imports
 import React from 'react';
-import { Table, Switch, Button, message } from 'antd';
+import { Table, Switch, Button } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
 import { useHistory } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { handleError } from '../../common/handleResponse';
 
 //Local Imports
 import styles from './integrations.module.css';
-import { toggleIntegration } from './integration-utils.js';
+import integrationsService from '@/services/integrations.service';
 
 import { getAllActiveIntegrations } from '@/redux/slices/ApplicationSlice';
 
@@ -28,12 +29,11 @@ function IntegrationsTable({ allIntegrations }) {
   // Handle integration active status change
   const handleToggleIntegrationStatus = async ({ record, active, application_id }) => {
     try {
-      await toggleIntegration({ integrationId: record.id, application_id, active });
-
+      await integrationsService.toggle({ integrationId: record.id, application_id, active });
       // dispatch below actions so redux store gets fresh data
       dispatch(getAllActiveIntegrations());
     } catch (error) {
-      message.error('Failed to toggle integration', error);
+      handleError('Failed to toggle integration');
     }
   };
 

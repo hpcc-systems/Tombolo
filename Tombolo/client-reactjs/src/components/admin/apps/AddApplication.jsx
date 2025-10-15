@@ -1,14 +1,18 @@
+// Imports from libraries
 import React, { useEffect, useState } from 'react';
-import { Modal, Button, Form, Input, Radio, message, Card, Descriptions, Tooltip } from 'antd';
+import { Modal, Button, Form, Input, Radio, Card, Descriptions, Tooltip, Typography } from 'antd';
 import { useDispatch } from 'react-redux';
-import { authHeader } from '../../common/AuthHeader';
-import Text from '../../common/Text';
 import { InfoCircleOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+
+const { Text: AntText } = Typography;
+
+// Local imports
+import { handleError, handleSuccess } from '../../common/handleResponse';
+import applicationsService from '@/services/applications.service';
+import Text from '../../common/Text';
 import InfoDrawer from '../../common/InfoDrawer';
 import { setUser, getUser } from '../../common/userStorage';
-import { Typography } from 'antd';
-import dayjs from 'dayjs';
-const { Text: AntText } = Typography;
 import { getApplications, applicationSelected } from '@/redux/slices/ApplicationSlice';
 import { emptyGroupsTree } from '@/redux/slices/GroupSlice';
 
@@ -158,7 +162,7 @@ function AddApplication({
     );
 
     if (appWithSameTitleExists) {
-      message.error('App with same title already exists');
+      handleError('App with same title already exists');
       return;
     }
 
@@ -173,23 +177,13 @@ function AddApplication({
         id: selectedApplication?.id || '',
       };
 
-      const response = await fetch('/api/app/read/saveApplication', {
-        method: 'post',
-        headers: authHeader(),
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        message.error('Error occurred while saving application');
-        return;
-      }
+      const responseData = await applicationsService.save(payload);
 
       dispatch(emptyGroupsTree());
-      message.success('Application saved successfully');
+      handleSuccess('Application saved successfully');
       form.resetFields();
       closeAddApplicationModal();
 
-      const responseData = await response.json();
       const { user_app_id, id, title, description } = responseData;
       user.applications.push({ id: user_app_id, application: { id, title, description } });
       setUser(JSON.stringify(user));
@@ -199,7 +193,7 @@ function AddApplication({
       dispatch(getApplications());
     } catch (err) {
       console.error(err);
-      message.error(err.message);
+      handleError(err.message);
     }
   };
 

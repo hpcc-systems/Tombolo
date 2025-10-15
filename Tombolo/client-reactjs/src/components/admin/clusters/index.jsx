@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
-import { message } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
+import { handleError } from '@/components/common/handleResponse';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import ClusterActionBtn from './ClusterActionBtn';
 import ClustersTable from './ClustersTable';
 import ClusterDetailsModal from './ClusterDetailsModal';
 import AddClusterModal from './AddClusterModal';
 import EditClusterModal from './EditClusterModal';
-import { getAllClusters, getClusterWhiteList, getConfigurationDetails } from './clusterUtils';
+import clustersService from '@/services/clusters.service';
+import configurationsService from '@/services/configurations.service';
 import { clustersAddButtonTourShown, clustersFound } from '@/redux/slices/ApplicationSlice';
 
 function Clusters() {
@@ -31,30 +32,30 @@ function Clusters() {
     // Get all saved clusters
     (async () => {
       try {
-        const clusters = await getAllClusters();
+        const clusters = await clustersService.getAll();
         setClusters(clusters);
       } catch (e) {
-        message.error('Failed to fetch clusters');
+        handleError('Failed to fetch clusters');
       }
     })();
 
     // Get cluster white list
     (async () => {
       try {
-        const clusterWhiteList = await getClusterWhiteList();
+        const clusterWhiteList = await clustersService.getWhiteList();
         setClusterWhiteList(clusterWhiteList);
       } catch (e) {
-        message.error('Failed to fetch cluster white list');
+        handleError('Failed to fetch cluster white list');
       }
     })();
 
     // Get tombolo instance name
     (async () => {
       try {
-        const { instanceName } = await getConfigurationDetails();
+        const { instanceName } = await configurationsService.getInstanceDetails();
         setTombolo_instance_name(instanceName);
       } catch (e) {
-        message.error('Failed to fetch instance name');
+        handleError('Failed to fetch instance name');
       }
     })();
   }, []);

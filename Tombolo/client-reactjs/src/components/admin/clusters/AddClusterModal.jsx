@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, message, Alert, Typography, Checkbox } from 'antd';
+import { Modal, Form, Row, Col, Input, Select, Button, Card, Spin, Alert, Typography, Checkbox } from 'antd';
 
-import { pingCluster, addCluster } from './clusterUtils';
+import clustersService from '@/services/clusters.service';
 import AddClusterSteps from './AddClusterSteps';
 import EmailTagInput from '@/components/common/EmailTagInput';
+import { handleSuccess } from '@/components/common/handleResponse';
 
 // Constants
 const { Option } = Select;
@@ -86,7 +87,9 @@ function AddClusterModal({
       ]);
 
       const clusterInfo = form.getFieldsValue(['name', 'username', 'password']);
-      const response = await pingCluster({ clusterInfo, abortController });
+      // const response = await pingCluster({ clusterInfo, abortController });
+
+      const response = await clustersService.checkHealth({ clusterInfo, abortController });
 
       // Based on response set if cluster requires credentials
       if (response === 200) {
@@ -133,7 +136,7 @@ function AddClusterModal({
     if (requireCredentials) {
       try {
         const clusterInfo = form.getFieldsValue(['name', 'username', 'password']);
-        const response = await pingCluster({ clusterInfo, abortController });
+        const response = await clustersService.ping({ clusterInfo, abortController });
 
         // Invalid credentials provided
         if (response === 403) {
@@ -166,7 +169,7 @@ function AddClusterModal({
       const payload = form.getFieldsValue();
 
       // Make API request to add cluster
-      const response = await addCluster({ clusterInfo: payload, abortController });
+      const response = await clustersService.addWithProgress({ clusterInfo: payload, abortController });
 
       if (!response.ok) {
         throw new Error('Failed to add cluster');
@@ -201,7 +204,7 @@ function AddClusterModal({
             if (event.cluster) {
               setClusters([...clusters, event.cluster]);
               setRequireCredentials(false);
-              message.success('Cluster added successfully');
+              handleSuccess('Cluster added successfully');
               form.resetFields();
               setDisplayAddClusterModal(false);
               setAddingCluster(false);

@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authHeader, handleError } from '@/components/common/AuthHeader';
+import integrationsService from '@/services/integrations.service.js';
+import applicationsService from '@/services/applications.service';
+import clustersService from '@/services/clusters.service';
 
 const initialState = {
   application: {},
@@ -13,25 +15,19 @@ const initialState = {
 
 // Async thunks
 export const getClusters = createAsyncThunk('application/getClusters', async (_, { dispatch }) => {
-  const response = await fetch('/api/cluster', { headers: authHeader() });
-  if (!response.ok) throw await handleError(response);
-
-  const clusters = await response.json();
+  const clusters = await clustersService.getAll();
 
   // If there are no clusters, set this to null for later checks
-  if (clusters.data.length === 0) {
+  if (clusters.length === 0) {
     dispatch(noClustersFound(true));
     return null;
   }
 
-  return clusters.data;
+  return clusters;
 });
 
 export const getApplications = createAsyncThunk('application/getApplications', async (_, { dispatch }) => {
-  const response = await fetch('/api/app/read/app_list', { headers: authHeader() });
-  if (!response.ok) throw await handleError(response);
-
-  const applications = await response.json();
+  const applications = await applicationsService.getAll();
 
   if (!applications || applications.length === 0) {
     dispatch(noApplicationFound(true));
@@ -43,10 +39,10 @@ export const getApplications = createAsyncThunk('application/getApplications', a
 });
 
 export const getAllActiveIntegrations = createAsyncThunk('application/getAllActiveIntegrations', async () => {
-  const response = await fetch('/api/integrations/getAllActive', { headers: authHeader() });
-  if (!response.ok) throw await handleError(response);
+  // const response = await fetch('/api/integrations/getAllActive', { headers: authHeader() });
+  const data = await integrationsService.getAllActive();
+  // if (!response.ok) throw await handleError(response);
 
-  const data = await response.json();
   const integrations = [];
 
   if (data.length > 0) {
@@ -110,8 +106,8 @@ const applicationSlice = createSlice({
           state.clusters = action.payload;
         }
       })
-      .addCase(getClusters.rejected, (state, action) => {
-        console.log('Failed to fetch clusters:', action.error.message);
+      .addCase(getClusters.rejected, (_state, _action) => {
+        // Error handled by global error interceptor
       })
 
       // getApplications
@@ -119,8 +115,7 @@ const applicationSlice = createSlice({
         state.applications = action.payload;
         state.applicationsRetrieved = true;
       })
-      .addCase(getApplications.rejected, (state, action) => {
-        console.log('Failed to fetch applications:', action.error.message);
+      .addCase(getApplications.rejected, (state, _action) => {
         state.noApplication.noApplication = true;
         state.applications = [];
         state.application = { applicationId: null, applicationTitle: null };
@@ -130,8 +125,8 @@ const applicationSlice = createSlice({
       .addCase(getAllActiveIntegrations.fulfilled, (state, action) => {
         state.integrations = action.payload;
       })
-      .addCase(getAllActiveIntegrations.rejected, (state, action) => {
-        console.log('Failed to fetch integrations:', action.error.message);
+      .addCase(getAllActiveIntegrations.rejected, (_state, _action) => {
+        // Error handled by global error interceptor
       });
   },
 });

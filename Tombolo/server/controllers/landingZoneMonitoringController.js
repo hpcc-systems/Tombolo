@@ -290,7 +290,7 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
       deletedByUserId: req.user.id,
     });
 
-    sendSuccess(res, 'Landing zone monitoring deleted successfully');
+    sendSuccess(res, null, 'Landing zone monitoring deleted successfully');
   } catch (err) {
     logger.error('Error deleting landing zone monitoring: ', err);
 
@@ -321,7 +321,7 @@ const evaluateLandingZoneMonitoring = async (req, res) => {
     });
 
     if (updatedCount === 0) {
-      sendError(res, 'No landing zone with the provided id(s) found', 404);
+      sendError(res, 'No landing zone monitoring records found with the provided IDs', 404);
     }
 
     // Get updated monitoring
@@ -334,7 +334,7 @@ const evaluateLandingZoneMonitoring = async (req, res) => {
     sendSuccess(res, updatedData);
   } catch (error) {
     logger.error('Error evaluating landing zone monitoring:', error);
-    sendError(res, error);
+    sendError(res, error.message || 'Failed to evaluate landing zone monitoring');
   }
 };
 

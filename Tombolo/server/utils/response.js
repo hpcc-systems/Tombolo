@@ -42,8 +42,8 @@ export const sendResponse = (
  * @param {string} [message='OK'] - Success message
  * @returns {import('express').Response} Express response
  */
-export const sendSuccess = (res, data, message = 'OK') =>
-  sendResponse(res, { status: 200, success: true, data, message, errors: [] });
+export const sendSuccess = (res, data, message = 'OK', status = 200) =>
+  sendResponse(res, { status, success: true, data, message, errors: [] });
 
 /**
  * Sends an error response to the client.

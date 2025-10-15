@@ -106,7 +106,7 @@ export const logout = createAsyncThunk('auth/logout', async () => {
     });
   } catch (error) {
     // Even if logout API fails, we still want to clear local storage
-    console.log('Logout API call failed:', error);
+    // Error logged by interceptor
   }
 
   clearStorage();
@@ -223,7 +223,7 @@ export const azureLoginRedirect = () => {
 
     window.location.href = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
   } catch (e) {
-    console.log(e);
+    // Error logged by global error handler
     message.error('An error occurred while trying to login with Microsoft.');
   }
 };

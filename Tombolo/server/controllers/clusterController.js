@@ -18,6 +18,7 @@ const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
+const { sendSuccess, sendError } = require('../utils/response');
 
 // Add a cluster - Without sending progress updates to client
 const addCluster = async (req, res) => {
@@ -35,10 +36,7 @@ const addCluster = async (req, res) => {
 
     if (!cluster) {
       logger.error(`Cluster not whitelisted: ${clusterName}`);
-      return res.status(400).json({
-        success: false,
-        message: 'Cluster not whitelisted',
-      });
+      return sendError(res, 'Cluster not whitelisted', 400);
     }
 
     const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
@@ -137,13 +135,15 @@ const addCluster = async (req, res) => {
 
     // Create cluster
     const newCluster = await Cluster.create(clusterPayload);
-    return res.status(201).json({ success: true, data: newCluster });
+    return sendSuccess(res, newCluster, 'Cluster added successfully');
   } catch (err) {
     logger.error('Failed to add cluster: ', err);
     const errorResult = uniqueConstraintErrorHandler(err, err.message);
-    return res
-      .status(err.statusCode || errorResult.statusCode)
-      .json(errorResult.responseObject);
+    return sendError(
+      res,
+      errorResult.responseObject?.message || err.message,
+      err.statusCode || errorResult.statusCode || 500
+    );
   }
 };
 
@@ -401,12 +401,10 @@ const getClusters = async (req, res) => {
       order: [['name', 'ASC']],
     });
 
-    return res.status(200).json({ success: true, data: clusters });
+    return sendSuccess(res, clusters);
   } catch (err) {
     logger.error('Get clusters: ', err);
-    return res
-      .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -425,12 +423,10 @@ const getCluster = async (req, res) => {
 
     if (!cluster) throw new CustomError('Cluster not found', 404);
 
-    return res.status(200).json({ success: true, data: cluster });
+    return sendSuccess(res, cluster);
   } catch (err) {
     logger.error(`Get cluster: ${err.message}`);
-    return res
-      .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -443,12 +439,10 @@ const deleteCluster = async (req, res) => {
       deletedByUserId: req.user.id,
     });
     if (!cluster) throw new CustomError('Cluster not found', 404);
-    return res.status(200).json({ success: true, data: cluster });
+    return sendSuccess(res, cluster, 'Cluster deleted successfully');
   } catch (err) {
     logger.error(`Delete cluster: ${err.message}`);
-    return res
-      .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -466,12 +460,10 @@ const updateCluster = async (req, res) => {
     cluster.updatedBy = req.user.id;
 
     await cluster.save();
-    return res.status(200).json({ success: true, data: cluster });
+    return sendSuccess(res, cluster, 'Cluster updated successfully');
   } catch (err) {
     logger.error(`Update cluster: ${err.message}`);
-    return res
-      .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -479,16 +471,14 @@ const updateCluster = async (req, res) => {
 const getClusterWhiteList = async (req, res) => {
   try {
     if (!clusters) throw new CustomError('Cluster whitelist not found', 404);
-    return res.status(200).json({ success: true, data: clusters });
+    return sendSuccess(res, clusters);
   } catch (err) {
     logger.error(`Get cluster white list: ${err.message}`);
-    return res
-      .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
-// Ping HPCC cluster to check if it is reachable
+// Ping HPCC cluster to check if it is reachable (with given username and password)
 const pingCluster = async (req, res) => {
   let baseUrl;
   try {
@@ -515,9 +505,7 @@ const pingCluster = async (req, res) => {
       timeout: 25000,
     });
 
-    return res
-      .status(200)
-      .json({ success: true, message: 'Cluster reachable' });
+    return sendSuccess(res, null, 'Cluster reachable');
   } catch (err) {
     if (err?.response?.status) {
       const statusCode =
@@ -525,15 +513,58 @@ const pingCluster = async (req, res) => {
       logger.error(
         `Ping cluster: ${err?.response?.status === 401 ? `${baseUrl} Reachable but invalid credentials` : err.message}`
       );
-      return res
-        .status(statusCode)
-        .json({ success: false, message: err.message });
+      return sendError(res, err.message, statusCode);
     } else {
       logger.error(`Pinging  cluster ${baseUrl}: ${err.message}`);
-      return res.status(503).json({
-        success: false,
-        message: `Cluster unreachable ${err.message}`,
-      });
+      return sendError(res, `Cluster unreachable ${err.message}`, 503);
+    }
+  }
+};
+
+// Check if cluster is alive - pings with no username and password
+const checkClusterHealth = async (req, res) => {
+  let baseUrl;
+  try {
+    logger.verbose(`Checking HPCC cluster health: ${req.body.name}`);
+    const { name } = req.body;
+
+    // Validate cluster
+    const cluster = clusters.find(c => c.name === name);
+
+    if (!cluster) {
+      logger.error(`Cluster not whitelisted: ${name}`);
+      throw new CustomError('Cluster not whitelisted', 400);
+    }
+
+    // Construct base URL
+    baseUrl = `${cluster.thor}:${cluster.thor_port}`;
+
+    // Attempt to check cluster health without credentials
+    await axios.get(`${baseUrl}`, {
+      timeout: 25000,
+      auth: {
+        username: null,
+        password: null,
+      },
+    });
+
+    return sendSuccess(res, null, 'Cluster is healthy');
+  } catch (err) {
+    if (err?.response?.status) {
+      const statusCode =
+        err.response.status === 401 ? 202 : err.response.status; // 401 means healthy but needs authentication
+      logger.error(
+        `Check cluster health: ${err?.response?.status === 401 ? `${baseUrl} Healthy but requires authentication` : err.message}`
+      );
+      const message =
+        err.response.status === 401
+          ? 'Cluster healthy but requires authentication'
+          : err.message;
+      // send success response
+      sendSuccess(res, [], message, statusCode);
+    } else {
+      logger.error(`Checking cluster health ${baseUrl}: ${err.message}`);
+      return sendError(res, `Cluster unreachable ${err.message}`, 503);
     }
   }
 };
@@ -556,7 +587,7 @@ const pingExistingCluster = async (req, res) => {
         where: { id },
       }
     );
-    return res.status(200).json({ success: true, message: 'Reachable' }); // Success Response
+    return sendSuccess(res, null, 'Reachable');
   } catch (err) {
     logger.error(`Ping existing cluster: ${err}`);
     await Cluster.update(
@@ -571,7 +602,7 @@ const pingExistingCluster = async (req, res) => {
         where: { id },
       }
     );
-    return res.status(503).json({ success: false, message: err.message }); // Service Unavailable
+    return sendError(res, err.message || err, 503);
   }
 };
 
@@ -600,13 +631,10 @@ const clusterUsage = async (req, res) => {
       maxUsage: target.max.toFixed(2),
       meanUsage: target.mean.toFixed(2),
     }));
-    return res.status(200).send(maxUsage);
+    return sendSuccess(res, maxUsage);
   } catch (err) {
     logger.error('clusterControllers clusterUsage: ', err);
-    return res.status(503).json({
-      success: false,
-      message: 'Failed to fetch current cluster usage',
-    });
+    return sendError(res, 'Failed to fetch current cluster usage', 503);
   }
 };
 
@@ -644,13 +672,10 @@ const clusterStorageHistory = async (req, res) => {
       }
     }
 
-    return res.status(200).send(filtered_data);
+    return sendSuccess(res, filtered_data);
   } catch (err) {
     logger.error('clusterController clusterStorageHistory: ', err);
-    return res.status(503).json({
-      success: false,
-      message: 'Failed to fetch current cluster usage',
-    });
+    return sendError(res, 'Failed to fetch cluster storage history', 503);
   }
 };
 
@@ -663,6 +688,7 @@ module.exports = {
   updateCluster,
   getClusterWhiteList,
   pingCluster,
+  checkClusterHealth,
   pingExistingCluster,
   clusterUsage,
   clusterStorageHistory,
