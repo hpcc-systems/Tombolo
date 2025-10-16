@@ -1,9 +1,12 @@
+// Imports from libraries
 import React, { useEffect, useState, useRef } from 'react';
-import { Form, Input, Button, Divider, message, Popover } from 'antd';
-import { Link, useParams } from 'react-router-dom';
+import { Form, Input, Button, Divider, Popover } from 'antd';
+import { useParams } from 'react-router-dom';
+
+// Local imports
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
 import { authHeader } from '../common/AuthHeader';
-
+import { handleError, handleSuccess } from '../common/handleResponse';
 import { getDeviceInfo } from './utils';
 import { setUser } from '../common/userStorage';
 
@@ -14,8 +17,6 @@ const ResetPassword = () => {
   //we will get the reset token from the url and test if it is valid to get the user information
   const { resetToken } = useParams();
   const [form] = Form.useForm();
-
-  const [messageApi, contextHolder] = message.useMessage();
 
   //ref to track if user is finished typing
   const finishedTypingRef = useRef(false);
@@ -71,9 +72,9 @@ const ResetPassword = () => {
       if (!response.ok) {
         let json = await response.json();
         if (json.message) {
-          message.error(json.message);
+          handleError(json.message);
         } else {
-          message.error('An undefined error occurred. Please try again later');
+          handleError('An undefined error occurred. Please try again later');
         }
         return;
       }
@@ -83,7 +84,7 @@ const ResetPassword = () => {
         setUserDetails(json?.user);
       }
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     }
   };
 
@@ -94,21 +95,9 @@ const ResetPassword = () => {
   }, [resetToken, userDetails]);
 
   const invalidToken = () => {
-    messageApi.open({
-      type: 'error',
-      content: (
-        <>
-          <span>
-            The reset token provided is either expired or invalid, please go to the{' '}
-            <Link to="/forgot-password">Forgot Password</Link> page to get a new one.
-          </span>
-        </>
-      ),
-      duration: 100,
-      style: {
-        marginTop: '20vh',
-      },
-    });
+    handleError(
+      'The reset token provided is either expired or invalid, please go to the Forgot Password page to get a new one.'
+    );
   };
 
   //if there is no token, we will show an error message to the user
@@ -134,15 +123,15 @@ const ResetPassword = () => {
         let json = await response.json();
 
         if (json.message) {
-          message.error(json.message);
+          handleError(json.message);
         } else {
-          message.error('An undefined error occurred. Please try again later');
+          handleError('An undefined error occurred. Please try again later');
         }
         return;
       }
 
       if (response.ok) {
-        message.success('Password reset successfully.');
+        handleSuccess('Password reset successfully.');
         let json = await response.json();
         if (json.success === true) {
           json.data.isAuthenticated = true;
@@ -152,7 +141,7 @@ const ResetPassword = () => {
         }
       }
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     }
   };
 
@@ -160,7 +149,6 @@ const ResetPassword = () => {
 
   return (
     <Form onFinish={onFinish} layout="vertical" form={form}>
-      {contextHolder}
       <Divider>Reset Password</Divider>
       <Popover content={popOverContent} title="Password Complexity" trigger="focus" placement="right">
         <Form.Item

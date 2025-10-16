@@ -63,7 +63,21 @@ export const sendError = (res, error, status = 500) => {
   } else if (typeof error === 'string') {
     errorsArray = [error];
   } else if (error instanceof Error) {
+    console.log('------------------------');
+    console.log(error.message);
+    console.log(error.status);
+    console.log('------------------------');
     const errorInfo = getErrorInfo(error);
+
+    console.log('---currently send---------------------');
+    console.log({
+      status: errorInfo.statusCode,
+      success: false,
+      message: errorInfo.message,
+      errors: [errorInfo.message],
+    });
+    console.log('------------------------');
+
     return sendResponse(res, {
       status: errorInfo.statusCode,
       success: false,
@@ -112,6 +126,9 @@ export const getErrorInfo = error => {
   }
 
   const { name } = error;
+  console.log('------------------------');
+  console.log('Name or error : ', name);
+  console.log('------------------------');
   const info = ERROR_MAP[name];
 
   if (info) {
@@ -131,6 +148,10 @@ export const getErrorInfo = error => {
 
 /** @type {Record<string, {code: number, message: string}>} */
 const ERROR_MAP = {
+  UnauthorizedError: {
+    code: StatusCodes.UNAUTHORIZED,
+    message: 'Invalid credentials provided.',
+  },
   EvalError: {
     code: StatusCodes.BAD_REQUEST,
     message: 'Evaluation error occurred.',
@@ -156,10 +177,6 @@ const ERROR_MAP = {
   AssertionError: {
     code: StatusCodes.BAD_REQUEST,
     message: 'Assertion failed.',
-  },
-  UnauthorizedError: {
-    code: StatusCodes.UNAUTHORIZED,
-    message: 'You are not authorized to perform this action.',
   },
   ForbiddenError: {
     code: StatusCodes.FORBIDDEN,

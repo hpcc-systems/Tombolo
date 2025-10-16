@@ -1,8 +1,11 @@
+// Imports from libraries
 import React from 'react';
-import { Form, Input, Button, Divider, message } from 'antd';
+import { Form, Input, Button, Divider } from 'antd';
 import { Link } from 'react-router-dom';
-import { authHeader } from '../common/AuthHeader';
 
+// Local imports
+import { authHeader } from '../common/AuthHeader';
+import { handleError, handleSuccess } from '../common/handleResponse';
 import styles from './login.module.css';
 
 const ForgotPassword = () => {
@@ -11,27 +14,14 @@ const ForgotPassword = () => {
       const url = '/api/auth/handlePasswordResetRequest';
       await fetch(url, { headers: authHeader(), method: 'POST', body: JSON.stringify(values) });
 
-      success();
+      handleSuccess('If a user with this email exists, a password reset link will be sent to the email address.');
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     }
-  };
-
-  const [messageApi, contextHolder] = message.useMessage();
-  const success = () => {
-    messageApi.open({
-      type: 'success',
-      content: 'If a user with this email exists, a password reset link will be sent to the email address.',
-      duration: 10,
-      style: {
-        marginTop: '20vh',
-      },
-    });
   };
 
   return (
     <Form onFinish={onFinish} layout="vertical">
-      {contextHolder}
       <Divider>Forgot Password?</Divider>
       <Form.Item
         label="Email"

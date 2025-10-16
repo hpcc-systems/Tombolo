@@ -1,9 +1,13 @@
+// Imports from libraries
 import React, { useState, useEffect, useRef } from 'react';
-import { Form, Input, Button, Spin, message, Popover } from 'antd';
+import { Form, Input, Button, Spin, Popover } from 'antd';
+
+// Local imports
 import { resetTempPassword } from './utils';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
 import { setUser } from '../common/userStorage';
 import { authHeader } from '../common/AuthHeader';
+import { handleError } from '../common/handleResponse';
 
 function ResetTempPassword() {
   const [loading, setLoading] = useState(false);
@@ -79,9 +83,9 @@ function ResetTempPassword() {
       if (!response.ok) {
         let json = await response.json();
         if (json.message) {
-          message.error(json.message);
+          handleError(json.message);
         } else {
-          message.error('An undefined error occurred. Please try again later');
+          handleError('An undefined error occurred. Please try again later');
         }
         return;
       }
@@ -91,7 +95,7 @@ function ResetTempPassword() {
         setUserDetails(json?.user);
       }
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     }
   };
 
@@ -124,10 +128,10 @@ function ResetTempPassword() {
         setUser(JSON.stringify(user));
         window.location.href = '/';
       } else {
-        message.error(result.message);
+        handleError(result.message);
       }
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     } finally {
       setLoading(false);
     }

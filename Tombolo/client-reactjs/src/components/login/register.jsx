@@ -1,16 +1,17 @@
+// Imports from libraries
 import React, { useState, useEffect } from 'react';
-import { Form, message } from 'antd';
+import { Form } from 'antd';
 import { CheckCircleFilled, LoadingOutlined, CloseCircleFilled } from '@ant-design/icons';
 import { useLocation, useHistory, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 
+// Local imports
 import RegisterUserForm from './registerUserForm';
 import { getDeviceInfo } from './utils';
 import { verifyEmail } from './utils';
 import { setUser } from '../common/userStorage';
-
+import { handleSuccess } from '../common/handleResponse';
 import { registerBasicUser } from '@/redux/slices/AuthSlice';
-import { useDispatch } from 'react-redux';
-
 import styles from './login.module.css';
 
 const Register = () => {
@@ -46,7 +47,7 @@ const Register = () => {
             throw new Error(response?.data?.message || 'Verification failed');
           }
 
-          message.success('Your email has been verified!');
+          handleSuccess('Your email has been verified!');
           setRegistrationComplete(true);
           setVerifying(false);
           setUser(JSON.stringify(response.data));

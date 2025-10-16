@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { authHeader, handleError } from '@/components/common/AuthHeader';
-import { message } from 'antd';
+import { handleError as handleResponseError } from '@/components/common/handleResponse';
 import { getUser, setUser } from '@/components/common/userStorage';
 import { Constants } from '@/components/common/Constants';
 
@@ -43,7 +43,7 @@ const loginBasicUserFunc = async (email, password, deviceInfo) => {
     } else if (data.message === Constants.LOGIN_TEMP_PW) {
       return data;
     } else {
-      message.error(data.message);
+      handleResponseError(data.message);
       return { message: data.message, type: Constants.LOGIN_FAILED };
     }
   } else if (!response.ok) {
@@ -177,7 +177,7 @@ export const loginOrRegisterAzureUser = createAsyncThunk(
 
       if (!response.ok) {
         if (response.status === 409) {
-          message.error(data.message);
+          handleResponseError(data.message);
         } else {
           handleError(response);
         }
@@ -224,7 +224,7 @@ export const azureLoginRedirect = () => {
     window.location.href = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
   } catch (e) {
     // Error logged by global error handler
-    message.error('An error occurred while trying to login with Microsoft.');
+    handleResponseError('An error occurred while trying to login with Microsoft.');
   }
 };
 

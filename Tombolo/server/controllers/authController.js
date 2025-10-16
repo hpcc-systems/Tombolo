@@ -1,10 +1,15 @@
+// Imports from libraries
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const { Op } = require('sequelize');
+const moment = require('moment');
+
+// Local imports
 const logger = require('../config/logger');
 const roleTypes = require('../config/roleTypes');
-const { sendSuccess, sendError, sendResponse } = require('../utils/response');
+const { sendSuccess, sendError } = require('../utils/response');
 const {
   User,
   UserRole,
@@ -19,8 +24,6 @@ const {
   InstanceSetting,
   sequelize,
 } = require('../models');
-const { Op } = require('sequelize');
-const moment = require('moment');
 const {
   generateAccessToken,
   generateRefreshToken,
