@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, message } from 'antd';
 import { CheckCircleFilled, LoadingOutlined, CloseCircleFilled } from '@ant-design/icons';
 import { useLocation, useHistory, Link } from 'react-router-dom';
@@ -12,7 +12,6 @@ import { registerBasicUser } from '@/redux/slices/AuthSlice';
 import { useDispatch } from 'react-redux';
 
 import styles from './login.module.css';
-import { useHistory } from 'react-router-dom';
 
 const Register = () => {
   const dispatch = useDispatch();
