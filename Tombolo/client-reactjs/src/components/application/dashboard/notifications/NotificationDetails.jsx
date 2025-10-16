@@ -5,7 +5,7 @@ import { Descriptions, Tooltip, Tag, Tabs } from 'antd';
 //Local Imports
 import { formatDateTime } from '../../../common/CommonUtil';
 import styles from './notifications.module.css';
-import { getNotificationHtmlCode } from './notificationUtil';
+import notificationsService from '@/services/notifications.service';
 
 function NotificationDetails({ selectedNotification }) {
   // Destructure metaData
@@ -20,10 +20,10 @@ function NotificationDetails({ selectedNotification }) {
         try {
           const { id } = selectedNotification;
 
-          const notificationHtmlCode = await getNotificationHtmlCode(id);
+          const notificationHtmlCode = await notificationsService.getNotificationHtmlCode(id);
           setNotificationHtmlCode(notificationHtmlCode);
         } catch (err) {
-          console.log(err);
+          // Error handled by service layer
         } finally {
           setFetchingNotificationDetails(false);
         }

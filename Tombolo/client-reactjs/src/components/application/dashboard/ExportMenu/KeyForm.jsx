@@ -1,9 +1,10 @@
 // Libraries
 import React from 'react';
-import { Form, Button, Input, message } from 'antd';
+import { Form, Button, Input } from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 
 // Local imports
+import { handleError } from '@/components/common/handleResponse';
 import { getUser } from '../../../common/userStorage';
 
 const KeyForm = ({ createKey }) => {
@@ -28,7 +29,7 @@ const KeyForm = ({ createKey }) => {
 
       createKey(data);
     } catch (err) {
-      if (err.message !== 'Validation failed') message.error(err.message);
+      if (err.message !== 'Validation failed') handleError(err.message);
     }
   };
 
@@ -41,7 +42,6 @@ const KeyForm = ({ createKey }) => {
       formData = await keyForm.validateFields();
     } catch (err) {
       validationError = err;
-      console.log(err);
     }
 
     return { validationError, formData };

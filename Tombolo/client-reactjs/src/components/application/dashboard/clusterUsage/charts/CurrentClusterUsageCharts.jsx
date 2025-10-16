@@ -3,9 +3,10 @@ import { useSelector } from 'react-redux';
 import { Empty, Select } from 'antd';
 
 import { addQueriesToUrl } from '../../../../common/AddQueryToUrl.js';
-import { authHeader, handleError } from '../../../../common/AuthHeader.js';
 import MeterGauge from './MeterGauge.jsx';
 import styles from '../clusterUsage.module.css';
+import clusterService from '@/services/cluster.service';
+import { handleError } from '@/components/common/handleResponse';
 
 const { Option } = Select;
 
@@ -22,17 +23,7 @@ function CurrentClusterUsageCharts({ selectedCluster, setSelectedCluster }) {
   //Get current usage func
   const getCurrentClusterUsage = async (clusterId) => {
     try {
-      const payload = {
-        method: 'GET',
-        headers: authHeader(),
-      };
-
-      const response = await fetch(`/api/cluster/currentClusterUsage/${clusterId}`, payload);
-      if (!response.ok) {
-        handleError(response);
-        return;
-      }
-      const data = await response.json();
+      const data = await clusterService.getCurrentClusterUsage(clusterId);
 
       const groupedUsage = [];
       const groupedData = {};

@@ -4,12 +4,13 @@ import { useSelector } from 'react-redux';
 import { Tabs } from 'antd';
 import GraphExpanded from './charts/GraphExpanded.jsx';
 
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
 import StorageUsageHistoryCharts from './charts/StorageUsageHistoryCharts.jsx';
 import Filters from './charts/Filters.jsx';
 import CurrentClusterUsageCharts from './charts/CurrentClusterUsageCharts.jsx';
 import ExportMenu from '../ExportMenu/ExportMenu.jsx';
 import { getQueryParamsFromUrl, addQueriesToUrl } from '../../../common/AddQueryToUrl.js';
+import clusterService from '@/services/cluster.service';
+import { handleError } from '@/components/common/handleResponse';
 
 function ClusterUsage() {
   const [clusterUsageHistory, setClusterUsageHistory] = useState({});
@@ -81,20 +82,10 @@ function ClusterUsage() {
   //Get  usage history  func
   const getClusterUsageHistory = async (clusterId) => {
     try {
-      const payload = {
-        method: 'GET',
-        headers: authHeader(),
-      };
-
       //Query data
       const queryData = JSON.stringify({ clusterId, historyDateRange });
 
-      const response = await fetch(`/api/cluster/clusterStorageHistory/${queryData}`, payload);
-      if (!response.ok) {
-        handleError(response);
-        return;
-      }
-      const data = await response.json();
+      const data = await clusterService.getClusterStorageHistory(queryData);
       setClusterUsageHistory(data);
     } catch (err) {
       setClusterUsageHistory([]);

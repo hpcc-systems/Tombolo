@@ -1,11 +1,12 @@
 // Packages
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Dropdown, Popconfirm, message } from 'antd';
+import { Button, Dropdown, Popconfirm } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined, FilterOutlined } from '@ant-design/icons';
 
 //Local imports
-import { deleteMultipleNotifications } from './notificationUtil';
+import { handleSuccess, handleError } from '@/components/common/handleResponse';
+import notificationsService from '@/services/notifications.service';
 
 const NotificationActions = ({
   selectedNotificationsIds,
@@ -24,14 +25,14 @@ const NotificationActions = ({
   // Delete selected notifications
   const deleteSelectedNotifications = async () => {
     try {
-      await deleteMultipleNotifications(selectedNotificationsIds);
-      message.success('Selected notifications deleted successfully');
+      await notificationsService.deleteMultipleNotifications(selectedNotificationsIds);
+      handleSuccess('Selected notifications deleted successfully');
       setSelectedNotificationsIds([]);
       setNotifications((prevNotifications) =>
         prevNotifications.filter((notification) => !selectedNotificationsIds.includes(notification.id))
       );
     } catch (err) {
-      message.error('Failed to delete selected notifications');
+      handleError('Failed to delete selected notifications');
     }
   };
 

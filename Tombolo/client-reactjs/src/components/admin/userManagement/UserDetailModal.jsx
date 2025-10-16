@@ -1,7 +1,10 @@
+// Imports from libraries
 import React, { useEffect, useState } from 'react';
 import { Modal, Descriptions, Button } from 'antd';
 import startCase from 'lodash/startCase';
 import { useSelector } from 'react-redux';
+
+// Local imports
 import styles from './userManagement.module.css';
 
 function UserDetailModal({ displayUserDetailsModal, setDisplayUserDetailsModal, selectedUser, roles }) {
@@ -57,7 +60,6 @@ function UserDetailModal({ displayUserDetailsModal, setDisplayUserDetailsModal, 
         <Descriptions.Item label="Applications">
           {selectedUser?.applications
             ?.map((ua) => {
-              console.log(ua.application_id);
               const app = allApps.find((a) => a.id === ua.application_id);
               return app ? app.title : null;
             })
