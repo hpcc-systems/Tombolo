@@ -25,6 +25,10 @@ const cost_monitoring_intervals = {
   monitor_cost_interval: '1 hours',
 };
 
+const work_unit_history_intervals = {
+  work_unit_history_interval: '1 hours',
+};
+
 // User account monitoring configuration
 const userAccountMonitoring = {
   passwordExpiryAlertDaysForUser: [10, 3, 1],
@@ -38,4 +42,5 @@ module.exports = {
   ...lz_monitoring_intervals,
   ...userAccountMonitoring,
   ...cost_monitoring_intervals,
+  ...work_unit_history_intervals,
 };

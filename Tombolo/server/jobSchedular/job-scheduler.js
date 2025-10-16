@@ -43,6 +43,10 @@ const {
   createAnalyzeCostJob,
 } = require('../jobSchedularMethods/costMonitoring');
 
+const {
+  createWorkUnitHistoryJob,
+} = require('../jobSchedularMethods/workUnitHistory');
+
 const { createDataArchiveJob } = require('../jobSchedularMethods/archive');
 
 const {
@@ -134,6 +138,7 @@ class JobScheduler {
       await this.checkClusterReachability();
       await this.checkClusterContainerization();
       await this.createMonitorCostJob();
+      await this.createWorkUnitHistoryJob();
       await this.createDataArchiveJob();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
@@ -236,6 +241,10 @@ class JobScheduler {
 
   createMonitorCostJob() {
     return createMonitorCostJob.call(this);
+  }
+
+  createWorkUnitHistoryJob() {
+    return createWorkUnitHistoryJob.call(this);
   }
 
   createAnalyzeCostJob() {

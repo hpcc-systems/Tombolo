@@ -632,6 +632,7 @@ exports.getCluster = clusterId => {
 
 /**
  * Retrieves cluster objects for the given array of cluster IDs, including reachability and credential status.
+ * If no cluster IDs are provided, retrieves all clusters from the database.
  *
  * For each cluster:
  *   - Decrypts the password hash if present
@@ -639,13 +640,15 @@ exports.getCluster = clusterId => {
  *   - Returns the cluster object if reachable and authorized
  *   - Returns an object with an error property if unreachable or unauthorized
  *
- * @param {string[]} clusterIds - Array of cluster IDs to fetch
+ * @param {string[] | null} clusterIds - Array of cluster IDs to fetch
  * @returns {Promise<Object[]>} Resolves to an array of cluster objects with an error key included if there were errors
  * @throws {Error} If there is a database or internal error
  */
 exports.getClusters = async clusterIds => {
   try {
-    const clusters = await Cluster.findAll({ where: { id: clusterIds } });
+    const whereClause =
+      clusterIds === null ? {} : { where: { id: clusterIds } };
+    const clusters = await Cluster.findAll(whereClause);
     const clusterPromises = clusters.map(async cluster => {
       try {
         if (cluster.hash) {
