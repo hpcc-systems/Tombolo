@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form, Input, Button, Divider, message } from 'antd';
+import { Link } from 'react-router-dom';
 import { authHeader } from '../common/AuthHeader';
 
 import styles from './login.module.css';
@@ -52,7 +53,7 @@ const ForgotPassword = () => {
         </Button>
       </Form.Item>
       <p className={styles.helperLink}>
-        <span>Remembered your password?</span> <a href="/src/components/login/login">Log in</a>
+        <span>Remembered your password?</span> <Link to="/login">Log in</Link>
       </p>
     </Form>
   );

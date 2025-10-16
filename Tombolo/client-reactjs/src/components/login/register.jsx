@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, message } from 'antd';
 import { CheckCircleFilled, LoadingOutlined, CloseCircleFilled } from '@ant-design/icons';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory, Link } from 'react-router-dom';
 
 import RegisterUserForm from './registerUserForm';
 import { getDeviceInfo } from './utils';
@@ -108,7 +108,7 @@ const Register = () => {
         <>
           <RegisterUserForm form={form} onFinish={onFinish} />
           <p className={styles.helperLink}>
-            <span>Already have an account?</span> <a href="/src/components/login/login">Login</a>
+            <span>Already have an account?</span> <Link to="/login">Login</Link>
           </p>
         </>
       )}
