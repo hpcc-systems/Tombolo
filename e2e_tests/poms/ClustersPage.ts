@@ -83,61 +83,278 @@ export class ClustersPage {
     // Scope to the visible AntD dropdown
     const visibleDropdown = this.page.locator(".ant-select-dropdown:visible");
 
-    // Prefer .ant-select-item-option (matches visible Play)
-    const itemOption = visibleDropdown
+    // Wait for dropdown to be fully loaded
+    await visibleDropdown.waitFor({ state: "visible", timeout: 5000 });
+    await this.page.waitForTimeout(500); // Let dropdown render
+
+    console.log(`Searching for option: "${n}"`);
+
+    // First, try to find the option without scrolling
+    let option = visibleDropdown
       .locator(".ant-select-item-option")
-      .filter({ hasText: new RegExp(`^\\s*${escaped}\\s*$`, "i") })
-      .filter({ has: this.page.locator(":visible") });
+      .filter({ hasText: new RegExp(`^\\s*${escaped}\\s*$`, "i") });
 
-    // Fallback to role=option
-    const roleOption = visibleDropdown
-      .getByRole("option", { name: new RegExp(`^\\s*${escaped}\\s*$`, "i") })
-      .filter({ has: this.page.locator(":visible") });
-
-    // Debug: Log all options
-    const options = visibleDropdown.locator(
-      '.ant-select-item-option, [role="option"]'
-    );
-    console.log(`Found ${await options.count()} dropdown options`);
-    for (let i = 0; i < (await options.count()); i++) {
-      const text = await options.nth(i).textContent();
-      const isVisible = await options.nth(i).isVisible();
-      const isEnabled = await options.nth(i).isEnabled();
+    if ((await option.count()) === 0) {
       console.log(
-        `Option ${i}: "${text}" (Visible: ${isVisible}, Enabled: ${isEnabled})`
+        `Option "${n}" not immediately visible, scrolling through dropdown...`
       );
+
+      // Find the actual scrollable container in AntD Select dropdown
+      // Try multiple possible selectors for the scrollable area
+      const scrollableSelectors = [
+        ".ant-select-dropdown .rc-virtual-list-holder",
+        ".ant-select-dropdown .ant-select-dropdown-menu",
+        ".ant-select-dropdown .rc-virtual-list",
+        ".ant-select-dropdown-menu",
+        ".rc-virtual-list-holder",
+        ".ant-select-dropdown",
+      ];
+
+      let dropdownContent = null;
+      let canScroll = false;
+
+      // Find the first scrollable element
+      for (const selector of scrollableSelectors) {
+        const element = visibleDropdown.locator(selector).first();
+        if (await element.isVisible().catch(() => false)) {
+          const isScrollable = await element
+            .evaluate((el) => {
+              const hasScroll = el.scrollHeight > el.clientHeight;
+              console.log(
+                `Checking ${el.className || el.tagName}: scrollHeight=${
+                  el.scrollHeight
+                }, clientHeight=${el.clientHeight}, scrollable=${hasScroll}`
+              );
+              return hasScroll;
+            })
+            .catch(() => false);
+
+          if (isScrollable) {
+            dropdownContent = element;
+            canScroll = true;
+            console.log(`Found scrollable element with selector: ${selector}`);
+            break;
+          }
+        }
+      }
+
+      if (!canScroll) {
+        console.log(
+          "No scrollable container found with standard selectors, examining DOM structure..."
+        );
+
+        // Debug: Log the dropdown structure to understand the layout
+        await visibleDropdown.evaluate((dropdown) => {
+          const logElement = (element: Element, depth = 0) => {
+            const indent = "  ".repeat(depth);
+            const hasScroll = element.scrollHeight > element.clientHeight;
+            const classes = element.className || "";
+            console.log(
+              `${indent}${element.tagName} .${classes} (scrollable: ${hasScroll}, scrollHeight: ${element.scrollHeight}, clientHeight: ${element.clientHeight})`
+            );
+
+            for (let i = 0; i < Math.min(element.children.length, 5); i++) {
+              logElement(element.children[i], depth + 1);
+            }
+          };
+
+          console.log("Dropdown structure:");
+          logElement(dropdown);
+        });
+
+        // Try to find ANY scrollable element within the dropdown
+        const anyScrollable = await visibleDropdown.evaluate(() => {
+          const walker = document.createTreeWalker(
+            document.querySelector(
+              '.ant-select-dropdown:not([style*="display: none"])'
+            ) as Node,
+            NodeFilter.SHOW_ELEMENT
+          );
+
+          let node;
+          while ((node = walker.nextNode())) {
+            const element = node as Element;
+            if (element.scrollHeight > element.clientHeight) {
+              return {
+                tagName: element.tagName,
+                className: element.className,
+                scrollHeight: element.scrollHeight,
+                clientHeight: element.clientHeight,
+              };
+            }
+          }
+          return null;
+        });
+
+        if (anyScrollable) {
+          console.log(
+            `Found scrollable element: ${anyScrollable.tagName}.${anyScrollable.className}`
+          );
+          // Try to create a locator for this element
+          dropdownContent = visibleDropdown
+            .locator(
+              `${anyScrollable.tagName.toLowerCase()}${
+                anyScrollable.className
+                  ? "." + anyScrollable.className.split(" ").join(".")
+                  : ""
+              }`
+            )
+            .first();
+          canScroll = true;
+        }
+      }
+
+      let found = false;
+      let scrollAttempts = 0;
+      const maxScrollAttempts = 50; // Prevent infinite scrolling
+      let lastVisibleOptions: string[] = [];
+
+      while (!found && scrollAttempts < maxScrollAttempts) {
+        // Get currently visible options
+        const currentOptions = visibleDropdown.locator(
+          ".ant-select-item-option"
+        );
+        const currentCount = await currentOptions.count();
+
+        // Check current visible options
+        const currentVisibleOptions: string[] = [];
+        for (let i = 0; i < currentCount; i++) {
+          const text = await currentOptions.nth(i).textContent();
+          const trimmed = text?.trim() || "";
+          currentVisibleOptions.push(trimmed);
+
+          if (trimmed === n) {
+            console.log(`Found "${n}" at visible position ${i}`);
+            option = currentOptions.nth(i);
+            found = true;
+            break;
+          }
+        }
+
+        if (found) break;
+
+        // Check if we've seen these options before (no more scrolling possible)
+        const optionsString = currentVisibleOptions.join("|");
+        const lastOptionsString = lastVisibleOptions.join("|");
+
+        if (optionsString === lastOptionsString) {
+          console.log(
+            "No new options appeared after scrolling, reaching end of list"
+          );
+          break;
+        }
+
+        lastVisibleOptions = [...currentVisibleOptions];
+        console.log(
+          `Scroll attempt ${
+            scrollAttempts + 1
+          }: Found ${currentCount} options, scrolling down...`
+        );
+
+        // Scroll down in the dropdown using multiple approaches
+        if (dropdownContent && canScroll) {
+          try {
+            // Primary method: scroll the dropdown content
+            await dropdownContent.evaluate((element) => {
+              element.scrollTop += 300; // Scroll down by 300px
+              console.log(`Scrolled to position: ${element.scrollTop}`);
+            });
+          } catch (scrollError) {
+            console.log(
+              `Direct scroll failed: ${
+                scrollError instanceof Error
+                  ? scrollError.message
+                  : String(scrollError)
+              }`
+            );
+          }
+
+          // Alternative: scroll by dispatching wheel event (safer than keyboard)
+          try {
+            await dropdownContent.dispatchEvent("wheel", { deltaY: 300 });
+          } catch (wheelError) {
+            console.log(
+              `Wheel scroll failed: ${
+                wheelError instanceof Error
+                  ? wheelError.message
+                  : String(wheelError)
+              }`
+            );
+          }
+        } else {
+          // Fallback: try scrolling the entire dropdown area with mouse
+          console.log("Trying fallback scroll method on entire dropdown");
+          try {
+            await visibleDropdown.hover();
+            await this.page.mouse.wheel(0, 300);
+            await this.page.waitForTimeout(300);
+          } catch (mouseError) {
+            console.log(
+              `Mouse wheel scroll failed: ${
+                mouseError instanceof Error
+                  ? mouseError.message
+                  : String(mouseError)
+              }`
+            );
+            console.log("No scrollable content found, cannot scroll");
+            break; // Exit the loop if we can't scroll
+          }
+        }
+
+        await this.page.waitForTimeout(500); // Wait longer for new options to load
+
+        // Check if dropdown is still visible after scrolling
+        if (!(await visibleDropdown.isVisible({ timeout: 1000 }))) {
+          console.log("Dropdown closed during scrolling, cannot continue");
+          break;
+        }
+
+        scrollAttempts++;
+      }
+
+      // If still not found after scrolling, try search/filter methods
+      if (!found) {
+        console.log(
+          `Still not found after scrolling, trying search/filter methods...`
+        );
+
+        // Try search methods
+        const searchWorked = await this.trySearchInDropdown(n);
+        if (searchWorked) {
+          await this.page.waitForTimeout(500);
+          option = visibleDropdown
+            .locator(".ant-select-item-option")
+            .filter({ hasText: new RegExp(`^\\s*${escaped}\\s*$`, "i") });
+        }
+      }
     }
 
-    // Check matches
-    const matches = itemOption.or(roleOption);
-    console.log(`Found ${await matches.count()} matches for "${n}"`);
-    if ((await matches.count()) === 0) {
-      console.log(`Option "${n}" not found, capturing screenshot`);
+    // Final check
+    const matchCount = await option.count();
+    console.log(`Final search found ${matchCount} matches for "${n}"`);
+
+    if (matchCount === 0) {
+      // Debug: Log all currently visible options for troubleshooting
+      const allVisible = visibleDropdown.locator(".ant-select-item-option");
+      const visibleCount = await allVisible.count();
+      console.log(`Debug - All ${visibleCount} currently visible options:`);
+
+      for (let i = 0; i < Math.min(visibleCount, 20); i++) {
+        const text = await allVisible.nth(i).textContent();
+        console.log(`  ${i}: "${text?.trim()}"`);
+      }
+
       await this.page.screenshot({
-        path: `option-${n}-failure.png`,
+        path: `dropdown-search-failure-${n}.png`,
         fullPage: true,
       });
-      throw new Error(`Dropdown option "${n}" not found`);
-    }
-
-    // Log attributes of matches
-    for (let i = 0; i < (await matches.count()); i++) {
-      const element = matches.nth(i);
-      console.log(
-        `Match ${i}: "${await element.textContent()}" (Visible: ${await element.isVisible()}, Enabled: ${await element.isEnabled()})`
-      );
-      console.log(
-        `Attributes: ${await element.evaluate((el) =>
-          JSON.stringify(
-            [...(el as Element).attributes].map((attr) => `${attr.name}: ${attr.value}`)
-          )
-        )}`
+      throw new Error(
+        `Dropdown option "${n}" not found after searching through virtualized dropdown`
       );
     }
 
-    return matches.first();
+    return option.first();
   }
-
   table(): Locator {
     return this.page.locator(".ant-table");
   }
@@ -170,32 +387,106 @@ export class ClustersPage {
     await expect(select).toBeEnabled();
     await select.waitFor({ state: "visible", timeout: 5000 });
     await this.page.waitForTimeout(500);
-    // For AntD Select, clicking the control opens dropdown
+
+    console.log(`Attempting to select cluster: "${name}"`);
+
+    // Click to open dropdown
     await select.click();
-    // await this.dropdownOptionByName(name).click();
-    //   await select.dispatchEvent('mousedown');
-    await this.page
-      .locator(".ant-select-dropdown:visible")
-      .waitFor({ state: "visible", timeout: 5000 })
-      .catch(() => {
-        console.log("Dropdown did not open after mousedown");
-      });
-    // The component pings cluster on change; give it a short moment to update state
+
+    // Wait for dropdown to appear
+    const dropdown = this.page.locator(".ant-select-dropdown:visible");
+    await dropdown.waitFor({ state: "visible", timeout: 5000 });
+    console.log("Dropdown opened successfully");
+
+    // Find and click the option
+    try {
+      const option = await this.dropdownOptionByName(name);
+
+      // Ensure option is visible and clickable
+      await option.scrollIntoViewIfNeeded();
+      await option.waitFor({ state: "visible", timeout: 5000 });
+
+      console.log(`Clicking option for "${name}"`);
+      await option.click();
+    } catch (error) {
+      console.log(
+        `Failed to find/click option directly, trying alternative methods: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+
+      // Alternative 1: Try using search first, then select
+      try {
+        console.log("Attempting to use search input to find the option...");
+        const searchWorked = await this.trySearchInDropdown(name);
+        if (searchWorked) {
+          // Try finding the option again after search
+          const filteredOption = this.page
+            .locator(".ant-select-dropdown:visible .ant-select-item-option")
+            .first();
+          if (await filteredOption.isVisible()) {
+            await filteredOption.click();
+            console.log(`Successfully selected "${name}" after search filter`);
+          } else {
+            throw new Error("No options visible after search");
+          }
+        } else {
+          throw new Error("Search method failed");
+        }
+      } catch (searchError) {
+        console.log(
+          `Search method failed: ${
+            searchError instanceof Error
+              ? searchError.message
+              : String(searchError)
+          }`
+        );
+
+        // Alternative 2: Try direct DOM manipulation
+        try {
+          console.log("Trying direct DOM manipulation...");
+          const success = await this.page.evaluate((optionName) => {
+            // Find the select component and trigger value change
+            const selectElements = document.querySelectorAll(
+              '.ant-select-dropdown:not([style*="display: none"]) .ant-select-item-option'
+            );
+            for (const element of selectElements) {
+              if (element.textContent?.trim() === optionName) {
+                (element as HTMLElement).click();
+                return true;
+              }
+            }
+            return false;
+          }, name);
+
+          if (!success) {
+            throw new Error("Option not found in DOM");
+          }
+          console.log(`Successfully selected "${name}" using DOM manipulation`);
+        } catch (domError) {
+          console.log(
+            `DOM manipulation failed: ${
+              domError instanceof Error ? domError.message : String(domError)
+            }`
+          );
+          throw new Error(
+            `Could not select cluster "${name}" using any available method. The option may not exist in the dropdown.`
+          );
+        }
+      }
+    }
+
+    // Wait for dropdown to close
+    await expect(dropdown).not.toBeVisible({ timeout: 5000 });
+
+    // Verify selection was made
+    const selectionItem = select.locator(".ant-select-selection-item");
+    await expect(selectionItem).toHaveText(name, { timeout: 5000 });
+    console.log(`Successfully selected "${name}"`);
+
+    // The component pings cluster on change; give it time to update state
+    console.log("Waiting for cluster ping...");
     await this.page.waitForTimeout(3000);
-
-    // Select option
-    const option = await this.dropdownOptionByName(name);
-    await option.waitFor({ state: "visible", timeout: 5000 });
-    await option.click();
-
-    // Verify selection
-    await expect(
-      this.page.locator(".ant-select-dropdown:visible")
-    ).not.toBeVisible();
-    await expect(select.locator(".ant-select-selection-item")).toHaveText(name);
-
-    // Wait for state update
-    await this.page.waitForTimeout(200);
   }
 
   async enterAdminEmail(): Promise<void> {
@@ -233,40 +524,89 @@ export class ClustersPage {
   }
 
   async isClusterInDropdown(name: string): Promise<boolean> {
+    let found = false;
+
     try {
       // Open the dropdown
       await this.openAddNewCluster();
       const select = this.clusterSelect();
       await select.click();
-      await this.page
-        .locator(".ant-select-dropdown:visible")
-        .waitFor({ state: "visible" });
 
-      // Check if option exists without throwing error
-      const options = this.page
-        .locator(".ant-select-dropdown:visible")
-        .locator('.ant-select-item-option, [role="option"]');
-      let exists = false;
+      const dropdown = this.page.locator(".ant-select-dropdown:visible");
+      await dropdown.waitFor({ state: "visible", timeout: 5000 });
 
-      for (let i = 0; i < (await options.count()); i++) {
-        const text = await options.nth(i).textContent();
-        if (text?.trim() === name) {
-          exists = true;
-          break;
-        }
-      }
-
-      // Close the modal
-      await this.cancelButton().click();
-
-      return exists;
-    } catch {
-      // Close modal if it's open
+      // Try to find the option using the improved search method
       try {
-        await this.cancelButton().click();
-      } catch {}
-      return false;
+        await this.dropdownOptionByName(name);
+        console.log(`Found cluster "${name}" in dropdown`);
+        found = true;
+      } catch (error) {
+        console.log(
+          `Cluster "${name}" not found in dropdown: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+        found = false;
+      }
+    } catch (error) {
+      console.log(
+        `Error checking if cluster "${name}" exists in dropdown: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+      found = false;
+    } finally {
+      // Always try to close the modal regardless of success/failure
+      try {
+        // First, ensure any open dropdown is closed
+        const openDropdown = this.page.locator(".ant-select-dropdown:visible");
+        if (await openDropdown.isVisible({ timeout: 500 })) {
+          console.log("Dropdown is still open, closing it first...");
+          // Try multiple methods to close the dropdown
+          await this.page.keyboard.press("Escape").catch(() => {});
+          await this.page
+            .locator("body")
+            .click({ position: { x: 10, y: 10 } })
+            .catch(() => {});
+
+          // Wait for dropdown to close
+          await expect(openDropdown)
+            .not.toBeVisible({ timeout: 2000 })
+            .catch(() => {
+              console.log(
+                "Dropdown didn't close with escape/click, forcing closure"
+              );
+            });
+        }
+
+        // Now try to close the modal
+        const modal = this.modalByTitle(this.addClusterTitle);
+        if (await modal.isVisible({ timeout: 1000 })) {
+          const cancelBtn = this.cancelButton();
+          if (await cancelBtn.isVisible({ timeout: 2000 })) {
+            await cancelBtn.click();
+          } else {
+            // Try alternative close methods
+            await this.page.keyboard.press("Escape");
+          }
+        }
+      } catch (closeError) {
+        console.log(
+          `Could not close modal: ${
+            closeError instanceof Error
+              ? closeError.message
+              : String(closeError)
+          }`
+        );
+        // Last resort - try clicking outside the modal
+        await this.page
+          .locator("body")
+          .click({ position: { x: 0, y: 0 } })
+          .catch(() => {});
+      }
     }
+
+    return found;
   }
 
   async deleteCluster(name: string): Promise<void> {
@@ -337,6 +677,44 @@ export class ClustersPage {
   // Utils
   private escapeRegex(str: string | number): string {
     return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  private async trySearchInDropdown(searchTerm: string): Promise<boolean> {
+    try {
+      // Ensure dropdown is still visible before attempting search
+      const dropdown = this.page.locator(".ant-select-dropdown:visible");
+      if (!(await dropdown.isVisible({ timeout: 1000 }))) {
+        console.log("Dropdown not visible, cannot perform search");
+        return false;
+      }
+
+      // First, try to find a search input in the dropdown
+      const searchInput = this.page.locator(
+        ".ant-select-dropdown:visible .ant-select-dropdown-search input, .ant-select-dropdown:visible input[type='text']"
+      );
+
+      if (await searchInput.isVisible({ timeout: 1000 })) {
+        console.log(`Found search input, filtering for "${searchTerm}"`);
+        await searchInput.clear();
+        await searchInput.fill(searchTerm);
+        await this.page.waitForTimeout(800); // Wait longer for filter to apply
+        return true;
+      }
+
+      // For AntD selects without search input, we can't reliably use keyboard filtering
+      // as it often closes the dropdown. Skip this approach.
+      console.log(
+        `No search input found in dropdown. Keyboard filtering not available for this dropdown type.`
+      );
+      return false;
+    } catch (error) {
+      console.log(
+        `Search methods not available or failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+      return false;
+    }
   }
 }
 
