@@ -8,6 +8,7 @@ import { getDeviceInfo } from './utils';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
+import { useDispatch } from 'react-redux';
 import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 
 import styles from './login.module.css';
@@ -215,7 +216,7 @@ const Login = () => {
                   </Button>
                 </Form.Item>
                 <p className={styles.helperLink}>
-                  <span>Need an account?</span> <Link to="/register">Register</Link>
+                  <span>Need an account?</span> <a href="/register">Register</a>
                 </p>
               </>
             )}

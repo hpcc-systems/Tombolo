@@ -12,6 +12,7 @@ import { registerBasicUser } from '@/redux/slices/AuthSlice';
 import { useDispatch } from 'react-redux';
 
 import styles from './login.module.css';
+import { useHistory } from 'react-router-dom';
 
 const Register = () => {
   const dispatch = useDispatch();
