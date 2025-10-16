@@ -17,15 +17,24 @@ const { Op } = require('sequelize');
 const logger = require('../../config/logger');
 const { SentNotification, sequelize } = require('../../models');
 const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode');
+const { sendSuccess, sendError } = require('../../utils/response');
 
 // Create a new sent notification
 router.post('/', validate(validateCreateSentNotification), async (req, res) => {
   try {
-    const response = await SentNotification.create(req.body, { raw: true });
-    return res.status(200).send(response);
+    const response = await SentNotification.create(
+      { ...req.body, createdBy: req.user.id },
+      { raw: true }
+    );
+    return sendSuccess(
+      res,
+      response,
+      'Sent notification created successfully',
+      201
+    );
   } catch (err) {
     logger.error('createSentNotification: ', err);
-    return res.status(500).send('Failed to save sent notification');
+    return sendError(res, 'Failed to save sent notification', 500);
   }
 });
 
@@ -46,10 +55,14 @@ router.get(
         },
         order: [['createdAt', 'DESC']],
       });
-      return res.status(200).json(notifications);
+      return sendSuccess(
+        res,
+        notifications,
+        'Sent notifications retrieved successfully'
+      );
     } catch (err) {
       logger.error('getSentNotifications: ', err);
-      return res.status(500).send('Failed to get sent notifications');
+      return sendError(res, 'Failed to get sent notifications', 500);
     }
   }
 );
@@ -62,12 +75,16 @@ router.get(
     try {
       const notification = await SentNotification.findByPk(req.params.id);
       if (!notification) {
-        return res.status(404).send('Sent notification not found');
+        return sendError(res, 'Sent notification not found', 404);
       }
-      return res.status(200).json(notification);
+      return sendSuccess(
+        res,
+        notification,
+        'Sent notification retrieved successfully'
+      );
     } catch (err) {
       logger.error('getSentNotification: ', err);
-      return res.status(500).send('Failed to get sent notification');
+      return sendError(res, 'Failed to get sent notification', 500);
     }
   }
 );
@@ -78,11 +95,16 @@ router.delete(
   validate(validateDeleteSentNotification),
   async (req, res) => {
     try {
-      await SentNotification.destroy({ where: { id: req.params.id } });
-      return res.status(200).send('success');
+      const deletedCount = await SentNotification.destroy({
+        where: { id: req.params.id },
+      });
+      if (deletedCount === 0) {
+        return sendError(res, 'Sent notification not found', 404);
+      }
+      return sendSuccess(res, null, 'Sent notification deleted successfully');
     } catch (err) {
       logger.error('deleteSentNotification: ', err);
-      return res.status(500).send('Failed to delete sent notification');
+      return sendError(res, 'Failed to delete sent notification', 500);
     }
   }
 );
@@ -93,11 +115,17 @@ router.delete(
   validate(validateBulkDeleteSentNotifications),
   async (req, res) => {
     try {
-      await SentNotification.destroy({ where: { id: req.body.ids } });
-      return res.status(200).send('success');
+      const deletedCount = await SentNotification.destroy({
+        where: { id: req.body.ids },
+      });
+      return sendSuccess(
+        res,
+        { deletedCount },
+        'Sent notifications deleted successfully'
+      );
     } catch (err) {
       logger.error('bulkDeleteSentNotifications: ', err);
-      return res.status(500).send('Failed to delete sent notifications');
+      return sendError(res, 'Failed to delete sent notifications', 500);
     }
   }
 );
@@ -160,10 +188,14 @@ router.patch(
         raw: true,
       });
 
-      return res.status(200).json(updatedNotifications);
+      return sendSuccess(
+        res,
+        updatedNotifications,
+        'Sent notifications updated successfully'
+      );
     } catch (err) {
       logger.error('updateSentNotifications: ', err);
-      return res.status(500).send('Failed to update sent notifications');
+      return sendError(res, 'Failed to update sent notifications', 500);
     }
   }
 );
@@ -176,37 +208,34 @@ router.post(
     try {
       const notification = await SentNotification.findByPk(req.body.id);
       if (!notification) {
-        return res.status(404).send('Sent notification not found');
+        return sendError(res, 'Sent notification not found', 404);
       }
 
       if (
         !notification.metaData ||
         !notification.metaData.notificationDetails
       ) {
-        return res
-          .status(404)
-          .send({ message: 'No details for this notification', data: null });
+        return sendError(res, 'No details for this notification', 404);
       }
 
       const templateName =
         notification.metaData.notificationDetails.templateName;
       if (!templateName) {
-        return res
-          .status(404)
-          .send({ message: 'Notification template not found', data: null });
+        return sendError(res, 'Notification template not found', 404);
       }
 
       const htmlCode = emailNotificationHtmlCode({
         templateName,
         data: notification.metaData.notificationDetails,
       });
-      return res.status(200).send({
-        message: 'Successfully fetched notification details',
-        data: htmlCode,
-      });
+      return sendSuccess(
+        res,
+        htmlCode,
+        'Successfully fetched notification details'
+      );
     } catch (err) {
       logger.error(err.message);
-      return res.status(500).send('Failed to get notification html code');
+      return sendError(res, 'Failed to get notification html code', 500);
     }
   }
 );

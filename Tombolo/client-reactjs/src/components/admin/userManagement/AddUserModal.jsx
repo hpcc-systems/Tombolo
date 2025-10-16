@@ -1,7 +1,11 @@
+// Imports from libraries
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, Row, Col, Card, message } from 'antd';
+import { Modal, Form, Input, Select, Row, Col, Card } from 'antd';
 import { useSelector } from 'react-redux';
-import { createUser } from './Utils';
+
+// Local imports
+import { handleSuccess, handleError } from '@/components/common/handleResponse';
+import usersService from '@/services/users.service';
 
 const { Option } = Select;
 
@@ -38,7 +42,7 @@ function AddUserModal({ displayAddUserModal, setDisplayAddUserModal, roles, setU
       }
 
       // Create user
-      const newUser = await createUser(values);
+      const newUser = await usersService.create(values);
       setUsers((prev) => [newUser, ...prev]);
 
       // if no filters add new user to filtered user
@@ -48,10 +52,10 @@ function AddUserModal({ displayAddUserModal, setDisplayAddUserModal, roles, setU
 
       // Reset from fields and close the modal
       form.resetFields();
-      message.success('User created successfully');
+      handleSuccess('User created successfully');
       setDisplayAddUserModal(false);
     } catch (error) {
-      message.error('Failed to create user');
+      handleError('Failed to create user');
     }
   };
 

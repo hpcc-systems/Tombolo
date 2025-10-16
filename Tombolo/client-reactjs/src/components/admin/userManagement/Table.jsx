@@ -1,5 +1,6 @@
+// Imports from libraries
 import React from 'react';
-import { Table, Tooltip, Popconfirm, message, Tag, Popover } from 'antd';
+import { Table, Tooltip, Popconfirm, Tag, Popover } from 'antd';
 import {
   EyeOutlined,
   EditOutlined,
@@ -10,8 +11,9 @@ import {
   DownOutlined,
 } from '@ant-design/icons';
 
-import { deleteUser, resetUserPassword, unlockUserAccount } from './Utils.js';
-
+// Local imports
+import { handleSuccess, handleError } from '@/components/common/handleResponse';
+import usersService from '@/services/users.service';
 import styles from './userManagement.module.css';
 
 const UserManagementTable = ({
@@ -28,17 +30,17 @@ const UserManagementTable = ({
   // Rest password
   const handlePasswordReset = async ({ id }) => {
     try {
-      await resetUserPassword({ id });
-      message.success('Password reset successfully');
+      await usersService.resetPassword({ id });
+      handleSuccess('Password reset successfully');
     } catch (err) {
-      message.error('Failed to reset password');
+      handleError('Failed to reset password');
     }
   };
 
   // Unlock user account
   const handleAccountUnlock = async ({ id }) => {
     try {
-      await unlockUserAccount({ id });
+      await usersService.unlockAccount({ id });
 
       // Update the user in the table
       setUsers((prev) =>
@@ -71,21 +73,21 @@ const UserManagementTable = ({
           return user;
         })
       );
-      message.success('User account unlocked successfully');
+      handleSuccess('User account unlocked successfully');
     } catch (err) {
-      message.error('Failed to unlock user account');
+      handleError('Failed to unlock user account');
     }
   };
 
   // Const handle user deletion - display message and setUsers and filteredUsers
   const handleDeleteUser = async ({ id }) => {
     try {
-      await deleteUser({ id });
+      await usersService.delete({ id });
       setUsers((prev) => prev.filter((user) => user.id !== id));
       setFilteredUsers((prev) => prev.filter((user) => user.id !== id));
-      message.success('User deleted successfully');
+      handleSuccess('User deleted successfully');
     } catch (err) {
-      message.error('Failed to delete user');
+      handleError('Failed to delete user');
     }
   };
 

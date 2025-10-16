@@ -6,6 +6,7 @@ const moment = require('moment');
 
 // Local Imports
 const logger = require('../config/logger');
+const { sendError } = require('./response');
 const {
   User,
   UserRole,
@@ -103,7 +104,7 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
     return true;
   } catch (e) {
     logger.error('Error while generating csrf token:' + e);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return sendError(res, 'Internal Server Error', 500);
   }
 };
 

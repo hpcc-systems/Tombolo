@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { Form, Select, DatePicker, Button, message } from 'antd';
+import { Form, Select, DatePicker, Button } from 'antd';
 import { addQueriesToUrl } from '../../../../common/AddQueryToUrl.js';
+import { handleError } from '@/components/common/handleResponse';
 
 const layout = {
   labelCol: { span: 24 },
@@ -36,7 +37,7 @@ function Filters({ setSelectedCluster, selectedCluster, setHistoryDateRange, his
       setSelectedCluster(clusterOptions);
       setHistoryDateRange(dateRange);
     } catch (err) {
-      message.error('Failed to fetch data');
+      handleError('Failed to fetch data');
     }
   };
 

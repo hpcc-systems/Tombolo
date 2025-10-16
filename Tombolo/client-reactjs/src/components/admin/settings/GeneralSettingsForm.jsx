@@ -1,3 +1,4 @@
+// Imports from libraries
 import React from 'react';
 import { Form, Input } from 'antd';
 
@@ -6,7 +7,7 @@ function GeneralSettingsForm({ generalSettingsForm, instanceSettings }) {
     <Form
       form={generalSettingsForm}
       layout="vertical"
-      initialValues={{ name: instanceSettings.name, description: instanceSettings.metaData.description }}>
+      initialValues={{ name: instanceSettings.name, description: instanceSettings.metaData?.description }}>
       <Form.Item
         label="Instance Name"
         name="name"

@@ -1,12 +1,13 @@
-// Libraries
+// Imports from libraries
 import React from 'react';
-import { Modal, Card, Form, message } from 'antd';
+import { Modal, Card, Form } from 'antd';
 import capitalize from 'lodash/capitalize';
 
-// Local Imports
+// Local imports
+import { handleError } from '@/components/common/handleResponse';
+import instanceSettingsService from '@/services/instanceSettings.service';
 import GeneralSettingsForm from './GeneralSettingsForm';
 import SupportSettingsForm from './SupportSettingsForm';
-import { updateInstanceSettings } from './settingsUtils';
 
 function EditSettingsModel({
   openEditModel,
@@ -43,13 +44,11 @@ function EditSettingsModel({
           break;
       }
 
-      const response = await updateInstanceSettings(updatedSettings);
-      if (response.data) {
-        setInstanceSettings(response.data);
-      }
+      const response = await instanceSettingsService.update(updatedSettings);
+      setInstanceSettings(response);
       setOpenEditModel(false);
     } catch (error) {
-      message.error('Failed to save settings');
+      handleError('Failed to save settings');
     }
   };
 

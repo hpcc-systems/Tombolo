@@ -1,13 +1,17 @@
-// Package imports
+// Imports from libraries
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Tabs, Space, message } from 'antd';
-import { getRoleNameArray } from '../../../common/AuthUtil';
+import { Tabs, Space } from 'antd';
 
+// Local imports
+import { getRoleNameArray } from '../../../common/AuthUtil';
+import { handleError } from '@/components/common/handleResponse';
 import SentNotificationsTable from './NotificationsTable';
 import NotificationDashboard from './NotificationDashboard';
 import NotificationActions from './BulkActions';
-import { getAllSentNotifications, getAllMonitorings, getAllDomains, getAllProductCategories } from './notificationUtil';
+import notificationsService from '@/services/notifications.service';
+import asrService from '@/services/asr.service';
+import monitoringTypeService from '@/services/monitoringType.service';
 import NotificationDetailsModal from './NotificationDetailsModal';
 import CreateNotificationModal from './CreateNotificationModal';
 import UpdateNotificationModal from './UpdateNotification';
@@ -54,10 +58,10 @@ const Index = () => {
     //Get all sent notifications
     (async () => {
       try {
-        const data = await getAllSentNotifications({ applicationId });
+        const data = await notificationsService.getAllSentNotifications(applicationId);
         setSentNotifications(data);
       } catch (error) {
-        message.error('Unable to fetch  notifications');
+        handleError('Unable to fetch  notifications');
       }
     })();
   }, [applicationId]);
@@ -72,30 +76,30 @@ const Index = () => {
     // Get all activity types [monitoring types]
     (async () => {
       try {
-        const response = await getAllMonitorings();
+        const response = await monitoringTypeService.getAll();
         setMonitorings(response);
       } catch (error) {
-        message.error('Failed to fetch activity types');
+        handleError('Failed to fetch activity types');
       }
     })();
 
     // Get all domains
     (async () => {
       try {
-        const response = await getAllDomains();
+        const response = await asrService.getAllDomains();
         setDomains(response);
       } catch (error) {
-        message.error('Failed to fetch domains');
+        handleError('Failed to fetch domains');
       }
     })();
 
     // Get all product categories
     (async () => {
       try {
-        const response = await getAllProductCategories();
+        const response = await asrService.getAllProductCategories();
         setProductCategories(response);
       } catch (error) {
-        message.error('Failed to fetch product categories');
+        handleError('Failed to fetch product categories');
       }
     })();
   }, []);
