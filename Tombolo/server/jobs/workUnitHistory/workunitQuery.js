@@ -2,37 +2,24 @@ const { Workunit } = require('@hpcc-js/comms');
 const { logOrPostMessage } = require('../jobUtils');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 const { getClusters } = require('../../utils/hpcc-util');
-const {
-  MonitoringType,
-  MonitoringLog,
-  WorkUnitHistory,
-} = require('../../models');
+const { MonitoringType, MonitoringLog, WorkUnit } = require('../../models');
 
 // Constants
 const MONITORING_TYPE_NAME = 'WorkUnit History';
 
 /**
  * Gets the start and end time for fetching workunits
- * @param {string|null} lastScanTime - Last scan time from monitoring log
+ * Always queries from start of current day (UTC) to now
  * @param {boolean} toIso - Whether to return ISO strings
  * @returns {{startTime: string|Date, endTime: string|Date}}
  */
-function getStartAndEndTime(lastScanTime, toIso = false) {
+function getStartAndEndTime(toIso = false) {
   const now = new Date();
-  let startTime;
 
-  if (lastScanTime) {
-    // Start from beginning of the day of last scan to ensure no gaps
-    const lastScan = new Date(lastScanTime);
-    startTime = new Date(
-      lastScan.getFullYear(),
-      lastScan.getMonth(),
-      lastScan.getDate()
-    );
-  } else {
-    // If no previous scan, start from beginning of today
-    startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  }
+  // Always start from beginning of current day in UTC
+  const startTime = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
 
   return {
     startTime: toIso ? startTime.toISOString() : startTime,
@@ -95,26 +82,29 @@ function parseWorkunitTimestamp(wuId, timezoneOffset = 0) {
  * @returns {Object} Transformed workunit data
  */
 function transformWorkunitData(workunit, clusterId, timezoneOffset = 0) {
-  const executeCost = parseFloat(workunit.ExecuteCost) || 0.0;
-  const fileAccessCost = parseFloat(workunit.FileAccessCost) || 0.0;
-  const compileCost = parseFloat(workunit.CompileCost) || 0.0;
+  // Extract data from _espState property
+  const wuData = workunit._espState || workunit;
+
+  const executeCost = parseFloat(wuData.ExecuteCost) || 0.0;
+  const fileAccessCost = parseFloat(wuData.FileAccessCost) || 0.0;
+  const compileCost = parseFloat(wuData.CompileCost) || 0.0;
   const totalCost = executeCost + fileAccessCost + compileCost;
 
   return {
-    wuId: workunit.Wuid,
+    wuId: wuData.Wuid,
     clusterId,
-    workUnitTimestamp: parseWorkunitTimestamp(workunit.Wuid, timezoneOffset),
-    owner: workunit.Owner || 'unknown',
-    engine: workunit.Cluster || 'unknown',
-    jobName: workunit.Jobname || null,
-    stateId: workunit.StateID || 0,
-    state: workunit.State || 'unknown',
-    protected: workunit.Protected === true || workunit.Protected === 'true',
-    action: workunit.Action || 0,
-    actionEx: workunit.ActionEx || null,
-    isPausing: workunit.IsPausing === true || workunit.IsPausing === 'true',
-    thorLcr: workunit.ThorLCR === true || workunit.ThorLCR === 'true',
-    totalClusterTime: parseFloat(workunit.TotalClusterTime) || 0.0,
+    workUnitTimestamp: parseWorkunitTimestamp(wuData.Wuid, timezoneOffset),
+    owner: wuData.Owner || 'unknown',
+    engine: wuData.Cluster || 'unknown',
+    jobName: wuData.Jobname || null,
+    stateId: wuData.StateID || 0,
+    state: wuData.State || 'unknown',
+    protected: wuData.Protected === true || wuData.Protected === 'true',
+    action: wuData.Action || 0,
+    actionEx: wuData.ActionEx || null,
+    isPausing: wuData.IsPausing === true || wuData.IsPausing === 'true',
+    thorLcr: wuData.ThorLCR === true || wuData.ThorLCR === 'true',
+    totalClusterTime: parseFloat(wuData.TotalClusterTime) || 0.0,
     executeCost,
     fileAccessCost,
     compileCost,
@@ -156,7 +146,7 @@ async function retryWithBackoff(fn, maxRetries = 3, delay = 2000) {
  * @param {string} endDate - End date in ISO format
  * @param {number} pageStartFrom - Starting index for pagination
  * @param {number} pageSize - Number of records per page
- * @returns {Object} Response containing workunits and pagination info
+ * @returns {Promise<Object>} Response containing workunits and pagination info
  */
 async function fetchWorkunitPage(
   clusterOptions,
@@ -166,16 +156,20 @@ async function fetchWorkunitPage(
   pageSize = 250
 ) {
   return await retryWithBackoff(async () => {
-    const response = await Workunit.query(clusterOptions, {
+    const workunits = await Workunit.query(clusterOptions, {
       StartDate: startDate,
       EndDate: endDate,
       PageStartFrom: pageStartFrom,
       PageSize: pageSize,
     });
 
-    return (
-      response || { Workunits: [], NumWUs: 0, PageStartFrom: 0, PageEndAt: 0 }
-    );
+    // Workunit.query returns an array directly, not a response object
+    return {
+      Workunits: workunits || [],
+      NumWUs: (workunits || []).length,
+      PageStartFrom: pageStartFrom,
+      PageEndAt: pageStartFrom + (workunits || []).length - 1,
+    };
   });
 }
 
@@ -370,11 +364,8 @@ async function workunitQuery() {
           raw: true,
         });
 
-        // Determine start and end dates
-        const { startTime, endTime } = getStartAndEndTime(
-          monitoringLog ? monitoringLog.scan_time : null,
-          true
-        );
+        // Determine start and end dates (always from start of current day)
+        const { startTime, endTime } = getStartAndEndTime(true);
 
         logOrPostMessage({
           level: 'info',
@@ -427,7 +418,7 @@ async function workunitQuery() {
         );
 
         // Bulk insert workunits
-        await WorkUnitHistory.bulkCreate(transformedWorkunits, {
+        await WorkUnit.bulkCreate(transformedWorkunits, {
           updateOnDuplicate: [
             'workUnitTimestamp',
             'owner',
@@ -489,7 +480,7 @@ async function workunitQuery() {
 
 module.exports = {
   getWorkUnits,
-  getWorkUnitHistory: workunitQuery,
+  workunitQuery,
   parseWorkunitTimestamp,
   transformWorkunitData,
   retryWithBackoff,

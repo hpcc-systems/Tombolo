@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       id: {
         primaryKey: true,
         type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
       },
       clusterId: {
         type: DataTypes.UUID,
@@ -61,7 +62,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.JSON,
         allowNull: true,
       },
-      // TODO: Does noAccess matter
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,

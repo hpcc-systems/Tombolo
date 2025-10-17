@@ -13,22 +13,10 @@ module.exports = {
       clusterId: {
         type: Sequelize.UUID,
         allowNull: false,
-        references: {
-          model: 'clusters',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
       wuId: {
         type: Sequelize.STRING(30),
         allowNull: false,
-        references: {
-          model: 'work_units',
-          key: 'wuId',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
       scopeId: {
         type: Sequelize.STRING,
@@ -60,6 +48,31 @@ module.exports = {
       },
     });
 
+    // Add foreign key constraints
+    await queryInterface.addConstraint('work_unit_details', {
+      fields: ['clusterId'],
+      type: 'foreign key',
+      name: 'work_unit_details_cluster_fk',
+      references: {
+        table: 'clusters',
+        field: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    });
+
+    await queryInterface.addConstraint('work_unit_details', {
+      fields: ['wuId', 'clusterId'],
+      type: 'foreign key',
+      name: 'work_unit_details_workunit_fk',
+      references: {
+        table: 'work_units',
+        fields: ['wuId', 'clusterId'],
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    });
+
     // Add indexes
     await queryInterface.addIndex('work_unit_details', ['clusterId', 'wuId'], {
       name: 'work_unit_details_cluster_wu_idx',
@@ -79,7 +92,17 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    // Remove indexes first
+    // Remove foreign key constraints first
+    await queryInterface.removeConstraint(
+      'work_unit_details',
+      'work_unit_details_workunit_fk'
+    );
+    await queryInterface.removeConstraint(
+      'work_unit_details',
+      'work_unit_details_cluster_fk'
+    );
+
+    // Remove indexes
     await queryInterface.removeIndex(
       'work_unit_details',
       'work_unit_details_scope_id_idx'

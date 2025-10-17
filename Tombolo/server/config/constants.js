@@ -4,7 +4,7 @@ const APPROVAL_STATUS = {
   REJECTED: 'rejected',
 };
 
-export const ActivityKindMap = {
+const ActivityKindMap = {
   // Graph and structural activities
   1: 'Thor Graph',
   2: 'Thor Subgraph',
@@ -264,4 +264,14 @@ export const ActivityKindMap = {
   256: 'Dictionary Local Result Write',
 };
 
-module.exports = { APPROVAL_STATUS, ActivityKindMap };
+/**
+ * Get the human-readable name for an activity kind code
+ * @param kind - The numeric kind code (as string or number)
+ * @returns The human-readable activity name, or "Unknown Activity" if not found
+ */
+function getActivityKindName(kind) {
+  const kindStr = String(kind);
+  return ActivityKindMap[kindStr] || `Unknown Activity (${kindStr})`;
+}
+
+module.exports = { APPROVAL_STATUS, ActivityKindMap, getActivityKindName };
