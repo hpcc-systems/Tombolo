@@ -95,12 +95,13 @@ These configurations are required if you're using SSL/TLS. Ignore if not using S
   _Example:_ `false`
 
 - **DB_USERNAME**
-  The default is often `root`. In production, a non-root user with appropriate permissions is recommended.
-  _Example:_ `root`
+  Provide a non-root database username.
+  **Do not use `root`** – this is a reserved system user in MySQL
+  _Example:_ `dbUser`
 
 - **DB_PASSWORD**
   The password associated with the MySQL username.
-  _Example:_ `root`
+  _Example:_ `dbPassword`
 
 - **DB_PORT**
   The port used for MySQL communication. The default MySQL port is `3306`, but this may differ based on your environment.
