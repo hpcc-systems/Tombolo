@@ -148,7 +148,8 @@ describe('ApproveRejectModal', () => {
     expect(checkbox).toBeChecked();
 
     await user.click(screen.getByRole('button', { name: /save/i }));
-    await waitFor(() => evaluateMonitoring.mock.calls.length > 0);
+
+    await waitFor(() => expect(evaluateMonitoring).toHaveBeenCalled());
     const payload = evaluateMonitoring.mock.calls[0][0];
     expect(payload).toMatchObject({
       approvalStatus: APPROVED,
@@ -156,7 +157,8 @@ describe('ApproveRejectModal', () => {
       isActive: true,
       ids: [10],
     });
-    await waitFor(() => message.success.mock.calls.length > 0);
+
+    await waitFor(() => expect(message.success).toHaveBeenCalled());
     expect(onCancel).toHaveBeenCalled();
   });
 
@@ -178,11 +180,13 @@ describe('ApproveRejectModal', () => {
     await user.type(screen.getByPlaceholderText('Comments'), 'Not acceptable');
 
     await user.click(screen.getByRole('button', { name: /save/i }));
-    await waitFor(() => evaluateMonitoring.mock.calls.length > 0);
+
+    await waitFor(() => expect(evaluateMonitoring).toHaveBeenCalled());
     const payload = evaluateMonitoring.mock.calls[0][0];
     expect(payload.approvalStatus).toBe(REJECTED);
     expect(payload.isActive).toBe(false);
-    await waitFor(() => message.success.mock.calls.length > 0);
+
+    await waitFor(() => expect(message.success).toHaveBeenCalled());
     expect(onCancel).toHaveBeenCalled();
   });
 
@@ -210,8 +214,10 @@ describe('ApproveRejectModal', () => {
     await user.selectOptions(actionSelect, 'approved');
     await user.type(screen.getByPlaceholderText('Comments'), 'All good');
     await user.click(screen.getByRole('button', { name: /save/i }));
-    await waitFor(() => evaluateMonitoring.mock.calls.length > 0);
+
+    await waitFor(() => expect(evaluateMonitoring).toHaveBeenCalled());
     expect(setMonitoring).toHaveBeenCalled();
+    // When single item selected and array of one returned, it updates selected
     expect(setSelectedMonitoring).toHaveBeenCalledWith(updated[0]);
     expect(onCancel).toHaveBeenCalled();
     expect(message.success).toHaveBeenCalledWith('updated');
@@ -256,8 +262,9 @@ describe('ApproveRejectModal', () => {
     await user.selectOptions(actionSelect, 'approved');
     await user.type(screen.getByPlaceholderText('Comments'), 'Okay');
     await user.click(screen.getByRole('button', { name: /save/i }));
-    await waitFor(() => evaluateMonitoring.mock.calls.length > 0);
-    await waitFor(() => onSuccess.mock.calls.length > 0);
+
+    await waitFor(() => expect(evaluateMonitoring).toHaveBeenCalled());
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(setSelectedMonitoring).toHaveBeenCalledWith(null);
     expect(onCancel).toHaveBeenCalled();
     expect(message.success).toHaveBeenCalled();
@@ -280,6 +287,7 @@ describe('ApproveRejectModal', () => {
     await user.selectOptions(actionSelect, 'approved');
     await user.type(screen.getByPlaceholderText('Comments'), 'Okay'); // Use 4+ characters
     await user.click(screen.getByRole('button', { name: /save/i }));
-    await waitFor(() => message.error.mock.calls.some((call) => call[0] === 'No evaluation handler provided.'));
+
+    await waitFor(() => expect(message.error).toHaveBeenCalledWith('No evaluation handler provided.'));
   });
 });

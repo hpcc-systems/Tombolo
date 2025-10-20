@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, message } from 'antd';
 import { CheckCircleFilled, LoadingOutlined, CloseCircleFilled } from '@ant-design/icons';
 import { useLocation, useHistory, Link } from 'react-router-dom';

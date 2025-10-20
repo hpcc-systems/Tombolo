@@ -215,7 +215,7 @@ const Login = () => {
                   </Button>
                 </Form.Item>
                 <p className={styles.helperLink}>
-                  <span>Need an account?</span> <Link to="/register">Register</Link>
+                  <span>Need an account?</span> <a href="/register">Register</a>
                 </p>
               </>
             )}
