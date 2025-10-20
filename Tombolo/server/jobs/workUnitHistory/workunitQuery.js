@@ -3,6 +3,7 @@ const { logOrPostMessage } = require('../jobUtils');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 const { getClusters } = require('../../utils/hpcc-util');
 const { MonitoringType, MonitoringLog, WorkUnit } = require('../../models');
+const retryWithBackoff = require('../../utils/retryWithBackoff');
 
 // Constants
 const MONITORING_TYPE_NAME = 'WorkUnit History';
@@ -113,33 +114,6 @@ function transformWorkunitData(workunit, clusterId, timezoneOffset = 0) {
 }
 
 /**
- * Retry function with exponential backoff
- * @param {Function} fn - Function to retry
- * @param {number} maxRetries - Maximum number of retries
- * @param {number} delay - Initial delay in milliseconds
- * @returns {Promise} Result of the function
- */
-async function retryWithBackoff(fn, maxRetries = 3, delay = 2000) {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      if (attempt === maxRetries) {
-        throw err;
-      }
-
-      const backoffDelay = delay * Math.pow(2, attempt);
-      logOrPostMessage({
-        level: 'warn',
-        text: `Attempt ${attempt + 1} failed: ${err.message}. Retrying in ${backoffDelay}ms...`,
-      });
-
-      await new Promise(resolve => setTimeout(resolve, backoffDelay));
-    }
-  }
-}
-
-/**
  * Fetches a single page of workunits with retry logic
  * @param {Object} clusterOptions - HPCC cluster connection options
  * @param {string} startDate - Start date in ISO format
@@ -175,17 +149,25 @@ async function fetchWorkunitPage(
 
 /**
  * Fetches all workunits from a cluster within a date range using pagination
+ * Transforms and inserts them into the database
  * @param {Object} clusterOptions - HPCC cluster connection options
  * @param {string} startDate - Start date in ISO format
  * @param {string} endDate - End date in ISO format
  * @param {string} clusterId - Cluster ID for logging
- * @returns {Array} Array of workunit data
+ * @param {number} timezoneOffset - Timezone offset in minutes
+ * @returns {Promise<Object>} Stats about processed workunits {totalFetched, totalInserted}
  */
-async function getWorkUnits(clusterOptions, startDate, endDate, clusterId) {
+async function getWorkUnits(
+  clusterOptions,
+  startDate,
+  endDate,
+  clusterId,
+  timezoneOffset = 0
+) {
   const pageSize = 250;
-  let allWorkunits = [];
   let pageStartFrom = 0;
   let totalFetched = 0;
+  let totalInserted = 0;
 
   try {
     while (true) {
@@ -208,12 +190,40 @@ async function getWorkUnits(clusterOptions, startDate, endDate, clusterId) {
         break;
       }
 
-      allWorkunits = allWorkunits.concat(workunits);
       totalFetched += workunits.length;
+
+      // Transform and insert immediately
+      const transformedWorkunits = workunits.map(wu =>
+        transformWorkunitData(wu, clusterId, timezoneOffset)
+      );
+
+      await WorkUnit.bulkCreate(transformedWorkunits, {
+        updateOnDuplicate: [
+          'workUnitTimestamp',
+          'owner',
+          'engine',
+          'jobName',
+          'stateId',
+          'state',
+          'protected',
+          'action',
+          'actionEx',
+          'isPausing',
+          'thorLcr',
+          'totalClusterTime',
+          'executeCost',
+          'fileAccessCost',
+          'compileCost',
+          'totalCost',
+          'updatedAt',
+        ],
+      });
+
+      totalInserted += transformedWorkunits.length;
 
       logOrPostMessage({
         level: 'info',
-        text: `Fetched ${workunits.length} workunits (total: ${totalFetched}) for cluster ${clusterId}`,
+        text: `Processed ${totalFetched} workunits (inserted/updated: ${totalInserted}) for cluster ${clusterId}`,
       });
 
       // Check if we've reached the end
@@ -229,10 +239,10 @@ async function getWorkUnits(clusterOptions, startDate, endDate, clusterId) {
 
     logOrPostMessage({
       level: 'info',
-      text: `Completed fetching all ${totalFetched} workunits for cluster ${clusterId}`,
+      text: `Completed processing ${totalFetched} workunits for cluster ${clusterId}`,
     });
 
-    return allWorkunits;
+    return { totalFetched, totalInserted };
   } catch (err) {
     logOrPostMessage({
       level: 'error',
@@ -329,136 +339,120 @@ async function workunitQuery() {
       text: `Processing ${clusterDetails.length} cluster(s)`,
     });
 
-    // Process each cluster
-    for (const clusterDetail of clusterDetails) {
-      try {
-        if ('error' in clusterDetail) {
-          logOrPostMessage({
-            level: 'error',
-            text: `Failed to get cluster ${clusterDetail.id}: ${clusterDetail.error}, skipping`,
-          });
-          continue;
-        }
+    // Process clusters in parallel with error isolation
+    const results = await Promise.allSettled(
+      clusterDetails.map(async clusterDetail => {
+        try {
+          if ('error' in clusterDetail) {
+            logOrPostMessage({
+              level: 'error',
+              text: `Failed to get cluster ${clusterDetail.id}: ${clusterDetail.error}, skipping`,
+            });
+            return { clusterId: clusterDetail.id, status: 'skipped' };
+          }
 
-        const {
-          id: clusterId,
-          thor_host: thorHost,
-          thor_port: thorPort,
-          username,
-          hash,
-          timezone_offset: timezoneOffset = 0,
-          allowSelfSigned,
-        } = clusterDetail;
+          const {
+            id: clusterId,
+            thor_host: thorHost,
+            thor_port: thorPort,
+            username,
+            hash,
+            timezone_offset: timezoneOffset = 0,
+            allowSelfSigned,
+          } = clusterDetail;
 
-        logOrPostMessage({
-          level: 'info',
-          text: `Processing cluster ${clusterId} (${thorHost})`,
-        });
-
-        // Get monitoring log for this cluster
-        const monitoringLog = await MonitoringLog.findOne({
-          where: {
-            cluster_id: clusterId,
-            monitoring_type_id: monitoringType.id,
-          },
-          raw: true,
-        });
-
-        // Determine start and end dates (always from start of current day)
-        const { startTime, endTime } = getStartAndEndTime(true);
-
-        logOrPostMessage({
-          level: 'info',
-          text: `Fetching workunits for cluster ${clusterId} from ${startTime} to ${endTime}`,
-        });
-
-        // Create cluster options
-        const clusterOptions = getClusterOptions(
-          {
-            baseUrl: `${thorHost}:${thorPort}`,
-            userID: username || '',
-            password: hash || '',
-            timeoutSecs: 180,
-          },
-          allowSelfSigned
-        );
-
-        // Fetch workunits from cluster
-        const workunits = await getWorkUnits(
-          clusterOptions,
-          startTime,
-          endTime,
-          clusterId
-        );
-
-        if (!workunits || workunits.length === 0) {
           logOrPostMessage({
             level: 'info',
-            text: `No workunits found for cluster ${clusterId}`,
+            text: `Processing cluster ${clusterId} (${thorHost})`,
           });
 
-          // Update monitoring log even if no workunits found
+          // Get monitoring log for this cluster
+          const monitoringLog = await MonitoringLog.findOne({
+            where: {
+              cluster_id: clusterId,
+              monitoring_type_id: monitoringType.id,
+            },
+            raw: true,
+          });
+
+          // Determine start and end dates (always from start of current day)
+          const { startTime, endTime } = getStartAndEndTime(true);
+
+          logOrPostMessage({
+            level: 'info',
+            text: `Fetching workunits for cluster ${clusterId} from ${startTime} to ${endTime}`,
+          });
+
+          // Create cluster options
+          const clusterOptions = getClusterOptions(
+            {
+              baseUrl: `${thorHost}:${thorPort}`,
+              userID: username || '',
+              password: hash || '',
+              timeoutSecs: 180,
+            },
+            allowSelfSigned
+          );
+
+          // Fetch, transform, and insert workunits
+          const result = await getWorkUnits(
+            clusterOptions,
+            startTime,
+            endTime,
+            clusterId,
+            timezoneOffset
+          );
+
+          if (!result || result.totalFetched === 0) {
+            logOrPostMessage({
+              level: 'info',
+              text: `No workunits found for cluster ${clusterId}`,
+            });
+          } else {
+            logOrPostMessage({
+              level: 'info',
+              text: `Successfully processed ${result.totalFetched} workunits (${result.totalInserted} inserted/updated) for cluster ${clusterId}`,
+            });
+          }
+
+          // Update monitoring log
           await handleMonitoringLog(
             monitoringLog,
             clusterId,
             monitoringType.id,
             executionStartTime
           );
-          continue;
+
+          return { clusterId, status: 'success', ...result };
+        } catch (err) {
+          logOrPostMessage({
+            level: 'error',
+            text: `Error processing cluster ${clusterDetail.id}: ${err.message}`,
+          });
+          return {
+            clusterId: clusterDetail.id,
+            status: 'error',
+            error: err.message,
+          };
         }
+      })
+    );
 
-        logOrPostMessage({
-          level: 'info',
-          text: `Found ${workunits.length} workunits for cluster ${clusterId}`,
-        });
+    // Log summary
+    const successful = results.filter(
+      r => r.status === 'fulfilled' && r.value.status === 'success'
+    ).length;
+    const failed = results.filter(
+      r => r.status === 'rejected' || r.value?.status === 'error'
+    ).length;
+    const skipped = results.filter(
+      r => r.status === 'fulfilled' && r.value.status === 'skipped'
+    ).length;
 
-        // Transform workunits for database insertion
-        const transformedWorkunits = workunits.map(wu =>
-          transformWorkunitData(wu, clusterId, timezoneOffset)
-        );
-
-        // Bulk insert workunits
-        await WorkUnit.bulkCreate(transformedWorkunits, {
-          updateOnDuplicate: [
-            'workUnitTimestamp',
-            'owner',
-            'engine',
-            'jobName',
-            'stateId',
-            'state',
-            'protected',
-            'action',
-            'actionEx',
-            'isPausing',
-            'thorLcr',
-            'totalClusterTime',
-            'executeCost',
-            'fileAccessCost',
-            'compileCost',
-            'totalCost',
-            'updatedAt',
-          ],
-        });
-
-        logOrPostMessage({
-          level: 'info',
-          text: `Successfully inserted/updated ${transformedWorkunits.length} workunits for cluster ${clusterId}`,
-        });
-
-        // Update monitoring log
-        await handleMonitoringLog(
-          monitoringLog,
-          clusterId,
-          monitoringType.id,
-          executionStartTime
-        );
-      } catch (err) {
-        logOrPostMessage({
-          level: 'error',
-          text: `Error processing cluster ${clusterDetail.id}: ${err.message}`,
-        });
-      }
-    }
+    logOrPostMessage({
+      level: 'info',
+      text: `Cluster processing complete: ${successful} successful, ${failed} failed, ${skipped} skipped`,
+    });
 
     const executionTime = new Date().getTime() - executionStartTime.getTime();
     logOrPostMessage({
@@ -483,6 +477,5 @@ module.exports = {
   workunitQuery,
   parseWorkunitTimestamp,
   transformWorkunitData,
-  retryWithBackoff,
   fetchWorkunitPage,
 };
