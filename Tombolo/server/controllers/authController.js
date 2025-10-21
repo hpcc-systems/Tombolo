@@ -409,25 +409,10 @@ const resetPasswordWithToken = async (req, res) => {
 //Reset Password with Temp Password - Owner/Admin requested
 const resetTempPassword = async (req, res) => {
   try {
-    const { password, token, deviceInfo } = req.body;
-
-    // From the AccountVerificationCode table findUser ID by code, where code is resetToken
-    const accountVerificationCode = await AccountVerificationCode.findOne({
-      where: { code: token },
-    });
-
-    // If accountVerificationCode not found
-    if (!accountVerificationCode) {
-      throw { status: 404, message: 'Invalid or expired reset token' };
-    }
-
-    // If accountVerificationCode has expired
-    if (new Date() > accountVerificationCode.expiresAt) {
-      throw { status: 400, message: 'Reset token has expired' };
-    }
+    const { password, email, deviceInfo } = req.body;
 
     // Find user by ID
-    let user = await getAUser({ id: accountVerificationCode.userId });
+    let user = await getAUser({ email });
 
     // If user not found
     if (!user) {
@@ -471,16 +456,6 @@ const resetTempPassword = async (req, res) => {
         where: { id: user.id },
       }
     );
-
-    // Delete the account verification code
-    await AccountVerificationCode.destroy({
-      where: { code: token },
-    });
-
-    //delete password reset link
-    await PasswordResetLink.destroy({
-      where: { id: token },
-    });
 
     //remove all sessions for user before initiating new session
     await RefreshToken.destroy({
@@ -535,11 +510,13 @@ const resetTempPassword = async (req, res) => {
 
 //Login Basic user
 // 401 - Unverified , Temp PW, Expired PW | 403 - Incorrect E-mail password combination | 500 - Internal server error | 200 - Success
+//Login Basic user
+// 401 - Invalid credentials | 403 - Account restrictions (unverified, temp pw, expired pw, locked) | 500 - Internal server error | 200 - Success
 const loginBasicUser = async (req, res) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
-    const genericError = 'Username and Password combination not found';
+    const genericError = 'failed'; // Use Constants.LOGIN_FAILED
 
     // find user - include user roles from UserRole table
     const user = await getAUser({ email });
@@ -547,20 +524,13 @@ const loginBasicUser = async (req, res) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-      return sendError(res, genericError, 403);
+      return sendError(res, genericError, 401);
     }
 
+    // If force password reset is true it means user is issued a temp password and must reset password
     if (user?.forcePasswordReset) {
       logger.error(`Login : Login attempt by user with Temp PW - ${user.id}`);
-      let resetUrl = null;
-
-      if (user?.AccountVerificationCodes[0]?.code) {
-        resetUrl = `${trimURL(process.env.WEB_URL)}/reset-temporary-password/${
-          user.AccountVerificationCodes[0].code
-        }`;
-      }
-
-      return sendError(res, 'temp-pw', 401);
+      return sendError(res, 'temp-pw', 401); // Use Constants.LOGIN_TEMP_PW
     }
 
     // If the accountLocked.isLocked is true, return generic error
@@ -568,19 +538,20 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login Attempt by user with locked account ${email}`
       );
-      return sendError(res, genericError, 403);
+      return sendError(res, 'password-locked', 401);
     }
 
     //Compare password
     if (!bcrypt.compareSync(password, user.hash)) {
       logger.error(`Login : Invalid password for user with email ${email}`);
       await handleInvalidLoginAttempt({ user, errMessage: genericError });
+      return; // Add missing return
     }
 
     // If not verified user return error
     if (!user.verifiedUser) {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
-      return sendError(res, 'unverified', 401);
+      return sendError(res, 'unverified', 401); // Use Constants.LOGIN_UNVERIFIED
     }
 
     //if password has expired
@@ -588,25 +559,14 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login attempt by user with expired password - ${user.id}`
       );
-
-      return sendError(res, 'password-expired', 401);
+      return sendError(res, 'password-expired', 401); // Use Constants.LOGIN_PW_EXPIRED
     }
 
-    // If force password reset is true it  means user is issued a temp password and must reset password
-    if (user.forcePasswordReset) {
-      logger.error(
-        `Login : Login attempt by user with temp password - ${user.id}`
-      );
-      return sendError(res, 'temp-pw', 401);
-    }
-
-    // If user is an registered to azure, throw error
+    // If user is registered to azure, throw error
     if (user.registrationMethod === 'azure') {
       logger.error(
         `Login : Login attempt by azure user - ${user.id} - ${user.email}`
       );
-
-      // Incorrect E-mail password combination error
       const azureError = new Error(
         'Email is registered with a Microsoft account. Please sign in with Microsoft'
       );
@@ -614,7 +574,7 @@ const loginBasicUser = async (req, res) => {
       throw azureError;
     }
 
-    // Remove hash from use object
+    // Remove hash from user object
     const userObj = user.toJSON();
     delete userObj.hash;
 
@@ -629,8 +589,6 @@ const loginBasicUser = async (req, res) => {
 
     // Save refresh token to DB
     const { iat, exp } = jwt.decode(refreshToken);
-
-    //get device info from request
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -651,10 +609,9 @@ const loginBasicUser = async (req, res) => {
     await setLastLogin(user);
 
     // Success response
-    return sendSuccess(res, userObj, 'User logged in successfully');
+    return sendSuccess(res, userObj, 'success'); // Use Constants.LOGIN_SUCCESS
   } catch (err) {
     logger.error(`Login user: ${err.message}`);
-    // If err.status is present - it is logged already
     if (!err.status) {
       logger.error(`Login user: ${err.message}`);
     }

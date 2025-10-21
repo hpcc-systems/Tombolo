@@ -4,16 +4,14 @@ import { Form, Input, Button, Divider } from 'antd';
 import { Link } from 'react-router-dom';
 
 // Local imports
-import { authHeader } from '../common/AuthHeader';
 import { handleError, handleSuccess } from '../common/handleResponse';
+import authService from '@/services/auth.service';
 import styles from './login.module.css';
 
 const ForgotPassword = () => {
   const onFinish = async (values) => {
     try {
-      const url = '/api/auth/handlePasswordResetRequest';
-      await fetch(url, { headers: authHeader(), method: 'POST', body: JSON.stringify(values) });
-
+      await authService.handlePasswordResetRequest(values.email);
       handleSuccess('If a user with this email exists, a password reset link will be sent to the email address.');
     } catch (err) {
       handleError(err.message);

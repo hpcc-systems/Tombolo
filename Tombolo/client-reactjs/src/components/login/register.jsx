@@ -8,10 +8,10 @@ import { useDispatch } from 'react-redux';
 // Local imports
 import RegisterUserForm from './registerUserForm';
 import { getDeviceInfo } from './utils';
-import { verifyEmail } from './utils';
 import { setUser } from '../common/userStorage';
 import { handleSuccess } from '../common/handleResponse';
 import { registerBasicUser } from '@/redux/slices/AuthSlice';
+import authService from '@/services/auth.service';
 import styles from './login.module.css';
 
 const Register = () => {
@@ -41,10 +41,10 @@ const Register = () => {
       setVerifying(true);
       const verifyUserAc = async () => {
         try {
-          const response = await verifyEmail(regId);
+          const response = await authService.verifyEmail(regId);
 
           if (!response.success) {
-            throw new Error(response?.data?.message || 'Verification failed');
+            throw new Error(response?.message || 'Verification failed');
           }
 
           handleSuccess('Your email has been verified!');

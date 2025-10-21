@@ -92,7 +92,6 @@ const validatePasswordResetRequestPayload = [emailBody('email')];
 
 //validateResetPasswordPayload - comes in request body - token must be present and must be UUID, password must be present and meet password requirements
 const validateResetPasswordPayload = [
-  stringBody('token'),
   body('password')
     .isString()
     .notEmpty()

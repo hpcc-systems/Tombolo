@@ -11,6 +11,8 @@ import { getDeviceInfo } from './utils';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
+import ResetTempPassword from './ResetTempPassword';
+
 import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 import styles from './login.module.css';
 
@@ -41,6 +43,7 @@ const Login = () => {
 
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
+  const [isTempPassword, setIsTempPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [azureLoginAttempted, setAzureLoginAttempted] = useState(false);
   const [email, setEmail] = useState(null);
@@ -58,11 +61,13 @@ const Login = () => {
 
     const test = await dispatch(login({ email, password, deviceInfo }));
 
-    if (test?.type === 'temp-pw') {
+    if (test?.payload?.type === Constants.LOGIN_TEMP_PW) {
       setLoading(false);
       // Since resetLink is no longer provided in the response,
       // show a message to check email for reset instructions
-      handleError('You have a temporary password. Please check your email for password reset instructions.');
+      // handleError('You have a temporary password. Please check your email for password reset instructions.');
+      setIsTempPassword(true);
+
       return;
     }
 
@@ -153,8 +158,9 @@ const Login = () => {
       {unverifiedUserLoginAttempt && (
         <UnverifiedUser setUnverifiedUserLoginAttempt={setUnverifiedUserLoginAttempt} email={email} />
       )}
+      {isTempPassword && <ResetTempPassword email={email} />}
       {expiredPassword && <ExpiredPassword email={email} />}
-      {!unverifiedUserLoginAttempt && !expiredPassword && (
+      {!unverifiedUserLoginAttempt && !expiredPassword && !isTempPassword && (
         <>
           <Form onFinish={onFinish} layout="vertical" form={loginForm}>
             {loading && (

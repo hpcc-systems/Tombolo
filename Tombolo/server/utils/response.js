@@ -63,20 +63,7 @@ export const sendError = (res, error, status = 500) => {
   } else if (typeof error === 'string') {
     errorsArray = [error];
   } else if (error instanceof Error) {
-    console.log('------------------------');
-    console.log(error.message);
-    console.log(error.status);
-    console.log('------------------------');
     const errorInfo = getErrorInfo(error);
-
-    console.log('---currently send---------------------');
-    console.log({
-      status: errorInfo.statusCode,
-      success: false,
-      message: errorInfo.message,
-      errors: [errorInfo.message],
-    });
-    console.log('------------------------');
 
     return sendResponse(res, {
       status: errorInfo.statusCode,
@@ -130,6 +117,10 @@ export const getErrorInfo = error => {
   console.log('Name or error : ', name);
   console.log('------------------------');
   const info = ERROR_MAP[name];
+
+  console.log('------------------------');
+  console.log('Info: ', info);
+  console.log('------------------------');
 
   if (info) {
     return {

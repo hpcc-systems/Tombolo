@@ -4,8 +4,8 @@ import { Button, Typography, Card } from 'antd';
 import { CheckCircleFilled } from '@ant-design/icons';
 
 // Local imports
-import { resendVerificationCode } from './utils';
 import { handleError } from '../common/handleResponse';
+import authService from '@/services/auth.service';
 import styles from './login.module.css';
 
 const { Text } = Typography;
@@ -48,7 +48,7 @@ function UnverifiedUser({ setUnverifiedUserLoginAttempt, email = 'yadhap.dahal@l
       setSendingEmail(true);
       setCanSendVerificationEmail(false);
       setSendingEmail(false);
-      await resendVerificationCode(email);
+      await authService.resendVerificationCode(email);
       setSentVerificationEmail(true);
       // Start the delay timer
       t.current = startTimer();
