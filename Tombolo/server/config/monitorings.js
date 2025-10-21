@@ -25,8 +25,9 @@ const cost_monitoring_intervals = {
   monitor_cost_interval: '1 hours',
 };
 
-const work_unit_history_intervals = {
-  work_unit_history_interval: '1 hours',
+const work_unit_intervals = {
+  fetch_workunit_interval: '30 minutes',
+  fetch_workunit_details_interval: '15 minutes',
 };
 
 // User account monitoring configuration
@@ -42,5 +43,5 @@ module.exports = {
   ...lz_monitoring_intervals,
   ...userAccountMonitoring,
   ...cost_monitoring_intervals,
-  ...work_unit_history_intervals,
+  ...work_unit_intervals,
 };
