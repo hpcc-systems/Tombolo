@@ -72,14 +72,14 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: [
     {
-      command: "cd ../../Tombolo/server && npm run bootstrap-server",
+      command: "cd ../Tombolo/server && npm run bootstrap-server",
       url: "http://localhost:3001",
       reuseExistingServer: !process.env.CI,
       timeout: 120 * 1000, // 2 minutes for server setup
     },
     {
-      command: "cd ../../Tombolo/client-reactjs && npm run bootstrap-client",
-      url: "http://localhost:3000",
+      command: "cd ../Tombolo/client-reactjs && npm run bootstrap-client",
+      url: process.env.FRONTEND_URL || "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
       timeout: 60 * 1000, // 1 minute for client startup
     },

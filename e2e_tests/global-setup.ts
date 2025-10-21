@@ -1,4 +1,5 @@
 import { chromium, FullConfig } from "@playwright/test";
+import { existsSync, writeFileSync } from "fs";
 
 // Global setup to perform a single login and save storage state for reuse.
 // Skips generation if credentials are not provided.
@@ -7,6 +8,16 @@ export default async function globalSetup(_config: FullConfig) {
   const EMAIL = process.env.USER_EMAIL;
   const PASSWORD = process.env.USER_PASS;
   const STATE_PATH = "./state.json";
+
+  // Create empty state.json if it doesn't exist to prevent file not found errors
+  if (!existsSync(STATE_PATH)) {
+    const emptyState = {
+      cookies: [],
+      origins: [],
+    };
+    writeFileSync(STATE_PATH, JSON.stringify(emptyState, null, 2));
+    console.log(`[global-setup] Created empty state file at ${STATE_PATH}`);
+  }
 
   if (!EMAIL || !PASSWORD) {
     console.warn(
