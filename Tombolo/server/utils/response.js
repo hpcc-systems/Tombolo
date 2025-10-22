@@ -113,15 +113,7 @@ export const getErrorInfo = error => {
   }
 
   const { name } = error;
-  console.log('------------------------');
-  console.log('Name or error : ', name);
-  console.log('------------------------');
   const info = ERROR_MAP[name];
-
-  console.log('------------------------');
-  console.log('Info: ', info);
-  console.log('------------------------');
-
   if (info) {
     return {
       statusCode: info.code,
