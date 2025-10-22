@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Form, Input, Button, Divider, message, Popover } from 'antd';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
 import { authHeader } from '../common/AuthHeader';
 
@@ -100,7 +100,7 @@ const ResetPassword = () => {
         <>
           <span>
             The reset token provided is either expired or invalid, please go to the{' '}
-            <a href="/forgot-password">Forgot Password</a> page to get a new one.
+            <Link to="/forgot-password">Forgot Password</Link> page to get a new one.
           </span>
         </>
       ),

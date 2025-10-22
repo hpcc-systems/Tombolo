@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin, message } from 'antd';
+import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+
 import msLogo from '../../images/mslogo.png';
 import { getDeviceInfo } from './utils';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
-import { useDispatch } from 'react-redux';
 import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 
 import styles from './login.module.css';
@@ -206,7 +208,7 @@ const Login = () => {
                   ]}>
                   <Input.Password name="password" size="large" autoComplete="new-password" />
                 </Form.Item>
-                <a href="/forgot-password">Forgot password?</a>
+                <Link to="/forgot-password">Forgot password?</Link>
                 <Form.Item>
                   <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">
                     Log in
