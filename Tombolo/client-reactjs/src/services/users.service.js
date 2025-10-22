@@ -62,6 +62,24 @@ const usersService = {
     const response = await apiClient.post('/user/unlock-account', { id });
     return response.data;
   },
+
+  // Change user password (for current user)
+  changePassword: async ({ id, values }) => {
+    const response = await apiClient.patch(`/user/change-password/${id}`, values);
+    return response.data;
+  },
+
+  // Update user info (for current user)
+  updateUserInfo: async ({ id, values }) => {
+    const response = await apiClient.patch(`/user/update/${id}`, values);
+    return response.data;
+  },
+
+  // Change password (alternative endpoint)
+  changePasswordAlt: async ({ id, values }) => {
+    const response = await apiClient.patch(`/user/changepassword/${id}`, values);
+    return response.data;
+  },
 };
 
 export default usersService;

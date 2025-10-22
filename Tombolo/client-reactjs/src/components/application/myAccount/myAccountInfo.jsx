@@ -1,8 +1,13 @@
+// Imports from libraries
 import React, { useState, useEffect } from 'react';
-import { Form, Row, Col, Input, Button, Spin, message } from 'antd';
-import { roleStringBuilder, updateAccount } from './utils';
+import { Form, Row, Col, Input, Button, Spin } from 'antd';
+
+// Local imports
+import { roleStringBuilder } from './utils';
 import { setUser, getUser } from '../../common/userStorage';
 import styles from './myAccount.module.css';
+import { handleSuccess } from '../../common/handleResponse';
+import usersService from '@/services/users.service';
 
 const MyAccountInfo = ({ user, editing, setEditing }) => {
   const [form] = Form.useForm();
@@ -33,15 +38,15 @@ const MyAccountInfo = ({ user, editing, setEditing }) => {
         values.id = user.id;
         values.verifiedUser = user.verifiedUser;
 
-        const response = await updateAccount(values);
+        const { data } = await usersService.update({ userId: user.id, userData: values });
 
-        if (response.success) {
-          form.setFieldsValue(response.data);
+        if (data) {
+          form.setFieldsValue(data);
           setEditing(false);
-          message.success('Account updated successfully');
+          handleSuccess('Account updated successfully');
 
           const oldUser = getUser();
-          const newUser = { ...oldUser, firstName: response.data.firstName, lastName: response.data.lastName };
+          const newUser = { ...oldUser, firstName: data.firstName, lastName: data.lastName };
 
           setUser(JSON.stringify(newUser));
           window.dispatchEvent(new Event('userStorage'));
@@ -50,7 +55,6 @@ const MyAccountInfo = ({ user, editing, setEditing }) => {
         setLoading(false);
       }
     } catch (err) {
-      console.log(err);
       setLoading(false);
     }
   };
