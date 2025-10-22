@@ -1,6 +1,6 @@
 // Library imports
 import React, { useState, useEffect } from 'react';
-import { Form, Steps, Button, Divider, message, Card, Space } from 'antd';
+import { Form, Steps, Button, Divider, Card, Space } from 'antd';
 import { Route, Switch } from 'react-router-dom';
 import {
   FormOutlined,
@@ -8,29 +8,27 @@ import {
   UserOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  RightCircleOutlined,
 } from '@ant-design/icons';
 
 // Local imports
 import InstanceSettingsForm from './instanceSettings';
 import ReviewForm from './reviewForm';
-import { completeFirstRun } from './initialExperienceUtils';
+import wizardService from '@/services/wizard.service';
 import RegisterUserForm from '../login/registerUserForm';
 import { getDeviceInfo } from '../login/utils';
 import BasicLayout from '../common/BasicLayout';
+import { handleSuccess, handleError } from '../common/handleResponse';
 
-// Colors for the steps
+// Colors for the steps (aligned with cluster pattern)
 const stepColor = {
-  info: 'var(--light)',
-  success: 'var(--success)',
-  error: 'var(--danger)',
+  true: 'var(--success)',
+  false: 'var(--danger)',
 };
 
-// Icons for the steps
+// Icons for the steps (aligned with cluster pattern)
 const stepIcon = {
-  info: <RightCircleOutlined />,
-  success: <CheckCircleOutlined />,
-  error: <CloseCircleOutlined />,
+  true: <CheckCircleOutlined />,
+  false: <CloseCircleOutlined />,
 };
 
 const Wizard = () => {
@@ -135,7 +133,7 @@ const Wizard = () => {
         deviceInfo: getDeviceInfo(),
       };
 
-      const response = await completeFirstRun({ instanceInfo: values });
+      const response = await wizardService.completeFirstRun({ instanceInfo: values });
 
       if (!response.ok) {
         throw new Error('Failed to complete set up');
@@ -161,12 +159,14 @@ const Wizard = () => {
 
           // Check if any of these events are errors or step is 999
           serverSentEvents.forEach((e) => {
-            if (e.event === 'error') {
+            if (e.step === 99) {
+              // Error step
               setSubmitting(false);
             } else if (e.step === 999) {
+              // Completion step
               setCompleteSuccessfully(true);
               setSubmitting(false);
-              message.success('Verification E-mail sent!');
+              handleSuccess('Verification E-mail sent!');
             }
           });
 
@@ -174,7 +174,7 @@ const Wizard = () => {
         }
       }
     } catch (e) {
-      message.error(e.message);
+      handleError(e);
     }
   };
 
@@ -215,8 +215,8 @@ const Wizard = () => {
                 </div>
                 <div className="wizardSteps" style={{ display: progressVisible ? 'block' : 'none' }}>
                   {stepMessage.map((step, index) => (
-                    <div style={{ color: stepColor[step.event] }} key={index}>
-                      {stepIcon[step.event]} {step.message}
+                    <div style={{ color: stepColor[step.success] }} key={index}>
+                      {stepIcon[step.success]} {step.message}
                     </div>
                   ))}
                 </div>
