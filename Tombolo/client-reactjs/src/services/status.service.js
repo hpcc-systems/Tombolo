@@ -1,15 +1,15 @@
-import apiClient from './apiClient';
+import { apiClient } from '@/services/api';
 
 const statusService = {
   // Check backend status
   checkBackendStatus: async () => {
-    const response = await apiClient.get('/api/status');
-    return response.data;
+    const response = await apiClient.get('/status');
+    return response;
   },
 
   // Check if owner exists
   checkOwnerExists: async () => {
-    const response = await apiClient.get('/api/status/ownerExists');
+    const response = await apiClient.get('/status/ownerExists');
     return response.data;
   },
 };

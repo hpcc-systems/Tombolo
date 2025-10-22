@@ -5,8 +5,10 @@ import statusService from '@/services/status.service';
 // eslint-disable-next-line unused-imports/no-unused-vars
 export const checkBackendStatus = createAsyncThunk('backend/checkBackendStatus', async (_, { rejectWithValue }) => {
   try {
-    const response = await statusService.checkBackendStatus();
-    return response.success || false;
+    await statusService.checkBackendStatus();
+
+    // return response.success || false;
+    return true;
   } catch (err) {
     console.error('Error fetching backend status:', err);
     // swallow network errors as "not connected" rather than throwing
@@ -19,7 +21,7 @@ export const checkOwnerExists = createAsyncThunk('backend/checkOwnerExists', asy
   try {
     const response = await statusService.checkOwnerExists();
     // API returns { success: boolean, data: boolean }
-    return Boolean(response?.data);
+    return Boolean(response);
   } catch (err) {
     console.error('Error fetching owner exists:', err);
     return false;

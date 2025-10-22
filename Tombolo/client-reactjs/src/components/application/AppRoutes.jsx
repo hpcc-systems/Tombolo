@@ -18,7 +18,7 @@ const Home = React.lazy(() => import('./home'));
 // const JobDetailsForm = React.lazy(() => import('./Jobs/JobDetails'));
 // const IndexDetailsForm = React.lazy(() => import('./IndexDetails'));
 // const QueryDetailsForm = React.lazy(() => import('./queries/QueryDetails'));
-const ManualJobDetail = React.lazy(() => import('./Jobs/ManualJobDetail'));
+const ManualJobDetail = React.lazy(() => import('./Jobs.unused/ManualJobDetail'));
 // const AddJobsForm = React.lazy(() => import('./Jobs/AddjobsForm/AddJobsForm'));
 const FileMonitoring = React.lazy(() => import('./fileMonitoring'));
 // const OrbitMonitoring = React.lazy(() => import('./orbitMonitoring/OrbitMonitoring'));
