@@ -643,6 +643,25 @@ function extractPerformanceMetrics(scope, clusterId, wuId) {
 }
 
 /**
+ * Truncates a string to a maximum length, keeping the start and end with ellipsis in the middle
+ * @param {string} str - The string to truncate
+ * @param {number} maxLength - Maximum length (default: 245)
+ * @returns {string|null} Truncated string or null if input is null
+ */
+function truncateString(str, maxLength = 245) {
+  if (!str) return null;
+  if (str.length <= maxLength) return str;
+
+  // Keep roughly equal parts from start and end
+  const ellipsis = '...';
+  const charsToKeep = maxLength - ellipsis.length;
+  const startChars = Math.ceil(charsToKeep / 2);
+  const endChars = Math.floor(charsToKeep / 2);
+
+  return str.slice(0, startChars) + ellipsis + str.slice(-endChars);
+}
+
+/**
  * Processes a single scope and converts it to a DB row
  * Returns null if scope should be filtered out
  */
@@ -674,16 +693,18 @@ function processScopeToRow(scope, clusterId, wuId) {
     filename = filenameProp?.RawValue ?? null;
   }
 
+  // Always truncate filename if it exists, regardless of label
+  const truncatedFileName = filename ? truncateString(filename, 125) : null;
+
   return {
     clusterId,
     wuId,
     scopeId: scope._espState?.Id,
     scopeName: scopeName,
     scopeType: scopeType,
-    label: label || null,
+    label: label ? truncateString(label, 250) : null,
     kind: kind || null,
-    fileName:
-      label && label.includes('Disk Read') && filename ? filename : null,
+    fileName: truncatedFileName,
     ...metrics,
   };
 }
@@ -696,41 +717,52 @@ function processScopeToRow(scope, clusterId, wuId) {
  */
 async function fetchWorkunitDetails(clusterOptions, wuId) {
   return await retryWithBackoff(async () => {
-    // Attach to workunit and fetch performance data
-    const attachedWu = Workunit.attach(clusterOptions, wuId);
+    try {
+      // Attach to workunit and fetch performance data
+      const attachedWu = Workunit.attach(clusterOptions, wuId);
 
-    // Highly optimized fetchDetails call - minimal data transfer
+      // Highly optimized fetchDetails call - minimal data transfer
 
-    return await attachedWu.fetchDetails({
-      ScopeFilter: {
-        MaxDepth: 999999,
-        // Only get scopes that typically have performance data
-        ScopeTypes: ['activity', 'subgraph', 'graph', 'operation'],
-      },
-      ScopeOptions: {
-        IncludeId: true,
-        IncludeScope: true,
-        IncludeScopeType: true,
-      },
-      PropertyOptions: {
-        IncludeName: true,
-        IncludeRawValue: true,
-        IncludeFormatted: false, // Don't need formatted strings
-        IncludeMeasure: false, // Don't need measure info
-        IncludeCreator: false, // Don't need creator info
-        IncludeCreatorType: false, // Don't need creator type
-      },
-      PropertiesToReturn: {
-        AllStatistics: true, // Gets TimeElapsed, memory, disk I/O, etc.
-        AllProperties: false, // Don't get all properties
-        AllAttributes: false, // Skip attributes
-        AllHints: false, // Skip hints
-        AllNotes: false, // Skip notes
-        AllScopes: true,
-        // Request only specific properties we need
-        Properties: ['Kind', 'Label', 'Filename'].concat(relevantMetrics),
-      },
-    });
+      return await attachedWu.fetchDetails({
+        ScopeFilter: {
+          MaxDepth: 999999,
+          // Only get scopes that typically have performance data
+          ScopeTypes: ['activity', 'subgraph', 'graph', 'operation'],
+        },
+        ScopeOptions: {
+          IncludeId: true,
+          IncludeScope: true,
+          IncludeScopeType: true,
+        },
+        PropertyOptions: {
+          IncludeName: true,
+          IncludeRawValue: true,
+          IncludeFormatted: false, // Don't need formatted strings
+          IncludeMeasure: false, // Don't need measure info
+          IncludeCreator: false, // Don't need creator info
+          IncludeCreatorType: false, // Don't need creator type
+        },
+        PropertiesToReturn: {
+          AllStatistics: true, // Gets TimeElapsed, memory, disk I/O, etc.
+          AllProperties: false, // Don't get all properties
+          AllAttributes: false, // Skip attributes
+          AllHints: false, // Skip hints
+          AllNotes: false, // Skip notes
+          AllScopes: true,
+          // Request only specific properties we need
+          Properties: ['Kind', 'Label', 'Filename'].concat(relevantMetrics),
+        },
+      });
+    } catch (err) {
+      // Don't retry if workunit cannot be opened (deleted, archived, or inaccessible)
+      if (err.message && err.message.includes('Cannot open workunit')) {
+        // Create a non-retryable error by marking it
+        const nonRetryableError = new Error(err.message);
+        nonRetryableError.noRetry = true;
+        throw nonRetryableError;
+      }
+      throw err;
+    }
   });
 }
 

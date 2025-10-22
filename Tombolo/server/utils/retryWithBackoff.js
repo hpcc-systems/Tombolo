@@ -12,6 +12,11 @@ async function retryWithBackoff(fn, maxRetries = 3, delay = 2000) {
     try {
       return await fn();
     } catch (err) {
+      // Don't retry if error is marked as non-retryable
+      if (err.noRetry) {
+        throw err;
+      }
+
       if (attempt === maxRetries) {
         throw err;
       }
