@@ -1,10 +1,13 @@
+// Imports from libraries
 import React, { useState } from 'react';
-import { Button, message, Form } from 'antd';
-import { handleError } from '../../common/AuthHeader';
+import { Button, Form } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
+
+// Local imports
 import RequestAccessModal from './requestAccessModal';
 import { getUser } from '../../common/userStorage';
-
+import { handleError, handleSuccess } from '../../common/handleResponse';
+import authService from '@/services/auth.service';
 import styles from './noAccess.module.css';
 
 const NoAccess = () => {
@@ -16,7 +19,7 @@ const NoAccess = () => {
     const user = getUser();
 
     if (!user) {
-      message.error('User not found');
+      handleError('User not found');
       return;
     }
 
@@ -27,23 +30,14 @@ const NoAccess = () => {
       values.comment = 'No comment provided';
     }
 
-    const response = await fetch('/api/auth/requestAccess', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(values),
-    });
-    console.log(response);
-
-    if (!response.ok) {
-      handleError(response);
-      return;
+    try {
+      await authService.requestAccess(values);
+      handleSuccess('A request has been sent to your administration team to grant you access');
+      setIsOpen(false);
+      form.resetFields();
+    } catch (err) {
+      // Error handled by axios interceptor
     }
-
-    message.success('A request has been sent to your administration team to grant you access');
-    setIsOpen(false);
-    form.resetFields();
   };
 
   return (
