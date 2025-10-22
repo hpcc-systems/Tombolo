@@ -13,6 +13,12 @@ const usersService = {
     return response.data;
   },
 
+  // Get a single user by ID
+  getOne: async ({ id }) => {
+    const response = await apiClient.get(`/user/${id}`);
+    return response.data;
+  },
+
   // Update a user
   update: async ({ userId, userData }) => {
     const response = await apiClient.patch(`/user/${userId}`, userData);
