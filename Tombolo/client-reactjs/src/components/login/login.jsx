@@ -210,7 +210,7 @@ const Login = () => {
                     { required: true, message: 'Please input your password!' },
                     { max: 64, message: 'Maximum of 64 characters allowed' },
                   ]}>
-                  <Input.Password size="large" autoComplete="new-password" />
+                  <Input.Password name="password" size="large" autoComplete="new-password" />
                 </Form.Item>
                 <Link to="/forgot-password">Forgot password?</Link>
                 <Form.Item>
@@ -219,7 +219,7 @@ const Login = () => {
                   </Button>
                 </Form.Item>
                 <p className={styles.helperLink}>
-                  <span>Need an account?</span> <Link to="/register">Register</Link>
+                  <span>Need an account?</span> <a href="/register">Register</a>
                 </p>
               </>
             )}

@@ -327,9 +327,17 @@ const verifyEmail = async (req, res) => {
 
 //Reset Password With Token - Self Requested
 const resetPasswordWithToken = async (req, res) => {
-  const transaction = await sequelize.transaction();
+  let transaction;
   try {
     const { password, token, deviceInfo } = req.body;
+
+    // Validate inputs before starting transaction
+    if (!password || !token) {
+      throw { status: 400, message: 'Password and token are required' };
+    }
+
+    // Start transaction
+    transaction = await sequelize.transaction();
 
     // From the AccountVerificationCode table findUser ID by code, where code is resetToken
     const accountVerificationCode = await AccountVerificationCode.findOne(
@@ -396,13 +404,94 @@ const resetPasswordWithToken = async (req, res) => {
       transaction,
     });
 
+    // Create token id
+    const tokenId = uuidv4();
+
+    // Create access jwt
+    const accessToken = generateAccessToken({ ...user.toJSON(), tokenId });
+
+    // Generate refresh token
+    const refreshToken = generateRefreshToken({ tokenId });
+
+    // Save refresh token to DB
+    const { iat, exp } = jwt.decode(refreshToken);
+
+    // Save refresh token in DB
+    await RefreshToken.create(
+      {
+        id: tokenId,
+        userId: user.id,
+        token: refreshToken,
+        deviceInfo,
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      },
+      { transaction }
+    );
+
+    // Send notification informing user that password has been reset
+    const readable_notification = `ACC_CNG_${moment().format(
+      'YYYYMMDD_HHmmss_SSS'
+    )}`;
+
+    await NotificationQueue.create(
+      {
+        type: 'email',
+        templateName: 'accountChange',
+        notificationOrigin: 'Password Reset',
+        deliveryType: 'immediate',
+        metaData: {
+          notificationId: readable_notification,
+          recipientName: `${user.firstName} ${user.lastName}`,
+          notificationOrigin: 'Password Reset',
+          subject: 'Your password has been changed',
+          mainRecipients: [user.email],
+          notificationDescription: 'Password Reset',
+          changedInfo: ['password'],
+        },
+        createdBy: user.id,
+      },
+      { transaction }
+    );
+
+    // Commit the transaction before setting cookies and tokens
     await transaction.commit();
 
-    return sendSuccess(res, null, 'Password reset successfully');
+    // User data obj to send to the client (after transaction commit)
+    const userObj = {
+      ...user.toJSON(),
+    };
+
+    // remove hash from user object
+    delete userObj.hash;
+
+    // Set cookies and tokens after successful transaction
+    await setTokenCookie(res, accessToken);
+    await generateAndSetCSRFToken(req, res, accessToken);
+
+    // Set last login (outside transaction to avoid conflicts)
+    await setLastLogin(user);
+
+    // Success response
+    return res.status(200).json({
+      success: true,
+      message: 'Password updated successfully',
+      data: userObj,
+    });
   } catch (err) {
-    await transaction.rollback();
-    logger.error('Failed to reset password with token', err);
-    return sendError(res, err);
+    // Rollback the transaction if it exists
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (rollbackErr) {
+        logger.error(`Transaction rollback failed: ${rollbackErr.message}`);
+      }
+    }
+    logger.error(`Reset Password With Token: ${err.message}`);
+    return res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
   }
 };
 

@@ -95,12 +95,13 @@ These configurations are required if you're using SSL/TLS. Ignore if not using S
   _Example:_ `false`
 
 - **DB_USERNAME**
-  The default is often `root`. In production, a non-root user with appropriate permissions is recommended.
-  _Example:_ `root`
+  Provide a non-root database username.
+  **Do not use `root`** – this is a reserved system user in MySQL
+  _Example:_ `dbUser`
 
 - **DB_PASSWORD**
   The password associated with the MySQL username.
-  _Example:_ `root`
+  _Example:_ `dbPassword`
 
 - **DB_PORT**
   The port used for MySQL communication. The default MySQL port is `3306`, but this may differ based on your environment.
@@ -202,6 +203,22 @@ Some services we recommend are: [SendGrid](https://sendgrid.com/), [Mailgun](htt
 ### 9. Integration-Specific Configuration
 
 If you have any integrations enabled and they have environment variables, they can be added to this configuration file as well. There is a placeholder section for those integration-specific variables. Please add them there.
+
+### 10. Test Configuration
+
+- **RATE_LIMIT_REQUEST_MAX**
+  The amount of requests per 15 minutes that will rate limit a user.
+
+  _Example:_ `400`
+
+---
+
+- **TEST_MODE**
+  This should only be set to true if end to end tests are being executed.
+
+  _Example:_ `false`
+
+---
 
 </details>
 </div>
