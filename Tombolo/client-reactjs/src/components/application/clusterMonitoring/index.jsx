@@ -16,7 +16,7 @@ import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';
 import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import ClusterMonitoringFilters from './ClusterMonitoringFilters';
-import { getAllProductCategories } from '../../common/ASRTools';
+import asrService from '@/services/asr.service';
 import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal';
 
 // Constants
@@ -64,7 +64,7 @@ function ClusterMonitoring() {
     (async () => {
       const cm = await clusterMonitoringService.getAll();
       setClusterMonitoring(cm);
-      const prods = await getAllProductCategories();
+      const prods = await asrService.getAllProductCategories();
       setAllProductCategories(prods);
     })();
   }, []);
