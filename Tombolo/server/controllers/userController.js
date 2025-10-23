@@ -3,6 +3,8 @@ const { v4: UUIDV4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
@@ -16,6 +18,7 @@ const {
   NotificationQueue,
   AccountVerificationCode,
   PasswordResetLink,
+  RefreshToken,
 } = require('../models');
 const {
   setPasswordExpiry,
@@ -26,6 +29,10 @@ const {
   sendAccountUnlockedEmail,
   deleteUser: deleteUserUtil,
   checkIfSystemUser,
+  generateAccessToken,
+  generateRefreshToken,
+  setTokenCookie,
+  generateAndSetCSRFToken,
 } = require('../utils/authUtil');
 
 const whereNotSystemUser = {
@@ -241,6 +248,7 @@ const changePassword = async (req, res) => {
       'YYYYMMDD_HHmmss_SSS'
     )}`;
 
+    // TODO - send notification only after successful commit
     await NotificationQueue.create(
       {
         type: 'email',
@@ -261,13 +269,46 @@ const changePassword = async (req, res) => {
       { transaction: t }
     );
 
-    // Commit transaction
+    // Invalidate all existing sessions for security
+    await RefreshToken.destroy({ where: { userId: id }, transaction: t });
+
+    // Generate new tokens for the current session
+    const tokenId = crypto.randomUUID();
+    const accessToken = generateAccessToken({
+      id: existingUser.id,
+      email: existingUser.email,
+    });
+    const refreshToken = generateRefreshToken({ tokenId });
+
+    // Decode refresh token to get iat and exp
+    const { iat, exp } = jwt.decode(refreshToken);
+
+    // Create new refresh token in database
+    await RefreshToken.create(
+      {
+        id: tokenId,
+        userId: existingUser.id,
+        token: refreshToken,
+        deviceInfo: { userAgent: req.headers['user-agent'] },
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      },
+      { transaction: t }
+    );
+
+    // Set new tokens in cookies BEFORE committing transaction
+    // If this fails, transaction will rollback
+    await setTokenCookie(res, accessToken, refreshToken);
+    await generateAndSetCSRFToken(req, res, accessToken);
+
+    // Commit transaction only after tokens are set successfully
     await t.commit();
 
     return sendSuccess(res, null, 'Password updated successfully');
   } catch (err) {
     await t.rollback(); // Rollback on failure
-    logger.error('Change password: An error occurred during password update.');
+    logger.error(err);
     return sendError(res, err);
   }
 };
