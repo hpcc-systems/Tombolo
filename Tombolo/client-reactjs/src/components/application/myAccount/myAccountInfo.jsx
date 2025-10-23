@@ -38,7 +38,7 @@ const MyAccountInfo = ({ user, editing, setEditing }) => {
         values.id = user.id;
         values.verifiedUser = user.verifiedUser;
 
-        const { data } = await usersService.update({ userId: user.id, userData: values });
+        const data = await usersService.update({ userId: user.id, userData: values });
 
         if (data) {
           form.setFieldsValue(data);
