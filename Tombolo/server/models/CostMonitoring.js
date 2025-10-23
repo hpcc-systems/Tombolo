@@ -12,12 +12,9 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
       });
 
-      CostMonitoring.hasMany(models.CostMonitoringData, {
-        foreignKey: 'monitoringId',
-        as: 'costMonitoringData',
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-      });
+      // NOTE: CostMonitoringData is no longer directly related to CostMonitoring
+      // Cost data is now cluster-based and can be used by multiple monitorings
+      // See CostMonitoringData model for cluster-based relationship
 
       CostMonitoring.belongsTo(models.User, {
         foreignKey: 'createdBy',
