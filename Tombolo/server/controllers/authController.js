@@ -1032,9 +1032,7 @@ const requestAccess = async (req, res) => {
       return sendError(res, 'User not found', 404);
     }
 
-    const instance_setting = await InstanceSetting.findOne({
-      where: { name: 'contactEmail' },
-    });
+    const instance_setting = await InstanceSetting.findOne({ raw: true });
 
     if (!instance_setting) {
       return sendError(res, 'No contact email found', 404);
@@ -1060,6 +1058,41 @@ const requestAccess = async (req, res) => {
       }
     }
 
+    const { metaData } = instance_setting;
+    let recipients = metaData?.accessRequestEmailRecipientsEmail || [];
+
+    if (
+      metaData?.accessRequestEmailRecipientsRoles &&
+      metaData.accessRequestEmailRecipientsRoles.length > 0
+    ) {
+      const roles = metaData.accessRequestEmailRecipientsRoles;
+
+      // Get role ids
+      const roleDetails = await RoleType.findAll({
+        where: { roleName: roles },
+        raw: true,
+      });
+
+      const roleIds = roleDetails.map(r => {
+        return r.id;
+      });
+
+      // Get all users with the roleIds above
+      const users = await UserRole.findAll({
+        where: { roleId: roleIds },
+        include: [
+          {
+            model: User, // or just User if it's in scope
+            as: 'user', // This matches the alias in your association
+            attributes: ['email'],
+          },
+        ],
+      });
+
+      const emails = users.map(u => u.user.email);
+      recipients = [...recipients, ...emails];
+    }
+
     const searchableNotificationId = uuidv4();
 
     // Add to notification queue
@@ -1077,7 +1110,7 @@ const requestAccess = async (req, res) => {
           process.env.WEB_URL
         )}/admin/userManagement`,
         subject: `User Access Request from ${user.email}`,
-        mainRecipients: [instance_setting.value],
+        mainRecipients: recipients,
         notificationDescription: 'User Access Request',
         validForHours: 24,
       },
