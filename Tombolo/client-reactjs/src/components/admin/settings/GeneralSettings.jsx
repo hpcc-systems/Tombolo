@@ -1,8 +1,8 @@
-// Import from Libraries
+// Imports from libraries
 import React from 'react';
 import { Descriptions } from 'antd';
 
-// Local Imports
+// Local imports
 import { formatDateTimeShort } from '../../common/CommonUtil';
 
 function GeneralSettings({ instanceSettings }) {

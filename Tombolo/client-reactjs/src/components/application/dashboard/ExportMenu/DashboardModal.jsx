@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, message, Tabs, Button, Input } from 'antd';
+import { Modal, Tabs, Button, Input } from 'antd';
 import InfoDrawer from '../../../common/InfoDrawer.jsx';
 import useWindowSize from '@/hooks/useWindowSize';
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import { handleSuccess, handleError as handleResponseError } from '@/components/common/handleResponse';
 import { InfoCircleOutlined, CopyOutlined } from '@ant-design/icons';
 import DashboardApiTable from './DashboardApiTable.jsx';
 import KeyForm from './KeyForm.jsx';
+import apiKeysService from '@/services/apiKeys.service';
 
 const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authReducer }) => {
   //extra states needed for data verification and entry
@@ -28,14 +29,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
 
   const getKeys = async () => {
     try {
-      const payload = {
-        method: 'GET',
-        headers: authHeader(),
-      };
-
-      const response = await fetch(`/api/key/all/${applicationId}`, payload);
-      if (!response.ok) handleError(response);
-      const data = await response.json();
+      const data = await apiKeysService.getAll({ applicationId });
 
       data.map((data) => {
         //get current date and expiration date for calculations
@@ -65,7 +59,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
       setKeys(data);
       return data;
     } catch (error) {
-      message.error('Failed to fetch keys');
+      handleResponseError('Failed to fetch keys');
     }
   };
 
@@ -73,23 +67,14 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
 
   const createKey = async (formData) => {
     try {
-      const payload = {
-        method: 'POST',
-        headers: authHeader(),
-        body: JSON.stringify({ applicationId, formData }),
-      };
-
-      const response = await fetch(`/api/key/newKey/${applicationId}`, payload);
-      if (!response.ok) handleError(response);
-
-      const data = await response.json();
+      const data = await apiKeysService.create({ applicationId, formData });
 
       if (data && data.apiKey) setKey(data.apiKey);
       getKeys();
       setKey(data);
       return;
     } catch (error) {
-      message.error('Failed to get API Key');
+      handleResponseError('Failed to get API Key');
     }
   };
   // Changes modal size per screen vw
@@ -106,7 +91,7 @@ const DashboardModal = ({ modalVisible, setModalVisible, applicationId, authRedu
 
   const copyKey = () => {
     navigator.clipboard.writeText(key.apiKey);
-    message.success('Key Copied to Clipboard');
+    handleSuccess('Key Copied to Clipboard');
   };
 
   function cancelModal() {

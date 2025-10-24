@@ -7,8 +7,8 @@ import WorkUnitCharts from '../common/charts/WorkUnitCharts';
 import Filters from './Filters';
 import MetricBoxes from '../common/charts/MetricBoxes';
 import ExportMenu from '../ExportMenu/ExportMenu';
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
-import { message } from 'antd';
+import { handleError as handleResponseError } from '@/components/common/handleResponse';
+import orbitService from '@/services/orbit.service';
 
 function Orbit() {
   //all states needed to manage data
@@ -61,27 +61,11 @@ function Orbit() {
   const getbuilds = async () => {
     try {
       setLoading(true);
-      const payload = {
-        method: 'GET',
-        headers: authHeader(),
-      };
 
       if (applicationId === undefined) return;
 
-      const response = await fetch(`/api/orbit/allMonitoring/${applicationId}`, payload);
-      if (!response.ok) {
-        setLoading(false);
-        handleError(response);
-      }
-      const data = await response.json();
-
-      //get work unit information and put it in builds information
-      const response2 = await fetch(`/api/orbit/getWorkUnits/${applicationId}`, payload);
-      if (!response2.ok) {
-        setLoading(false);
-        handleError(response2);
-      }
-      const data2 = await response2.json();
+      const data = await orbitService.getAllMonitoring({ applicationId });
+      const data2 = await orbitService.getWorkUnits({ applicationId });
 
       let builds2 = [];
 
@@ -190,8 +174,7 @@ function Orbit() {
 
       setLoading(false);
     } catch (error) {
-      message.error('Failed to fetch builds' + error);
-      console.log(error);
+      handleResponseError('Failed to fetch builds' + error);
     }
   };
 

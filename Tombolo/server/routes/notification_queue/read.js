@@ -5,6 +5,7 @@ const router = express.Router();
 const logger = require('../../config/logger');
 const { NotificationQueue } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
+const { sendSuccess, sendError } = require('../../utils/response');
 const {
   validateCreateNotificationQueue,
   validatePatchNotificationQueue,
@@ -18,10 +19,10 @@ router.post(
   async (req, res) => {
     try {
       const response = await NotificationQueue.create(req.body, { raw: true });
-      return res.status(200).send(response);
+      return sendSuccess(res, response, 'Notification created successfully');
     } catch (err) {
       logger.error('createNotificationQueue: ', err);
-      return res.status(500).send('Failed to save notification');
+      return sendError(res, 'Failed to save notification');
     }
   }
 );
@@ -30,10 +31,14 @@ router.post(
 router.get('/', async (req, res) => {
   try {
     const notifications = await NotificationQueue.findAll();
-    return res.status(200).json(notifications);
+    return sendSuccess(
+      res,
+      notifications,
+      'Notifications retrieved successfully'
+    );
   } catch (err) {
     logger.error('getNotificationQueue: ', err);
-    return res.status(500).send('Failed to get notifications');
+    return sendError(res, 'Failed to get notifications');
   }
 });
 
@@ -49,14 +54,18 @@ router.patch(
       });
 
       if (updatedRows[0] === 0) {
-        return res.status(404).send('Notification not found');
+        return sendError(res, 'Notification not found', 404);
       }
 
       const updatedNotification = await NotificationQueue.findByPk(req.body.id);
-      return res.status(200).send(updatedNotification);
+      return sendSuccess(
+        res,
+        updatedNotification,
+        'Notification updated successfully'
+      );
     } catch (err) {
       logger.error('patchNotificationQueue: ', err);
-      return res.status(500).send('Failed to update notification');
+      return sendError(res, 'Failed to update notification');
     }
   }
 );
@@ -68,10 +77,10 @@ router.delete(
   async (req, res) => {
     try {
       await NotificationQueue.destroy({ where: { id: req.params.id } });
-      return res.status(200).send('success');
+      return sendSuccess(res, null, 'Notification deleted successfully');
     } catch (err) {
       logger.error('deleteNotificationQueue: ', err);
-      return res.status(500).send('Failed to delete notification');
+      return sendError(res, 'Failed to delete notification');
     }
   }
 );
