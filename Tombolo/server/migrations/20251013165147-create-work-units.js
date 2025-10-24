@@ -86,7 +86,11 @@ module.exports = {
         type: Sequelize.FLOAT,
         allowNull: false,
       },
-      detailsFetched: {
+      detailsFetchedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      clusterDeleted: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false,
@@ -127,7 +131,7 @@ module.exports = {
       name: 'work_units_state_idx',
     });
 
-    await queryInterface.addIndex('work_units', ['detailsFetched'], {
+    await queryInterface.addIndex('work_units', ['detailsFetchedAt'], {
       name: 'work_units_details_fetched_idx',
     });
   },

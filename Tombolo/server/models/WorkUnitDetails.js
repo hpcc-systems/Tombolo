@@ -25,8 +25,8 @@ module.exports = (sequelize, DataTypes) => {
     {
       id: {
         primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.BIGINT.UNSIGNED,
+        autoIncrement: true,
       },
       clusterId: {
         type: DataTypes.UUID,
@@ -277,24 +277,13 @@ module.exports = (sequelize, DataTypes) => {
       NodeMaxLookAhead: { type: DataTypes.TINYINT.UNSIGNED, allowNull: true },
       NodeMinFirstRow: { type: DataTypes.TINYINT.UNSIGNED, allowNull: true },
       NodeMaxFirstRow: { type: DataTypes.TINYINT.UNSIGNED, allowNull: true },
-      createdAt: {
-        allowNull: false,
-        type: DataTypes.DATE,
-      },
-      updatedAt: {
-        allowNull: false,
-        type: DataTypes.DATE,
-      },
-      deletedAt: {
-        allowNull: true,
-        type: DataTypes.DATE,
-      },
     },
     {
       sequelize,
       modelName: 'WorkUnitDetails',
       tableName: 'work_unit_details',
-      paranoid: true,
+      timestamps: false,
+      paranoid: false,
       indexes: [
         {
           name: 'work_unit_details_cluster_wu_idx',
@@ -313,6 +302,8 @@ module.exports = (sequelize, DataTypes) => {
         //   fields: ['scopeId'],
         // },
       ],
+      rowFormat: 'COMPRESSED',
+      keyBlockSize: 8,
     }
   );
 

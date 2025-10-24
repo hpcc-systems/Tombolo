@@ -97,7 +97,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.FLOAT,
         allowNull: false,
       },
-      detailsFetched: {
+      detailsFetchedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      clusterDeleted: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
@@ -140,7 +144,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         {
           name: 'work_units_details_fetched_idx',
-          fields: ['detailsFetched'],
+          fields: ['detailsFetchedAt'],
         },
       ],
     }

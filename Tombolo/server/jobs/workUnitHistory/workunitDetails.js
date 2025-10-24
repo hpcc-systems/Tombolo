@@ -170,7 +170,7 @@ function logOutOfRangeError(error, batch) {
 async function bulkCreateWithDiagnostics(batch) {
   try {
     await WorkUnitDetails.bulkCreate(batch, {
-      updateOnDuplicate: ['updatedAt'],
+      ignoreDuplicates: true, // Skip duplicates instead of updating (no timestamps to update)
       logging: false,
     });
   } catch (e) {
@@ -755,8 +755,11 @@ async function fetchWorkunitDetails(clusterOptions, wuId) {
       });
     } catch (err) {
       // Don't retry if workunit cannot be opened (deleted, archived, or inaccessible)
-      if (err.message && err.message.includes('Cannot open workunit')) {
-        // Create a non-retryable error by marking it
+      // This will be caught and handled in the main loop where we mark clusterDeleted
+      if (
+        err.message &&
+        err.message.toLowerCase().includes('cannot open workunit')
+      ) {
         const nonRetryableError = new Error(err.message);
         nonRetryableError.noRetry = true;
         throw nonRetryableError;
@@ -828,15 +831,16 @@ async function workunitDetails() {
           text: `Processing cluster ${clusterId} (${thorHost})`,
         });
 
-        // Get WorkUnits with terminal states and detailsFetched = false, limit to 25
+        // Get WorkUnits with terminal states and detailsFetchedAt IS NULL, limit to 20
         const workunitsToProcess = await WorkUnit.findAll({
           where: {
             clusterId,
             state: TERMINAL_STATES,
-            detailsFetched: false,
+            detailsFetchedAt: null,
+            clusterDeleted: false, // Only process workunits that still exist on cluster
           },
           limit: 20,
-          order: [['workUnitTimestamp', 'ASC']], // Process most recent first
+          order: [['workUnitTimestamp', 'ASC']], // Process oldest first
           raw: true,
         });
 
@@ -970,10 +974,33 @@ async function workunitDetails() {
               );
             }
           } catch (err) {
-            logOrPostMessage({
-              level: 'error',
-              text: `Error processing workunit ${workunit.wuId}: ${err.message}`,
-            });
+            // Check if workunit was deleted from cluster
+            if (
+              err.message &&
+              err.message.toLowerCase().includes('cannot open workunit')
+            ) {
+              logOrPostMessage({
+                level: 'warn',
+                text: `Workunit ${workunit.wuId} has been deleted from cluster, marking as clusterDeleted`,
+              });
+
+              // Mark workunit as deleted on cluster
+              await WorkUnit.update(
+                { clusterDeleted: true },
+                {
+                  where: {
+                    wuId: workunit.wuId,
+                    clusterId,
+                  },
+                }
+              );
+            } else {
+              logOrPostMessage({
+                level: 'error',
+                text: `Error processing workunit ${workunit.wuId}: ${err.message}`,
+              });
+            }
+
             processedCount++;
 
             // Clean up on error
@@ -988,7 +1015,7 @@ async function workunitDetails() {
         // Batch update all successful workunits at once
         if (successfulWuIds.length > 0) {
           await WorkUnit.update(
-            { detailsFetched: true },
+            { detailsFetchedAt: new Date() },
             {
               where: {
                 wuId: successfulWuIds,
