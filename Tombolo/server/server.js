@@ -1,4 +1,3 @@
-/* ENV */
 const path = require('path');
 const fs = require('fs');
 
@@ -6,6 +5,7 @@ const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
 require('dotenv').config({ path: ENVPath });
+const { preloadSecrets } = require('./config/secrets');
 
 /* Use UTC as default timezone */
 process.env.TZ = 'UTC';
@@ -76,6 +76,18 @@ app.use(cors());
 app.use(express.json());
 app.use(limiter);
 app.use(cookieParser());
+
+// Secret refresh endpoint (secure with auth in prod)
+app.get('/api/refresh-secrets', validateToken, async (req, res) => {
+  try {
+    await preloadSecrets();
+    logger.info('Secrets refreshed from Akeyless');
+    res.send('Secrets refreshed');
+  } catch (err) {
+    logger.error('Failed to refresh secrets:', err);
+    res.status(500).send('Failed to refresh secrets');
+  }
+});
 
 /*  ROUTES */
 const job = require('./routes/job/read');
@@ -200,6 +212,11 @@ server.listen(port, '0.0.0.0', async () => {
     logger.info('-----------------------------');
     logger.info('Server is initializing...');
     logger.info('-----------------------------');
+
+    // Preload secrets before DB connection and server start
+    await preloadSecrets();
+    logger.info('Secrets loaded from Akeyless or .env');
+
     logger.info('Server listening on port ' + port + '!');
     /* Check DB connection */
     await dbConnection.authenticate();
