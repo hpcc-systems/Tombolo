@@ -5,12 +5,7 @@ const client = new akeyless.ApiClient();
 client.basePath = process.env.AKEYLESS_API_URL;
 const api = new akeyless.V2Api(client);
 
-let token = null;
-let tokenExpiry = null;
-
 async function getToken() {
-  if (token && tokenExpiry > Date.now()) return token;
-
   if (!process.env.AKEYLESS_ACCESS_ID || !process.env.AKEYLESS_ACCESS_KEY) {
     const errorMsg =
       'Missing AKEYLESS_ACCESS_ID or AKEYLESS_ACCESS_KEY in .env';
@@ -24,9 +19,7 @@ async function getToken() {
       'access-key': process.env.AKEYLESS_ACCESS_KEY,
     };
     const authRes = await api.auth(authReq);
-    token = authRes.token;
-    tokenExpiry = Date.now() + (authRes.expiration * 1000 || 300_000); // fallback 5 min
-    return token;
+    return authRes.token;
   } catch (err) {
     logger?.error('Failed to get Akeyless token:', err);
     throw err;
@@ -75,10 +68,6 @@ async function getSecret(name) {
 
 async function preloadSecrets() {
   try {
-    if (!process.env.AKEYLESS_PATH_PREFIX) {
-      throw new Error('AKEYLESS_PATH_PREFIX is not defined in .env');
-    }
-
     const secretNames = await fetchAllSecretsInPath();
     logger?.info(
       `Found ${secretNames.length} secrets in Akeyless ${process.env.AKEYLESS_PATH_PREFIX}`

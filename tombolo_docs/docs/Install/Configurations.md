@@ -21,9 +21,9 @@ To get Tombolo up and running, you'll need to configure two essential files. For
 
 Tombolo supports storing sensitive values (such as passwords and encryption keys) securely in Akeyless. This allows you to avoid keeping critical secrets directly in your .env files. If you plan to use Akeyless:
 
-3. Provide the Akeyless configuration details in your .env file (e.g., access ID, access key, and path prefix).
-4. Do not move all variables to Akeyless - certain values such as HOST, PORT, and other Docker-related settings must remain in the .env file, as they are required by docker-compose. Moving them to Akeyless will cause your environment to break.
-5. If the same variable exists in both Akeyless and .env, the .env value takes precedence.
+1. Provide the Akeyless configuration details in your .env file (e.g., access ID, access key, and path prefix).
+2. Do not move all variables to Akeyless - certain values such as HOST, PORT, and other Docker-related settings must remain in the .env file, as they are required by docker-compose. Moving them to Akeyless will cause your environment to break.
+3. If the same variable exists in both Akeyless and .env, the .env value takes precedence.
 
 **Good candidates for storing in Akeyless include:**
 
