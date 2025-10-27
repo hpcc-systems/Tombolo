@@ -151,7 +151,6 @@ function logOutOfRangeError(error, batch) {
         }
       });
       const timeValuesStr = JSON.stringify(timeValues, null, 2);
-      console.error(`All Time* values in this row:\n${timeValuesStr}`);
       logOrPostMessage({
         level: 'error',
         text: `All Time* values in this row: ${timeValuesStr}`,
