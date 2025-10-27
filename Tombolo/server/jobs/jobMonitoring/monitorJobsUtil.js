@@ -954,6 +954,7 @@ const WUAlertDataPoints = () => {
 };
 
 // Infer start time from wuid
+// TODO: This method doesn't handle appended sequences like W20251013-211441-5
 const inferWuStartTime = wuid => {
   // Extract the timestamp part from WUID (remove 'W' prefix)
   const timestampStr = wuid.startsWith('W') ? wuid.slice(1) : wuid;
