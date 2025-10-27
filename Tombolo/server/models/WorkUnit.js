@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       wuId: {
         primaryKey: true,
-        type: DataTypes.STRING(30), // TODO: Will workunit ids ever get this big?
+        type: DataTypes.STRING(30),
       },
       clusterId: {
         primaryKey: true,
@@ -39,7 +39,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       engine: {
-        // TODO: Should this be engine? There will be a collision error between cluster and the cluster model
         allowNull: false,
         type: DataTypes.STRING(),
       },
@@ -106,7 +105,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: false,
       },
-      // TODO: Does noAccess matter
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
