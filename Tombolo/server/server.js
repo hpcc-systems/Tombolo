@@ -77,18 +77,6 @@ app.use(express.json());
 app.use(limiter);
 app.use(cookieParser());
 
-// Secret refresh endpoint (secure with auth in prod)
-app.get('/api/refresh-secrets', validateToken, async (req, res) => {
-  try {
-    await preloadSecrets();
-    logger.info('Secrets refreshed from Akeyless');
-    res.send('Secrets refreshed');
-  } catch (err) {
-    logger.error('Failed to refresh secrets:', err);
-    res.status(500).send('Failed to refresh secrets');
-  }
-});
-
 /*  ROUTES */
 const job = require('./routes/job/read');
 const bree = require('./routes/bree/read');
