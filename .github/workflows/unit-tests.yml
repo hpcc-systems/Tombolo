@@ -44,6 +44,12 @@ jobs:
           cd Tombolo/server
           npm ci
 
+      - name: Setup server config files
+        if: steps.changed-files.outputs.server_any_changed == 'true'
+        run: |
+          cd Tombolo/server
+          cp cluster-whitelist.sample.js cluster-whitelist.js
+
       - name: Run client tests
         if: steps.changed-files.outputs.client_any_changed == 'true'
         run: |

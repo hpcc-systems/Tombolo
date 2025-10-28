@@ -28,7 +28,7 @@ module.exports = {
   // Setup files to run before each test suite
   // setupFiles: ['<rootDir>/tests/setup.js'],
   // globalSetup: '<rootDir>/tests/globalSetup.js',
-  // globalTeardown: '<rootDir>/tests/teardown.js',
+  globalTeardown: '<rootDir>/tests/globalTeardown.js',
 
   // Specify the test environment (node or jsdom)
   // testEnvironment: 'node',
