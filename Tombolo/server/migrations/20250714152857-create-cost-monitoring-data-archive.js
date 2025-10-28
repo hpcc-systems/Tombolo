@@ -24,6 +24,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       },
+      localDay: {
+        type: Sequelize.DATEONLY,
+        comment: 'Precomputed local day for fast queries',
+      },
       usersCostInfo: {
         allowNull: false,
         type: Sequelize.JSON,
@@ -53,12 +57,18 @@ module.exports = {
       },
     });
 
+    // Composite index for fast queries by cluster, local_day, and deletedAt (matches source table)
+    await queryInterface.addIndex(
+      'cost_monitoring_data_archive',
+      ['clusterId', 'localDay', 'deletedAt'],
+      {
+        name: 'idx_cmd_archive_cluster_localday_notdeleted',
+      }
+    );
+
     // Add indexes for better query performance
     await queryInterface.addIndex('cost_monitoring_data_archive', [
       'archivedAt',
-    ]);
-    await queryInterface.addIndex('cost_monitoring_data_archive', [
-      'clusterId',
     ]);
     await queryInterface.addIndex('cost_monitoring_data_archive', ['date']);
   },

@@ -23,8 +23,10 @@ class ArchiveManager {
   }
 
   createArchiveModel(originalModel, archiveModelName) {
+    // Use getAttributes() which returns current attributes, not cached rawAttributes
     const attributes = { ...originalModel.getAttributes() };
 
+    // Add archivedAt field for tracking when records were archived
     attributes.archivedAt = {
       type: DataTypes.DATE,
       allowNull: false,
@@ -32,7 +34,7 @@ class ArchiveManager {
     };
 
     return this.sequelize.define(archiveModelName, attributes, {
-      tableName: `${originalModel.tableName}Archive`,
+      tableName: `${originalModel.tableName}_archive`,
       timestamps: true,
       paranoid: true,
     });

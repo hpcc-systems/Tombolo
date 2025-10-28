@@ -49,7 +49,9 @@
     "start": "vite",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build",
     "serve": "vite preview",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint --fix ."
   },
