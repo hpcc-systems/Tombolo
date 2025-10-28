@@ -100,9 +100,12 @@ const Register = () => {
       ) : registrationComplete ? (
         <div>
           <p className={styles.helperLink} style={{ fontSize: '1.1rem' }}>
-            <CheckCircleFilled style={{ marginRight: '1rem', color: 'green' }} twoToneColor="#eb2f96" fill="green" />
+            <CheckCircleFilled style={{ marginRight: '1rem', color: 'green' }} fill="green" />
             Registration complete. Please check your email to verify your account.
           </p>
+          <div className={styles.helperLink}>
+            <Link to="/login">Go to Login</Link>
+          </div>
         </div>
       ) : (
         <>
