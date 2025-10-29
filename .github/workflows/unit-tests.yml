@@ -54,10 +54,15 @@ jobs:
         if: steps.changed-files.outputs.client_any_changed == 'true'
         run: |
           cd Tombolo/client-reactjs
-          npm test
+          timeout 5m npm test
 
       - name: Run server tests
         if: steps.changed-files.outputs.server_any_changed == 'true'
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-jwt-secret-key-for-ci
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-key-for-ci
+          WEB_URL: http://localhost:3000
         run: |
           cd Tombolo/server
-          npm test
+          timeout 3m npm test
