@@ -31,8 +31,14 @@ Before setting up Tombolo with Docker, ensure your system meets the following re
 
 To get started, clone the Tombolo repository using the following command:
 
-```
+```bash
 git clone https://github.com/hpcc-systems/Tombolo.git
+```
+
+The default branch is `master`, which will be checked out automatically when you clone. If you have switched branches and need to return to `master`, use:
+
+```bash
+git checkout master
 ```
 
 ---
@@ -88,7 +94,7 @@ Docker Compose is used to define and run the multi-container Docker applications
 
 To build and start the application using Docker, run the following commands. The first command builds the application image, while the second command starts the application in detached mode, allowing it to run in the background.
 
-NOTE: If you are receiving errors when executing the commands on linux you may ned to run them with `sudo`
+NOTE: If you are receiving errors when executing the commands on linux you may need to run them with `sudo`
 
 ```bash
 # Navigate to the project root directory
