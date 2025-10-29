@@ -133,48 +133,57 @@ const Wizard = () => {
         deviceInfo: getDeviceInfo(),
       };
 
-      const response = await wizardService.completeFirstRun({ instanceInfo: values });
+      // Create abort controller for cancellation
+      const abortController = new AbortController();
 
-      if (!response.ok) {
-        throw new Error('Failed to complete set up');
-      } else {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
+      let processedLength = 0;
 
-        let sendingResponse = true;
+      // Make API request to complete first run with progress callback
+      await wizardService.completeFirstRun({
+        instanceInfo: values,
+        abortController,
+        onProgress: (text) => {
+          // Get only the new data since last progress event
+          const newData = text.substring(processedLength);
+          processedLength = text.length;
 
-        while (sendingResponse) {
-          const { done, value } = await reader.read();
+          if (newData.trim()) {
+            const jsonStrings = newData
+              .split('\n')
+              .filter((str) => str.trim() !== '')
+              .map((str) => str.replace(/^data: /, ''));
 
-          if (done) {
-            sendingResponse = false;
+            const serverSentEvents = jsonStrings
+              .map((str) => {
+                try {
+                  return JSON.parse(str);
+                } catch (e) {
+                  return null;
+                }
+              })
+              .filter((event) => event !== null);
+
+            // Check if any of these events are errors or step is 999
+            serverSentEvents.forEach((e) => {
+              if (e.step === 99) {
+                // Error step
+                setSubmitting(false);
+                throw new Error(e.message || 'Setup failed');
+              } else if (e.step === 999) {
+                // Completion step
+                setCompleteSuccessfully(true);
+                setSubmitting(false);
+                handleSuccess('Verification E-mail sent!');
+              }
+            });
+
+            setStepMessage((prev) => [...prev, ...serverSentEvents]);
           }
-          const decodedValue = decoder.decode(value);
-
-          const jsonStrings = decodedValue
-            .split('\n')
-            .filter((str) => str.trim() !== '')
-            .map((str) => str.replace(/^data: /, ''));
-          const serverSentEvents = jsonStrings.map((str) => JSON.parse(str));
-
-          // Check if any of these events are errors or step is 999
-          serverSentEvents.forEach((e) => {
-            if (e.step === 99) {
-              // Error step
-              setSubmitting(false);
-            } else if (e.step === 999) {
-              // Completion step
-              setCompleteSuccessfully(true);
-              setSubmitting(false);
-              handleSuccess('Verification E-mail sent!');
-            }
-          });
-
-          setStepMessage((prev) => [...prev, ...serverSentEvents]);
-        }
-      }
+        },
+      });
     } catch (e) {
       handleError(e);
+      setSubmitting(false);
     }
   };
 

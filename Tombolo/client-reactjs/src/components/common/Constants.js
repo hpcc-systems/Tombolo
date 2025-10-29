@@ -2,7 +2,7 @@ export const Constants = {
   LOGIN_SUCCESS: 'success',
   LOGIN_FAILED: 'failed',
   LOGIN_TEMP_PW: 'temp-pw',
-  LOGIN_ACCOUNT_LOCKED: 'password-locked',
+  LOGIN_ACCOUNT_LOCKED: 'account-locked',
   LOGIN_PW_EXPIRED: 'password-expired',
   LOGIN_UNVERIFIED: 'unverified',
 

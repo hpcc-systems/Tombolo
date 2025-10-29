@@ -1,11 +1,8 @@
-/* eslint-disable unused-imports/no-unused-vars */
-/* eslint-disable no-unreachable */
 // Imports from libraries
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 // Local imports
-import { handleError } from '@/components/common/AuthHeader';
-import { handleError as handleResponseError } from '@/components/common/handleResponse';
+import { handleError } from '@/components/common/handleResponse';
 import { getUser, setUser } from '@/components/common/userStorage';
 import { Constants } from '@/components/common/Constants';
 import authService from '@/services/auth.service';
@@ -28,34 +25,6 @@ const clearStorage = () => {
   localStorage.clear();
 };
 
-// Helper function for basic user login
-// const loginBasicUserFunc = async (email, password, deviceInfo) => {
-//   clearStorage();
-//   try {
-//     const data = await authService.loginBasicUser(email, password, deviceInfo);
-//     console.log('------------------------');
-//     console.log('Login User Data from backend SUCCESS: ', data);
-//     console.log('------------------------');
-//     return data;
-//   } catch (error) {
-//     const errMessage = error.messages[0];
-//     if (errMessage === 'failed') {
-//       console.log('------------------------');
-//       console.log('Error message when username password failed ', errMessage);
-//       console.log('------------------------');
-//       return { message: errMessage, type: Constants.LOGIN_FAILED };
-//     } else if (errMessage === 'temp' || errMessage === 'expired' || errMessage === 'unverified') {
-//       console.log('------------------------');
-//       console.log('User cannot login  because of  password or account is : ', errMessage);
-//       console.log('------------------------');
-//     } else {
-//       console.log('------------------------');
-//       console.log('Some unrelated issue occurred ');
-//       console.log('------------------------');
-//     }
-//   }
-// };
-
 // Async thunks
 export const login = createAsyncThunk('auth/login', async ({ email, password, deviceInfo }, { rejectWithValue }) => {
   clearStorage();
@@ -72,6 +41,7 @@ export const login = createAsyncThunk('auth/login', async ({ email, password, de
       user: userData,
     };
   } catch (err) {
+    handleError(err.messages);
     // Extract error message
     const errMessage =
       Array.isArray(err?.messages) && err.messages.length > 0 ? err.messages[0] : err?.message || 'Unknown error';
@@ -106,6 +76,7 @@ export const login = createAsyncThunk('auth/login', async ({ email, password, de
     }
   }
 });
+
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
     await authService.logoutBasicUser();
@@ -128,9 +99,7 @@ export const registerBasicUser = createAsyncThunk('auth/registerBasicUser', asyn
     const data = await authService.registerBasicUser(values);
     return data;
   } catch (error) {
-    if (error.response) {
-      handleError(error.response);
-    }
+    handleError(error);
     throw new Error('Registration failed');
   }
 });
@@ -174,9 +143,9 @@ export const loginOrRegisterAzureUser = createAsyncThunk(
         const { status, data } = error.response;
 
         if (status === 409) {
-          handleResponseError(data.message);
+          handleError(data.message);
         } else {
-          handleError(error.response);
+          handleError(error);
         }
 
         return rejectWithValue({
@@ -207,7 +176,7 @@ export const azureLoginRedirect = () => {
     window.location.href = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
   } catch (e) {
     // Error logged by global error handler
-    handleResponseError('An error occurred while trying to login with Microsoft.');
+    handleError('An error occurred while trying to login with Microsoft.');
   }
 };
 

@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import RegisterUserForm from './registerUserForm';
 import { getDeviceInfo } from './utils';
 import { setUser } from '../common/userStorage';
-import { handleSuccess } from '../common/handleResponse';
+import { handleError, handleSuccess } from '../common/handleResponse';
 import { registerBasicUser } from '@/redux/slices/AuthSlice';
 import authService from '@/services/auth.service';
 import styles from './login.module.css';
@@ -43,18 +43,18 @@ const Register = () => {
         try {
           const response = await authService.verifyEmail(regId);
 
-          if (!response.success) {
+          if (!response) {
             throw new Error(response?.message || 'Verification failed');
           }
 
           handleSuccess('Your email has been verified!');
           setRegistrationComplete(true);
           setVerifying(false);
-          setUser(JSON.stringify(response.data));
+          setUser(JSON.stringify(response));
           history.push('/');
         } catch (err) {
           setVerifying(false);
-          setVerificationFailed(err.message);
+          setVerificationFailed(err.messages[0]);
         }
       };
 
@@ -74,7 +74,8 @@ const Register = () => {
 
       setRegistrationComplete(true);
     } catch (e) {
-      setVerificationFailed(e.message);
+      handleError(e);
+      setVerificationFailed(e.message[0]);
     }
   };
 

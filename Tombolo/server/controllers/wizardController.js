@@ -271,23 +271,16 @@ const manageInstanceSettings = async (
 
 // Helper: Send verification email
 const sendVerificationEmail = async (user, transaction) => {
+  let verificationCode = uuidv4();
+  let expiresAt = new Date(Date.now() + 86400000); // 24 hours
+  const notificationId = uuidv4();
   if (
     process.env.NODE_ENV === 'development' &&
     process.env.TEST_MODE === 'true'
   ) {
-    await AccountVerificationCode.create(
-      {
-        code: 'test-verification-code',
-        userId: user.id,
-        expiresAt: new Date(Date.now() + 600000), // 10 minutes
-      },
-      { transaction }
-    );
-    return;
+    verificationCode = 'test-verification-code';
+    expiresAt = new Date(Date.now() + 86400000); // 10 minutes
   }
-
-  const verificationCode = uuidv4();
-  const notificationId = uuidv4();
 
   await AccountVerificationCode.create(
     {

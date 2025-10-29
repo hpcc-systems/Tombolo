@@ -228,6 +228,7 @@ const verifyEmail = async (req, res) => {
     // Find the account verification code
     const accountVerificationCode = await AccountVerificationCode.findOne({
       where: { code: token },
+      raw: true,
     });
 
     // Token does not exist
@@ -613,7 +614,11 @@ const loginBasicUser = async (req, res) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-      return sendError(res, genericError, 401);
+      return sendError(
+        res,
+        'User with the provided email and  password combination not found',
+        401
+      );
     }
 
     // If force password reset is true it means user is issued a temp password and must reset password
@@ -627,7 +632,7 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login Attempt by user with locked account ${email}`
       );
-      return sendError(res, 'password-locked', 401);
+      return sendError(res, 'account-locked', 401);
     }
 
     //Compare password
