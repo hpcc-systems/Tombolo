@@ -9,7 +9,7 @@ RUN npm install
 COPY . /app/
 
 # Reason why this package is copied to public folder - https://github.com/suren-atoyan/monaco-react/issues/217#issuecomment-980800802
-RUN cp -r node_modules/monaco-editor /app/public
+# RUN cp -r node_modules/monaco-editor /app/public
 
 RUN npm run build
 
