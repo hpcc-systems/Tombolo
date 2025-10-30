@@ -3,7 +3,7 @@ import { Button, Form, Modal, Select, Card } from 'antd';
 import { isEmail } from 'validator';
 import { useSelector } from 'react-redux';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
-import { handleSuccess, handleError } from '@/utils/handleResponse';
+import { handleSuccess, handleError } from '@/components/common/handleResponse';
 
 const { useForm } = Form;
 
