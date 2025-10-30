@@ -16,6 +16,7 @@ const {
   validateDeleteIndex,
 } = require('../../middlewares/indexMiddleware');
 const logger = require('../../config/logger');
+const { sendSuccess, sendError } = require('../../utils/response');
 
 router.get('/index_list', validate(validateIndexList), async (req, res) => {
   try {
