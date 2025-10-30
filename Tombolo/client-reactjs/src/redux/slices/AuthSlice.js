@@ -122,22 +122,25 @@ export const loginOrRegisterAzureUser = createAsyncThunk(
     clearStorage();
 
     try {
-      const data = await authService.loginOrRegisterAzureUser(code);
+      const response = await authService.loginOrRegisterAzureUser(code);
 
-      if (data.success) {
-        data.data.isAuthenticated = true;
-        setUser(JSON.stringify(data.data));
+      if (response) {
+        response.data.isAuthenticated = true;
+        setUser(JSON.stringify(response.data));
         return {
           type: 'success',
-          user: data.data,
+          user: response.data,
         };
       } else {
         return rejectWithValue({
           status: null,
-          message: data.message || 'Azure login failed',
+          message: response.message || 'Azure login failed',
         });
       }
     } catch (error) {
+      console.log('------------------------');
+      console.log('ERRRRR: ', error);
+      console.log('------------------------');
       // Handle axios errors
       if (error.response) {
         const { status, data } = error.response;
@@ -153,6 +156,7 @@ export const loginOrRegisterAzureUser = createAsyncThunk(
           message: data.message || 'Azure login failed',
         });
       }
+      handleError(error.messages || error);
 
       // Handle network errors or other unexpected issues
       return rejectWithValue({

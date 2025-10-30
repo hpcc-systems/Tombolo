@@ -86,7 +86,7 @@ const authService = {
   // Login or register Azure user
   loginOrRegisterAzureUser: async (code) => {
     const response = await apiClient.post('/auth/loginOrRegisterAzureUser', { code });
-    return response.data;
+    return response;
   },
 
   // Request access for user without roles/applications

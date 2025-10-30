@@ -1015,7 +1015,6 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
     // Set last login
     await setLastLogin(user);
-
     // Send response
     return sendSuccess(
       res,
