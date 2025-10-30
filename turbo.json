@@ -12,7 +12,6 @@
       "env": ["NODE_ENV"]
     },
     "test": {
-      "dependsOn": ["build"],
       "cache": true,
       "outputs": ["coverage/**"]
     },

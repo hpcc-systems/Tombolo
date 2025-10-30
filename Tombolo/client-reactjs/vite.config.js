@@ -64,11 +64,7 @@ export default function config({ mode }) {
         '~': path.resolve(__dirname, '../../node_modules'), // Alias for node_modules (monorepo root)
       },
     },
-    test: {
-      environment: 'jsdom', // For React component testing
-      globals: true, // Avoid importing `describe`, `it`, etc.
-      setupFiles: './src/tests/setupTests.js', // Optional for custom setup
-    },
+    // Test configuration moved to vitest.config.js
     build: {
       outDir: 'build',
       rollupOptions: {
