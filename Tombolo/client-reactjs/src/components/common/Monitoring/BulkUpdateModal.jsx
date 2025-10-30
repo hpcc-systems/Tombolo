@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, message, Modal, Select, Card } from 'antd';
+import { Button, Form, Modal, Select, Card } from 'antd';
 import { isEmail } from 'validator';
 import { useSelector } from 'react-redux';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
+import { handleSuccess, handleError } from '@/utils/handleResponse';
 
 const { useForm } = Form;
 
@@ -161,7 +162,7 @@ const BulkUpdateModal = ({
 
         // Validate primary contacts are present
         if (!meta.primaryContacts || meta.primaryContacts.length < 1) {
-          message.error(`Primary contact is mandatory. ${row.monitoringName} does not have any`);
+          handleError(`Primary contact is mandatory. ${row.monitoringName} does not have any`);
           hasError = true;
           return;
         }
@@ -209,10 +210,10 @@ const BulkUpdateModal = ({
       );
 
       setMonitorings(newCostMonitoringData);
-      message.success('Cost monitorings updated successfully');
+      handleSuccess('Cost monitorings updated successfully');
       resetState();
     } catch (err) {
-      message.error(err.message || 'Failed to update cost monitorings');
+      handleError(err.message || 'Failed to update cost monitorings');
     }
   };
 

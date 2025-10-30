@@ -203,7 +203,7 @@ describe('MonitoringActionButton', () => {
     // action may be undefined if Select not interacted with in mock; still ensure success message is called
     // message is mocked above
     const { message } = await import('antd');
-    expect(message.success).toHaveBeenCalled();
+    expect(handleSuccess).toHaveBeenCalled();
 
     // Error path: make handler throw
     const failing = vi.fn().mockRejectedValue(new Error('nope'));

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import BreadCrumbs from '../../common/BreadCrumbs';
-import { Tooltip, Button, message } from 'antd';
+import { Tooltip, Button } from 'antd';
 import Text from '../../common/Text';
 import OrbitMonitoringTable from './OrbitMonitoringTable';
 import OrbitMonitoringModal from './OrbitMonitoringModal';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { handleSuccess, handleError as handleResponseError } from '../../common/handleResponse.jsx';
 import { useSelector } from 'react-redux';
 
 const OrbitMonitoring = () => {
@@ -79,12 +80,12 @@ const OrbitMonitoring = () => {
       if (!response.ok) {
         handleError(response);
       } else {
-        message.success('Successfully saved orbit build monitoring data');
+        handleSuccess('Successfully saved orbit build monitoring data');
         getOrbitMonitoring();
       }
     } catch (error) {
       console.log(error);
-      message.error('Failed to save orbit build monitoring');
+      handleResponseError('Failed to save orbit build monitoring');
     }
   };
 
@@ -112,7 +113,7 @@ const OrbitMonitoring = () => {
       setProductStatus(null);
     } catch (error) {
       console.log(error);
-      message.error('There was an error getting Products from Fido');
+      handleResponseError('There was an error getting Products from Fido');
       setProductStatus('error');
     }
   };
@@ -141,7 +142,7 @@ const OrbitMonitoring = () => {
       setDomainStatus(null);
     } catch (error) {
       console.log(error);
-      message.error('There was an error getting Domains from Fido');
+      handleResponseError('There was an error getting Domains from Fido');
       setDomainStatus('error');
     }
   };

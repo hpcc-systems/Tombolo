@@ -14,14 +14,18 @@ vi.mock('antd', async (importOriginal) => {
               const value = col.dataIndex ? row[col.dataIndex] : row;
               const content = col.render ? col.render(value, row) : value;
               return (
-                <div key={cIdx} data-testid={`cell-${rIdx}-${cIdx}`}>{content}</div>
+                <div key={cIdx} data-testid={`cell-${rIdx}-${cIdx}`}>
+                  {content}
+                </div>
               );
             })}
           </div>
         ))}
       </div>
       {rowSelection ? (
-        <button aria-label="select-first" onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>select-first</button>
+        <button aria-label="select-first" onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>
+          select-first
+        </button>
       ) : null}
     </div>
   );
@@ -34,7 +38,9 @@ vi.mock('antd', async (importOriginal) => {
   );
   const MockPopconfirm = ({ children, onConfirm }) => (
     <span>
-      <button aria-label="confirm" onClick={onConfirm}>confirm</button>
+      <button aria-label="confirm" onClick={onConfirm}>
+        confirm
+      </button>
       {children}
     </span>
   );
@@ -43,8 +49,16 @@ vi.mock('antd', async (importOriginal) => {
 });
 
 vi.mock('@ant-design/icons', () => ({
-  EyeOutlined: ({ onClick }) => (<button aria-label="view" onClick={onClick}>view</button>),
-  EditOutlined: ({ onClick }) => (<button aria-label="edit" onClick={onClick}>edit</button>),
+  EyeOutlined: ({ onClick }) => (
+    <button aria-label="view" onClick={onClick}>
+      view
+    </button>
+  ),
+  EditOutlined: ({ onClick }) => (
+    <button aria-label="edit" onClick={onClick}>
+      edit
+    </button>
+  ),
   DeleteOutlined: () => <span>del</span>,
   CheckCircleFilled: () => <span>approveIcon</span>,
   BellOutlined: () => <span>bell</span>,
@@ -56,7 +70,9 @@ vi.mock('@ant-design/icons', () => ({
 
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 
-vi.mock('react-redux', () => ({ useSelector: (sel) => sel({ application: { application: { applicationId: 'app-1' } } }) }));
+vi.mock('react-redux', () => ({
+  useSelector: (sel) => sel({ application: { application: { applicationId: 'app-1' } } }),
+}));
 
 vi.mock('@/components/application/LandingZoneMonitoring/Utils', () => ({
   deleteLzMonitoring: vi.fn().mockResolvedValue(),
@@ -84,7 +100,9 @@ const rowApproved = {
 const rowPending = { ...rowApproved, id: 2, isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
 
 describe('LandingZoneMonitoringTable', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('renders actions and triggers view/edit/approve/duplicate via More popover', async () => {
     const user = userEvent.setup();
@@ -172,7 +190,7 @@ describe('LandingZoneMonitoringTable', () => {
     await user.click(pauseIcon);
     await waitFor(() => expect(toggleLzMonitoringStatus).toHaveBeenCalled());
     expect(setLandingZoneMonitoring).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalledWith('Monitoring status toggled successfully');
+    expect(handleSuccess).toHaveBeenCalledWith('Monitoring status toggled successfully');
   });
 
   it('deletes a monitoring via Popconfirm and updates state', async () => {
@@ -198,7 +216,7 @@ describe('LandingZoneMonitoringTable', () => {
     await user.click(screen.getByRole('button', { name: 'confirm' }));
     await waitFor(() => expect(deleteLzMonitoring).toHaveBeenCalledWith({ id: rowApproved.id }));
     expect(setLandingZoneMonitoring).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalledWith('Landing zone monitoring deleted successfully');
+    expect(handleSuccess).toHaveBeenCalledWith('Landing zone monitoring deleted successfully');
   });
 
   it('allows row selection to set selected rows', async () => {
