@@ -96,8 +96,6 @@ const constraint = require('./routes/constraint/index');
 const fileTemplateRead = require('./routes/fileTemplate/read');
 // const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const regulations = require('./routes/controlsAndRegulations/read');
-const updateNotifications = require('./routes/notifications/update');
-const notifications = require('./routes/notifications/read');
 const key = require('./routes/key/read');
 const api = require('./routes/api/read');
 const jobmonitoring = require('./routes/jobmonitoring/read');
@@ -128,7 +126,6 @@ const fileMonitoring = require('./routes/fileMonitoringRoutes');
 app.use(compression());
 
 app.use('/api/auth', auth);
-app.use('/api/updateNotification', updateNotifications);
 app.use('/api/status', status);
 app.use('/api/wizard', wizard);
 
@@ -160,7 +157,6 @@ app.use('/api/constraint', constraint);
 app.use('/api/controlsAndRegulations', regulations);
 app.use('/api/fileTemplate/read', fileTemplateRead);
 app.use('/api/fileMonitoring', fileMonitoring);
-app.use('/api/notifications/read', notifications);
 app.use('/api/key', key);
 app.use('/api/jobmonitoring', jobmonitoring);
 app.use('/api/cluster', cluster);
