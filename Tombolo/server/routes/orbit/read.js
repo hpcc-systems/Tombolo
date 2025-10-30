@@ -31,7 +31,7 @@ const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
 const notificationTemplate = require('../../jobs/messageCards/notificationTemplate');
-const { notify } = require('../notifications/email-notification');
+// const { notify } = require('../notifications/email-notification');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const SqlString = require('sqlstring');
@@ -616,15 +616,15 @@ router.post(
                   notificationTemplate.orbitBuildEmailBody(buildDetails);
                 const emailRecipients = integration.metaData.notificationEmails;
 
-                await notify({
-                  to: emailRecipients,
-                  from: process.env.EMAIL_SENDER,
-                  subject:
-                    'Alert: Megaphone Substatus detected on Orbit Build ' +
-                    build.Name,
-                  text: emailBody,
-                  html: emailBody,
-                });
+                // await notify({
+                //   to: emailRecipients,
+                //   from: process.env.EMAIL_SENDER,
+                //   subject:
+                //     'Alert: Megaphone Substatus detected on Orbit Build ' +
+                //     build.Name,
+                //   text: emailBody,
+                //   html: emailBody,
+                // });
 
                 let notification_id = uuidv4();
 
