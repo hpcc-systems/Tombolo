@@ -16,7 +16,11 @@ const {
   validateDeleteIndex,
 } = require('../../middlewares/indexMiddleware');
 const logger = require('../../config/logger');
-const { sendSuccess, sendError } = require('../../utils/response');
+const {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} = require('../../utils/response');
 
 router.get('/index_list', validate(validateIndexList), async (req, res) => {
   try {
@@ -33,7 +37,7 @@ router.get('/index_list', validate(validateIndexList), async (req, res) => {
           'createdAt',
         ],
       });
-      return res.json(assets);
+      return sendSuccess(res, assets, 'Indexes retrieved successfully');
     }
 
     const assets = await Index.findAll({
@@ -50,13 +54,10 @@ router.get('/index_list', validate(validateIndexList), async (req, res) => {
       return parsed;
     });
 
-    return res.json(assetList);
+    return sendSuccess(res, assetList, 'Indexes retrieved successfully');
   } catch (error) {
     logger.error('index/read - index_list: ', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occurred while retrieving assets',
-    });
+    return sendError(res, 'Failed to retrieve indexes');
   }
 });
 
@@ -145,10 +146,10 @@ router.post('/saveIndex', validate(validateSaveIndex), async (req, res) => {
     }
     index = index.toJSON();
     await updateIndexDetails(index.id, application_id, req);
-    return res.status(200).json({ success: true, message: 'Save successful' });
+    return sendSuccess(res, { id: index.id }, 'Index saved successfully');
   } catch (err) {
     logger.error('index/read - saveIndex: ', err);
-    return res.status(503).json({ success: false, message: err.message });
+    return sendError(res, 'Failed to save index');
   }
 });
 
@@ -162,18 +163,21 @@ router.get(
         req.query.index_id
       );
       if (indexInfo && indexInfo.basic) {
-        return res.status(200).json(indexInfo);
+        return sendSuccess(
+          res,
+          indexInfo,
+          'Index details retrieved successfully'
+        );
       }
 
-      throw new Error(
-        'Index details not found. Please check if the index exists in Assets.'
+      return sendError(
+        res,
+        'Index not found. Please check if the index exists in Assets.',
+        404
       );
     } catch (err) {
       logger.error('index/read - index_details: ', err);
-      return res.status(500).json({
-        success: false,
-        message: err.message,
-      });
+      return sendError(res, 'Failed to retrieve index details');
     }
   }
 );
@@ -189,10 +193,14 @@ router.post('/delete', validate(validateDeleteIndex), async (req, res) => {
     await IndexKey.destroy({ where: { index_id: req.body.indexId } });
     await IndexPayload.destroy({ where: { index_id: req.body.indexId } });
 
-    return res.status(200).json({ result: 'success' });
+    return sendSuccess(
+      res,
+      { id: req.body.indexId },
+      'Index deleted successfully'
+    );
   } catch (err) {
     logger.error('index/read - delete: ', err);
-    return res.status(500).json({ message: 'Failed to delete index' });
+    return sendError(res, 'Failed to delete index');
   }
 });
 

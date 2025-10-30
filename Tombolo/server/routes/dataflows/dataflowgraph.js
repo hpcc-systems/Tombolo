@@ -84,7 +84,7 @@ router.post(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
 
     try {
       const { name, description, dataflowId, graph } = req.body;
@@ -99,17 +99,17 @@ router.post(
         dataflowId,
       });
 
-      return res.status(200).send({
+      return sendSuccess(res, {
         id: version.id,
         isLive: version.isLive,
         name: version.name,
         description: version.description,
         createdBy: version.createdBy,
         createdAt: version.createdAt,
-      });
+      }, 'Version saved successfully');
     } catch (error) {
       logger.error('dataflowgraph - save: ', error);
-      return res.status(500).send({ message: error.message });
+      return sendError(res, 'Failed to save version');
     }
   }
 );
@@ -126,26 +126,28 @@ router.put(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
 
     try {
       const { name, description, id } = req.body;
 
       let version = await DataflowVersion.findOne({ where: { id } });
-      if (!version) throw new Error('Version was not found');
+      if (!version) {
+        return sendError(res, 'Version not found', 404);
+      }
 
       version = await version.update({ name, description });
 
-      return res.status(200).send({
+      return sendSuccess(res, {
         id: version.id,
         name: version.name,
         description: version.description,
         createdBy: version.createdBy,
         createdAt: version.createdAt,
-      });
+      }, 'Version updated successfully');
     } catch (error) {
       logger.error('dataflowgraph - edit: ', error);
-      return res.status(500).send({ message: error.message });
+      return sendError(res, 'Failed to update version');
     }
   }
 );
@@ -158,18 +160,20 @@ router.delete(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
 
     try {
       const { id } = req.query;
 
       const isRemoved = await DataflowVersion.destroy({ where: { id } });
-      if (!isRemoved) throw new Error('Version was not removed!');
+      if (!isRemoved) {
+        return sendError(res, 'Version not found or could not be removed', 404);
+      }
 
-      return res.status(200).send({ success: true, id });
+      return sendSuccess(res, { id }, 'Version removed successfully');
     } catch (error) {
       logger.error('dataflowgraph - remove_version: ', error);
-      return res.status(500).send({ message: error.message });
+      return sendError(res, 'Failed to remove version');
     }
   }
 );
@@ -182,7 +186,7 @@ router.get(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     try {
       const { id } = req.query;
 
@@ -190,12 +194,14 @@ router.get(
         where: { id },
         attributes: ['id', 'graph', 'name', 'description'],
       });
-      if (!version) throw new Error('Version does not exist');
+      if (!version) {
+        return sendError(res, 'Version not found', 404);
+      }
 
-      return res.status(200).send(version);
+      return sendSuccess(res, version, 'Version retrieved successfully');
     } catch (error) {
       logger.error('dataflowgraph - change_versions: ', error);
-      return res.status(500).json({ message: error.message });
+      return sendError(res, 'Failed to retrieve version');
     }
   }
 );
@@ -211,7 +217,7 @@ router.put(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
 
     try {
       const { id, action, dataflowId } = req.body;
@@ -221,7 +227,9 @@ router.put(
           where: { id },
           attributes: ['graph', 'id'],
         });
-        if (!version) throw new Error('Version was not found');
+        if (!version) {
+          return sendError(res, 'Version not found', 404);
+        }
         const monitorIds = version.graph.cells.reduce((acc, node) => {
           if (node.data?.isMonitoring) acc.push(node.data.assetId);
           return acc;
@@ -239,14 +247,16 @@ router.put(
           { isLive: false },
           { where: { dataflowId } }
         );
-        return res.status(200).send({ id: version.id, isLive: false });
+        return sendSuccess(res, { id: version.id, isLive: false }, 'Dataflow paused successfully');
       }
 
       let newVersion = await DataflowVersion.findOne({
         where: { id },
         attributes: ['graph', 'id'],
       });
-      if (!newVersion) throw new Error('Version was not found');
+      if (!newVersion) {
+        return sendError(res, 'Version not found', 404);
+      }
 
       // To change graph version we need to update file template monitoring and cron jobs with latest setup;
       const { newMonitorIds, cronjobs } = newVersion.graph.cells.reduce(
@@ -331,10 +341,10 @@ router.put(
 
       newVersion = await newVersion.update({ isLive: true });
 
-      return res.status(200).send({ id: newVersion.id, isLive: true });
+      return sendSuccess(res, { id: newVersion.id, isLive: true }, 'Version set as live successfully');
     } catch (error) {
       logger.error('dataflowgraph - version_live: ', error);
-      return res.status(500).send({ message: error.message });
+      return sendError(res, 'Failed to update version live status');
     }
   }
 );

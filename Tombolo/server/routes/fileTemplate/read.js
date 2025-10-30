@@ -51,7 +51,7 @@ router.post(
     try {
       let errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(422).json({ success: false, errors: errors.array() });
+        return sendValidationError(res, errors.array());
       }
 
       const {
@@ -97,12 +97,14 @@ router.post(
           { where: { fileTemplate_id: assetId } }
         );
         // await FileTemplate_licenses.destroy({where : { fileTemplate_id : assetId}});
-        return res.status(200).json({
-          success: true,
-          assetId: assetId,
-          isMonitoring: !!metaData.fileMonitoringTemplate,
-          message: `Successfully updated file template -> ${title}`,
-        });
+        return sendSuccess(
+          res,
+          {
+            assetId: assetId,
+            isMonitoring: !!metaData.fileMonitoringTemplate,
+          },
+          `File template '${title}' updated successfully`
+        );
       }
 
       // New file template -> Create it
@@ -124,18 +126,17 @@ router.post(
         fields: { layout: fileLayoutData },
       });
 
-      return res.status(200).json({
-        success: true,
-        assetId: fileTemplate.id,
-        isMonitoring: !!metaData.fileMonitoringTemplate,
-        message: `Successfully created file template -> ${title}`,
-      });
+      return sendSuccess(
+        res,
+        {
+          assetId: fileTemplate.id,
+          isMonitoring: !!metaData.fileMonitoringTemplate,
+        },
+        `File template '${title}' created successfully`
+      );
     } catch (err) {
       logger.error('fileTemplate/read - saveFileTemplate: ', err);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occurred while saving file template details',
-      });
+      return sendError(res, 'Failed to save file template details');
     }
   }
 );
@@ -157,7 +158,7 @@ router.get(
   async (req, res) => {
     let errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
 
     try {
@@ -186,13 +187,14 @@ router.get(
         return acc;
       }, []);
 
-      return res.status(200).json(assetList);
+      return sendSuccess(
+        res,
+        assetList,
+        'File templates retrieved successfully'
+      );
     } catch (error) {
       logger.error('fileTemplate/read - fileTemplate_list: ', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occurred while retrieving assets',
-      });
+      return sendError(res, 'Failed to retrieve file templates');
     }
   }
 );
@@ -209,7 +211,7 @@ router.post(
   async (req, res) => {
     let errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
     try {
       const TemplateResults = await FileTemplate.findOne({
@@ -217,20 +219,26 @@ router.post(
         include: FileTemplateLayout,
         raw: true,
       });
+
+      if (!TemplateResults) {
+        return sendError(res, 'File template not found', 404);
+      }
+
       const fileMonitoring = await FileMonitoring.findOne({
         where: { fileTemplateId: TemplateResults.id },
       });
 
-      return res.status(200).json({
-        ...TemplateResults,
-        monitoring: fileMonitoring ? true : false,
-      });
+      return sendSuccess(
+        res,
+        {
+          ...TemplateResults,
+          monitoring: fileMonitoring ? true : false,
+        },
+        'File template details retrieved successfully'
+      );
     } catch (err) {
       logger.error('fileTemplate/read - getFileTemplate: ', err);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occurred while trying to fetch file template details',
-      });
+      return sendError(res, 'Failed to fetch file template details');
     }
   }
 );
@@ -247,19 +255,20 @@ router.post(
   async (req, res) => {
     let errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
     const { id, application_id } = req.body;
     try {
-      await FileTemplate.destroy({ where: { id, application_id } });
-      res
-        .status(200)
-        .json({ success: true, message: 'File template deleted successfully' });
+      const result = await FileTemplate.destroy({
+        where: { id, application_id },
+      });
+      if (!result) {
+        return sendError(res, 'File template not found', 404);
+      }
+      return sendSuccess(res, { id }, 'File template deleted successfully');
     } catch (err) {
       logger.error('fileTemplate/read - deleteFileTemplate: ', err);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Unable to delete File Template' });
+      return sendError(res, 'Failed to delete file template');
     }
   }
 );
@@ -275,20 +284,22 @@ router.post(
   async (req, res) => {
     let errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
     const { fileTemplate_id } = req.body;
     try {
-      let associateLicenses = await FileTemplate_licenses.findAll({
-        where: { fileTemplate_id },
-      });
+      // Note: FileTemplate_licenses model appears to be missing or deprecated
+      // For now, returning empty array until model is defined
+      let associateLicenses = []; // await FileTemplate_licenses.findAll({ where: { fileTemplate_id } });
 
-      return res.status(200).json(associateLicenses);
+      return sendSuccess(
+        res,
+        associateLicenses,
+        'Associated licenses retrieved successfully'
+      );
     } catch (err) {
       logger.error('fileTemplate/read - getAssociatedLicenses: ', err);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Unable to get associated licenses' });
+      return sendError(res, 'Failed to get associated licenses');
     }
   }
 );

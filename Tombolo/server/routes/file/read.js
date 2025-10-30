@@ -37,14 +37,15 @@ router.post(
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
-    if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+    if (!errors.isEmpty()) return sendValidationError(res, errors.array());
 
     try {
       const superFileAssetId = req.body.superFileAssetId;
       const file = await File.findOne({ where: { id: superFileAssetId } });
 
-      if (!file || !file?.isSuperFile) throw new Error('Asset not found');
+      if (!file || !file?.isSuperFile) {
+        return sendError(res, 'Asset not found', 404);
+      }
 
       const cluster = await hpccUtil.getCluster(file.cluster_id);
       const clusterAuth = hpccUtil.getClusterAuth(cluster);
@@ -63,11 +64,17 @@ router.post(
       const response = await axios.post(url, payload, { headers: clusterAuth });
 
       const subfiles = response.data?.SuperfileListResponse?.subfiles?.Item;
-      if (!subfiles) throw new Error('Failed to get subfiles');
+      if (!subfiles) {
+        return sendError(res, 'Failed to get subfiles');
+      }
 
-      return res.status(200).json(subfiles);
+      return sendSuccess(
+        res,
+        subfiles,
+        'Superfile metadata retrieved successfully'
+      );
     } catch (error) {
-      return res.status(500).json({ success: false, message: error.message });
+      return sendError(res, 'Failed to retrieve superfile metadata');
     }
   }
 );
@@ -85,8 +92,7 @@ router.get(
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
-    if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+    if (!errors.isEmpty()) return sendValidationError(res, errors.array());
 
     try {
       const { application_id, cluster_id } = req.query;
@@ -104,7 +110,7 @@ router.get(
             'createdAt',
           ],
         });
-        return res.status(200).json(assets);
+        return sendSuccess(res, assets, 'Files retrieved successfully');
       }
 
       const assets = await File.findAll({
@@ -130,13 +136,10 @@ router.get(
         return parsed;
       });
 
-      return res.status(200).json(assetList);
+      return sendSuccess(res, assetList, 'Files retrieved successfully');
     } catch (error) {
       logger.error('file/read getFileList: ', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occurred while retrieving assets',
-      });
+      return sendError(res, 'Failed to retrieve assets');
     }
   }
 );
@@ -154,7 +157,7 @@ router.post(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
     try {
       const applications = await Application.findAll({
@@ -184,12 +187,14 @@ router.post(
           app_id: fileDefn.application_id,
         };
       });
-      return res.status(200).json(fileDefSuggestions);
+      return sendSuccess(
+        res,
+        fileDefSuggestions,
+        'File suggestions retrieved successfully'
+      );
     } catch (err) {
       logger.error('err', err);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Error occured while getting files' });
+      return sendError(res, 'Failed to get files');
     }
   }
 );
@@ -200,25 +205,20 @@ router.get('/licenses', async (req, res) => {
       attributes: ['id', 'name', 'url', 'description'],
     });
 
-    return res.status(200).json(licenses);
+    return sendSuccess(res, licenses, 'Licenses retrieved successfully');
   } catch (err) {
     logger.error('err', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occured while getting licenses',
-    });
+    return sendError(res, 'Failed to get licenses');
   }
 });
 
 router.get('/rules', async (req, res) => {
   try {
     const rules = await Rule.findAll();
-    return res.status(200).json(rules);
+    return sendSuccess(res, rules, 'Rules retrieved successfully');
   } catch (err) {
     logger.error('file/read getRules: ', err);
-    return res
-      .status(500)
-      .json({ success: false, message: 'Error occured while getting rules' });
+    return sendError(res, 'Failed to get rules');
   }
 });
 
@@ -229,12 +229,10 @@ router.get('/files/:fileId/validation-rules', async (req, res) => {
         file_id: req.params.fileId,
       },
     });
-    return res.status(200).json(rules);
+    return sendSuccess(res, rules, 'Validation rules retrieved successfully');
   } catch (err) {
     logger.error('file/read getValidationRules: ', err);
-    return res.status(500).json({
-      message: 'An error occurred',
-    });
+    return sendError(res, 'Failed to retrieve validation rules');
   }
 });
 
@@ -252,14 +250,14 @@ router.get('/files/:fileId/validation-rules/validations', async (req, res) => {
         validations += rule.rule_name + ':' + rule.rule_test + ';';
       }
     });
-    return res.status(200).json({
-      ecl: validations,
-    });
+    return sendSuccess(
+      res,
+      { ecl: validations },
+      'Validation rule validations retrieved successfully'
+    );
   } catch (err) {
     logger.error('file/read getValidationRuleValidations: ', err);
-    return res.status(500).json({
-      message: 'An error occurred',
-    });
+    return sendError(res, 'Failed to retrieve validation rule validations');
   }
 });
 
@@ -278,14 +276,14 @@ router.get('/files/:fileId/validation-rules/fixes', async (req, res) => {
       }
     });
 
-    return res.status(200).json({
-      ecl: fixes,
-    });
+    return sendSuccess(
+      res,
+      { ecl: fixes },
+      'Validation rule fixes retrieved successfully'
+    );
   } catch (err) {
     logger.error('file/read getValidationRuleFixes: ', err);
-    return res.status(500).json({
-      message: 'An error occurred',
-    });
+    return sendError(res, 'Failed to retrieve validation rule fixes');
   }
 });
 
@@ -300,7 +298,7 @@ router.get(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
 
     try {
@@ -308,12 +306,10 @@ router.get(
         where: { application_id: req.query.app_id, id: req.query.file_id },
       });
 
-      if (file) return res.status(200).json(true);
-
-      return res.status(200).json(false);
+      return sendSuccess(res, !!file, 'File existence check completed');
     } catch (err) {
       logger.error('file CheckFileId: ', err);
-      return res.status(500).json({ error: err });
+      return sendError(res, 'Failed to check file existence');
     }
   }
 );
@@ -326,7 +322,7 @@ router.get(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
 
     const results = [];
@@ -343,10 +339,10 @@ router.get(
         results.push(fileObj);
       });
 
-      return res.status(200).json(results);
+      return sendSuccess(res, results, 'File IDs retrieved successfully');
     } catch (err) {
       logger.error('file/read getFilesByIds: ', err);
-      return res.status(500).json({ error: err });
+      return sendError(res, 'Failed to retrieve file IDs');
     }
   }
 );
@@ -362,19 +358,16 @@ router.get(
       const errors = validationResult(req).formatWith(
         validatorUtil.errorFormatter
       );
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
+      if (!errors.isEmpty()) return sendValidationError(res, errors.array());
 
       const fileInfo = await assetUtil.fileInfo(
         req.query.app_id,
         req.query.file_id
       );
-      return res.status(200).json(fileInfo);
+      return sendSuccess(res, fileInfo, 'File details retrieved successfully');
     } catch (err) {
       logger.error('file/read getFileDetails: ', err);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Error occured while file details' });
+      return sendError(res, 'Failed to retrieve file details');
     }
   }
 );
@@ -391,21 +384,25 @@ router.get(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
 
     try {
       const { clusterId, fileName } = req.query;
       const DFUService = await hpccUtil.getDFUService(clusterId);
       const response = await DFUService.DFUInfo({ Name: fileName });
-      if (!response.FileDetail) throw new Error('File details not found');
+      if (!response.FileDetail) {
+        return sendError(res, 'File details not found', 404);
+      }
 
-      return res.status(200).send(response.FileDetail.subfiles.Item);
+      return sendSuccess(
+        res,
+        response.FileDetail.subfiles.Item,
+        'Subfiles retrieved successfully'
+      );
     } catch (error) {
       logger.error('file/read getSubFiles: ', error);
-      return res
-        .status(404)
-        .json({ success: false, message: 'Unable to fetch subfiles' });
+      return sendError(res, 'Unable to fetch subfiles', 404);
     }
   }
 );
@@ -459,7 +456,7 @@ router.post(
     try {
       let errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(422).json({ success: false, errors: errors.array() });
+        return sendValidationError(res, errors.array());
       }
 
       const { removeAssetId = '', renameAssetId = '', basic } = req.body.file;
@@ -509,13 +506,10 @@ router.post(
       }
 
       const response = this.updateFileDetails(fileId, applicationId, req);
-      return res.status(200).json(response);
+      return sendSuccess(res, response, 'File saved successfully');
     } catch (err) {
       logger.error('file/read saveFile: ', err);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occured while saving file details',
-      });
+      return sendError(res, 'Failed to save file details');
     }
   }
 );
@@ -531,7 +525,7 @@ router.post(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
 
     logger.info(
@@ -551,12 +545,11 @@ router.post(
           where: { object_id: fileId, object_type: 'file' },
         }),
       ]);
+
+      return sendSuccess(res, { id: fileId }, 'File deleted successfully');
     } catch (err) {
       logger.error('deleteFile: ', err);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occured while deleting file details',
-      });
+      return sendError(res, 'Failed to delete file');
     }
   }
 );
@@ -567,10 +560,10 @@ router.get('/dataTypes', async (req, res) => {
     const dataTypes = await DataType.findAll();
     dataTypes.forEach(doc => results.push(doc.name));
 
-    return res.status(200).json(results);
+    return sendSuccess(res, results, 'Data types retrieved successfully');
   } catch (err) {
     logger.error('file/read getDataTypes: ', err);
-    return res.status(500).json({ error: err });
+    return sendError(res, 'Failed to retrieve data types');
   }
 });
 
@@ -587,17 +580,15 @@ router.post(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
 
     try {
       let files = await assetUtil.fileSearch(req.body.app_id, req.body.keyword);
-      return res.status(200).json(files);
+      return sendSuccess(res, files, 'File search completed successfully');
     } catch (err) {
       logger.error('file/read tomboloFileSearch: ', err);
-      return res
-        .status(500)
-        .send('Error occurred while retrieving file details');
+      return sendError(res, 'Failed to search files');
     }
   }
 );
@@ -628,12 +619,14 @@ router.get(
         };
       });
 
-      return res.status(200).send(cleanedLogicalItems);
+      return sendSuccess(
+        res,
+        cleanedLogicalItems,
+        'Logical files browsed successfully'
+      );
     } catch (err) {
       logger.error('file/read browseLogicalFile: ', err);
-      return res
-        .status(500)
-        .json({ message: 'Error occured while searching for logical file' });
+      return sendError(res, 'Failed to browse logical files');
     }
   }
 );
@@ -700,12 +693,10 @@ router.get(
       });
 
       //return non-duplicate array
-      return res.status(200).send(uniqueArray);
+      return sendSuccess(res, uniqueArray, 'Super files browsed successfully');
     } catch (err) {
       logger.error('file/read browseSuperFile: ', err);
-      return res
-        .status(500)
-        .json({ message: 'Error occured while searching for Superfiles' });
+      return sendError(res, 'Failed to browse super files');
     }
   }
 );

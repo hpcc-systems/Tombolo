@@ -65,15 +65,11 @@ router.post(
     logger.info('Dataflow Save...' + reachable);
 
     if (reachable.statusCode === 503) {
-      return res
-        .status(503)
-        .json({ success: false, message: 'Cluster not reachable' });
+      return sendError(res, 'Cluster not reachable', 503);
     }
 
     if (reachable.statusCode === 403) {
-      return res
-        .status(403)
-        .json({ success: false, message: 'Invalid cluster credentials' });
+      return sendError(res, 'Invalid cluster credentials', 403);
     }
 
     try {
@@ -296,67 +292,6 @@ router.get(
       logger.error('dataflow assets: ', err);
       return sendError(res, err.message || err);
     }
-
-    /* // This would go inside the try block above
-    File.findAll({
-      raw: true,
-      attributes:["id","title","name","description"],
-      where:{"application_id":req.query.app_id, "dataflowId":req.query.dataflowId}
-    })
-    .then((files) => {
-      files.forEach((file) => {
-        results.push({
-            "id":file.id,
-            "title":file.title,
-            "name":file.name,
-            "description":file.description,
-            "objType": "file",
-            "createdAt": file.createdAt,
-            "contact": file.consumer
-        })
-      });
-      return Job.findAll({
-        raw: true,
-        attributes:["id","name","description"],
-        where:{"application_Id":req.query.app_id, "dataflowId":req.query.dataflowId}
-      });
-    })
-    .then((jobs) => {
-      jobs.forEach((job) => {
-        results.push({
-            "id":job.id,
-            "title":job.name,
-            "name":job.name,
-            "description":job.description,
-            "objType": "job",
-            "createdAt": job.createdAt,
-            "contact": job.contact
-        })
-      });
-      return Index.findAll({
-        raw: true,
-        attributes:["id","title","description"],
-        where:{"application_id":req.query.app_id, "dataflowId":req.query.dataflowId}}
-      );
-    })
-    .then((indexes) => {
-      indexes.forEach((index) => {
-        results.push({
-            "id":index.id,
-            "title":index.title,
-            "name":index.title,
-            "description":index.description,
-            "objType": "index",
-            "createdAt": index.createdAt,
-            "contact":""
-        })
-      })
-      return res.status(200).json(results);
-    }).catch(function(err) {
-        logger.error('dataflow: ', err);
-        return res.status(500).json({ error: err });
-    });
-  */
   }
 );
 

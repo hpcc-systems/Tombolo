@@ -6,6 +6,11 @@ const {
 const express = require('express');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} = require('../../utils/response');
+const {
   validateCreateOrbit,
   validateGetOrbitsByAppId,
   validateSearchByKeyword,
@@ -103,12 +108,15 @@ router.post('/', validate(validateCreateOrbit), async (req, res) => {
       jobScheduler.createOrbitMonitoringJob(schedularOptions);
     }
 
-    return res.status(201).send(newOrbitMonitoring);
+    return sendSuccess(
+      res,
+      newOrbitMonitoring,
+      'Orbit monitoring created successfully',
+      201
+    );
   } catch (error) {
     logger.error('orbit/read create: ', error);
-    return res
-      .status(500)
-      .json({ message: 'Unable to save Orbit monitoring details' });
+    return sendError(res, 'Unable to save Orbit monitoring details', 500);
   }
 });
 
@@ -126,10 +134,14 @@ router.get(
         },
       });
 
-      return res.status(200).send(result);
+      return sendSuccess(
+        res,
+        result,
+        'Orbit monitorings retrieved successfully'
+      );
     } catch (err) {
       logger.error('getOrbitMonitorings: ', err);
-      res.status(500).json({ message: err.message });
+      return sendError(res, err.message, 500);
       // ... error checks
     }
   }
@@ -149,10 +161,14 @@ router.get(
         },
       });
 
-      return res.status(200).send(result);
+      return sendSuccess(
+        res,
+        result,
+        'Orbit monitorings retrieved successfully'
+      );
     } catch (err) {
       logger.error('getOrbitMonitorings: ', err);
-      // ... error checks
+      return sendError(res, err.message, 500);
     }
   }
 );
@@ -190,13 +206,15 @@ router.get(
         return false;
       });
 
-      return res.status(200).json(unique);
+      return sendSuccess(res, unique, 'Builds found successfully');
     } catch (err) {
       // ... error checks
       logger.error('orbit/read keywordSearch: ', err);
-      return res
-        .status(400)
-        .send('There was an issue contacting the orbit reports server');
+      return sendError(
+        res,
+        'There was an issue contacting the orbit reports server',
+        400
+      );
     }
   }
 );
@@ -221,13 +239,19 @@ router.get(
         throw Error(result.err);
       }
 
-      return res.status(200).json(result[0][0]);
+      return sendSuccess(
+        res,
+        result[0][0],
+        'Build details retrieved successfully'
+      );
     } catch (err) {
       // ... error checks
       logger.error('getOrbitBuildDetails: ', err);
-      return res
-        .status(400)
-        .send('There was an issue contacting the orbit reports server');
+      return sendError(
+        res,
+        'There was an issue contacting the orbit reports server',
+        400
+      );
     }
   }
 );
@@ -368,12 +392,10 @@ router.put('/', validate(validateUpdateOrbitMonitor), async (req, res) => {
       }
     }
 
-    return res.status(200).send(newInfo);
+    return sendSuccess(res, newInfo, 'Orbit monitoring updated successfully');
   } catch (error) {
     logger.error('orbit/read update: ', error);
-    return res
-      .status(500)
-      .json({ message: 'Unable to save orbit build monitoring details' });
+    return sendError(res, 'Unable to save orbit build monitoring details', 500);
   }
 });
 
@@ -414,10 +436,14 @@ router.put(
         });
       }
 
-      return res.status(200).send('Update successful');
+      return sendSuccess(
+        res,
+        { message: 'Update successful' },
+        'Status toggled successfully'
+      );
     } catch (err) {
       logger.error('orbit/read toggleStatus: ', err);
-      return res.status(500).json({ message: 'Failed to toggle status' });
+      return sendError(res, 'Failed to toggle status', 500);
     }
   }
 );
@@ -434,8 +460,6 @@ router.delete(
         where: { id },
       });
 
-      res.status(200).json({ message: `Deleted ${response} orbit monitoring` });
-
       //Check if this job is in bree - if so - remove
       const breeJobs = jobScheduler.getAllJobs();
       const expectedJobName = `Orbit Monitoring - ${id}`;
@@ -447,9 +471,15 @@ router.delete(
           }
         }
       }
+
+      return sendSuccess(
+        res,
+        { message: `Deleted ${response} orbit monitoring` },
+        'Orbit monitoring deleted successfully'
+      );
     } catch (err) {
       logger.error('orbit/read delete: ', err);
-      return res.status(500).json({ message: err.message });
+      return sendError(res, err.message, 500);
     }
   }
 );
@@ -466,10 +496,14 @@ router.get(
         raw: true,
       });
 
-      return res.status(200).send(result);
+      return sendSuccess(
+        res,
+        result,
+        'Orbit monitoring retrieved successfully'
+      );
     } catch (err) {
       logger.error('orbit/read getOne: ', err);
-      return res.status(500).json({ message: err.message });
+      return sendError(res, err.message, 500);
     }
   }
 );
@@ -508,10 +542,10 @@ router.get(
         );
       }
 
-      return res.status(200).send(wuList);
+      return sendSuccess(res, wuList, 'Workunits retrieved successfully');
     } catch (err) {
       logger.error('orbit/read getWorkunits: ', err);
-      return res.status(500).json({ message: err.message });
+      return sendError(res, err.message, 500);
     }
   }
 );
@@ -650,12 +684,14 @@ router.post(
         await MonitoringNotification.bulkCreate(sentNotifications);
       }
 
-      return res.status(200).send(result);
+      return sendSuccess(res, result, 'List updated successfully');
     } catch (err) {
       logger.error('orbit/read updateList: ', err);
-      return res
-        .status(400)
-        .send('There was an issue contacting the orbit reports server');
+      return sendError(
+        res,
+        'There was an issue contacting the orbit reports server',
+        400
+      );
     }
   }
 );
@@ -671,15 +707,21 @@ router.get(
       const result = await runSQLQuery(query, fidoDbConfig);
 
       if (result?.recordset) {
-        return res.status(200).send(result.recordset);
+        return sendSuccess(
+          res,
+          result.recordset,
+          'Domains retrieved successfully'
+        );
       }
 
       throw Error('No domains found on Fido Server: ' + query);
     } catch (err) {
       logger.error('orbit/read getDomains: ', err);
-      return res
-        .status(400)
-        .send('There was an issue contacting the orbit reports server');
+      return sendError(
+        res,
+        'There was an issue contacting the orbit reports server',
+        400
+      );
     }
   }
 );
@@ -694,15 +736,21 @@ router.get(
       const result = await runSQLQuery(query, fidoDbConfig);
 
       if (result?.recordset) {
-        return res.status(200).send(result.recordset);
+        return sendSuccess(
+          res,
+          result.recordset,
+          'Products retrieved successfully'
+        );
       }
 
       throw Error('No products found on Fido Server: ' + query);
     } catch (err) {
       logger.error('orbit/read getProducts: ', err);
-      return res
-        .status(400)
-        .send('There was an issue contacting the orbit reports server');
+      return sendError(
+        res,
+        'There was an issue contacting the orbit reports server',
+        400
+      );
     }
   }
 );

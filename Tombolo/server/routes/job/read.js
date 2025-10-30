@@ -18,6 +18,11 @@ const Op = Sequelize.Op;
 const JobScheduler = require('../../jobSchedular/job-scheduler');
 const hpccUtil = require('../../utils/hpcc-util');
 const workFlowUtil = require('../../utils/workflow-util');
+const {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} = require('../../utils/response');
 const { validate } = require('../../middlewares/validateRequestBody');
 const {
   validateJobFileRetention,
@@ -363,13 +368,21 @@ router.post(
             }
           }
         });
-        return res.status(200).send(fileAndTemplates);
+        return sendSuccess(
+          res,
+          fileAndTemplates,
+          'Related files and templates retrieved successfully'
+        );
       }
       // END of matching template ------------------
-      return res.status(200).send(relatedFiles);
+      return sendSuccess(
+        res,
+        relatedFiles,
+        'Related files retrieved successfully'
+      );
     } catch (error) {
       logger.error('job/read jobFileRelation: ', error);
-      return res.status(500).send('Could not find related files');
+      return sendError(res, 'Could not find related files', 500);
     }
   }
 );
@@ -489,7 +502,11 @@ router.post(
 
       if (templates.length < 1) {
         // If no templates exists
-        return res.json({ result, assetsIds: allAssetsIds.flat(Infinity) });
+        return sendSuccess(
+          res,
+          { result, assetsIds: allAssetsIds.flat(Infinity) },
+          'No templates exist for dataflow synchronization'
+        );
       }
 
       let jobWithoutRelatedFiles = []; // Has no input or output files
@@ -578,12 +595,14 @@ router.post(
         jobWithRelatedFiles.relatedFiles = fileAndTemplates;
       });
       const allJobs = [...jobsWithRelatedFiles, ...jobWithoutRelatedFiles];
-      return res.status(200).send({ result: allJobs, assetsIds: allAssetsIds });
+      return sendSuccess(
+        res,
+        { result: allJobs, assetsIds: allAssetsIds },
+        'Dataflow synchronized successfully'
+      );
     } catch (error) {
       logger.error('job/read syncDataflow: ', error);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Error occurred while updating' });
+      return sendError(res, 'Error occurred while updating', 500);
     }
   }
 );
@@ -696,16 +715,17 @@ router.post('/saveJob', validate(validateSaveJob), async (req, res) => {
 
     logger.info(`---JOB SAVED ${job.name}-${job.title}-${job.id}-----------`);
 
-    return res.status(200).json({
-      success: true,
-      title: req.body.job.basic.title,
-      jobId: job.id,
-    });
+    return sendSuccess(
+      res,
+      {
+        title: req.body.job.basic.title,
+        jobId: job.id,
+      },
+      'Job saved successfully'
+    );
   } catch (error) {
     logger.error('job/read saveJob: ', error);
-    return res
-      .status(422)
-      .send({ success: false, message: 'Failed to Save job' });
+    return sendError(res, 'Failed to Save job', 422);
   }
 });
 
@@ -735,13 +755,10 @@ router.get('/job_list', validate(validateJobList), async (req, res) => {
       return parsed;
     });
 
-    return res.status(200).json(assetList);
+    return sendSuccess(res, assetList, 'Job list retrieved successfully');
   } catch (error) {
     logger.error('job/read job_list: ', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occurred while retrieving assets',
-    });
+    return sendError(res, 'Error occurred while retrieving assets', 500);
   }
 });
 
@@ -919,21 +936,24 @@ router.get('/job_details', validate(validateJobDetails), async (req, res) => {
           jobData.jobFileTemplate = fileAndTemplates;
           return jobData;
         } else {
-          return res.status(500).json({
-            success: false,
-            message:
-              'Job details could not be found. Please check if the job exists in Assets. ',
-          });
+          return sendError(
+            res,
+            'Job details could not be found. Please check if the job exists in Assets.',
+            404
+          );
         }
       })
       .then(function (jobData) {
-        res.json(jobData);
+        if (jobData) {
+          sendSuccess(res, jobData, 'Job details retrieved successfully');
+        }
       })
       .catch(function (err) {
         logger.error(
           'job/read Error occurred while retrieving job details: ',
           err
         );
+        sendError(res, 'Error occurred while retrieving job details', 500);
       });
   } catch (err) {
     logger.error('job/read job_details: ', err);
@@ -943,13 +963,10 @@ router.get('/job_details', validate(validateJobDetails), async (req, res) => {
 router.post('/delete', validate(validateDeleteJob), async (req, res) => {
   try {
     await deleteJob(req.body.jobId, req.body.application_id);
-    return res.status(200).json({ result: 'success' });
+    return sendSuccess(res, { result: 'success' }, 'Job deleted successfully');
   } catch (error) {
     logger.error('job/read delete: ', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occurred while deleting the job',
-    });
+    return sendError(res, 'Error occurred while deleting the job', 500);
   }
 });
 
@@ -1025,13 +1042,10 @@ router.post('/executeJob', validate(validateExecuteJob), async (req, res) => {
 
     if (!status.success) throw status;
 
-    return res.status(200).json({ success: true });
+    return sendSuccess(res, { success: true }, 'Job executed successfully');
   } catch (err) {
     logger.error('job/read executeJob: ', err);
-    return res.status(500).json({
-      success: false,
-      message: 'Error occurred while submitting the job',
-    });
+    return sendError(res, 'Error occurred while submitting the job', 500);
   }
 });
 
@@ -1083,13 +1097,18 @@ router.get(
         },
       }));
 
-      return res.json(formatted);
+      return sendSuccess(
+        res,
+        formatted,
+        'Job execution details retrieved successfully'
+      );
     } catch (err) {
       console.error('err', err);
-      return res.status(500).json({
-        success: false,
-        message: 'Error occured while retrieving Job Execution Details',
-      });
+      return sendError(
+        res,
+        'Error occured while retrieving Job Execution Details',
+        500
+      );
     }
   }
 );
@@ -1114,12 +1133,10 @@ router.post(
         manualJob_meta: newJobExecutionMetaData,
       });
 
-      res.status(200).json({ success: true, message: 'Job execution updated' }); // Response to client if no error
+      sendSuccess(res, { success: true }, 'Job execution updated successfully'); // Response to client if no error
     } catch (error) {
       logger.error('job/read manualJobResponse: ', error);
-      return res
-        .status(501)
-        .json({ success: false, message: 'Error occurred while saving data' }); // response to client when error and return
+      return sendError(res, 'Error occurred while saving data', 500); // response to client when error and return
     }
 
     // Once response is recorded successfully check for dependent job & send confirmation email
