@@ -4,16 +4,21 @@ const jobScheduler = require('../../jobSchedular/job-scheduler');
 const { body, query } = require('express-validator');
 const { validate } = require('../../middlewares/validateRequestBody');
 const logger = require('../../config/logger');
+const { sendSuccess, sendError } = require('../../utils/response');
 
 const validateName = [body('name').notEmpty().isString()];
 
 router.get('/all', async (req, res) => {
   try {
     const breeJobs = jobScheduler.getAllJobs();
-    return res.status(200).send({ jobs: breeJobs });
+    return sendSuccess(
+      res,
+      { jobs: breeJobs },
+      'Bree jobs retrieved successfully'
+    );
   } catch (error) {
     logger.error('Something went wrong', error);
-    return res.status(500).json({ message: error.message });
+    return sendError(res, error);
   }
 });
 
@@ -22,10 +27,10 @@ router.put('/stop_job', validate(validateName), async (req, res) => {
   const jobName = req.body.name;
   try {
     const result = await jobScheduler.stopJob(jobName);
-    return res.status(200).send(result);
+    return sendSuccess(res, result, 'Job stopped successfully');
   } catch (error) {
     logger.error('Something went wrong', error);
-    return res.status(500).json({ message: error.message });
+    return sendError(res, error);
   }
 });
 
@@ -34,10 +39,10 @@ router.put('/start_job', validate(validateName), async (req, res) => {
   const jobName = req.body.name;
   try {
     const result = jobScheduler.startJob(jobName);
-    return res.status(200).send(result);
+    return sendSuccess(res, result, 'Job started successfully');
   } catch (error) {
     logger.error('Something went wrong', error);
-    return res.status(500).json({ message: error.message });
+    return sendError(res, error);
   }
 });
 
@@ -49,10 +54,10 @@ router.delete(
     const jobName = req.query.name;
     try {
       const result = await jobScheduler.removeJobFromScheduler(jobName);
-      return res.status(200).send(result);
+      return sendSuccess(res, result, 'Job removed successfully');
     } catch (error) {
       logger.error('Something went wrong', error);
-      return res.status(500).json({ message: error.message });
+      return sendError(res, error);
     }
   }
 );
@@ -61,10 +66,10 @@ router.put('/start_all', async (req, res) => {
   // Route logic
   try {
     const result = jobScheduler.startAllJobs();
-    return res.status(200).send(result);
+    return sendSuccess(res, result, 'All jobs started successfully');
   } catch (error) {
     logger.error('Something went wrong', error);
-    return res.status(500).json({ message: error.message });
+    return sendError(res, error);
   }
 });
 
@@ -72,10 +77,10 @@ router.put('/stop_all', async (req, res) => {
   // Route logic
   try {
     const result = await jobScheduler.stopAllJobs();
-    return res.status(200).send(result);
+    return sendSuccess(res, result, 'All jobs stopped successfully');
   } catch (error) {
     logger.error('Something went wrong', error);
-    return res.status(500).json({ message: error.message });
+    return sendError(res, error);
   }
 });
 

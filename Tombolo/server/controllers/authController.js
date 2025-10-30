@@ -475,11 +475,7 @@ const resetPasswordWithToken = async (req, res) => {
     await setLastLogin(user);
 
     // Success response
-    return res.status(200).json({
-      success: true,
-      message: 'Password updated successfully',
-      data: userObj,
-    });
+    return sendSuccess(res, userObj, 'Password updated successfully');
   } catch (err) {
     // Rollback the transaction if it exists
     if (transaction) {
@@ -490,9 +486,7 @@ const resetPasswordWithToken = async (req, res) => {
       }
     }
     logger.error(`Reset Password With Token: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -639,7 +633,6 @@ const loginBasicUser = async (req, res) => {
     if (!bcrypt.compareSync(password, user.hash)) {
       logger.error(`Login : Invalid password for user with email ${email}`);
       await handleInvalidLoginAttempt({ user, errMessage: genericError });
-      return; // Add missing return
     }
 
     // If not verified user return error

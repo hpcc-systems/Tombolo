@@ -13,7 +13,8 @@ const MyAccountTable = ({ user }) => {
 
   useEffect(() => {
     const fetchSessions = async (user) => {
-      const { data } = await sessionService.getActiveSessions(user.id);
+      const data = await sessionService.getActiveSessions(user.id);
+
       if (data) {
         setSessions(data);
       }

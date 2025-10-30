@@ -30,6 +30,7 @@ const cookieParser = require('cookie-parser');
 // const { doubleCsrfProtection } = require('./middlewares/csrfMiddleware'); TODO - Temporarily disabled until axios migration is complete
 
 const { readSelfSignedCerts } = require('./utils/readSelfSignedCerts');
+const { sendError } = require('./utils/response');
 
 /* BREE JOB SCHEDULER */
 const JobScheduler = require('./jobSchedular/job-scheduler');
@@ -183,7 +184,7 @@ app.use((err, req, res, next) => {
     `Error caught by Express error handler on route ${req.path}`,
     err
   );
-  res.status(500).send('Something went wrong');
+  return sendError(res, 'Something went wrong', 500);
 });
 
 // Disables SSL verification for self-signed certificates in development mode

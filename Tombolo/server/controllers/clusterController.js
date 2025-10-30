@@ -442,10 +442,8 @@ const addClusterWithProgress = async (req, res) => {
       cluster: newCluster,
     });
     res.end();
-    // res.status(201).json({ success: true, data: newCluster });
   } catch (err) {
     logger.error('Add cluster: ', err);
-    // res.status(err.statusCode || 500).json({ success: false, message: err.message });
     sendUpdate({ step: 99, success: false, message: err.message });
     res.end();
   }
