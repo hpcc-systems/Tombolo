@@ -43,6 +43,12 @@ Run the command below.
 git clone https://github.com/hpcc-systems/Tombolo.git
 ```
 
+The default branch is `master`, which will be checked out automatically when you clone. If you have switched branches and need to return to `master`, use:
+
+```bash
+git checkout master
+```
+
 ---
 
 ## Step 2 - Editor Setup (Recommended: Visual Studio Code)
