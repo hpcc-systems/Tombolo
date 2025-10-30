@@ -393,7 +393,7 @@ const resetPasswordWithToken = async (req, res) => {
           ...user.metaData,
           previousPasswords: [
             ...(user.metaData?.previousPasswords || []),
-            user.password,
+            user.hash,
           ].slice(-5), // Keep last 5 passwords
         },
       },
