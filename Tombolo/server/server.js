@@ -68,7 +68,9 @@ app.set('trust proxy', 1);
 // Limit the rate of requests to 400 per 15 minutes
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.RATE_LIMIT_REQUEST_MAX,
+  max: Number.isNaN(parseInt(process.env.RATE_LIMIT_REQUEST_MAX, 10))
+    ? 400
+    : parseInt(process.env.RATE_LIMIT_REQUEST_MAX, 10),
 });
 
 // MIDDLEWARE -> apply to all requests
