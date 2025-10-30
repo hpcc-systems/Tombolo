@@ -50,7 +50,7 @@ const clustersService = {
     const response = await apiClient.post('/cluster/addClusterWithProgress', clusterInfo, {
       signal: abortController?.signal,
       responseType: 'text',
-      timeout, // Timeout can be overridden by caller, defaults to 120 seconds for long-running cluster operations
+      timeout, // Timeout can be overridden by caller, defaults to 180 seconds for long-running cluster operations
       onDownloadProgress: (progressEvent) => {
         if (onProgress && progressEvent.event && progressEvent.event.target) {
           const text = progressEvent.event.target.responseText;
