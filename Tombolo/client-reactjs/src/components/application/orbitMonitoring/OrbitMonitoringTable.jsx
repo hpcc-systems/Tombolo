@@ -1,7 +1,8 @@
 import React from 'react';
-import { Table, Space, Tooltip, Badge, message } from 'antd';
+import { Table, Space, Tooltip, Badge } from 'antd';
 import { DeleteOutlined, EyeOutlined, PauseCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { handleError as handleResponseError } from '../../../utils/handleResponse';
 
 const OrbitMonitoringTable = ({
   orbitBuildList,
@@ -25,7 +26,7 @@ const OrbitMonitoringTable = ({
       const newOrbitBuildMonitoringList = orbitBuildList.filter((OrbitBuild) => OrbitBuild.id != id);
       setOrbitBuildList(newOrbitBuildMonitoringList);
     } catch (err) {
-      message.error('Failed to delete Orbit Build monitoring ', err.message);
+      handleResponseError('Failed to delete Orbit Build monitoring: ' + err.message);
     }
   };
 
@@ -50,7 +51,7 @@ const OrbitMonitoringTable = ({
       );
       setOrbitBuildList(updatedMonitoringList);
     } catch (err) {
-      message.error('Failed to update file monitoring status');
+      handleResponseError('Failed to update file monitoring status');
     }
   };
 

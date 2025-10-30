@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Modal, Button, Tabs, Form, message, Spin } from 'antd';
+import { Modal, Button, Tabs, Form, Spin } from 'antd';
 import BasicTab from './BasicTab';
 import MonitoringTab from './MonitoringTab';
 import NotificationsTab from './NotificationsTab';
 import useWindowSize from '@/hooks/useWindowSize';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
+import { handleError as handleResponseError } from '../../../utils/handleResponse';
 
 const { TabPane } = Tabs;
 
@@ -199,7 +200,7 @@ const OrbitMonitoringModal = ({
     } catch (err) {
       setConfirmLoading(false);
       console.log(err.message);
-      if (err.message !== 'Validation failed') message.error(err.message);
+      if (err.message !== 'Validation failed') handleResponseError(err.message);
     }
   };
 

@@ -1,11 +1,9 @@
-import { message } from 'antd';
 import { getRoleNameArray } from './AuthUtil';
+import { handleError as handleResponseError } from '../../utils/handleResponse';
 
 const csrfHeaderName = 'x-csrf-token';
 
 export function handleError(response) {
-  message.config({ top: 130 });
-
   //if response is false, it means that we cannot communicate with backend, set backend status to false so UI will show error message
   if (response === false) {
     import('@/redux/store/Store').then(async ({ store }) => {
@@ -19,13 +17,13 @@ export function handleError(response) {
   if (response.body && !response.bodyUsed) {
     response.json().then((data) => {
       if (data.message) {
-        message.error(data.message);
+        handleResponseError(data.message);
       } else {
-        message.error('An undefined error occurred. Please try again later');
+        handleResponseError('An undefined error occurred. Please try again later');
       }
     });
   } else {
-    message.error('An undefined error occurred. Please try again later');
+    handleResponseError('An undefined error occurred. Please try again later');
   }
 }
 
@@ -52,7 +50,7 @@ window.fetch = async (...args) => {
     let allowed = checkPermissions(resource, config);
 
     if (!allowed) {
-      message.error('You do not have permission to perform this action');
+      handleResponseError('You do not have permission to perform this action');
       return {};
     }
 

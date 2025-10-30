@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { message, Table } from 'antd';
+import { Table } from 'antd';
 
 import { authHeader, handleError } from '../../common/AuthHeader';
 import Text from '../../common/Text';
+import { handleError as handleResponseError } from '../../../utils/handleResponse';
 
 function FileTemplate_permissablePurpose(props) {
   const { enableEdit, editingAllowed, setSelectedLicenses, selectedLicenses, selectedAsset } = props;
@@ -37,7 +38,7 @@ function FileTemplate_permissablePurpose(props) {
           setSelectedLicenses(associatedLicenses);
         }
       } catch (err) {
-        message.error('Unable to retrieve license information');
+        handleResponseError('Unable to retrieve license information');
       }
     };
     fetchInitialData();

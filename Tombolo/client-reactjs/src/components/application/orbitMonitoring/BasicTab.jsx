@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { message, Form, Row, Col, AutoComplete, Spin, Select, Input } from 'antd';
+import { Form, Row, Col, AutoComplete, Spin, Select, Input } from 'antd';
 import { authHeader, handleError } from '../../common/AuthHeader.js';
 import { useSelector } from 'react-redux';
 import ObjectKeyValue from '../../common/ObjectKeyValue';
+import { handleError as handleResponseError } from '../../../utils/handleResponse';
 
 import styles from './orbitMonitoring.module.css';
 
@@ -53,7 +54,7 @@ const BasicTab = ({
       setOrbitBuildDetails(buildInfo);
     } catch (error) {
       console.log(error);
-      message.error('There was an error getting file information from the cluster. Please try again');
+      handleResponseError('There was an error getting file information from the cluster. Please try again');
     }
   };
 
@@ -68,7 +69,7 @@ const BasicTab = ({
       return;
     }
     if (!searchText.match(/^[a-zA-Z0-9:_ -]*$/)) {
-      return message.error('Invalid search keyword. Please remove any special characters from the keyword.');
+      return handleResponseError('Invalid search keyword. Please remove any special characters from the keyword.');
     }
     try {
       const options = {
@@ -94,7 +95,7 @@ const BasicTab = ({
       }
     } catch (error) {
       console.log(error);
-      message.error('There was an error getting Builds from Orbit');
+      handleResponseError('There was an error getting Builds from Orbit');
       setLoading(false);
       setStatus('error');
     }
