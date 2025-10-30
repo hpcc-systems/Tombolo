@@ -318,7 +318,7 @@ const addClusterWithProgress = async (req, res) => {
       const {
         Workunits: { ECLWorkunit },
       } = await wus.WUQuery({ Wuid });
-      wuState = ECLWorkunit[0].State.toLowerCase();
+      wuState = (ECLWorkunit[0]?.State || '').toLowerCase();
       logger.info(`Workunit ${Wuid} state: ${wuState}`);
     }
 
