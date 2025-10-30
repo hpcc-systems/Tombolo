@@ -353,6 +353,10 @@ const resetPasswordWithToken = async (req, res) => {
       throw { status: 404, message: 'User not found' };
     }
 
+    // Check if the token is expired
+    if (accountVerificationCode.expiresAt && moment().isAfter(accountVerificationCode.expiresAt)) {
+      throw { status: 400, message: 'Reset token has expired' };
+    }
     const user = await User.findByPk(accountVerificationCode.userId, {
       transaction,
     });
