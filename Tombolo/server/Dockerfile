@@ -4,6 +4,12 @@ RUN apt-get update -y && apt-get install -y build-essential curl
 # intall node
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - ; apt-get install -y nodejs
 
+RUN corepack enable && \
+    corepack prepare pnpm@latest --activate
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN true
 
@@ -25,6 +31,6 @@ COPY . app
 
 WORKDIR /app
 
-RUN npm install -g node-gyp sequelize-cli pm2 && npm install
+RUN pnpm install -g node-gyp sequelize-cli pm2 && pnpm install
 # Entry point is set on docker-compose, uncomment if docker-compose is not used
 # ENTRYPOINT ["sh", "/app/docker-entry.sh", "mysql_db", "3306"]
