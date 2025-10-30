@@ -17,6 +17,11 @@ const { isClusterReachable } = require('../../utils/hpcc-util');
 const assetUtil = require('../../utils/assets');
 const { encryptString } = require('../../utils/cipher');
 const logger = require('../../config/logger');
+const {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} = require('../../utils/response');
 
 router.post(
   '/save',
@@ -33,7 +38,7 @@ router.post(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
     const { id, application_id, title, description, clusterId, metaData } =
       req.body;
@@ -89,9 +94,7 @@ router.post(
           cluster_hash: encryptString(password),
         });
 
-        return res
-          .status(200)
-          .json({ success: true, message: 'Dataflow created successfully' });
+        return sendSuccess(res, null, 'Dataflow created successfully');
       }
 
       // If id is available on req.body -> updating existing workflow
@@ -99,10 +102,11 @@ router.post(
 
       if (!dataFlow) {
         // send error to front end - could not update no DF found
-        return res.status(404).json({
-          success: false,
-          message: 'Unable to update dataflow - dataflow not found',
-        });
+        return sendError(
+          res,
+          'Unable to update dataflow - dataflow not found',
+          404
+        );
       }
 
       await Dataflow.update(
@@ -125,14 +129,10 @@ router.post(
         },
         { where: { dataflow_id: id } }
       );
-      return res
-        .status(200)
-        .json({ success: true, message: 'Dataflow updated' });
+      return sendSuccess(res, null, 'Dataflow updated successfully');
     } catch (err) {
       logger.error('dataflow save: ', err);
-      return res
-        .status(409)
-        .json({ success: false, message: 'Unable to create dataflow' });
+      return sendError(res, 'Unable to create dataflow', 409);
     }
   }
 );
@@ -151,7 +151,7 @@ router.get(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
 
     try {
@@ -170,12 +170,10 @@ router.get(
         order: [['createdAt', 'DESC']],
       });
 
-      return res.status(200).json(dataFlow);
+      return sendSuccess(res, dataFlow);
     } catch (err) {
       logger.error('err', err);
-      res
-        .status(500)
-        .json({ success: false, message: 'Unable to fetch dataflows' });
+      return sendError(res, 'Unable to fetch dataflows');
     }
   }
 );
@@ -191,7 +189,7 @@ router.post(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
 
     const { dataflowId, applicationId } = req.body;
@@ -223,10 +221,10 @@ router.post(
         }),
       ]);
 
-      return res.status(200).json({ result: 'success' });
+      return sendSuccess(res, null, 'Dataflow deleted successfully');
     } catch (error) {
       logger.error('dataflow delete: ', error);
-      return res.status(422).json({ result: false, message: error.message });
+      return sendError(res, error.message, 422);
     }
   }
 );
@@ -242,12 +240,12 @@ router.get(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
     let results = [];
 
     try {
-      const dataFlow = Dataflow.findOne({
+      const dataFlow = await Dataflow.findOne({
         where: {
           id: req.query.dataflowId,
         },
@@ -269,7 +267,7 @@ router.get(
         });
       });
 
-      dataflow.indexes.forEach(index => {
+      dataFlow.indexes.forEach(index => {
         results.push({
           id: index.id,
           title: index.title,
@@ -293,10 +291,10 @@ router.get(
         });
       });
 
-      return res.status(200).json(results);
+      return sendSuccess(res, results);
     } catch (err) {
       logger.error('dataflow assets: ', err);
-      return res.status(500).json({ error: err });
+      return sendError(res, err.message || err);
     }
 
     /* // This would go inside the try block above
@@ -369,8 +367,7 @@ router.get(
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
-    if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+    if (!errors.isEmpty()) return sendValidationError(res, errors.array());
 
     try {
       const { assetId } = req.query;
@@ -396,12 +393,10 @@ router.get(
         }
       }
 
-      return res.status(200).send(inDataflows);
+      return sendSuccess(res, inDataflows);
     } catch (error) {
       logger.error('dataflow/checkDataflows: ', error);
-      return res
-        .status(500)
-        .send('Error occurred while checking asset in dataflows');
+      return sendError(res, 'Error occurred while checking asset in dataflows');
     }
   }
 );

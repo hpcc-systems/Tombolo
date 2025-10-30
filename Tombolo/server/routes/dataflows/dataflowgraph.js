@@ -7,6 +7,7 @@ const { body, query, validationResult } = require('express-validator');
 const JobScheduler = require('../../jobSchedular/job-scheduler');
 const assetUtil = require('../../utils/assets');
 const logger = require('../../config/logger');
+const { sendSuccess, sendError, sendValidationError } = require('../../utils/response');
 
 router.get(
   '/',
@@ -16,7 +17,7 @@ router.get(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty()) {
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
     }
 
     try {
@@ -27,14 +28,13 @@ router.get(
         attributes: ['graph', 'name'],
       });
 
-      return res.status(200).json({
-        success: true,
+      return sendSuccess(res, {
         name: dataflowVersion?.name,
         graph: dataflowVersion?.graph,
       });
     } catch (error) {
       logger.error('dataflowgraph - get: ', error);
-      return res.status(500).json({ message: 'Unable to fetch the graph' });
+      return sendError(res, 'Unable to fetch the graph');
     }
   }
 );
@@ -47,7 +47,7 @@ router.get(
       validatorUtil.errorFormatter
     );
     if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+      return sendValidationError(res, errors.array());
 
     try {
       const { dataflowId } = req.query;
@@ -62,12 +62,11 @@ router.get(
           'createdAt',
         ],
         order: [['createdAt', 'ASC']],
-      });
-      return res.status(200).send(versions);
+      ]);
+      return sendSuccess(res, versions);
     } catch (error) {
       logger.error('dataflowgraph - get: ', error);
-
-      return res.status(500).json({ message: error.message });
+      return sendError(res, error.message);
     }
   }
 );
