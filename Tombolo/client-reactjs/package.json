@@ -52,7 +52,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "clean": "rm -rf node_modules"
   },
   "eslintConfig": {
     "extends": "react-app"

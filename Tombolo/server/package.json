@@ -16,7 +16,8 @@
     "test:jobs": "jest --detectOpenHandles --selectProjects jobs",
     "test:api": "jest --detectOpenHandles --selectProjects api",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "clean": "rm -rf node_modules"
   },
   "author": "",
   "license": "ISC",
