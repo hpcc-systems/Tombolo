@@ -59,12 +59,12 @@ cd Tombolo/server
 ```
 
 ```bash
-npm run dropSchema
+pnpm run dropSchema
 ```
 
 The `cd` command changes the directory you're working with.
 
-The `npm run dropSchema` command will run the associated command located in the package.json necessary to delete the database on your local system.
+The `pnpm run dropSchema` command will run the associated command located in the package.json necessary to delete the database on your local system.
 
 If you do not have your local copy of the Tombolo Git Repository, and do not wish to place it back on your system, you will need to drop your database manually. [This Link](https://www.mysqltutorial.org/mysql-basics/mysql-drop-database/) may be of assistance, walking you through options utilizing MySQL Workbench, or the MySQL CLI, depending on your system.
 

@@ -1,0 +1,42 @@
+{
+  "name": "tombolo-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tombolo monorepo managed with pnpm workspaces and Turborepo",
+  "scripts": {
+    "dev": "turbo dev --filter='./Tombolo/*'",
+    "build": "turbo build --filter='./Tombolo/*'",
+    "test": "turbo test --filter='./Tombolo/*'",
+    "lint": "turbo lint --filter='./Tombolo/*'",
+    "lint:fix": "turbo lint:fix --filter='./Tombolo/*'",
+    "clean": "turbo clean && rm -rf node_modules",
+    "server:dev": "turbo dev --filter=@tombolo/server",
+    "client:dev": "turbo dev --filter=@tombolo/client",
+    "server:build": "turbo build --filter=@tombolo/server",
+    "client:build": "turbo build --filter=@tombolo/client",
+    "e2e:app": "pnpm --filter e2e_tests test:app",
+    "docs:dev": "pnpm --filter tombolo_docs start",
+    "docs:build": "pnpm --filter tombolo_docs build"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "react-error-overlay": "6.0.9",
+      "cron-validate": "1.4.5"
+    },
+    "packageExtensions": {
+      "bree@8.0.5": {
+        "dependencies": {
+          "cron-validate": "1.4.5"
+        }
+      }
+    }
+  }
+}

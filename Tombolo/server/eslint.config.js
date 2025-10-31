@@ -2,10 +2,6 @@ const globals = require('globals');
 
 module.exports = [
   {
-    parserOptions: {
-      ecmaVersion: 2021,
-      sourceType: 'module',
-    },
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: 'module',

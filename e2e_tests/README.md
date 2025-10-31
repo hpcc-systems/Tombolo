@@ -29,7 +29,7 @@ e2e_tests/
 1. **Install dependencies:**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. **Configure environment:**
@@ -41,20 +41,20 @@ e2e_tests/
 
 3. **Install Playwright browsers:**
    ```bash
-   npx playwright install --with-deps
+   pnpm exec playwright install --with-deps
    ```
 
 ### Running Tests
 
-| Command                   | Description                                   |
-| ------------------------- | --------------------------------------------- |
-| `npm test`                | Run all tests                                 |
-| `npm run test:app`        | Run admin + monitoring projects               |
-| `npm run test:admin`      | Run admin tests only (applications, clusters) |
-| `npm run test:monitoring` | Run monitoring tests only                     |
-| `npm run test:wizard`     | Run initial experience and login tests        |
-| `npm run test:ui`         | Run tests with UI mode                        |
-| `npm run test:debug`      | Run tests in debug mode                       |
+| Command                    | Description                                   |
+| -------------------------- | --------------------------------------------- |
+| `pnpm test`                | Run all tests                                 |
+| `pnpm run test:app`        | Run admin + monitoring projects               |
+| `pnpm run test:admin`      | Run admin tests only (applications, clusters) |
+| `pnpm run test:monitoring` | Run monitoring tests only                     |
+| `pnpm run test:wizard`     | Run initial experience and login tests        |
+| `pnpm run test:ui`         | Run tests with UI mode                        |
+| `pnpm run test:debug`      | Run tests in debug mode                       |
 
 ## Test Organization
 
@@ -191,21 +191,21 @@ A sample GitHub Actions workflow is provided in `sample-cd.yaml` showing how to:
 ### Debug Mode
 
 ```bash
-npm run test:debug
+pnpm run test:debug
 # Opens tests in debug mode with step-through capability
 ```
 
 ### UI Mode
 
 ```bash
-npm run test:ui
+pnpm run test:ui
 # Interactive test runner with live browser view
 ```
 
 ### Codegen
 
 ```bash
-npm run codegen
+pnpm run codegen
 # Generate test code by recording browser interactions
 ```
 

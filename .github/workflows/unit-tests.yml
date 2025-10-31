@@ -17,10 +17,24 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "22"
-          cache: "npm"
-          cache-dependency-path: |
-            Tombolo/client-reactjs/package-lock.json
-            Tombolo/server/package-lock.json
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Get changed files
         id: changed-files
@@ -36,13 +50,13 @@ jobs:
         if: steps.changed-files.outputs.client_any_changed == 'true'
         run: |
           cd Tombolo/client-reactjs
-          npm ci
+          pnpm install --frozen-lockfile
 
       - name: Install server dependencies
         if: steps.changed-files.outputs.server_any_changed == 'true'
         run: |
           cd Tombolo/server
-          npm ci
+          pnpm install --frozen-lockfile
 
       - name: Setup server config files
         if: steps.changed-files.outputs.server_any_changed == 'true'
@@ -54,7 +68,7 @@ jobs:
         if: steps.changed-files.outputs.client_any_changed == 'true'
         run: |
           cd Tombolo/client-reactjs
-          timeout 5m npm test
+          timeout 5m pnpm test
 
       - name: Run server tests
         if: steps.changed-files.outputs.server_any_changed == 'true'
@@ -65,4 +79,4 @@ jobs:
           WEB_URL: http://localhost:3000
         run: |
           cd Tombolo/server
-          timeout 3m npm test
+          timeout 3m pnpm test

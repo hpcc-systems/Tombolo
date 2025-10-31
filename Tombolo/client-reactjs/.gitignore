@@ -27,3 +27,4 @@ yarn-debug.log*
 yarn-error.log*
 
 nginx.conf.template
+test-results.json
