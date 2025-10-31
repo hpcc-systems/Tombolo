@@ -1,4 +1,3 @@
-/* ENV */
 const path = require('path');
 const fs = require('fs');
 
@@ -6,6 +5,7 @@ const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
 require('dotenv').config({ path: ENVPath });
+const { preloadSecrets } = require('./config/secrets');
 
 /* Use UTC as default timezone */
 process.env.TZ = 'UTC';
@@ -200,6 +200,11 @@ server.listen(port, '0.0.0.0', async () => {
     logger.info('-----------------------------');
     logger.info('Server is initializing...');
     logger.info('-----------------------------');
+
+    // Preload secrets before DB connection and server start
+    await preloadSecrets();
+    logger.info('Secrets loaded from Akeyless or .env');
+
     logger.info('Server listening on port ' + port + '!');
     /* Check DB connection */
     await dbConnection.authenticate();
