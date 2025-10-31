@@ -10,6 +10,7 @@ export default function config({ mode }) {
 
   return defineConfig({
     root: './',
+    base: './', // Ensure relative paths work correctly
     plugins: [
       react(),
       // Disable ESLint checker in dev mode to prevent crashes from linting errors
@@ -67,9 +68,11 @@ export default function config({ mode }) {
     // Test configuration moved to vitest.config.js
     build: {
       outDir: 'build',
+      sourcemap: isDev, // Enable sourcemaps in development
       rollupOptions: {
         output: {
           chunkFileNames: 'static/js/[name].chunk.js', // makes Dockerfile glob match
+          manualChunks: undefined, // Let Vite handle chunk splitting automatically
         },
       },
     },

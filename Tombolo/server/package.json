@@ -1,6 +1,7 @@
 {
   "name": "@tombolo/server",
   "version": "1.0.0",
+  "private": true,
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -8,6 +9,7 @@
     "bootstrap-server": "(pnpm install) && (pnpm run createSchema) && (pnpm run migrations)  && (pnpm run seeds) && (pnpm exec nodemon server.js)",
     "createSchema": "pnpm exec sequelize db:create",
     "migrations": "pnpm exec sequelize db:migrate",
+    "build": "echo No build step for server",
     "seeds": "pnpm exec sequelize db:seed:all",
     "dropSchema": "pnpm exec sequelize db:drop",
     "test": "jest --detectOpenHandles",

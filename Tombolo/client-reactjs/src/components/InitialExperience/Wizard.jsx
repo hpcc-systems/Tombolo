@@ -1,5 +1,5 @@
 // Library imports
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, Steps, Button, Divider, message, Card, Space } from 'antd';
 import { Route, Switch } from 'react-router-dom';
 import {
