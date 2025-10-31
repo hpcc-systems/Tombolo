@@ -39,9 +39,7 @@ export const getApplications = createAsyncThunk('application/getApplications', a
 });
 
 export const getAllActiveIntegrations = createAsyncThunk('application/getAllActiveIntegrations', async () => {
-  // const response = await fetch('/api/integrations/getAllActive', { headers: authHeader() });
   const data = await integrationsService.getAllActive();
-  // if (!response.ok) throw await handleError(response);
 
   const integrations = [];
 

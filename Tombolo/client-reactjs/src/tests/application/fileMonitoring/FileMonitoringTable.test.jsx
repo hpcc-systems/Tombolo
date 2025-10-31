@@ -233,9 +233,9 @@ describe('FileMonitoringTable', () => {
 
     const pauseIcon = await screen.findByText('pause');
     await user.click(pauseIcon);
-    await waitFor(() => toggleFileMonitoringStatus.mock.calls.length > 0);
+    await waitFor(() => expect(toggleFileMonitoringStatus).toHaveBeenCalled());
     expect(setFileMonitoring).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalledWith('Monitoring paused successfully');
+    expect(handleSuccess).toHaveBeenCalledWith('Monitoring paused successfully');
   });
 
   it('deletes a monitoring via Popconfirm and updates state', async () => {
@@ -264,10 +264,9 @@ describe('FileMonitoringTable', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'confirm' }));
-    await waitFor(() => handleDeleteFileMonitoring.mock.calls.length > 0);
-    expect(handleDeleteFileMonitoring).toHaveBeenCalledWith([rowApproved.id]);
+    await waitFor(() => expect(handleDeleteFileMonitoring).toHaveBeenCalledWith([rowApproved.id]));
     expect(setFileMonitoring).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalledWith('File monitoring deleted successfully');
+    expect(handleSuccess).toHaveBeenCalledWith('File monitoring deleted successfully');
   });
 
   it('renders unreachable cluster tag and allows row selection to set selected rows', async () => {

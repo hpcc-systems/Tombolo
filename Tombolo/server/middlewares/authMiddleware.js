@@ -9,6 +9,7 @@ const {
   bodyUuids,
 } = require('./commonMiddleware');
 const jwt = require('jsonwebtoken');
+const { sendError } = require('../utils/response');
 
 const logger = require('../config/logger');
 const { User } = require('../models');
@@ -48,15 +49,7 @@ const validateEmailDuplicate = [
     const message = 'Email already in use';
     const user = await User.findOne({ where: { email } });
     if (user) {
-      return res.status(400).json({
-        success: false,
-        message: message,
-        formErrors: {
-          email: {
-            errors: message,
-          },
-        },
-      });
+      return sendError(res, message, 400);
     }
     next();
   },
@@ -68,9 +61,7 @@ const verifyValidTokenExists = (req, res, next) => {
 
   if (!accessToken) {
     logger.error('Authorization: Access token not provided');
-    return res
-      .status(401)
-      .json({ success: false, message: 'Access token not provided' });
+    return sendError(res, 'Access token not provided', 401);
   }
 
   try {
@@ -82,9 +73,7 @@ const verifyValidTokenExists = (req, res, next) => {
     next(); // Proceed to the controller
   } catch (err) {
     logger.error('Authorization: Invalid or expired access token', err);
-    return res
-      .status(401)
-      .json({ success: false, message: 'Invalid or expired access token' });
+    return sendError(res, 'Invalid or expired access token', 401);
   }
 };
 
@@ -92,7 +81,12 @@ const validatePasswordResetRequestPayload = [emailBody('email')];
 
 //validateResetPasswordPayload - comes in request body - token must be present and must be UUID, password must be present and meet password requirements
 const validateResetPasswordPayload = [
-  stringBody('token'),
+  body('token')
+    .isString()
+    .notEmpty()
+    .withMessage('Token is required')
+    .isUUID()
+    .withMessage('Token must be a valid UUID'),
   body('password')
     .isString()
     .notEmpty()

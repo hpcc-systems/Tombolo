@@ -168,51 +168,56 @@ function AddClusterModal({
       // Get the form values
       const payload = form.getFieldsValue();
 
-      // Make API request to add cluster
-      const response = await clustersService.addWithProgress({ clusterInfo: payload, abortController });
+      let processedLength = 0;
 
-      if (!response.ok) {
-        throw new Error('Failed to add cluster');
-      } else {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
+      // Make API request to add cluster with progress callback
+      await clustersService.addWithProgress({
+        clusterInfo: payload,
+        abortController,
+        onProgress: (text) => {
+          // Get only the new data since last progress event
+          const newData = text.substring(processedLength);
+          processedLength = text.length;
 
-        let sendingResponse = true;
+          if (newData.trim()) {
+            const jsonStrings = newData
+              .split('\n')
+              .filter((str) => str.trim() !== '')
+              .map((str) => str.replace(/^data: /, ''));
 
-        while (sendingResponse) {
-          const { done, value } = await reader.read();
-          if (done) {
-            sendingResponse = false;
+            const serverSentEvents = jsonStrings
+              .map((str) => {
+                try {
+                  return JSON.parse(str);
+                } catch (e) {
+                  return null;
+                }
+              })
+              .filter((event) => event !== null);
+
+            // Set completed steps
+            setCompletedSteps((prev) => [...prev, ...serverSentEvents]);
+
+            // If server event have cluster key-value pair, then add it to clusters
+            serverSentEvents.forEach((event) => {
+              //If error encountered, stop the process
+              if (event.step === 99) {
+                throw new Error(event.message);
+              }
+
+              if (event.cluster) {
+                setClusters([...clusters, event.cluster]);
+                setRequireCredentials(false);
+                handleSuccess('Cluster added successfully');
+                form.resetFields();
+                setDisplayAddClusterModal(false);
+                setAddingCluster(false);
+                setDisplaySteps(false);
+              }
+            });
           }
-          const decodedValue = decoder.decode(value);
-          const jsonStrings = decodedValue
-            .split('\n')
-            .filter((str) => str.trim() !== '')
-            .map((str) => str.replace(/^data: /, ''));
-          const serverSentEvents = jsonStrings.map((str) => JSON.parse(str));
-
-          // Set completed steps
-          setCompletedSteps((prev) => [...prev, ...serverSentEvents]);
-
-          // If server event have cluster key-value pair, then add it to clusters
-          serverSentEvents.forEach((event) => {
-            //If error encountered, stop the process
-            if (event.step === 99) {
-              throw new Error(event.message);
-            }
-
-            if (event.cluster) {
-              setClusters([...clusters, event.cluster]);
-              setRequireCredentials(false);
-              handleSuccess('Cluster added successfully');
-              form.resetFields();
-              setDisplayAddClusterModal(false);
-              setAddingCluster(false);
-              setDisplaySteps(false);
-            }
-          });
-        }
-      }
+        },
+      });
     } catch (err) {
       // If completed step does not have an item with step 99
       // The error occurred outside pre-defined 4 steps

@@ -1,10 +1,12 @@
 import { DeleteOutlined, EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { Button, Divider, Form, Input, Modal, notification, Popconfirm, Select, Spin, Table, Tooltip } from 'antd';
+import { Button, Divider, Form, Input, Modal, Popconfirm, Select, Spin, Table, Tooltip } from 'antd';
 import React, { Component } from 'react';
 
-import { authHeader, handleError } from '../common/AuthHeader.js';
+import { handleError } from '../common/handleResponse';
+import { handleSuccess } from '../common/handleResponse';
 import BreadCrumbs from '../common/BreadCrumbs';
 import Text from '../common/Text';
+import usersService from '@/services/users.service';
 
 const Option = Select.Option;
 
@@ -45,86 +47,57 @@ class Users extends Component {
     });
   };
 
-  getUsers() {
-    this.setState({
-      initialDataLoading: true,
-    });
-    fetch('/api/user/', {
-      headers: authHeader(),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {
-        this.setState({
-          users: data,
-        });
-        this.setState({
-          initialDataLoading: false,
-        });
-      })
-      .catch((error) => {
-        console.log(error);
+  async getUsers() {
+    try {
+      this.setState({
+        initialDataLoading: true,
       });
+
+      const response = await usersService.getAll();
+
+      this.setState({
+        users: response.data || response,
+        initialDataLoading: false,
+      });
+    } catch (error) {
+      handleError(error);
+      this.setState({
+        initialDataLoading: false,
+      });
+    }
   }
 
-  handleDelete = (id) => {
-    fetch('/api/user/' + id, {
-      method: 'delete',
-      headers: authHeader(),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((_suggestions) => {
-        notification.open({
-          message: 'User Removed',
-          description: 'The user has been removed.',
-          onClick: () => {
-            console.log('Closed!');
-          },
-        });
-        this.getUsers();
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+  handleDelete = async (id) => {
+    try {
+      await usersService.delete({ id });
+      handleSuccess('The user has been removed.');
+      this.getUsers();
+    } catch (error) {
+      handleError(error);
+    }
   };
 
-  handleEditUser(userId) {
-    fetch('/api/user/' + userId, {
-      headers: authHeader(),
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        handleError(response);
-      })
-      .then((data) => {
-        this.setState({
-          ...this.state,
-          newUser: {
-            ...this.state.newUser,
-            id: data.id,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            username: data.username,
-            role: data.role,
-          },
-          showAddUsers: true,
-          isUserUpdated: true,
-        });
-      })
-      .catch((error) => {
-        console.log(error);
+  async handleEditUser(userId) {
+    try {
+      const response = await usersService.getOne({ id: userId });
+      const data = response.data || response;
+
+      this.setState({
+        ...this.state,
+        newUser: {
+          ...this.state.newUser,
+          id: data.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          username: data.username,
+          role: data.role,
+        },
+        showAddUsers: true,
+        isUserUpdated: true,
       });
+    } catch (error) {
+      handleError(error);
+    }
   }
 
   handleAdd = (_event) => {
@@ -160,44 +133,45 @@ class Users extends Component {
     this.setState({ ...this.state, newUser: { ...this.state.newUser, role: value } });
   };
 
-  handleAddUserOk = () => {
+  handleAddUserOk = async () => {
     this.setState({
       confirmLoading: true,
       submitted: true,
     });
+
     if (this.state.newUser.firstName && this.state.newUser.username && this.state.newUser.password) {
-      let data = JSON.stringify({
-        firstName: this.state.newUser.firstName,
-        lastName: this.state.newUser.lastName,
-        username: this.state.newUser.username,
-        password: this.state.newUser.password,
-        role: this.state.newUser.role,
-      });
-      let url = this.state.isUserUpdated ? '/api/user/' + this.state.newUser.id : '/api/user/register';
-      let method = this.state.isUserUpdated ? 'put' : 'post';
-      fetch(url, {
-        method: method,
-        headers: authHeader(),
-        body: data,
-      })
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          }
-          handleError(response);
-        })
-        .then((_suggestions) => {
-          this.setState({
-            confirmLoading: false,
-            showAddUsers: false,
-            isUserUpdated: false,
-            submitted: false,
+      try {
+        const userData = {
+          firstName: this.state.newUser.firstName,
+          lastName: this.state.newUser.lastName,
+          username: this.state.newUser.username,
+          password: this.state.newUser.password,
+          role: this.state.newUser.role,
+        };
+
+        if (this.state.isUserUpdated) {
+          await usersService.update({
+            userId: this.state.newUser.id,
+            userData,
           });
-          this.getUsers();
-        })
-        .catch((error) => {
-          console.log(error);
+        } else {
+          await usersService.create(userData);
+        }
+
+        this.setState({
+          confirmLoading: false,
+          showAddUsers: false,
+          isUserUpdated: false,
+          submitted: false,
         });
+
+        this.getUsers();
+      } catch (error) {
+        handleError(error);
+        this.setState({
+          confirmLoading: false,
+        });
+      }
     }
   };
 

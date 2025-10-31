@@ -7,14 +7,19 @@ import BulkUpdateModal from '@/components/common/Monitoring/BulkUpdateModal.jsx'
 // Mock antd Modal/Select/message
 vi.mock('antd', async (importOriginal) => {
   const antd = await importOriginal();
-  const MockModal = ({ open, children, footer }) => (open ? (<div>{children}{footer}</div>) : null);
+  const MockModal = ({ open, children, footer }) =>
+    open ? (
+      <div>
+        {children}
+        {footer}
+      </div>
+    ) : null;
   const MockSelect = ({ value = [], onChange, placeholder }) => (
     <select
       multiple
       value={value}
       aria-label={placeholder || 'select'}
-      onChange={(e) => onChange?.([...e.target.selectedOptions].map((o) => o.value))}
-    >
+      onChange={(e) => onChange?.([...e.target.selectedOptions].map((o) => o.value))}>
       {/* Test will call onChange directly; options are not necessary */}
     </select>
   );
@@ -110,7 +115,7 @@ describe('BulkUpdateModal', () => {
     const payload = props.handleBulkUpdateMonitorings.mock.calls[0][0];
     expect(payload.updatedData).toHaveLength(2);
     // Ensure message success and modal closed via setBulkEditModalVisibility(false)
-    await waitFor(() => expect(message.success).toHaveBeenCalled());
+    await waitFor(() => expect(handleSuccess).toHaveBeenCalled());
     expect(props.setMonitorings).toHaveBeenCalled();
   });
 

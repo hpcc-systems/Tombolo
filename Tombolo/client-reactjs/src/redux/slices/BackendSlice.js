@@ -1,17 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authHeader, handleError } from '@/components/common/AuthHeader';
+import statusService from '@/services/status.service';
 
 // Async thunks (replaces old actions/Backend)
 // eslint-disable-next-line unused-imports/no-unused-vars
 export const checkBackendStatus = createAsyncThunk('backend/checkBackendStatus', async (_, { rejectWithValue }) => {
   try {
-    const response = await fetch('/api/status', { headers: authHeader() });
-    if (!response.ok) {
-      // let global handler show message where appropriate
-      handleError(response);
-      return false;
-    }
-    return response.ok;
+    await statusService.checkBackendStatus();
+
+    // return response.success || false;
+    return true;
   } catch (err) {
     console.error('Error fetching backend status:', err);
     // swallow network errors as "not connected" rather than throwing
@@ -22,14 +19,9 @@ export const checkBackendStatus = createAsyncThunk('backend/checkBackendStatus',
 // eslint-disable-next-line unused-imports/no-unused-vars
 export const checkOwnerExists = createAsyncThunk('backend/checkOwnerExists', async (_, { rejectWithValue }) => {
   try {
-    const response = await fetch('/api/status/ownerExists', { headers: authHeader() });
-    if (!response.ok) {
-      handleError(response);
-      return false;
-    }
-    const data = await response.json();
-    // assume API returns { data: boolean } as before
-    return Boolean(data?.data);
+    const response = await statusService.checkOwnerExists();
+    // API returns { success: boolean, data: boolean }
+    return Boolean(response);
   } catch (err) {
     console.error('Error fetching owner exists:', err);
     return false;

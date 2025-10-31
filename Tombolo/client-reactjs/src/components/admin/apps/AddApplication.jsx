@@ -14,7 +14,7 @@ import Text from '../../common/Text';
 import InfoDrawer from '../../common/InfoDrawer';
 import { setUser, getUser } from '../../common/userStorage';
 import { getApplications, applicationSelected } from '@/redux/slices/ApplicationSlice';
-import { emptyGroupsTree } from '@/redux/slices/GroupSlice';
+// import { emptyGroupsTree } from '@/redux/slices/GroupSlice';
 
 // Description component for view mode
 const AppDescription = ({ application }) => {
@@ -179,7 +179,7 @@ function AddApplication({
 
       const responseData = await applicationsService.save(payload);
 
-      dispatch(emptyGroupsTree());
+      // dispatch(emptyGroupsTree());
       handleSuccess('Application saved successfully');
       form.resetFields();
       closeAddApplicationModal();

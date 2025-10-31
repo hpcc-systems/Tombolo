@@ -3,6 +3,7 @@ const router = express.Router();
 
 const { Dataflow, DataflowVersion, File, Report } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
+const { sendSuccess, sendError, sendValidationError } = require('../../utils/response');
 const {
   validateApplicationId,
   validateDeleteReport,
@@ -18,10 +19,10 @@ router.get(
     try {
       const { application_id } = req.params;
       const reports = await Report.findAll({ where: { application_id } });
-      return res.status(200).send(reports);
+      return sendSuccess(res, reports, 'Reports retrieved successfully');
     } catch (error) {
       logger.error('Something went wrong', error);
-      return res.status(500).json({ message: error.message });
+      return sendError(res, error.message, 500);
     }
   }
 );
@@ -34,10 +35,10 @@ router.delete(
       const { reportId } = req.params;
       const isRemoved = await Report.destroy({ where: { id: reportId } });
       if (!isRemoved) throw new Error('Report was not removed!');
-      return res.status(200).send({ success: true, id: reportId });
+      return sendSuccess(res, { success: true, id: reportId }, 'Report deleted successfully');
     } catch (error) {
       logger.error('Something went wrong', error);
-      return res.status(500).json({ message: error.message });
+      return sendError(res, error.message, 500);
     }
   }
 );
@@ -80,10 +81,10 @@ router.get(
 
       const newReport = await Report.create(summary);
 
-      return res.status(200).send(newReport);
+      return sendSuccess(res, newReport, 'Current report generated successfully');
     } catch (error) {
       logger.error('Something went wrong', error);
-      return res.status(500).json({ message: error.message });
+      return sendError(res, error.message, 500);
     }
   }
 );
@@ -107,7 +108,7 @@ router.put(
         );
 
         if (!isUpdated) throw new Error('Failed to remove baseline');
-        return res.status(200).send({ success: true, id });
+        return sendSuccess(res, { success: true, id }, 'Baseline removed successfully');
       }
 
       if (action === 'assign') {
@@ -123,13 +124,11 @@ router.put(
           isBaseLine: true,
         });
 
-        return res
-          .status(200)
-          .send({ success: true, id: newBaseLineReport.id });
+        return sendSuccess(res, { success: true, id: newBaseLineReport.id }, 'Baseline assigned successfully');
       }
     } catch (error) {
       logger.error('Something went wrong', error);
-      return res.status(500).json({ message: error.message });
+      return sendError(res, error.message, 500);
     }
   }
 );
@@ -172,13 +171,11 @@ router.get(
         }
       }
 
-      return res.status(200).send(inDataflows);
+      return sendSuccess(res, inDataflows, 'Associated dataflows retrieved successfully');
     } catch (error) {
       logger.error('report/read associatedDataflows: ', error);
 
-      return res
-        .status(500)
-        .send('Error occurred while checking asset in dataflows');
+      return sendError(res, 'Error occurred while checking asset in dataflows', 500);
     }
   }
 );

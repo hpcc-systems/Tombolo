@@ -1,8 +1,9 @@
 import React from 'react';
 import { useState } from 'react';
 import { useEffect } from 'react';
-import { authHeader, handleError } from '../common/AuthHeader';
-import { Table, Button, message, Space } from 'antd';
+import { handleError, handleSuccess } from '../common/handleResponse';
+import { Table, Button, Space } from 'antd';
+import breeService from '@/services/bree.service';
 
 function ScheduledJobsPage() {
   const [jobs, setJobs] = useState({ loading: false, error: '', data: [] });
@@ -13,17 +14,14 @@ function ScheduledJobsPage() {
       try {
         setJobs((prev) => ({ ...prev, error: '' }));
 
-        const response = await fetch('/api/bree/all', { headers: authHeader() });
-        if (!response.ok) handleError(response);
+        const response = await breeService.getAll();
 
-        const data = await response.json();
-
-        setJobs((prev) => ({ ...prev, data: data.jobs }));
+        setJobs((prev) => ({ ...prev, data: response.jobs }));
       } catch (error) {
         console.log('Error fetch', error);
         setJobs((prev) => ({ ...prev, error: error.message }));
         stopPolling();
-        message.error(error.message);
+        handleError(error.message);
       }
     };
 
@@ -41,53 +39,42 @@ function ScheduledJobsPage() {
 
   const changeStatus = async (action, record) => {
     try {
-      const payload = {
-        method: 'PUT',
-        headers: authHeader(),
-        body: JSON.stringify({ name: record.name }),
-      };
-
       setJobs((prev) => ({ ...prev, loading: true, error: '' }));
 
-      const route = action === 'stop' ? 'stop_job' : 'start_job';
-      const response = await fetch(`/api/bree/${route}`, payload);
-      if (!response.ok) handleError(response);
+      // Call the appropriate service method
+      if (action === 'stop') {
+        await breeService.stopJob({ name: record.name });
+      } else {
+        await breeService.startJob({ name: record.name });
+      }
 
-      const data = await response.json();
-      if (!data.success) throw new Error(data.message);
+      // Refresh the job list to get updated state
+      const updatedJobs = await breeService.getAll();
+      setJobs((prev) => ({ ...prev, loading: false, data: updatedJobs.jobs }));
 
-      setJobs((prev) => ({ ...prev, loading: false, data: data.jobs }));
-
-      message.success(`Job ${data.job.name} is ${action === 'stop' ? 'stopped' : 'started'}`);
+      handleSuccess(`Job ${record.name} is ${action === 'stop' ? 'stopped' : 'started'}`);
     } catch (error) {
       console.log('Error fetch', error);
       setJobs((prev) => ({ ...prev, loading: false, error: error.message }));
-      message.error(error.message);
+      handleError(error.message);
     }
   };
 
   const removeJob = async (record) => {
     try {
-      const payload = {
-        method: 'DELETE',
-        headers: authHeader(),
-      };
-
       setJobs((prev) => ({ ...prev, loading: true, error: '' }));
 
-      const response = await fetch(`/api/bree/remove_job?name=${record.name}`, payload);
-      if (!response.ok) handleError(response);
+      await breeService.removeJob({ name: record.name });
 
-      const data = await response.json();
-      if (!data.success) throw new Error(data.message);
+      // Refresh the job list to get updated state
+      const updatedJobs = await breeService.getAll();
+      setJobs((prev) => ({ ...prev, loading: false, data: updatedJobs.jobs }));
 
-      setJobs((prev) => ({ ...prev, loading: false, data: data.jobs }));
-
-      message.success(`Job ${data.job.name} is removed`);
+      handleSuccess(`Job ${record.name} is removed`);
     } catch (error) {
       console.log('Error fetch', error);
       setJobs((prev) => ({ ...prev, loading: false, error: error.message }));
-      message.error(error.message);
+      handleError(error.message);
     }
   };
 

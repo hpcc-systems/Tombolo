@@ -449,7 +449,8 @@ const handleInvalidLoginAttempt = async ({ user, errMessage }) => {
 
   // Incorrect E-mail password combination error
   const invalidCredentialsErr = new Error(errMessage);
-  invalidCredentialsErr.status = 403;
+  invalidCredentialsErr.status = 401;
+  invalidCredentialsErr.name = 'UnauthorizedError';
   throw invalidCredentialsErr;
 };
 

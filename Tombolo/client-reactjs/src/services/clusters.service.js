@@ -1,5 +1,4 @@
 import { apiClient } from '@/services/api';
-import { authHeader } from '@/components/common/AuthHeader';
 
 const clustersService = {
   getAll: async () => {
@@ -46,19 +45,20 @@ const clustersService = {
     return response.status;
   },
 
-  // For SSE, we need to use fetch directly since axios doesn't handle SSE well
-  addWithProgress: async ({ clusterInfo, abortController }) => {
-    const response = await fetch('/api/cluster/addClusterWithProgress', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Get auth header from local storage or context
-        ...authHeader(),
-      },
-      body: JSON.stringify(clusterInfo),
+  // SSE endpoint for cluster addition with progress updates
+  addWithProgress: async ({ clusterInfo, abortController, onProgress, timeout = 180000 }) => {
+    const response = await apiClient.post('/cluster/addClusterWithProgress', clusterInfo, {
       signal: abortController?.signal,
+      responseType: 'text',
+      timeout, // Timeout can be overridden by caller, defaults to 180 seconds for long-running cluster operations
+      onDownloadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.event && progressEvent.event.target) {
+          const text = progressEvent.event.target.responseText;
+          onProgress(text);
+        }
+      },
     });
-    return response;
+    return response.data;
   },
 };
 

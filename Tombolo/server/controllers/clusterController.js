@@ -170,14 +170,26 @@ const addClusterWithProgress = async (req, res) => {
       metaData = {},
       allowSelfSigned,
     } = req.body;
+
+    logger.info(
+      `Adding cluster with progress: ${clusterName}, user: ${userID}`
+    );
+
     // Make sure cluster is whitelisted
     const cluster = clusters.find(c => c.name === clusterName);
 
     if (!cluster) {
-      return;
+      logger.error(`Cluster ${clusterName} not found in whitelist`);
+      sendUpdate({
+        step: 99,
+        success: false,
+        message: 'Cluster not found in whitelist',
+      });
+      return res.end();
     }
 
     const baseUrl = `${cluster.thor}:${cluster.thor_port}`;
+    logger.info(`Cluster base URL: ${baseUrl}`);
 
     // Check if cluster is reachable
     sendUpdate({
@@ -185,6 +197,8 @@ const addClusterWithProgress = async (req, res) => {
       success: true,
       message: 'Authenticating cluster ..',
     });
+
+    logger.info(`Attempting to authenticate with cluster ${clusterName}`);
     await new AccountService(
       getClusterOptions(
         {
@@ -195,6 +209,8 @@ const addClusterWithProgress = async (req, res) => {
         allowSelfSigned
       )
     ).MyAccount();
+
+    logger.info(`Authentication successful for cluster ${clusterName}`);
     sendUpdate({
       step: 1,
       success: true,
@@ -207,6 +223,8 @@ const addClusterWithProgress = async (req, res) => {
       success: true,
       message: 'Selecting default engine ..',
     });
+
+    logger.info(`Querying logical clusters for ${clusterName}`);
     const {
       TpLogicalClusters: { TpLogicalCluster },
     } = await new TopologyService(
@@ -219,6 +237,8 @@ const addClusterWithProgress = async (req, res) => {
         allowSelfSigned
       )
     ).TpLogicalClusterQuery();
+
+    logger.info(`Found ${TpLogicalCluster.length} logical clusters`);
 
     let defaultEngine = null;
     if (TpLogicalCluster.length > 0) {
@@ -233,8 +253,14 @@ const addClusterWithProgress = async (req, res) => {
     }
 
     // if default cluster is not found, return error
-    if (!defaultEngine) throw new CustomError('Default engine not found', 400);
+    if (!defaultEngine) {
+      logger.error(
+        `No suitable default engine found for cluster ${clusterName}`
+      );
+      throw new CustomError('Default engine not found', 400);
+    }
 
+    logger.info(`Selected default engine: ${defaultEngine.Name}`);
     sendUpdate({
       step: 2,
       success: true,
@@ -274,21 +300,57 @@ const addClusterWithProgress = async (req, res) => {
 
     // Submit the recently created workunit
     await wus.WUSubmit({ Wuid, Cluster: defaultEngine.Name });
+    logger.info(`Submitted workunit ${Wuid} for timezone offset calculation`);
 
     let wuState = 'submitted';
     const finalStates = ['unknown', 'completed', 'failed', 'aborted'];
-    while (!finalStates.includes(wuState)) {
-      // Delay for 2 seconds before checking the state again
+    const maxAttempts = 20; // 20 attempts * 3 seconds = 60 seconds max wait
+    let attempts = 0;
+
+    while (!finalStates.includes(wuState) && attempts < maxAttempts) {
+      // Delay for 3 seconds before checking the state again
       await new Promise(resolve => setTimeout(resolve, 3000));
+      attempts++;
+      logger.info(
+        `Checking workunit ${Wuid} state, attempt ${attempts}/${maxAttempts}`
+      );
+
       const {
         Workunits: { ECLWorkunit },
       } = await wus.WUQuery({ Wuid });
-      wuState = ECLWorkunit[0].State;
+      wuState = (ECLWorkunit[0]?.State || '').toLowerCase();
+      logger.info(`Workunit ${Wuid} state: ${wuState}`);
+    }
+
+    // Check if we timed out
+    if (attempts >= maxAttempts && !finalStates.includes(wuState)) {
+      logger.error(
+        `Workunit ${Wuid} timed out after ${maxAttempts * 3} seconds. Last state: ${wuState}`
+      );
+      throw new CustomError(
+        'Timeout waiting for timezone offset calculation. The cluster may be slow or unresponsive.',
+        408
+      );
+    }
+
+    // Check if workunit failed
+    if (
+      wuState === 'failed' ||
+      wuState === 'aborted' ||
+      wuState === 'unknown'
+    ) {
+      logger.error(`Workunit ${Wuid} ended with state: ${wuState}`);
+      throw new CustomError(
+        `Timezone offset calculation ${wuState}. Please check cluster health.`,
+        500
+      );
     }
 
     // Work unit result
+    logger.info(`Fetching result for workunit ${Wuid}`);
     const wuSummary = await wus.WUResultSummary({ Wuid });
     const offSetInMinutes = parseInt(wuSummary.Result.Value) / 60;
+    logger.info(`Timezone offset calculated: ${offSetInMinutes} minutes`);
 
     // throw new Error("Error occurred while getting timezone offset");
     sendUpdate({
@@ -380,10 +442,8 @@ const addClusterWithProgress = async (req, res) => {
       cluster: newCluster,
     });
     res.end();
-    // res.status(201).json({ success: true, data: newCluster });
   } catch (err) {
     logger.error('Add cluster: ', err);
-    // res.status(err.statusCode || 500).json({ success: false, message: err.message });
     sendUpdate({ step: 99, success: false, message: err.message });
     res.end();
   }

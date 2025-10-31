@@ -1,6 +1,10 @@
+// Imports from libraries
 import React from 'react';
-import BasicLayout from '../common/BasicLayout';
 import { Route, Switch } from 'react-router-dom';
+
+// Local imports
+import BasicLayout from '../common/BasicLayout';
+
 const Login = React.lazy(() => import('./login.jsx'));
 const Register = React.lazy(() => import('./register.jsx'));
 const ResetPassword = React.lazy(() => import('./ResetPasswordWithToken.jsx'));

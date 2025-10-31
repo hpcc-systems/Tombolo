@@ -1,16 +1,17 @@
+// Imports from libraries
 import React, { useState, useEffect } from 'react';
-import { Form, message } from 'antd';
+import { Form } from 'antd';
 import { CheckCircleFilled, LoadingOutlined, CloseCircleFilled } from '@ant-design/icons';
 import { useLocation, useHistory, Link } from 'react-router-dom';
-
-import RegisterUserForm from './registerUserForm';
-import { getDeviceInfo } from './utils';
-import { verifyEmail } from './utils';
-import { setUser } from '../common/userStorage';
-
-import { registerBasicUser } from '@/redux/slices/AuthSlice';
 import { useDispatch } from 'react-redux';
 
+// Local imports
+import RegisterUserForm from './registerUserForm';
+import { getDeviceInfo } from './utils';
+import { setUser } from '../common/userStorage';
+import { handleError, handleSuccess } from '../common/handleResponse';
+import { registerBasicUser } from '@/redux/slices/AuthSlice';
+import authService from '@/services/auth.service';
 import styles from './login.module.css';
 
 const Register = () => {
@@ -40,20 +41,20 @@ const Register = () => {
       setVerifying(true);
       const verifyUserAc = async () => {
         try {
-          const response = await verifyEmail(regId);
+          const response = await authService.verifyEmail(regId);
 
-          if (!response.success) {
-            throw new Error(response?.data?.message || 'Verification failed');
+          if (!response) {
+            throw new Error(response?.message || 'Verification failed');
           }
 
-          message.success('Your email has been verified!');
+          handleSuccess('Your email has been verified!');
           setRegistrationComplete(true);
           setVerifying(false);
-          setUser(JSON.stringify(response.data));
+          setUser(JSON.stringify(response));
           history.push('/');
         } catch (err) {
           setVerifying(false);
-          setVerificationFailed(err.message);
+          setVerificationFailed(err.messages[0]);
         }
       };
 
@@ -73,7 +74,8 @@ const Register = () => {
 
       setRegistrationComplete(true);
     } catch (e) {
-      setVerificationFailed(e.message);
+      handleError(e);
+      setVerificationFailed(e.message[0]);
     }
   };
 
@@ -99,9 +101,12 @@ const Register = () => {
       ) : registrationComplete ? (
         <div>
           <p className={styles.helperLink} style={{ fontSize: '1.1rem' }}>
-            <CheckCircleFilled style={{ marginRight: '1rem', color: 'green' }} twoToneColor="#eb2f96" fill="green" />
+            <CheckCircleFilled style={{ marginRight: '1rem', color: 'green' }} fill="green" />
             Registration complete. Please check your email to verify your account.
           </p>
+          <div className={styles.helperLink}>
+            <Link to="/login">Go to Login</Link>
+          </div>
         </div>
       ) : (
         <>

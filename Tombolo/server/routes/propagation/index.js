@@ -4,6 +4,11 @@ const router = express.Router();
 const { File, Job, Report } = require('../../models');
 const _ = require('lodash');
 const logger = require('../../config/logger');
+const {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} = require('../../utils/response');
 
 router.get('/:applicationId', async (req, res) => {
   try {
@@ -270,7 +275,7 @@ router.get('/:applicationId', async (req, res) => {
         type: 'changes',
         application_id,
       });
-      return res.status(200).send(newReport);
+      return sendSuccess(res, newReport, 'Changes report created successfully');
     }
     // Check if base line report exists
     const baseLineReport = await Report.findOne({ where: { id: baseLineId } });
@@ -342,10 +347,18 @@ router.get('/:applicationId', async (req, res) => {
       application_id,
     });
 
-    return res.status(200).send(newReport);
+    return sendSuccess(
+      res,
+      newReport,
+      'Comparison report created successfully'
+    );
   } catch (error) {
     logger.error('propagation/index get: ', error);
-    return res.status(500).send('Error occurred while retrieving credentials');
+    return sendError(
+      res,
+      'Error occurred while processing propagation data',
+      500
+    );
   }
 });
 

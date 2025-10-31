@@ -31,7 +31,7 @@ const {
   validateExportApp,
 } = require('../../middlewares/appMiddleware');
 const { sendError, sendSuccess } = require('../../utils/response');
-const NotificationModule = require('../notifications/email-notification');
+// const NotificationModule = require('../notifications/email-notification');
 const jobScheduler = require('../../jobSchedular/job-scheduler');
 const logger = require('../../config/logger');
 

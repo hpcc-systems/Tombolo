@@ -1,10 +1,11 @@
-//Libraries
+// Imports from libraries
 import React, { useRef, useState, useEffect } from 'react';
-import { Button, Typography, Card, message } from 'antd';
+import { Button, Typography, Card } from 'antd';
 import { CheckCircleFilled } from '@ant-design/icons';
 
 // Local imports
-import { resendVerificationCode } from './utils';
+import { handleError } from '../common/handleResponse';
+import authService from '@/services/auth.service';
 import styles from './login.module.css';
 
 const { Text } = Typography;
@@ -47,12 +48,12 @@ function UnverifiedUser({ setUnverifiedUserLoginAttempt, email = 'yadhap.dahal@l
       setSendingEmail(true);
       setCanSendVerificationEmail(false);
       setSendingEmail(false);
-      await resendVerificationCode(email);
+      await authService.resendVerificationCode(email);
       setSentVerificationEmail(true);
       // Start the delay timer
       t.current = startTimer();
     } catch (error) {
-      message.error(error.message);
+      handleError(error.message);
       setCanSendVerificationEmail(true);
     }
   };
@@ -60,7 +61,6 @@ function UnverifiedUser({ setUnverifiedUserLoginAttempt, email = 'yadhap.dahal@l
   useEffect(() => {
     return () => {
       clearTimer(timerInterval);
-      console.log('Cleared timer');
     };
   }, []);
 
