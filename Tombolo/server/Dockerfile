@@ -31,6 +31,6 @@ COPY . app
 
 WORKDIR /app
 
-RUN pnpm install -g node-gyp sequelize-cli pm2 && pnpm install
+RUN pnpm add -g node-gyp sequelize-cli pm2 && pnpm install
 # Entry point is set on docker-compose, uncomment if docker-compose is not used
 # ENTRYPOINT ["sh", "/app/docker-entry.sh", "mysql_db", "3306"]
