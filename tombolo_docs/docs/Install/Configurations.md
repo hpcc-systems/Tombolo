@@ -15,6 +15,24 @@ To get Tombolo up and running, you'll need to configure two essential files. For
 2. **Client-Specific Environment File**:
    This file is specific to the client-side application and is located in `Tombolo/Tombolo/client-reactjs/.env`.
 
+---
+
+## Using Akeyless for Secure Secrets Management
+
+Tombolo supports storing sensitive values (such as passwords and encryption keys) securely in Akeyless. This allows you to avoid keeping critical secrets directly in your .env files. If you plan to use Akeyless:
+
+1. Provide the Akeyless configuration details in your .env file (e.g., access ID, access key, and path prefix).
+2. Do not move all variables to Akeyless - certain values such as HOST, PORT, and other Docker-related settings must remain in the .env file, as they are required by docker-compose. Moving them to Akeyless will cause your environment to break.
+3. If the same variable exists in both Akeyless and .env, the .env value takes precedence.
+
+**Good candidates for storing in Akeyless include:**
+
+- Database usernames and passwords
+- Encryption or API keys
+- Other sensitive credentials or tokens
+
+---
+
 <div class="important_block">
 > **Important**: Review and understand the variables in these files as they may differ depending on your environment. Detailed explanations for each variable are provided below.
 </div>
@@ -30,7 +48,27 @@ To get Tombolo up and running, you'll need to configure two essential files. For
 
 Below are the server and Docker-related configuration variables for Tombolo. These variables are also referenced in the Docker Compose file. Each one is explained with its purpose and usage.
 
-### 1. Instance Configuration
+### 1. Akeyless Configuration
+
+- **AKEYLESS_API_URL**
+  The base API URL for your Akeyless instance.
+  _Example:_ `https://api.akeyless.io`
+
+- **AKEYLESS_PATH_PREFIX**
+  The path prefix where your secrets are stored in Akeyless. All secrets under this path will be loaded.
+  _Example:_ `/tombolo/secrets`
+
+- **AKEYLESS_ACCESS_ID**
+  The access ID for authenticating with Akeyless API.
+  _Example:_ `p-xxxxx`
+
+- **AKEYLESS_ACCESS_KEY**
+  The access key for authenticating with Akeyless API. Keep this secure.
+  _Example:_ `your-secret-access-key`
+
+---
+
+### 2. Instance Configuration
 
 - **INSTANCE_NAME**
   This variable is used to give a unique name to the instance of the Tombolo application.
@@ -46,7 +84,7 @@ Below are the server and Docker-related configuration variables for Tombolo. The
 
 ---
 
-### 2. Host, Port, and Web URL Configuration
+### 3. Host, Port, and Web URL Configuration
 
 - **HOSTNAME**
   This defines the hostname that Tombolo will use. Typically, `localhost` is used for local development, but in a production setup, this could be a domain name or an IP address where the Tombolo server is hosted.
@@ -70,7 +108,7 @@ Below are the server and Docker-related configuration variables for Tombolo. The
 
 ---
 
-### 3. SSL Certificate Configuration (Nginx)
+### 4. SSL Certificate Configuration (Nginx)
 
 These configurations are required if you're using SSL/TLS. Ignore if not using SSL.
 
@@ -88,7 +126,7 @@ These configurations are required if you're using SSL/TLS. Ignore if not using S
 
 ---
 
-### 4. Database Configuration
+### 5. Database Configuration
 
 - **MYSQL_SSL_ENABLED**
   Determines whether SSL is enabled for the MySQL connection. Set this to `true` in production environment.
@@ -117,7 +155,7 @@ These configurations are required if you're using SSL/TLS. Ignore if not using S
 
 ---
 
-### 5. Authentication and Authorization Configuration
+### 6. Authentication and Authorization Configuration
 
 Tombolo offers two authentication methods: traditional authentication and Azure AD. By default, traditional authentication is enabled and is required for your ownership account. Regardless of whether you use Azure AD for authentication, the following three variables must be provided.
 
@@ -135,7 +173,7 @@ To generate these secret tokens, you can use the following bash command:
 
 ---
 
-### 6. OAuth 2.0 (Azure) Configuration
+### 7. OAuth 2.0 (Azure) Configuration
 
 <div class="important_block">
 > **Important**: Azure AD authentication is optional, and you are not required to set Azure configuration variables
@@ -161,7 +199,7 @@ The first step to using Microsoft Entra ID for authentication is to register an 
 
 ---
 
-### 7. Email Configuration
+### 8. Email Configuration
 
 Tombolo does not include a built-in SMTP server. To enable email functionality (e.g., notifications), you will need to configure an external SMTP server:
 
@@ -192,7 +230,7 @@ Some services we recommend are: [SendGrid](https://sendgrid.com/), [Mailgun](htt
 
 ---
 
-### 8. Security Configuration
+### 9. Security Configuration
 
 - **ENCRYPTION_KEY**
   This key is used for hashing, encryption, and decryption operations within Tombolo. You can generate this key using OpenSSL:
@@ -200,11 +238,11 @@ Some services we recommend are: [SendGrid](https://sendgrid.com/), [Mailgun](htt
 
 ---
 
-### 9. Integration-Specific Configuration
+### 10. Integration-Specific Configuration
 
 If you have any integrations enabled and they have environment variables, they can be added to this configuration file as well. There is a placeholder section for those integration-specific variables. Please add them there.
 
-### 10. Test Configuration
+### 11. Test Configuration
 
 - **RATE_LIMIT_REQUEST_MAX**
   The amount of requests per 15 minutes that will rate limit a user.
