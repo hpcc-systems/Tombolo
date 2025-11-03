@@ -1,0 +1,19 @@
+{
+  "name": "@tombolo/db",
+  "private": true,
+  "version": "0.1.0",
+  "main": "models/index.js",
+  "description": "Shared database models, migrations, and connection configuration for Tombolo",
+  "dependencies": {
+    "sequelize": "^6.35.2",
+    "mysql2": "^3.6.5",
+    "dotenv": "^16.3.1"
+  },
+  "scripts": {
+    "build": "echo 'no build step for db'",
+    "migrate": "sequelize db:migrate",
+    "create": "sequelize db:create",
+    "seed": "sequelize db:seed:all",
+    "drop": "sequelize db:drop"
+  }
+}

@@ -6,12 +6,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "bootstrap-server": "(pnpm install) && (pnpm run createSchema) && (pnpm run migrations)  && (pnpm run seeds) && (pnpm exec nodemon server.js)",
-    "createSchema": "pnpm exec sequelize db:create",
-    "migrations": "pnpm exec sequelize db:migrate",
-    "build": "echo No build step for server",
-    "seeds": "pnpm exec sequelize db:seed:all",
-    "dropSchema": "pnpm exec sequelize db:drop",
+    "bootstrap-server": "(pnpm install) && (pnpm exec nodemon server.js)",
+    "build": "echo 'No build step for server'",
     "test": "jest --detectOpenHandles",
     "test:jobs": "jest --detectOpenHandles --selectProjects jobs",
     "test:api": "jest --detectOpenHandles --selectProjects api",
@@ -22,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@tombolo/db": "workspace:*",
     "@hpcc-js/comms": "^3.7.6",
     "akeyless": "^5.0.12",
     "axios": "^1.1.3",
