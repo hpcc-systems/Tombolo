@@ -17,7 +17,7 @@ const { User } = require('../models');
 // Validate registration payload
 const validateNewUserPayload = [
   stringBody('registrationMethod', false, {
-    isIn: ['traditional', 'microsoft'],
+    isIn: ['traditional', 'azure'],
   }),
   stringBody('firstName', { length: { ...NAME_LENGTH } }),
   stringBody('lastName', { length: { ...NAME_LENGTH } }),

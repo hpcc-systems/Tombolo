@@ -36,7 +36,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          isIn: [['traditional', 'microsoft']],
+          isIn: [['traditional', 'azure']],
         },
       },
       verifiedUser: {
