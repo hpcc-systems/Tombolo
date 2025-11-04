@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Tooltip, Form, Select, Input, Checkbox, message } from 'antd';
+import { Modal, Button, Tooltip, Form, Select, Input, Checkbox } from 'antd';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 
 /**
  * Shared Approve/Reject Modal for monitoring types
@@ -26,6 +27,7 @@ const ApproveRejectModal = ({
   monitoringTypeLabel = 'Monitoring',
   evaluateMonitoring,
   onSuccess,
+  onSubmit,
   ...modalProps
 }) => {
   const [form] = Form.useForm();
@@ -79,12 +81,17 @@ const ApproveRejectModal = ({
         formData.isActive = !!formData.isActive;
       }
 
+      if (onSubmit) {
+        await onSubmit(formData);
+        return;
+      }
+
       // Extensibility: expects a setMonitoring function to update the list after evaluation
       // You should pass an async function via props to handle the evaluation and update
       if (typeof evaluateMonitoring === 'function') {
         const response = await evaluateMonitoring(formData);
-        const updatedMonitoring = response?.data;
-        if (Array.isArray(updatedMonitoring)) {
+        const updatedMonitoring = response?.data || response; // response already returns data - part of axios implementation
+        if (Array.isArray(updatedMonitoring) && setMonitoring) {
           // When API returns an array of updated items
           setMonitoring((prevMonitoring) => {
             const updatedIds = updatedMonitoring.map((mon) => mon.id);
@@ -94,7 +101,7 @@ const ApproveRejectModal = ({
                 : mon
             );
           });
-          message.success(response?.message || 'Your response has been saved');
+          handleSuccess(response?.message || 'Your response has been saved');
           form.resetFields();
           // If a single item was selected, keep the modal display consistent by updating it as well
           if (selectedMonitoring && updatedMonitoring.length === 1) {
@@ -117,12 +124,12 @@ const ApproveRejectModal = ({
           if (selectedMonitoring && selectedMonitoring.id === updatedObj.id) {
             setSelectedMonitoring(updatedObj);
           }
-          message.success(response?.message || 'Your response has been saved');
+          handleSuccess(response?.message || 'Your response has been saved');
           form.resetFields();
           onCancel();
         } else if (response?.success || typeof response === 'string') {
           // If response is a success object or a string message, show success and close
-          message.success(
+          handleSuccess(
             response?.message || (typeof response === 'string' ? response : 'Your response has been saved')
           );
           if (onSuccess) {
@@ -132,13 +139,13 @@ const ApproveRejectModal = ({
           setSelectedMonitoring(null);
           onCancel();
         } else {
-          message.error('Evaluation did not return a valid array or object.');
+          handleError('Evaluation did not return a valid array or object.');
         }
       } else {
-        message.error('No evaluation handler provided.');
+        handleError('No evaluation handler provided.');
       }
     } catch (error) {
-      message.error(error.message);
+      handleError(error.message);
     } finally {
       setSavingEvaluation(false);
     }

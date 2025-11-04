@@ -1,10 +1,11 @@
 // Package imorts
 import React, { useState, useEffect } from 'react';
-import { Table, Space, Popconfirm, Tag, message } from 'antd';
+import { Table, Space, Popconfirm, Tag } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { handleError } from '../../../common/handleResponse';
 
 // Local imports
-import { getProducts, deleteProduct } from './asr-integration-util';
+import asrService from '@/services/asr.service';
 import useWindowSize from '@/hooks/useWindowSize';
 
 const ProductsTab = ({ products, setSelectedProduct, setProductModalOpen, setProducts }) => {
@@ -124,11 +125,11 @@ const ProductsTab = ({ products, setSelectedProduct, setProductModalOpen, setPro
   // Handle product deletion
   const handleDelete = async (record) => {
     try {
-      await deleteProduct({ id: record.id });
-      const updatedProducts = await getProducts();
+      await asrService.deleteProduct({ id: record.id });
+      const updatedProducts = await asrService.getAllProducts();
       setProducts(updatedProducts);
     } catch (err) {
-      message.error('Failed to delete product');
+      handleError('Failed to delete product');
     }
   };
 

@@ -1,11 +1,14 @@
+// Imports from libraries
 import React, { useEffect, useState, useRef } from 'react';
-import { Form, Input, Button, Divider, message, Popover } from 'antd';
-import { Link, useParams } from 'react-router-dom';
-import passwordComplexityValidator from '../common/passwordComplexityValidator';
-import { authHeader } from '../common/AuthHeader';
+import { Form, Input, Button, Divider, Popover } from 'antd';
+import { useParams } from 'react-router-dom';
 
+// Local imports
+import passwordComplexityValidator from '../common/passwordComplexityValidator';
+import { handleError, handleSuccess } from '../common/handleResponse';
 import { getDeviceInfo } from './utils';
 import { setUser } from '../common/userStorage';
+import authService from '@/services/auth.service';
 
 const ResetPassword = () => {
   const [popOverContent, setPopOverContent] = useState(null);
@@ -14,8 +17,6 @@ const ResetPassword = () => {
   //we will get the reset token from the url and test if it is valid to get the user information
   const { resetToken } = useParams();
   const [form] = Form.useForm();
-
-  const [messageApi, contextHolder] = message.useMessage();
 
   //ref to track if user is finished typing
   const finishedTypingRef = useRef(false);
@@ -59,31 +60,22 @@ const ResetPassword = () => {
   };
 
   const onLoad = async () => {
-    //get user details from /api/auth//getUserDetailsWithToken/:token
+    //get user details from service
     try {
-      const url = '/api/auth/getUserDetailsWithToken/' + resetToken;
+      const response = await authService.getUserDetailsWithToken(resetToken);
 
-      const response = await fetch(url, {
-        headers: authHeader(),
-        method: 'GET',
-      });
-
-      if (!response.ok) {
-        let json = await response.json();
-        if (json.message) {
-          message.error(json.message);
+      if (!response.success) {
+        if (response.message) {
+          handleError(response.message);
         } else {
-          message.error('An undefined error occurred. Please try again later');
+          handleError('An undefined error occurred. Please try again later');
         }
         return;
       }
 
-      if (response.ok) {
-        let json = await response.json();
-        setUserDetails(json?.user);
-      }
+      setUserDetails(response.data?.user || response.user);
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     }
   };
 
@@ -94,21 +86,9 @@ const ResetPassword = () => {
   }, [resetToken, userDetails]);
 
   const invalidToken = () => {
-    messageApi.open({
-      type: 'error',
-      content: (
-        <>
-          <span>
-            The reset token provided is either expired or invalid, please go to the{' '}
-            <Link to="/forgot-password">Forgot Password</Link> page to get a new one.
-          </span>
-        </>
-      ),
-      duration: 100,
-      style: {
-        marginTop: '20vh',
-      },
-    });
+    handleError(
+      'The reset token provided is either expired or invalid, please go to the Forgot Password page to get a new one.'
+    );
   };
 
   //if there is no token, we will show an error message to the user
@@ -120,39 +100,34 @@ const ResetPassword = () => {
 
   const onFinish = async (values) => {
     try {
-      const url = '/api/auth/resetPasswordWithToken';
       const password = values.newPassword;
       const deviceInfo = getDeviceInfo();
 
-      const response = await fetch(url, {
-        headers: authHeader(),
-        method: 'POST',
-        body: JSON.stringify({ password, token: resetToken, deviceInfo }),
+      const response = await authService.resetPasswordWithToken({
+        password,
+        token: resetToken,
+        deviceInfo,
       });
 
-      if (!response.ok) {
-        let json = await response.json();
-
-        if (json.message) {
-          message.error(json.message);
+      if (!response.success) {
+        if (response.message) {
+          handleError(response.message);
         } else {
-          message.error('An undefined error occurred. Please try again later');
+          handleError('An undefined error occurred. Please try again later');
         }
         return;
       }
 
-      if (response.ok) {
-        message.success('Password reset successfully.');
-        let json = await response.json();
-        if (json.success === true) {
-          json.data.isAuthenticated = true;
-          setUser(json.data);
-          //reload window
-          window.location.href = '/';
-        }
+      handleSuccess('Password reset successfully.');
+      if (response.success === true) {
+        const userData = response.data || response;
+        userData.isAuthenticated = true;
+        setUser(userData);
+        //reload window
+        window.location.href = '/';
       }
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     }
   };
 
@@ -160,7 +135,6 @@ const ResetPassword = () => {
 
   return (
     <Form onFinish={onFinish} layout="vertical" form={form}>
-      {contextHolder}
       <Divider>Reset Password</Divider>
       <Popover content={popOverContent} title="Password Complexity" trigger="focus" placement="right">
         <Form.Item

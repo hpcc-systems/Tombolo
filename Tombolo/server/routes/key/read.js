@@ -9,6 +9,7 @@ const {
   validateGetKeysByAppId,
   validateDeleteKey,
 } = require('../../middlewares/keyMiddlware');
+const { sendSuccess, sendError } = require('../../utils/response');
 const path = require('path');
 const fs = require('fs');
 const rootENV = path.join(process.cwd(), '..', '.env');
@@ -55,10 +56,10 @@ router.post(
       });
 
       newKey.apiKey = key;
-      return res.status(200).send(newKey);
+      return sendSuccess(res, newKey, 'API key created successfully');
     } catch (error) {
       logger.error('key/read - newKey: ', error);
-      return res.status(500).json({ message: 'Unable to generate new key' });
+      return sendError(res, 'Unable to generate new key');
     }
   }
 );
@@ -77,10 +78,10 @@ router.get(
         raw: true,
       });
 
-      return res.status(200).send(keys);
+      return sendSuccess(res, keys);
     } catch (error) {
       logger.error('key/read - all: ', error);
-      return res.status(500).json({ message: 'Unable to fetch keys' });
+      return sendError(res, 'Unable to fetch keys');
     }
   }
 );
@@ -93,9 +94,10 @@ router.delete('/:id', validate(validateDeleteKey), async (req, res) => {
       where: { id: id },
     });
 
-    return res.status(200).json({ message: `Deleted ${response} api key` });
+    if (!response) return sendError(res, 'API key not found', 404);
+    return sendSuccess(res, null, `Deleted ${response} API key successfully`);
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    return sendError(res, err.message);
   }
 });
 

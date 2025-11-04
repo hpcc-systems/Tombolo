@@ -4,5 +4,5 @@
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
   "jest.rootPath": "Tombolo/server",
-  "cSpell.words": ["AKEYLESS"]
+  "cSpell.words": ["monitorings", "AKEYLESS"]
 }

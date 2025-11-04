@@ -1,5 +1,8 @@
+// Imports from libraries
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Col, Row, Divider, Popover, Spin } from 'antd';
+
+// Local imports
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
 
 //TODO, msenabled should check if microsoft login is enabled

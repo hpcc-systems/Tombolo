@@ -1,9 +1,15 @@
+// Imports from libraries
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const { Op } = require('sequelize');
+const moment = require('moment');
+
+// Local imports
 const logger = require('../config/logger');
 const roleTypes = require('../config/roleTypes');
+const { sendSuccess, sendError } = require('../utils/response');
 const {
   User,
   UserRole,
@@ -18,8 +24,6 @@ const {
   InstanceSetting,
   sequelize,
 } = require('../models');
-const { Op } = require('sequelize');
-const moment = require('moment');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -49,10 +53,7 @@ const createApplicationOwner = async (req, res) => {
 
     // If the OWNER role type is not found, return a 409 conflict response
     if (!role || !role.id) {
-      return res.status(409).json({
-        success: false,
-        message: 'Owner role not found in the system',
-      });
+      return sendError(res, 'Owner role not found in the system', 409);
     }
 
     // Check if a user with the OWNER role already exists
@@ -60,31 +61,35 @@ const createApplicationOwner = async (req, res) => {
 
     // If an owner is found, return a 409 conflict response
     if (owner) {
-      return res.status(409).json({
-        success: false,
-        message: 'An owner already exists in the system',
-      });
+      return sendError(res, 'An owner already exists in the system', 409);
     }
 
     // Check if the password meets the security requirements
-    const passwordSecurityViolations = checkPasswordSecurityViolations({
-      password: req.body.password,
-      user: {
+    const passwordSecurityViolations = await checkPasswordSecurityViolations(
+      {
+        password: req.body.password,
         email: req.body.email,
         firstName: req.body.firstName,
         lastName: req.body.lastName,
       },
-      newUser: true,
-    });
+      payload,
+      {
+        email: req.body.email,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+      },
+      {
+        newUser: true,
+      }
+    );
 
     if (passwordSecurityViolations.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password does not meet security requirements',
-      });
-    }
-
-    // Hash password and set expiry
+      return sendError(
+        res,
+        'Password does not meet security requirements',
+        400
+      );
+    } // Hash password and set expiry
     const salt = bcrypt.genSaltSync(10);
     payload.hash = bcrypt.hashSync(req.body.password, salt);
     setPasswordExpiry(payload);
@@ -134,16 +139,10 @@ const createApplicationOwner = async (req, res) => {
     });
 
     // Send response
-    return res.status(201).json({
-      success: true,
-      message: 'User created successfully',
-    });
+    return sendSuccess(res, null, 'User created successfully', 201);
   } catch (err) {
     logger.error(`Create user: ${err.message}`);
-
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -164,10 +163,11 @@ const createBasicUser = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password does not meet security requirements',
-      });
+      return sendError(
+        res,
+        'Password does not meet security requirements',
+        400
+      );
     }
 
     // Hash password and set expiry
@@ -213,15 +213,10 @@ const createBasicUser = async (req, res) => {
     });
 
     // Send response
-    return res.status(201).json({
-      success: true,
-      message: 'User created successfully',
-    });
+    return sendSuccess(res, null, 'User created successfully', 201);
   } catch (err) {
     logger.error(`Create user: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -233,23 +228,19 @@ const verifyEmail = async (req, res) => {
     // Find the account verification code
     const accountVerificationCode = await AccountVerificationCode.findOne({
       where: { code: token },
+      raw: true,
     });
 
     // Token does not exist
     if (!accountVerificationCode) {
       logger.error(`Verify email: Token ${token} does not exist`);
-      return res.status(404).json({
-        success: false,
-        message: 'Invalid or expired verification token',
-      });
+      return sendError(res, 'Invalid or expired verification token', 404);
     }
 
     // Token has expired
     if (new Date() > accountVerificationCode.expiresAt) {
       logger.error(`Verify email: Token ${token} has expired`);
-      return res
-        .status(400)
-        .json({ success: false, message: 'Verification token has expired' });
+      return sendError(res, 'Verification token has expired', 400);
     }
 
     // Find the user
@@ -324,16 +315,14 @@ const verifyEmail = async (req, res) => {
     await setLastLogin(user);
 
     // Send response
-    return res.status(200).json({
-      success: true,
-      message: 'Email verified successfully',
-      data: { ...user.toJSON() },
-    });
+    return sendSuccess(
+      res,
+      { ...user.toJSON() },
+      'Email verified successfully'
+    );
   } catch (err) {
     logger.error('Failed to verify email', err);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -361,18 +350,20 @@ const resetPasswordWithToken = async (req, res) => {
 
     // If accountVerificationCode not found
     if (!accountVerificationCode) {
-      throw { status: 404, message: 'Invalid or expired reset token' };
+      throw { status: 404, message: 'User not found' };
     }
 
-    // If accountVerificationCode has expired
-    if (new Date() > accountVerificationCode.expiresAt) {
+    // Check if the token is expired
+    if (
+      accountVerificationCode.expiresAt &&
+      moment().isAfter(accountVerificationCode.expiresAt)
+    ) {
       throw { status: 400, message: 'Reset token has expired' };
     }
+    const user = await User.findByPk(accountVerificationCode.userId, {
+      transaction,
+    });
 
-    // Find user by ID
-    let user = await getAUser({ id: accountVerificationCode.userId });
-
-    // If user not found
     if (!user) {
       throw { status: 404, message: 'User not found' };
     }
@@ -384,56 +375,39 @@ const resetPasswordWithToken = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
-      try {
-        await transaction.rollback();
-      } catch (rollbackError) {
-        logger.error('Rollback failed:', rollbackError);
-      }
-      return res.status(400).json({
-        success: false,
-        message: 'Password does not meet security requirements',
-      });
+      return sendError(
+        res,
+        'Password does not meet security requirements',
+        400
+      );
     }
 
-    // Hash the new password and set expiry
-    const salt = bcrypt.genSaltSync(10);
-    user.hash = bcrypt.hashSync(password, salt);
-    user.verifiedUser = true;
-    user.verifiedAt = new Date();
-    user.forcePasswordReset = false;
-    setPasswordExpiry(user);
-    setPreviousPasswords(user);
-    setLastLoginAndReturn(user);
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Save user with updated details
-    await User.update(
+    // Update user password and related fields
+    await user.update(
       {
-        hash: user.hash,
-        metaData: user.metaData,
-        passwordExpiresAt: user.passwordExpiresAt,
-        forcePasswordReset: user.forcePasswordReset,
-        lastLoginAt: user.lastLoginAt,
+        hash: hashedPassword,
+        lastPasswordUpdate: new Date(),
+        forcePasswordReset: false,
+        passwordExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+        metaData: {
+          ...user.metaData,
+          previousPasswords: [
+            ...(user.metaData?.previousPasswords || []),
+            user.hash,
+          ].slice(-5), // Keep last 5 passwords
+        },
       },
-      {
-        where: { id: user.id },
-        transaction,
-      }
+      { transaction }
     );
 
-    // Delete the account verification code
-    await AccountVerificationCode.destroy({
-      where: { code: token },
-      transaction,
-    });
+    // Remove the account verification code
+    await accountVerificationCode.destroy({ transaction });
 
-    //delete password reset link
+    // Remove all password reset links for this user
     await PasswordResetLink.destroy({
-      where: { id: token },
-      transaction,
-    });
-
-    //remove all sessions for user before initiating new session
-    await RefreshToken.destroy({
       where: { userId: user.id },
       transaction,
     });
@@ -508,11 +482,7 @@ const resetPasswordWithToken = async (req, res) => {
     await setLastLogin(user);
 
     // Success response
-    return res.status(200).json({
-      success: true,
-      message: 'Password updated successfully',
-      data: userObj,
-    });
+    return sendSuccess(res, userObj, 'Password updated successfully');
   } catch (err) {
     // Rollback the transaction if it exists
     if (transaction) {
@@ -523,34 +493,17 @@ const resetPasswordWithToken = async (req, res) => {
       }
     }
     logger.error(`Reset Password With Token: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
 //Reset Password with Temp Password - Owner/Admin requested
 const resetTempPassword = async (req, res) => {
   try {
-    const { password, token, deviceInfo } = req.body;
-
-    // From the AccountVerificationCode table findUser ID by code, where code is resetToken
-    const accountVerificationCode = await AccountVerificationCode.findOne({
-      where: { code: token },
-    });
-
-    // If accountVerificationCode not found
-    if (!accountVerificationCode) {
-      throw { status: 404, message: 'Invalid or expired reset token' };
-    }
-
-    // If accountVerificationCode has expired
-    if (new Date() > accountVerificationCode.expiresAt) {
-      throw { status: 400, message: 'Reset token has expired' };
-    }
+    const { password, email, deviceInfo } = req.body;
 
     // Find user by ID
-    let user = await getAUser({ id: accountVerificationCode.userId });
+    let user = await getAUser({ email });
 
     // If user not found
     if (!user) {
@@ -564,10 +517,11 @@ const resetTempPassword = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password does not meet security requirements',
-      });
+      return sendError(
+        res,
+        'Password does not meet security requirements',
+        400
+      );
     }
 
     // Hash the new password and set expiry
@@ -593,16 +547,6 @@ const resetTempPassword = async (req, res) => {
         where: { id: user.id },
       }
     );
-
-    // Delete the account verification code
-    await AccountVerificationCode.destroy({
-      where: { code: token },
-    });
-
-    //delete password reset link
-    await PasswordResetLink.destroy({
-      where: { id: token },
-    });
 
     //remove all sessions for user before initiating new session
     await RefreshToken.destroy({
@@ -648,26 +592,22 @@ const resetTempPassword = async (req, res) => {
     delete userObj.hash;
 
     // Success response
-    return res.status(200).json({
-      success: true,
-      message: 'Password updated successfully',
-      data: userObj,
-    });
+    return sendSuccess(res, userObj, 'Password updated successfully');
   } catch (err) {
     logger.error(`Reset Temp Password: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
 //Login Basic user
 // 401 - Unverified , Temp PW, Expired PW | 403 - Incorrect E-mail password combination | 500 - Internal server error | 200 - Success
+//Login Basic user
+// 401 - Invalid credentials | 403 - Account restrictions (unverified, temp pw, expired pw, locked) | 500 - Internal server error | 200 - Success
 const loginBasicUser = async (req, res) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
-    const genericError = 'Username and Password combination not found';
+    const genericError = 'failed'; // Use Constants.LOGIN_FAILED
 
     // find user - include user roles from UserRole table
     const user = await getAUser({ email });
@@ -675,27 +615,17 @@ const loginBasicUser = async (req, res) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-      return res.status(403).json({
-        success: false,
-        message: genericError,
-      });
+      return sendError(
+        res,
+        'User with the provided email and  password combination not found',
+        401
+      );
     }
 
+    // If force password reset is true it means user is issued a temp password and must reset password
     if (user?.forcePasswordReset) {
       logger.error(`Login : Login attempt by user with Temp PW - ${user.id}`);
-      let resetUrl = null;
-
-      if (user?.AccountVerificationCodes[0]?.code) {
-        resetUrl = `${trimURL(process.env.WEB_URL)}/reset-temporary-password/${
-          user.AccountVerificationCodes[0].code
-        }`;
-      }
-
-      return res.status(401).json({
-        success: false,
-        message: 'temp-pw',
-        resetLink: resetUrl ? resetUrl : null,
-      });
+      return sendError(res, 'temp-pw', 401); // Use Constants.LOGIN_TEMP_PW
     }
 
     // If the accountLocked.isLocked is true, return generic error
@@ -703,10 +633,7 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login Attempt by user with locked account ${email}`
       );
-      return res.status(403).json({
-        success: false,
-        message: genericError,
-      });
+      return sendError(res, 'account-locked', 401);
     }
 
     //Compare password
@@ -718,10 +645,7 @@ const loginBasicUser = async (req, res) => {
     // If not verified user return error
     if (!user.verifiedUser) {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
-      return res.status(401).json({
-        success: false,
-        message: 'unverified',
-      });
+      return sendError(res, 'unverified', 401); // Use Constants.LOGIN_UNVERIFIED
     }
 
     //if password has expired
@@ -729,31 +653,14 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login attempt by user with expired password - ${user.id}`
       );
-
-      return res.status(401).json({
-        success: false,
-        message: 'password-expired',
-      });
+      return sendError(res, 'password-expired', 401); // Use Constants.LOGIN_PW_EXPIRED
     }
 
-    // If force password reset is true it  means user is issued a temp password and must reset password
-    if (user.forcePasswordReset) {
-      logger.error(
-        `Login : Login attempt by user with temp password - ${user.id}`
-      );
-      return res.status(401).json({
-        success: false,
-        message: 'temp-password',
-      });
-    }
-
-    // If user is an registered to azure, throw error
+    // If user is registered to azure, throw error
     if (user.registrationMethod === 'azure') {
       logger.error(
         `Login : Login attempt by azure user - ${user.id} - ${user.email}`
       );
-
-      // Incorrect E-mail password combination error
       const azureError = new Error(
         'Email is registered with a Microsoft account. Please sign in with Microsoft'
       );
@@ -761,7 +668,7 @@ const loginBasicUser = async (req, res) => {
       throw azureError;
     }
 
-    // Remove hash from use object
+    // Remove hash from user object
     const userObj = user.toJSON();
     delete userObj.hash;
 
@@ -776,8 +683,6 @@ const loginBasicUser = async (req, res) => {
 
     // Save refresh token to DB
     const { iat, exp } = jwt.decode(refreshToken);
-
-    //get device info from request
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -798,20 +703,13 @@ const loginBasicUser = async (req, res) => {
     await setLastLogin(user);
 
     // Success response
-    return res.status(200).json({
-      success: true,
-      message: 'User logged in successfully',
-      data: userObj,
-    });
+    return sendSuccess(res, userObj, 'success'); // Use Constants.LOGIN_SUCCESS
   } catch (err) {
     logger.error(`Login user: ${err.message}`);
-    // If err.status is present - it is logged already
     if (!err.status) {
       logger.error(`Login user: ${err.message}`);
     }
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -834,12 +732,10 @@ const logOutBasicUser = async (req, res) => {
     // Add access token to the blacklist
     await blacklistToken({ tokenId, exp: decodedToken.exp });
 
-    return res.status(200).json({ success: true, message: 'User logged out' });
+    return sendSuccess(res, null, 'User logged out');
   } catch (err) {
     logger.error(`Logout user: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -871,7 +767,7 @@ const handlePasswordResetRequest = async (req, res) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Reset password: User with email ${email} does not exist`);
-      return res.status(404).json({ success: false });
+      return sendError(res, 'User not found', 404);
     }
 
     //need to check if user is an owner or admin to see if they are allowed to reset password without admin assistance
@@ -892,9 +788,7 @@ const handlePasswordResetRequest = async (req, res) => {
       //send password expired email
       await sendPasswordExpiredEmail(user);
 
-      return res.status(403).json({
-        success: false,
-      });
+      return sendError(res, 'Password expired', 403);
     }
 
     // Stop users form abusing this endpoint - allow 4 requests per hour
@@ -912,7 +806,7 @@ const handlePasswordResetRequest = async (req, res) => {
       logger.error(
         `Reset password: User with email ${email} has exceeded the limit of password reset requests`
       );
-      return res.status(429).json({ success: false });
+      return sendError(res, 'Too many requests', 429);
     }
 
     // Generate a password reset token
@@ -968,12 +862,10 @@ const handlePasswordResetRequest = async (req, res) => {
     });
 
     // response
-    return res.status(200).json({ success: true });
+    return sendSuccess(res, null, 'Password reset request processed');
   } catch (err) {
     logger.error(`Reset password: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -1031,11 +923,11 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
     // If user exists and is not an azure user
     if (userExists.exists && userExists.registrationMethod !== 'azure') {
-      return res.status(409).json({
-        success: false,
-        message:
-          'This account was created with a different login method. Please sign in with your username and password instead of using Microsoft',
-      });
+      return sendError(
+        res,
+        'This account was created with a different login method. Please sign in with your username and password instead of using Microsoft',
+        409
+      );
     }
 
     // If user does not exist create user - issues necessary tokens etc just like registering  traditional user
@@ -1087,11 +979,12 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       await setLastLogin(newUser);
 
       // Send response
-      return res.status(201).json({
-        success: true,
-        message: 'User created successfully',
-        data: { ...newUserPlain },
-      });
+      return sendSuccess(
+        res,
+        { ...newUserPlain },
+        'User created successfully',
+        201
+      );
     }
 
     // If user exists and is azure user
@@ -1122,18 +1015,15 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
     // Set last login
     await setLastLogin(user);
-
     // Send response
-    return res.status(200).json({
-      success: true,
-      message: 'User logged in successfully',
-      data: { ...user.toJSON() },
-    });
+    return sendSuccess(
+      res,
+      { ...user.toJSON() },
+      'User logged in successfully'
+    );
   } catch (err) {
     logger.error(`Login or Register Azure User: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -1143,15 +1033,13 @@ const requestAccess = async (req, res) => {
 
     const user = await User.findOne({ where: { id } });
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
-    const instance_setting = await InstanceSetting.findOne({
-      where: { name: 'contactEmail' },
-    });
+    const instance_setting = await InstanceSetting.findOne({ raw: true });
 
     if (!instance_setting) {
-      return res.status(404).json({ message: 'No contact email found.' });
+      return sendError(res, 'No contact email found', 404);
     }
 
     const existingNotification = await SentNotification.findOne({
@@ -1170,8 +1058,43 @@ const requestAccess = async (req, res) => {
           'Access request from user already sent within 24 hours. User: ' +
             user.email
         );
-        return res.status(200).json({ message: 'Access request already sent' });
+        return sendSuccess(res, null, 'Access request already sent');
       }
+    }
+
+    const { metaData } = instance_setting;
+    let recipients = metaData?.accessRequestEmailRecipientsEmail || [];
+
+    if (
+      metaData?.accessRequestEmailRecipientsRoles &&
+      metaData.accessRequestEmailRecipientsRoles.length > 0
+    ) {
+      const roles = metaData.accessRequestEmailRecipientsRoles;
+
+      // Get role ids
+      const roleDetails = await RoleType.findAll({
+        where: { roleName: roles },
+        raw: true,
+      });
+
+      const roleIds = roleDetails.map(r => {
+        return r.id;
+      });
+
+      // Get all users with the roleIds above
+      const users = await UserRole.findAll({
+        where: { roleId: roleIds },
+        include: [
+          {
+            model: User, // or just User if it's in scope
+            as: 'user', // This matches the alias in your association
+            attributes: ['email'],
+          },
+        ],
+      });
+
+      const emails = users.map(u => u.user.email);
+      recipients = [...recipients, ...emails];
     }
 
     const searchableNotificationId = uuidv4();
@@ -1191,17 +1114,17 @@ const requestAccess = async (req, res) => {
           process.env.WEB_URL
         )}/admin/userManagement`,
         subject: `User Access Request from ${user.email}`,
-        mainRecipients: [instance_setting.value],
+        mainRecipients: recipients,
         notificationDescription: 'User Access Request',
         validForHours: 24,
       },
       createdBy: user.id,
     });
 
-    return res.status(200).json({ message: 'Access requested successfully' });
+    return sendSuccess(res, null, 'Access requested successfully');
   } catch (e) {
     logger.error(`Request Access: ${e.message}`);
-    return res.status(500).json({ message: e.message });
+    return sendError(res, e);
   }
 };
 
@@ -1264,15 +1187,13 @@ const resendVerificationCode = async (req, res) => {
       createdBy: user.id,
     });
 
-    return res.status(200).json({
-      success: true,
-      message: 'Verification code sent successfully',
-    });
+    // Update last verification code sent timestamp
+    await user.update({ lastVerificationCodeSentAt: Date.now() });
+
+    return sendSuccess(res, null, 'Verification code sent successfully');
   } catch (err) {
     logger.error(`Resend verification code: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -1288,7 +1209,7 @@ const getUserDetailsWithToken = async (req, res) => {
     });
 
     if (!userId) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     const id = userId.userId;
@@ -1298,7 +1219,7 @@ const getUserDetailsWithToken = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     //only grab the details we need
@@ -1310,12 +1231,10 @@ const getUserDetailsWithToken = async (req, res) => {
       newUser: user.newUser,
     };
 
-    return res.status(200).json({ user: userObj });
+    return sendSuccess(res, { user: userObj });
   } catch (err) {
     logger.error(`getUserDetailsWithToken: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -1331,7 +1250,7 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
     });
 
     if (!userId) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     const id = userId.userId;
@@ -1341,7 +1260,7 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     //check if it is a new user
@@ -1363,12 +1282,10 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       newUser: user.newUser,
     };
 
-    return res.status(200).json({ user: userObj });
+    return sendSuccess(res, { user: userObj });
   } catch (err) {
-    logger.error(`getUserDetailsWithToken: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    logger.error(`getUserDetailsWithVerificationCode: ${err.message}`);
+    return sendError(res, err);
   }
 };
 
@@ -1381,18 +1298,16 @@ const requestPasswordReset = async (req, res) => {
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     // Send E-mail to access request email
     const response = await sendPasswordExpiredEmail(user);
 
-    return res.status(200).json({ message: response.message });
+    return sendSuccess(res, null, response.message);
   } catch (err) {
     logger.error(`Request password reset: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 

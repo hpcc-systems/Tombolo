@@ -9,6 +9,7 @@ const {
   validateGetGhProjects,
 } = require('../../middlewares/ghProjectsMiddleware');
 const logger = require('../../config/logger');
+const { sendSuccess, sendError } = require('../../utils/response');
 
 router.post('/', validate(validateCreateGhProject), async (req, res) => {
   try {
@@ -52,10 +53,10 @@ router.post('/', validate(validateCreateGhProject), async (req, res) => {
     logger.info({ projectToJson, defaultFields });
     logger.info('------------------------------------------');
 
-    return res.status(200).send({ success: true, id: project.id });
+    return sendSuccess(res, { id: project.id }, 'Project saved successfully');
   } catch (error) {
     logger.error('gh_projects/index create: ', error);
-    return res.status(500).send('Error occurred while saving project');
+    return sendError(res, 'Error occurred while saving project');
   }
 });
 
@@ -66,12 +67,12 @@ router.delete('/', validate(validateDeleteGhProject), async (req, res) => {
     const deleted = await GithubRepoSetting.destroy({
       where: { id, application_id },
     });
-    if (!deleted) throw new Error('Project does not exist');
+    if (!deleted) return sendError(res, 'Project does not exist', 404);
 
-    return res.status(200).send({ success: true });
+    return sendSuccess(res, null, 'Project deleted successfully');
   } catch (error) {
     logger.error('gh_projects/index delete: ', error);
-    return res.status(500).send('Error occurred while saving project');
+    return sendError(res, 'Error occurred while deleting project');
   }
 });
 
@@ -93,11 +94,10 @@ router.get('/', validate(validateGetGhProjects), async (req, res) => {
       return projectJSON;
     });
 
-    return res.status(200).send(projectList);
+    return sendSuccess(res, projectList);
   } catch (error) {
     logger.error('gh_projects/index get: ', error);
-
-    return res.status(500).send('Error occurred while retreiving credentials');
+    return sendError(res, 'Error occurred while retrieving credentials');
   }
 });
 

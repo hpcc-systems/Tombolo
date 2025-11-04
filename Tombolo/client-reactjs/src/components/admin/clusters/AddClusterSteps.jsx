@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Card, Spin } from 'antd';
 import { Loading3QuartersOutlined } from '@ant-design/icons';
-import { allStepsToAddCluster } from './clusterUtils';
+import { allStepsToAddCluster } from '@/services/clusters.service';
 
 function AddClusterSteps({
   completedSteps,

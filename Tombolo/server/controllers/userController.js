@@ -3,11 +3,14 @@ const { v4: UUIDV4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Local imports
 const logger = require('../config/logger');
+const { sendSuccess, sendError } = require('../utils/response');
 const {
   User,
   UserRole,
@@ -15,6 +18,7 @@ const {
   NotificationQueue,
   AccountVerificationCode,
   PasswordResetLink,
+  RefreshToken,
 } = require('../models');
 const {
   setPasswordExpiry,
@@ -25,6 +29,10 @@ const {
   sendAccountUnlockedEmail,
   deleteUser: deleteUserUtil,
   checkIfSystemUser,
+  generateAccessToken,
+  generateRefreshToken,
+  setTokenCookie,
+  generateAndSetCSRFToken,
 } = require('../utils/authUtil');
 
 const whereNotSystemUser = {
@@ -44,18 +52,14 @@ const deleteUser = async (req, res) => {
 
     // If the deleted count is 0, user not found
     if (!deleted) {
-      throw { status: 404, message: 'Error Removing User.' };
+      return sendError(res, 'Error Removing User.', 404);
     }
 
     // User successfully deleted
-    res
-      .status(200)
-      .json({ success: true, message: 'User deleted successfully' });
+    return sendSuccess(res, null, 'User deleted successfully');
   } catch (err) {
     logger.error('Delete user: ', err);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -78,7 +82,8 @@ const updateBasicUserInfo = async (req, res) => {
 
     // If user not found
     if (!existingUser || checkIfSystemUser(existingUser)) {
-      throw { status: 404, message: 'User not found' };
+      await t.rollback();
+      return sendError(res, 'User not found', 404);
     }
 
     const changedInfo = [];
@@ -107,7 +112,8 @@ const updateBasicUserInfo = async (req, res) => {
 
     // If update payload is empty
     if (Object.keys(req.body).length === 0) {
-      throw { status: 400, message: 'No update payload provided' };
+      await t.rollback();
+      return sendError(res, 'No update payload provided', 400);
     }
 
     // Save user with updated details within the transaction
@@ -140,18 +146,12 @@ const updateBasicUserInfo = async (req, res) => {
     // Commit the transaction
     await t.commit();
 
-    return res.status(200).json({
-      success: true,
-      message: 'User updated successfully',
-      data: updatedUser,
-    });
+    return sendSuccess(res, updatedUser, 'User updated successfully');
   } catch (err) {
     // Rollback transaction if anything goes wrong
     await t.rollback();
     logger.error(`Update user: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -162,19 +162,13 @@ const getUser = async (req, res) => {
     const user = await User.findOne({ where: { id } });
 
     if (!user || checkIfSystemUser(user)) {
-      throw { status: 404, message: 'User not found' };
+      return sendError(res, 'User not found', 404);
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'User retrieved successfully',
-      data: user,
-    });
+    return sendSuccess(res, user, 'User retrieved successfully');
   } catch (err) {
     logger.error(`Get user: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -190,16 +184,10 @@ const getAllUsers = async (req, res) => {
       // descending order by date
       order: [['createdAt', 'DESC']],
     });
-    return res.status(200).json({
-      success: true,
-      message: 'Users retrieved successfully',
-      data: users,
-    });
+    return sendSuccess(res, users, 'Users retrieved successfully');
   } catch (err) {
     logger.error('Get all users: ', err);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -215,12 +203,14 @@ const changePassword = async (req, res) => {
     const existingUser = await User.findOne({ where: { id }, transaction: t });
 
     if (!existingUser || checkIfSystemUser(existingUser)) {
-      throw { status: 404, message: 'User not found' };
+      await t.rollback();
+      return sendError(res, 'User not found', 404);
     }
 
     // Check if current password is correct
     if (!bcrypt.compareSync(currentPassword, existingUser.hash)) {
-      throw { status: 400, message: 'Current password is incorrect' };
+      await t.rollback();
+      return sendError(res, 'Current password is incorrect', 400);
     }
 
     // Check for password security violations
@@ -230,7 +220,8 @@ const changePassword = async (req, res) => {
     });
 
     if (errors.length > 0) {
-      throw { status: 400, message: errors };
+      await t.rollback();
+      return sendError(res, errors, 400);
     }
 
     // Update password
@@ -257,6 +248,7 @@ const changePassword = async (req, res) => {
       'YYYYMMDD_HHmmss_SSS'
     )}`;
 
+    // TODO - send notification only after successful commit
     await NotificationQueue.create(
       {
         type: 'email',
@@ -277,19 +269,47 @@ const changePassword = async (req, res) => {
       { transaction: t }
     );
 
-    // Commit transaction
+    // Invalidate all existing sessions for security
+    await RefreshToken.destroy({ where: { userId: id }, transaction: t });
+
+    // Generate new tokens for the current session
+    const tokenId = crypto.randomUUID();
+    const accessToken = generateAccessToken({
+      id: existingUser.id,
+      email: existingUser.email,
+    });
+    const refreshToken = generateRefreshToken({ tokenId });
+
+    // Decode refresh token to get iat and exp
+    const { iat, exp } = jwt.decode(refreshToken);
+
+    // Create new refresh token in database
+    await RefreshToken.create(
+      {
+        id: tokenId,
+        userId: existingUser.id,
+        token: refreshToken,
+        deviceInfo: { userAgent: req.headers['user-agent'] },
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      },
+      { transaction: t }
+    );
+
+    // Set new tokens in cookies BEFORE committing transaction
+    // If this fails, transaction will rollback
+    await setTokenCookie(res, accessToken, refreshToken);
+    await generateAndSetCSRFToken(req, res, accessToken);
+
+    // Commit transaction only after tokens are set successfully
     await t.commit();
 
-    return res.status(200).json({
-      success: true,
-      message: 'Password updated successfully',
-    });
+    return sendSuccess(res, null, 'Password updated successfully');
   } catch (err) {
     await t.rollback(); // Rollback on failure
-    logger.error('Change password: An error occurred during password update.');
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    logger.error(err);
+    return sendError(res, err);
   }
 };
 
@@ -309,23 +329,13 @@ const bulkDeleteUsers = async (req, res) => {
     }
 
     if (deletedCount !== idsCount) {
-      return res.status(207).json({
-        success: false,
-        message: 'Some users could not be deleted',
-        data: { deletedCount, idsCount },
-      });
+      return sendError(res, 'Some users could not be deleted', 207);
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Users deleted successfully',
-      data: { deletedCount },
-    });
+    return sendSuccess(res, { deletedCount }, 'Users deleted successfully');
   } catch (err) {
     logger.error('Failed to bulk delete users: ', err);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -362,21 +372,13 @@ const bulkUpdateUsers = async (req, res) => {
     }
 
     if (errors.length > 0) {
-      return res.status(207).json({
-        success: false,
-        message: 'Some users could not be updated',
-        errors,
-      });
+      return sendError(res, 'Some users could not be updated', 207);
     }
 
-    return res
-      .status(200)
-      .json({ success: true, message: 'Users updated successfully' });
+    return sendSuccess(res, null, 'Users updated successfully');
   } catch (err) {
     logger.error('Failed to bulk update users: ', err);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -392,7 +394,7 @@ const updateUserRoles = async (req, res) => {
 
     // If user not found
     if (!existingUser || checkIfSystemUser(existingUser)) {
-      throw { status: 404, message: 'User not found' };
+      return sendError(res, 'User not found', 404);
     }
     // Create id and role pair
     const userRoles = roles.map(role => ({
@@ -419,16 +421,10 @@ const updateUserRoles = async (req, res) => {
     const newRoles = await UserRole.bulkCreate(rolesToAdd);
 
     // Response
-    return res.status(200).json({
-      success: true,
-      message: 'User roles updated successfully',
-      data: newRoles,
-    });
+    return sendSuccess(res, newRoles, 'User roles updated successfully');
   } catch (err) {
     logger.error('Update user roles: ', err);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -464,16 +460,14 @@ const updateUserApplications = async (req, res) => {
       await UserApplication.bulkCreate(applicationUserPair);
 
     // Response
-    return res.status(200).json({
-      success: true,
-      message: 'User applications updated successfully',
-      data: newApplications,
-    });
+    return sendSuccess(
+      res,
+      newApplications,
+      'User applications updated successfully'
+    );
   } catch (err) {
     logger.error(`Update user applications: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -495,7 +489,7 @@ const createUser = async (req, res) => {
     const existingUser = await User.findOne({ where: { email } });
 
     if (existingUser) {
-      throw { status: 400, message: 'Email already exists' };
+      return sendError(res, 'Email already exists', 400);
     }
 
     // Generate random password - 12 characters - alpha numeric
@@ -597,16 +591,10 @@ const createUser = async (req, res) => {
     // Remove hash
     delete newUserData.dataValues.hash;
 
-    return res.status(201).json({
-      success: true,
-      message: 'User created successfully',
-      data: newUserData,
-    });
+    return sendSuccess(res, newUserData, 'User created successfully', 201);
   } catch (err) {
     logger.error(`Create user: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -623,9 +611,7 @@ const resetPasswordForUser = async (req, res) => {
     // If user not found
     if (!user || checkIfSystemUser(user)) {
       await transaction.rollback(); // Rollback if user is not found
-      return res
-        .status(404)
-        .json({ success: false, message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     // Generate a password reset token
@@ -688,15 +674,11 @@ const resetPasswordForUser = async (req, res) => {
     await transaction.commit();
 
     // Response
-    res
-      .status(200)
-      .json({ success: true, message: 'Password reset successfully' });
+    return sendSuccess(res, null, 'Password reset successfully');
   } catch (err) {
     await transaction.rollback(); // Rollback transaction in case of error
     logger.error(`Reset password for user: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -709,9 +691,7 @@ const unlockAccount = async (req, res) => {
 
     // If user not found
     if (!user || checkIfSystemUser(user)) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     // Generate temporary password/hash
@@ -743,14 +723,10 @@ const unlockAccount = async (req, res) => {
     await sendAccountUnlockedEmail({ user, tempPassword, verificationCode });
 
     // Response
-    res
-      .status(200)
-      .json({ success: true, message: 'User account unlocked successfully' });
+    return sendSuccess(res, null, 'User account unlocked successfully');
   } catch (err) {
     logger.error(`Unlock account: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 

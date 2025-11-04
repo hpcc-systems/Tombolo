@@ -1,8 +1,12 @@
+// Imports from libraries
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, Form, Input, Button, Popover, message, Spin } from 'antd';
+import { Modal, Form, Input, Button, Popover, Spin } from 'antd';
+
+// Local imports
 import passwordComplexityValidator from '../../common/passwordComplexityValidator';
-import { changeBasicUserPassword } from './utils';
 import { getUser } from '../../common/userStorage';
+import { handleSuccess } from '../../common/handleResponse';
+import usersService from '@/services/users.service';
 
 const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModalVisible }) => {
   const [form] = Form.useForm();
@@ -58,12 +62,13 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
     if (validForm) {
       const values = form.getFieldsValue();
 
-      const data = await changeBasicUserPassword(values);
-
-      if (data) {
-        message.success('Password changed successfully');
+      try {
+        await usersService.changePassword({ id: user.id, values });
+        handleSuccess('Password changed successfully');
         setChangePasswordModalVisible(false);
         form.resetFields();
+      } catch (err) {
+        // Error handled by axios interceptor
       }
     }
     setLoading(false);

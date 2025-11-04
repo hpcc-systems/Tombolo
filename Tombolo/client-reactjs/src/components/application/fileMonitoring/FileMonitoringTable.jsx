@@ -1,5 +1,6 @@
+// Imports from libraries
 import React, { useState, useEffect } from 'react';
-import { Table, Tooltip, Popconfirm, message, Popover, Tag } from 'antd';
+import { Table, Tooltip, Popconfirm, Popover, Tag } from 'antd';
 import {
   EyeOutlined,
   EditOutlined,
@@ -15,8 +16,9 @@ import {
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-import { handleDeleteFileMonitoring, toggleFileMonitoringStatus } from './fileMonitoringUtils';
-
+// Local imports
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
+import fileMonitoringService from '@/services/fileMonitoring.service';
 import styles from './fileMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
@@ -309,7 +311,7 @@ const FileMonitoringTable = ({
     try {
       // Ensure record is a valid object
       if (!record || typeof record !== 'object') {
-        message.error('Invalid monitoring data');
+        handleError('Invalid monitoring data');
         return;
       }
 
@@ -317,7 +319,7 @@ const FileMonitoringTable = ({
       setDisplayMonitoringDetailsModal(true);
     } catch (error) {
       console.error('Error in viewMonitoringDetails:', error);
-      message.error('Failed to view monitoring details');
+      handleError('Failed to view monitoring details');
     }
     // setSelectedMonitoring(record);
     // setDisplayMonitoringDetailsModal(true);
@@ -346,11 +348,11 @@ const FileMonitoringTable = ({
   // Delete file monitoring
   const deleteFileMonitoring = async (id) => {
     try {
-      await handleDeleteFileMonitoring([id]);
+      await fileMonitoringService.delete([id]);
       setFileMonitoring((prev) => prev.filter((monitoring) => monitoring.id !== id));
-      message.success('File monitoring deleted successfully');
+      handleSuccess('File monitoring deleted successfully');
     } catch (err) {
-      message.error('Failed to delete file monitoring');
+      handleError('Failed to delete file monitoring');
     }
   };
 
@@ -359,12 +361,11 @@ const FileMonitoringTable = ({
     try {
       const lowercaseStatus = record.approvalStatus.toLowerCase();
       if (lowercaseStatus !== APPROVAL_STATUS.APPROVED) {
-        message.error('Monitoring must be in approved state before it can be started');
+        handleError('Monitoring must be in approved state before it can be started');
         return;
       }
 
-      const updatedData = await toggleFileMonitoringStatus({ ids: [record.id], action: status });
-
+      const updatedData = await fileMonitoringService.toggle({ ids: [record.id], action: status });
       const updatedMonitoringIds = updatedData.map((monitoring) => monitoring.id);
 
       setFileMonitoring((prev) =>
@@ -374,9 +375,9 @@ const FileMonitoringTable = ({
             : monitoring
         )
       );
-      message.success(`Monitoring ${status === 'start' ? 'started' : 'paused'} successfully`);
+      handleSuccess(`Monitoring ${status === 'start' ? 'started' : 'paused'} successfully`);
     } catch (err) {
-      message.error('Failed to toggle monitoring status');
+      handleError('Failed to toggle monitoring status');
     }
   };
 

@@ -4,11 +4,11 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import debounce from 'lodash/debounce';
 import { useSelector } from 'react-redux';
 
-import { authHeader, handleError } from '../../common/AuthHeader.js';
 import InfoDrawer from '../../common/InfoDrawer';
 import { doesNameExist } from './jobMonitoringUtils';
 import AsrSpecificMonitoringDetails from '../../common/Monitoring/AsrSpecificMonitoringDetails';
 import { DescriptionFormRules, MonitoringNameFormRules } from '../../common/FormRules';
+import hpccService from '@/services/hpcc.service';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -113,17 +113,10 @@ function JobMonitoringBasicTab({
   const getJobs = debounce(async (value) => {
     try {
       setFetchingJobs(true);
-      const payload = {
-        method: 'POST',
-        headers: authHeader(),
-        body: JSON.stringify({ keyword: value, clusterId: selectedCluster.id }),
-      };
-
-      const response = await fetch(`/api/hpcc/read/jobsearch`, payload);
-
-      if (!response.ok) handleError(response);
-
-      const data = await response.json();
+      const data = await hpccService.jobSearch({
+        keyword: value,
+        clusterId: selectedCluster.id,
+      });
 
       if (data) {
         const cleanedData = data.map((d) => {
@@ -139,7 +132,7 @@ function JobMonitoringBasicTab({
         setJobs(cleanedData);
       }
     } catch (err) {
-      console.log(err);
+      // Silently handle error
     } finally {
       setFetchingJobs(false);
     }

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../../config/logger');
 const { Query, QueryField, AssetsGroup } = require('../../models');
+const { sendSuccess, sendError, sendValidationError } = require('../../utils/response');
 const {
   validateSaveQuery,
   validateQueryList,
@@ -64,10 +65,10 @@ router.post('/saveQuery', validate(validateSaveQuery), async (req, res) => {
 
     const response = await updateQueryDetails(queryId, applicationId, req);
 
-    return res.status(200).json(response);
+    return sendSuccess(res, response, 'Query saved successfully');
   } catch (err) {
     logger.error('query/read - saveQuery: ', err);
-    return res.status(500).send('Error occurred while saving Query');
+    return sendError(res, 'Error occurred while saving Query', 500);
   }
 });
 
@@ -78,10 +79,10 @@ router.get('/query_list', validate(validateQueryList), async (req, res) => {
       order: [['createdAt', 'DESC']],
     });
 
-    return res.status(200).json(queries);
+    return sendSuccess(res, queries, 'Query list retrieved successfully');
   } catch (err) {
     logger.error('query/read - query_list: ', err);
-    return res.status(500).json({ message: 'Failed to get query list' });
+    return sendError(res, 'Failed to get query list', 500);
   }
 });
 
@@ -95,10 +96,10 @@ router.get(
         include: [QueryField],
       });
 
-      return res.status(200).json(query);
+      return sendSuccess(res, query, 'Query details retrieved successfully');
     } catch (err) {
       logger.error('query/read - query_details: ', err);
-      return res.status(500).json({ message: 'Failed to get query details' });
+      return sendError(res, 'Failed to get query details', 500);
     }
   }
 );
@@ -114,10 +115,10 @@ router.post('/delete', validate(validateDeleteQuery), async (req, res) => {
 
     await QueryField.destroy({ where: { query_id: req.body.queryId } });
 
-    return res.status(200).json({ result: 'success' });
+    return sendSuccess(res, { result: 'success' }, 'Query deleted successfully');
   } catch (err) {
     logger.error('query/read - delete: ', err);
-    return res.status(500).json({ message: 'Failed to delete query' });
+    return sendError(res, 'Failed to delete query', 500);
   }
 });
 

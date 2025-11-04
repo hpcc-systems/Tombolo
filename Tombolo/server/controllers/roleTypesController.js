@@ -1,11 +1,12 @@
 const { RoleType } = require('../models');
+const { sendSuccess, sendError } = require('../utils/response');
 
 const getAllRoles = async (req, res) => {
   try {
     const roles = await RoleType.findAll();
-    return res.status(200).json({ success: true, data: roles });
+    return sendSuccess(res, roles, 'Roles retrieved successfully');
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return sendError(res, error);
   }
 };
 

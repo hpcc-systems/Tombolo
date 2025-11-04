@@ -1,7 +1,9 @@
+// Imports from libraries
 import React, { useState } from 'react';
 import { Modal, Tabs, Button, Badge, Form } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 
+// Local imports
 import FileMonitoringBasicTab from './FileMonitoringBasicTab';
 import FileMonitoringNotificationTab from './FileMonitoringNotificationTab';
 
