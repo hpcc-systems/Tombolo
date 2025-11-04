@@ -353,7 +353,6 @@ router.put(
                 product_id: req.params.id,
                 domain_id: domainId,
                 updatedBy: req.user.id,
-                createdBy: req.user.id,
               },
               { transaction: t }
             );

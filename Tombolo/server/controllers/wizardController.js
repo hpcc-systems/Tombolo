@@ -279,8 +279,7 @@ const sendVerificationEmail = async (user, transaction) => {
     process.env.TEST_MODE === 'true'
   ) {
     verificationCode = 'test-verification-code';
-    expiresAt = new Date(Date.now() + 86400000); // 10 minutes
-  }
+    expiresAt = new Date(Date.now() + 86400000); // 24 hours
 
   await AccountVerificationCode.create(
     {

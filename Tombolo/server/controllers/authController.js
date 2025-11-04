@@ -354,7 +354,10 @@ const resetPasswordWithToken = async (req, res) => {
     }
 
     // Check if the token is expired
-    if (accountVerificationCode.expiresAt && moment().isAfter(accountVerificationCode.expiresAt)) {
+    if (
+      accountVerificationCode.expiresAt &&
+      moment().isAfter(accountVerificationCode.expiresAt)
+    ) {
       throw { status: 400, message: 'Reset token has expired' };
     }
     const user = await User.findByPk(accountVerificationCode.userId, {
@@ -385,7 +388,7 @@ const resetPasswordWithToken = async (req, res) => {
     // Update user password and related fields
     await user.update(
       {
-        password: hashedPassword,
+        hash: hashedPassword,
         lastPasswordUpdate: new Date(),
         forcePasswordReset: false,
         passwordExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
