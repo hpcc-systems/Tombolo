@@ -1,5 +1,6 @@
 packages:
   - "Tombolo/server"
   - "Tombolo/client-reactjs"
+  - "Tombolo/db"
   - "e2e_tests"
   - "tombolo_docs"

@@ -16,15 +16,19 @@
     "client:build": "turbo build --filter=@tombolo/client",
     "e2e:app": "pnpm --filter e2e_tests test:app",
     "docs:dev": "pnpm --filter tombolo_docs start",
-    "docs:build": "pnpm --filter tombolo_docs build"
+    "docs:build": "pnpm --filter tombolo_docs build",
+    "db:migrate": "pnpm --filter=@tombolo/db migrate",
+    "db:drop": "pnpm --filter=@tombolo/db drop",
+    "db:seed": "pnpm --filter=@tombolo/db seed",
+    "db:create": "pnpm --filter=@tombolo/db create"
   },
   "devDependencies": {
-    "turbo": "^2.3.3"
+    "turbo": "^2.6.0"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=9.0.0"
+    "pnpm": ">=10.0.0"
   },
   "pnpm": {
     "overrides": {

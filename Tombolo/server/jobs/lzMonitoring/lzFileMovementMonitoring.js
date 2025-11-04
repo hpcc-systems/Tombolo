@@ -1,4 +1,11 @@
-const models = require('../../models');
+const {
+  LandingZoneMonitoring,
+  Cluster,
+  MonitoringType,
+  NotificationQueue,
+  AsrProduct,
+  AsrDomain,
+} = require('../../models');
 const { parentPort } = require('worker_threads');
 const { logOrPostMessage } = require('../jobUtils');
 const { decryptString } = require('../../utils/cipher');
@@ -11,15 +18,6 @@ const {
   findLocalDateTimeAtCluster,
 } = require('./lzFileMonitoringUtils');
 const { APPROVAL_STATUS } = require('../../config/constants');
-
-const {
-  LandingZoneMonitoring,
-  Cluster,
-  MonitoringType,
-  NotificationQueue,
-  AsrProduct,
-  AsrDomain,
-} = models;
 
 const monitoring_name = 'Landing Zone Monitoring';
 

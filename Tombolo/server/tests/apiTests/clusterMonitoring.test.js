@@ -1,8 +1,7 @@
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
 const request = require('supertest');
 const { app } = require('../test_server');
-const models = require('../../models');
-const { ClusterMonitoring } = models;
+const { ClusterMonitoring } = require('../../models');
 
 const {
   getClusterMonitoring,
