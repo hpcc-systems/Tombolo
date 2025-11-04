@@ -32,8 +32,7 @@ vi.mock('antd', async (importOriginal) => {
         {rowSelection ? (
           <button
             aria-label="select-first"
-            onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}
-          >
+            onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>
             select-first
           </button>
         ) : null}
@@ -49,21 +48,35 @@ vi.mock('antd', async (importOriginal) => {
   );
   const MockPopconfirm = ({ children, onConfirm }) => (
     <span>
-      <button aria-label="confirm" onClick={onConfirm}>confirm</button>
+      <button aria-label="confirm" onClick={onConfirm}>
+        confirm
+      </button>
       {children}
     </span>
   );
   const MockTag = ({ children }) => <span>{children}</span>;
   const message = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
-  return { ...antd, Table: MockTable, Tooltip: MockTooltip, Popover: MockPopover, Popconfirm: MockPopconfirm, Tag: MockTag, message };
+  return {
+    ...antd,
+    Table: MockTable,
+    Tooltip: MockTooltip,
+    Popover: MockPopover,
+    Popconfirm: MockPopconfirm,
+    Tag: MockTag,
+    message,
+  };
 });
 
 vi.mock('@ant-design/icons', () => ({
   EyeOutlined: ({ onClick }) => (
-    <button aria-label="view" onClick={onClick}>view</button>
+    <button aria-label="view" onClick={onClick}>
+      view
+    </button>
   ),
   EditOutlined: ({ onClick }) => (
-    <button aria-label="edit" onClick={onClick}>edit</button>
+    <button aria-label="edit" onClick={onClick}>
+      edit
+    </button>
   ),
   DeleteOutlined: () => <span>del</span>,
   CheckCircleFilled: () => <span>approveIcon</span>,
@@ -83,7 +96,10 @@ vi.mock('@/components/application/clusterMonitoring/clusterMonitoringUtils.js', 
 }));
 
 import { message } from 'antd';
-import { toggleSingleClusterMonitoringActiveStatus, deleteClusterMonitoring } from '@/components/application/clusterMonitoring/clusterMonitoringUtils.js';
+import {
+  toggleSingleClusterMonitoringActiveStatus,
+  deleteClusterMonitoring,
+} from '@/components/application/clusterMonitoring/clusterMonitoringUtils.js';
 import ClusterMonitoringTable from '@/components/application/clusterMonitoring/ClusterMonitoringTable.jsx';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
@@ -199,7 +215,7 @@ describe('ClusterMonitoringTable', () => {
     await user.click(pauseBtn);
     await waitFor(() => expect(toggleSingleClusterMonitoringActiveStatus).toHaveBeenCalledWith(rowApproved.id));
     expect(setClusterMonitoring).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalled();
+    expect(handleSuccess).toHaveBeenCalled();
   });
 
   it('deletes a monitoring via Popconfirm and updates state', async () => {
@@ -227,7 +243,7 @@ describe('ClusterMonitoringTable', () => {
     await user.click(screen.getByRole('button', { name: 'confirm' }));
     await waitFor(() => expect(deleteClusterMonitoring).toHaveBeenCalledWith(rowApproved.id));
     expect(setClusterMonitoring).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalledWith('Monitoring deleted successfully.');
+    expect(handleSuccess).toHaveBeenCalledWith('Monitoring deleted successfully.');
   });
 
   it('allows row selection to set selected rows', async () => {

@@ -1,8 +1,9 @@
 const logger = require('../config/logger');
 const { UserRole, RoleType } = require('../models');
+const { sendSuccess, sendError } = require('../utils/response');
 
 const checkStatus = async (req, res) => {
-  return res.send("Tombolo's Backend is running successfully");
+  return sendSuccess(res, null, "Tombolo's Backend is running successfully");
 };
 
 const checkOwnerExists = async (req, res) => {
@@ -12,10 +13,7 @@ const checkOwnerExists = async (req, res) => {
     });
 
     if (!ownerRole) {
-      return res.status(400).json({
-        success: false,
-        message: 'Owner role does not exist',
-      });
+      return sendError(res, 'Owner role does not exist', 400);
     }
 
     const owners = await UserRole.findOne({
@@ -24,13 +22,10 @@ const checkOwnerExists = async (req, res) => {
 
     const exists = owners?.dataValues ? true : false;
 
-    return res.status(200).json({ success: true, data: exists });
+    return sendSuccess(res, exists, 'Owner existence check completed');
   } catch (err) {
     logger.error('Check owner exists: ', err);
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+    return sendError(res, err);
   }
 };
 

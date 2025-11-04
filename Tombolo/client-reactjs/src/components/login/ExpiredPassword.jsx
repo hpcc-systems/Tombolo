@@ -4,7 +4,7 @@ import { Button } from 'antd';
 import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
 
 // Local Imports
-import { requestPasswordReset } from './utils';
+import authService from '@/services/auth.service';
 import styles from './login.module.css';
 
 function ExpiredPassword({ email }) {
@@ -67,7 +67,7 @@ function ExpiredPassword({ email }) {
   const handleResetPassword = async () => {
     try {
       setResetting(true);
-      const response = await requestPasswordReset({ email });
+      const response = await authService.handlePasswordResetRequest(email);
       setSuccessMessage(response.message);
       setResetting(false);
       setResetSuccess(true);

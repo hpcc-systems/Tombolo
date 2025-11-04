@@ -27,9 +27,10 @@ require('./utils/tokenBlackListing');
 
 const cookieParser = require('cookie-parser');
 
-const { doubleCsrfProtection } = require('./middlewares/csrfMiddleware');
+// const { doubleCsrfProtection } = require('./middlewares/csrfMiddleware'); TODO - Temporarily disabled until axios migration is complete
 
 const { readSelfSignedCerts } = require('./utils/readSelfSignedCerts');
+const { sendError } = require('./utils/response');
 
 /* BREE JOB SCHEDULER */
 const JobScheduler = require('./jobSchedular/job-scheduler');
@@ -67,7 +68,9 @@ app.set('trust proxy', 1);
 // Limit the rate of requests to 400 per 15 minutes
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.RATE_LIMIT_REQUEST_MAX,
+  max: Number.isNaN(parseInt(process.env.RATE_LIMIT_REQUEST_MAX, 10))
+    ? 400
+    : parseInt(process.env.RATE_LIMIT_REQUEST_MAX, 10),
 });
 
 // MIDDLEWARE -> apply to all requests
@@ -95,8 +98,6 @@ const constraint = require('./routes/constraint/index');
 const fileTemplateRead = require('./routes/fileTemplate/read');
 // const dataflowGraph = require('./routes/dataflows/dataflowgraph');
 const regulations = require('./routes/controlsAndRegulations/read');
-const updateNotifications = require('./routes/notifications/update');
-const notifications = require('./routes/notifications/read');
 const key = require('./routes/key/read');
 const api = require('./routes/api/read');
 const jobmonitoring = require('./routes/jobmonitoring/read');
@@ -127,7 +128,6 @@ const fileMonitoring = require('./routes/fileMonitoringRoutes');
 app.use(compression());
 
 app.use('/api/auth', auth);
-app.use('/api/updateNotification', updateNotifications);
 app.use('/api/status', status);
 app.use('/api/wizard', wizard);
 
@@ -136,7 +136,7 @@ app.use('/api/apikeys', api);
 
 // Validate access token and csrf tokens, all routes below require these
 app.use(validateToken);
-app.use(doubleCsrfProtection);
+// app.use(doubleCsrfProtection);
 
 // Authenticated routes
 app.use('/api/user', users);
@@ -159,7 +159,6 @@ app.use('/api/constraint', constraint);
 app.use('/api/controlsAndRegulations', regulations);
 app.use('/api/fileTemplate/read', fileTemplateRead);
 app.use('/api/fileMonitoring', fileMonitoring);
-app.use('/api/notifications/read', notifications);
 app.use('/api/key', key);
 app.use('/api/jobmonitoring', jobmonitoring);
 app.use('/api/cluster', cluster);
@@ -183,7 +182,7 @@ app.use((err, req, res, next) => {
     `Error caught by Express error handler on route ${req.path}`,
     err
   );
-  res.status(500).send('Something went wrong');
+  return sendError(res, 'Something went wrong', 500);
 });
 
 // Disables SSL verification for self-signed certificates in development mode

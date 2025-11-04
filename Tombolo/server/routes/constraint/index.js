@@ -2,6 +2,11 @@ const express = require('express');
 const { body, param, validationResult } = require('express-validator');
 const validatorUtil = require('../../utils/validator');
 const logger = require('../../config/logger');
+const {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} = require('../../utils/response');
 const router = express.Router();
 
 const { Constraint, File } = require('../../models');
@@ -9,10 +14,10 @@ const { Constraint, File } = require('../../models');
 router.get('/', async (req, res) => {
   try {
     const constraints = await Constraint.findAll();
-    return res.status(200).send(constraints);
+    return sendSuccess(res, constraints);
   } catch (error) {
-    logger.error('Something went wrong', error);
-    return res.status(500).json({ message: error.message });
+    logger.error('Get constraints error:', error);
+    return sendError(res, error.message);
   }
 });
 
@@ -22,14 +27,18 @@ router.delete('/:id', [param('id').isUUID(4)], async (req, res) => {
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
-    if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+    if (!errors.isEmpty()) return sendValidationError(res, errors.array());
     // Route logic
 
     const { id } = req.params;
 
     const isRemoved = await Constraint.destroy({ where: { id } });
-    if (!isRemoved) throw new Error('Contraint was not removed!');
+    if (!isRemoved)
+      return sendError(
+        res,
+        'Constraint was not found or could not be removed',
+        404
+      );
 
     const files = await File.findAll();
 
@@ -62,10 +71,10 @@ router.delete('/:id', [param('id').isUUID(4)], async (req, res) => {
       logger.info('------------------------------------------');
     }
 
-    return res.status(200).send({ success: true, id });
+    return sendSuccess(res, { id }, 'Constraint deleted successfully');
   } catch (error) {
-    logger.error('Something went wrong', error);
-    return res.status(500).json({ message: error.message });
+    logger.error('Delete constraint error:', error);
+    return sendError(res, error.message);
   }
 });
 
@@ -82,28 +91,32 @@ router.post(
     const errors = validationResult(req).formatWith(
       validatorUtil.errorFormatter
     );
-    if (!errors.isEmpty())
-      return res.status(422).json({ success: false, errors: errors.array() });
+    if (!errors.isEmpty()) return sendValidationError(res, errors.array());
     // Route logic
     try {
       const constraint = req.body;
 
       if (!constraint.id) {
         const newContraint = await Constraint.create(constraint);
-        return res.status(200).send(newContraint);
+        return sendSuccess(
+          res,
+          newContraint,
+          'Constraint created successfully'
+        );
       } else {
         const { id, ...restFields } = constraint;
 
         const existingContraint = await Constraint.findOne({ where: { id } });
-        if (!existingContraint) throw new Error('Contraint does not exist');
+        if (!existingContraint)
+          return sendError(res, 'Constraint does not exist', 404);
 
         const updated = await existingContraint.update(restFields);
 
-        return res.status(200).send(updated);
+        return sendSuccess(res, updated, 'Constraint updated successfully');
       }
     } catch (error) {
-      logger.error('Something went wrong', error);
-      return res.status(500).json({ message: error.message });
+      logger.error('Create/Update constraint error:', error);
+      return sendError(res, error.message);
     }
   }
 );

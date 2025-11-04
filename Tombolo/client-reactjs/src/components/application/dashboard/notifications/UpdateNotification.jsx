@@ -1,26 +1,13 @@
 // Packages
 import React, { useState, useEffect } from 'react';
 import { DownOutlined } from '@ant-design/icons';
-import {
-  Modal,
-  Form,
-  Select,
-  Input,
-  DatePicker,
-  Button,
-  message,
-  Dropdown,
-  Menu,
-  Alert,
-  List,
-  Space,
-  Card,
-} from 'antd';
+import { Modal, Form, Select, Input, DatePicker, Button, Dropdown, Menu, Alert, List, Space, Card } from 'antd';
 import dayjs from 'dayjs';
 
 //Local Imports
+import { handleSuccess, handleError } from '@/components/common/handleResponse';
 import { statuses } from './notificationUtil';
-import { updateMultipleNotifications } from './notificationUtil';
+import notificationsService from '@/services/notifications.service';
 import { getUser } from '../../../common/userStorage';
 
 const { Option } = Select;
@@ -160,7 +147,7 @@ const UpdateNotificationModal = ({
       payload.ids = selectedNotificationsIds;
 
       // Make api request to update notification
-      const responseData = await updateMultipleNotifications({ data: payload });
+      const responseData = await notificationsService.updateMultipleNotifications(selectedNotificationsIds, payload);
       const updatedIds = responseData.map((notification) => notification.id);
       const allUpdatedNotifications = [];
 
@@ -173,7 +160,7 @@ const UpdateNotificationModal = ({
         }
       });
 
-      message.success('Notifications updated successfully');
+      handleSuccess('Notifications updated successfully');
       setSentNotifications(allUpdatedNotifications);
 
       // Reset sate and form fields
@@ -186,7 +173,7 @@ const UpdateNotificationModal = ({
         setSelectedNotificationsIds([]);
       }
     } catch (err) {
-      message.error('Failed to save updated notification(s)');
+      handleError('Failed to save updated notification(s)');
     } finally {
       form.resetFields();
     }
@@ -375,7 +362,7 @@ const UpdateNotificationModal = ({
       const fieldsTouched = fieldNames.filter((fieldName) => form.isFieldTouched(fieldName));
 
       if (fieldsTouched.length === 0) {
-        message.info('No change detected');
+        handleSuccess('No change detected');
         return;
       }
 
@@ -388,7 +375,7 @@ const UpdateNotificationModal = ({
       }
 
       if (!actionsSelected && selectedNotificationsIds.length > 1) {
-        message.error('Select an action for at least one field');
+        handleError('Select an action for at least one field');
         return;
       }
 

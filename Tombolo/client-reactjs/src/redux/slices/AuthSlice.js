@@ -1,8 +1,11 @@
+// Imports from libraries
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { authHeader, handleError } from '@/components/common/AuthHeader';
-import { message } from 'antd';
+
+// Local imports
+import { handleError } from '@/components/common/handleResponse';
 import { getUser, setUser } from '@/components/common/userStorage';
 import { Constants } from '@/components/common/Constants';
+import authService from '@/services/auth.service';
 
 const initialState = {
   isAuthenticated: false,
@@ -22,91 +25,64 @@ const clearStorage = () => {
   localStorage.clear();
 };
 
-// Helper function for basic user login
-const loginBasicUserFunc = async (email, password, deviceInfo) => {
-  clearStorage();
-  const url = '/api/auth/loginBasicUser';
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, password, deviceInfo }),
-  });
-
-  const data = await response.json();
-
-  if (response.status === 401 || response.status === 403) {
-    if (data.message === Constants.LOGIN_UNVERIFIED) {
-      return data;
-    } else if (data.message === Constants.LOGIN_TEMP_PW) {
-      return data;
-    } else {
-      message.error(data.message);
-      return { message: data.message, type: Constants.LOGIN_FAILED };
-    }
-  } else if (!response.ok) {
-    handleError(response);
-    throw new Error('Login failed');
-  }
-
-  return data;
-};
-
 // Async thunks
-export const login = createAsyncThunk(
-  'auth/login',
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async ({ email, password, deviceInfo }, { dispatch, rejectWithValue }) => {
-    clearStorage();
+export const login = createAsyncThunk('auth/login', async ({ email, password, deviceInfo }, { rejectWithValue }) => {
+  clearStorage();
 
-    try {
-      const user = await loginBasicUserFunc(email, password, deviceInfo);
+  try {
+    const response = await authService.loginBasicUser(email, password, deviceInfo);
 
-      if (user && user?.message === Constants.LOGIN_TEMP_PW) {
-        return {
-          type: Constants.LOGIN_TEMP_PW,
-          user,
-        };
-      } else if (user && user?.message === Constants.LOGIN_PW_EXPIRED) {
-        return {
-          type: Constants.LOGIN_PW_EXPIRED,
-          user: null,
-        };
-      } else if (user && user?.message === Constants.LOGIN_UNVERIFIED) {
-        return {
-          type: Constants.LOGIN_UNVERIFIED,
-          user: null,
-        };
-      } else if (user && user.data) {
-        user.data.isAuthenticated = true;
-        setUser(JSON.stringify(user.data));
-        return {
-          type: Constants.LOGIN_SUCCESS,
-          user: user.data,
-        };
-      } else {
-        return {
-          type: Constants.LOGIN_FAILED,
-          user: user,
-        };
-      }
-    } catch (err) {
-      return rejectWithValue(err.message);
+    // Login success
+    const userData = response.data || response;
+    userData.isAuthenticated = true;
+    setUser(JSON.stringify(userData));
+    return {
+      type: Constants.LOGIN_SUCCESS,
+      user: userData,
+    };
+  } catch (err) {
+    handleError(err.messages);
+    // Extract error message
+    const errMessage =
+      Array.isArray(err?.messages) && err.messages.length > 0 ? err.messages[0] : err?.message || 'Unknown error';
+
+    // Handle specific authentication states
+    if (errMessage === Constants.LOGIN_TEMP_PW) {
+      return rejectWithValue({
+        type: Constants.LOGIN_TEMP_PW,
+        message: errMessage,
+      });
+    } else if (errMessage === Constants.LOGIN_PW_EXPIRED) {
+      return rejectWithValue({
+        type: Constants.LOGIN_PW_EXPIRED,
+        message: errMessage,
+      });
+    } else if (errMessage === Constants.LOGIN_UNVERIFIED) {
+      return rejectWithValue({
+        type: Constants.LOGIN_UNVERIFIED,
+        message: errMessage,
+      });
+    } else if (errMessage === Constants.LOGIN_FAILED) {
+      return rejectWithValue({
+        type: Constants.LOGIN_FAILED,
+        message: errMessage,
+      });
+    } else {
+      // Handle any other unexpected errors
+      return rejectWithValue({
+        type: Constants.LOGIN_FAILED,
+        message: errMessage,
+      });
     }
   }
-);
+});
 
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
-    await fetch('/api/auth/logoutBasicUser', {
-      headers: authHeader(),
-      method: 'POST',
-    });
+    await authService.logoutBasicUser();
   } catch (error) {
     // Even if logout API fails, we still want to clear local storage
-    console.log('Logout API call failed:', error);
+    // Error logged by interceptor
   }
 
   clearStorage();
@@ -119,89 +95,69 @@ export const loadUserFromStorage = createAsyncThunk('auth/loadUserFromStorage', 
 });
 
 export const registerBasicUser = createAsyncThunk('auth/registerBasicUser', async (values) => {
-  const url = '/api/auth/registerBasicUser';
-  values.registrationMethod = 'traditional';
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(values),
-  });
-
-  if (!response.ok) {
-    handleError(response);
+  try {
+    const data = await authService.registerBasicUser(values);
+    return data;
+  } catch (error) {
+    handleError(error);
     throw new Error('Registration failed');
   }
-
-  return await response.json();
 });
 
 export const registerOwner = createAsyncThunk('auth/registerOwner', async (values) => {
-  const url = '/api/auth/registerApplicationOwner';
-  values.registrationMethod = 'traditional';
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(values),
-  });
-
-  if (!response.ok) {
-    handleError(response);
+  try {
+    const data = await authService.registerApplicationOwner(values);
+    return data;
+  } catch (error) {
+    if (error.response) {
+      handleError(error.response);
+    }
     throw new Error('Owner registration failed');
   }
-
-  return await response.json();
 });
 
 export const loginOrRegisterAzureUser = createAsyncThunk(
   'auth/loginOrRegisterAzureUser',
   async (code, { rejectWithValue }) => {
     clearStorage();
-    const url = '/api/auth/loginOrRegisterAzureUser';
 
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code }),
-      });
+      const response = await authService.loginOrRegisterAzureUser(code);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 409) {
-          message.error(data.message);
-        } else {
-          handleError(response);
-        }
-        // Handle non-2xx responses (e.g., 409 Conflict)
-        return rejectWithValue({
-          status: response.status,
-          message: data.message || 'Azure login failed',
-        });
-      }
-
-      if (data.success) {
-        data.data.isAuthenticated = true;
-        setUser(JSON.stringify(data.data));
+      if (response) {
+        response.data.isAuthenticated = true;
+        setUser(JSON.stringify(response.data));
         return {
           type: 'success',
-          user: data.data,
+          user: response.data,
         };
       } else {
         return rejectWithValue({
-          status: response.status,
-          message: data.message || 'Azure login failed',
+          status: null,
+          message: response.message || 'Azure login failed',
         });
       }
     } catch (error) {
+      console.log('------------------------');
+      console.log('ERRRRR: ', error);
+      console.log('------------------------');
+      // Handle axios errors
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 409) {
+          handleError(data.message);
+        } else {
+          handleError(error);
+        }
+
+        return rejectWithValue({
+          status: status,
+          message: data.message || 'Azure login failed',
+        });
+      }
+      handleError(error.messages || error);
+
       // Handle network errors or other unexpected issues
       return rejectWithValue({
         status: null,
@@ -223,8 +179,8 @@ export const azureLoginRedirect = () => {
 
     window.location.href = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
   } catch (e) {
-    console.log(e);
-    message.error('An error occurred while trying to login with Microsoft.');
+    // Error logged by global error handler
+    handleError('An error occurred while trying to login with Microsoft.');
   }
 };
 

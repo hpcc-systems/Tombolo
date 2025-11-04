@@ -4,8 +4,8 @@ import assetReducer from '../slices/AssetSlice';
 import authReducer from '../slices/AuthSlice';
 import backendReducer from '../slices/BackendSlice';
 import dataflowReducer from '../slices/DataflowSlice';
-import groupsReducer from '../slices/GroupSlice';
-import propagationReducer from '../slices/PropagationSlice';
+// import groupsReducer from '../slices/GroupSlice';
+// import propagationReducer from '../slices/PropagationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,8 +14,8 @@ export const store = configureStore({
     auth: authReducer,
     backend: backendReducer,
     dataflow: dataflowReducer,
-    groups: groupsReducer,
-    propagation: propagationReducer,
+    // groups: groupsReducer,
+    // propagation: propagationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -1,18 +1,13 @@
+// Imports from libraries
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Form, message, Descriptions, Tag } from 'antd';
+import { Form, Descriptions, Tag } from 'antd';
 
+// Local imports
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import AddEditFileMonitoringModal from './AddEditFileMonitoringModal';
-import {
-  evaluateFileMonitoring,
-  getAllFileMonitoring,
-  createFileMonitoring,
-  updateSelectedFileMonitoring,
-  handleDeleteFileMonitoring,
-  toggleFileMonitoringStatus,
-  handleBulkUpdateFileMonitoring,
-} from './fileMonitoringUtils';
+import fileMonitoringService from '@/services/fileMonitoring.service.js';
 import { identifyErroneousTabs } from '../jobMonitoring/jobMonitoringUtils';
 import { getRoleNameArray } from '../../common/AuthUtil';
 import FileMonitoringTable from './FileMonitoringTable';
@@ -75,7 +70,7 @@ function FileMonitoring() {
     monitorings: fileMonitoring,
     setMonitorings: setFileMonitoring,
     allProductCategories,
-  } = useMonitoringsAndAllProductCategories(applicationId, getAllFileMonitoring);
+  } = useMonitoringsAndAllProductCategories(applicationId, fileMonitoringService.getAll);
 
   // When intention to edit a monitoring is discovered
   useEffect(() => {
@@ -301,16 +296,16 @@ function FileMonitoring() {
       // Add metaData to allInputs
       allInputs = { ...allInputs, metaData };
 
-      const responseData = await createFileMonitoring({ inputData: allInputs });
+      const responseData = await fileMonitoringService.create({ inputData: allInputs });
 
-      setFileMonitoring([responseData.data, ...fileMonitoring]);
-      message.success('File monitoring saved successfully');
+      setFileMonitoring([responseData, ...fileMonitoring]);
+      handleSuccess('File monitoring saved successfully');
 
       // Reset states and Close modal if saved successfully
       resetStates();
       setDisplayAddFileMonitoringModal(false);
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     } finally {
       setSavingFileMonitoring(false);
     }
@@ -324,7 +319,7 @@ function FileMonitoring() {
 
   // Handle bulk update of file monitoring
   const handlePauseAndStartAction = async ({ ids, action }) => {
-    const response = await toggleFileMonitoringStatus({ ids, action });
+    const response = await fileMonitoringService.toggle({ ids, action });
     // the response is array of updated objects, these need to replace the existing objects in the state
     const updatedMap = new Map(response.map((u) => [u.id, u]));
     setFileMonitoring((prev) => prev.map((m) => updatedMap.get(m.id) || m));
@@ -372,7 +367,7 @@ function FileMonitoring() {
       });
       // If no touched fields
       if (touchedFields.length === 0) {
-        return message.error('No changes detected');
+        return handleError('No changes detected');
       }
 
       const asrSpecificMetaData = {};
@@ -435,14 +430,14 @@ function FileMonitoring() {
       // Add metaData to allInputs
       const updatedData = { ...allInputs, metaData };
 
-      const response = await updateSelectedFileMonitoring(updatedData, selectedMonitoring.id);
+      const response = await fileMonitoringService.updateOne(updatedData, selectedMonitoring.id);
 
       // If no error thrown set state with new data
-      setFileMonitoring((prev) => prev.map((fm) => (fm.id === response.data.id ? response.data : fm)));
+      setFileMonitoring((prev) => prev.map((fm) => (fm.id === response.id ? response : fm)));
       resetStates();
-      message.success('File monitoring updated successfully');
+      handleSuccess('File monitoring updated successfully');
     } catch (err) {
-      message.error('Failed to update file monitoring');
+      handleError('Failed to update file monitoring');
     } finally {
       setSavingFileMonitoring(false);
     }
@@ -450,12 +445,12 @@ function FileMonitoring() {
 
   const handleBulkDeleteSelectedFileMonitoring = async (ids) => {
     try {
-      await handleDeleteFileMonitoring(ids);
+      await fileMonitoringService.delete(ids);
       setFileMonitoring((prev) => prev.filter((cm) => !ids.includes(cm.id)));
       setSelectedRows([]);
-      message.success('Selected file monitoring deleted successfully');
+      handleSuccess('Selected file monitoring deleted successfully');
     } catch (_) {
-      message.error('Unable to delete selected file monitoring');
+      handleError('Unable to delete selected file monitoring');
     }
   };
 
@@ -589,7 +584,7 @@ function FileMonitoring() {
           selectedRows={selectedRows}
           setMonitoring={setFileMonitoring}
           monitoringTypeLabel={monitoringTypeName}
-          evaluateMonitoring={evaluateFileMonitoring}
+          evaluateMonitoring={fileMonitoringService.evaluate}
         />
       )}
 
@@ -603,7 +598,7 @@ function FileMonitoring() {
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}
           monitoringType="fileMonitoring"
-          handleBulkUpdateMonitorings={handleBulkUpdateFileMonitoring}
+          handleBulkUpdateMonitorings={fileMonitoringService.bulkUpdate}
         />
       )}
     </>

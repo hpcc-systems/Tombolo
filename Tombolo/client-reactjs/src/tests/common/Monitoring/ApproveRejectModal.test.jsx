@@ -52,6 +52,7 @@ vi.mock('antd', async (importOriginal) => {
   };
 });
 import { message } from 'antd';
+import { handleSuccess } from '@/utils/handleResponse';
 
 // Helper to render modal with getContainer={false} to keep it in the RTL container
 const setup = (props = {}) => {
@@ -158,7 +159,7 @@ describe('ApproveRejectModal', () => {
       ids: [10],
     });
 
-    await waitFor(() => expect(message.success).toHaveBeenCalled());
+    await waitFor(() => expect(handleSuccess).toHaveBeenCalled());
     expect(onCancel).toHaveBeenCalled();
   });
 
@@ -186,7 +187,7 @@ describe('ApproveRejectModal', () => {
     expect(payload.approvalStatus).toBe(REJECTED);
     expect(payload.isActive).toBe(false);
 
-    await waitFor(() => expect(message.success).toHaveBeenCalled());
+    await waitFor(() => expect(handleSuccess).toHaveBeenCalled());
     expect(onCancel).toHaveBeenCalled();
   });
 
@@ -220,7 +221,7 @@ describe('ApproveRejectModal', () => {
     // When single item selected and array of one returned, it updates selected
     expect(setSelectedMonitoring).toHaveBeenCalledWith(updated[0]);
     expect(onCancel).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalledWith('updated');
+    expect(handleSuccess).toHaveBeenCalledWith('updated');
   });
 
   it('shows evaluated view and toggles back to form on Modify', async () => {
@@ -267,7 +268,7 @@ describe('ApproveRejectModal', () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(setSelectedMonitoring).toHaveBeenCalledWith(null);
     expect(onCancel).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalled();
+    expect(handleSuccess).toHaveBeenCalled();
   });
 
   it('shows error when evaluateMonitoring handler is missing', async () => {

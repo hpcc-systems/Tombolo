@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Collapse, Form, Input, message, Modal, Select, Table } from 'antd';
+import { Button, Collapse, Form, Input, Modal, Select, Table } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import ConstraintsTags from '../admin/Compliance/Constraints/ConstraintsTags';
+import { handleSuccess } from '../../../utils/handleResponse';
 import Text from './Text';
 import ReadOnlyField from './ReadOnlyField';
 const { Option } = Select;
@@ -123,7 +124,7 @@ const ConstraintModal = ({ modal, setData, dataSource, closeModal }) => {
 
     setData(newDataSource);
     setEditing(false);
-    message.success('Success!');
+    handleSuccess('Success!');
     closeModal();
   };
 

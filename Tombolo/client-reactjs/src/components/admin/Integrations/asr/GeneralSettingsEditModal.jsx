@@ -1,10 +1,11 @@
 // Package Imports
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Checkbox, Select, Card, message } from 'antd';
+import { Modal, Form, Checkbox, Select, Card } from 'antd';
 import { isEmail } from 'validator';
+import { handleError } from '../../../common/handleResponse';
 
 //Local Imports
-import { updateIntegrationSettings } from '../integration-utils';
+import integrationsService from '@/services/integrations.service';
 
 function GeneralSettingsEditModal({
   displayGeneralSettingsEditModal,
@@ -75,7 +76,7 @@ function GeneralSettingsEditModal({
 
     // Save the payload
     try {
-      await updateIntegrationSettings({
+      await integrationsService.updateSettings({
         integrationMappingId: integrationDetails.integrationMappingId,
         integrationSettings: payload,
       });
@@ -94,7 +95,7 @@ function GeneralSettingsEditModal({
 
       handleModalClose();
     } catch (err) {
-      message.error('Unable to update the integration settings');
+      handleError('Unable to update the integration settings');
     }
   };
 

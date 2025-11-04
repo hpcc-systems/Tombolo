@@ -8,18 +8,17 @@ const {
   validateDeleteMsTeamsHook,
 } = require('../../middlewares/msTeamsHookMiddleware');
 const logger = require('../../config/logger');
+const { sendSuccess, sendError } = require('../../utils/response');
 const { TeamsHook } = require('../../models');
 
 // GET all teams hooks
 router.get('/', async (req, res) => {
   try {
     const response = await TeamsHook.findAll({ raw: true });
-    return res.status(200).send(response);
+    return sendSuccess(res, response);
   } catch (err) {
     logger.error('getMsTeamsHook: ', err);
-    return res
-      .status(500)
-      .send('Error while fetching teams hooks. Try again later.');
+    return sendError(res, 'Error while fetching teams hooks. Try again later.');
   }
 });
 
@@ -27,12 +26,10 @@ router.get('/', async (req, res) => {
 router.post('/', validate(validateCreateMsTeamsHook), async (req, res) => {
   try {
     const response = await TeamsHook.create(req.body);
-    return res.status(200).send(response);
+    return sendSuccess(res, response, 'Teams hook created successfully');
   } catch (err) {
     logger.error('createMsTeamsHook: ', err);
-    return res
-      .status(500)
-      .send('Error while creating teams hook. Try again later.');
+    return sendError(res, 'Error while creating teams hook. Try again later.');
   }
 });
 
@@ -54,12 +51,13 @@ router.patch(
       const response = await TeamsHook.update(req.body, {
         where: { id: req.body.id },
       });
-      return res.status(200).send(response);
+      return sendSuccess(res, response, 'Teams hook updated successfully');
     } catch (err) {
       logger.error('updateMsTeamsHook: ', err);
-      return res
-        .status(500)
-        .send('Error while updating teams hook. Try again later.');
+      return sendError(
+        res,
+        'Error while updating teams hook. Try again later.'
+      );
     }
   }
 );
@@ -70,12 +68,10 @@ router.delete('/:id', validate(validateDeleteMsTeamsHook), async (req, res) => {
     await TeamsHook.destroy({
       where: { id: req.params.id },
     });
-    return res.status(200).send('Successfully deleted teams hook');
+    return sendSuccess(res, null, 'Teams hook deleted successfully');
   } catch (err) {
     logger.error('deleteMsTeamsHook: ', err);
-    return res
-      .status(500)
-      .send('Error while deleting teams hook. Try again later.');
+    return sendError(res, 'Error while deleting teams hook. Try again later.');
   }
 });
 

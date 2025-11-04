@@ -1,7 +1,8 @@
 // Package imports
 import React, { useState, useEffect } from 'react';
-import { Tabs, Card, Button, Dropdown, Space, message } from 'antd';
+import { Tabs, Card, Button, Dropdown, Space } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
+import { handleError } from '../../../common/handleResponse';
 
 // Local Imports
 import BreadCrumbs from '../../../common/BreadCrumbs.jsx';
@@ -9,8 +10,9 @@ import GeneralTab from './GeneralTab.jsx';
 import DomainsTab from './DomainsTab.jsx';
 import ProductsTab from './ProductsTab.jsx';
 import GeneralSettingsEditModal from './GeneralSettingsEditModal.jsx';
-import { getIntegrationDetailsByRelationId } from '../integration-utils.js';
-import { getMonitoringTypes, getDomains, getProducts, getTeamsChannels } from './asr-integration-util.js';
+import integrationsService from '@/services/integrations.service';
+import monitoringTypeService from '@/services/monitoringType.service';
+import asrService from '@/services/asr.service';
 import DomainModal from './DomainModal.jsx';
 import ProductModal from './ProductModal.jsx';
 
@@ -55,19 +57,19 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
     //Get integration details
     (async () => {
       try {
-        const integrationDetails = await getIntegrationDetailsByRelationId({
+        const integrationDetails = await integrationsService.getDetailsByRelationId({
           relationId: integration_to_app_mapping_id,
         });
         setIntegrationDetails(integrationDetails);
       } catch (err) {
-        message.error('Unable to get integration details');
+        handleError('Unable to get integration details');
       }
     })();
 
     // Get all monitoring types
     (async () => {
       try {
-        const monitoringTypes = await getMonitoringTypes();
+        const monitoringTypes = await monitoringTypeService.getAll();
         setMonitoringTypes(monitoringTypes);
       } catch (err) {
         return;
@@ -80,7 +82,7 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
     // Get domains
     (async () => {
       try {
-        const domains = await getDomains();
+        const domains = await asrService.getAllDomains();
         setDomains(domains);
       } catch (err) {
         return;
@@ -90,7 +92,7 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
     //Get products
     (async () => {
       try {
-        const products = await getProducts();
+        const products = await asrService.getAllProducts();
         setProducts(products);
       } catch (err) {
         return;
@@ -100,10 +102,10 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
     // Get teams channels
     (async () => {
       try {
-        const response = await getTeamsChannels();
+        const response = await asrService.getTeamsChannels();
         setTeamsChannels(response);
       } catch (err) {
-        message.error('Failed to get teams channels');
+        handleError('Failed to get teams channels');
       }
     })();
   }, []);

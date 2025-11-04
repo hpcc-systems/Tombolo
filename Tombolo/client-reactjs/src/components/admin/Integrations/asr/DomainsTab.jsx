@@ -1,10 +1,11 @@
 // Package imports
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Space, Popconfirm, message } from 'antd';
+import { Table, Tag, Space, Popconfirm } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { handleError, handleSuccess } from '../../../common/handleResponse';
 
 //Local Imports
-import { deleteDomain } from './asr-integration-util';
+import asrService from '@/services/asr.service';
 
 const DomainsTab = ({ domains, setSelectedDomain, setDomainModalOpen }) => {
   const [domainData, setDomainData] = useState([]);
@@ -118,11 +119,11 @@ const DomainsTab = ({ domains, setSelectedDomain, setDomainModalOpen }) => {
   // Handle when delete icon is clicked
   const handleDelete = async (record) => {
     try {
-      await deleteDomain({ id: record.id });
-      message.success('Domain deleted successfully');
+      await asrService.deleteDomain({ id: record.id });
+      handleSuccess('Domain deleted successfully');
       setDomainData((prev) => prev.filter((d) => d.id !== record.id));
     } catch (err) {
-      message.error('Failed to delete domain');
+      handleError('Failed to delete domain');
     }
   };
 

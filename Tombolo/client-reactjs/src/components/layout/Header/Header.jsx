@@ -16,7 +16,7 @@ import {
 import styles from '../layout.module.css';
 import { logout } from '@/redux/slices/AuthSlice';
 import { clusterSelected } from '@/redux/slices/AssetSlice';
-import { groupsExpanded, selectGroup } from '@/redux/slices/GroupSlice';
+// import { groupsExpanded, selectGroup } from '@/redux/slices/GroupSlice';
 
 const { Header } = Layout;
 
@@ -93,8 +93,8 @@ const AppHeader = () => {
     //clear data
     setSelected('Select an Application');
     dispatch(applicationSelected({ applicationId: '', applicationTitle: '' }));
-    dispatch(groupsExpanded(['0-0']));
-    dispatch(selectGroup({ id: '', key: '0-0' }));
+    // dispatch(groupsExpanded(['0-0']));
+    // dispatch(selectGroup({ id: '', key: '0-0' }));
     dispatch(clusterSelected(''));
 
     //log user out

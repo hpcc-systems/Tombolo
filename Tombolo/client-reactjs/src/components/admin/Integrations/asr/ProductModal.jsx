@@ -1,9 +1,10 @@
 // Package imports
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, message } from 'antd';
+import { Modal, Form, Input, Select } from 'antd';
+import { handleError, handleSuccess } from '../../../common/handleResponse';
 
 // Local imports
-import { createNewProduct, getProducts, updateProduct } from './asr-integration-util';
+import asrService from '@/services/asr.service';
 
 // Product tiers
 const tiers = [
@@ -58,13 +59,13 @@ const ProductModal = ({
         await updateExistingProduct(formValues);
       }
 
-      const products = await getProducts();
+      const products = await asrService.getAllProducts();
       setProducts(products);
       form.resetFields();
       setSelectedProduct(null);
       setProductModalOpen(false);
     } catch (err) {
-      message.error('Failed to create product', err.message);
+      handleError('Failed to create product');
     }
   };
 
@@ -74,8 +75,8 @@ const ProductModal = ({
       const payload = {
         ...values,
       };
-      await createNewProduct({ payload });
-      message.success('Product created successfully');
+      await asrService.createProduct({ payload });
+      handleSuccess('Product created successfully');
     } catch (error) {
       throw new Error('Failed to create product');
     }
@@ -88,8 +89,8 @@ const ProductModal = ({
         ...values,
         id: selectedProduct.id,
       };
-      await updateProduct({ id: selectedProduct.id, payload });
-      message.success('Product updated successfully');
+      await asrService.updateProduct({ id: selectedProduct.id, payload });
+      handleSuccess('Product updated successfully');
     } catch (error) {
       throw new Error('Failed to update product');
     }
