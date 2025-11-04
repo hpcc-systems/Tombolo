@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("users", {
+    await queryInterface.createTable('users', {
       id: {
         primaryKey: true,
         type: Sequelize.UUID,
@@ -32,7 +32,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          isIn: [["traditional", "microsoft"]],
+          isIn: [['traditional', 'azure']],
         },
       },
       verifiedUser: {
@@ -48,7 +48,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          isIn: [["pending", "active", "revoked"]],
+          isIn: [['pending', 'active', 'revoked']],
         },
       },
       forcePasswordReset: {
@@ -100,6 +100,6 @@ module.exports = {
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("users");
+    await queryInterface.dropTable('users');
   },
 };

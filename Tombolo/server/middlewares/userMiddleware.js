@@ -18,7 +18,7 @@ const validateUpdateUserPayload = [
   stringBody('lastName', true, { length: { ...NAME_LENGTH } }),
   emailBody('email', true),
   stringBody('registrationMethod', true, {
-    isIn: ['traditional', 'microsoft'],
+    isIn: ['traditional', 'azure'],
   }),
   booleanBody('verifiedUser', true),
   stringBody('registrationStatus', true, {
