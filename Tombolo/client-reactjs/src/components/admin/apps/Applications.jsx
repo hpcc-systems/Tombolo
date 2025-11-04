@@ -1,15 +1,17 @@
-/* eslint-disable no-unreachable */
+// Imports from libraries
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Divider, message, Popconfirm, Table, Tooltip, Tour } from 'antd';
+import { Button, Divider, Popconfirm, Table, Tooltip, Tour } from 'antd';
 import { DeleteOutlined, EditOutlined, EyeOutlined, GlobalOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { authHeader, handleError } from '../../common/AuthHeader';
+
+// Local imports
+import { handleError, handleSuccess } from '../../common/handleResponse';
+import applicationsService from '@/services/applications.service';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
 import AddApplication from './AddApplication';
 import { getUser } from '../../common/userStorage';
 import Text from '../../common/Text';
-
 import { getApplications, applicationSelected, applicationAddButtonTourShown } from '@/redux/slices/ApplicationSlice';
 
 // Table column configuration
@@ -148,21 +150,11 @@ const Applications = () => {
       // Optimistically update local applications
       setLocalApplications(localApplications.filter((app) => app.id !== app_id));
 
-      // Prepare request data
-      const data = JSON.stringify({ appIdToDelete: app_id, user: user.id });
-
-      const response = await fetch('/api/app/read/deleteApplication', {
-        method: 'POST',
-        headers: authHeader(),
-        body: data,
+      // Delete application using service
+      await applicationsService.delete({
+        appIdToDelete: app_id,
+        userId: user.id,
       });
-
-      if (!response.ok) {
-        handleError(response);
-        throw new Error('Failed to delete application');
-      }
-
-      await response.json();
 
       // Clear active project ID if deleted
       if (localStorage.getItem('activeProjectId') === app_id) {
@@ -172,11 +164,11 @@ const Applications = () => {
 
       // Fetch updated applications
       dispatch(getApplications());
-      message.success('Application has been removed successfully.');
+      handleSuccess('Application has been removed successfully.');
     } catch (error) {
       // Revert optimistic update
       setLocalApplications(originalApplications);
-      message.error('Failed to delete the application. Please try again.');
+      handleError('Failed to delete the application. Please try again.');
     }
   };
 

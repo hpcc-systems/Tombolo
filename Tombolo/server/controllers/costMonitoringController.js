@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const {
   uniqueConstraintErrorHandler,
 } = require('../utils/uniqueConstraintErrorHandler');
+const { sendSuccess, sendError } = require('../utils/response');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 const { APPROVAL_STATUS } = require('../config/constants');
 
@@ -20,14 +21,15 @@ async function createCostMonitoring(req, res) {
     const result = await CostMonitoring.findByPk(createResult.id, {
       include: getUserFkIncludes(true),
     });
-    return res.status(201).json({
-      success: true,
-      data: result,
-    });
+    return sendSuccess(res, result);
   } catch (err) {
     logger.error('Failed to create cost monitoring', err);
     const errorResult = uniqueConstraintErrorHandler(err, err.message);
-    return res.status(errorResult.statusCode).json(errorResult.responseObject);
+    return sendError(
+      res,
+      errorResult.responseObject.message || err.message,
+      errorResult.statusCode
+    );
   }
 }
 
@@ -39,23 +41,17 @@ async function updateCostMonitoring(req, res) {
     });
 
     if (affected[0] === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Cost monitoring not found',
-      });
+      return sendError(res, 'Cost monitoring not found', 404);
     }
 
     const result = await CostMonitoring.findByPk(updatedData.id, {
       include: getUserFkIncludes(true),
     });
 
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
+    return sendSuccess(res, result);
   } catch (err) {
     logger.error('Failed to update cost monitoring', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return sendError(res, err.message);
   }
 }
 
@@ -66,10 +62,10 @@ async function getCostMonitorings(req, res) {
       include: getUserFkIncludes(true),
       order: [['createdAt', 'DESC']],
     });
-    return res.status(200).json({ success: true, data: costMonitorings });
+    return sendSuccess(res, costMonitorings);
   } catch (err) {
     logger.error('Failed to get cost monitorings', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return sendError(res, err.message);
   }
 }
 
@@ -79,14 +75,12 @@ async function getCostMonitoringById(req, res) {
       include: getUserFkIncludes(true),
     });
     if (!costMonitoringRecord) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Cost monitoring not found' });
+      return sendError(res, 'Cost monitoring not found', 404);
     }
-    return res.status(200).json({ success: true, data: costMonitoringRecord });
+    return sendSuccess(res, costMonitoringRecord);
   } catch (err) {
     logger.error('Failed to get cost monitoring by id', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return sendError(res, err.message);
   }
 }
 
@@ -100,20 +94,15 @@ async function deleteCostMonitoring(req, res) {
     });
 
     if (!result || result === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Cost monitoring not found' });
+      return sendError(res, 'Cost monitoring not found', 404);
     }
     await transaction.commit();
 
-    return res.status(200).json({
-      success: true,
-      message: 'Cost monitoring deleted successfully',
-    });
+    return sendSuccess(res, null, 'Cost monitoring deleted successfully');
   } catch (err) {
     await transaction.rollback();
     logger.error('Failed to delete cost monitoring', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return sendError(res, err.message);
   }
 }
 
@@ -143,14 +132,14 @@ async function evaluateCostMonitoring(req, res) {
       include: getUserFkIncludes(true),
     });
 
-    return res.status(200).json({
-      success: true,
-      message: 'Cost monitoring(s) evaluated successfully',
-      data: result,
-    });
+    return sendSuccess(
+      res,
+      result,
+      'Cost monitoring(s) evaluated successfully'
+    );
   } catch (err) {
     logger.error('Failed to evaluate cost monitoring', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return sendError(res, err.message);
   }
 }
 
@@ -168,7 +157,7 @@ async function toggleCostMonitoringActive(req, res) {
 
     if (costMonitorings.length === 0) {
       logger.error('Toggle Cost monitoring - Cost monitorings not found');
-      return res.status(404).send('Cost monitorings not found');
+      return sendError(res, 'Cost monitorings not found', 404);
     }
 
     const monitoringIds = costMonitorings.map(monitoring => monitoring.id);
@@ -190,15 +179,15 @@ async function toggleCostMonitoringActive(req, res) {
       include: getUserFkIncludes(true),
     });
 
-    return res.status(200).json({
-      success: true,
-      message: 'Cost monitoring(s) toggled successfully',
-      updatedCostMonitorings,
-    });
+    return sendSuccess(
+      res,
+      { updatedCostMonitorings },
+      'Cost monitoring(s) toggled successfully'
+    );
   } catch (err) {
     transaction && (await transaction.rollback());
     logger.error('Failed to toggle cost monitoring isActive', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return sendError(res, err.message);
   }
 }
 
@@ -212,14 +201,11 @@ async function bulkDeleteCostMonitoring(req, res) {
     });
 
     await transaction.commit();
-    return res.status(200).json({
-      success: true,
-      message: 'Cost monitoring(s) deleted successfully',
-    });
+    return sendSuccess(res, null, 'Cost monitoring(s) deleted successfully');
   } catch (err) {
     await transaction.rollback();
     logger.error('Failed to bulk delete cost monitoring', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return sendError(res, err.message);
   }
 }
 
@@ -240,14 +226,11 @@ async function bulkUpdateCostMonitoring(req, res) {
       );
     }
     await transaction.commit();
-    return res.status(200).json({
-      success: true,
-      message: 'Cost monitorings updated successfully',
-    });
+    return sendSuccess(res, null, 'Cost monitorings updated successfully');
   } catch (err) {
     transaction && (await transaction.rollback());
     logger.error('Failed to bulk update cost monitoring', err);
-    return res.status(500).json({ success: false, message: err.message });
+    return sendError(res, err.message);
   }
 }
 

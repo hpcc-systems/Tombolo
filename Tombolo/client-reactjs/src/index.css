@@ -20,6 +20,10 @@
   background: var(--danger) !important;
 }
 
+.success-notification > .ant-notification-notice-progress {
+  background: var(--success) !important;
+}
+
 .link-text {
   color: var(--primary);
   cursor: pointer;

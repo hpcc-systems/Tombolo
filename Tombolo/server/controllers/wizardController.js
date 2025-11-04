@@ -31,20 +31,22 @@ const createInstanceSettingFirstRun = async (req, res) => {
 
     // Step 1: Check if user already exists
     sendUpdate(res, {
-      event: 'info',
+      success: true,
       step: 1,
       message: 'Verifying if the email is already in use ...',
     });
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       sendUpdate(res, {
-        event: 'error',
+        success: false,
+        step: 99,
         message: 'A user with the provided email already exists.',
       });
       return res.end();
     } else {
       sendUpdate(res, {
-        event: 'success',
+        success: true,
+        step: 1,
         message: 'No existing account is associated with the email provided.',
       });
     }
@@ -52,7 +54,7 @@ const createInstanceSettingFirstRun = async (req, res) => {
     // Step 2: Create new user
     let newUser = null;
     try {
-      sendUpdate(res, { event: 'info', step: 2, message: 'Creating user ...' });
+      sendUpdate(res, { success: true, step: 2, message: 'Creating user ...' });
       newUser = await createUser(
         {
           firstName,
@@ -64,29 +66,39 @@ const createInstanceSettingFirstRun = async (req, res) => {
       );
 
       sendUpdate(res, {
-        event: 'success',
+        success: true,
+        step: 2,
         message: 'User created successfully.',
       });
     } catch (err) {
       logger.error(err.message);
-      sendUpdate(res, { event: 'error', message: 'Failed to create user.' });
+      sendUpdate(res, {
+        success: false,
+        step: 99,
+        message: 'Failed to create user.',
+      });
       transaction.rollback();
       return res.end();
     }
 
     // Step 3: Assign owner role
     sendUpdate(res, {
-      event: 'info',
+      success: true,
       step: 3,
       message: 'Assigning owner role ...',
     });
     try {
       await assignOwnerRole(newUser.id, transaction);
-      sendUpdate(res, { event: 'success', message: 'Owner role assigned.' });
+      sendUpdate(res, {
+        success: true,
+        step: 3,
+        message: 'Owner role assigned.',
+      });
     } catch (err) {
       logger.error('Wizard failed to assign owner role: ', err);
       sendUpdate(res, {
-        event: 'error',
+        success: false,
+        step: 99,
         message: 'Failed to assign owner role.',
       });
       await transaction.rollback();
@@ -96,7 +108,7 @@ const createInstanceSettingFirstRun = async (req, res) => {
     // Step 4: Create instance settings
     try {
       sendUpdate(res, {
-        event: 'info',
+        success: true,
         step: 4,
         message: 'Creating instance settings ...',
       });
@@ -105,13 +117,15 @@ const createInstanceSettingFirstRun = async (req, res) => {
         transaction
       );
       sendUpdate(res, {
-        event: 'success',
+        success: true,
+        step: 4,
         message: 'Instance settings created.',
       });
     } catch (err) {
       logger.error('Wizard failed to create instance settings: ', err);
       sendUpdate(res, {
-        event: 'error',
+        success: false,
+        step: 99,
         message: 'Failed to create instance settings.',
       });
       await transaction.rollback();
@@ -121,19 +135,21 @@ const createInstanceSettingFirstRun = async (req, res) => {
     // Step 5: Send verification email
     try {
       sendUpdate(res, {
-        event: 'info',
+        success: true,
         step: 5,
         message: 'Sending verification email ...',
       });
       await sendVerificationEmail(newUser, transaction);
       sendUpdate(res, {
-        event: 'success',
+        success: true,
+        step: 5,
         message: 'Verification email sent.',
       });
     } catch (err) {
       logger.error('Wizard failed to send verification email: ', err);
       sendUpdate(res, {
-        event: 'error',
+        success: false,
+        step: 99,
         message: 'Failed to send verification email.',
       });
       await transaction.rollback();
@@ -145,7 +161,7 @@ const createInstanceSettingFirstRun = async (req, res) => {
 
     // Final response
     sendUpdate(res, {
-      event: 'success',
+      success: true,
       step: 999,
       message:
         'Setup complete. Please check your email for the verification link.',
@@ -157,7 +173,8 @@ const createInstanceSettingFirstRun = async (req, res) => {
     await transaction.rollback();
     logger.error('Wizard failed: ', err);
     sendUpdate(res, {
-      event: 'error',
+      success: false,
+      step: 99,
       message: 'Setup failed due to a server error',
     });
     res.end();
@@ -254,55 +271,48 @@ const manageInstanceSettings = async (
 
 // Helper: Send verification email
 const sendVerificationEmail = async (user, transaction) => {
+  let verificationCode = uuidv4();
+  let expiresAt = new Date(Date.now() + 86400000); // 24 hours
+  const notificationId = uuidv4();
   if (
     process.env.NODE_ENV === 'development' &&
     process.env.TEST_MODE === 'true'
   ) {
+    verificationCode = 'test-verification-code';
+    expiresAt = new Date(Date.now() + 86400000); // 24 hours
+
     await AccountVerificationCode.create(
       {
-        code: 'test-verification-code',
+        code: verificationCode,
         userId: user.id,
-        expiresAt: new Date(Date.now() + 600000), // 10 minutes
+        expiresAt: new Date(Date.now() + 86400000), // 24 hours
       },
       { transaction }
     );
-    return;
-  }
 
-  const verificationCode = uuidv4();
-  const notificationId = uuidv4();
-
-  await AccountVerificationCode.create(
-    {
-      code: verificationCode,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 86400000), // 24 hours
-    },
-    { transaction }
-  );
-
-  await NotificationQueue.create(
-    {
-      type: 'email',
-      templateName: 'verifyEmail',
-      notificationOrigin: 'User Registration',
-      deliveryType: 'immediate',
-      metaData: {
-        notificationId,
-        recipientName: `${user.firstName}`,
-        verificationLink: `${trimURL(
-          process.env.WEB_URL
-        )}/register?regId=${verificationCode}`,
+    await NotificationQueue.create(
+      {
+        type: 'email',
+        templateName: 'verifyEmail',
         notificationOrigin: 'User Registration',
-        subject: 'Verify your email',
-        mainRecipients: [user.email],
-        notificationDescription: 'Verify email',
-        validForHours: 24,
+        deliveryType: 'immediate',
+        metaData: {
+          notificationId,
+          recipientName: `${user.firstName}`,
+          verificationLink: `${trimURL(
+            process.env.WEB_URL
+          )}/register?regId=${verificationCode}`,
+          notificationOrigin: 'User Registration',
+          subject: 'Verify your email',
+          mainRecipients: [user.email],
+          notificationDescription: 'Verify email',
+          validForHours: 24,
+        },
+        createdBy: user.id,
       },
-      createdBy: user.id,
-    },
-    { transaction }
-  );
+      { transaction }
+    );
+  }
 };
 
 module.exports = {

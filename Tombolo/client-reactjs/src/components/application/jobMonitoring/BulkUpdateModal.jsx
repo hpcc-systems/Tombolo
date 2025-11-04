@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, message, Modal, Select } from 'antd';
+import { Button, Form, Modal, Select } from 'antd';
+import { handleError } from '@/components/common/handleResponse';
 import { isEmail } from 'validator';
-import { handleBulkUpdateJobMonitorings } from './jobMonitoringUtils';
+import jobMonitoringService from '@/services/jobMonitoring.service';
 import { useSelector } from 'react-redux';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
@@ -148,7 +149,7 @@ const BulkUpdateModal = ({
         }
 
         if (meta?.primaryContacts.length < 1) {
-          message.error(`Primary contact is mandatory. ${row.monitoringName} does not have any`);
+          handleError(`Primary contact is mandatory. ${row.monitoringName} does not have any`);
           return;
         }
 
@@ -159,7 +160,7 @@ const BulkUpdateModal = ({
       });
 
       // Update
-      await handleBulkUpdateJobMonitorings({ updatedData: updatedMetaData });
+      await jobMonitoringService.bulkUpdate({ updatedData: updatedMetaData });
       const allUpdatedIds = updatedMetaData.map((data) => data.id);
       const newJobMonitoringData = jobMonitorings.map((job) => {
         if (allUpdatedIds.includes(job.id)) {
@@ -180,7 +181,7 @@ const BulkUpdateModal = ({
       setJobMonitorings(newJobMonitoringData);
       resetState();
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     }
   };
 

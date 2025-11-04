@@ -1,21 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
+
+// Local Imports
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { useSelector } from 'react-redux';
-import { Form, message } from 'antd';
-import {
-  identifyErroneousTabs,
-  getAllLzMonitorings,
-  updateMonitoring,
-  createLandingZoneMonitoring,
-  handleLzBulkDelete,
-  toggleLzMonitoringStatus,
-  approveSelectedMonitoring,
-} from './Utils';
+import { Form } from 'antd';
+import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service.js';
+import { identifyErroneousTabs, handleLandingZoneMonitoringApproval } from './Utils';
 import { flattenObject } from '../../common/CommonUtil';
-
-import { getMonitoringTypeId, getDomains, getProductCategories } from '../../common/ASRTools';
+import asrService from '@/services/asr.service.js';
+import monitoringTypeService from '@/services/monitoringType.service.js';
 import { getRoleNameArray } from '../../common/AuthUtil';
-
 import AddEditModal from './AddEditModal/Modal';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import LandingZoneMonitoringTable from './LandingZoneMonitoringTable';
@@ -24,7 +18,9 @@ import BulkUpdateModal from './BulkUpdateModal';
 import ViewDetailsModal from './ViewDetailsModal';
 import LzFilters from './LzFilters';
 import { Constants } from '@/components/common/Constants';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 
+// Constants
 const monitoringTypeName = 'Landing Zone Monitoring';
 
 const LandigZoneMonitoring = () => {
@@ -111,16 +107,15 @@ const LandigZoneMonitoring = () => {
     if (!applicationId) return;
     (async () => {
       try {
-        const allLzMonitoring = await getAllLzMonitorings({ applicationId });
+        const allLzMonitoring = await landingZoneMonitoringService.getAll(applicationId);
         // Flatten each object in the array
         const flattenedMonitorings = allLzMonitoring.map((monitoring) => {
           const flat = flattenObject(monitoring);
           return { ...flat, ...monitoring }; // Flat also keep the original object - make it easier to update
         });
-
         setLandingZoneMonitoring(flattenedMonitorings);
       } catch (error) {
-        message.error('Error fetching landing zone monitorings');
+        handleError('Failed to fetch all landing zone monitoring');
       }
     })();
   }, [applicationId, displayAddEditModal]);
@@ -130,10 +125,11 @@ const LandigZoneMonitoring = () => {
     if (!isMonitoringTypeIdFetched.current) {
       (async () => {
         try {
-          const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
+          // const monitoringTypeId = await getMonitoringTypeId({ monitoringTypeName });
+          const monitoringTypeId = await monitoringTypeService.getId({ monitoringTypeName });
           setMonitoringTypeId(monitoringTypeId);
         } catch (error) {
-          message.error('Error fetching monitoring type ID');
+          handleError('Error fetching monitoring type ID');
         }
       })();
       isMonitoringTypeIdFetched.current = true;
@@ -146,14 +142,15 @@ const LandigZoneMonitoring = () => {
     if (!monitoringTypeId) return;
     (async () => {
       try {
-        let domainData = await getDomains({ monitoringTypeId });
+        let domainData = await asrService.getDomains({ monitoringTypeId });
+
         domainData = domainData.map((d) => ({
           label: d.name,
           value: d.id,
         }));
         setDomains(domainData);
       } catch (error) {
-        message.error('Error fetching domains');
+        handleError('Error fetching domains');
       }
     })();
 
@@ -166,14 +163,14 @@ const LandigZoneMonitoring = () => {
     if (!selectedDomain) return;
     (async () => {
       try {
-        const productCategories = await getProductCategories({ domainId: selectedDomain });
+        const productCategories = await asrService.getProductCategories({ domainId: selectedDomain });
         const formattedProductCategories = productCategories.map((c) => ({
           label: `${c.name} (${c.shortCode})`,
           value: c.id,
         }));
         setProductCategories(formattedProductCategories);
       } catch (error) {
-        message.error('Error fetching product category');
+        handleError('Error fetching product category');
       }
     })();
   }, [monitoringTypeId, selectedDomain, selectedMonitoring]);
@@ -287,14 +284,15 @@ const LandigZoneMonitoring = () => {
       // Add appliationId to userFieldInputs
       userFieldInputs.applicationId = applicationId;
 
-      await createLandingZoneMonitoring({ inputData: userFieldInputs });
+      await landingZoneMonitoringService.create(userFieldInputs);
 
       // Rest states and Close model if saved successfully
       resetStates();
       setDisplayAddEditModal(false);
+      handleSuccess('Landing zone monitoring created successfully');
     } catch (err) {
       console.log(err);
-      message.error(err.message);
+      handleError('Failed to create landing zone monitoring');
     } finally {
       setSavingLzMonitoring(false);
     }
@@ -346,7 +344,7 @@ const LandigZoneMonitoring = () => {
 
       // If no touched fields
       if (touchedFields.length === 0) {
-        return message.error('No changes detected');
+        return handleError('No changes detected');
       }
 
       // updated monitoring
@@ -390,11 +388,11 @@ const LandigZoneMonitoring = () => {
       updatedData = { ...updatedData, ...newOtherFields };
 
       // Make api call
-      await updateMonitoring({ updatedData });
-      message.success('Landingzone monitoring saved successfully');
+      await landingZoneMonitoringService.updateOne(updatedData);
+      handleSuccess('Landingzone monitoring updated successfully');
       resetStates();
     } catch (err) {
-      message.error('Failed to update landing zone monitoring');
+      handleError('Failed to save landing zone monitoring');
     } finally {
       setSavingLzMonitoring(false);
     }
@@ -489,24 +487,23 @@ const LandigZoneMonitoring = () => {
 
   const handleBulkDeleteSelectedLandingZones = async (ids) => {
     try {
-      const res = await handleLzBulkDelete({ ids });
+      await landingZoneMonitoringService.bulkDelete(ids);
       setLandingZoneMonitoring((prev) => prev.filter((lz) => !ids.includes(lz.id)));
       setSelectedRows([]);
-      if (res) message.success('Selected landing zone monitorings deleted successfully');
+      handleSuccess('Selected landing zone monitoring deleted successfully');
     } catch (err) {
-      message.error('Unable to delete selected landing zone monitorings: ' + err);
+      handleError('Failed to delete selected landing zone monitoring');
     }
   };
 
   const handleBulkStartPauseLandingZones = async ({ ids, action }) => {
     try {
       const startMonitoring = action === 'start';
-      await toggleLzMonitoringStatus({ ids, isActive: startMonitoring });
-      setLandingZoneMonitoring((prev) =>
-        prev.map((lz) => (ids.includes(lz.id) ? { ...lz, isActive: startMonitoring } : lz))
-      );
-    } catch (_) {
-      message.error('Unable to start/pause selected job monitorings');
+      await landingZoneMonitoringService.toggle(ids, startMonitoring);
+      handleSuccess(`Selected landing zone monitoring ${startMonitoring ? 'started' : 'paused'} successfully. `);
+    } catch (err) {
+      console.log(err);
+      handleError('Failed to start/pause selected landing zone monitoring');
     }
   };
 
@@ -610,13 +607,21 @@ const LandigZoneMonitoring = () => {
         selectedMonitoring={selectedMonitoring}
         setSelectedMonitoring={setSelectedMonitoring}
         selectedRows={selectedRows}
-        setMonitoring={setLandingZoneMonitoring}
+        // setMonitoring={setLandingZoneMonitoring}
         monitoringTypeLabel={monitoringTypeName}
-        evaluateMonitoring={approveSelectedMonitoring}
-        onSuccess={async () => {
-          const updatedLzMonitoringData = await getAllLzMonitorings({ applicationId });
-          setLandingZoneMonitoring(updatedLzMonitoringData);
-        }}
+        evaluateMonitoring={landingZoneMonitoringService.approveMonitoring}
+        onSubmit={(formData) =>
+          handleLandingZoneMonitoringApproval({
+            formData,
+            landingZoneMonitoringService,
+            handleSuccess,
+            handleError,
+            applicationId,
+            setLandingZoneMonitoring,
+            setDisplayApprovalModal,
+            flattenObject,
+          })
+        }
       />
       {bulkEditModalVisibility && (
         <BulkUpdateModal
@@ -625,7 +630,6 @@ const LandigZoneMonitoring = () => {
           landingZoneMonitoring={landingZoneMonitoring}
           setLandingZoneMonitoring={setLandingZoneMonitoring}
           selectedRows={selectedRows}
-          getAllLzMonitorings={getAllLzMonitorings}
         />
       )}
     </>

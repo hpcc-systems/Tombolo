@@ -1,93 +1,3 @@
-import { authHeader } from '../../common/AuthHeader.js';
-
-// Create a landingzone monitoring
-export const createLandingZoneMonitoring = async ({ inputData }) => {
-  const payload = {
-    method: 'POST',
-    headers: authHeader(),
-    body: JSON.stringify(inputData),
-  };
-
-  const response = await fetch(`/api/landingZoneMonitoring`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to save landingzone monitoring');
-  }
-
-  const { data } = await response.json();
-  return data;
-};
-
-// Function to get all LZ monitorings from the server
-export const getAllLzMonitorings = async ({ applicationId }) => {
-  const payload = {
-    method: 'GET',
-    headers: authHeader(),
-  };
-
-  const response = await fetch(`/api/landingZoneMonitoring/all/${applicationId}`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to get landing zone monitorings');
-  }
-
-  const { data } = await response.json();
-  return data;
-};
-
-// Update a landingzone monitoring
-export const updateMonitoring = async ({ updatedData }) => {
-  const payload = {
-    method: 'PATCH',
-    headers: authHeader(),
-    body: JSON.stringify(updatedData),
-  };
-
-  const response = await fetch(`/api/landingZoneMonitoring`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to update landingzone monitoring');
-  }
-
-  const data = await response.json();
-  return data;
-};
-
-// Update a landingzone monitoring
-export const approveSelectedMonitoring = async (formData) => {
-  const payload = {
-    method: 'PATCH',
-    headers: authHeader(),
-    body: JSON.stringify(formData),
-  };
-
-  const response = await fetch(`/api/landingZoneMonitoring/evaluate`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to update landingzone monitoring');
-  }
-
-  const data = await response.json();
-  return data;
-};
-
-//Delete landing zone monitoring
-export const deleteLzMonitoring = async ({ id }) => {
-  const payload = {
-    method: 'DELETE',
-    headers: authHeader(),
-  };
-
-  const response = await fetch(`/api/landingZoneMonitoring/${id}`, payload);
-
-  if (!response.ok) {
-    throw new Error(`Failed to delete landing zone monitoring: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data;
-};
-
 // Function to identify erroneous tab(s)
 const formFields = {
   0: ['monitoringName', 'description', 'monitoringScope', 'clusterId', 'directoryName'],
@@ -108,82 +18,6 @@ export const identifyErroneousTabs = ({ erroneousFields }) => {
   return erroneousTabs;
 };
 
-//Toggle landing zone monitoring status, just post the id of the landing zone monitoring to  /toggle in the req body
-export const toggleLzMonitoringStatus = async ({ ids, isActive }) => {
-  const payload = {
-    method: 'PATCH',
-    headers: authHeader(),
-    body: JSON.stringify({ ids, isActive }),
-  };
-
-  const response = await fetch(`/api/landingZoneMonitoring/toggleStatus`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to toggle landing zone monitoring status');
-  }
-
-  const data = await response.json();
-  return data;
-};
-
-// Bulk delete landingzone monitorings
-export const handleLzBulkDelete = async ({ ids }) => {
-  const payload = {
-    method: 'DELETE',
-    headers: authHeader(),
-    body: JSON.stringify({ ids }),
-  };
-
-  const response = await fetch(`/api/landingZoneMonitoring/bulkDelete`, payload);
-  if (!response.ok) {
-    throw new Error('Failed to bulk delete landing zone monitorings');
-  }
-  return true;
-};
-
-// Bulk update
-export const handleBulkUpdateLzMonitorings = async (updatedData) => {
-  const payload = {
-    method: 'PATCH',
-    headers: authHeader(),
-    body: JSON.stringify({ updatedData }),
-  };
-
-  const response = await fetch(`/api/LandingZoneMonitoring/bulkUpdate`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to bulk update landing zone monitorings');
-  }
-
-  const data = await response.json();
-  return data;
-};
-
-export const handleBulkApproveLandingZoneMonitoring = async ({ selectedLandingZoneMonitoring, formData }) => {
-  const { approved, approvedAt, approvedBy, approvalStatus, active } = formData;
-
-  const payload = {
-    method: 'PATCH',
-    headers: authHeader(),
-    body: JSON.stringify({
-      ids: selectedLandingZoneMonitoring,
-      approved,
-      approvedAt,
-      approvedBy,
-      approvalStatus,
-      active,
-    }),
-  };
-
-  const response = await fetch(`/api/landingZoneMonitoring/bulkApprove`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to bulk approve landingzone monitorings');
-  }
-  const data = await response.json();
-  return data;
-};
-
 // Check if 2 schedule are the same
 export function isScheduleUpdated({ existingSchedule, newSchedule }) {
   if (existingSchedule.length !== newSchedule.length) return true;
@@ -193,49 +27,34 @@ export function isScheduleUpdated({ existingSchedule, newSchedule }) {
   return false;
 }
 
-export const getDropzones = async (selectedCluster) => {
-  const payload = {
-    method: 'GET',
-    headers: authHeader(),
-  };
-
-  const response = await fetch(`/api/landingZoneMonitoring/getDropzones?clusterId=${selectedCluster.id}`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to get dropzones');
-  }
-
-  const data = await response.json();
-  return data;
-};
-
-export const getDirectoryList = async ({ clusterId, dropzoneName, netaddr, path, signal }) => {
-  const payload = {
-    method: 'GET',
-    headers: authHeader(),
-    signal, // Add abort signal to fetch options
-  };
-
-  const queryParams = new URLSearchParams({
-    clusterId,
-    DropZoneName: dropzoneName,
-    Netaddr: netaddr,
-    Path: path,
-    DirectoryOnly: 'true',
-  });
-
-  const response = await fetch(`/api/landingZoneMonitoring/fileList?${queryParams}`, payload);
-
-  if (!response.ok) {
-    throw new Error('Failed to get directory list');
-  }
-
-  const data = await response.json();
-  return data;
-};
-
 // Convert storage values to MB for comparison
 export const convertToMB = (value, unit) => {
   const multipliers = { MB: 1, GB: 1024, TB: 1024 * 1024, PB: 1024 * 1024 * 1024 };
   return value * (multipliers[unit] || 1);
 };
+
+// Handle landing zone monitoring approval with success/error handling and data refresh
+export async function handleLandingZoneMonitoringApproval({
+  formData,
+  landingZoneMonitoringService,
+  handleSuccess,
+  handleError,
+  applicationId,
+  setLandingZoneMonitoring,
+  setDisplayApprovalModal,
+  flattenObject,
+}) {
+  try {
+    await landingZoneMonitoringService.approveMonitoring(formData);
+    const updatedLzMonitoringData = await landingZoneMonitoringService.getAll(applicationId);
+    const flattenedMonitoring = updatedLzMonitoringData.map((monitoring) => {
+      const flat = flattenObject(monitoring);
+      return { ...flat, ...monitoring }; // Flat also keep the original object - make it easier to update
+    });
+    setLandingZoneMonitoring(flattenedMonitoring);
+    handleSuccess('Response saved successfully');
+    setDisplayApprovalModal(false);
+  } catch (error) {
+    handleError('Failed to updated landing zone monitoring');
+  }
+}

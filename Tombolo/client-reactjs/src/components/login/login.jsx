@@ -1,15 +1,19 @@
+// Imports from libraries
 import { useEffect, useState } from 'react';
-import { Form, Input, Button, Divider, Spin, message } from 'antd';
+import { Form, Input, Button, Divider, Spin } from 'antd';
 import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
+// Local imports
+import { handleError } from '../common/handleResponse';
 import msLogo from '../../images/mslogo.png';
 import { getDeviceInfo } from './utils';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
-import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
+import ResetTempPassword from './ResetTempPassword';
 
+import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 import styles from './login.module.css';
 
 // Static auth config and Azure env validation (computed once per module load)
@@ -39,6 +43,7 @@ const Login = () => {
 
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
+  const [isTempPassword, setIsTempPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [azureLoginAttempted, setAzureLoginAttempted] = useState(false);
   const [email, setEmail] = useState(null);
@@ -56,15 +61,13 @@ const Login = () => {
 
     const test = await dispatch(login({ email, password, deviceInfo }));
 
-    if (test?.type === 'temp-pw') {
+    if (test?.payload?.type === Constants.LOGIN_TEMP_PW) {
       setLoading(false);
+      // Since resetLink is no longer provided in the response,
+      // show a message to check email for reset instructions
+      // handleError('You have a temporary password. Please check your email for password reset instructions.');
+      setIsTempPassword(true);
 
-      const resetLink = test.payload?.user?.resetLink;
-      if (resetLink) {
-        window.location.href = resetLink;
-      } else {
-        message.error('Please check your email for link to reset you temporary password.');
-      }
       return;
     }
 
@@ -95,7 +98,7 @@ const Login = () => {
 
     //handle all other errors
     if (!test) {
-      message.error('An unexpected error occurred. Please try again.');
+      handleError('An unexpected error occurred. Please try again.');
       setLoading(false);
     }
     return;
@@ -107,7 +110,7 @@ const Login = () => {
 
     if (sessionExpired) {
       localStorage.removeItem('sessionExpired');
-      message.error('Session expired. Please log in again.');
+      handleError('Session expired. Please log in again.');
     }
   });
 
@@ -137,7 +140,7 @@ const Login = () => {
         return;
       }
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
       setLoading(false);
       return;
     } finally {
@@ -155,8 +158,9 @@ const Login = () => {
       {unverifiedUserLoginAttempt && (
         <UnverifiedUser setUnverifiedUserLoginAttempt={setUnverifiedUserLoginAttempt} email={email} />
       )}
+      {isTempPassword && <ResetTempPassword email={email} />}
       {expiredPassword && <ExpiredPassword email={email} />}
-      {!unverifiedUserLoginAttempt && !expiredPassword && (
+      {!unverifiedUserLoginAttempt && !expiredPassword && !isTempPassword && (
         <>
           <Form onFinish={onFinish} layout="vertical" form={loginForm}>
             {loading && (

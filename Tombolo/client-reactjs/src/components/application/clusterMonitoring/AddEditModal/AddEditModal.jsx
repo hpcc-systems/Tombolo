@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Modal, Tabs, Badge, Button, message, Card } from 'antd';
+import { Modal, Tabs, Badge, Button, Card } from 'antd';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import BasicTab from './BasicTab';
 import NotificationTab from './NotificationTab';
-import { createClusterMonitoring, updateClusterMonitoring, identifyErroneousTabs } from '../clusterMonitoringUtils';
+import clusterMonitoringService from '@/services/clusterMonitoring.service';
+import { identifyErroneousTabs } from '../clusterMonitoringUtils';
 
 function AddEditModel({
   setDisplayAddEditModal,
@@ -253,8 +255,8 @@ function AddEditModel({
       allInputs = { ...allInputs, metaData };
 
       if (editingMonitoring) {
-        const responseData = await updateClusterMonitoring({ ...allInputs, id: selectedMonitoring.id });
-        let updatedMonitoring = responseData.data;
+        const responseData = await clusterMonitoringService.update({ ...allInputs, id: selectedMonitoring.id });
+        let updatedMonitoring = responseData;
 
         setClusterMonitoring(
           clusterMonitoring.map((monitoring) =>
@@ -262,15 +264,15 @@ function AddEditModel({
           )
         );
       } else {
-        let responseData = await createClusterMonitoring(allInputs);
-        setClusterMonitoring([responseData.data, ...clusterMonitoring]);
+        let responseData = await clusterMonitoringService.create(allInputs);
+        setClusterMonitoring([responseData, ...clusterMonitoring]);
       }
 
       form.resetFields();
-      message.success('Cost monitoring saved successfully');
+      handleSuccess('Cost monitoring saved successfully');
       setDisplayAddEditModal(false);
     } catch (err) {
-      message.error(err.message);
+      handleError(err.message);
     } finally {
       setSavingClusterMonitoring(false);
       setDuplicatingData({ isDuplicating: false });

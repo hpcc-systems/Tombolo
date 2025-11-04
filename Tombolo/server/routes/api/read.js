@@ -7,6 +7,11 @@ const {
   Cluster,
 } = require('../../models');
 const logger = require('../../config/logger');
+const {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} = require('../../utils/response');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
@@ -30,8 +35,7 @@ router.get(
       validatorUtil.errorFormatter
     );
     try {
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
+      if (!errors.isEmpty()) return sendValidationError(res, errors.array());
       const { applicationId: application_id } = req.params;
       if (!application_id) throw Error('Invalid app ID');
 
@@ -53,7 +57,7 @@ router.get(
 
         //Check if key is expired
         if (validKey.dataValues.expirationDate < currentDate) {
-          throw Error('Key expired');
+          return sendError(res, 'Key expired', 401);
         }
         //Check if key usage is below limit
         if (metaData.Usage < metaData.UsageLimit) {
@@ -61,7 +65,7 @@ router.get(
           //update key usage
           await ApiKey.update({ metaData }, { where: { name } });
         } else {
-          throw Error('Key has no uses remaining');
+          return sendError(res, 'Key has no uses remaining', 429);
         }
 
         //no errors, get notifications and return them.
@@ -80,14 +84,13 @@ router.get(
           raw: true,
         });
 
-        return res.status(200).send(notifications);
+        return sendSuccess(res, notifications);
       } else {
-        throw Error('Invalid or Expired Key');
+        return sendError(res, 'Invalid or Expired Key', 401);
       }
     } catch (error) {
-      return res
-        .status(500)
-        .json({ message: 'Unable to get notifications - ' + error });
+      logger.error('Get notifications API error:', error);
+      return sendError(res, `Unable to get notifications - ${error.message}`);
     }
   }
 );
@@ -107,11 +110,10 @@ router.get(
       );
 
       // return if error(s) exist
-      if (!errors.isEmpty())
-        return res.status(422).json({ success: false, errors: errors.array() });
+      if (!errors.isEmpty()) return sendValidationError(res, errors.array());
 
       const { applicationId: application_id } = req.params;
-      if (!application_id) throw Error('Invalid app ID');
+      if (!application_id) return sendError(res, 'Invalid app ID', 400);
 
       const { name, key } = req.params;
 
@@ -131,7 +133,7 @@ router.get(
 
         //Check if key is expired
         if (validKey.dataValues.expirationDate < currentDate) {
-          throw Error('Key expired');
+          return sendError(res, 'Key expired', 401);
         }
         //Check if key usage is below limit
         if (metaData.Usage < metaData.UsageLimit) {
@@ -139,7 +141,7 @@ router.get(
           //update key usage
           await ApiKey.update({ metaData }, { where: { name } });
         } else {
-          throw Error('Key has no uses remaining');
+          return sendError(res, 'Key has no uses remaining', 429);
         }
 
         const data = await Cluster.findAll({
@@ -147,14 +149,13 @@ router.get(
           attributes: ['name', 'metaData'],
         });
 
-        res.status(200).send(data);
+        return sendSuccess(res, data);
+      } else {
+        return sendError(res, 'Invalid or Expired Key', 401);
       }
     } catch (err) {
       logger.error('getClusterUsage: ', err);
-      res.status(503).json({
-        success: false,
-        message: 'Failed to fetch current cluster usage',
-      });
+      return sendError(res, 'Failed to fetch current cluster usage', 503);
     }
   }
 );

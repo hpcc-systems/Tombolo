@@ -1,14 +1,15 @@
 // Packages
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Modal, Form, Input, Select, DatePicker, Button, Row, Col, message } from 'antd';
+import { Modal, Form, Input, Select, DatePicker, Button, Row, Col } from 'antd';
+import { handleError } from '@/components/common/handleResponse';
 import dayjs from 'dayjs';
 
 // Local imports
-import { getDomains, getProductCategories } from './notificationUtil';
-import { createNotification } from './notificationUtil';
 import { statuses } from './notificationUtil';
 import { getUser } from '../../../common/userStorage';
+import notificationsService from '@/services/notifications.service';
+import asrService from '@/services/asr.service';
 
 //Constants
 const { Option } = Select;
@@ -52,10 +53,10 @@ const CreateNotificationModal = ({
     }
     (async () => {
       try {
-        const data = await getDomains({ monitoringId: selectedActivityType });
+        const data = await asrService.getDomains({ monitoringTypeId: selectedActivityType });
         setDomains(data);
       } catch (err) {
-        message.error('Error fetching domains');
+        handleError('Error fetching domains');
       }
     })();
   }, [selectedActivityType]);
@@ -67,10 +68,10 @@ const CreateNotificationModal = ({
     }
     (async () => {
       try {
-        const response = await getProductCategories({ domainId: selectedDomain });
+        const response = await asrService.getProductCategories({ domainId: selectedDomain });
         setProductCategories(response);
       } catch (err) {
-        message.error('Failed to fetch product category for selected domain');
+        handleError('Failed to fetch product category for selected domain');
       }
     })();
   }, [selectedDomain]);
@@ -88,7 +89,7 @@ const CreateNotificationModal = ({
       setSelectedDomain(value);
       form.setFieldsValue({ productCategory: null });
     } catch (error) {
-      message.error('Error fetching product category');
+      handleError('Error fetching product category');
     }
   };
 
@@ -132,7 +133,7 @@ const CreateNotificationModal = ({
 
       //Make fetch call to save data
       const notificationPayload = { ...commonPayloadFields, metaData: { asrSpecificMetaData } };
-      const responseData = await createNotification({ notificationPayload });
+      const responseData = await notificationsService.createNotification(notificationPayload);
 
       // Successful creation of notification
       setSentNotifications((prevNotifications) => [responseData, ...prevNotifications]);
@@ -141,7 +142,7 @@ const CreateNotificationModal = ({
       form.resetFields();
     } catch (error) {
       // Error saving notification
-      message.error('Error saving notification');
+      handleError('Error saving notification');
       setSavingForm(false);
     }
   };

@@ -42,8 +42,8 @@ export const sendResponse = (
  * @param {string} [message='OK'] - Success message
  * @returns {import('express').Response} Express response
  */
-export const sendSuccess = (res, data, message = 'OK') =>
-  sendResponse(res, { status: 200, success: true, data, message, errors: [] });
+export const sendSuccess = (res, data, message = 'OK', status = 200) =>
+  sendResponse(res, { status, success: true, data, message, errors: [] });
 
 /**
  * Sends an error response to the client.
@@ -64,6 +64,7 @@ export const sendError = (res, error, status = 500) => {
     errorsArray = [error];
   } else if (error instanceof Error) {
     const errorInfo = getErrorInfo(error);
+
     return sendResponse(res, {
       status: errorInfo.statusCode,
       success: false,
@@ -113,7 +114,6 @@ export const getErrorInfo = error => {
 
   const { name } = error;
   const info = ERROR_MAP[name];
-
   if (info) {
     return {
       statusCode: info.code,
@@ -131,6 +131,10 @@ export const getErrorInfo = error => {
 
 /** @type {Record<string, {code: number, message: string}>} */
 const ERROR_MAP = {
+  UnauthorizedError: {
+    code: StatusCodes.UNAUTHORIZED,
+    message: 'Invalid credentials provided.',
+  },
   EvalError: {
     code: StatusCodes.BAD_REQUEST,
     message: 'Evaluation error occurred.',
@@ -156,10 +160,6 @@ const ERROR_MAP = {
   AssertionError: {
     code: StatusCodes.BAD_REQUEST,
     message: 'Assertion failed.',
-  },
-  UnauthorizedError: {
-    code: StatusCodes.UNAUTHORIZED,
-    message: 'You are not authorized to perform this action.',
   },
   ForbiddenError: {
     code: StatusCodes.FORBIDDEN,

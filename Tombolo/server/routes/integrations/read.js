@@ -8,6 +8,7 @@ const {
   validateUpdateIntegrationSettings,
 } = require('../../middlewares/integrationsMiddleware');
 const logger = require('../../config/logger');
+const { sendError, sendSuccess } = require('../../utils/response');
 const { Integration, IntegrationMapping } = require('../../models');
 
 const router = express.Router();
@@ -16,10 +17,10 @@ const router = express.Router();
 router.get('/all', async (req, res) => {
   try {
     const result = await Integration.findAll();
-    return res.status(200).send(result);
+    return sendSuccess(res, result);
   } catch (err) {
     logger.error('integrations/read getAll: ', err);
-    return res.status(500).json({ message: 'Unable to get integrations' });
+    return sendError(res, 'Unable to get integrations');
   }
 });
 
@@ -41,10 +42,10 @@ router.get('/getAllActive/', async (req, res) => {
         raw: true,
       }
     );
-    return res.status(200).send(integrationMappingDetails);
+    return sendSuccess(res, integrationMappingDetails);
   } catch (err) {
     logger.error('integrations/read getAllActive: ', err);
-    return res.status(500).send('Failed to get active integrations: ' + err);
+    return sendError(res, 'Failed to get active integrations');
   }
 });
 
@@ -81,10 +82,10 @@ router.get(
         ],
       });
 
-      return res.status(200).send(result);
+      return sendSuccess(res, result);
     } catch (err) {
       logger.error('integrations/read integrationDetails: ', err);
-      return res.status(500).send('Failed to get integration details');
+      return sendError(res, 'Failed to get integration details');
     }
   }
 );
@@ -133,12 +134,10 @@ router.post(
           },
         });
       }
-      return res.status(200).json({ message: 'Integration status changed' });
+      return sendSuccess(res, null, 'Integration status changed');
     } catch (err) {
       logger.error('integrations/read toggleStatus: ', err);
-      return res
-        .status(500)
-        .json({ message: 'Unable to update the integration' });
+      return sendError(res, 'Unable to update the integration');
     }
   }
 );
@@ -159,10 +158,10 @@ router.put(
           },
         }
       );
-      return res.status(200).send(result);
+      return sendSuccess(res, result);
     } catch (err) {
       logger.error('integrations/read updateIntegrationSettings: ', err);
-      return res.status(500).send('Failed to update integration details');
+      return sendError(res, 'Failed to update integration details');
     }
   }
 );

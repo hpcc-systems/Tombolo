@@ -11,17 +11,16 @@ const {
 } = require('../../middlewares/monitoringMiddleware');
 const { MonitoringType } = require('../../models');
 const logger = require('../../config/logger');
+const { sendError, sendSuccess } = require('../../utils/response');
 
 // Route to get all monitoring types
 router.get('/', async (req, res) => {
   try {
     const monitoringTypes = await MonitoringType.findAll();
-    return res.status(200).json(monitoringTypes);
+    return sendSuccess(res, monitoringTypes);
   } catch (err) {
     logger.error('get monitoringTypes: ', err);
-    return res
-      .status(500)
-      .json({ message: 'Failed to fetch monitoring types' });
+    return sendError(res, 'Failed to fetch monitoring types');
   }
 });
 
@@ -30,12 +29,14 @@ router.get('/', async (req, res) => {
 router.post('/', validate(validateCreateMonitoring), async (req, res) => {
   try {
     const monitoringType = await MonitoringType.create(req.body);
-    return res.status(200).json(monitoringType);
+    return sendSuccess(
+      res,
+      monitoringType,
+      'Monitoring type created successfully'
+    );
   } catch (error) {
     logger.error('create monitoringType: ', error);
-    return res
-      .status(500)
-      .json({ message: 'Failed to create monitoring type' });
+    return sendError(res, 'Failed to create monitoring type');
   }
 });
 
@@ -44,17 +45,13 @@ router.delete('/:id', validate(validateDeleteMonitoring), async (req, res) => {
   try {
     const monitoringType = await MonitoringType.findByPk(req.params.id);
     if (!monitoringType) {
-      return res.status(404).json({ message: 'Monitoring type not found' });
+      return sendError(res, 'Monitoring type not found', 404);
     }
     await monitoringType.destroy();
-    return res
-      .status(200)
-      .json({ message: 'Monitoring type deleted successfully' });
+    return sendSuccess(res, null, 'Monitoring type deleted successfully');
   } catch (error) {
     logger.error('delete monitoringType: ', error);
-    return res
-      .status(500)
-      .json({ message: 'Failed to delete monitoring type' });
+    return sendError(res, 'Failed to delete monitoring type');
   }
 });
 
@@ -63,15 +60,17 @@ router.put('/:id', validate(validateUpdateMonitoring), async (req, res) => {
   try {
     const monitoringType = await MonitoringType.findByPk(req.params.id);
     if (!monitoringType) {
-      return res.status(404).json({ message: 'Monitoring type not found' });
+      return sendError(res, 'Monitoring type not found', 404);
     }
     await monitoringType.update(req.body);
-    return res.status(200).json(monitoringType);
+    return sendSuccess(
+      res,
+      monitoringType,
+      'Monitoring type updated successfully'
+    );
   } catch (error) {
     logger.error('update monitoringType: ', error);
-    return res
-      .status(500)
-      .json({ message: 'Failed to update monitoring type' });
+    return sendError(res, 'Failed to update monitoring type');
   }
 });
 
@@ -87,14 +86,12 @@ router.get(
         },
       });
       if (!monitoringType) {
-        return res.status(404).json({ message: 'Monitoring type not found' });
+        return sendError(res, 'Monitoring type not found', 404);
       }
-      return res.status(200).json(monitoringType.id);
+      return sendSuccess(res, monitoringType.id);
     } catch (error) {
       logger.error('get monitoringTypeId', error);
-      return res
-        .status(500)
-        .json({ message: 'Failed to get monitoring type id' });
+      return sendError(res, 'Failed to get monitoring type id');
     }
   }
 );

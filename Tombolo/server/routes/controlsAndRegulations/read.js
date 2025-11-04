@@ -3,6 +3,7 @@ const router = express.Router();
 const { ControlsRegulation, DataType } = require('../../models');
 let Sequelize = require('sequelize');
 const logger = require('../../config/logger');
+const { sendSuccess, sendError } = require('../../utils/response');
 const Op = Sequelize.Op;
 
 router.get('/controlsAndRegulations', async (req, res) => {
@@ -17,10 +18,10 @@ router.get('/controlsAndRegulations', async (req, res) => {
       ],
       group: ['compliance'],
     });
-    return res.status(200).json(regulations);
+    return sendSuccess(res, regulations);
   } catch (err) {
     logger.error('getControlsAndRegulations: ', err);
-    return res.status(500).json({ error: err });
+    return sendError(res, err.message || err);
   }
 });
 
@@ -30,10 +31,10 @@ router.get('/getRegulation', async (req, res) => {
       where: { compliance: req.query.compliance },
     });
 
-    return res.status(200).json(regulations);
+    return sendSuccess(res, regulations);
   } catch (err) {
     logger.error('getRegulation: ', err);
-    return res.status(500).json({ error: err });
+    return sendError(res, err.message || err);
   }
 });
 
@@ -43,11 +44,10 @@ router.post('/delete', async (req, res) => {
       where: { compliance: req.body.compliance },
     });
 
-    return res.status(200).json({ result: 'success' });
+    return sendSuccess(res, null, 'Regulation deleted successfully');
   } catch (err) {
     logger.error('regulations/read delete: ', err);
-    logger.error('err', err);
-    return res.status(500).json({ error: err });
+    return sendError(res, err.message || err);
   }
 });
 
@@ -64,20 +64,20 @@ router.post('/saveRegulations', async function (req, res) {
     await ControlsRegulation.destroy({ where: { compliance: compliance } });
     await ControlsRegulation.bulkCreate(regulations);
 
-    return res.status(200).json({ result: 'success ' });
+    return sendSuccess(res, null, 'Regulations saved successfully');
   } catch (err) {
     logger.error('regulations/read saveRegulations: ', err);
-    return res.status(500).json({ error: err });
+    return sendError(res, err.message || err);
   }
 });
 
 router.get('/dataTypes', async (req, res) => {
   try {
     const data_types = await DataType.findAll();
-    return res.status(200).json(data_types);
+    return sendSuccess(res, data_types);
   } catch (err) {
     logger.error('regulations/read dataTypes: ', err);
-    return res.status(500).json({ error: err });
+    return sendError(res, err.message || err);
   }
 });
 
@@ -97,10 +97,10 @@ router.get('/getComplianceByDataType', async (req, res) => {
       }
     }
 
-    return res.status(200).json(compliance);
+    return sendSuccess(res, compliance);
   } catch (err) {
     logger.error('regulations/read getComplianceByDataType: ', err);
-    return res.status(500).json({ error: err });
+    return sendError(res, err.message || err);
   }
 });
 

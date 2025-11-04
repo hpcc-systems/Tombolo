@@ -1,11 +1,12 @@
 // Packages
 import React from 'react';
-import { Table, Tooltip, Popconfirm, Space, Button, message } from 'antd';
+import { Table, Tooltip, Popconfirm, Space, Button } from 'antd';
+import { handleError } from '@/components/common/handleResponse';
 import { EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 //Local Imports
 import { DateWithTooltip } from '../../../common/CommonUtil';
-import { deleteNotification } from './notificationUtil';
+import notificationsService from '@/services/notifications.service';
 
 function SentNotificationsTable({
   sentNotifications,
@@ -41,10 +42,10 @@ function SentNotificationsTable({
   // Delete notification
   const deleteSingleNotification = async (id) => {
     try {
-      await deleteNotification(id);
+      await notificationsService.deleteNotification(id);
       setSentNotifications(sentNotifications.filter((item) => item.id !== id));
     } catch (err) {
-      message.error('failed to delete notification. Please try again.');
+      handleError('failed to delete notification. Please try again.');
     }
   };
 

@@ -25,6 +25,11 @@ const {
   sequelize,
 } = require('../../models');
 const logger = require('../../config/logger');
+const {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+} = require('../../utils/response');
 
 let createGroupHierarchy = groups => {
   let recursivelyPopulateGroup = (parentLevelGroup, parentKey) => {
@@ -75,10 +80,13 @@ router.get('/details', validate(validateGetDetails), async (req, res) => {
     const group = await Group.findOne({
       where: { application_id: req.query.app_id, id: req.query.group_id },
     });
-    return res.status(200).json(group);
+    if (!group) {
+      return sendError(res, 'Group not found', 404);
+    }
+    return sendSuccess(res, group, 'Group details retrieved successfully');
   } catch (err) {
     logger.error('group details: ', err);
-    return res.status(500).json({ error: err });
+    return sendError(res, 'Failed to retrieve group details');
   }
 });
 
@@ -90,10 +98,10 @@ router.get('/', validate(validateGetGroup), async (req, res) => {
     });
 
     const groupHierarchy = await createGroupHierarchy(groups);
-    return res.status(200).json(groupHierarchy);
+    return sendSuccess(res, groupHierarchy, 'Groups retrieved successfully');
   } catch (err) {
     logger.error('getGroups: ', err);
-    return res.status(500).json({ message: 'Failed to get groups' });
+    return sendError(res, 'Failed to get groups');
   }
 });
 
@@ -271,10 +279,11 @@ router.get('/assets', validate(validateGetAssets), (req, res) => {
 
         finalAssets.sort(comparator);
         finalAssets = childGroups.concat(finalAssets);
-        res.json(finalAssets);
+        return sendSuccess(res, finalAssets, 'Assets retrieved successfully');
       })
       .catch(function (err) {
         logger.error('Error occurred while retrieving assets for group: ', err);
+        return sendError(res, 'Failed to retrieve assets for group');
       });
   } else {
     let promises = [],
@@ -413,12 +422,17 @@ router.get('/assets', validate(validateGetAssets), (req, res) => {
       })
     );
 
-    Promise.all(promises).then(() => {
-      finalAssets.sort(comparator);
+    Promise.all(promises)
+      .then(() => {
+        finalAssets.sort(comparator);
 
-      finalAssets = finalGroups.concat(finalAssets);
-      res.json(finalAssets);
-    });
+        finalAssets = finalGroups.concat(finalAssets);
+        return sendSuccess(res, finalAssets, 'Assets retrieved successfully');
+      })
+      .catch(err => {
+        logger.error('Error occurred while retrieving assets: ', err);
+        return sendError(res, 'Failed to retrieve assets');
+      });
   }
 });
 
@@ -437,10 +451,10 @@ router.get(
         type: sequelize.QueryTypes.SELECT,
         replacements: replacements,
       });
-      return res.status(200).json(assets);
+      return sendSuccess(res, assets, 'Nested assets retrieved successfully');
     } catch (err) {
       logger.error('group nestedAssets: ', err);
-      return res.status(500).send('Error occurred while retrieving assets');
+      return sendError(res, 'Failed to retrieve nested assets');
     }
   }
 );
@@ -572,10 +586,10 @@ router.get(
         type: sequelize.QueryTypes.SELECT,
         replacements: replacements,
       });
-      return res.status(200).json(assets);
+      return sendSuccess(res, assets, 'Assets search completed successfully');
     } catch (err) {
       logger.error('assetsSearch: ', err);
-      return res.status(500).send('Error occurred while retrieving assets');
+      return sendError(res, 'Failed to search assets');
     }
   }
 );
@@ -602,10 +616,11 @@ router.post('/', validate(validateCreateGroup), async (req, res) => {
         req.body.applicationId
       );
       if (duplicateGroupName)
-        return res.status(400).send({
-          message:
-            'There is already a group with the same name under the parent group. Please select a different name',
-        });
+        return sendError(
+          res,
+          'There is already a group with the same name under the parent group. Please select a different name',
+          400
+        );
 
       const groupCreated = await Group.create({
         name: req.body.name,
@@ -613,7 +628,11 @@ router.post('/', validate(validateCreateGroup), async (req, res) => {
         application_id: req.body.applicationId,
         parent_group: parentGroupId,
       });
-      return res.status(200).json({ success: true, id: groupCreated.id });
+      return sendSuccess(
+        res,
+        { id: groupCreated.id },
+        'Group created successfully'
+      );
     }
 
     const group = await Group.findOne({
@@ -629,10 +648,11 @@ router.post('/', validate(validateCreateGroup), async (req, res) => {
       );
     }
     if (duplicateGroupName)
-      return res.status(400).send({
-        message:
-          'There is already a group with the same name under the parent group. Please select a different name',
-      });
+      return sendError(
+        res,
+        'There is already a group with the same name under the parent group. Please select a different name',
+        400
+      );
 
     const groupUpdated = await Group.update(
       {
@@ -642,10 +662,10 @@ router.post('/', validate(validateCreateGroup), async (req, res) => {
       { where: { id: req.body.id } }
     );
 
-    return res.status(200).json({ success: true, id: groupUpdated.id });
+    return sendSuccess(res, { id: req.body.id }, 'Group updated successfully');
   } catch (err) {
     logger.error('group create: ', err);
-    return res.status(500).send('Error occured while saving Group');
+    return sendError(res, 'Failed to save group');
   }
 });
 
@@ -701,18 +721,23 @@ router.delete('/', validate(validateDeleteGroup), async (req, res) => {
     );
 
     if (!deleteGroup)
-      return res.status(500).json({
-        message:
-          'The selected Group is not empty. Please empty the content of the group before it can be deleted',
-      });
+      return sendError(
+        res,
+        'The selected Group is not empty. Please empty the content of the group before it can be deleted',
+        400
+      );
 
     await Group.destroy({
       where: { application_id: req.body.app_id, id: req.body.group_id },
     });
-    return res.status(200).json({ success: true });
+    return sendSuccess(
+      res,
+      { id: req.body.group_id },
+      'Group deleted successfully'
+    );
   } catch (err) {
     logger.error('group delete: ', err);
-    return res.status(500).send('Error occured while deleting the Group');
+    return sendError(res, 'Failed to delete group');
   }
 });
 
@@ -724,10 +749,14 @@ router.put('/move', validate(validateMoveGroup), async (req, res) => {
       { parent_group: parentGroup },
       { where: { id: req.body.groupId, application_id: req.body.app_id } }
     );
-    return res.status(200).json({ success: true });
+    return sendSuccess(
+      res,
+      { id: req.body.groupId },
+      'Group moved successfully'
+    );
   } catch (err) {
     logger.error('group move: ', err);
-    return res.status(500).send('Error occurred while moving group');
+    return sendError(res, 'Failed to move group');
   }
 });
 
@@ -739,7 +768,7 @@ router.put('/move/asset', validate(validateMoveAsset), async (req, res) => {
         { parent_group: req.body.destGroupId || '' },
         { where: { application_id: app_id, id: assetId } }
       );
-      return res.status(200).json({ success: true });
+      return sendSuccess(res, { id: assetId }, 'Group moved successfully');
     }
 
     // create or update File
@@ -757,10 +786,10 @@ router.put('/move/asset', validate(validateMoveAsset), async (req, res) => {
       if (!isAssetGroupCreated) await assetGroup.update(assetGroupFields);
     }
 
-    return res.status(200).json({ success: true });
+    return sendSuccess(res, { id: assetId }, 'Asset moved successfully');
   } catch (err) {
     logger.error('group move asset: ', err);
-    return res.status(500).send('Error occured while moving asset');
+    return sendError(res, 'Failed to move asset');
   }
 });
 

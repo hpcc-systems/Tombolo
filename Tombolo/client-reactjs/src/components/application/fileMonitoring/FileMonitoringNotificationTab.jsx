@@ -1,8 +1,8 @@
-// Packages
+// Imports from libraries
 import React, { useEffect } from 'react';
 import { Form, InputNumber, Select, Row, Col } from 'antd';
 
-// Local Imports
+// Local imports
 import NotificationContacts from '../../common/Monitoring/NotificationContacts';
 
 // Constants

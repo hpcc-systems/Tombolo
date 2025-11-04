@@ -1,31 +1,23 @@
 import React from 'react';
-import { Table, Space, Tooltip, message, Typography } from 'antd';
+import { Table, Space, Tooltip, Typography } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
-import { authHeader, handleError } from '../../../common/AuthHeader.js';
+import { handleSuccess, handleError as handleResponseError } from '@/components/common/handleResponse';
 // import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
+import apiKeysService from '@/services/apiKeys.service';
 
 const DashboardApiTable = ({ keys, getKeys, active }) => {
   const { Text } = Typography;
 
   const deleteKey = async (id) => {
     try {
-      const payload = {
-        method: 'DELETE',
-        headers: authHeader(),
-      };
-
-      const response = await fetch(`/api/key/${id}`, payload);
-      if (!response.ok) {
-        handleError(response);
-      } else {
-        await getKeys();
-        message.success('Key Deleted');
-      }
+      await apiKeysService.delete(id);
+      await getKeys();
+      handleSuccess('Key Deleted');
 
       return;
     } catch (error) {
-      message.error('Failed to Delete key');
+      handleResponseError('Failed to Delete key');
     }
   };
 

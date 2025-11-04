@@ -1,11 +1,14 @@
+// Imports from libraries
 import React, { useState, useEffect } from 'react';
-import { message } from 'antd';
 
+// Local imports
 import BreadCrumbs from '../../common/BreadCrumbs';
+import { handleError } from '@/components/common/handleResponse';
 import UserManagementActionButton from './ActionButton';
 import UserManagementTable from './Table';
 import UserFilters from './Filters';
-import { getAllUsers, getAllRoles } from './Utils';
+import usersService from '@/services/users.service';
+import rolesService from '@/services/roles.service';
 import UserDetailModal from './UserDetailModal';
 import EditUserModel from './EditUserModel';
 import AddUserModal from './AddUserModal';
@@ -87,11 +90,11 @@ const UserManagement = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const data = await getAllUsers();
+        const data = await usersService.getAll();
         setUsers(data);
         setFilteredUsers(data);
       } catch (error) {
-        message.error('Failed to get users');
+        handleError('Failed to get users');
       }
     };
     fetchUser();
@@ -99,10 +102,10 @@ const UserManagement = () => {
     // Get all roles when component mounts
     const fetchRoles = async () => {
       try {
-        const allRoles = await getAllRoles();
+        const allRoles = await rolesService.getAll();
         setRoles(allRoles);
       } catch (error) {
-        message.error('Failed to get roles');
+        handleError('Failed to get roles');
       }
     };
     fetchRoles();
