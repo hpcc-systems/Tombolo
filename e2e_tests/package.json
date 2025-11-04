@@ -13,7 +13,8 @@
     "test:monitoring": "playwright test --project=monitoring --timeout=60000",
     "test:ui": "playwright test --ui",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "clean": "rm -rf node_modules"
   },
   "keywords": [],
   "author": "",

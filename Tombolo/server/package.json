@@ -1,17 +1,23 @@
 {
-  "name": "server",
+  "name": "@tombolo/server",
   "version": "1.0.0",
+  "private": true,
   "description": "",
   "main": "server.js",
   "scripts": {
-    "bootstrap-server": "(npm install) && (npm run createSchema) && (npm run migrations)  && (npm run seeds) && (npx nodemon server.js)",
-    "createSchema": "npx sequelize db:create",
-    "migrations": "npx sequelize db:migrate",
-    "seeds": "npx sequelize db:seed:all",
-    "dropSchema": "npx sequelize db:drop",
+    "dev": "nodemon server.js",
+    "bootstrap-server": "(pnpm install) && (pnpm run createSchema) && (pnpm run migrations)  && (pnpm run seeds) && (pnpm exec nodemon server.js)",
+    "createSchema": "pnpm exec sequelize db:create",
+    "migrations": "pnpm exec sequelize db:migrate",
+    "build": "echo No build step for server",
+    "seeds": "pnpm exec sequelize db:seed:all",
+    "dropSchema": "pnpm exec sequelize db:drop",
     "test": "jest --detectOpenHandles",
     "test:jobs": "jest --detectOpenHandles --selectProjects jobs",
-    "test:api": "jest --detectOpenHandles --selectProjects api"
+    "test:api": "jest --detectOpenHandles --selectProjects api",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "clean": "rm -rf node_modules"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +31,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "cron-parser": "^4.9.0",
+    "cron-validate": "^1.5.2",
     "csrf-csrf": "^3.1.0",
     "dotenv": "^8.6.0",
     "ejs": "^3.1.10",
@@ -49,6 +56,9 @@
     "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "babel-jest": "^30.2.0",
     "cross-env": "^7.0.3",
     "eslint": "^9.27.0",
     "globals": "^16.2.0",

@@ -1,5 +1,5 @@
 {
-  "name": "tombolo",
+  "name": "@tombolo/client",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -12,6 +12,7 @@
     "cronstrue": "^2.14.0",
     "dayjs": "^1.11.10",
     "font-awesome": "^4.7.0",
+    "history": "^4.10.1",
     "lodash": "^4.17.21",
     "re-resizable": "^6.9.1",
     "react": "^18.2.0",
@@ -41,11 +42,9 @@
     "vite-plugin-checker": "^0.10.2",
     "vitest": "^3.2.4"
   },
-  "resolutions": {
-    "react-error-overlay": "6.0.9"
-  },
   "scripts": {
-    "bootstrap-client": "(npm install) && (npm start)",
+    "dev": "vite",
+    "bootstrap-client": "(pnpm install) && (pnpm start)",
     "start": "vite",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build",
     "serve": "vite preview",
@@ -53,7 +52,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "clean": "rm -rf node_modules"
   },
   "eslintConfig": {
     "extends": "react-app"

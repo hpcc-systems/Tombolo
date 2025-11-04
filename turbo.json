@@ -1,0 +1,42 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**", "dist/**", ".vite/**"],
+      "env": ["NODE_ENV"]
+    },
+    "test": {
+      "cache": true,
+      "outputs": ["coverage/**"]
+    },
+    "lint": {
+      "cache": true,
+      "outputs": []
+    },
+    "lint:fix": {
+      "cache": false,
+      "outputs": []
+    },
+    "createSchema": {
+      "cache": false
+    },
+    "migrations": {
+      "cache": false
+    },
+    "seeds": {
+      "cache": false
+    },
+    "dropSchema": {
+      "cache": false
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

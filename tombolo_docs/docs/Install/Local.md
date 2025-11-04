@@ -107,12 +107,12 @@ cd Tombolo/server
 ```
 
 ```bash
-npm run bootstrap-server
+pnpm run bootstrap-server
 ```
 
 The `cd` command changes the directory you're working with.
 
-The `npm run bootstrap-server` command installs dependencies located in the package.json file necessary for running and compiling the code, then creates the database schema and runs necessary migrations and seeder files for the application. After this is finished, it will start the server. You should see the message below in your console, followed by a set of informational messages stating services have started.
+The `pnpm run bootstrap-server` command installs dependencies located in the package.json file necessary for running and compiling the code, then creates the database schema and runs necessary migrations and seeder files for the application. After this is finished, it will start the server. You should see the message below in your console, followed by a set of informational messages stating services have started.
 
 ```bash
 -----------------------------
@@ -135,17 +135,17 @@ cd Tombolo/client-reactjs
 ```
 
 ```bash
-npm run bootstrap-client
+pnpm run bootstrap-client
 ```
 
 The `cd` command changes the directory you're working with.
 
-The `npm run bootstrap-client` command installs dependencies located in the package.json file necessary for running and compiling the code. After this is finished, it will start the front end.
+The `pnpm run bootstrap-client` command installs dependencies located in the package.json file necessary for running and compiling the code. After this is finished, it will start the front end.
 
 \*\*\* After the bootstrap command has been run, you can start the client in any terminal with the following command inside of the Tombolo/client-reactjs directory
 
 ```bash
-npm run start
+pnpm run start
 ```
 
 ---
@@ -153,6 +153,6 @@ npm run start
 ## Step 6 - Open the application
 
 Depending on your environment, your browser may have been opened to the start page of Tombolo already, after running the
-`npm start` command for the client. If not, you can reach your new installation at [http://localhost:3000/](http://localhost:3000/). If you need any further assistance, check out our [user guides](/docs/category/user-guides).
+`pnpm start` command for the client. If not, you can reach your new installation at [http://localhost:3000/](http://localhost:3000/). If you need any further assistance, check out our [user guides](/docs/category/user-guides).
 
 ---
