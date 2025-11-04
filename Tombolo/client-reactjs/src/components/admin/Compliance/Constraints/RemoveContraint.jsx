@@ -11,7 +11,7 @@
 
 //   const remove = async () => {
 //     const config = { method: 'DELETE', headers: authHeader() };
-//     // const response = await fetch(`/api/constraint/${record.id}`, config);
+//     const response = await fetch(`/api/constraint/${record.id}`, config);
 //     if (!response.ok) handleError(response);
 //     const data = await response.json();
 

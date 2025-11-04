@@ -1,5 +1,9 @@
 const path = require('path');
 const fs = require('fs');
+
+// Set NODE_ENV to test BEFORE any other modules are loaded
+process.env.NODE_ENV = 'test';
+
 const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
