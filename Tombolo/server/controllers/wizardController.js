@@ -281,37 +281,38 @@ const sendVerificationEmail = async (user, transaction) => {
     verificationCode = 'test-verification-code';
     expiresAt = new Date(Date.now() + 86400000); // 24 hours
 
-  await AccountVerificationCode.create(
-    {
-      code: verificationCode,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 86400000), // 24 hours
-    },
-    { transaction }
-  );
-
-  await NotificationQueue.create(
-    {
-      type: 'email',
-      templateName: 'verifyEmail',
-      notificationOrigin: 'User Registration',
-      deliveryType: 'immediate',
-      metaData: {
-        notificationId,
-        recipientName: `${user.firstName}`,
-        verificationLink: `${trimURL(
-          process.env.WEB_URL
-        )}/register?regId=${verificationCode}`,
-        notificationOrigin: 'User Registration',
-        subject: 'Verify your email',
-        mainRecipients: [user.email],
-        notificationDescription: 'Verify email',
-        validForHours: 24,
+    await AccountVerificationCode.create(
+      {
+        code: verificationCode,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 86400000), // 24 hours
       },
-      createdBy: user.id,
-    },
-    { transaction }
-  );
+      { transaction }
+    );
+
+    await NotificationQueue.create(
+      {
+        type: 'email',
+        templateName: 'verifyEmail',
+        notificationOrigin: 'User Registration',
+        deliveryType: 'immediate',
+        metaData: {
+          notificationId,
+          recipientName: `${user.firstName}`,
+          verificationLink: `${trimURL(
+            process.env.WEB_URL
+          )}/register?regId=${verificationCode}`,
+          notificationOrigin: 'User Registration',
+          subject: 'Verify your email',
+          mainRecipients: [user.email],
+          notificationDescription: 'Verify email',
+          validForHours: 24,
+        },
+        createdBy: user.id,
+      },
+      { transaction }
+    );
+  }
 };
 
 module.exports = {
