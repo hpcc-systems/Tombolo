@@ -75,9 +75,9 @@ const createApplicationOwner = async (req, res) => {
       newUser: true,
     });
 
-    console.log('------------------------');
-    console.log('Password security violation: ');
-    console.log('------------------------');
+    logger.debug('------------------------');
+    logger.debug('Password security violation: ');
+    logger.debug('------------------------');
 
     if (passwordSecurityViolations.length > 0) {
       return sendError(
