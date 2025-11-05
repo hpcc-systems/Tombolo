@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .main_body {
+        width: 100%;
+        border-bottom: 1px solid lightgray !important;
+      }
+
+      .section-footer-td {
+        color: #808080;
+        border-top: 1px solid #808080;
+      }
+
+      .section-header-td {
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+
+      .list {
+        padding: 10px;
+      }
+
+      .tabbedText {
+        padding-left: 40px;
+      }
+
+      .bold-text {
+        font-weight: bold;
+      }
+
+      .important-text {
+        color: #ff0000;
+      }
+
+      .info-text {
+        color: #0066cc;
+      }
+    </style>
+  </head>
+
+  <table class="main_body">
+    <tbody>
+      <tr>
+        <td>
+          <table>
+            <tbody>
+              <tr>
+                <td class="section-header-td">
+                  <div>Hello,</div>
+                  <div>
+                    A new user has registered for Tombolo and requires your attention. 
+                    Please review their details and assign appropriate roles and applications.
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="section-header-td">
+                    <div class="info-text">
+                        <div class="bold-text">User Details:</div>
+                    </div>
+                  <div class="tabbedText">
+                    <div><span class="bold-text">Name: </span><%= typeof userFirstName !== 'undefined' ? userFirstName : "" %> <%= typeof userLastName !== 'undefined' ? userLastName : "" %></div>
+                    <div><span class="bold-text">Email: </span><%= typeof userEmail !== 'undefined' ? userEmail : "" %></div>
+                    <div><span class="bold-text">Registration Method: </span><%= typeof registrationMethod !== 'undefined' ? registrationMethod : "traditional" %></div>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="section-header-td">
+                  <div class="info-text">
+                    <span class="bold-text">Action Required:</span>
+                  </div>
+                  <div class="tabbedText">
+                    • Review the user's registration details<br>
+                    • Assign appropriate roles<br>
+                    • Grant access to relevant applications<br>
+                    • Activate the user account if they are valid
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <p>
+                    <span class="important-text">
+                      Click here to access User Management:
+                    </span><br>
+                    <a href="<%= typeof userManagementLink !== 'undefined' ? userManagementLink : '' %>">
+                      <%= typeof userManagementLink !== 'undefined' ? userManagementLink : '' %>
+                    </a>
+                  </p>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="section-header-td">
+                  <div>Best Regards,</div>
+                  <div>Tombolo</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

@@ -566,6 +566,58 @@ const deleteUser = async (id, reason) => {
   }
 };
 
+// Get access request notification recipients from instance settings and role-based recipients
+const getAccessRequestRecipients = async () => {
+  try {
+    const instance_setting = await InstanceSetting.findOne({ raw: true });
+
+    if (!instance_setting) {
+      logger.warn('No instance settings found for notification recipients');
+      return [];
+    }
+
+    const { metaData } = instance_setting;
+    let recipients = metaData?.accessRequestEmailRecipientsEmail || [];
+
+    // Get emails from users with specified roles
+    if (
+      metaData?.accessRequestEmailRecipientsRoles &&
+      metaData.accessRequestEmailRecipientsRoles.length > 0
+    ) {
+      const roles = metaData.accessRequestEmailRecipientsRoles;
+
+      // Get role ids
+      const roleDetails = await RoleType.findAll({
+        where: { roleName: roles },
+        raw: true,
+      });
+
+      const roleIds = roleDetails.map(r => r.id);
+
+      // Get all users with the roleIds above
+      const users = await UserRole.findAll({
+        where: { roleId: roleIds },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['email'],
+          },
+        ],
+      });
+
+      const emails = users.map(u => u.user.email);
+      recipients = [...recipients, ...emails];
+    }
+
+    // Remove duplicates and filter out empty values
+    return [...new Set(recipients.filter(email => email && email.trim()))];
+  } catch (error) {
+    logger.error(`Error getting notification recipients: ${error.message}`);
+    return [];
+  }
+};
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -589,4 +641,5 @@ module.exports = {
   sendAccountUnlockedEmail,
   deleteUser,
   checkIfSystemUser,
+  getAccessRequestRecipients,
 };
