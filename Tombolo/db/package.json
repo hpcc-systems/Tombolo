@@ -11,9 +11,9 @@
   },
   "scripts": {
     "build": "echo 'no build step for db'",
-    "migrate": "sequelize db:migrate",
-    "create": "sequelize db:create",
-    "seed": "sequelize db:seed:all",
-    "drop": "sequelize db:drop"
+    "db:migrate": "sequelize db:migrate",
+    "db:create": "sequelize db:create",
+    "db:seed": "sequelize db:seed:all",
+    "db:drop": "sequelize db:drop"
   }
 }
