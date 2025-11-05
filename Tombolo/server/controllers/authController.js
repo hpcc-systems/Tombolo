@@ -38,6 +38,7 @@ const {
   setPreviousPasswords,
   setLastLogin,
   handleInvalidLoginAttempt,
+  getAccessRequestRecipients,
 } = require('../utils/authUtil');
 const { blacklistToken } = require('../utils/tokenBlackListing');
 
@@ -179,6 +180,41 @@ const createBasicUser = async (req, res) => {
 
     // Save user to DB
     const user = await User.create(payload);
+
+    // Notify admins/owners about new user registration
+    try {
+      const recipients = await getAccessRequestRecipients();
+
+      if (recipients.length > 0) {
+        const adminNotificationId = uuidv4();
+
+        await NotificationQueue.create({
+          type: 'email',
+          templateName: 'newUserRegistration',
+          notificationOrigin: 'User Registration',
+          deliveryType: 'immediate',
+          metaData: {
+            notificationId: adminNotificationId,
+            notificationOrigin: 'User Registration',
+            userEmail: user.email,
+            userFirstName: user.firstName,
+            userLastName: user.lastName,
+            registrationMethod: user.registrationMethod || 'traditional',
+            userManagementLink: `${trimURL(process.env.WEB_URL)}/admin/userManagement`,
+            subject: `New User Registration - Action Required: ${user.email}`,
+            mainRecipients: recipients,
+            notificationDescription: 'New User Registration',
+            validForHours: 24,
+          },
+          createdBy: user.id,
+        });
+      }
+    } catch (adminNotificationError) {
+      logger.error(
+        `Failed to send admin notification for new user: ${adminNotificationError.message}`
+      );
+      // Don't fail user registration if admin notification fails
+    }
 
     // Send verification email
     const searchableNotificationId = uuidv4();
@@ -950,6 +986,41 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       newUserPlain.roles = [];
       newUserPlain.applications = [];
 
+      // Notify admins/owners about new Azure user registration
+      try {
+        const recipients = await getAccessRequestRecipients();
+
+        if (recipients.length > 0) {
+          const adminNotificationId = uuidv4();
+
+          await NotificationQueue.create({
+            type: 'email',
+            templateName: 'newUserRegistration',
+            notificationOrigin: 'Azure User Registration',
+            deliveryType: 'immediate',
+            metaData: {
+              notificationId: adminNotificationId,
+              notificationOrigin: 'Azure User Registration',
+              userEmail: newUser.email,
+              userFirstName: newUser.firstName,
+              userLastName: newUser.lastName,
+              registrationMethod: 'azure',
+              userManagementLink: `${trimURL(process.env.WEB_URL)}/admin/userManagement`,
+              subject: `New Azure User Registration - Action Required: ${newUser.email}`,
+              mainRecipients: recipients,
+              notificationDescription: 'New Azure User Registration',
+              validForHours: 24,
+            },
+            createdBy: newUser.id,
+          });
+        }
+      } catch (adminNotificationError) {
+        logger.error(
+          `Failed to send admin notification for new Azure user: ${adminNotificationError.message}`
+        );
+        // Don't fail user registration if admin notification fails
+      }
+
       // Create a new refresh token
       const tokenId = uuidv4();
       const refreshToken = generateRefreshToken({ tokenId });
@@ -1036,10 +1107,11 @@ const requestAccess = async (req, res) => {
       return sendError(res, 'User not found', 404);
     }
 
-    const instance_setting = await InstanceSetting.findOne({ raw: true });
+    // Get recipients for access request notifications
+    const recipients = await getAccessRequestRecipients();
 
-    if (!instance_setting) {
-      return sendError(res, 'No contact email found', 404);
+    if (recipients.length === 0) {
+      return sendError(res, 'No notification recipients configured', 404);
     }
 
     const existingNotification = await SentNotification.findOne({
@@ -1060,41 +1132,6 @@ const requestAccess = async (req, res) => {
         );
         return sendSuccess(res, null, 'Access request already sent');
       }
-    }
-
-    const { metaData } = instance_setting;
-    let recipients = metaData?.accessRequestEmailRecipientsEmail || [];
-
-    if (
-      metaData?.accessRequestEmailRecipientsRoles &&
-      metaData.accessRequestEmailRecipientsRoles.length > 0
-    ) {
-      const roles = metaData.accessRequestEmailRecipientsRoles;
-
-      // Get role ids
-      const roleDetails = await RoleType.findAll({
-        where: { roleName: roles },
-        raw: true,
-      });
-
-      const roleIds = roleDetails.map(r => {
-        return r.id;
-      });
-
-      // Get all users with the roleIds above
-      const users = await UserRole.findAll({
-        where: { roleId: roleIds },
-        include: [
-          {
-            model: User, // or just User if it's in scope
-            as: 'user', // This matches the alias in your association
-            attributes: ['email'],
-          },
-        ],
-      });
-
-      const emails = users.map(u => u.user.email);
-      recipients = [...recipients, ...emails];
     }
 
     const searchableNotificationId = uuidv4();
