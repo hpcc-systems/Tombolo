@@ -65,23 +65,19 @@ const createApplicationOwner = async (req, res) => {
     }
 
     // Check if the password meets the security requirements
-    const passwordSecurityViolations = await checkPasswordSecurityViolations(
-      {
-        password: req.body.password,
+    const passwordSecurityViolations = checkPasswordSecurityViolations({
+      password: req.body.password,
+      user: {
         email: req.body.email,
         firstName: req.body.firstName,
         lastName: req.body.lastName,
       },
-      payload,
-      {
-        email: req.body.email,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-      },
-      {
-        newUser: true,
-      }
-    );
+      newUser: true,
+    });
+
+    logger.debug('------------------------');
+    logger.debug('Password security violation: ');
+    logger.debug('------------------------');
 
     if (passwordSecurityViolations.length > 0) {
       return sendError(
