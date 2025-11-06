@@ -272,47 +272,49 @@ const manageInstanceSettings = async (
 // Helper: Send verification email
 const sendVerificationEmail = async (user, transaction) => {
   let verificationCode = uuidv4();
-  let expiresAt = new Date(Date.now() + 86400000); // 24 hours
   const notificationId = uuidv4();
+
+  // Use test code in test mode, otherwise generate real UUID
   if (
     process.env.NODE_ENV === 'development' &&
     process.env.TEST_MODE === 'true'
   ) {
     verificationCode = 'test-verification-code';
-    expiresAt = new Date(Date.now() + 86400000); // 24 hours
-
-    await AccountVerificationCode.create(
-      {
-        code: verificationCode,
-        userId: user.id,
-        expiresAt: new Date(Date.now() + 86400000), // 24 hours
-      },
-      { transaction }
-    );
-
-    await NotificationQueue.create(
-      {
-        type: 'email',
-        templateName: 'verifyEmail',
-        notificationOrigin: 'User Registration',
-        deliveryType: 'immediate',
-        metaData: {
-          notificationId,
-          recipientName: `${user.firstName}`,
-          verificationLink: `${trimURL(
-            process.env.WEB_URL
-          )}/register?regId=${verificationCode}`,
-          notificationOrigin: 'User Registration',
-          subject: 'Verify your email',
-          mainRecipients: [user.email],
-          notificationDescription: 'Verify email',
-          validForHours: 24,
-        },
-        createdBy: user.id,
-      },
-      { transaction }
-    );
   }
+
+  // Create verification code record
+  await AccountVerificationCode.create(
+    {
+      code: verificationCode,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 86400000), // 24 hours
+    },
+    { transaction }
+  );
+
+  // Queue notification email
+  await NotificationQueue.create(
+    {
+      type: 'email',
+      templateName: 'verifyEmail',
+      notificationOrigin: 'User Registration',
+      deliveryType: 'immediate',
+      metaData: {
+        notificationId,
+        recipientName: `${user.firstName}`,
+        verificationLink: `${trimURL(
+          process.env.WEB_URL
+        )}/register?regId=${verificationCode}`,
+        notificationOrigin: 'User Registration',
+        subject: 'Verify your email',
+        mainRecipients: [user.email],
+        notificationDescription: 'Verify email',
+        validForHours: 24,
+      },
+      createdBy: user.id,
+    },
+    { transaction }
+  );
 };
 
 module.exports = {
