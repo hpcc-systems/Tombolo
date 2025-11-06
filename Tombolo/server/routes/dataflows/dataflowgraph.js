@@ -62,7 +62,7 @@ router.get(
           'createdAt',
         ],
         order: [['createdAt', 'ASC']],
-      ]);
+      });
       return sendSuccess(res, versions);
     } catch (error) {
       logger.error('dataflowgraph - get: ', error);

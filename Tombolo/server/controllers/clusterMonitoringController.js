@@ -1,18 +1,16 @@
 const { Op } = require('sequelize');
-const models = require('../models');
+const { ClusterMonitoring, sequelize, Cluster } = require('../models');
 const logger = require('../config/logger');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 const { APPROVAL_STATUS } = require('../config/constants');
 const { sendError, sendSuccess, sendResponse } = require('../utils/response');
-
-const { ClusterMonitoring, sequelize } = models;
 
 // Common includes for cluster monitoring - customize with additional  if needed
 const getCommonIncludes = ({ customIncludes = [] }) => {
   return [
     ...getUserFkIncludes(true),
     {
-      model: models.Cluster,
+      model: Cluster,
       as: 'cluster',
       attributes: ['id', 'name', 'thor_host', 'thor_port'],
     },

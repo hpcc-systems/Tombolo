@@ -322,6 +322,7 @@ const evaluateLandingZoneMonitoring = async (req, res) => {
 
     if (updatedCount === 0) {
       sendError(res, 'No landing zone monitoring records found with the provided IDs', 404);
+      return;
     }
 
     // Get updated monitoring

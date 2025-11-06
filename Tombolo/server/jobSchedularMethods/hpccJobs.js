@@ -1,6 +1,5 @@
 const path = require('path');
 
-const models = require('../models');
 const logger = require('../config/logger');
 
 const JOB_STATUS_POLLER = 'statusPoller.js';

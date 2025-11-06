@@ -4,14 +4,20 @@ WORKDIR /app
 
 COPY package*.json /app/
 
-RUN npm install
+RUN corepack enable && \
+    corepack prepare pnpm@latest --activate
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+
+RUN pnpm install
 
 COPY . /app/
 
 # Reason why this package is copied to public folder - https://github.com/suren-atoyan/monaco-react/issues/217#issuecomment-980800802
 # RUN cp -r node_modules/monaco-editor /app/public
 
-RUN npm run build
+RUN pnpm run build
 
 #temperory fix for hpcc-js lib causing CSP to fail
 RUN sed -i 's/new Function("return this;")()/function(){return this;}/g' build/static/js/*.chunk.js

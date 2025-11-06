@@ -25,15 +25,20 @@ jobs:
         with:
           node-version: 18
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Install dependencies
         run: |
           cd tombolo_docs
-          npm ci
+          pnpm install --frozen-lockfile
 
       - name: Build Docusaurus site
         run: |
           cd tombolo_docs
-          npm run build
+          pnpm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
