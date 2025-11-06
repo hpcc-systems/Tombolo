@@ -3,7 +3,7 @@ const router = express.Router();
 const axios = require('axios');
 const hpccUtil = require('../../utils/hpcc-util');
 // const assetUtil = require('../../utils/assets');
-const { Cluster, Job } = require('../../models');
+const { Cluster } = require('../../models');
 let hpccJSComms = require('@hpcc-js/comms');
 
 const { validate } = require('../../middlewares/validateRequestBody');
