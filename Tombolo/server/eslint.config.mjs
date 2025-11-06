@@ -1,13 +1,15 @@
-const globals = require('globals');
+import baseConfig from '../../eslint.config.mjs';
+import globals from 'globals';
 
-module.exports = [
+/** @type {import('eslint').Linter.Config[]} */
+export default [
+  ...baseConfig,
   {
+    files: ['**/*.js'],
     languageOptions: {
-      ecmaVersion: 2021,
-      sourceType: 'module',
       globals: {
         ...globals.node,
-      },
+      }
     },
     rules: {
       'no-unused-vars': [
@@ -19,5 +21,5 @@ module.exports = [
       quotes: ['error', 'single'],
       semi: ['error', 'always'],
     },
-  },
+  }
 ];

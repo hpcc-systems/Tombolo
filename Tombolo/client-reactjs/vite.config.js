@@ -1,7 +1,10 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react-swc';
-import checker from 'vite-plugin-checker';
-import path from 'path';
+import eslint from 'vite-plugin-eslint2';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default function config({ mode }) {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
@@ -13,19 +16,13 @@ export default function config({ mode }) {
     base: './', // Ensure relative paths work correctly
     plugins: [
       react(),
-      // Disable ESLint checker in dev mode to prevent crashes from linting errors
-      !isDev &&
-        checker({
-          eslint: {
-            // Specify the files to lint
-            files: './src/**/*.{js,jsx,ts,tsx}',
-            // This ensures ESLint uses your .eslintrc.json
-            lintCommand: 'eslint --config .eslintrc.json "./src/**/*.{js,jsx,ts,tsx}"',
-          },
-          overlay: {
-            initialIsOpen: false,
-          },
-        }),
+      eslint({
+        lintInWorker: true, // Non-blocking (recommended)
+        formatter: 'stylish', // or 'codeframe', 'visualstudio', etc.
+        overrideConfigFile: './eslint.config.mjs',
+        // Optional: only lint on save/start
+        // lintOnStart: true,
+      }),
     ].filter(Boolean),
     optimizeDeps: {
       include: [
