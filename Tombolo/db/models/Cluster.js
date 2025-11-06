@@ -6,16 +6,16 @@ const { DeleteMixin } = require('../utils/modelMixins/DeleteMixin');
 module.exports = sequelize => {
   class Cluster extends DeleteMixin(Model) {
     static associate(models) {
-      this.hasMany(models.Dataflow, { foreignKey: 'clusterId' });
-      this.hasMany(models.Job, { foreignKey: 'cluster_id' });
-      this.hasMany(models.JobExecution, { foreignKey: 'clusterId' });
-      this.hasMany(models.DataflowClusterCredential, {
-        foreignKey: 'cluster_id',
-      });
-      this.hasMany(models.FileTemplate, {
-        foreignKey: 'cluster_id',
-        onDelete: 'CASCADE',
-      });
+      // this.hasMany(models.Dataflow, { foreignKey: 'clusterId' });
+      // this.hasMany(models.Job, { foreignKey: 'cluster_id' });
+      // this.hasMany(models.JobExecution, { foreignKey: 'clusterId' });
+      // this.hasMany(models.DataflowClusterCredential, {
+      //   foreignKey: 'cluster_id',
+      // });
+      // this.hasMany(models.FileTemplate, {
+      //   foreignKey: 'cluster_id',
+      //   onDelete: 'CASCADE',
+      // });
       this.hasMany(models.FileMonitoring, {
         foreignKey: 'clusterId',
         onDelete: 'CASCADE',

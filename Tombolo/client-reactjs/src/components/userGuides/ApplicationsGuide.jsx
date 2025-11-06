@@ -6,16 +6,16 @@ const ApplicationsGuide = () => {
         <span> tags are utilized to bold key phrases to make content more easily scannable and emphasize important pieces of information
         Always follow a proper heading structure with <h3> as the top level heading (h2 is the title of the info drawer), and <h4> for subheadings
         All heading tags are automatically bolded, so no <span> tag is necessary
-        Avoid use of <br/> tags, instead group text into a new <p> tag to achieve a break line for consistency. 
+        Avoid use of <br/> tags, instead group text into a new <p> tag to achieve a break line for consistency.
     */
   return (
     <div className="guide">
       <h2>Applications Guide</h2>
       <p>
         Applications provide a way to seperate groups of data and settings inside of Tombolo. Each application has its
-        own set of Assets, Dataflows, Jobs, Monitorings, and Notifications as well as administration settings. You can
-        switch application instances at any time by utilizing the selector in the top left corner of the navigation bar,
-        by the Tombolo logo.
+        own set of Monitorings and Notifications as well as administration settings. You can switch application
+        instances at any time by utilizing the selector in the top left corner of the navigation bar, by the Tombolo
+        logo.
       </p>
       <p>
         Common use cases for multiple applications are departments with several divisions where each division wants to
