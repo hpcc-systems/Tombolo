@@ -1,8 +1,6 @@
-FROM ubuntu:bionic
+FROM node:24-trixie
 
 RUN apt-get update -y && apt-get install -y build-essential curl
-# intall node
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - ; apt-get install -y nodejs
 
 RUN corepack enable && \
     corepack prepare pnpm@latest --activate

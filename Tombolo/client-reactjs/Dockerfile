@@ -1,4 +1,4 @@
-FROM node:20-alpine as build
+FROM node:24-alpine as build
 
 WORKDIR /app
 
@@ -14,15 +14,12 @@ RUN pnpm install
 
 COPY . /app/
 
-# Reason why this package is copied to public folder - https://github.com/suren-atoyan/monaco-react/issues/217#issuecomment-980800802
-# RUN cp -r node_modules/monaco-editor /app/public
-
 RUN pnpm run build
 
 #temperory fix for hpcc-js lib causing CSP to fail
-RUN sed -i 's/new Function("return this;")()/function(){return this;}/g' build/static/js/*.chunk.js
+# RUN sed -i 's/new Function("return this;")()/function(){return this;}/g' build/static/js/*.chunk.js
 
-FROM nginx:1.19.8-alpine
+FROM nginx:1.29.3-alpine
 
 COPY --from=build /app/build /usr/share/nginx/html
 
