@@ -21,9 +21,9 @@ const initialState = {
   error: null,
 };
 
-// Function to centralize storage clearing
+// Function to clear only auth-related storage
 const clearStorage = () => {
-  localStorage.clear();
+  localStorage.removeItem('user');
 };
 
 // Async thunks

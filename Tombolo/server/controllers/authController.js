@@ -327,7 +327,10 @@ const verifyEmail = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -454,7 +457,10 @@ const resetPasswordWithToken = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create(
@@ -595,7 +601,10 @@ const resetTempPassword = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -714,7 +723,10 @@ const loginBasicUser = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -751,8 +763,8 @@ const logOutBasicUser = async (req, res) => {
     // Clear the token cookie
     res.clearCookie('token');
     res.clearCookie('x-csrf-token');
-    // Decode the token to get the tokenId (assuming token contains tokenId)
-    const decodedToken = jwt.decode(req.cookies.token);
+    // Verify the token to get the tokenId securely
+    const decodedToken = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
 
     const { tokenId } = decodedToken;
 
@@ -1022,7 +1034,10 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       const refreshToken = generateRefreshToken({ tokenId });
 
       // Save refresh token to DB
-      const { iat, exp } = jwt.decode(refreshToken);
+      const { iat, exp } = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET
+      );
 
       // Save refresh token in DB
       await RefreshToken.create({
@@ -1060,7 +1075,10 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -1348,7 +1366,7 @@ const requestPasswordReset = async (req, res) => {
 const refreshAccessToken = async (req, res) => {
   try {
     const token = req.cookies.token;
-    const decodedToken = jwt.decode(token, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
     const { id: userId, tokenId } = decodedToken;
 
     // Check if corresponding refresh token exists in DB

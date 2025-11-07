@@ -94,8 +94,8 @@ export const authInterceptor = (axiosInstance) => {
           // Set logout flag to prevent further refresh attempts
           isLoggedOut = true;
 
-          // Clear storage immediately
-          localStorage.clear();
+          // Clear only auth-related storage
+          localStorage.removeItem('user');
 
           // Import store dynamically to avoid circular dependency
           const { store } = await import('@/redux/store/Store');
