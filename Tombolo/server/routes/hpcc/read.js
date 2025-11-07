@@ -2,9 +2,8 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const hpccUtil = require('../../utils/hpcc-util');
-const assetUtil = require('../../utils/assets');
-const { encryptString } = require('../../utils/cipher');
-const { Cluster, File, Query, Indexes: Index, Job } = require('../../models');
+// const assetUtil = require('../../utils/assets');
+const { Cluster } = require('../../models');
 let hpccJSComms = require('@hpcc-js/comms');
 
 const { validate } = require('../../middlewares/validateRequestBody');
@@ -13,13 +12,13 @@ const {
   validateSuperfileSearch,
   validateQuerySearch,
   // validateJobSearch,
-  validateGetFileInfo,
+  // validateGetFileInfo,
   validateGetLogicalFileDetails,
-  validateGetIndexInfo,
+  // validateGetIndexInfo,
   validateGetData,
-  validateGetQueryInfo,
+  // validateGetQueryInfo,
   validateGetQueryFiles,
-  validateGetJobInfo,
+  // validateGetJobInfo,
   validateGetDropZones,
   validateDropZoneDirectoryDetails,
   validateDropZoneFileSearch,
@@ -300,22 +299,22 @@ router.get('/getCluster', async function (req, res) {
   }
 });
 
-router.get('/getFileInfo', validate(validateGetFileInfo), async (req, res) => {
-  try {
-    const { applicationId, fileName, clusterid } = req.query;
-    const file = await File.findOne({
-      where: { name: fileName, application_id: applicationId },
-      attributes: ['id'],
-    });
-    const data = file
-      ? await assetUtil.fileInfo(applicationId, file.id)
-      : await hpccUtil.fileInfo(fileName, clusterid);
-    return sendSuccess(res, data);
-  } catch (error) {
-    logger.error('hpcc/read getFileInfo: ', error);
-    return sendError(res, 'Error occurred while getting file details', 500);
-  }
-});
+// router.get('/getFileInfo', validate(validateGetFileInfo), async (req, res) => {
+//   try {
+//     const { applicationId, fileName, clusterid } = req.query;
+//     const file = await File.findOne({
+//       where: { name: fileName, application_id: applicationId },
+//       attributes: ['id'],
+//     });
+//     const data = file
+//       ? await assetUtil.fileInfo(applicationId, file.id)
+//       : await hpccUtil.fileInfo(fileName, clusterid);
+//     return sendSuccess(res, data);
+//   } catch (error) {
+//     logger.error('hpcc/read getFileInfo: ', error);
+//     return sendError(res, 'Error occurred while getting file details', 500);
+//   }
+// });
 
 // Gets file detail straight from HPCC regardless of whether it exists in Tombolo DB
 router.get(
@@ -339,39 +338,39 @@ router.get(
   }
 );
 
-router.get(
-  '/getIndexInfo',
-  validate(validateGetIndexInfo),
-  async function (req, res) {
-    try {
-      const existingIndex = await Index.findOne({
-        where: {
-          name: req.query.indexName,
-          application_id: req.query.applicationId,
-        },
-      });
-
-      if (existingIndex) {
-        const existingIndexInfo = await assetUtil.indexInfo(
-          req.query.applicationId,
-          existingIndex.id
-        );
-
-        return sendSuccess(res, existingIndexInfo);
-      } else {
-        const indexInfo = await hpccUtil.indexInfo(
-          req.query.clusterid,
-          req.query.indexName
-        );
-
-        return sendSuccess(res, indexInfo);
-      }
-    } catch (err) {
-      logger.error('hpcc getIndexInfo: ', err);
-      return sendError(res, 'Error occurred while getting file details', 500);
-    }
-  }
-);
+// router.get(
+//   '/getIndexInfo',
+//   validate(validateGetIndexInfo),
+//   async function (req, res) {
+//     try {
+//       const existingIndex = await Index.findOne({
+//         where: {
+//           name: req.query.indexName,
+//           application_id: req.query.applicationId,
+//         },
+//       });
+//
+//       if (existingIndex) {
+//         const existingIndexInfo = await assetUtil.indexInfo(
+//           req.query.applicationId,
+//           existingIndex.id
+//         );
+//
+//         return sendSuccess(res, existingIndexInfo);
+//       } else {
+//         const indexInfo = await hpccUtil.indexInfo(
+//           req.query.clusterid,
+//           req.query.indexName
+//         );
+//
+//         return sendSuccess(res, indexInfo);
+//       }
+//     } catch (err) {
+//       logger.error('hpcc getIndexInfo: ', err);
+//       return sendError(res, 'Error occurred while getting file details', 500);
+//     }
+//   }
+// );
 
 // NOT USED
 // function getIndexColumns(cluster, indexName) {
@@ -541,37 +540,37 @@ router.get('/getFileProfileHTML', async function (req, res) {
   }
 });
 
-router.get(
-  '/getQueryInfo',
-  validate(validateGetQueryInfo),
-  async function (req, res) {
-    try {
-      const existingQuery = await Query.findOne({
-        where: {
-          name: req.query.queryName,
-          application_id: req.query.applicationId,
-        },
-      });
-
-      if (existingQuery) {
-        const existingQueryInfo = await assetUtil.queryInfo(
-          req.query.applicationId,
-          existingQuery.id
-        );
-        return sendSuccess(res, existingQueryInfo);
-      } else {
-        const queryInfo = await hpccUtil.queryInfo(
-          req.query.clusterid,
-          req.query.queryName
-        );
-        return sendSuccess(res, queryInfo);
-      }
-    } catch (err) {
-      logger.error('hpcc/read getQueryInfo: ', err);
-      return sendError(res, 'Error occurred while getting file details', 500);
-    }
-  }
-);
+// router.get(
+//   '/getQueryInfo',
+//   validate(validateGetQueryInfo),
+//   async function (req, res) {
+//     try {
+//       const existingQuery = await Query.findOne({
+//         where: {
+//           name: req.query.queryName,
+//           application_id: req.query.applicationId,
+//         },
+//       });
+//
+//       if (existingQuery) {
+//         const existingQueryInfo = await assetUtil.queryInfo(
+//           req.query.applicationId,
+//           existingQuery.id
+//         );
+//         return sendSuccess(res, existingQueryInfo);
+//       } else {
+//         const queryInfo = await hpccUtil.queryInfo(
+//           req.query.clusterid,
+//           req.query.queryName
+//         );
+//         return sendSuccess(res, queryInfo);
+//       }
+//     } catch (err) {
+//       logger.error('hpcc/read getQueryInfo: ', err);
+//       return sendError(res, 'Error occurred while getting file details', 500);
+//     }
+//   }
+// );
 
 router.get(
   '/getQueryFiles',
@@ -595,42 +594,43 @@ router.get(
     }
   }
 );
-router.get(
-  '/getJobInfo',
-  validate(validateGetJobInfo),
-  async function (req, res) {
-    try {
-      const existingJob = await Job.findOne({
-        where: {
-          name: req.query.jobName,
-          cluster_id: req.query.clusterid,
-          application_id: req.query.applicationId,
-        },
-        attributes: ['id'],
-      });
 
-      if (!existingJob) {
-        const jobInfo = await hpccUtil.getJobInfo(
-          req.query.clusterid,
-          req.query.jobWuid,
-          req.query.jobType
-        );
-
-        return sendSuccess(res, jobInfo);
-      }
-
-      const existingJobInfo = await assetUtil.jobInfo(
-        req.query.applicationId,
-        existingJob.id
-      );
-
-      return sendSuccess(res, existingJobInfo);
-    } catch (err) {
-      logger.error('hpcc/read getJobInfo: ', err);
-      return sendError(res, 'Error occurred while getting job info', 500);
-    }
-  }
-);
+// router.get(
+//   '/getJobInfo',
+//   validate(validateGetJobInfo),
+//   async function (req, res) {
+//     try {
+//       const existingJob = await Job.findOne({
+//         where: {
+//           name: req.query.jobName,
+//           cluster_id: req.query.clusterid,
+//           application_id: req.query.applicationId,
+//         },
+//         attributes: ['id'],
+//       });
+//
+//       if (!existingJob) {
+//         const jobInfo = await hpccUtil.getJobInfo(
+//           req.query.clusterid,
+//           req.query.jobWuid,
+//           req.query.jobType
+//         );
+//
+//         return sendSuccess(res, jobInfo);
+//       }
+//
+//       const existingJobInfo = await assetUtil.jobInfo(
+//         req.query.applicationId,
+//         existingJob.id
+//       );
+//
+//       return sendSuccess(res, existingJobInfo);
+//     } catch (err) {
+//       logger.error('hpcc/read getJobInfo: ', err);
+//       return sendError(res, 'Error occurred while getting job info', 500);
+//     }
+//   }
+// );
 
 router.get(
   '/getDropZones',
@@ -808,51 +808,53 @@ router.get(
   }
 );
 
-router.post(
-  '/executeSprayJob',
-  validate(validateExecuteSprayJob),
-  async function (req, res) {
-    try {
-      const job = await Job.findOne({
-        where: { id: req.body.jobId },
-        attributes: { exclude: ['assetId'] },
-      });
+// router.post(
+//   '/executeSprayJob',
+//   validate(validateExecuteSprayJob),
+//   async function (req, res) {
+//     try {
+//       const job = await Job.findOne({
+//         where: { id: req.body.jobId },
+//         attributes: { exclude: ['assetId'] },
+//       });
+//
+//       const cluster = await hpccUtil.getCluster(job.cluster_id);
+//       const sprayPayload = {
+//         destGroup: 'mythor',
+//         DFUServerQueue: 'dfuserver_queue',
+//         namePrefix: job.sprayedFileScope,
+//         targetName: job.sprayFileName,
+//         overwrite: 'on',
+//         sourceIP: job.sprayDropZone,
+//         sourcePath: `/var/lib/HPCCSystems/mydropzone/${job.sprayFileName}`,
+//         destLogicalName: `${job.sprayedFileScope}::${job.sprayFileName}`,
+//         rawxml_: 1,
+//         sourceFormat: 1,
+//         sourceCsvSeparate: ',',
+//         sourceCsvTerminate: '\n,\r\n',
+//         sourceCsvQuote: '"',
+//       };
+//
+//       logger.info(sprayPayload);
+//
+//       const response = await axios.post(
+//         `${cluster.thor_host}:${cluster.thor_port}/FileSpray/SprayVariable.json`,
+//         new URLSearchParams(sprayPayload).toString(),
+//         {
+//           auth: hpccUtil.getClusterAuth(cluster),
+//           headers: { 'content-type': 'application/x-www-form-urlencoded' },
+//         }
+//       );
+//
+//       return sendSuccess(res, response.data);
+//     } catch (err) {
+//       logger.error('hpcc/read executeSprayJob: ', err);
+//       return sendError(res, 'Error occurred during dropzone file search', 500);
+//     }
+//   }
+// );
 
-      const cluster = await hpccUtil.getCluster(job.cluster_id);
-      const sprayPayload = {
-        destGroup: 'mythor',
-        DFUServerQueue: 'dfuserver_queue',
-        namePrefix: job.sprayedFileScope,
-        targetName: job.sprayFileName,
-        overwrite: 'on',
-        sourceIP: job.sprayDropZone,
-        sourcePath: `/var/lib/HPCCSystems/mydropzone/${job.sprayFileName}`,
-        destLogicalName: `${job.sprayedFileScope}::${job.sprayFileName}`,
-        rawxml_: 1,
-        sourceFormat: 1,
-        sourceCsvSeparate: ',',
-        sourceCsvTerminate: '\n,\r\n',
-        sourceCsvQuote: '"',
-      };
 
-      logger.info(sprayPayload);
-
-      const response = await axios.post(
-        `${cluster.thor_host}:${cluster.thor_port}/FileSpray/SprayVariable.json`,
-        new URLSearchParams(sprayPayload).toString(),
-        {
-          auth: hpccUtil.getClusterAuth(cluster),
-          headers: { 'content-type': 'application/x-www-form-urlencoded' },
-        }
-      );
-
-      return sendSuccess(res, response.data);
-    } catch (err) {
-      logger.error('hpcc/read executeSprayJob: ', err);
-      return sendError(res, 'Error occurred during dropzone file search', 500);
-    }
-  }
-);
 router.get(
   '/clusterMetaData',
   validate(validateClusterMetaData),

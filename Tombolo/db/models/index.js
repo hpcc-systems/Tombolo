@@ -13,7 +13,7 @@ const AccountVerificationCodes = require("./AccountVerificationCodes")(
   sequelize,
   Sequelize.DataTypes
 );
-const ApiKey = require("./ApiKey")(sequelize, Sequelize.DataTypes);
+// const ApiKey = require("./ApiKey")(sequelize, Sequelize.DataTypes);
 const Application = require("./Application")(sequelize, Sequelize.DataTypes);
 const AsrDomain = require("./AsrDomain")(sequelize, Sequelize.DataTypes);
 const AsrDomainToProductsRelation = require("./AsrDomainToProductsRelation")(
@@ -26,22 +26,22 @@ const AsrMonitoringTypeToDomainsRelation =
     Sequelize.DataTypes
   );
 const AsrProduct = require("./AsrProduct")(sequelize, Sequelize.DataTypes);
-const AssetsGroup = require("./AssetsGroup")(sequelize, Sequelize.DataTypes);
+// const AssetsGroup = require("./AssetsGroup")(sequelize, Sequelize.DataTypes);
 const Cluster = require("./Cluster")(sequelize, Sequelize.DataTypes);
 const ClusterMonitoring = require("./ClusterMonitoring")(
   sequelize,
   Sequelize.DataTypes
 );
-const Constraint = require("./Constraint")(sequelize, Sequelize.DataTypes);
-const Consumer = require("./Consumer")(sequelize, Sequelize.DataTypes);
-const ConsumerObject = require("./ConsumerObject")(
-  sequelize,
-  Sequelize.DataTypes
-);
-const ControlsRegulation = require("./ControlsRegulation")(
-  sequelize,
-  Sequelize.DataTypes
-);
+// const Constraint = require("./Constraint")(sequelize, Sequelize.DataTypes);
+// const Consumer = require("./Consumer")(sequelize, Sequelize.DataTypes);
+// const ConsumerObject = require("./ConsumerObject")(
+//   sequelize,
+//   Sequelize.DataTypes
+// );
+// const ControlsRegulation = require("./ControlsRegulation")(
+//   sequelize,
+//   Sequelize.DataTypes
+// );
 const CostMonitoring = require("./CostMonitoring")(
   sequelize,
   Sequelize.DataTypes
@@ -50,42 +50,42 @@ const CostMonitoringData = require("./CostMonitoringData")(
   sequelize,
   Sequelize.DataTypes
 );
-const Dataflow = require("./Dataflow")(sequelize, Sequelize.DataTypes);
-const DataflowClusterCredential = require("./DataflowClusterCredential")(
-  sequelize,
-  Sequelize.DataTypes
-);
-const DataflowVersion = require("./DataflowVersion")(
-  sequelize,
-  Sequelize.DataTypes
-);
-const DataType = require("./DataType")(sequelize, Sequelize.DataTypes);
+// const Dataflow = require("./Dataflow")(sequelize, Sequelize.DataTypes);
+// const DataflowClusterCredential = require("./DataflowClusterCredential")(
+//   sequelize,
+//   Sequelize.DataTypes
+// );
+// const DataflowVersion = require("./DataflowVersion")(
+//   sequelize,
+//   Sequelize.DataTypes
+// );
+// const DataType = require("./DataType")(sequelize, Sequelize.DataTypes);
 const DirectoryMonitoring = require("./DirectoryMonitoring")(
   sequelize,
   Sequelize.DataTypes
 );
-const File = require("./File")(sequelize, Sequelize.DataTypes);
+// const File = require("./File")(sequelize, Sequelize.DataTypes);
 const FileMonitoring = require("./FileMonitoring")(
   sequelize,
   Sequelize.DataTypes
 );
-const FileTemplate = require("./FileTemplate")(sequelize, Sequelize.DataTypes);
-const FileTemplateLayout = require("./FileTemplateLayout")(
-  sequelize,
-  Sequelize.DataTypes
-);
-const FileValidation = require("./FileValidation")(
-  sequelize,
-  Sequelize.DataTypes
-);
-const GithubRepoSetting = require("./GithubRepoSetting")(
-  sequelize,
-  Sequelize.DataTypes
-);
-const Group = require("./Group")(sequelize, Sequelize.DataTypes);
-const Indexes = require("./Indexes")(sequelize, Sequelize.DataTypes);
-const IndexKey = require("./IndexKey")(sequelize, Sequelize.DataTypes);
-const IndexPayload = require("./IndexPayload")(sequelize, Sequelize.DataTypes);
+// const FileTemplate = require("./FileTemplate")(sequelize, Sequelize.DataTypes);
+// const FileTemplateLayout = require("./FileTemplateLayout")(
+//   sequelize,
+//   Sequelize.DataTypes
+// );
+// const FileValidation = require("./FileValidation")(
+//   sequelize,
+//   Sequelize.DataTypes
+// );
+// const GithubRepoSetting = require("./GithubRepoSetting")(
+//   sequelize,
+//   Sequelize.DataTypes
+// );
+// const Group = require("./Group")(sequelize, Sequelize.DataTypes);
+// const Indexes = require("./Indexes")(sequelize, Sequelize.DataTypes);
+// const IndexKey = require("./IndexKey")(sequelize, Sequelize.DataTypes);
+// const IndexPayload = require("./IndexPayload")(sequelize, Sequelize.DataTypes);
 const InstanceSettings = require("./InstanceSettings")(
   sequelize,
   Sequelize.DataTypes
@@ -95,9 +95,9 @@ const IntegrationMapping = require("./IntegrationMapping")(
   Sequelize.DataTypes
 );
 const Integrations = require("./Integrations")(sequelize, Sequelize.DataTypes);
-const Job = require("./Job")(sequelize, Sequelize.DataTypes);
-const JobExecution = require("./JobExecution")(sequelize, Sequelize.DataTypes);
-const JobFile = require("./JobFile")(sequelize, Sequelize.DataTypes);
+// const Job = require("./Job")(sequelize, Sequelize.DataTypes);
+// const JobExecution = require("./JobExecution")(sequelize, Sequelize.DataTypes);
+// const JobFile = require("./JobFile")(sequelize, Sequelize.DataTypes);
 const JobMonitoring = require("./JobMonitoring")(
   sequelize,
   Sequelize.DataTypes
@@ -110,16 +110,16 @@ const JobMonitoringDataArchive = require("./JobMonitoringDataArchive")(
   sequelize,
   Sequelize.DataTypes
 );
-const JobParam = require("./JobParam")(sequelize, Sequelize.DataTypes);
+// const JobParam = require("./JobParam")(sequelize, Sequelize.DataTypes);
 const LandingZoneMonitoring = require("./LandingZoneMonitoring")(
   sequelize,
   Sequelize.DataTypes
 );
 const License = require("./License")(sequelize, Sequelize.DataTypes);
-const MessageBasedJobs = require("./MessageBasedJobs")(
-  sequelize,
-  Sequelize.DataTypes
-);
+// const MessageBasedJobs = require("./MessageBasedJobs")(
+//   sequelize,
+//   Sequelize.DataTypes
+// );
 const MonitoringLog = require("./MonitoringLog")(
   sequelize,
   Sequelize.DataTypes
@@ -145,17 +145,17 @@ const PasswordResetLink = require("./PasswordResetLink")(
   sequelize,
   Sequelize.DataTypes
 );
-const Query = require("./query")(sequelize, Sequelize.DataTypes);
-const QueryField = require("./QueryField")(sequelize, Sequelize.DataTypes);
+// const Query = require("./query")(sequelize, Sequelize.DataTypes);
+// const QueryField = require("./QueryField")(sequelize, Sequelize.DataTypes);
 const RefreshToken = require("./RefreshToken")(sequelize, Sequelize.DataTypes);
-const Report = require("./Report")(sequelize, Sequelize.DataTypes);
+// const Report = require("./Report")(sequelize, Sequelize.DataTypes);
 const RoleType = require("./RoleType")(sequelize, Sequelize.DataTypes);
-const Rule = require("./Rule")(sequelize, Sequelize.DataTypes);
+// const Rule = require("./Rule")(sequelize, Sequelize.DataTypes);
 const SentNotification = require("./SentNotification")(
   sequelize,
   Sequelize.DataTypes
 );
-const TeamsHook = require("./TeamsHook")(sequelize, Sequelize.DataTypes);
+// const TeamsHook = require("./TeamsHook")(sequelize, Sequelize.DataTypes);
 const TokenBlackList = require("./TokenBlackList")(
   sequelize,
   Sequelize.DataTypes
@@ -172,49 +172,49 @@ const UserRole = require("./UserRole")(sequelize, Sequelize.DataTypes);
 const models = {};
 [
   AccountVerificationCodes,
-  ApiKey,
+  // ApiKey,
   Application,
   AsrDomain,
   AsrDomainToProductsRelation,
   AsrMonitoringTypeToDomainsRelation,
   AsrProduct,
-  AssetsGroup,
+  // AssetsGroup,
   Cluster,
   ClusterMonitoring,
-  Constraint,
-  Consumer,
-  ConsumerObject,
-  ControlsRegulation,
+  // Constraint,
+  // Consumer,
+  // ConsumerObject,
+  // ControlsRegulation,
   CostMonitoring,
   CostMonitoringData,
-  Dataflow,
-  DataflowClusterCredential,
-  DataflowVersion,
-  DataType,
+  // Dataflow,
+  // DataflowClusterCredential,
+  // DataflowVersion,
+  // DataType,
   DirectoryMonitoring,
-  File,
+  // File,
   FileMonitoring,
-  FileTemplate,
-  FileTemplateLayout,
-  FileValidation,
-  GithubRepoSetting,
-  Group,
-  Indexes,
-  IndexKey,
-  IndexPayload,
+  // FileTemplate,
+  // FileTemplateLayout,
+  // FileValidation,
+  // GithubRepoSetting,
+  // Group,
+  // Indexes,
+  // IndexKey,
+  // IndexPayload,
   InstanceSettings,
   IntegrationMapping,
   Integrations,
-  Job,
-  JobExecution,
-  JobFile,
+  // Job,
+  // JobExecution,
+  // JobFile,
   JobMonitoring,
   JobMonitoringData,
   JobMonitoringDataArchive,
-  JobParam,
+  // JobParam,
   LandingZoneMonitoring,
   License,
-  MessageBasedJobs,
+  // MessageBasedJobs,
   MonitoringLog,
   MonitoringNotification,
   MonitoringType,
@@ -222,14 +222,14 @@ const models = {};
   OrbitBuilds,
   OrbitMonitoring,
   PasswordResetLink,
-  Query,
-  QueryField,
+  // Query,
+  // QueryField,
   RefreshToken,
-  Report,
+  // Report,
   RoleType,
-  Rule,
+  // Rule,
   SentNotification,
-  TeamsHook,
+  // TeamsHook,
   TokenBlackList,
   User,
   UserApplication,
