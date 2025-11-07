@@ -13,78 +13,78 @@ module.exports = sequelize => {
       });
 
       /* GITHUB SETTINGS */
-      this.hasMany(models.GithubRepoSetting, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
-
-      /* JOB EXECUTION */
-      this.hasMany(models.JobExecution, {
-        foreignKey: 'applicationId',
-        onDelete: 'CASCADE',
-      });
+      // this.hasMany(models.GithubRepoSetting, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
+      //
+      // /* JOB EXECUTION */
+      // this.hasMany(models.JobExecution, {
+      //   foreignKey: 'applicationId',
+      //   onDelete: 'CASCADE',
+      // });
 
       /* DATAFLOW */
-      this.hasMany(models.Dataflow, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
-
-      /* INDEX */
-      this.hasMany(models.Indexes, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
+      // this.hasMany(models.Dataflow, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
+      //
+      // /* INDEX */
+      // this.hasMany(models.Indexes, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
 
       /* QUERY */
-      this.hasMany(models.Query, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
-
-      this.hasMany(models.QueryField, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
+      // this.hasMany(models.Query, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
+      //
+      // this.hasMany(models.QueryField, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
 
       /* JOB */
-      this.hasMany(models.Job, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
-
-      this.hasMany(models.JobParam, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
+      // this.hasMany(models.Job, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
+      //
+      // this.hasMany(models.JobParam, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
 
       /* REPORT */
-      this.hasMany(models.Report, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
+      // this.hasMany(models.Report, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
 
       /* FILE */
-      this.hasMany(models.File, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
-
-      this.hasMany(models.FileValidation, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
+      // this.hasMany(models.File, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
+      //
+      // this.hasMany(models.FileValidation, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
 
       /* FILE TEMPLATE */
-      this.hasMany(models.FileTemplate, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
-
-      this.hasMany(models.FileTemplateLayout, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
+      // this.hasMany(models.FileTemplate, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
+      //
+      // this.hasMany(models.FileTemplateLayout, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
 
       /* FILE MONITORING */
       this.hasMany(models.FileMonitoring, {
@@ -93,10 +93,10 @@ module.exports = sequelize => {
       });
 
       /* FILE MONITORING NOTIFICATION */
-      this.hasMany(models.MonitoringNotification, {
-        foreignKey: 'application_id',
-        onDelete: 'CASCADE',
-      });
+      // this.hasMany(models.MonitoringNotification, {
+      //   foreignKey: 'application_id',
+      //   onDelete: 'CASCADE',
+      // });
 
       this.hasMany(models.IntegrationMapping, {
         foreignKey: 'application_id',
