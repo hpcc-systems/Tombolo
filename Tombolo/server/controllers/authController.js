@@ -1344,6 +1344,91 @@ const requestPasswordReset = async (req, res) => {
   }
 };
 
+// Refresh Access Token - Explicit Client-Side Refresh
+const refreshAccessToken = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    const decodedToken = jwt.decode(token, process.env.JWT_SECRET);
+    const { id: userId, tokenId } = decodedToken;
+
+    // Check if corresponding refresh token exists in DB
+    const refreshToken = await RefreshToken.findOne({
+      where: { id: tokenId },
+    });
+
+    if (!refreshToken) {
+      return sendError(res, 'Session expired', 401);
+    }
+
+    // Check if the original session has expired (7 days from initial login)
+    const now = new Date();
+    if (now > refreshToken.exp) {
+      // Session has expired - remove the refresh token and force re-login
+      await refreshToken.destroy();
+      return sendError(res, 'Session expired', 401);
+    }
+
+    // Get fresh user details
+    const user = await User.findOne({
+      where: { id: userId },
+      include: [
+        {
+          model: UserRole,
+          attributes: ['id'],
+          as: 'roles',
+          include: [
+            {
+              model: RoleType,
+              as: 'role_details',
+              attributes: ['id', 'roleName'],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!user) {
+      return sendError(res, 'User not found', 404);
+    }
+
+    const userObj = user.toJSON();
+    delete userObj.hash;
+    const newTokenId = uuidv4();
+    const newAccessToken = generateAccessToken({
+      ...userObj,
+      tokenId: newTokenId,
+    });
+
+    // Generate new refresh token with the ORIGINAL expiry time
+    const newRefreshToken = generateRefreshToken(
+      { tokenId: newTokenId },
+      refreshToken.exp
+    );
+
+    // Save new refresh token in DB
+    await RefreshToken.create({
+      id: newTokenId,
+      userId: user.id,
+      token: newRefreshToken,
+      deviceInfo: refreshToken.deviceInfo,
+      iat: refreshToken.iat,
+      exp: refreshToken.exp, // Keep original expiry
+    });
+
+    // Remove old refresh token from DB
+    await refreshToken.destroy();
+
+    // Set new access token in cookie
+    await setTokenCookie(res, newAccessToken);
+    await generateAndSetCSRFToken(req, res, newAccessToken);
+
+    return sendSuccess(res, { user: userObj }, 'Token refreshed successfully');
+  } catch (err) {
+    logger.error(`Refresh token: ${err.message}`);
+    return sendError(res, 'Invalid refresh token', 401);
+  }
+};
+
 //Exports
 module.exports = {
   createBasicUser,
@@ -1351,6 +1436,7 @@ module.exports = {
   resetPasswordWithToken,
   resetTempPassword,
   loginBasicUser,
+  refreshAccessToken,
   logOutBasicUser,
   handlePasswordResetRequest,
   createApplicationOwner,

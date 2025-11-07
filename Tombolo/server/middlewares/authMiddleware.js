@@ -72,7 +72,7 @@ const verifyValidTokenExists = (req, res, next) => {
     req.accessToken = accessToken;
     next(); // Proceed to the controller
   } catch (err) {
-    logger.error('Authorization: Invalid or expired access token', err);
+    logger.error('Authorization: Invalid or expired access token', err.message);
     return sendError(res, 'Invalid or expired access token', 401);
   }
 };
@@ -116,6 +116,20 @@ const validateAccessRequest = [
   stringBody('comment', { length: { ...COMMENT_LENGTH } }),
 ];
 
+// Validate refresh token request - only checks if token exists in cookie, not if it's valid
+const validateRefreshTokenRequest = (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    logger.error('Authorization: No token provided for refresh');
+    return sendError(res, 'No token provided', 401);
+  }
+
+  // Attach token to req object for controller processing
+  req.accessToken = token;
+  next();
+};
+
 // Validate login payload
 const validateEmailInBody = [emailBody('email')];
 const validateResetToken = [uuidParam('token')];
@@ -126,6 +140,7 @@ module.exports = {
   validateLoginPayload,
   validateEmailDuplicate,
   verifyValidTokenExists,
+  validateRefreshTokenRequest,
   validatePasswordResetRequestPayload,
   validateResetPasswordPayload,
   validateAzureAuthCode,

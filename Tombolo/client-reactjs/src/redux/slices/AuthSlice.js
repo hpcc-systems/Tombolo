@@ -6,6 +6,7 @@ import { handleError } from '@/components/common/handleResponse';
 import { getUser, setUser } from '@/components/common/userStorage';
 import { Constants } from '@/components/common/Constants';
 import authService from '@/services/auth.service';
+import { resetAuthState } from '@/services/interceptors/auth.interceptor';
 
 const initialState = {
   isAuthenticated: false,
@@ -32,7 +33,9 @@ export const login = createAsyncThunk('auth/login', async ({ email, password, de
   try {
     const response = await authService.loginBasicUser(email, password, deviceInfo);
 
-    // Login success
+    // Login success - reset auth interceptor state
+    resetAuthState();
+
     const userData = response.data || response;
     userData.isAuthenticated = true;
     setUser(JSON.stringify(userData));
