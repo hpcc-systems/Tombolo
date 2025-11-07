@@ -20,8 +20,6 @@ const apiClient = axios.create({
   },
   maxBodyLength: 50 * 1024 * 1024, // 50MB
   maxRedirects: 5,
-  xsrfCookieName: 'x-csrf-token',
-  xsrfHeaderName: 'x-csrf-token',
 });
 
 // ------------------

@@ -24,9 +24,25 @@ export const resetAuthState = () => {
 };
 
 export const authInterceptor = (axiosInstance) => {
-  // Request interceptor - CSRF token automatically handled by axios config
+  // Request interceptor - Add CSRF token to headers for state-changing methods
   axiosInstance.interceptors.request.use(
     (config) => {
+      // For POST, PUT, DELETE requests, extract CSRF token from cookie
+      if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
+        // Extract CSRF token from cookie format: "secretToken|hashToken"
+        const csrfCookie = document.cookie.split(';').find((c) => c.trim().startsWith('x-csrf-token='));
+
+        if (csrfCookie) {
+          const cookieValue = csrfCookie.split('=')[1];
+          // Decode URL encoding and extract the secret token (first part before |)
+          const decodedValue = decodeURIComponent(cookieValue);
+          const secretToken = decodedValue.split('|')[0];
+
+          if (secretToken) {
+            config.headers['x-csrf-token'] = secretToken;
+          }
+        }
+      }
       return config;
     },
     (error) => Promise.reject(error)

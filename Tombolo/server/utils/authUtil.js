@@ -107,9 +107,10 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
     //set token in req as well so csrf token can be generated
     req.cookies.token = accessToken;
 
-    const csrfToken = generateToken(req, res, true);
+    // Generate the token pair using doubleCsrf
+    const csrfToken = generateToken(req, res);
 
-    //attach csrfToken to x-csrf-token header
+    //attach csrfToken to x-csrf-token header for client to store and use in subsequent requests
     res.setHeader(csrfHeaderName, csrfToken);
 
     return true;
