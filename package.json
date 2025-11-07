@@ -9,7 +9,7 @@
     "test": "turbo test --filter='./Tombolo/*'",
     "lint": "turbo lint --filter='./Tombolo/*'",
     "lint:fix": "turbo lint:fix --filter='./Tombolo/*'",
-    "clean": "turbo clean && rm -rf node_modules",
+    "clean": "pnpm -r exec rm -rf node_modules && rm -rf node_modules",
     "server:dev": "turbo dev --filter=@tombolo/server",
     "client:dev": "turbo dev --filter=@tombolo/client",
     "server:build": "turbo build --filter=@tombolo/server",
@@ -24,6 +24,14 @@
     "db:init": "pnpm db:create && pnpm db:migrate && pnpm db:seed"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "globals": "^16.5.0",
     "turbo": "^2.6.0"
   },
   "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
@@ -42,6 +50,12 @@
           "cron-validate": "1.4.5"
         }
       }
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "core-js",
+      "core-js-pure",
+      "esbuild"
+    ]
   }
 }
