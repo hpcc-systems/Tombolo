@@ -10,7 +10,14 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["build/**", "dist/**", ".vite/**"],
-      "env": ["NODE_ENV"]
+      "inputs": [
+        "src/**",
+        "public/**",
+        "*.config.js",
+        "*.config.ts",
+        "package.json"
+      ],
+      "env": ["NODE_ENV", "VITE_*"]
     },
     "test": {
       "cache": true,

@@ -1,9 +1,9 @@
-version: "3"
 services:
   web:
     build:
-      context: ./client-reactjs
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Tombolo/Dockerfile
+      target: client
     networks:
       - tombolo-network
     ports:
@@ -13,22 +13,24 @@ services:
       - ${CERT_PATH}:/etc/nginx/certs/
     depends_on:
       - mysql_db
+      - node
     env_file:
       - .env
     entrypoint: ["sh", "/etc/nginx/run_nginx.sh", "${HOSTNAME}"]
 
   node:
-    #restart: always
     entrypoint: ["sh", "/app/docker-entry.sh", "mysql_db", "3306"]
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Tombolo/Dockerfile
+      target: server
     volumes:
       - /tmp/pm2:/tmp/pm2
       - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
       - ./logs/server:/app/logs
       - ./certs:/usr/local/share/ca-certificates
       - ./customCerts:/customCerts
+      - ./gitClones:/gitClones
     networks:
       - tombolo-network
     ports:
