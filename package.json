@@ -50,6 +50,12 @@
           "cron-validate": "1.4.5"
         }
       }
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "core-js",
+      "core-js-pure",
+      "esbuild"
+    ]
   }
 }
