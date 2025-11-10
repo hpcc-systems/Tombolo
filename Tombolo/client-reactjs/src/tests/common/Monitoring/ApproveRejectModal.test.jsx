@@ -49,10 +49,15 @@ vi.mock('antd', async (importOriginal) => {
       destroy: vi.fn(),
       config: vi.fn(),
     },
+    notification: {
+      success: vi.fn(),
+      error: vi.fn(),
+      warning: vi.fn(),
+      info: vi.fn(),
+    },
   };
 });
-import { message } from 'antd';
-import { handleSuccess } from '@/utils/handleResponse';
+import { message, notification } from 'antd';
 
 // Helper to render modal with getContainer={false} to keep it in the RTL container
 const setup = (props = {}) => {
@@ -159,7 +164,7 @@ describe('ApproveRejectModal', () => {
       ids: [10],
     });
 
-    await waitFor(() => expect(handleSuccess).toHaveBeenCalled());
+    await waitFor(() => expect(notification.success).toHaveBeenCalled());
     expect(onCancel).toHaveBeenCalled();
   });
 
@@ -187,7 +192,7 @@ describe('ApproveRejectModal', () => {
     expect(payload.approvalStatus).toBe(REJECTED);
     expect(payload.isActive).toBe(false);
 
-    await waitFor(() => expect(handleSuccess).toHaveBeenCalled());
+    await waitFor(() => expect(notification.success).toHaveBeenCalled());
     expect(onCancel).toHaveBeenCalled();
   });
 
@@ -221,7 +226,7 @@ describe('ApproveRejectModal', () => {
     // When single item selected and array of one returned, it updates selected
     expect(setSelectedMonitoring).toHaveBeenCalledWith(updated[0]);
     expect(onCancel).toHaveBeenCalled();
-    expect(handleSuccess).toHaveBeenCalledWith('updated');
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('shows evaluated view and toggles back to form on Modify', async () => {
@@ -268,7 +273,7 @@ describe('ApproveRejectModal', () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(setSelectedMonitoring).toHaveBeenCalledWith(null);
     expect(onCancel).toHaveBeenCalled();
-    expect(handleSuccess).toHaveBeenCalled();
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('shows error when evaluateMonitoring handler is missing', async () => {
@@ -289,6 +294,11 @@ describe('ApproveRejectModal', () => {
     await user.type(screen.getByPlaceholderText('Comments'), 'Okay'); // Use 4+ characters
     await user.click(screen.getByRole('button', { name: /save/i }));
 
-    await waitFor(() => expect(message.error).toHaveBeenCalledWith('No evaluation handler provided.'));
+    await waitFor(() => {
+      expect(notification.error).toHaveBeenCalled();
+      const call = notification.error.mock.calls[0][0];
+      expect(call.message).toBe('Error occurred');
+      expect(call.description.props.children[0].props.children).toBe('No evaluation handler provided.');
+    });
   });
 });

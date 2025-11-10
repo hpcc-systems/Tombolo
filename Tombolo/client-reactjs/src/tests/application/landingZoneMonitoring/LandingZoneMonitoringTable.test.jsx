@@ -45,7 +45,16 @@ vi.mock('antd', async (importOriginal) => {
     </span>
   );
   const message = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
-  return { ...antd, Table: MockTable, Tooltip: MockTooltip, Popover: MockPopover, Popconfirm: MockPopconfirm, message };
+  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
+  return {
+    ...antd,
+    Table: MockTable,
+    Tooltip: MockTooltip,
+    Popover: MockPopover,
+    Popconfirm: MockPopconfirm,
+    message,
+    notification,
+  };
 });
 
 vi.mock('@ant-design/icons', () => ({
@@ -74,13 +83,16 @@ vi.mock('react-redux', () => ({
   useSelector: (sel) => sel({ application: { application: { applicationId: 'app-1' } } }),
 }));
 
-vi.mock('@/components/application/LandingZoneMonitoring/Utils', () => ({
-  deleteLzMonitoring: vi.fn().mockResolvedValue(),
-  toggleLzMonitoringStatus: vi.fn().mockResolvedValue(),
+const mockToggle = vi.fn();
+const mockDelete = vi.fn();
+vi.mock('@/services/landingZoneMonitoring.service', () => ({
+  default: {
+    toggle: (...args) => mockToggle(...args),
+    delete: (...args) => mockDelete(...args),
+  },
 }));
 
-import { message } from 'antd';
-import { deleteLzMonitoring, toggleLzMonitoringStatus } from '@/components/application/LandingZoneMonitoring/Utils';
+import { message, notification } from 'antd';
 import LandingZoneMonitoringTable from '@/components/application/LandingZoneMonitoring/LandingZoneMonitoringTable.jsx';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
@@ -168,7 +180,12 @@ describe('LandingZoneMonitoringTable', () => {
     );
 
     await user.click(screen.getByText('Start'));
-    expect(message.error).toHaveBeenCalledWith('Monitoring must be in approved state before it can be started');
+    expect(notification.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Error occurred',
+        description: expect.anything(),
+      })
+    );
 
     rerender(
       <LandingZoneMonitoringTable
@@ -187,10 +204,11 @@ describe('LandingZoneMonitoringTable', () => {
     );
 
     const pauseIcon = await screen.findByText('pause');
+    mockToggle.mockResolvedValueOnce();
     await user.click(pauseIcon);
-    await waitFor(() => expect(toggleLzMonitoringStatus).toHaveBeenCalled());
+    await waitFor(() => expect(mockToggle).toHaveBeenCalledWith([rowApproved.id], false));
     expect(setLandingZoneMonitoring).toHaveBeenCalled();
-    expect(handleSuccess).toHaveBeenCalledWith('Monitoring status toggled successfully');
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('deletes a monitoring via Popconfirm and updates state', async () => {
@@ -213,10 +231,11 @@ describe('LandingZoneMonitoringTable', () => {
       />
     );
 
+    mockDelete.mockResolvedValueOnce();
     await user.click(screen.getByRole('button', { name: 'confirm' }));
-    await waitFor(() => expect(deleteLzMonitoring).toHaveBeenCalledWith({ id: rowApproved.id }));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(rowApproved.id));
     expect(setLandingZoneMonitoring).toHaveBeenCalled();
-    expect(handleSuccess).toHaveBeenCalledWith('Landing zone monitoring deleted successfully');
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('allows row selection to set selected rows', async () => {

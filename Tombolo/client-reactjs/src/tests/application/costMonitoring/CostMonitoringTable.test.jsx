@@ -33,8 +33,7 @@ vi.mock('antd', async (importOriginal) => {
         {rowSelection ? (
           <button
             aria-label="select-first"
-            onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}
-          >
+            onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>
             select-first
           </button>
         ) : null}
@@ -58,15 +57,29 @@ vi.mock('antd', async (importOriginal) => {
   );
   const MockTag = ({ children }) => <span>{children}</span>;
   const message = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
-  return { ...antd, Table: MockTable, Tooltip: MockTooltip, Popover: MockPopover, Popconfirm: MockPopconfirm, Tag: MockTag, message };
+  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
+  return {
+    ...antd,
+    Table: MockTable,
+    Tooltip: MockTooltip,
+    Popover: MockPopover,
+    Popconfirm: MockPopconfirm,
+    Tag: MockTag,
+    message,
+    notification,
+  };
 });
 
 vi.mock('@ant-design/icons', () => ({
   EyeOutlined: ({ onClick }) => (
-    <button aria-label="view" onClick={onClick}>view</button>
+    <button aria-label="view" onClick={onClick}>
+      view
+    </button>
   ),
   EditOutlined: ({ onClick }) => (
-    <button aria-label="edit" onClick={onClick}>edit</button>
+    <button aria-label="edit" onClick={onClick}>
+      edit
+    </button>
   ),
   DeleteOutlined: () => <span>del</span>,
   CheckCircleFilled: () => <span>approveIcon</span>,
@@ -84,14 +97,17 @@ vi.mock('react-redux', () => ({
   useSelector: (sel) => sel(mockState),
 }));
 
-// Mock utils used by the table
-vi.mock('@/components/application/costMonitoring/costMonitoringUtils', () => ({
-  handleDeleteCostMonitoring: vi.fn().mockResolvedValue(),
-  toggleCostMonitoringStatus: vi.fn().mockResolvedValue([{ id: 1, approvalStatus: 'approved', isActive: false }]),
+// Mock service used by the table
+const mockToggle = vi.fn();
+const mockDelete = vi.fn();
+vi.mock('@/services/costMonitoring.service', () => ({
+  default: {
+    toggle: (...args) => mockToggle(...args),
+    delete: (...args) => mockDelete(...args),
+  },
 }));
 
-import { message } from 'antd';
-import { toggleCostMonitoringStatus } from '@/components/application/costMonitoring/costMonitoringUtils';
+import { message, notification } from 'antd';
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 import CostMonitoringTable from '@/components/application/costMonitoring/CostMonitoringTable.jsx';
 
@@ -204,7 +220,12 @@ describe('CostMonitoringTable', () => {
     );
 
     await user.click(screen.getByText('Pause'));
-    expect(message.error).toHaveBeenCalledWith('Monitoring must be in approved state before it can be started');
+    expect(notification.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Error occurred',
+        description: expect.anything(),
+      })
+    );
 
     // Approved row triggers toggle util and state update
     rerender(
@@ -228,8 +249,9 @@ describe('CostMonitoringTable', () => {
       />
     );
 
+    mockToggle.mockResolvedValueOnce({ updatedCostMonitorings: [{ ...rowApproved, isActive: false }] });
     await user.click(screen.getByText('Pause'));
-    await waitFor(() => expect(toggleCostMonitoringStatus).toHaveBeenCalled());
+    await waitFor(() => expect(mockToggle).toHaveBeenCalledWith({ ids: [rowApproved.id], action: 'pause' }));
     expect(setCostMonitorings).toHaveBeenCalled();
   });
 
