@@ -12,11 +12,27 @@ services:
     volumes:
       - ${CERT_PATH}:/etc/nginx/certs/
     depends_on:
-      - mysql_db
-      - node
+      node:
+        condition: service_healthy
+      mysql_db:
+        condition: service_healthy
     env_file:
       - .env
     entrypoint: ["sh", "/etc/nginx/run_nginx.sh", "${HOSTNAME}"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80/",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   node:
     entrypoint: ["sh", "/app/docker-entry.sh", "mysql_db", "3306"]
@@ -36,11 +52,24 @@ services:
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
     depends_on:
-      - mysql_db
+      mysql_db:
+        condition: service_healthy
     env_file:
       - .env
     logging:
       driver: "none" # This line disables Docker logs. All logs are written to the file system
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:${SERVER_PORT}/api/status/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   mysql_db:
     image: mysql:8.0
@@ -60,6 +89,22 @@ services:
       - tombolo-network
     env_file:
       - .env
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 networks:
   tombolo-network:
