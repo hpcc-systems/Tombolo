@@ -42,6 +42,18 @@ const {
 } = require('../utils/authUtil');
 const { blacklistToken } = require('../utils/tokenBlackListing');
 
+// Helper function to create minimal JWT payload
+const createTokenPayload = (user, tokenId) => {
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    roles: user.roles || [],  // Include roles for RBAC
+    tokenId
+  };
+};
+
 // Register application owner
 const createApplicationOwner = async (req, res) => {
   try {
@@ -761,8 +773,8 @@ const loginBasicUser = async (req, res) => {
     // Create token id
     const tokenId = uuidv4();
 
-    // Create access jwt
-    const accessToken = generateAccessToken({ ...userObj, tokenId });
+    // Create access jwt with minimal payload
+    const accessToken = generateAccessToken(createTokenPayload(userObj, tokenId));
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });
