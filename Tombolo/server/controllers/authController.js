@@ -348,15 +348,18 @@ const verifyEmail = async (req, res) => {
     );
 
     // Save refresh token in DB
-    await RefreshToken.create({
-      id: tokenId,
-      userId: user.id,
-      token: refreshToken,
-      deviceInfo: {},
-      metaData: {},
-      iat: new Date(iat * 1000),
-      exp: new Date(exp * 1000),
-    }, { transaction });
+    await RefreshToken.create(
+      {
+        id: tokenId,
+        userId: user.id,
+        token: refreshToken,
+        deviceInfo: {},
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      },
+      { transaction }
+    );
 
     // Delete the account verification code (after successful user save)
     await AccountVerificationCode.destroy({
@@ -367,23 +370,28 @@ const verifyEmail = async (req, res) => {
     // Commit transaction before setting cookies/tokens
     await transaction.commit();
 
-    // Set cookies and tokens (after successful transaction)
-    await setTokenCookie(res, accessToken);
-    await generateAndSetCSRFToken(req, res, accessToken);
-    
-    // Set last login (outside transaction to avoid conflicts)
-    await setLastLogin(user);
-
     // Prepare user object for response
     const userObj = user.toJSON();
     delete userObj.hash; // Remove sensitive data
 
-    // Send response
-    return sendSuccess(
-      res,
-      userObj,
-      'Email verified successfully'
-    );
+    // Set cookies and tokens (after successful transaction)
+    try {
+      await setTokenCookie(res, accessToken);
+
+      // For email verification, skip CSRF token generation to avoid circular dependency
+      // CSRF token will be generated on next authenticated request
+      logger.info('Email verification successful');
+
+      // Set last login (outside transaction to avoid conflicts)
+      await setLastLogin(user);
+
+      // Send response only after all operations succeed
+      return sendSuccess(res, userObj, 'Email verified successfully');
+    } catch (tokenError) {
+      // Handle token/cookie errors without sending duplicate response
+      logger.error('Token generation failed:', tokenError);
+      return sendError(res, 'Authentication setup failed', 500);
+    }
   } catch (err) {
     // Rollback transaction if it exists
     if (transaction) {
@@ -1092,7 +1100,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
       await setTokenCookie(res, accessToken);
 
-      await generateAndSetCSRFToken(req, res, accessToken, next);
+      await generateAndSetCSRFToken(req, res, accessToken);
 
       // Set last login
       await setLastLogin(newUser);

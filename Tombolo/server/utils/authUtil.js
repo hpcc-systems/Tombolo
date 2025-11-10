@@ -116,7 +116,7 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
     return true;
   } catch (e) {
     logger.error('Error while generating csrf token:' + e);
-    return sendError(res, 'Internal Server Error', 500);
+    throw new Error('CSRF token generation failed: ' + e.message);
   }
 };
 
