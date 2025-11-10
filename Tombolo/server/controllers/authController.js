@@ -254,24 +254,36 @@ const createBasicUser = async (req, res) => {
 
 // Verify email
 const verifyEmail = async (req, res) => {
+  let transaction;
   try {
     const { token } = req.body;
+
+    // Validate token input
+    if (!token) {
+      return sendError(res, 'Verification token is required', 400);
+    }
+
+    // Start transaction
+    transaction = await sequelize.transaction();
 
     // Find the account verification code
     const accountVerificationCode = await AccountVerificationCode.findOne({
       where: { code: token },
       raw: true,
+      transaction,
     });
 
     // Token does not exist
     if (!accountVerificationCode) {
       logger.error(`Verify email: Token ${token} does not exist`);
+      await transaction.rollback();
       return sendError(res, 'Invalid or expired verification token', 404);
     }
 
     // Token has expired
     if (new Date() > accountVerificationCode.expiresAt) {
       logger.error(`Verify email: Token ${token} has expired`);
+      await transaction.rollback();
       return sendError(res, 'Verification token has expired', 400);
     }
 
@@ -303,19 +315,22 @@ const verifyEmail = async (req, res) => {
           ],
         },
       ],
+      transaction,
     });
+
+    // User not found
+    if (!user) {
+      logger.error(`Verify email: User not found for token ${token}`);
+      await transaction.rollback();
+      return sendError(res, 'User not found', 404);
+    }
 
     // Update user
     user.verifiedUser = true;
     user.verifiedAt = new Date();
 
     // Save user
-    await user.save();
-
-    // Delete the account verification code
-    await AccountVerificationCode.destroy({
-      where: { code: token },
-    });
+    await user.save({ transaction });
 
     // Create token id
     const tokenId = uuidv4();
@@ -341,21 +356,43 @@ const verifyEmail = async (req, res) => {
       metaData: {},
       iat: new Date(iat * 1000),
       exp: new Date(exp * 1000),
+    }, { transaction });
+
+    // Delete the account verification code (after successful user save)
+    await AccountVerificationCode.destroy({
+      where: { code: token },
+      transaction,
     });
 
+    // Commit transaction before setting cookies/tokens
+    await transaction.commit();
+
+    // Set cookies and tokens (after successful transaction)
     await setTokenCookie(res, accessToken);
-
     await generateAndSetCSRFToken(req, res, accessToken);
-
+    
+    // Set last login (outside transaction to avoid conflicts)
     await setLastLogin(user);
+
+    // Prepare user object for response
+    const userObj = user.toJSON();
+    delete userObj.hash; // Remove sensitive data
 
     // Send response
     return sendSuccess(
       res,
-      { ...user.toJSON() },
+      userObj,
       'Email verified successfully'
     );
   } catch (err) {
+    // Rollback transaction if it exists
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (rollbackErr) {
+        logger.error(`Transaction rollback failed: ${rollbackErr.message}`);
+      }
+    }
     logger.error('Failed to verify email', err);
     return sendError(res, err);
   }
