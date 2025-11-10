@@ -8,6 +8,11 @@ const moment = require('moment');
 const logger = require('../config/logger');
 const { sendError } = require('./response');
 const {
+  ACCESS_TOKEN_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
+  TOKEN_COOKIE_MAX_AGE,
+} = require('../config/tokens');
+const {
   User,
   UserRole,
   RoleType,
@@ -25,12 +30,18 @@ const csrfHeaderName = 'x-csrf-token';
 
 // Generate access token
 const generateAccessToken = user => {
-  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '15m' });
+  return jwt.sign(user, process.env.JWT_SECRET, {
+    expiresIn: ACCESS_TOKEN_EXPIRY,
+  });
 };
 
 // Generate refresh token
-const generateRefreshToken = tokenId => {
-  return jwt.sign(tokenId, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+const generateRefreshToken = (tokenId, customExpiry = null) => {
+  const options = customExpiry
+    ? { expiresIn: Math.floor((customExpiry.getTime() - Date.now()) / 1000) } // seconds until custom expiry
+    : { expiresIn: REFRESH_TOKEN_EXPIRY }; // default from config
+
+  return jwt.sign(tokenId, process.env.JWT_REFRESH_SECRET, options);
 };
 
 // Verify token
@@ -86,7 +97,7 @@ const setTokenCookie = async (res, token) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'Strict',
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    maxAge: TOKEN_COOKIE_MAX_AGE, // From config
   });
   return true;
 };
@@ -96,15 +107,16 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
     //set token in req as well so csrf token can be generated
     req.cookies.token = accessToken;
 
-    const csrfToken = generateToken(req, res, true);
+    // Generate the token pair using doubleCsrf
+    const csrfToken = generateToken(req, res);
 
-    //attach csrfToken to x-csrf-token header
+    //attach csrfToken to x-csrf-token header for client to store and use in subsequent requests
     res.setHeader(csrfHeaderName, csrfToken);
 
     return true;
   } catch (e) {
     logger.error('Error while generating csrf token:' + e);
-    return sendError(res, 'Internal Server Error', 500);
+    throw new Error('CSRF token generation failed: ' + e.message);
   }
 };
 

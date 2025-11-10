@@ -59,6 +59,12 @@ const authService = {
     return response.data;
   },
 
+  // Refresh access token
+  refreshToken: async () => {
+    const response = await apiClient.post('/auth/refreshToken');
+    return response.data;
+  },
+
   // Logout basic user
   logoutBasicUser: async () => {
     const response = await apiClient.post('/auth/logoutBasicUser');

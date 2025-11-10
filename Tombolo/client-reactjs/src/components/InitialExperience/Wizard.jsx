@@ -164,11 +164,14 @@ const Wizard = () => {
               .filter((event) => event !== null);
 
             // Check if any of these events are errors or step is 999
+            let hasError = false;
+            let errorMessage = '';
+
             serverSentEvents.forEach((e) => {
               if (e.step === 99) {
                 // Error step
-                setSubmitting(false);
-                throw new Error(e.message || 'Setup failed');
+                hasError = true;
+                errorMessage = e.message || 'Setup failed';
               } else if (e.step === 999) {
                 // Completion step
                 setCompleteSuccessfully(true);
@@ -177,7 +180,15 @@ const Wizard = () => {
               }
             });
 
+            // Always update UI with all events first
             setStepMessage((prev) => [...prev, ...serverSentEvents]);
+
+            // Handle error after UI update
+            if (hasError) {
+              setSubmitting(false);
+              handleError(new Error(errorMessage));
+              return;
+            }
           }
         },
       });
