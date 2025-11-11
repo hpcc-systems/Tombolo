@@ -20,27 +20,7 @@ const apiClient = axios.create({
   },
   maxBodyLength: 50 * 1024 * 1024, // 50MB
   maxRedirects: 5,
-  xsrfCookieName: 'x-csrf-token',
-  xsrfHeaderName: 'x-csrf-token',
 });
-
-// ------------------
-// Axios Retry Setup
-// TODO - causes more issues than it solves. commented out for now
-// ------------------
-// axiosRetry(apiClient, {
-//   retries: 2,
-//   retryDelay: axiosRetry.exponentialDelay,
-//   retryCondition: (error) => {
-//     // Retry on network errors or 5xx responses
-//     return axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status >= 500;
-//   },
-//   onRetry: (retryCount, error, requestConfig) => {
-//     requestConfig._isRetryAttempt = true;
-//     requestConfig._retryCount = retryCount;
-//     requestConfig._maxRetries = 2;
-//   },
-// });
 
 // ------------------
 // Apply interceptors

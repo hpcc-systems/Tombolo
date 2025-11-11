@@ -36,35 +36,35 @@ const validateJobSearch = [
   regexBody('clusterType', true, { regex: strictLetterRegex }),
 ];
 
-const validateGetFileInfo = [...fileDetailsShared, uuidQuery('applicationId')];
+// const validateGetFileInfo = [...fileDetailsShared, uuidQuery('applicationId')];
 
 const validateGetLogicalFileDetails = [...fileDetailsShared];
 
-const validateGetIndexInfo = [
-  regexQuery('indexName', false, { regex: strictLetterRegex }),
-  queryUuids.clusterid,
-  queryUuids.applicationId,
-];
+// const validateGetIndexInfo = [
+//   regexQuery('indexName', false, { regex: strictLetterRegex }),
+//   queryUuids.clusterid,
+//   queryUuids.applicationId,
+// ];
 
 const validateGetData = [
   queryUuids.clusterid,
   regexQuery('fileName', false, { regex: strictLetterRegex }),
 ];
 
-const validateGetQueryInfo = [
-  queryUuids.clusterid,
-  regexQuery('queryName', false, { regex: strictLetterRegex }),
-];
+// const validateGetQueryInfo = [
+//   queryUuids.clusterid,
+//   regexQuery('queryName', false, { regex: strictLetterRegex }),
+// ];
 
 const validateGetQueryFiles = [
   regexQuery('hpcc_queryId', false, { regex: strictLetterRegex }),
   queryUuids.clusterId,
 ];
 
-const validateGetJobInfo = [
-  queryUuids.clusterid,
-  regexQuery('jobWuid', false, { regex: strictLetterRegex }),
-];
+// const validateGetJobInfo = [
+//   queryUuids.clusterid,
+//   regexQuery('jobWuid', false, { regex: strictLetterRegex }),
+// ];
 
 const validateGetDropZones = [uuidQuery('clusterId')];
 
@@ -96,13 +96,13 @@ module.exports = {
   validateSuperfileSearch,
   validateQuerySearch,
   validateJobSearch,
-  validateGetFileInfo,
+  // validateGetFileInfo,
   validateGetLogicalFileDetails,
-  validateGetIndexInfo,
+  // validateGetIndexInfo,
   validateGetData,
-  validateGetQueryInfo,
+  // validateGetQueryInfo,
   validateGetQueryFiles,
-  validateGetJobInfo,
+  // validateGetJobInfo,
   validateGetDropZones,
   validateDropZoneDirectoryDetails,
   validateDropZoneFileSearch,

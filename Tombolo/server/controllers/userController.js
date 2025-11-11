@@ -281,7 +281,7 @@ const changePassword = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Decode refresh token to get iat and exp
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
     // Create new refresh token in database
     await RefreshToken.create(

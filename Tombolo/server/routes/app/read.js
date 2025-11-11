@@ -8,18 +8,6 @@ const Sequelize = require('sequelize');
 const {
   UserApplication,
   Application,
-  Group,
-  File,
-  FileValidation,
-  Indexes: Index,
-  IndexKey,
-  IndexPayload,
-  Job,
-  JobFile,
-  JobParam,
-  Query,
-  QueryField,
-  Dataflow,
   User,
 } = require('../../models');
 const { validate } = require('../../middlewares/validateRequestBody');
@@ -32,7 +20,6 @@ const {
 } = require('../../middlewares/appMiddleware');
 const { sendError, sendSuccess } = require('../../utils/response');
 // const NotificationModule = require('../notifications/email-notification');
-const jobScheduler = require('../../jobSchedular/job-scheduler');
 const logger = require('../../config/logger');
 
 // Constants & Config
@@ -172,20 +159,6 @@ router.post(
 // DELETE APPLICATION
 router.post('/deleteApplication', async function (req, res) {
   try {
-    let dataflows = await Dataflow.findAll({
-      where: { application_id: req.body.appIdToDelete },
-      raw: true,
-      attributes: ['id'],
-    });
-    if (dataflows && dataflows.length > 0) {
-      let dataflowIds = dataflows.map(dataflow => dataflow.id);
-      await Dataflow.destroy({
-        where: { application_id: req.body.appIdToDelete },
-      });
-      for (const id of dataflowIds) {
-        await jobScheduler.removeAllFromBree(id);
-      }
-    }
     await UserApplication.destroy({
       where: { application_id: req.body.appIdToDelete, user_id: req.body.user },
     });
@@ -257,132 +230,6 @@ router.post('/export', validate(validateExportApp), (req, res) => {
           description: application.description,
           cluster: application.cluster,
         },
-      };
-
-      let groups = await Group.findAll({
-        where: { application_id: req.body.id },
-        attributes: { exclude: ['createdAt', 'updatedAt', 'application_id'] },
-      });
-      applicationExport.application.groups = groups;
-
-      let files = await File.findAll({
-        where: { application_id: application.id },
-        include: [
-          {
-            model: FileValidation,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-            },
-          },
-          {
-            model: Group,
-            as: 'groups',
-            attributes: ['id', 'name', 'description', 'parent_group'],
-            through: {
-              attributes: [],
-            },
-          },
-          { model: Dataflow, as: 'dataflows', attributes: ['id'] },
-        ],
-      });
-
-      let indexes = await Index.findAll({
-        where: { application_id: application.id },
-        include: [
-          {
-            model: IndexKey,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-            },
-          },
-          {
-            model: IndexPayload,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-            },
-          },
-          {
-            model: Group,
-            as: 'groups',
-            attributes: ['id', 'name', 'description', 'parent_group'],
-            through: {
-              attributes: [],
-            },
-          },
-          { model: Dataflow, as: 'dataflows', attributes: ['id'] },
-        ],
-        attributes: {
-          exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-        },
-      });
-
-      let queries = await Query.findAll({
-        where: { application_id: application.id },
-        include: [
-          {
-            model: QueryField,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-            },
-          },
-          {
-            model: Group,
-            as: 'groups',
-            attributes: ['id', 'name', 'description', 'parent_group'],
-            through: {
-              attributes: [],
-            },
-          },
-          { model: Dataflow, as: 'dataflows', attributes: ['id'] },
-        ],
-        attributes: {
-          exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-        },
-      });
-
-      let jobs = await Job.findAll({
-        where: { application_id: application.id },
-        include: [
-          {
-            model: JobFile,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-            },
-          },
-          {
-            model: JobParam,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-            },
-          },
-          {
-            model: Group,
-            as: 'groups',
-            attributes: ['id', 'name', 'description', 'parent_group'],
-            through: {
-              attributes: [],
-            },
-          },
-          { model: Dataflow, as: 'dataflows', attributes: ['id'] },
-        ],
-        attributes: {
-          exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-        },
-      });
-
-      let dataflow = await Dataflow.findAll({
-        where: { application_id: application.id },
-        attributes: {
-          exclude: ['createdAt', 'updatedAt', 'id', 'application_id'],
-        },
-      });
-
-      applicationExport.application.assets = {
-        files: files,
-        indexes: indexes,
-        queries: queries,
-        jobs: jobs,
-        dataflow: dataflow,
       };
 
       var schemaDir = path.join(__dirname, '..', '..', 'schemas');

@@ -1,13 +1,13 @@
 import React from 'react';
 import { Drawer } from 'antd';
-import ApiKeyGuide from '../userGuides/ApiKeyGuide';
+// import ApiKeyGuide from '../userGuides/ApiKeyGuide';
 import ExampleGuide from '../userGuides/ExampleGuide';
 import CollaboratorGuide from '../userGuides/CollaboratorGuide';
-import DataFlowGUide from '../userGuides/DataFlowGUide';
-import AssetsGuide from '../userGuides/AssetsGuide';
-import GithubGuide from '../userGuides/GithubGuide';
+// import DataFlowGUide from '../userGuides/DataFlowGUide';
+// import AssetsGuide from '../userGuides/AssetsGuide';
+// import GithubGuide from '../userGuides/GithubGuide';
 import CronGuide from '../userGuides/CronGuide';
-import TeamsWebhookGuide from '../userGuides/TeamsWebhookGuide';
+// import TeamsWebhookGuide from '../userGuides/TeamsWebhookGuide';
 import ApplicationsGuide from '../userGuides/ApplicationsGuide';
 import ClusterGuide from '../userGuides/ClusterGuide';
 import WildcardGuide from '../userGuides/WildcardGuide';
@@ -41,20 +41,20 @@ const GuideDrawer = ({ content, open, onClose, width }) => {
         switch (content) {
           case 'example':
             return <ExampleGuide />;
-          case 'api':
-            return <ApiKeyGuide />;
+          // case 'api':
+          //   return <ApiKeyGuide />;
           case 'collaborator':
             return <CollaboratorGuide />;
-          case 'dataFlow':
-            return <DataFlowGUide />;
-          case 'assets':
-            return <AssetsGuide />;
-          case 'github':
-            return <GithubGuide />;
+          // case 'dataFlow':
+          //   return <DataFlowGUide />;
+          // case 'assets':
+          //   return <AssetsGuide />;
+          // case 'github':
+          //   return <GithubGuide />;
           case 'cron':
             return <CronGuide />;
-          case 'webhook':
-            return <TeamsWebhookGuide />;
+          // case 'webhook':
+          //   return <TeamsWebhookGuide />;
           case 'application':
             return <ApplicationsGuide />;
           case 'cluster':

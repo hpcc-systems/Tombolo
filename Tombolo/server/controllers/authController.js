@@ -42,6 +42,18 @@ const {
 } = require('../utils/authUtil');
 const { blacklistToken } = require('../utils/tokenBlackListing');
 
+// Helper function to create minimal JWT payload
+const createTokenPayload = (user, tokenId) => {
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    roles: user.roles || [],  // Include roles for RBAC
+    tokenId
+  };
+};
+
 // Register application owner
 const createApplicationOwner = async (req, res) => {
   try {
@@ -254,24 +266,36 @@ const createBasicUser = async (req, res) => {
 
 // Verify email
 const verifyEmail = async (req, res) => {
+  let transaction;
   try {
     const { token } = req.body;
+
+    // Validate token input
+    if (!token) {
+      return sendError(res, 'Verification token is required', 400);
+    }
+
+    // Start transaction
+    transaction = await sequelize.transaction();
 
     // Find the account verification code
     const accountVerificationCode = await AccountVerificationCode.findOne({
       where: { code: token },
       raw: true,
+      transaction,
     });
 
     // Token does not exist
     if (!accountVerificationCode) {
       logger.error(`Verify email: Token ${token} does not exist`);
+      await transaction.rollback();
       return sendError(res, 'Invalid or expired verification token', 404);
     }
 
     // Token has expired
     if (new Date() > accountVerificationCode.expiresAt) {
       logger.error(`Verify email: Token ${token} has expired`);
+      await transaction.rollback();
       return sendError(res, 'Verification token has expired', 400);
     }
 
@@ -303,19 +327,22 @@ const verifyEmail = async (req, res) => {
           ],
         },
       ],
+      transaction,
     });
+
+    // User not found
+    if (!user) {
+      logger.error(`Verify email: User not found for token ${token}`);
+      await transaction.rollback();
+      return sendError(res, 'User not found', 404);
+    }
 
     // Update user
     user.verifiedUser = true;
     user.verifiedAt = new Date();
 
     // Save user
-    await user.save();
-
-    // Delete the account verification code
-    await AccountVerificationCode.destroy({
-      where: { code: token },
-    });
+    await user.save({ transaction });
 
     // Create token id
     const tokenId = uuidv4();
@@ -327,32 +354,65 @@ const verifyEmail = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
-    await RefreshToken.create({
-      id: tokenId,
-      userId: user.id,
-      token: refreshToken,
-      deviceInfo: {},
-      metaData: {},
-      iat: new Date(iat * 1000),
-      exp: new Date(exp * 1000),
+    await RefreshToken.create(
+      {
+        id: tokenId,
+        userId: user.id,
+        token: refreshToken,
+        deviceInfo: {},
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      },
+      { transaction }
+    );
+
+    // Delete the account verification code (after successful user save)
+    await AccountVerificationCode.destroy({
+      where: { code: token },
+      transaction,
     });
 
-    await setTokenCookie(res, accessToken);
+    // Commit transaction before setting cookies/tokens
+    await transaction.commit();
 
-    await generateAndSetCSRFToken(req, res, accessToken);
+    // Prepare user object for response
+    const userObj = user.toJSON();
+    delete userObj.hash; // Remove sensitive data
 
-    await setLastLogin(user);
+    // Set cookies and tokens (after successful transaction)
+    try {
+      await setTokenCookie(res, accessToken);
 
-    // Send response
-    return sendSuccess(
-      res,
-      { ...user.toJSON() },
-      'Email verified successfully'
-    );
+      // For email verification, skip CSRF token generation to avoid circular dependency
+      // CSRF token will be generated on next authenticated request
+      logger.info('Email verification successful');
+
+      // Set last login (outside transaction to avoid conflicts)
+      await setLastLogin(user);
+
+      // Send response only after all operations succeed
+      return sendSuccess(res, userObj, 'Email verified successfully');
+    } catch (tokenError) {
+      // Handle token/cookie errors without sending duplicate response
+      logger.error('Token generation failed:', tokenError);
+      return sendError(res, 'Authentication setup failed', 500);
+    }
   } catch (err) {
+    // Rollback transaction if it exists
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (rollbackErr) {
+        logger.error(`Transaction rollback failed: ${rollbackErr.message}`);
+      }
+    }
     logger.error('Failed to verify email', err);
     return sendError(res, err);
   }
@@ -454,7 +514,10 @@ const resetPasswordWithToken = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create(
@@ -595,7 +658,10 @@ const resetTempPassword = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -707,14 +773,17 @@ const loginBasicUser = async (req, res) => {
     // Create token id
     const tokenId = uuidv4();
 
-    // Create access jwt
-    const accessToken = generateAccessToken({ ...userObj, tokenId });
+    // Create access jwt with minimal payload
+    const accessToken = generateAccessToken(createTokenPayload(userObj, tokenId));
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -751,8 +820,8 @@ const logOutBasicUser = async (req, res) => {
     // Clear the token cookie
     res.clearCookie('token');
     res.clearCookie('x-csrf-token');
-    // Decode the token to get the tokenId (assuming token contains tokenId)
-    const decodedToken = jwt.decode(req.cookies.token);
+    // Verify the token to get the tokenId securely
+    const decodedToken = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
 
     const { tokenId } = decodedToken;
 
@@ -1022,7 +1091,10 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       const refreshToken = generateRefreshToken({ tokenId });
 
       // Save refresh token to DB
-      const { iat, exp } = jwt.decode(refreshToken);
+      const { iat, exp } = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET
+      );
 
       // Save refresh token in DB
       await RefreshToken.create({
@@ -1040,7 +1112,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
       await setTokenCookie(res, accessToken);
 
-      await generateAndSetCSRFToken(req, res, accessToken, next);
+      await generateAndSetCSRFToken(req, res, accessToken);
 
       // Set last login
       await setLastLogin(newUser);
@@ -1060,7 +1132,10 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -1344,6 +1419,91 @@ const requestPasswordReset = async (req, res) => {
   }
 };
 
+// Refresh Access Token - Explicit Client-Side Refresh
+const refreshAccessToken = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const { id: userId, tokenId } = decodedToken;
+
+    // Check if corresponding refresh token exists in DB
+    const refreshToken = await RefreshToken.findOne({
+      where: { id: tokenId },
+    });
+
+    if (!refreshToken) {
+      return sendError(res, 'Session expired', 401);
+    }
+
+    // Check if the original session has expired (7 days from initial login)
+    const now = new Date();
+    if (now > refreshToken.exp) {
+      // Session has expired - remove the refresh token and force re-login
+      await refreshToken.destroy();
+      return sendError(res, 'Session expired', 401);
+    }
+
+    // Get fresh user details
+    const user = await User.findOne({
+      where: { id: userId },
+      include: [
+        {
+          model: UserRole,
+          attributes: ['id'],
+          as: 'roles',
+          include: [
+            {
+              model: RoleType,
+              as: 'role_details',
+              attributes: ['id', 'roleName'],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!user) {
+      return sendError(res, 'User not found', 404);
+    }
+
+    const userObj = user.toJSON();
+    delete userObj.hash;
+    const newTokenId = uuidv4();
+    const newAccessToken = generateAccessToken({
+      ...userObj,
+      tokenId: newTokenId,
+    });
+
+    // Generate new refresh token with the ORIGINAL expiry time
+    const newRefreshToken = generateRefreshToken(
+      { tokenId: newTokenId },
+      refreshToken.exp
+    );
+
+    // Save new refresh token in DB
+    await RefreshToken.create({
+      id: newTokenId,
+      userId: user.id,
+      token: newRefreshToken,
+      deviceInfo: refreshToken.deviceInfo,
+      iat: refreshToken.iat,
+      exp: refreshToken.exp, // Keep original expiry
+    });
+
+    // Remove old refresh token from DB
+    await refreshToken.destroy();
+
+    // Set new access token in cookie
+    await setTokenCookie(res, newAccessToken);
+    await generateAndSetCSRFToken(req, res, newAccessToken);
+
+    return sendSuccess(res, { user: userObj }, 'Token refreshed successfully');
+  } catch (err) {
+    logger.error(`Refresh token: ${err.message}`);
+    return sendError(res, 'Invalid refresh token', 401);
+  }
+};
+
 //Exports
 module.exports = {
   createBasicUser,
@@ -1351,6 +1511,7 @@ module.exports = {
   resetPasswordWithToken,
   resetTempPassword,
   loginBasicUser,
+  refreshAccessToken,
   logOutBasicUser,
   handlePasswordResetRequest,
   createApplicationOwner,

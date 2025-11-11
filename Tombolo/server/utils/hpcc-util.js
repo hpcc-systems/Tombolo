@@ -1,17 +1,15 @@
 const axios = require('axios');
-const path = require('path');
 const {
   Cluster,
-  DataflowClusterCredential,
-  GithubRepoSetting,
+  // DataflowClusterCredential,
+  // GithubRepoSetting,
 } = require('../models');
 let hpccJSComms = require('@hpcc-js/comms');
 const { decryptString } = require('./cipher');
 const { getClusterOptions } = require('../utils/getClusterOptions');
 
-const simpleGit = require('simple-git');
+// const simpleGit = require('simple-git');
 const cp = require('child_process');
-const fs = require('fs');
 const logger = require('../config/logger');
 
 exports.fileInfo = async (fileName, clusterId) => {
@@ -371,131 +369,131 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
   }
 };
 
-exports.getJobWuDetails = async (
-  clusterId,
-  jobName,
-  dataflowId,
-  clusterType = ''
-) => {
-  try {
-    let wuService;
+// exports.getJobWuDetails = async (
+//   clusterId,
+//   jobName,
+//   dataflowId,
+//   clusterType = ''
+// ) => {
+//   try {
+//     let wuService;
+//
+//     if (!dataflowId) {
+//       wuService = await module.exports.getWorkunitsService(clusterId);
+//     } else {
+//       const clusterCredentials = await DataflowClusterCredential.findOne({
+//         where: { dataflow_id: dataflowId },
+//         include: [Cluster],
+//       });
+//       if (!clusterCredentials) throw new Error('Failed to get dataflow creds');
+//
+//       const { thor_host, thor_port, allowSelfSigned } =
+//         clusterCredentials.cluster.dataValues;
+//
+//       const connectionSettings = getClusterOptions(
+//         {
+//           baseUrl: thor_host + ':' + thor_port,
+//           userID: clusterCredentials.cluster_username,
+//           password: decryptString(clusterCredentials.cluster_hash),
+//         },
+//         allowSelfSigned
+//       );
+//
+//       wuService = new hpccJSComms.WorkunitsService(connectionSettings);
+//     }
+//
+//     if (!wuService) throw new Error('Failed to get WorkunitsService');
+//
+//     const WUQuery = await wuService.WUQuery({
+//       Jobname: jobName,
+//       Cluster: clusterType,
+//       PageSize: 1,
+//       PageStartFrom: 0,
+//     });
+//     const ECLWorkunit = WUQuery.Workunits?.ECLWorkunit?.[0];
+//
+//     return ECLWorkunit
+//       ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster, wuService }
+//       : null;
+//   } catch (error) {
+//     logger.error('hpcc-util - getJobWuDetails: ', error);
+//     throw error;
+//   }
+// };
 
-    if (!dataflowId) {
-      wuService = await module.exports.getWorkunitsService(clusterId);
-    } else {
-      const clusterCredentials = await DataflowClusterCredential.findOne({
-        where: { dataflow_id: dataflowId },
-        include: [Cluster],
-      });
-      if (!clusterCredentials) throw new Error('Failed to get dataflow creds');
-
-      const { thor_host, thor_port, allowSelfSigned } =
-        clusterCredentials.cluster.dataValues;
-
-      const connectionSettings = getClusterOptions(
-        {
-          baseUrl: thor_host + ':' + thor_port,
-          userID: clusterCredentials.cluster_username,
-          password: decryptString(clusterCredentials.cluster_hash),
-        },
-        allowSelfSigned
-      );
-
-      wuService = new hpccJSComms.WorkunitsService(connectionSettings);
-    }
-
-    if (!wuService) throw new Error('Failed to get WorkunitsService');
-
-    const WUQuery = await wuService.WUQuery({
-      Jobname: jobName,
-      Cluster: clusterType,
-      PageSize: 1,
-      PageStartFrom: 0,
-    });
-    const ECLWorkunit = WUQuery.Workunits?.ECLWorkunit?.[0];
-
-    return ECLWorkunit
-      ? { wuid: ECLWorkunit.Wuid, cluster: ECLWorkunit.Cluster, wuService }
-      : null;
-  } catch (error) {
-    logger.error('hpcc-util - getJobWuDetails: ', error);
-    throw error;
-  }
-};
-
-exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
-  let cluster_auth;
-
-  if (dataflowId) {
-    try {
-      const clusterCred = await DataflowClusterCredential.findOne({
-        where: { dataflow_id: dataflowId },
-        include: [Cluster],
-      });
-      cluster_auth = {
-        user: clusterCred.dataValues.cluster_username,
-        password: decryptString(clusterCred.dataValues.cluster_hash),
-      };
-    } catch (error) {
-      logger.error('hpcc-util - resubmitWU: ', error);
-    }
-  }
-
-  try {
-    const body = {
-      WURunRequest: {
-        Wuid: wuid,
-        CloneWorkunit: true,
-        Cluster: wucluster,
-        Wait: 0,
-      },
-    };
-
-    const cluster = await module.exports.getCluster(clusterId);
-
-    const response = await axios.post(
-      `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WURun.json?ver_=1.8`,
-      body,
-      {
-        auth: dataflowId
-          ? cluster_auth
-          : module.exports.getClusterAuth(cluster),
-        headers: {
-          'content-type': 'application/json',
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    // Handle axios errors
-    if (error.response) {
-      // Check for access denied in response body
-      const responseBody =
-        typeof error.response.data === 'string'
-          ? error.response.data
-          : JSON.stringify(error.response.data);
-
-      if (responseBody.indexOf('Access Denied') > -1) {
-        logger.error('hpcc-util - resubmitWU - access denied: ', error);
-        throw new Error(
-          'Access Denied -- Valid username and password required!'
-        );
-      }
-
-      // For other HTTP errors, try to parse the response
-      try {
-        return error.response.data;
-      } catch (parseError) {
-        logger.error('hpcc-util - resubmitWU - parse error: ', parseError);
-        throw parseError;
-      }
-    } else {
-      logger.error('hpcc-util - resubmitWU: ', error);
-      // Network or other errors
-      throw error;
-    }
-  }
-};
+// exports.resubmitWU = async (clusterId, wuid, wucluster, dataflowId) => {
+//   let cluster_auth;
+//
+//   if (dataflowId) {
+//     try {
+//       const clusterCred = await DataflowClusterCredential.findOne({
+//         where: { dataflow_id: dataflowId },
+//         include: [Cluster],
+//       });
+//       cluster_auth = {
+//         user: clusterCred.dataValues.cluster_username,
+//         password: decryptString(clusterCred.dataValues.cluster_hash),
+//       };
+//     } catch (error) {
+//       logger.error('hpcc-util - resubmitWU: ', error);
+//     }
+//   }
+//
+//   try {
+//     const body = {
+//       WURunRequest: {
+//         Wuid: wuid,
+//         CloneWorkunit: true,
+//         Cluster: wucluster,
+//         Wait: 0,
+//       },
+//     };
+//
+//     const cluster = await module.exports.getCluster(clusterId);
+//
+//     const response = await axios.post(
+//       `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WURun.json?ver_=1.8`,
+//       body,
+//       {
+//         auth: dataflowId
+//           ? cluster_auth
+//           : module.exports.getClusterAuth(cluster),
+//         headers: {
+//           'content-type': 'application/json',
+//         },
+//       }
+//     );
+//     return response.data;
+//   } catch (error) {
+//     // Handle axios errors
+//     if (error.response) {
+//       // Check for access denied in response body
+//       const responseBody =
+//         typeof error.response.data === 'string'
+//           ? error.response.data
+//           : JSON.stringify(error.response.data);
+//
+//       if (responseBody.indexOf('Access Denied') > -1) {
+//         logger.error('hpcc-util - resubmitWU - access denied: ', error);
+//         throw new Error(
+//           'Access Denied -- Valid username and password required!'
+//         );
+//       }
+//
+//       // For other HTTP errors, try to parse the response
+//       try {
+//         return error.response.data;
+//       } catch (parseError) {
+//         logger.error('hpcc-util - resubmitWU - parse error: ', parseError);
+//         throw parseError;
+//       }
+//     } else {
+//       logger.error('hpcc-util - resubmitWU: ', error);
+//       // Network or other errors
+//       throw error;
+//     }
+//   }
+// };
 
 exports.workunitInfo = async (wuid, clusterId) => {
   try {
@@ -827,204 +825,204 @@ exports.updateWUAction = async (clusterId, WUactionBody) => {
   }
 };
 
-exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
-  const tasks = {
-    repoCloned: false,
-    repoDeleted: false,
-    archiveCreated: false,
-    WUCreated: false,
-    WUupdated: false,
-    WUsubmitted: false,
-    WUaction: null,
-    error: null,
-  };
-  let masterFolder;
-  let wuService;
-  let wuid;
+// exports.pullFilesFromGithub = async (jobName = '', clusterId, gitHubFiles) => {
+//   const tasks = {
+//     repoCloned: false,
+//     repoDeleted: false,
+//     archiveCreated: false,
+//     WUCreated: false,
+//     WUupdated: false,
+//     WUsubmitted: false,
+//     WUaction: null,
+//     error: null,
+//   };
+//   let masterFolder;
+//   let wuService;
+//   let wuid;
+//
+//   try {
+//     // initializing wuService to update hpcc.
+//     wuService = await module.exports.getWorkunitsService(clusterId);
+//     //  Create empty Work Unit;
+//     const createRespond = await wuService.WUCreate({});
+//     wuid = createRespond.Workunit?.Wuid;
+//     if (!wuid) {
+//       logger.error(
+//         '❌ pullFilesFromGithub: WUCreate error-----------------------------------------'
+//       );
+//       logger.error(createRespond);
+//       throw new Error('Failed to update Work Unit.');
+//     }
+//     tasks.WUCreated = true;
+//     logger.info(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
+//
+//     // CLONING OPERATIONS
+//     // gitHubFiles = {
+//     //   selectedProjects // List of selected projects IDS! ['c1bdfedd-4be7-4391-9936-259b040786cd']
+//     //   selectedRepoId // Id of repo with main file "c1bdfedd-4be7-4391-9936-259b040786cd"
+//     //   selectedFile:{ // main file data
+//     //      download_url, git_url, html_url, id, isLeaf, label, name, owner, path, ref, repo, sha, size, type, url, value,
+//     //    }
+//
+//     // Create one master folder that is going to hold all cloned repos, name of folder is newly created WUID number;
+//     masterFolder = path.join(process.cwd(), '..', 'gitClones', wuid);
+//     const dir = await fs.promises.mkdir(masterFolder, { recursive: true });
+//     logger.info('--dir created----------------------------------------');
+//     logger.info(dir);
+//     const git = simpleGit({ baseDir: masterFolder });
+//
+//     // const { selectedProjects } = gitHubFiles;
+//
+//     //Loop through the reposList(contains GithubRepoSetting ids that has all gh project data including tokens) and clone each repo into master folder;
+//     for (const repoId of selectedProjects) {
+//       let project = await GithubRepoSetting.findOne({ where: { id: repoId } });
+//       if (!project) throw new Error('Failed to find GitHub project');
+//
+//       project = project.toJSON();
+//
+//       if (project.ghToken) project.ghToken = decryptString(project.ghToken);
+//       if (project.ghUserName)
+//         project.ghUserName = decryptString(project.ghUserName);
+//
+//       let { ghLink, ghBranchOrTag, ghUserName, ghToken } = project;
+//
+//       const ghProjectName = ghLink.split('/')[4];
+//
+//       const clonePath = path.join(masterFolder, ghProjectName);
+//       // Add credentials to git request if they are present
+//       if (ghUserName && ghToken)
+//         ghLink =
+//           ghLink.slice(0, 8) +
+//           ghUserName +
+//           ':' +
+//           ghToken +
+//           '@' +
+//           ghLink.slice(8);
+//
+//       logger.info(
+//         `✔️  pullFilesFromGithub: CLONING STARTED-${ghLink}, branch/tag: ${ghBranchOrTag}`
+//       );
+//       await git.clone(ghLink, clonePath, {
+//         '--branch': ghBranchOrTag,
+//         '--single-branch': true,
+//       });
+//       logger.info(
+//         `✔️  pullFilesFromGithub: CLONING FINISHED-${ghLink}, branch/tag: ${ghBranchOrTag}`
+//       );
+//
+//       //Update submodules
+//       try {
+//         await git
+//           .cwd({ path: clonePath, root: true })
+//           .submoduleUpdate(['--init', '--recursive']);
+//         logger.info(
+//           `✔️  pullFilesFromGithub: SUBMODULES UPDATED ${ghLink}, branch/tag: ${ghBranchOrTag}`
+//         );
+//       } catch (error) {
+//         logger.error(
+//           'hpcc-util - pullFilesFromGithub - submoduleUpdate: ',
+//           error
+//         );
+//       } finally {
+//         // Switch back to root folder after updating submodules
+//         await git.cwd({ path: masterFolder, root: true });
+//       }
+//     }
+//     tasks.repoCloned = true;
+//
+//     //Create a path to main file
+//     const { repo: ghProjectName, path: filePath } = gitHubFiles.selectedFile;
+//
+//     const startFilePath = path.join(masterFolder, ghProjectName, filePath);
+//
+//     let args = ['-E', startFilePath, '-I', masterFolder];
+//     const archived = await this.createEclArchive(args, masterFolder);
+//
+//     tasks.archiveCreated = true;
+//     logger.info('✔️  pullFilesFromGithub: Archive Created');
+//     // logger.info(archived);
+//
+//     // Update the Workunit with Archive XML
+//     const updateBody = {
+//       Wuid: wuid,
+//       Jobname: jobName,
+//       QueryText: archived.stdout,
+//     };
+//     const updateRespond = await wuService.WUUpdate(updateBody);
+//     if (!updateRespond.Workunit?.Wuid) {
+//       // assume that Wuid field is always gonna be in "happy" response
+//       logger.error(
+//         '❌  pullFilesFromGithub: WUupdate error----------------------------------------'
+//       );
+//       logger.error(updateRespond);
+//       throw new Error('Failed to update Work Unit.');
+//     }
+//     tasks.WUupdated = true;
+//     logger.info(`✔️  pullFilesFromGithub: WUupdated-  ${wuid}`);
+//
+//     // Submit the Workunit to HPCC
+//     const submitBody = { Wuid: wuid, Cluster: 'thor' };
+//     const submitRespond = await wuService.WUSubmit(submitBody);
+//     if (submitRespond.Exceptions) {
+//       logger.error(
+//         '❌  pullFilesFromGithub: WUsubmit error---------------------------------------'
+//       );
+//       logger.error(submitRespond);
+//       throw new Error('Failed to submit Work Unit.');
+//     }
+//     tasks.WUsubmitted = true;
+//     logger.info(`✔️  pullFilesFromGithub: WUsubmitted-  ${wuid}`);
+//   } catch (error) {
+//     // Error going to have messages related to where in process error happened, it will end up in router.post('/executeJob' catch block.
+//     try {
+//       const WUactionBody = {
+//         Wuids: { Item: [wuid] },
+//         WUActionType: 'SetToFailed',
+//       };
+//       const actionRespond = await wuService.WUAction(WUactionBody);
+//       const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result;
+//       if (!result || result !== 'Success') {
+//         logger.error(
+//           '❌  pullFilesFromGithub: WUaction error-------------------------------------'
+//         );
+//         logger.error(actionRespond);
+//         throw actionRespond;
+//       }
+//       tasks.WUaction = actionRespond.ActionResults.WUActionResult;
+//     } catch (error) {
+//       error.message
+//         ? (tasks.WUaction = { message: error.message, failedToUpdate: true })
+//         : (tasks.WUaction = { ...error, failedToUpdate: true });
+//     }
+//
+//     tasks.error = error;
+//     logger.error('hpcc-util - pullFilesFromGithub: ', error);
+//   } finally {
+//     // Delete repo;
+//     const isDeleted = deleteRepo(masterFolder);
+//     logger.info(
+//       `✔️  pullFilesFromGithub: CLEANUP, REPO DELETED SUCCESSFULLY-  ${masterFolder}`
+//     );
+//     tasks.repoDeleted = isDeleted;
+//     const summary = { wuid, ...tasks };
+//     return summary;
+//   }
+// };
 
-  try {
-    // initializing wuService to update hpcc.
-    wuService = await module.exports.getWorkunitsService(clusterId);
-    //  Create empty Work Unit;
-    const createRespond = await wuService.WUCreate({});
-    wuid = createRespond.Workunit?.Wuid;
-    if (!wuid) {
-      logger.error(
-        '❌ pullFilesFromGithub: WUCreate error-----------------------------------------'
-      );
-      logger.error(createRespond);
-      throw new Error('Failed to update Work Unit.');
-    }
-    tasks.WUCreated = true;
-    logger.info(`✔️  pullFilesFromGithub: WUCreated-  ${wuid}`);
-
-    // CLONING OPERATIONS
-    // gitHubFiles = {
-    //   selectedProjects // List of selected projects IDS! ['c1bdfedd-4be7-4391-9936-259b040786cd']
-    //   selectedRepoId // Id of repo with main file "c1bdfedd-4be7-4391-9936-259b040786cd"
-    //   selectedFile:{ // main file data
-    //      download_url, git_url, html_url, id, isLeaf, label, name, owner, path, ref, repo, sha, size, type, url, value,
-    //    }
-
-    // Create one master folder that is going to hold all cloned repos, name of folder is newly created WUID number;
-    masterFolder = path.join(process.cwd(), '..', 'gitClones', wuid);
-    const dir = await fs.promises.mkdir(masterFolder, { recursive: true });
-    logger.info('--dir created----------------------------------------');
-    logger.info(dir);
-    const git = simpleGit({ baseDir: masterFolder });
-
-    const { selectedProjects } = gitHubFiles;
-
-    //Loop through the reposList(contains GithubRepoSetting ids that has all gh project data including tokens) and clone each repo into master folder;
-    for (const repoId of selectedProjects) {
-      let project = await GithubRepoSetting.findOne({ where: { id: repoId } });
-      if (!project) throw new Error('Failed to find GitHub project');
-
-      project = project.toJSON();
-
-      if (project.ghToken) project.ghToken = decryptString(project.ghToken);
-      if (project.ghUserName)
-        project.ghUserName = decryptString(project.ghUserName);
-
-      let { ghLink, ghBranchOrTag, ghUserName, ghToken } = project;
-
-      const ghProjectName = ghLink.split('/')[4];
-
-      const clonePath = path.join(masterFolder, ghProjectName);
-      // Add credentials to git request if they are present
-      if (ghUserName && ghToken)
-        ghLink =
-          ghLink.slice(0, 8) +
-          ghUserName +
-          ':' +
-          ghToken +
-          '@' +
-          ghLink.slice(8);
-
-      logger.info(
-        `✔️  pullFilesFromGithub: CLONING STARTED-${ghLink}, branch/tag: ${ghBranchOrTag}`
-      );
-      await git.clone(ghLink, clonePath, {
-        '--branch': ghBranchOrTag,
-        '--single-branch': true,
-      });
-      logger.info(
-        `✔️  pullFilesFromGithub: CLONING FINISHED-${ghLink}, branch/tag: ${ghBranchOrTag}`
-      );
-
-      //Update submodules
-      try {
-        await git
-          .cwd({ path: clonePath, root: true })
-          .submoduleUpdate(['--init', '--recursive']);
-        logger.info(
-          `✔️  pullFilesFromGithub: SUBMODULES UPDATED ${ghLink}, branch/tag: ${ghBranchOrTag}`
-        );
-      } catch (error) {
-        logger.error(
-          'hpcc-util - pullFilesFromGithub - submoduleUpdate: ',
-          error
-        );
-      } finally {
-        // Switch back to root folder after updating submodules
-        await git.cwd({ path: masterFolder, root: true });
-      }
-    }
-    tasks.repoCloned = true;
-
-    //Create a path to main file
-    const { repo: ghProjectName, path: filePath } = gitHubFiles.selectedFile;
-
-    const startFilePath = path.join(masterFolder, ghProjectName, filePath);
-
-    let args = ['-E', startFilePath, '-I', masterFolder];
-    const archived = await this.createEclArchive(args, masterFolder);
-
-    tasks.archiveCreated = true;
-    logger.info('✔️  pullFilesFromGithub: Archive Created');
-    // logger.info(archived);
-
-    // Update the Workunit with Archive XML
-    const updateBody = {
-      Wuid: wuid,
-      Jobname: jobName,
-      QueryText: archived.stdout,
-    };
-    const updateRespond = await wuService.WUUpdate(updateBody);
-    if (!updateRespond.Workunit?.Wuid) {
-      // assume that Wuid field is always gonna be in "happy" response
-      logger.error(
-        '❌  pullFilesFromGithub: WUupdate error----------------------------------------'
-      );
-      logger.error(updateRespond);
-      throw new Error('Failed to update Work Unit.');
-    }
-    tasks.WUupdated = true;
-    logger.info(`✔️  pullFilesFromGithub: WUupdated-  ${wuid}`);
-
-    // Submit the Workunit to HPCC
-    const submitBody = { Wuid: wuid, Cluster: 'thor' };
-    const submitRespond = await wuService.WUSubmit(submitBody);
-    if (submitRespond.Exceptions) {
-      logger.error(
-        '❌  pullFilesFromGithub: WUsubmit error---------------------------------------'
-      );
-      logger.error(submitRespond);
-      throw new Error('Failed to submit Work Unit.');
-    }
-    tasks.WUsubmitted = true;
-    logger.info(`✔️  pullFilesFromGithub: WUsubmitted-  ${wuid}`);
-  } catch (error) {
-    // Error going to have messages related to where in process error happened, it will end up in router.post('/executeJob' catch block.
-    try {
-      const WUactionBody = {
-        Wuids: { Item: [wuid] },
-        WUActionType: 'SetToFailed',
-      };
-      const actionRespond = await wuService.WUAction(WUactionBody);
-      const result = actionRespond.ActionResults?.WUActionResult?.[0]?.Result;
-      if (!result || result !== 'Success') {
-        logger.error(
-          '❌  pullFilesFromGithub: WUaction error-------------------------------------'
-        );
-        logger.error(actionRespond);
-        throw actionRespond;
-      }
-      tasks.WUaction = actionRespond.ActionResults.WUActionResult;
-    } catch (error) {
-      error.message
-        ? (tasks.WUaction = { message: error.message, failedToUpdate: true })
-        : (tasks.WUaction = { ...error, failedToUpdate: true });
-    }
-
-    tasks.error = error;
-    logger.error('hpcc-util - pullFilesFromGithub: ', error);
-  } finally {
-    // Delete repo;
-    const isDeleted = deleteRepo(masterFolder);
-    logger.info(
-      `✔️  pullFilesFromGithub: CLEANUP, REPO DELETED SUCCESSFULLY-  ${masterFolder}`
-    );
-    tasks.repoDeleted = isDeleted;
-    const summary = { wuid, ...tasks };
-    return summary;
-  }
-};
-
-const deleteRepo = masterFolder => {
-  let isRepoDeleted;
-  try {
-    fs.rmSync(masterFolder, { recursive: true, maxRetries: 5, force: true });
-    isRepoDeleted = true;
-  } catch (err) {
-    logger.error('hpcc-util - deleteRepo: ', err);
-    logger.error(
-      `❌  pullFilesFromGithub: Failed to delete a repo ${masterFolder}`
-    );
-    isRepoDeleted = false;
-  }
-  return isRepoDeleted;
-};
+// const deleteRepo = masterFolder => {
+//   let isRepoDeleted;
+//   try {
+//     fs.rmSync(masterFolder, { recursive: true, maxRetries: 5, force: true });
+//     isRepoDeleted = true;
+//   } catch (err) {
+//     logger.error('hpcc-util - deleteRepo: ', err);
+//     logger.error(
+//       `❌  pullFilesFromGithub: Failed to delete a repo ${masterFolder}`
+//     );
+//     isRepoDeleted = false;
+//   }
+//   return isRepoDeleted;
+// };
 
 let sortFiles = files => {
   return files.sort((a, b) => (a.name > b.name ? 1 : -1));

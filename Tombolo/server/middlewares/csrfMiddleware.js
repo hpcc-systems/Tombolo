@@ -5,18 +5,24 @@ const logger = require('../config/logger');
 const csrf = doubleCsrf({
   getSecret: req => {
     try {
-      const { verifyToken } = require('../utils/authUtil');
+      const jwt = require('jsonwebtoken');
       const token = req.cookies.token;
 
-      const decoded = verifyToken(token, process.env.JWT_SECRET);
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-      const secret = process.env.CSRF_SECRET
-        ? process.env.CSRF_SECRET
-        : 'secret' + decoded.id;
+      const decoded = jwt.decode(token);
 
+      if (!decoded || !decoded.id) {
+        throw new Error('Invalid token structure');
+      }
+
+      const secret = process.env.CSRF_SECRET + decoded.id;
       return secret;
     } catch (e) {
       logger.error('Error while getting csrf Secret: ' + e);
+      throw e;
     }
   },
 

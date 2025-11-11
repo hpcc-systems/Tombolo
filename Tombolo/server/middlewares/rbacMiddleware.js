@@ -17,7 +17,6 @@ const validateUserRole = allowedRoles => {
     if (!hasRole) {
       return sendError(res, 'Access denied: Insufficient privileges', 403);
     }
-
     next();
   };
 };

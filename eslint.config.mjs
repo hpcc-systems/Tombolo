@@ -1,13 +1,17 @@
-const globals = require('globals');
+import globals from 'globals';
+import prettier from 'eslint-config-prettier';
+import js from '@eslint/js';
 
-module.exports = [
+/** @type {import('eslint').Linter.Config[]} */
+export default [
+  js.configs.recommended,
   {
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: 'module',
       globals: {
-        ...globals.node,
-      },
+        ...globals.es2021,
+      }
     },
     rules: {
       'no-unused-vars': [
