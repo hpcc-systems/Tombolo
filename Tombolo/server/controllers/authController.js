@@ -10,6 +10,7 @@ const moment = require('moment');
 const logger = require('../config/logger');
 const roleTypes = require('../config/roleTypes');
 const { sendSuccess, sendError } = require('../utils/response');
+const CustomError = require('../utils/customError');
 const {
   User,
   UserRole,
@@ -759,11 +760,10 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login attempt by azure user - ${user.id} - ${user.email}`
       );
-      const azureError = new Error(
-        'Email is registered with a Microsoft account. Please sign in with Microsoft'
+      throw new CustomError(
+        'Email is registered with a Microsoft account. Please sign in with Microsoft',
+        403
       );
-      azureError.statusCode = 403;
-      throw azureError;
     }
 
     // Remove hash from user object

@@ -20,6 +20,7 @@ function getUsers() {
       accountLocked: {
         isLocked: false,
       },
+      passwordExpiresAt: new Date(Date.now() + 86400000 * 30), // 30 days from now
       metaData: {
         previousPassword: [],
       },
@@ -37,6 +38,7 @@ function getUsers() {
       accountLocked: {
         isLocked: false,
       },
+      passwordExpiresAt: new Date(Date.now() + 86400000 * 30), // 30 days from now
       metaData: {
         previousPassword: [],
       },

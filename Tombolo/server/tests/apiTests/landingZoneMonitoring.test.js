@@ -71,7 +71,7 @@ describe('Landing Zone Monitoring Routes', () => {
         .query({ clusterId: validClusterId });
 
       expect(res.status).toBe(200);
-      expect(Array.isArray(res.body)).toBe(true);
+      expect(Array.isArray(res.body.data)).toBe(true);
       expect(Cluster.findOne).toHaveBeenCalledWith({
         where: { id: validClusterId },
         attributes: { exclude: ['metaData'] },

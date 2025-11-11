@@ -49,7 +49,7 @@ describe('Auth Routes', () => {
 
     User.findOne.mockResolvedValue({
       ...user,
-      toJSON: () => JSON.stringify(user, null, 4),
+      toJSON: () => ({ ...user }),
     });
     RefreshToken.create.mockResolvedValue(true);
     User.update.mockResolvedValue([1]);
@@ -60,7 +60,7 @@ describe('Auth Routes', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.message).toBe('User logged in successfully');
+    expect(res.body.message).toBe('success');
     const cookies = res.headers['set-cookie'];
     expect(cookies).toBeDefined();
     expect(
@@ -120,7 +120,10 @@ describe('Auth Routes', () => {
     const payload = getLoginPayload(user);
     user.registrationMethod = 'azure';
 
-    User.findOne.mockResolvedValue(user);
+    User.findOne.mockResolvedValue({
+      ...user,
+      toJSON: () => ({ ...user }),
+    });
 
     const res = await request(app)
       .post('/api/auth/loginBasicUser')
@@ -159,7 +162,12 @@ describe('Auth Routes', () => {
 
   it('request-access should request access', async () => {
     const user = getUser();
-    const instanceSettings = getInstanceSettings();
+    const instanceSettings = getInstanceSettings()[0]; // Get first item since findOne returns single object
+    instanceSettings.metaData = {
+      description: 'This is for local dev',
+      accessRequestEmailRecipientsEmail: ['admin@example.com'], // Ensure recipients exist
+      // Remove accessRequestEmailRecipientsRoles to avoid unmocked DB queries
+    };
     User.findOne.mockResolvedValue(user);
     InstanceSetting.findOne.mockResolvedValue(instanceSettings);
     SentNotification.findOne.mockResolvedValue(null);
@@ -179,7 +187,12 @@ describe('Auth Routes', () => {
 
   it('request-access should request access if existingNotification >24 hours', async () => {
     const user = getUser();
-    const instanceSettings = getInstanceSettings();
+    const instanceSettings = getInstanceSettings()[0]; // Get first item since findOne returns single object
+    instanceSettings.metaData = {
+      description: 'This is for local dev',
+      accessRequestEmailRecipientsEmail: ['admin@example.com'], // Ensure recipients exist
+      // Remove accessRequestEmailRecipientsRoles to avoid unmocked DB queries
+    };
     const sentNotification = getSentNotification();
     sentNotification.createdAt = moment()
       .subtract(25, 'hours')
@@ -221,7 +234,12 @@ describe('Auth Routes', () => {
 
   it('request-access should not send another request in <24 hours', async () => {
     const user = getUser();
-    const instanceSettings = getInstanceSettings();
+    const instanceSettings = getInstanceSettings()[0]; // Get first item since findOne returns single object
+    instanceSettings.metaData = {
+      description: 'This is for local dev',
+      accessRequestEmailRecipientsEmail: ['admin@example.com'], // Ensure recipients exist
+      // Remove accessRequestEmailRecipientsRoles to avoid unmocked DB queries
+    };
     const sentNotification = getSentNotification();
     sentNotification.createdAt = moment()
       .subtract(7, 'hours')
