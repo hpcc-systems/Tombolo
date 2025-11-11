@@ -115,7 +115,7 @@ describe('Auth Routes', () => {
     expect(logger.error).toHaveBeenCalled();
   });
 
-  it('basic-login should 403 if user is registered with azure', async () => {
+  it('basic-login should 401 if user is registered with azure', async () => {
     const user = getUser();
     const payload = getLoginPayload(user);
     user.registrationMethod = 'azure';
@@ -129,7 +129,7 @@ describe('Auth Routes', () => {
       .post('/api/auth/loginBasicUser')
       .send(payload);
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
     expect(res.body.message).toBe(
       'Email is registered with a Microsoft account. Please sign in with Microsoft'
     );
