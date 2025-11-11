@@ -1,6 +1,7 @@
 const { InstanceSetting, User } = require('../models');
 const logger = require('../config/logger');
 const { sendSuccess, sendError } = require('../utils/response');
+const CustomError = require('../utils/customError');
 
 // Get a single instance setting by name
 const getInstanceSetting = async (req, res) => {
@@ -68,7 +69,7 @@ const updateInstanceSetting = async (req, res) => {
 
     // If updated instance count is 0, throw an error
     if (updatedInstanceCount[0] === 0) {
-      throw new Error('Failed to update instance setting');
+      throw new CustomError('Failed to update instance setting', 500);
     }
 
     // Get the updated instance setting
@@ -95,7 +96,7 @@ const updateInstanceSetting = async (req, res) => {
       'Instance setting updated successfully'
     );
   } catch (error) {
-    return sendError(res, error, 400);
+    return sendError(res, error);
   }
 };
 

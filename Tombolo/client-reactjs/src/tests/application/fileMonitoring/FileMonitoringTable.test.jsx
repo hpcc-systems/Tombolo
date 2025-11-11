@@ -45,7 +45,7 @@ vi.mock('antd', async (importOriginal) => {
     </span>
   );
   const MockTag = ({ children }) => <span>{children}</span>;
-  const message = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
+  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
   return {
     ...antd,
     Table: MockTable,
@@ -53,7 +53,7 @@ vi.mock('antd', async (importOriginal) => {
     Popover: MockPopover,
     Popconfirm: MockPopconfirm,
     Tag: MockTag,
-    message,
+    notification,
   };
 });
 
@@ -89,16 +89,16 @@ vi.mock('react-redux', () => ({
     }),
 }));
 
-vi.mock('@/components/application/fileMonitoring/fileMonitoringUtils', () => ({
-  handleDeleteFileMonitoring: vi.fn().mockResolvedValue(),
-  toggleFileMonitoringStatus: vi.fn().mockResolvedValue([{ id: 1, approvalStatus: 'approved', isActive: false }]),
+const mockToggle = vi.fn();
+const mockDelete = vi.fn();
+vi.mock('@/services/fileMonitoring.service', () => ({
+  default: {
+    toggle: (...args) => mockToggle(...args),
+    delete: (...args) => mockDelete(...args),
+  },
 }));
 
-import { message } from 'antd';
-import {
-  toggleFileMonitoringStatus,
-  handleDeleteFileMonitoring,
-} from '@/components/application/fileMonitoring/fileMonitoringUtils';
+import { notification } from 'antd';
 import FileMonitoringTable from '@/components/application/fileMonitoring/FileMonitoringTable.jsx';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
@@ -208,7 +208,12 @@ describe('FileMonitoringTable', () => {
     );
 
     await user.click(screen.getByText('Start'));
-    expect(message.error).toHaveBeenCalledWith('Monitoring must be in approved state before it can be started');
+    expect(notification.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Error occurred',
+        description: expect.anything(),
+      })
+    );
 
     rerender(
       <FileMonitoringTable
@@ -232,10 +237,11 @@ describe('FileMonitoringTable', () => {
     );
 
     const pauseIcon = await screen.findByText('pause');
+    mockToggle.mockResolvedValueOnce([{ ...rowApproved, isActive: false }]);
     await user.click(pauseIcon);
-    await waitFor(() => expect(toggleFileMonitoringStatus).toHaveBeenCalled());
+    await waitFor(() => expect(mockToggle).toHaveBeenCalledWith({ ids: [rowApproved.id], action: 'pause' }));
     expect(setFileMonitoring).toHaveBeenCalled();
-    expect(handleSuccess).toHaveBeenCalledWith('Monitoring paused successfully');
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('deletes a monitoring via Popconfirm and updates state', async () => {
@@ -263,10 +269,11 @@ describe('FileMonitoringTable', () => {
       />
     );
 
+    mockDelete.mockResolvedValueOnce();
     await user.click(screen.getByRole('button', { name: 'confirm' }));
-    await waitFor(() => expect(handleDeleteFileMonitoring).toHaveBeenCalledWith([rowApproved.id]));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith([rowApproved.id]));
     expect(setFileMonitoring).toHaveBeenCalled();
-    expect(handleSuccess).toHaveBeenCalledWith('File monitoring deleted successfully');
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('renders unreachable cluster tag and allows row selection to set selected rows', async () => {

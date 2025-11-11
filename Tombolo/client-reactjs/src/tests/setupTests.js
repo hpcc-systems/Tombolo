@@ -1,6 +1,28 @@
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
+
+// Mock antd notification and message globally
+vi.mock('antd', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    notification: {
+      error: vi.fn(),
+      success: vi.fn(),
+      warning: vi.fn(),
+      info: vi.fn(),
+      open: vi.fn(),
+    },
+    message: {
+      error: vi.fn(),
+      success: vi.fn(),
+      warning: vi.fn(),
+      info: vi.fn(),
+      loading: vi.fn(),
+    },
+  };
+});
 
 // Cleanup DOM after each test
 afterEach(() => {

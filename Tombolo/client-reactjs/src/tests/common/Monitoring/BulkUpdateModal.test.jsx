@@ -24,7 +24,8 @@ vi.mock('antd', async (importOriginal) => {
     </select>
   );
   const message = { success: vi.fn(), error: vi.fn() };
-  return { ...antd, Modal: MockModal, Select: MockSelect, message };
+  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
+  return { ...antd, Modal: MockModal, Select: MockSelect, message, notification };
 });
 
 // Mock react-redux useSelector
@@ -93,18 +94,18 @@ describe('BulkUpdateModal', () => {
       selectedRows: rowsMissingPrimary,
       monitorings: rowsMissingPrimary,
     };
-    const { message } = await import('antd');
+    const { notification } = await import('antd');
     render(<BulkUpdateModal {...props} />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(message.error).toHaveBeenCalled());
+    await waitFor(() => expect(notification.error).toHaveBeenCalled());
     expect(props.handleBulkUpdateMonitorings).not.toHaveBeenCalled();
   });
 
   it('builds updated metadata and calls bulk update; updates state and closes', async () => {
     const props = baseProps();
-    const { message } = await import('antd');
+    const { notification } = await import('antd');
     render(<BulkUpdateModal {...props} />);
 
     // Simulate adding a new primary contact by calling onChange with a union of existing + new via select change
@@ -114,8 +115,8 @@ describe('BulkUpdateModal', () => {
     await waitFor(() => expect(props.handleBulkUpdateMonitorings).toHaveBeenCalled());
     const payload = props.handleBulkUpdateMonitorings.mock.calls[0][0];
     expect(payload.updatedData).toHaveLength(2);
-    // Ensure message success and modal closed via setBulkEditModalVisibility(false)
-    await waitFor(() => expect(handleSuccess).toHaveBeenCalled());
+    // Ensure notification success and modal closed via setBulkEditModalVisibility(false)
+    await waitFor(() => expect(notification.success).toHaveBeenCalled());
     expect(props.setMonitorings).toHaveBeenCalled();
   });
 
@@ -133,12 +134,16 @@ describe('BulkUpdateModal', () => {
   it('shows error when handler rejects and keeps modal open', async () => {
     const props = baseProps();
     props.handleBulkUpdateMonitorings.mockRejectedValue(new Error('Boom'));
-    const { message } = await import('antd');
+    const { notification } = await import('antd');
     render(<BulkUpdateModal {...props} />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(message.error).toHaveBeenCalledWith('Boom'));
+    await waitFor(() => {
+      expect(notification.error).toHaveBeenCalled();
+      const errorCall = notification.error.mock.calls[0][0];
+      expect(errorCall.description.props.children[0].props.children).toBe('Boom');
+    });
     // ensure not closed
     expect(props.setBulkEditModalVisibility).not.toHaveBeenCalledWith(false);
   });

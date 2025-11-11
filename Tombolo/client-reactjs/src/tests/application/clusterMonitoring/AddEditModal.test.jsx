@@ -30,7 +30,20 @@ vi.mock('antd', async (importOriginal) => {
   const MockButton = ({ children, onClick }) => <button onClick={onClick}>{children}</button>;
   const MockBadge = () => null;
   const MockCard = ({ children }) => <div>{children}</div>;
-  return { ...antd, Modal: MockModal, Tabs: MockTabs, Button: MockButton, Badge: MockBadge, Card: MockCard };
+  return {
+    ...antd,
+    Modal: MockModal,
+    Tabs: MockTabs,
+    Button: MockButton,
+    Badge: MockBadge,
+    Card: MockCard,
+    notification: {
+      success: vi.fn(),
+      error: vi.fn(),
+      warning: vi.fn(),
+      info: vi.fn(),
+    },
+  };
 });
 
 vi.mock('@/components/application/clusterMonitoring/AddEditModal/BasicTab', () => ({
@@ -40,17 +53,19 @@ vi.mock('@/components/application/clusterMonitoring/AddEditModal/NotificationTab
   default: () => <div>NotificationTab</div>,
 }));
 
+vi.mock('@/services/clusterMonitoring.service', () => ({
+  default: {
+    create: vi.fn().mockResolvedValue({ data: { id: 111 } }),
+    update: vi.fn().mockResolvedValue({ data: { id: 222 } }),
+  },
+}));
+
 vi.mock('@/components/application/clusterMonitoring/clusterMonitoringUtils', () => ({
-  createClusterMonitoring: vi.fn().mockResolvedValue({ data: { id: 111 } }),
-  updateClusterMonitoring: vi.fn().mockResolvedValue({ data: { id: 222 } }),
   identifyErroneousTabs: vi.fn().mockReturnValue([]),
 }));
 
 import AddEditModal from '@/components/application/clusterMonitoring/AddEditModal/AddEditModal.jsx';
-import {
-  createClusterMonitoring,
-  updateClusterMonitoring,
-} from '@/components/application/clusterMonitoring/clusterMonitoringUtils';
+import clusterMonitoringService from '@/services/clusterMonitoring.service';
 
 describe('Cluster AddEditModal', () => {
   let baseProps;
@@ -137,7 +152,7 @@ describe('Cluster AddEditModal', () => {
     }
     const submitBtn = screen.getByText('Submit');
     await user.click(submitBtn);
-    expect(updateClusterMonitoring).toHaveBeenCalled();
+    expect(clusterMonitoringService.update).toHaveBeenCalled();
   });
 
   it('calls create util when not editing on submit', async () => {
@@ -145,6 +160,6 @@ describe('Cluster AddEditModal', () => {
     render(<AddEditModal {...baseProps} />);
     await user.click(screen.getByText('Next'));
     await user.click(screen.getByText('Update'));
-    expect(createClusterMonitoring).toHaveBeenCalled();
+    expect(clusterMonitoringService.create).toHaveBeenCalled();
   });
 });
