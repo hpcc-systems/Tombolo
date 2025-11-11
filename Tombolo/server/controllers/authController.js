@@ -49,8 +49,8 @@ const createTokenPayload = (user, tokenId) => {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    roles: user.roles || [],  // Include roles for RBAC
-    tokenId
+    roles: user.roles || [], // Include roles for RBAC
+    tokenId,
   };
 };
 
@@ -715,7 +715,7 @@ const loginBasicUser = async (req, res) => {
       logger.error(`Login : User with email ${email} does not exist`);
       return sendError(
         res,
-        'User with the provided email and  password combination not found',
+        'User with the provided email and password combination not found',
         401
       );
     }
@@ -762,7 +762,7 @@ const loginBasicUser = async (req, res) => {
       const azureError = new Error(
         'Email is registered with a Microsoft account. Please sign in with Microsoft'
       );
-      azureError.status = 403;
+      azureError.statusCode = 403;
       throw azureError;
     }
 
@@ -774,7 +774,9 @@ const loginBasicUser = async (req, res) => {
     const tokenId = uuidv4();
 
     // Create access jwt with minimal payload
-    const accessToken = generateAccessToken(createTokenPayload(userObj, tokenId));
+    const accessToken = generateAccessToken(
+      createTokenPayload(userObj, tokenId)
+    );
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });

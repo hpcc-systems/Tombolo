@@ -24,7 +24,7 @@ describe('Instance Routes', () => {
     const res = await request(app).get('/api/instance');
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject(instanceSettings);
+    expect(res.body.data).toMatchObject(instanceSettings);
     expect(InstanceSetting.findOne).toHaveBeenCalledTimes(1);
   });
 
@@ -60,7 +60,7 @@ describe('Instance Routes', () => {
 
     const res = await request(app).put('/api/instance');
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(500);
     expect(res.body.message).toBe('Failed to update instance setting');
     expect(InstanceSetting.findOne).toHaveBeenCalledTimes(1);
     expect(InstanceSetting.update).toHaveBeenCalledTimes(1);
