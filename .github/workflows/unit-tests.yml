@@ -5,13 +5,29 @@ on:
     branches: [master, "candidate-*"]
 
 jobs:
-  test:
+  detect-changes:
     runs-on: ubuntu-latest
-
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+      server: ${{ steps.filter.outputs.server }}
     steps:
       - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
-          fetch-depth: 0 # Fetch full history for changed files detection
+          filters: |
+            client:
+              - 'Tombolo/client-reactjs/**'
+            server:
+              - 'Tombolo/server/**'
+
+  test-client:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.client == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -36,47 +52,58 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v47
+      - name: Install dependencies
+        working-directory: Tombolo/client-reactjs
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        working-directory: Tombolo/client-reactjs
+        run: pnpm test
+
+  test-server:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
         with:
-          files_yaml: |
-            client:
-              - 'Tombolo/client-reactjs/**'
-            server:
-              - 'Tombolo/server/**'
+          node-version: "22"
 
-      - name: Install client dependencies
-        if: steps.changed-files.outputs.client_any_changed == 'true'
-        run: |
-          cd Tombolo/client-reactjs
-          pnpm install --frozen-lockfile
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
-      - name: Install server dependencies
-        if: steps.changed-files.outputs.server_any_changed == 'true'
+      - name: Get pnpm store directory
+        shell: bash
         run: |
-          cd Tombolo/server
-          pnpm install --frozen-lockfile
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: Tombolo/server
+        run: pnpm install --frozen-lockfile
 
       - name: Setup server config files
-        if: steps.changed-files.outputs.server_any_changed == 'true'
-        run: |
-          cd Tombolo/server
-          cp cluster-whitelist.sample.js cluster-whitelist.js
+        working-directory: Tombolo/server
+        run: cp cluster-whitelist.sample.js cluster-whitelist.js
 
-      - name: Run client tests
-        if: steps.changed-files.outputs.client_any_changed == 'true'
-        run: |
-          cd Tombolo/client-reactjs
-          timeout 5m pnpm test
-
-      - name: Run server tests
-        if: steps.changed-files.outputs.server_any_changed == 'true'
+      - name: Run tests
+        working-directory: Tombolo/server
         env:
           NODE_ENV: test
           JWT_SECRET: test-jwt-secret-key-for-ci
           JWT_REFRESH_SECRET: test-jwt-refresh-secret-key-for-ci
           WEB_URL: http://localhost:3000
-        run: |
-          cd Tombolo/server
-          timeout 3m pnpm test
+        run: pnpm test
