@@ -21,7 +21,7 @@ async function createCostMonitoring(req, res) {
     const result = await CostMonitoring.findByPk(createResult.id, {
       include: getUserFkIncludes(true),
     });
-    return sendSuccess(res, result);
+    return sendSuccess(res, result, 'OK', 201);
   } catch (err) {
     logger.error('Failed to create cost monitoring', err);
     const errorResult = uniqueConstraintErrorHandler(err, err.message);

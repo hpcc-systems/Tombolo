@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import CustomError from './customError';
 
 /**
  * Sends a standardized JSON response to the client.
@@ -104,6 +105,18 @@ export const sendValidationError = (
  * @returns {{statusCode: number, message: string, name: string}} Structured error info
  */
 export const getErrorInfo = error => {
+  if (error instanceof CustomError) {
+    let errorName = 'CustomError';
+    if (error.message.toLowerCase().includes('not found'))
+      errorName = 'NotFoundError';
+
+    return {
+      statusCode: error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
+      message: error.message,
+      name: 'errorName',
+    };
+  }
+
   if (!(error instanceof Error)) {
     return {
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
