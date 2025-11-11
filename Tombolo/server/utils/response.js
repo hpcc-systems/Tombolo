@@ -107,13 +107,14 @@ export const sendValidationError = (
 export const getErrorInfo = error => {
   if (error instanceof CustomError) {
     let errorName = 'CustomError';
-    if (error.message.toLowerCase().includes('not found'))
+    if (error.message.toLowerCase().includes('not found')) {
       errorName = 'NotFoundError';
+    }
 
     return {
       statusCode: error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
       message: error.message,
-      name: 'errorName',
+      name: errorName,
     };
   }
 

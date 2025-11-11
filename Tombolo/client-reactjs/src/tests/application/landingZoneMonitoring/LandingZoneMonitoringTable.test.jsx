@@ -44,7 +44,6 @@ vi.mock('antd', async (importOriginal) => {
       {children}
     </span>
   );
-  const message = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
   const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
   return {
     ...antd,
@@ -52,7 +51,6 @@ vi.mock('antd', async (importOriginal) => {
     Tooltip: MockTooltip,
     Popover: MockPopover,
     Popconfirm: MockPopconfirm,
-    message,
     notification,
   };
 });
@@ -92,7 +90,7 @@ vi.mock('@/services/landingZoneMonitoring.service', () => ({
   },
 }));
 
-import { message, notification } from 'antd';
+import { notification } from 'antd';
 import LandingZoneMonitoringTable from '@/components/application/LandingZoneMonitoring/LandingZoneMonitoringTable.jsx';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 

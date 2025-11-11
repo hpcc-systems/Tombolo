@@ -45,7 +45,6 @@ vi.mock('antd', async (importOriginal) => {
     </span>
   );
   const MockTag = ({ children }) => <span>{children}</span>;
-  const message = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
   const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
   return {
     ...antd,
@@ -54,7 +53,6 @@ vi.mock('antd', async (importOriginal) => {
     Popover: MockPopover,
     Popconfirm: MockPopconfirm,
     Tag: MockTag,
-    message,
     notification,
   };
 });
@@ -100,7 +98,7 @@ vi.mock('@/services/fileMonitoring.service', () => ({
   },
 }));
 
-import { message, notification } from 'antd';
+import { notification } from 'antd';
 import FileMonitoringTable from '@/components/application/fileMonitoring/FileMonitoringTable.jsx';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 

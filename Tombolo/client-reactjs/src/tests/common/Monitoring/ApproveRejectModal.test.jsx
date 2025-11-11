@@ -40,15 +40,6 @@ vi.mock('antd', async (importOriginal) => {
     ...antd,
     Modal: MockModal,
     Select: MockSelect,
-    message: {
-      success: vi.fn(),
-      error: vi.fn(),
-      warning: vi.fn(),
-      info: vi.fn(),
-      loading: vi.fn(),
-      destroy: vi.fn(),
-      config: vi.fn(),
-    },
     notification: {
       success: vi.fn(),
       error: vi.fn(),
@@ -57,7 +48,7 @@ vi.mock('antd', async (importOriginal) => {
     },
   };
 });
-import { message, notification } from 'antd';
+import { notification } from 'antd';
 
 // Helper to render modal with getContainer={false} to keep it in the RTL container
 const setup = (props = {}) => {
