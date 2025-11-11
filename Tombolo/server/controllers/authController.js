@@ -762,7 +762,7 @@ const loginBasicUser = async (req, res) => {
       );
       throw new CustomError(
         'Email is registered with a Microsoft account. Please sign in with Microsoft',
-        403
+        401
       );
     }
 
