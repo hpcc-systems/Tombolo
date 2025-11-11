@@ -121,7 +121,12 @@ const createLandingZoneMonitoring = async (req, res) => {
     );
 
     logger.info(`Landing zone monitoring created with ID: ${response.id}`);
-    sendSuccess(res, response, 'Landing zone monitoring created successfully');
+    sendSuccess(
+      res,
+      response,
+      'Landing zone monitoring created successfully',
+      201
+    );
   } catch (err) {
     logger.error('Error creating landing zone monitoring: ', err);
     const errorResult = uniqueConstraintErrorHandler(
@@ -321,7 +326,11 @@ const evaluateLandingZoneMonitoring = async (req, res) => {
     });
 
     if (updatedCount === 0) {
-      sendError(res, 'No landing zone monitoring records found with the provided IDs', 404);
+      sendError(
+        res,
+        'No landing zone monitoring records found with the provided IDs',
+        404
+      );
       return;
     }
 
@@ -335,7 +344,10 @@ const evaluateLandingZoneMonitoring = async (req, res) => {
     sendSuccess(res, updatedData);
   } catch (error) {
     logger.error('Error evaluating landing zone monitoring:', error);
-    sendError(res, error.message || 'Failed to evaluate landing zone monitoring');
+    sendError(
+      res,
+      error.message || 'Failed to evaluate landing zone monitoring'
+    );
   }
 };
 

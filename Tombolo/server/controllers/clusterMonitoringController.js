@@ -37,7 +37,8 @@ const createClusterMonitoring = async (req, res) => {
     return sendSuccess(
       res,
       monitoring,
-      'Cluster status monitoring created successfully'
+      'Cluster status monitoring created successfully',
+      201
     );
   } catch (err) {
     logger.error('Failed to create cluster monitoring', err);

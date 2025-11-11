@@ -32,7 +32,12 @@ async function createFileMonitoring(req, res) {
     const result = await FileMonitoring.findByPk(createResult.id, {
       include: getCommonIncludes(),
     });
-    return sendSuccess(res, result, 'File monitoring created successfully');
+    return sendSuccess(
+      res,
+      result,
+      'File monitoring created successfully',
+      201
+    );
   } catch (err) {
     logger.error('Failed to create file monitoring', err);
     const errorResult = uniqueConstraintErrorHandler(err, err.message);

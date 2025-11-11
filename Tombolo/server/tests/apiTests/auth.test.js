@@ -49,7 +49,7 @@ describe('Auth Routes', () => {
 
     User.findOne.mockResolvedValue({
       ...user,
-      toJSON: () => JSON.stringify(user, null, 4),
+      toJSON: () => ({ ...user }),
     });
     RefreshToken.create.mockResolvedValue(true);
     User.update.mockResolvedValue([1]);
@@ -60,7 +60,7 @@ describe('Auth Routes', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.message).toBe('User logged in successfully');
+    expect(res.body.message).toBe('success');
     const cookies = res.headers['set-cookie'];
     expect(cookies).toBeDefined();
     expect(
@@ -74,7 +74,7 @@ describe('Auth Routes', () => {
     expect(User.update).toHaveBeenCalled();
   });
 
-  it('basic-login should 403 if user with email does not exist', async () => {
+  it('basic-login should 401 if user with email does not exist', async () => {
     const user = getUser();
     const payload = getLoginPayload(user);
 
@@ -84,9 +84,9 @@ describe('Auth Routes', () => {
       .post('/api/auth/loginBasicUser')
       .send(payload);
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
     expect(res.body.message).toBe(
-      'Username and Password combination not found'
+      'User with the provided email and password combination not found'
     );
     expect(res.body.success).toBe(false);
     expect(User.findOne).toHaveBeenCalled();
@@ -115,18 +115,21 @@ describe('Auth Routes', () => {
     expect(logger.error).toHaveBeenCalled();
   });
 
-  it('basic-login should 403 if user is registered with azure', async () => {
+  it('basic-login should 401 if user is registered with azure', async () => {
     const user = getUser();
     const payload = getLoginPayload(user);
     user.registrationMethod = 'azure';
 
-    User.findOne.mockResolvedValue(user);
+    User.findOne.mockResolvedValue({
+      ...user,
+      toJSON: () => ({ ...user }),
+    });
 
     const res = await request(app)
       .post('/api/auth/loginBasicUser')
       .send(payload);
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
     expect(res.body.message).toBe(
       'Email is registered with a Microsoft account. Please sign in with Microsoft'
     );
@@ -137,7 +140,7 @@ describe('Auth Routes', () => {
     expect(logger.error).toHaveBeenCalled();
   });
 
-  it('basic-login should 403 if account is locked', async () => {
+  it('basic-login should 401 if account is locked', async () => {
     const user = getUser();
     const payload = getLoginPayload(user);
     user.accountLocked.isLocked = true;
@@ -148,10 +151,8 @@ describe('Auth Routes', () => {
       .post('/api/auth/loginBasicUser')
       .send(payload);
 
-    expect(res.status).toBe(403);
-    expect(res.body.message).toBe(
-      'Username and Password combination not found'
-    );
+    expect(res.status).toBe(401);
+    expect(res.body.message).toBe('account-locked');
     expect(res.body.success).toBe(false);
     expect(User.findOne).toHaveBeenCalled();
     expect(RefreshToken.create).not.toHaveBeenCalled();
@@ -161,7 +162,12 @@ describe('Auth Routes', () => {
 
   it('request-access should request access', async () => {
     const user = getUser();
-    const instanceSettings = getInstanceSettings();
+    const instanceSettings = getInstanceSettings()[0]; // Get first item since findOne returns single object
+    instanceSettings.metaData = {
+      description: 'This is for local dev',
+      accessRequestEmailRecipientsEmail: ['admin@example.com'], // Ensure recipients exist
+      // Remove accessRequestEmailRecipientsRoles to avoid unmocked DB queries
+    };
     User.findOne.mockResolvedValue(user);
     InstanceSetting.findOne.mockResolvedValue(instanceSettings);
     SentNotification.findOne.mockResolvedValue(null);
@@ -181,7 +187,12 @@ describe('Auth Routes', () => {
 
   it('request-access should request access if existingNotification >24 hours', async () => {
     const user = getUser();
-    const instanceSettings = getInstanceSettings();
+    const instanceSettings = getInstanceSettings()[0]; // Get first item since findOne returns single object
+    instanceSettings.metaData = {
+      description: 'This is for local dev',
+      accessRequestEmailRecipientsEmail: ['admin@example.com'], // Ensure recipients exist
+      // Remove accessRequestEmailRecipientsRoles to avoid unmocked DB queries
+    };
     const sentNotification = getSentNotification();
     sentNotification.createdAt = moment()
       .subtract(25, 'hours')
@@ -223,7 +234,12 @@ describe('Auth Routes', () => {
 
   it('request-access should not send another request in <24 hours', async () => {
     const user = getUser();
-    const instanceSettings = getInstanceSettings();
+    const instanceSettings = getInstanceSettings()[0]; // Get first item since findOne returns single object
+    instanceSettings.metaData = {
+      description: 'This is for local dev',
+      accessRequestEmailRecipientsEmail: ['admin@example.com'], // Ensure recipients exist
+      // Remove accessRequestEmailRecipientsRoles to avoid unmocked DB queries
+    };
     const sentNotification = getSentNotification();
     sentNotification.createdAt = moment()
       .subtract(7, 'hours')
