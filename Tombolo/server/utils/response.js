@@ -1,4 +1,5 @@
-import { StatusCodes } from 'http-status-codes';
+const { StatusCodes } = require('http-status-codes');
+const CustomError = require('./customError');
 
 /**
  * Sends a standardized JSON response to the client.
@@ -12,19 +13,19 @@ import { StatusCodes } from 'http-status-codes';
  * @param {Array<string|Error|Object>} [options.errors=[]] - Array of error messages or error objects
  * @returns {import('express').Response} Express response
  */
-export const sendResponse = (
+const sendResponse = (
   res,
   { status = 200, success = true, message = '', data = null, errors = [] }
 ) => {
   const normalizedErrors = Array.isArray(errors)
     ? errors.map(e =>
-        typeof e === 'string' ? e : e?.message || JSON.stringify(e)
-      )
+      typeof e === 'string' ? e : e?.message || JSON.stringify(e)
+    )
     : [
-        typeof errors === 'string'
-          ? errors
-          : errors?.message || JSON.stringify(errors),
-      ];
+      typeof errors === 'string'
+        ? errors
+        : errors?.message || JSON.stringify(errors),
+    ];
 
   return res.status(status).json({
     success,
@@ -42,7 +43,7 @@ export const sendResponse = (
  * @param {string} [message='OK'] - Success message
  * @returns {import('express').Response} Express response
  */
-export const sendSuccess = (res, data, message = 'OK', status = 200) =>
+const sendSuccess = (res, data, message = 'OK', status = 200) =>
   sendResponse(res, { status, success: true, data, message, errors: [] });
 
 /**
@@ -53,7 +54,7 @@ export const sendSuccess = (res, data, message = 'OK', status = 200) =>
  * @param {number} [status=500] - HTTP status code
  * @returns {import('express').Response} Express response
  */
-export const sendError = (res, error, status = 500) => {
+const sendError = (res, error, status = 500) => {
   let errorsArray;
 
   if (Array.isArray(error)) {
@@ -91,7 +92,7 @@ export const sendError = (res, error, status = 500) => {
  * @param {string} [message='Validation failed'] - Optional message
  * @returns {import('express').Response} Express response
  */
-export const sendValidationError = (
+const sendValidationError = (
   res,
   errors,
   message = 'Validation failed'
@@ -103,7 +104,20 @@ export const sendValidationError = (
  * @param {Error} error - Error object
  * @returns {{statusCode: number, message: string, name: string}} Structured error info
  */
-export const getErrorInfo = error => {
+const getErrorInfo = error => {
+  if (error instanceof CustomError) {
+    let errorName = 'CustomError';
+    if (error.message.toLowerCase().includes('not found')) {
+      errorName = 'NotFoundError';
+    }
+
+    return {
+      statusCode: error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
+      message: error.message,
+      name: errorName,
+    };
+  }
+
   if (!(error instanceof Error)) {
     return {
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
@@ -203,3 +217,5 @@ const ERROR_MAP = {
     message: 'Database connection unavailable.',
   },
 };
+
+module.exports = { sendResponse, sendSuccess, sendError, sendValidationError };

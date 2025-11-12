@@ -55,7 +55,7 @@ vi.mock('antd', async (importOriginal) => {
     </span>
   );
   const MockTag = ({ children }) => <span>{children}</span>;
-  const message = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
+  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
   return {
     ...antd,
     Table: MockTable,
@@ -63,7 +63,7 @@ vi.mock('antd', async (importOriginal) => {
     Popover: MockPopover,
     Popconfirm: MockPopconfirm,
     Tag: MockTag,
-    message,
+    notification,
   };
 });
 
@@ -89,17 +89,17 @@ vi.mock('@ant-design/icons', () => ({
 
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 
-// Mock utils used by the table
-vi.mock('@/components/application/clusterMonitoring/clusterMonitoringUtils.js', () => ({
-  toggleSingleClusterMonitoringActiveStatus: vi.fn().mockResolvedValue(),
-  deleteClusterMonitoring: vi.fn().mockResolvedValue(),
+// Mock service used by the table
+const mockToggleSingle = vi.fn();
+const mockDelete = vi.fn();
+vi.mock('@/services/clusterMonitoring.service', () => ({
+  default: {
+    toggleSingle: (...args) => mockToggleSingle(...args),
+    delete: (...args) => mockDelete(...args),
+  },
 }));
 
-import { message } from 'antd';
-import {
-  toggleSingleClusterMonitoringActiveStatus,
-  deleteClusterMonitoring,
-} from '@/components/application/clusterMonitoring/clusterMonitoringUtils.js';
+import { notification } from 'antd';
 import ClusterMonitoringTable from '@/components/application/clusterMonitoring/ClusterMonitoringTable.jsx';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
@@ -191,7 +191,12 @@ describe('ClusterMonitoringTable', () => {
 
     // For a pending and inactive monitoring, UI shows Start; clicking Start should error because not approved.
     await user.click(screen.getByText('Start'));
-    expect(message.error).toHaveBeenCalledWith('Monitoring cannot be started as it is not approved.');
+    expect(notification.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Error occurred',
+        description: expect.anything(),
+      })
+    );
 
     // Now approved row should toggle
     rerender(
@@ -212,10 +217,11 @@ describe('ClusterMonitoringTable', () => {
     );
 
     const pauseBtn = await screen.findByText('pause');
+    mockToggleSingle.mockResolvedValueOnce();
     await user.click(pauseBtn);
-    await waitFor(() => expect(toggleSingleClusterMonitoringActiveStatus).toHaveBeenCalledWith(rowApproved.id));
+    await waitFor(() => expect(mockToggleSingle).toHaveBeenCalledWith(rowApproved.id));
     expect(setClusterMonitoring).toHaveBeenCalled();
-    expect(handleSuccess).toHaveBeenCalled();
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('deletes a monitoring via Popconfirm and updates state', async () => {
@@ -240,10 +246,11 @@ describe('ClusterMonitoringTable', () => {
     );
 
     // In mocked Popconfirm we expose a confirm button
+    mockDelete.mockResolvedValueOnce();
     await user.click(screen.getByRole('button', { name: 'confirm' }));
-    await waitFor(() => expect(deleteClusterMonitoring).toHaveBeenCalledWith(rowApproved.id));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(rowApproved.id));
     expect(setClusterMonitoring).toHaveBeenCalled();
-    expect(handleSuccess).toHaveBeenCalledWith('Monitoring deleted successfully.');
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('allows row selection to set selected rows', async () => {

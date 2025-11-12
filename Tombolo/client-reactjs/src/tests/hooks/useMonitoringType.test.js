@@ -3,12 +3,17 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 
-// Mock antd message
-vi.mock('antd', () => ({ message: { error: vi.fn() } }));
+// Mock antd with both message and notification
+vi.mock('antd', () => ({
+  message: { error: vi.fn() },
+  notification: { error: vi.fn(), success: vi.fn(), warning: vi.fn(), info: vi.fn() },
+}));
 
 const mockGetMonitoringTypeId = vi.fn();
-vi.mock('@/components/common/ASRTools', () => ({
-  getMonitoringTypeId: (...args) => mockGetMonitoringTypeId(...args),
+vi.mock('@/services/monitoringType.service', () => ({
+  default: {
+    getId: (...args) => mockGetMonitoringTypeId(...args),
+  },
 }));
 
 import { message } from 'antd';

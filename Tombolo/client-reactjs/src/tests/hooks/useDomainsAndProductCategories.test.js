@@ -3,17 +3,20 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 
-// Mock antd message
+// Mock antd with both message and notification
 vi.mock('antd', () => ({
   message: { error: vi.fn() },
+  notification: { error: vi.fn(), success: vi.fn(), warning: vi.fn(), info: vi.fn() },
 }));
 
-// Mock ASRTools functions
+// Mock asrService functions
 const mockGetDomains = vi.fn();
 const mockGetProductCategories = vi.fn();
-vi.mock('@/components/common/ASRTools', () => ({
-  getDomains: (...args) => mockGetDomains(...args),
-  getProductCategories: (...args) => mockGetProductCategories(...args),
+vi.mock('@/services/asr.service', () => ({
+  default: {
+    getDomains: (...args) => mockGetDomains(...args),
+    getProductCategories: (...args) => mockGetProductCategories(...args),
+  },
 }));
 
 import { message } from 'antd';

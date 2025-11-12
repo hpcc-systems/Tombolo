@@ -9,6 +9,8 @@ vi.mock('react-redux', () => ({
 vi.mock('antd', () => ({
   Card: ({ children }) => <div>{children}</div>,
   Form: ({ children }) => <form>{children}</form>,
+  notification: { error: vi.fn(), success: vi.fn(), warning: vi.fn(), info: vi.fn() },
+  message: { error: vi.fn(), success: vi.fn(), warning: vi.fn(), info: vi.fn() },
 }));
 import NotificationContacts from '@/components/common/Monitoring/NotificationContacts.jsx';
 

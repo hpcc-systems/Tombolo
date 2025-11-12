@@ -1,6 +1,27 @@
 const logger = require('../config/logger');
-const { UserRole, RoleType } = require('../models');
+const { UserRole, RoleType, sequelize } = require('../models');
 const { sendSuccess, sendError } = require('../utils/response');
+
+// Lightweight healthcheck for Docker - no auth required
+const healthcheck = async (req, res) => {
+  try {
+    // Check database connectivity
+    await sequelize.authenticate();
+
+    return res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    });
+  } catch (err) {
+    logger.error('Healthcheck failed:', err);
+    return res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: err.message,
+    });
+  }
+};
 
 const checkStatus = async (req, res) => {
   return sendSuccess(res, null, "Tombolo's Backend is running successfully");
@@ -30,6 +51,7 @@ const checkOwnerExists = async (req, res) => {
 };
 
 module.exports = {
+  healthcheck,
   checkStatus,
   checkOwnerExists,
 };

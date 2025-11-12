@@ -2,6 +2,8 @@
 **/node_modules
 *.env
 */.env
+**/.env.docker
+**/.env.local
 *.DS_Store
 **/bower_components
 **/build
@@ -9,8 +11,6 @@
 **/vscode
 **/server/scripts
 sequelize-data.json
-docs/~$tombolo.pptx
-Auth-Service/
 gitClones/**
 !gitClones/.gitkeep
 .prettierignore

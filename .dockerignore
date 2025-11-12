@@ -1,0 +1,50 @@
+# Ignore node_modules everywhere
+**/node_modules
+**/npm-debug.log
+
+# Git files
+.git
+.gitignore
+
+# Environment files - exclude server .env (has secrets), but allow client .env (build-time only)
+Tombolo/.env
+Tombolo/server/.env
+**/.env.local
+**/.env.*.local
+**/.aws
+
+# OS files
+.DS_Store
+Thumbs.db
+**/.editorconfig
+
+# Build outputs
+**/build
+**/dist
+**/coverage
+
+# IDE
+.vscode
+.idea
+.turbo
+
+# Logs
+**/logs
+**/*.log
+**/eclcc.log
+
+# Test results
+**/test-results
+**/playwright-report
+
+# Sequelize data files
+**/sequelize-data.json
+
+# README and LICENSE (not needed in containers)
+**/README.md
+**/LICENSE
+
+# Database
+**/mysql-data
+
+.github

@@ -66,6 +66,7 @@ vi.mock('antd', async (importOriginal) => {
   MockSelect.Option = ({ value, children }) => <option value={value}>{children}</option>;
 
   const message = { success: vi.fn(), error: vi.fn() };
+  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
 
   return {
     ...antd,
@@ -75,6 +76,7 @@ vi.mock('antd', async (importOriginal) => {
     Popover: MockPopover,
     Badge: MockBadge,
     message,
+    notification,
     Form: MockForm,
     Select: MockSelect,
   };
@@ -201,9 +203,8 @@ describe('MonitoringActionButton', () => {
     const call = onBulkStartPause.mock.calls[0][0];
     expect(call.ids).toEqual([1, 2]);
     // action may be undefined if Select not interacted with in mock; still ensure success message is called
-    // message is mocked above
-    const { message } = await import('antd');
-    expect(handleSuccess).toHaveBeenCalled();
+    const { notification } = await import('antd');
+    expect(notification.success).toHaveBeenCalled();
 
     // Error path: make handler throw
     const failing = vi.fn().mockRejectedValue(new Error('nope'));
@@ -211,7 +212,11 @@ describe('MonitoringActionButton', () => {
     const applyBtn2 = screen.getByRole('button', { name: 'Apply' });
     await user.click(applyBtn2);
 
-    const { message: msg2 } = await import('antd');
-    await waitFor(() => expect(msg2.error).toHaveBeenCalledWith('Unable to start/pause selected items'));
+    const { notification: notif2 } = await import('antd');
+    await waitFor(() => {
+      expect(notif2.error).toHaveBeenCalled();
+      const errorCall = notif2.error.mock.calls[0][0];
+      expect(errorCall.description.props.children[0].props.children).toBe('Unable to start/pause selected items');
+    });
   });
 });
