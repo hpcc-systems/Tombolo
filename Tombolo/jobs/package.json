@@ -1,0 +1,31 @@
+{
+  "name": "@tombolo/jobs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Background job processing for Tombolo",
+  "main": "dist/app.js",
+  "types": "dist/app.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "nodemon",
+    "start": "node dist/app.js",
+    "clean": "rm -rf dist node_modules .turbo",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
+  },
+  "dependencies": {
+    "@sidequest/mysql-backend": "^1.12.0",
+    "@tombolo/db": "workspace:*",
+    "dotenv": "^17.2.3",
+    "mysql2": "^3.6.5",
+    "sidequest": "^1.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.3",
+    "nodemon": "^2.0.22",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.46.2"
+  }
+}
