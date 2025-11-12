@@ -45,6 +45,9 @@ COPY --from=client-builder /app/Tombolo/client-reactjs/build /usr/share/nginx/ht
 
 # Copy nginx configuration
 RUN rm /etc/nginx/conf.d/default.conf
+
+RUN apk add --no-cache wget
+
 COPY Tombolo/client-reactjs/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY Tombolo/client-reactjs/nginx/conf.d/nginx.conf.template /etc/nginx/conf.d/nginx.conf.template
 COPY Tombolo/client-reactjs/nginx/run_nginx.sh /etc/nginx/run_nginx.sh
