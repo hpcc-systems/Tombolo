@@ -141,6 +141,9 @@ importers:
 
   Tombolo/db:
     dependencies:
+      '@tombolo/shared':
+        specifier: workspace:*
+        version: link:../shared
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
@@ -193,6 +196,9 @@ importers:
       '@tombolo/db':
         specifier: workspace:*
         version: link:../db
+      '@tombolo/shared':
+        specifier: workspace:*
+        version: link:../shared
       akeyless:
         specifier: ^5.0.12
         version: 5.0.13(@babel/core@7.28.5)
@@ -308,6 +314,15 @@ importers:
       supertest:
         specifier: ^7.1.4
         version: 7.1.4
+
+  Tombolo/shared:
+    dependencies:
+      winston:
+        specifier: ^3.18.3
+        version: 3.18.3
+      winston-daily-rotate-file:
+        specifier: ^5.0.0
+        version: 5.0.0(winston@3.18.3)
 
   e2e_tests:
     devDependencies:
