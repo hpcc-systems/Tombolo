@@ -1,3 +1,6 @@
+/* Do not mix code formatting rules with linting rules. 
+Please add code formatting rules to .prettierrc file */
+
 import baseConfig from '../../eslint.config.mjs';
 import globals from 'globals';
 
@@ -9,7 +12,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
-      }
+      },
     },
     rules: {
       'no-unused-vars': [
@@ -17,9 +20,6 @@ export default [
         { vars: 'all', args: 'after-used', ignoreRestSiblings: false },
       ],
       'no-console': ['warn', { allow: ['info', 'error'] }],
-      indent: ['error', 2],
-      quotes: ['error', 'single'],
-      semi: ['error', 'always'],
     },
-  }
+  },
 ];

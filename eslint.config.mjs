@@ -1,5 +1,6 @@
+/*  Do not add any code formatting rules to this file. This file is only for linting rules.
+ Add code formatting rules to the .prettierrc file to avoid conflicts */
 import globals from 'globals';
-import prettier from 'eslint-config-prettier';
 import js from '@eslint/js';
 
 /** @type {import('eslint').Linter.Config[]} */
@@ -11,7 +12,7 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.es2021,
-      }
+      },
     },
     rules: {
       'no-unused-vars': [
@@ -19,9 +20,6 @@ export default [
         { vars: 'all', args: 'after-used', ignoreRestSiblings: false },
       ],
       'no-console': ['warn', { allow: ['info', 'error'] }],
-      indent: ['error', 2],
-      quotes: ['error', 'single'],
-      semi: ['error', 'always'],
     },
   },
 ];
