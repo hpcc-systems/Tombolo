@@ -5,14 +5,14 @@
  * All schedules are defined in config/schedules.ts
  */
 
-import { Sidequest } from "sidequest";
-import { JobClassType } from "@sidequest/core";
-import { jobSchedules } from "./config/schedules.js";
-import { logger } from "./config/logger.js";
+import { Sidequest } from 'sidequest';
+import { JobClassType } from '@sidequest/core';
+import { jobSchedules } from './config/schedules.js';
+import { logger } from './config/logger.js';
 
 // Import all job classes
-import { EmailJob } from "./jobs/emailJob.js";
-import { DbJob } from "./jobs/testDbJob.js";
+import { EmailJob } from './jobs/emailJob.js';
+import { DbJob } from './jobs/testDbJob.js';
 
 /**
  * Job schedule configuration
@@ -59,7 +59,7 @@ const scheduledJobs: Record<string, ScheduleConfig> = {
  * Call this after Sidequest.start()
  */
 export function registerScheduledJobs(): void {
-  logger.info("Registering scheduled jobs...");
+  logger.info('Registering scheduled jobs...');
 
   let registeredCount = 0;
 
@@ -76,7 +76,7 @@ export function registerScheduledJobs(): void {
       builder.schedule(config.schedule, config.args);
 
       logger.info(
-        `Scheduled: ${name} - ${config.description || "No description"} (${config.schedule})`,
+        `Scheduled: ${name} - ${config.description || 'No description'} (${config.schedule})`,
       );
       registeredCount++;
     } catch (error) {
@@ -94,7 +94,7 @@ export function getScheduledJobsList() {
   return Object.entries(scheduledJobs).map(([name, config]) => ({
     name,
     jobClass: config.jobClass.name,
-    queue: config.queue || "default",
+    queue: config.queue || 'default',
     schedule: config.schedule,
     description: config.description,
   }));

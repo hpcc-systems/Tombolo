@@ -1,38 +1,40 @@
-import globals from "globals";
-import tseslint from "typescript-eslint";
-import rootConfig from "../../eslint.config.mjs";
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+import rootConfig from '../../eslint.config.mjs';
 
 export default [
-  // Inherit root config
+  // TypeScript recommended first
+  ...tseslint.configs.recommended,
+
+  // Then inherit root config (this will override TS defaults)
   ...rootConfig,
 
   // TypeScript-specific overrides
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
       globals: globals.node,
       parser: tseslint.parser,
       parserOptions: {
-        project: "./tsconfig.json",
+        project: './tsconfig.json',
       },
     },
   },
-  ...tseslint.configs.recommended,
 
-  // Package-specific rules
+  // Package-specific rules (last, highest priority)
   {
-    files: ["**/*.{js,mjs,cjs,ts,tsx}"],
+    files: ['**/*.{js,mjs,cjs,ts,tsx}'],
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
         {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
         },
       ],
       // Override root's no-console for this package (we want console logs in workers)
-      "no-console": "off",
+      'no-console': 'off',
     },
   },
 ];

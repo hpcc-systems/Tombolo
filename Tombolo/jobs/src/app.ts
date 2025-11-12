@@ -1,11 +1,11 @@
-import { Sidequest } from "sidequest";
-import type { SidequestConfig } from "sidequest";
-import { DB_URL } from "./config/db.js";
-import { registerScheduledJobs } from "./scheduler.js";
+import { Sidequest } from 'sidequest';
+import type { SidequestConfig } from 'sidequest';
+import { DB_URL } from './config/db.js';
+import { registerScheduledJobs } from './scheduler.js';
 
 const sqConfig: SidequestConfig = {
   backend: {
-    driver: "@sidequest/mysql-backend",
+    driver: '@sidequest/mysql-backend',
     config: DB_URL,
   },
   dashboard: {
@@ -23,6 +23,6 @@ async function startSideQuest() {
 
 startSideQuest()
   .then(() =>
-    console.log("Sidequest started! Dashboard: http://localhost:8678"),
+    console.log('Sidequest started! Dashboard: http://localhost:8678'),
   )
   .catch((err) => console.error(`Failed to start sidequest: ${err}`));
