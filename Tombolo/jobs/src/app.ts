@@ -2,6 +2,7 @@ import { Sidequest } from 'sidequest';
 import type { SidequestConfig } from 'sidequest';
 import { DB_URL } from './config/db.js';
 import { registerScheduledJobs } from './scheduler.js';
+import logger from './config/logger.js';
 
 const sqConfig: SidequestConfig = {
   backend: {
@@ -23,6 +24,6 @@ async function startSideQuest() {
 
 startSideQuest()
   .then(() =>
-    console.log('Sidequest started! Dashboard: http://localhost:8678'),
+    logger.info('Sidequest started! Dashboard: http://localhost:8678'),
   )
-  .catch((err) => console.error(`Failed to start sidequest: ${err}`));
+  .catch((err) => logger.error(`Failed to start sidequest: ${err}`));
