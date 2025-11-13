@@ -1,3 +1,4 @@
+// @ts-expect-error - No types for older version of dotenv
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -23,8 +24,3 @@ const DB_PORT = process.env.DB_PORT || '3306';
 const DB_NAME = process.env.DB_NAME || 'tombolo';
 
 export const DB_URL = `mysql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOSTNAME}:${DB_PORT}/${DB_NAME}`;
-
-console.log(
-  'Database URL (password hidden):',
-  DB_URL.replace(/:([^@]+)@/, ':****@'),
-);
