@@ -1,9 +1,9 @@
-version: "3"
 services:
   web:
     build:
-      context: ./client-reactjs
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Tombolo/Dockerfile
+      target: client
     networks:
       - tombolo-network
     ports:
@@ -12,33 +12,64 @@ services:
     volumes:
       - ${CERT_PATH}:/etc/nginx/certs/
     depends_on:
-      - mysql_db
+      node:
+        condition: service_healthy
+      mysql_db:
+        condition: service_healthy
     env_file:
       - .env
     entrypoint: ["sh", "/etc/nginx/run_nginx.sh", "${HOSTNAME}"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80/",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   node:
-    #restart: always
     entrypoint: ["sh", "/app/docker-entry.sh", "mysql_db", "3306"]
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Tombolo/Dockerfile
+      target: server
     volumes:
       - /tmp/pm2:/tmp/pm2
       - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
       - ./logs/server:/app/logs
       - ./certs:/usr/local/share/ca-certificates
       - ./customCerts:/customCerts
+      - ./gitClones:/gitClones
     networks:
       - tombolo-network
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
     depends_on:
-      - mysql_db
+      mysql_db:
+        condition: service_healthy
     env_file:
       - .env
     logging:
       driver: "none" # This line disables Docker logs. All logs are written to the file system
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:${SERVER_PORT}/api/status/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   mysql_db:
     image: mysql:8.0
@@ -58,6 +89,22 @@ services:
       - tombolo-network
     env_file:
       - .env
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 networks:
   tombolo-network:

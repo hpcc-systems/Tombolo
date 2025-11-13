@@ -1,0 +1,10 @@
+// .sequelizerc.docker - Used in Docker containers after pnpm deploy
+// Points to migrations and models in the deployed @tombolo/db package structure
+const path = require('path');
+
+module.exports = {
+  'config': path.resolve(__dirname, 'node_modules', '@tombolo', 'db', 'config', 'config.js'),
+  'migrations-path': path.resolve(__dirname, 'node_modules', '@tombolo', 'db', 'migrations'),
+  'seeders-path': path.resolve(__dirname, 'node_modules', '@tombolo', 'db', 'seeders'),
+  'models-path': path.resolve(__dirname, 'node_modules', '@tombolo', 'db', 'models')
+};

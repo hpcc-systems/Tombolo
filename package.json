@@ -21,7 +21,10 @@
     "db:drop": "pnpm --filter=@tombolo/db db:drop",
     "db:seed": "pnpm --filter=@tombolo/db db:seed",
     "db:create": "pnpm --filter=@tombolo/db db:create",
-    "db:init": "pnpm db:create && pnpm db:migrate && pnpm db:seed"
+    "db:init": "pnpm db:create && pnpm db:migrate && pnpm db:seed",
+    "docker:build": "cd Tombolo && docker compose build",
+    "docker:up": "cd Tombolo && docker compose up -d",
+    "docker:down": "cd Tombolo && docker compose down"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
