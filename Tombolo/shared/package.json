@@ -4,9 +4,12 @@
   "private": true,
   "description": "Shared utilities and common functionality for Tombolo packages",
   "main": "index.js",
+  "types": "index.d.ts",
   "exports": {
-    ".": "./index.js",
-    "./*": "./*"
+    ".": {
+      "types": "./index.d.ts",
+      "require": "./index.js"
+    }
   },
   "scripts": {
     "test": "echo \"No tests yet\""

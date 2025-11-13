@@ -17,6 +17,7 @@
   "dependencies": {
     "@sidequest/mysql-backend": "^1.12.0",
     "@tombolo/db": "workspace:*",
+    "@tombolo/shared": "workspace:*",
     "dotenv": "^8.6.0",
     "mysql2": "^3.6.5",
     "sidequest": "^1.12.0"
