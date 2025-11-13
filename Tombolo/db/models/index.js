@@ -31,7 +31,6 @@ const ClusterMonitoring = require('./ClusterMonitoring')(
   sequelize,
   Sequelize.DataTypes
 );
-
 const CostMonitoring = require('./CostMonitoring')(
   sequelize,
   Sequelize.DataTypes
@@ -55,7 +54,6 @@ const FileMonitoring = require('./FileMonitoring')(
   sequelize,
   Sequelize.DataTypes
 );
-
 const InstanceSettings = require('./InstanceSettings')(
   sequelize,
   Sequelize.DataTypes
