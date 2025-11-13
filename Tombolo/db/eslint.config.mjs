@@ -1,6 +1,5 @@
 /* Do not mix code formatting rules with linting rules. 
 Please add code formatting rules to .prettierrc file */
-
 import baseConfig from '../../eslint.config.mjs';
 import globals from 'globals';
 
