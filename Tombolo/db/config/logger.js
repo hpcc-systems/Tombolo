@@ -1,9 +1,11 @@
 const { createLogger } = require('@tombolo/shared');
 const path = require('path');
 
-// Create logger instance with server-specific configuration
+// Create logger instance for database operations
+// Note: When used by server, logs will go to server's log directory
+// When used standalone (migrations, seeds), logs go to db/logs
 const logger = createLogger({
-  logDir: path.join(__dirname, '..', 'logs'), // Absolute path to db/logs
+  logDir: process.env.LOG_DIR || path.join(__dirname, '..', 'logs'),
   serviceName: 'db',
 });
 
