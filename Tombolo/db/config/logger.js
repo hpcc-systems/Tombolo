@@ -6,7 +6,6 @@ const path = require('path');
 // When used standalone (migrations, seeds), logs go to db/logs
 const logger = createLogger({
   logDir: process.env.LOG_DIR || path.join(__dirname, '..', 'logs'),
-  serviceName: 'db',
 });
 
 module.exports = logger;

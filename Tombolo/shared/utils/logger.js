@@ -133,22 +133,13 @@ function createLogFormat(isConsole) {
  * @returns {Object} Winston logger instance
  */
 function createLoggerInstance(options = {}) {
-  const {
-    logDir = './logs',
-    level = process.env.NODE_LOG_LEVEL || 'info',
-    serviceName = '',
-  } = options;
-
-  // Add service name to format if provided
-  const serviceFormat = serviceName
-    ? format.label({ label: serviceName })
-    : format(info => info)();
+  const { logDir = './logs', level = process.env.NODE_LOG_LEVEL || 'info' } =
+    options;
 
   // Create transports
   const consoleTransport = new transports.Console({
     level,
     format: format.combine(
-      serviceFormat,
       format.colorize({ all: true }),
       createLogFormat(true)
     ),
@@ -161,7 +152,7 @@ function createLoggerInstance(options = {}) {
     zippedArchive: true,
     maxSize: '20m',
     maxFiles: '14d',
-    format: format.combine(serviceFormat, createLogFormat(false)),
+    format: createLogFormat(false),
   });
 
   const errorFileTransport = new transports.DailyRotateFile({
@@ -171,13 +162,13 @@ function createLoggerInstance(options = {}) {
     zippedArchive: true,
     maxSize: '20m',
     maxFiles: '14d',
-    format: format.combine(serviceFormat, createLogFormat(false)),
+    format: createLogFormat(false),
   });
 
   // Create and configure logger
   const logger = createLogger({
     exitOnError: false,
-    format: format.combine(serviceFormat, createLogFormat(false)),
+    format: createLogFormat(false),
     transports: [consoleTransport, combinedFileTransport, errorFileTransport],
   });
 

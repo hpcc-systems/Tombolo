@@ -10,11 +10,6 @@ export interface LoggerOptions {
    * Log level (defaults to NODE_LOG_LEVEL env or 'info')
    */
   level?: string;
-
-  /**
-   * Optional service name to prefix logs
-   */
-  serviceName?: string;
 }
 
 /**

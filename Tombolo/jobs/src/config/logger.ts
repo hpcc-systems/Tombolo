@@ -8,7 +8,6 @@ const __dirname = path.dirname(__filename);
 
 const logger = createLogger({
   logDir: process.env.LOG_DIR || path.join(__dirname, '..', '..', 'logs'), // Tombolo/jobs/logs
-  serviceName: 'jobs',
 });
 
 export default logger;
