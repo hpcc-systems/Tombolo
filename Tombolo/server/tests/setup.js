@@ -156,6 +156,22 @@ jest.mock('../models', () => {
       getClusterDataTotals: jest.fn(),
       getDataTotals: jest.fn(),
     },
+    OrbitProfileMonitoring: {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findByPk: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      bulkCreate: jest.fn(),
+      update: jest.fn(),
+      destroy: jest.fn(),
+      handleDelete: jest.fn(),
+      sequelize: {
+        transaction,
+        __commit: commit,
+        __rollback: rollback,
+      },
+    },
     UserArchive: {
       create: jest.fn(),
     },
