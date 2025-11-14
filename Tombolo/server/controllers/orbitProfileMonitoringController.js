@@ -248,13 +248,13 @@ const toggleOrbitProfileMonitoringStatus = async (req, res) => {
 // Approve orbit profile monitoring
 const evaluateOrbitProfileMonitoring = async (req, res) => {
   try {
-    const { comment, ids, isActive } = req.body;
+    const { approverComment, ids, isActive } = req.body;
     const userId = req.user.id;
 
     // Find all for ids and update approverComment, approvalStatus, isActive
     await OrbitProfileMonitoring.update(
       {
-        approverComment: comment || null,
+        approverComment: approverComment || null,
         approvalStatus: APPROVAL_STATUS.APPROVED,
         isActive,
         approvedBy: userId,
