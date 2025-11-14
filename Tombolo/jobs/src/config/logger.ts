@@ -1,4 +1,4 @@
-import { createLogger } from '@tombolo/shared';
+import { createLogger } from '@tombolo/shared/backend';
 import { fileURLToPath } from 'url';
 import path from 'path';
 

@@ -1,23 +1,9 @@
-import { Logger } from 'winston';
-
-export interface LoggerOptions {
-  /**
-   * Directory for log files (defaults to './logs')
-   */
-  logDir?: string;
-
-  /**
-   * Log level (defaults to NODE_LOG_LEVEL env or 'info')
-   */
-  level?: string;
-}
-
 /**
- * Create a logger instance with optional custom configuration
+ * @tombolo/shared
+ *
+ * Universal utilities that work in both browser and Node.js
+ * For server-only utilities, use '@tombolo/shared/server'
  */
-export function createLogger(options?: LoggerOptions): Logger;
 
-/**
- * Default logger instance
- */
-export const logger: Logger;
+// Add universal type definitions here
+export {};

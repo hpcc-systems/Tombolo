@@ -10,6 +10,11 @@
       "types": "./index.d.ts",
       "require": "./index.js",
       "default": "./index.js"
+    },
+    "./backend": {
+      "types": "./backend.d.ts",
+      "require": "./backend.js",
+      "default": "./backend.js"
     }
   },
   "scripts": {
