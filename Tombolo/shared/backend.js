@@ -4,4 +4,4 @@
  * Backend-only utilities (Node.js backend)
  */
 
-module.exports = require('./backend');
+module.exports = require('./backend/index');
