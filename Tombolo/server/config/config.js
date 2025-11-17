@@ -1,24 +1,24 @@
-const path = require("path");
-const fs = require("fs");
-const rootENV = path.join(process.cwd(), "..", ".env");
-const serverENV = path.join(process.cwd(), ".env");
+const path = require('path');
+const fs = require('fs');
+const rootENV = path.join(process.cwd(), '..', '.env');
+const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-require("dotenv").config({ path: ENVPath });
+require('dotenv').config({ path: ENVPath });
 
-const logger = require("./logger");
+const logger = require('./logger');
 
 // Common database configuration options
 const commonDbConfigOptions = {
-  dialect: "mysql",
-  seederStorage: "sequelize",
-  seederStorageTableName: "sequelize_seeders",
-  migrationStorageTableName: "sequelize_migrations",
-  logging: (msg) => logger.debug(msg), // change winston settings to 'debug' to see this log
+  dialect: 'mysql',
+  seederStorage: 'sequelize',
+  seederStorageTableName: 'sequelize_seeders',
+  migrationStorageTableName: 'sequelize_migrations',
+  logging: msg => logger.debug(msg), // change winston settings to 'debug' to see this log
 };
 
 // SSL configuration if enabled
 const sslConfig =
-  process.env.MYSQL_SSL_ENABLED === "true"
+  process.env.MYSQL_SSL_ENABLED === 'true'
     ? {
         ssl: true,
         dialectOptions: {
@@ -35,6 +35,7 @@ const development = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   host: process.env.DB_HOSTNAME,
+  port: process.env.DB_PORT || 3306,
   ...commonDbConfigOptions,
   ...sslConfig,
 };
@@ -45,6 +46,7 @@ const production = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   host: process.env.DB_HOSTNAME,
+  port: process.env.DB_PORT || 3306,
   ...commonDbConfigOptions,
   ...sslConfig,
 };

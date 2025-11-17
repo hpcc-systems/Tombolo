@@ -18,6 +18,7 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc ./
 COPY Tombolo/client-reactjs/package.json ./Tombolo/client-reactjs/
 COPY Tombolo/server/package.json ./Tombolo/server/
 COPY Tombolo/db/package.json ./Tombolo/db/
+COPY Tombolo/jobs/package.json ./Tombolo/jobs/
 
 # Install all dependencies
 RUN pnpm install --frozen-lockfile
@@ -147,3 +148,65 @@ RUN mkdir -p /gitClones
 WORKDIR /app
 
 # Entry point is set on docker-compose
+
+# ===========================================
+# Jobs Worker Builder Stage
+# ===========================================
+FROM node:24-alpine AS jobs-builder
+
+WORKDIR /app
+
+# Enable pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+
+# Copy workspace configuration
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc ./
+
+# Copy all package.json files
+COPY Tombolo/jobs/package.json ./Tombolo/jobs/
+COPY Tombolo/db/package.json ./Tombolo/db/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY Tombolo/jobs ./Tombolo/jobs
+COPY Tombolo/db ./Tombolo/db
+
+# Build TypeScript
+WORKDIR /app/Tombolo/jobs
+RUN pnpm build
+
+# Use pnpm deploy to create a clean deployment structure
+WORKDIR /app
+RUN pnpm --filter @tombolo/jobs deploy /deploy/jobs --prod --legacy
+
+# ===========================================
+# Jobs Worker Runtime Stage
+# ===========================================
+FROM node:24-alpine AS jobs
+
+WORKDIR /app
+
+# Enable pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+
+# Install PM2 globally
+RUN pnpm add -g pm2
+
+# Copy deployed jobs from builder (includes node_modules with workspace deps resolved)
+COPY --from=jobs-builder /deploy/jobs /app
+
+# Copy the built dist folder with proper structure
+COPY --from=jobs-builder /app/Tombolo/jobs/dist ./dist
+
+WORKDIR /app
+
+# Entry point is set on docker-compose
+CMD ["pm2-runtime", "start", "dist/app.js", "--name", "tombolo-jobs"]

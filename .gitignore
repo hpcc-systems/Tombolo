@@ -29,3 +29,4 @@ e2e_tests/state.json
 .pnpm-debug.log*
 .pnpm-store/
 **/.turbo
+**/dist
