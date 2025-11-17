@@ -7,7 +7,4 @@
 
 // Add universal utilities here that work in both browser and Node.js
 // Example: validation helpers, constants, type guards, etc.
-
-module.exports = {
-  // Export universal utilities here
-};
+module.exports = require('./src');

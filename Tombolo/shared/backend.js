@@ -4,9 +4,4 @@
  * Backend-only utilities (Node.js backend)
  */
 
-const { createLogger, logger } = require('./utils/logger.js');
-
-module.exports = {
-  createLogger,
-  logger,
-};
+module.exports = require('./backend');
