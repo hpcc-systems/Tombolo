@@ -120,8 +120,8 @@ module.exports = {
     // Add unique index
     await queryInterface.addIndex('orbit_profile_monitorings', {
       unique: true,
-      fields: ['name', 'deletedAt'],
-      name: 'orbit_profile_monitorings_name_deleted_at_unique',
+      fields: ['applicationId', 'name', 'deletedAt'],
+      name: 'orbit_profile_monitorings_application_id_name_deleted_at_unique',
     });
   },
 

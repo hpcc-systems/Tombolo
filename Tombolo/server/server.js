@@ -27,7 +27,7 @@ require('./utils/tokenBlackListing');
 
 const cookieParser = require('cookie-parser');
 
-const { doubleCsrfProtection } = require('./middlewares/csrfMiddleware');
+// const { doubleCsrfProtection } = require('./middlewares/csrfMiddleware');
 
 const { readSelfSignedCerts } = require('./utils/readSelfSignedCerts');
 const { sendError } = require('./utils/response');
@@ -117,7 +117,7 @@ app.use('/api/wizard', wizard);
 
 // Validate access token and csrf tokens, all routes below require these
 app.use(validateToken);
-app.use(doubleCsrfProtection);
+// app.use(doubleCsrfProtection);
 
 // Authenticated routes
 app.use('/api/user', users);
