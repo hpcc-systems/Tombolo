@@ -9,7 +9,7 @@ import {
   NotificationOutlined,
   ClockCircleOutlined,
   BarChartOutlined,
-  // CloudServerOutlined,
+  CloudServerOutlined,
   ApiOutlined,
   // BellOutlined,
   SettingOutlined,
@@ -249,6 +249,18 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
         //       clusterDisabled
         //     )
         //   : null,
+        getItem(
+          <Link to={'/' + applicationId + '/orbitmonitoring-new'}>
+            <span>
+              <CloudServerOutlined /> Orbit Profile
+            </span>
+          </Link>,
+          '4f-new',
+          null,
+          null,
+          null,
+          clusterDisabled
+        ),
         getItem(
           <Link to={'/' + applicationId + '/costMonitoring'}>
             <span>
