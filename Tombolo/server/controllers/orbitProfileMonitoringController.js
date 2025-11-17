@@ -254,7 +254,7 @@ const evaluateOrbitProfileMonitoring = async (req, res) => {
     // Find all for ids and update approverComment, approvalStatus, isActive
     await OrbitProfileMonitoring.update(
       {
-        approverComment: approverComment || null,
+        approverComment: approverComment,
         approvalStatus: APPROVAL_STATUS.APPROVED,
         isActive,
         approvedBy: userId,
