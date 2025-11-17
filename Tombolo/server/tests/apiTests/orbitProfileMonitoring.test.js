@@ -29,7 +29,7 @@ describe('orbitProfileMonitoring Routes', () => {
     OrbitProfileMonitoring.findByPk.mockResolvedValue(orbitProfileMonitoring);
 
     const res = await request(app)
-      .post(`/api/orbitProfileMonitoring/${applicationId}`)
+      .post(`/api/orbitProfileMonitoring`)
       .send(orbitProfileMonitoring);
 
     expect(res.status).toBe(201);
