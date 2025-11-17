@@ -178,6 +178,21 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.1)(jiti@1.21.7)(jsdom@26.1.0)(terser@5.44.1)(tsx@4.20.6)
 
+  Tombolo/core:
+    dependencies:
+      '@hpcc-js/comms':
+        specifier: 'catalog:'
+        version: 3.11.1
+      '@tombolo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@tombolo/shared':
+        specifier: workspace:*
+        version: link:../shared
+      axios:
+        specifier: 'catalog:'
+        version: 1.13.2
+
   Tombolo/db:
     dependencies:
       '@tombolo/shared':
@@ -198,6 +213,9 @@ importers:
       '@sidequest/mysql-backend':
         specifier: ^1.12.0
         version: 1.12.0
+      '@tombolo/core':
+        specifier: workspace:*
+        version: link:../core
       '@tombolo/db':
         specifier: workspace:*
         version: link:../db
