@@ -27,7 +27,7 @@ require('./utils/tokenBlackListing');
 
 const cookieParser = require('cookie-parser');
 
-const { doubleCsrfProtection } = require('./middlewares/csrfMiddleware');
+// const { doubleCsrfProtection } = require('./middlewares/csrfMiddleware');
 
 const { readSelfSignedCerts } = require('./utils/readSelfSignedCerts');
 const { sendError } = require('./utils/response');
@@ -81,30 +81,13 @@ app.use(limiter);
 app.use(cookieParser());
 
 /*  ROUTES */
-// const job = require('./routes/job/read');
 const bree = require('./routes/bree/read');
 const appRead = require('./routes/app/read');
-// const query = require('./routes/query/read');
 const hpccRead = require('./routes/hpcc/read');
-// const fileRead = require('./routes/file/read');
-// const groups = require('./routes/groups/group');
-// const indexRead = require('./routes/index/read');
-// const reportRead = require('./routes/report/read');
-// const consumer = require('./routes/consumers/read');
-// const gh_projects = require('./routes/gh_projects');
-// const propagation = require('./routes/propagation');
-// const dataflow = require('./routes/dataflows/dataflow');
-// const constraint = require('./routes/constraint/index');
-// const fileTemplateRead = require('./routes/fileTemplate/read');
-// const dataflowGraph = require('./routes/dataflows/dataflowgraph');
-// const regulations = require('./routes/controlsAndRegulations/read');
-// const key = require('./routes/key/read');
-// const api = require('./routes/api/read');
 const jobmonitoring = require('./routes/jobmonitoring/read');
 const configurations = require('./routes/configRoutes.js');
 const orbit = require('./routes/orbit/read');
 const integrations = require('./routes/integrations/read');
-// const teamsHook = require('./routes/msTeamsHook/read');
 const notification_queue = require('./routes/notification_queue/read');
 const sent_notifications = require('./routes/sent_notifications/read');
 const monitorings = require('./routes/monitorings/read');
@@ -123,6 +106,7 @@ const costMonitoring = require('./routes/costMonitoringRoutes');
 const landingZoneMonitoring = require('./routes/landingZoneMonitoring');
 const clusterMonitoring = require('./routes/clusterMonitoringRoutes');
 const fileMonitoring = require('./routes/fileMonitoringRoutes');
+const orbitProfileMonitoring = require('./routes/orbitProfileMonitoringRoutes');
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -131,41 +115,22 @@ app.use('/api/auth', auth);
 app.use('/api/status', status);
 app.use('/api/wizard', wizard);
 
-//exposed API, requires api key for any routes
-// app.use('/api/apikeys', api);
-
 // Validate access token and csrf tokens, all routes below require these
 app.use(validateToken);
-app.use(doubleCsrfProtection);
+// app.use(doubleCsrfProtection);
 
 // Authenticated routes
 app.use('/api/user', users);
 app.use('/api/session', sessions);
-// app.use('/api/job', job);
 app.use('/api/bree', bree);
-// app.use('/api/query', query);
-// app.use('/api/groups', groups);
 app.use('/api/app/read', appRead);
-// app.use('/api/consumer', consumer);
-// app.use('/api/dataflow', dataflow);
-// app.use('/api/propagation', propagation);
 app.use('/api/hpcc/read', hpccRead);
-// app.use('/api/file/read', fileRead);
-// app.use('/api/index/read', indexRead);
-// app.use('/api/report/read', reportRead);
-// app.use('/api/constraint', constraint);
-// app.use('/api/gh_projects', gh_projects);
-// app.use('/api/dataflowgraph', dataflowGraph);
-// app.use('/api/controlsAndRegulations', regulations);
-// app.use('/api/fileTemplate/read', fileTemplateRead);
 app.use('/api/fileMonitoring', fileMonitoring);
-// app.use('/api/key', key);
 app.use('/api/jobmonitoring', jobmonitoring);
 app.use('/api/cluster', cluster);
 app.use('/api/configurations', configurations);
 app.use('/api/orbit', orbit);
 app.use('/api/integrations', integrations);
-// app.use('/api/teamsHook', teamsHook);
 app.use('/api/notification_queue', notification_queue);
 app.use('/api/sent_notifications', sent_notifications);
 app.use('/api/monitorings', monitorings);
@@ -175,6 +140,7 @@ app.use('/api/instanceSettings', instanceSettings);
 app.use('/api/costMonitoring', costMonitoring);
 app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
 app.use('/api/clusterMonitoring', clusterMonitoring);
+app.use('/api/orbitProfileMonitoring', orbitProfileMonitoring);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
