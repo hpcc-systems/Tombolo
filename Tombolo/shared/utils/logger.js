@@ -129,7 +129,6 @@ function createLogFormat(isConsole) {
  * @param {Object} options - Logger configuration options
  * @param {string} options.logDir - Directory for log files (defaults to './logs')
  * @param {string} options.level - Log level (defaults to NODE_LOG_LEVEL env or 'info')
- * @param {string} options.serviceName - Optional service name to prefix logs
  * @returns {Object} Winston logger instance
  */
 function createLoggerInstance(options = {}) {
