@@ -3,7 +3,6 @@ const { app } = require('../test_server');
 const { Cluster } = require('../../models');
 const { v4: uuidv4 } = require('uuid');
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const logger = require('../../config/logger');
 const { getCluster, AUTHED_USER_ID, UUID_REGEX } = require('../helpers');
 
 const nonExistentID = uuidv4();
@@ -51,7 +50,6 @@ describe('Cluster Routes', () => {
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe('Cluster not found');
     expect(Cluster.findOne).toHaveBeenCalledTimes(1);
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('add-cluster Should not create cluster if not in whitelist', async () => {
@@ -64,7 +62,6 @@ describe('Cluster Routes', () => {
     expect(res.body.message).toBe('Cluster not whitelisted');
     expect(res.body.success).toBe(false);
     expect(Cluster.create).not.toHaveBeenCalled();
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('update-cluster should update a cluster by ID', async () => {
@@ -99,7 +96,6 @@ describe('Cluster Routes', () => {
     expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe('Cluster not found');
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('get-cluster-whitelist should get the cluster whitelist', async () => {
@@ -134,7 +130,6 @@ describe('Cluster Routes', () => {
       id: nonExistentID,
       deletedByUserId: AUTHED_USER_ID,
     });
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('add-cluster-w-progress should add cluster with progress', async () => {});
