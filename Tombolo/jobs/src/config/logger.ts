@@ -1,19 +1,13 @@
-export const logger = {
-  info: (message: string, ...args: any[]) => {
-    console.log(`[INFO] ${new Date().toISOString()} - ${message}`, ...args);
-  },
-  error: (message: string, ...args: any[]) => {
-    console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, ...args);
-  },
-  warn: (message: string, ...args: any[]) => {
-    console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, ...args);
-  },
-  debug: (message: string, ...args: any[]) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.debug(
-        `[DEBUG] ${new Date().toISOString()} - ${message}`,
-        ...args,
-      );
-    }
-  },
-};
+import { createLogger } from '@tombolo/shared';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const logger = createLogger({
+  logDir: process.env.LOG_DIR || path.join(__dirname, '..', '..', 'logs'), // Tombolo/jobs/logs
+});
+
+export default logger;

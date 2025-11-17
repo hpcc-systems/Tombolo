@@ -8,7 +8,7 @@
 import { Sidequest } from 'sidequest';
 import { JobClassType } from '@sidequest/core';
 import { jobSchedules } from './config/schedules.js';
-import { logger } from './config/logger.js';
+import logger from './config/logger.js';
 
 // Import all job classes
 import { EmailJob } from './jobs/emailJob.js';

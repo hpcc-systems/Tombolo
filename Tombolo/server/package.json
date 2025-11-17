@@ -18,8 +18,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@tombolo/db": "workspace:*",
     "@hpcc-js/comms": "^3.7.6",
+    "@tombolo/db": "workspace:*",
+    "@tombolo/shared": "workspace:*",
     "akeyless": "^5.0.12",
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
