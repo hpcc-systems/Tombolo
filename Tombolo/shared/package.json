@@ -16,7 +16,7 @@
     "test": "echo \"No tests yet\""
   },
   "dependencies": {
-    "winston": "^3.18.3",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston": "catalog:",
+    "winston-daily-rotate-file": "catalog:"
   }
 }
