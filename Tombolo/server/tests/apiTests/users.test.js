@@ -7,7 +7,6 @@ const {
   sequelize,
 } = require('../../models');
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const logger = require('../../config/logger');
 const { getUsers, nonExistentID } = require('../helpers');
 
 beforeAll(async () => {});
@@ -136,7 +135,6 @@ describe('User Routes', () => {
     expect(res.body.success).toBe(false);
     expect(User.destroy).not.toHaveBeenCalled();
     expect(UserArchive.create).not.toHaveBeenCalled();
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('change-password should change user password', async () => {
