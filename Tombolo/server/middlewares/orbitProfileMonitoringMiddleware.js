@@ -8,6 +8,8 @@ const {
   paramUuids,
   bodyUuids,
   booleanBody,
+  enumBody,
+  APPROVAL_STATUSES,
 } = require('./commonMiddleware');
 
 const createOrbitMonitoringPayloadValidations = [
@@ -35,7 +37,7 @@ const monitoringTogglePayloadValidations = [
 const validateMonitoringEvaluationPayload = [
   ...bodyUuids.arrayIds,
   stringBody('approverComment', false, { length: { ...COMMENT_LENGTH } }),
-  stringBody('approvalStatus'),
+  enumBody('approvalStatus', false, APPROVAL_STATUSES),
   booleanBody('isActive'),
 ];
 
