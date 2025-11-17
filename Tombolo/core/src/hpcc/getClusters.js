@@ -1,34 +1,36 @@
-const db = require("@tombolo/db");
-const { decryptString } = require("@tombolo/shared");
+const db = require('@tombolo/db');
+const { decryptString } = require('@tombolo/shared');
+const isClusterReachable = require('./isClusterReachable');
+const { ENCRYPTION_KEY } = require('../config/config');
 
 const { Cluster } = db;
 
 /**
- * Encrypts a string using `crypto`
+ * Retrieves cluster details and ensures the cluster is reachable
  * @param {string[] | null} clusterIds - The clusterIds you would like to be fetched
  * @returns {@import("@tombolo/db").Cluster} Encrypted string
  */
 async function getClusters(clusterIds) {
   const whereClause = clusterIds === null ? {} : { where: { id: clusterIds } };
   const clusters = await Cluster.findAll(whereClause);
-  const clusterPromises = clusters.map(async (cluster) => {
+  const clusterPromises = clusters.map(async cluster => {
     try {
       if (cluster.hash) {
-        cluster.hash = decryptString(cluster.hash);
+        cluster.hash = decryptString(cluster.hash, ENCRYPTION_KEY);
       }
 
-      const isReachable = await module.exports.isClusterReachable(
+      const isReachable = await isClusterReachable(
         cluster.thor_host,
         cluster.thor_port,
         cluster.username,
-        cluster.hash,
+        cluster.hash
       );
       const { reached, statusCode } = isReachable;
       if (reached && statusCode === 200) {
         return cluster;
       } else if (reached && statusCode === 403) {
         return {
-          error: "Invalid cluster credentials",
+          error: 'Invalid cluster credentials',
           ...cluster,
         };
       } else {

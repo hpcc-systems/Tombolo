@@ -1,6 +1,6 @@
 import { Sidequest } from 'sidequest';
 import type { SidequestConfig } from 'sidequest';
-import { DB_URL } from './config/db.js';
+import { DB_URL } from './config/config.js';
 import { registerScheduledJobs } from './scheduler.js';
 import logger from './config/logger.js';
 
@@ -24,6 +24,6 @@ async function startSideQuest() {
 
 startSideQuest()
   .then(() =>
-    logger.info('Sidequest started! Dashboard: http://localhost:8678'),
+    logger.info('Sidequest started! Dashboard: http://localhost:8678')
   )
-  .catch((err) => logger.error(`Failed to start sidequest: ${err}`));
+  .catch(err => logger.error(`Failed to start sidequest: ${err}`));

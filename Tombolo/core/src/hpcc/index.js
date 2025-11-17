@@ -4,7 +4,7 @@
 
 const { getClusters } = require('./getClusters');
 const { getClusterOptions } = require('./getClusterOptions');
-const { isClusterReachable } = require('./isClusterReachable');
+const isClusterReachable = require('./isClusterReachable');
 
 module.exports = {
   getClusters,

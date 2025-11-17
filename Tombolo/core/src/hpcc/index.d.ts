@@ -18,7 +18,7 @@ export interface ClusterOptions {
  * @param clusterId - Optional cluster ID to filter
  * @returns Array of cluster model instances
  */
-export function getClusters(
+export async function getClusters(
   clusterId?: string | null
 ): Promise<ClusterInstance[]>;
 
@@ -46,9 +46,9 @@ type clusterReachableResponse = {
  * @param password
  * @returns Object
  */
-export function isClusterReachable(
+export async function isClusterReachable(
   clusterHost: string,
   port: string | number,
   username: string | null,
   password: string | null
-): clusterReachableResponse;
+): Promise<clusterReachableResponse>;

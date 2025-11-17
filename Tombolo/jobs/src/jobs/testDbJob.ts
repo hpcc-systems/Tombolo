@@ -1,6 +1,6 @@
 import { Job } from 'sidequest';
 import db from '@tombolo/db';
-import logger from '../config/logger';
+import logger from '../config/logger.js';
 const { Application } = db;
 
 export class DbJob extends Job {

@@ -23,4 +23,6 @@ const DB_HOSTNAME = process.env.DB_HOSTNAME || 'localhost';
 const DB_PORT = process.env.DB_PORT || '3306';
 const DB_NAME = process.env.DB_NAME || 'tombolo';
 
-export const DB_URL = `mysql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOSTNAME}:${DB_PORT}/${DB_NAME}`;
+const DB_URL = `mysql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOSTNAME}:${DB_PORT}/${DB_NAME}`;
+
+export { DB_URL };

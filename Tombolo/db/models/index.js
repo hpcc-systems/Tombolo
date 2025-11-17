@@ -122,6 +122,11 @@ const UserApplication = require('./UserApplication')(
 );
 const UserArchive = require('./UserArchive')(sequelize, Sequelize.DataTypes);
 const UserRole = require('./UserRole')(sequelize, Sequelize.DataTypes);
+const WorkUnit = require('./WorkUnit')(sequelize, Sequelize.DataTypes);
+const WorkUnitDetails = require('./WorkUnitDetails')(
+  sequelize,
+  Sequelize.DataTypes
+);
 
 // Build models object using each model's registered name from model.name property
 const models = {};
@@ -162,6 +167,8 @@ const models = {};
   UserApplication,
   UserArchive,
   UserRole,
+  WorkUnit,
+  WorkUnitDetails,
 ].forEach(model => {
   models[model.name] = model;
 });

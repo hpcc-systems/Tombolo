@@ -1,15 +1,14 @@
 import { IOptions, Workunit } from '@hpcc-js/comms';
 import { getClusters, getClusterOptions } from '@tombolo/core';
-import {
-  MonitoringType,
-  MonitoringLog,
-  WorkUnit,
+import db from '@tombolo/db';
+import type {
   MonitoringLogAttributes,
   MonitoringLogInstance,
 } from '@tombolo/db';
+const { MonitoringType, MonitoringLog, WorkUnit } = db;
 import { retryWithBackoff } from '@tombolo/shared';
 import { parseWorkunitTimestamp } from '@tombolo/shared';
-import logger from '../../config/logger';
+import logger from '../../config/logger.js';
 
 // Type for HPCC workunit with _espState access
 interface WorkunitWithState {
@@ -41,9 +40,11 @@ const MONITORING_TYPE_NAME = 'WorkUnit History';
  * Gets the start and end time for fetching workunits
  * Always queries from start of current day (UTC) to now
  * @param {boolean} toIso - Whether to return ISO strings
- * @returns {{startTime: string|Date, endTime: string|Date}}
  */
-function getStartAndEndTime(toIso = false) {
+function getStartAndEndTime(toIso = false): {
+  startTime: string | Date;
+  endTime: string | Date;
+} {
   const now = new Date();
 
   // Always start from beginning of current day in UTC
@@ -434,7 +435,6 @@ async function workunitQuery() {
 export {
   getWorkUnits,
   workunitQuery,
-  parseWorkunitTimestamp,
   transformWorkunitData,
   fetchWorkunitPage,
 };

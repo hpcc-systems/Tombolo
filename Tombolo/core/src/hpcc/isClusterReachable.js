@@ -11,7 +11,7 @@ response.status : 403 -> Cluster reachable but Unauthorized
  * @param {number | string} port
  * @param {string?} username
  * @param {string?} password
- * @returns {object} Returns a customized IOptions
+ * @returns {Promise<object>} Returns a customized IOptions
  */
 const isClusterReachable = async (clusterHost, port, username, password) => {
   let auth = {
@@ -26,7 +26,12 @@ const isClusterReachable = async (clusterHost, port, username, password) => {
     });
 
     if (response.status === 200) {
-      return { reached: true, statusCode: 200, message: 'success', error: null };
+      return {
+        reached: true,
+        statusCode: 200,
+        message: 'success',
+        error: null,
+      };
     }
   } catch (error) {
     let message;

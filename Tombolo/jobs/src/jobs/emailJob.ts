@@ -1,5 +1,5 @@
 import { Job } from 'sidequest';
-import logger from '../config/logger';
+import logger from '../config/logger.js';
 
 export class EmailJob extends Job {
   async run(to: string, subject: string, body: string) {

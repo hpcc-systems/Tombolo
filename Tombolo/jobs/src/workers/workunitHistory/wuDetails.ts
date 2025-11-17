@@ -1,8 +1,9 @@
 import { IOptions, Workunit } from '@hpcc-js/comms';
 import { getClusters, getClusterOptions } from '@tombolo/core';
-import { WorkUnit, WorkUnitDetails } from '@tombolo/db';
+import db from '@tombolo/db';
+const { WorkUnit, WorkUnitDetails } = db;
 import { retryWithBackoff, truncateString } from '@tombolo/shared';
-import logger from '../../config/logger';
+import logger from '../../config/logger.js';
 
 // Type definition for scope objects from HPCC fetchDetails response
 // The Scope class has a private _espState property that contains the raw WSDL response
