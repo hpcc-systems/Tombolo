@@ -27,7 +27,7 @@ const {
 
 // Routes
 router.post(
-  '/:applicationId',
+  '/',
   validate(createOrbitMonitoringPayloadValidations),
   createOrbitProfileMonitoring
 );

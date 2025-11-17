@@ -120,6 +120,9 @@ const updateOrbitProfileMonitoring = async (req, res) => {
     const updateData = req.body;
     const userId = req.user.id;
 
+    // Remove application id from update data to prevent modification
+    delete updateData.applicationId;
+
     const orbitProfileMonitoring = await OrbitProfileMonitoring.findOne({
       where: { id },
     });
@@ -248,15 +251,16 @@ const toggleOrbitProfileMonitoringStatus = async (req, res) => {
 // Approve orbit profile monitoring
 const evaluateOrbitProfileMonitoring = async (req, res) => {
   try {
-    const { approverComment, ids, isActive } = req.body;
+    const { approverComment, ids, isActive, approvalStatus } = req.body;
     const userId = req.user.id;
 
     // Find all for ids and update approverComment, approvalStatus, isActive
     await OrbitProfileMonitoring.update(
       {
         approverComment: approverComment,
-        approvalStatus: APPROVAL_STATUS.APPROVED,
-        isActive,
+        approvalStatus: approvalStatus,
+        isActive:
+          approvalStatus === APPROVAL_STATUS.REJECTED ? false : isActive,
         approvedBy: userId,
         approvedAt: new Date(),
         lastUpdatedBy: userId,
