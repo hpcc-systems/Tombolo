@@ -22,7 +22,7 @@ const Home = React.lazy(() => import('./home'));
 // const AddJobsForm = React.lazy(() => import('./Jobs/AddjobsForm/AddJobsForm'));
 const FileMonitoring = React.lazy(() => import('./fileMonitoring'));
 // const OrbitMonitoring = React.lazy(() => import('./orbitMonitoring/OrbitMonitoring'));
-const OrbitMonitoringNew = React.lazy(() => import('./orbitmonitoring-new/index.jsx'));
+const orbitProfileMonitoring = React.lazy(() => import('./orbitProfileMonitoring/index.jsx'));
 // const Orbit = React.lazy(() => import('./dashboard/Orbit/Orbit'));
 const Notifications = React.lazy(() => import('./dashboard/notifications'));
 // const ClusterUsage = React.lazy(() => import('./dashboard/clusterUsage/'));
@@ -48,7 +48,7 @@ const AppRoutes = ({ application, authenticationReducer }) => {
       <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
       <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
       {/* <PrivateRoute path="/:applicationId/OrbitMonitoring" component={OrbitMonitoring} /> */}
-      <PrivateRoute path="/:applicationId/orbitmonitoring-new" component={OrbitMonitoringNew} />
+      <PrivateRoute path="/:applicationId/orbit-profile-monitoring" component={orbitProfileMonitoring} />
       <PrivateRoute path="/:applicationId/jobMonitoring/timeSeriesAnalysis" component={TimeSeriesAnalysis} />
       <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />
       <PrivateRoute path="/:applicationId/costMonitoring" component={CostMonitoring} />

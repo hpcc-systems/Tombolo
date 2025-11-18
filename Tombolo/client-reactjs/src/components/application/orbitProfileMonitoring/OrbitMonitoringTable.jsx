@@ -75,7 +75,8 @@ function OrbitMonitoringTable({
   // Toggle monitoring status
   const toggleMonitoringStatus = async (record, action) => {
     if (onToggleStatus) {
-      onToggleStatus(record, action);
+      const isActive = action === 'start';
+      await onToggleStatus([record.id], isActive);
     }
   };
 

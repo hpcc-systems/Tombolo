@@ -159,7 +159,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
           clusterDisabled
         ),
         getItem(
-          <Link to={'/' + applicationId + '/orbitmonitoring-new'}>
+          <Link to={'/' + applicationId + '/orbit-profile-monitoring'}>
             <span>
               <CloudServerOutlined /> Orbit Profile
             </span>
