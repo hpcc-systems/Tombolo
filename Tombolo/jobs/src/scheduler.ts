@@ -13,6 +13,8 @@ import logger from './config/logger.js';
 // Import all job classes
 import { EmailJob } from './jobs/emailJob.js';
 import { DbJob } from './jobs/testDbJob.js';
+import { WorkunitQueryJob } from './jobs/workunitQueryJob.js';
+import { WorkunitDetailJob } from './jobs/workunitDetailJob.js';
 
 /**
  * Job schedule configuration
@@ -39,6 +41,16 @@ const scheduledJobs: Record<string, ScheduleConfig> = {
   testDbJob: {
     jobClass: DbJob,
     schedule: jobSchedules.dbJobs.testDbJob,
+  },
+
+  wuQuery: {
+    jobClass: WorkunitQueryJob,
+    schedule: jobSchedules.wuHistory.wuQuery,
+  },
+
+  wuDetails: {
+    jobClass: WorkunitDetailJob,
+    schedule: jobSchedules.wuHistory.wuDetails,
   },
 
   // Example: Clean audit records weekly
@@ -76,7 +88,7 @@ export function registerScheduledJobs(): void {
       builder.schedule(config.schedule, config.args);
 
       logger.info(
-        `Scheduled: ${name} - ${config.description || 'No description'} (${config.schedule})`,
+        `Scheduled: ${name} - ${config.description || 'No description'} (${config.schedule})`
       );
       registeredCount++;
     } catch (error) {
