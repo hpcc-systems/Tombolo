@@ -36,68 +36,53 @@ const approveButtonColor = (approvalStatus) => {
 };
 
 function OrbitMonitoringTable({
-  orbitMonitoring,
-  applicationId,
+  orbitMonitoringData,
+  onEdit,
+  onCopy,
+  onDelete,
+  onToggleStatus,
+  loading,
+  setDisplayViewDetailsModal,
   setSelectedMonitoring,
   isReader,
-  setDisplayViewDetailsModal,
-  setDisplayAddEditModal,
-  setEditingMonitoring,
-  setApproveRejectModal,
   selectedRows,
   setSelectedRows,
-  setDuplicatingData,
-  setOrbitMonitoring,
+  applicationId,
+  setApproveRejectModal
 }) {
   //Actions
   const editOrbitMonitoring = (record) => {
-    setEditingMonitoring(true);
-    setSelectedMonitoring(record);
-    setDisplayAddEditModal(true);
+    if (onEdit) {
+      onEdit(record);
+    }
   };
 
   // Approve or reject monitoring
   const evaluateMonitoring = (record) => {
     setSelectedMonitoring(record);
-    setApproveRejectModal(true);
+    if (setApproveRejectModal) {
+      setApproveRejectModal(true);
+    }
   };
 
   // When the copy/duplicate icon is clicked
   const duplicateOrbitMonitoring = (record) => {
-    setDuplicatingData({ isDuplicating: true, selectedMonitoring: record });
-    setSelectedMonitoring(record);
-    setDisplayAddEditModal(true);
+    if (onCopy) {
+      onCopy(record);
+    }
   };
 
   // Toggle monitoring status
   const toggleMonitoringStatus = async (record, action) => {
-    try {
-      // If approval status is not approved, do not allow to start monitoring
-      if (record.approvalStatus !== APPROVAL_STATUS.APPROVED && action === 'start') {
-        handleError('Monitoring cannot be started as it is not approved.');
-        return;
-      }
-      await orbitProfileMonitoringService.toggleStatus([record.id], action === 'start');
-
-      setOrbitMonitoring((prev) =>
-        prev.map((monitoring) =>
-          monitoring.id === record.id ? { ...monitoring, isActive: !monitoring.isActive } : monitoring
-        )
-      );
-      handleSuccess(`Monitoring ${record.isActive ? 'paused' : 'started'} successfully.`);
-    } catch (error) {
-      handleError('Failed to toggle monitoring status');
+    if (onToggleStatus) {
+      onToggleStatus(record, action);
     }
   };
 
   // Handle delete
   const handleDelete = async (id) => {
-    try {
-      await orbitProfileMonitoringService.delete([id]);
-      setOrbitMonitoring((prev) => prev.filter((monitoring) => monitoring.id !== id));
-      handleSuccess('Monitoring deleted successfully.');
-    } catch (error) {
-      handleError(error);
+    if (onDelete) {
+      onDelete(id);
     }
   };
 
@@ -105,7 +90,7 @@ function OrbitMonitoringTable({
   // When component loads and if there is selected monitoring pass data to form instance
   const viewDetails = (monitoringId) => {
     setDisplayViewDetailsModal(true);
-    const selectedMonitoring = orbitMonitoring.find((monitoring) => monitoring.id === monitoringId);
+    const selectedMonitoring = orbitMonitoringData.find((monitoring) => monitoring.id === monitoringId);
     setSelectedMonitoring(selectedMonitoring);
   };
 
@@ -129,12 +114,30 @@ function OrbitMonitoringTable({
     },
     {
       title: 'Build Name',
-      dataIndex: 'buildName',
-      render: (buildName) => buildName || 'N/A',
+      dataIndex: 'metaData',
+      render: (_, record) => record.metaData?.asrSpecificMetaData?.buildName || 'N/A',
     },
     { title: 'Active', dataIndex: 'isActive', render: (isActive) => (isActive ? 'Yes' : 'No') },
     { title: 'Approval Status', dataIndex: 'approvalStatus', render: (status) => startCase(status) },
-
+    {
+      title: 'Created by',
+       dataIndex: 'creator',
+            key: 'creator',
+            render: (creator) => {
+              const { firstName, lastName, email } = creator;
+              const name = `${firstName} ${lastName}`;
+              return (
+                <Tooltip
+                  title={
+                    <>
+                      <div>E-mail: {email}</div>
+                    </>
+                  }>
+                  <span style={{ color: 'var(--primary)' }}>{name}</span>
+                </Tooltip>
+              );
+            },
+    },
     {
       title: 'Actions',
       dataIndex: 'actions',
@@ -213,9 +216,9 @@ function OrbitMonitoringTable({
                     </div>
                   </div>
                 }>
-                <span style={{ color: 'var(--primary)' }}>
-                  More <DownOutlined style={{ fontSize: '10px' }} />
-                </span>
+                 <span style={{ color: 'var(--secondary)' }}>
+                   More <DownOutlined style={{ fontSize: '10px' }} />
+                 </span>
               </Popover>
             </>
           ) : null}
@@ -228,7 +231,8 @@ function OrbitMonitoringTable({
     <Table
       size="small"
       columns={columns}
-      dataSource={orbitMonitoring}
+      dataSource={orbitMonitoringData}
+      loading={loading}
       className={styles.orbit_monitoring_table}
       rowKey={(record) => record.id}
       rowSelectedBgColor="var(--danger)"

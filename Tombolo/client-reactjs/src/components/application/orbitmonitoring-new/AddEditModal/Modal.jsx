@@ -8,10 +8,13 @@ import NotificationTab from './NotificationTab.jsx';
 const AddEditModal = ({
   displayAddEditModal,
   setDisplayAddEditModal,
-  handleSaveOrbitMonitoring,
-  handleUpdateOrbitMonitoring,
   form,
   clusters,
+  applicationId,
+  domains,
+  productCategories,
+  selectedDomain,
+  setSelectedDomain,
   isEditing,
   isDuplicating,
   erroneousTabs,
@@ -23,6 +26,7 @@ const AddEditModal = ({
   setActiveTab,
   selectedMonitoring,
   savingOrbitMonitoring,
+  saveOrbitMonitoring
 }) => {
   // Keep track of visited tabs
   const [visitedTabs, setVisitedTabs] = useState(['0']);
@@ -69,22 +73,40 @@ const AddEditModal = ({
     try {
       await form.validateFields();
       const values = form.getFieldsValue();
-      
+      const { primaryContacts, secondaryContacts, notifyContacts, domain, productCategory, severity, notificationConditions , buildName } = values;
+      values.applicationId = applicationId;
+
+      // all contacts 
+      const contacts = {primaryContacts, secondaryContacts, notifyContacts};
+      const asrSpecificMetaData = {domain, productCategory, severity, buildName};
+      const monitoringData = {notificationConditions};
+
+      // Metadata
+      const metaData = {}
+      metaData['asrSpecificMetaData'] = asrSpecificMetaData;
+      metaData['monitoringData'] = monitoringData;
+      metaData['contacts'] = contacts;
+
+      // Remove items added in metaData
+      delete values.primaryContacts;
+      delete values.secondaryContacts;
+      delete values.notifyContacts;
+      delete values.domain;
+      delete values.productCategory;
+      delete values.severity;
+      delete values.notificationConditions;
+
+      // Add metaData to values
+      values.metaData = metaData;
+
       if (isEditing) {
-        await handleUpdateOrbitMonitoring(values);
+        await saveOrbitMonitoring(values, true, false);
       } else {
-        await handleSaveOrbitMonitoring(values);
+        await saveOrbitMonitoring(values, false, isDuplicating);
       }
     } catch (error) {
+      // Handle error in form validation with utility function
       console.error('Form validation failed:', error);
-      // Handle form validation errors here if needed
-      const erroneousFields = form
-        .getFieldsError()
-        .filter((f) => f.errors.length > 0)
-        .map((f) => f.name[0]);
-      
-      // You can identify which tabs have errors and mark them
-      // This would need a utility function similar to cluster monitoring
     }
   };
 
@@ -96,10 +118,13 @@ const AddEditModal = ({
         <BasicTab
           form={form}
           clusters={clusters}
+          domains={domains}
+          productCategories={productCategories}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
           selectedCluster={selectedCluster}
           setSelectedCluster={setSelectedCluster}
           isEditing={isEditing}
-          isDuplicating={isDuplicating}
           selectedMonitoring={selectedMonitoring}
         />
       ),
@@ -212,7 +237,7 @@ const AddEditModal = ({
       title={getModalTitle()}
       maskClosable={false}
       footer={renderFooter()}
-      destroyOnClose={true}>
+      destroyOnHidden={true}>
       <Card size="small">
         <Tabs type="card" activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)} items={tabItems} />
       </Card>

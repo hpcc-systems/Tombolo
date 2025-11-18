@@ -1,8 +1,8 @@
 import { apiClient } from '@/services/api';
 
 const orbitProfileMonitoringService = {
-  create: async (data, applicationId) => {
-    const response = await apiClient.post(`/orbitProfileMonitoring/${applicationId}`, data);
+  create: async data => {
+    const response = await apiClient.post(`/orbitProfileMonitoring`, data);
     return response.data;
   },
 

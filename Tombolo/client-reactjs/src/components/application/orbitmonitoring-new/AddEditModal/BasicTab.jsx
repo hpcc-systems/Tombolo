@@ -1,43 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Form, Input, Card, Select, Row, Col } from 'antd';
-import { useSelector } from 'react-redux';
 import { DescriptionFormRules, MonitoringNameFormRules } from '../../../common/FormRules';
 
 const { TextArea } = Input;
 const { Option } = Select;
 
-// Mock data for domains and product categories
-const domains = [
-  { label: 'Insurance', value: 'insurance' },
-  { label: 'Legal', value: 'legal' },
-  { label: 'Risk', value: 'risk' },
-];
-
-const productCategories = [
-  { label: 'Auto Insurance', value: 'auto_insurance' },
-  { label: 'Property Insurance', value: 'property_insurance' },
-  { label: 'Life Insurance', value: 'life_insurance' },
-  { label: 'Legal Research', value: 'legal_research' },
-  { label: 'Risk Assessment', value: 'risk_assessment' },
-];
-
 const severityLevels = [0, 1, 2, 3];
 
 function BasicTab({
   form,
-  clusters,
-  selectedCluster,
-  setSelectedCluster,
+  domains,
+  productCategories,
+  setSelectedDomain,
   isEditing,
-  selectedMonitoring,
 }) {
   //Local State
   const nameRef = useRef(null);
-  const [selectedDomain, setSelectedDomain] = useState(null);
-  const [filteredProductCategories, setFilteredProductCategories] = useState(productCategories);
-
-  //Redux
-  const applicationId = useSelector((state) => state.application.application.applicationId);
 
   // Focus on monitoring name input when adding new
   useEffect(() => {
@@ -50,24 +28,9 @@ function BasicTab({
   const handleDomainChange = (value) => {
     form.setFieldsValue({ productCategory: undefined });
     setSelectedDomain(value);
-    
-    // Filter product categories based on domain (mock logic)
-    if (value === 'insurance') {
-      setFilteredProductCategories(productCategories.filter(cat => cat.value.includes('insurance')));
-    } else if (value === 'legal') {
-      setFilteredProductCategories(productCategories.filter(cat => cat.value.includes('legal')));
-    } else if (value === 'risk') {
-      setFilteredProductCategories(productCategories.filter(cat => cat.value.includes('risk')));
-    } else {
-      setFilteredProductCategories(productCategories);
-    }
   };
 
-  const handleClusterChange = (value) => {
-    const cluster = clusters.find(c => c.id === value);
-    setSelectedCluster(cluster);
-    console.log('Selected cluster:', cluster);
-  };
+
 
   return (
     <Card size="small" style={{ marginBottom: '1rem' }}>
@@ -112,7 +75,7 @@ function BasicTab({
               name="domain"
               rules={[{ required: true, message: 'Please select a domain' }]}>
               <Select onChange={handleDomainChange} placeholder="Select domain">
-                {domains.map((d, i) => (
+                {domains?.map((d, i) => (
                   <Option key={i} value={d.value}>
                     {d.label}
                   </Option>
@@ -126,7 +89,7 @@ function BasicTab({
               name="productCategory"
               rules={[{ required: true, message: 'Please select a product category' }]}>
               <Select placeholder="Select product category">
-                {filteredProductCategories.map((c, i) => (
+                {productCategories?.map((c, i) => (
                   <Option key={i} value={c.value}>
                     {c.label}
                   </Option>
@@ -143,7 +106,7 @@ function BasicTab({
           <Select placeholder="Select a severity level">
             {severityLevels.map((level, i) => (
               <Option key={i} value={level}>
-                Level {level}
+                 {level}
               </Option>
             ))}
           </Select>
