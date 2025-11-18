@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "build:prod": "tsc --sourceMap false",
     "dev": "nodemon",
     "start": "node dist/app.js",
     "clean": "rm -rf dist node_modules .turbo",
