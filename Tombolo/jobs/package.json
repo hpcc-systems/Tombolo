@@ -18,6 +18,7 @@
     "@sidequest/mysql-backend": "^1.12.0",
     "@tombolo/db": "workspace:*",
     "@tombolo/shared": "workspace:*",
+    "@tombolo/core": "workspace:*",
     "dotenv": "catalog:",
     "mysql2": "catalog:",
     "sidequest": "^1.12.0"
@@ -25,7 +26,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "nodemon": "catalog:",
-    "tsx": "^4.19.2",
+    "ts-node": "^10.9.2",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"
   }

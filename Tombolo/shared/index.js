@@ -2,11 +2,9 @@
  * @tombolo/shared
  *
  * Common utilities and functionality shared across Tombolo packages
+ * This is for universal (frontend + backend) utilities only
  */
 
-const { createLogger, logger } = require('./utils/logger.js');
-
-module.exports = {
-  createLogger,
-  logger,
-};
+// Add universal utilities here that work in both browser and Node.js
+// Example: validation helpers, constants, type guards, etc.
+module.exports = require('./src');

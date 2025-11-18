@@ -1,4 +1,8 @@
-const { createLogger, format, transports } = require('winston');
+const {
+  createLogger: winstonCreateLogger,
+  format,
+  transports,
+} = require('winston');
 require('winston-daily-rotate-file');
 const util = require('util');
 const path = require('path');
@@ -165,7 +169,7 @@ function createLoggerInstance(options = {}) {
   });
 
   // Create and configure logger
-  const logger = createLogger({
+  const logger = winstonCreateLogger({
     exitOnError: false,
     format: createLogFormat(false),
     transports: [consoleTransport, combinedFileTransport, errorFileTransport],

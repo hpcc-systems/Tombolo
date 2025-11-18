@@ -1,4 +1,4 @@
-const { createLogger } = require('@tombolo/shared');
+const { createLogger } = require('@tombolo/shared/backend');
 const path = require('path');
 
 // Create logger instance for database operations
