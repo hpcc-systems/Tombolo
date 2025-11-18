@@ -1,28 +1,9 @@
-import { IOptions, Workunit } from '@hpcc-js/comms';
+import { IOptions, Scope, Workunit } from '@hpcc-js/comms';
 import { getClusters, getClusterOptions } from '@tombolo/core';
 import db from '@tombolo/db';
 const { WorkUnit, WorkUnitDetails } = db;
 import { retryWithBackoff, truncateString } from '@tombolo/shared';
 import logger from '../../config/logger.js';
-
-// Type definition for scope objects from HPCC fetchDetails response
-// The Scope class has a private _espState property that contains the raw WSDL response
-interface ScopeWithState {
-  scopeType?: string;
-  _espState: {
-    Id: string;
-    ScopeName: string;
-    ScopeType: string;
-    Properties: {
-      Property: Array<{
-        Name: string;
-        RawValue: string;
-        Formatted?: string;
-        Measure?: string;
-      }>;
-    };
-  };
-}
 
 // Type for database row objects (what processScopeToRow returns)
 type WorkUnitDetailRow = {
@@ -535,14 +516,14 @@ const UNIT_LOOKUP: Record<
   NodeMaxFirstRow: 'int',
 };
 
-const activityIgnoreMetrics = ['FirstRow', 'NodeMin', 'NodeMax'];
+// const activityIgnoreMetrics = ['FirstRow', 'NodeMin', 'NodeMax'];
 
-const relevantActivityMetrics = relevantMetrics.filter(
-  metric =>
-    !activityIgnoreMetrics.some(ignoreSubstring =>
-      metric.includes(ignoreSubstring)
-    )
-);
+const relevantActivityMetrics = relevantMetrics; // .filter(
+//   metric =>
+//     !activityIgnoreMetrics.some(ignoreSubstring =>
+//       metric.includes(ignoreSubstring)
+//     )
+// );
 
 // Create Sets for O(1) lookup instead of O(n) array.includes()
 const relevantMetricsSet = new Set(relevantMetrics);
@@ -555,15 +536,15 @@ const relevantActivityMetricsSet = new Set(relevantActivityMetrics);
  * @param {string} wuId - The workunit ID for error tracking
  */
 function extractPerformanceMetrics(
-  scope: ScopeWithState,
+  scope: Scope,
   clusterId: string,
   wuId: string
 ) {
   const metrics = {};
 
-  if (!scope._espState?.Properties?.Property) return metrics;
+  if (!scope?.Properties?.Property) return metrics;
 
-  const st = scope.scopeType || scope._espState?.ScopeType;
+  const st = scope.ScopeType;
   const currentRelevantMetrics =
     st === 'activity' ? relevantActivityMetricsSet : relevantMetricsSet;
 
@@ -648,7 +629,7 @@ function extractPerformanceMetrics(
   };
 
   // Extract properties into clean + converted metrics object
-  scope._espState.Properties.Property.forEach(prop => {
+  scope.Properties.Property.forEach(prop => {
     if (currentRelevantMetrics.has(prop.Name as MetricName)) {
       const value =
         prop.RawValue !== undefined ? prop.RawValue : prop.Formatted;
@@ -666,14 +647,18 @@ function extractPerformanceMetrics(
  * Processes a single scope and converts it to a DB row
  * Returns null if scope should be filtered out
  */
-function processScopeToRow(
-  scope: ScopeWithState,
-  clusterId: string,
-  wuId: string
-) {
-  const relevantScopeTypes = ['activity', 'subgraph', 'graph', 'operation'];
-  const scopeType = scope._espState?.ScopeType;
-  const scopeName = scope._espState?.ScopeName;
+function processScopeToRow(scope: Scope, clusterId: string, wuId: string) {
+  // The empty string is intentional
+  const relevantScopeTypes = [
+    'activity',
+    'subgraph',
+    'graph',
+    'operation',
+    'workflow',
+    '',
+  ];
+  const scopeType = scope?.ScopeType;
+  const scopeName = scope?.ScopeName;
 
   // Filter out irrelevant scopes early
   if (!relevantScopeTypes.includes(scopeType)) return null;
@@ -686,7 +671,7 @@ function processScopeToRow(
   let kind = null;
   let label = null;
   let filename = null;
-  const props = scope._espState?.Properties?.Property;
+  const props = scope?.Properties?.Property;
 
   if (props && Array.isArray(props)) {
     const kindProp = props.find(p => p.Name === 'Kind');
@@ -704,7 +689,7 @@ function processScopeToRow(
   return {
     clusterId,
     wuId,
-    scopeId: scope._espState?.Id,
+    scopeId: scope?.Id,
     scopeName: scopeName,
     scopeType: scopeType,
     label: label ? truncateString(label, 250) : null,
@@ -894,11 +879,7 @@ async function getWorkunitDetails() {
               const scope = detailedInfo[i];
 
               // Convert scope to row (cast to access internal _espState)
-              const row = processScopeToRow(
-                scope as unknown as ScopeWithState,
-                clusterId,
-                workunit.wuId
-              );
+              const row = processScopeToRow(scope, clusterId, workunit.wuId);
 
               if (row) {
                 rows.push(row);
@@ -952,7 +933,7 @@ async function getWorkunitDetails() {
             processedCount++;
 
             // Add a small delay between requests to be gentle on the HPCC system
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 4000));
 
             // Force garbage collection every 3 workunits to manage memory
             if (processedCount % 3 === 0) {
