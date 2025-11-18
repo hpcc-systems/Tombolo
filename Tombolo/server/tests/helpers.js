@@ -293,6 +293,43 @@ function getCostMonitoring(overrides = {}, dateStrings = false) {
   };
 }
 
+function getOrbitProfileMonitoring(overrides = {}, dateStrings = false) {
+  let newDate = new Date();
+  if (dateStrings) {
+    newDate = newDate.toISOString();
+  }
+  return {
+    id: uuidv4(),
+    applicationId: uuidv4(),
+    name: 'Test Orbit Profile Monitor',
+    description: 'This is a test description for orbit monitoring',
+    clusterId: uuidv4(),
+    isActive: false,
+    approvalStatus: APPROVAL_STATUS.PENDING,
+    approvedBy: null,
+    approvedAt: null,
+    approverComment: null,
+    lastRunDetails: null,
+    metaData: {
+      domain: 'lexisnexis.com',
+      productCategory: 'Legal Research',
+      severity: 'High',
+      conditions: {
+        buildThreshold: 90,
+        monitoringFrequency: 'daily',
+        alertOnFailure: true,
+      },
+      notifyContactEmails: ['admin@lexisnexis.com', 'devops@lexisnexis.com'],
+    },
+    createdBy: uuidv4(),
+    lastUpdatedBy: uuidv4(),
+    createdAt: newDate,
+    updatedAt: newDate,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
 function getClusterMonitoring(overrides = {}) {
   let newDate = new Date();
   newDate = newDate.toISOString();
@@ -339,6 +376,7 @@ module.exports = {
   fakeValidateTokenMiddleware,
   getUuids,
   getCostMonitoring,
+  getOrbitProfileMonitoring,
   UUID_REGEX,
   nonExistentID,
   ISO_DATE_REGEX,
