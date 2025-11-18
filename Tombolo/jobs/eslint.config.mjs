@@ -1,40 +1,32 @@
-import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import rootConfig from '../../eslint.config.mjs';
+import { defineConfig } from 'eslint/config';
+import globals from 'globals';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-export default [
-  // TypeScript recommended first
-  ...tseslint.configs.recommended,
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-  // Then inherit root config (this will override TS defaults)
-  ...rootConfig,
-
-  // TypeScript-specific overrides
+export default defineConfig(
   {
-    files: ['**/*.{ts,tsx}'],
     languageOptions: {
-      globals: globals.node,
-      parser: tseslint.parser,
       parserOptions: {
-        project: './tsconfig.json',
+        tsconfigRootDir: __dirname,
       },
+      globals: globals.node,
     },
   },
-
-  // Package-specific rules (last, highest priority)
+  ...tseslint.configs.recommended,
+  ...rootConfig,
   {
     files: ['**/*.{js,mjs,cjs,ts,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-        },
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
-      // Override root's no-console for this package (we want console logs in workers)
       'no-console': 'off',
     },
   },
-];
+);

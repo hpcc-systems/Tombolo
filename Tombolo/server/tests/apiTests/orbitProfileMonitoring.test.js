@@ -29,7 +29,7 @@ describe('orbitProfileMonitoring Routes', () => {
     OrbitProfileMonitoring.findByPk.mockResolvedValue(orbitProfileMonitoring);
 
     const res = await request(app)
-      .post(`/api/orbitProfileMonitoring/${applicationId}`)
+      .post(`/api/orbitProfileMonitoring`)
       .send(orbitProfileMonitoring);
 
     expect(res.status).toBe(201);
@@ -148,8 +148,10 @@ describe('orbitProfileMonitoring Routes', () => {
     expect(OrbitProfileMonitoring.findOne).toHaveBeenCalledWith({
       where: { id: orbitProfileMonitoring.id },
     });
+    const expectedUpdateData = { ...updateData };
+    delete expectedUpdateData.applicationId; // Controller removes applicationId
     expect(orbitProfileMonitoring.update).toHaveBeenCalledWith({
-      ...updateData,
+      ...expectedUpdateData,
       lastUpdatedBy: AUTHED_USER_ID,
       approvalStatus: 'pending',
     });

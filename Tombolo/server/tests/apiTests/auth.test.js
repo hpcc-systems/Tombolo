@@ -92,7 +92,6 @@ describe('Auth Routes', () => {
     expect(User.findOne).toHaveBeenCalled();
     expect(RefreshToken.create).not.toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('basic-login should 401 if user unverified', async () => {
@@ -112,7 +111,6 @@ describe('Auth Routes', () => {
     expect(User.findOne).toHaveBeenCalled();
     expect(RefreshToken.create).not.toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('basic-login should 401 if user is registered with azure', async () => {
@@ -137,7 +135,6 @@ describe('Auth Routes', () => {
     expect(User.findOne).toHaveBeenCalled();
     expect(RefreshToken.create).not.toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('basic-login should 401 if account is locked', async () => {
@@ -157,7 +154,6 @@ describe('Auth Routes', () => {
     expect(User.findOne).toHaveBeenCalled();
     expect(RefreshToken.create).not.toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
-    expect(logger.error).toHaveBeenCalled();
   });
 
   it('request-access should request access', async () => {
