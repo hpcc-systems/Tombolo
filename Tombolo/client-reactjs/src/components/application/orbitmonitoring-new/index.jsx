@@ -135,9 +135,9 @@ const OrbitMonitoring = () => {
     setDisplayAddEditModal(true);
   };
 
-  const handleDeleteMonitoring = async (ids) => {
+  const handleDeleteMonitoring = async (id) => {
     try {
-      await orbitProfileMonitoringService.delete(ids);
+      await orbitProfileMonitoringService.delete([id]);
       message.success('Monitoring deleted successfully');
       await fetchOrbitMonitoring();
     } catch (err) {
@@ -157,6 +157,32 @@ const OrbitMonitoring = () => {
     }
   };
 
+  const handleBulkStartPauseOrbitMonitorings = async ({ ids, action }) => {
+    try {
+      const isActive = action === 'start';
+      await orbitProfileMonitoringService.toggleStatus(ids, isActive);
+      setOrbitMonitoringData((prev) => 
+        prev.map((m) => ids.includes(m.id) ? { ...m, isActive } : m)
+      );
+      setSelectedRows([]);
+    } catch (err) {
+      message.error('Unable to start/pause selected orbit monitorings');
+      console.error('Bulk start/pause error:', err);
+    }
+  };
+
+  const handleBulkDeleteSelectedOrbitMonitorings = async (ids) => {
+    try {
+      await orbitProfileMonitoringService.delete(ids);
+      setOrbitMonitoringData((prev) => prev.filter((om) => !ids.includes(om.id)));
+      setSelectedRows([]);
+      message.success('Selected orbit monitorings deleted successfully');
+    } catch (err) {
+      message.error('Unable to delete selected orbit monitorings');
+      console.error('Bulk delete error:', err);
+    }
+  };
+
 
   return (
     <div className={styles.container}>
@@ -167,6 +193,8 @@ const OrbitMonitoring = () => {
             isReader={isReader}
             selectedRows={selectedRows}
             onAdd={handleAddMonitoring}
+            onBulkStartPause={handleBulkStartPauseOrbitMonitorings}
+            onBulkDelete={handleBulkDeleteSelectedOrbitMonitorings}
             showBulkApproveReject={false}
             showFiltersToggle={false}
           />
