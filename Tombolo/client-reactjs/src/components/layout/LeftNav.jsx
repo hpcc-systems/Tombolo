@@ -40,13 +40,13 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
   const history = useHistory();
 
   //get states from redux
-  const application = useSelector((state) => state.application.application);
+  const application = useSelector(state => state.application.application);
   // const integrations = useSelector((state) => state.application.integrations);
-  const clusters = useSelector((state) => state.application.clusters);
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const clusters = useSelector(state => state.application.clusters);
+  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
 
   const applicationId = application?.applicationId;
-  const clusterConnectionIssue = clusters?.some((c) => c.reachabilityInfo?.reachable === false);
+  const clusterConnectionIssue = clusters?.some(c => c.reachabilityInfo?.reachable === false);
 
   const roleArray = getRoleNameArray();
 
@@ -223,7 +223,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
             <Tooltip
               placement="right"
               arrow={false}
-              styles={{ root: { left: 35 } }}
+              styles={{ body: { left: 35 } }}
               open={collapsed && clusterConnectionIssue ? true : false}
               title={<WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}>
               <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
@@ -297,11 +297,11 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
     ),
   ];
 
-  const onClick = (e) => {
+  const onClick = e => {
     setCurrent(e.key);
   };
 
-  const title = (title) => {
+  const title = title => {
     return (
       <Typography.Title ellipsis={true} className="left-nav-title">
         {title}
@@ -309,7 +309,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
     );
   };
 
-  const menu = (items) => {
+  const menu = items => {
     return (
       <Menu
         theme="dark"
