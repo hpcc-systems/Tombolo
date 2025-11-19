@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { message, Form, Descriptions, Tag } from 'antd';
+import { Form, Descriptions, Tag } from 'antd';
 import { useSelector } from 'react-redux';
+import { handleError, handleSuccess } from '../../common/handleResponse.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs.jsx';
 import OrbitMonitoringTable from './OrbitMonitoringTable.jsx';
 import AddEditModal from './AddEditModal/Modal.jsx';
@@ -10,9 +11,8 @@ import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';
-import orbitProfileMonitoringService  from '../../../services/orbitProfileMonitoring.service.js';
+import orbitProfileMonitoringService from '../../../services/orbitProfileMonitoring.service.js';
 import styles from './orbitMonitoring.module.css';
-
 
 // Constants
 const monitoringTypeName = 'Orbit Profile Monitoring';
@@ -31,23 +31,17 @@ const OrbitMonitoring = () => {
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
   const [displayApproveRejectModal, setDisplayApproveRejectModal] = useState(false);
-  
+
   const [form] = Form.useForm();
-  const applicationId = useSelector((state) => state.application.application.applicationId);
-  const clusters = useSelector((state) => state.application.clusters);
-  
+  const applicationId = useSelector(state => state.application.application.applicationId);
+  const clusters = useSelector(state => state.application.clusters);
+
   // User permissions
   const roleArray = getRoleNameArray();
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
-
   const { monitoringTypeId } = useMonitorType(monitoringTypeName);
-  const {
-    domains,
-    selectedDomain,
-    setSelectedDomain,
-    productCategories,
-  } = useDomainAndCategories(monitoringTypeId);
+  const { domains, selectedDomain, setSelectedDomain, productCategories } = useDomainAndCategories(monitoringTypeId);
 
   useEffect(() => {
     if (applicationId) {
@@ -62,7 +56,7 @@ const OrbitMonitoring = () => {
       const response = await orbitProfileMonitoringService.getAll(applicationId);
       setOrbitMonitoringData(response || []);
     } catch (err) {
-      message.error('Failed to fetch orbit monitoring data');
+      handleError('Failed to fetch orbit monitoring data');
       console.error('Fetch error:', err);
     } finally {
       setIsLoading(false);
@@ -84,28 +78,28 @@ const OrbitMonitoring = () => {
     try {
       setSavingOrbitMonitoring(true);
       let response;
-      
+
       if (isUpdate && selectedMonitoring?.id) {
         response = await orbitProfileMonitoringService.updateOne(selectedMonitoring.id, formData);
-        message.success('Monitoring updated successfully');
+        handleSuccess('Monitoring updated successfully');
       } else {
         response = await orbitProfileMonitoringService.create(formData, applicationId);
         if (isDuplicate) {
-          message.success('Monitoring duplicated successfully');
+          handleSuccess('Monitoring duplicated successfully');
         } else {
-          message.success('Monitoring created successfully');
+          handleSuccess('Monitoring created successfully');
         }
       }
-      
+
       // Refresh data and close modal
       await fetchOrbitMonitoring();
       setDisplayAddEditModal(false);
       resetStates();
-      
+
       return response;
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'An error occurred while saving';
-      message.error(errorMessage);
+      handleError(errorMessage);
       throw error;
     } finally {
       setSavingOrbitMonitoring(false);
@@ -117,31 +111,31 @@ const OrbitMonitoring = () => {
     setDisplayAddEditModal(true);
   };
 
-  const handleEditMonitoring = (monitoring) => {
+  const handleEditMonitoring = monitoring => {
     setSelectedMonitoring(monitoring);
     setIsEditing(true);
     setDisplayAddEditModal(true);
   };
 
-  const handleCopyMonitoring = (monitoring) => {
+  const handleCopyMonitoring = monitoring => {
     // Create a copy with modified name
     const copiedMonitoring = {
       ...monitoring,
       name: `${monitoring.name} (Copy)`,
-      id: null // Remove ID so it creates a new record
+      id: null, // Remove ID so it creates a new record
     };
     setSelectedMonitoring(copiedMonitoring);
     // setIsDuplicating(true);
     setDisplayAddEditModal(true);
   };
 
-  const handleDeleteMonitoring = async (id) => {
+  const handleDeleteMonitoring = async id => {
     try {
       await orbitProfileMonitoringService.delete([id]);
-      message.success('Monitoring deleted successfully');
+      handleSuccess('Monitoring deleted successfully');
       await fetchOrbitMonitoring();
     } catch (err) {
-      message.error('Failed to delete monitoring');
+      handleError('Failed to delete monitoring');
       console.error('Delete error:', err);
     }
   };
@@ -149,10 +143,10 @@ const OrbitMonitoring = () => {
   const handleToggleStatus = async (ids, isActive) => {
     try {
       await orbitProfileMonitoringService.toggleStatus(ids, isActive);
-      message.success(`Monitoring ${isActive ? 'started' : 'paused'} successfully`);
+      handleSuccess(`Monitoring ${isActive ? 'started' : 'paused'} successfully`);
       await fetchOrbitMonitoring();
     } catch (err) {
-      message.error('Failed to toggle monitoring status');
+      handleError('Failed to toggle monitoring status');
       console.error('Toggle error:', err);
     }
   };
@@ -161,32 +155,29 @@ const OrbitMonitoring = () => {
     try {
       const isActive = action === 'start';
       await orbitProfileMonitoringService.toggleStatus(ids, isActive);
-      setOrbitMonitoringData((prev) => 
-        prev.map((m) => ids.includes(m.id) ? { ...m, isActive } : m)
-      );
+      setOrbitMonitoringData(prev => prev.map(m => (ids.includes(m.id) ? { ...m, isActive } : m)));
       setSelectedRows([]);
     } catch (err) {
-      message.error('Unable to start/pause selected orbit monitorings');
+      handleError('Unable to start/pause selected orbit monitorings');
       console.error('Bulk start/pause error:', err);
     }
   };
 
-  const handleBulkDeleteSelectedOrbitMonitorings = async (ids) => {
+  const handleBulkDeleteSelectedOrbitMonitorings = async ids => {
     try {
       await orbitProfileMonitoringService.delete(ids);
-      setOrbitMonitoringData((prev) => prev.filter((om) => !ids.includes(om.id)));
+      setOrbitMonitoringData(prev => prev.filter(om => !ids.includes(om.id)));
       setSelectedRows([]);
-      message.success('Selected orbit monitorings deleted successfully');
+      handleSuccess('Selected orbit monitorings deleted successfully');
     } catch (err) {
-      message.error('Unable to delete selected orbit monitorings');
+      handleError('Unable to delete selected orbit monitorings');
       console.error('Bulk delete error:', err);
     }
   };
 
-
   return (
     <div className={styles.container}>
-      <BreadCrumbs 
+      <BreadCrumbs
         extraContent={
           <MonitoringActionButton
             label="Orbit Monitoring Actions"
@@ -200,9 +191,8 @@ const OrbitMonitoring = () => {
           />
         }
       />
-      
+
       <div className={styles.content}>
-        
         <OrbitMonitoringTable
           orbitMonitoringData={orbitMonitoringData}
           searchTerm={searchTerm}
@@ -262,18 +252,19 @@ const OrbitMonitoring = () => {
           productCategories={productCategories}>
           {selectedMonitoring?.metaData?.asrSpecificMetaData?.buildName && (
             <Descriptions.Item label="Build Name">
-                {selectedMonitoring.metaData.asrSpecificMetaData.buildName}
+              {selectedMonitoring.metaData.asrSpecificMetaData.buildName}
             </Descriptions.Item>
           )}
-          {selectedMonitoring?.metaData?.notificationConditions && selectedMonitoring.metaData.notificationConditions.length > 0 && (
-            <Descriptions.Item label="Notification Conditions">
-              {selectedMonitoring.metaData.notificationConditions.map((condition, index) => (
-                <Tag key={`oc-${index}`} style={{ marginBottom: '4px' }}>
-                  {condition}
-                </Tag>
-              ))}
-            </Descriptions.Item>
-          )}
+          {selectedMonitoring?.metaData?.notificationConditions &&
+            selectedMonitoring.metaData.notificationConditions.length > 0 && (
+              <Descriptions.Item label="Notification Conditions">
+                {selectedMonitoring.metaData.notificationConditions.map((condition, index) => (
+                  <Tag key={`oc-${index}`} style={{ marginBottom: '4px' }}>
+                    {condition}
+                  </Tag>
+                ))}
+              </Descriptions.Item>
+            )}
         </MonitoringDetailsModal>
       )}
 
