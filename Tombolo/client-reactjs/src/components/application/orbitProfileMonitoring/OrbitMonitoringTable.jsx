@@ -99,8 +99,8 @@ function OrbitMonitoringTable({
   const columns = [
     { 
       title: 'Name', 
-      dataIndex: 'name',
-      render: (name) => name || 'N/A'
+      dataIndex: 'monitoringName',
+      render: (monitoringName) => monitoringName || 'N/A'
     },
     {
       title: 'Cluster',
