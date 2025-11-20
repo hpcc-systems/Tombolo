@@ -12,7 +12,6 @@
         margin: 10px;
         padding: 20px;
       }
-
       .section {
         margin-top: 15px;
       }
@@ -27,59 +26,88 @@
         font-size: 12px;
         color: #999;
       }
+      .alert-header {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        margin-bottom: 15px;
+      }
+      .build-info {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+      }
     </style>
   </head>
   <body>
     <div class="container">
+      <div class="alert-header">
+        <strong>🚨 Orbit Build Monitoring Alert</strong>
+      </div>
+
       <div class="section">
         <div class="greeting">Hello,</div>
-        <%= typeof jobName !== 'undefined' ? jobName :"____" %> is in <%= typeof
-        state !== 'undefined' ? state : "____" %> state on <%= typeof
-        clusterName !== 'undefined' ? clusterName: "____" %>. Please take below
-        actions
+        <p>An Orbit build monitoring alert has been triggered for <strong><%= typeof buildName !== 'undefined' ? buildName : "Unknown Build" %></strong>.</p>
+        
+        <% if (typeof issue !== 'undefined' && issue) { %>
+          <p><strong>Issue:</strong> Analysis detected a monitored build returning non-successful status</p>
+        <% } %>
       </div>
 
-      <!-- HTML Table -->
       <div class="section">
-        <table
-          style="
-            border: 1px solid black;
-            border-collapse: collapse;
-            padding: 5px;
-          "
-        >
-          <tbody>
+        <div class="build-info">
+          <h3>Build Details:</h3>
+          <table style="width: 100%; border-collapse: collapse;">
             <tr>
-              <td style="border: 1px solid black">Row 1, Column 1</td>
-              <td style="border: 1px solid black">Row 1, Column 2</td>
-              <td style="border: 1px solid black">Row 1, Column 3</td>
-              <td style="border: 1px solid black">Row 1, Column 4</td>
-              <td style="border: 1px solid black">Row 1, Column 5</td>
+              <td style="padding: 5px; font-weight: bold; width: 30%;">Build Name:</td>
+              <td style="padding: 5px;"><%= typeof buildName !== 'undefined' ? buildName : "N/A" %></td>
             </tr>
             <tr>
-              <td style="border: 1px solid black">Row 2, Column 1</td>
-              <td style="border: 1px solid black">Row 2, Column 2</td>
-              <td style="border: 1px solid black">Row 2, Column 3</td>
-              <td style="border: 1px solid black">Row 2, Column 4</td>
-              <td style="border: 1px solid black">Row 2, Column 5</td>
+              <td style="padding: 5px; font-weight: bold;">Status:</td>
+              <td style="padding: 5px;"><%= typeof status !== 'undefined' ? status : "N/A" %></td>
             </tr>
-          </tbody>
-        </table>
+            <tr>
+              <td style="padding: 5px; font-weight: bold;">Host:</td>
+              <td style="padding: 5px;"><%= typeof host !== 'undefined' ? host : "N/A" %></td>
+            </tr>
+            <tr>
+              <td style="padding: 5px; font-weight: bold;">Product:</td>
+              <td style="padding: 5px;"><%= typeof product !== 'undefined' ? product : "N/A" %></td>
+            </tr>
+            <tr>
+              <td style="padding: 5px; font-weight: bold;">Business Unit:</td>
+              <td style="padding: 5px;"><%= typeof businessUnit !== 'undefined' ? businessUnit : "N/A" %></td>
+            </tr>
+            <tr>
+              <td style="padding: 5px; font-weight: bold;">Severity:</td>
+              <td style="padding: 5px;"><%= typeof severityCode !== 'undefined' ? severityCode : "N/A" %></td>
+            </tr>
+            <tr>
+              <td style="padding: 5px; font-weight: bold;">Work Unit:</td>
+              <td style="padding: 5px;"><%= typeof workUnit !== 'undefined' ? workUnit : "N/A" %></td>
+            </tr>
+          </table>
+        </div>
       </div>
 
-      <!-- Mentions -->
-      <div class="section">
-        [MENTIONS]
-        <at>email1@example.com</at>
-        <at>email2@example.com</at>
-        <at>email3@example.com</at>
-      </div>
+      <% if (typeof remedy !== 'undefined' && remedy) { %>
+        <div class="section">
+          <h3>Action Required:</h3>
+          <p><%- remedy %></p>
+        </div>
+      <% } %>
 
-      <div class="signature">Tombolo</div>
+      <div class="signature">
+        Best regards,<br>
+        Tombolo Monitoring System
+      </div>
+      
       <div class="footer">
-        You are receiving this message because you are part of the job
-        monitoring notification list. To stop getting these alerts please
-        contact the administrator.
+        You are receiving this message because you are part of the Orbit build monitoring notification list. 
+        To stop getting these alerts please contact the administrator.
       </div>
     </div>
   </body>

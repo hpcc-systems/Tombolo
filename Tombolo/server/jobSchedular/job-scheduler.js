@@ -57,6 +57,10 @@ const {
   startLzSpaceUsageMonitoring,
 } = require('../jobSchedularMethods/lzMonitoring.js');
 
+const {
+  createMonitorOrbitServerJob,
+} = require('../jobSchedularMethods/orbitMonitoring.js');
+
 class JobScheduler {
   constructor() {
     this.bree = new Bree({
@@ -142,6 +146,7 @@ class JobScheduler {
       await startLzFileCountMonitoring.call(this);
       await startLzSpaceUsageMonitoring.call(this);
       await startClusterMonitoring.call(this);
+      await this.createMonitorOrbitServerJob();
       logger.info('-----------------------------');
       logger.info('Server is finished intializing, and is now running');
       logger.info('-----------------------------');
@@ -310,9 +315,9 @@ class JobScheduler {
     return scheduleEmailNotificationProcessing.call(this);
   }
 
-  createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
-    return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
-  }
+  // createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
+  //   return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
+  // }
 
   checkClusterReachability() {
     return checkClusterReachability.call(this);
@@ -343,6 +348,10 @@ class JobScheduler {
   // Cluster Status Monitoring
   startClusterMonitoring() {
     return startClusterMonitoring.call(this);
+  }
+
+  createMonitorOrbitServerJob() {
+    return createMonitorOrbitServerJob.call(this);
   }
 }
 

@@ -31,6 +31,11 @@ const userAccountMonitoring = {
   accountDeleteAlertDaysForUser: [10, 3, 1],
 };
 
+// Orbit server monitoring
+const orbitServerMonitoring = {
+  orbitServerMonitoringInterval: '30m', // in minutes
+};
+
 // Export
 module.exports = {
   ...jobMonitoringConfig,
@@ -38,4 +43,5 @@ module.exports = {
   ...lz_monitoring_intervals,
   ...userAccountMonitoring,
   ...cost_monitoring_intervals,
+  ...orbitServerMonitoring,
 };
