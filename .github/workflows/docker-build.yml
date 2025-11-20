@@ -52,7 +52,7 @@ jobs:
           sed -i 's/JWT_SECRET=/JWT_SECRET=ci_jwt_secret_dummy_value_for_build/' .env
           sed -i 's/JWT_REFRESH_SECRET=/JWT_REFRESH_SECRET=ci_jwt_refresh_secret_dummy/' .env
           sed -i 's/CSRF_SECRET=/CSRF_SECRET=ci_csrf_secret_dummy_value/' .env
-          sed -i 's/ENCRYPTION_KEY=/ENCRYPTION_KEY=ci_encryption_key_dummy_32chars/' .env
+          sed -i 's/ENCRYPTION_KEY=/ENCRYPTION_KEY=ci_encryption_key_dummy_32charsXX/' .env
           # Setup nginx config from no-ssl template
           cp client-reactjs/nginx/conf.d/nginx.conf.template-no-ssl client-reactjs/nginx/conf.d/nginx.conf.template
 
