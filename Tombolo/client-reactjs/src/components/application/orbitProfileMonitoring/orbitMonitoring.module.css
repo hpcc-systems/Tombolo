@@ -1,0 +1,19 @@
+.orbitMonitoringTable__inactive-monitoring {
+  background-color: var(--paused);
+}
+
+.orbitMonitoringTable__active-monitoring {
+  background-color: var(--active);
+}
+
+.orbitMonitoringTable__hidden_actions > * {
+  padding: 5px;
+}
+
+.orbitMonitoringTable__hidden_actions > *:hover {
+  background-color: var(--secondary-light);
+}
+
+.orbitMonitoringTable__selected_row > .ant-table-cell {
+  background-color: rgba(255, 255, 0, 0.1) !important;
+}

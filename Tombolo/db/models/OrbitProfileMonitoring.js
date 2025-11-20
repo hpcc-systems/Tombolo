@@ -67,7 +67,7 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      name: {
+      monitoringName: {
         allowNull: false,
         type: DataTypes.STRING,
       },
@@ -172,7 +172,7 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [
         {
           unique: true,
-          fields: ['name', 'applicationId', 'deletedAt'],
+          fields: ['monitoringName', 'applicationId', 'deletedAt'],
         },
       ],
     }

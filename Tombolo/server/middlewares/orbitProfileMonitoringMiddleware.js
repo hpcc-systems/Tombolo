@@ -14,7 +14,7 @@ const {
 
 const createOrbitMonitoringPayloadValidations = [
   uuidBody('applicationId', false),
-  stringBody('name', false, {
+  stringBody('monitoringName', false, {
     length: { ...MONITORING_NAME_LENGTH },
   }),
   stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),

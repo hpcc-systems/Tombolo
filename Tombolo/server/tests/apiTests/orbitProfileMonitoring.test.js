@@ -22,7 +22,7 @@ describe('orbitProfileMonitoring Routes', () => {
     jest.clearAllMocks();
   });
 
-  it('POST /:applicationId should create a new orbit profile monitoring', async () => {
+  it('POST / should create a new orbit profile monitoring', async () => {
     const applicationId = uuidv4();
     const orbitProfileMonitoring = getOrbitProfileMonitoring({}, true);
     OrbitProfileMonitoring.create.mockResolvedValue(orbitProfileMonitoring);
@@ -38,7 +38,7 @@ describe('orbitProfileMonitoring Routes', () => {
     expect(OrbitProfileMonitoring.create).toHaveBeenCalledTimes(1);
     expect(OrbitProfileMonitoring.create).toHaveBeenCalledWith({
       applicationId: orbitProfileMonitoring.applicationId,
-      name: orbitProfileMonitoring.name,
+      monitoringName: orbitProfileMonitoring.monitoringName,
       description: orbitProfileMonitoring.description,
       clusterId: orbitProfileMonitoring.clusterId,
       metaData: orbitProfileMonitoring.metaData,
@@ -98,7 +98,7 @@ describe('orbitProfileMonitoring Routes', () => {
     const orbitProfileMonitoring = getOrbitProfileMonitoring({}, true);
     const updateData = {
       applicationId: orbitProfileMonitoring.applicationId,
-      name: 'Updated Monitoring Name',
+      monitoringName: 'Updated Monitoring Name',
       description: 'Updated description',
       clusterId: uuidv4(),
       metaData: {
@@ -161,7 +161,7 @@ describe('orbitProfileMonitoring Routes', () => {
     const nonExistentId = uuidv4();
     const updateData = {
       applicationId: uuidv4(),
-      name: 'Updated Name',
+      monitoringName: 'Updated Name',
       description: 'Updated description',
       clusterId: uuidv4(),
       metaData: {
@@ -392,7 +392,7 @@ describe('orbitProfileMonitoring Routes', () => {
     expect(res.body.data[0]).toMatchObject({
       id: orbitMonitoringOne.id,
       applicationId: orbitMonitoringOne.applicationId,
-      name: orbitMonitoringOne.name,
+      monitoringName: orbitMonitoringOne.monitoringName,
       description: orbitMonitoringOne.description,
       clusterId: orbitMonitoringOne.clusterId,
       approvalStatus: APPROVAL_STATUS.APPROVED,
@@ -405,7 +405,7 @@ describe('orbitProfileMonitoring Routes', () => {
     expect(res.body.data[1]).toMatchObject({
       id: orbitMonitoringTwo.id,
       applicationId: orbitMonitoringTwo.applicationId,
-      name: orbitMonitoringTwo.name,
+      monitoringName: orbitMonitoringTwo.monitoringName,
       description: orbitMonitoringTwo.description,
       clusterId: orbitMonitoringTwo.clusterId,
       approvalStatus: APPROVAL_STATUS.APPROVED,

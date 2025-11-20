@@ -6,11 +6,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('antd', async (importOriginal) => {
   const antd = await importOriginal();
 
-  const MockDropdown = ({ children, dropdownRender, onOpenChange }) => (
+  const MockDropdown = ({ children, dropdownRender, popupRender, onOpenChange }) => (
     <div>
       <div onClick={() => onOpenChange?.(true, { source: 'trigger' })}>{children}</div>
       {/* Always render dropdown content to simplify tests */}
-      <div data-testid="menu">{dropdownRender?.()}</div>
+      <div data-testid="menu">{dropdownRender?.() || popupRender?.()}</div>
     </div>
   );
 

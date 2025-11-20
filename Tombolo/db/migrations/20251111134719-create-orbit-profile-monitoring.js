@@ -19,7 +19,7 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      name: {
+      monitoringName: {
         allowNull: false,
         type: Sequelize.STRING,
       },
@@ -120,7 +120,7 @@ module.exports = {
     // Add unique index
     await queryInterface.addIndex('orbit_profile_monitorings', {
       unique: true,
-      fields: ['applicationId', 'name', 'deletedAt'],
+      fields: ['applicationId', 'monitoringName', 'deletedAt'],
       name: 'orbit_profile_monitorings_application_id_name_deleted_at_unique',
     });
   },

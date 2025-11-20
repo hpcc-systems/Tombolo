@@ -1,164 +1,164 @@
-import React, { useState } from 'react';
-import { Form, Select, Input, Button } from 'antd';
-import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import InfoDrawer from '../../common/InfoDrawer';
+// import React, { useState } from 'react';
+// import { Form, Select, Input, Button } from 'antd';
+// import { MinusCircleOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
+// import InfoDrawer from '../../common/InfoDrawer';
 
-import styles from './orbitMonitoring.module.css';
+// import styles from './orbitMonitoring.module.css';
 
-const notificationOptions = [
-  { label: 'E-mail', value: 'eMail' },
-  { label: 'MS Teams', value: 'msTeams' },
-];
+// const notificationOptions = [
+//   { label: 'E-mail', value: 'eMail' },
+//   { label: 'MS Teams', value: 'msTeams' },
+// ];
 
-const NotificationTab = ({ setNotificationDetails, notificationDetails }) => {
-  // useEffect(() => {}, [selectedFileMonitoringDetails]);
-  const [open, setOpen] = useState(false);
+// const NotificationTab = ({ setNotificationDetails, notificationDetails }) => {
+//   // useEffect(() => {}, [selectedFileMonitoringDetails]);
+//   const [open, setOpen] = useState(false);
 
-  const showDrawer = () => {
-    setOpen(true);
-  };
+//   const showDrawer = () => {
+//     setOpen(true);
+//   };
 
-  const onClose = () => {
-    setOpen(false);
-  };
+//   const onClose = () => {
+//     setOpen(false);
+//   };
 
-  return (
-    <>
-      <Form.Item
-        label="Primary Contact"
-        name="primaryContact"
-        validateTrigger={['onChange', 'onBlur']}
-        className="medium-form-item"
-        rules={[
-          {
-            max: 256,
-            message: 'Maximum of 256 characters allowed',
-          },
-        ]}>
-        <Input placeholder="Primary Contact Information"></Input>
-      </Form.Item>
-      <Form.Item
-        label="Secondary Contact"
-        name="secondaryContact"
-        validateTrigger={['onChange', 'onBlur']}
-        className="medium-form-item"
-        rules={[
-          {
-            max: 256,
-            message: 'Maximum of 256 characters allowed',
-          },
-        ]}>
-        <Input placeholder="Secondary Contact Information"></Input>
-      </Form.Item>
+//   return (
+//     <>
+//       <Form.Item
+//         label="Primary Contact"
+//         name="primaryContact"
+//         validateTrigger={['onChange', 'onBlur']}
+//         className="medium-form-item"
+//         rules={[
+//           {
+//             max: 256,
+//             message: 'Maximum of 256 characters allowed',
+//           },
+//         ]}>
+//         <Input placeholder="Primary Contact Information"></Input>
+//       </Form.Item>
+//       <Form.Item
+//         label="Secondary Contact"
+//         name="secondaryContact"
+//         validateTrigger={['onChange', 'onBlur']}
+//         className="medium-form-item"
+//         rules={[
+//           {
+//             max: 256,
+//             message: 'Maximum of 256 characters allowed',
+//           },
+//         ]}>
+//         <Input placeholder="Secondary Contact Information"></Input>
+//       </Form.Item>
 
-      <Form.Item
-        label={
-          <>
-            <p style={{ marginBottom: '0' }}>
-              Notification Channel
-              <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
-            </p>
-            <InfoDrawer open={open} onClose={onClose} content="webhook"></InfoDrawer>
-          </>
-        }
-        name="notificationChannels"
-        rules={[{ required: true, message: 'Required Field' }]}>
-        <Select
-          options={notificationOptions}
-          mode="tags"
-          onChange={(value) => {
-            setNotificationDetails({ ...notificationDetails, notificationChannel: value });
-          }}></Select>
-      </Form.Item>
+//       <Form.Item
+//         label={
+//           <>
+//             <p style={{ marginBottom: '0' }}>
+//               Notification Channel
+//               <InfoCircleOutlined style={{ marginLeft: '.5rem' }} onClick={() => showDrawer()} />
+//             </p>
+//             <InfoDrawer open={open} onClose={onClose} content="webhook"></InfoDrawer>
+//           </>
+//         }
+//         name="notificationChannels"
+//         rules={[{ required: true, message: 'Required Field' }]}>
+//         <Select
+//           options={notificationOptions}
+//           mode="tags"
+//           onChange={(value) => {
+//             setNotificationDetails({ ...notificationDetails, notificationChannel: value });
+//           }}></Select>
+//       </Form.Item>
 
-      {notificationDetails?.notificationChannel?.includes('eMail') ? (
-        <Form.List name="emails">
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map((field, _index) => (
-                <Form.Item required={true} key={field.key}>
-                  <div className={styles.emailsList}>
-                    <Form.Item
-                      {...field}
-                      validateTrigger={['onChange', 'onBlur']}
-                      type="email"
-                      rules={[
-                        {
-                          required: true,
-                          whitespace: true,
-                          type: 'email',
-                          message: 'Invalid e-mail address.',
-                        },
-                      ]}
-                      noStyle>
-                      <Input placeholder="E-mail" />
-                    </Form.Item>
-                    {fields.length > 1 ? (
-                      <MinusCircleOutlined
-                        className="dynamic-delete-button"
-                        onClick={() => remove(field.name)}
-                        style={{ marginLeft: '10px' }}
-                      />
-                    ) : null}
-                  </div>
-                </Form.Item>
-              ))}
-              <Form.Item>
-                <Button
-                  type="dashed"
-                  onClick={() => add()}
-                  icon={<PlusOutlined />}
-                  width={'100%'}
-                  style={{ width: '100% -10px' }}>
-                  Add E-mail
-                </Button>
-              </Form.Item>
-            </>
-          )}
-        </Form.List>
-      ) : null}
+//       {notificationDetails?.notificationChannel?.includes('eMail') ? (
+//         <Form.List name="emails">
+//           {(fields, { add, remove }) => (
+//             <>
+//               {fields.map((field, _index) => (
+//                 <Form.Item required={true} key={field.key}>
+//                   <div className={styles.emailsList}>
+//                     <Form.Item
+//                       {...field}
+//                       validateTrigger={['onChange', 'onBlur']}
+//                       type="email"
+//                       rules={[
+//                         {
+//                           required: true,
+//                           whitespace: true,
+//                           type: 'email',
+//                           message: 'Invalid e-mail address.',
+//                         },
+//                       ]}
+//                       noStyle>
+//                       <Input placeholder="E-mail" />
+//                     </Form.Item>
+//                     {fields.length > 1 ? (
+//                       <MinusCircleOutlined
+//                         className="dynamic-delete-button"
+//                         onClick={() => remove(field.name)}
+//                         style={{ marginLeft: '10px' }}
+//                       />
+//                     ) : null}
+//                   </div>
+//                 </Form.Item>
+//               ))}
+//               <Form.Item>
+//                 <Button
+//                   type="dashed"
+//                   onClick={() => add()}
+//                   icon={<PlusOutlined />}
+//                   width={'100%'}
+//                   style={{ width: '100% -10px' }}>
+//                   Add E-mail
+//                 </Button>
+//               </Form.Item>
+//             </>
+//           )}
+//         </Form.List>
+//       ) : null}
 
-      {notificationDetails?.notificationChannel?.includes('msTeams') ? (
-        <Form.List name="msTeamsGroups">
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map((field, _index) => (
-                <Form.Item required={false} key={field.key}>
-                  <div className={styles.emailsList}>
-                    <Form.Item
-                      {...field}
-                      validateTrigger={['onChange', 'onBlur']}
-                      rules={[
-                        {
-                          required: true,
-                          whitespace: true,
-                          message: 'Invalid Teams webhook URL',
-                        },
-                      ]}
-                      noStyle>
-                      <Input placeholder="Teams incoming webhook URL" />
-                    </Form.Item>
-                    {fields.length > 1 ? (
-                      <MinusCircleOutlined
-                        className="dynamic-delete-button"
-                        onClick={() => remove(field.name)}
-                        style={{ marginLeft: '10px' }}
-                      />
-                    ) : null}
-                  </div>
-                </Form.Item>
-              ))}
-              <Form.Item>
-                <Button type="dashed" onClick={() => add()} icon={<PlusOutlined />} style={{ width: '100% -10px' }}>
-                  Add Teams Group
-                </Button>
-              </Form.Item>
-            </>
-          )}
-        </Form.List>
-      ) : null}
-    </>
-  );
-};
+//       {notificationDetails?.notificationChannel?.includes('msTeams') ? (
+//         <Form.List name="msTeamsGroups">
+//           {(fields, { add, remove }) => (
+//             <>
+//               {fields.map((field, _index) => (
+//                 <Form.Item required={false} key={field.key}>
+//                   <div className={styles.emailsList}>
+//                     <Form.Item
+//                       {...field}
+//                       validateTrigger={['onChange', 'onBlur']}
+//                       rules={[
+//                         {
+//                           required: true,
+//                           whitespace: true,
+//                           message: 'Invalid Teams webhook URL',
+//                         },
+//                       ]}
+//                       noStyle>
+//                       <Input placeholder="Teams incoming webhook URL" />
+//                     </Form.Item>
+//                     {fields.length > 1 ? (
+//                       <MinusCircleOutlined
+//                         className="dynamic-delete-button"
+//                         onClick={() => remove(field.name)}
+//                         style={{ marginLeft: '10px' }}
+//                       />
+//                     ) : null}
+//                   </div>
+//                 </Form.Item>
+//               ))}
+//               <Form.Item>
+//                 <Button type="dashed" onClick={() => add()} icon={<PlusOutlined />} style={{ width: '100% -10px' }}>
+//                   Add Teams Group
+//                 </Button>
+//               </Form.Item>
+//             </>
+//           )}
+//         </Form.List>
+//       ) : null}
+//     </>
+//   );
+// };
 
-export default NotificationTab;
+// export default NotificationTab;

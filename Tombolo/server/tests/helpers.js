@@ -301,7 +301,7 @@ function getOrbitProfileMonitoring(overrides = {}, dateStrings = false) {
   return {
     id: uuidv4(),
     applicationId: uuidv4(),
-    name: 'Test Orbit Profile Monitor',
+    monitoringName: 'Test Orbit Profile Monitor',
     description: 'This is a test description for orbit monitoring',
     clusterId: uuidv4(),
     isActive: false,
