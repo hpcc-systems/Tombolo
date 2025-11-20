@@ -11,8 +11,6 @@ import { jobSchedules } from './config/schedules.js';
 import logger from './config/logger.js';
 
 // Import all job classes
-import { EmailJob } from './jobs/emailJob.js';
-import { DbJob } from './jobs/testDbJob.js';
 import { WorkunitQueryJob } from './jobs/workunitQueryJob.js';
 import { WorkunitDetailJob } from './jobs/workunitDetailJob.js';
 
@@ -33,16 +31,6 @@ interface ScheduleConfig {
  * This is the central place to configure recurring jobs
  */
 const scheduledJobs: Record<string, ScheduleConfig> = {
-  processEmails: {
-    jobClass: EmailJob,
-    schedule: jobSchedules.email.sendWelcomeEmails,
-  },
-
-  testDbJob: {
-    jobClass: DbJob,
-    schedule: jobSchedules.dbJobs.testDbJob,
-  },
-
   wuQuery: {
     jobClass: WorkunitQueryJob,
     schedule: jobSchedules.wuHistory.wuQuery,

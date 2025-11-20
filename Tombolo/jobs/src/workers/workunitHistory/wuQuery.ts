@@ -10,46 +10,30 @@ import { retryWithBackoff } from '@tombolo/shared';
 import { parseWorkunitTimestamp } from '@tombolo/shared';
 import logger from '../../config/logger.js';
 
-// Type for HPCC workunit with _espState access
-interface WorkunitWithState {
-  _espState?: {
-    Wuid: string;
-    Owner?: string;
-    Cluster?: string;
-    Jobname?: string;
-    StateID?: number;
-    State?: string;
-    Protected?: boolean | string;
-    Action?: number;
-    ActionEx?: string;
-    IsPausing?: boolean | string;
-    ThorLCR?: boolean | string;
-    TotalClusterTime?: string;
-    ExecuteCost?: string;
-    FileAccessCost?: string;
-    CompileCost?: string;
-  };
-  // Allow direct property access as fallback
-  [key: string]: unknown;
-}
-
 // Constants
 const MONITORING_TYPE_NAME = 'WorkUnit History';
 
 /**
  * Gets the start and end time for fetching workunits
- * Always queries from start of current day (UTC) to now
- * @param {boolean} toIso - Whether to return ISO strings
+ * @param toIso - Whether to return ISO strings
+ * @param daysBack - Number of days to look back (default: 0 for current day only)
  */
-function getStartAndEndTime(toIso = false): {
+function getStartAndEndTime(
+  toIso: boolean = false,
+  daysBack: number = 0
+): {
   startTime: string | Date;
   endTime: string | Date;
 } {
   const now = new Date();
 
-  // Always start from beginning of current day in UTC
+  // Calculate start time by going back the specified number of days
   const startTime = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() - daysBack
+    )
   );
 
   return {
@@ -66,36 +50,34 @@ function getStartAndEndTime(toIso = false): {
  * @returns {Object} Transformed workunit data
  */
 function transformWorkunitData(
-  workunit: WorkunitWithState,
+  workunit: Workunit,
   clusterId: string,
   timezoneOffset = 0
 ) {
-  // Extract data from _espState property
-  const wuData = workunit._espState || workunit;
-
-  const executeCost = parseFloat(String(wuData.ExecuteCost || 0)) || 0.0;
-  const fileAccessCost = parseFloat(String(wuData.FileAccessCost || 0)) || 0.0;
-  const compileCost = parseFloat(String(wuData.CompileCost || 0)) || 0.0;
+  const executeCost = parseFloat(String(workunit.ExecuteCost || 0)) || 0.0;
+  const fileAccessCost =
+    parseFloat(String(workunit.FileAccessCost || 0)) || 0.0;
+  const compileCost = parseFloat(String(workunit.CompileCost || 0)) || 0.0;
   const totalCost = executeCost + fileAccessCost + compileCost;
 
   return {
-    wuId: String(wuData.Wuid),
+    wuId: String(workunit.Wuid),
     clusterId,
     workUnitTimestamp: parseWorkunitTimestamp(
-      String(wuData.Wuid),
+      String(workunit.Wuid),
       timezoneOffset
     ),
-    owner: String(wuData.Owner || 'unknown'),
-    engine: String(wuData.Cluster || 'unknown'),
-    jobName: wuData.Jobname ? String(wuData.Jobname) : null,
-    stateId: Number(wuData.StateID) || 0,
-    state: String(wuData.State || 'unknown'),
-    protected: wuData.Protected === true || wuData.Protected === 'true',
-    action: Number(wuData.Action) || 0,
-    actionEx: wuData.ActionEx ? String(wuData.ActionEx) : null,
-    isPausing: wuData.IsPausing === true || wuData.IsPausing === 'true',
-    thorLcr: wuData.ThorLCR === true || wuData.ThorLCR === 'true',
-    totalClusterTime: parseFloat(String(wuData.TotalClusterTime || 0)) || 0.0,
+    owner: String(workunit.Owner || 'unknown'),
+    engine: String(workunit.Cluster || 'unknown'),
+    jobName: workunit.Jobname ? String(workunit.Jobname) : null,
+    stateId: Number(workunit.StateID) || 0,
+    state: String(workunit.State || 'unknown'),
+    protected: workunit.Protected === true,
+    action: Number(workunit.Action) || 0,
+    actionEx: workunit.ActionEx ? String(workunit.ActionEx) : null,
+    isPausing: workunit.IsPausing === true,
+    thorLcr: workunit.ThorLCR === true,
+    totalClusterTime: parseFloat(String(workunit.TotalClusterTime || 0)) || 0.0,
     executeCost,
     fileAccessCost,
     compileCost,
@@ -183,11 +165,7 @@ async function getWorkUnits(
 
       // Transform and insert immediately
       const transformedWorkunits = workunits.map(wu =>
-        transformWorkunitData(
-          wu as unknown as WorkunitWithState,
-          clusterId,
-          timezoneOffset
-        )
+        transformWorkunitData(wu, clusterId, timezoneOffset)
       );
 
       // Sequelize will auto-populate createdAt, updatedAt, and set clusterDeleted default
@@ -228,7 +206,7 @@ async function getWorkUnits(
       pageStartFrom += pageSize;
 
       // Add a small delay between requests to be gentle on the HPCC system
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
 
     logger.info(
@@ -350,8 +328,8 @@ async function workunitQuery() {
             raw: true,
           });
 
-          // Determine start and end dates (always from start of current day)
-          const { startTime, endTime } = getStartAndEndTime(true);
+          // Determine start and end dates (7 days back from current day)
+          const { startTime, endTime } = getStartAndEndTime(true, 7);
 
           logger.info(
             `Fetching workunits for cluster ${clusterId} from ${startTime} to ${endTime}`

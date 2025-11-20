@@ -18,6 +18,8 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc ./
 COPY Tombolo/client-reactjs/package.json ./Tombolo/client-reactjs/
 COPY Tombolo/server/package.json ./Tombolo/server/
 COPY Tombolo/db/package.json ./Tombolo/db/
+COPY Tombolo/shared/package.json ./Tombolo/shared/
+COPY Tombolo/core/package.json ./Tombolo/core/
 COPY Tombolo/jobs/package.json ./Tombolo/jobs/
 
 # Install all dependencies
@@ -74,6 +76,8 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc ./
 # Copy all package.json files
 COPY Tombolo/server/package.json ./Tombolo/server/
 COPY Tombolo/db/package.json ./Tombolo/db/
+COPY Tombolo/shared/package.json ./Tombolo/shared/
+COPY Tombolo/core/package.json ./Tombolo/core/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile --prod
@@ -81,6 +85,8 @@ RUN pnpm install --frozen-lockfile --prod
 # Copy source code
 COPY Tombolo/server ./Tombolo/server
 COPY Tombolo/db ./Tombolo/db
+COPY Tombolo/shared ./Tombolo/shared
+COPY Tombolo/core ./Tombolo/core
 
 # Copy Docker-specific .sequelizerc and rename it
 COPY Tombolo/server/.sequelizerc.docker ./Tombolo/server/.sequelizerc
@@ -168,6 +174,8 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc ./
 # Copy all package.json files
 COPY Tombolo/jobs/package.json ./Tombolo/jobs/
 COPY Tombolo/db/package.json ./Tombolo/db/
+COPY Tombolo/shared/package.json ./Tombolo/shared/
+COPY Tombolo/core/package.json ./Tombolo/core/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
@@ -175,10 +183,12 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY Tombolo/jobs ./Tombolo/jobs
 COPY Tombolo/db ./Tombolo/db
+COPY Tombolo/shared ./Tombolo/shared
+COPY Tombolo/core ./Tombolo/core
 
-# Build TypeScript
+# Build TypeScript without source maps for production
 WORKDIR /app/Tombolo/jobs
-RUN pnpm build
+RUN pnpm build:prod
 
 # Use pnpm deploy to create a clean deployment structure
 WORKDIR /app
@@ -207,6 +217,9 @@ COPY --from=jobs-builder /deploy/jobs /app
 COPY --from=jobs-builder /app/Tombolo/jobs/dist ./dist
 
 WORKDIR /app
+
+# Disable source map support in production
+ENV NODE_OPTIONS="--no-enable-source-maps"
 
 # Entry point is set on docker-compose
 CMD ["pm2-runtime", "start", "dist/app.js", "--name", "tombolo-jobs"]
