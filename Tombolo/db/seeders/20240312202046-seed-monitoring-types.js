@@ -55,6 +55,16 @@ module.exports = {
       },
       {
         id: uuidv4(),
+        name: 'Orbit Profile Monitoring',
+        createdAt: new Date(),
+        createdBy: JSON.stringify({
+          firstName: null,
+          lastName: 'System',
+          email: 'NA',
+        }),
+      },
+      {
+        id: uuidv4(),
         name: 'WorkUnit History',
         createdAt: new Date(),
         createdBy: JSON.stringify({

@@ -183,7 +183,7 @@ const MonitoringActionButton = ({
       onOpenChange={(nextOpen, info) => {
         if (!info || info.source === 'trigger' || nextOpen) setOpen(nextOpen);
       }}
-      dropdownRender={() => <Menu items={menuItems} onClick={({ key }) => handleMenuSelection(key)} />}
+      popupRender={() => <Menu items={menuItems} onClick={({ key }) => handleMenuSelection(key)} />}
       placement={placement}>
       <Button type={buttonType} disabled={buttonDisabled ?? isReader}>
         {label} <DownOutlined />

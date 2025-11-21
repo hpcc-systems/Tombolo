@@ -67,12 +67,13 @@ const getOrbitProfileMonitoringById = async (req, res) => {
 // Create new orbit profile monitoring
 const createOrbitProfileMonitoring = async (req, res) => {
   try {
-    const { name, clusterId, description, metaData, applicationId } = req.body;
+    const { monitoringName, clusterId, description, metaData, applicationId } =
+      req.body;
     const userId = req.user.id;
 
     const newOrbitProfileMonitoring = await OrbitProfileMonitoring.create({
       applicationId,
-      name,
+      monitoringName,
       description,
       clusterId,
       metaData,
