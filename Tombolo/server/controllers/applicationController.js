@@ -1,33 +1,13 @@
-// Library Imports
-const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { UserApplication, Application, User } = require('../models');
 const Sequelize = require('sequelize');
-
-// Local Imports
-const {
-  UserApplication,
-  Application,
-  User,
-} = require('../../models');
-const { validate } = require('../../middlewares/validateRequestBody');
-const {
-  validateGetAppByUsername,
-  validateGetAppById,
-  validateSaveApp,
-  validateUnshareApp,
-  validateExportApp,
-} = require('../../middlewares/appMiddleware');
-const { sendError, sendSuccess } = require('../../utils/response');
-// const NotificationModule = require('../notifications/email-notification');
-const logger = require('../../config/logger');
-
-// Constants & Config
-const router = express.Router();
+const { sendError, sendSuccess } = require('../utils/response');
 const Op = Sequelize.Op;
+const logger = require('../config/logger');
+// const NotificationModule = require('../notifications/email-notification');
 
-// Get all public apps and the ones that are associated with the user
-router.get('/app_list', async (req, res) => {
+async function getApplications(req, res) {
   try {
     const { id: userId } = req.user;
 
@@ -59,38 +39,32 @@ router.get('/app_list', async (req, res) => {
     logger.error(`Error occurred while getting application list: ${err}`);
     return sendError(res, 'Error occurred while getting application list');
   }
-});
+}
 
-router.get(
-  '/appListByUsername',
-  validate(validateGetAppByUsername),
-  async (req, res) => {
-    const { user_name } = req.query;
-    try {
-      const userApplications = await UserApplication.findAll({
-        where: { user_id: user_name },
-        raw: true,
-        attributes: ['application_id'],
-      });
-      const userApplicationIds = userApplications.map(
-        app => app.application_id
-      );
-      const allApplications = await Application.findAll({
-        where: {
-          [Op.or]: [{ id: userApplicationIds }, { visibility: 'Public' }],
-        },
-        raw: true,
-        order: [['updatedAt', 'DESC']],
-      }); // this includes user created, public and shared apps
-      return sendSuccess(res, allApplications);
-    } catch (err) {
-      logger.error('err', err);
-      return sendError(res, 'Error occurred while getting application list');
-    }
+async function getApplicationsByUser(req, res) {
+  const { user_name } = req.query;
+  try {
+    const userApplications = await UserApplication.findAll({
+      where: { user_id: user_name },
+      raw: true,
+      attributes: ['application_id'],
+    });
+    const userApplicationIds = userApplications.map(app => app.application_id);
+    const allApplications = await Application.findAll({
+      where: {
+        [Op.or]: [{ id: userApplicationIds }, { visibility: 'Public' }],
+      },
+      raw: true,
+      order: [['updatedAt', 'DESC']],
+    }); // this includes user created, public and shared apps
+    return sendSuccess(res, allApplications);
+  } catch (err) {
+    logger.error('err', err);
+    return sendError(res, 'Error occurred while getting application list');
   }
-);
+}
 
-router.get('/app', validate(validateGetAppById), async (req, res) => {
+async function getApplicationById(req, res) {
   try {
     const application = await Application.findOne({
       where: { id: req.query.app_id },
@@ -100,64 +74,59 @@ router.get('/app', validate(validateGetAppById), async (req, res) => {
     logger.error('err', err);
     return sendError(res, 'Error occurred while getting application details');
   }
-});
+}
 
-router.post(
-  '/saveApplication',
-  validate(validateSaveApp),
-  async function (req, res) {
-    try {
-      if (req.body.id === '') {
-        const application = await Application.create({
-          title: req.body.title,
-          description: req.body.description,
-          creator: req.user.id,
-          visibility: req.body.visibility,
+async function saveApplication(req, res) {
+  try {
+    if (req.body.id === '') {
+      const application = await Application.create({
+        title: req.body.title,
+        description: req.body.description,
+        creator: req.user.id,
+        visibility: req.body.visibility,
+      });
+      if (req.user.id) {
+        const userApp = await UserApplication.create({
+          user_id: req.user.id,
+          application_id: application.id,
+          createdBy: req.user.id,
+          user_app_relation: 'created',
         });
-        if (req.user.id) {
-          const userApp = await UserApplication.create({
-            user_id: req.user.id,
-            application_id: application.id,
-            createdBy: req.user.id,
-            user_app_relation: 'created',
-          });
 
-          return sendSuccess(
-            res,
-            {
-              id: application.id,
-              title: application.title,
-              description: application.description,
-              user_app_id: userApp.id,
-            },
-            'Application created successfully'
-          );
-        } else {
-          return sendSuccess(
-            res,
-            { id: application.id },
-            'Application created successfully'
-          );
-        }
-      } else {
-        const result = await Application.update(req.body, {
-          where: { id: req.body.id },
-        });
         return sendSuccess(
           res,
-          { id: result.id },
-          'Application updated successfully'
+          {
+            id: application.id,
+            title: application.title,
+            description: application.description,
+            user_app_id: userApp.id,
+          },
+          'Application created successfully'
+        );
+      } else {
+        return sendSuccess(
+          res,
+          { id: application.id },
+          'Application created successfully'
         );
       }
-    } catch (err) {
-      logger.error('saveApplication: ', err);
-      return sendError(res, 'Error occurred while creating application');
+    } else {
+      const result = await Application.update(req.body, {
+        where: { id: req.body.id },
+      });
+      return sendSuccess(
+        res,
+        { id: result.id },
+        'Application updated successfully'
+      );
     }
+  } catch (err) {
+    logger.error('saveApplication: ', err);
+    return sendError(res, 'Error occurred while creating application');
   }
-);
+}
 
-// DELETE APPLICATION
-router.post('/deleteApplication', async function (req, res) {
+async function deleteApplication(req, res) {
   try {
     await UserApplication.destroy({
       where: { application_id: req.body.appIdToDelete, user_id: req.body.user },
@@ -172,27 +141,26 @@ router.post('/deleteApplication', async function (req, res) {
     logger.error('err', err);
     return sendError(res, 'Error occurred while removing application');
   }
-});
+}
 
-// SHARE APPLICATION
-router.post('/shareApplication', async (req, res) => {
+async function shareApplication(req, res) {
   const { data: appShareDetails } = req.body;
 
   try {
     await UserApplication.create(appShareDetails);
     // Can't wait for notification  email to be sent - might take longer ->Sending response to client as soon as the data is saved in userApplication table
     sendSuccess(res, null, 'Application shared successfully');
-    try {
-      NotificationModule.notifyApplicationShare(
-        appShareDetails.user_id,
-        appShareDetails.appTitle
-      );
-    } catch (err) {
-      logger.error(
-        'app/read.js - Error sending application share notification: ',
-        err
-      );
-    }
+    // try {
+    //   NotificationModule.notifyApplicationShare(
+    //     appShareDetails.user_id,
+    //     appShareDetails.appTitle
+    //   );
+    // } catch (err) {
+    //   logger.error(
+    //     'app/read.js - Error sending application share notification: ',
+    //     err
+    //   );
+    // }
   } catch (err) {
     logger.error('app/read.js - Share app error: ', err);
     return sendError(
@@ -200,25 +168,20 @@ router.post('/shareApplication', async (req, res) => {
       'Error occurred while saving user application mapping'
     );
   }
-});
+}
 
-// UN-SHARE APPLICATION
-router.post(
-  '/stopApplicationShare',
-  validate(validateUnshareApp),
-  async (req, res) => {
-    try {
-      const { application_id, username: user_id } = req.body;
-      await UserApplication.destroy({ where: { application_id, user_id } });
-      return sendSuccess(res, null, 'Application sharing stopped successfully');
-    } catch (err) {
-      logger.error('stopApplicationShare: ', err);
-      return sendError(res, err.message, 405);
-    }
+async function stopApplicationShare(req, res) {
+  try {
+    const { application_id, username: user_id } = req.body;
+    await UserApplication.destroy({ where: { application_id, user_id } });
+    return sendSuccess(res, null, 'Application sharing stopped successfully');
+  } catch (err) {
+    logger.error('stopApplicationShare: ', err);
+    return sendError(res, err.message, 405);
   }
-);
+}
 
-router.post('/export', validate(validateExportApp), (req, res) => {
+async function exportApplication(req, res) {
   try {
     let applicationExport = {};
     Application.findOne({
@@ -278,6 +241,15 @@ router.post('/export', validate(validateExportApp), (req, res) => {
     logger.error('err', err);
     return sendError(res, 'Error occurred while exporting application');
   }
-});
+}
 
-module.exports = router;
+module.exports = {
+  getApplications,
+  getApplicationsByUser,
+  getApplicationById,
+  shareApplication,
+  stopApplicationShare,
+  deleteApplication,
+  saveApplication,
+  exportApplication,
+};
