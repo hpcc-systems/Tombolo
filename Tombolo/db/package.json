@@ -15,6 +15,7 @@
     "db:migrate": "sequelize db:migrate",
     "db:create": "sequelize db:create",
     "db:seed": "sequelize db:seed:all",
-    "db:drop": "sequelize db:drop"
+    "db:drop": "sequelize db:drop",
+    "clean": "rm -rf node_modules"
   }
 }

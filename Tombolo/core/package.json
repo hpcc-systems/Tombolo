@@ -13,7 +13,8 @@
     }
   },
   "scripts": {
-    "test": "echo \"No tests yet\""
+    "test": "echo \"No tests yet\"",
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
     "@tombolo/db": "workspace:*",
