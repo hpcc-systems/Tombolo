@@ -252,6 +252,43 @@ const evaluateOrbitProfileMonitoring = async (req, res) => {
   }
 };
 
+// Bulk update orbit profile monitorings
+const bulkUpdateOrbitProfileMonitoring = async (req, res) => {
+  let transaction;
+  try {
+    transaction = await sequelize.transaction();
+    const inputMonitorings = req.body.monitorings;
+    const userId = req.user.id;
+
+    for (const monitoring of inputMonitorings) {
+      const { id, metaData } = monitoring;
+      await OrbitProfileMonitoring.update(
+        {
+          metaData,
+          lastUpdatedBy: userId,
+          approvalStatus: APPROVAL_STATUS.PENDING,
+          isActive: false,
+        },
+        {
+          where: { id },
+          transaction,
+        }
+      );
+    }
+
+    await transaction.commit();
+    sendSuccess(
+      res,
+      null,
+      'Orbit profile monitorings updated successfully'
+    );
+  } catch (err) {
+    transaction && (await transaction.rollback());
+    logger.error('Error bulk updating orbit profile monitorings:', err);
+    sendError(res, 'Failed to bulk update orbit profile monitorings');
+  }
+};
+
 module.exports = {
   getAllOrbitProfileMonitorings,
   getOrbitProfileMonitoringById,
@@ -260,4 +297,5 @@ module.exports = {
   deleteOrbitProfileMonitoring,
   toggleOrbitProfileMonitoringStatus,
   evaluateOrbitProfileMonitoring,
+  bulkUpdateOrbitProfileMonitoring,
 };

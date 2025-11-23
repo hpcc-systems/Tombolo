@@ -11,6 +11,7 @@ const {
   deleteOrbitMonitoringPayloadValidations,
   monitoringTogglePayloadValidations,
   validateMonitoringEvaluationPayload,
+  validateBulkUpdate,
 } = require('../middlewares/orbitProfileMonitoringMiddleware');
 const { validate } = require('../middlewares/validateRequestBody');
 
@@ -23,6 +24,7 @@ const {
   deleteOrbitProfileMonitoring,
   toggleOrbitProfileMonitoringStatus,
   evaluateOrbitProfileMonitoring,
+  bulkUpdateOrbitProfileMonitoring,
 } = require('../controllers/orbitProfileMonitoringController');
 
 // Routes
@@ -66,6 +68,12 @@ router.patch(
   '/evaluate',
   validate(validateMonitoringEvaluationPayload),
   evaluateOrbitProfileMonitoring
+);
+
+router.patch(
+  '/bulk',
+  validate(validateBulkUpdate),
+  bulkUpdateOrbitProfileMonitoring
 );
 
 module.exports = router;

@@ -40,6 +40,11 @@ const orbitProfileMonitoringService = {
     const response = await apiClient.patch('/orbitProfileMonitoring/evaluate', formData);
     return response.data;
   },
+
+  bulkUpdate: async monitorings => {
+    const response = await apiClient.patch('/orbitProfileMonitoring/bulk', { monitorings });
+    return response.data;
+  },
 };
 
 export default orbitProfileMonitoringService;

@@ -210,10 +210,16 @@ const BulkUpdateModal = ({
       );
 
       setMonitorings(newCostMonitoringData);
-      handleSuccess('Cost monitorings updated successfully');
+      const successMessage = monitoringType === 'orbit' 
+        ? 'Orbit monitorings updated successfully' 
+        : 'Cost monitorings updated successfully';
+      handleSuccess(successMessage);
       resetState();
     } catch (err) {
-      handleError(err.message || 'Failed to update cost monitorings');
+      const errorMessage = monitoringType === 'orbit'
+        ? 'Failed to update orbit monitorings'
+        : 'Failed to update cost monitorings';
+      handleError(err.message || errorMessage);
     }
   };
 

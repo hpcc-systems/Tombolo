@@ -7,6 +7,7 @@ import OrbitMonitoringTable from './OrbitMonitoringTable.jsx';
 import AddEditModal from './AddEditModal/Modal.jsx';
 import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsModal.jsx';
 import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal.jsx';
+import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal.jsx';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
@@ -31,6 +32,7 @@ const OrbitMonitoring = () => {
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
   const [displayApproveRejectModal, setDisplayApproveRejectModal] = useState(false);
+  const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
 
   const [form] = Form.useForm();
   const applicationId = useSelector(state => state.application.application.applicationId);
@@ -173,6 +175,16 @@ const OrbitMonitoring = () => {
     }
   };
 
+  const handleBulkUpdateOrbitMonitorings = async ({ updatedData }) => {
+    try {
+      await orbitProfileMonitoringService.bulkUpdate(updatedData);
+      await fetchOrbitMonitoring();
+    } catch (err) {
+      console.error('Bulk update error:', err);
+      throw err;
+    }
+  };
+
   return (
     <div className={styles.container}>
       <BreadCrumbs
@@ -182,6 +194,7 @@ const OrbitMonitoring = () => {
             isReader={isReader}
             selectedRows={selectedRows}
             onAdd={handleAddMonitoring}
+            onBulkEdit={() => setBulkEditModalVisibility(true)}
             onBulkStartPause={handleBulkStartPauseOrbitMonitorings}
             onBulkDelete={handleBulkDeleteSelectedOrbitMonitorings}
             showBulkApproveReject={false}
@@ -271,6 +284,19 @@ const OrbitMonitoring = () => {
           setMonitoring={setOrbitMonitoringData}
           monitoringTypeLabel={monitoringTypeName}
           evaluateMonitoring={orbitProfileMonitoringService.evaluate}
+        />
+      )}
+
+      {bulkEditModalVisibility && (
+        <BulkUpdateModal
+          bulkEditModalVisibility={bulkEditModalVisibility}
+          setBulkEditModalVisibility={setBulkEditModalVisibility}
+          monitorings={orbitMonitoringData}
+          setMonitorings={setOrbitMonitoringData}
+          selectedRows={selectedRows}
+          setSelectedRows={setSelectedRows}
+          monitoringType="orbit"
+          handleBulkUpdateMonitorings={handleBulkUpdateOrbitMonitorings}
         />
       )}
     </div>

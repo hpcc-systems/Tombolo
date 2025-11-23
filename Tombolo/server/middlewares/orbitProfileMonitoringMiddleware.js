@@ -5,6 +5,7 @@ const {
   uuidBody,
   stringBody,
   objectBody,
+  arrayBody,
   paramUuids,
   bodyUuids,
   booleanBody,
@@ -40,6 +41,15 @@ const validateMonitoringEvaluationPayload = [
   booleanBody('isActive'),
 ];
 
+const validateBulkUpdate = [
+  arrayBody('monitorings'),
+  uuidBody('monitorings.*.id'),
+  objectBody('monitorings.*.metaData'),
+  objectBody('monitorings.*.metaData.contacts', true),
+  objectBody('monitorings.*.metaData.asrSpecificMetaData', true),
+  objectBody('monitorings.*.metaData.monitoringData', true),
+];
+
 module.exports = {
   createOrbitMonitoringPayloadValidations,
   validateAppIdInReqParam,
@@ -48,4 +58,5 @@ module.exports = {
   deleteOrbitMonitoringPayloadValidations,
   monitoringTogglePayloadValidations,
   validateMonitoringEvaluationPayload,
+  validateBulkUpdate,
 };
