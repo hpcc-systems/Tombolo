@@ -105,12 +105,9 @@ vi.mock('@/services/orbitProfileMonitoring.service', () => ({
   },
 }));
 
-import { notification } from 'antd';
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 import OrbitMonitoringTable from '@/components/application/orbitProfileMonitoring/OrbitMonitoringTable.jsx';
 
-const domains = [{ value: 'd1', label: 'Domain One' }];
-const allProductCategories = [{ id: 'p1', name: 'Product Long Name', shortCode: 'PLN' }];
 
 const rowApproved = {
   id: 1,
@@ -124,8 +121,6 @@ const rowApproved = {
   isActive: true,
   approvalStatus: 'approved',
 };
-
-const rowPending = { ...rowApproved, id: 2, isActive: true, approvalStatus: 'pending' };
 
 beforeEach(() => {
   vi.clearAllMocks();
