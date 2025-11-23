@@ -195,9 +195,10 @@ const OrbitMonitoring = () => {
             selectedRows={selectedRows}
             onAdd={handleAddMonitoring}
             onBulkEdit={() => setBulkEditModalVisibility(true)}
+            onBulkApproveReject={() => setDisplayApproveRejectModal(true)}
             onBulkStartPause={handleBulkStartPauseOrbitMonitorings}
             onBulkDelete={handleBulkDeleteSelectedOrbitMonitorings}
-            showBulkApproveReject={false}
+            showBulkApproveReject={true}
             showFiltersToggle={false}
           />
         }
