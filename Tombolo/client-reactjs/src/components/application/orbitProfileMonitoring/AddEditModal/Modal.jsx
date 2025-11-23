@@ -22,6 +22,7 @@ const AddEditModal = ({
   activeTab,
   setActiveTab,
   selectedMonitoring,
+  orbitMonitoringData,
   savingOrbitMonitoring,
   saveOrbitMonitoring,
 }) => {
@@ -49,6 +50,48 @@ const AddEditModal = ({
       }
     }
   }, [isEditing, selectedMonitoring, form, setSelectedDomain]);
+
+  // Populate form fields when duplicating and generate unique name
+  useEffect(() => {
+    if (isDuplicating && selectedMonitoring && form) {
+      const { metaData } = selectedMonitoring;
+      form.setFieldsValue({
+        monitoringName: selectedMonitoring.monitoringName,
+        description: selectedMonitoring.description,
+        domain: metaData?.asrSpecificMetaData?.domain,
+        productCategory: metaData?.asrSpecificMetaData?.productCategory,
+        severity: metaData?.asrSpecificMetaData?.severity,
+        buildName: metaData?.asrSpecificMetaData?.buildName,
+        primaryContacts: metaData?.contacts?.primaryContacts,
+        secondaryContacts: metaData?.contacts?.secondaryContacts,
+        notifyContacts: metaData?.contacts?.notifyContacts,
+        notificationConditions: metaData?.monitoringData?.notificationConditions,
+      });
+      if (metaData?.asrSpecificMetaData?.domain) {
+        setSelectedDomain(metaData.asrSpecificMetaData.domain);
+      }
+
+      // Generate unique name
+      const doesNameExist = name => orbitMonitoringData.some(m => m.monitoringName === name);
+
+      let currentName = selectedMonitoring.monitoringName;
+      let newName = `copy-${currentName}`;
+      let copyCount = 1;
+
+      while (doesNameExist(newName)) {
+        copyCount++;
+        newName = `copy-${currentName}-${copyCount}`;
+      }
+
+      form.setFields([
+        {
+          name: 'monitoringName',
+          value: newName,
+          warnings: ['Auto generated name. Please modify if necessary.'],
+        },
+      ]);
+    }
+  }, [isDuplicating, selectedMonitoring, form, orbitMonitoringData, setSelectedDomain]);
 
   // Handle Cancel
   const handleCancel = () => {

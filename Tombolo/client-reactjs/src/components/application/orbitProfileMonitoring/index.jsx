@@ -26,6 +26,7 @@ const OrbitMonitoring = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [savingOrbitMonitoring, setSavingOrbitMonitoring] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
   const [erroneousTabs, setErroneousTabs] = useState([]);
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
@@ -65,6 +66,7 @@ const OrbitMonitoring = () => {
   const resetStates = () => {
     setSelectedMonitoring(null);
     setIsEditing(false);
+    setIsDuplicating(false);
     setErroneousTabs([]);
     setActiveTab('0');
     form.resetFields();
@@ -118,11 +120,10 @@ const OrbitMonitoring = () => {
     // Create a copy with modified name
     const copiedMonitoring = {
       ...monitoring,
-      name: `${monitoring.name} (Copy)`,
       id: null, // Remove ID so it creates a new record
     };
     setSelectedMonitoring(copiedMonitoring);
-    // setIsDuplicating(true);
+    setIsDuplicating(true);
     setDisplayAddEditModal(true);
   };
 
@@ -218,18 +219,17 @@ const OrbitMonitoring = () => {
           domains={domains}
           productCategories={productCategories}
           applicationId={applicationId}
-          // setProductCategories={setProductCategories}
           selectedDomain={selectedDomain}
           setSelectedDomain={setSelectedDomain}
-          // monitoringType={monitoringTypeId}
-          // setMonitoringType={setMonitoringType}
           isEditing={isEditing}
+          isDuplicating={isDuplicating}
           erroneousTabs={erroneousTabs}
           setErroneousTabs={setErroneousTabs}
           resetStates={resetStates}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           selectedMonitoring={selectedMonitoring}
+          orbitMonitoringData={orbitMonitoringData}
           savingOrbitMonitoring={savingOrbitMonitoring}
         />
       )}
