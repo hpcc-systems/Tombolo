@@ -108,7 +108,6 @@ vi.mock('@/services/orbitProfileMonitoring.service', () => ({
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 import OrbitMonitoringTable from '@/components/application/orbitProfileMonitoring/OrbitMonitoringTable.jsx';
 
-const allProductCategories = [{ id: 'p1', name: 'Product Long Name', shortCode: 'PLN' }];
 
 const rowApproved = {
   id: 1,
