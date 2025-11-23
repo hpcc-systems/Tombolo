@@ -152,6 +152,7 @@ describe('orbitProfileMonitoring Routes', () => {
       ...expectedUpdateData,
       lastUpdatedBy: AUTHED_USER_ID,
       approvalStatus: 'pending',
+      isActive: false,
     });
   });
 
