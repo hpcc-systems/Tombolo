@@ -76,7 +76,7 @@ const AddEditModal = ({
 
       let currentName = selectedMonitoring.monitoringName;
       let newName = `copy-${currentName}`;
-      let copyCount = 1;
+      let copyCount = 0;
 
       while (doesNameExist(newName)) {
         copyCount++;

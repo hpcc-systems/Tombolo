@@ -208,11 +208,8 @@ const OrbitMonitoring = () => {
   };
 
   const handleCopyMonitoring = monitoring => {
-    // Create a copy with modified name
-    const copiedMonitoring = {
-      ...monitoring,
-      id: null, // Remove ID so it creates a new record
-    };
+    // Create a copy without the id property
+    const { id, ...copiedMonitoring } = monitoring;
     setSelectedMonitoring(copiedMonitoring);
     setIsDuplicating(true);
     setDisplayAddEditModal(true);
