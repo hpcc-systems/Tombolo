@@ -4,31 +4,29 @@ import { Form, Card, Select } from 'antd';
 const { Option } = Select;
 
 function NotificationTab({ form, _isEditing, _selectedMonitoring }) {
-
-  // Notification condition options
-  const notificationConditions = [
-    { value: 'buildFailed', label: 'Build not available for use' },
-    {value: 'failedToGetBuildInfo', label: 'Failed to get build info' },
+  // Build status options for notification conditions
+  const buildStatuses = [
+    { label: 'Build Available For Use', value: 'build_available_for_use' },
+    { label: 'Discarded', value: 'discarded' },
+    { label: 'Failed QA QAHeld', value: 'failed_qa_qaheld' },
+    { label: 'Graveyard', value: 'graveyard' },
+    { label: 'Passed QA', value: 'passed_qa' },
+    { label: 'Passed QA No Release', value: 'passed_qa_no_release' },
+    { label: 'Production', value: 'production' },
+    { label: 'Skipped', value: 'skipped' },
   ];
 
   return (
     <Card size="small" style={{ marginBottom: '1rem' }}>
-      <Form form={form} layout="vertical"
-      // Select both notification conditions by default
-      initialValues={{ notificationConditions: ['buildFailed', 'failedToGetBuildInfo'] }}
-    
-      >
+      <Form form={form} layout="vertical">
         <Form.Item
           label="Notification Conditions"
           name="notificationConditions"
           rules={[{ required: true, message: 'Please select at least one notification condition' }]}>
-          <Select
-            mode="multiple"
-            placeholder="Select notification conditions"
-            optionLabelProp="label">
-            {notificationConditions.map((condition) => (
-              <Option key={condition.value} value={condition.value} label={condition.label}>
-                {condition.label}
+          <Select mode="multiple" placeholder="Select notification conditions" optionLabelProp="label">
+            {buildStatuses.map(status => (
+              <Option key={status.value} value={status.value} label={status.label}>
+                {status.label}
               </Option>
             ))}
           </Select>
@@ -49,9 +47,7 @@ function NotificationTab({ form, _isEditing, _selectedMonitoring }) {
           />
         </Form.Item>
 
-        <Form.Item
-          label="Secondary Contact Emails"
-          name="secondaryContacts">
+        <Form.Item label="Secondary Contact Emails" name="secondaryContacts">
           <Select
             mode="tags"
             style={{ width: '100%' }}
@@ -60,9 +56,7 @@ function NotificationTab({ form, _isEditing, _selectedMonitoring }) {
           />
         </Form.Item>
 
-        <Form.Item
-          label="Notify Contact Emails"
-          name="notifyContacts">
+        <Form.Item label="Notify Contact Emails" name="notifyContacts">
           <Select
             mode="tags"
             style={{ width: '100%' }}
