@@ -105,7 +105,6 @@ vi.mock('@/services/orbitProfileMonitoring.service', () => ({
   },
 }));
 
-import { notification } from 'antd';
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 import OrbitMonitoringTable from '@/components/application/orbitProfileMonitoring/OrbitMonitoringTable.jsx';
 
