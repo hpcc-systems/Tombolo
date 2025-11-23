@@ -9,9 +9,11 @@ import MonitoringDetailsModal from '../../common/Monitoring/MonitoringDetailsMod
 import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal.jsx';
 import BulkUpdateModal from '../../common/Monitoring/BulkUpdateModal.jsx';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
+import OrbitProfileMonitoringFilters from './OrbitProfileMonitoringFilters.jsx';
 import { getRoleNameArray } from '../../common/AuthUtil.js';
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';
+import { useMonitoringsAndAllProductCategories } from '@/hooks/useMonitoringsAndAllProductCategories';
 import orbitProfileMonitoringService from '../../../services/orbitProfileMonitoring.service.js';
 import styles from './orbitMonitoring.module.css';
 
@@ -19,7 +21,7 @@ import styles from './orbitMonitoring.module.css';
 const monitoringTypeName = 'Orbit Profile Monitoring';
 
 const OrbitMonitoring = () => {
-  const [orbitMonitoringData, setOrbitMonitoringData] = useState([]);
+  const [filteredOrbitMonitoring, setFilteredOrbitMonitoring] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [displayAddEditModal, setDisplayAddEditModal] = useState(false);
   const [displayViewDetailsModal, setDisplayViewDetailsModal] = useState(false);
@@ -33,6 +35,10 @@ const OrbitMonitoring = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [displayApproveRejectModal, setDisplayApproveRejectModal] = useState(false);
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
+  const [filters, setFilters] = useState({});
+  const [filtersVisible, setFiltersVisible] = useState(true);
+  const [filteringOrbits, setFilteringOrbits] = useState(false);
+  const [matchCount, setMatchCount] = useState(0);
 
   const [form] = Form.useForm();
   const applicationId = useSelector(state => state.application.application.applicationId);
@@ -42,27 +48,109 @@ const OrbitMonitoring = () => {
   const isReader = roleArray.includes('reader') && roleArray.length === 1;
 
   const { monitoringTypeId } = useMonitorType(monitoringTypeName);
-  const { domains, selectedDomain, setSelectedDomain, productCategories } = useDomainAndCategories(monitoringTypeId);
+  const { domains, selectedDomain, setSelectedDomain, productCategories } = useDomainAndCategories(
+    monitoringTypeId,
+    selectedMonitoring
+  );
 
+  // Use the hook to get monitorings and all product categories
+  const {
+    monitorings: orbitMonitoringData,
+    setMonitorings: setOrbitMonitoringData,
+    allProductCategories,
+  } = useMonitoringsAndAllProductCategories(applicationId, orbitProfileMonitoringService.getAll);
+
+  // Filter logic
   useEffect(() => {
-    if (applicationId) {
-      fetchOrbitMonitoring();
+    setFilteringOrbits(true);
+    if (orbitMonitoringData.length === 0) {
+      setFilteringOrbits(false);
+      return;
     }
-  }, [applicationId]);
 
-  // Fetch Orbit Monitoring data function
-  const fetchOrbitMonitoring = async () => {
-    try {
-      setIsLoading(true);
-      const response = await orbitProfileMonitoringService.getAll(applicationId);
-      setOrbitMonitoringData(response || []);
-    } catch (err) {
-      handleError('Failed to fetch orbit monitoring data');
-      console.error('Fetch error:', err);
-    } finally {
-      setIsLoading(false);
+    const { approvalStatus, activeStatus, domain, product, creator } = filters;
+
+    // Convert activeStatus to boolean
+    let activeStatusBool;
+    if (activeStatus === 'Active') {
+      activeStatusBool = true;
+    } else if (activeStatus === 'Inactive') {
+      activeStatusBool = false;
     }
-  };
+
+    let filteredOm = orbitMonitoringData.filter(orbitMonitoring => {
+      let include = true;
+
+      if (approvalStatus && orbitMonitoring.approvalStatus !== approvalStatus) {
+        include = false;
+      }
+      if (activeStatusBool !== undefined && orbitMonitoring.isActive !== activeStatusBool) {
+        include = false;
+      }
+
+      // Domain filter
+      const currentDomain = orbitMonitoring.metaData?.asrSpecificMetaData?.domain || null;
+      if (domain && currentDomain !== domain) {
+        include = false;
+      }
+
+      // Product category filter
+      const currentProduct = orbitMonitoring.metaData?.asrSpecificMetaData?.productCategory || null;
+      if (product && currentProduct !== product) {
+        include = false;
+      }
+
+      // Creator filter
+      const currentCreator = orbitMonitoring.createdBy || null;
+      if (creator && currentCreator !== creator) {
+        include = false;
+      }
+
+      return include;
+    });
+
+    const matchedOrbitIds = [];
+
+    // Calculate the number of matched string instances
+    if (searchTerm) {
+      let instanceCount = 0;
+      filteredOm.forEach(orbit => {
+        const monitoringName = orbit.monitoringName.toLowerCase();
+        const description = orbit.description?.toLowerCase() || '';
+        const buildName = orbit.metaData?.asrSpecificMetaData?.buildName?.toLowerCase() || '';
+
+        if (monitoringName.includes(searchTerm)) {
+          matchedOrbitIds.push(orbit.id);
+          instanceCount++;
+        }
+
+        if (description.includes(searchTerm)) {
+          matchedOrbitIds.push(orbit.id);
+          instanceCount++;
+        }
+
+        if (buildName.includes(searchTerm)) {
+          matchedOrbitIds.push(orbit.id);
+          instanceCount++;
+        }
+      });
+
+      setMatchCount(instanceCount);
+    } else {
+      setMatchCount(0);
+    }
+
+    if (matchedOrbitIds.length > 0) {
+      filteredOm = filteredOm.filter(orbit => matchedOrbitIds.includes(orbit.id));
+    } else if (matchedOrbitIds.length === 0 && searchTerm) {
+      filteredOm = [];
+    }
+
+    setFilteredOrbitMonitoring(filteredOm);
+    setFilteringOrbits(false);
+  }, [filters, orbitMonitoringData, searchTerm]);
+
+  const handleToggleFilters = () => setFiltersVisible(prev => !prev);
 
   // Reset modal states
   const resetStates = () => {
@@ -93,7 +181,8 @@ const OrbitMonitoring = () => {
       }
 
       // Refresh data and close modal
-      await fetchOrbitMonitoring();
+      const refreshedData = await orbitProfileMonitoringService.getAll({ applicationId });
+      setOrbitMonitoringData(refreshedData || []);
       setDisplayAddEditModal(false);
       resetStates();
 
@@ -133,7 +222,8 @@ const OrbitMonitoring = () => {
     try {
       await orbitProfileMonitoringService.delete([id]);
       handleSuccess('Monitoring deleted successfully');
-      await fetchOrbitMonitoring();
+      const refreshedData = await orbitProfileMonitoringService.getAll({ applicationId });
+      setOrbitMonitoringData(refreshedData || []);
     } catch (err) {
       handleError('Failed to delete monitoring');
       console.error('Delete error:', err);
@@ -144,7 +234,8 @@ const OrbitMonitoring = () => {
     try {
       await orbitProfileMonitoringService.toggleStatus(ids, isActive);
       handleSuccess(`Monitoring ${isActive ? 'started' : 'paused'} successfully`);
-      await fetchOrbitMonitoring();
+      const refreshedData = await orbitProfileMonitoringService.getAll({ applicationId });
+      setOrbitMonitoringData(refreshedData || []);
     } catch (err) {
       handleError('Failed to toggle monitoring status');
       console.error('Toggle error:', err);
@@ -179,7 +270,8 @@ const OrbitMonitoring = () => {
   const handleBulkUpdateOrbitMonitorings = async ({ updatedData }) => {
     try {
       await orbitProfileMonitoringService.bulkUpdate(updatedData);
-      await fetchOrbitMonitoring();
+      const refreshedData = await orbitProfileMonitoringService.getAll({ applicationId });
+      setOrbitMonitoringData(refreshedData || []);
     } catch (err) {
       console.error('Bulk update error:', err);
       throw err;
@@ -200,14 +292,30 @@ const OrbitMonitoring = () => {
             onBulkStartPause={handleBulkStartPauseOrbitMonitorings}
             onBulkDelete={handleBulkDeleteSelectedOrbitMonitorings}
             showBulkApproveReject={true}
-            showFiltersToggle={false}
+            showFiltersToggle={true}
+            onToggleFilters={handleToggleFilters}
           />
         }
       />
 
+      <OrbitProfileMonitoringFilters
+        setFilters={setFilters}
+        orbitMonitorings={orbitMonitoringData}
+        filtersVisible={filtersVisible}
+        setFiltersVisible={setFiltersVisible}
+        setSearchTerm={setSearchTerm}
+        matchCount={matchCount}
+        searchTerm={searchTerm}
+        domains={domains}
+        setSelectedDomain={setSelectedDomain}
+        selectedDomain={selectedDomain}
+        productCategories={productCategories}
+        allProductCategories={allProductCategories}
+      />
+
       <div className={styles.content}>
         <OrbitMonitoringTable
-          orbitMonitoringData={orbitMonitoringData}
+          orbitMonitoringData={filteredOrbitMonitoring}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           onEdit={handleEditMonitoring}

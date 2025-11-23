@@ -6,7 +6,7 @@ const orbitProfileMonitoringService = {
     return response.data;
   },
 
-  getAll: async applicationId => {
+  getAll: async ({ applicationId }) => {
     const response = await apiClient.get(`/orbitProfileMonitoring/getAll/${applicationId}`);
     return response.data;
   },
