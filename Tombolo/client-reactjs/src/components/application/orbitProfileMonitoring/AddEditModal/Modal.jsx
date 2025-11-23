@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Badge, Button, Card } from 'antd';
 
 import BasicTab from './BasicTab.jsx';
@@ -27,6 +27,28 @@ const AddEditModal = ({
 }) => {
   // Keep track of visited tabs
   const [visitedTabs, setVisitedTabs] = useState(['0']);
+
+  // Populate form fields when editing
+  useEffect(() => {
+    if (isEditing && selectedMonitoring && form) {
+      const { metaData } = selectedMonitoring;
+      form.setFieldsValue({
+        monitoringName: selectedMonitoring.monitoringName,
+        description: selectedMonitoring.description,
+        domain: metaData?.asrSpecificMetaData?.domain,
+        productCategory: metaData?.asrSpecificMetaData?.productCategory,
+        severity: metaData?.asrSpecificMetaData?.severity,
+        buildName: metaData?.asrSpecificMetaData?.buildName,
+        primaryContacts: metaData?.contacts?.primaryContacts,
+        secondaryContacts: metaData?.contacts?.secondaryContacts,
+        notifyContacts: metaData?.contacts?.notifyContacts,
+        notificationConditions: metaData?.monitoringData?.notificationConditions,
+      });
+      if (metaData?.asrSpecificMetaData?.domain) {
+        setSelectedDomain(metaData.asrSpecificMetaData.domain);
+      }
+    }
+  }, [isEditing, selectedMonitoring, form, setSelectedDomain]);
 
   // Handle Cancel
   const handleCancel = () => {
@@ -101,6 +123,7 @@ const AddEditModal = ({
       delete values.productCategory;
       delete values.severity;
       delete values.notificationConditions;
+      delete values.buildName;
 
       // Add metaData to values
       values.metaData = metaData;
