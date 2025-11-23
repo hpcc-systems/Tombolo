@@ -37,7 +37,6 @@ const OrbitMonitoring = () => {
   const [bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
   const [filters, setFilters] = useState({});
   const [filtersVisible, setFiltersVisible] = useState(true);
-  const [filteringOrbits, setFilteringOrbits] = useState(false);
   const [matchCount, setMatchCount] = useState(0);
 
   const [form] = Form.useForm();
