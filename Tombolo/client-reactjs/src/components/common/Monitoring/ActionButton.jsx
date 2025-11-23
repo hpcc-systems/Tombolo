@@ -111,7 +111,6 @@ const MonitoringActionButton = ({
       const ids = selectedRows.map((r) => r.id);
       await onBulkStartPause?.({ ids, action });
 
-      handleSuccess(`Selected ${action === 'start' ? 'items started' : 'items paused'}`);
       setOpen(false);
     } catch (_) {
       handleError('Unable to start/pause selected items');

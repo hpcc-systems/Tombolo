@@ -157,6 +157,7 @@ const OrbitMonitoring = () => {
       await orbitProfileMonitoringService.toggleStatus(ids, isActive);
       setOrbitMonitoringData(prev => prev.map(m => (ids.includes(m.id) ? { ...m, isActive } : m)));
       setSelectedRows([]);
+      handleSuccess(`Selected orbit monitorings ${action === 'start' ? 'started' : 'paused'} successfully`);
     } catch (err) {
       handleError('Unable to start/pause selected orbit monitorings');
       console.error('Bulk start/pause error:', err);
