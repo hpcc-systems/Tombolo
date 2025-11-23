@@ -123,8 +123,6 @@ const rowApproved = {
   approvalStatus: 'approved',
 };
 
-const rowPending = { ...rowApproved, id: 2, isActive: true, approvalStatus: 'pending' };
-
 beforeEach(() => {
   vi.clearAllMocks();
   mockState = {
