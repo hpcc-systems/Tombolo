@@ -113,6 +113,7 @@ const updateOrbitProfileMonitoring = async (req, res) => {
       ...updateData,
       lastUpdatedBy: userId,
       approvalStatus: APPROVAL_STATUS.PENDING, // Reset to pending on update
+      isActive: false, // Deactivate on update - requires re-approval
     });
 
     const updatedMonitoring = await OrbitProfileMonitoring.findByPk(id, {
