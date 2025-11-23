@@ -25,7 +25,7 @@ import commonStyles from '../../common/common.module.css';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 //Approve button color
-const approveButtonColor = (approvalStatus) => {
+const approveButtonColor = approvalStatus => {
   if (approvalStatus === APPROVAL_STATUS.PENDING) {
     return 'var(--primary)';
   } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
@@ -48,17 +48,17 @@ function OrbitMonitoringTable({
   selectedRows,
   setSelectedRows,
   applicationId,
-  setApproveRejectModal
+  setApproveRejectModal,
 }) {
   //Actions
-  const editOrbitMonitoring = (record) => {
+  const editOrbitMonitoring = record => {
     if (onEdit) {
       onEdit(record);
     }
   };
 
   // Approve or reject monitoring
-  const evaluateMonitoring = (record) => {
+  const evaluateMonitoring = record => {
     setSelectedMonitoring(record);
     if (setApproveRejectModal) {
       setApproveRejectModal(true);
@@ -66,7 +66,7 @@ function OrbitMonitoringTable({
   };
 
   // When the copy/duplicate icon is clicked
-  const duplicateOrbitMonitoring = (record) => {
+  const duplicateOrbitMonitoring = record => {
     if (onCopy) {
       onCopy(record);
     }
@@ -81,7 +81,7 @@ function OrbitMonitoringTable({
   };
 
   // Handle delete
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     if (onDelete) {
       onDelete(id);
     }
@@ -89,55 +89,44 @@ function OrbitMonitoringTable({
 
   // Filter and get particular orbit monitoring from list
   // When component loads and if there is selected monitoring pass data to form instance
-  const viewDetails = (monitoringId) => {
+  const viewDetails = monitoringId => {
     setDisplayViewDetailsModal(true);
-    const selectedMonitoring = orbitMonitoringData.find((monitoring) => monitoring.id === monitoringId);
+    const selectedMonitoring = orbitMonitoringData.find(monitoring => monitoring.id === monitoringId);
     setSelectedMonitoring(selectedMonitoring);
   };
 
   //Columns
   const columns = [
-    { 
-      title: 'Name', 
-      dataIndex: 'monitoringName',
-      render: (monitoringName) => monitoringName || 'N/A'
-    },
     {
-      title: 'Cluster',
-      dataIndex: 'cluster_id',
-      render: (_, record) => {
-        return (
-          <Tooltip title={`${record?.cluster?.thor_host}:${record?.cluster?.thor_port}`}>
-            {record?.cluster?.name}
-          </Tooltip>
-        );
-      },
+      title: 'Name',
+      dataIndex: 'monitoringName',
+      render: monitoringName => monitoringName || 'N/A',
     },
     {
       title: 'Build Name',
       dataIndex: 'metaData',
       render: (_, record) => record.metaData?.asrSpecificMetaData?.buildName || 'N/A',
     },
-    { title: 'Active', dataIndex: 'isActive', render: (isActive) => (isActive ? 'Yes' : 'No') },
-    { title: 'Approval Status', dataIndex: 'approvalStatus', render: (status) => startCase(status) },
+    { title: 'Active', dataIndex: 'isActive', render: isActive => (isActive ? 'Yes' : 'No') },
+    { title: 'Approval Status', dataIndex: 'approvalStatus', render: status => startCase(status) },
     {
       title: 'Created by',
-       dataIndex: 'creator',
-            key: 'creator',
-            render: (creator) => {
-              const { firstName, lastName, email } = creator;
-              const name = `${firstName} ${lastName}`;
-              return (
-                <Tooltip
-                  title={
-                    <>
-                      <div>E-mail: {email}</div>
-                    </>
-                  }>
-                  <span style={{ color: 'var(--primary)' }}>{name}</span>
-                </Tooltip>
-              );
-            },
+      dataIndex: 'creator',
+      key: 'creator',
+      render: creator => {
+        const { firstName, lastName, email } = creator;
+        const name = `${firstName} ${lastName}`;
+        return (
+          <Tooltip
+            title={
+              <>
+                <div>E-mail: {email}</div>
+              </>
+            }>
+            <span style={{ color: 'var(--primary)' }}>{name}</span>
+          </Tooltip>
+        );
+      },
     },
     {
       title: 'Actions',
@@ -217,9 +206,9 @@ function OrbitMonitoringTable({
                     </div>
                   </div>
                 }>
-                 <span style={{ color: 'var(--secondary)' }}>
-                   More <DownOutlined style={{ fontSize: '10px' }} />
-                 </span>
+                <span style={{ color: 'var(--secondary)' }}>
+                  More <DownOutlined style={{ fontSize: '10px' }} />
+                </span>
               </Popover>
             </>
           ) : null}
@@ -235,7 +224,7 @@ function OrbitMonitoringTable({
       dataSource={orbitMonitoringData}
       loading={loading}
       className={styles.orbit_monitoring_table}
-      rowKey={(record) => record.id}
+      rowKey={record => record.id}
       rowSelectedBgColor="var(--danger)"
       rowSelection={{
         type: 'checkbox',
@@ -244,10 +233,10 @@ function OrbitMonitoringTable({
         },
       }}
       pagination={{ pageSize: 20 }}
-      rowClassName={(record) => {
+      rowClassName={record => {
         let className = record?.isActive ? commonStyles.table_active_row : commonStyles.table_inactive_row;
 
-        const idsOfSelectedRows = selectedRows.map((row) => row.id);
+        const idsOfSelectedRows = selectedRows.map(row => row.id);
         if (idsOfSelectedRows.includes(record.id)) {
           className += styles.orbitMonitoringTable__selected_row;
         }

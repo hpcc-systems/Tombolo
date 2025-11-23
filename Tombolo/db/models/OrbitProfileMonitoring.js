@@ -12,13 +12,6 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE',
       });
 
-      OrbitProfileMonitoring.belongsTo(models.Cluster, {
-        foreignKey: 'clusterId',
-        as: 'cluster',
-        onDelete: 'NO ACTION',
-        onUpdate: 'CASCADE',
-      });
-
       OrbitProfileMonitoring.belongsTo(models.User, {
         foreignKey: 'createdBy',
         as: 'creator',
@@ -74,16 +67,6 @@ module.exports = (sequelize, DataTypes) => {
       description: {
         allowNull: false,
         type: DataTypes.STRING,
-      },
-      clusterId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: 'clusters',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'NO ACTION',
       },
       isActive: {
         allowNull: false,

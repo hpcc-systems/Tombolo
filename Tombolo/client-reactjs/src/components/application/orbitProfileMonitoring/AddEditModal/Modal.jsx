@@ -9,7 +9,6 @@ const AddEditModal = ({
   displayAddEditModal,
   setDisplayAddEditModal,
   form,
-  clusters,
   applicationId,
   domains,
   productCategories,
@@ -20,13 +19,11 @@ const AddEditModal = ({
   erroneousTabs,
   setErroneousTabs,
   resetStates,
-  selectedCluster,
-  setSelectedCluster,
   activeTab,
   setActiveTab,
   selectedMonitoring,
   savingOrbitMonitoring,
-  saveOrbitMonitoring
+  saveOrbitMonitoring,
 }) => {
   // Keep track of visited tabs
   const [visitedTabs, setVisitedTabs] = useState(['0']);
@@ -38,7 +35,7 @@ const AddEditModal = ({
   };
 
   // Handle tab change
-  const handleTabChange = (key) => {
+  const handleTabChange = key => {
     setActiveTab(key);
     if (!visitedTabs.includes(key)) {
       setVisitedTabs([...visitedTabs, key]);
@@ -46,7 +43,7 @@ const AddEditModal = ({
 
     // Clear error indicator for visited tab
     if (erroneousTabs.includes(key)) {
-      setErroneousTabs(erroneousTabs.filter((tab) => tab !== key));
+      setErroneousTabs(erroneousTabs.filter(tab => tab !== key));
     }
   };
 
@@ -73,16 +70,25 @@ const AddEditModal = ({
     try {
       await form.validateFields();
       const values = form.getFieldsValue();
-      const { primaryContacts, secondaryContacts, notifyContacts, domain, productCategory, severity, notificationConditions , buildName } = values;
+      const {
+        primaryContacts,
+        secondaryContacts,
+        notifyContacts,
+        domain,
+        productCategory,
+        severity,
+        notificationConditions,
+        buildName,
+      } = values;
       values.applicationId = applicationId;
 
-      // all contacts 
-      const contacts = {primaryContacts, secondaryContacts, notifyContacts};
-      const asrSpecificMetaData = {domain, productCategory, severity, buildName};
-      const monitoringData = {notificationConditions};
+      // all contacts
+      const contacts = { primaryContacts, secondaryContacts, notifyContacts };
+      const asrSpecificMetaData = { domain, productCategory, severity, buildName };
+      const monitoringData = { notificationConditions };
 
       // Metadata
-      const metaData = {}
+      const metaData = {};
       metaData['asrSpecificMetaData'] = asrSpecificMetaData;
       metaData['monitoringData'] = monitoringData;
       metaData['contacts'] = contacts;
@@ -117,13 +123,10 @@ const AddEditModal = ({
       component: () => (
         <BasicTab
           form={form}
-          clusters={clusters}
           domains={domains}
           productCategories={productCategories}
           selectedDomain={selectedDomain}
           setSelectedDomain={setSelectedDomain}
-          selectedCluster={selectedCluster}
-          setSelectedCluster={setSelectedCluster}
           isEditing={isEditing}
           selectedMonitoring={selectedMonitoring}
         />
@@ -133,27 +136,12 @@ const AddEditModal = ({
     {
       label: 'Monitoring Details',
       id: 2,
-      component: () => (
-        <MonitoringTab
-          form={form}
-          clusters={clusters}
-          selectedCluster={selectedCluster}
-          setSelectedCluster={setSelectedCluster}
-          isEditing={isEditing}
-          selectedMonitoring={selectedMonitoring}
-        />
-      ),
+      component: () => <MonitoringTab form={form} isEditing={isEditing} selectedMonitoring={selectedMonitoring} />,
     },
     {
       label: 'Notifications',
       id: 3,
-      component: () => (
-        <NotificationTab
-          form={form}
-          isEditing={isEditing}
-          selectedMonitoring={selectedMonitoring}
-        />
-      ),
+      component: () => <NotificationTab form={form} isEditing={isEditing} selectedMonitoring={selectedMonitoring} />,
     },
   ];
 
@@ -193,11 +181,7 @@ const AddEditModal = ({
           <Button type="primary" ghost onClick={handlePrevious}>
             Previous
           </Button>
-          <Button
-            type="primary"
-            onClick={handleSaveOrbitMonitoringModal}
-            loading={savingOrbitMonitoring}
-          >
+          <Button type="primary" onClick={handleSaveOrbitMonitoringModal} loading={savingOrbitMonitoring}>
             {isEditing ? 'Update' : 'Save'}
           </Button>
         </>
@@ -239,7 +223,7 @@ const AddEditModal = ({
       footer={renderFooter()}
       destroyOnHidden={true}>
       <Card size="small">
-        <Tabs type="card" activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)} items={tabItems} />
+        <Tabs type="card" activeKey={activeTab.toString()} onChange={key => handleTabChange(key)} items={tabItems} />
       </Card>
     </Modal>
   );

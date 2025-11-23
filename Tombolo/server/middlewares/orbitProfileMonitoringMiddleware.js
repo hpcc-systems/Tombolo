@@ -18,7 +18,6 @@ const createOrbitMonitoringPayloadValidations = [
     length: { ...MONITORING_NAME_LENGTH },
   }),
   stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
-  uuidBody('clusterId', false),
   objectBody('metaData'),
 ];
 

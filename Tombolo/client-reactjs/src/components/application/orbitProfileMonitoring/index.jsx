@@ -27,14 +27,12 @@ const OrbitMonitoring = () => {
   const [savingOrbitMonitoring, setSavingOrbitMonitoring] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [erroneousTabs, setErroneousTabs] = useState([]);
-  const [selectedCluster, setSelectedCluster] = useState(null);
   const [activeTab, setActiveTab] = useState('0');
   const [selectedRows, setSelectedRows] = useState([]);
   const [displayApproveRejectModal, setDisplayApproveRejectModal] = useState(false);
 
   const [form] = Form.useForm();
   const applicationId = useSelector(state => state.application.application.applicationId);
-  const clusters = useSelector(state => state.application.clusters);
 
   // User permissions
   const roleArray = getRoleNameArray();
@@ -68,7 +66,6 @@ const OrbitMonitoring = () => {
     setSelectedMonitoring(null);
     setIsEditing(false);
     setErroneousTabs([]);
-    setSelectedCluster(null);
     setActiveTab('0');
     form.resetFields();
   };
@@ -218,7 +215,6 @@ const OrbitMonitoring = () => {
           setDisplayAddEditModal={setDisplayAddEditModal}
           saveOrbitMonitoring={saveOrbitMonitoring}
           form={form}
-          clusters={clusters}
           domains={domains}
           productCategories={productCategories}
           applicationId={applicationId}
@@ -231,8 +227,6 @@ const OrbitMonitoring = () => {
           erroneousTabs={erroneousTabs}
           setErroneousTabs={setErroneousTabs}
           resetStates={resetStates}
-          selectedCluster={selectedCluster}
-          setSelectedCluster={setSelectedCluster}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           selectedMonitoring={selectedMonitoring}
@@ -247,7 +241,6 @@ const OrbitMonitoring = () => {
           setDisplayMonitoringDetailsModal={setDisplayViewDetailsModal}
           selectedMonitoring={selectedMonitoring}
           setSelectedMonitoring={setSelectedMonitoring}
-          clusters={clusters}
           domains={domains}
           productCategories={productCategories}>
           {selectedMonitoring?.metaData?.asrSpecificMetaData?.buildName && (

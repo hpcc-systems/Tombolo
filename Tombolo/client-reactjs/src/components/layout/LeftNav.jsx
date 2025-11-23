@@ -50,6 +50,13 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
 
   const roleArray = getRoleNameArray();
 
+  // Integrations
+  const integrations = useSelector(state => state.application.integrations);
+
+  const asrIntegration = integrations.some(
+    integration => integration.name === 'ASR' && integration.application_id === applicationId
+  );
+
   //control the disabled state of the menu items based on the application and cluster states
   useEffect(() => {
     if (application && applicationId) {
@@ -158,18 +165,19 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
           null,
           clusterDisabled
         ),
-        getItem(
-          <Link to={'/' + applicationId + '/orbit-profile-monitoring'}>
-            <span>
-              <CloudServerOutlined /> Orbit Profile
-            </span>
-          </Link>,
-          '4f-new',
-          null,
-          null,
-          null,
-          clusterDisabled
-        ),
+        asrIntegration &&
+          getItem(
+            <Link to={'/' + applicationId + '/orbit-profile-monitoring'}>
+              <span>
+                <CloudServerOutlined /> Orbit Profile
+              </span>
+            </Link>,
+            '4f-new',
+            null,
+            null,
+            null,
+            clusterDisabled
+          ),
         getItem(
           <Link to={'/' + applicationId + '/costMonitoring'}>
             <span>

@@ -3,7 +3,7 @@ const Sequelize = require('sequelize');
 
 // Local Imports
 const logger = require('../config/logger');
-const { OrbitProfileMonitoring, Cluster, sequelize } = require('../models');
+const { OrbitProfileMonitoring, sequelize } = require('../models');
 const { APPROVAL_STATUS } = require('../config/constants');
 const { sendError, sendSuccess } = require('../utils/response');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
@@ -18,14 +18,7 @@ const getAllOrbitProfileMonitorings = async (req, res) => {
 
     const orbitProfileMonitorings = await OrbitProfileMonitoring.findAll({
       where: { applicationId },
-      include: [
-        {
-          model: Cluster,
-          as: 'cluster',
-          attributes: ['id', 'name', 'thor_host', 'thor_port'],
-        },
-        ...getUserFkIncludes(),
-      ],
+      include: [...getUserFkIncludes()],
       order: [['createdAt', 'DESC']],
     });
 
@@ -43,14 +36,7 @@ const getOrbitProfileMonitoringById = async (req, res) => {
 
     const orbitProfileMonitoring = await OrbitProfileMonitoring.findOne({
       where: { id },
-      include: [
-        {
-          model: Cluster,
-          as: 'cluster',
-          attributes: ['id', 'name', 'thor_host', 'thor_port'],
-        },
-        ...getUserFkIncludes(),
-      ],
+      include: [...getUserFkIncludes()],
     });
 
     if (!orbitProfileMonitoring) {
@@ -67,15 +53,13 @@ const getOrbitProfileMonitoringById = async (req, res) => {
 // Create new orbit profile monitoring
 const createOrbitProfileMonitoring = async (req, res) => {
   try {
-    const { monitoringName, clusterId, description, metaData, applicationId } =
-      req.body;
+    const { monitoringName, description, metaData, applicationId } = req.body;
     const userId = req.user.id;
 
     const newOrbitProfileMonitoring = await OrbitProfileMonitoring.create({
       applicationId,
       monitoringName,
       description,
-      clusterId,
       metaData,
       createdBy: userId,
       lastUpdatedBy: userId,
@@ -86,14 +70,7 @@ const createOrbitProfileMonitoring = async (req, res) => {
     const createdMonitoring = await OrbitProfileMonitoring.findByPk(
       newOrbitProfileMonitoring.id,
       {
-        include: [
-          {
-            model: Cluster,
-            as: 'cluster',
-            attributes: ['id', 'name', 'thor_host', 'thor_port'],
-          },
-          ...getUserFkIncludes(),
-        ],
+        include: [...getUserFkIncludes()],
       }
     );
 
@@ -139,14 +116,7 @@ const updateOrbitProfileMonitoring = async (req, res) => {
     });
 
     const updatedMonitoring = await OrbitProfileMonitoring.findByPk(id, {
-      include: [
-        {
-          model: Cluster,
-          as: 'cluster',
-          attributes: ['id', 'name', 'thor_host', 'thor_port'],
-        },
-        ...getUserFkIncludes(),
-      ],
+      include: [...getUserFkIncludes()],
     });
 
     sendSuccess(
@@ -228,14 +198,7 @@ const toggleOrbitProfileMonitoringStatus = async (req, res) => {
         id: { [Sequelize.Op.in]: ids },
         approvalStatus: APPROVAL_STATUS.APPROVED,
       },
-      include: [
-        {
-          model: Cluster,
-          as: 'cluster',
-          attributes: ['id', 'name', 'thor_host', 'thor_port'],
-        },
-        ...getUserFkIncludes(),
-      ],
+      include: [...getUserFkIncludes()],
     });
 
     sendSuccess(
@@ -274,14 +237,7 @@ const evaluateOrbitProfileMonitoring = async (req, res) => {
     // Re-fetch the updated monitoring
     const updatedMonitoring = await OrbitProfileMonitoring.findAll({
       where: { id: { [Sequelize.Op.in]: ids } },
-      include: [
-        {
-          model: Cluster,
-          as: 'cluster',
-          attributes: ['id', 'name', 'thor_host', 'thor_port'],
-        },
-        ...getUserFkIncludes(),
-      ],
+      include: [...getUserFkIncludes()],
     });
 
     sendSuccess(
