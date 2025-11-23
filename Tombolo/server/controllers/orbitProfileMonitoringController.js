@@ -277,11 +277,7 @@ const bulkUpdateOrbitProfileMonitoring = async (req, res) => {
     }
 
     await transaction.commit();
-    sendSuccess(
-      res,
-      null,
-      'Orbit profile monitorings updated successfully'
-    );
+    sendSuccess(res, null, 'Orbit profile monitorings updated successfully');
   } catch (err) {
     transaction && (await transaction.rollback());
     logger.error('Error bulk updating orbit profile monitorings:', err);
