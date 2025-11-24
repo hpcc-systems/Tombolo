@@ -82,16 +82,16 @@ app.use(cookieParser());
 
 /*  ROUTES */
 const bree = require('./routes/bree/read');
-const appRead = require('./routes/app/read');
-const hpccRead = require('./routes/hpcc/read');
-const jobmonitoring = require('./routes/jobmonitoring/read');
+const applications = require('./routes/applicationRoutes');
+const hpccRead = require('./routes/hpccRoutes');
+const jobmonitoring = require('./routes/jobMonitoringRoutes');
 const configurations = require('./routes/configRoutes.js');
 const orbit = require('./routes/orbit/read');
 const integrations = require('./routes/integrations/read');
-const notification_queue = require('./routes/notification_queue/read');
-const sent_notifications = require('./routes/sent_notifications/read');
-const monitorings = require('./routes/monitorings/read');
-const asr = require('./routes/asr/read');
+const notification_queue = require('./routes/notificationQueueRoutes');
+const sent_notifications = require('./routes/sentNotificationRoutes');
+const monitorings = require('./routes/monitoringTypeRoutes');
+const asr = require('./routes/asrRoutes');
 const wizard = require('./routes/wizardRoutes');
 
 //MVC & TESTED
@@ -123,7 +123,7 @@ app.use(validateToken);
 app.use('/api/user', users);
 app.use('/api/session', sessions);
 app.use('/api/bree', bree);
-app.use('/api/app/read', appRead);
+app.use('/api/app/read', applications);
 app.use('/api/hpcc/read', hpccRead);
 app.use('/api/fileMonitoring', fileMonitoring);
 app.use('/api/jobmonitoring', jobmonitoring);
