@@ -1,11 +1,10 @@
 // Library imports
 import React from 'react';
-import { Table, Space, Tooltip, Popconfirm, Popover, Tag, Button } from 'antd';
+import { Table, Space, Tooltip, Popconfirm, Popover } from 'antd';
 import { Link } from 'react-router-dom';
 import startCase from 'lodash/startCase';
 
 // Local imports
-import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import {
   EyeOutlined,
   EditOutlined,
@@ -19,7 +18,6 @@ import {
 } from '@ant-design/icons';
 
 // Local imports
-import orbitProfileMonitoringService from '@/services/orbitProfileMonitoring.service';
 import styles from './orbitMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';
 import { APPROVAL_STATUS } from '@/components/common/Constants';

@@ -1,21 +1,7 @@
 import React from 'react';
 import { Form, Select } from 'antd';
 
-const { Option } = Select;
-
 function NotificationTab({ form, _isEditing, _selectedMonitoring }) {
-  // Build status options for notification conditions
-  const buildStatuses = [
-    { label: 'Build Available For Use', value: 'build_available_for_use' },
-    { label: 'Discarded', value: 'discarded' },
-    { label: 'Failed QA QAHeld', value: 'failed_qa_qaheld' },
-    { label: 'Graveyard', value: 'graveyard' },
-    { label: 'Passed QA', value: 'passed_qa' },
-    { label: 'Passed QA No Release', value: 'passed_qa_no_release' },
-    { label: 'Production', value: 'production' },
-    { label: 'Skipped', value: 'skipped' },
-  ];
-
   return (
     <Form form={form} layout="vertical">
       <Form.Item

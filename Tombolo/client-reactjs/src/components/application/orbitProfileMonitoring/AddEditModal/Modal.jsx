@@ -43,7 +43,12 @@ const AddEditModal = ({
         primaryContacts: metaData?.contacts?.primaryContacts,
         secondaryContacts: metaData?.contacts?.secondaryContacts,
         notifyContacts: metaData?.contacts?.notifyContacts,
-        notificationConditions: metaData?.monitoringData?.notificationConditions,
+        monitoringData: {
+          notificationConditions: metaData?.monitoringData?.notificationConditions,
+          buildStatus: metaData?.monitoringData?.buildStatus,
+          updateInterval: metaData?.monitoringData?.updateInterval,
+          updateIntervalDays: metaData?.monitoringData?.updateIntervalDays,
+        },
       });
       if (metaData?.asrSpecificMetaData?.domain) {
         setSelectedDomain(metaData.asrSpecificMetaData.domain);
@@ -65,7 +70,12 @@ const AddEditModal = ({
         primaryContacts: metaData?.contacts?.primaryContacts,
         secondaryContacts: metaData?.contacts?.secondaryContacts,
         notifyContacts: metaData?.contacts?.notifyContacts,
-        notificationConditions: metaData?.monitoringData?.notificationConditions,
+        monitoringData: {
+          notificationConditions: metaData?.monitoringData?.notificationConditions,
+          buildStatus: metaData?.monitoringData?.buildStatus,
+          updateInterval: metaData?.monitoringData?.updateInterval,
+          updateIntervalDays: metaData?.monitoringData?.updateIntervalDays,
+        },
       });
       if (metaData?.asrSpecificMetaData?.domain) {
         setSelectedDomain(metaData.asrSpecificMetaData.domain);
