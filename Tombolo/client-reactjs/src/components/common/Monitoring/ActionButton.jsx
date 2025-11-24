@@ -78,7 +78,7 @@ const MonitoringActionButton = ({
   const count = selectedRows?.length || 0;
   const disabledMulti = count < 2;
 
-  const handleMenuSelection = (key) => {
+  const handleMenuSelection = key => {
     if (key === 'add' && onAdd) onAdd();
     if (key === 'bulkEdit' && onBulkEdit) onBulkEdit();
     if (key === 'bulkApproveReject' && onBulkApproveReject) onBulkApproveReject();
@@ -98,7 +98,7 @@ const MonitoringActionButton = ({
 
   const deleteSelected = async () => {
     try {
-      const ids = selectedRows.map((r) => r.id);
+      const ids = selectedRows.map(r => r.id);
       await onBulkDelete?.(ids);
     } catch (err) {
       handleError('Unable to delete selected items');
@@ -108,10 +108,9 @@ const MonitoringActionButton = ({
   const bulkStartPause = async () => {
     try {
       const action = bulkStartPauseForm.getFieldValue('action');
-      const ids = selectedRows.map((r) => r.id);
+      const ids = selectedRows.map(r => r.id);
       await onBulkStartPause?.({ ids, action });
 
-      handleSuccess(`Selected ${action === 'start' ? 'items started' : 'items paused'}`);
       setOpen(false);
     } catch (_) {
       handleError('Unable to start/pause selected items');
@@ -145,7 +144,7 @@ const MonitoringActionButton = ({
         </Card>
       }
       trigger="click"
-      onOpenChange={(visible) => {
+      onOpenChange={visible => {
         if (!visible) bulkStartPauseForm.resetFields();
       }}>
       <a>Bulk start/pause</a>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Badge, Button, Card } from 'antd';
 
 import BasicTab from './BasicTab.jsx';
@@ -9,7 +9,6 @@ const AddEditModal = ({
   displayAddEditModal,
   setDisplayAddEditModal,
   form,
-  clusters,
   applicationId,
   domains,
   productCategories,
@@ -20,16 +19,89 @@ const AddEditModal = ({
   erroneousTabs,
   setErroneousTabs,
   resetStates,
-  selectedCluster,
-  setSelectedCluster,
   activeTab,
   setActiveTab,
   selectedMonitoring,
+  orbitMonitoringData,
   savingOrbitMonitoring,
-  saveOrbitMonitoring
+  saveOrbitMonitoring,
 }) => {
   // Keep track of visited tabs
   const [visitedTabs, setVisitedTabs] = useState(['0']);
+
+  // Populate form fields when editing
+  useEffect(() => {
+    if (isEditing && selectedMonitoring && form) {
+      const { metaData } = selectedMonitoring;
+      form.setFieldsValue({
+        monitoringName: selectedMonitoring.monitoringName,
+        description: selectedMonitoring.description,
+        domain: metaData?.asrSpecificMetaData?.domain,
+        productCategory: metaData?.asrSpecificMetaData?.productCategory,
+        severity: metaData?.asrSpecificMetaData?.severity,
+        buildName: metaData?.asrSpecificMetaData?.buildName,
+        primaryContacts: metaData?.contacts?.primaryContacts,
+        secondaryContacts: metaData?.contacts?.secondaryContacts,
+        notifyContacts: metaData?.contacts?.notifyContacts,
+        monitoringData: {
+          notificationConditions: metaData?.monitoringData?.notificationConditions,
+          buildStatus: metaData?.monitoringData?.buildStatus,
+          updateInterval: metaData?.monitoringData?.updateInterval,
+          updateIntervalDays: metaData?.monitoringData?.updateIntervalDays,
+        },
+      });
+      if (metaData?.asrSpecificMetaData?.domain) {
+        setSelectedDomain(metaData.asrSpecificMetaData.domain);
+      }
+    }
+  }, [isEditing, selectedMonitoring, form, setSelectedDomain]);
+
+  // Populate form fields when duplicating and generate unique name
+  useEffect(() => {
+    if (isDuplicating && selectedMonitoring && form) {
+      const { metaData } = selectedMonitoring;
+      form.setFieldsValue({
+        monitoringName: selectedMonitoring.monitoringName,
+        description: selectedMonitoring.description,
+        domain: metaData?.asrSpecificMetaData?.domain,
+        productCategory: metaData?.asrSpecificMetaData?.productCategory,
+        severity: metaData?.asrSpecificMetaData?.severity,
+        buildName: metaData?.asrSpecificMetaData?.buildName,
+        primaryContacts: metaData?.contacts?.primaryContacts,
+        secondaryContacts: metaData?.contacts?.secondaryContacts,
+        notifyContacts: metaData?.contacts?.notifyContacts,
+        monitoringData: {
+          notificationConditions: metaData?.monitoringData?.notificationConditions,
+          buildStatus: metaData?.monitoringData?.buildStatus,
+          updateInterval: metaData?.monitoringData?.updateInterval,
+          updateIntervalDays: metaData?.monitoringData?.updateIntervalDays,
+        },
+      });
+      if (metaData?.asrSpecificMetaData?.domain) {
+        setSelectedDomain(metaData.asrSpecificMetaData.domain);
+      }
+
+      // Generate unique name
+      const doesNameExist = name => orbitMonitoringData.some(m => m.monitoringName === name);
+
+      let currentName = selectedMonitoring.monitoringName;
+      let newName = `copy-${currentName}`;
+      let copyCount = 0;
+
+      while (doesNameExist(newName)) {
+        copyCount++;
+        newName = `copy-${currentName}-${copyCount}`;
+      }
+
+      form.setFields([
+        {
+          name: 'monitoringName',
+          value: newName,
+          warnings: ['Auto generated name. Please modify if necessary.'],
+        },
+      ]);
+    }
+  }, [isDuplicating, selectedMonitoring, form, orbitMonitoringData, setSelectedDomain]);
 
   // Handle Cancel
   const handleCancel = () => {
@@ -38,7 +110,7 @@ const AddEditModal = ({
   };
 
   // Handle tab change
-  const handleTabChange = (key) => {
+  const handleTabChange = key => {
     setActiveTab(key);
     if (!visitedTabs.includes(key)) {
       setVisitedTabs([...visitedTabs, key]);
@@ -46,7 +118,7 @@ const AddEditModal = ({
 
     // Clear error indicator for visited tab
     if (erroneousTabs.includes(key)) {
-      setErroneousTabs(erroneousTabs.filter((tab) => tab !== key));
+      setErroneousTabs(erroneousTabs.filter(tab => tab !== key));
     }
   };
 
@@ -73,16 +145,20 @@ const AddEditModal = ({
     try {
       await form.validateFields();
       const values = form.getFieldsValue();
-      const { primaryContacts, secondaryContacts, notifyContacts, domain, productCategory, severity, notificationConditions , buildName } = values;
+      const { primaryContacts, secondaryContacts, notifyContacts, domain, productCategory, severity, buildName } =
+        values;
+      const monitoringDataFromForm = values.monitoringData || {};
       values.applicationId = applicationId;
 
-      // all contacts 
-      const contacts = {primaryContacts, secondaryContacts, notifyContacts};
-      const asrSpecificMetaData = {domain, productCategory, severity, buildName};
-      const monitoringData = {notificationConditions};
+      // all contacts
+      const contacts = { primaryContacts, secondaryContacts, notifyContacts };
+      const asrSpecificMetaData = { domain, productCategory, severity, buildName };
+      const monitoringData = {
+        ...monitoringDataFromForm,
+      };
 
       // Metadata
-      const metaData = {}
+      const metaData = {};
       metaData['asrSpecificMetaData'] = asrSpecificMetaData;
       metaData['monitoringData'] = monitoringData;
       metaData['contacts'] = contacts;
@@ -94,7 +170,8 @@ const AddEditModal = ({
       delete values.domain;
       delete values.productCategory;
       delete values.severity;
-      delete values.notificationConditions;
+      delete values.monitoringData;
+      delete values.buildName;
 
       // Add metaData to values
       values.metaData = metaData;
@@ -117,13 +194,10 @@ const AddEditModal = ({
       component: () => (
         <BasicTab
           form={form}
-          clusters={clusters}
           domains={domains}
           productCategories={productCategories}
           selectedDomain={selectedDomain}
           setSelectedDomain={setSelectedDomain}
-          selectedCluster={selectedCluster}
-          setSelectedCluster={setSelectedCluster}
           isEditing={isEditing}
           selectedMonitoring={selectedMonitoring}
         />
@@ -133,27 +207,12 @@ const AddEditModal = ({
     {
       label: 'Monitoring Details',
       id: 2,
-      component: () => (
-        <MonitoringTab
-          form={form}
-          clusters={clusters}
-          selectedCluster={selectedCluster}
-          setSelectedCluster={setSelectedCluster}
-          isEditing={isEditing}
-          selectedMonitoring={selectedMonitoring}
-        />
-      ),
+      component: () => <MonitoringTab form={form} isEditing={isEditing} selectedMonitoring={selectedMonitoring} />,
     },
     {
       label: 'Notifications',
       id: 3,
-      component: () => (
-        <NotificationTab
-          form={form}
-          isEditing={isEditing}
-          selectedMonitoring={selectedMonitoring}
-        />
-      ),
+      component: () => <NotificationTab form={form} isEditing={isEditing} selectedMonitoring={selectedMonitoring} />,
     },
   ];
 
@@ -193,11 +252,7 @@ const AddEditModal = ({
           <Button type="primary" ghost onClick={handlePrevious}>
             Previous
           </Button>
-          <Button
-            type="primary"
-            onClick={handleSaveOrbitMonitoringModal}
-            loading={savingOrbitMonitoring}
-          >
+          <Button type="primary" onClick={handleSaveOrbitMonitoringModal} loading={savingOrbitMonitoring}>
             {isEditing ? 'Update' : 'Save'}
           </Button>
         </>
@@ -239,7 +294,7 @@ const AddEditModal = ({
       footer={renderFooter()}
       destroyOnHidden={true}>
       <Card size="small">
-        <Tabs type="card" activeKey={activeTab.toString()} onChange={(key) => handleTabChange(key)} items={tabItems} />
+        <Tabs type="card" activeKey={activeTab.toString()} onChange={key => handleTabChange(key)} items={tabItems} />
       </Card>
     </Modal>
   );

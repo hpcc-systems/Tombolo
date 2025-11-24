@@ -337,3 +337,4 @@ export const User: GenericModel;
 export const UserApplication: GenericModel;
 export const UserArchive: GenericModel;
 export const UserRole: GenericModel;
+export const OrbitProfileMonitoring: GenericModel;

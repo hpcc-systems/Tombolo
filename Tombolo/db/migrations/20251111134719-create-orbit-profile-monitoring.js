@@ -27,16 +27,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      clusterId: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: 'clusters',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'NO ACTION',
-      },
       isActive: {
         allowNull: false,
         defaultValue: false,

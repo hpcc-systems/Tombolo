@@ -17,8 +17,8 @@ const BulkUpdateModal = ({
   monitoringType,
   handleBulkUpdateMonitorings,
 }) => {
-  const applicationId = useSelector((state) => state.application.application.applicationId);
-  const integrations = useSelector((state) => state.application.integrations);
+  const applicationId = useSelector(state => state.application.application.applicationId);
+  const integrations = useSelector(state => state.application.integrations);
 
   // Original
   const [primaryContacts, setPrimaryContacts] = useState([]);
@@ -36,27 +36,27 @@ const BulkUpdateModal = ({
   const [removedNotifyContacts, setRemovedNotifyContacts] = useState([]);
 
   // Handle Primary Contact Change
-  const handlePrimaryContactsChange = (value) => {
-    const addedPc = value.filter((v) => !primaryContacts.includes(v));
-    const removedPc = primaryContacts.filter((v) => !value.includes(v));
+  const handlePrimaryContactsChange = value => {
+    const addedPc = value.filter(v => !primaryContacts.includes(v));
+    const removedPc = primaryContacts.filter(v => !value.includes(v));
 
     setNewPrimaryContacts(addedPc);
     setRemovedPrimaryContacts(removedPc);
   };
 
   // Handle Secondary Contact Change
-  const handleSecondaryContactsChange = (value) => {
-    const addedSc = value.filter((v) => !secondaryContacts.includes(v));
-    const removedSc = secondaryContacts.filter((v) => !value.includes(v));
+  const handleSecondaryContactsChange = value => {
+    const addedSc = value.filter(v => !secondaryContacts.includes(v));
+    const removedSc = secondaryContacts.filter(v => !value.includes(v));
 
     setNewSecondaryContacts(addedSc);
     setRemovedSecondaryContacts(removedSc);
   };
 
   // handle Notify Contact Change
-  const handleNotifyContactsChange = (value) => {
-    const addedNc = value.filter((v) => !notifyContacts.includes(v));
-    const removedNc = notifyContacts.filter((v) => !value.includes(v));
+  const handleNotifyContactsChange = value => {
+    const addedNc = value.filter(v => !notifyContacts.includes(v));
+    const removedNc = notifyContacts.filter(v => !value.includes(v));
 
     setNewNotifyContacts(addedNc);
     setRemovedNotifyContacts(removedNc);
@@ -88,15 +88,15 @@ const BulkUpdateModal = ({
       const { primaryContacts, secondaryContacts, notifyContacts } = notificationMetaData || contacts || {};
 
       if (primaryContacts) {
-        setPrimaryContacts((prev) => [...new Set([...prev, ...primaryContacts])]);
+        setPrimaryContacts(prev => [...new Set([...prev, ...primaryContacts])]);
       }
 
       if (secondaryContacts) {
-        setSecondaryContacts((prev) => [...new Set([...prev, ...secondaryContacts])]);
+        setSecondaryContacts(prev => [...new Set([...prev, ...secondaryContacts])]);
       }
 
       if (notifyContacts) {
-        setNotifyContacts((prev) => [...new Set([...prev, ...notifyContacts])]);
+        setNotifyContacts(prev => [...new Set([...prev, ...notifyContacts])]);
       }
     });
   }, [selectedRows]);
@@ -112,7 +112,7 @@ const BulkUpdateModal = ({
     let hasError = false;
 
     try {
-      selectedRows.forEach((row) => {
+      selectedRows.forEach(row => {
         const { metaData } = row || {};
         const { notificationMetaData, contacts } = metaData || {};
         const {
@@ -126,7 +126,7 @@ const BulkUpdateModal = ({
         // Handle primary contacts
         if (primaryContacts || newPrimaryContacts.length > 0) {
           // Filter out the contacts that are in the 'removedPrimaryContacts' list
-          const remainingContacts = primaryContacts.filter((v) => !removedPrimaryContacts.includes(v));
+          const remainingContacts = primaryContacts.filter(v => !removedPrimaryContacts.includes(v));
 
           // Combine the remaining contacts with the new contacts
           const combinedContacts = [...remainingContacts, ...newPrimaryContacts];
@@ -139,7 +139,7 @@ const BulkUpdateModal = ({
         // Handle secondary contacts
         if (secondaryContacts || newSecondaryContacts.length > 0) {
           // Filter out the contacts that are in the 'removedSecondaryContacts' list
-          const remainingContacts = secondaryContacts.filter((v) => !removedSecondaryContacts.includes(v));
+          const remainingContacts = secondaryContacts.filter(v => !removedSecondaryContacts.includes(v));
 
           // Combine the remaining contacts with the new contacts
           const combinedContacts = [...remainingContacts, ...newSecondaryContacts];
@@ -151,7 +151,7 @@ const BulkUpdateModal = ({
         // Handle notify contacts
         if (notifyContacts || newNotifyContacts.length > 0) {
           // Filter out the contacts that are in the 'removedNotifyContacts' list
-          const remainingContacts = notifyContacts.filter((v) => !removedNotifyContacts.includes(v));
+          const remainingContacts = notifyContacts.filter(v => !removedNotifyContacts.includes(v));
 
           // Combine the remaining contacts with the new contacts
           const combinedContacts = [...remainingContacts, ...newNotifyContacts];
@@ -192,28 +192,32 @@ const BulkUpdateModal = ({
       // Update using the bulk update function
       await handleBulkUpdateMonitorings({ updatedData: updatedMetaData });
 
-      const allUpdatedIds = updatedMetaData.map((data) => data.id);
-      const newCostMonitoringData = monitorings.map((cost) => {
+      const allUpdatedIds = updatedMetaData.map(data => data.id);
+      const newCostMonitoringData = monitorings.map(cost => {
         if (allUpdatedIds.includes(cost.id)) {
-          const updatedCost = updatedMetaData.find((data) => data.id === cost.id);
+          const updatedCost = updatedMetaData.find(data => data.id === cost.id);
           return { ...cost, metaData: updatedCost.metaData, isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
         }
         return cost;
       });
 
       // Set selected monitoring to the updated monitoring
-      setSelectedRows((prev) =>
-        prev.map((row) => {
-          const updatedRow = updatedMetaData.find((data) => data.id === row.id);
+      setSelectedRows(prev =>
+        prev.map(row => {
+          const updatedRow = updatedMetaData.find(data => data.id === row.id);
           return { ...row, metaData: updatedRow.metaData, isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
         })
       );
 
       setMonitorings(newCostMonitoringData);
-      handleSuccess('Cost monitorings updated successfully');
+      const successMessage =
+        monitoringType === 'orbit' ? 'Orbit monitorings updated successfully' : 'Cost monitorings updated successfully';
+      handleSuccess(successMessage);
       resetState();
     } catch (err) {
-      handleError(err.message || 'Failed to update cost monitorings');
+      const errorMessage =
+        monitoringType === 'orbit' ? 'Failed to update orbit monitorings' : 'Failed to update cost monitorings';
+      handleError(err.message || errorMessage);
     }
   };
 
@@ -243,7 +247,7 @@ const BulkUpdateModal = ({
                   if (!value || value.length === 0) {
                     return Promise.reject(new Error('Please add at least one email!'));
                   }
-                  if (!value.every((v) => isEmail(v))) {
+                  if (!value.every(v => isEmail(v))) {
                     return Promise.reject(new Error('One or more emails are invalid'));
                   }
                   return Promise.resolve();
@@ -263,7 +267,7 @@ const BulkUpdateModal = ({
           {monitoringType !== 'cost' &&
             integrations &&
             integrations.some(
-              (integration) => integration.name === 'ASR' && integration.application_id === applicationId
+              integration => integration.name === 'ASR' && integration.application_id === applicationId
             ) && (
               <>
                 <Form.Item
@@ -272,7 +276,7 @@ const BulkUpdateModal = ({
                   rules={[
                     {
                       validator: (_, value) => {
-                        if (value && !value.every((v) => isEmail(v))) {
+                        if (value && !value.every(v => isEmail(v))) {
                           return Promise.reject(new Error('One or more emails are invalid'));
                         }
                         return Promise.resolve();
@@ -294,7 +298,7 @@ const BulkUpdateModal = ({
                   rules={[
                     {
                       validator: (_, value) => {
-                        if (value && !value.every((v) => isEmail(v))) {
+                        if (value && !value.every(v => isEmail(v))) {
                           return Promise.reject(new Error('One or more emails are invalid'));
                         }
                         return Promise.resolve();

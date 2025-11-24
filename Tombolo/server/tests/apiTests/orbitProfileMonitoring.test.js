@@ -40,7 +40,6 @@ describe('orbitProfileMonitoring Routes', () => {
       applicationId: orbitProfileMonitoring.applicationId,
       monitoringName: orbitProfileMonitoring.monitoringName,
       description: orbitProfileMonitoring.description,
-      clusterId: orbitProfileMonitoring.clusterId,
       metaData: orbitProfileMonitoring.metaData,
       createdBy: AUTHED_USER_ID,
       lastUpdatedBy: AUTHED_USER_ID,
@@ -100,7 +99,6 @@ describe('orbitProfileMonitoring Routes', () => {
       applicationId: orbitProfileMonitoring.applicationId,
       monitoringName: 'Updated Monitoring Name',
       description: 'Updated description',
-      clusterId: uuidv4(),
       metaData: {
         domain: 'updated-domain.com',
         productCategory: 'Updated Category',
@@ -154,6 +152,7 @@ describe('orbitProfileMonitoring Routes', () => {
       ...expectedUpdateData,
       lastUpdatedBy: AUTHED_USER_ID,
       approvalStatus: 'pending',
+      isActive: false,
     });
   });
 
@@ -163,7 +162,6 @@ describe('orbitProfileMonitoring Routes', () => {
       applicationId: uuidv4(),
       monitoringName: 'Updated Name',
       description: 'Updated description',
-      clusterId: uuidv4(),
       metaData: {
         domain: 'test-domain.com',
         productCategory: 'Test Category',
@@ -394,7 +392,6 @@ describe('orbitProfileMonitoring Routes', () => {
       applicationId: orbitMonitoringOne.applicationId,
       monitoringName: orbitMonitoringOne.monitoringName,
       description: orbitMonitoringOne.description,
-      clusterId: orbitMonitoringOne.clusterId,
       approvalStatus: APPROVAL_STATUS.APPROVED,
       approverComment: 'Monitoring looks good to go',
       isActive: true,
@@ -407,7 +404,6 @@ describe('orbitProfileMonitoring Routes', () => {
       applicationId: orbitMonitoringTwo.applicationId,
       monitoringName: orbitMonitoringTwo.monitoringName,
       description: orbitMonitoringTwo.description,
-      clusterId: orbitMonitoringTwo.clusterId,
       approvalStatus: APPROVAL_STATUS.APPROVED,
       approverComment: 'Monitoring looks good to go',
       isActive: true,
@@ -432,12 +428,7 @@ describe('orbitProfileMonitoring Routes', () => {
 
     expect(OrbitProfileMonitoring.findAll).toHaveBeenCalledWith({
       where: { id: { [Op.in]: uuids } },
-      include: expect.arrayContaining([
-        expect.objectContaining({
-          model: expect.anything(),
-          as: 'cluster',
-        }),
-      ]),
+      include: expect.any(Array),
     });
   });
 });

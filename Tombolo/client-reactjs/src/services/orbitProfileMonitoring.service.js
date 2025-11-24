@@ -6,7 +6,7 @@ const orbitProfileMonitoringService = {
     return response.data;
   },
 
-  getAll: async applicationId => {
+  getAll: async ({ applicationId }) => {
     const response = await apiClient.get(`/orbitProfileMonitoring/getAll/${applicationId}`);
     return response.data;
   },
@@ -38,6 +38,11 @@ const orbitProfileMonitoringService = {
 
   evaluate: async formData => {
     const response = await apiClient.patch('/orbitProfileMonitoring/evaluate', formData);
+    return response.data;
+  },
+
+  bulkUpdate: async monitorings => {
+    const response = await apiClient.patch('/orbitProfileMonitoring/bulk', { monitorings });
     return response.data;
   },
 };

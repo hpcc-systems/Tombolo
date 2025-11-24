@@ -80,6 +80,8 @@ export const Constants = {
 
   FM_FILTERS_KEY: 'fMFilters',
   FM_FILTERS_VS_KEY: 'fMFiltersVisible',
+  OPM_FILTERS_KEY: 'opmFilters',
+  OPM_FILTERS_VS_KEY: 'opmFiltersVisible',
 };
 
 export const APPROVAL_STATUS = {

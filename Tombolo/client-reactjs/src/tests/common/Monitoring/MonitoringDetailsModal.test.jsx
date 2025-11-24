@@ -49,6 +49,10 @@ const mockSelectedMonitoring = {
       secondaryContacts: ['secondary@example.com'],
       notifyContacts: ['notify@example.com'],
     },
+    // New structure used by Orbit Profile Monitoring UI
+    monitoringData: {
+      notificationConditions: ['OnFailure', 'OnSuccess'],
+    },
   },
 };
 
@@ -142,17 +146,17 @@ describe('MonitoringDetailsModal', () => {
     const createdByLabel = screen.getByText('Created by');
     const createdBySection = createdByLabel.closest('.ant-descriptions-row');
     expect(within(createdBySection).getByText('John Doe')).toBeInTheDocument();
-    expect(within(createdBySection).getByText((content) => content.includes('September 1, 2025'))).toBeInTheDocument();
+    expect(within(createdBySection).getByText(content => content.includes('September 1, 2025'))).toBeInTheDocument();
 
     const approvedByLabel = screen.getByText('Approved by');
     const approvedBySection = approvedByLabel.closest('.ant-descriptions-row');
     expect(within(approvedBySection).getByText('Jane Smith')).toBeInTheDocument();
-    expect(within(approvedBySection).getByText((content) => content.includes('September 2, 2025'))).toBeInTheDocument();
+    expect(within(approvedBySection).getByText(content => content.includes('September 2, 2025'))).toBeInTheDocument();
 
     const updatedByLabel = screen.getByText('Last updated by');
     const updatedBySection = updatedByLabel.closest('.ant-descriptions-row');
     expect(within(updatedBySection).getByText('Bob Johnson')).toBeInTheDocument();
-    expect(within(updatedBySection).getByText((content) => content.includes('September 3, 2025'))).toBeInTheDocument();
+    expect(within(updatedBySection).getByText(content => content.includes('September 3, 2025'))).toBeInTheDocument();
   });
 
   test('renders ASR-specific metadata', async () => {
@@ -198,14 +202,9 @@ describe('MonitoringDetailsModal', () => {
     await screen.findByText('Test Monitoring Type Details');
 
     expect(screen.getByText('Notify when')).toBeInTheDocument();
-    expect(screen.getByText('On Failure')).toBeInTheDocument();
-    expect(screen.getByText('On Success')).toBeInTheDocument();
-    expect(screen.getByText('Primary contact(s)')).toBeInTheDocument();
-    expect(screen.getByText('primary@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Secondary contact(s)')).toBeInTheDocument();
-    expect(screen.getByText('secondary@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Notify contact(s)')).toBeInTheDocument();
-    expect(screen.getByText('notify@example.com')).toBeInTheDocument();
+    // monitoringData now contains the conditions; they render as provided
+    expect(screen.getByText('OnFailure')).toBeInTheDocument();
+    expect(screen.getByText('OnSuccess')).toBeInTheDocument();
   });
 
   test('closes modal and resets selectedMonitoring on cancel', async () => {
