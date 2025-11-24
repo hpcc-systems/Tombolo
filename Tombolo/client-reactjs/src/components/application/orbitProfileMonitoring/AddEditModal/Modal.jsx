@@ -135,22 +135,17 @@ const AddEditModal = ({
     try {
       await form.validateFields();
       const values = form.getFieldsValue();
-      const {
-        primaryContacts,
-        secondaryContacts,
-        notifyContacts,
-        domain,
-        productCategory,
-        severity,
-        notificationConditions,
-        buildName,
-      } = values;
+      const { primaryContacts, secondaryContacts, notifyContacts, domain, productCategory, severity, buildName } =
+        values;
+      const monitoringDataFromForm = values.monitoringData || {};
       values.applicationId = applicationId;
 
       // all contacts
       const contacts = { primaryContacts, secondaryContacts, notifyContacts };
       const asrSpecificMetaData = { domain, productCategory, severity, buildName };
-      const monitoringData = { notificationConditions };
+      const monitoringData = {
+        ...monitoringDataFromForm,
+      };
 
       // Metadata
       const metaData = {};
@@ -165,7 +160,7 @@ const AddEditModal = ({
       delete values.domain;
       delete values.productCategory;
       delete values.severity;
-      delete values.notificationConditions;
+      delete values.monitoringData;
       delete values.buildName;
 
       // Add metaData to values
