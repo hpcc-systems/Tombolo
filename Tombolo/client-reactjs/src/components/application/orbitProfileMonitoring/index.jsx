@@ -61,9 +61,7 @@ const OrbitMonitoring = () => {
 
   // Filter logic
   useEffect(() => {
-    setFilteringOrbits(true);
     if (orbitMonitoringData.length === 0) {
-      setFilteringOrbits(false);
       return;
     }
 
@@ -112,6 +110,7 @@ const OrbitMonitoring = () => {
 
     // Calculate the number of matched string instances
     if (searchTerm) {
+      setIsLoading(true);
       let instanceCount = 0;
       filteredOm.forEach(orbit => {
         const monitoringName = orbit.monitoringName.toLowerCase();
@@ -146,7 +145,7 @@ const OrbitMonitoring = () => {
     }
 
     setFilteredOrbitMonitoring(filteredOm);
-    setFilteringOrbits(false);
+    setIsLoading(false);
   }, [filters, orbitMonitoringData, searchTerm]);
 
   const handleToggleFilters = () => setFiltersVisible(prev => !prev);
