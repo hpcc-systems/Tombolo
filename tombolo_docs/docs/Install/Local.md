@@ -25,6 +25,7 @@ Local installation requires a few dependencies to be installed directly on your 
 - [HPCC cluster](https://hpccsystems.com/getting-started/) latest version recommended.
 - Email Provider - Required to verify user accounts.
 - [pnpm](../Developer/InstallPnpm) The package manager used by Tombolo.
+- [Redis](../Developer/InstallRedis) The in-memory database used for job queues
 
 ### Recommended Software and Skills
 
