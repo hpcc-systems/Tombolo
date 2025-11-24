@@ -39,6 +39,13 @@ const {
 } = require('../jobSchedularMethods/jobMonitoring.js');
 
 const {
+  // createOrbitMegaphoneJob,
+  createOrbitMonitoringJob,
+  createOrbitProfileMonitoringJob,
+  // scheduleOrbitMonitoringOnServerStart,
+} = require('../jobSchedularMethods/orbitJobs.js');
+
+const {
   createMonitorCostJob,
   createAnalyzeCostJob,
 } = require('../jobSchedularMethods/costMonitoring');
@@ -134,6 +141,7 @@ class JobScheduler {
       await this.checkClusterReachability();
       await this.checkClusterContainerization();
       await this.createMonitorCostJob();
+      await this.createOrbitProfileMonitoringJob();
       await this.createDataArchiveJob();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
@@ -310,8 +318,12 @@ class JobScheduler {
     return scheduleEmailNotificationProcessing.call(this);
   }
 
-  createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
-    return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
+  // createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
+  //   return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
+  // }
+
+  createOrbitProfileMonitoringJob() {
+    return createOrbitProfileMonitoringJob.call(this);
   }
 
   checkClusterReachability() {
