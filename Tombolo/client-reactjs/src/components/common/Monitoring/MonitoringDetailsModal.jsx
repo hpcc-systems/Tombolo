@@ -58,17 +58,20 @@ function MonitoringDetailsModal({
 
   const fkUuids = creator || approver || updater;
 
-  const { asrSpecificMetaData, notificationMetaData } = metaData || {};
+  const { asrSpecificMetaData, notificationMetaData, monitoringData } = metaData || {};
+
+  // Prefer new monitoringData (from orbitProfileMonitoring) but keep fallback to older notificationMetaData
+  const effectiveMonitoringData = monitoringData || notificationMetaData || {};
 
   // Get cluster names from cluster IDs
-  const getClusterNames = (clusterIds) => {
+  const getClusterNames = clusterIds => {
     if (!clusterIds || clusterIds.length === 0) return [];
 
     // "*" means all clusters
-    if (clusterIds[0] === '*') return clusters.map((cluster) => cluster.name);
+    if (clusterIds[0] === '*') return clusters.map(cluster => cluster.name);
 
-    return clusterIds.map((clusterId) => {
-      const cluster = clusters.find((c) => c.id === clusterId);
+    return clusterIds.map(clusterId => {
+      const cluster = clusters.find(c => c.id === clusterId);
       return cluster ? cluster.name : `Unknown (${clusterId})`;
     });
   };
@@ -186,7 +189,7 @@ function MonitoringDetailsModal({
 
         {asrSpecificMetaData?.domain && (
           <Descriptions.Item label="Domain">
-            {domains.filter((d) => d.value === asrSpecificMetaData.domain)[0]?.label || (
+            {domains.filter(d => d.value === asrSpecificMetaData.domain)[0]?.label || (
               <Tag color="red"> Deleted domain</Tag>
             )}
           </Descriptions.Item>
@@ -194,7 +197,7 @@ function MonitoringDetailsModal({
 
         {asrSpecificMetaData?.productCategory && (
           <Descriptions.Item label="Product category">
-            {productCategories.filter((c) => c.value === asrSpecificMetaData.productCategory)[0]?.label || (
+            {productCategories.filter(c => c.value === asrSpecificMetaData.productCategory)[0]?.label || (
               <Tag color="red"> Deleted product</Tag>
             )}
           </Descriptions.Item>
@@ -204,50 +207,47 @@ function MonitoringDetailsModal({
           <Descriptions.Item label="Severity">{asrSpecificMetaData.severity}</Descriptions.Item>
         )}
 
-        {/* Notification Settings */}
-        {notificationMetaData &&
-          notificationMetaData.notificationCondition &&
-          notificationMetaData.notificationCondition.length > 0 && (
+        {/* Notification Settings (new monitoringData preferred, fallback to notificationMetaData) */}
+        {effectiveMonitoringData?.notificationConditions &&
+          effectiveMonitoringData.notificationConditions.length > 0 && (
             <Descriptions.Item label="Notify when">
-              {notificationMetaData.notificationCondition.map((condition, i) => (
-                <Tag key={i}>{condition.replace(/([A-Z])/g, ' $1').trim()}</Tag>
-              ))}
+              {effectiveMonitoringData.notificationConditions.map((condition, i) => {
+                const label =
+                  condition === 'updateInterval'
+                    ? 'Build not following correct interval'
+                    : condition === 'buildStatus'
+                      ? 'Build status'
+                      : condition;
+                return (
+                  <Tag key={i} style={{ marginBottom: '4px' }}>
+                    {label}
+                  </Tag>
+                );
+              })}
             </Descriptions.Item>
           )}
 
-        {notificationMetaData?.primaryContacts && notificationMetaData.primaryContacts.length > 0 && (
-          <Descriptions.Item label="Primary contact(s)">
-            {notificationMetaData.primaryContacts.map((email, index) =>
-              index < notificationMetaData.primaryContacts.length - 1 ? (
-                <span key={index}>{email}, </span>
-              ) : (
-                <span key={index}>{email}</span>
-              )
-            )}
+        {effectiveMonitoringData?.buildStatus && effectiveMonitoringData.buildStatus.length > 0 && (
+          <Descriptions.Item label="Build status(es)">
+            {effectiveMonitoringData.buildStatus.map((s, i) => (
+              <Tag key={`bs-${i}`} style={{ marginBottom: '4px' }}>
+                {s}
+              </Tag>
+            ))}
           </Descriptions.Item>
         )}
 
-        {notificationMetaData?.secondaryContacts && notificationMetaData.secondaryContacts.length > 0 && (
-          <Descriptions.Item label="Secondary contact(s)">
-            {notificationMetaData.secondaryContacts.map((email, index) =>
-              index < notificationMetaData.secondaryContacts.length - 1 ? (
-                <span key={index}>{email}, </span>
-              ) : (
-                <span key={index}>{email}</span>
-              )
-            )}
-          </Descriptions.Item>
+        {(effectiveMonitoringData?.updateInterval || effectiveMonitoringData?.updateInterval === 0) && (
+          <Descriptions.Item label="Update Interval (days)">{effectiveMonitoringData.updateInterval}</Descriptions.Item>
         )}
 
-        {notificationMetaData?.notifyContacts && notificationMetaData.notifyContacts.length > 0 && (
-          <Descriptions.Item label="Notify contact(s)">
-            {notificationMetaData.notifyContacts.map((email, index) =>
-              index < notificationMetaData.notifyContacts.length - 1 ? (
-                <span key={index}>{email}, </span>
-              ) : (
-                <span key={index}>{email}</span>
-              )
-            )}
+        {effectiveMonitoringData?.updateIntervalDays && effectiveMonitoringData.updateIntervalDays.length > 0 && (
+          <Descriptions.Item label="Update Interval Days">
+            {effectiveMonitoringData.updateIntervalDays.map((d, i) => (
+              <Tag key={`uid-${i}`} style={{ marginBottom: '4px' }}>
+                {d.charAt(0).toUpperCase() + d.slice(1)}
+              </Tag>
+            ))}
           </Descriptions.Item>
         )}
 
