@@ -83,10 +83,13 @@ services:
     depends_on:
       mysql_db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - .env
     environment:
       DB_PORT: 3306 # Override for container-to-container communication
+      REDIS_HOST: redis # Override for container-to-container communication
     healthcheck:
       test:
         [
@@ -136,6 +139,42 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  redis:
+    image: redis:8.4-alpine
+    restart: always
+    command: >
+      sh -c "
+        if [ -n \"${REDIS_PASSWORD}\" ]; then
+          if [ -n \"${REDIS_USER}\" ]; then
+            redis-server --requirepass ${REDIS_PASSWORD} --user ${REDIS_USER} on >${REDIS_PASSWORD} ~* &* +@all
+          else
+            redis-server --requirepass ${REDIS_PASSWORD}
+          fi
+        else
+          redis-server
+        fi
+      "
+    ports:
+      - ${REDIS_PORT}:6379
+    networks:
+      - tombolo-network
+    env_file:
+      - .env
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          'if [ -n "${REDIS_PASSWORD}" ]; then redis-cli -a ${REDIS_PASSWORD} ping; else redis-cli ping; fi',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - ./redis-data:/data
 
 networks:
   tombolo-network:

@@ -230,7 +230,34 @@ Some services we recommend are: [SendGrid](https://sendgrid.com/), [Mailgun](htt
 
 ---
 
-### 9. Security Configuration
+### 9. Redis Configuration
+
+- **REDIS_HOST**
+  The Redis hostname.
+
+  _Example:_ `localhost` (If using Docker set to `redis`)
+
+- **REDIS_PORT**
+  The port Redis is accessible on.
+
+  _Example:_ `6379`
+
+- **REDIS_USER**
+  The Redis username for authentication. A value is not required but recommended.
+
+  _Example:_ `tombolo_redis_user`
+
+- **REDIS_PASSWORD**
+  The Redis password for authentication.
+
+- **REDIS_DB**
+  Redis DB name/number for Tombolo to use.
+
+  _Example:_ `0`
+
+---
+
+### 10. Security Configuration
 
 - **ENCRYPTION_KEY**
   This key is used for hashing, encryption, and decryption operations within Tombolo. You can generate this key using OpenSSL:
@@ -238,11 +265,11 @@ Some services we recommend are: [SendGrid](https://sendgrid.com/), [Mailgun](htt
 
 ---
 
-### 10. Integration-Specific Configuration
+### 11. Integration-Specific Configuration
 
 If you have any integrations enabled and they have environment variables, they can be added to this configuration file as well. There is a placeholder section for those integration-specific variables. Please add them there.
 
-### 11. Test Configuration
+### 12. Test Configuration
 
 - **RATE_LIMIT_REQUEST_MAX**
   The amount of requests per 15 minutes that will rate limit a user.
