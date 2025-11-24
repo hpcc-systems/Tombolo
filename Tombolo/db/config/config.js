@@ -1,27 +1,27 @@
-const path = require("path");
-const fs = require("fs");
+const path = require('path');
+const fs = require('fs');
 
 // Look for .env in Tombolo root folder
-const tomboloRootENV = path.join(__dirname, "..", "..", ".env");
-const serverENV = path.join(__dirname, "..", "..", "server", ".env");
+const tomboloRootENV = path.join(__dirname, '..', '..', '.env');
+const serverENV = path.join(__dirname, '..', '..', 'server', '.env');
 const ENVPath = fs.existsSync(tomboloRootENV) ? tomboloRootENV : serverENV;
 
-require("dotenv").config({ path: ENVPath });
+require('dotenv').config({ path: ENVPath });
 
-const logger = require("./logger");
+const logger = require('./logger');
 
 // Common database configuration options
 const commonDbConfigOptions = {
-  dialect: "mysql",
-  seederStorage: "sequelize",
-  seederStorageTableName: "sequelize_seeders",
-  migrationStorageTableName: "sequelize_migrations",
-  logging: (msg) => logger.debug(msg), // change winston settings to 'debug' to see this log
+  dialect: 'mysql',
+  seederStorage: 'sequelize',
+  seederStorageTableName: 'sequelize_seeders',
+  migrationStorageTableName: 'sequelize_migrations',
+  logging: msg => logger.debug(msg), // change winston settings to 'debug' to see this log
 };
 
 // SSL configuration if enabled
 const sslConfig =
-  process.env.MYSQL_SSL_ENABLED === "true"
+  process.env.MYSQL_SSL_ENABLED === 'true'
     ? {
         ssl: true,
         dialectOptions: {
