@@ -1,11 +1,5 @@
-/**
- * Workunit History Worker
- * Processes jobs from the workunit-history queue with concurrency of 1
- * Runs in main thread with error handling and timer queue mitigation
- */
-
 import { Worker } from 'bullmq';
-import { redisConnection } from '../../config/config.js';
+import { redisConnectionOptions } from '../../config/config.js';
 import logger from '../../config/logger.js';
 
 // Import the processor function directly (runs in main thread)
@@ -19,7 +13,7 @@ export const workunitHistoryWorker = new Worker(
   'workunit-history',
   processWorkunitHistoryJob, // Function instead of file path - runs in main thread
   {
-    connection: redisConnection,
+    connection: redisConnectionOptions,
     concurrency: 1, // IMPORTANT: Only process one job at a time
     limiter: {
       max: 1, // Maximum 1 job

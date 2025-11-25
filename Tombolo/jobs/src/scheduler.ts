@@ -1,8 +1,3 @@
-/**
- * BullMQ Scheduler
- * Registers recurring jobs with BullMQ using cron schedules
- */
-
 import { workunitHistoryQueue } from './queues/workunitHistoryQueue.js';
 import { scheduledJobs } from './config/schedules.js';
 import logger from './config/logger.js';
