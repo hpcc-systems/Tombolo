@@ -27,7 +27,7 @@
     "csrf-csrf": "^3.1.0",
     "dotenv": "^8.6.0",
     "ejs": "^3.1.10",
-    "express": "^4.17.3",
+    "express": "^5.1.0",
     "express-rate-limit": "^5.5.1",
     "express-validator": "^6.13.0",
     "helmet": "^8.1.0",
