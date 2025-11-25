@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
-import { ConnectionOptions } from 'bullmq';
+import type { RedisOptions } from 'ioredis';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -17,7 +17,7 @@ const ENVPath = fs.existsSync(tomboloENV) ? tomboloENV : jobsENV;
 console.log('Loading .env from:', ENVPath); // Debug log
 dotenv.config({ path: ENVPath });
 
-export const redisConnection: ConnectionOptions = {
+export const redisConnectionOptions: RedisOptions = {
   host: process.env.REDIS_HOST || 'localhost',
   port: Number(process.env.REDIS_PORT) || 6379,
   username: process.env.REDIS_USER,

@@ -1,8 +1,8 @@
 import { Queue } from 'bullmq';
-import { redisConnection } from './config/config.js';
+import { redisConnectionOptions } from './config/config.js';
 
 export const workunitHistoryQueue = new Queue('workunit-history', {
-  connection: redisConnection,
+  connection: redisConnectionOptions,
   defaultJobOptions: {
     removeOnComplete: 100,
     removeOnFail: 50,

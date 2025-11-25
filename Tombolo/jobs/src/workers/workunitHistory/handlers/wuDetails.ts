@@ -1,4 +1,3 @@
-// CRITICAL: Import rafPatch FIRST to intercept requestAnimationFrame before @hpcc-js loads
 import { IOptions, Scope, Workunit } from '@hpcc-js/comms';
 import { getClusters, getClusterOptions } from '@tombolo/core';
 import db from '@tombolo/db';

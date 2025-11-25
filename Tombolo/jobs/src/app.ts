@@ -2,12 +2,17 @@ import express from 'express';
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
+import { Redis } from 'ioredis';
 import { registerScheduledJobs } from './scheduler.js';
 import { workunitHistoryQueue } from './queues/workunitHistoryQueue.js';
 import { workunitHistoryWorker } from './workers/workunitHistory/workunitHistoryWorker.js';
+import { redisConnectionOptions } from './config/config.js';
 import logger from './config/logger.js';
 
-const PORT = process.env.BULL_BOARD_PORT || 3003;
+// Create Redis client for health checks
+const redisClient = new Redis(redisConnectionOptions);
+
+const PORT = process.env.BULL_BOARD_PORT || 3005;
 
 async function startJobProcessor() {
   logger.info('Starting BullMQ job processor...');
@@ -32,11 +37,49 @@ async function startJobProcessor() {
   // Create Express app
   const app = express();
 
-  app.use('/admin/queues', serverAdapter.getRouter());
+  // API Key authentication middleware for Bull Board
+  const apiKeyAuth = (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const apiKey = req.headers['x-api-key'] || req.query.apiKey;
+    const validApiKey = process.env.BULL_BOARD_API_KEY;
+
+    // Skip auth if no API key is configured
+    if (!validApiKey) {
+      return next();
+    }
+
+    if (apiKey === validApiKey) {
+      next();
+    } else {
+      res.status(401).json({ error: 'Unauthorized - Invalid API key' });
+    }
+  };
+
+  app.use('/admin/queues', apiKeyAuth, serverAdapter.getRouter());
 
   // Health check endpoint
-  app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  app.get('/health', async (req, res) => {
+    try {
+      // Check Redis connection
+      await redisClient.ping();
+
+      res.json({
+        status: 'ok',
+        redis: 'connected',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Health check failed - Redis connection error:', error);
+      res.status(503).json({
+        status: 'error',
+        redis: 'disconnected',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      });
+    }
   });
 
   // Start Bull Board server

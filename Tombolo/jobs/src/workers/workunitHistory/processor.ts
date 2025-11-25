@@ -1,8 +1,3 @@
-/**
- * Workunit History Job Processor
- * This file runs in a separate worker thread when useWorkerThreads is enabled
- */
-
 import { Job } from 'bullmq';
 import { workunitQuery } from './handlers/wuQuery.js';
 import { getWorkunitDetails } from './handlers/wuDetails.js';
