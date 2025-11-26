@@ -264,6 +264,10 @@ const bulkUpdateOrbitProfileMonitoring = async (req, res) => {
     }
     const userId = req.user.id;
 
+    if (!Array.isArray(inputMonitorings) || inputMonitorings.length === 0) {
+      await transaction.rollback();
+      return sendError(res, 'At least one monitoring record must be provided for bulk update');
+    }
     for (const monitoring of inputMonitorings) {
       const { id, metaData } = monitoring;
       await OrbitProfileMonitoring.update(
