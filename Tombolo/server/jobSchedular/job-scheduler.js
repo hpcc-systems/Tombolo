@@ -40,7 +40,6 @@ const {
 
 const {
   // createOrbitMegaphoneJob,
-  createOrbitMonitoringJob,
   createOrbitProfileMonitoringJob,
   // scheduleOrbitMonitoringOnServerStart,
 } = require('../jobSchedularMethods/orbitJobs.js');
