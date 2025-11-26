@@ -65,7 +65,9 @@ export class OrbitMonitoringPage {
    * Navigate to the ASR tab in the modal
    */
   async goToAsrTab() {
-    const asrTab = this.page.getByText(/^asr$/i);
+    // The modal labels this tab "Monitoring Details" (not "ASR").
+    // Use the visible label to make E2E navigation robust.
+    const asrTab = this.page.getByText(/^monitoring details$/i);
     await asrTab.click();
     await this.page.waitForTimeout(500);
   }
