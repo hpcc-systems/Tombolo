@@ -1,5 +1,5 @@
 const { logOrPostMessage } = require('../jobUtils');
-const { OrbitProfileMonitoring } = require('../../models');
+const { OrbitProfileMonitoring, OrbitBuildData } = require('../../models');
 
 const {
   runMySQLQuery,
@@ -7,10 +7,11 @@ const {
 } = require('../../utils/runSQLQueries.js');
 
 async function monitorOrbitProfile() {
+  const timeStarted = new Date();
   try {
     logOrPostMessage({
       level: 'info',
-      text: 'Orbit monitoring running message ..',
+      text: 'Orbit monitoring - Getting new builds from Orbit server and checking if status  of existing build changed...',
     });
 
     // Get all active Orbit Profile Monitoring
@@ -44,10 +45,6 @@ async function monitorOrbitProfile() {
     builds = [...new Set(builds)];
 
     if (!builds || builds.length === 0) {
-      logOrPostMessage({
-        level: 'info',
-        text: 'No builds found for active orbit profiles, exiting.',
-      });
       return [];
     }
 
@@ -67,41 +64,131 @@ async function monitorOrbitProfile() {
       }
     });
 
-    logOrPostMessage({
-      level: 'info',
-      text: buildToMonitoringMap,
-    });
-
-    logOrPostMessage({
-      level: 'info',
-      text: `Prepared IN clause placeholders: ${placeholders}`,
-    });
-    logOrPostMessage({
-      level: 'info',
-      text: `Params: ${JSON.stringify(params)}`,
-    });
-
+    // Query to get all matching builds
     const query = `
-      SELECT
-        HpccWorkUnit AS WorkUnit,
-        Name AS Build,
-        DateUpdated AS Date,
-        Status_Code AS Status,
-        Version,
-        BuildTemplateIdKey AS BuildID
-      FROM orbitreport.dimbuildinstance
-      WHERE Name IN (${placeholders})
-        AND HpccWorkUnit IS NOT NULL
+      SELECT BuildInstanceIdKey, HpccWorkUnit, Name, DateUpdated, Status_Code, Version, BuildTemplateIdKey
+      FROM (
+        SELECT
+          BuildInstanceIdKey, HpccWorkUnit, Name, DateUpdated, Status_Code, Version, BuildTemplateIdKey,
+          ROW_NUMBER() OVER (PARTITION BY Name ORDER BY DateUpdated DESC) AS rn
+        FROM orbitreport.dimbuildinstance
+        WHERE Name IN (${placeholders})
+          AND HpccWorkUnit IS NOT NULL
+      ) t
+      WHERE rn <= 10
       ORDER BY Name, DateUpdated DESC;
     `;
 
-    const wuResult = await runMySQLQuery(query, orbitDbConfig, params);
+    const wuResult = await runMySQLQuery(query, orbitDbConfig, params); // Array of objects
 
-    logOrPostMessage({ level: 'info', text: JSON.stringify(wuResult) });
+    // Separate the build that already exist in our OrbitBuildData table -> Array of objects
+    const existingBuilds = await OrbitBuildData.findAll({
+      where: {
+        buildInstanceIdKey: wuResult.map(wu => wu.BuildInstanceIdKey),
+      },
+      raw: true,
+    });
+
+    // Ids of existing builds
+    const existingBuildIds = existingBuilds.map(b => b.BuildInstanceIdKey);
+
+    // Filter out existing builds
+    const newBuilds = wuResult.filter(
+      wu => !existingBuildIds.includes(wu.BuildInstanceIdKey)
+    );
+
+    // Insert new builds into OrbitBuildData
+    const buildDataToInsert = newBuilds.map(wu => ({
+      BuildInstanceIdKey: wu.BuildInstanceIdKey,
+      HpccWorkUnit: wu.HpccWorkUnit,
+      Name: wu.Name,
+      DateUpdated: wu.DateUpdated,
+      Status_Code: wu.Status_Code,
+      Version: wu.Version,
+      BuildTemplateIdKey: wu.BuildTemplateIdKey,
+      status_history: [
+        {
+          status: wu.Status_Code,
+          date: wu.DateUpdated,
+        },
+      ],
+    }));
+
+    if (buildDataToInsert.length > 0) {
+      logOrPostMessage({
+        level: 'info',
+        text: `Inserting ${buildDataToInsert.length} new Orbit build records.`,
+      });
+      await OrbitBuildData.bulkCreate(buildDataToInsert);
+    }
+
+    // Find the changed builds
+    const existingBuildNeedingUpdate = [];
+    for (const b of existingBuilds) {
+      // Find corresponding wuResult entry
+      const wu = wuResult.find(
+        w => w.BuildInstanceIdKey === b.BuildInstanceIdKey
+      );
+      if (!wu) continue;
+
+      // Check if the Status_Code or DateUpdated has changed0;
+      if (
+        b.Status_Code !== wu.Status_Code ||
+        String(b.DateUpdated) !== String(wu.DateUpdated)
+      ) {
+        // Build payload like for the new builds , make sure to append to status_history if status changed
+        const statusCodeChanged =
+          b.Status_Code !== wu.Status_Code ? 'Status_Code' : null;
+        const updateDateChanged =
+          String(b.DateUpdated) !== String(wu.DateUpdated)
+            ? 'DateUpdated'
+            : null;
+
+        const payload = { ...b };
+        if (statusCodeChanged) {
+          payload.Status_Code = wu.Status_Code;
+          const updatedStatusHistory = [
+            ...b.status_history,
+            { date: wu.DateUpdated, status: wu.Status_Code },
+          ];
+          payload.status_history = updatedStatusHistory;
+        }
+        if (updateDateChanged) {
+          payload.DateUpdated = wu.DateUpdated;
+        }
+        existingBuildNeedingUpdate.push(payload);
+      }
+    }
+
+    //Loop and  Update existing builds that need update
+    for (const b of existingBuildNeedingUpdate) {
+      try {
+        await OrbitBuildData.update(
+          {
+            ...b,
+          },
+          {
+            where: { buildInstanceIdKey: b.BuildInstanceIdKey },
+          }
+        );
+      } catch (updateErr) {
+        logOrPostMessage({
+          level: 'error',
+          text: `Error updating Orbit build record for BuildInstanceIdKey: ${b.BuildInstanceIdKey} - ${updateErr}`,
+        });
+      }
+    }
   } catch (err) {
     logOrPostMessage({
       level: 'error',
-      text: `monitorOrbitProfile: ${err.message}`,
+      text: `monitorOrbitProfile: ${err}`,
+    });
+  } finally {
+    const timeEnded = new Date();
+    const duration = (timeEnded - timeStarted) / 1000; // duration in seconds
+    logOrPostMessage({
+      level: 'info',
+      text: `Checking  Orbit server for new builds and status changes completed in ${duration} seconds.`,
     });
   }
 }

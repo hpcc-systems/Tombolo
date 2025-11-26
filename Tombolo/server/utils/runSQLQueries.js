@@ -25,22 +25,15 @@ const fidoDbConfig = {
 };
 
 const runMySQLQuery = async (query, config, params = []) => {
-  try {
-    const connection = await mysql.createConnection(config);
-    connection.connect();
-    // If params provided, pass them to query to use prepared values
-    const [rows] =
-      params && params.length > 0
-        ? await connection.query(query, params)
-        : await connection.query(query);
-    connection.end();
-    return rows;
-  } catch (err) {
-    return {
-      err,
-      message: 'There was an issue contacting the server' + err,
-    };
-  }
+  const connection = await mysql.createConnection(config);
+  connection.connect();
+  // If params provided, pass them to query to use prepared values
+  const [rows] =
+    params && params.length > 0
+      ? await connection.query(query, params)
+      : await connection.query(query);
+  connection.end();
+  return rows;
 };
 
 const runSQLQuery = async (query, config) => {

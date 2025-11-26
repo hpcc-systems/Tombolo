@@ -40,6 +40,11 @@ const OrbitProfileMonitoring = require('./OrbitProfileMonitoring')(
   Sequelize.DataTypes
 );
 
+const OrbitBuildData = require('./OrbitBuildData')(
+  sequelize,
+  Sequelize.DataTypes
+);
+
 const CostMonitoringData = require('./CostMonitoringData')(
   sequelize,
   Sequelize.DataTypes
@@ -142,6 +147,7 @@ const models = {};
   CostMonitoring,
   CostMonitoringData,
   OrbitProfileMonitoring,
+  OrbitBuildData,
   DirectoryMonitoring,
   FileMonitoring,
   InstanceSettings,
