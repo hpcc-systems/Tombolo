@@ -268,7 +268,7 @@ const AddEditModal = ({
       title={getModalTitle()}
       maskClosable={false}
       footer={renderFooter()}
-      destroyOnHidden={true}>
+      destroyOnClose={true}>
       <Card size="small">
         <Tabs type="card" activeKey={activeTab.toString()} onChange={key => handleTabChange(key)} items={tabItems} />
       </Card>
