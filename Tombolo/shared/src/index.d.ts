@@ -27,17 +27,17 @@ export interface RetryLogger {
 /**
  * Retry a function with exponential backoff
  * @param fn - Async function to retry
+ * @param logger - Optional logger with warn method
  * @param maxRetries - Maximum number of retry attempts (default: 3)
  * @param delay - Initial delay in milliseconds (default: 2000)
- * @param logger - Optional logger with warn method
  * @returns Result of the function
  * @throws Error from the function if all retries fail
  */
 export function retryWithBackoff<T>(
   fn: () => Promise<T>,
+  logger?: RetryLogger,
   maxRetries?: number,
-  delay?: number,
-  logger?: RetryLogger
+  delay?: number
 ): Promise<T>;
 
 /**

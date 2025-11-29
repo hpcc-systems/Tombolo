@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
+import type { RedisOptions } from 'ioredis';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -16,13 +17,12 @@ const ENVPath = fs.existsSync(tomboloENV) ? tomboloENV : jobsENV;
 console.log('Loading .env from:', ENVPath); // Debug log
 dotenv.config({ path: ENVPath });
 
-// Construct MySQL connection URL with proper validation
-const DB_USERNAME = process.env.DB_USERNAME || 'root';
-const DB_PASSWORD = process.env.DB_PASSWORD || '';
-const DB_HOSTNAME = process.env.DB_HOSTNAME || 'localhost';
-const DB_PORT = process.env.DB_PORT || '3306';
-const DB_NAME = process.env.DB_NAME || 'tombolo';
-
-const DB_URL = `mysql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOSTNAME}:${DB_PORT}/${DB_NAME}`;
-
-export { DB_URL };
+export const redisConnectionOptions: RedisOptions = {
+  host: process.env.REDIS_HOST || 'localhost',
+  port: Number(process.env.REDIS_PORT) || 6379,
+  username: process.env.REDIS_USER,
+  password: process.env.REDIS_PASSWORD,
+  db: Number(process.env.REDIS_DB) || 0,
+  // Enable if you use Redis TLS in prod
+  //   tls: process.env.NODE_ENV === 'production' ? {} : undefined,
+};

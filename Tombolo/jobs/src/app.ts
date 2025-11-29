@@ -1,29 +1,101 @@
-import { Sidequest } from 'sidequest';
-import type { SidequestConfig } from 'sidequest';
-import { DB_URL } from './config/config.js';
+import express from 'express';
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { ExpressAdapter } from '@bull-board/express';
+import { Redis } from 'ioredis';
 import { registerScheduledJobs } from './scheduler.js';
+import { workunitHistoryQueue } from './queues/workunitHistoryQueue.js';
+import { workunitHistoryWorker } from './workers/workunitHistory/workunitHistoryWorker.js';
+import { redisConnectionOptions } from './config/config.js';
 import logger from './config/logger.js';
 
-const sqConfig: SidequestConfig = {
-  backend: {
-    driver: '@sidequest/mysql-backend',
-    config: DB_URL,
-  },
-  dashboard: {
-    port: 8678,
-  },
-};
+// Create Redis client for health checks
+const redisClient = new Redis(redisConnectionOptions);
 
-async function startSideQuest() {
-  // Quick start Sidequest with default settings and Dashboard enabled
-  await Sidequest.start(sqConfig);
+const PORT = process.env.BULL_BOARD_PORT || 3005;
 
-  // Register all scheduled jobs after Sidequest starts
-  registerScheduledJobs();
+async function startJobProcessor() {
+  logger.info('Starting BullMQ job processor...');
+
+  // Start the worker (it will process jobs as they come in)
+  logger.info(
+    `Workunit history worker started (concurrency: 1) - Worker ready: ${workunitHistoryWorker.isRunning()}`
+  );
+
+  // Register scheduled jobs
+  await registerScheduledJobs();
+
+  // Setup Bull Board
+  const serverAdapter = new ExpressAdapter();
+  serverAdapter.setBasePath('/admin/queues');
+
+  createBullBoard({
+    queues: [new BullMQAdapter(workunitHistoryQueue)],
+    serverAdapter: serverAdapter,
+  });
+
+  // Create Express app
+  const app = express();
+
+  // API Key authentication middleware for Bull Board
+  const apiKeyAuth = (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const apiKey = req.headers['x-api-key'] || req.query.apiKey;
+    const validApiKey = process.env.BULL_BOARD_API_KEY;
+
+    // Skip auth if no API key is configured
+    if (!validApiKey) {
+      return next();
+    }
+
+    if (apiKey === validApiKey) {
+      next();
+    } else {
+      res.status(401).json({ error: 'Unauthorized - Invalid API key' });
+    }
+  };
+
+  app.use('/admin/queues', apiKeyAuth, serverAdapter.getRouter());
+
+  // Health check endpoint
+  app.get('/health', async (req, res) => {
+    try {
+      // Check Redis connection
+      await redisClient.ping();
+
+      res.json({
+        status: 'ok',
+        redis: 'connected',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Health check failed - Redis connection error:', error);
+      res.status(503).json({
+        status: 'error',
+        redis: 'disconnected',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
+  // Start Bull Board server
+  app.listen(PORT, () => {
+    logger.info(
+      `Bull Board UI available at http://localhost:${PORT}/admin/queues`
+    );
+    logger.info(`Health check at http://localhost:${PORT}/health`);
+  });
+
+  logger.info('Job processor started successfully!');
 }
 
-startSideQuest()
-  .then(() =>
-    logger.info('Sidequest started! Dashboard: http://localhost:8678')
-  )
-  .catch(err => logger.error(`Failed to start sidequest: ${err}`));
+startJobProcessor()
+  .then(() => logger.info('BullMQ job processor is running'))
+  .catch(err => {
+    logger.error(`Failed to start job processor: ${String(err)}`);
+    process.exit(1);
+  });
