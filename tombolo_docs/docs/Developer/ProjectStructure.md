@@ -80,7 +80,7 @@ Tombolo/
 │   │   ├── index.mjs              # Main ESM entry point
 │   │   └── package.json           # Dual exports configuration
 │   │
-│   ├── docker-compose.yml         # Docker Compose configuration
+│   ├── docker-compose-sample.yml  # Docker Compose configuration
 │   ├── Dockerfile                 # Multi-stage Docker build
 │   └── mysql-data/                # MySQL data directory (local dev)
 │
