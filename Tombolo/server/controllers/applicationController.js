@@ -42,10 +42,17 @@ async function getApplications(req, res) {
 }
 
 async function getApplicationsByUser(req, res) {
-  const { user_name } = req.query;
+  const { user_id } = req.query;
+  // Use authenticated user ID if user_id is not provided
+  const userId = user_id || req.user?.id;
+
+  if (!userId) {
+    return sendError(res, 'User ID is required', 400);
+  }
+
   try {
     const userApplications = await UserApplication.findAll({
-      where: { user_id: user_name },
+      where: { user_id: userId },
       raw: true,
       attributes: ['application_id'],
     });
