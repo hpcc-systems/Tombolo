@@ -8,11 +8,13 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
+      "import": "./index.mjs",
       "require": "./index.js",
       "default": "./index.js"
     },
     "./backend": {
       "types": "./backend.d.ts",
+      "import": "./backend.js",
       "require": "./backend.js",
       "default": "./backend.js"
     }

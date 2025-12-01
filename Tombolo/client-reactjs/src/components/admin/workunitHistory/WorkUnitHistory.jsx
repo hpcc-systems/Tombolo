@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   Statistic,
+  Divider,
 } from 'antd';
 import {
   ReloadOutlined,
@@ -37,7 +38,9 @@ const formatTime = seconds => {
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  return `${hours}h ${mins}m ${secs}s`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  if (mins > 0) return `${mins}m ${secs}s`;
+  return `${secs}s`;
 };
 
 const WorkUnitHistory = () => {
@@ -60,6 +63,7 @@ const WorkUnitHistory = () => {
     jobName: undefined,
     dateRange: undefined,
     costAbove: undefined,
+    detailsFetched: undefined,
   });
 
   const [statistics, setStatistics] = useState({
@@ -88,6 +92,7 @@ const WorkUnitHistory = () => {
         queryParams.dateTo = filters.dateRange[1].toISOString();
       }
       if (filters.costAbove) queryParams.costAbove = filters.costAbove;
+      if (filters.detailsFetched !== undefined) queryParams.detailsFetched = filters.detailsFetched;
 
       const result = await workunitsService.getAll(queryParams);
       setData(result.data || []);
@@ -126,6 +131,7 @@ const WorkUnitHistory = () => {
     filters.jobName,
     filters.dateRange,
     filters.costAbove,
+    filters.detailsFetched,
   ]);
 
   useEffect(() => {
@@ -180,13 +186,14 @@ const WorkUnitHistory = () => {
       jobName: undefined,
       dateRange: undefined,
       costAbove: undefined,
+      detailsFetched: undefined,
     });
     setPage(1);
     // fetchData will be called by useEffect
   };
 
   const handleView = record => {
-    history.push(`/admin/workunits/${record.wuId}`);
+    history.push(`/admin/workunits/${record.clusterId}/${record.wuId}`);
   };
 
   const columns = [
@@ -233,20 +240,11 @@ const WorkUnitHistory = () => {
       },
     },
     {
-      title: 'Timestamp',
+      title: 'Start Date',
       dataIndex: 'workUnitTimestamp',
-      key: 'workUnitTimestamp',
+      key: 'startDate',
       width: 160,
-      sorter: true,
       render: date => (date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '-'),
-    },
-    {
-      title: 'Total Time',
-      dataIndex: 'totalClusterTime',
-      key: 'totalClusterTime',
-      width: 120,
-      sorter: true,
-      render: formatTime,
     },
     {
       title: 'Cost',
@@ -315,6 +313,55 @@ const WorkUnitHistory = () => {
       {/* Filters */}
       <Card style={{ marginBottom: 16 }}>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          {/* Preset Filters */}
+          <Row>
+            <Space wrap>
+              <Text strong>Quick Filters:</Text>
+              <Button
+                size="small"
+                onClick={() => {
+                  setFilters({ ...filters, state: 'running' });
+                  handleSearch();
+                }}>
+                Running
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  setFilters({ ...filters, state: 'failed' });
+                  handleSearch();
+                }}>
+                Failed
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  setFilters({ ...filters, state: 'running', minClusterTime: 3600 });
+                  handleSearch();
+                }}>
+                Long Running (&gt;1h)
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  const today = dayjs().startOf('day');
+                  setFilters({ ...filters, dateRange: [today, dayjs()] });
+                  handleSearch();
+                }}>
+                Today
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  const weekAgo = dayjs().subtract(7, 'day');
+                  setFilters({ ...filters, dateRange: [weekAgo, dayjs()] });
+                  handleSearch();
+                }}>
+                Last 7 Days
+              </Button>
+            </Space>
+          </Row>
+          <Divider style={{ margin: '8px 0' }} />
           <Row gutter={[16, 16]}>
             <Col span={6}>
               <Select
@@ -346,18 +393,21 @@ const WorkUnitHistory = () => {
               </Select>
             </Col>
             <Col span={6}>
+              <Select
+                placeholder="Details Fetched"
+                value={filters.detailsFetched}
+                onChange={value => setFilters({ ...filters, detailsFetched: value })}
+                style={{ width: '100%' }}
+                allowClear>
+                <Option value={true}>Yes</Option>
+                <Option value={false}>No</Option>
+              </Select>
+            </Col>
+            <Col span={6}>
               <Input
                 placeholder="Owner"
                 value={filters.owner}
                 onChange={e => setFilters({ ...filters, owner: e.target.value })}
-                allowClear
-              />
-            </Col>
-            <Col span={6}>
-              <Input
-                placeholder="Job Name"
-                value={filters.jobName}
-                onChange={e => setFilters({ ...filters, jobName: e.target.value })}
                 allowClear
               />
             </Col>
@@ -399,6 +449,12 @@ const WorkUnitHistory = () => {
 
       {/* Table */}
       <Card>
+        <style>{`
+          .wu-row-failed { background-color: #ffe5e5 !important; }
+          .wu-row-failed:hover { background-color: #ffd1d1 !important; }
+          .wu-row-long-running { background-color: #fff5e6 !important; }
+          .wu-row-long-running:hover { background-color: #ffe8cc !important; }
+        `}</style>
         <Table
           columns={columns}
           dataSource={data}
@@ -413,6 +469,16 @@ const WorkUnitHistory = () => {
             pageSizeOptions: ['25', '50', '100', '200'],
           }}
           onChange={handleTableChange}
+          rowClassName={record => {
+            if (record.state === 'failed' || record.state === 'aborted') {
+              return 'wu-row-failed';
+            }
+            // Orange for long running (>2h)
+            if (record.state === 'running' && (record.totalClusterTime || 0) > 7200) {
+              return 'wu-row-long-running';
+            }
+            return '';
+          }}
           scroll={{ x: 1400 }}
         />
       </Card>

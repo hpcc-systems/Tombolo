@@ -31,6 +31,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import { normalizeLabel } from '@tombolo/shared';
 dayjs.extend(duration);
 
 const { Title, Text } = Typography;
@@ -44,9 +45,9 @@ const formatTimeShort = seconds => {
 };
 
 const formatBytes = bytes => {
-  if (!bytes) return '-';
+  if (!bytes || isNaN(bytes)) return '-';
+  let size = Number(bytes);
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let size = bytes;
   let i = 0;
   while (size >= 1024 && i < units.length - 1) {
     size /= 1024;
@@ -62,6 +63,48 @@ const WorkUnitView = ({ wu, details }) => {
   const [problemFilter, setProblemFilter] = useState('all'); // all, high-skew, slow, spills, high-disk
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('time'); // time, skew, rows, disk
+
+  // Auto-diagnosis: find the biggest problem
+  const diagnosis = useMemo(() => {
+    if (!details.length) return null;
+
+    const activities = details.filter(d => d.scopeType === 'activity');
+    const totalTime = wu.totalClusterTime || 1;
+
+    // Find highest time consumer
+    const slowest = activities.reduce(
+      (max, curr) => ((curr.TimeElapsed || 0) > (max.TimeElapsed || 0) ? curr : max),
+      activities[0]
+    );
+
+    const slowestPct = (((slowest?.TimeElapsed || 0) / totalTime) * 100).toFixed(1);
+    const hasHighSpill = (slowest?.SizeGraphSpill || 0) > 100 * 1024 * 1024 * 1024; // >100GB
+    const hasHighSkew = parseFloat(slowest?.SkewMaxElapsed || 0) > 500;
+
+    if (slowestPct > 70) {
+      let msg = `${slowestPct}% of time spent in ${slowest.scopeName}`;
+      if (slowest.label) msg += `: ${slowest.label.split(',')[0]}`;
+
+      const issues = [];
+      if (hasHighSpill) issues.push(`${formatBytes(slowest.SizeGraphSpill)} spill`);
+      if (hasHighSkew) issues.push(`${parseFloat(slowest.SkewMaxElapsed).toFixed(0)}% skew`);
+
+      if (issues.length > 0) {
+        msg += ` → ` + issues.join(', ');
+        if (hasHighSkew) msg += ` → likely data skew issue`;
+      }
+
+      return { type: 'warning', message: msg };
+    }
+
+    // Check for stuck/long running with no progress
+    const hasStuck = activities.some(a => (a.TimeElapsed || 0) > 7200 && a.NumRowsProcessed === 0);
+    if (hasStuck) {
+      return { type: 'error', message: 'Workunit appears stuck - activities running >2h with no rows processed' };
+    }
+
+    return { type: 'success', message: 'No major performance issues detected' };
+  }, [details, wu.totalClusterTime]);
 
   const { scopeTree, scopeMap, timelineData, totalTime } = useMemo(() => {
     const map = new Map();
@@ -178,10 +221,8 @@ const WorkUnitView = ({ wu, details }) => {
     {
       title: 'Scope',
       render: (_, r) => {
-        let displayLabel = r.label;
-        if (r.label && r.label.startsWith('Keyed Join')) {
-          displayLabel = 'Keyed Join';
-        }
+        let displayLabel = normalizeLabel(r.label);
+
         return (
           <Space>
             <Text strong>{r.scopeName}</Text>
@@ -217,18 +258,33 @@ const WorkUnitView = ({ wu, details }) => {
 
   const renderTreeNode = node => {
     const isSelected = selectedScope === (node.scopeId || node.scopeName);
-    const isHot = hotspots.some(h => h.scopeId === node.scopeId);
+    const pct = totalTime > 0 ? (((node.TimeElapsed || 0) / totalTime) * 100).toFixed(1) : 0;
+    const hasHighSkew = parseFloat(node.SkewMaxElapsed || 0) > 500;
+    const hasLargeSpill = (node.SizeGraphSpill || 0) > 100 * 1024 * 1024 * 1024; // >100GB
+    const hasHighMemory = (node.PeakMemoryUsage || 0) > 1024 * 1024 * 1024 * 1024; // >1TB
+    const isProblem = hasHighSkew || hasLargeSpill || hasHighMemory;
 
     return (
       <Tree.TreeNode
         title={
           <Space>
-            {isHot && <WarningOutlined style={{ color: '#ff4d4f' }} />}
-            <span style={{ color: isSelected ? '#1890ff' : undefined, fontWeight: isSelected ? 'bold' : 'normal' }}>
+            {isProblem && <WarningOutlined style={{ color: '#ff4d4f' }} />}
+            <span
+              style={{
+                color: isSelected ? '#1890ff' : isProblem ? '#ff4d4f' : undefined,
+                fontWeight: isSelected ? 'bold' : 'normal',
+              }}>
               {node.scopeName}
+              {node.label && `: ${normalizeLabel(node.label)}`}
             </span>
-            {node.label && <Tag size="small">{node.label}</Tag>}
-            {node.TimeElapsed && <Text type="secondary">{formatTime(node.TimeElapsed)}</Text>}
+            {node.TimeElapsed && (
+              <Text type="secondary">
+                ({formatTimeShort(node.TimeElapsed)} – {pct}%)
+              </Text>
+            )}
+            {hasHighSkew && <Tag color="red">Skew: {parseFloat(node.SkewMaxElapsed).toFixed(0)}%</Tag>}
+            {hasLargeSpill && <Tag color="orange">Spill: {formatBytes(node.SizeGraphSpill)}</Tag>}
+            {hasHighMemory && <Tag color="purple">Mem: {formatBytes(node.PeakMemoryUsage)}</Tag>}
           </Space>
         }
         key={node.scopeId || node.scopeName}
@@ -254,6 +310,19 @@ const WorkUnitView = ({ wu, details }) => {
           background-color: #ffe8cc !important;
         }
       `}</style>
+
+      {/* Auto-Diagnosis Banner */}
+      {diagnosis && (
+        <Alert
+          message="Performance Analysis"
+          description={diagnosis.message}
+          type={diagnosis.type}
+          showIcon
+          style={{ marginBottom: 16 }}
+          banner
+        />
+      )}
+
       {/* Header */}
       <Card style={{ marginBottom: 16 }}>
         <Row justify="space-between" align="middle">
@@ -553,7 +622,7 @@ const WorkUnitView = ({ wu, details }) => {
                   };
 
                   // Truncate "Keyed Join" labels for display in header
-                  const displayLabel = item.label && item.label.startsWith('Keyed Join') ? 'Keyed Join...' : item.label;
+                  const displayLabel = normalizeLabel(item.label);
 
                   return (
                     <Collapse.Panel

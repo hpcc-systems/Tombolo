@@ -84,6 +84,21 @@ router.get('/', async (req, res) => {
       };
     if (costAbove)
       where.totalCost = { ...where.totalCost, [Op.gt]: parseFloat(costAbove) };
+    if (req.query.detailsFetched !== undefined) {
+      if (req.query.detailsFetched === 'true') {
+        where[Op.and] = [
+          sequelize.literal(
+            'EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId`)'
+          ),
+        ];
+      } else if (req.query.detailsFetched === 'false') {
+        where[Op.and] = [
+          sequelize.literal(
+            'NOT EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId`)'
+          ),
+        ];
+      }
+    }
 
     const { count, rows } = await WorkUnit.findAndCountAll({
       where,
@@ -122,10 +137,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/workunits/:wuid - Single workunit
-router.get('/:wuid', async (req, res) => {
+// GET /api/workunits/:clusterId/:wuid - Single workunit
+router.get('/:clusterId/:wuid', async (req, res) => {
   try {
-    const wu = await WorkUnit.findByPk(req.params.wuid, {
+    const wu = await WorkUnit.findOne({
+      where: { wuId: req.params.wuid, clusterId: req.params.clusterId },
       attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] },
     });
 
@@ -138,11 +154,11 @@ router.get('/:wuid', async (req, res) => {
   }
 });
 
-// GET /api/workunits/:wuid/details - Hierarchical scope tree
-router.get('/:wuid/details', async (req, res) => {
+// GET /api/workunits/:clusterId/:wuid/details - Hierarchical scope tree
+router.get('/:clusterId/:wuid/details', async (req, res) => {
   try {
     const details = await WorkUnitDetails.findAll({
-      where: { wuId: req.params.wuid },
+      where: { wuId: req.params.wuid, clusterId: req.params.clusterId },
       order: [['id', 'ASC']],
     });
 
@@ -154,6 +170,7 @@ router.get('/:wuid/details', async (req, res) => {
 
     return sendSuccess(res, {
       wuId: req.params.wuid,
+      clusterId: req.params.clusterId,
       fetchedAt: details[0].createdAt || new Date(),
       graphs,
     });
@@ -163,72 +180,42 @@ router.get('/:wuid/details', async (req, res) => {
   }
 });
 
-// GET /api/workunits/:wuid/hotspots - Top performance issues
-router.get('/:wuid/hotspots', async (req, res) => {
+// GET /api/workunits/:clusterId/:wuid/hotspots - Top performance issues
+router.get('/:clusterId/:wuid/hotspots', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 15;
 
-    const hotspots = await WorkUnitDetails.findAll({
-      where: {
-        wuId: req.params.wuid,
-        scopeType: 'activity',
-        TimeElapsed: { [Op.not]: null },
-      },
-      attributes: [
-        'scopeName',
-        'label',
-        'fileName',
-        'TimeElapsed',
-        'SkewMaxElapsed',
-        'NumRowsProcessed',
-        'SizeDiskRead',
-        'SizeGraphSpill',
-      ],
-      order: [
-        [sequelize.fn('COALESCE', sequelize.col('TimeElapsed'), 0), 'DESC'],
-      ],
+    const details = await WorkUnitDetails.findAll({
+      where: { wuId: req.params.wuid, clusterId: req.params.clusterId },
+      order: [['TimeElapsed', 'DESC']],
       limit,
-      raw: true,
     });
 
-    return sendSuccess(res, hotspots);
+    return sendSuccess(
+      res,
+      details.map(d => d.get({ plain: true }))
+    );
   } catch (err) {
     console.error(err);
     return sendError(res, 'Failed to fetch hotspots', 500);
   }
 });
 
-// GET /api/workunits/:wuid/timeline - For Gantt/Timeline tab
-router.get('/:wuid/timeline', async (req, res) => {
+// GET /api/workunits/:clusterId/:wuid/timeline - Timeline data
+router.get('/:clusterId/:wuid/timeline', async (req, res) => {
   try {
-    const activities = await WorkUnitDetails.findAll({
-      where: {
-        wuId: req.params.wuid,
-        scopeType: 'activity',
-        TimeElapsed: { [Op.gt]: 0.01 },
-      },
-      attributes: [
-        'scopeName',
-        'label',
-        'TimeFirstRow',
-        'TimeElapsed',
-        'SkewMaxElapsed',
-      ],
-      order: [[sequelize.coalesce(sequelize.col('TimeFirstRow'), 0), 'ASC']],
-      raw: true,
+    const details = await WorkUnitDetails.findAll({
+      where: { wuId: req.params.wuid, clusterId: req.params.clusterId },
+      order: [['TimeFirstRow', 'ASC']],
     });
 
-    const timeline = activities.map(a => ({
-      ...a,
-      start: a.TimeFirstRow || 0,
-      duration: a.TimeElapsed || 0,
-      end: (a.TimeFirstRow || 0) + (a.TimeElapsed || 0),
-    }));
-
-    return sendSuccess(res, timeline);
+    return sendSuccess(
+      res,
+      details.map(d => d.get({ plain: true }))
+    );
   } catch (err) {
     console.error(err);
-    return sendError(res, 'Failed to build timeline', 500);
+    return sendError(res, 'Failed to fetch timeline', 500);
   }
 });
 

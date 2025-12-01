@@ -6,7 +6,7 @@ import workunitsService from '@/services/workunits.service';
 import WorkUnitView from './WorkUnitView';
 
 const WorkUnitDetails = () => {
-  const { wuid } = useParams();
+  const { clusterId, wuid } = useParams();
   const history = useHistory();
   const [loading, setLoading] = useState(true);
   const [wu, setWu] = useState(null);
@@ -18,12 +18,12 @@ const WorkUnitDetails = () => {
     setError(null);
     try {
       // Fetch workunit first
-      const wuData = await workunitsService.getById(wuid);
+      const wuData = await workunitsService.getById(clusterId, wuid);
       setWu(wuData);
 
       // Try to fetch details, but handle 404 gracefully
       try {
-        const detailsData = await workunitsService.getDetails(wuid);
+        const detailsData = await workunitsService.getDetails(clusterId, wuid);
 
         console.info('Raw details data from API:', detailsData);
         console.info('Number of graphs:', detailsData.graphs?.length || 0);

@@ -23,33 +23,36 @@ const workunitsService = {
   },
 
   /**
-   * Get a single workunit by ID
+   * Get a single workunit by clusterId and ID
+   * @param {string} clusterId - Cluster ID
    * @param {string} wuid - Workunit ID
    * @returns {Promise<Object>}
    */
-  getById: async wuid => {
-    const response = await apiClient.get(`/workunits/${wuid}`);
+  getById: async (clusterId, wuid) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}`);
     return response.data;
   },
 
   /**
    * Get hierarchical scope details for a workunit
+   * @param {string} clusterId - Cluster ID
    * @param {string} wuid - Workunit ID
    * @returns {Promise<{wuId: string, fetchedAt: string, graphs: Array}>}
    */
-  getDetails: async wuid => {
-    const response = await apiClient.get(`/workunits/${wuid}/details`);
+  getDetails: async (clusterId, wuid) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/details`);
     return response.data;
   },
 
   /**
    * Get performance hotspots for a workunit
+   * @param {string} clusterId - Cluster ID
    * @param {string} wuid - Workunit ID
    * @param {number} limit - Number of hotspots to return (default: 15)
    * @returns {Promise<Array>}
    */
-  getHotspots: async (wuid, limit = 15) => {
-    const response = await apiClient.get(`/workunits/${wuid}/hotspots`, {
+  getHotspots: async (clusterId, wuid, limit = 15) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/hotspots`, {
       params: { limit },
     });
     return response.data;
@@ -57,11 +60,12 @@ const workunitsService = {
 
   /**
    * Get timeline data for Gantt/Timeline visualization
+   * @param {string} clusterId - Cluster ID
    * @param {string} wuid - Workunit ID
    * @returns {Promise<Array>}
    */
-  getTimeline: async wuid => {
-    const response = await apiClient.get(`/workunits/${wuid}/timeline`);
+  getTimeline: async (clusterId, wuid) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/timeline`);
     return response.data;
   },
 };
