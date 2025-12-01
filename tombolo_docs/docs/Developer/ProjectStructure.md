@@ -101,6 +101,7 @@ Tombolo/
     ├── create-release.sh          # Create new releases
     ├── create-major.sh            # Major version bump
     ├── create-minor.sh            # Minor version bump
+    ├── cherry-pick-fix.sh         # Cherry-pick fixes between branches
     └── upmerge.sh                 # Merge between branches
 ```
 
