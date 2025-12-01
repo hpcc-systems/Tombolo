@@ -66,3 +66,21 @@ export function encryptString(text: string, encryptionKey: string): string;
  * @throws Error
  */
 export function truncateString(str: string, maxLength: number): string;
+
+/**
+ * List of all relevant metrics for workunit details
+ */
+export declare const relevantMetrics: readonly string[];
+
+/**
+ * Lookup for metric units
+ */
+export declare const UNIT_LOOKUP: Record<
+  string,
+  'nanoseconds' | 'percentage' | 'bytes' | 'int'
+>;
+
+/**
+ * Normalizes a label by replacing newlines and multiple spaces, then shortens using readableLabels if matched
+ */
+export function normalizeLabel(label: string): string | undefined;
