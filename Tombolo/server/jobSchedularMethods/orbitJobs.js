@@ -5,6 +5,7 @@ const { OrbitMonitoring } = require('../models');
 
 const MEGAPHONE_JOB = 'orbitMegaphone.js';
 const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
+const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';
 
 function createOrbitMegaphoneJob() {
   const uniqueJobName = 'Orbit Megaphone Job';
@@ -32,6 +33,26 @@ function createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
   this.bree.start(uniqueJobName);
 }
 
+function createOrbitProfileMonitoringJob({
+  uniqueJobName = 'Orbit Profile Monitoring',
+} = {}) {
+  const jobName = uniqueJobName;
+  const job = {
+    interval: '10s',
+    name: jobName,
+    path: path.join(
+      __dirname,
+      '..',
+      'jobs',
+      'orbitProfileMonitoring',
+      ORBIT_PROFILE_MONITORING
+    ),
+  };
+  this.bree.add(job);
+  this.bree.start(jobName);
+  logger.info(`Orbit profile monitoring job scheduled ...`);
+}
+
 async function scheduleOrbitMonitoringOnServerStart() {
   try {
     logger.info('Orbit monitoring initialized ...');
@@ -53,5 +74,6 @@ async function scheduleOrbitMonitoringOnServerStart() {
 module.exports = {
   createOrbitMegaphoneJob,
   createOrbitMonitoringJob,
+  createOrbitProfileMonitoringJob,
   scheduleOrbitMonitoringOnServerStart,
 };

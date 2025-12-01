@@ -29,36 +29,10 @@ const AddEditModal = ({
   // Keep track of visited tabs
   const [visitedTabs, setVisitedTabs] = useState(['0']);
 
-  // Populate form fields when editing
+  // Populate form fields when editing or duplicating. When duplicating, also
+  // generate a unique name and place a warning on the field.
   useEffect(() => {
-    if (isEditing && selectedMonitoring && form) {
-      const { metaData } = selectedMonitoring;
-      form.setFieldsValue({
-        monitoringName: selectedMonitoring.monitoringName,
-        description: selectedMonitoring.description,
-        domain: metaData?.asrSpecificMetaData?.domain,
-        productCategory: metaData?.asrSpecificMetaData?.productCategory,
-        severity: metaData?.asrSpecificMetaData?.severity,
-        buildName: metaData?.asrSpecificMetaData?.buildName,
-        primaryContacts: metaData?.contacts?.primaryContacts,
-        secondaryContacts: metaData?.contacts?.secondaryContacts,
-        notifyContacts: metaData?.contacts?.notifyContacts,
-        monitoringData: {
-          notificationConditions: metaData?.monitoringData?.notificationConditions,
-          buildStatus: metaData?.monitoringData?.buildStatus,
-          updateInterval: metaData?.monitoringData?.updateInterval,
-          updateIntervalDays: metaData?.monitoringData?.updateIntervalDays,
-        },
-      });
-      if (metaData?.asrSpecificMetaData?.domain) {
-        setSelectedDomain(metaData.asrSpecificMetaData.domain);
-      }
-    }
-  }, [isEditing, selectedMonitoring, form, setSelectedDomain]);
-
-  // Populate form fields when duplicating and generate unique name
-  useEffect(() => {
-    if (isDuplicating && selectedMonitoring && form) {
+    if ((isEditing || isDuplicating) && selectedMonitoring && form) {
       const { metaData } = selectedMonitoring;
       form.setFieldsValue({
         monitoringName: selectedMonitoring.monitoringName,
@@ -81,27 +55,29 @@ const AddEditModal = ({
         setSelectedDomain(metaData.asrSpecificMetaData.domain);
       }
 
-      // Generate unique name
-      const doesNameExist = name => orbitMonitoringData.some(m => m.monitoringName === name);
+      if (isDuplicating) {
+        // Generate unique name
+        const doesNameExist = name => orbitMonitoringData.some(m => m.monitoringName === name);
 
-      let currentName = selectedMonitoring.monitoringName;
-      let newName = `copy-${currentName}`;
-      let copyCount = 0;
+        const currentName = selectedMonitoring.monitoringName;
+        let newName = `copy-${currentName}`;
+        let copyCount = 0;
 
-      while (doesNameExist(newName)) {
-        copyCount++;
-        newName = `copy-${currentName}-${copyCount}`;
+        while (doesNameExist(newName)) {
+          copyCount++;
+          newName = `copy-${currentName}-${copyCount}`;
+        }
+
+        form.setFields([
+          {
+            name: 'monitoringName',
+            value: newName,
+            warnings: ['Auto generated name. Please modify if necessary.'],
+          },
+        ]);
       }
-
-      form.setFields([
-        {
-          name: 'monitoringName',
-          value: newName,
-          warnings: ['Auto generated name. Please modify if necessary.'],
-        },
-      ]);
     }
-  }, [isDuplicating, selectedMonitoring, form, orbitMonitoringData, setSelectedDomain]);
+  }, [isEditing, isDuplicating, selectedMonitoring, form, orbitMonitoringData, setSelectedDomain]);
 
   // Handle Cancel
   const handleCancel = () => {
@@ -292,7 +268,7 @@ const AddEditModal = ({
       title={getModalTitle()}
       maskClosable={false}
       footer={renderFooter()}
-      destroyOnHidden={true}>
+      destroyOnClose={true}>
       <Card size="small">
         <Tabs type="card" activeKey={activeTab.toString()} onChange={key => handleTabChange(key)} items={tabItems} />
       </Card>

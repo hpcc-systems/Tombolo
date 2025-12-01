@@ -258,8 +258,16 @@ const bulkUpdateOrbitProfileMonitoring = async (req, res) => {
   try {
     transaction = await sequelize.transaction();
     const inputMonitorings = req.body.monitorings;
+    // Validate input: ensure monitorings is a non-empty array
+    if (!Array.isArray(inputMonitorings) || inputMonitorings.length === 0) {
+      return sendError(res, 'No monitorings provided for bulk update', 400);
+    }
     const userId = req.user.id;
 
+    if (!Array.isArray(inputMonitorings) || inputMonitorings.length === 0) {
+      await transaction.rollback();
+      return sendError(res, 'At least one monitoring record must be provided for bulk update');
+    }
     for (const monitoring of inputMonitorings) {
       const { id, metaData } = monitoring;
       await OrbitProfileMonitoring.update(
