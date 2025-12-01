@@ -34,7 +34,7 @@ const AdminRoutes = () => {
       <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
       <PrivateRoute path="/admin/integrations" component={Integrations} />
       <PrivateRoute path="/admin/settings" component={Settings} />
-      <PrivateRoute exact path="/admin/workunits/:wuid" component={WorkUnitDetails} />
+      <PrivateRoute exact path="/admin/workunits/:clusterId/:wuid" component={WorkUnitDetails} />
       <PrivateRoute path="/admin/workunits" component={WorkUnitHistory} />
     </Switch>
   );
