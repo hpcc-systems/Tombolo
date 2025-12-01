@@ -8,7 +8,7 @@ import type {
 const { MonitoringType, MonitoringLog, WorkUnit } = db;
 import { retryWithBackoff } from '@tombolo/shared';
 import { parseWorkunitTimestamp } from '@tombolo/shared';
-import logger from '../../config/logger.js';
+import logger from '../../../config/logger.js';
 
 // Constants
 const MONITORING_TYPE_NAME = 'WorkUnit History';
