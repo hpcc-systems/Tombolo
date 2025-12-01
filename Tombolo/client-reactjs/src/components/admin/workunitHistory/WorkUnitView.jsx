@@ -36,6 +36,7 @@ dayjs.extend(duration);
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
+const { Option } = Select;
 
 const formatTime = seconds => (seconds == null ? '-' : dayjs.duration(seconds, 'seconds').format('HH:mm:ss.SSS'));
 
@@ -72,6 +73,7 @@ const WorkUnitView = ({ wu, details }) => {
     const totalTime = wu.totalClusterTime || 1;
 
     // Find highest time consumer
+    if (!activities) return null;
     const slowest = activities.reduce(
       (max, curr) => ((curr.TimeElapsed || 0) > (max.TimeElapsed || 0) ? curr : max),
       activities[0]

@@ -88,13 +88,13 @@ router.get('/', async (req, res) => {
       if (req.query.detailsFetched === 'true') {
         where[Op.and] = [
           sequelize.literal(
-            'EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId`)'
+            'EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId` AND `work_unit_details`.`clusterId` = `WorkUnit`.`clusterId`)'
           ),
         ];
       } else if (req.query.detailsFetched === 'false') {
         where[Op.and] = [
           sequelize.literal(
-            'NOT EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId`)'
+            'NOT EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId` AND `work_unit_details`.`clusterId` = `WorkUnit`.`clusterId`)'
           ),
         ];
       }
@@ -114,7 +114,7 @@ router.get('/', async (req, res) => {
         'detailsFetchedAt',
         [
           sequelize.literal(
-            'EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId`)'
+            'EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId` AND `work_unit_details`.`clusterId` = `WorkUnit`.`clusterId`)'
           ),
           'hasDetails',
         ],

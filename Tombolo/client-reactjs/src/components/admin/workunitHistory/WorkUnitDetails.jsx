@@ -25,9 +25,6 @@ const WorkUnitDetails = () => {
       try {
         const detailsData = await workunitsService.getDetails(clusterId, wuid);
 
-        console.info('Raw details data from API:', detailsData);
-        console.info('Number of graphs:', detailsData.graphs?.length || 0);
-
         // Flatten the hierarchical structure into a flat array
         const flattenDetails = graphs => {
           const result = [];
@@ -42,10 +39,10 @@ const WorkUnitDetails = () => {
         };
 
         const flattenedDetails = flattenDetails(detailsData.graphs || []);
-        console.info('Flattened details count:', flattenedDetails.length);
         setDetails(flattenedDetails);
-      } catch {
+      } catch (error) {
         // If details are not found (404), just continue with empty details
+        console.error('Error fetching workunit details (expected for 404):', error);
         setDetails([]);
       }
     } catch (err) {
