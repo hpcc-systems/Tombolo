@@ -353,9 +353,4 @@ function normalizeLabel(label) {
   return label;
 }
 
-module.exports = {
-  relevantMetrics,
-  UNIT_LOOKUP,
-  readableLabels,
-  normalizeLabel,
-};
+export { relevantMetrics, UNIT_LOOKUP, readableLabels, normalizeLabel };

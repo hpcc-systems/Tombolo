@@ -17,4 +17,4 @@ function truncateString(str, maxLength = 245) {
   return str.slice(0, startChars) + ellipsis + str.slice(-endChars);
 }
 
-module.exports = truncateString;
+export default truncateString;

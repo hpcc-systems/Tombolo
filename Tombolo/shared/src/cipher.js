@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 // The crypto package will work on the client as long as we use vite
 
 const algorithm = 'aes-256-ctr';
@@ -44,7 +44,4 @@ const decryptString = (text, encryptionKey) => {
   return decrypted.toString();
 };
 
-module.exports = {
-  encryptString,
-  decryptString,
-};
+export { encryptString, decryptString };

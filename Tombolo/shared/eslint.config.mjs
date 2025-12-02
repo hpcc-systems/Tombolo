@@ -7,11 +7,11 @@ export default [
 
   // Override for CommonJS
   {
-    files: ['**/*.js'],
+    files: ['**/*.js', '!dist/'],
     languageOptions: {
-      sourceType: 'commonjs',
+      sourceType: 'module',
       globals: {
-        ...globals.commonjs,
+        ...globals.es2020,
         ...globals.node,
       },
     },

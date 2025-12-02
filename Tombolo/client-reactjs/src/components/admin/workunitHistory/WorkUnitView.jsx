@@ -31,7 +31,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import { normalizeLabel } from './workunitConstants';
+import { normalizeLabel } from '@tombolo/shared';
 dayjs.extend(duration);
 
 const { Title, Text } = Typography;

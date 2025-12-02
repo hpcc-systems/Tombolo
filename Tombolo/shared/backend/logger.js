@@ -1,11 +1,11 @@
-const {
-  createLogger: winstonCreateLogger,
+import {
   format,
   transports,
-} = require('winston');
-require('winston-daily-rotate-file');
-const util = require('util');
-const path = require('path');
+  createLogger as winstonCreateLogger,
+} from 'winston';
+import 'winston-daily-rotate-file';
+import util from 'util';
+import path from 'path';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -179,7 +179,5 @@ function createLoggerInstance(options = {}) {
 }
 
 // Export factory function and default instance
-module.exports = {
-  createLogger: createLoggerInstance,
-  logger: createLoggerInstance(), // Default logger instance
-};
+export const createLogger = createLoggerInstance;
+export const logger = createLoggerInstance(); // Default logger instance

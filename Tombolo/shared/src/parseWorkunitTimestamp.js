@@ -37,4 +37,4 @@ function parseWorkunitTimestamp(wuId, timezoneOffset = 0) {
   return timestamp;
 }
 
-module.exports = parseWorkunitTimestamp;
+export default parseWorkunitTimestamp;
