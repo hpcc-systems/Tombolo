@@ -14,7 +14,11 @@
   },
   "scripts": {
     "test": "echo \"No tests yet\"",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf .turbo",
+    "clean:deps": "rm -rf node_modules"
+  },
+  "devDependencies": {
+    "tsup": "catalog:"
   },
   "dependencies": {
     "@tombolo/db": "workspace:*",

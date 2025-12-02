@@ -16,6 +16,7 @@
     "db:create": "sequelize db:create",
     "db:seed": "sequelize db:seed:all",
     "db:drop": "sequelize db:drop",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf .turbo",
+    "clean:deps": "rm -rf node_modules"
   }
 }
