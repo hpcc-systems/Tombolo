@@ -92,7 +92,7 @@ export interface WorkUnitDetailsAttributes {
   wuId: string;
   scopeId?: string | null;
   scopeName: string;
-  scopeType: 'activity' | 'subgraph' | 'graph' | 'operation';
+  scopeType: 'activity' | 'subgraph' | 'graph' | 'operation' | 'workflow' | '';
   label?: string | null;
   kind?: number | null;
   fileName?: string | null;

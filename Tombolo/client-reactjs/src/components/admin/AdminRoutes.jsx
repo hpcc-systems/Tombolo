@@ -16,6 +16,8 @@ const IntegrationSettings = React.lazy(() => import('./Integrations/IntegrationS
 const TeamsNotification = React.lazy(() => import('./notifications/MsTeams/Teams'));
 const UserManagement = React.lazy(() => import('./userManagement/index.jsx'));
 const Settings = React.lazy(() => import('./settings'));
+const WorkUnitHistory = React.lazy(() => import('./workunitHistory/WorkUnitHistory'));
+const WorkUnitDetails = React.lazy(() => import('./workunitHistory/WorkUnitDetails'));
 
 const AdminRoutes = () => {
   return (
@@ -32,6 +34,8 @@ const AdminRoutes = () => {
       <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
       <PrivateRoute path="/admin/integrations" component={Integrations} />
       <PrivateRoute path="/admin/settings" component={Settings} />
+      <PrivateRoute exact path="/admin/workunits/:clusterId/:wuid" component={WorkUnitDetails} />
+      <PrivateRoute path="/admin/workunits" component={WorkUnitHistory} />
     </Switch>
   );
 };

@@ -2,7 +2,12 @@ import { IOptions, Scope, Workunit } from '@hpcc-js/comms';
 import { getClusters, getClusterOptions } from '@tombolo/core';
 import db from '@tombolo/db';
 const { WorkUnit, WorkUnitDetails } = db;
-import { truncateString } from '@tombolo/shared';
+import {
+  retryWithBackoff,
+  truncateString,
+  UNIT_LOOKUP,
+  relevantMetrics,
+} from '@tombolo/shared';
 import logger from '../../../config/logger.js';
 
 // Type for database row objects (what processScopeToRow returns)
@@ -200,342 +205,8 @@ async function bulkCreateWithDiagnostics(batch: WorkUnitDetailRow[]) {
   }
 }
 
-// Key performance metrics we care about - including all statistical variants
-const relevantMetrics = [
-  // Time-based metrics
-  'TimeElapsed',
-  'TimeAvgElapsed',
-  'TimeMinElapsed',
-  'TimeMaxElapsed',
-  'TimeStdDevElapsed',
-  'TimeLocalExecute',
-  'TimeAvgLocalExecute',
-  'TimeMinLocalExecute',
-  'TimeMaxLocalExecute',
-  'TimeStdDevLocalExecute',
-  'TimeTotalExecute',
-  'TimeAvgTotalExecute',
-  'TimeMinTotalExecute',
-  'TimeMaxTotalExecute',
-  'TimeStdDevTotalExecute',
-  'TimeDiskReadIO',
-  'TimeAvgDiskReadIO',
-  'TimeMinDiskReadIO',
-  'TimeMaxDiskReadIO',
-  'TimeStdDevDiskReadIO',
-  'TimeDiskWriteIO',
-  'TimeAvgDiskWriteIO',
-  'TimeMinDiskWriteIO',
-  'TimeMaxDiskWriteIO',
-  'TimeStdDevDiskWriteIO',
-  'TimeBlocked',
-  'TimeAvgBlocked',
-  'TimeMinBlocked',
-  'TimeMaxBlocked',
-  'TimeStdDevBlocked',
-  'TimeLookAhead',
-  'TimeAvgLookAhead',
-  'TimeMinLookAhead',
-  'TimeMaxLookAhead',
-  'TimeStdDevLookAhead',
-  'TimeFirstRow',
-
-  // Disk I/O metrics
-  'NumDiskRowsRead',
-  'NumAvgDiskRowsRead',
-  'NumMinDiskRowsRead',
-  'NumMaxDiskRowsRead',
-  'NumStdDevDiskRowsRead',
-  'SizeDiskRead',
-  'SizeAvgDiskRead',
-  'SizeMinDiskRead',
-  'SizeMaxDiskRead',
-  'SizeStdDevDiskRead',
-  'NumDiskReads',
-  'NumAvgDiskReads',
-  'NumMinDiskReads',
-  'NumMaxDiskReads',
-  'SizeDiskWrite',
-  'SizeAvgDiskWrite',
-  'SizeMinDiskWrite',
-  'SizeMaxDiskWrite',
-  'SizeStdDevDiskWrite',
-  'NumDiskWrites',
-  'NumAvgDiskWrites',
-  'NumMinDiskWrites',
-  'NumMaxDiskWrites',
-
-  // Memory metrics
-  'MemoryUsage',
-  'MemoryAvgUsage',
-  'MemoryMinUsage',
-  'MemoryMaxUsage',
-  'PeakMemoryUsage',
-  'PeakAvgMemoryUsage',
-  'PeakMinMemoryUsage',
-  'PeakMaxMemoryUsage',
-  // SizePeakMemory fields removed - duplicates of PeakMemoryUsage
-
-  // Spill metrics
-  'SpillRowsWritten',
-  'SpillAvgRowsWritten',
-  'SpillMinRowsWritten',
-  'SpillMaxRowsWritten',
-  'SpillSizeWritten',
-  'SpillAvgSizeWritten',
-  'SpillMinSizeWritten',
-  'SpillMaxSizeWritten',
-  'SizeGraphSpill',
-  'SizeAvgGraphSpill',
-  'SizeMinGraphSpill',
-  'SizeMaxGraphSpill',
-
-  // Row processing metrics (removed RowsProcessed duplicates - keeping NumRowsProcessed)
-  'NumRowsProcessed',
-  'NumAvgRowsProcessed',
-  'NumMinRowsProcessed',
-  'NumMaxRowsProcessed',
-
-  // Skew metrics (performance distribution across nodes)
-  'SkewMinElapsed',
-  'SkewMaxElapsed',
-  'SkewMinLocalExecute',
-  'SkewMaxLocalExecute',
-  'SkewMinTotalExecute',
-  'SkewMaxTotalExecute',
-  'SkewMinDiskRowsRead',
-  'SkewMaxDiskRowsRead',
-  'SkewMinDiskRead',
-  'SkewMaxDiskRead',
-  'SkewMinDiskWrite',
-  'SkewMaxDiskWrite',
-  'SkewMinDiskReadIO',
-  'SkewMaxDiskReadIO',
-  'SkewMaxDiskWriteIO',
-
-  // Network metrics
-  'SizeNetworkWrite',
-  'SizeAvgNetworkWrite',
-  'SizeMinNetworkWrite',
-  'SizeMaxNetworkWrite',
-  'NumNetworkWrites',
-  'NumAvgNetworkWrites',
-  'NumMinNetworkWrites',
-  'NumMaxNetworkWrites',
-
-  // Additional performance indicators
-  'MaxRowSize',
-  'NumIndexRecords',
-  'NumStarts',
-  'NumStops',
-  'OriginalSize',
-  'CompressedSize',
-  'ScansBlob',
-  'ScansIndex',
-  'WildSeeks',
-  'SeeksBlob',
-  'SeeksIndex',
-
-  // Node metrics (which nodes had min/max performance)
-  'NodeMinElapsed',
-  'NodeMaxElapsed',
-  'NodeMinLocalExecute',
-  'NodeMaxLocalExecute',
-  'NodeMinTotalExecute',
-  'NodeMaxTotalExecute',
-  'NodeMinDiskRowsRead',
-  'NodeMaxDiskRowsRead',
-  'NodeMinDiskRead',
-  'NodeMaxDiskRead',
-  'NodeMinDiskWrite',
-  'NodeMaxDiskWrite',
-  'NodeMinDiskReadIO',
-  'NodeMaxDiskReadIO',
-  'NodeMinDiskWriteIO',
-  'NodeMaxDiskWriteIO',
-  'NodeMinBlocked',
-  'NodeMaxBlocked',
-  'NodeMinLookAhead',
-  'NodeMaxLookAhead',
-  'NodeMinFirstRow',
-  'NodeMaxFirstRow',
-] as const;
-
-type MetricName = (typeof relevantMetrics)[number];
-
-const UNIT_LOOKUP: Record<
-  MetricName,
-  'nanoseconds' | 'percentage' | 'bytes' | 'int'
-> = {
-  TimeElapsed: 'nanoseconds',
-  TimeAvgElapsed: 'nanoseconds',
-  TimeMinElapsed: 'nanoseconds',
-  TimeMaxElapsed: 'nanoseconds',
-  TimeStdDevElapsed: 'nanoseconds',
-  TimeLocalExecute: 'nanoseconds',
-  TimeAvgLocalExecute: 'nanoseconds',
-  TimeMinLocalExecute: 'nanoseconds',
-  TimeMaxLocalExecute: 'nanoseconds',
-  TimeStdDevLocalExecute: 'nanoseconds',
-  TimeTotalExecute: 'nanoseconds',
-  TimeAvgTotalExecute: 'nanoseconds',
-  TimeMinTotalExecute: 'nanoseconds',
-  TimeMaxTotalExecute: 'nanoseconds',
-  TimeStdDevTotalExecute: 'nanoseconds',
-  TimeDiskReadIO: 'nanoseconds',
-  TimeAvgDiskReadIO: 'nanoseconds',
-  TimeMinDiskReadIO: 'nanoseconds',
-  TimeMaxDiskReadIO: 'nanoseconds',
-  TimeStdDevDiskReadIO: 'nanoseconds',
-  TimeDiskWriteIO: 'nanoseconds',
-  TimeAvgDiskWriteIO: 'nanoseconds',
-  TimeMinDiskWriteIO: 'nanoseconds',
-  TimeMaxDiskWriteIO: 'nanoseconds',
-  TimeStdDevDiskWriteIO: 'nanoseconds',
-  TimeBlocked: 'nanoseconds',
-  TimeAvgBlocked: 'nanoseconds',
-  TimeMinBlocked: 'nanoseconds',
-  TimeMaxBlocked: 'nanoseconds',
-  TimeStdDevBlocked: 'nanoseconds',
-  TimeLookAhead: 'nanoseconds',
-  TimeAvgLookAhead: 'nanoseconds',
-  TimeMinLookAhead: 'nanoseconds',
-  TimeMaxLookAhead: 'nanoseconds',
-  TimeStdDevLookAhead: 'nanoseconds',
-  TimeFirstRow: 'nanoseconds',
-
-  NumDiskRowsRead: 'int',
-  NumAvgDiskRowsRead: 'int',
-  NumMinDiskRowsRead: 'int',
-  NumMaxDiskRowsRead: 'int',
-  NumStdDevDiskRowsRead: 'int',
-
-  SizeDiskRead: 'bytes',
-  SizeAvgDiskRead: 'bytes',
-  SizeMinDiskRead: 'bytes',
-  SizeMaxDiskRead: 'bytes',
-  SizeStdDevDiskRead: 'bytes',
-
-  NumDiskReads: 'int',
-  NumAvgDiskReads: 'int',
-  NumMinDiskReads: 'int',
-  NumMaxDiskReads: 'int',
-
-  SizeDiskWrite: 'bytes',
-  SizeAvgDiskWrite: 'bytes',
-  SizeMinDiskWrite: 'bytes',
-  SizeMaxDiskWrite: 'bytes',
-  SizeStdDevDiskWrite: 'bytes',
-
-  NumDiskWrites: 'int',
-  NumAvgDiskWrites: 'int',
-  NumMinDiskWrites: 'int',
-  NumMaxDiskWrites: 'int',
-
-  MemoryUsage: 'bytes',
-  MemoryAvgUsage: 'bytes',
-  MemoryMinUsage: 'bytes',
-  MemoryMaxUsage: 'bytes',
-
-  PeakMemoryUsage: 'bytes',
-  PeakAvgMemoryUsage: 'bytes',
-  PeakMinMemoryUsage: 'bytes',
-  PeakMaxMemoryUsage: 'bytes',
-
-  SpillRowsWritten: 'int',
-  SpillAvgRowsWritten: 'int',
-  SpillMinRowsWritten: 'int',
-  SpillMaxRowsWritten: 'int',
-
-  SpillSizeWritten: 'bytes',
-  SpillAvgSizeWritten: 'bytes',
-  SpillMinSizeWritten: 'bytes',
-  SpillMaxSizeWritten: 'bytes',
-
-  SizeGraphSpill: 'bytes',
-  SizeAvgGraphSpill: 'bytes',
-  SizeMinGraphSpill: 'bytes',
-  SizeMaxGraphSpill: 'bytes',
-
-  NumRowsProcessed: 'int',
-  NumAvgRowsProcessed: 'int',
-  NumMinRowsProcessed: 'int',
-  NumMaxRowsProcessed: 'int',
-
-  SkewMinElapsed: 'percentage',
-  SkewMaxElapsed: 'percentage',
-  SkewMinLocalExecute: 'percentage',
-  SkewMaxLocalExecute: 'percentage',
-  SkewMinTotalExecute: 'percentage',
-  SkewMaxTotalExecute: 'percentage',
-  SkewMinDiskRowsRead: 'percentage',
-  SkewMaxDiskRowsRead: 'percentage',
-  SkewMinDiskRead: 'percentage',
-  SkewMaxDiskRead: 'percentage',
-  SkewMinDiskWrite: 'percentage',
-  SkewMaxDiskWrite: 'percentage',
-  SkewMinDiskReadIO: 'percentage',
-  SkewMaxDiskReadIO: 'percentage',
-  SkewMaxDiskWriteIO: 'percentage',
-
-  SizeNetworkWrite: 'bytes',
-  SizeAvgNetworkWrite: 'bytes',
-  SizeMinNetworkWrite: 'bytes',
-  SizeMaxNetworkWrite: 'bytes',
-
-  NumNetworkWrites: 'int',
-  NumAvgNetworkWrites: 'int',
-  NumMinNetworkWrites: 'int',
-  NumMaxNetworkWrites: 'int',
-
-  MaxRowSize: 'bytes',
-  NumIndexRecords: 'int',
-  NumStarts: 'int',
-  NumStops: 'int',
-  OriginalSize: 'bytes',
-  CompressedSize: 'bytes',
-  ScansBlob: 'int',
-  ScansIndex: 'int',
-  WildSeeks: 'int',
-  SeeksBlob: 'int',
-  SeeksIndex: 'int',
-
-  NodeMinElapsed: 'int',
-  NodeMaxElapsed: 'int',
-  NodeMinLocalExecute: 'int',
-  NodeMaxLocalExecute: 'int',
-  NodeMinTotalExecute: 'int',
-  NodeMaxTotalExecute: 'int',
-  NodeMinDiskRowsRead: 'int',
-  NodeMaxDiskRowsRead: 'int',
-  NodeMinDiskRead: 'int',
-  NodeMaxDiskRead: 'int',
-  NodeMinDiskWrite: 'int',
-  NodeMaxDiskWrite: 'int',
-  NodeMinDiskReadIO: 'int',
-  NodeMaxDiskReadIO: 'int',
-  NodeMinDiskWriteIO: 'int',
-  NodeMaxDiskWriteIO: 'int',
-  NodeMinBlocked: 'int',
-  NodeMaxBlocked: 'int',
-  NodeMinLookAhead: 'int',
-  NodeMaxLookAhead: 'int',
-  NodeMinFirstRow: 'int',
-  NodeMaxFirstRow: 'int',
-};
-
-// const activityIgnoreMetrics = ['FirstRow', 'NodeMin', 'NodeMax'];
-
-const relevantActivityMetrics = relevantMetrics; // .filter(
-//   metric =>
-//     !activityIgnoreMetrics.some(ignoreSubstring =>
-//       metric.includes(ignoreSubstring)
-//     )
-// );
-
 // Create Sets for O(1) lookup instead of O(n) array.includes()
 const relevantMetricsSet = new Set(relevantMetrics);
-const relevantActivityMetricsSet = new Set(relevantActivityMetrics);
 
 /**
  * Extracts performance metrics from a scope's properties
@@ -552,10 +223,6 @@ function extractPerformanceMetrics(
 
   if (!scope?.Properties?.Property) return metrics;
 
-  const st = scope.ScopeType;
-  const currentRelevantMetrics =
-    st === 'activity' ? relevantActivityMetricsSet : relevantMetricsSet;
-
   // DECIMAL(13,6) max value: 9999999.999999 seconds (~115.7 days)
   const MAX_DECIMAL_13_6 = 9999999.999999;
 
@@ -571,7 +238,7 @@ function extractPerformanceMetrics(
     }
     if (typeof num !== 'number' || !isFinite(num)) return null;
 
-    const unit = UNIT_LOOKUP[name as MetricName];
+    const unit = UNIT_LOOKUP[name];
     switch (unit) {
       case 'nanoseconds': {
         // Convert nanoseconds to seconds with microsecond precision (6 decimal places)
@@ -638,7 +305,7 @@ function extractPerformanceMetrics(
 
   // Extract properties into clean + converted metrics object
   scope.Properties.Property.forEach(prop => {
-    if (currentRelevantMetrics.has(prop.Name as MetricName)) {
+    if (relevantMetricsSet.has(prop.Name)) {
       const value =
         prop.RawValue !== undefined ? prop.RawValue : prop.Formatted;
       const converted = convertByUnit(prop.Name, value);
@@ -700,75 +367,62 @@ function processScopeToRow(scope: Scope, clusterId: string, wuId: string) {
 }
 
 /**
- * Fetches workunit details WITHOUT retry logic
- * (Retries disabled to prevent timer queue overflow under high load)
+ * Fetches workunit details with retry logic
  */
 async function fetchWorkunitDetails(clusterOptions: IOptions, wuId: string) {
-  try {
-    // Attach to workunit and fetch performance data
-    const attachedWu = Workunit.attach(
-      { ...clusterOptions, timeoutSecs: 600 },
-      wuId
-    );
+  return await retryWithBackoff(async () => {
+    try {
+      // Attach to workunit and fetch performance data
+      const attachedWu = Workunit.attach(clusterOptions, wuId);
 
-    // Fetch details with reasonable depth limit to prevent memory issues
-    const result = await attachedWu.fetchDetails({
-      ScopeFilter: {
-        MaxDepth: 99999, // Limit depth to prevent exponential scope explosion
-        // Only get scopes that typically have performance data
-        ScopeTypes: ACCEPTED_SCOPE_TYPES,
-      },
-      ScopeOptions: {
-        IncludeId: true,
-        IncludeScope: true,
-        IncludeScopeType: true,
-      },
-      PropertyOptions: {
-        IncludeName: true,
-        IncludeRawValue: true,
-        IncludeFormatted: false, // Don't need formatted strings
-        IncludeMeasure: false, // Don't need measure info
-        IncludeCreator: false, // Don't need creator info
-        IncludeCreatorType: false, // Don't need creator type
-      },
-      PropertiesToReturn: {
-        AllStatistics: true, // Gets TimeElapsed, memory, disk I/O, etc.
-        AllProperties: false, // Don't get all properties
-        AllAttributes: false, // Skip attributes
-        AllHints: false, // Skip hints
-        AllNotes: false, // Skip notes
-        AllScopes: false, // Don't automatically include all scopes
-        // Request only specific properties we need
-        Properties: ['Kind', 'Label', 'Filename'].concat(relevantMetrics),
-      },
-    });
+      // Highly optimized fetchDetails call - minimal data transfer
 
-    // Safety check on result size
-    if (result && Array.isArray(result)) {
-      const scopeCount = result.length;
-      if (scopeCount > 50000) {
-        logger.warn(
-          `Workunit ${wuId} returned ${scopeCount} scopes - truncating to 50000 to prevent memory issues`
-        );
-        // return result.slice(0, 50000);
+      return await attachedWu.fetchDetails({
+        ScopeFilter: {
+          MaxDepth: 999999,
+          // Only get scopes that typically have performance data
+          ScopeTypes: ACCEPTED_SCOPE_TYPES,
+        },
+        ScopeOptions: {
+          IncludeId: true,
+          IncludeScope: true,
+          IncludeScopeType: true,
+        },
+        PropertyOptions: {
+          IncludeName: true,
+          IncludeRawValue: true,
+          IncludeFormatted: false, // Don't need formatted strings
+          IncludeMeasure: false, // Don't need measure info
+          IncludeCreator: false, // Don't need creator info
+          IncludeCreatorType: false, // Don't need creator type
+        },
+        PropertiesToReturn: {
+          AllStatistics: true, // Gets TimeElapsed, memory, disk I/O, etc.
+          AllProperties: false, // Don't get all properties
+          AllAttributes: false, // Skip attributes
+          AllHints: false, // Skip hints
+          AllNotes: false, // Skip notes
+          AllScopes: false, // Don't automatically include all scopes
+          // Request only specific properties we need
+          Properties: ['Kind', 'Label', 'Filename'].concat(relevantMetrics),
+        },
+      });
+    } catch (err: unknown) {
+      // Don't retry if workunit cannot be opened (deleted, archived, or inaccessible)
+      // This will be caught and handled in the main loop where we mark clusterDeleted
+      if (
+        err instanceof Error &&
+        err.message &&
+        err.message.toLowerCase().includes('cannot open workunit')
+      ) {
+        const nonRetryableError = new Error(err.message);
+        // @ts-expect-error Writing non standard key to Error object
+        nonRetryableError.noRetry = true;
+        throw nonRetryableError;
       }
+      throw err;
     }
-
-    return result;
-  } catch (err: unknown) {
-    // Mark workunit deletion errors as non-retryable
-    if (
-      err instanceof Error &&
-      err.message &&
-      err.message.toLowerCase().includes('cannot open workunit')
-    ) {
-      const nonRetryableError = new Error(err.message);
-      // @ts-expect-error Writing non standard key to Error object
-      nonRetryableError.noRetry = true;
-      throw nonRetryableError;
-    }
-    throw err;
-  }
+  });
 }
 
 /**
@@ -817,8 +471,7 @@ async function getWorkunitDetails() {
 
         logger.info(`Processing cluster ${clusterId} (${thorHost})`);
 
-        // Get WorkUnits with terminal states and detailsFetchedAt IS NULL
-        // Reduced limit to 5 to prevent timer queue overflow with large workunits
+        // Get WorkUnits with terminal states and detailsFetchedAt IS NULL, limit to 20
         const workunitsToProcess = await WorkUnit.findAll({
           where: {
             clusterId,
@@ -869,25 +522,10 @@ async function getWorkunitDetails() {
             );
 
             // Fetch detailed performance data (raw scopes)
-            try {
-              detailedInfo = await fetchWorkunitDetails(
-                clusterOptions,
-                workunit.wuId
-              );
-            } catch (fetchErr: unknown) {
-              if (fetchErr instanceof RangeError) {
-                logger.error(
-                  `RangeError during fetchWorkunitDetails for ${workunit.wuId}:`,
-                  {
-                    error: fetchErr.message,
-                    stack: fetchErr.stack,
-                    clusterId,
-                    wuId: workunit.wuId,
-                  }
-                );
-              }
-              throw fetchErr;
-            }
+            detailedInfo = await fetchWorkunitDetails(
+              clusterOptions,
+              workunit.wuId
+            );
 
             const scopeCount = detailedInfo?.length || 0;
             logger.info(
@@ -991,9 +629,7 @@ async function getWorkunitDetails() {
             successCount++;
             processedCount++;
 
-            // Single yield between workunits - just enough to allow other async ops to run
-            // Reduces 40 microtasks per WU to just 1
-            // await new Promise(resolve => setImmediate(resolve));
+            // Add a small delay between requests to be gentle on the HPCC system
             await new Promise(resolve => setTimeout(resolve, 4000));
 
             // Force garbage collection every 3 workunits to manage memory
@@ -1013,37 +649,12 @@ async function getWorkunitDetails() {
                 `Workunit ${workunit.wuId} has been deleted from cluster, will mark as clusterDeleted in batch`
               );
 
-              // Add to deleted list for batch update
               deletedWuIds.push(workunit.wuId);
             } else {
-              // Enhanced error logging with stack trace for RangeErrors
-              if (err instanceof RangeError) {
-                logger.error(
-                  `RangeError processing workunit ${workunit.wuId}:`,
-                  {
-                    error: err.message,
-                    stack: err.stack,
-                    clusterId,
-                    wuId: workunit.wuId,
-                    scopeCount: detailedInfo?.length || 'unknown',
-                    memoryUsage: {
-                      heapUsed:
-                        Math.round(
-                          process.memoryUsage().heapUsed / 1024 / 1024
-                        ) + 'MB',
-                      heapTotal:
-                        Math.round(
-                          process.memoryUsage().heapTotal / 1024 / 1024
-                        ) + 'MB',
-                    },
-                  }
-                );
-              } else {
-                logger.error(
-                  `Error processing workunit ${workunit.wuId}: ${String(err)}`,
-                  err instanceof Error ? { stack: err.stack } : {}
-                );
-              }
+              logger.error(
+                `Error processing workunit ${workunit.wuId}: ${String(err)}`,
+                err instanceof Error ? { stack: err.stack } : {}
+              );
             }
 
             processedCount++;
@@ -1095,27 +706,10 @@ async function getWorkunitDetails() {
           `Completed processing cluster ${clusterId}: ${successCount}/${processedCount} workunits successful`
         );
       } catch (err: unknown) {
-        // Enhanced error logging for cluster-level errors
-        if (err instanceof RangeError) {
-          logger.error(`RangeError processing cluster ${clusterDetail.id}:`, {
-            error: err.message,
-            stack: err.stack,
-            clusterId: clusterDetail.id,
-            clusterName: clusterDetail.name,
-            memoryUsage: {
-              heapUsed:
-                Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
-              heapTotal:
-                Math.round(process.memoryUsage().heapTotal / 1024 / 1024) +
-                'MB',
-            },
-          });
-        } else {
-          logger.error(
-            `Error processing cluster ${clusterDetail.id}: ${String(err)}`,
-            err instanceof Error ? { stack: err.stack } : {}
-          );
-        }
+        logger.error(
+          `Error processing cluster ${clusterDetail.id}: ${String(err)}`,
+          err instanceof Error ? { stack: err.stack } : {}
+        );
       }
     }
 

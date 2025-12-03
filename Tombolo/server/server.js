@@ -85,7 +85,7 @@ const bree = require('./routes/bree/read');
 const applications = require('./routes/applicationRoutes');
 const hpccRead = require('./routes/hpccRoutes');
 const jobmonitoring = require('./routes/jobMonitoringRoutes');
-const configurations = require('./routes/configRoutes.js');
+const configurations = require('./routes/configRoutes');
 const orbit = require('./routes/orbit/read');
 const integrations = require('./routes/integrations/read');
 const notification_queue = require('./routes/notificationQueueRoutes');
@@ -107,6 +107,7 @@ const landingZoneMonitoring = require('./routes/landingZoneMonitoring');
 const clusterMonitoring = require('./routes/clusterMonitoringRoutes');
 const fileMonitoring = require('./routes/fileMonitoringRoutes');
 const orbitProfileMonitoring = require('./routes/orbitProfileMonitoringRoutes');
+const workunits = require('./routes/workunitRoutes');
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -141,6 +142,7 @@ app.use('/api/costMonitoring', costMonitoring);
 app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
 app.use('/api/clusterMonitoring', clusterMonitoring);
 app.use('/api/orbitProfileMonitoring', orbitProfileMonitoring);
+app.use('/api/workunits', workunits);
 
 // Safety net for unhandled errors
 app.use((err, req, res, next) => {
