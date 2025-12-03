@@ -333,6 +333,8 @@ const readableLabels = {
   'filtered csv read': 'Filtered Csv Read',
   'keyed join': 'Keyed Join',
   'filtered projected csv read': 'Filtered Projected Csv Read',
+  output: 'Output',
+  store: 'Store',
 };
 
 /**
