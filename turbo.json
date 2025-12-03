@@ -5,7 +5,7 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["^db:migrate", "^db:seed"]
+      "dependsOn": ["^esm:build", "^db:migrate", "^db:seed"]
     },
     "build": {
       "dependsOn": ["^build"],
@@ -35,7 +35,8 @@
       "cache": false
     },
     "db:migrate": {
-      "cache": false
+      "cache": false,
+      "dependsOn": ["^esm:build"]
     },
     "db:seed": {
       "cache": false,
@@ -46,6 +47,10 @@
     },
     "clean": {
       "cache": false
+    },
+    "esm:build": {
+      "cache": true,
+      "outputs": ["dist/**"]
     }
   }
 }

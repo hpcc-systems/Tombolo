@@ -1,6 +1,3 @@
-const { logger, createLogger } = require('./logger');
+import { logger, createLogger } from './logger';
 
-module.exports = {
-  logger,
-  createLogger,
-};
+export { logger, createLogger };

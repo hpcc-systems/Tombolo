@@ -1,15 +1,15 @@
-const parseWorkunitTimestamp = require('./parseWorkunitTimestamp');
-const retryWithBackoff = require('./retryWithBackoff');
-const { encryptString, decryptString } = require('./cipher');
-const truncateString = require('./truncateString');
-const {
+import parseWorkunitTimestamp from './parseWorkunitTimestamp.js';
+import retryWithBackoff from './retryWithBackoff.js';
+import { encryptString, decryptString } from './cipher.js';
+import truncateString from './truncateString.js';
+import {
   UNIT_LOOKUP,
   relevantMetrics,
   normalizeLabel,
   readableLabels,
-} = require('./workunitConstants');
+} from './workunitConstants.js';
 
-module.exports = {
+export {
   parseWorkunitTimestamp,
   retryWithBackoff,
   encryptString,
