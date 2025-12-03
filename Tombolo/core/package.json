@@ -17,9 +17,6 @@
     "clean": "rm -rf .turbo",
     "clean:deps": "rm -rf node_modules"
   },
-  "devDependencies": {
-    "tsup": "catalog:"
-  },
   "dependencies": {
     "@tombolo/db": "workspace:*",
     "@tombolo/shared": "workspace:*",
