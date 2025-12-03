@@ -353,7 +353,7 @@ function normalizeLabel(label) {
       return readableLabels[prefix];
     }
   }
-  return label;
+  return normalized;
 }
 
 export { relevantMetrics, UNIT_LOOKUP, readableLabels, normalizeLabel };
