@@ -52,11 +52,11 @@ describe('Landing Zone Monitoring Routes', () => {
   beforeEach(() => {
     jest.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
     jest.clearAllTimers();
-    jest.clearAllMocks();
   });
 
   describe('GET /api/landingZoneMonitoring/getDropzones', () => {

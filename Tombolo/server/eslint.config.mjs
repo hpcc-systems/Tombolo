@@ -22,4 +22,13 @@ export default [
       'no-console': ['warn', { allow: ['info', 'error'] }],
     },
   },
+  {
+    files: ['tests/**/*.js', '**/*.test.js', '**/*.spec.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.jest,
+      },
+    },
+  },
 ];
