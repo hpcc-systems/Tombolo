@@ -333,6 +333,9 @@ const readableLabels = {
   'filtered csv read': 'Filtered Csv Read',
   'keyed join': 'Keyed Join',
   'filtered projected csv read': 'Filtered Projected Csv Read',
+  'projected disk read': 'Projected Disk Read',
+  output: 'Output',
+  store: 'Store',
 };
 
 /**
@@ -350,7 +353,7 @@ function normalizeLabel(label) {
       return readableLabels[prefix];
     }
   }
-  return label;
+  return normalized;
 }
 
 export { relevantMetrics, UNIT_LOOKUP, readableLabels, normalizeLabel };

@@ -350,9 +350,6 @@ function processScopeToRow(scope: Scope, clusterId: string, wuId: string) {
     filename = filenameProp?.RawValue ?? null;
   }
 
-  // Always truncate filename if it exists, regardless of label
-  const truncatedFileName = filename ? truncateString(filename, 125) : null;
-
   return {
     clusterId,
     wuId,
@@ -361,7 +358,7 @@ function processScopeToRow(scope: Scope, clusterId: string, wuId: string) {
     scopeType: scopeType,
     label: label ? truncateString(label, 250) : null,
     kind: kind || null,
-    fileName: truncatedFileName,
+    fileName: filename ? truncateString(filename, 125) : null,
     ...metrics,
   };
 }
