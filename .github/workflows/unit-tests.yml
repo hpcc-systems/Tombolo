@@ -51,8 +51,11 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        working-directory: Tombolo/client-reactjs
         run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        working-directory: Tombolo/shared
+        run: pnpm build
 
       - name: Run tests
         working-directory: Tombolo/client-reactjs
@@ -88,8 +91,11 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        working-directory: Tombolo/server
         run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        working-directory: Tombolo/shared
+        run: pnpm build
 
       - name: Setup server config files
         working-directory: Tombolo/server

@@ -47,7 +47,8 @@
   "pnpm": {
     "overrides": {
       "react-error-overlay": "6.0.9",
-      "cron-validate": "1.4.5"
+      "cron-validate": "1.4.5",
+      "glob": "^10.5.0"
     },
     "packageExtensions": {
       "bree@8.0.5": {
