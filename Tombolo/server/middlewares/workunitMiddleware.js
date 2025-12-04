@@ -18,18 +18,6 @@ const VALID_SORT_FIELDS = [
 // Valid order directions
 const VALID_ORDER_DIRECTIONS = ['asc', 'desc', 'ASC', 'DESC'];
 
-// Valid workunit states
-const VALID_WORKUNIT_STATES = [
-  'completed',
-  'failed',
-  'running',
-  'blocked',
-  'submitted',
-  'compiled',
-  'wait',
-  'aborted',
-];
-
 // Validation for GET /api/workunits (list with filters)
 const validateGetWorkunits = [
   intQuery('page', true, { min: 1 }),
@@ -85,5 +73,4 @@ module.exports = {
   validateGetWorkunitTimeline,
   VALID_SORT_FIELDS,
   VALID_ORDER_DIRECTIONS,
-  VALID_WORKUNIT_STATES,
 };

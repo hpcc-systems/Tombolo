@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { WorkUnit, WorkUnitDetails, sequelize } = require('../models');
 const { sendSuccess, sendError } = require('../utils/response');
+const logger = require('../config/logger');
 
 // Helper: build hierarchy from flat details
 const buildScopeHierarchy = details => {
@@ -127,7 +128,7 @@ async function getWorkunits(req, res) {
       data: rows,
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Get workunits error: ', err);
     return sendError(res, 'Failed to fetch workunits', 500);
   }
 }
@@ -143,7 +144,7 @@ async function getWorkunit(req, res) {
 
     return sendSuccess(res, wu.get({ plain: true }));
   } catch (err) {
-    console.error(err);
+    logger.error('Get workunit error: ', err);
     return sendError(res, 'Server error', 500);
   }
 }
@@ -168,7 +169,7 @@ async function getWorkunitDetails(req, res) {
       graphs,
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Get workunit details error: ', err);
     return sendError(res, 'Failed to fetch details', 500);
   }
 }
@@ -188,7 +189,7 @@ async function getWorkunitHotspots(req, res) {
       details.map(d => d.get({ plain: true }))
     );
   } catch (err) {
-    console.error(err);
+    logger.error('Get wu details hotspots error: ', err);
     return sendError(res, 'Failed to fetch hotspots', 500);
   }
 }
@@ -205,7 +206,7 @@ async function getWorkunitTimeline(req, res) {
       details.map(d => d.get({ plain: true }))
     );
   } catch (err) {
-    console.error(err);
+    logger.error('Get wu details timeline error: ', err);
     return sendError(res, 'Failed to fetch timeline', 500);
   }
 }
