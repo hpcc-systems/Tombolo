@@ -1,3 +1,19 @@
+const formatNumber = n => (n == null ? '-' : Number(n).toLocaleString());
+const formatSeconds = s =>
+  s == null || isNaN(s) ? '-' : `${Number(s).toFixed(3)}s`;
+const formatBytes = bytes => {
+  if (bytes == null || isNaN(bytes)) return '-';
+  let size = Number(bytes);
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  while (size >= 1024 && i < units.length - 1) {
+    size /= 1024;
+    i++;
+  }
+  return `${size.toFixed(2)} ${units[i]}`;
+};
+const formatPercentage = p => (p == null ? '-' : `${Number(p).toFixed(2)}%`);
+
 /**
  * Parses workunit timestamp from wuId and applies timezone offset
  * @param {string} wuId - The workunit ID
@@ -37,4 +53,10 @@ function parseWorkunitTimestamp(wuId, timezoneOffset = 0) {
   return timestamp;
 }
 
-export default parseWorkunitTimestamp;
+export {
+  formatNumber,
+  formatSeconds,
+  formatBytes,
+  formatPercentage,
+  parseWorkunitTimestamp,
+};
