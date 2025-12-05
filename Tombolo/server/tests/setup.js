@@ -172,11 +172,46 @@ jest.mock('../models', () => {
         __rollback: rollback,
       },
     },
+    WorkUnit: {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findAndCountAll: jest.fn(),
+      findByPk: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      bulkCreate: jest.fn(),
+      update: jest.fn(),
+      destroy: jest.fn(),
+      handleDelete: jest.fn(),
+      sequelize: {
+        transaction,
+        __commit: commit,
+        __rollback: rollback,
+      },
+    },
+    WorkUnitDetails: {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findAndCountAll: jest.fn(),
+      findByPk: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      bulkCreate: jest.fn(),
+      update: jest.fn(),
+      destroy: jest.fn(),
+      handleDelete: jest.fn(),
+      sequelize: {
+        transaction,
+        __commit: commit,
+        __rollback: rollback,
+      },
+    },
     UserArchive: {
       create: jest.fn(),
     },
     sequelize: {
       transaction,
+      literal: jest.fn(value => value),
       __commit: commit, // Expose for test access
       __rollback: rollback, // Expose for test access
     },

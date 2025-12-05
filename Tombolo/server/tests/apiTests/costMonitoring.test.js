@@ -3,13 +3,7 @@ const request = require('supertest');
 const { app } = require('../test_server');
 const { v4: uuidv4 } = require('uuid');
 const { CostMonitoring } = require('../../models');
-const {
-  getUuids,
-  getCostMonitoring,
-  ISO_DATE_REGEX,
-  UUID_REGEX,
-  AUTHED_USER_ID,
-} = require('../helpers');
+const { getUuids, getCostMonitoring, AUTHED_USER_ID } = require('../helpers');
 const { Op } = require('sequelize');
 const { getUserFkIncludes } = require('../../utils/getUserFkIncludes');
 const { APPROVAL_STATUS } = require('../../config/constants');
@@ -105,12 +99,6 @@ describe('costMonitoring Routes', () => {
       isActive: false,
     });
 
-    const expectedResBodies = {
-      isActive: true,
-      createdAt: expect.stringMatching(ISO_DATE_REGEX),
-      updatedAt: expect.stringMatching(ISO_DATE_REGEX),
-    };
-
     CostMonitoring.findAll
       .mockResolvedValueOnce([costMonitoringOne, costMonitoringTwo])
       .mockResolvedValueOnce([
@@ -124,18 +112,6 @@ describe('costMonitoring Routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.message).toBe('Cost monitoring(s) toggled successfully');
-    // expect(res.body.updatedCostMonitorings).toEqual([
-    //   {
-    //     ...costMonitoringOne,
-    //     ...expectedResBodies,
-    //     lastUpdatedBy: expect.stringMatching(UUID_REGEX),
-    //   },
-    //   {
-    //     ...costMonitoringTwo,
-    //     ...expectedResBodies,
-    //     lastUpdatedBy: expect.stringMatching(UUID_REGEX),
-    //   },
-    // ]);
     expect(CostMonitoring.findAll).toHaveBeenCalledTimes(2);
     expect(CostMonitoring.update).toHaveBeenCalledTimes(1);
     expect(CostMonitoring.update).toHaveBeenCalledWith(

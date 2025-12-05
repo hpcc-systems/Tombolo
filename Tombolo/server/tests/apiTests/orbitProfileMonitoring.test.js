@@ -23,7 +23,6 @@ describe('orbitProfileMonitoring Routes', () => {
   });
 
   it('POST / should create a new orbit profile monitoring', async () => {
-    const applicationId = uuidv4();
     const orbitProfileMonitoring = getOrbitProfileMonitoring({}, true);
     OrbitProfileMonitoring.create.mockResolvedValue(orbitProfileMonitoring);
     OrbitProfileMonitoring.findByPk.mockResolvedValue(orbitProfileMonitoring);

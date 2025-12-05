@@ -16,7 +16,6 @@ const {
   nonExistentID,
 } = require('../helpers');
 const moment = require('moment');
-const logger = require('../../config/logger');
 
 const getUser = () => getUsers()[0];
 
@@ -30,18 +29,6 @@ describe('Auth Routes', () => {
     jest.clearAllTimers();
     jest.clearAllMocks();
   });
-
-  // Test end to end basic user registration
-  // it('Should register a new user on /api/auth/registerBasicUser', async () => {
-  //   const response = await request(app)
-  //     .post('/api/auth/registerBasicUser')
-  //     .send(payload);
-
-  //   // Check the response
-  //   expect(response.status).toBe(201);
-  //   expect(response.body.success).toBe(true);
-  //   expect(response.body.message).toBe('User created successfully');
-  // });
 
   it('basic-login Should log in a user', async () => {
     const user = getUser();
