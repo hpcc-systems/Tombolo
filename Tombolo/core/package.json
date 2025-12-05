@@ -14,7 +14,8 @@
   },
   "scripts": {
     "test": "echo \"No tests yet\"",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf .turbo",
+    "clean:deps": "rm -rf node_modules"
   },
   "dependencies": {
     "@tombolo/db": "workspace:*",

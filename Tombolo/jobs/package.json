@@ -11,7 +11,8 @@
     "build:prod": "tsc --sourceMap false",
     "dev": "nodemon",
     "start": "node --trace-warnings --trace-uncaught --max-old-space-size=8192 --expose-gc dist/app.js",
-    "clean": "rm -rf dist node_modules .turbo",
+    "clean": "rm -rf dist .turbo",
+    "clean:deps": "rm -rf node_modules",
     "lint": "eslint .",
     "lint:fix": "eslint --fix ."
   },

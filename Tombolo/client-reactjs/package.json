@@ -49,7 +49,9 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "clean": "rm -rf node_modules dist build .vite"
+    "clean": "rm -rf dist build .vite .turbo",
+    "clean:deps": "rm -rf node_modules",
+    "clean:cache": "rm -rf .turbo"
   },
   "browserslist": {
     "production": [
