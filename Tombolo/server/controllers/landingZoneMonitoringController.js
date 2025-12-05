@@ -221,7 +221,7 @@ const updateLandingZoneMonitoring = async (req, res) => {
     });
 
     if (updatedRowsCount === 0) {
-      sendError(res, 'Landing zone monitoring not found');
+      return sendError(res, 'Landing zone monitoring not found', 404);
     }
 
     // Get the updated record

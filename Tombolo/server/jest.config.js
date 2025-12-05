@@ -74,6 +74,7 @@ module.exports = {
 
   // Collect coverage information when running tests
   collectCoverage: true,
+  coverageProvider: 'v8',
 
   // Ignore specific paths when running in watch mode
   watchPathIgnorePatterns: ['/node_modules/'],

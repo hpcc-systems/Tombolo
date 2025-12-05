@@ -358,6 +358,59 @@ function getClusterMonitoring(overrides = {}) {
   };
 }
 
+function getWorkUnit(overrides = {}, dateStrings = false) {
+  let newDate = new Date();
+  if (dateStrings) {
+    newDate = newDate.toISOString();
+  }
+  return {
+    wuId: 'W20241203-123456',
+    clusterId: uuidv4(),
+    workUnitTimestamp: newDate,
+    owner: 'testuser',
+    engine: 'hthor',
+    jobName: 'TestJob',
+    stateId: 3,
+    state: 'completed',
+    protected: false,
+    action: 1,
+    actionEx: null,
+    isPausing: false,
+    thorLcr: false,
+    totalClusterTime: 1234.56,
+    executeCost: 10.5,
+    fileAccessCost: 2.3,
+    compileCost: 0.5,
+    totalCost: 13.3,
+    detailsFetchedAt: null,
+    clusterDeleted: false,
+    createdAt: newDate,
+    updatedAt: newDate,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function getWorkUnitDetails(overrides = {}, dateStrings = false) {
+  let newDate = new Date();
+  if (dateStrings) {
+    newDate = newDate.toISOString();
+  }
+  return {
+    id: Math.floor(Math.random() * 1000000),
+    clusterId: uuidv4(),
+    wuId: 'W20241203-123456',
+    scopeId: 'graph1',
+    scopeName: 'TestGraph',
+    scopeType: 'graph',
+    TimeElapsed: 1000.5,
+    TimeFirstRow: 100.2,
+    createdAt: newDate,
+    updatedAt: newDate,
+    ...overrides,
+  };
+}
+
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -377,6 +430,8 @@ module.exports = {
   getUuids,
   getCostMonitoring,
   getOrbitProfileMonitoring,
+  getWorkUnit,
+  getWorkUnitDetails,
   UUID_REGEX,
   nonExistentID,
   ISO_DATE_REGEX,
