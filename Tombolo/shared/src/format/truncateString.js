@@ -20,4 +20,4 @@ function truncateString(str, maxLength = 245) {
   return newStr.slice(0, startChars) + ellipsis + newStr.slice(-endChars);
 }
 
-export default truncateString;
+export { truncateString };
