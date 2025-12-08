@@ -13,7 +13,8 @@
     "test:api": "jest --detectOpenHandles --selectProjects api",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf .turbo",
+    "clean:deps": "rm -rf node_modules"
   },
   "author": "",
   "license": "ISC",
