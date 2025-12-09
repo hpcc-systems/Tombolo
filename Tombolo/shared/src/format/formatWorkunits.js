@@ -56,8 +56,8 @@ function parseWorkunitTimestamp(wuId, timezoneOffset = 0) {
 function renderAnyMetric(key, value) {
   const lower = String(key).toLowerCase();
   if (lower.includes('time') || lower.includes('elapsed') || lower.includes('execute')) return formatSeconds(value);
-  if (lower.includes('size') || lower.includes('disk') || lower.includes('memory')) return formatBytes(value);
   if (lower.startsWith('num') || lower.includes('count')) return formatNumber(value);
+  if (lower.includes('size') || lower.includes('disk') || lower.includes('memory')) return formatBytes(value);
   return String(value);
 }
 
