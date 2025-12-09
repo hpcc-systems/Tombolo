@@ -17,6 +17,11 @@
       "types": "./dist/backend.d.ts",
       "import": "./dist/backend.js",
       "require": "./dist/backend.cjs"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js",
+      "require": "./dist/browser.cjs"
     }
   },
   "files": [
