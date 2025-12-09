@@ -50,3 +50,12 @@ export function parseWorkunitTimestamp(
  * @throws Error
  */
 export function truncateString(str: string, maxLength: number): string;
+
+/**
+ * Fast formatting for any workunit details metrics
+ * @param key - Key of the property to render
+ * @param value - Value of the property
+ * @returns Formatted string
+ * @throws Error
+ */
+export function renderAnyMetric(key: string, value: number): string;
