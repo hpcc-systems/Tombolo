@@ -1,3 +1,5 @@
+import { formatSeconds, formatNumber, formatBytes, formatPercentage } from './format/index.js';
+
 /**
  * List of all relevant metrics for workunit details
  * @type {string[]}
@@ -161,6 +163,168 @@ const relevantMetrics = [
   'NodeMinFirstRow',
   'NodeMaxFirstRow',
 ];
+
+/**
+ * Lookup for metric units
+ * @type {Object<string, function>}
+ */
+const FORMAT_LOOKUP = {
+  TimeElapsed: formatSeconds,
+  TimeAvgElapsed: formatSeconds,
+  TimeMinElapsed: formatSeconds,
+  TimeMaxElapsed: formatSeconds,
+  TimeStdDevElapsed: formatSeconds,
+  TimeLocalExecute: formatSeconds,
+  TimeAvgLocalExecute: formatSeconds,
+  TimeMinLocalExecute: formatSeconds,
+  TimeMaxLocalExecute: formatSeconds,
+  TimeStdDevLocalExecute: formatSeconds,
+  TimeTotalExecute: formatSeconds,
+  TimeAvgTotalExecute: formatSeconds,
+  TimeMinTotalExecute: formatSeconds,
+  TimeMaxTotalExecute: formatSeconds,
+  TimeStdDevTotalExecute: formatSeconds,
+  TimeDiskReadIO: formatSeconds,
+  TimeAvgDiskReadIO: formatSeconds,
+  TimeMinDiskReadIO: formatSeconds,
+  TimeMaxDiskReadIO: formatSeconds,
+  TimeStdDevDiskReadIO: formatSeconds,
+  TimeDiskWriteIO: formatSeconds,
+  TimeAvgDiskWriteIO: formatSeconds,
+  TimeMinDiskWriteIO: formatSeconds,
+  TimeMaxDiskWriteIO: formatSeconds,
+  TimeStdDevDiskWriteIO: formatSeconds,
+  TimeBlocked: formatSeconds,
+  TimeAvgBlocked: formatSeconds,
+  TimeMinBlocked: formatSeconds,
+  TimeMaxBlocked: formatSeconds,
+  TimeStdDevBlocked: formatSeconds,
+  TimeLookAhead: formatSeconds,
+  TimeAvgLookAhead: formatSeconds,
+  TimeMinLookAhead: formatSeconds,
+  TimeMaxLookAhead: formatSeconds,
+  TimeStdDevLookAhead: formatSeconds,
+  TimeFirstRow: formatSeconds,
+
+  NumDiskRowsRead: formatNumber,
+  NumAvgDiskRowsRead: formatNumber,
+  NumMinDiskRowsRead: formatNumber,
+  NumMaxDiskRowsRead: formatNumber,
+  NumStdDevDiskRowsRead: formatNumber,
+
+  SizeDiskRead: formatBytes,
+  SizeAvgDiskRead: formatBytes,
+  SizeMinDiskRead: formatBytes,
+  SizeMaxDiskRead: formatBytes,
+  SizeStdDevDiskRead: formatBytes,
+
+  NumDiskReads: formatNumber,
+  NumAvgDiskReads: formatNumber,
+  NumMinDiskReads: formatNumber,
+  NumMaxDiskReads: formatNumber,
+
+  SizeDiskWrite: formatBytes,
+  SizeAvgDiskWrite: formatBytes,
+  SizeMinDiskWrite: formatBytes,
+  SizeMaxDiskWrite: formatBytes,
+  SizeStdDevDiskWrite: formatBytes,
+
+  NumDiskWrites: formatNumber,
+  NumAvgDiskWrites: formatNumber,
+  NumMinDiskWrites: formatNumber,
+  NumMaxDiskWrites: formatNumber,
+
+  MemoryUsage: formatBytes,
+  MemoryAvgUsage: formatBytes,
+  MemoryMinUsage: formatBytes,
+  MemoryMaxUsage: formatBytes,
+
+  PeakMemoryUsage: formatBytes,
+  PeakAvgMemoryUsage: formatBytes,
+  PeakMinMemoryUsage: formatBytes,
+  PeakMaxMemoryUsage: formatBytes,
+
+  SpillRowsWritten: formatNumber,
+  SpillAvgRowsWritten: formatNumber,
+  SpillMinRowsWritten: formatNumber,
+  SpillMaxRowsWritten: formatNumber,
+
+  SpillSizeWritten: formatBytes,
+  SpillAvgSizeWritten: formatBytes,
+  SpillMinSizeWritten: formatBytes,
+  SpillMaxSizeWritten: formatBytes,
+
+  SizeGraphSpill: formatBytes,
+  SizeAvgGraphSpill: formatBytes,
+  SizeMinGraphSpill: formatBytes,
+  SizeMaxGraphSpill: formatBytes,
+
+  NumRowsProcessed: formatNumber,
+  NumAvgRowsProcessed: formatNumber,
+  NumMinRowsProcessed: formatNumber,
+  NumMaxRowsProcessed: formatNumber,
+
+  SkewMinElapsed: formatPercentage,
+  SkewMaxElapsed: formatPercentage,
+  SkewMinLocalExecute: formatPercentage,
+  SkewMaxLocalExecute: formatPercentage,
+  SkewMinTotalExecute: formatPercentage,
+  SkewMaxTotalExecute: formatPercentage,
+  SkewMinDiskRowsRead: formatPercentage,
+  SkewMaxDiskRowsRead: formatPercentage,
+  SkewMinDiskRead: formatPercentage,
+  SkewMaxDiskRead: formatPercentage,
+  SkewMinDiskWrite: formatPercentage,
+  SkewMaxDiskWrite: formatPercentage,
+  SkewMinDiskReadIO: formatPercentage,
+  SkewMaxDiskReadIO: formatPercentage,
+  SkewMaxDiskWriteIO: formatPercentage,
+
+  SizeNetworkWrite: formatBytes,
+  SizeAvgNetworkWrite: formatBytes,
+  SizeMinNetworkWrite: formatBytes,
+  SizeMaxNetworkWrite: formatBytes,
+
+  NumNetworkWrites: formatNumber,
+  NumAvgNetworkWrites: formatNumber,
+  NumMinNetworkWrites: formatNumber,
+  NumMaxNetworkWrites: formatNumber,
+
+  MaxRowSize: formatBytes,
+  NumIndexRecords: formatNumber,
+  NumStarts: formatNumber,
+  NumStops: formatNumber,
+  OriginalSize: formatBytes,
+  CompressedSize: formatBytes,
+  ScansBlob: formatNumber,
+  ScansIndex: formatNumber,
+  WildSeeks: formatNumber,
+  SeeksBlob: formatNumber,
+  SeeksIndex: formatNumber,
+
+  NodeMinElapsed: formatNumber,
+  NodeMaxElapsed: formatNumber,
+  NodeMinLocalExecute: formatNumber,
+  NodeMaxLocalExecute: formatNumber,
+  NodeMinTotalExecute: formatNumber,
+  NodeMaxTotalExecute: formatNumber,
+  NodeMinDiskRowsRead: formatNumber,
+  NodeMaxDiskRowsRead: formatNumber,
+  NodeMinDiskRead: formatNumber,
+  NodeMaxDiskRead: formatNumber,
+  NodeMinDiskWrite: formatNumber,
+  NodeMaxDiskWrite: formatNumber,
+  NodeMinDiskReadIO: formatNumber,
+  NodeMaxDiskReadIO: formatNumber,
+  NodeMinDiskWriteIO: formatNumber,
+  NodeMaxDiskWriteIO: formatNumber,
+  NodeMinBlocked: formatNumber,
+  NodeMaxBlocked: formatNumber,
+  NodeMinLookAhead: formatNumber,
+  NodeMaxLookAhead: formatNumber,
+  NodeMinFirstRow: formatNumber,
+  NodeMaxFirstRow: formatNumber,
+};
 
 /**
  * Lookup for metric units
@@ -353,4 +517,4 @@ function normalizeLabel(label) {
   return label;
 }
 
-export { relevantMetrics, UNIT_LOOKUP, readableLabels, normalizeLabel };
+export { relevantMetrics, UNIT_LOOKUP, readableLabels, normalizeLabel, FORMAT_LOOKUP };
