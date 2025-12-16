@@ -1,0 +1,197 @@
+/* Generic layout helpers */
+.fullWidth {
+  width: 100%;
+}
+.justifyBetween {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.headerBar {
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+.contentPadding {
+  padding: 16px;
+}
+.pageContainer {
+  padding: 24px;
+  min-height: 100vh;
+}
+.pageBgLight {
+  background: #f0f2f5;
+}
+.pageBgLighter {
+  background: #f9f9f9;
+}
+.centerScreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.containerNarrow {
+  padding: 24px;
+  max-width: 800px;
+  margin: 50px auto;
+}
+.mb16 {
+  margin-bottom: 16px;
+}
+.mb12 {
+  margin-bottom: 12px;
+}
+.mt16 {
+  margin-top: 16px;
+}
+.mr0 {
+  margin-right: 0;
+}
+
+/* Typography helpers */
+.tightParagraph {
+  margin-bottom: 0;
+}
+.smallText {
+  font-size: 11px;
+}
+.subtleText {
+  color: #999;
+}
+.subtleTextDark {
+  color: #666;
+}
+.mutedTextMid {
+  color: #888;
+}
+.numericText {
+  font-variant-numeric: tabular-nums;
+}
+.fw600 {
+  font-weight: 600;
+}
+.ellipsis {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tagCapitalize {
+  text-transform: capitalize;
+}
+.ml12 {
+  margin-left: 12px;
+}
+
+/* Card helpers */
+.cardMarginBottom16 {
+  margin-bottom: 16px;
+}
+.resultsCardMarginTop {
+  margin-top: 8px;
+}
+.sectionHeader {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.scrollAreaTall {
+  height: 520px;
+  overflow: auto;
+  padding: 12px;
+}
+.dividerTight {
+  margin: 12px 0;
+}
+.dividerTighter {
+  margin: 8px 0;
+}
+.mt12 {
+  margin-top: 12px;
+}
+
+/* Controls widths */
+.w300 {
+  width: 300px;
+}
+.w280 {
+  width: 280px;
+}
+.w260 {
+  width: 260px;
+}
+.w200 {
+  width: 200px;
+}
+.w180 {
+  width: 180px;
+}
+.w160 {
+  width: 160px;
+}
+.w140 {
+  width: 140px;
+}
+.w120 {
+  width: 120px;
+}
+.minW180 {
+  min-width: 180px;
+}
+
+/* Special containers */
+.editorContainer {
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* AntD specific tweaks */
+.cardNoBodyPadding :global(.ant-card-body) {
+  padding: 0;
+}
+.cardBodyPadTop8 :global(.ant-card-body) {
+  padding-top: 8px;
+}
+.menuScrollable {
+  max-height: 360px;
+  overflow: auto;
+}
+.menuItemTight {
+  padding: 0;
+}
+.cursorPointer {
+  cursor: pointer;
+}
+.menuCheckboxFull {
+  width: 100%;
+  padding: 6px 12px;
+}
+
+/* Table row highlights (global classes used by rowClassName) */
+:global(.wu-row-failed) {
+  background-color: #ffe5e5 !important;
+}
+:global(.wu-row-failed:hover) {
+  background-color: #ffd1d1 !important;
+}
+:global(.wu-row-long-running) {
+  background-color: #fff5e6 !important;
+}
+:global(.wu-row-long-running:hover) {
+  background-color: #ffe8cc !important;
+}
+
+/* WorkUnitView problem row styles */
+:global(.problem-row-critical) {
+  background-color: #ffe5e5 !important;
+}
+:global(.problem-row-critical:hover) {
+  background-color: #ffd1d1 !important;
+}
+:global(.problem-row-warning) {
+  background-color: #fff5e6 !important;
+}
+:global(.problem-row-warning:hover) {
+  background-color: #ffe8cc !important;
+}
