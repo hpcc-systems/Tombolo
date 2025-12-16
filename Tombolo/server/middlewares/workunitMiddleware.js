@@ -4,6 +4,7 @@ const {
   intQuery,
   dateQuery,
 } = require('./commonMiddleware');
+const { body } = require('express-validator');
 
 // Valid sort fields for workunits
 const VALID_SORT_FIELDS = [
@@ -73,4 +74,15 @@ module.exports = {
   validateGetWorkunitTimeline,
   VALID_SORT_FIELDS,
   VALID_ORDER_DIRECTIONS,
+  // POST /api/workunits/:clusterId/:wuid/sql
+  validateExecuteWorkunitSql: [
+    stringParam('clusterId', false),
+    stringParam('wuid', false),
+    body('sql')
+      .isString()
+      .withMessage('sql must be a string')
+      .bail()
+      .notEmpty()
+      .withMessage('sql is required'),
+  ],
 };
