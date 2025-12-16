@@ -26,3 +26,5 @@ export declare const FORMAT_LOOKUP: Object<string, function>;
  * List of all relevant metrics for workunit details
  */
 export declare const relevantMetrics: string[];
+
+export declare const forbiddenSqlKeywords: string[];
