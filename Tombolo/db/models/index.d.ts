@@ -297,45 +297,715 @@ export interface MonitoringTypeInstance
     MonitoringTypeAttributes {}
 export type MonitoringTypeModel = ModelCtor<MonitoringTypeInstance>;
 
-// Model exports
 export const sequelize: Sequelize;
 
-export const AccountVerificationCodes: GenericModel;
+export interface AccountVerificationCodeAttributes {
+  id: string;
+  code: string;
+  userId: string;
+  expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AccountVerificationCodeInstance
+  extends Model<AccountVerificationCodeAttributes>,
+    AccountVerificationCodeAttributes {}
+export type AccountVerificationCodeModel = ModelCtor<AccountVerificationCodeInstance>;
+export const AccountVerificationCodes: AccountVerificationCodeModel;
 export const Application: ApplicationModel;
-export const AsrDomain: GenericModel;
-export const AsrDomainToProductsRelation: GenericModel;
-export const AsrMonitoringTypeToDomainsRelation: GenericModel;
-export const AsrProduct: GenericModel;
+
+export interface AsrDomainAttributes {
+  id: string;
+  name: string;
+  region: string;
+  severityThreshold: number;
+  severityAlertRecipients: Record<string, any>;
+  metaData?: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt?: Date | null;
+  deletedAt?: Date | null;
+  createdBy: string;
+  updatedBy?: string | null;
+  deletedBy?: string | null;
+}
+
+export interface AsrDomainInstance
+  extends Model<AsrDomainAttributes>,
+    AsrDomainAttributes {}
+export type AsrDomainModel = ModelCtor<AsrDomainInstance>;
+export const AsrDomain: AsrDomainModel;
+
+export interface AsrProductAttributes {
+  id: string;
+  name: string;
+  shortCode: string;
+  tier: number;
+  createdAt: Date;
+  updatedAt?: Date | null;
+  deletedAt?: Date | null;
+  createdBy: string;
+  updatedBy?: string | null;
+  deletedBy?: string | null;
+}
+
+export interface AsrProductInstance
+  extends Model<AsrProductAttributes>,
+    AsrProductAttributes {}
+export type AsrProductModel = ModelCtor<AsrProductInstance>;
+export const AsrProduct: AsrProductModel;
+
+export interface AsrDomainToProductsRelationAttributes {
+  id: string;
+  domain_id: string;
+  product_id: string;
+  createdAt: Date;
+  updatedAt?: Date | null;
+  deletedAt?: Date | null;
+  createdBy: string;
+  updatedBy?: string | null;
+  deletedBy?: string | null;
+}
+
+export interface AsrDomainToProductsRelationInstance
+  extends Model<AsrDomainToProductsRelationAttributes>,
+    AsrDomainToProductsRelationAttributes {}
+export type AsrDomainToProductsRelationModel = ModelCtor<AsrDomainToProductsRelationInstance>;
+export const AsrDomainToProductsRelation: AsrDomainToProductsRelationModel;
+
+export interface AsrMonitoringTypeToDomainsRelationAttributes {
+  id: string;
+  monitoring_type_id: string;
+  domain_id: string;
+  createdAt: Date;
+  updatedAt?: Date | null;
+  deletedAt?: Date | null;
+  createdBy: string;
+  updatedBy?: string | null;
+  deletedBy?: string | null;
+}
+
+export interface AsrMonitoringTypeToDomainsRelationInstance
+  extends Model<AsrMonitoringTypeToDomainsRelationAttributes>,
+    AsrMonitoringTypeToDomainsRelationAttributes {}
+export type AsrMonitoringTypeToDomainsRelationModel = ModelCtor<AsrMonitoringTypeToDomainsRelationInstance>;
+export const AsrMonitoringTypeToDomainsRelation: AsrMonitoringTypeToDomainsRelationModel;
 export const Cluster: ClusterModel;
-export const ClusterMonitoring: GenericModel;
-export const CostMonitoring: GenericModel;
-export const CostMonitoringData: GenericModel;
-export const DirectoryMonitoring: GenericModel;
-export const FileMonitoring: GenericModel;
-export const InstanceSettings: GenericModel;
-export const IntegrationMapping: GenericModel;
-export const Integrations: GenericModel;
-export const JobMonitoring: GenericModel;
-export const JobMonitoringData: GenericModel;
-export const JobMonitoringDataArchive: GenericModel;
-export const LandingZoneMonitoring: GenericModel;
-export const License: GenericModel;
+
+export interface ClusterMonitoringAttributes {
+  id: string;
+  monitoringName: string;
+  clusterMonitoringType: ('status' | 'usage')[];
+  isActive: boolean;
+  approvalStatus: 'approved' | 'rejected' | 'pending';
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
+  approverComment?: string | null;
+  description: string;
+  clusterId: string;
+  lastRunDetails?: Record<string, any> | null;
+  metaData: Record<string, any>;
+  createdBy: string;
+  lastUpdatedBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+  deletedBy?: string | null;
+}
+
+export interface ClusterMonitoringInstance
+  extends Model<ClusterMonitoringAttributes>,
+    ClusterMonitoringAttributes {}
+export type ClusterMonitoringModel = ModelCtor<ClusterMonitoringInstance>;
+export const ClusterMonitoring: ClusterMonitoringModel;
+
+export interface CostMonitoringAttributes {
+  id: string;
+  applicationId: string;
+  monitoringScope: 'clusters' | 'users';
+  monitoringName: string;
+  isSummed: boolean;
+  isActive: boolean;
+  approvalStatus: 'approved' | 'rejected' | 'pending';
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
+  approverComment?: string | null;
+  description: string;
+  clusterIds?: string[] | null;
+  lastJobRunDetails?: Record<string, any> | null;
+  metaData: Record<string, any>;
+  createdBy: string;
+  lastUpdatedBy?: string | null;
+  deletedBy?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface CostMonitoringInstance
+  extends Model<CostMonitoringAttributes>,
+    CostMonitoringAttributes {}
+export type CostMonitoringModel = ModelCtor<CostMonitoringInstance>;
+export const CostMonitoring: CostMonitoringModel;
+export interface CostMonitoringDataAttributes {
+  id: string;
+  clusterId: string;
+  date: Date;
+  localDay?: string | null; // DATEONLY
+  usersCostInfo: Record<string, any>;
+  metaData?: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt?: Date | null;
+  deletedAt?: Date | null;
+}
+
+export interface CostMonitoringDataInstance
+  extends Model<CostMonitoringDataAttributes>,
+    CostMonitoringDataAttributes {}
+export type CostMonitoringDataModel = ModelCtor<CostMonitoringDataInstance>;
+export const CostMonitoringData: CostMonitoringDataModel;
+
+export interface DirectoryMonitoringAttributes {
+  id: string;
+  application_id: string;
+  cluster_id: string;
+  name: string;
+  description: string;
+  cron?: string | null;
+  type: string;
+  active: boolean;
+  machine: string;
+  landingZone: string;
+  directory: string;
+  metaData?: Record<string, any> | null;
+  approved: boolean;
+  approvalStatus: string;
+  approvalNote?: string | null;
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
+  createdBy: string;
+  updatedBy: string;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+  createdAt?: Date;
+}
+
+export interface DirectoryMonitoringInstance
+  extends Model<DirectoryMonitoringAttributes>,
+    DirectoryMonitoringAttributes {}
+export type DirectoryMonitoringModel = ModelCtor<DirectoryMonitoringInstance>;
+export const DirectoryMonitoring: DirectoryMonitoringModel;
+export interface FileMonitoringAttributes {
+  id: string;
+  monitoringName: string;
+  description?: string | null;
+  applicationId: string;
+  clusterId: string;
+  fileMonitoringType: 'stdLogicalFile' | 'superFile';
+  isActive: boolean;
+  approvalStatus: 'approved' | 'rejected' | 'pending';
+  metaData?: Record<string, any> | null;
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
+  approverComment?: string | null;
+  createdBy: string;
+  createdAt: Date;
+  lastUpdatedBy?: string | null;
+  updatedAt?: Date | null;
+  deletedBy?: string | null;
+  deletedAt?: Date | null;
+}
+
+export interface FileMonitoringInstance
+  extends Model<FileMonitoringAttributes>,
+    FileMonitoringAttributes {}
+export type FileMonitoringModel = ModelCtor<FileMonitoringInstance>;
+export const FileMonitoring: FileMonitoringModel;
+export interface InstanceSettingAttributes {
+  id: number;
+  name: string;
+  metaData: Record<string, any>;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface InstanceSettingInstance
+  extends Model<InstanceSettingAttributes>,
+    InstanceSettingAttributes {}
+export type InstanceSettingModel = ModelCtor<InstanceSettingInstance>;
+export const InstanceSettings: InstanceSettingModel;
+export interface IntegrationMappingAttributes {
+  id: string;
+  integration_id?: string | null;
+  application_id?: string | null;
+  metaData?: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface IntegrationMappingInstance
+  extends Model<IntegrationMappingAttributes>,
+    IntegrationMappingAttributes {}
+export type IntegrationMappingModel = ModelCtor<IntegrationMappingInstance>;
+export const IntegrationMapping: IntegrationMappingModel;
+
+export interface IntegrationAttributes {
+  id: string;
+  name: string;
+  description: string;
+  metaData?: Record<string, any> | null;
+}
+
+export interface IntegrationInstance
+  extends Model<IntegrationAttributes>,
+    IntegrationAttributes {}
+export type IntegrationModel = ModelCtor<IntegrationInstance>;
+export const Integrations: IntegrationModel;
+
+export interface JobMonitoringAttributes {
+  id: string;
+  applicationId: string;
+  monitoringName: string;
+  isActive: boolean;
+  approvalStatus: 'approved' | 'rejected' | 'pending';
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
+  approverComment?: string | null;
+  description: string;
+  monitoringScope: string;
+  clusterId: string;
+  jobName: string;
+  lastJobRunDetails?: Record<string, any> | null;
+  metaData: Record<string, any>;
+  createdBy: string;
+  lastUpdatedBy?: string | null;
+  deletedBy?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface JobMonitoringInstance
+  extends Model<JobMonitoringAttributes>,
+    JobMonitoringAttributes {}
+export type JobMonitoringModel = ModelCtor<JobMonitoringInstance>;
+export const JobMonitoring: JobMonitoringModel;
+
+export interface JobMonitoringDataAttributes {
+  id: string;
+  applicationId: string;
+  wuId: string;
+  wuState: string;
+  monitoringId: string;
+  date: Date;
+  wuTopLevelInfo: Record<string, any>;
+  wuDetailInfo: Record<string, any>;
+  analyzed: boolean;
+  metaData?: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface JobMonitoringDataInstance
+  extends Model<JobMonitoringDataAttributes>,
+    JobMonitoringDataAttributes {}
+export type JobMonitoringDataModel = ModelCtor<JobMonitoringDataInstance>;
+export const JobMonitoringData: JobMonitoringDataModel;
+
+export interface JobMonitoringDataArchiveAttributes {
+  id: string;
+  applicationId: string;
+  wuId: string;
+  wuState: string;
+  monitoringId: string;
+  date: Date;
+  wuTopLevelInfo: Record<string, any>;
+  wuDetailInfo: Record<string, any>;
+  analyzed: boolean;
+  metaData?: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface JobMonitoringDataArchiveInstance
+  extends Model<JobMonitoringDataArchiveAttributes>,
+    JobMonitoringDataArchiveAttributes {}
+export type JobMonitoringDataArchiveModel =
+  ModelCtor<JobMonitoringDataArchiveInstance>;
+export const JobMonitoringDataArchive: JobMonitoringDataArchiveModel;
+
+export interface LandingZoneMonitoringAttributes {
+  id: string;
+  applicationId: string;
+  monitoringName: string;
+  isActive: boolean;
+  lzMonitoringType: 'fileCount' | 'spaceUsage' | 'fileMovement';
+  approvalStatus: 'approved' | 'rejected' | 'pending';
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
+  approverComment?: string | null;
+  description: string;
+  clusterId: string;
+  lastRunDetails?: Record<string, any> | null;
+  metaData: Record<string, any>;
+  createdBy: string;
+  lastUpdatedBy: string;
+  deletedBy?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface LandingZoneMonitoringInstance
+  extends Model<LandingZoneMonitoringAttributes>,
+    LandingZoneMonitoringAttributes {}
+export type LandingZoneMonitoringModel =
+  ModelCtor<LandingZoneMonitoringInstance>;
+export const LandingZoneMonitoring: LandingZoneMonitoringModel;
+
+export interface LicenseAttributes {
+  id: string;
+  name?: string | null;
+  url?: string | null;
+  description?: string | null;
+}
+
+export interface LicenseInstance
+  extends Model<LicenseAttributes>,
+    LicenseAttributes {}
+export type LicenseModel = ModelCtor<LicenseInstance>;
+export const License: LicenseModel;
 export const MonitoringLog: MonitoringLogModel;
-export const MonitoringNotification: GenericModel;
+export interface MonitoringNotificationAttributes {
+  id: string;
+  monitoring_type?: string | null;
+  monitoring_id?: string | null;
+  application_id?: string | null;
+  file_name?: string | null;
+  notification_reason?: string | null;
+  notification_channel?: string | null;
+  status?: string | null;
+  responded_on?: Date | null;
+  metaData?: Record<string, any> | null;
+  comment?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface MonitoringNotificationInstance
+  extends Model<MonitoringNotificationAttributes>,
+    MonitoringNotificationAttributes {}
+export type MonitoringNotificationModel = ModelCtor<MonitoringNotificationInstance>;
+export const MonitoringNotification: MonitoringNotificationModel;
 export const MonitoringType: MonitoringTypeModel;
-export const NotificationQueue: GenericModel;
-export const OrbitBuilds: GenericModel;
-export const OrbitMonitoring: GenericModel;
-export const PasswordResetLink: GenericModel;
-export const RefreshToken: GenericModel;
-export const RoleType: GenericModel;
-export const SentNotification: GenericModel;
-export const TokenBlackList: GenericModel;
+
+export interface NotificationQueueAttributes {
+  id: string;
+  type: 'msTeams' | 'email';
+  notificationOrigin: string;
+  originationId?: string | null;
+  deliveryType: 'immediate' | 'scheduled';
+  deliveryTime?: Date | null;
+  templateName: string;
+  lastScanned?: Date | null;
+  attemptCount: number;
+  reTryAfter?: Date | null;
+  failureMessage?: Record<string, any> | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedBy: string;
+  updatedAt: Date;
+  metaData?: Record<string, any> | null;
+}
+
+export interface NotificationQueueInstance
+  extends Model<NotificationQueueAttributes>,
+    NotificationQueueAttributes {}
+export type NotificationQueueModel = ModelCtor<NotificationQueueInstance>;
+export const NotificationQueue: NotificationQueueModel;
+
+export interface OrbitBuildsAttributes {
+  id: string;
+  name: string;
+  application_id: string;
+  monitoring_id?: string | null;
+  type: string;
+  wuid: string;
+  metaData?: Record<string, any> | null;
+  build_id: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date | null;
+}
+
+export interface OrbitBuildsInstance
+  extends Model<OrbitBuildsAttributes>,
+    OrbitBuildsAttributes {}
+export type OrbitBuildsModel = ModelCtor<OrbitBuildsInstance>;
+export const OrbitBuilds: OrbitBuildsModel;
+
+export interface OrbitMonitoringAttributes {
+  id: string;
+  application_id: string;
+  name: string;
+  cron?: string | null;
+  build: string;
+  businessUnit: string;
+  product: string;
+  severityCode: number;
+  host: string;
+  primaryContact?: string | null;
+  secondaryContact?: string | null;
+  metaData?: Record<string, any> | null;
+  isActive?: boolean | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date | null;
+}
+
+export interface OrbitMonitoringInstance
+  extends Model<OrbitMonitoringAttributes>,
+    OrbitMonitoringAttributes {}
+export type OrbitMonitoringModel = ModelCtor<OrbitMonitoringInstance>;
+export const OrbitMonitoring: OrbitMonitoringModel;
+
+export interface PasswordResetLinkAttributes {
+  id: string;
+  userId: string;
+  resetLink: string;
+  issuedAt: Date;
+  expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PasswordResetLinkInstance
+  extends Model<PasswordResetLinkAttributes>,
+    PasswordResetLinkAttributes {}
+export type PasswordResetLinkModel = ModelCtor<PasswordResetLinkInstance>;
+export const PasswordResetLink: PasswordResetLinkModel;
+
+export interface RefreshTokenAttributes {
+  id: string;
+  userId: string;
+  token: string;
+  deviceInfo: Record<string, any>;
+  iat: Date;
+  exp: Date;
+  revoked: boolean;
+  revokedAt?: Date | null;
+  metaData?: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface RefreshTokenInstance
+  extends Model<RefreshTokenAttributes>,
+    RefreshTokenAttributes {}
+export type RefreshTokenModel = ModelCtor<RefreshTokenInstance>;
+export const RefreshToken: RefreshTokenModel;
+
+export interface RoleTypeAttributes {
+  id: string;
+  roleName: string;
+  description: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface RoleTypeInstance
+  extends Model<RoleTypeAttributes>,
+    RoleTypeAttributes {}
+export type RoleTypeModel = ModelCtor<RoleTypeInstance>;
+export const RoleType: RoleTypeModel;
+
+export interface SentNotificationAttributes {
+  id: string;
+  searchableNotificationId: string;
+  idempotencyKey?: string | null;
+  applicationId?: string | null;
+  notifiedAt?: Date | null;
+  notificationOrigin: string;
+  notificationChannel: string;
+  notificationTitle: string;
+  notificationDescription?: string | null;
+  status: string;
+  recipients?: Record<string, any> | null;
+  resolutionDateTime?: Date | null;
+  comment?: string | null;
+  createdBy: { name: string; email: string };
+  createdAt: Date;
+  updatedBy?: Record<string, any> | null;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+  metaData?: Record<string, any> | null;
+}
+
+export interface SentNotificationInstance
+  extends Model<SentNotificationAttributes>,
+    SentNotificationAttributes {}
+export type SentNotificationModel = ModelCtor<SentNotificationInstance>;
+export const SentNotification: SentNotificationModel;
 export const WorkUnit: WorkUnitModel;
 export const WorkUnitDetails: WorkUnitDetailsModel;
-export const User: GenericModel;
-export const UserApplication: GenericModel;
-export const UserArchive: GenericModel;
-export const UserRole: GenericModel;
-export const OrbitProfileMonitoring: GenericModel;
-export const OrbitBuildData: GenericModel;
+
+export interface TokenBlackListAttributes {
+  id: string;
+  exp: number;
+}
+
+export interface TokenBlackListInstance
+  extends Model<TokenBlackListAttributes>,
+    TokenBlackListAttributes {}
+export type TokenBlackListModel = ModelCtor<TokenBlackListInstance>;
+export const TokenBlackList: TokenBlackListModel;
+
+export interface UserAttributes {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  hash?: string | null;
+  registrationMethod: 'traditional' | 'azure';
+  verifiedUser: boolean;
+  verifiedAt?: Date | null;
+  registrationStatus: 'pending' | 'active' | 'revoked';
+  forcePasswordReset: boolean;
+  passwordExpiresAt?: Date | null;
+  loginAttempts: number;
+  accountLocked?: { isLocked: boolean; lockedReason: any[] } | null;
+  lastLoginAt?: Date | null;
+  lastAccessedAt?: Date | null;
+  metaData?: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface UserInstance
+  extends Model<UserAttributes>,
+    UserAttributes {}
+export type UserModel = ModelCtor<UserInstance>;
+export const User: UserModel;
+// UserApplication Model
+export interface UserApplicationAttributes {
+  id: string;
+  user_id: string;
+  application_id: string;
+  user_app_relation: 'created' | 'shared' | 'assigned';
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface UserApplicationInstance
+  extends Model<UserApplicationAttributes>,
+    UserApplicationAttributes {}
+export type UserApplicationModel = ModelCtor<UserApplicationInstance>;
+export const UserApplication: UserApplicationModel;
+
+export interface UserArchiveAttributes {
+  id: string;
+  removedBy: string;
+  removedAt: Date;
+  firstName: string;
+  lastName: string;
+  email: string;
+  registrationMethod: 'traditional' | 'azure';
+  verifiedUser: boolean;
+  verifiedAt?: Date | null;
+  registrationStatus: 'pending' | 'active' | 'revoked';
+  forcePasswordReset: boolean;
+  passwordExpiresAt?: Date | null;
+  lastLoginAt?: Date | null;
+  lastAccessedAt?: Date | null;
+  metaData?: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserArchiveInstance
+  extends Model<UserArchiveAttributes>,
+    UserArchiveAttributes {}
+export type UserArchiveModel = ModelCtor<UserArchiveInstance>;
+export const UserArchive: UserArchiveModel;
+
+export interface UserRoleAttributes {
+  id: string;
+  userId: string;
+  roleId: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface UserRoleInstance
+  extends Model<UserRoleAttributes>,
+    UserRoleAttributes {}
+export type UserRoleModel = ModelCtor<UserRoleInstance>;
+export const UserRole: UserRoleModel;
+
+export interface OrbitProfileMonitoringAttributes {
+  id: string;
+  applicationId: string;
+  monitoringName: string;
+  description: string;
+  isActive: boolean;
+  approvalStatus: 'approved' | 'rejected' | 'pending';
+  approvedBy?: string | null;
+  approvedAt?: Date | null;
+  approverComment?: string | null;
+  lastRunDetails?: Record<string, any> | null;
+  metaData: Record<string, any>;
+  createdBy: string;
+  lastUpdatedBy: string;
+  deletedBy?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface OrbitProfileMonitoringInstance
+  extends Model<OrbitProfileMonitoringAttributes>,
+    OrbitProfileMonitoringAttributes {}
+export type OrbitProfileMonitoringModel = ModelCtor<OrbitProfileMonitoringInstance>;
+export const OrbitProfileMonitoring: OrbitProfileMonitoringModel;
+
+export interface OrbitBuildDataAttributes {
+  BuildInstanceIdKey: number;
+  BuildTemplateIdKey?: number | null;
+  Name: string;
+  HpccWorkUnit?: string | null;
+  DateUpdated?: Date | null;
+  Status_Code?: string | null;
+  Version?: string | null;
+  observed_at: Date;
+  stable: boolean;
+  stable_at?: Date | null;
+  last_analyzed_at?: Date | null;
+  monitoring_id?: string | null;
+  notification_state?: Record<string, any> | null;
+  status_history?: Record<string, any> | null;
+  metaData?: Record<string, any> | null;
+  processed: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface OrbitBuildDataInstance
+  extends Model<OrbitBuildDataAttributes>,
+    OrbitBuildDataAttributes {}
+export type OrbitBuildDataModel = ModelCtor<OrbitBuildDataInstance>;
+export const OrbitBuildData: OrbitBuildDataModel;
