@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     index: 'index.js',
     backend: 'backend.js',
+    browser: 'browser.js',
   },
   format: ['cjs', 'esm'],
   dts: true, // Generate TypeScript declarations
