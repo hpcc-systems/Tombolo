@@ -34,10 +34,19 @@ const ACCEPTED_SCOPE_TYPES = [
   '',
 ];
 
+type OutOfRangeTimeValue = {
+  clusterId: string;
+  wuId: string;
+  fieldName: string;
+  value: number;
+  reason: 'negative' | 'exceeds_max';
+  originalNanoseconds?: number;
+  maxAllowed?: number;
+};
+
 // Global array to track out-of-range time values
-// TODO: Create a notification for this at some point
-// TODO: Create a type for this at some point as well
-const outOfRangeTimeValues: any[] = [];
+// Cleared at the start of each execution
+const outOfRangeTimeValues: OutOfRangeTimeValue[] = [];
 
 /**
  * Logs current memory usage
@@ -72,25 +81,68 @@ function logOutOfRangeSummary() {
   if (outOfRangeTimeValues.length === 0) return;
 
   logger.warn(
-    `Found ${outOfRangeTimeValues.length} out-of-range time value(s) during processing`
+    `Found ${outOfRangeTimeValues.length} out-of-range time value(s) during this execution`
   );
 
-  // Group by reason
-  const byReason = outOfRangeTimeValues.reduce((acc, item) => {
-    acc[item.reason] = (acc[item.reason] || 0) + 1;
-    return acc;
-  }, {});
+  // Group by reason with detailed breakdown
+  const byReason = outOfRangeTimeValues.reduce(
+    (acc, item) => {
+      acc[item.reason] = (acc[item.reason] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
-  logger.info(`Out-of-range breakdown: ${JSON.stringify(byReason)}`);
+  logger.warn(
+    `Out-of-range breakdown by reason: ${JSON.stringify(byReason, null, 2)}`
+  );
 
-  // Show examples
-  const examples = outOfRangeTimeValues.slice(0, 3);
-  examples.forEach(ex => {
-    const days = ex.value ? (ex.value / 86400).toFixed(1) : 'N/A';
-    logger.info(
-      `  Example: ${ex.fieldName} = ${ex.value}s (${days} days) in wuId=${ex.wuId}, reason=${ex.reason}`
+  // Group by field name
+  const byField = outOfRangeTimeValues.reduce(
+    (acc, item) => {
+      acc[item.fieldName] = (acc[item.fieldName] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  logger.info(
+    `Out-of-range breakdown by field: ${JSON.stringify(byField, null, 2)}`
+  );
+
+  // Log all NEGATIVE time values (clock skew/errors)
+  const negativeValues = outOfRangeTimeValues.filter(
+    ex => ex.reason === 'negative'
+  );
+  const exceedsMaxValues = outOfRangeTimeValues.filter(
+    ex => ex.reason === 'exceeds_max'
+  );
+
+  if (negativeValues.length > 0) {
+    logger.warn(
+      `NEGATIVE time values (clock skew/errors) - ${negativeValues.length} total:`
     );
-  });
+    negativeValues.forEach(ex => {
+      logger.warn(
+        `  WorkUnit: ${ex.wuId} | Cluster: ${ex.clusterId} | Property: ${ex.fieldName} | Value: ${ex.value}s | Original: ${ex.originalNanoseconds}ns`
+      );
+    });
+  }
+
+  if (exceedsMaxValues.length > 0) {
+    logger.warn(
+      `EXCESSIVE time values (timer overflow) - ${exceedsMaxValues.length} total:`
+    );
+    exceedsMaxValues.forEach(ex => {
+      const days = (ex.value / 86400).toFixed(2);
+      const maxDays = ex.maxAllowed
+        ? (ex.maxAllowed / 86400).toFixed(2)
+        : 'N/A';
+      logger.warn(
+        `  WorkUnit: ${ex.wuId} | Cluster: ${ex.clusterId} | Property: ${ex.fieldName} | Value: ${ex.value}s (${days} days) | Max Allowed: ${ex.maxAllowed}s (${maxDays} days) | Original: ${ex.originalNanoseconds}ns`
+      );
+    });
+  }
 }
 
 /**
@@ -427,6 +479,9 @@ async function fetchWorkunitDetails(clusterOptions: IOptions, wuId: string) {
  */
 async function getWorkunitDetails() {
   const executionStartTime = new Date();
+
+  // Clear out-of-range time values from previous execution
+  outOfRangeTimeValues.length = 0;
 
   logger.info('Starting WorkUnit Details job');
 
