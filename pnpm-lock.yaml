@@ -218,6 +218,10 @@ importers:
       sequelize:
         specifier: 'catalog:'
         version: 6.37.7(mysql2@3.15.3)
+    devDependencies:
+      sequelize-cli:
+        specifier: ^6.6.3
+        version: 6.6.3
 
   Tombolo/jobs:
     dependencies:
