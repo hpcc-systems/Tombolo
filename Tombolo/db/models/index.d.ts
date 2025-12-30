@@ -1,5 +1,7 @@
 import { Sequelize, Model, ModelCtor } from 'sequelize';
 
+export { Transaction } from 'sequelize';
+
 // Generic model type for models without specific attributes defined yet
 export type GenericModel = ModelCtor<Model>;
 
@@ -16,8 +18,7 @@ export interface ApplicationAttributes {
 }
 
 export interface ApplicationInstance
-  extends Model<ApplicationAttributes>,
-    ApplicationAttributes {}
+  extends Model<ApplicationAttributes>, ApplicationAttributes {}
 export type ApplicationModel = ModelCtor<ApplicationInstance>;
 
 // Cluster Model
@@ -49,8 +50,7 @@ export interface ClusterAttributes {
 }
 
 export interface ClusterInstance
-  extends Model<ClusterAttributes>,
-    ClusterAttributes {}
+  extends Model<ClusterAttributes>, ClusterAttributes {}
 export type ClusterModel = ModelCtor<ClusterInstance>;
 
 // WorkUnit Model
@@ -74,6 +74,7 @@ export interface WorkUnitAttributes {
   compileCost: number;
   totalCost: number;
   detailsFetchedAt?: Date | null;
+  exceptionsFetchedAt?: Date | null;
   clusterDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -81,8 +82,7 @@ export interface WorkUnitAttributes {
 }
 
 export interface WorkUnitInstance
-  extends Model<WorkUnitAttributes>,
-    WorkUnitAttributes {}
+  extends Model<WorkUnitAttributes>, WorkUnitAttributes {}
 export type WorkUnitModel = ModelCtor<WorkUnitInstance>;
 
 // WorkUnitDetails Model
@@ -247,9 +247,31 @@ export interface WorkUnitDetailsAttributes {
 }
 
 export interface WorkUnitDetailsInstance
-  extends Model<WorkUnitDetailsAttributes>,
-    WorkUnitDetailsAttributes {}
+  extends Model<WorkUnitDetailsAttributes>, WorkUnitDetailsAttributes {}
 export type WorkUnitDetailsModel = ModelCtor<WorkUnitDetailsInstance>;
+
+// WorkUnitException Model
+export interface WorkUnitExceptionAttributes {
+  wuId: string;
+  clusterId: string;
+  severity: string;
+  source?: string | null;
+  code: number;
+  message?: string | null;
+  column?: number | null;
+  lineNo?: number | null;
+  fileName?: string | null;
+  activity?: number | null;
+  scope?: string | null;
+  priority?: number | null;
+  cost?: number | null;
+  createdAt: Date;
+  deletedAt?: Date | null;
+}
+
+export interface WorkUnitExceptionInstance
+  extends Model<WorkUnitExceptionAttributes>, WorkUnitExceptionAttributes {}
+export type WorkUnitExceptionModel = ModelCtor<WorkUnitExceptionInstance>;
 
 // MonitoringLog Model
 export interface MonitoringLogAttributes {
@@ -264,8 +286,7 @@ export interface MonitoringLogAttributes {
 }
 
 export interface MonitoringLogInstance
-  extends Model<MonitoringLogAttributes>,
-    MonitoringLogAttributes {}
+  extends Model<MonitoringLogAttributes>, MonitoringLogAttributes {}
 export type MonitoringLogModel = ModelCtor<MonitoringLogInstance>;
 
 // MonitoringType Model
@@ -293,8 +314,7 @@ export interface MonitoringTypeAttributes {
 }
 
 export interface MonitoringTypeInstance
-  extends Model<MonitoringTypeAttributes>,
-    MonitoringTypeAttributes {}
+  extends Model<MonitoringTypeAttributes>, MonitoringTypeAttributes {}
 export type MonitoringTypeModel = ModelCtor<MonitoringTypeInstance>;
 
 export const sequelize: Sequelize;
@@ -309,9 +329,11 @@ export interface AccountVerificationCodeAttributes {
 }
 
 export interface AccountVerificationCodeInstance
-  extends Model<AccountVerificationCodeAttributes>,
+  extends
+    Model<AccountVerificationCodeAttributes>,
     AccountVerificationCodeAttributes {}
-export type AccountVerificationCodeModel = ModelCtor<AccountVerificationCodeInstance>;
+export type AccountVerificationCodeModel =
+  ModelCtor<AccountVerificationCodeInstance>;
 export const AccountVerificationCodes: AccountVerificationCodeModel;
 export const Application: ApplicationModel;
 
@@ -331,8 +353,7 @@ export interface AsrDomainAttributes {
 }
 
 export interface AsrDomainInstance
-  extends Model<AsrDomainAttributes>,
-    AsrDomainAttributes {}
+  extends Model<AsrDomainAttributes>, AsrDomainAttributes {}
 export type AsrDomainModel = ModelCtor<AsrDomainInstance>;
 export const AsrDomain: AsrDomainModel;
 
@@ -350,8 +371,7 @@ export interface AsrProductAttributes {
 }
 
 export interface AsrProductInstance
-  extends Model<AsrProductAttributes>,
-    AsrProductAttributes {}
+  extends Model<AsrProductAttributes>, AsrProductAttributes {}
 export type AsrProductModel = ModelCtor<AsrProductInstance>;
 export const AsrProduct: AsrProductModel;
 
@@ -368,9 +388,11 @@ export interface AsrDomainToProductsRelationAttributes {
 }
 
 export interface AsrDomainToProductsRelationInstance
-  extends Model<AsrDomainToProductsRelationAttributes>,
+  extends
+    Model<AsrDomainToProductsRelationAttributes>,
     AsrDomainToProductsRelationAttributes {}
-export type AsrDomainToProductsRelationModel = ModelCtor<AsrDomainToProductsRelationInstance>;
+export type AsrDomainToProductsRelationModel =
+  ModelCtor<AsrDomainToProductsRelationInstance>;
 export const AsrDomainToProductsRelation: AsrDomainToProductsRelationModel;
 
 export interface AsrMonitoringTypeToDomainsRelationAttributes {
@@ -386,9 +408,11 @@ export interface AsrMonitoringTypeToDomainsRelationAttributes {
 }
 
 export interface AsrMonitoringTypeToDomainsRelationInstance
-  extends Model<AsrMonitoringTypeToDomainsRelationAttributes>,
+  extends
+    Model<AsrMonitoringTypeToDomainsRelationAttributes>,
     AsrMonitoringTypeToDomainsRelationAttributes {}
-export type AsrMonitoringTypeToDomainsRelationModel = ModelCtor<AsrMonitoringTypeToDomainsRelationInstance>;
+export type AsrMonitoringTypeToDomainsRelationModel =
+  ModelCtor<AsrMonitoringTypeToDomainsRelationInstance>;
 export const AsrMonitoringTypeToDomainsRelation: AsrMonitoringTypeToDomainsRelationModel;
 export const Cluster: ClusterModel;
 
@@ -414,8 +438,7 @@ export interface ClusterMonitoringAttributes {
 }
 
 export interface ClusterMonitoringInstance
-  extends Model<ClusterMonitoringAttributes>,
-    ClusterMonitoringAttributes {}
+  extends Model<ClusterMonitoringAttributes>, ClusterMonitoringAttributes {}
 export type ClusterMonitoringModel = ModelCtor<ClusterMonitoringInstance>;
 export const ClusterMonitoring: ClusterMonitoringModel;
 
@@ -443,8 +466,7 @@ export interface CostMonitoringAttributes {
 }
 
 export interface CostMonitoringInstance
-  extends Model<CostMonitoringAttributes>,
-    CostMonitoringAttributes {}
+  extends Model<CostMonitoringAttributes>, CostMonitoringAttributes {}
 export type CostMonitoringModel = ModelCtor<CostMonitoringInstance>;
 export const CostMonitoring: CostMonitoringModel;
 export interface CostMonitoringDataAttributes {
@@ -460,8 +482,7 @@ export interface CostMonitoringDataAttributes {
 }
 
 export interface CostMonitoringDataInstance
-  extends Model<CostMonitoringDataAttributes>,
-    CostMonitoringDataAttributes {}
+  extends Model<CostMonitoringDataAttributes>, CostMonitoringDataAttributes {}
 export type CostMonitoringDataModel = ModelCtor<CostMonitoringDataInstance>;
 export const CostMonitoringData: CostMonitoringDataModel;
 
@@ -491,8 +512,7 @@ export interface DirectoryMonitoringAttributes {
 }
 
 export interface DirectoryMonitoringInstance
-  extends Model<DirectoryMonitoringAttributes>,
-    DirectoryMonitoringAttributes {}
+  extends Model<DirectoryMonitoringAttributes>, DirectoryMonitoringAttributes {}
 export type DirectoryMonitoringModel = ModelCtor<DirectoryMonitoringInstance>;
 export const DirectoryMonitoring: DirectoryMonitoringModel;
 export interface FileMonitoringAttributes {
@@ -517,8 +537,7 @@ export interface FileMonitoringAttributes {
 }
 
 export interface FileMonitoringInstance
-  extends Model<FileMonitoringAttributes>,
-    FileMonitoringAttributes {}
+  extends Model<FileMonitoringAttributes>, FileMonitoringAttributes {}
 export type FileMonitoringModel = ModelCtor<FileMonitoringInstance>;
 export const FileMonitoring: FileMonitoringModel;
 export interface InstanceSettingAttributes {
@@ -533,8 +552,7 @@ export interface InstanceSettingAttributes {
 }
 
 export interface InstanceSettingInstance
-  extends Model<InstanceSettingAttributes>,
-    InstanceSettingAttributes {}
+  extends Model<InstanceSettingAttributes>, InstanceSettingAttributes {}
 export type InstanceSettingModel = ModelCtor<InstanceSettingInstance>;
 export const InstanceSettings: InstanceSettingModel;
 export interface IntegrationMappingAttributes {
@@ -548,8 +566,7 @@ export interface IntegrationMappingAttributes {
 }
 
 export interface IntegrationMappingInstance
-  extends Model<IntegrationMappingAttributes>,
-    IntegrationMappingAttributes {}
+  extends Model<IntegrationMappingAttributes>, IntegrationMappingAttributes {}
 export type IntegrationMappingModel = ModelCtor<IntegrationMappingInstance>;
 export const IntegrationMapping: IntegrationMappingModel;
 
@@ -561,8 +578,7 @@ export interface IntegrationAttributes {
 }
 
 export interface IntegrationInstance
-  extends Model<IntegrationAttributes>,
-    IntegrationAttributes {}
+  extends Model<IntegrationAttributes>, IntegrationAttributes {}
 export type IntegrationModel = ModelCtor<IntegrationInstance>;
 export const Integrations: IntegrationModel;
 
@@ -590,8 +606,7 @@ export interface JobMonitoringAttributes {
 }
 
 export interface JobMonitoringInstance
-  extends Model<JobMonitoringAttributes>,
-    JobMonitoringAttributes {}
+  extends Model<JobMonitoringAttributes>, JobMonitoringAttributes {}
 export type JobMonitoringModel = ModelCtor<JobMonitoringInstance>;
 export const JobMonitoring: JobMonitoringModel;
 
@@ -612,8 +627,7 @@ export interface JobMonitoringDataAttributes {
 }
 
 export interface JobMonitoringDataInstance
-  extends Model<JobMonitoringDataAttributes>,
-    JobMonitoringDataAttributes {}
+  extends Model<JobMonitoringDataAttributes>, JobMonitoringDataAttributes {}
 export type JobMonitoringDataModel = ModelCtor<JobMonitoringDataInstance>;
 export const JobMonitoringData: JobMonitoringDataModel;
 
@@ -634,7 +648,8 @@ export interface JobMonitoringDataArchiveAttributes {
 }
 
 export interface JobMonitoringDataArchiveInstance
-  extends Model<JobMonitoringDataArchiveAttributes>,
+  extends
+    Model<JobMonitoringDataArchiveAttributes>,
     JobMonitoringDataArchiveAttributes {}
 export type JobMonitoringDataArchiveModel =
   ModelCtor<JobMonitoringDataArchiveInstance>;
@@ -663,7 +678,8 @@ export interface LandingZoneMonitoringAttributes {
 }
 
 export interface LandingZoneMonitoringInstance
-  extends Model<LandingZoneMonitoringAttributes>,
+  extends
+    Model<LandingZoneMonitoringAttributes>,
     LandingZoneMonitoringAttributes {}
 export type LandingZoneMonitoringModel =
   ModelCtor<LandingZoneMonitoringInstance>;
@@ -677,8 +693,7 @@ export interface LicenseAttributes {
 }
 
 export interface LicenseInstance
-  extends Model<LicenseAttributes>,
-    LicenseAttributes {}
+  extends Model<LicenseAttributes>, LicenseAttributes {}
 export type LicenseModel = ModelCtor<LicenseInstance>;
 export const License: LicenseModel;
 export const MonitoringLog: MonitoringLogModel;
@@ -700,9 +715,11 @@ export interface MonitoringNotificationAttributes {
 }
 
 export interface MonitoringNotificationInstance
-  extends Model<MonitoringNotificationAttributes>,
+  extends
+    Model<MonitoringNotificationAttributes>,
     MonitoringNotificationAttributes {}
-export type MonitoringNotificationModel = ModelCtor<MonitoringNotificationInstance>;
+export type MonitoringNotificationModel =
+  ModelCtor<MonitoringNotificationInstance>;
 export const MonitoringNotification: MonitoringNotificationModel;
 export const MonitoringType: MonitoringTypeModel;
 
@@ -726,8 +743,7 @@ export interface NotificationQueueAttributes {
 }
 
 export interface NotificationQueueInstance
-  extends Model<NotificationQueueAttributes>,
-    NotificationQueueAttributes {}
+  extends Model<NotificationQueueAttributes>, NotificationQueueAttributes {}
 export type NotificationQueueModel = ModelCtor<NotificationQueueInstance>;
 export const NotificationQueue: NotificationQueueModel;
 
@@ -746,8 +762,7 @@ export interface OrbitBuildsAttributes {
 }
 
 export interface OrbitBuildsInstance
-  extends Model<OrbitBuildsAttributes>,
-    OrbitBuildsAttributes {}
+  extends Model<OrbitBuildsAttributes>, OrbitBuildsAttributes {}
 export type OrbitBuildsModel = ModelCtor<OrbitBuildsInstance>;
 export const OrbitBuilds: OrbitBuildsModel;
 
@@ -771,8 +786,7 @@ export interface OrbitMonitoringAttributes {
 }
 
 export interface OrbitMonitoringInstance
-  extends Model<OrbitMonitoringAttributes>,
-    OrbitMonitoringAttributes {}
+  extends Model<OrbitMonitoringAttributes>, OrbitMonitoringAttributes {}
 export type OrbitMonitoringModel = ModelCtor<OrbitMonitoringInstance>;
 export const OrbitMonitoring: OrbitMonitoringModel;
 
@@ -787,8 +801,7 @@ export interface PasswordResetLinkAttributes {
 }
 
 export interface PasswordResetLinkInstance
-  extends Model<PasswordResetLinkAttributes>,
-    PasswordResetLinkAttributes {}
+  extends Model<PasswordResetLinkAttributes>, PasswordResetLinkAttributes {}
 export type PasswordResetLinkModel = ModelCtor<PasswordResetLinkInstance>;
 export const PasswordResetLink: PasswordResetLinkModel;
 
@@ -808,8 +821,7 @@ export interface RefreshTokenAttributes {
 }
 
 export interface RefreshTokenInstance
-  extends Model<RefreshTokenAttributes>,
-    RefreshTokenAttributes {}
+  extends Model<RefreshTokenAttributes>, RefreshTokenAttributes {}
 export type RefreshTokenModel = ModelCtor<RefreshTokenInstance>;
 export const RefreshToken: RefreshTokenModel;
 
@@ -823,8 +835,7 @@ export interface RoleTypeAttributes {
 }
 
 export interface RoleTypeInstance
-  extends Model<RoleTypeAttributes>,
-    RoleTypeAttributes {}
+  extends Model<RoleTypeAttributes>, RoleTypeAttributes {}
 export type RoleTypeModel = ModelCtor<RoleTypeInstance>;
 export const RoleType: RoleTypeModel;
 
@@ -851,12 +862,12 @@ export interface SentNotificationAttributes {
 }
 
 export interface SentNotificationInstance
-  extends Model<SentNotificationAttributes>,
-    SentNotificationAttributes {}
+  extends Model<SentNotificationAttributes>, SentNotificationAttributes {}
 export type SentNotificationModel = ModelCtor<SentNotificationInstance>;
 export const SentNotification: SentNotificationModel;
 export const WorkUnit: WorkUnitModel;
 export const WorkUnitDetails: WorkUnitDetailsModel;
+export const WorkUnitException: WorkUnitExceptionModel;
 
 export interface TokenBlackListAttributes {
   id: string;
@@ -864,8 +875,7 @@ export interface TokenBlackListAttributes {
 }
 
 export interface TokenBlackListInstance
-  extends Model<TokenBlackListAttributes>,
-    TokenBlackListAttributes {}
+  extends Model<TokenBlackListAttributes>, TokenBlackListAttributes {}
 export type TokenBlackListModel = ModelCtor<TokenBlackListInstance>;
 export const TokenBlackList: TokenBlackListModel;
 
@@ -891,9 +901,7 @@ export interface UserAttributes {
   deletedAt?: Date | null;
 }
 
-export interface UserInstance
-  extends Model<UserAttributes>,
-    UserAttributes {}
+export interface UserInstance extends Model<UserAttributes>, UserAttributes {}
 export type UserModel = ModelCtor<UserInstance>;
 export const User: UserModel;
 // UserApplication Model
@@ -909,8 +917,7 @@ export interface UserApplicationAttributes {
 }
 
 export interface UserApplicationInstance
-  extends Model<UserApplicationAttributes>,
-    UserApplicationAttributes {}
+  extends Model<UserApplicationAttributes>, UserApplicationAttributes {}
 export type UserApplicationModel = ModelCtor<UserApplicationInstance>;
 export const UserApplication: UserApplicationModel;
 
@@ -935,8 +942,7 @@ export interface UserArchiveAttributes {
 }
 
 export interface UserArchiveInstance
-  extends Model<UserArchiveAttributes>,
-    UserArchiveAttributes {}
+  extends Model<UserArchiveAttributes>, UserArchiveAttributes {}
 export type UserArchiveModel = ModelCtor<UserArchiveInstance>;
 export const UserArchive: UserArchiveModel;
 
@@ -951,8 +957,7 @@ export interface UserRoleAttributes {
 }
 
 export interface UserRoleInstance
-  extends Model<UserRoleAttributes>,
-    UserRoleAttributes {}
+  extends Model<UserRoleAttributes>, UserRoleAttributes {}
 export type UserRoleModel = ModelCtor<UserRoleInstance>;
 export const UserRole: UserRoleModel;
 
@@ -977,9 +982,11 @@ export interface OrbitProfileMonitoringAttributes {
 }
 
 export interface OrbitProfileMonitoringInstance
-  extends Model<OrbitProfileMonitoringAttributes>,
+  extends
+    Model<OrbitProfileMonitoringAttributes>,
     OrbitProfileMonitoringAttributes {}
-export type OrbitProfileMonitoringModel = ModelCtor<OrbitProfileMonitoringInstance>;
+export type OrbitProfileMonitoringModel =
+  ModelCtor<OrbitProfileMonitoringInstance>;
 export const OrbitProfileMonitoring: OrbitProfileMonitoringModel;
 
 export interface OrbitBuildDataAttributes {
@@ -1005,7 +1012,6 @@ export interface OrbitBuildDataAttributes {
 }
 
 export interface OrbitBuildDataInstance
-  extends Model<OrbitBuildDataAttributes>,
-    OrbitBuildDataAttributes {}
+  extends Model<OrbitBuildDataAttributes>, OrbitBuildDataAttributes {}
 export type OrbitBuildDataModel = ModelCtor<OrbitBuildDataInstance>;
 export const OrbitBuildData: OrbitBuildDataModel;

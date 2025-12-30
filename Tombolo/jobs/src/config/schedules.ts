@@ -2,7 +2,7 @@
  * Cron schedule definitions for recurring jobs
  */
 
-import { wuHistoryJobType } from '../config/constants.js';
+import { wuHistoryJobType } from './constants.js';
 
 export interface ScheduledJob {
   name: string;
@@ -26,6 +26,13 @@ export const scheduledJobs: ScheduledJob[] = [
     data: { type: wuHistoryJobType.DETAILS },
     schedule: '0 */4 * * * *', // Every 4 minutes
     description: 'Fetch workunit performance details',
+  },
+  {
+    name: 'wuInfo',
+    jobId: 'wuInfo-recurring',
+    data: { type: wuHistoryJobType.INFO },
+    schedule: '0 */10 * * * *', // Every 10 minutes
+    description: 'Fetch workunit info',
   },
   // Add more scheduled jobs here as needed
 ];

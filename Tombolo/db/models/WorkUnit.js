@@ -100,6 +100,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      exceptionsFetchedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
       clusterDeleted: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
@@ -144,6 +148,10 @@ module.exports = (sequelize, DataTypes) => {
           name: 'work_units_details_fetched_idx',
           fields: ['detailsFetchedAt'],
         },
+        {
+          name: 'work_units_exceptions_fetched_idx',
+          fields: ['exceptionsFetchedAt'],
+        }
       ],
     }
   );
