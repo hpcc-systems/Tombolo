@@ -265,7 +265,6 @@ export interface WorkUnitExceptionAttributes {
   scope?: string | null;
   priority?: number | null;
   cost?: number | null;
-  clusterDeleted: boolean;
   createdAt: Date;
   deletedAt?: Date | null;
 }

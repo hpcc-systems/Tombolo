@@ -183,7 +183,6 @@ async function getWorkunitInfo() {
             scope: exception.Scope || null,
             priority: exception.Priority || null,
             cost: exception.Cost || null,
-            clusterDeleted: false,
             createdAt: new Date(),
           });
         }
