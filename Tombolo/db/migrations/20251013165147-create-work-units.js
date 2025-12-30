@@ -90,6 +90,10 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
       },
+      exceptionsFetchedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
       clusterDeleted: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
@@ -133,6 +137,10 @@ module.exports = {
 
     await queryInterface.addIndex('work_units', ['detailsFetchedAt'], {
       name: 'work_units_details_fetched_idx',
+    });
+
+    await queryInterface.addIndex('work_units', ['exceptionsFetchedAt'], {
+      name: 'work_units_exceptions_fetched_idx',
     });
   },
 

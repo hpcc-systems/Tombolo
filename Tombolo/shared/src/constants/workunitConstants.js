@@ -504,10 +504,13 @@ function normalizeLabel(label) {
   return normalized;
 }
 
+const TERMINAL_STATES = ['completed', 'failed', 'aborted'];
+
 export {
   relevantMetrics,
   UNIT_LOOKUP,
   readableLabels,
   normalizeLabel,
   FORMAT_LOOKUP,
+  TERMINAL_STATES,
 };

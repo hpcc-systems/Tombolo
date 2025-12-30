@@ -1,6 +1,7 @@
 import { Job } from 'bullmq';
 import { workunitQuery } from './handlers/wuQuery.js';
 import { getWorkunitDetails } from './handlers/wuDetails.js';
+import { getWorkunitInfo } from './handlers/wuInfo.js';
 import { wuHistoryJobType } from '../../config/constants.js';
 import logger from '../../config/logger.js';
 
@@ -30,6 +31,12 @@ export default async function processWorkunitHistoryJob(
         logger.info('Starting workunit detail job');
         await getWorkunitDetails();
         logger.info('Workunit detail completed');
+        break;
+
+      case wuHistoryJobType.INFO:
+        logger.info('Starting workunit info job');
+        await getWorkunitInfo();
+        logger.info('Workunit info completed');
         break;
 
       default:

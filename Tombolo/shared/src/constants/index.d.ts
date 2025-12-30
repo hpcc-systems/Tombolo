@@ -7,12 +7,12 @@ export function normalizeLabel(label: string): string;
 /**
  * Mapping of normalized label prefixes to readable short labels
  */
-export declare const readableLabels: Object<string, string>;
+export declare const readableLabels: Record<string, string>;
 
 /**
  * Lookup for WUDetails metric units
  */
-export declare const UNIT_LOOKUP: Object<
+export declare const UNIT_LOOKUP: Record<
   string,
   'nanoseconds' | 'percentage' | 'bytes' | 'int'
 >;
@@ -20,9 +20,12 @@ export declare const UNIT_LOOKUP: Object<
 /**
  * Lookup for WUDetails metric format functions
  */
-export declare const FORMAT_LOOKUP: Object<string, function>;
+export declare const FORMAT_LOOKUP: Record<string, Function>;
 
 /**
  * List of all relevant metrics for workunit details
  */
 export declare const relevantMetrics: string[];
+
+
+export declare const TERMINAL_STATES: string[];

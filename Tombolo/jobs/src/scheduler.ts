@@ -1,4 +1,4 @@
-import { workunitHistoryQueue } from './queues/workunitHistoryQueue.js';
+import { workunitHistoryQueue } from './queues/index.js';
 import { scheduledJobs } from './config/schedules.js';
 import logger from './config/logger.js';
 
