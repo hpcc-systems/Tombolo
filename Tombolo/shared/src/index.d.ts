@@ -46,6 +46,6 @@ export function decryptString(text: string, encryptionKey: string): string;
  */
 export function encryptString(text: string, encryptionKey: string): string;
 
-export * from './format/index.d.ts';
+export type * from './format/index';
 
-export * from './constants/index.d.ts';
+export type * from './constants/index';

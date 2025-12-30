@@ -59,3 +59,13 @@ export function truncateString(str: string, maxLength: number): string;
  * @throws Error
  */
 export function renderAnyMetric(key: string, value: number): string;
+
+
+/**
+ * Cleans a string and returns null if it is empty
+ * @param str - The string you would like to be checked
+ * @returns Cleaned string or null
+ * @throws Error
+ */
+export function ifEmptyNull(str: string): string | null;
+
