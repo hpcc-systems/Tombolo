@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       WorkunitException.belongsTo(models.Cluster, {
         foreignKey: 'clusterId',
         as: 'cluster',
-        onDelete: 'NO ACTION',
+        onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
     }
@@ -29,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
+      },
+      sequenceNo: {
+        primaryKey: true,
+        type: DataTypes.INTEGER,
       },
       severity: {
         type: DataTypes.STRING(20),
@@ -92,6 +96,22 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [],
     }
   );
+
+  // Auto-assign next sequenceNo per (wuId, clusterId) if not provided
+  WorkunitException.addHook('beforeValidate', async (instance, options) => {
+    if (
+      (instance.sequenceNo === undefined || instance.sequenceNo === null) &&
+      instance.wuId &&
+      instance.clusterId
+    ) {
+      const tx = options?.transaction;
+      const maxSeq = await WorkunitException.max('sequenceNo', {
+        where: { wuId: instance.wuId, clusterId: instance.clusterId },
+        transaction: tx,
+      });
+      instance.sequenceNo = (maxSeq ?? 0) + 1;
+    }
+  });
 
   return WorkunitException;
 };

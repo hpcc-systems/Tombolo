@@ -135,7 +135,7 @@ const WorkUnitDetails = require('./WorkUnitDetails')(
 
 const WorkUnitException = require('./WorkUnitException')(
   sequelize, Sequelize.DataTypes
-)
+);
 
 // Build models object using each model's registered name from model.name property
 const models = {};

@@ -32,7 +32,7 @@ export const scheduledJobs: ScheduledJob[] = [
     jobId: 'wuInfo-recurring',
     data: { type: wuHistoryJobType.INFO },
     schedule: '0 */10 * * * *', // Every 10 minutes
-    description: 'Fetch workunit performance details',
+    description: 'Fetch workunit info',
   },
   // Add more scheduled jobs here as needed
 ];

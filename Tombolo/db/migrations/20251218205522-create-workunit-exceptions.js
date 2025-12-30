@@ -18,6 +18,10 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      sequenceNo: {
+        primaryKey: true,
+        type: Sequelize.INTEGER,
+      },
       severity: {
         type: Sequelize.STRING(20),
       },
