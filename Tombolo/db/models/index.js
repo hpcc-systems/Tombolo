@@ -133,6 +133,10 @@ const WorkUnitDetails = require('./WorkUnitDetails')(
   Sequelize.DataTypes
 );
 
+const WorkUnitException = require('./WorkUnitException')(
+  sequelize, Sequelize.DataTypes
+)
+
 // Build models object using each model's registered name from model.name property
 const models = {};
 [
@@ -175,6 +179,7 @@ const models = {};
   UserRole,
   WorkUnit,
   WorkUnitDetails,
+  WorkUnitException,
 ].forEach(model => {
   models[model.name] = model;
 });
