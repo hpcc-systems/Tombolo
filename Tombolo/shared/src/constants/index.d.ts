@@ -30,3 +30,5 @@ export declare const relevantMetrics: string[];
 export declare const forbiddenSqlKeywords: string[];
 
 export declare const TERMINAL_STATES: string[];
+
+export declare const SCOPE_TYPES: string[];

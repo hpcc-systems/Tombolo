@@ -22,13 +22,11 @@ import {
   AppstoreOutlined,
 } from '@ant-design/icons';
 import { Bar } from '@ant-design/plots';
-import { formatSeconds, formatNumber, formatBytes, renderAnyMetric } from '@tombolo/shared';
+import { formatSeconds, formatNumber, formatBytes, renderAnyMetric, SCOPE_TYPES } from '@tombolo/shared';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import styles from './workunitHistory.module.css';
 
 const { Option } = Select;
-
-const SCOPE_TYPES = ['graph', 'subgraph', 'activity', 'operation'];
 
 // Top-level graph key from scopeId like G1:SG2:A3
 function getGraphKey(scopeId, scopeType) {

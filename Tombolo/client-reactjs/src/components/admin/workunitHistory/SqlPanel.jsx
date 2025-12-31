@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Card, Empty, Space, Table, Typography, message } from 'antd';
 import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined } from '@ant-design/icons';
 import workunitsService from '@/services/workunits.service';
-import { relevantMetrics } from '@tombolo/shared';
+import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor from '@monaco-editor/react';
+import debounce from 'lodash/debounce';
 import styles from './workunitHistory.module.css';
 
 const { Text, Paragraph } = Typography;
@@ -31,8 +32,29 @@ export default function SqlPanel({ clusterId, wuid }) {
   const ROW_HEIGHT_PX = 28;
   const TABLE_SCROLL_Y = MIN_TABLE_ROWS * ROW_HEIGHT_PX; // 420px
 
+  // Debounce localStorage writes to avoid excessive sync I/O during typing
+  const saveRef = useRef(null);
+  const DEBOUNCE_MS = 300;
+
+  // Create a stable debounced saver once
   useEffect(() => {
-    localStorage.setItem(storageKey, sql);
+    saveRef.current = debounce((key, value) => {
+      try {
+        localStorage.setItem(key, value);
+      } catch (_) {
+        // best-effort persistence; ignore quota or availability errors
+      }
+    }, DEBOUNCE_MS);
+
+    return () => {
+      // Flush the pending write on unmount to persist last edits
+      if (saveRef.current?.flush) saveRef.current.flush();
+    };
+  }, []);
+
+  // Invoke debounced saver whenever sql or key changes
+  useEffect(() => {
+    saveRef.current?.(storageKey, sql);
   }, [sql, storageKey]);
 
   // Very lightweight SQL linter (client-side) — no libraries, just simple checks
@@ -59,19 +81,7 @@ export default function SqlPanel({ clusterId, wuid }) {
     }
 
     // Disallow destructive keywords (basic word-boundary checks)
-    const forbidden = [
-      'insert',
-      'update',
-      'delete',
-      'drop',
-      'alter',
-      'truncate',
-      'create',
-      'replace',
-      'grant',
-      'revoke',
-    ];
-    for (const kw of forbidden) {
+    for (const kw of forbiddenSqlKeywords) {
       const re = new RegExp(`\\b${kw}\\b`, 'i');
       if (re.test(withoutComments)) {
         return { ok: false, reason: `Disallowed keyword detected: ${kw.toUpperCase()}` };
@@ -171,8 +181,8 @@ export default function SqlPanel({ clusterId, wuid }) {
     editor.onDidDispose(() => {
       try {
         disposable.dispose();
-      } catch {
-        console.error('Failed to dispose SQL completion provider');
+      } catch (err) {
+        console.error('Failed to dispose SQL completion provider', err);
       }
     });
   };

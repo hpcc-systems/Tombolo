@@ -25,7 +25,7 @@ import {
   DatabaseOutlined,
   ClusterOutlined,
 } from '@ant-design/icons';
-import { formatSeconds, formatNumber, formatBytes } from '@tombolo/shared';
+import { formatSeconds, formatNumber, formatBytes, SCOPE_TYPES } from '@tombolo/shared';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import styles from './workunitHistory.module.css';
 
@@ -80,22 +80,18 @@ function findPathByKey(nodes, key) {
   return stack.map(n => ({ title: n.scopeName, key: n.key }));
 }
 
-const SCOPE_TYPES = ['graph', 'subgraph', 'activity', 'operation'];
-
 const OverviewPanel = ({ wu, details }) => {
   // Preferences / UI state
   const [types, setTypes] = useState(loadLocalStorage('wuh.overview.types', SCOPE_TYPES));
   const [q, setQ] = useState(loadLocalStorage('wuh.overview.q', ''));
   const [minElapsed, setMinElapsed] = useState(loadLocalStorage('wuh.overview.minElapsed', 0));
   const [expandedKeys, setExpandedKeys] = useState(loadLocalStorage('wuh.overview.expandedKeys', []));
-  const [autoExpand, setAutoExpand] = useState(loadLocalStorage('wuh.overview.autoExpand', false));
   const [selectedKey, setSelectedKey] = useState(null);
 
   useEffect(() => saveLocalStorage('wuh.overview.types', types), [types]);
   useEffect(() => saveLocalStorage('wuh.overview.q', q), [q]);
   useEffect(() => saveLocalStorage('wuh.overview.minElapsed', minElapsed), [minElapsed]);
   useEffect(() => saveLocalStorage('wuh.overview.expandedKeys', expandedKeys), [expandedKeys]);
-  useEffect(() => saveLocalStorage('wuh.overview.autoExpand', autoExpand), [autoExpand]);
 
   // Build tree once
   const treeRaw = useMemo(() => buildScopeTree(details || []), [details]);
@@ -182,20 +178,6 @@ const OverviewPanel = ({ wu, details }) => {
     }));
 
   const antTreeData = useMemo(() => toAntTreeNodes(treeFiltered), [treeFiltered]);
-
-  // Auto expand first level on mount or when filter changes (guarded)
-  useEffect(() => {
-    if (!autoExpand) return;
-    const keys = [];
-    const stack = [...treeFiltered];
-    const LIMIT = 2000; // prevent expanding huge trees
-    while (stack.length && keys.length < LIMIT) {
-      const n = stack.pop();
-      keys.push(n.key);
-      if (n.children) stack.push(...n.children);
-    }
-    setExpandedKeys(keys);
-  }, [treeFiltered, autoExpand]);
 
   // Selected node and details
   const selectedNode = useMemo(() => flatList.find(n => n.key === selectedKey) || null, [flatList, selectedKey]);

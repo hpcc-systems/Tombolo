@@ -223,8 +223,17 @@ async function executeWorkunitSql(req, res) {
       return sendError(res, 'Only SELECT statements are allowed', 400);
     }
 
-    if (forbiddenSqlKeywords.some(k => lowered.includes(k + ' '))) {
-      return sendError(res, 'Only non-destructive SELECT queries are allowed', 400);
+    // Strip comments and check for forbidden keywords
+    const withoutComments = rawSql
+      .replace(/--.*$/gm, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .trim();
+
+    for (const kw of forbiddenSqlKeywords) {
+      const re = new RegExp(`\\b${kw}\\b`, 'i');
+      if (re.test(withoutComments)) {
+        return sendError(res, 'Only non-destructive SELECT queries are allowed', 400);
+      }
     }
 
     // Cap rows returned
