@@ -225,7 +225,7 @@ async function executeWorkunitSql(req, res) {
 
     // Strip comments and check for forbidden keywords
     const withoutComments = rawSql
-      .replace(/--.*$/gm, '')
+      .replace(/--[^\n]*$/gm, '')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .trim();
 

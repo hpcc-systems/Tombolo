@@ -27,6 +27,7 @@ import {
 } from '@ant-design/icons';
 import { formatSeconds, formatNumber, formatBytes, SCOPE_TYPES } from '@tombolo/shared';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
+import { flattenTree } from './common';
 import styles from './workunitHistory.module.css';
 
 // Build hierarchical tree from flat details using scopeId path (e.g., G1:SG2:A3)
@@ -54,16 +55,6 @@ function buildScopeTree(details) {
   return roots;
 }
 
-function flattenTree(nodes) {
-  const out = [];
-  const visit = arr =>
-    arr?.forEach(n => {
-      out.push(n);
-      if (n.children) visit(n.children);
-    });
-  visit(nodes);
-  return out;
-}
 
 function findPathByKey(nodes, key) {
   const stack = [];

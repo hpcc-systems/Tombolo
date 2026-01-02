@@ -30,6 +30,7 @@ import {
 import { formatSeconds, formatNumber, formatBytes, renderAnyMetric } from '@tombolo/shared';
 import styles from './workunitHistory.module.css';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
+import { flattenTree } from './common';
 
 const { Option } = Select;
 const { Item: MenuItem, ItemGroup: MenuItemGroup } = Menu;
@@ -466,16 +467,5 @@ const AllMetricsPanel = ({ wu, details }) => {
   );
 };
 
-// Helper to flatten tree to list
-function flattenTree(nodes) {
-  const out = [];
-  const visit = arr =>
-    arr?.forEach(n => {
-      out.push(n);
-      if (n.children) visit(n.children);
-    });
-  visit(nodes);
-  return out;
-}
 
 export default AllMetricsPanel;
