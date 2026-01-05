@@ -32,6 +32,13 @@ const isClusterReachable = async (clusterHost, port, username, password) => {
         message: 'success',
         error: null,
       };
+    } else {
+      return {
+        reached: false,
+        statusCode: response.status,
+        message: 'Unknown response status',
+        error: null,
+      };
     }
   } catch (error) {
     let message;
