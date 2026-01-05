@@ -360,6 +360,11 @@ module.exports = {
       name: 'work_unit_details_cluster_wu_idx',
     });
 
+    await queryInterface.addIndex('work_unit_details', ['wuId', 'clusterId', 'scopeId'], {
+      name: 'work_unit_details_uniq_wuid_clusterid_scope_idx',
+      unique: true,
+    });
+
     // await queryInterface.addIndex('work_unit_details', ['scopeType'], {
     //   name: 'work_unit_details_scope_type_idx',
     // });
