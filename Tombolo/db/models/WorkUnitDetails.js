@@ -48,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       scopeId: {
         type: DataTypes.STRING(15),
-        allowNull: true,
+        allowNull: false,
       },
       scopeName: {
         type: DataTypes.STRING(130),

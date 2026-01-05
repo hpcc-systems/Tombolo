@@ -22,7 +22,7 @@ module.exports = {
         },
         scopeId: {
           type: Sequelize.STRING(15),
-          allowNull: true,
+          allowNull: false,
         },
         scopeName: {
           type: Sequelize.STRING(130),
