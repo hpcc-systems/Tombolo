@@ -7,7 +7,7 @@ import globals from 'globals';
 export default [
   ...baseConfig,
   {
-    files: ['**/*.js'],
+    files: ['**/*.js', '**/*.cjs'],
     languageOptions: {
       globals: {
         ...globals.node,

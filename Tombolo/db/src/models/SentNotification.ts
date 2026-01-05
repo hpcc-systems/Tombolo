@@ -1,0 +1,106 @@
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  PrimaryKey,
+  Default,
+  AllowNull,
+  ForeignKey,
+  BelongsTo,
+  CreatedAt,
+  UpdatedAt,
+  DeletedAt,
+} from 'sequelize-typescript';
+import { Application } from './Application.js';
+
+@Table({
+  tableName: 'sent_notifications',
+  paranoid: true,
+  timestamps: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ['idempotencyKey', 'deletedAt'],
+    },
+  ],
+})
+export class SentNotification extends Model {
+  @PrimaryKey
+  @Default(DataType.UUIDV4)
+  @Column(DataType.UUID)
+  declare id: string;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  declare searchableNotificationId: string;
+
+  @Column(DataType.STRING)
+  declare idempotencyKey?: string;
+
+  @ForeignKey(() => Application)
+  @Column(DataType.UUID)
+  declare applicationId?: string;
+
+  @Column(DataType.DATE)
+  declare notifiedAt?: Date;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  declare notificationOrigin: string;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  declare notificationChannel: string;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  declare notificationTitle: string;
+
+  @Column(DataType.TEXT)
+  declare notificationDescription?: string;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  declare status: string;
+
+  @Column(DataType.JSON)
+  declare recipients?: any;
+
+  @Column(DataType.DATE)
+  declare resolutionDateTime?: Date;
+
+  @Column(DataType.TEXT)
+  declare comment?: string;
+
+  @AllowNull(false)
+  @Default({ name: 'System', email: 'N/A' })
+  @Column(DataType.JSON)
+  declare createdBy: any;
+
+  @Column(DataType.JSON)
+  declare updatedBy?: any;
+
+  @Column(DataType.JSON)
+  declare metaData?: any;
+
+  @CreatedAt
+  @AllowNull(false)
+  @Default(DataType.NOW)
+  @Column(DataType.DATE)
+  declare createdAt: Date;
+
+  @UpdatedAt
+  @AllowNull(false)
+  @Default(DataType.NOW)
+  @Column(DataType.DATE)
+  declare updatedAt: Date;
+
+  @DeletedAt
+  @Column(DataType.DATE)
+  declare deletedAt?: Date;
+
+  // Associations
+  @BelongsTo(() => Application)
+  declare application?: Application;
+}

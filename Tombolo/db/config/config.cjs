@@ -8,7 +8,7 @@ const ENVPath = fs.existsSync(tomboloRootENV) ? tomboloRootENV : serverENV;
 
 require('dotenv').config({ path: ENVPath });
 
-const logger = require('./logger');
+const logger = require('./logger.cjs');
 
 // Common database configuration options
 const commonDbConfigOptions = {

@@ -2,27 +2,19 @@
   "name": "@tombolo/db",
   "private": true,
   "version": "0.1.0",
-  "main": "models/index.js",
-  "types": "models/index.d.ts",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./models/index.d.ts",
-      "require": "./models/index.js",
-      "default": "./models/index.js"
-    },
-    "./models": {
-      "types": "./models/index.d.ts",
-      "require": "./models/index.js",
-      "default": "./models/index.js"
-    },
-    "./models/*": {
-      "types": "./models/*.d.ts",
-      "require": "./models/*.js",
-      "default": "./models/*.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
-    "models",
+    "dist",
     "config",
     "utils",
     "migrations",
@@ -33,18 +25,27 @@
     "@tombolo/shared": "workspace:*",
     "dotenv": "catalog:",
     "mysql2": "catalog:",
-    "sequelize": "catalog:"
+    "reflect-metadata": "^0.2.2",
+    "sequelize": "catalog:",
+    "sequelize-typescript": "^2.1.6"
   },
   "scripts": {
-    "build": "echo 'no build step for db'",
+    "build": "tsup",
+    "esm:build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "build:check": "pnpm typecheck && pnpm build",
+    "dev": "tsup --watch",
     "db:migrate": "sequelize db:migrate",
     "db:create": "sequelize db:create",
     "db:seed": "sequelize db:seed:all",
     "db:drop": "sequelize db:drop",
-    "clean": "rm -rf .turbo",
+    "clean": "rm -rf .turbo dist",
     "clean:deps": "rm -rf node_modules"
   },
   "devDependencies": {
-    "sequelize-cli": "^6.6.3"
+    "@types/node": "catalog:",
+    "sequelize-cli": "^6.6.3",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
   }
 }
