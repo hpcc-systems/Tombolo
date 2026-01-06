@@ -359,18 +359,6 @@ module.exports = {
     await queryInterface.addIndex('work_unit_details', ['clusterId', 'wuId'], {
       name: 'work_unit_details_cluster_wu_idx',
     });
-
-    // await queryInterface.addIndex('work_unit_details', ['scopeType'], {
-    //   name: 'work_unit_details_scope_type_idx',
-    // });
-    //
-    // await queryInterface.addIndex('work_unit_details', ['scopeName'], {
-    //   name: 'work_unit_details_scope_name_idx',
-    // });
-    //
-    // await queryInterface.addIndex('work_unit_details', ['scopeId'], {
-    //   name: 'work_unit_details_scope_id_idx',
-    // });
   },
 
   // eslint-disable-next-line no-unused-vars
