@@ -49,14 +49,14 @@ export class CostMonitoringData extends Model<
   declare date: Date;
 
   @Column(DataType.DATEONLY)
-  declare localDay?: string;
+  declare localDay?: string | null;
 
   @AllowNull(false)
   @Column(DataType.JSON)
   declare usersCostInfo: any;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -65,11 +65,11 @@ export class CostMonitoringData extends Model<
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt?: Date;
+  declare updatedAt?: Date | null;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Cluster)

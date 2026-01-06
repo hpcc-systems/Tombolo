@@ -51,7 +51,7 @@ export class OrbitMonitoring extends Model<
   declare name: string;
 
   @Column(DataType.STRING)
-  declare cron?: string;
+  declare cron?: string | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -74,16 +74,16 @@ export class OrbitMonitoring extends Model<
   declare host: string;
 
   @Column(DataType.STRING)
-  declare primaryContact?: string;
+  declare primaryContact?: string | null;
 
   @Column(DataType.STRING)
-  declare secondaryContact?: string;
+  declare secondaryContact?: string | null;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @Column(DataType.BOOLEAN)
-  declare isActive?: boolean;
+  declare isActive?: boolean | null;
 
   @CreatedAt
   @Column(DataType.DATE)
@@ -95,7 +95,7 @@ export class OrbitMonitoring extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Application, 'application_id')

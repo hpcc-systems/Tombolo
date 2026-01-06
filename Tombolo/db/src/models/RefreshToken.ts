@@ -60,10 +60,10 @@ export class RefreshToken extends Model<
   declare revoked: CreationOptional<boolean>;
 
   @Column(DataType.DATE)
-  declare revokedAt?: Date;
+  declare revokedAt?: Date | null;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @CreatedAt
   @Column(DataType.DATE)
@@ -75,7 +75,7 @@ export class RefreshToken extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => User)

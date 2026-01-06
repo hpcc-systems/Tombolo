@@ -44,14 +44,14 @@ export class SentNotification extends Model<
   declare searchableNotificationId: string;
 
   @Column(DataType.STRING)
-  declare idempotencyKey?: string;
+  declare idempotencyKey?: string | null;
 
   @ForeignKey(() => Application)
   @Column(DataType.UUID)
-  declare applicationId?: string;
+  declare applicationId?: string | null;
 
   @Column(DataType.DATE)
-  declare notifiedAt?: Date;
+  declare notifiedAt?: Date | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -66,20 +66,20 @@ export class SentNotification extends Model<
   declare notificationTitle: string;
 
   @Column(DataType.TEXT)
-  declare notificationDescription?: string;
+  declare notificationDescription?: string | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
   declare status: string;
 
   @Column(DataType.JSON)
-  declare recipients?: any;
+  declare recipients?: any | null;
 
   @Column(DataType.DATE)
-  declare resolutionDateTime?: Date;
+  declare resolutionDateTime?: Date | null;
 
   @Column(DataType.TEXT)
-  declare comment?: string;
+  declare comment?: string | null;
 
   @AllowNull(false)
   @Default({ name: 'System', email: 'N/A' })
@@ -87,10 +87,10 @@ export class SentNotification extends Model<
   declare createdBy: any;
 
   @Column(DataType.JSON)
-  declare updatedBy?: any;
+  declare updatedBy?: any | null;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -106,7 +106,7 @@ export class SentNotification extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Application)

@@ -33,19 +33,19 @@ export class WorkUnitDetails extends Model<
 > {
   @PrimaryKey
   @Column({ type: DataType.BIGINT.UNSIGNED, autoIncrement: true })
-  declare id: number;
+  declare id: CreationOptional<number>;
 
   @ForeignKey(() => Cluster)
   @ForeignKey(() => WorkUnit)
   @Column(DataType.UUID)
-  declare clusterId?: string;
+  declare clusterId?: string | null;
 
   @ForeignKey(() => WorkUnit)
   @Column(DataType.STRING(30))
-  declare wuId?: string;
+  declare wuId?: string | null;
 
   @Column(DataType.STRING(15))
-  declare scopeId?: string;
+  declare scopeId?: string | null;
 
   @AllowNull(false)
   @Column(DataType.STRING(130))
@@ -53,439 +53,439 @@ export class WorkUnitDetails extends Model<
 
   @AllowNull(false)
   @Column(DataType.ENUM('activity', 'subgraph', 'graph', 'operation'))
-  declare scopeType: 'activity' | 'subgraph' | 'graph' | 'operation';
+  declare scopeType: 'activity' | 'subgraph' | 'graph' | 'operation' | string;
 
   @Column(DataType.STRING(255))
-  declare label?: string;
+  declare label?: string | null;
 
   @Column(DataType.SMALLINT.UNSIGNED)
-  declare kind?: number;
+  declare kind?: number | null;
 
   @Column(DataType.STRING(130))
-  declare fileName?: string;
+  declare fileName?: string | null;
 
   // Time metrics (DECIMAL(13,6) for microsecond precision)
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeElapsed?: number;
+  declare TimeElapsed?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeAvgElapsed?: number;
+  declare TimeAvgElapsed?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMinElapsed?: number;
+  declare TimeMinElapsed?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMaxElapsed?: number;
+  declare TimeMaxElapsed?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeStdDevElapsed?: number;
+  declare TimeStdDevElapsed?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeLocalExecute?: number;
+  declare TimeLocalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeAvgLocalExecute?: number;
+  declare TimeAvgLocalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMinLocalExecute?: number;
+  declare TimeMinLocalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMaxLocalExecute?: number;
+  declare TimeMaxLocalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeStdDevLocalExecute?: number;
+  declare TimeStdDevLocalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeTotalExecute?: number;
+  declare TimeTotalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeAvgTotalExecute?: number;
+  declare TimeAvgTotalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMinTotalExecute?: number;
+  declare TimeMinTotalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMaxTotalExecute?: number;
+  declare TimeMaxTotalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeStdDevTotalExecute?: number;
+  declare TimeStdDevTotalExecute?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeDiskReadIO?: number;
+  declare TimeDiskReadIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeAvgDiskReadIO?: number;
+  declare TimeAvgDiskReadIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMinDiskReadIO?: number;
+  declare TimeMinDiskReadIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMaxDiskReadIO?: number;
+  declare TimeMaxDiskReadIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeStdDevDiskReadIO?: number;
+  declare TimeStdDevDiskReadIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeDiskWriteIO?: number;
+  declare TimeDiskWriteIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeAvgDiskWriteIO?: number;
+  declare TimeAvgDiskWriteIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMinDiskWriteIO?: number;
+  declare TimeMinDiskWriteIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMaxDiskWriteIO?: number;
+  declare TimeMaxDiskWriteIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeStdDevDiskWriteIO?: number;
+  declare TimeStdDevDiskWriteIO?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeBlocked?: number;
+  declare TimeBlocked?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeAvgBlocked?: number;
+  declare TimeAvgBlocked?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMinBlocked?: number;
+  declare TimeMinBlocked?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMaxBlocked?: number;
+  declare TimeMaxBlocked?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeStdDevBlocked?: number;
+  declare TimeStdDevBlocked?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeLookAhead?: number;
+  declare TimeLookAhead?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeAvgLookAhead?: number;
+  declare TimeAvgLookAhead?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMinLookAhead?: number;
+  declare TimeMinLookAhead?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeMaxLookAhead?: number;
+  declare TimeMaxLookAhead?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeStdDevLookAhead?: number;
+  declare TimeStdDevLookAhead?: number | null;
 
   @Column(DataType.DECIMAL(13, 6))
-  declare TimeFirstRow?: number;
+  declare TimeFirstRow?: number | null;
 
   // Numeric metrics
   @Column(DataType.BIGINT.UNSIGNED)
-  declare NumDiskRowsRead?: number;
+  declare NumDiskRowsRead?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare NumAvgDiskRowsRead?: number;
+  declare NumAvgDiskRowsRead?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare NumMinDiskRowsRead?: number;
+  declare NumMinDiskRowsRead?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare NumMaxDiskRowsRead?: number;
+  declare NumMaxDiskRowsRead?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare NumStdDevDiskRowsRead?: number;
+  declare NumStdDevDiskRowsRead?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeDiskRead?: number;
+  declare SizeDiskRead?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeAvgDiskRead?: number;
+  declare SizeAvgDiskRead?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeMinDiskRead?: number;
+  declare SizeMinDiskRead?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeMaxDiskRead?: number;
+  declare SizeMaxDiskRead?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeStdDevDiskRead?: number;
+  declare SizeStdDevDiskRead?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumDiskReads?: number;
+  declare NumDiskReads?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumAvgDiskReads?: number;
+  declare NumAvgDiskReads?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumMinDiskReads?: number;
+  declare NumMinDiskReads?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumMaxDiskReads?: number;
+  declare NumMaxDiskReads?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeDiskWrite?: number;
+  declare SizeDiskWrite?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeAvgDiskWrite?: number;
+  declare SizeAvgDiskWrite?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeMinDiskWrite?: number;
+  declare SizeMinDiskWrite?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeMaxDiskWrite?: number;
+  declare SizeMaxDiskWrite?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeStdDevDiskWrite?: number;
+  declare SizeStdDevDiskWrite?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumDiskWrites?: number;
+  declare NumDiskWrites?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumAvgDiskWrites?: number;
+  declare NumAvgDiskWrites?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumMinDiskWrites?: number;
+  declare NumMinDiskWrites?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumMaxDiskWrites?: number;
+  declare NumMaxDiskWrites?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare MemoryUsage?: number;
+  declare MemoryUsage?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare MemoryAvgUsage?: number;
+  declare MemoryAvgUsage?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare MemoryMinUsage?: number;
+  declare MemoryMinUsage?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare MemoryMaxUsage?: number;
+  declare MemoryMaxUsage?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare PeakMemoryUsage?: number;
+  declare PeakMemoryUsage?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare PeakAvgMemoryUsage?: number;
+  declare PeakAvgMemoryUsage?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare PeakMinMemoryUsage?: number;
+  declare PeakMinMemoryUsage?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare PeakMaxMemoryUsage?: number;
+  declare PeakMaxMemoryUsage?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SpillRowsWritten?: number;
+  declare SpillRowsWritten?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SpillAvgRowsWritten?: number;
+  declare SpillAvgRowsWritten?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SpillMinRowsWritten?: number;
+  declare SpillMinRowsWritten?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SpillMaxRowsWritten?: number;
+  declare SpillMaxRowsWritten?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SpillSizeWritten?: number;
+  declare SpillSizeWritten?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SpillAvgSizeWritten?: number;
+  declare SpillAvgSizeWritten?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SpillMinSizeWritten?: number;
+  declare SpillMinSizeWritten?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SpillMaxSizeWritten?: number;
+  declare SpillMaxSizeWritten?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeGraphSpill?: number;
+  declare SizeGraphSpill?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeAvgGraphSpill?: number;
+  declare SizeAvgGraphSpill?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeMinGraphSpill?: number;
+  declare SizeMinGraphSpill?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeMaxGraphSpill?: number;
+  declare SizeMaxGraphSpill?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare NumRowsProcessed?: number;
+  declare NumRowsProcessed?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare NumAvgRowsProcessed?: number;
+  declare NumAvgRowsProcessed?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare NumMinRowsProcessed?: number;
+  declare NumMinRowsProcessed?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare NumMaxRowsProcessed?: number;
+  declare NumMaxRowsProcessed?: number | null;
 
   // Skew metrics
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMinElapsed?: number;
+  declare SkewMinElapsed?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMaxElapsed?: number;
+  declare SkewMaxElapsed?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMinLocalExecute?: number;
+  declare SkewMinLocalExecute?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMaxLocalExecute?: number;
+  declare SkewMaxLocalExecute?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMinTotalExecute?: number;
+  declare SkewMinTotalExecute?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMaxTotalExecute?: number;
+  declare SkewMaxTotalExecute?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMinDiskRowsRead?: number;
+  declare SkewMinDiskRowsRead?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMaxDiskRowsRead?: number;
+  declare SkewMaxDiskRowsRead?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMinDiskRead?: number;
+  declare SkewMinDiskRead?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMaxDiskRead?: number;
+  declare SkewMaxDiskRead?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMinDiskWrite?: number;
+  declare SkewMinDiskWrite?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMaxDiskWrite?: number;
+  declare SkewMaxDiskWrite?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMinDiskReadIO?: number;
+  declare SkewMinDiskReadIO?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMaxDiskReadIO?: number;
+  declare SkewMaxDiskReadIO?: number | null;
 
   @Column(DataType.DECIMAL(8, 2))
-  declare SkewMaxDiskWriteIO?: number;
+  declare SkewMaxDiskWriteIO?: number | null;
 
   // Network metrics
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeNetworkWrite?: number;
+  declare SizeNetworkWrite?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeAvgNetworkWrite?: number;
+  declare SizeAvgNetworkWrite?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeMinNetworkWrite?: number;
+  declare SizeMinNetworkWrite?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare SizeMaxNetworkWrite?: number;
+  declare SizeMaxNetworkWrite?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumNetworkWrites?: number;
+  declare NumNetworkWrites?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumAvgNetworkWrites?: number;
+  declare NumAvgNetworkWrites?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumMinNetworkWrites?: number;
+  declare NumMinNetworkWrites?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumMaxNetworkWrites?: number;
+  declare NumMaxNetworkWrites?: number | null;
 
   // Other metrics
   @Column(DataType.BIGINT.UNSIGNED)
-  declare MaxRowSize?: number;
+  declare MaxRowSize?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumIndexRecords?: number;
+  declare NumIndexRecords?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumStarts?: number;
+  declare NumStarts?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare NumStops?: number;
+  declare NumStops?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare OriginalSize?: number;
+  declare OriginalSize?: number | null;
 
   @Column(DataType.BIGINT.UNSIGNED)
-  declare CompressedSize?: number;
+  declare CompressedSize?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare ScansBlob?: number;
+  declare ScansBlob?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare ScansIndex?: number;
+  declare ScansIndex?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare WildSeeks?: number;
+  declare WildSeeks?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare SeeksBlob?: number;
+  declare SeeksBlob?: number | null;
 
   @Column(DataType.INTEGER.UNSIGNED)
-  declare SeeksIndex?: number;
+  declare SeeksIndex?: number | null;
 
   // Node metrics
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinElapsed?: number;
+  declare NodeMinElapsed?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxElapsed?: number;
+  declare NodeMaxElapsed?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinLocalExecute?: number;
+  declare NodeMinLocalExecute?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxLocalExecute?: number;
+  declare NodeMaxLocalExecute?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinTotalExecute?: number;
+  declare NodeMinTotalExecute?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxTotalExecute?: number;
+  declare NodeMaxTotalExecute?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinDiskRowsRead?: number;
+  declare NodeMinDiskRowsRead?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxDiskRowsRead?: number;
+  declare NodeMaxDiskRowsRead?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinDiskRead?: number;
+  declare NodeMinDiskRead?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxDiskRead?: number;
+  declare NodeMaxDiskRead?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinDiskWrite?: number;
+  declare NodeMinDiskWrite?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxDiskWrite?: number;
+  declare NodeMaxDiskWrite?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinDiskReadIO?: number;
+  declare NodeMinDiskReadIO?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxDiskReadIO?: number;
+  declare NodeMaxDiskReadIO?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinDiskWriteIO?: number;
+  declare NodeMinDiskWriteIO?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxDiskWriteIO?: number;
+  declare NodeMaxDiskWriteIO?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinBlocked?: number;
+  declare NodeMinBlocked?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxBlocked?: number;
+  declare NodeMaxBlocked?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinLookAhead?: number;
+  declare NodeMinLookAhead?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxLookAhead?: number;
+  declare NodeMaxLookAhead?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMinFirstRow?: number;
+  declare NodeMinFirstRow?: number | null;
 
   @Column(DataType.TINYINT.UNSIGNED)
-  declare NodeMaxFirstRow?: number;
+  declare NodeMaxFirstRow?: number | null;
 
   // Associations
   @BelongsTo(() => Cluster, 'clusterId')

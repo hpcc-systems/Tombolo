@@ -36,14 +36,14 @@ export class IntegrationMapping extends Model<
 
   @ForeignKey(() => Integration)
   @Column(DataType.UUID)
-  declare integration_id?: string;
+  declare integration_id?: string | null;
 
   @ForeignKey(() => Application)
   @Column(DataType.UUID)
-  declare application_id?: string;
+  declare application_id?: string | null;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -59,7 +59,7 @@ export class IntegrationMapping extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Integration, 'integration_id')

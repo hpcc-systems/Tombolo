@@ -29,13 +29,13 @@ export class License extends Model<
   declare id: CreationOptional<string>;
 
   @Column(DataType.STRING)
-  declare name?: string;
+  declare name?: string | null;
 
   @Column(DataType.STRING)
-  declare url?: string;
+  declare url?: string | null;
 
   @Column(DataType.STRING)
-  declare description?: string;
+  declare description?: string | null;
 
   @CreatedAt
   @Column(DataType.DATE)

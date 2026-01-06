@@ -77,7 +77,7 @@ export class JobMonitoringData extends Model<
   declare analyzed: CreationOptional<boolean>;
 
   @Column(DataType.JSONB)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -91,7 +91,7 @@ export class JobMonitoringData extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Application)

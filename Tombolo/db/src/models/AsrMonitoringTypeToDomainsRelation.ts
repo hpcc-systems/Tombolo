@@ -42,10 +42,10 @@ export class AsrMonitoringTypeToDomainsRelation extends Model<
   declare id: CreationOptional<string>;
 
   @Column(DataType.UUID)
-  declare monitoring_type_id?: string;
+  declare monitoring_type_id?: string | null;
 
   @Column(DataType.UUID)
-  declare domain_id?: string;
+  declare domain_id?: string | null;
 
   @AllowNull(false)
   @ForeignKey(() => User)
@@ -54,11 +54,11 @@ export class AsrMonitoringTypeToDomainsRelation extends Model<
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare updatedBy?: string;
+  declare updatedBy?: string | null;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare deletedBy?: string;
+  declare deletedBy?: string | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -68,11 +68,11 @@ export class AsrMonitoringTypeToDomainsRelation extends Model<
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt?: Date;
+  declare updatedAt?: Date | null;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => User, 'createdBy')

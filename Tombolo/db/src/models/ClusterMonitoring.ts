@@ -61,13 +61,13 @@ export class ClusterMonitoring extends Model<
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare approvedBy?: string;
+  declare approvedBy?: string | null;
 
   @Column(DataType.DATE)
-  declare approvedAt?: Date;
+  declare approvedAt?: Date | null;
 
   @Column(DataType.STRING)
-  declare approverComment?: string;
+  declare approverComment?: string | null;
 
   @AllowNull(false)
   @Column(DataType.TEXT)
@@ -79,7 +79,7 @@ export class ClusterMonitoring extends Model<
   declare clusterId: string;
 
   @Column(DataType.JSON)
-  declare lastRunDetails?: any;
+  declare lastRunDetails?: any | null;
 
   @AllowNull(false)
   @Default({
@@ -106,7 +106,7 @@ export class ClusterMonitoring extends Model<
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare deletedBy?: string;
+  declare deletedBy?: string | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -120,7 +120,7 @@ export class ClusterMonitoring extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Cluster)

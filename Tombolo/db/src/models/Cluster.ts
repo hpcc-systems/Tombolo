@@ -57,11 +57,11 @@ export class Cluster extends Model<
 
   @AllowNull(true)
   @Column(DataType.STRING)
-  declare username?: string;
+  declare username?: string | null;
 
   @AllowNull(true)
   @Column(DataType.STRING)
-  declare hash?: string;
+  declare hash?: string | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -88,26 +88,26 @@ export class Cluster extends Model<
 
   @Default({})
   @Column(DataType.JSON)
-  declare accountMetaData?: CreationOptional<Record<string, any>>;
+  declare accountMetaData?: CreationOptional<Record<string, any>> | null;
 
   @AllowNull(true)
   @Column(DataType.JSON)
-  declare adminEmails?: any[];
-
-  @AllowNull(true)
-  @Default({})
-  @Column(DataType.JSON)
-  declare reachabilityInfo?: CreationOptional<Record<string, any>>;
+  declare adminEmails?: any[] | null;
 
   @AllowNull(true)
   @Default({})
   @Column(DataType.JSON)
-  declare storageUsageHistory?: CreationOptional<Record<string, any>>;
+  declare reachabilityInfo?: CreationOptional<Record<string, any>> | null;
 
   @AllowNull(true)
   @Default({})
   @Column(DataType.JSON)
-  declare metaData?: CreationOptional<Record<string, any>>;
+  declare storageUsageHistory?: CreationOptional<Record<string, any>> | null;
+
+  @AllowNull(true)
+  @Default({})
+  @Column(DataType.JSON)
+  declare metaData?: CreationOptional<Record<string, any>> | null;
 
   @AllowNull(false)
   @ForeignKey(() => User)
@@ -117,12 +117,12 @@ export class Cluster extends Model<
   @AllowNull(true)
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare updatedBy?: string;
+  declare updatedBy?: string | null;
 
   @AllowNull(true)
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare deletedBy?: string;
+  declare deletedBy?: string | null;
 
   @CreatedAt
   @Column(DataType.DATE)
@@ -134,7 +134,7 @@ export class Cluster extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @HasMany(() => FileMonitoring)

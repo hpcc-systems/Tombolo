@@ -59,7 +59,7 @@ export class LandingZoneMonitoring extends Model<
   declare description: string;
 
   @Column(DataType.STRING)
-  declare cron?: string;
+  declare cron?: string | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -82,7 +82,7 @@ export class LandingZoneMonitoring extends Model<
   declare directory: string;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @AllowNull(false)
   @Column(DataType.BOOLEAN)
@@ -93,13 +93,13 @@ export class LandingZoneMonitoring extends Model<
   declare approvalStatus: string;
 
   @Column(DataType.STRING)
-  declare approvalNote?: string;
+  declare approvalNote?: string | null;
 
   @Column(DataType.STRING)
-  declare approvedBy?: string;
+  declare approvedBy?: string | null;
 
   @Column(DataType.DATE)
-  declare approvedAt?: Date;
+  declare approvedAt?: Date | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -120,7 +120,7 @@ export class LandingZoneMonitoring extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Application, 'application_id')

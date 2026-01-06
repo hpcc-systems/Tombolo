@@ -70,23 +70,23 @@ export class CostMonitoring extends Model<
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare approvedBy?: string;
+  declare approvedBy?: string | null;
 
   @Column(DataType.DATE)
-  declare approvedAt?: Date;
+  declare approvedAt?: Date | null;
 
   @Column(DataType.STRING)
-  declare approverComment?: string;
+  declare approverComment?: string | null;
 
   @AllowNull(false)
   @Column(DataType.TEXT)
   declare description: string;
 
   @Column(DataType.JSON)
-  declare clusterIds?: string[];
+  declare clusterIds?: string[] | null;
 
   @Column(DataType.JSON)
-  declare lastJobRunDetails?: any;
+  declare lastJobRunDetails?: any | null;
 
   @AllowNull(false)
   @Column(DataType.JSON)
@@ -99,11 +99,11 @@ export class CostMonitoring extends Model<
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare lastUpdatedBy?: string;
+  declare lastUpdatedBy?: string | null;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare deletedBy?: string;
+  declare deletedBy?: string | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -117,7 +117,7 @@ export class CostMonitoring extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Application)

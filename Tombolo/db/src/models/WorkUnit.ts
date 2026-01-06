@@ -76,7 +76,7 @@ export class WorkUnit extends Model<
   declare engine: string;
 
   @Column(DataType.STRING)
-  declare jobName?: string;
+  declare jobName?: string | null;
 
   @AllowNull(false)
   @Column(DataType.INTEGER)
@@ -95,7 +95,7 @@ export class WorkUnit extends Model<
   declare action: number;
 
   @Column(DataType.STRING)
-  declare actionEx?: string;
+  declare actionEx?: string | null;
 
   @AllowNull(false)
   @Column(DataType.BOOLEAN)
@@ -125,11 +125,13 @@ export class WorkUnit extends Model<
   @Column(DataType.FLOAT)
   declare totalCost: number;
 
+  @AllowNull(true)
   @Column(DataType.DATE)
-  declare detailsFetchedAt?: Date;
+  declare detailsFetchedAt?: Date | null;
 
+  @AllowNull(true)
   @Column(DataType.DATE)
-  declare exceptionsFetchedAt?: Date;
+  declare exceptionsFetchedAt?: Date | null;
 
   @AllowNull(false)
   @Default(false)
@@ -148,7 +150,7 @@ export class WorkUnit extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Cluster)

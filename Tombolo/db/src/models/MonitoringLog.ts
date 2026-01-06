@@ -55,7 +55,7 @@ export class MonitoringLog extends Model<
   declare scan_time: Date;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -65,11 +65,11 @@ export class MonitoringLog extends Model<
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt?: Date;
+  declare updatedAt?: Date | null;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Cluster, 'cluster_id')

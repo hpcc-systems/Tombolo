@@ -61,11 +61,11 @@ export class User extends Model<
 
   @AllowNull(true)
   @Column(DataType.STRING)
-  declare organization?: string;
+  declare organization?: string | null;
 
   @AllowNull(true)
   @Column(DataType.STRING)
-  declare phone?: string;
+  declare phone?: string | null;
 
   @AllowNull(false)
   @Default(false)
@@ -74,11 +74,11 @@ export class User extends Model<
 
   @AllowNull(true)
   @Column(DataType.DATE)
-  declare lastLoginAt?: Date;
+  declare lastLoginAt?: Date | null;
 
   @AllowNull(true)
   @Column(DataType.JSON)
-  declare metaData?: Record<string, any>;
+  declare metaData?: Record<string, any> | null;
 
   @CreatedAt
   @Column(DataType.DATE)
@@ -90,7 +90,7 @@ export class User extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @HasMany(() => UserRole)

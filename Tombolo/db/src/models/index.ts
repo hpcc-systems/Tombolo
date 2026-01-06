@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { Sequelize } from 'sequelize-typescript';
+import type { InferAttributes } from 'sequelize';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
@@ -170,7 +171,16 @@ export { Sequelize };
 export { WorkUnitExceptionCreationAttributes };
 
 // Export Sequelize types for external use
-export type { Transaction, Op } from 'sequelize';
+export type {
+  Transaction,
+  Op,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
+
+// Export legacy-compatible type aliases
+export type MonitoringLogAttributes = InferAttributes<MonitoringLog>;
+export type MonitoringLogInstance = MonitoringLog;
 
 // Export all models
 export {

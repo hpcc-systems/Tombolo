@@ -66,7 +66,7 @@ export class InstanceSettings extends Model<
   @DeletedAt
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => User, 'createdBy')

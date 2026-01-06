@@ -42,7 +42,7 @@ export class Integration extends Model<
   declare description: string;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   // Associations
   @HasMany(() => IntegrationMapping)

@@ -58,7 +58,7 @@ export class UserArchive extends Model<
   declare verifiedUser: CreationOptional<boolean>;
 
   @Column(DataType.DATE)
-  declare verifiedAt?: Date;
+  declare verifiedAt?: Date | null;
 
   @AllowNull(false)
   @Default('pending')
@@ -71,17 +71,17 @@ export class UserArchive extends Model<
   declare forcePasswordReset: CreationOptional<boolean>;
 
   @Column(DataType.DATE)
-  declare passwordExpiresAt?: Date;
+  declare passwordExpiresAt?: Date | null;
 
   @Column(DataType.DATE)
-  declare lastLoginAt?: Date;
+  declare lastLoginAt?: Date | null;
 
   @Column(DataType.DATE)
-  declare lastAccessedAt?: Date;
+  declare lastAccessedAt?: Date | null;
 
   @Default({})
   @Column(DataType.JSON)
-  declare metaData?: CreationOptional<any>;
+  declare metaData?: CreationOptional<any> | null;
 
   @CreatedAt
   @Column(DataType.DATE)

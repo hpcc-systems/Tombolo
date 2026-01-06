@@ -48,7 +48,7 @@ export class OrbitBuilds extends Model<
   declare application_id: string;
 
   @Column(DataType.UUID)
-  declare monitoring_id?: string;
+  declare monitoring_id?: string | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -59,7 +59,7 @@ export class OrbitBuilds extends Model<
   declare wuid: string;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -75,7 +75,7 @@ export class OrbitBuilds extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Application, 'application_id')

@@ -40,7 +40,7 @@ export class FileMonitoring extends Model<
   declare monitoringName: string;
 
   @Column(DataType.STRING)
-  declare description?: string;
+  declare description?: string | null;
 
   @AllowNull(false)
   @ForeignKey(() => Application)
@@ -58,24 +58,24 @@ export class FileMonitoring extends Model<
 
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare isActive?: boolean;
+  declare isActive?: boolean | null;
 
   @AllowNull(false)
   @Column(DataType.ENUM('approved', 'rejected', 'pending'))
   declare approvalStatus: 'approved' | 'rejected' | 'pending';
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare approvedBy?: string;
+  declare approvedBy?: string | null;
 
   @Column(DataType.DATE)
-  declare approvedAt?: Date;
+  declare approvedAt?: Date | null;
 
   @Column(DataType.STRING)
-  declare approverComment?: string;
+  declare approverComment?: string | null;
 
   @AllowNull(false)
   @ForeignKey(() => User)
@@ -84,11 +84,11 @@ export class FileMonitoring extends Model<
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare lastUpdatedBy?: string;
+  declare lastUpdatedBy?: string | null;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare deletedBy?: string;
+  declare deletedBy?: string | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -97,11 +97,11 @@ export class FileMonitoring extends Model<
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt?: Date;
+  declare updatedAt?: Date | null;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Application)

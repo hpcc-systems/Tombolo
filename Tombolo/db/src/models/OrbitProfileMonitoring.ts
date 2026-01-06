@@ -65,16 +65,16 @@ export class OrbitProfileMonitoring extends Model<
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare approvedBy?: string;
+  declare approvedBy?: string | null;
 
   @Column(DataType.DATE)
-  declare approvedAt?: Date;
+  declare approvedAt?: Date | null;
 
   @Column(DataType.STRING)
-  declare approverComment?: string;
+  declare approverComment?: string | null;
 
   @Column(DataType.JSON)
-  declare lastRunDetails?: any;
+  declare lastRunDetails?: any | null;
 
   @AllowNull(false)
   @Column(DataType.JSON)
@@ -92,7 +92,7 @@ export class OrbitProfileMonitoring extends Model<
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare deletedBy?: string;
+  declare deletedBy?: string | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -108,7 +108,7 @@ export class OrbitProfileMonitoring extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Application)

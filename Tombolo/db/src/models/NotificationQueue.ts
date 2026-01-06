@@ -38,21 +38,21 @@ export class NotificationQueue extends Model<
   declare notificationOrigin: string;
 
   @Column(DataType.UUID)
-  declare originationId?: string;
+  declare originationId?: string | null;
 
   @AllowNull(false)
   @Column(DataType.ENUM('immediate', 'scheduled'))
   declare deliveryType: 'immediate' | 'scheduled';
 
   @Column(DataType.DATE)
-  declare deliveryTime?: Date;
+  declare deliveryTime?: Date | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
   declare templateName: string;
 
   @Column(DataType.DATE)
-  declare lastScanned?: Date;
+  declare lastScanned?: Date | null;
 
   @AllowNull(false)
   @Default(0)
@@ -60,10 +60,10 @@ export class NotificationQueue extends Model<
   declare attemptCount: CreationOptional<number>;
 
   @Column(DataType.DATE)
-  declare reTryAfter?: Date;
+  declare reTryAfter?: Date | null;
 
   @Column(DataType.JSON)
-  declare failureMessage?: any;
+  declare failureMessage?: any | null;
 
   @AllowNull(false)
   @Default('System')
@@ -76,7 +76,7 @@ export class NotificationQueue extends Model<
   declare updatedBy: CreationOptional<string>;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @CreatedAt
   @AllowNull(false)

@@ -42,10 +42,10 @@ export class MonitoringType extends Model<
   declare createdAt: Date;
 
   @Column(DataType.DATE)
-  declare updatedAt?: Date;
+  declare updatedAt?: Date | null;
 
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: Date | null;
 
   @AllowNull(false)
   @Default({ firstName: null, lastName: 'System', email: 'NA' })
@@ -53,10 +53,10 @@ export class MonitoringType extends Model<
   declare createdBy: any;
 
   @Column(DataType.JSON)
-  declare updatedBy?: any;
+  declare updatedBy?: any | null;
 
   @Column(DataType.JSON)
-  declare deletedBy?: any;
+  declare deletedBy?: any | null;
 
   // Associations
   @BelongsToMany(() => AsrDomain, () => AsrMonitoringTypeToDomainsRelation)

@@ -58,11 +58,11 @@ export class AsrProduct extends Model<
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare updatedBy?: string;
+  declare updatedBy?: string | null;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare deletedBy?: string;
+  declare deletedBy?: string | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -72,11 +72,11 @@ export class AsrProduct extends Model<
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt?: Date;
+  declare updatedAt?: Date | null;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => User, 'createdBy')

@@ -35,35 +35,35 @@ export class MonitoringNotification extends Model<
   declare id: CreationOptional<string>;
 
   @Column(DataType.STRING)
-  declare monitoring_type?: string;
+  declare monitoring_type?: string | null;
 
   @Column(DataType.UUID)
-  declare monitoring_id?: string;
+  declare monitoring_id?: string | null;
 
   @ForeignKey(() => Application)
   @Column(DataType.UUID)
-  declare application_id?: string;
+  declare application_id?: string | null;
 
   @Column(DataType.STRING)
-  declare file_name?: string;
+  declare file_name?: string | null;
 
   @Column(DataType.STRING)
-  declare notification_reason?: string;
+  declare notification_reason?: string | null;
 
   @Column(DataType.STRING)
-  declare notification_channel?: string;
+  declare notification_channel?: string | null;
 
   @Column(DataType.STRING)
-  declare status?: string;
+  declare status?: string | null;
 
   @Column(DataType.DATE)
-  declare responded_on?: Date;
+  declare responded_on?: Date | null;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @Column(DataType.TEXT)
-  declare comment?: string;
+  declare comment?: string | null;
 
   @CreatedAt
   @Column(DataType.DATE)
@@ -75,7 +75,7 @@ export class MonitoringNotification extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Application, 'application_id')

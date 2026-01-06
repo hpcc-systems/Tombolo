@@ -44,37 +44,37 @@ export class WorkUnitException extends Model<
   declare sequenceNo: CreationOptional<number>;
 
   @Column(DataType.STRING(20))
-  declare severity?: string;
+  declare severity?: string | null;
 
   @Column(DataType.STRING(40))
-  declare source?: string;
+  declare source?: string | null;
 
   @Column(DataType.INTEGER)
-  declare code?: number;
+  declare code?: number | null;
 
   @Column(DataType.STRING(200))
-  declare message?: string;
+  declare message?: string | null;
 
   @Column(DataType.INTEGER)
-  declare column?: number;
+  declare column?: number | null;
 
   @Column(DataType.INTEGER)
-  declare lineNo?: number;
+  declare lineNo?: number | null;
 
   @Column(DataType.STRING(210))
-  declare fileName?: string;
+  declare fileName?: string | null;
 
   @Column(DataType.INTEGER)
-  declare activity?: number;
+  declare activity?: number | null;
 
   @Column(DataType.STRING(210))
-  declare scope?: string;
+  declare scope?: string | null;
 
   @Column(DataType.INTEGER)
-  declare priority?: number;
+  declare priority?: number | null;
 
   @Column(DataType.FLOAT)
-  declare cost?: number;
+  declare cost?: number | null;
 
   @CreatedAt
   @AllowNull(false)
@@ -83,7 +83,7 @@ export class WorkUnitException extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
   @BelongsTo(() => Cluster)

@@ -31,23 +31,23 @@ export class OrbitBuildData extends Model<
   declare BuildInstanceIdKey: number;
 
   @Column(DataType.BIGINT)
-  declare BuildTemplateIdKey?: number;
+  declare BuildTemplateIdKey?: number | null;
 
   @AllowNull(false)
   @Column(DataType.STRING)
   declare Name: string;
 
   @Column(DataType.STRING)
-  declare HpccWorkUnit?: string;
+  declare HpccWorkUnit?: string | null;
 
   @Column(DataType.DATE)
-  declare DateUpdated?: Date;
+  declare DateUpdated?: Date | null;
 
   @Column(DataType.STRING)
-  declare Status_Code?: string;
+  declare Status_Code?: string | null;
 
   @Column(DataType.STRING)
-  declare Version?: string;
+  declare Version?: string | null;
 
   @AllowNull(false)
   @Default(DataType.NOW)
@@ -60,22 +60,22 @@ export class OrbitBuildData extends Model<
   declare stable: CreationOptional<boolean>;
 
   @Column(DataType.DATE)
-  declare stable_at?: Date;
+  declare stable_at?: Date | null;
 
   @Column(DataType.DATE)
-  declare last_analyzed_at?: Date;
+  declare last_analyzed_at?: Date | null;
 
   @Column(DataType.UUID)
-  declare monitoring_id?: string;
+  declare monitoring_id?: string | null;
 
   @Column(DataType.JSON)
-  declare notification_state?: any;
+  declare notification_state?: any | null;
 
   @Column(DataType.JSON)
-  declare status_history?: any;
+  declare status_history?: any | null;
 
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: any | null;
 
   @AllowNull(false)
   @Default(false)
@@ -92,5 +92,5 @@ export class OrbitBuildData extends Model<
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: CreationOptional<Date>;
+  declare deletedAt?: CreationOptional<Date> | null;
 }
