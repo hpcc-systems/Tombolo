@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { Cluster } from './Cluster.js';
 
 @Table({
@@ -45,7 +50,10 @@ import { Cluster } from './Cluster.js';
     },
   ],
 })
-export class WorkUnit extends Model {
+export class WorkUnit extends Model<
+  InferAttributes<WorkUnit>,
+  InferCreationAttributes<WorkUnit>
+> {
   @PrimaryKey
   @Column(DataType.STRING(30))
   declare wuId: string;
@@ -126,21 +134,21 @@ export class WorkUnit extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare clusterDeleted: boolean;
+  declare clusterDeleted: CreationOptional<boolean>;
 
   @CreatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Cluster)

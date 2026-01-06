@@ -8,22 +8,34 @@ import {
   AllowNull,
   Unique,
   HasMany,
-  HasOne,
   DeletedAt,
   CreatedAt,
   UpdatedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
+import { UserRole } from './UserRole.js';
+import { UserApplication } from './UserApplication.js';
+import { RefreshToken } from './RefreshToken.js';
+import { Application } from './Application.js';
+import { Cluster } from './Cluster.js';
 
 @Table({
   tableName: 'users',
   paranoid: true,
   timestamps: true,
 })
-export class User extends Model {
+export class User extends Model<
+  InferAttributes<User>,
+  InferCreationAttributes<User>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -58,7 +70,7 @@ export class User extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare emailVerified: boolean;
+  declare emailVerified: CreationOptional<boolean>;
 
   @AllowNull(true)
   @Column(DataType.DATE)
@@ -70,29 +82,29 @@ export class User extends Model {
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
-  // Associations will be added as we convert more models
-  // @HasMany(() => UserRole)
-  // roles?: UserRole[];
+  // Associations
+  @HasMany(() => UserRole)
+  declare roles?: UserRole[];
 
-  // @HasMany(() => UserApplication)
-  // applications?: UserApplication[];
+  @HasMany(() => UserApplication)
+  declare applications?: UserApplication[];
 
-  // @HasMany(() => RefreshToken)
-  // refreshTokens?: RefreshToken[];
+  @HasMany(() => RefreshToken)
+  declare refreshTokens?: RefreshToken[];
 
-  // @HasMany(() => Application)
-  // apps?: Application[];
+  @HasMany(() => Application, 'creator')
+  declare createdApplications?: Application[];
 
-  // @HasMany(() => Cluster)
-  // createdClusters?: Cluster[];
+  @HasMany(() => Cluster, 'createdBy')
+  declare createdClusters?: Cluster[];
 }

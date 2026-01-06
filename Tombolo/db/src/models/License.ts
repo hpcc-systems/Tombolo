@@ -5,21 +5,28 @@ import {
   DataType,
   PrimaryKey,
   Default,
-  AllowNull,
   CreatedAt,
   UpdatedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 
 @Table({
   tableName: 'licenses',
   freezeTableName: true,
   timestamps: true,
 })
-export class License extends Model {
+export class License extends Model<
+  InferAttributes<License>,
+  InferCreationAttributes<License>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @Column(DataType.STRING)
   declare name?: string;
@@ -32,9 +39,9 @@ export class License extends Model {
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 }

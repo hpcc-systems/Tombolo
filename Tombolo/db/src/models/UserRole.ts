@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
 import { RoleType } from './RoleType.js';
 
@@ -21,11 +26,14 @@ import { RoleType } from './RoleType.js';
   paranoid: true,
   timestamps: true,
 })
-export class UserRole extends Model {
+export class UserRole extends Model<
+  InferAttributes<UserRole>,
+  InferCreationAttributes<UserRole>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => User)
@@ -43,15 +51,15 @@ export class UserRole extends Model {
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => User, 'userId')

@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { Application } from './Application.js';
 import { Integration } from './Integration.js';
 
@@ -20,11 +25,14 @@ import { Integration } from './Integration.js';
   paranoid: true,
   timestamps: true,
 })
-export class IntegrationMapping extends Model {
+export class IntegrationMapping extends Model<
+  InferAttributes<IntegrationMapping>,
+  InferCreationAttributes<IntegrationMapping>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @ForeignKey(() => Integration)
   @Column(DataType.UUID)
@@ -41,17 +49,17 @@ export class IntegrationMapping extends Model {
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Integration, 'integration_id')

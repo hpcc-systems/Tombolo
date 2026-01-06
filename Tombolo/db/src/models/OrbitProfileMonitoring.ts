@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
 import { Application } from './Application.js';
 
@@ -26,11 +31,14 @@ import { Application } from './Application.js';
     },
   ],
 })
-export class OrbitProfileMonitoring extends Model {
+export class OrbitProfileMonitoring extends Model<
+  InferAttributes<OrbitProfileMonitoring>,
+  InferCreationAttributes<OrbitProfileMonitoring>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => Application)
@@ -48,7 +56,7 @@ export class OrbitProfileMonitoring extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare isActive: boolean;
+  declare isActive: CreationOptional<boolean>;
 
   @AllowNull(false)
   @Default('pending')
@@ -90,17 +98,17 @@ export class OrbitProfileMonitoring extends Model {
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Application)

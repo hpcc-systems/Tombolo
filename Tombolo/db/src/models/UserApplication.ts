@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
 import { Application } from './Application.js';
 
@@ -20,11 +25,14 @@ import { Application } from './Application.js';
   timestamps: true,
   paranoid: true,
 })
-export class UserApplication extends Model {
+export class UserApplication extends Model<
+  InferAttributes<UserApplication>,
+  InferCreationAttributes<UserApplication>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => User)

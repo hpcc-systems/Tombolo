@@ -9,16 +9,24 @@ import {
   CreatedAt,
   UpdatedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 
 @Table({
   tableName: 'user_archives',
   timestamps: true,
 })
-export class UserArchive extends Model {
+export class UserArchive extends Model<
+  InferAttributes<UserArchive>,
+  InferCreationAttributes<UserArchive>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -47,7 +55,7 @@ export class UserArchive extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare verifiedUser: boolean;
+  declare verifiedUser: CreationOptional<boolean>;
 
   @Column(DataType.DATE)
   declare verifiedAt?: Date;
@@ -55,12 +63,12 @@ export class UserArchive extends Model {
   @AllowNull(false)
   @Default('pending')
   @Column(DataType.STRING)
-  declare registrationStatus: string;
+  declare registrationStatus: CreationOptional<string>;
 
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare forcePasswordReset: boolean;
+  declare forcePasswordReset: CreationOptional<boolean>;
 
   @Column(DataType.DATE)
   declare passwordExpiresAt?: Date;
@@ -73,13 +81,13 @@ export class UserArchive extends Model {
 
   @Default({})
   @Column(DataType.JSON)
-  declare metaData?: any;
+  declare metaData?: CreationOptional<any>;
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 }

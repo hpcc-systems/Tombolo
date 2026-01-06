@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { Application } from './Application.js';
 
 @Table({
@@ -25,11 +30,14 @@ import { Application } from './Application.js';
     },
   ],
 })
-export class SentNotification extends Model {
+export class SentNotification extends Model<
+  InferAttributes<SentNotification>,
+  InferCreationAttributes<SentNotification>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -88,17 +96,17 @@ export class SentNotification extends Model {
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Application)

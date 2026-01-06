@@ -13,17 +13,27 @@ import {
   CreatedAt,
   UpdatedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
+import { User } from './User.js';
+import { FileMonitoring } from './FileMonitoring.js';
 
 @Table({
   tableName: 'clusters',
   paranoid: true,
   timestamps: true,
 })
-export class Cluster extends Model {
+export class Cluster extends Model<
+  InferAttributes<Cluster>,
+  InferCreationAttributes<Cluster>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -64,21 +74,21 @@ export class Cluster extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare allowSelfSigned: boolean;
+  declare allowSelfSigned: CreationOptional<boolean>;
 
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare containerized: boolean;
+  declare containerized: CreationOptional<boolean>;
 
   @AllowNull(false)
   @Default('USD')
   @Column(DataType.STRING(10))
-  declare currencyCode: string;
+  declare currencyCode: CreationOptional<string>;
 
   @Default({})
   @Column(DataType.JSON)
-  declare accountMetaData?: Record<string, any>;
+  declare accountMetaData?: CreationOptional<Record<string, any>>;
 
   @AllowNull(true)
   @Column(DataType.JSON)
@@ -87,17 +97,17 @@ export class Cluster extends Model {
   @AllowNull(true)
   @Default({})
   @Column(DataType.JSON)
-  declare reachabilityInfo?: Record<string, any>;
+  declare reachabilityInfo?: CreationOptional<Record<string, any>>;
 
   @AllowNull(true)
   @Default({})
   @Column(DataType.JSON)
-  declare storageUsageHistory?: Record<string, any>;
+  declare storageUsageHistory?: CreationOptional<Record<string, any>>;
 
   @AllowNull(true)
   @Default({})
   @Column(DataType.JSON)
-  declare metaData?: Record<string, any>;
+  declare metaData?: CreationOptional<Record<string, any>>;
 
   @AllowNull(false)
   @ForeignKey(() => User)
@@ -116,29 +126,26 @@ export class Cluster extends Model {
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
-  // @HasMany(() => FileMonitoring)
-  // fileMonitorings?: FileMonitoring[];
+  @HasMany(() => FileMonitoring)
+  declare fileMonitorings?: FileMonitoring[];
 
-  // @BelongsTo(() => User, 'createdBy')
-  // creator?: User;
+  @BelongsTo(() => User, 'createdBy')
+  declare creator?: User;
 
-  // @BelongsTo(() => User, 'updatedBy')
-  // updater?: User;
+  @BelongsTo(() => User, 'updatedBy')
+  declare updater?: User;
 
-  // @BelongsTo(() => User, 'deletedBy')
-  // deleter?: User;
+  @BelongsTo(() => User, 'deletedBy')
+  declare deleter?: User;
 }
-
-// Need to import User - will be uncommented once User model is in place
-import { User } from './User.js';

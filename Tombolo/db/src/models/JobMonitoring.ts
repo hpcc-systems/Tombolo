@@ -13,11 +13,16 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
 import { Application } from './Application.js';
 import { Cluster } from './Cluster.js';
-// import { JobMonitoringData } from './JobMonitoringData.js';
-// import { JobMonitoringDataArchive } from './JobMonitoringDataArchive.js';
+import { JobMonitoringData } from './JobMonitoringData.js';
+import { JobMonitoringDataArchive } from './JobMonitoringDataArchive.js';
 
 @Table({
   tableName: 'job_monitorings',
@@ -30,11 +35,14 @@ import { Cluster } from './Cluster.js';
     },
   ],
 })
-export class JobMonitoring extends Model {
+export class JobMonitoring extends Model<
+  InferAttributes<JobMonitoring>,
+  InferCreationAttributes<JobMonitoring>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => Application)
@@ -48,7 +56,7 @@ export class JobMonitoring extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare isActive: boolean;
+  declare isActive: CreationOptional<boolean>;
 
   @AllowNull(false)
   @Column(DataType.ENUM('approved', 'rejected', 'pending'))
@@ -104,16 +112,16 @@ export class JobMonitoring extends Model {
   @CreatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Application)
@@ -134,9 +142,9 @@ export class JobMonitoring extends Model {
   @BelongsTo(() => User, 'deletedBy')
   declare deleter?: User;
 
-  // @HasMany(() => JobMonitoringData)
-  // declare jobMonitoringData?: JobMonitoringData[];
+  @HasMany(() => JobMonitoringData)
+  declare jobMonitoringData?: JobMonitoringData[];
 
-  // @HasMany(() => JobMonitoringDataArchive)
-  // declare jobMonitoringDataArchive?: JobMonitoringDataArchive[];
+  @HasMany(() => JobMonitoringDataArchive)
+  declare jobMonitoringDataArchive?: JobMonitoringDataArchive[];
 }

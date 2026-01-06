@@ -9,17 +9,25 @@ import {
   CreatedAt,
   UpdatedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 
 @Table({
   tableName: 'notification_queue',
   freezeTableName: true,
   timestamps: true,
 })
-export class NotificationQueue extends Model {
+export class NotificationQueue extends Model<
+  InferAttributes<NotificationQueue>,
+  InferCreationAttributes<NotificationQueue>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Column(DataType.ENUM('msTeams', 'email'))
@@ -49,7 +57,7 @@ export class NotificationQueue extends Model {
   @AllowNull(false)
   @Default(0)
   @Column(DataType.INTEGER)
-  declare attemptCount: number;
+  declare attemptCount: CreationOptional<number>;
 
   @Column(DataType.DATE)
   declare reTryAfter?: Date;
@@ -60,12 +68,12 @@ export class NotificationQueue extends Model {
   @AllowNull(false)
   @Default('System')
   @Column(DataType.STRING)
-  declare createdBy: string;
+  declare createdBy: CreationOptional<string>;
 
   @AllowNull(false)
   @Default('System')
   @Column(DataType.STRING)
-  declare updatedBy: string;
+  declare updatedBy: CreationOptional<string>;
 
   @Column(DataType.JSON)
   declare metaData?: any;
@@ -74,11 +82,11 @@ export class NotificationQueue extends Model {
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 }

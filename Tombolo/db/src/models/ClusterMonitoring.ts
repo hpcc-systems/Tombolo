@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
 import { Cluster } from './Cluster.js';
 
@@ -26,11 +31,14 @@ import { Cluster } from './Cluster.js';
     },
   ],
 })
-export class ClusterMonitoring extends Model {
+export class ClusterMonitoring extends Model<
+  InferAttributes<ClusterMonitoring>,
+  InferCreationAttributes<ClusterMonitoring>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -44,7 +52,7 @@ export class ClusterMonitoring extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare isActive: boolean;
+  declare isActive: CreationOptional<boolean>;
 
   @AllowNull(false)
   @Default('pending')
@@ -103,16 +111,16 @@ export class ClusterMonitoring extends Model {
   @CreatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Cluster)

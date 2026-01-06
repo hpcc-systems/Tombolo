@@ -12,20 +12,28 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
-// import { AsrDomain } from './AsrDomain.js';
-// import { AsrProduct } from './AsrProduct.js';
+import { AsrDomain } from './AsrDomain.js';
+import { AsrProduct } from './AsrProduct.js';
 
 @Table({
   tableName: 'asr_domain_to_products_relations',
   paranoid: true,
   timestamps: true,
 })
-export class AsrDomainToProductsRelation extends Model {
+export class AsrDomainToProductsRelation extends Model<
+  InferAttributes<AsrDomainToProductsRelation>,
+  InferCreationAttributes<AsrDomainToProductsRelation>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @Column(DataType.UUID)
   declare domain_id?: string;
@@ -50,7 +58,7 @@ export class AsrDomainToProductsRelation extends Model {
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
@@ -58,7 +66,7 @@ export class AsrDomainToProductsRelation extends Model {
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => User, 'createdBy')
@@ -70,9 +78,9 @@ export class AsrDomainToProductsRelation extends Model {
   @BelongsTo(() => User, 'deletedBy')
   declare deleter?: User;
 
-  // @BelongsTo(() => AsrDomain, 'domain_id')
-  // declare domain?: AsrDomain;
+  @BelongsTo(() => AsrDomain, 'domain_id')
+  declare domain?: AsrDomain;
 
-  // @BelongsTo(() => AsrProduct, 'product_id')
-  // declare product?: AsrProduct;
+  @BelongsTo(() => AsrProduct, 'product_id')
+  declare product?: AsrProduct;
 }

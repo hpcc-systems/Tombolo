@@ -12,8 +12,13 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { Cluster } from './Cluster.js';
-// import { MonitoringType } from './MonitoringType.js';
+import { MonitoringType } from './MonitoringType.js';
 
 @Table({
   tableName: 'monitoring_logs',
@@ -26,11 +31,14 @@ import { Cluster } from './Cluster.js';
     },
   ],
 })
-export class MonitoringLog extends Model {
+export class MonitoringLog extends Model<
+  InferAttributes<MonitoringLog>,
+  InferCreationAttributes<MonitoringLog>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => Cluster)
@@ -53,7 +61,7 @@ export class MonitoringLog extends Model {
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
@@ -61,12 +69,12 @@ export class MonitoringLog extends Model {
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Cluster, 'cluster_id')
   declare cluster?: Cluster;
 
-  // @BelongsTo(() => MonitoringType, 'monitoring_type_id')
-  // declare monitoring_types?: MonitoringType;
+  @BelongsTo(() => MonitoringType, 'monitoring_type_id')
+  declare monitoring_types?: MonitoringType;
 }

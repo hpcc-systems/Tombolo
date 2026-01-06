@@ -13,8 +13,13 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { Application } from './Application.js';
-// import { MonitoringNotification } from './MonitoringNotification.js';
+import { MonitoringNotification } from './MonitoringNotification.js';
 
 @Table({
   tableName: 'orbit_monitorings',
@@ -27,11 +32,14 @@ import { Application } from './Application.js';
     },
   ],
 })
-export class OrbitMonitoring extends Model {
+export class OrbitMonitoring extends Model<
+  InferAttributes<OrbitMonitoring>,
+  InferCreationAttributes<OrbitMonitoring>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => Application)
@@ -79,20 +87,20 @@ export class OrbitMonitoring extends Model {
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Application, 'application_id')
   declare application?: Application;
 
-  // @HasMany(() => MonitoringNotification, 'application_id')
-  // declare monitoringNotifications?: MonitoringNotification[];
+  @HasMany(() => MonitoringNotification, 'application_id')
+  declare monitoringNotifications?: MonitoringNotification[];
 }

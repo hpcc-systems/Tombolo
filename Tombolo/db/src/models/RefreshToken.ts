@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
 
 @Table({
@@ -19,7 +24,10 @@ import { User } from './User.js';
   paranoid: true,
   timestamps: true,
 })
-export class RefreshToken extends Model {
+export class RefreshToken extends Model<
+  InferAttributes<RefreshToken>,
+  InferCreationAttributes<RefreshToken>
+> {
   @PrimaryKey
   @AllowNull(false)
   @Column(DataType.UUID)
@@ -49,7 +57,7 @@ export class RefreshToken extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare revoked: boolean;
+  declare revoked: CreationOptional<boolean>;
 
   @Column(DataType.DATE)
   declare revokedAt?: Date;
@@ -59,15 +67,15 @@ export class RefreshToken extends Model {
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => User)

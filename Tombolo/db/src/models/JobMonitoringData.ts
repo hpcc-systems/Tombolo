@@ -12,7 +12,13 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { Application } from './Application.js';
+import { JobMonitoring } from './JobMonitoring.js';
 // import { JobMonitoring } from './JobMonitoring.js';
 
 @Table({
@@ -27,11 +33,14 @@ import { Application } from './Application.js';
     },
   ],
 })
-export class JobMonitoringData extends Model {
+export class JobMonitoringData extends Model<
+  InferAttributes<JobMonitoringData>,
+  InferCreationAttributes<JobMonitoringData>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => Application)
@@ -65,7 +74,7 @@ export class JobMonitoringData extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare analyzed: boolean;
+  declare analyzed: CreationOptional<boolean>;
 
   @Column(DataType.JSONB)
   declare metaData?: any;
@@ -73,21 +82,21 @@ export class JobMonitoringData extends Model {
   @CreatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Application)
   declare application?: Application;
 
-  // @BelongsTo(() => JobMonitoring, 'monitoringId')
-  // declare jobMonitoring?: JobMonitoring;
+  @BelongsTo(() => JobMonitoring, 'monitoringId')
+  declare jobMonitoring?: JobMonitoring;
 }

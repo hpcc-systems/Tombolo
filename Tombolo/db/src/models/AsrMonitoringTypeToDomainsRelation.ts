@@ -12,9 +12,14 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
-// import { MonitoringType } from './MonitoringType.js';
-// import { AsrDomain } from './AsrDomain.js';
+import { MonitoringType } from './MonitoringType.js';
+import { AsrDomain } from './AsrDomain.js';
 
 @Table({
   tableName: 'asr_monitoring_type_to_domains_relations',
@@ -27,11 +32,14 @@ import { User } from './User.js';
     },
   ],
 })
-export class AsrMonitoringTypeToDomainsRelation extends Model {
+export class AsrMonitoringTypeToDomainsRelation extends Model<
+  InferAttributes<AsrMonitoringTypeToDomainsRelation>,
+  InferCreationAttributes<AsrMonitoringTypeToDomainsRelation>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @Column(DataType.UUID)
   declare monitoring_type_id?: string;
@@ -56,7 +64,7 @@ export class AsrMonitoringTypeToDomainsRelation extends Model {
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
@@ -64,7 +72,7 @@ export class AsrMonitoringTypeToDomainsRelation extends Model {
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => User, 'createdBy')
@@ -76,9 +84,9 @@ export class AsrMonitoringTypeToDomainsRelation extends Model {
   @BelongsTo(() => User, 'deletedBy')
   declare deleter?: User;
 
-  // @BelongsTo(() => MonitoringType, 'monitoring_type_id')
-  // declare monitoringType?: MonitoringType;
+  @BelongsTo(() => MonitoringType, 'monitoring_type_id')
+  declare monitoringType?: MonitoringType;
 
-  // @BelongsTo(() => AsrDomain, 'domain_id')
-  // declare domain?: AsrDomain;
+  @BelongsTo(() => AsrDomain, 'domain_id')
+  declare domain?: AsrDomain;
 }

@@ -7,13 +7,14 @@ import {
   Default,
   AllowNull,
   Unique,
-  ForeignKey,
-  BelongsTo,
   HasMany,
-  CreatedAt,
-  UpdatedAt,
-  DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
+import { IntegrationMapping } from './IntegrationMapping.js';
 import { Application } from './Application.js';
 // import { IntegrationMapping } from './IntegrationMapping.js';
 
@@ -22,11 +23,14 @@ import { Application } from './Application.js';
   freezeTableName: true,
   timestamps: false,
 })
-export class Integration extends Model {
+export class Integration extends Model<
+  InferAttributes<Integration>,
+  InferCreationAttributes<Integration>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Unique
@@ -41,6 +45,6 @@ export class Integration extends Model {
   declare metaData?: any;
 
   // Associations
-  // @HasMany(() => IntegrationMapping)
-  // declare integrationMappings?: IntegrationMapping[];
+  @HasMany(() => IntegrationMapping)
+  declare integrationMappings?: IntegrationMapping[];
 }

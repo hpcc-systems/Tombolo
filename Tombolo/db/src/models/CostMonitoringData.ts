@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { Cluster } from './Cluster.js';
 
 @Table({
@@ -25,11 +30,14 @@ import { Cluster } from './Cluster.js';
     },
   ],
 })
-export class CostMonitoringData extends Model {
+export class CostMonitoringData extends Model<
+  InferAttributes<CostMonitoringData>,
+  InferCreationAttributes<CostMonitoringData>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => Cluster)
@@ -53,7 +61,7 @@ export class CostMonitoringData extends Model {
   @CreatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
@@ -61,7 +69,7 @@ export class CostMonitoringData extends Model {
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Cluster)

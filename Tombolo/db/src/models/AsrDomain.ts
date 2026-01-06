@@ -14,22 +14,30 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
-// import { MonitoringType } from './MonitoringType.js';
-// import { AsrProduct } from './AsrProduct.js';
-// import { AsrMonitoringTypeToDomainsRelation } from './AsrMonitoringTypeToDomainsRelation.js';
-// import { AsrDomainToProductsRelation } from './AsrDomainToProductsRelation.js';
+import { MonitoringType } from './MonitoringType.js';
+import { AsrMonitoringTypeToDomainsRelation } from './AsrMonitoringTypeToDomainsRelation.js';
+import { AsrProduct } from './AsrProduct.js';
+import { AsrDomainToProductsRelation } from './AsrDomainToProductsRelation.js';
 
 @Table({
   tableName: 'asr_domains',
   paranoid: true,
   timestamps: true,
 })
-export class AsrDomain extends Model {
+export class AsrDomain extends Model<
+  InferAttributes<AsrDomain>,
+  InferCreationAttributes<AsrDomain>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Unique
@@ -68,7 +76,7 @@ export class AsrDomain extends Model {
   @AllowNull(false)
   @Default(DataType.NOW)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
@@ -76,7 +84,7 @@ export class AsrDomain extends Model {
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => User, 'createdBy')
@@ -88,9 +96,9 @@ export class AsrDomain extends Model {
   @BelongsTo(() => User, 'deletedBy')
   declare deleter?: User;
 
-  // @BelongsToMany(() => MonitoringType, () => AsrMonitoringTypeToDomainsRelation)
-  // declare monitoringTypes?: MonitoringType[];
+  @BelongsToMany(() => MonitoringType, () => AsrMonitoringTypeToDomainsRelation)
+  declare monitoringTypes?: MonitoringType[];
 
-  // @BelongsToMany(() => AsrProduct, () => AsrDomainToProductsRelation)
-  // declare associatedProducts?: AsrProduct[];
+  @BelongsToMany(() => AsrProduct, () => AsrDomainToProductsRelation)
+  declare products?: AsrProduct[];
 }

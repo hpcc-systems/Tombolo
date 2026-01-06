@@ -8,6 +8,11 @@ import {
   ForeignKey,
   BelongsTo,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { Cluster } from './Cluster.js';
 import { WorkUnit } from './WorkUnit.js';
 
@@ -22,12 +27,16 @@ import { WorkUnit } from './WorkUnit.js';
     },
   ],
 })
-export class WorkUnitDetails extends Model {
+export class WorkUnitDetails extends Model<
+  InferAttributes<WorkUnitDetails>,
+  InferCreationAttributes<WorkUnitDetails>
+> {
   @PrimaryKey
   @Column({ type: DataType.BIGINT.UNSIGNED, autoIncrement: true })
   declare id: number;
 
   @ForeignKey(() => Cluster)
+  @ForeignKey(() => WorkUnit)
   @Column(DataType.UUID)
   declare clusterId?: string;
 
@@ -479,9 +488,20 @@ export class WorkUnitDetails extends Model {
   declare NodeMaxFirstRow?: number;
 
   // Associations
-  @BelongsTo(() => Cluster)
+  @BelongsTo(() => Cluster, 'clusterId')
   declare cluster?: Cluster;
 
-  @BelongsTo(() => WorkUnit)
+  // Constraints must be false to tell sequelize to rely on the database level composite key
+  // Sequelize doesn't support composite foreign keys on the model level
+  @BelongsTo(() => WorkUnit, {
+    foreignKey: 'clusterId',
+    targetKey: 'clusterId',
+    constraints: false,
+  })
+  @BelongsTo(() => WorkUnit, {
+    foreignKey: 'wuId',
+    targetKey: 'wuId',
+    constraints: false,
+  })
   declare workUnit?: WorkUnit;
 }

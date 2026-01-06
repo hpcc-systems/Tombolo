@@ -10,13 +10,21 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 
 @Table({
   tableName: 'orbit_build_data',
   paranoid: true,
   timestamps: true,
 })
-export class OrbitBuildData extends Model {
+export class OrbitBuildData extends Model<
+  InferAttributes<OrbitBuildData>,
+  InferCreationAttributes<OrbitBuildData>
+> {
   @PrimaryKey
   @AllowNull(false)
   @Column(DataType.BIGINT)
@@ -49,7 +57,7 @@ export class OrbitBuildData extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare stable: boolean;
+  declare stable: CreationOptional<boolean>;
 
   @Column(DataType.DATE)
   declare stable_at?: Date;
@@ -72,17 +80,17 @@ export class OrbitBuildData extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare processed: boolean;
+  declare processed: CreationOptional<boolean>;
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 }

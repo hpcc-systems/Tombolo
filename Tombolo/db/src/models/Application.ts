@@ -14,17 +14,28 @@ import {
   CreatedAt,
   UpdatedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
+import { User } from './User.js';
+import { UserApplication } from './UserApplication.js';
+import { FileMonitoring } from './FileMonitoring.js';
 
 @Table({
   tableName: 'applications',
   paranoid: true,
   timestamps: true,
 })
-export class Application extends Model {
+export class Application extends Model<
+  InferAttributes<Application>,
+  InferCreationAttributes<Application>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Unique
@@ -42,27 +53,27 @@ export class Application extends Model {
   @AllowNull(false)
   @Default('Private')
   @Column(DataType.ENUM('Public', 'Private'))
-  declare visibility: 'Public' | 'Private';
+  declare visibility: CreationOptional<'Public' | 'Private'>;
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
-  // Associations will be added here as we convert more models
-  // @HasMany(() => UserApplication)
-  // userApplications?: UserApplication[];
+  // Associations
+  @HasMany(() => UserApplication)
+  declare userApplications?: UserApplication[];
 
-  // @HasMany(() => FileMonitoring)
-  // fileMonitorings?: FileMonitoring[];
+  @HasMany(() => FileMonitoring)
+  declare fileMonitorings?: FileMonitoring[];
 
-  // @BelongsTo(() => User, 'creator')
-  // application_creator?: User;
+  @BelongsTo(() => User, 'creator')
+  declare application_creator?: User;
 }

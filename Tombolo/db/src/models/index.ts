@@ -1,8 +1,10 @@
 import 'reflect-metadata';
 import { Sequelize } from 'sequelize-typescript';
+import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 // Import all models
 import { AccountVerificationCode } from './AccountVerificationCode.js';
@@ -44,7 +46,9 @@ import { UserRole } from './UserRole.js';
 import { WorkUnit } from './WorkUnit.js';
 import { WorkUnitDetails } from './WorkUnitDetails.js';
 import { WorkUnitException } from './WorkUnitException.js';
+import type { WorkUnitExceptionCreationAttributes } from './WorkUnitException.js';
 
+// tsup with shims=true will handle __dirname and import.meta.url correctly
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -53,16 +57,58 @@ const tomboloRootENV = path.join(__dirname, '../../..', '.env');
 const serverENV = path.join(__dirname, '../../..', 'server', '.env');
 const ENVPath = fs.existsSync(tomboloRootENV) ? tomboloRootENV : serverENV;
 
-// Load environment variables
-await import('dotenv').then(dotenv => {
-  dotenv.config({ path: ENVPath });
-});
+// Load environment variables synchronously
+dotenv.config({ path: ENVPath });
 
 const env = process.env.NODE_ENV || 'development';
 
-// Dynamically import config (it's still CommonJS)
-const configModule = await import('../../config/config.cjs');
-const config = configModule.default?.[env] || configModule[env];
+// Load config synchronously using dynamic require
+// The config file is external to the bundle
+const loadConfig = () => {
+  const require = createRequire(import.meta.url);
+
+  // Try multiple possible paths for the config file
+  // __dirname is the dist folder, which could be in the package or in node_modules
+  const paths = [
+    path.join(__dirname, '..', 'config', 'config.cjs'), // From dist/ to package root (normal case)
+    path.join(__dirname, '../..', 'db', 'config', 'config.cjs'), // From node_modules/@tombolo/db/dist
+    path.join(__dirname, '../../..', 'Tombolo', 'db', 'config', 'config.cjs'), // From monorepo node_modules
+  ];
+
+  let lastError: Error | undefined;
+
+  for (const configPath of paths) {
+    try {
+      if (fs.existsSync(configPath)) {
+        const configModule = require(configPath);
+        const config = configModule[env];
+        if (config) {
+          return config;
+        }
+      }
+    } catch (err) {
+      lastError = err as Error;
+      // Continue trying other paths
+    }
+  }
+
+  // If we get here, none of the paths worked
+  const errorDetails = [
+    `Config file not found or failed to load.`,
+    `Environment: ${env}`,
+    `__dirname: ${__dirname}`,
+    `Tried paths:`,
+    ...paths.map((p, i) => `  ${i + 1}. ${p} (exists: ${fs.existsSync(p)})`),
+  ];
+
+  if (lastError) {
+    errorDetails.push(`Last error: ${lastError.message}`);
+  }
+
+  throw new Error(errorDetails.join('\n'));
+};
+
+const config = loadConfig();
 
 // Initialize Sequelize with TypeScript support
 export const sequelize = new Sequelize({
@@ -119,6 +165,12 @@ export const sequelize = new Sequelize({
 
 // Export Sequelize for compatibility
 export { Sequelize };
+
+// Export types
+export { WorkUnitExceptionCreationAttributes };
+
+// Export Sequelize types for external use
+export type { Transaction, Op } from 'sequelize';
 
 // Export all models
 export {

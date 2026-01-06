@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { Application } from './Application.js';
 import { Cluster } from './Cluster.js';
 
@@ -26,11 +31,14 @@ import { Cluster } from './Cluster.js';
     },
   ],
 })
-export class LandingZoneMonitoring extends Model {
+export class LandingZoneMonitoring extends Model<
+  InferAttributes<LandingZoneMonitoring>,
+  InferCreationAttributes<LandingZoneMonitoring>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => Application)
@@ -103,16 +111,16 @@ export class LandingZoneMonitoring extends Model {
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Application, 'application_id')

@@ -11,17 +11,25 @@ import {
   CreatedAt,
   UpdatedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
 
 @Table({
   tableName: 'account_verification_codes',
   timestamps: true,
 })
-export class AccountVerificationCode extends Model {
+export class AccountVerificationCode extends Model<
+  InferAttributes<AccountVerificationCode>,
+  InferCreationAttributes<AccountVerificationCode>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Column(DataType.UUID)
@@ -38,11 +46,11 @@ export class AccountVerificationCode extends Model {
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => User)

@@ -12,6 +12,11 @@ import {
   UpdatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
 import { Application } from './Application.js';
 
@@ -26,11 +31,14 @@ import { Application } from './Application.js';
     },
   ],
 })
-export class CostMonitoring extends Model {
+export class CostMonitoring extends Model<
+  InferAttributes<CostMonitoring>,
+  InferCreationAttributes<CostMonitoring>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @ForeignKey(() => Application)
@@ -40,7 +48,7 @@ export class CostMonitoring extends Model {
   @AllowNull(false)
   @Default('clusters')
   @Column(DataType.STRING)
-  declare monitoringScope: string;
+  declare monitoringScope: CreationOptional<string>;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -49,12 +57,12 @@ export class CostMonitoring extends Model {
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare isSummed: boolean;
+  declare isSummed: CreationOptional<boolean>;
 
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  declare isActive: boolean;
+  declare isActive: CreationOptional<boolean>;
 
   @AllowNull(false)
   @Column(DataType.ENUM('approved', 'rejected', 'pending'))
@@ -100,16 +108,16 @@ export class CostMonitoring extends Model {
   @CreatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @AllowNull(false)
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
   @Column(DataType.DATE)
-  declare deletedAt?: Date;
+  declare deletedAt?: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => Application)

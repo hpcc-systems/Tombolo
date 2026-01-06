@@ -10,13 +10,21 @@ import {
   CreatedAt,
   UpdatedAt,
 } from 'sequelize-typescript';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
 import { User } from './User.js';
 
 @Table({
   tableName: 'password_reset_links',
   timestamps: true,
 })
-export class PasswordResetLink extends Model {
+export class PasswordResetLink extends Model<
+  InferAttributes<PasswordResetLink>,
+  InferCreationAttributes<PasswordResetLink>
+> {
   @PrimaryKey
   @AllowNull(false)
   @Column(DataType.UUID)
@@ -41,11 +49,11 @@ export class PasswordResetLink extends Model {
 
   @CreatedAt
   @Column(DataType.DATE)
-  declare createdAt: Date;
+  declare createdAt: CreationOptional<Date>;
 
   @UpdatedAt
   @Column(DataType.DATE)
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 
   // Associations
   @BelongsTo(() => User)

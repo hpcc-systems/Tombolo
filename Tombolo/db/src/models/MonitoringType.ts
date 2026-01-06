@@ -8,23 +8,28 @@ import {
   AllowNull,
   Unique,
   BelongsToMany,
-  CreatedAt,
-  UpdatedAt,
-  DeletedAt,
 } from 'sequelize-typescript';
-// import { AsrDomain } from './AsrDomain.js';
-// import { AsrMonitoringTypeToDomainsRelation } from './AsrMonitoringTypeToDomainsRelation.js';
+import type {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+} from 'sequelize';
+import { AsrDomain } from './AsrDomain.js';
+import { AsrMonitoringTypeToDomainsRelation } from './AsrMonitoringTypeToDomainsRelation.js';
 
 @Table({
   tableName: 'monitoring_types',
   freezeTableName: true,
   timestamps: false,
 })
-export class MonitoringType extends Model {
+export class MonitoringType extends Model<
+  InferAttributes<MonitoringType>,
+  InferCreationAttributes<MonitoringType>
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declare id: string;
+  declare id: CreationOptional<string>;
 
   @AllowNull(false)
   @Unique
@@ -54,6 +59,6 @@ export class MonitoringType extends Model {
   declare deletedBy?: any;
 
   // Associations
-  // @BelongsToMany(() => AsrDomain, () => AsrMonitoringTypeToDomainsRelation)
-  // declare asr_domains?: AsrDomain[];
+  @BelongsToMany(() => AsrDomain, () => AsrMonitoringTypeToDomainsRelation)
+  declare asr_domains?: AsrDomain[];
 }
