@@ -1,22 +1,18 @@
 import type {
-  WorkUnitExceptionAttributes,
-  WorkUnitInstance,
-  Transaction
+  Transaction,
+  WorkUnitExceptionCreationAttributes,
 } from '@tombolo/db';
-import db from '@tombolo/db';
+import { WorkUnit, WorkUnitException, sequelize } from '@tombolo/db';
 import { TERMINAL_STATES } from '@tombolo/shared';
 import logger from '../../../config/logger.js';
 import { Workunit } from '@hpcc-js/comms';
 import { getClusterOptions, getClusters } from '@tombolo/core';
-import { ifEmptyNull } from '@tombolo/shared';
-
-const { WorkUnit, WorkUnitException } = db;
+import { ifEmptyUndef } from '@tombolo/shared';
 
 /*
  Fetches workunits for a cluster that are terminal
  */
-async function fetchWorkunits(clusterId: string): Promise<WorkUnitInstance[]> {
-
+async function fetchWorkunits(clusterId: string): Promise<WorkUnit[]> {
   return WorkUnit.findAll({
     where: {
       clusterId,
@@ -33,11 +29,11 @@ async function fetchWorkunits(clusterId: string): Promise<WorkUnitInstance[]> {
  */
 async function saveClusterDbUpdates(
   clusterId: string,
-  exceptionsToCreate: WorkUnitExceptionAttributes[],
+  exceptionsToCreate: WorkUnitExceptionCreationAttributes[],
   deletedWuIds: string[],
   successfulWuIds: string[]
 ) {
-  await db.sequelize.transaction(async (t: Transaction) => {
+  await sequelize.transaction(async (t: Transaction) => {
     if (exceptionsToCreate.length > 0) {
       await WorkUnitException.bulkCreate(exceptionsToCreate, {
         ignoreDuplicates: true,
@@ -113,7 +109,7 @@ async function getWorkunitInfo() {
     const wus = await fetchWorkunits(clusterId);
 
     // Per-cluster accumulators
-    const exceptionsToCreate: WorkUnitExceptionAttributes[] = [];
+    const exceptionsToCreate: WorkUnitExceptionCreationAttributes[] = [];
     const successfulWuIds: string[] = [];
     const deletedWuIds: string[] = [];
 
@@ -148,18 +144,21 @@ async function getWorkunitInfo() {
           IncludeAllowedClusters: false,
           IncludeTotalClusterTime: false,
           IncludeServiceNames: false,
-          IncludeProcesses: false
+          IncludeProcesses: false,
         });
 
         const memAfter = process.memoryUsage();
         const durMs = Date.now() - startedAt;
-        const exceptionCount = wuInfo?.Workunit?.Exceptions?.ECLException?.length ?? 0;
+        const exceptionCount =
+          wuInfo?.Workunit?.Exceptions?.ECLException?.length ?? 0;
         logger.info(
-          `WUInfo: fetched wuId=${wu.wuId} in ${durMs}ms, exceptions=${exceptionCount} (heapUsedΔMB=${((
-            memAfter.heapUsed - memBefore.heapUsed
-          ) /
+          `WUInfo: fetched wuId=${wu.wuId} in ${durMs}ms, exceptions=${exceptionCount} (heapUsedΔMB=${(
+            (memAfter.heapUsed - memBefore.heapUsed) /
             1024 /
-            1024).toFixed(2)}, rssΔMB=${((memAfter.rss - memBefore.rss) / 1024 / 1024).toFixed(2)})`
+            1024
+          ).toFixed(
+            2
+          )}, rssΔMB=${((memAfter.rss - memBefore.rss) / 1024 / 1024).toFixed(2)})`
         );
 
         // Consider this WU successfully fetched even if there are no exceptions
@@ -171,18 +170,19 @@ async function getWorkunitInfo() {
 
           exceptionsToCreate.push({
             wuId: wu.wuId,
+            sequenceNo: undefined, // This will be set by sequelize
             clusterId: clusterId,
             severity: exception.Severity,
-            source: ifEmptyNull(exception.Source),
+            source: ifEmptyUndef(exception.Source),
             code: exception.Code,
-            message: ifEmptyNull(exception.Message),
-            column: exception.Column || null,
-            lineNo: exception.LineNo || null,
-            fileName: ifEmptyNull(exception.FileName),
-            activity: exception.Activity || null,
-            scope: exception.Scope || null,
-            priority: exception.Priority || null,
-            cost: exception.Cost || null,
+            message: ifEmptyUndef(exception.Message),
+            column: exception.Column,
+            lineNo: exception.LineNo,
+            fileName: ifEmptyUndef(exception.FileName),
+            activity: exception.Activity,
+            scope: exception.Scope,
+            priority: exception.Priority,
+            cost: exception.Cost,
             createdAt: new Date(),
           });
         }
@@ -210,7 +210,7 @@ async function getWorkunitInfo() {
       }
 
       // Sleep to avoid hitting the cluster too quickly
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     // Bulk DB operations per cluster
@@ -231,13 +231,15 @@ async function getWorkunitInfo() {
     // Cluster-level memory summary
     const clusterMemEnd = process.memoryUsage();
     logger.info(
-      `WUInfo: Finished cluster ${clusterDetail.name} — processedWUs=${wus.length}, exceptionsToCreate=${exceptionsToCreate.length}, deletedWuIds=${deletedWuIds.length}, successfulWuIds=${successfulWuIds.length} (heapUsedΔMB=${((
-        clusterMemEnd.heapUsed - clusterMemStart.heapUsed
-      ) /
+      `WUInfo: Finished cluster ${clusterDetail.name} — processedWUs=${wus.length}, exceptionsToCreate=${exceptionsToCreate.length}, deletedWuIds=${deletedWuIds.length}, successfulWuIds=${successfulWuIds.length} (heapUsedΔMB=${(
+        (clusterMemEnd.heapUsed - clusterMemStart.heapUsed) /
         1024 /
-        1024).toFixed(2)}, rssΔMB=${((clusterMemEnd.rss - clusterMemStart.rss) / 1024 / 1024).toFixed(
-        2
-      )})`
+        1024
+      ).toFixed(2)}, rssΔMB=${(
+        (clusterMemEnd.rss - clusterMemStart.rss) /
+        1024 /
+        1024
+      ).toFixed(2)})`
     );
   }
 }

@@ -60,7 +60,6 @@ export function truncateString(str: string, maxLength: number): string;
  */
 export function renderAnyMetric(key: string, value: number): string;
 
-
 /**
  * Cleans a string and returns null if it is empty
  * @param str - The string you would like to be checked
@@ -69,3 +68,10 @@ export function renderAnyMetric(key: string, value: number): string;
  */
 export function ifEmptyNull(str: string): string | null;
 
+/**
+ * Cleans a string and returns null if it is empty
+ * @param str - The string you would like to be checked
+ * @returns Cleaned string or undefined
+ * @throws Error
+ */
+export function ifEmptyUndef(str: string): string | undefined;

@@ -1,7 +1,6 @@
 import { IOptions, Scope, Workunit } from '@hpcc-js/comms';
 import { getClusters, getClusterOptions } from '@tombolo/core';
-import db from '@tombolo/db';
-const { WorkUnit, WorkUnitDetails } = db;
+import { WorkUnit, WorkUnitDetails } from '@tombolo/db';
 import {
   retryWithBackoff,
   truncateString,
@@ -232,7 +231,6 @@ function logOutOfRangeError(error: Error, batch: WorkUnitDetailRow[]) {
 async function bulkCreateWithDiagnostics(batch: WorkUnitDetailRow[]) {
   try {
     // Dynamic metric fields don't match static Sequelize type, but structure is compatible
-    // @ts-expect-error - WorkUnitDetailRow has dynamic metric fields that are compatible at runtime
     await WorkUnitDetails.bulkCreate(batch, {
       ignoreDuplicates: true, // Skip duplicates instead of updating (no timestamps to update)
       logging: false,
