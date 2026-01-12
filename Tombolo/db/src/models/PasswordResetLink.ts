@@ -56,6 +56,6 @@ export class PasswordResetLink extends Model<
   declare updatedAt: CreationOptional<Date>;
 
   // Associations
-  @BelongsTo(() => User)
+  @BelongsTo(() => User, 'userId')
   declare user?: User;
 }

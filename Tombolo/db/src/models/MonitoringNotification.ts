@@ -37,6 +37,8 @@ export class MonitoringNotification extends Model<
   @Column(DataType.STRING)
   declare monitoring_type?: string | null;
 
+  @ForeignKey(() => FileMonitoring)
+  @ForeignKey(() => JobMonitoring)
   @Column(DataType.UUID)
   declare monitoring_id?: string | null;
 

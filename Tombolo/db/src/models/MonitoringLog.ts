@@ -46,6 +46,7 @@ export class MonitoringLog extends Model<
   declare cluster_id: string;
 
   @AllowNull(false)
+  @ForeignKey(() => MonitoringType)
   @Column(DataType.UUID)
   declare monitoring_type_id: string;
 

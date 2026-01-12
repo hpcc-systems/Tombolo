@@ -56,6 +56,6 @@ export class RoleType extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @HasMany(() => UserRole)
+  @HasMany(() => UserRole, 'roleId')
   declare userRoles?: UserRole[];
 }

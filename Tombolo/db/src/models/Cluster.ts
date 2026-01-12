@@ -20,6 +20,8 @@ import type {
 } from 'sequelize';
 import { User } from './User.js';
 import { FileMonitoring } from './FileMonitoring.js';
+import { LandingZoneMonitoring } from './LandingZoneMonitoring.js';
+import { ClusterMonitoring } from './ClusterMonitoring.js';
 
 @Table({
   tableName: 'clusters',
@@ -137,15 +139,39 @@ export class Cluster extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @HasMany(() => FileMonitoring)
+  @HasMany(() => FileMonitoring, 'clusterId')
   declare fileMonitorings?: FileMonitoring[];
 
-  @BelongsTo(() => User, 'createdBy')
+  @HasMany(() => LandingZoneMonitoring, 'cluster_id')
+  declare landingZoneMonitorings?: LandingZoneMonitoring[];
+
+  @HasMany(() => ClusterMonitoring, {
+    foreignKey: 'clusterId',
+    onDelete: 'CASCADE',
+  })
+  declare clusterMonitorings?: ClusterMonitoring[];
+
+  @BelongsTo(() => User, {
+    foreignKey: 'createdBy',
+    as: 'creator',
+    onDelete: 'NO ACTION',
+    onUpdate: 'CASCADE',
+  })
   declare creator?: User;
 
-  @BelongsTo(() => User, 'updatedBy')
+  @BelongsTo(() => User, {
+    foreignKey: 'updatedBy',
+    as: 'updater',
+    onDelete: 'NO ACTION',
+    onUpdate: 'CASCADE',
+  })
   declare updater?: User;
 
-  @BelongsTo(() => User, 'deletedBy')
+  @BelongsTo(() => User, {
+    foreignKey: 'deletedBy',
+    as: 'deleter',
+    onDelete: 'NO ACTION',
+    onUpdate: 'CASCADE',
+  })
   declare deleter?: User;
 }

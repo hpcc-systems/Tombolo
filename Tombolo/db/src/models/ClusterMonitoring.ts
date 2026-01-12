@@ -101,7 +101,7 @@ export class ClusterMonitoring extends Model<
 
   @AllowNull(false)
   @ForeignKey(() => User)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, field: 'lastUpdatedBy' })
   declare lastUpdatedBy: string;
 
   @ForeignKey(() => User)
@@ -123,7 +123,7 @@ export class ClusterMonitoring extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @BelongsTo(() => Cluster)
+  @BelongsTo(() => Cluster, 'clusterId')
   declare cluster?: Cluster;
 
   @BelongsTo(() => User, 'createdBy')

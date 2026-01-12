@@ -78,6 +78,6 @@ export class RefreshToken extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @BelongsTo(() => User)
+  @BelongsTo(() => User, 'userId')
   declare user?: User;
 }

@@ -44,8 +44,9 @@ export class WorkUnitDetails extends Model<
   @Column(DataType.STRING(30))
   declare wuId?: string | null;
 
+  @AllowNull(false)
   @Column(DataType.STRING(15))
-  declare scopeId?: string | null;
+  declare scopeId: string;
 
   @AllowNull(false)
   @Column(DataType.STRING(130))
@@ -491,13 +492,8 @@ export class WorkUnitDetails extends Model<
   @BelongsTo(() => Cluster, 'clusterId')
   declare cluster?: Cluster;
 
-  // Constraints must be false to tell sequelize to rely on the database level composite key
-  // Sequelize doesn't support composite foreign keys on the model level
-  @BelongsTo(() => WorkUnit, {
-    foreignKey: 'clusterId',
-    targetKey: 'clusterId',
-    constraints: false,
-  })
+  // Composite foreign key relationship - using both clusterId and wuId
+  // Sequelize doesn't fully support composite foreign keys, so constraints are disabled
   @BelongsTo(() => WorkUnit, {
     foreignKey: 'wuId',
     targetKey: 'wuId',

@@ -21,7 +21,6 @@ import type {
 } from 'sequelize';
 import { Application } from './Application.js';
 import { MonitoringNotification } from './MonitoringNotification.js';
-// import { MonitoringNotification } from './MonitoringNotification.js';
 
 @Table({
   tableName: 'orbit_builds',

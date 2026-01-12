@@ -35,9 +35,11 @@ export class AsrDomainToProductsRelation extends Model<
   @Column(DataType.UUID)
   declare id: CreationOptional<string>;
 
+  @ForeignKey(() => AsrDomain)
   @Column(DataType.UUID)
   declare domain_id?: string | null;
 
+  @ForeignKey(() => AsrProduct)
   @Column(DataType.UUID)
   declare product_id?: string | null;
 

@@ -96,9 +96,17 @@ export class AsrDomain extends Model<
   @BelongsTo(() => User, 'deletedBy')
   declare deleter?: User;
 
-  @BelongsToMany(() => MonitoringType, () => AsrMonitoringTypeToDomainsRelation)
+  @BelongsToMany(
+    () => MonitoringType,
+    () => AsrMonitoringTypeToDomainsRelation,
+    'domain_id'
+  )
   declare monitoringTypes?: MonitoringType[];
 
-  @BelongsToMany(() => AsrProduct, () => AsrDomainToProductsRelation)
-  declare products?: AsrProduct[];
+  @BelongsToMany(
+    () => AsrProduct,
+    () => AsrDomainToProductsRelation,
+    'domain_id'
+  )
+  declare associatedProducts?: AsrProduct[];
 }

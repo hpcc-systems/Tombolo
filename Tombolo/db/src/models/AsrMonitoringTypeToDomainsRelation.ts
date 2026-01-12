@@ -41,9 +41,11 @@ export class AsrMonitoringTypeToDomainsRelation extends Model<
   @Column(DataType.UUID)
   declare id: CreationOptional<string>;
 
+  @ForeignKey(() => MonitoringType)
   @Column(DataType.UUID)
   declare monitoring_type_id?: string | null;
 
+  @ForeignKey(() => AsrDomain)
   @Column(DataType.UUID)
   declare domain_id?: string | null;
 

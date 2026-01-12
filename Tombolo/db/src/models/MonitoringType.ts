@@ -59,6 +59,10 @@ export class MonitoringType extends Model<
   declare deletedBy?: any | null;
 
   // Associations
-  @BelongsToMany(() => AsrDomain, () => AsrMonitoringTypeToDomainsRelation)
+  @BelongsToMany(
+    () => AsrDomain,
+    () => AsrMonitoringTypeToDomainsRelation,
+    'monitoring_type_id'
+  )
   declare asr_domains?: AsrDomain[];
 }

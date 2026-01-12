@@ -22,6 +22,10 @@ import type {
 import { User } from './User.js';
 import { UserApplication } from './UserApplication.js';
 import { FileMonitoring } from './FileMonitoring.js';
+import { IntegrationMapping } from './IntegrationMapping.js';
+import { JobMonitoringData } from './JobMonitoringData.js';
+import { JobMonitoringDataArchive } from './JobMonitoringDataArchive.js';
+import { LandingZoneMonitoring } from './LandingZoneMonitoring.js';
 
 @Table({
   tableName: 'applications',
@@ -47,6 +51,7 @@ export class Application extends Model<
   declare description: string;
 
   @AllowNull(false)
+  @ForeignKey(() => User)
   @Column(DataType.UUID)
   declare creator: string;
 
@@ -68,12 +73,28 @@ export class Application extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @HasMany(() => UserApplication)
+  @HasMany(() => UserApplication, 'application_id')
   declare userApplications?: UserApplication[];
 
-  @HasMany(() => FileMonitoring)
+  @HasMany(() => FileMonitoring, 'applicationId')
   declare fileMonitorings?: FileMonitoring[];
 
-  @BelongsTo(() => User, 'creator')
+  @HasMany(() => IntegrationMapping, 'application_id')
+  declare integrationMappings?: IntegrationMapping[];
+
+  @HasMany(() => JobMonitoringData, 'applicationId')
+  declare jobMonitoringData?: JobMonitoringData[];
+
+  @HasMany(() => JobMonitoringDataArchive, 'applicationId')
+  declare jobMonitoringDataArchive?: JobMonitoringDataArchive[];
+
+  @HasMany(() => LandingZoneMonitoring, 'application_id')
+  declare landingZoneMonitorings?: LandingZoneMonitoring[];
+
+  @BelongsTo(() => User, {
+    foreignKey: 'creator',
+    as: 'application_creator',
+    onDelete: 'CASCADE',
+  })
   declare application_creator?: User;
 }

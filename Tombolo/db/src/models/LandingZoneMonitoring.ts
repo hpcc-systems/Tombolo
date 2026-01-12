@@ -19,15 +19,16 @@ import type {
 } from 'sequelize';
 import { Application } from './Application.js';
 import { Cluster } from './Cluster.js';
+import { User } from './User.js';
 
 @Table({
-  tableName: 'directory_monitorings',
+  tableName: 'landing_zone_monitorings',
   paranoid: true,
   timestamps: true,
   indexes: [
     {
       unique: true,
-      fields: ['name', 'deletedAt'],
+      fields: ['monitoringName', 'deletedAt'],
     },
   ],
 })
@@ -43,78 +44,73 @@ export class LandingZoneMonitoring extends Model<
   @AllowNull(false)
   @ForeignKey(() => Application)
   @Column(DataType.UUID)
-  declare application_id: string;
+  declare applicationId: string;
 
   @AllowNull(false)
-  @ForeignKey(() => Cluster)
+  @Column(DataType.STRING)
+  declare monitoringName: string;
+
+  @AllowNull(false)
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare isActive: boolean;
+
+  @AllowNull(false)
+  @Column(DataType.ENUM('fileCount', 'spaceUsage', 'fileMovement'))
+  declare lzMonitoringType: 'fileCount' | 'spaceUsage' | 'fileMovement';
+
+  @AllowNull(false)
+  @Default('pending')
+  @Column(DataType.ENUM('approved', 'rejected', 'pending'))
+  declare approvalStatus: 'approved' | 'rejected' | 'pending';
+
+  @ForeignKey(() => User)
   @Column(DataType.UUID)
-  declare cluster_id: string;
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  declare name: string;
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  declare description: string;
-
-  @Column(DataType.STRING)
-  declare cron?: string | null;
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  declare type: string;
-
-  @AllowNull(false)
-  @Column(DataType.BOOLEAN)
-  declare active: boolean;
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  declare machine: string;
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  declare landingZone: string;
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  declare directory: string;
-
-  @Column(DataType.JSON)
-  declare metaData?: any | null;
-
-  @AllowNull(false)
-  @Column(DataType.BOOLEAN)
-  declare approved: boolean;
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  declare approvalStatus: string;
-
-  @Column(DataType.STRING)
-  declare approvalNote?: string | null;
-
-  @Column(DataType.STRING)
   declare approvedBy?: string | null;
 
   @Column(DataType.DATE)
   declare approvedAt?: Date | null;
 
-  @AllowNull(false)
   @Column(DataType.STRING)
+  declare approverComment?: string | null;
+
+  @AllowNull(false)
+  @Column(DataType.TEXT)
+  declare description: string;
+
+  @AllowNull(false)
+  @ForeignKey(() => Cluster)
+  @Column(DataType.UUID)
+  declare clusterId: string;
+
+  @Column(DataType.JSON)
+  declare lastRunDetails?: any | null;
+
+  @AllowNull(false)
+  @Column(DataType.JSON)
+  declare metaData: any;
+
+  @AllowNull(false)
+  @ForeignKey(() => User)
+  @Column(DataType.UUID)
   declare createdBy: string;
 
   @AllowNull(false)
-  @Column(DataType.STRING)
-  declare updatedBy: string;
+  @ForeignKey(() => User)
+  @Column(DataType.UUID)
+  declare lastUpdatedBy: string;
 
+  @ForeignKey(() => User)
+  @Column(DataType.UUID)
+  declare deletedBy?: string | null;
+
+  @AllowNull(false)
   @CreatedAt
   @Column(DataType.DATE)
   declare createdAt: CreationOptional<Date>;
 
-  @UpdatedAt
   @AllowNull(false)
+  @UpdatedAt
   @Column(DataType.DATE)
   declare updatedAt: CreationOptional<Date>;
 
@@ -123,9 +119,21 @@ export class LandingZoneMonitoring extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @BelongsTo(() => Application, 'application_id')
+  @BelongsTo(() => Application, 'applicationId')
   declare application?: Application;
 
-  @BelongsTo(() => Cluster, 'cluster_id')
+  @BelongsTo(() => Cluster, 'clusterId')
   declare cluster?: Cluster;
+
+  @BelongsTo(() => User, 'createdBy')
+  declare creator?: User;
+
+  @BelongsTo(() => User, 'lastUpdatedBy')
+  declare updater?: User;
+
+  @BelongsTo(() => User, 'approvedBy')
+  declare approver?: User;
+
+  @BelongsTo(() => User, 'deletedBy')
+  declare deleter?: User;
 }

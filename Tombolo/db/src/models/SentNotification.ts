@@ -109,6 +109,6 @@ export class SentNotification extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @BelongsTo(() => Application)
+  @BelongsTo(() => Application, 'applicationId')
   declare application?: Application;
 }

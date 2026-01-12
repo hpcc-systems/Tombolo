@@ -19,7 +19,6 @@ import type {
 } from 'sequelize';
 import { Application } from './Application.js';
 import { JobMonitoring } from './JobMonitoring.js';
-// import { JobMonitoring } from './JobMonitoring.js';
 
 @Table({
   tableName: 'job_monitoring_data',
@@ -56,6 +55,7 @@ export class JobMonitoringData extends Model<
   declare wuState: string;
 
   @AllowNull(false)
+  @ForeignKey(() => JobMonitoring)
   @Column(DataType.UUID)
   declare monitoringId: string;
 
@@ -94,7 +94,7 @@ export class JobMonitoringData extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @BelongsTo(() => Application)
+  @BelongsTo(() => Application, 'applicationId')
   declare application?: Application;
 
   @BelongsTo(() => JobMonitoring, 'monitoringId')

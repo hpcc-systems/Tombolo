@@ -153,6 +153,6 @@ export class WorkUnit extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @BelongsTo(() => Cluster)
+  @BelongsTo(() => Cluster, 'clusterId')
   declare cluster?: Cluster;
 }

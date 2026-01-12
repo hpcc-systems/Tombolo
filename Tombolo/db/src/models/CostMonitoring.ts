@@ -98,7 +98,7 @@ export class CostMonitoring extends Model<
   declare createdBy: string;
 
   @ForeignKey(() => User)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, field: 'lastUpdatedBy' })
   declare lastUpdatedBy?: string | null;
 
   @ForeignKey(() => User)
@@ -120,7 +120,7 @@ export class CostMonitoring extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @BelongsTo(() => Application)
+  @BelongsTo(() => Application, 'applicationId')
   declare application?: Application;
 
   @BelongsTo(() => User, 'createdBy')

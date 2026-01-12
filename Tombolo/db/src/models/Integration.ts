@@ -15,8 +15,6 @@ import type {
   InferCreationAttributes,
 } from 'sequelize';
 import { IntegrationMapping } from './IntegrationMapping.js';
-import { Application } from './Application.js';
-// import { IntegrationMapping } from './IntegrationMapping.js';
 
 @Table({
   tableName: 'integrations',
@@ -45,6 +43,6 @@ export class Integration extends Model<
   declare metaData?: any | null;
 
   // Associations
-  @HasMany(() => IntegrationMapping)
+  @HasMany(() => IntegrationMapping, 'integration_id')
   declare integrationMappings?: IntegrationMapping[];
 }

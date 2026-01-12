@@ -55,6 +55,7 @@ export class JobMonitoringDataArchive extends Model<
   declare wuState: string;
 
   @AllowNull(false)
+  @ForeignKey(() => JobMonitoring)
   @Column(DataType.UUID)
   declare monitoringId: string;
 
@@ -93,7 +94,7 @@ export class JobMonitoringDataArchive extends Model<
   declare deletedAt?: CreationOptional<Date> | null;
 
   // Associations
-  @BelongsTo(() => Application)
+  @BelongsTo(() => Application, 'applicationId')
   declare application?: Application;
 
   @BelongsTo(() => JobMonitoring, 'monitoringId')
