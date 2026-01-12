@@ -6,6 +6,7 @@
     "@ant-design/charts": "^2.6.6",
     "@ant-design/icons": "^6.1.0",
     "@ant-design/plots": "^2.6.6",
+    "@monaco-editor/react": "^4.7.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@tombolo/shared": "workspace:*",
     "antd": "^5.27.6",

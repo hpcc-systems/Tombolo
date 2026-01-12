@@ -705,6 +705,8 @@ exports.isClusterReachable = async (clusterHost, port, username, password) => {
 
     if (response.status === 200) {
       return { reached: true, statusCode: 200 };
+    } else {
+      return { reached: false, statusCode: response.status };
     }
   } catch (error) {
     if (error.response) {

@@ -28,6 +28,7 @@ import {
 import dayjs from 'dayjs';
 import workunitsService from '@/services/workunits.service';
 import clustersService from '@/services/clusters.service';
+import styles from './workunitHistory.module.css';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -205,7 +206,7 @@ const WorkUnitHistory = () => {
       render: (text, record) => (
         <Space direction="vertical" size={0}>
           <Text strong>{text || record.wuId}</Text>
-          <Text type="secondary" style={{ fontSize: 11 }}>
+          <Text type="secondary" className={styles.smallText}>
             {record.wuId}
           </Text>
         </Space>
@@ -282,11 +283,11 @@ const WorkUnitHistory = () => {
   ];
 
   return (
-    <div style={{ padding: 24, background: '#f0f2f5', minHeight: '100vh' }}>
+    <div className={`${styles.pageContainer} ${styles.pageBgLight}`}>
       <Title level={2}>Workunit History</Title>
 
       {/* Statistics */}
-      <Row gutter={16} style={{ marginBottom: 16 }}>
+      <Row gutter={16} className={styles.mb16}>
         <Col span={8}>
           <Card>
             <Statistic title="Total Jobs" value={statistics.totalJobs} prefix={<ClockCircleOutlined />} />
@@ -311,8 +312,8 @@ const WorkUnitHistory = () => {
       </Row>
 
       {/* Filters */}
-      <Card style={{ marginBottom: 16 }}>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+      <Card className={styles.cardMarginBottom16}>
+        <Space direction="vertical" size="middle" className={styles.fullWidth}>
           {/* Preset Filters */}
           <Row>
             <Space wrap>
@@ -361,14 +362,14 @@ const WorkUnitHistory = () => {
               </Button>
             </Space>
           </Row>
-          <Divider style={{ margin: '8px 0' }} />
+          <Divider className={styles.dividerTighter} />
           <Row gutter={[16, 16]}>
             <Col span={6}>
               <Select
                 placeholder="Select Cluster"
                 value={filters.clusterId}
                 onChange={value => setFilters({ ...filters, clusterId: value })}
-                style={{ width: '100%' }}
+                className={styles.fullWidth}
                 allowClear
                 showSearch
                 filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
@@ -384,7 +385,7 @@ const WorkUnitHistory = () => {
                 placeholder="State"
                 value={filters.state}
                 onChange={value => setFilters({ ...filters, state: value })}
-                style={{ width: '100%' }}
+                className={styles.fullWidth}
                 allowClear>
                 <Option value="completed">Completed</Option>
                 <Option value="failed">Failed</Option>
@@ -397,7 +398,7 @@ const WorkUnitHistory = () => {
                 placeholder="Details Fetched"
                 value={filters.detailsFetched}
                 onChange={value => setFilters({ ...filters, detailsFetched: value })}
-                style={{ width: '100%' }}
+                className={styles.fullWidth}
                 allowClear>
                 <Option value={true}>Yes</Option>
                 <Option value={false}>No</Option>
@@ -417,7 +418,7 @@ const WorkUnitHistory = () => {
               <RangePicker
                 value={filters.dateRange}
                 onChange={dates => setFilters({ ...filters, dateRange: dates })}
-                style={{ width: '100%' }}
+                className={styles.fullWidth}
                 showTime
               />
             </Col>
@@ -449,12 +450,6 @@ const WorkUnitHistory = () => {
 
       {/* Table */}
       <Card>
-        <style>{`
-          .wu-row-failed { background-color: #ffe5e5 !important; }
-          .wu-row-failed:hover { background-color: #ffd1d1 !important; }
-          .wu-row-long-running { background-color: #fff5e6 !important; }
-          .wu-row-long-running:hover { background-color: #ffe8cc !important; }
-        `}</style>
         <Table
           columns={columns}
           dataSource={data}
