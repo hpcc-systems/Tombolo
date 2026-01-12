@@ -72,7 +72,7 @@ const getApplicationColumns = (user, handleApplicationView, handleApplicationEdi
         <Tooltip placement="right" title={<Text text="View" />}>
           <EyeOutlined className="link-text" onClick={() => handleApplicationView(record)} />
         </Tooltip>
-        {record.application_creator.id === user.id && (
+        {record?.application_creator?.id === user.id && (
           <>
             <Divider type="vertical" />
             <Tooltip placement="right" title={<Text text="Edit" />}>
