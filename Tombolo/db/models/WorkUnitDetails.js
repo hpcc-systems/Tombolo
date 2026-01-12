@@ -48,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       scopeId: {
         type: DataTypes.STRING(15),
-        allowNull: true,
+        allowNull: false,
       },
       scopeName: {
         type: DataTypes.STRING(130),
@@ -289,6 +289,11 @@ module.exports = (sequelize, DataTypes) => {
           name: 'work_unit_details_cluster_wu_idx',
           fields: ['clusterId', 'wuId'],
         },
+        {
+          name: 'work_unit_details_uniq_wuid_clusterid_scope_idx',
+          fields: ['wuId', 'clusterId', 'scopeId'],
+          unique: true,
+        }
         // {
         //   name: 'work_unit_details_scope_type_idx',
         //   fields: ['scopeType'],
