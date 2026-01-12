@@ -5,6 +5,7 @@ const {
   getWorkunitDetails,
   getWorkunitHotspots,
   getWorkunitTimeline,
+  executeWorkunitSql,
 } = require('../controllers/workunitController');
 const {
   validateGetWorkunits,
@@ -12,6 +13,7 @@ const {
   validateGetWorkunitDetails,
   validateGetWorkunitHotspots,
   validateGetWorkunitTimeline,
+  validateExecuteWorkunitSql,
 } = require('../middlewares/workunitMiddleware');
 const { validate } = require('../middlewares/validateRequestBody');
 
@@ -42,6 +44,13 @@ router.get(
   '/:clusterId/:wuid/timeline',
   validate(validateGetWorkunitTimeline),
   getWorkunitTimeline
+);
+
+// POST /api/workunits/:clusterId/:wuid/sql - Execute read-only SQL against work_unit_details
+router.post(
+  '/:clusterId/:wuid/sql',
+  validate(validateExecuteWorkunitSql),
+  executeWorkunitSql
 );
 
 module.exports = router;

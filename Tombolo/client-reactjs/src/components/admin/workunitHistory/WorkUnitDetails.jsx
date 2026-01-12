@@ -4,6 +4,7 @@ import { Spin, Button, message, Alert, Space } from 'antd';
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import workunitsService from '@/services/workunits.service';
 import WorkUnitView from './WorkUnitView';
+import styles from './workunitHistory.module.css';
 
 const WorkUnitDetails = () => {
   const { clusterId, wuid } = useParams();
@@ -28,13 +29,19 @@ const WorkUnitDetails = () => {
         // Flatten the hierarchical structure into a flat array
         const flattenDetails = graphs => {
           const result = [];
-          const traverse = node => {
-            result.push(node);
+          const traverse = (node, parentId = null, level = 0) => {
+            // Normalize a few common fields so the table has consistent columns
+            const normalized = {
+              ...node,
+              _parentId: parentId,
+              _level: level,
+            };
+            result.push(normalized);
             if (node.children && node.children.length > 0) {
-              node.children.forEach(traverse);
+              node.children.forEach(child => traverse(child, node.id ?? node.scopeId ?? null, level + 1));
             }
           };
-          graphs.forEach(traverse);
+          graphs.forEach(g => traverse(g));
           return result;
         };
 
@@ -60,9 +67,10 @@ const WorkUnitDetails = () => {
     }
   }, [wuid]);
 
+  // After all hooks are declared, it's safe to return early conditionally
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <div className={styles.centerScreen}>
         <Spin size="large" tip="Loading workunit details..." />
       </div>
     );
@@ -70,7 +78,7 @@ const WorkUnitDetails = () => {
 
   if (error) {
     return (
-      <div style={{ padding: 24, maxWidth: 800, margin: '50px auto' }}>
+      <div className={styles.containerNarrow}>
         <Alert
           message="Error Loading Workunit"
           description={error}
@@ -93,7 +101,7 @@ const WorkUnitDetails = () => {
 
   if (!wu) {
     return (
-      <div style={{ padding: 24, maxWidth: 800, margin: '50px auto' }}>
+      <div className={styles.containerNarrow}>
         <Alert
           message="Workunit Not Found"
           description={`No workunit found with ID: ${wuid}`}
@@ -111,12 +119,21 @@ const WorkUnitDetails = () => {
 
   return (
     <div>
-      <div style={{ padding: '16px 24px', background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => history.push('/admin/workunits')}>
-          Back to Workunit History
-        </Button>
+      <div className={styles.headerBar}>
+        <Space wrap>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => history.push('/admin/workunits')}>
+            Back to Workunit History
+          </Button>
+          <Button icon={<ReloadOutlined />} onClick={fetchData}>
+            Refresh
+          </Button>
+        </Space>
       </div>
-      <WorkUnitView wu={wu} details={details} />
+
+      {/* Summary header */}
+      <div className={styles.contentPadding}>
+        <WorkUnitView wu={wu} details={details} />
+      </div>
     </div>
   );
 };

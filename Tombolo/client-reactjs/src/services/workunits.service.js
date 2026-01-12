@@ -68,6 +68,18 @@ const workunitsService = {
     const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/timeline`);
     return response.data;
   },
+
+  /**
+   * Execute a read-only SQL SELECT against workunitDetails scoped to this workunit
+   * @param {string} clusterId
+   * @param {string} wuid
+   * @param {string} sql
+   * @returns {Promise<{columns: string[], rows: any[]}>}
+   */
+  executeSql: async (clusterId, wuid, sql) => {
+    const response = await apiClient.post(`/workunits/${clusterId}/${wuid}/sql`, { sql });
+    return response.data;
+  },
 };
 
 export default workunitsService;

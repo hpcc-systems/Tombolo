@@ -506,6 +506,8 @@ function normalizeLabel(label) {
 
 const TERMINAL_STATES = ['completed', 'failed', 'aborted'];
 
+const SCOPE_TYPES = ['graph', 'subgraph', 'activity', 'operation'];
+
 export {
   relevantMetrics,
   UNIT_LOOKUP,
@@ -513,4 +515,5 @@ export {
   normalizeLabel,
   FORMAT_LOOKUP,
   TERMINAL_STATES,
+  SCOPE_TYPES,
 };

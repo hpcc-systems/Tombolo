@@ -1,15 +1,15 @@
-const { Op } = require('sequelize');
+const { Op, QueryTypes } = require('sequelize');
 const { WorkUnit, WorkUnitDetails, sequelize } = require('../models');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../config/logger');
+const { forbiddenSqlKeywords } = require('@tombolo/shared');
 
-// Helper: build hierarchy from flat details
+// Build hierarchy from flat details (graphs, scoped by parent prefixes)
 const buildScopeHierarchy = details => {
   const map = new Map();
   const roots = [];
   const orphans = [];
 
-  // First pass: create all nodes
   details.forEach(item => {
     const key = item.scopeId || item.scopeName;
     const node = {
@@ -19,7 +19,6 @@ const buildScopeHierarchy = details => {
     map.set(key, node);
   });
 
-  // Second pass: build hierarchy
   details.forEach(item => {
     const key = item.scopeId || item.scopeName;
     const node = map.get(key);
@@ -32,16 +31,13 @@ const buildScopeHierarchy = details => {
       if (parent) {
         parent.children.push(node);
       } else {
-        // If parent not found, treat as orphan (add to roots)
         orphans.push(node);
       }
     } else {
-      // No parent reference, treat as root-level
       orphans.push(node);
     }
   });
 
-  // Return roots plus any orphaned nodes
   return [...roots, ...orphans];
 };
 
@@ -211,10 +207,126 @@ async function getWorkunitTimeline(req, res) {
   }
 }
 
+async function executeWorkunitSql(req, res) {
+  try {
+    const { clusterId, wuid } = req.params;
+    const rawSql = (req.body.sql || '').trim();
+
+    if (!rawSql) return sendError(res, 'SQL is required', 400);
+
+    // Basic protections
+    const lowered = rawSql.toLowerCase();
+    if (lowered.includes(';')) {
+      return sendError(res, 'Multiple statements are not allowed', 400);
+    }
+    if (!lowered.startsWith('select')) {
+      return sendError(res, 'Only SELECT statements are allowed', 400);
+    }
+
+    // Strip comments and check for forbidden keywords
+    const withoutComments = rawSql
+      .replace(/--[^\n]*$/gm, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .trim();
+
+    for (const kw of forbiddenSqlKeywords) {
+      const re = new RegExp(`\\b${kw}\\b`, 'i');
+      if (re.test(withoutComments)) {
+        return sendError(res, 'Only non-destructive SELECT queries are allowed', 400);
+      }
+    }
+
+    // Cap rows returned
+    const MAX_LIMIT = 1000;
+
+    // Build safe SQL by forcing FROM work_unit_details and injecting enforced WHERE
+    const selectBody = rawSql.replace(/^select\s+/i, '');
+
+    const fromIndex = selectBody.search(/\bfrom\b/i);
+    if (fromIndex === -1) {
+      return sendError(res, 'Query must include FROM clause', 400);
+    }
+    const selectList = selectBody.substring(0, fromIndex).trim();
+    let remainder = selectBody.substring(fromIndex + 4).trim();
+
+    // Validate base table and capture optional alias
+    const tokens = remainder.split(/\s+/);
+    const tableToken = tokens[0].replace(/[`\[\]"]/g, '');
+    if (tableToken !== 'work_unit_details') {
+      return sendError(res, 'You may only query the work_unit_details table', 400);
+    }
+
+    tokens.shift();
+    if (tokens[0] && tokens[0].toLowerCase() === 'as') tokens.shift();
+    const alias = tokens[0] && !['where', 'order', 'group', 'limit', 'join'].includes(tokens[0].toLowerCase()) ? tokens.shift() : 'work_unit_details';
+
+    const rest = tokens.join(' ');
+
+    // Disallow multi-table constructs
+    const restLower = rest.toLowerCase();
+    if (/(\bjoin\b|\bunion\b|\bfrom\b)/i.test(restLower)) {
+      return sendError(res, 'JOINs, UNIONs, and subqueries are not allowed', 400);
+    }
+
+    // Merge enforced WHERE with user's WHERE while preserving ORDER/GROUP/LIMIT
+    const enforcedWhere = `${alias}.\`clusterId\` = :clusterId AND ${alias}.\`wuId\` = :wuid`;
+
+    let safeWhereJoined = '';
+    const restTrimmedAll = rest.trim();
+    const whereMatch = restTrimmedAll.match(/\bwhere\b/i);
+    if (whereMatch && typeof whereMatch.index === 'number') {
+      const whereIdx = whereMatch.index;
+      const beforeWhere = restTrimmedAll.substring(0, whereIdx).trim();
+      const afterWhereAll = restTrimmedAll.substring(whereIdx + whereMatch[0].length).trim();
+
+      let tailStartIdx = -1;
+      const tailMatch = afterWhereAll.match(/\b(order\s+by|group\s+by|limit)\b/i);
+      if (tailMatch && typeof tailMatch.index === 'number') {
+        tailStartIdx = tailMatch.index;
+      }
+
+      const userWhereCond = tailStartIdx >= 0 ? afterWhereAll.substring(0, tailStartIdx).trim() : afterWhereAll;
+      const tail = tailStartIdx >= 0 ? afterWhereAll.substring(tailStartIdx).trim() : '';
+
+      const prefix = beforeWhere ? beforeWhere + ' ' : '';
+      safeWhereJoined = `${prefix}WHERE (${userWhereCond}) AND (${enforcedWhere})${tail ? ' ' + tail : ''}`;
+    } else {
+      const restTrimmed = restTrimmedAll;
+      safeWhereJoined = restTrimmed ? `WHERE ${enforcedWhere} ${restTrimmed}` : `WHERE ${enforcedWhere}`;
+    }
+
+    // Enforce LIMIT cap
+    let finalSql = `SELECT ${selectList} FROM \`work_unit_details\` ${alias === 'work_unit_details' ? '' : 'AS ' + alias} ${safeWhereJoined}`.trim();
+    const limitMatch = finalSql.toLowerCase().match(/\blimit\s+(\d+)/);
+    if (limitMatch) {
+      const n = parseInt(limitMatch[1], 10);
+      if (!Number.isFinite(n) || n > MAX_LIMIT) {
+        finalSql = finalSql.replace(/\blimit\s+\d+/i, `LIMIT ${MAX_LIMIT}`);
+      }
+    } else {
+      finalSql = `${finalSql} LIMIT ${MAX_LIMIT}`;
+    }
+
+    const rows = await sequelize.query(finalSql, {
+      replacements: { clusterId, wuid },
+      type: QueryTypes.SELECT,
+      logging: false,
+    });
+
+    const columns = Array.isArray(rows) && rows.length ? Object.keys(rows[0]) : [];
+    return sendSuccess(res, { columns, rows });
+  } catch (err) {
+    logger.error('Execute workunit SQL error: ', err);
+    const msg = err?.parent?.sqlMessage || err?.message || 'Failed to execute SQL';
+    return sendError(res, msg, 400);
+  }
+}
+
 module.exports = {
   getWorkunits,
   getWorkunit,
   getWorkunitDetails,
   getWorkunitHotspots,
   getWorkunitTimeline,
+  executeWorkunitSql,
 };
