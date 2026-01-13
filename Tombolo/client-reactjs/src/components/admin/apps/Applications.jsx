@@ -19,7 +19,7 @@ const getApplicationColumns = (user, handleApplicationView, handleApplicationEdi
   {
     width: '2%',
     title: '',
-    render: (record) =>
+    render: record =>
       record.visibility === 'Public' ? (
         <Tooltip title="Public">
           <GlobalOutlined className="link-text" />
@@ -54,7 +54,7 @@ const getApplicationColumns = (user, handleApplicationView, handleApplicationEdi
     width: '15%',
     title: <Text text="Created" />,
     dataIndex: 'createdAt',
-    render: (text) => {
+    render: text => {
       const createdAt = new Date(text);
       return (
         createdAt.toLocaleDateString('en-US', Constants.COMPACT_DATE_FORMAT_OPTION) +
@@ -72,7 +72,7 @@ const getApplicationColumns = (user, handleApplicationView, handleApplicationEdi
         <Tooltip placement="right" title={<Text text="View" />}>
           <EyeOutlined className="link-text" onClick={() => handleApplicationView(record)} />
         </Tooltip>
-        {record?.application_creator?.id === user.id && (
+        {record.application_creator?.id === user.id && (
           <>
             <Divider type="vertical" />
             <Tooltip placement="right" title={<Text text="Edit" />}>
@@ -99,7 +99,7 @@ const getApplicationColumns = (user, handleApplicationView, handleApplicationEdi
 ];
 
 // Tour steps configuration
-const getTourSteps = (appAddButtonRef) => [
+const getTourSteps = appAddButtonRef => [
   {
     title: 'Add Application',
     description: 'Click here to add an application. After adding an application, we can move on to the next step.',
@@ -114,8 +114,8 @@ const Applications = () => {
   // State and Redux hooks
   const user = getUser();
   const dispatch = useDispatch();
-  const applications = useSelector((state) => state.application.applications);
-  const noApplication = useSelector((state) => state.application.noApplication);
+  const applications = useSelector(state => state.application.applications);
+  const noApplication = useSelector(state => state.application.noApplication);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showAddApplicationModal, setShowAddApplicationModal] = useState(false);
   const [mode, setMode] = useState(null);
@@ -142,13 +142,13 @@ const Applications = () => {
   }, [noApplication, dispatch]);
 
   // Handle Remove
-  const handleRemove = async (app_id) => {
+  const handleRemove = async app_id => {
     const originalApplications = [...localApplications];
 
     try {
       // Store original applications for revert
       // Optimistically update local applications
-      setLocalApplications(localApplications.filter((app) => app.id !== app_id));
+      setLocalApplications(localApplications.filter(app => app.id !== app_id));
 
       // Delete application using service
       await applicationsService.delete({
@@ -179,13 +179,13 @@ const Applications = () => {
     setShowTour(false);
   };
 
-  const handleApplicationView = (record) => {
+  const handleApplicationView = record => {
     setShowAddApplicationModal(true);
     setSelectedApplication(record);
     setMode('view');
   };
 
-  const handleApplicationEdit = (record) => {
+  const handleApplicationEdit = record => {
     setShowAddApplicationModal(true);
     setSelectedApplication(record);
     setMode('edit');
@@ -217,7 +217,7 @@ const Applications = () => {
         <Table
           size="small"
           columns={getApplicationColumns(user, handleApplicationView, handleApplicationEdit, handleRemove)}
-          rowKey={(record) => record.id}
+          rowKey={record => record.id}
           dataSource={localApplications}
           pagination={localApplications?.length > 10 ? { pageSize: 10 } : false}
         />

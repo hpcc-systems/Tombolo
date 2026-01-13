@@ -65,7 +65,7 @@ async function getApplicationsByUser(req, res) {
         {
           model: User,
           as: 'application_creator',
-          attributes: { exclude: ['hash'] },
+          attributes: ['id', 'firstName', 'lastName', 'email'],
         },
       ],
       order: [['updatedAt', 'DESC']],
