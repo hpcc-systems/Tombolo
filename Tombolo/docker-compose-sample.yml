@@ -43,7 +43,7 @@ services:
     volumes:
       - /tmp/pm2:/tmp/pm2
       - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
-      - ./logs/server:/app/logs
+      - ./dockerLogs/server:/app/logs
       - ./certs:/usr/local/share/ca-certificates
       - ./customCerts:/customCerts
       - ./gitClones:/gitClones
@@ -56,6 +56,8 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      LOG_DIR: /app/logs/db
     logging:
       driver: "none" # This line disables Docker logs. All logs are written to the file system
     healthcheck:
@@ -76,6 +78,8 @@ services:
       context: ..
       dockerfile: Tombolo/Dockerfile
       target: jobs
+    volumes:
+      - ./dockerLogs/jobs:/app/logs
     networks:
       - tombolo-network
     ports:
@@ -89,7 +93,7 @@ services:
       - .env
     environment:
       DB_PORT: 3306 # Override for container-to-container communication
-      REDIS_HOST: redis # Override for container-to-container communication
+      LOG_DIR: /app/logs
     healthcheck:
       test:
         [
@@ -111,6 +115,7 @@ services:
     command: --innodb_use_native_aio=0 --sql_mode=""
     volumes:
       - ./mysql-data:/var/lib/mysql
+      - ./dockerLogs/db:/var/log/mysql
     ports:
       - ${DB_PORT}:3306
     environment:
@@ -143,6 +148,14 @@ services:
   redis:
     image: redis:8.4-alpine
     restart: always
+    networks:
+      - tombolo-network
+    ports:
+      - ${REDIS_PORT}:6379
+    env_file:
+      - .env
+    volumes:
+      - ./redis-data:/data
     command: >
       sh -c "
         if [ -n \"${REDIS_PASSWORD}\" ]; then
@@ -155,12 +168,6 @@ services:
           redis-server
         fi
       "
-    ports:
-      - ${REDIS_PORT}:6379
-    networks:
-      - tombolo-network
-    env_file:
-      - .env
     healthcheck:
       test:
         [
@@ -173,8 +180,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    volumes:
-      - ./redis-data:/data
 
 networks:
   tombolo-network:

@@ -26,9 +26,25 @@ COPY Tombolo/jobs/package.json ./Tombolo/jobs/
 RUN pnpm install --frozen-lockfile
 
 # ===========================================
+# Shared Package Builder Stage
+# ===========================================
+FROM base AS shared-builder
+
+# Copy shared package source
+COPY Tombolo/shared ./Tombolo/shared
+
+WORKDIR /app/Tombolo/shared
+
+# Build shared package
+RUN pnpm build
+
+# ===========================================
 # Client Builder Stage
 # ===========================================
 FROM base AS client-builder
+
+# Copy built shared package from shared-builder
+COPY --from=shared-builder /app/Tombolo/shared/dist ./Tombolo/shared/dist
 
 # Copy client source (includes .env for Vite build-time variables)
 COPY Tombolo/client-reactjs ./Tombolo/client-reactjs
@@ -87,6 +103,9 @@ COPY Tombolo/server ./Tombolo/server
 COPY Tombolo/db ./Tombolo/db
 COPY Tombolo/shared ./Tombolo/shared
 COPY Tombolo/core ./Tombolo/core
+
+# Copy built shared package from shared-builder
+COPY --from=shared-builder /app/Tombolo/shared/dist ./Tombolo/shared/dist
 
 # Copy Docker-specific .sequelizerc and rename it
 COPY Tombolo/server/.sequelizerc.docker ./Tombolo/server/.sequelizerc
@@ -185,6 +204,9 @@ COPY Tombolo/jobs ./Tombolo/jobs
 COPY Tombolo/db ./Tombolo/db
 COPY Tombolo/shared ./Tombolo/shared
 COPY Tombolo/core ./Tombolo/core
+
+# Copy built shared package from shared-builder
+COPY --from=shared-builder /app/Tombolo/shared/dist ./Tombolo/shared/dist
 
 # Build TypeScript without source maps for production
 WORKDIR /app/Tombolo/jobs
