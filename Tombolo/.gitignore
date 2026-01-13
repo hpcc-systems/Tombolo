@@ -23,3 +23,5 @@ certs/*.pem
 certs/*.crt
 customCerts/*.crt
 customCerts/*.pem
+dockerLogs/
+redis-data/
