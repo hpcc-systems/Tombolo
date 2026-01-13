@@ -6,7 +6,6 @@ const moment = require('moment');
 
 // Local Imports
 const logger = require('../config/logger');
-const { sendError } = require('./response');
 const {
   ACCESS_TOKEN_EXPIRY,
   REFRESH_TOKEN_EXPIRY,
@@ -106,6 +105,12 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
   try {
     //set token in req as well so csrf token can be generated
     req.cookies.token = accessToken;
+
+    // Clear any existing CSRF cookie to prevent validation conflicts
+    res.clearCookie('x-csrf-token', {
+      sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'Lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
 
     // Generate the token pair using doubleCsrf
     const csrfToken = generateToken(req, res);

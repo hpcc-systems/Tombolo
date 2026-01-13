@@ -61,7 +61,13 @@ async function getApplicationsByUser(req, res) {
       where: {
         [Op.or]: [{ id: userApplicationIds }, { visibility: 'Public' }],
       },
-      raw: true,
+      include: [
+        {
+          model: User,
+          as: 'application_creator',
+          attributes: ['id', 'firstName', 'lastName', 'email'],
+        },
+      ],
       order: [['updatedAt', 'DESC']],
     }); // this includes user created, public and shared apps
     return sendSuccess(res, allApplications);
