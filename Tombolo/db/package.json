@@ -15,6 +15,7 @@
   },
   "files": [
     "dist",
+    "models",
     "config",
     "utils",
     "migrations",

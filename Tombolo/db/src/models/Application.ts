@@ -26,6 +26,9 @@ import { IntegrationMapping } from './IntegrationMapping.js';
 import { JobMonitoringData } from './JobMonitoringData.js';
 import { JobMonitoringDataArchive } from './JobMonitoringDataArchive.js';
 import { LandingZoneMonitoring } from './LandingZoneMonitoring.js';
+import { JobMonitoring } from './JobMonitoring.js';
+import { CostMonitoring } from './CostMonitoring.js';
+import { OrbitProfileMonitoring } from './OrbitProfileMonitoring.js';
 
 @Table({
   tableName: 'applications',
@@ -88,8 +91,17 @@ export class Application extends Model<
   @HasMany(() => JobMonitoringDataArchive, 'applicationId')
   declare jobMonitoringDataArchive?: JobMonitoringDataArchive[];
 
-  @HasMany(() => LandingZoneMonitoring, 'application_id')
+  @HasMany(() => LandingZoneMonitoring, 'applicationId')
   declare landingZoneMonitorings?: LandingZoneMonitoring[];
+
+  @HasMany(() => JobMonitoring, 'applicationId')
+  declare jobMonitorings?: JobMonitoring[];
+
+  @HasMany(() => CostMonitoring, 'applicationId')
+  declare costMonitorings?: CostMonitoring[];
+
+  @HasMany(() => OrbitProfileMonitoring, 'applicationId')
+  declare orbitProfileMonitorings?: OrbitProfileMonitoring[];
 
   @BelongsTo(() => User, {
     foreignKey: 'creator',

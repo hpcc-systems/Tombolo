@@ -142,7 +142,7 @@ export class Cluster extends Model<
   @HasMany(() => FileMonitoring, 'clusterId')
   declare fileMonitorings?: FileMonitoring[];
 
-  @HasMany(() => LandingZoneMonitoring, 'cluster_id')
+  @HasMany(() => LandingZoneMonitoring, 'clusterId')
   declare landingZoneMonitorings?: LandingZoneMonitoring[];
 
   @HasMany(() => ClusterMonitoring, {

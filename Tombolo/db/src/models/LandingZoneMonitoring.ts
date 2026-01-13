@@ -43,65 +43,65 @@ export class LandingZoneMonitoring extends Model<
 
   @AllowNull(false)
   @ForeignKey(() => Application)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, field: 'applicationId' })
   declare applicationId: string;
 
   @AllowNull(false)
-  @Column(DataType.STRING)
+  @Column({ type: DataType.STRING, field: 'monitoringName' })
   declare monitoringName: string;
 
   @AllowNull(false)
   @Default(false)
-  @Column(DataType.BOOLEAN)
+  @Column({ type: DataType.BOOLEAN, field: 'isActive' })
   declare isActive: boolean;
 
   @AllowNull(false)
-  @Column(DataType.ENUM('fileCount', 'spaceUsage', 'fileMovement'))
+  @Column({ type: DataType.ENUM('fileCount', 'spaceUsage', 'fileMovement'), field: 'lzMonitoringType' })
   declare lzMonitoringType: 'fileCount' | 'spaceUsage' | 'fileMovement';
 
   @AllowNull(false)
   @Default('pending')
-  @Column(DataType.ENUM('approved', 'rejected', 'pending'))
+  @Column({ type: DataType.ENUM('approved', 'rejected', 'pending'), field: 'approvalStatus' })
   declare approvalStatus: 'approved' | 'rejected' | 'pending';
 
   @ForeignKey(() => User)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, field: 'approvedBy' })
   declare approvedBy?: string | null;
 
-  @Column(DataType.DATE)
+  @Column({ type: DataType.DATE, field: 'approvedAt' })
   declare approvedAt?: Date | null;
 
-  @Column(DataType.STRING)
+  @Column({ type: DataType.STRING, field: 'approverComment' })
   declare approverComment?: string | null;
 
   @AllowNull(false)
-  @Column(DataType.TEXT)
+  @Column({ type: DataType.TEXT, field: 'description' })
   declare description: string;
 
   @AllowNull(false)
   @ForeignKey(() => Cluster)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, field: 'clusterId' })
   declare clusterId: string;
 
-  @Column(DataType.JSON)
+  @Column({ type: DataType.JSON, field: 'lastRunDetails' })
   declare lastRunDetails?: any | null;
 
   @AllowNull(false)
-  @Column(DataType.JSON)
+  @Column({ type: DataType.JSON, field: 'metaData' })
   declare metaData: any;
 
   @AllowNull(false)
   @ForeignKey(() => User)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, field: 'createdBy' })
   declare createdBy: string;
 
   @AllowNull(false)
   @ForeignKey(() => User)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, field: 'lastUpdatedBy' })
   declare lastUpdatedBy: string;
 
   @ForeignKey(() => User)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, field: 'deletedBy' })
   declare deletedBy?: string | null;
 
   @AllowNull(false)

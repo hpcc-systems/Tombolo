@@ -214,7 +214,7 @@ export class User extends Model<
   declare createdLandingZoneMonitorings?: LandingZoneMonitoring[];
 
   @HasMany(() => LandingZoneMonitoring, {
-    foreignKey: 'updatedBy',
+    foreignKey: 'lastUpdatedBy',
     onDelete: 'NO ACTION',
   })
   declare updatedLandingZoneMonitorings?: LandingZoneMonitoring[];
