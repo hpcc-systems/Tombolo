@@ -102,7 +102,7 @@ router.get(
 );
 
 // Catch-all route for debugging - this will help identify malformed requests
-router.all('*', (req, res) => {
+router.all('*path', (req, res) => {
   return res
     .status(404)
     .json({ message: 'Auth endpoint not found', path: req.originalUrl });
