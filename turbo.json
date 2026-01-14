@@ -51,6 +51,9 @@
     "esm:build": {
       "cache": true,
       "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
     }
   }
 }

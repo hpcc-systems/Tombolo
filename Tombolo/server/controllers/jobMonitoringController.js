@@ -129,10 +129,10 @@ async function patchJobMonitoring(req, res) {
     payload.approvedBy = null;
     payload.approvedAt = null;
     payload.isActive = false;
-    payload.updatedBy = req.user.id;
+    payload.lastUpdatedBy = req.user.id;
 
     //Update the job monitoring
-    const updatedRows = await JobMonitoring.update(req.body, {
+    const updatedRows = await JobMonitoring.update(payload, {
       where: { id: req.body.id },
       returning: true,
     });
@@ -257,7 +257,7 @@ async function toggleJobMonitoring(req, res) {
     if (action) {
       // If action is start or pause change isActive to true or false respectively
       await JobMonitoring.update(
-        { isActive: action === 'start', updatedBy: req.user.id },
+        { isActive: action === 'start', lastUpdatedBy: req.user.id },
         {
           where: { id: { [Op.in]: approvedIds } },
           transaction,
@@ -268,7 +268,7 @@ async function toggleJobMonitoring(req, res) {
       await JobMonitoring.update(
         {
           isActive: Sequelize.literal('NOT isActive'),
-          updatedBy: req.user.id,
+          lastUpdatedBy: req.user.id,
         },
         {
           where: { id: { [Op.in]: approvedIds } },
@@ -313,7 +313,7 @@ async function bulkUpdateJobMonitoring(req, res) {
           metaData: data.metaData,
           isActive: false,
           approvalStatus: APPROVAL_STATUS.PENDING,
-          updatedBy: req.user.id,
+          lastUpdatedBy: req.user.id,
         },
         {
           where: { id: data.id },
