@@ -113,30 +113,30 @@ function ClustersTable({
   ];
 
   // Handle delete cluster
-  const handleDeleteCluster = async (id) => {
+  const handleDeleteCluster = async id => {
     try {
       await clustersService.delete(id);
       handleSuccess('Cluster deleted successfully');
-      setClusters((clusters) => clusters.filter((cluster) => cluster.id !== id));
+      setClusters(clusters => clusters.filter(cluster => cluster.id !== id));
     } catch (e) {
       handleError('Failed to delete cluster');
     }
   };
 
   // Handle view cluster details
-  const handleViewClusterDetails = (record) => {
+  const handleViewClusterDetails = record => {
     setSelectedCluster(record);
     setDisplayClusterDetailsModal(true);
   };
 
   // Handle edit cluster details
-  const handleEditClusterDetails = (record) => {
+  const handleEditClusterDetails = record => {
     setSelectedCluster(record);
     setDisplayEditClusterModal(true);
   };
 
   // Handle test connection
-  const handleTestConnection = async (record) => {
+  const handleTestConnection = async record => {
     try {
       setTestingConnection(record.id);
       await clustersService.pingExisting({ clusterId: record.id });
@@ -149,13 +149,13 @@ function ClustersTable({
     // Get updated cluster and set it
     try {
       const updatedCluster = await clustersService.getOne(record.id);
-      setClusters((clusters) => clusters.map((cluster) => (cluster.id === record.id ? updatedCluster : cluster)));
+      setClusters(clusters => clusters.map(cluster => (cluster.id === record.id ? updatedCluster : cluster)));
     } catch (err) {
       handleError('Failed to get updated cluster');
     }
   };
 
-  return <Table columns={columns} dataSource={clusters} size="small" rowKey={(record) => record.id} />;
+  return <Table columns={columns} dataSource={clusters} size="small" rowKey={record => record.id} />;
 }
 
 export default ClustersTable;

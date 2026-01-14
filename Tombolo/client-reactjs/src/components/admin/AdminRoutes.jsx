@@ -6,7 +6,7 @@ import { PrivateRoute } from '../common/PrivateRoute';
 const Users = React.lazy(() => import('./Users'));
 const AdminApplications = React.lazy(() => import('./apps/Applications'));
 // const AdminClusters = React.lazy(() => import('./Clusters'));
-const Clusters = React.lazy(() => import('./clusters/'));
+const Clusters = React.lazy(() => import('@/pages/admin/Clusters'));
 // const Regulations = React.lazy(() => import('./ControlsAndRegulations'));
 // const GitHubSettings = React.lazy(() => import('./GitHubSettings/GitHubSettings'));
 const ScheduledJobsPage = React.lazy(() => import('./ScheduledJobsPage'));
