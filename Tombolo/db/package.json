@@ -1,0 +1,50 @@
+{
+  "name": "@tombolo/db",
+  "private": true,
+  "version": "0.1.0",
+  "main": "models/index.js",
+  "types": "models/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./models/index.d.ts",
+      "require": "./models/index.js",
+      "default": "./models/index.js"
+    },
+    "./models": {
+      "types": "./models/index.d.ts",
+      "require": "./models/index.js",
+      "default": "./models/index.js"
+    },
+    "./models/*": {
+      "types": "./models/*.d.ts",
+      "require": "./models/*.js",
+      "default": "./models/*.js"
+    }
+  },
+  "files": [
+    "models",
+    "config",
+    "utils",
+    "migrations",
+    "seeders"
+  ],
+  "description": "Shared database models, migrations, and connection configuration for Tombolo",
+  "dependencies": {
+    "@tombolo/shared": "workspace:*",
+    "dotenv": "catalog:",
+    "mysql2": "catalog:",
+    "sequelize": "catalog:"
+  },
+  "scripts": {
+    "build": "echo 'no build step for db'",
+    "db:migrate": "sequelize db:migrate",
+    "db:create": "sequelize db:create",
+    "db:seed": "sequelize db:seed:all",
+    "db:drop": "sequelize db:drop",
+    "clean": "rm -rf .turbo",
+    "clean:deps": "rm -rf node_modules"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.3"
+  }
+}

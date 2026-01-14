@@ -28,6 +28,8 @@ const landingZoneMonitoring = require('../routes/landingZoneMonitoring');
 const costMonitoring = require('../routes/costMonitoringRoutes');
 const clusterMonitoring = require('../routes/clusterMonitoringRoutes');
 const fileMonitoring = require('../routes/fileMonitoringRoutes');
+const orbitProfileMonitoring = require('../routes/orbitProfileMonitoringRoutes');
+const workunits = require('../routes/workunitRoutes');
 
 // Use routes
 app.use('/api/auth', auth);
@@ -48,6 +50,12 @@ app.use(
 );
 app.use('/api/costMonitoring', fakeValidateTokenMiddleware, costMonitoring);
 app.use('/api/fileMonitoring', fakeValidateTokenMiddleware, fileMonitoring);
+app.use(
+  '/api/orbitProfileMonitoring',
+  fakeValidateTokenMiddleware,
+  orbitProfileMonitoring
+);
+app.use('/api/workunits', fakeValidateTokenMiddleware, workunits);
 
 // Function to start the server
 let server;

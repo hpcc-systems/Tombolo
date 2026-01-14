@@ -18,12 +18,14 @@ Local installation requires a few dependencies to be installed directly on your 
 
 ### Required Software
 
-- [Node.js](https://nodejs.org/en/download/) version 18.0 or above:
+- [Node.js](https://nodejs.org/en/download/) version 18.0 or above (20+ recommended):
   - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
 - [Git](https://git-scm.com/downloads) latest version recommended.
 - [MySQL Database](https://dev.mysql.com/downloads/) latest version recommended (URL, and port number, must be accessible from the installation environment).
 - [HPCC cluster](https://hpccsystems.com/getting-started/) latest version recommended.
 - Email Provider - Required to verify user accounts.
+- [pnpm](../Developer/InstallPnpm) The package manager used by Tombolo.
+- [Redis](../Developer/InstallRedis) The in-memory database used for job queues
 
 ### Recommended Software and Skills
 
@@ -41,6 +43,12 @@ Run the command below.
 
 ```bash
 git clone https://github.com/hpcc-systems/Tombolo.git
+```
+
+The default branch is `master`, which will be checked out automatically when you clone. If you have switched branches and need to return to `master`, use:
+
+```bash
+git checkout master
 ```
 
 ---
@@ -92,61 +100,35 @@ Use cluster-whitelist.sample.js as a template to add the clusters that you would
 
 ## Step 5 - Run the application
 
-### Server
+### Initialize the database
 
-Run the following commands from the root directory of your git repository in your preferred terminal or integrated IDE
-
-```bash
-cd Tombolo/server
-```
+Run the following commands in the root directory of your git repository
 
 ```bash
-npm run bootstrap-server
+pnpm install
 ```
 
-The `cd` command changes the directory you're working with.
-
-The `npm run bootstrap-server` command installs dependencies located in the package.json file necessary for running and compiling the code, then creates the database schema and runs necessary migrations and seeder files for the application. After this is finished, it will start the server. You should see the message below in your console, followed by a set of informational messages stating services have started.
+The `pnpm install` command installs all dependencies for the application (even for nested repos)
 
 ```bash
------------------------------
-Server is finished intializing, and is now running
------------------------------
+pnpm db:init
 ```
 
-\*\*\* After the bootstrap command has been run, you can start the server in any terminal with the following command inside of the Tombolo/server directory
+The `pnpm db:init` command creates the schema, runs migrations and runs all seeds. This is required for the backend to interact with the database.
+
+### Run the application
 
 ```bash
-node server.js
+pnpm dev
 ```
 
-### Client
-
-Open a seperate terminal or integrated IDE, and navigate to your git repository location
-
-```bash
-cd Tombolo/client-reactjs
-```
-
-```bash
-npm run bootstrap-client
-```
-
-The `cd` command changes the directory you're working with.
-
-The `npm run bootstrap-client` command installs dependencies located in the package.json file necessary for running and compiling the code. After this is finished, it will start the front end.
-
-\*\*\* After the bootstrap command has been run, you can start the client in any terminal with the following command inside of the Tombolo/client-reactjs directory
-
-```bash
-npm run start
-```
+The `pnpm dev` command starts the frontend and backend in dev mode.
 
 ---
 
 ## Step 6 - Open the application
 
 Depending on your environment, your browser may have been opened to the start page of Tombolo already, after running the
-`npm start` command for the client. If not, you can reach your new installation at [http://localhost:3000/](http://localhost:3000/). If you need any further assistance, check out our [user guides](/docs/category/user-guides).
+`pnpm dev` command for the client. If not, you can reach your new installation at [http://localhost:3000/](http://localhost:3000/). If you need any further assistance, check out our [user guides](/docs/category/user-guides).
 
 ---

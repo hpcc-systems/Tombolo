@@ -1,9 +1,9 @@
-version: "3"
 services:
   web:
     build:
-      context: ./client-reactjs
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Tombolo/Dockerfile
+      target: client
     networks:
       - tombolo-network
     ports:
@@ -12,33 +12,102 @@ services:
     volumes:
       - ${CERT_PATH}:/etc/nginx/certs/
     depends_on:
-      - mysql_db
+      node:
+        condition: service_healthy
+      mysql_db:
+        condition: service_healthy
     env_file:
       - .env
     entrypoint: ["sh", "/etc/nginx/run_nginx.sh", "${HOSTNAME}"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80/",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   node:
-    #restart: always
     entrypoint: ["sh", "/app/docker-entry.sh", "mysql_db", "3306"]
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: Tombolo/Dockerfile
+      target: server
     volumes:
       - /tmp/pm2:/tmp/pm2
       - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
-      - ./logs/server:/app/logs
+      - ./dockerLogs/server:/app/logs
       - ./certs:/usr/local/share/ca-certificates
       - ./customCerts:/customCerts
+      - ./gitClones:/gitClones
     networks:
       - tombolo-network
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
     depends_on:
-      - mysql_db
+      mysql_db:
+        condition: service_healthy
     env_file:
       - .env
+    environment:
+      LOG_DIR: /app/logs/db
     logging:
       driver: "none" # This line disables Docker logs. All logs are written to the file system
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:${SERVER_PORT}/api/status/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  jobs:
+    build:
+      context: ..
+      dockerfile: Tombolo/Dockerfile
+      target: jobs
+    volumes:
+      - ./dockerLogs/jobs:/app/logs
+    networks:
+      - tombolo-network
+    ports:
+      - "8678:8678"
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DB_PORT: 3306 # Override for container-to-container communication
+      LOG_DIR: /app/logs
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8678/",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   mysql_db:
     image: mysql:8.0
@@ -46,6 +115,7 @@ services:
     command: --innodb_use_native_aio=0 --sql_mode=""
     volumes:
       - ./mysql-data:/var/lib/mysql
+      - ./dockerLogs/db:/var/log/mysql
     ports:
       - ${DB_PORT}:3306
     environment:
@@ -58,6 +128,58 @@ services:
       - tombolo-network
     env_file:
       - .env
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:8.4-alpine
+    restart: always
+    networks:
+      - tombolo-network
+    ports:
+      - ${REDIS_PORT}:6379
+    env_file:
+      - .env
+    volumes:
+      - ./redis-data:/data
+    command: >
+      sh -c "
+        if [ -n \"${REDIS_PASSWORD}\" ]; then
+          if [ -n \"${REDIS_USER}\" ]; then
+            redis-server --requirepass ${REDIS_PASSWORD} --user ${REDIS_USER} on >${REDIS_PASSWORD} ~* &* +@all
+          else
+            redis-server --requirepass ${REDIS_PASSWORD}
+          fi
+        else
+          redis-server
+        fi
+      "
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          'if [ -n "${REDIS_PASSWORD}" ]; then redis-cli -a ${REDIS_PASSWORD} ping; else redis-cli ping; fi',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 networks:
   tombolo-network:

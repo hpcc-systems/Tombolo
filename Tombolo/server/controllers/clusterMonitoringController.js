@@ -1,17 +1,16 @@
 const { Op } = require('sequelize');
-const models = require('../models');
+const { ClusterMonitoring, sequelize, Cluster } = require('../models');
 const logger = require('../config/logger');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 const { APPROVAL_STATUS } = require('../config/constants');
-
-const { ClusterMonitoring, sequelize } = models;
+const { sendError, sendSuccess, sendResponse } = require('../utils/response');
 
 // Common includes for cluster monitoring - customize with additional  if needed
 const getCommonIncludes = ({ customIncludes = [] }) => {
   return [
     ...getUserFkIncludes(true),
     {
-      model: models.Cluster,
+      model: Cluster,
       as: 'cluster',
       attributes: ['id', 'name', 'thor_host', 'thor_port'],
     },
@@ -35,13 +34,15 @@ const createClusterMonitoring = async (req, res) => {
       include: getCommonIncludes({ customIncludes: [] }),
     });
 
-    res.status(201).send({
-      message: 'Cluster status monitoring created successfully',
-      data: monitoring,
-    });
+    return sendSuccess(
+      res,
+      monitoring,
+      'Cluster status monitoring created successfully',
+      201
+    );
   } catch (err) {
-    res.status(500).send({ message: err.message });
-    logger.error('Failed to create cluster', err);
+    logger.error('Failed to create cluster monitoring', err);
+    return sendError(res, err.message);
   }
 };
 
@@ -53,14 +54,12 @@ const getClusterMonitoringById = async (req, res) => {
       include: getCommonIncludes({ customIncludes: [] }),
     });
     if (!monitoring) {
-      return res
-        .status(404)
-        .send({ message: 'Cluster status monitoring not found' });
+      return sendError(res, 'Cluster status monitoring not found', 404);
     }
-    res.status(200).send({ data: monitoring });
+    return sendSuccess(res, monitoring);
   } catch (err) {
-    res.status(500).send({ message: err.message });
     logger.error('Failed to get cluster monitoring by ID', err);
+    return sendError(res, err.message);
   }
 };
 
@@ -71,10 +70,10 @@ const getAllClusterMonitoring = async (req, res) => {
       include: getCommonIncludes({ customIncludes: [] }),
       order: [['createdAt', 'DESC']],
     });
-    res.status(200).send(monitoring);
+    return sendSuccess(res, monitoring);
   } catch (err) {
-    res.status(500).send({ message: err.message });
-    logger.error('failed to get all cluster monitoring', err);
+    logger.error('Failed to get all cluster monitoring', err);
+    return sendError(res, err.message);
   }
 };
 
@@ -86,9 +85,7 @@ const updateClusterMonitoring = async (req, res) => {
     });
 
     if (!monitoring) {
-      return res
-        .status(404)
-        .send({ message: 'Cluster status monitoring not found' });
+      return sendError(res, 'Cluster status monitoring not found', 404);
     }
 
     // Corrected update syntax
@@ -110,13 +107,14 @@ const updateClusterMonitoring = async (req, res) => {
       include: getCommonIncludes({ customIncludes: [] }),
     });
 
-    res.status(200).send({
-      message: 'Cluster status monitoring updated successfully',
-      data: updatedMonitoring,
-    });
+    return sendSuccess(
+      res,
+      updatedMonitoring,
+      'Cluster status monitoring updated successfully'
+    );
   } catch (err) {
     logger.error('Failed to update cluster monitoring', err);
-    res.status(500).send({ message: err.message });
+    return sendError(res, err.message);
   }
 };
 
@@ -131,16 +129,16 @@ const toggleClusterMonitoringStatus = async (req, res) => {
     });
 
     if (!monitoring) {
-      return res
-        .status(404)
-        .send({ message: 'Cluster status monitoring not found' });
+      return sendError(res, 'Cluster status monitoring not found', 404);
     }
 
     // If approvalStatus is not 'approved', return 400
     if (monitoring.approvalStatus !== APPROVAL_STATUS.APPROVED) {
-      return res.status(400).send({
-        message: 'Cluster status monitoring must be approved to activate',
-      });
+      return sendError(
+        res,
+        'Cluster status monitoring must be approved to activate',
+        400
+      );
     }
 
     await ClusterMonitoring.update(
@@ -152,12 +150,14 @@ const toggleClusterMonitoringStatus = async (req, res) => {
         where: { id: req.body.id },
       }
     );
-    res.status(200).send({
-      message: 'Cluster status monitoring status updated successfully',
-    });
+    return sendSuccess(
+      res,
+      null,
+      'Cluster status monitoring status updated successfully'
+    );
   } catch (err) {
-    res.status(500).send({ message: err.message });
     logger.error('Failed to toggle monitoring status', err);
+    return sendError(res, err.message);
   }
 };
 
@@ -173,9 +173,7 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
     });
 
     if (monitorings.length === 0) {
-      return res
-        .status(404)
-        .send({ message: 'No cluster status monitoring records found' });
+      return sendError(res, 'No cluster status monitoring records found', 404);
     }
 
     // Check if any monitoring is not approved
@@ -183,12 +181,24 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
       mon => mon.approvalStatus !== APPROVAL_STATUS.APPROVED
     );
 
-    if (unapprovedMonitorings.length > 0) {
-      return res.status(400).send({
-        message:
-          'All selected cluster status monitoring must be approved to change active status',
-        unapprovedIds: unapprovedMonitorings.map(mon => mon.id),
-      });
+    // iterate and remove unapproved monitoring from the list
+    const idsToProceedWith = [];
+    monitorings.forEach(m => {
+      if (m.approvalStatus == APPROVAL_STATUS.APPROVED) {
+        // remove from ids
+        idsToProceedWith.push(m.id);
+      }
+    });
+
+    if (idsToProceedWith.length === 0) {
+      return sendError(
+        res,
+        {
+          message: 'No monitorings to toggle. All are in unapproved state',
+          unapprovedIds: unapprovedMonitorings.map(mon => mon.id),
+        },
+        400
+      );
     }
 
     // Update isActive status for all specified IDs
@@ -198,16 +208,18 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
         updatedBy: req.user.id,
       },
       {
-        where: { id: { [Op.in]: ids } },
+        where: { id: { [Op.in]: idsToProceedWith } },
       }
     );
 
-    res.status(200).send({
-      message: 'Cluster status monitoring active status updated successfully',
-    });
+    return sendSuccess(
+      res,
+      null,
+      'Cluster status monitoring active status updated successfully'
+    );
   } catch (err) {
-    res.status(500).send({ message: err.message });
     logger.error('Failed to bulk toggle monitoring status', err);
+    return sendError(res, err.message);
   }
 };
 
@@ -235,19 +247,18 @@ const evaluateClusterMonitoring = async (req, res) => {
 
     // If no records were updated, return 404
     if (updatedMonitoring.length === 0) {
-      return res
-        .status(404)
-        .send({ message: 'No cluster status monitoring records found' });
+      return sendError(res, 'No cluster status monitoring records found', 404);
     }
 
     // Return the updated records
-    res.status(200).send({
-      message: 'Cluster status monitoring evaluated successfully',
-      data: updatedMonitoring,
-    });
+    return sendSuccess(
+      res,
+      updatedMonitoring,
+      'Cluster status monitoring evaluated successfully'
+    );
   } catch (err) {
-    res.status(500).send({ message: err.message });
     logger.error('Failed to evaluate monitoring', err);
+    return sendError(res, err.message);
   }
 };
 
@@ -299,19 +310,27 @@ const bulkUpdateClusterMonitoring = async (req, res) => {
     }
 
     const statusCode = results.failed.length > 0 ? 207 : 200;
+    const message =
+      statusCode === 207
+        ? 'Bulk update partially successful'
+        : 'Bulk update completed successfully';
 
-    res.status(statusCode).send({
-      message:
-        statusCode === 207
-          ? 'Bulk update partially successful'
-          : 'Bulk update completed successfully',
+    const responseData = {
       successful: results.successful.length,
       failed: results.failed.length,
       results,
+    };
+
+    return sendResponse(res, {
+      status: statusCode,
+      success: statusCode !== 207,
+      message,
+      data: responseData,
+      errors: results.failed.length > 0 ? results.failed.map(f => f.error) : [],
     });
   } catch (err) {
-    res.status(500).send({ message: err.message });
     logger.error('Failed to bulk update monitoring', err);
+    return sendError(res, err.message);
   }
 };
 
@@ -336,14 +355,15 @@ const deleteClusterMonitoring = async (req, res) => {
 
     await transaction.commit();
 
-    res
-      .status(200)
-      .send({ message: 'Cluster status monitoring deleted successfully' });
+    return sendSuccess(
+      res,
+      null,
+      'Cluster status monitoring deleted successfully'
+    );
   } catch (err) {
     await transaction.rollback();
-
-    res.status(500).send({ message: err.message });
     logger.error('Failed to delete monitoring', err);
+    return sendError(res, err.message);
   }
 };
 

@@ -7,6 +7,11 @@ const moment = require('moment');
 // Local Imports
 const logger = require('../config/logger');
 const {
+  ACCESS_TOKEN_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
+  TOKEN_COOKIE_MAX_AGE,
+} = require('../config/tokens');
+const {
   User,
   UserRole,
   RoleType,
@@ -24,12 +29,18 @@ const csrfHeaderName = 'x-csrf-token';
 
 // Generate access token
 const generateAccessToken = user => {
-  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '15m' });
+  return jwt.sign(user, process.env.JWT_SECRET, {
+    expiresIn: ACCESS_TOKEN_EXPIRY,
+  });
 };
 
 // Generate refresh token
-const generateRefreshToken = tokenId => {
-  return jwt.sign(tokenId, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+const generateRefreshToken = (tokenId, customExpiry = null) => {
+  const options = customExpiry
+    ? { expiresIn: Math.floor((customExpiry.getTime() - Date.now()) / 1000) } // seconds until custom expiry
+    : { expiresIn: REFRESH_TOKEN_EXPIRY }; // default from config
+
+  return jwt.sign(tokenId, process.env.JWT_REFRESH_SECRET, options);
 };
 
 // Verify token
@@ -85,7 +96,7 @@ const setTokenCookie = async (res, token) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'Strict',
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    maxAge: TOKEN_COOKIE_MAX_AGE, // From config
   });
   return true;
 };
@@ -95,15 +106,22 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
     //set token in req as well so csrf token can be generated
     req.cookies.token = accessToken;
 
-    const csrfToken = generateToken(req, res, true);
+    // Clear any existing CSRF cookie to prevent validation conflicts
+    res.clearCookie('x-csrf-token', {
+      sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'Lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
 
-    //attach csrfToken to x-csrf-token header
+    // Generate the token pair using doubleCsrf
+    const csrfToken = generateToken(req, res);
+
+    //attach csrfToken to x-csrf-token header for client to store and use in subsequent requests
     res.setHeader(csrfHeaderName, csrfToken);
 
     return true;
   } catch (e) {
     logger.error('Error while generating csrf token:' + e);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    throw new Error('CSRF token generation failed: ' + e.message);
   }
 };
 
@@ -448,7 +466,8 @@ const handleInvalidLoginAttempt = async ({ user, errMessage }) => {
 
   // Incorrect E-mail password combination error
   const invalidCredentialsErr = new Error(errMessage);
-  invalidCredentialsErr.status = 403;
+  invalidCredentialsErr.status = 401;
+  invalidCredentialsErr.name = 'UnauthorizedError';
   throw invalidCredentialsErr;
 };
 
@@ -564,6 +583,58 @@ const deleteUser = async (id, reason) => {
   }
 };
 
+// Get access request notification recipients from instance settings and role-based recipients
+const getAccessRequestRecipients = async () => {
+  try {
+    const instance_setting = await InstanceSetting.findOne({ raw: true });
+
+    if (!instance_setting) {
+      logger.warn('No instance settings found for notification recipients');
+      return [];
+    }
+
+    const { metaData } = instance_setting;
+    let recipients = metaData?.accessRequestEmailRecipientsEmail || [];
+
+    // Get emails from users with specified roles
+    if (
+      metaData?.accessRequestEmailRecipientsRoles &&
+      metaData.accessRequestEmailRecipientsRoles.length > 0
+    ) {
+      const roles = metaData.accessRequestEmailRecipientsRoles;
+
+      // Get role ids
+      const roleDetails = await RoleType.findAll({
+        where: { roleName: roles },
+        raw: true,
+      });
+
+      const roleIds = roleDetails.map(r => r.id);
+
+      // Get all users with the roleIds above
+      const users = await UserRole.findAll({
+        where: { roleId: roleIds },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['email'],
+          },
+        ],
+      });
+
+      const emails = users.map(u => u.user.email);
+      recipients = [...recipients, ...emails];
+    }
+
+    // Remove duplicates and filter out empty values
+    return [...new Set(recipients.filter(email => email && email.trim()))];
+  } catch (error) {
+    logger.error(`Error getting notification recipients: ${error.message}`);
+    return [];
+  }
+};
+
 //Exports
 module.exports = {
   generateAccessToken,
@@ -587,4 +658,5 @@ module.exports = {
   sendAccountUnlockedEmail,
   deleteUser,
   checkIfSystemUser,
+  getAccessRequestRecipients,
 };

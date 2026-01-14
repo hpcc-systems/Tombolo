@@ -7,6 +7,7 @@ const {
   validateLoginPayload,
   validateEmailDuplicate,
   verifyValidTokenExists,
+  validateRefreshTokenRequest,
   validatePasswordResetRequestPayload,
   validateResetPasswordPayload,
   validateAzureAuthCode,
@@ -20,6 +21,7 @@ const { validate } = require('../middlewares/validateRequestBody');
 const {
   createBasicUser,
   loginBasicUser,
+  refreshAccessToken,
   logOutBasicUser,
   handlePasswordResetRequest,
   createApplicationOwner,
@@ -46,6 +48,7 @@ router.post(
   createBasicUser
 ); // Create a new user (Traditional)
 router.post('/loginBasicUser', validate(validateLoginPayload), loginBasicUser); // Login user ( Traditional )
+router.post('/refreshToken', validateRefreshTokenRequest, refreshAccessToken); // Refresh access token
 router.post('/logoutBasicUser', verifyValidTokenExists, logOutBasicUser); // Logout user
 router.post(
   '/handlePasswordResetRequest',
@@ -97,5 +100,12 @@ router.get(
   validate(validateResetToken),
   getUserDetailsWithVerificationCode
 );
+
+// Catch-all route for debugging - this will help identify malformed requests
+router.all('*path', (req, res) => {
+  return res
+    .status(404)
+    .json({ message: 'Auth endpoint not found', path: req.originalUrl });
+});
 
 module.exports = router;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Menu, Dropdown, Button, message, Popconfirm, Popover, Form, Select, Card, Badge } from 'antd';
+import { Menu, Dropdown, Button, Popconfirm, Popover, Form, Select, Card, Badge } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 
 /**
  * Shared Monitoring Action Button
@@ -77,7 +78,7 @@ const MonitoringActionButton = ({
   const count = selectedRows?.length || 0;
   const disabledMulti = count < 2;
 
-  const handleMenuSelection = (key) => {
+  const handleMenuSelection = key => {
     if (key === 'add' && onAdd) onAdd();
     if (key === 'bulkEdit' && onBulkEdit) onBulkEdit();
     if (key === 'bulkApproveReject' && onBulkApproveReject) onBulkApproveReject();
@@ -97,22 +98,22 @@ const MonitoringActionButton = ({
 
   const deleteSelected = async () => {
     try {
-      const ids = selectedRows.map((r) => r.id);
+      const ids = selectedRows.map(r => r.id);
       await onBulkDelete?.(ids);
     } catch (err) {
-      message.error('Unable to delete selected items');
+      handleError('Unable to delete selected items');
     }
   };
 
   const bulkStartPause = async () => {
     try {
       const action = bulkStartPauseForm.getFieldValue('action');
-      const ids = selectedRows.map((r) => r.id);
+      const ids = selectedRows.map(r => r.id);
       await onBulkStartPause?.({ ids, action });
-      message.success(`Selected ${action === 'start' ? 'items started' : 'items paused'}`);
+
       setOpen(false);
     } catch (_) {
-      message.error('Unable to start/pause selected items');
+      handleError('Unable to start/pause selected items');
     }
   };
 
@@ -143,7 +144,7 @@ const MonitoringActionButton = ({
         </Card>
       }
       trigger="click"
-      onOpenChange={(visible) => {
+      onOpenChange={visible => {
         if (!visible) bulkStartPauseForm.resetFields();
       }}>
       <a>Bulk start/pause</a>
@@ -181,7 +182,7 @@ const MonitoringActionButton = ({
       onOpenChange={(nextOpen, info) => {
         if (!info || info.source === 'trigger' || nextOpen) setOpen(nextOpen);
       }}
-      dropdownRender={() => <Menu items={menuItems} onClick={({ key }) => handleMenuSelection(key)} />}
+      popupRender={() => <Menu items={menuItems} onClick={({ key }) => handleMenuSelection(key)} />}
       placement={placement}>
       <Button type={buttonType} disabled={buttonDisabled ?? isReader}>
         {label} <DownOutlined />

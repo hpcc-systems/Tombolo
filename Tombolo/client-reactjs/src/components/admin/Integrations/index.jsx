@@ -1,11 +1,11 @@
 // Package imports
 import React, { useState, useEffect } from 'react';
-import { message } from 'antd';
+import { handleError } from '../../common/handleResponse';
 
 //Local Imports
 import IntegrationsTable from './IntegrationsTable.jsx';
 import BreadCrumbs from '../../common/BreadCrumbs.jsx';
-import { getAllIntegrations } from './integration-utils.js';
+import integrationsService from '@/services/integrations.service';
 
 function Integrations() {
   //Local States
@@ -15,10 +15,10 @@ function Integrations() {
   useEffect(() => {
     (async () => {
       try {
-        const integrations = await getAllIntegrations();
+        const integrations = await integrationsService.getAll();
         setAllIntegrations(integrations);
       } catch (error) {
-        message.error('Failed to get integrations', error);
+        handleError('Failed to get integrations');
       }
     })();
   }, []);

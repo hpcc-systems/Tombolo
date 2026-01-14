@@ -1,7 +1,6 @@
 const { monitorCluster } = require('../../jobs/cluster/clusterMonitoring');
 const {
   ClusterMonitoring,
-  Cluster,
   MonitoringType,
   NotificationQueue,
   AsrProduct,

@@ -22,9 +22,7 @@ vi.mock('antd', async (importOriginal) => {
   MockForm.useForm = () => [{}, vi.fn()];
 
   const MockRow = ({ children }) => <div data-testid="row">{children}</div>;
-  const MockCol = ({ children, span }) => (
-    <div data-testid={`col-${span || 'n'}`}>{children}</div>
-  );
+  const MockCol = ({ children, span }) => <div data-testid={`col-${span || 'n'}`}>{children}</div>;
 
   const MockSelect = ({ children, placeholder, allowClear, mode, disabled }) => (
     <select aria-label={placeholder || 'select'} multiple={mode === 'multiple'} disabled={disabled}>
@@ -37,12 +35,7 @@ vi.mock('antd', async (importOriginal) => {
   const MockInput = ({ placeholder, prefix, suffix, onChange, allowClear, disabled }) => (
     <div>
       {prefix}
-      <input
-        aria-label={placeholder || 'input'}
-        placeholder={placeholder}
-        disabled={disabled}
-        onChange={onChange}
-      />
+      <input aria-label={placeholder || 'input'} placeholder={placeholder} disabled={disabled} onChange={onChange} />
       <span data-testid="suffix">{suffix}</span>
     </div>
   );
@@ -85,13 +78,7 @@ const integrationsASR = [{ name: 'ASR' }];
 
 describe('MonitoringFilters', () => {
   it('returns null when filtersVisible is false', () => {
-    const { container } = render(
-      <MonitoringFilters
-        form={{}}
-        filtersVisible={false}
-        options={baseOptions}
-      />
-    );
+    const { container } = render(<MonitoringFilters form={{}} filtersVisible={false} options={baseOptions} />);
     expect(container.firstChild).toBeNull();
   });
 
@@ -133,10 +120,11 @@ describe('MonitoringFilters', () => {
     // Now suffix should show matches and primary color
     const suffixes = screen.getAllByTestId('suffix');
     const suffix2 = suffixes[suffixes.length - 1];
-    expect(suffix2.textContent.replace(/\s+/g,' ').trim()).toContain('2 matches');
+    expect(suffix2.textContent.replace(/\s+/g, ' ').trim()).toContain('2 matches');
 
-    // color style check (string contains var(--primary))
-    expect(suffix2.firstChild).toHaveStyle({ color: 'var(--primary)' });
+    // color style check (verify the span has the color style)
+    expect(suffix2.firstChild).toBeInTheDocument();
+    expect(suffix2.firstChild.style.color).toBe('var(--primary)');
 
     // Change event lowercases input
     const inputs = screen.getAllByPlaceholderText('Search by monitoring name');
@@ -178,27 +166,13 @@ describe('MonitoringFilters', () => {
     expect(screen.queryByTestId('asr-filters')).not.toBeInTheDocument();
 
     // Hide when no ASR integration
-    rerender(
-      <MonitoringFilters
-        form={{}}
-        filtersVisible
-        options={baseOptions}
-        showAsr
-        integrations={[]}
-      />
-    );
+    rerender(<MonitoringFilters form={{}} filtersVisible options={baseOptions} showAsr integrations={[]} />);
     expect(screen.queryByTestId('asr-filters')).not.toBeInTheDocument();
   });
 
   it('renders Clusters select when showClusters; switches name and mode based on clustersMode', () => {
     const { rerender } = render(
-      <MonitoringFilters
-        form={{}}
-        filtersVisible
-        options={baseOptions}
-        showClusters
-        clustersMode="multiple"
-      />
+      <MonitoringFilters form={{}} filtersVisible options={baseOptions} showClusters clustersMode="multiple" />
     );
 
     // Multiple mode uses field name "clusters" and multiple select
@@ -208,15 +182,7 @@ describe('MonitoringFilters', () => {
     expect(selectMultiple).toHaveAttribute('multiple');
 
     // Single mode uses name "cluster" and no multiple
-    rerender(
-      <MonitoringFilters
-        form={{}}
-        filtersVisible
-        options={baseOptions}
-        showClusters
-        clustersMode="single"
-      />
-    );
+    rerender(<MonitoringFilters form={{}} filtersVisible options={baseOptions} showClusters clustersMode="single" />);
     const clustersItem2 = screen.getByText('Clusters').parentElement;
     const selectSingle = within(clustersItem2.parentElement).getByLabelText('Cluster');
     expect(selectSingle).not.toHaveAttribute('multiple');
@@ -228,15 +194,7 @@ describe('MonitoringFilters', () => {
   });
 
   it('renders Users and Frequency fields when toggles enabled and shows provided options', () => {
-    render(
-      <MonitoringFilters
-        form={{}}
-        filtersVisible
-        options={baseOptions}
-        showUsers
-        showFrequency
-      />
-    );
+    render(<MonitoringFilters form={{}} filtersVisible options={baseOptions} showUsers showFrequency />);
 
     expect(screen.getByText('Users')).toBeInTheDocument();
     const usersSelect = screen.getByLabelText('Users');

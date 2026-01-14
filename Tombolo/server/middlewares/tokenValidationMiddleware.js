@@ -1,15 +1,8 @@
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
 
 const logger = require('../config/logger');
-const { RefreshToken, User, UserRole, RoleType } = require('../models');
-const {
-  generateAccessToken,
-  generateRefreshToken,
-  setTokenCookie,
-} = require('../utils/authUtil');
+const { setTokenCookie } = require('../utils/authUtil');
 const { isTokenBlacklisted } = require('../utils/tokenBlackListing');
-const { generateAndSetCSRFToken } = require('../utils/authUtil');
 
 // Main middleware function
 const tokenValidationMiddleware = async (req, res, next) => {
@@ -20,7 +13,7 @@ const tokenValidationMiddleware = async (req, res, next) => {
   }
 
   try {
-    // Declare decoded variable properly
+    // Verify and decode token
     const decoded = await verifyToken(token, process.env.JWT_SECRET);
     req.user = decoded;
 
@@ -31,38 +24,17 @@ const tokenValidationMiddleware = async (req, res, next) => {
         .json({ message: 'Unauthorized: Token no longer valid' });
     }
 
-    // Put access token in cookie
+    // Refresh token cookie (extend expiry)
     setTokenCookie(res, token);
 
     next();
   } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      const tokenDetails = await handleExpiredToken(token);
-      if (tokenDetails.sessionExpired) {
-        // Session expired block so refresh token has expired meaning user needs to log in again
-        res.clearCookie('token', {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'Strict',
-        });
-        return res.status(401).json({
-          message: 'Unauthorized: Session expired, Please Log in again.',
-        });
-      } else {
-        logger.info('token expired, refreshing');
-        // Token expired, but session is still valid block so we need to refresh the token cookie and the csrf token
-        await setTokenCookie(res, tokenDetails.newAccessToken);
-
-        await generateAndSetCSRFToken(req, res, tokenDetails.newAccessToken);
-
-        // Update req.user with new token details
-        req.user = await jwt.decode(tokenDetails.newAccessToken);
-
-        next();
-      }
-    } else {
-      return res.status(401).json({ message: 'Unauthorized: Invalid token' });
-    }
+    // For any token error (expired, invalid, etc.) - return 401
+    // Client will handle refresh via interceptor
+    return res.status(401).json({
+      message:
+        err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token',
+    });
   }
 };
 
@@ -79,78 +51,6 @@ const verifyToken = (token, secret) => {
   });
 };
 
-// Function to handle expired tokens and refresh tokens
-const handleExpiredToken = async token => {
-  try {
-    const decodedToken = jwt.decode(token, process.env.JWT_SECRET);
-    const { id: userId, tokenId } = decodedToken;
-
-    // Check if corresponding refresh token exists in DB
-    const refreshToken = await RefreshToken.findOne({
-      where: { id: tokenId },
-    });
-
-    if (!refreshToken) {
-      return {
-        sessionExpired: true,
-        newAccessToken: null,
-      };
-    }
-
-    // Get fresh user details
-    const user = await User.findOne({
-      where: { id: userId },
-      include: [
-        {
-          model: UserRole,
-          attributes: ['id'],
-          as: 'roles',
-          include: [
-            {
-              model: RoleType,
-              as: 'role_details',
-              attributes: ['id', 'roleName'],
-            },
-          ],
-        },
-      ],
-    });
-
-    const userObj = user.toJSON();
-    delete userObj.hash;
-    const newTokenId = uuidv4();
-    const newAccessToken = generateAccessToken({
-      ...userObj,
-      tokenId: newTokenId,
-    });
-
-    const newRefreshToken = generateRefreshToken({ tokenId: newTokenId });
-
-    // Save new refresh token in DB
-    await RefreshToken.create({
-      id: newTokenId,
-      userId: user.id,
-      token: newRefreshToken,
-      deviceInfo: refreshToken.deviceInfo,
-      iat: refreshToken.iat,
-      exp: refreshToken.exp,
-    });
-
-    // Remove old refresh token from DB
-    await refreshToken.destroy();
-
-    return {
-      sessionExpired: false,
-      newAccessToken,
-    };
-  } catch (err) {
-    // Log error and return error object instead of using res directly
-    logger.error('Error in handleExpiredToken: ', err);
-    return {
-      sessionExpired: true,
-      newAccessToken: null,
-    };
-  }
-};
+// Refresh token logic moved to authController.js - refreshAccessToken method
 
 module.exports = { tokenValidationMiddleware };

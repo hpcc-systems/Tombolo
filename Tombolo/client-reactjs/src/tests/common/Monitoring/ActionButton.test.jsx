@@ -3,20 +3,20 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mock antd with primitives to avoid portal complexity (modal problems with portal)
-vi.mock('antd', async (importOriginal) => {
+vi.mock('antd', async importOriginal => {
   const antd = await importOriginal();
 
-  const MockDropdown = ({ children, dropdownRender, onOpenChange }) => (
+  const MockDropdown = ({ children, dropdownRender, popupRender, onOpenChange }) => (
     <div>
       <div onClick={() => onOpenChange?.(true, { source: 'trigger' })}>{children}</div>
       {/* Always render dropdown content to simplify tests */}
-      <div data-testid="menu">{dropdownRender?.()}</div>
+      <div data-testid="menu">{dropdownRender?.() || popupRender?.()}</div>
     </div>
   );
 
   const MockMenu = ({ items, onClick }) => (
     <ul>
-      {items.map((it) => (
+      {items.map(it => (
         <li key={it.key}>
           <button
             aria-label={typeof it.label === 'string' ? it.label : it.key}
@@ -59,13 +59,14 @@ vi.mock('antd', async (importOriginal) => {
   MockForm.useForm = () => [mockFormInstance];
 
   const MockSelect = ({ children, value, onChange }) => (
-    <select data-testid="mock-select" value={value} onChange={(e) => onChange?.(e.target.value)}>
+    <select data-testid="mock-select" value={value} onChange={e => onChange?.(e.target.value)}>
       {children}
     </select>
   );
   MockSelect.Option = ({ value, children }) => <option value={value}>{children}</option>;
 
   const message = { success: vi.fn(), error: vi.fn() };
+  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
 
   return {
     ...antd,
@@ -75,6 +76,7 @@ vi.mock('antd', async (importOriginal) => {
     Popover: MockPopover,
     Badge: MockBadge,
     message,
+    notification,
     Form: MockForm,
     Select: MockSelect,
   };
@@ -94,10 +96,10 @@ beforeEach(() => {
   // Ensure localStorage exists
   const store = {};
   vi.stubGlobal('localStorage', {
-    getItem: vi.fn((k) => (k in store ? store[k] : null)),
+    getItem: vi.fn(k => (k in store ? store[k] : null)),
     setItem: vi.fn((k, v) => (store[k] = String(v))),
-    removeItem: vi.fn((k) => delete store[k]),
-    clear: vi.fn(() => Object.keys(store).forEach((k) => delete store[k])),
+    removeItem: vi.fn(k => delete store[k]),
+    clear: vi.fn(() => Object.keys(store).forEach(k => delete store[k])),
   });
 });
 
@@ -200,10 +202,7 @@ describe('MonitoringActionButton', () => {
     await waitFor(() => expect(onBulkStartPause).toHaveBeenCalled());
     const call = onBulkStartPause.mock.calls[0][0];
     expect(call.ids).toEqual([1, 2]);
-    // action may be undefined if Select not interacted with in mock; still ensure success message is called
-    // message is mocked above
-    const { message } = await import('antd');
-    expect(message.success).toHaveBeenCalled();
+    // Component doesn't show success notification, it only closes the popover on success
 
     // Error path: make handler throw
     const failing = vi.fn().mockRejectedValue(new Error('nope'));
@@ -211,7 +210,11 @@ describe('MonitoringActionButton', () => {
     const applyBtn2 = screen.getByRole('button', { name: 'Apply' });
     await user.click(applyBtn2);
 
-    const { message: msg2 } = await import('antd');
-    await waitFor(() => expect(msg2.error).toHaveBeenCalledWith('Unable to start/pause selected items'));
+    const { notification: notif2 } = await import('antd');
+    await waitFor(() => {
+      expect(notif2.error).toHaveBeenCalled();
+      const errorCall = notif2.error.mock.calls[0][0];
+      expect(errorCall.description.props.children[0].props.children).toBe('Unable to start/pause selected items');
+    });
   });
 });

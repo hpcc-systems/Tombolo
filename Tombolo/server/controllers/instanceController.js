@@ -1,5 +1,7 @@
 const { InstanceSetting, User } = require('../models');
 const logger = require('../config/logger');
+const { sendSuccess, sendError } = require('../utils/response');
+const CustomError = require('../utils/customError');
 
 // Get a single instance setting by name
 const getInstanceSetting = async (req, res) => {
@@ -22,12 +24,16 @@ const getInstanceSetting = async (req, res) => {
     });
 
     if (!instance) {
-      return res.status(404).json({ message: 'Instance setting not found' });
+      return sendError(res, 'Instance setting not found', 404);
     }
-    return res.status(200).json(instance);
+    return sendSuccess(
+      res,
+      instance,
+      'Instance setting retrieved successfully'
+    );
   } catch (error) {
     logger.error('getInstanceSetting: ', error);
-    return res.status(500).json({ message: error.message });
+    return sendError(res, error);
   }
 };
 
@@ -63,7 +69,7 @@ const updateInstanceSetting = async (req, res) => {
 
     // If updated instance count is 0, throw an error
     if (updatedInstanceCount[0] === 0) {
-      throw new Error('Failed to update instance setting');
+      throw new CustomError('Failed to update instance setting', 500);
     }
 
     // Get the updated instance setting
@@ -84,12 +90,13 @@ const updateInstanceSetting = async (req, res) => {
     });
 
     // Send response to the client
-    return res.status(200).json({
-      message: 'Instance setting updated successfully',
-      data: updatedInstance,
-    });
+    return sendSuccess(
+      res,
+      updatedInstance,
+      'Instance setting updated successfully'
+    );
   } catch (error) {
-    return res.status(400).json({ message: error.message });
+    return sendError(res, error);
   }
 };
 

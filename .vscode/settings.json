@@ -3,5 +3,6 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
-  "jest.rootPath": "Tombolo/server"
+  "jest.rootPath": "Tombolo/server",
+  "cSpell.words": ["monitorings", "AKEYLESS"]
 }

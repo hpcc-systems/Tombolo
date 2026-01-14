@@ -4,8 +4,7 @@ const { deleteUser } = require('../../utils/authUtil');
 
 //Local Imports
 const { logOrPostMessage } = require('../jobUtils');
-const models = require('../../models');
-const { user } = models;
+const { user } = require('../../models');
 
 (async () => {
   try {

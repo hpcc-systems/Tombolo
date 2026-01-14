@@ -18,10 +18,11 @@ const Home = React.lazy(() => import('./home'));
 // const JobDetailsForm = React.lazy(() => import('./Jobs/JobDetails'));
 // const IndexDetailsForm = React.lazy(() => import('./IndexDetails'));
 // const QueryDetailsForm = React.lazy(() => import('./queries/QueryDetails'));
-const ManualJobDetail = React.lazy(() => import('./Jobs/ManualJobDetail'));
+// const ManualJobDetail = React.lazy(() => import('./Jobs/ManualJobDetail'));
 // const AddJobsForm = React.lazy(() => import('./Jobs/AddjobsForm/AddJobsForm'));
 const FileMonitoring = React.lazy(() => import('./fileMonitoring'));
 // const OrbitMonitoring = React.lazy(() => import('./orbitMonitoring/OrbitMonitoring'));
+const orbitProfileMonitoring = React.lazy(() => import('./orbitProfileMonitoring/index.jsx'));
 // const Orbit = React.lazy(() => import('./dashboard/Orbit/Orbit'));
 const Notifications = React.lazy(() => import('./dashboard/notifications'));
 // const ClusterUsage = React.lazy(() => import('./dashboard/clusterUsage/'));
@@ -47,6 +48,7 @@ const AppRoutes = ({ application, authenticationReducer }) => {
       <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
       <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
       {/* <PrivateRoute path="/:applicationId/OrbitMonitoring" component={OrbitMonitoring} /> */}
+      <PrivateRoute path="/:applicationId/orbit-profile-monitoring" component={orbitProfileMonitoring} />
       <PrivateRoute path="/:applicationId/jobMonitoring/timeSeriesAnalysis" component={TimeSeriesAnalysis} />
       <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />
       <PrivateRoute path="/:applicationId/costMonitoring" component={CostMonitoring} />
@@ -66,7 +68,7 @@ const AppRoutes = ({ application, authenticationReducer }) => {
       />
       <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} />{' '}
       <PrivateRoute path="/:applicationId/dataflowinstances" component={DataflowInstances} /> */}
-      <PrivateRoute path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId" component={ManualJobDetail} />
+      {/* <PrivateRoute path="/:applicationId/manualJobDetails/:jobId/:jobExecutionId" component={ManualJobDetail} /> */}
       {/* <PrivateRoute path="/:applicationId/dataflow" component={dataFlowComp} /> */}
     </Switch>
   );

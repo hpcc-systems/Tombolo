@@ -16,6 +16,7 @@ Our tests run in a lightweight, fully mocked environment to keep feedback fast a
 ### Test Locations and Structure
 
 All backend tests and helpers live under `Tombolo/server/tests`:
+
 - `breeJobs/` – unit tests for job utilities and related logic.
 - `apiTests/` – scaffolding for API tests using Express and Supertest.
 - `setup.js` – shared Jest setup that:
@@ -25,9 +26,10 @@ All backend tests and helpers live under `Tombolo/server/tests`:
 - `test_server.js` – a lightweight Express app wiring server routes; used only if you add API tests.
 
 Jest configuration (`Tombolo/server/jest.config.js`) declares two projects:
+
 - `jobs`: matches `tests/breeJobs/**/*.test.js`.
 - `api`: matches `tests/apiTests/**/*.test.js`.
-Both projects use `testEnvironment: 'node'` and `setupFiles: ['<rootDir>/tests/setup.js']`. Coverage is collected with the `text-summary` reporter.
+  Both projects use `testEnvironment: 'node'` and `setupFiles: ['<rootDir>/tests/setup.js']`. Coverage is collected with the `text-summary` reporter.
 
 ---
 
@@ -36,9 +38,9 @@ Both projects use `testEnvironment: 'node'` and `setupFiles: ['<rootDir>/tests/s
 From `Tombolo/server`:
 
 ```bash
-npm run test            # run all Jest projects
-npm run test:jobs       # run only unit tests under tests/breeJobs
-npm run test:api        # run only API tests under tests/apiTests
+pnpm run test            # run all Jest projects
+pnpm run test:jobs       # run only unit tests under tests/breeJobs
+pnpm run test:api        # run only API tests under tests/apiTests
 ```
 
 Note: At present, the active test suite is the unit tests. API tests exist as scaffolding and may be expanded; some example API tests may be placeholders.
@@ -61,7 +63,8 @@ Note: At present, the active test suite is the unit tests. API tests exist as sc
 
 ### What Happens When You Run Tests
 
-When `npm run test` runs:
+When `pnpm run test` runs:
+
 1. Jest reads `jest.config.js` and loads the two projects.
 2. For each project, `tests/setup.js` runs first to load env and install mocks (models, logging, etc.).
 3. Jest executes the tests and prints a coverage summary.

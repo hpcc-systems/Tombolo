@@ -1,5 +1,9 @@
 const path = require('path');
 const fs = require('fs');
+
+// Set NODE_ENV to test BEFORE any other modules are loaded
+process.env.NODE_ENV = 'test';
+
 const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
@@ -152,11 +156,62 @@ jest.mock('../models', () => {
       getClusterDataTotals: jest.fn(),
       getDataTotals: jest.fn(),
     },
+    OrbitProfileMonitoring: {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findByPk: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      bulkCreate: jest.fn(),
+      update: jest.fn(),
+      destroy: jest.fn(),
+      handleDelete: jest.fn(),
+      sequelize: {
+        transaction,
+        __commit: commit,
+        __rollback: rollback,
+      },
+    },
+    WorkUnit: {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findAndCountAll: jest.fn(),
+      findByPk: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      bulkCreate: jest.fn(),
+      update: jest.fn(),
+      destroy: jest.fn(),
+      handleDelete: jest.fn(),
+      sequelize: {
+        transaction,
+        __commit: commit,
+        __rollback: rollback,
+      },
+    },
+    WorkUnitDetails: {
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      findAndCountAll: jest.fn(),
+      findByPk: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      bulkCreate: jest.fn(),
+      update: jest.fn(),
+      destroy: jest.fn(),
+      handleDelete: jest.fn(),
+      sequelize: {
+        transaction,
+        __commit: commit,
+        __rollback: rollback,
+      },
+    },
     UserArchive: {
       create: jest.fn(),
     },
     sequelize: {
       transaction,
+      literal: jest.fn(value => value),
       __commit: commit, // Expose for test access
       __rollback: rollback, // Expose for test access
     },

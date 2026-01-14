@@ -1,6 +1,8 @@
+// Imports from libraries
 import React, { useState } from 'react';
 import { Divider } from 'antd';
 
+// Local imports
 import ChangePasswordModal from './changePasswordModal';
 import EditAccountActionButton from './editAccountActionButton';
 import MyAccountTable from './myAccountTable';

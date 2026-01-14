@@ -3,6 +3,7 @@ const { RefreshToken } = require('../models');
 const { blacklistToken } = require('../utils/tokenBlackListing');
 const logger = require('../config/logger');
 const { verifyToken } = require('../utils/authUtil');
+const { sendSuccess, sendError } = require('../utils/response');
 
 // Get all active sessions
 const activeSessionsByUserId = async (req, res) => {
@@ -36,12 +37,14 @@ const activeSessionsByUserId = async (req, res) => {
     });
 
     // response
-    return res.status(200).json({ success: true, data: activeSessions });
+    return sendSuccess(
+      res,
+      activeSessions,
+      'Active sessions retrieved successfully'
+    );
   } catch (err) {
     logger.error('Get active sessions: ', err);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -66,15 +69,10 @@ const destroyOneActiveSession = async (req, res) => {
     await blacklistToken({ tokenId: sessionId, exp });
 
     // response
-    return res.status(200).json({
-      success: true,
-      message: `${destroyedSessions} sessions destroyed`,
-    });
+    return sendSuccess(res, null, `${destroyedSessions} sessions destroyed`);
   } catch (err) {
     logger.error('Destroy active sessions: ', err);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -101,15 +99,10 @@ const destroyActiveSessions = async (req, res) => {
     }
 
     // response
-    return res.status(200).json({
-      success: true,
-      message: `${destroyedSessions} sessions destroyed`,
-    });
+    return sendSuccess(res, null, `${destroyedSessions} sessions destroyed`);
   } catch (err) {
     logger.error('Destroy active sessions: ', err);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 

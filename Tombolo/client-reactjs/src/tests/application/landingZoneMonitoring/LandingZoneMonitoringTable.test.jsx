@@ -14,14 +14,18 @@ vi.mock('antd', async (importOriginal) => {
               const value = col.dataIndex ? row[col.dataIndex] : row;
               const content = col.render ? col.render(value, row) : value;
               return (
-                <div key={cIdx} data-testid={`cell-${rIdx}-${cIdx}`}>{content}</div>
+                <div key={cIdx} data-testid={`cell-${rIdx}-${cIdx}`}>
+                  {content}
+                </div>
               );
             })}
           </div>
         ))}
       </div>
       {rowSelection ? (
-        <button aria-label="select-first" onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>select-first</button>
+        <button aria-label="select-first" onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>
+          select-first
+        </button>
       ) : null}
     </div>
   );
@@ -34,17 +38,34 @@ vi.mock('antd', async (importOriginal) => {
   );
   const MockPopconfirm = ({ children, onConfirm }) => (
     <span>
-      <button aria-label="confirm" onClick={onConfirm}>confirm</button>
+      <button aria-label="confirm" onClick={onConfirm}>
+        confirm
+      </button>
       {children}
     </span>
   );
-  const message = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
-  return { ...antd, Table: MockTable, Tooltip: MockTooltip, Popover: MockPopover, Popconfirm: MockPopconfirm, message };
+  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
+  return {
+    ...antd,
+    Table: MockTable,
+    Tooltip: MockTooltip,
+    Popover: MockPopover,
+    Popconfirm: MockPopconfirm,
+    notification,
+  };
 });
 
 vi.mock('@ant-design/icons', () => ({
-  EyeOutlined: ({ onClick }) => (<button aria-label="view" onClick={onClick}>view</button>),
-  EditOutlined: ({ onClick }) => (<button aria-label="edit" onClick={onClick}>edit</button>),
+  EyeOutlined: ({ onClick }) => (
+    <button aria-label="view" onClick={onClick}>
+      view
+    </button>
+  ),
+  EditOutlined: ({ onClick }) => (
+    <button aria-label="edit" onClick={onClick}>
+      edit
+    </button>
+  ),
   DeleteOutlined: () => <span>del</span>,
   CheckCircleFilled: () => <span>approveIcon</span>,
   BellOutlined: () => <span>bell</span>,
@@ -56,15 +77,20 @@ vi.mock('@ant-design/icons', () => ({
 
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 
-vi.mock('react-redux', () => ({ useSelector: (sel) => sel({ application: { application: { applicationId: 'app-1' } } }) }));
-
-vi.mock('@/components/application/LandingZoneMonitoring/Utils', () => ({
-  deleteLzMonitoring: vi.fn().mockResolvedValue(),
-  toggleLzMonitoringStatus: vi.fn().mockResolvedValue(),
+vi.mock('react-redux', () => ({
+  useSelector: (sel) => sel({ application: { application: { applicationId: 'app-1' } } }),
 }));
 
-import { message } from 'antd';
-import { deleteLzMonitoring, toggleLzMonitoringStatus } from '@/components/application/LandingZoneMonitoring/Utils';
+const mockToggle = vi.fn();
+const mockDelete = vi.fn();
+vi.mock('@/services/landingZoneMonitoring.service', () => ({
+  default: {
+    toggle: (...args) => mockToggle(...args),
+    delete: (...args) => mockDelete(...args),
+  },
+}));
+
+import { notification } from 'antd';
 import LandingZoneMonitoringTable from '@/components/application/LandingZoneMonitoring/LandingZoneMonitoringTable.jsx';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
@@ -84,7 +110,9 @@ const rowApproved = {
 const rowPending = { ...rowApproved, id: 2, isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
 
 describe('LandingZoneMonitoringTable', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('renders actions and triggers view/edit/approve/duplicate via More popover', async () => {
     const user = userEvent.setup();
@@ -150,7 +178,12 @@ describe('LandingZoneMonitoringTable', () => {
     );
 
     await user.click(screen.getByText('Start'));
-    expect(message.error).toHaveBeenCalledWith('Monitoring must be in approved state before it can be started');
+    expect(notification.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Error occurred',
+        description: expect.anything(),
+      })
+    );
 
     rerender(
       <LandingZoneMonitoringTable
@@ -169,10 +202,11 @@ describe('LandingZoneMonitoringTable', () => {
     );
 
     const pauseIcon = await screen.findByText('pause');
+    mockToggle.mockResolvedValueOnce();
     await user.click(pauseIcon);
-    await waitFor(() => expect(toggleLzMonitoringStatus).toHaveBeenCalled());
+    await waitFor(() => expect(mockToggle).toHaveBeenCalledWith([rowApproved.id], false));
     expect(setLandingZoneMonitoring).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalledWith('Monitoring status toggled successfully');
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('deletes a monitoring via Popconfirm and updates state', async () => {
@@ -195,10 +229,11 @@ describe('LandingZoneMonitoringTable', () => {
       />
     );
 
+    mockDelete.mockResolvedValueOnce();
     await user.click(screen.getByRole('button', { name: 'confirm' }));
-    await waitFor(() => expect(deleteLzMonitoring).toHaveBeenCalledWith({ id: rowApproved.id }));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(rowApproved.id));
     expect(setLandingZoneMonitoring).toHaveBeenCalled();
-    expect(message.success).toHaveBeenCalledWith('Landing zone monitoring deleted successfully');
+    expect(notification.success).toHaveBeenCalled();
   });
 
   it('allows row selection to set selected rows', async () => {

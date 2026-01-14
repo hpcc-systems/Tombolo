@@ -9,6 +9,7 @@ const {
   bodyUuids,
 } = require('./commonMiddleware');
 const jwt = require('jsonwebtoken');
+const { sendError } = require('../utils/response');
 
 const logger = require('../config/logger');
 const { User } = require('../models');
@@ -16,7 +17,7 @@ const { User } = require('../models');
 // Validate registration payload
 const validateNewUserPayload = [
   stringBody('registrationMethod', false, {
-    isIn: ['traditional', 'microsoft'],
+    isIn: ['traditional', 'azure'],
   }),
   stringBody('firstName', { length: { ...NAME_LENGTH } }),
   stringBody('lastName', { length: { ...NAME_LENGTH } }),
@@ -48,15 +49,7 @@ const validateEmailDuplicate = [
     const message = 'Email already in use';
     const user = await User.findOne({ where: { email } });
     if (user) {
-      return res.status(400).json({
-        success: false,
-        message: message,
-        formErrors: {
-          email: {
-            errors: message,
-          },
-        },
-      });
+      return sendError(res, message, 400);
     }
     next();
   },
@@ -68,9 +61,7 @@ const verifyValidTokenExists = (req, res, next) => {
 
   if (!accessToken) {
     logger.error('Authorization: Access token not provided');
-    return res
-      .status(401)
-      .json({ success: false, message: 'Access token not provided' });
+    return sendError(res, 'Access token not provided', 401);
   }
 
   try {
@@ -81,10 +72,8 @@ const verifyValidTokenExists = (req, res, next) => {
     req.accessToken = accessToken;
     next(); // Proceed to the controller
   } catch (err) {
-    logger.error('Authorization: Invalid or expired access token', err);
-    return res
-      .status(401)
-      .json({ success: false, message: 'Invalid or expired access token' });
+    logger.error('Authorization: Invalid or expired access token', err.message);
+    return sendError(res, 'Invalid or expired access token', 401);
   }
 };
 
@@ -92,7 +81,12 @@ const validatePasswordResetRequestPayload = [emailBody('email')];
 
 //validateResetPasswordPayload - comes in request body - token must be present and must be UUID, password must be present and meet password requirements
 const validateResetPasswordPayload = [
-  stringBody('token'),
+  body('token')
+    .isString()
+    .notEmpty()
+    .withMessage('Token is required')
+    .isUUID()
+    .withMessage('Token must be a valid UUID'),
   body('password')
     .isString()
     .notEmpty()
@@ -122,6 +116,20 @@ const validateAccessRequest = [
   stringBody('comment', { length: { ...COMMENT_LENGTH } }),
 ];
 
+// Validate refresh token request - only checks if token exists in cookie, not if it's valid
+const validateRefreshTokenRequest = (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    logger.error('Authorization: No token provided for refresh');
+    return sendError(res, 'No token provided', 401);
+  }
+
+  // Attach token to req object for controller processing
+  req.accessToken = token;
+  next();
+};
+
 // Validate login payload
 const validateEmailInBody = [emailBody('email')];
 const validateResetToken = [uuidParam('token')];
@@ -132,6 +140,7 @@ module.exports = {
   validateLoginPayload,
   validateEmailDuplicate,
   verifyValidTokenExists,
+  validateRefreshTokenRequest,
   validatePasswordResetRequestPayload,
   validateResetPasswordPayload,
   validateAzureAuthCode,

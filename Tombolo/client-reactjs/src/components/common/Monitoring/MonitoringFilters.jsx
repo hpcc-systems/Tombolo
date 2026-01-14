@@ -34,6 +34,7 @@ const { Option } = Select;
  * @param {('single'|'multiple')} [clustersMode='multiple'] - Single-select uses field name 'cluster'; multi-select uses 'clusters'.
  * @param {boolean} [showUsers=false] - If true, shows a multi-select Users field.
  * @param {boolean} [showFrequency=false] - If true, shows a single-select Frequency field.
+ * @param {boolean} [showCreators=false] - If true, shows a single-select Created By field.
  *
  * Options object (all arrays are optional; defaults to empty arrays)
  * @param {Object} [options] - Options providing choices for each select.
@@ -44,6 +45,7 @@ const { Option } = Select;
  * @param {{id:string|number,name:string}[]} [options.clusterOptions] - Cluster options.
  * @param {string[]} [options.userOptions] - User identifiers for the Users field.
  * @param {string[]} [options.frequencyOptions] - Frequencies (e.g., "daily", "weekly").
+ * @param {{id:string|number,name:string}[]} [options.creatorOptions] - Creator options for Created By field.
  *
  * Misc
  * @param {{name:string}[]} [integrations=[]] - Integrations present; ASR UI is shown only if an item has name === 'ASR'.
@@ -65,6 +67,7 @@ function MonitoringFilters({
   clustersMode = 'multiple',
   showUsers = false,
   showFrequency = false,
+  showCreators = false,
   options = {},
   integrations = [],
   handleDomainChange,
@@ -79,6 +82,7 @@ function MonitoringFilters({
     clusterOptions = [],
     userOptions = [],
     frequencyOptions = [],
+    creatorOptions = [],
   } = options;
 
   if (!filtersVisible) return null;
@@ -100,7 +104,7 @@ function MonitoringFilters({
                 ''
               )
             }
-            onChange={(e) => setSearchTerm?.(e.target.value.toLowerCase())}
+            onChange={e => setSearchTerm?.(e.target.value.toLowerCase())}
             allowClear
             disabled={false}
           />
@@ -110,7 +114,7 @@ function MonitoringFilters({
           <div className={labelClassName}>Approval Status</div>
           <Form.Item name="approvalStatus">
             <Select placeholder="Approval Status" allowClear disabled={false}>
-              {approvalStatusOptions.map((s) => (
+              {approvalStatusOptions.map(s => (
                 <Option key={s} value={s}>
                   {s}
                 </Option>
@@ -123,7 +127,7 @@ function MonitoringFilters({
           <div className={labelClassName}>Active Status</div>
           <Form.Item name="activeStatus">
             <Select placeholder="Active statuses" allowClear disabled={false}>
-              {activeStatusOptions.map((a) => (
+              {activeStatusOptions.map(a => (
                 <Option key={a} value={a}>
                   {a}
                 </Option>
@@ -132,7 +136,7 @@ function MonitoringFilters({
           </Form.Item>
         </Col>
 
-        {showAsr && integrations?.some((i) => i.name === 'ASR') && (
+        {showAsr && integrations?.some(i => i.name === 'ASR') && (
           <AsrSpecificFilters
             integrations={integrations}
             domainOptions={domainOptions}
@@ -150,7 +154,7 @@ function MonitoringFilters({
                 allowClear
                 disabled={false}
                 mode={clustersMode === 'multiple' ? 'multiple' : undefined}>
-                {clusterOptions.map((c) => (
+                {clusterOptions.map(c => (
                   <Option key={c.id} value={c.id}>
                     {c.name || startCase(c.name)}
                   </Option>
@@ -165,7 +169,7 @@ function MonitoringFilters({
             <div className={labelClassName}>Users</div>
             <Form.Item name="users">
               <Select placeholder="Users" allowClear disabled={false} mode="multiple">
-                {userOptions.map((u) => (
+                {userOptions.map(u => (
                   <Option key={u} value={u}>
                     {u}
                   </Option>
@@ -180,9 +184,24 @@ function MonitoringFilters({
             <div className={labelClassName}>Frequency</div>
             <Form.Item name="frequency">
               <Select placeholder="Frequency" allowClear disabled={false}>
-                {frequencyOptions.map((f) => (
+                {frequencyOptions.map(f => (
                   <Option key={f} value={f}>
                     {startCase(f)}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        )}
+
+        {showCreators && (
+          <Col span={4}>
+            <div className={labelClassName}>Created By</div>
+            <Form.Item name="creator">
+              <Select placeholder="Created By" allowClear disabled={false}>
+                {creatorOptions.map(c => (
+                  <Option key={c.id} value={c.id}>
+                    {c.name}
                   </Option>
                 ))}
               </Select>

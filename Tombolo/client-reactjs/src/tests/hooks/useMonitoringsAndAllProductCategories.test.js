@@ -3,12 +3,17 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 
-// Mock antd message
-vi.mock('antd', () => ({ message: { error: vi.fn() } }));
+// Mock antd with both message and notification
+vi.mock('antd', () => ({
+  message: { error: vi.fn() },
+  notification: { error: vi.fn(), success: vi.fn(), warning: vi.fn(), info: vi.fn() },
+}));
 
 const mockGetAllProductCategories = vi.fn();
-vi.mock('@/components/common/ASRTools', () => ({
-  getAllProductCategories: (...args) => mockGetAllProductCategories(...args),
+vi.mock('@/services/asr.service', () => ({
+  default: {
+    getAllProductCategories: (...args) => mockGetAllProductCategories(...args),
+  },
 }));
 
 // Use real flattenObject from the module to ensure behavior alignment

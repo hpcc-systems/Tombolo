@@ -18,7 +18,7 @@ Tombolo allows you to monitor various states of a work unit to ensure jobs run a
 
 **Unknown** When a work unit enters an unknown state, Tombolo will notify you to investigate further.
 
----
+**Time Series Analysis** Tombolo also performs a time-series analysis on nine job metrics to detect deviations from normal behavior. The analyzed data points are: `WarningCount`, `ErrorCount`, `GraphCount`, `SourceFileCount`, `ResultCount`, `TotalClusterTime`, `FileAccessCost`, `CompileCost`, and `ExecuteCost`. For each run Tombolo compares the current value against the recent history (up to 10 previous runs), computing mean, standard deviation, z-score, and an expected range (mean ± 3·std). If a metric falls outside the expected range Tombolo flags it and generates a Time Series Analysis alert with historical values and context.
 
 <div class="custom_details_component">
 <details class="env_config-details">

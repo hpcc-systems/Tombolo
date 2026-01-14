@@ -1,0 +1,70 @@
+{
+  "name": "tombolo-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tombolo monorepo managed with pnpm workspaces and Turborepo",
+  "scripts": {
+    "dev": "turbo dev --filter='./Tombolo/*'",
+    "build": "turbo build --filter='./Tombolo/*'",
+    "test": "turbo test --filter='./Tombolo/*'",
+    "lint": "turbo lint --filter='./Tombolo/*'",
+    "lint:fix": "turbo lint:fix --filter='./Tombolo/*'",
+    "clean": "turbo clean",
+    "clean:deps": "pnpm -r exec rm -rf node_modules && rm -rf node_modules",
+    "clean:cache": "rm -rf .turbo node_modules/.cache",
+    "clean:db": "rm -rf Tombolo/mysql-data Tombolo/redis-data",
+    "clean:all": "pnpm clean && pnpm clean:deps && pnpm clean:cache && pnpm clean:db && rm -rf pnpm-lock.yaml",
+    "server:dev": "turbo dev --filter=@tombolo/server",
+    "client:dev": "turbo dev --filter=@tombolo/client",
+    "server:build": "turbo build --filter=@tombolo/server",
+    "client:build": "turbo build --filter=@tombolo/client",
+    "e2e:app": "pnpm --filter e2e_tests test:app",
+    "docs:dev": "pnpm --filter tombolo-docs start",
+    "docs:build": "pnpm --filter tombolo-docs build",
+    "db:drop": "pnpm --filter=@tombolo/db db:drop",
+    "db:seed": "pnpm --filter=@tombolo/db db:seed",
+    "db:create": "pnpm --filter=@tombolo/db db:create",
+    "db:init": "pnpm db:create && pnpm db:migrate && pnpm db:seed",
+    "esm:build": "turbo build --filter=@tombolo/shared",
+    "docker:build": "cd Tombolo && docker compose build",
+    "docker:up": "cd Tombolo && docker compose up -d",
+    "docker:down": "cd Tombolo && docker compose down",
+    "db:migration:generate": "pnpm --filter=@tombolo/db db:migration:generate",
+    "db:migrate": "pnpm --filter=@tombolo/db db:migrate"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "globals": "^16.5.0",
+    "turbo": "^2.6.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "react-error-overlay": "6.0.9",
+      "cron-validate": "1.4.5",
+      "glob": "^10.5.0"
+    },
+    "packageExtensions": {
+      "bree@8.0.5": {
+        "dependencies": {
+          "cron-validate": "1.4.5"
+        }
+      }
+    },
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "core-js",
+      "core-js-pure",
+      "esbuild",
+      "msgpackr-extract"
+    ]
+  },
+  "packageManager": "pnpm@10.23.0"
+}

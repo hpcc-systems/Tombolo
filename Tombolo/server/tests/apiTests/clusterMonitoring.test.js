@@ -1,8 +1,7 @@
 const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
 const request = require('supertest');
 const { app } = require('../test_server');
-const models = require('../../models');
-const { ClusterMonitoring } = models;
+const { ClusterMonitoring } = require('../../models');
 
 const {
   getClusterMonitoring,
@@ -56,7 +55,7 @@ describe('Cluster Monitoring routes Routes', () => {
 
     const res = await request(app).get('/api/clusterMonitoring');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual([monitoring]);
+    expect(res.body.data).toEqual([monitoring]);
   });
 
   // Update existing cluster status monitoring

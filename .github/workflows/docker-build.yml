@@ -1,0 +1,72 @@
+name: Docker Build Check
+
+on:
+  pull_request:
+    branches: [master"]
+  push:
+    branches: [master]
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Setup docker-compose.yml and environment
+        run: |
+          cd Tombolo
+          cp docker-compose-sample.yml docker-compose.yml
+          cp .env.sample .env
+          # Set required dummy values for build
+          sed -i 's/DB_USERNAME=database_user/DB_USERNAME=ci_test_user/' .env
+          sed -i 's/DB_PASSWORD=database_user_password/DB_PASSWORD=ci_test_password/' .env
+          sed -i 's/JWT_SECRET=/JWT_SECRET=ci_jwt_secret_dummy_value_for_build/' .env
+          sed -i 's/JWT_REFRESH_SECRET=/JWT_REFRESH_SECRET=ci_jwt_refresh_secret_dummy/' .env
+          sed -i 's/CSRF_SECRET=/CSRF_SECRET=ci_csrf_secret_dummy_value/' .env
+          sed -i 's/ENCRYPTION_KEY=/ENCRYPTION_KEY=ci_encryption_key_dummy_32charsXX/' .env
+          # Setup nginx config from no-ssl template
+          cp client-reactjs/nginx/conf.d/nginx.conf.template-no-ssl client-reactjs/nginx/conf.d/nginx.conf.template
+
+      - name: Check Docker Compose config
+        run: |
+          cd Tombolo
+          docker compose config --quiet || (echo "Error: docker-compose.yml is invalid" && exit 1)
+
+      - name: Build Docker images
+        run: pnpm docker:build
+        env:
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
+
+      - name: Verify Docker images were created
+        run: |
+          docker images | grep tombolo || (echo "Error: Docker images not found" && exit 1)

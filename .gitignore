@@ -2,6 +2,8 @@
 **/node_modules
 *.env
 */.env
+**/.env.docker
+**/.env.local
 *.DS_Store
 **/bower_components
 **/build
@@ -9,8 +11,6 @@
 **/vscode
 **/server/scripts
 sequelize-data.json
-docs/~$tombolo.pptx
-Auth-Service/
 gitClones/**
 !gitClones/.gitkeep
 .prettierignore
@@ -21,3 +21,12 @@ cert.pem
 key.pem
 tombolo_docs/.docusaurus/*
 **/.idea
+e2e_tests/test-results
+e2e_tests/playwright-report
+e2e_tests/state.json
+
+# pnpm
+.pnpm-debug.log*
+.pnpm-store/
+**/.turbo
+**/dist

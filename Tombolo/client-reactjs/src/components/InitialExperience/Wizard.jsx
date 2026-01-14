@@ -1,6 +1,6 @@
 // Library imports
-import React, { useState, useEffect } from 'react';
-import { Form, Steps, Button, Divider, message, Card, Space } from 'antd';
+import { useState, useEffect } from 'react';
+import { Form, Steps, Button, Divider, Card, Space } from 'antd';
 import { Route, Switch } from 'react-router-dom';
 import {
   FormOutlined,
@@ -8,29 +8,27 @@ import {
   UserOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  RightCircleOutlined,
 } from '@ant-design/icons';
 
 // Local imports
 import InstanceSettingsForm from './instanceSettings';
 import ReviewForm from './reviewForm';
-import { completeFirstRun } from './initialExperienceUtils';
+import wizardService from '@/services/wizard.service';
 import RegisterUserForm from '../login/registerUserForm';
 import { getDeviceInfo } from '../login/utils';
 import BasicLayout from '../common/BasicLayout';
+import { handleSuccess, handleError } from '../common/handleResponse';
 
-// Colors for the steps
+// Colors for the steps (aligned with cluster pattern)
 const stepColor = {
-  info: 'var(--light)',
-  success: 'var(--success)',
-  error: 'var(--danger)',
+  true: 'var(--success)',
+  false: 'var(--danger)',
 };
 
-// Icons for the steps
+// Icons for the steps (aligned with cluster pattern)
 const stepIcon = {
-  info: <RightCircleOutlined />,
-  success: <CheckCircleOutlined />,
-  error: <CloseCircleOutlined />,
+  true: <CheckCircleOutlined />,
+  false: <CloseCircleOutlined />,
 };
 
 const Wizard = () => {
@@ -135,46 +133,68 @@ const Wizard = () => {
         deviceInfo: getDeviceInfo(),
       };
 
-      const response = await completeFirstRun({ instanceInfo: values });
+      // Create abort controller for cancellation
+      const abortController = new AbortController();
 
-      if (!response.ok) {
-        throw new Error('Failed to complete set up');
-      } else {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
+      let processedLength = 0;
 
-        let sendingResponse = true;
+      // Make API request to complete first run with progress callback
+      await wizardService.completeFirstRun({
+        instanceInfo: values,
+        abortController,
+        onProgress: (text) => {
+          // Get only the new data since last progress event
+          const newData = text.substring(processedLength);
+          processedLength = text.length;
 
-        while (sendingResponse) {
-          const { done, value } = await reader.read();
+          if (newData.trim()) {
+            const jsonStrings = newData
+              .split('\n')
+              .filter((str) => str.trim() !== '')
+              .map((str) => str.replace(/^data: /, ''));
 
-          if (done) {
-            sendingResponse = false;
-          }
-          const decodedValue = decoder.decode(value);
+            const serverSentEvents = jsonStrings
+              .map((str) => {
+                try {
+                  return JSON.parse(str);
+                } catch (e) {
+                  return null;
+                }
+              })
+              .filter((event) => event !== null);
 
-          const jsonStrings = decodedValue
-            .split('\n')
-            .filter((str) => str.trim() !== '')
-            .map((str) => str.replace(/^data: /, ''));
-          const serverSentEvents = jsonStrings.map((str) => JSON.parse(str));
+            // Check if any of these events are errors or step is 999
+            let hasError = false;
+            let errorMessage = '';
 
-          // Check if any of these events are errors or step is 999
-          serverSentEvents.forEach((e) => {
-            if (e.event === 'error') {
+            serverSentEvents.forEach((e) => {
+              if (e.step === 99) {
+                // Error step
+                hasError = true;
+                errorMessage = e.message || 'Setup failed';
+              } else if (e.step === 999) {
+                // Completion step
+                setCompleteSuccessfully(true);
+                setSubmitting(false);
+                handleSuccess('Verification E-mail sent!');
+              }
+            });
+
+            // Always update UI with all events first
+            setStepMessage((prev) => [...prev, ...serverSentEvents]);
+
+            // Handle error after UI update
+            if (hasError) {
               setSubmitting(false);
-            } else if (e.step === 999) {
-              setCompleteSuccessfully(true);
-              setSubmitting(false);
-              message.success('Verification E-mail sent!');
+              handleError(new Error(errorMessage));
+              return;
             }
-          });
-
-          setStepMessage((prev) => [...prev, ...serverSentEvents]);
-        }
-      }
+          }
+        },
+      });
     } catch (e) {
-      message.error(e.message);
+      handleError(e);
+      setSubmitting(false);
     }
   };
 
@@ -215,8 +235,8 @@ const Wizard = () => {
                 </div>
                 <div className="wizardSteps" style={{ display: progressVisible ? 'block' : 'none' }}>
                   {stepMessage.map((step, index) => (
-                    <div style={{ color: stepColor[step.event] }} key={index}>
-                      {stepIcon[step.event]} {step.message}
+                    <div style={{ color: stepColor[step.success] }} key={index}>
+                      {stepIcon[step.success]} {step.message}
                     </div>
                   ))}
                 </div>

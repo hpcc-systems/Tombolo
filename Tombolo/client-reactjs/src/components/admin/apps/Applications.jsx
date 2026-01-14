@@ -1,15 +1,17 @@
-/* eslint-disable no-unreachable */
+// Imports from libraries
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Divider, message, Popconfirm, Table, Tooltip, Tour } from 'antd';
+import { Button, Divider, Popconfirm, Table, Tooltip, Tour } from 'antd';
 import { DeleteOutlined, EditOutlined, EyeOutlined, GlobalOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { authHeader, handleError } from '../../common/AuthHeader';
+
+// Local imports
+import { handleError, handleSuccess } from '../../common/handleResponse';
+import applicationsService from '@/services/applications.service';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { Constants } from '../../common/Constants';
 import AddApplication from './AddApplication';
 import { getUser } from '../../common/userStorage';
 import Text from '../../common/Text';
-
 import { getApplications, applicationSelected, applicationAddButtonTourShown } from '@/redux/slices/ApplicationSlice';
 
 // Table column configuration
@@ -17,7 +19,7 @@ const getApplicationColumns = (user, handleApplicationView, handleApplicationEdi
   {
     width: '2%',
     title: '',
-    render: (record) =>
+    render: record =>
       record.visibility === 'Public' ? (
         <Tooltip title="Public">
           <GlobalOutlined className="link-text" />
@@ -52,7 +54,7 @@ const getApplicationColumns = (user, handleApplicationView, handleApplicationEdi
     width: '15%',
     title: <Text text="Created" />,
     dataIndex: 'createdAt',
-    render: (text) => {
+    render: text => {
       const createdAt = new Date(text);
       return (
         createdAt.toLocaleDateString('en-US', Constants.COMPACT_DATE_FORMAT_OPTION) +
@@ -70,7 +72,7 @@ const getApplicationColumns = (user, handleApplicationView, handleApplicationEdi
         <Tooltip placement="right" title={<Text text="View" />}>
           <EyeOutlined className="link-text" onClick={() => handleApplicationView(record)} />
         </Tooltip>
-        {record.application_creator.id === user.id && (
+        {record.application_creator?.id === user.id && (
           <>
             <Divider type="vertical" />
             <Tooltip placement="right" title={<Text text="Edit" />}>
@@ -97,7 +99,7 @@ const getApplicationColumns = (user, handleApplicationView, handleApplicationEdi
 ];
 
 // Tour steps configuration
-const getTourSteps = (appAddButtonRef) => [
+const getTourSteps = appAddButtonRef => [
   {
     title: 'Add Application',
     description: 'Click here to add an application. After adding an application, we can move on to the next step.',
@@ -112,8 +114,8 @@ const Applications = () => {
   // State and Redux hooks
   const user = getUser();
   const dispatch = useDispatch();
-  const applications = useSelector((state) => state.application.applications);
-  const noApplication = useSelector((state) => state.application.noApplication);
+  const applications = useSelector(state => state.application.applications);
+  const noApplication = useSelector(state => state.application.noApplication);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showAddApplicationModal, setShowAddApplicationModal] = useState(false);
   const [mode, setMode] = useState(null);
@@ -140,29 +142,19 @@ const Applications = () => {
   }, [noApplication, dispatch]);
 
   // Handle Remove
-  const handleRemove = async (app_id) => {
+  const handleRemove = async app_id => {
     const originalApplications = [...localApplications];
 
     try {
       // Store original applications for revert
       // Optimistically update local applications
-      setLocalApplications(localApplications.filter((app) => app.id !== app_id));
+      setLocalApplications(localApplications.filter(app => app.id !== app_id));
 
-      // Prepare request data
-      const data = JSON.stringify({ appIdToDelete: app_id, user: user.id });
-
-      const response = await fetch('/api/app/read/deleteApplication', {
-        method: 'POST',
-        headers: authHeader(),
-        body: data,
+      // Delete application using service
+      await applicationsService.delete({
+        appIdToDelete: app_id,
+        userId: user.id,
       });
-
-      if (!response.ok) {
-        handleError(response);
-        throw new Error('Failed to delete application');
-      }
-
-      await response.json();
 
       // Clear active project ID if deleted
       if (localStorage.getItem('activeProjectId') === app_id) {
@@ -172,11 +164,11 @@ const Applications = () => {
 
       // Fetch updated applications
       dispatch(getApplications());
-      message.success('Application has been removed successfully.');
+      handleSuccess('Application has been removed successfully.');
     } catch (error) {
       // Revert optimistic update
       setLocalApplications(originalApplications);
-      message.error('Failed to delete the application. Please try again.');
+      handleError('Failed to delete the application. Please try again.');
     }
   };
 
@@ -187,13 +179,13 @@ const Applications = () => {
     setShowTour(false);
   };
 
-  const handleApplicationView = (record) => {
+  const handleApplicationView = record => {
     setShowAddApplicationModal(true);
     setSelectedApplication(record);
     setMode('view');
   };
 
-  const handleApplicationEdit = (record) => {
+  const handleApplicationEdit = record => {
     setShowAddApplicationModal(true);
     setSelectedApplication(record);
     setMode('edit');
@@ -225,7 +217,7 @@ const Applications = () => {
         <Table
           size="small"
           columns={getApplicationColumns(user, handleApplicationView, handleApplicationEdit, handleRemove)}
-          rowKey={(record) => record.id}
+          rowKey={record => record.id}
           dataSource={localApplications}
           pagination={localApplications?.length > 10 ? { pageSize: 10 } : false}
         />

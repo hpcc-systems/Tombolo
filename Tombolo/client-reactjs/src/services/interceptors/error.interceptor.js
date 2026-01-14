@@ -1,4 +1,4 @@
-// interceptors/error.interceptor.js
+const ignore401Routes = ['/auth/loginBasicUser'];
 
 export const errorInterceptor = (apiClient) => {
   apiClient.interceptors.response.use(
@@ -18,7 +18,7 @@ export const errorInterceptor = (apiClient) => {
       }
 
       // ---- 401 Unauthorized ----
-      if (response.status === 401 && config.url !== '/auth/loginBasicUser') {
+      if (response.status === 401 && !ignore401Routes.includes(config.url)) {
         return Promise.reject({
           type: 'AUTH_ERROR',
           status: 401,

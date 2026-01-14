@@ -1,6 +1,5 @@
 const {
   regexBody,
-  uuidBody,
   stringQuery,
   uuidQuery,
   regexQuery,
@@ -36,34 +35,16 @@ const validateJobSearch = [
   regexBody('clusterType', true, { regex: strictLetterRegex }),
 ];
 
-const validateGetFileInfo = [...fileDetailsShared, uuidQuery('applicationId')];
-
 const validateGetLogicalFileDetails = [...fileDetailsShared];
-
-const validateGetIndexInfo = [
-  regexQuery('indexName', false, { regex: strictLetterRegex }),
-  queryUuids.clusterid,
-  queryUuids.applicationId,
-];
 
 const validateGetData = [
   queryUuids.clusterid,
   regexQuery('fileName', false, { regex: strictLetterRegex }),
 ];
 
-const validateGetQueryInfo = [
-  queryUuids.clusterid,
-  regexQuery('queryName', false, { regex: strictLetterRegex }),
-];
-
 const validateGetQueryFiles = [
   regexQuery('hpcc_queryId', false, { regex: strictLetterRegex }),
   queryUuids.clusterId,
-];
-
-const validateGetJobInfo = [
-  queryUuids.clusterid,
-  regexQuery('jobWuid', false, { regex: strictLetterRegex }),
 ];
 
 const validateGetDropZones = [uuidQuery('clusterId')];
@@ -87,7 +68,6 @@ const validateGetSuperfileDetails = [
   uuidQuery('clusterid', true, { checkFalsy: true }),
 ];
 
-const validateExecuteSprayJob = [uuidBody('jobId')];
 
 const validateClusterMetaData = [queryUuids.clusterId];
 
@@ -96,17 +76,12 @@ module.exports = {
   validateSuperfileSearch,
   validateQuerySearch,
   validateJobSearch,
-  validateGetFileInfo,
   validateGetLogicalFileDetails,
-  validateGetIndexInfo,
   validateGetData,
-  validateGetQueryInfo,
   validateGetQueryFiles,
-  validateGetJobInfo,
   validateGetDropZones,
   validateDropZoneDirectoryDetails,
   validateDropZoneFileSearch,
   validateGetSuperfileDetails,
-  validateExecuteSprayJob,
   validateClusterMetaData,
 };

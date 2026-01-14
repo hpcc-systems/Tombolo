@@ -1,9 +1,16 @@
+// Imports from libraries
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const { Op } = require('sequelize');
+const moment = require('moment');
+
+// Local imports
 const logger = require('../config/logger');
 const roleTypes = require('../config/roleTypes');
+const { sendSuccess, sendError } = require('../utils/response');
+const CustomError = require('../utils/customError');
 const {
   User,
   UserRole,
@@ -18,8 +25,6 @@ const {
   InstanceSetting,
   sequelize,
 } = require('../models');
-const { Op } = require('sequelize');
-const moment = require('moment');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -34,8 +39,21 @@ const {
   setPreviousPasswords,
   setLastLogin,
   handleInvalidLoginAttempt,
+  getAccessRequestRecipients,
 } = require('../utils/authUtil');
 const { blacklistToken } = require('../utils/tokenBlackListing');
+
+// Helper function to create minimal JWT payload
+const createTokenPayload = (user, tokenId) => {
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    roles: user.roles || [], // Include roles for RBAC
+    tokenId,
+  };
+};
 
 // Register application owner
 const createApplicationOwner = async (req, res) => {
@@ -49,10 +67,7 @@ const createApplicationOwner = async (req, res) => {
 
     // If the OWNER role type is not found, return a 409 conflict response
     if (!role || !role.id) {
-      return res.status(409).json({
-        success: false,
-        message: 'Owner role not found in the system',
-      });
+      return sendError(res, 'Owner role not found in the system', 409);
     }
 
     // Check if a user with the OWNER role already exists
@@ -60,10 +75,7 @@ const createApplicationOwner = async (req, res) => {
 
     // If an owner is found, return a 409 conflict response
     if (owner) {
-      return res.status(409).json({
-        success: false,
-        message: 'An owner already exists in the system',
-      });
+      return sendError(res, 'An owner already exists in the system', 409);
     }
 
     // Check if the password meets the security requirements
@@ -77,14 +89,17 @@ const createApplicationOwner = async (req, res) => {
       newUser: true,
     });
 
-    if (passwordSecurityViolations.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password does not meet security requirements',
-      });
-    }
+    logger.debug('------------------------');
+    logger.debug('Password security violation: ');
+    logger.debug('------------------------');
 
-    // Hash password and set expiry
+    if (passwordSecurityViolations.length > 0) {
+      return sendError(
+        res,
+        'Password does not meet security requirements',
+        400
+      );
+    } // Hash password and set expiry
     const salt = bcrypt.genSaltSync(10);
     payload.hash = bcrypt.hashSync(req.body.password, salt);
     setPasswordExpiry(payload);
@@ -134,16 +149,10 @@ const createApplicationOwner = async (req, res) => {
     });
 
     // Send response
-    return res.status(201).json({
-      success: true,
-      message: 'User created successfully',
-    });
+    return sendSuccess(res, null, 'User created successfully', 201);
   } catch (err) {
     logger.error(`Create user: ${err.message}`);
-
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -164,10 +173,11 @@ const createBasicUser = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password does not meet security requirements',
-      });
+      return sendError(
+        res,
+        'Password does not meet security requirements',
+        400
+      );
     }
 
     // Hash password and set expiry
@@ -179,6 +189,41 @@ const createBasicUser = async (req, res) => {
 
     // Save user to DB
     const user = await User.create(payload);
+
+    // Notify admins/owners about new user registration
+    try {
+      const recipients = await getAccessRequestRecipients();
+
+      if (recipients.length > 0) {
+        const adminNotificationId = uuidv4();
+
+        await NotificationQueue.create({
+          type: 'email',
+          templateName: 'newUserRegistration',
+          notificationOrigin: 'User Registration',
+          deliveryType: 'immediate',
+          metaData: {
+            notificationId: adminNotificationId,
+            notificationOrigin: 'User Registration',
+            userEmail: user.email,
+            userFirstName: user.firstName,
+            userLastName: user.lastName,
+            registrationMethod: user.registrationMethod || 'traditional',
+            userManagementLink: `${trimURL(process.env.WEB_URL)}/admin/userManagement`,
+            subject: `New User Registration - Action Required: ${user.email}`,
+            mainRecipients: recipients,
+            notificationDescription: 'New User Registration',
+            validForHours: 24,
+          },
+          createdBy: user.id,
+        });
+      }
+    } catch (adminNotificationError) {
+      logger.error(
+        `Failed to send admin notification for new user: ${adminNotificationError.message}`
+      );
+      // Don't fail user registration if admin notification fails
+    }
 
     // Send verification email
     const searchableNotificationId = uuidv4();
@@ -213,43 +258,46 @@ const createBasicUser = async (req, res) => {
     });
 
     // Send response
-    return res.status(201).json({
-      success: true,
-      message: 'User created successfully',
-    });
+    return sendSuccess(res, null, 'User created successfully', 201);
   } catch (err) {
     logger.error(`Create user: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
 // Verify email
 const verifyEmail = async (req, res) => {
+  let transaction;
   try {
     const { token } = req.body;
+
+    // Validate token input
+    if (!token) {
+      return sendError(res, 'Verification token is required', 400);
+    }
+
+    // Start transaction
+    transaction = await sequelize.transaction();
 
     // Find the account verification code
     const accountVerificationCode = await AccountVerificationCode.findOne({
       where: { code: token },
+      raw: true,
+      transaction,
     });
 
     // Token does not exist
     if (!accountVerificationCode) {
       logger.error(`Verify email: Token ${token} does not exist`);
-      return res.status(404).json({
-        success: false,
-        message: 'Invalid or expired verification token',
-      });
+      await transaction.rollback();
+      return sendError(res, 'Invalid or expired verification token', 404);
     }
 
     // Token has expired
     if (new Date() > accountVerificationCode.expiresAt) {
       logger.error(`Verify email: Token ${token} has expired`);
-      return res
-        .status(400)
-        .json({ success: false, message: 'Verification token has expired' });
+      await transaction.rollback();
+      return sendError(res, 'Verification token has expired', 400);
     }
 
     // Find the user
@@ -280,19 +328,22 @@ const verifyEmail = async (req, res) => {
           ],
         },
       ],
+      transaction,
     });
+
+    // User not found
+    if (!user) {
+      logger.error(`Verify email: User not found for token ${token}`);
+      await transaction.rollback();
+      return sendError(res, 'User not found', 404);
+    }
 
     // Update user
     user.verifiedUser = true;
     user.verifiedAt = new Date();
 
     // Save user
-    await user.save();
-
-    // Delete the account verification code
-    await AccountVerificationCode.destroy({
-      where: { code: token },
-    });
+    await user.save({ transaction });
 
     // Create token id
     const tokenId = uuidv4();
@@ -304,36 +355,67 @@ const verifyEmail = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
-    await RefreshToken.create({
-      id: tokenId,
-      userId: user.id,
-      token: refreshToken,
-      deviceInfo: {},
-      metaData: {},
-      iat: new Date(iat * 1000),
-      exp: new Date(exp * 1000),
+    await RefreshToken.create(
+      {
+        id: tokenId,
+        userId: user.id,
+        token: refreshToken,
+        deviceInfo: {},
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      },
+      { transaction }
+    );
+
+    // Delete the account verification code (after successful user save)
+    await AccountVerificationCode.destroy({
+      where: { code: token },
+      transaction,
     });
 
-    await setTokenCookie(res, accessToken);
+    // Commit transaction before setting cookies/tokens
+    await transaction.commit();
 
-    await generateAndSetCSRFToken(req, res, accessToken);
+    // Prepare user object for response
+    const userObj = user.toJSON();
+    delete userObj.hash; // Remove sensitive data
 
-    await setLastLogin(user);
+    // Set cookies and tokens (after successful transaction)
+    try {
+      await setTokenCookie(res, accessToken);
 
-    // Send response
-    return res.status(200).json({
-      success: true,
-      message: 'Email verified successfully',
-      data: { ...user.toJSON() },
-    });
+      // For email verification, skip CSRF token generation to avoid circular dependency
+      // CSRF token will be generated on next authenticated request
+      logger.info('Email verification successful');
+
+      // Set last login (outside transaction to avoid conflicts)
+      await setLastLogin(user);
+
+      // Send response only after all operations succeed
+      return sendSuccess(res, userObj, 'Email verified successfully');
+    } catch (tokenError) {
+      // Handle token/cookie errors without sending duplicate response
+      logger.error('Token generation failed:', tokenError);
+      return sendError(res, 'Authentication setup failed', 500);
+    }
   } catch (err) {
+    // Rollback transaction if it exists
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (rollbackErr) {
+        logger.error(`Transaction rollback failed: ${rollbackErr.message}`);
+      }
+    }
     logger.error('Failed to verify email', err);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -361,18 +443,20 @@ const resetPasswordWithToken = async (req, res) => {
 
     // If accountVerificationCode not found
     if (!accountVerificationCode) {
-      throw { status: 404, message: 'Invalid or expired reset token' };
+      throw { status: 404, message: 'User not found' };
     }
 
-    // If accountVerificationCode has expired
-    if (new Date() > accountVerificationCode.expiresAt) {
+    // Check if the token is expired
+    if (
+      accountVerificationCode.expiresAt &&
+      moment().isAfter(accountVerificationCode.expiresAt)
+    ) {
       throw { status: 400, message: 'Reset token has expired' };
     }
+    const user = await User.findByPk(accountVerificationCode.userId, {
+      transaction,
+    });
 
-    // Find user by ID
-    let user = await getAUser({ id: accountVerificationCode.userId });
-
-    // If user not found
     if (!user) {
       throw { status: 404, message: 'User not found' };
     }
@@ -384,56 +468,39 @@ const resetPasswordWithToken = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
-      try {
-        await transaction.rollback();
-      } catch (rollbackError) {
-        logger.error('Rollback failed:', rollbackError);
-      }
-      return res.status(400).json({
-        success: false,
-        message: 'Password does not meet security requirements',
-      });
+      return sendError(
+        res,
+        'Password does not meet security requirements',
+        400
+      );
     }
 
-    // Hash the new password and set expiry
-    const salt = bcrypt.genSaltSync(10);
-    user.hash = bcrypt.hashSync(password, salt);
-    user.verifiedUser = true;
-    user.verifiedAt = new Date();
-    user.forcePasswordReset = false;
-    setPasswordExpiry(user);
-    setPreviousPasswords(user);
-    setLastLoginAndReturn(user);
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Save user with updated details
-    await User.update(
+    // Update user password and related fields
+    await user.update(
       {
-        hash: user.hash,
-        metaData: user.metaData,
-        passwordExpiresAt: user.passwordExpiresAt,
-        forcePasswordReset: user.forcePasswordReset,
-        lastLoginAt: user.lastLoginAt,
+        hash: hashedPassword,
+        lastPasswordUpdate: new Date(),
+        forcePasswordReset: false,
+        passwordExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+        metaData: {
+          ...user.metaData,
+          previousPasswords: [
+            ...(user.metaData?.previousPasswords || []),
+            user.hash,
+          ].slice(-5), // Keep last 5 passwords
+        },
       },
-      {
-        where: { id: user.id },
-        transaction,
-      }
+      { transaction }
     );
 
-    // Delete the account verification code
-    await AccountVerificationCode.destroy({
-      where: { code: token },
-      transaction,
-    });
+    // Remove the account verification code
+    await accountVerificationCode.destroy({ transaction });
 
-    //delete password reset link
+    // Remove all password reset links for this user
     await PasswordResetLink.destroy({
-      where: { id: token },
-      transaction,
-    });
-
-    //remove all sessions for user before initiating new session
-    await RefreshToken.destroy({
       where: { userId: user.id },
       transaction,
     });
@@ -448,7 +515,10 @@ const resetPasswordWithToken = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create(
@@ -508,11 +578,7 @@ const resetPasswordWithToken = async (req, res) => {
     await setLastLogin(user);
 
     // Success response
-    return res.status(200).json({
-      success: true,
-      message: 'Password updated successfully',
-      data: userObj,
-    });
+    return sendSuccess(res, userObj, 'Password updated successfully');
   } catch (err) {
     // Rollback the transaction if it exists
     if (transaction) {
@@ -523,34 +589,17 @@ const resetPasswordWithToken = async (req, res) => {
       }
     }
     logger.error(`Reset Password With Token: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
 //Reset Password with Temp Password - Owner/Admin requested
 const resetTempPassword = async (req, res) => {
   try {
-    const { password, token, deviceInfo } = req.body;
-
-    // From the AccountVerificationCode table findUser ID by code, where code is resetToken
-    const accountVerificationCode = await AccountVerificationCode.findOne({
-      where: { code: token },
-    });
-
-    // If accountVerificationCode not found
-    if (!accountVerificationCode) {
-      throw { status: 404, message: 'Invalid or expired reset token' };
-    }
-
-    // If accountVerificationCode has expired
-    if (new Date() > accountVerificationCode.expiresAt) {
-      throw { status: 400, message: 'Reset token has expired' };
-    }
+    const { password, email, deviceInfo } = req.body;
 
     // Find user by ID
-    let user = await getAUser({ id: accountVerificationCode.userId });
+    let user = await getAUser({ email });
 
     // If user not found
     if (!user) {
@@ -564,10 +613,11 @@ const resetTempPassword = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password does not meet security requirements',
-      });
+      return sendError(
+        res,
+        'Password does not meet security requirements',
+        400
+      );
     }
 
     // Hash the new password and set expiry
@@ -594,16 +644,6 @@ const resetTempPassword = async (req, res) => {
       }
     );
 
-    // Delete the account verification code
-    await AccountVerificationCode.destroy({
-      where: { code: token },
-    });
-
-    //delete password reset link
-    await PasswordResetLink.destroy({
-      where: { id: token },
-    });
-
     //remove all sessions for user before initiating new session
     await RefreshToken.destroy({
       where: { userId: user.id },
@@ -619,7 +659,10 @@ const resetTempPassword = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -648,26 +691,22 @@ const resetTempPassword = async (req, res) => {
     delete userObj.hash;
 
     // Success response
-    return res.status(200).json({
-      success: true,
-      message: 'Password updated successfully',
-      data: userObj,
-    });
+    return sendSuccess(res, userObj, 'Password updated successfully');
   } catch (err) {
     logger.error(`Reset Temp Password: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
 //Login Basic user
 // 401 - Unverified , Temp PW, Expired PW | 403 - Incorrect E-mail password combination | 500 - Internal server error | 200 - Success
+//Login Basic user
+// 401 - Invalid credentials | 403 - Account restrictions (unverified, temp pw, expired pw, locked) | 500 - Internal server error | 200 - Success
 const loginBasicUser = async (req, res) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
-    const genericError = 'Username and Password combination not found';
+    const genericError = 'failed'; // Use Constants.LOGIN_FAILED
 
     // find user - include user roles from UserRole table
     const user = await getAUser({ email });
@@ -675,27 +714,17 @@ const loginBasicUser = async (req, res) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Login : User with email ${email} does not exist`);
-      return res.status(403).json({
-        success: false,
-        message: genericError,
-      });
+      return sendError(
+        res,
+        'User with the provided email and password combination not found',
+        401
+      );
     }
 
+    // If force password reset is true it means user is issued a temp password and must reset password
     if (user?.forcePasswordReset) {
       logger.error(`Login : Login attempt by user with Temp PW - ${user.id}`);
-      let resetUrl = null;
-
-      if (user?.AccountVerificationCodes[0]?.code) {
-        resetUrl = `${trimURL(process.env.WEB_URL)}/reset-temporary-password/${
-          user.AccountVerificationCodes[0].code
-        }`;
-      }
-
-      return res.status(401).json({
-        success: false,
-        message: 'temp-pw',
-        resetLink: resetUrl ? resetUrl : null,
-      });
+      return sendError(res, 'temp-pw', 401); // Use Constants.LOGIN_TEMP_PW
     }
 
     // If the accountLocked.isLocked is true, return generic error
@@ -703,10 +732,7 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login Attempt by user with locked account ${email}`
       );
-      return res.status(403).json({
-        success: false,
-        message: genericError,
-      });
+      return sendError(res, 'account-locked', 401);
     }
 
     //Compare password
@@ -718,10 +744,7 @@ const loginBasicUser = async (req, res) => {
     // If not verified user return error
     if (!user.verifiedUser) {
       logger.error(`Login : Login attempt by unverified user - ${user.id}`);
-      return res.status(401).json({
-        success: false,
-        message: 'unverified',
-      });
+      return sendError(res, 'unverified', 401); // Use Constants.LOGIN_UNVERIFIED
     }
 
     //if password has expired
@@ -729,55 +752,40 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login attempt by user with expired password - ${user.id}`
       );
-
-      return res.status(401).json({
-        success: false,
-        message: 'password-expired',
-      });
+      return sendError(res, 'password-expired', 401); // Use Constants.LOGIN_PW_EXPIRED
     }
 
-    // If force password reset is true it  means user is issued a temp password and must reset password
-    if (user.forcePasswordReset) {
-      logger.error(
-        `Login : Login attempt by user with temp password - ${user.id}`
-      );
-      return res.status(401).json({
-        success: false,
-        message: 'temp-password',
-      });
-    }
-
-    // If user is an registered to azure, throw error
+    // If user is registered to azure, throw error
     if (user.registrationMethod === 'azure') {
       logger.error(
         `Login : Login attempt by azure user - ${user.id} - ${user.email}`
       );
-
-      // Incorrect E-mail password combination error
-      const azureError = new Error(
-        'Email is registered with a Microsoft account. Please sign in with Microsoft'
+      throw new CustomError(
+        'Email is registered with a Microsoft account. Please sign in with Microsoft',
+        401
       );
-      azureError.status = 403;
-      throw azureError;
     }
 
-    // Remove hash from use object
+    // Remove hash from user object
     const userObj = user.toJSON();
     delete userObj.hash;
 
     // Create token id
     const tokenId = uuidv4();
 
-    // Create access jwt
-    const accessToken = generateAccessToken({ ...userObj, tokenId });
+    // Create access jwt with minimal payload
+    const accessToken = generateAccessToken(
+      createTokenPayload(userObj, tokenId)
+    );
 
     // Generate refresh token
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
-
-    //get device info from request
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -798,20 +806,13 @@ const loginBasicUser = async (req, res) => {
     await setLastLogin(user);
 
     // Success response
-    return res.status(200).json({
-      success: true,
-      message: 'User logged in successfully',
-      data: userObj,
-    });
+    return sendSuccess(res, userObj, 'success'); // Use Constants.LOGIN_SUCCESS
   } catch (err) {
     logger.error(`Login user: ${err.message}`);
-    // If err.status is present - it is logged already
     if (!err.status) {
       logger.error(`Login user: ${err.message}`);
     }
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -821,8 +822,8 @@ const logOutBasicUser = async (req, res) => {
     // Clear the token cookie
     res.clearCookie('token');
     res.clearCookie('x-csrf-token');
-    // Decode the token to get the tokenId (assuming token contains tokenId)
-    const decodedToken = jwt.decode(req.cookies.token);
+    // Verify the token to get the tokenId securely
+    const decodedToken = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
 
     const { tokenId } = decodedToken;
 
@@ -834,12 +835,10 @@ const logOutBasicUser = async (req, res) => {
     // Add access token to the blacklist
     await blacklistToken({ tokenId, exp: decodedToken.exp });
 
-    return res.status(200).json({ success: true, message: 'User logged out' });
+    return sendSuccess(res, null, 'User logged out');
   } catch (err) {
     logger.error(`Logout user: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -871,7 +870,7 @@ const handlePasswordResetRequest = async (req, res) => {
     // User with the given email does not exist
     if (!user) {
       logger.error(`Reset password: User with email ${email} does not exist`);
-      return res.status(404).json({ success: false });
+      return sendError(res, 'User not found', 404);
     }
 
     //need to check if user is an owner or admin to see if they are allowed to reset password without admin assistance
@@ -892,9 +891,7 @@ const handlePasswordResetRequest = async (req, res) => {
       //send password expired email
       await sendPasswordExpiredEmail(user);
 
-      return res.status(403).json({
-        success: false,
-      });
+      return sendError(res, 'Password expired', 403);
     }
 
     // Stop users form abusing this endpoint - allow 4 requests per hour
@@ -912,7 +909,7 @@ const handlePasswordResetRequest = async (req, res) => {
       logger.error(
         `Reset password: User with email ${email} has exceeded the limit of password reset requests`
       );
-      return res.status(429).json({ success: false });
+      return sendError(res, 'Too many requests', 429);
     }
 
     // Generate a password reset token
@@ -968,12 +965,10 @@ const handlePasswordResetRequest = async (req, res) => {
     });
 
     // response
-    return res.status(200).json({ success: true });
+    return sendSuccess(res, null, 'Password reset request processed');
   } catch (err) {
     logger.error(`Reset password: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -1031,11 +1026,11 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
     // If user exists and is not an azure user
     if (userExists.exists && userExists.registrationMethod !== 'azure') {
-      return res.status(409).json({
-        success: false,
-        message:
-          'This account was created with a different login method. Please sign in with your username and password instead of using Microsoft',
-      });
+      return sendError(
+        res,
+        'This account was created with a different login method. Please sign in with your username and password instead of using Microsoft',
+        409
+      );
     }
 
     // If user does not exist create user - issues necessary tokens etc just like registering  traditional user
@@ -1058,12 +1053,50 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       newUserPlain.roles = [];
       newUserPlain.applications = [];
 
+      // Notify admins/owners about new Azure user registration
+      try {
+        const recipients = await getAccessRequestRecipients();
+
+        if (recipients.length > 0) {
+          const adminNotificationId = uuidv4();
+
+          await NotificationQueue.create({
+            type: 'email',
+            templateName: 'newUserRegistration',
+            notificationOrigin: 'Azure User Registration',
+            deliveryType: 'immediate',
+            metaData: {
+              notificationId: adminNotificationId,
+              notificationOrigin: 'Azure User Registration',
+              userEmail: newUser.email,
+              userFirstName: newUser.firstName,
+              userLastName: newUser.lastName,
+              registrationMethod: 'azure',
+              userManagementLink: `${trimURL(process.env.WEB_URL)}/admin/userManagement`,
+              subject: `New Azure User Registration - Action Required: ${newUser.email}`,
+              mainRecipients: recipients,
+              notificationDescription: 'New Azure User Registration',
+              validForHours: 24,
+            },
+            createdBy: newUser.id,
+          });
+        }
+      } catch (adminNotificationError) {
+        logger.error(
+          `Failed to send admin notification for new Azure user: ${adminNotificationError.message}`
+        );
+        // Don't fail user registration if admin notification fails
+      }
+
       // Create a new refresh token
       const tokenId = uuidv4();
       const refreshToken = generateRefreshToken({ tokenId });
 
       // Save refresh token to DB
-      const { iat, exp } = jwt.decode(refreshToken);
+      const { iat, exp } = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET
+      );
 
       // Save refresh token in DB
       await RefreshToken.create({
@@ -1081,17 +1114,18 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
       await setTokenCookie(res, accessToken);
 
-      await generateAndSetCSRFToken(req, res, accessToken, next);
+      await generateAndSetCSRFToken(req, res, accessToken);
 
       // Set last login
       await setLastLogin(newUser);
 
       // Send response
-      return res.status(201).json({
-        success: true,
-        message: 'User created successfully',
-        data: { ...newUserPlain },
-      });
+      return sendSuccess(
+        res,
+        { ...newUserPlain },
+        'User created successfully',
+        201
+      );
     }
 
     // If user exists and is azure user
@@ -1100,7 +1134,10 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Save refresh token to DB
-    const { iat, exp } = jwt.decode(refreshToken);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -1122,18 +1159,15 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
 
     // Set last login
     await setLastLogin(user);
-
     // Send response
-    return res.status(200).json({
-      success: true,
-      message: 'User logged in successfully',
-      data: { ...user.toJSON() },
-    });
+    return sendSuccess(
+      res,
+      { ...user.toJSON() },
+      'User logged in successfully'
+    );
   } catch (err) {
     logger.error(`Login or Register Azure User: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -1143,15 +1177,14 @@ const requestAccess = async (req, res) => {
 
     const user = await User.findOne({ where: { id } });
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
-    const instance_setting = await InstanceSetting.findOne({
-      where: { name: 'contactEmail' },
-    });
+    // Get recipients for access request notifications
+    const recipients = await getAccessRequestRecipients();
 
-    if (!instance_setting) {
-      return res.status(404).json({ message: 'No contact email found.' });
+    if (recipients.length === 0) {
+      return sendError(res, 'No notification recipients configured', 404);
     }
 
     const existingNotification = await SentNotification.findOne({
@@ -1170,7 +1203,7 @@ const requestAccess = async (req, res) => {
           'Access request from user already sent within 24 hours. User: ' +
             user.email
         );
-        return res.status(200).json({ message: 'Access request already sent' });
+        return sendSuccess(res, null, 'Access request already sent');
       }
     }
 
@@ -1191,17 +1224,17 @@ const requestAccess = async (req, res) => {
           process.env.WEB_URL
         )}/admin/userManagement`,
         subject: `User Access Request from ${user.email}`,
-        mainRecipients: [instance_setting.value],
+        mainRecipients: recipients,
         notificationDescription: 'User Access Request',
         validForHours: 24,
       },
       createdBy: user.id,
     });
 
-    return res.status(200).json({ message: 'Access requested successfully' });
+    return sendSuccess(res, null, 'Access requested successfully');
   } catch (e) {
     logger.error(`Request Access: ${e.message}`);
-    return res.status(500).json({ message: e.message });
+    return sendError(res, e);
   }
 };
 
@@ -1264,15 +1297,13 @@ const resendVerificationCode = async (req, res) => {
       createdBy: user.id,
     });
 
-    return res.status(200).json({
-      success: true,
-      message: 'Verification code sent successfully',
-    });
+    // Update last verification code sent timestamp
+    await user.update({ lastVerificationCodeSentAt: Date.now() });
+
+    return sendSuccess(res, null, 'Verification code sent successfully');
   } catch (err) {
     logger.error(`Resend verification code: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -1288,7 +1319,7 @@ const getUserDetailsWithToken = async (req, res) => {
     });
 
     if (!userId) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     const id = userId.userId;
@@ -1298,7 +1329,7 @@ const getUserDetailsWithToken = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     //only grab the details we need
@@ -1310,12 +1341,10 @@ const getUserDetailsWithToken = async (req, res) => {
       newUser: user.newUser,
     };
 
-    return res.status(200).json({ user: userObj });
+    return sendSuccess(res, { user: userObj });
   } catch (err) {
     logger.error(`getUserDetailsWithToken: ${err.message}`);
-    res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
   }
 };
 
@@ -1331,7 +1360,7 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
     });
 
     if (!userId) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     const id = userId.userId;
@@ -1341,7 +1370,7 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     //check if it is a new user
@@ -1363,12 +1392,10 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       newUser: user.newUser,
     };
 
-    return res.status(200).json({ user: userObj });
+    return sendSuccess(res, { user: userObj });
   } catch (err) {
-    logger.error(`getUserDetailsWithToken: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    logger.error(`getUserDetailsWithVerificationCode: ${err.message}`);
+    return sendError(res, err);
   }
 };
 
@@ -1381,18 +1408,101 @@ const requestPasswordReset = async (req, res) => {
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return sendError(res, 'User not found', 404);
     }
 
     // Send E-mail to access request email
     const response = await sendPasswordExpiredEmail(user);
 
-    return res.status(200).json({ message: response.message });
+    return sendSuccess(res, null, response.message);
   } catch (err) {
     logger.error(`Request password reset: ${err.message}`);
-    return res
-      .status(err.status || 500)
-      .json({ success: false, message: err.message });
+    return sendError(res, err);
+  }
+};
+
+// Refresh Access Token - Explicit Client-Side Refresh
+const refreshAccessToken = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const { id: userId, tokenId } = decodedToken;
+
+    // Check if corresponding refresh token exists in DB
+    const refreshToken = await RefreshToken.findOne({
+      where: { id: tokenId },
+    });
+
+    if (!refreshToken) {
+      return sendError(res, 'Session expired', 401);
+    }
+
+    // Check if the original session has expired (7 days from initial login)
+    const now = new Date();
+    if (now > refreshToken.exp) {
+      // Session has expired - remove the refresh token and force re-login
+      await refreshToken.destroy();
+      return sendError(res, 'Session expired', 401);
+    }
+
+    // Get fresh user details
+    const user = await User.findOne({
+      where: { id: userId },
+      include: [
+        {
+          model: UserRole,
+          attributes: ['id'],
+          as: 'roles',
+          include: [
+            {
+              model: RoleType,
+              as: 'role_details',
+              attributes: ['id', 'roleName'],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!user) {
+      return sendError(res, 'User not found', 404);
+    }
+
+    const userObj = user.toJSON();
+    delete userObj.hash;
+    const newTokenId = uuidv4();
+    const newAccessToken = generateAccessToken({
+      ...userObj,
+      tokenId: newTokenId,
+    });
+
+    // Generate new refresh token with the ORIGINAL expiry time
+    const newRefreshToken = generateRefreshToken(
+      { tokenId: newTokenId },
+      refreshToken.exp
+    );
+
+    // Save new refresh token in DB
+    await RefreshToken.create({
+      id: newTokenId,
+      userId: user.id,
+      token: newRefreshToken,
+      deviceInfo: refreshToken.deviceInfo,
+      iat: refreshToken.iat,
+      exp: refreshToken.exp, // Keep original expiry
+    });
+
+    // Remove old refresh token from DB
+    await refreshToken.destroy();
+
+    // Set new access token in cookie
+    await setTokenCookie(res, newAccessToken);
+    await generateAndSetCSRFToken(req, res, newAccessToken);
+
+    return sendSuccess(res, { user: userObj }, 'Token refreshed successfully');
+  } catch (err) {
+    logger.error(`Refresh token: ${err.message}`);
+    return sendError(res, 'Invalid refresh token', 401);
   }
 };
 
@@ -1403,6 +1513,7 @@ module.exports = {
   resetPasswordWithToken,
   resetTempPassword,
   loginBasicUser,
+  refreshAccessToken,
   logOutBasicUser,
   handlePasswordResetRequest,
   createApplicationOwner,

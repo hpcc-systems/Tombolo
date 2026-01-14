@@ -1,5 +1,6 @@
-import { Popconfirm, message, Tooltip } from 'antd';
+import { Popconfirm, Tooltip } from 'antd';
 import React, { useState, useEffect, useRef } from 'react';
+import { handleSuccess, handleError } from './handleResponse.jsx';
 
 const ConfirmAction = ({
   onConfirm,
@@ -21,11 +22,11 @@ const ConfirmAction = ({
     try {
       setPrompt(() => ({ visible: true, loading: true }));
       await onConfirm();
-      message.success(`Success!${notification.success}`);
+      handleSuccess(`Success!${notification.success}`);
       isMounted.current && setPrompt(() => ({ visible: false, loading: false }));
     } catch (error) {
       console.log('Error fetch', error);
-      message.error(notification.error || error.message);
+      handleError(notification.error || error.message);
       isMounted.current && setPrompt({ visible: false, loading: false });
     }
   };

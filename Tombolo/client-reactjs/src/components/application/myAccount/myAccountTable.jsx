@@ -1,6 +1,11 @@
+// Imports from libraries
 import React, { useState, useEffect } from 'react';
-import { Table, Spin, message } from 'antd';
-import { getSessions, deviceInfoStringBuilder, revokeSession } from './utils';
+import { Table, Spin } from 'antd';
+
+// Local imports
+import { deviceInfoStringBuilder } from './utils';
+import { handleSuccess } from '../../common/handleResponse';
+import sessionService from '@/services/session.service';
 
 const MyAccountTable = ({ user }) => {
   const [sessions, setSessions] = useState([]);
@@ -8,13 +13,11 @@ const MyAccountTable = ({ user }) => {
 
   useEffect(() => {
     const fetchSessions = async (user) => {
-      const sessions = await getSessions(user);
-      if (!sessions?.success) {
-        return;
-      }
+      const data = await sessionService.getActiveSessions(user.id);
 
-      setSessions(sessions.data);
-      return;
+      if (data) {
+        setSessions(data);
+      }
     };
 
     if (sessionsFetched === false) {
@@ -45,12 +48,13 @@ const MyAccountTable = ({ user }) => {
           <a
             onClick={async () => {
               //TODO -- check if session is current active session and disabled revoke option
-              const response = await revokeSession(id);
-              if (!response) {
-                return;
+              try {
+                await sessionService.destroyActiveSession(id);
+                setSessions(sessions.filter((s) => s.id !== id));
+                handleSuccess('Session revoked successfully');
+              } catch (err) {
+                // Error handled by axios interceptor
               }
-              setSessions(sessions.filter((s) => s.id !== id));
-              message.success('Session revoked successfully');
             }}>
             Revoke
           </a>

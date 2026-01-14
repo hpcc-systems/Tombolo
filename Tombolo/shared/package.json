@@ -1,0 +1,45 @@
+{
+  "name": "@tombolo/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared utilities and common functionality for Tombolo packages",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./backend": {
+      "types": "./dist/backend.d.ts",
+      "import": "./dist/backend.js",
+      "require": "./dist/backend.cjs"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js",
+      "require": "./dist/browser.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "esm:build": "tsup",
+    "dev": "tsup --watch",
+    "test": "echo \"No tests yet\"",
+    "clean": "rm -rf dist .turbo",
+    "clean:deps": "rm -rf node_modules"
+  },
+  "devDependencies": {
+    "tsup": "catalog:"
+  },
+  "dependencies": {
+    "winston": "catalog:",
+    "winston-daily-rotate-file": "catalog:"
+  }
+}

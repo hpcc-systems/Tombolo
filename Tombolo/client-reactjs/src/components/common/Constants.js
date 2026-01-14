@@ -2,6 +2,7 @@ export const Constants = {
   LOGIN_SUCCESS: 'success',
   LOGIN_FAILED: 'failed',
   LOGIN_TEMP_PW: 'temp-pw',
+  LOGIN_ACCOUNT_LOCKED: 'account-locked',
   LOGIN_PW_EXPIRED: 'password-expired',
   LOGIN_UNVERIFIED: 'unverified',
 
@@ -79,6 +80,8 @@ export const Constants = {
 
   FM_FILTERS_KEY: 'fMFilters',
   FM_FILTERS_VS_KEY: 'fMFiltersVisible',
+  OPM_FILTERS_KEY: 'opmFilters',
+  OPM_FILTERS_VS_KEY: 'opmFiltersVisible',
 };
 
 export const APPROVAL_STATUS = {
