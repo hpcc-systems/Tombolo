@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Table, Space, Popconfirm, Button, Tooltip } from 'antd';
-import { EyeOutlined, EditOutlined, DeleteOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleFilled,
+  CloseCircleFilled,
+  FileTextOutlined,
+} from '@ant-design/icons';
+import { useHistory } from 'react-router-dom';
 
 import clustersService from '@/services/clusters.service';
 import { formatDateTime } from '../../common/CommonUtil';
@@ -16,6 +24,7 @@ function ClustersTable({
 }) {
   // States
   const [testingConnection, setTestingConnection] = useState(null);
+  const history = useHistory();
 
   //Columns
   const columns = [
@@ -89,8 +98,15 @@ function ClustersTable({
       dataIndex: 'actions',
       render: (_text, record) => (
         <Space size="middle">
-          <EyeOutlined onClick={() => handleViewClusterDetails(record)} />
-          <EditOutlined onClick={() => handleEditClusterDetails(record)} />
+          <Tooltip title="View Details">
+            <EyeOutlined onClick={() => handleViewClusterDetails(record)} />
+          </Tooltip>
+          <Tooltip title="Edit Cluster">
+            <EditOutlined onClick={() => handleEditClusterDetails(record)} />
+          </Tooltip>
+          <Tooltip title="View Logs">
+            <FileTextOutlined onClick={() => handleViewClusterLogs(record)} />
+          </Tooltip>
           <Popconfirm
             overlayStyle={{ width: 400 }}
             okButtonProps={{ danger: true }}
@@ -133,6 +149,11 @@ function ClustersTable({
   const handleEditClusterDetails = record => {
     setSelectedCluster(record);
     setDisplayEditClusterModal(true);
+  };
+
+  // Handle view cluster logs
+  const handleViewClusterLogs = record => {
+    history.push(`/admin/clusters/logs?clusterID=${record.id}&clusterName=${encodeURIComponent(record.name)}`);
   };
 
   // Handle test connection

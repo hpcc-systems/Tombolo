@@ -23,6 +23,7 @@ const {
   clusterUsage,
   clusterStorageHistory,
   checkClusterHealth,
+  getClusterLogs,
 } = require('../controllers/clusterController');
 const role = require('../config/roleTypes');
 
@@ -30,6 +31,7 @@ const { validateUserRole } = require('../middlewares/rbacMiddleware');
 
 router.get('/', getClusters); // GET - all clusters
 router.get('/getOne/:id', validate(validateClusterId), getCluster); // GET - one cluster by id
+router.get('/logs/:id', validate(validateClusterId), getClusterLogs); // GET - cluster logs
 
 //cluster dashboards
 router.get(
