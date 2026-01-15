@@ -97,6 +97,10 @@ jobs:
         working-directory: Tombolo/shared
         run: pnpm build
 
+      - name: build db package
+        working-directory: Tombolo/db
+        run: pnpm build
+
       - name: Setup server config files
         working-directory: Tombolo/server
         run: cp cluster-whitelist.sample.js cluster-whitelist.js

@@ -94,7 +94,7 @@ const updateClusterMonitoring = async (req, res) => {
         ...req.body,
         isActive: false,
         approvalStatus: APPROVAL_STATUS.PENDING,
-        updatedBy: req.user.id,
+        lastUpdatedBy: req.user.id,
       },
       {
         where: { id: req.body.id },
@@ -144,7 +144,7 @@ const toggleClusterMonitoringStatus = async (req, res) => {
     await ClusterMonitoring.update(
       {
         isActive: !monitoring.isActive,
-        updatedBy: req.user.id,
+        lastUpdatedBy: req.user.id,
       },
       {
         where: { id: req.body.id },
@@ -205,7 +205,7 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
     await ClusterMonitoring.update(
       {
         isActive,
-        updatedBy: req.user.id,
+        lastUpdatedBy: req.user.id,
       },
       {
         where: { id: { [Op.in]: idsToProceedWith } },
@@ -295,7 +295,7 @@ const bulkUpdateClusterMonitoring = async (req, res) => {
               ...monitoring.metaData,
               contacts: updateDataObj[monitoring.id],
             },
-            updatedBy: req.user.id,
+            lastUpdatedBy: req.user.id,
           },
           { where: { id: monitoring.id } }
         );

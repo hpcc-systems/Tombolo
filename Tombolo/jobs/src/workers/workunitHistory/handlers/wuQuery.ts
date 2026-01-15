@@ -169,7 +169,6 @@ async function getWorkUnits(
       );
 
       // Sequelize will auto-populate createdAt, updatedAt, and set clusterDeleted default
-      // @ts-expect-error - Sequelize handles missing timestamp and default fields
       await WorkUnit.bulkCreate(transformedWorkunits, {
         updateOnDuplicate: [
           'workUnitTimestamp',
