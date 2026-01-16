@@ -1,9 +1,7 @@
-import db from '@tombolo/db';
+import { Cluster } from '@tombolo/db';
 import { decryptString } from '@tombolo/shared';
 import { isClusterReachable } from './isClusterReachable.js';
 import { ENCRYPTION_KEY } from '../config/config.js';
-
-const { Cluster } = db;
 
 interface ClusterWithError {
   error?: string;
