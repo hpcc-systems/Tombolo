@@ -39,12 +39,59 @@ WORKDIR /app/Tombolo/shared
 RUN pnpm build
 
 # ===========================================
+# DB Package Builder Stage
+# ===========================================
+FROM base AS db-builder
+
+# Copy built shared package from shared-builder
+COPY --from=shared-builder /app/Tombolo/shared/dist ./Tombolo/shared/dist
+COPY --from=shared-builder /app/Tombolo/shared/package.json ./Tombolo/shared/package.json
+
+# Copy db package source
+COPY Tombolo/db ./Tombolo/db
+
+WORKDIR /app/Tombolo/db
+
+# Build db package
+RUN pnpm build
+
+# ===========================================
+# Core Package Builder Stage
+# ===========================================
+FROM base AS core-builder
+
+# Copy built shared package from shared-builder
+COPY --from=shared-builder /app/Tombolo/shared/dist ./Tombolo/shared/dist
+COPY --from=shared-builder /app/Tombolo/shared/package.json ./Tombolo/shared/package.json
+
+# Copy built db package from db-builder (core depends on db for types)
+COPY --from=db-builder /app/Tombolo/db/dist ./Tombolo/db/dist
+COPY --from=db-builder /app/Tombolo/db/package.json ./Tombolo/db/package.json
+
+# Copy core package source
+COPY Tombolo/core ./Tombolo/core
+
+WORKDIR /app/Tombolo/core
+
+# Build core package
+RUN pnpm build
+
+# ===========================================
 # Client Builder Stage
 # ===========================================
 FROM base AS client-builder
 
 # Copy built shared package from shared-builder
 COPY --from=shared-builder /app/Tombolo/shared/dist ./Tombolo/shared/dist
+COPY --from=shared-builder /app/Tombolo/shared/package.json ./Tombolo/shared/package.json
+
+# Copy built core package from core-builder
+COPY --from=core-builder /app/Tombolo/core/dist ./Tombolo/core/dist
+COPY --from=core-builder /app/Tombolo/core/package.json ./Tombolo/core/package.json
+
+# Copy built db package from db-builder
+COPY --from=db-builder /app/Tombolo/db/dist ./Tombolo/db/dist
+COPY --from=db-builder /app/Tombolo/db/package.json ./Tombolo/db/package.json
 
 # Copy client source (includes .env for Vite build-time variables)
 COPY Tombolo/client-reactjs ./Tombolo/client-reactjs
@@ -98,14 +145,26 @@ COPY Tombolo/core/package.json ./Tombolo/core/
 # Install dependencies
 RUN pnpm install --frozen-lockfile --prod
 
-# Copy source code
+# Copy server source code
 COPY Tombolo/server ./Tombolo/server
-COPY Tombolo/db ./Tombolo/db
-COPY Tombolo/shared ./Tombolo/shared
-COPY Tombolo/core ./Tombolo/core
 
 # Copy built shared package from shared-builder
 COPY --from=shared-builder /app/Tombolo/shared/dist ./Tombolo/shared/dist
+COPY --from=shared-builder /app/Tombolo/shared/package.json ./Tombolo/shared/package.json
+
+# Copy built core package from core-builder
+COPY --from=core-builder /app/Tombolo/core/dist ./Tombolo/core/dist
+COPY --from=core-builder /app/Tombolo/core/package.json ./Tombolo/core/package.json
+
+# Copy built db package from db-builder  
+COPY --from=db-builder /app/Tombolo/db/dist ./Tombolo/db/dist
+COPY --from=db-builder /app/Tombolo/db/package.json ./Tombolo/db/package.json
+
+# Copy db migrations, seeders, config, and utils (needed at runtime)
+COPY Tombolo/db/migrations ./Tombolo/db/migrations
+COPY Tombolo/db/seeders ./Tombolo/db/seeders
+COPY Tombolo/db/config ./Tombolo/db/config
+COPY Tombolo/db/utils ./Tombolo/db/utils
 
 # Copy Docker-specific .sequelizerc and rename it
 COPY Tombolo/server/.sequelizerc.docker ./Tombolo/server/.sequelizerc
@@ -199,14 +258,26 @@ COPY Tombolo/core/package.json ./Tombolo/core/
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
+# Copy jobs source code
 COPY Tombolo/jobs ./Tombolo/jobs
-COPY Tombolo/db ./Tombolo/db
-COPY Tombolo/shared ./Tombolo/shared
-COPY Tombolo/core ./Tombolo/core
 
 # Copy built shared package from shared-builder
 COPY --from=shared-builder /app/Tombolo/shared/dist ./Tombolo/shared/dist
+COPY --from=shared-builder /app/Tombolo/shared/package.json ./Tombolo/shared/package.json
+
+# Copy built core package from core-builder
+COPY --from=core-builder /app/Tombolo/core/dist ./Tombolo/core/dist
+COPY --from=core-builder /app/Tombolo/core/package.json ./Tombolo/core/package.json
+
+# Copy built db package from db-builder
+COPY --from=db-builder /app/Tombolo/db/dist ./Tombolo/db/dist
+COPY --from=db-builder /app/Tombolo/db/package.json ./Tombolo/db/package.json
+
+# Copy db migrations, seeders, config, and utils (needed at runtime)
+COPY Tombolo/db/migrations ./Tombolo/db/migrations
+COPY Tombolo/db/seeders ./Tombolo/db/seeders
+COPY Tombolo/db/config ./Tombolo/db/config
+COPY Tombolo/db/utils ./Tombolo/db/utils
 
 # Build TypeScript without source maps for production
 WORKDIR /app/Tombolo/jobs
