@@ -1,12 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { handleError } from '@/components/common/handleResponse';
-import BreadCrumbs from '../../common/BreadCrumbs';
-import ClusterActionBtn from './ClusterActionBtn';
-import ClustersTable from './ClustersTable';
-import ClusterDetailsModal from './ClusterDetailsModal';
-import AddClusterModal from './AddClusterModal';
-import EditClusterModal from './EditClusterModal';
+import BreadCrumbs from '@/components/common/BreadCrumbs';
+import ClusterActionBtn from '@/components/admin/clusters/ClusterActionBtn';
+import ClustersTable from '@/components/admin/clusters/ClustersTable';
+import ClusterDetailsModal from '@/components/admin/clusters/ClusterDetailsModal';
+import AddClusterModal from '@/components/admin/clusters/AddClusterModal';
+import EditClusterModal from '@/components/admin/clusters/EditClusterModal';
 import clustersService from '@/services/clusters.service';
 import configurationsService from '@/services/configurations.service';
 import { clustersAddButtonTourShown, clustersFound } from '@/redux/slices/ApplicationSlice';
@@ -22,7 +22,7 @@ function Clusters() {
   const [tombolo_instance_name, setTombolo_instance_name] = useState(null);
 
   //tour management
-  const noClusters = useSelector((store) => store.application.noClusters);
+  const noClusters = useSelector(store => store.application.noClusters);
   const addClusterButtonRef = useRef(null);
   const [tourOpen, setTourOpen] = useState(false);
   const dispatch = useDispatch();

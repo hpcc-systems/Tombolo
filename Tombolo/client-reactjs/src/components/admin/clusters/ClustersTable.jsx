@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Table, Space, Popconfirm, Button, Tooltip } from 'antd';
-import { EyeOutlined, EditOutlined, DeleteOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleFilled,
+  CloseCircleFilled,
+  FileTextOutlined,
+} from '@ant-design/icons';
+import { useHistory } from 'react-router-dom';
 
 import clustersService from '@/services/clusters.service';
 import { formatDateTime } from '../../common/CommonUtil';
@@ -16,6 +24,7 @@ function ClustersTable({
 }) {
   // States
   const [testingConnection, setTestingConnection] = useState(null);
+  const history = useHistory();
 
   //Columns
   const columns = [
@@ -89,8 +98,15 @@ function ClustersTable({
       dataIndex: 'actions',
       render: (_text, record) => (
         <Space size="middle">
-          <EyeOutlined onClick={() => handleViewClusterDetails(record)} />
-          <EditOutlined onClick={() => handleEditClusterDetails(record)} />
+          <Tooltip title="View Details">
+            <EyeOutlined onClick={() => handleViewClusterDetails(record)} />
+          </Tooltip>
+          <Tooltip title="Edit Cluster">
+            <EditOutlined onClick={() => handleEditClusterDetails(record)} />
+          </Tooltip>
+          <Tooltip title="View Logs">
+            <FileTextOutlined onClick={() => handleViewClusterLogs(record)} />
+          </Tooltip>
           <Popconfirm
             overlayStyle={{ width: 400 }}
             okButtonProps={{ danger: true }}
@@ -113,30 +129,35 @@ function ClustersTable({
   ];
 
   // Handle delete cluster
-  const handleDeleteCluster = async (id) => {
+  const handleDeleteCluster = async id => {
     try {
       await clustersService.delete(id);
       handleSuccess('Cluster deleted successfully');
-      setClusters((clusters) => clusters.filter((cluster) => cluster.id !== id));
+      setClusters(clusters => clusters.filter(cluster => cluster.id !== id));
     } catch (e) {
       handleError('Failed to delete cluster');
     }
   };
 
   // Handle view cluster details
-  const handleViewClusterDetails = (record) => {
+  const handleViewClusterDetails = record => {
     setSelectedCluster(record);
     setDisplayClusterDetailsModal(true);
   };
 
   // Handle edit cluster details
-  const handleEditClusterDetails = (record) => {
+  const handleEditClusterDetails = record => {
     setSelectedCluster(record);
     setDisplayEditClusterModal(true);
   };
 
+  // Handle view cluster logs
+  const handleViewClusterLogs = record => {
+    history.push(`/admin/clusters/logs?clusterID=${record.id}&clusterName=${encodeURIComponent(record.name)}`);
+  };
+
   // Handle test connection
-  const handleTestConnection = async (record) => {
+  const handleTestConnection = async record => {
     try {
       setTestingConnection(record.id);
       await clustersService.pingExisting({ clusterId: record.id });
@@ -149,13 +170,13 @@ function ClustersTable({
     // Get updated cluster and set it
     try {
       const updatedCluster = await clustersService.getOne(record.id);
-      setClusters((clusters) => clusters.map((cluster) => (cluster.id === record.id ? updatedCluster : cluster)));
+      setClusters(clusters => clusters.map(cluster => (cluster.id === record.id ? updatedCluster : cluster)));
     } catch (err) {
       handleError('Failed to get updated cluster');
     }
   };
 
-  return <Table columns={columns} dataSource={clusters} size="small" rowKey={(record) => record.id} />;
+  return <Table columns={columns} dataSource={clusters} size="small" rowKey={record => record.id} />;
 }
 
 export default ClustersTable;

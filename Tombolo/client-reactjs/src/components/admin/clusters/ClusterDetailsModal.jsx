@@ -55,7 +55,7 @@ function ClusterDetailsModal({
 export default ClusterDetailsModal;
 
 //Generate tags
-const generateTagsForAdminEmails = (adminEmails) => {
+const generateTagsForAdminEmails = adminEmails => {
   return adminEmails.map((email, index) => <Tag key={index}>{email}</Tag>);
 };
 
