@@ -106,6 +106,7 @@ const validateResetPasswordPayload = [
 // Verify if the request body has code -> Auth code from azure
 const validateAzureAuthCode = [
   stringBody('code', false, {
+    length: { min: 1, max: 10000 },
     alphaNumeric: false, // Explicitly disable alphanumeric check
   }),
 ];
