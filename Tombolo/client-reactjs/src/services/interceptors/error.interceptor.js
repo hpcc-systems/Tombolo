@@ -1,9 +1,9 @@
 const ignore401Routes = ['/auth/loginBasicUser'];
 
-export const errorInterceptor = (apiClient) => {
+export const errorInterceptor = apiClient => {
   apiClient.interceptors.response.use(
-    (response) => response,
-    async (error) => {
+    response => response,
+    async error => {
       const { response, config } = error;
 
       // ---- Network / connection errors (no response at all) ----
@@ -43,11 +43,15 @@ export const errorInterceptor = (apiClient) => {
       const data = response?.data || {};
       let messages = ['An error occurred'];
 
-      if (Array.isArray(data.messages) && data.messages.length > 0) {
-        messages = data.messages; // Prefer 'messages' array first
+      // Backend sends 'errors' array
+      if (Array.isArray(data.errors) && data.errors.length > 0) {
+        messages = data.errors;
       } else if (typeof data.message === 'string' && data.message.trim() !== '') {
         messages = [data.message]; // Fallback to 'message' if present
+      } else if (Array.isArray(data.messages) && data.messages.length > 0) {
+        messages = data.messages; // Prefer 'messages' array first
       }
+
       return Promise.reject({
         type: 'API_ERROR',
         status: response.status,

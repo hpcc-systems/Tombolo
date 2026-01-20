@@ -44,7 +44,7 @@ const Register = () => {
           const response = await authService.verifyEmail(regId);
 
           if (!response) {
-            throw new Error(response?.message || 'Verification failed');
+            throw new Error('Verification failed');
           }
 
           handleSuccess('Your email has been verified!');
@@ -54,7 +54,7 @@ const Register = () => {
           history.push('/');
         } catch (err) {
           setVerifying(false);
-          setVerificationFailed(err.messages[0]);
+          setVerificationFailed(err?.messages?.[0] || err.message || 'Verification failed');
         }
       };
 
@@ -63,7 +63,7 @@ const Register = () => {
   }, [regId]);
 
   // When form is submitted
-  const onFinish = async (values) => {
+  const onFinish = async values => {
     try {
       values.deviceInfo = getDeviceInfo();
       const res = await dispatch(registerBasicUser(values));

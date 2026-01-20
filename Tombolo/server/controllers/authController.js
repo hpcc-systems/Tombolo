@@ -88,10 +88,6 @@ const createApplicationOwner = async (req, res) => {
       newUser: true,
     });
 
-    logger.debug('------------------------');
-    logger.debug('Password security violation: ');
-    logger.debug('------------------------');
-
     if (passwordSecurityViolations.length > 0) {
       return sendError(
         res,
@@ -452,7 +448,34 @@ const resetPasswordWithToken = async (req, res) => {
     ) {
       throw { status: 400, message: 'Reset token has expired' };
     }
+
+    // Fetch user with roles and applications
     const user = await User.findByPk(accountVerificationCode.userId, {
+      include: [
+        {
+          model: UserRole,
+          attributes: ['id'],
+          as: 'roles',
+          include: [
+            {
+              model: RoleType,
+              as: 'role_details',
+              attributes: ['id', 'roleName'],
+            },
+          ],
+        },
+        {
+          model: UserApplication,
+          attributes: ['id'],
+          as: 'applications',
+          include: [
+            {
+              model: Application,
+              attributes: ['id', 'title', 'description'],
+            },
+          ],
+        },
+      ],
       transaction,
     });
 
