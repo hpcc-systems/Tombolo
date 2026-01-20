@@ -1,5 +1,4 @@
 const MONITORING_NAME = 'Job Monitoring';
-const { parentPort } = require('worker_threads');
 const { logOrPostMessage } = require('../jobUtils');
 const { WorkunitsService } = require('@hpcc-js/comms');
 const _ = require('lodash');
@@ -12,7 +11,7 @@ const {
   MonitoringLog,
   JobMonitoringData,
 } = require('../../models');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 
 const {
   findLocalDateTimeAtCluster,
@@ -28,6 +27,8 @@ const {
 } = require('./monitorJobsUtil');
 const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 (async () => {
   logOrPostMessage({
@@ -84,7 +85,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
     clustersInfo.forEach(clusterInfo => {
       try {
         if (clusterInfo.hash) {
-          clusterInfo.password = decryptString(clusterInfo.hash);
+          clusterInfo.password = decryptString(
+            clusterInfo.hash,
+            ENCRYPTION_KEY
+          );
         } else {
           clusterInfo.password = null;
         }
@@ -276,7 +280,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
             } catch (err) {
               logOrPostMessage({
                 level: 'error',
-                text: `Intermediate job monitoring: Error while trying calculate if job ran too long ${wu.Wuid} : ${err.message}`,
+                text: `Intermediate job monitoring: Error while trying calculate if job ran too long ${wuData.Wuid} : ${err.message}`,
               });
             }
           }

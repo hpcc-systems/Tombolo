@@ -15,8 +15,10 @@ const {
   MonitoringLog,
 } = require('../../models');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 const { APPROVAL_STATUS } = require('../../config/constants');
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 // Helper functions
 async function enrichAsrMetaData(asrSpecificMetaData) {
@@ -190,7 +192,7 @@ async function monitorCluster() {
     const clusterObject = {};
     activeClusterStatusMonitoring.forEach(monitoring => {
       let clusterPw = monitoring.cluster.hash
-        ? decryptString(monitoring.cluster.hash)
+        ? decryptString(monitoring.cluster.hash, ENCRYPTION_KEY)
         : null;
       clusterObject[monitoring.cluster.id] = {
         ...monitoring.cluster,

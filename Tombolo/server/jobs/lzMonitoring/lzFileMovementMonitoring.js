@@ -6,12 +6,10 @@ const {
   AsrProduct,
   AsrDomain,
 } = require('../../models');
-const { parentPort } = require('worker_threads');
 const { logOrPostMessage } = require('../jobUtils');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 const { FileSprayService } = require('@hpcc-js/comms');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
-// const path = require('path');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
 const {
   getFilesFromLandingZoneRecursivly,
@@ -20,6 +18,7 @@ const {
 const { APPROVAL_STATUS } = require('../../config/constants');
 
 const monitoring_name = 'Landing Zone Monitoring';
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 (async () => {
   // Get monitoring type ID for "Job Monitoring"
@@ -91,7 +90,7 @@ const monitoring_name = 'Landing Zone Monitoring';
       if (isClusterIdUnique) {
         let clusterPw;
         if (lzMonitoring.cluster.hash) {
-          clusterPw = decryptString(lzMonitoring.cluster.hash);
+          clusterPw = decryptString(lzMonitoring.cluster.hash, ENCRYPTION_KEY);
         }
         uniqueClusters.push({ ...lzMonitoring.cluster, password: clusterPw });
       }

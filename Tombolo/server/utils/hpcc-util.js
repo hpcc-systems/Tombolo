@@ -5,12 +5,14 @@ const {
   // GithubRepoSetting,
 } = require('../models');
 let hpccJSComms = require('@hpcc-js/comms');
-const { decryptString } = require('./cipher');
+const { decryptString } = require('@tombolo/shared');
 const { getClusterOptions } = require('../utils/getClusterOptions');
 
 // const simpleGit = require('simple-git');
 const cp = require('child_process');
 const logger = require('../config/logger');
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 exports.fileInfo = async (fileName, clusterId) => {
   try {
@@ -294,7 +296,6 @@ exports.queryInfo = (clusterId, queryName) => {
       });
     });
   } catch (err) {
-    model; // TODO: What is this
     logger.error('err', err);
   }
 };
@@ -394,7 +395,7 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
 //         {
 //           baseUrl: thor_host + ':' + thor_port,
 //           userID: clusterCredentials.cluster_username,
-//           password: decryptString(clusterCredentials.cluster_hash),
+//           password: decryptString(clusterCredentials.cluster_hash, ENCRYPTION_KEY),
 //         },
 //         allowSelfSigned
 //       );
@@ -432,7 +433,7 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
 //       });
 //       cluster_auth = {
 //         user: clusterCred.dataValues.cluster_username,
-//         password: decryptString(clusterCred.dataValues.cluster_hash),
+//         password: decryptString(clusterCred.dataValues.cluster_hash, ENCRYPTION_KEY),
 //       };
 //     } catch (error) {
 //       logger.error('hpcc-util - resubmitWU: ', error);
@@ -496,19 +497,15 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
 // };
 
 exports.workunitInfo = async (wuid, clusterId) => {
-  try {
-    const wuService = await module.exports.getWorkunitsService(clusterId);
-    return await wuService.WUInfo({
-      Wuid: wuid,
-      IncludeExceptions: true,
-      IncludeSourceFiles: true,
-      IncludeResults: true,
-      IncludeTotalClusterTime: true,
-      IncludeResultsViewNames: true,
-    });
-  } catch (error) {
-    throw error;
-  }
+  const wuService = await module.exports.getWorkunitsService(clusterId);
+  return await wuService.WUInfo({
+    Wuid: wuid,
+    IncludeExceptions: true,
+    IncludeSourceFiles: true,
+    IncludeResults: true,
+    IncludeTotalClusterTime: true,
+    IncludeResultsViewNames: true,
+  });
 };
 
 // RETURNS THE OUTPUT OF WORK UNIT
@@ -589,7 +586,7 @@ const getFileLayout = async (cluster, fileName, format) => {
 exports.getClusterAuth = cluster => {
   let auth = {};
   if (cluster.username && cluster.hash) {
-    (auth.user = cluster.username), (auth.password = cluster.hash);
+    ((auth.user = cluster.username), (auth.password = cluster.hash));
     return auth;
   } else {
     return null;
@@ -604,7 +601,7 @@ exports.getCluster = clusterId => {
         throw new Error(`Cluster with id ${clusterId} not in database`);
       }
       if (cluster.hash) {
-        cluster.hash = decryptString(cluster.hash);
+        cluster.hash = decryptString(cluster.hash, ENCRYPTION_KEY);
       }
 
       let isReachable = await module.exports.isClusterReachable(
@@ -647,7 +644,7 @@ exports.getClusters = async clusterIds => {
     const clusterPromises = clusters.map(async cluster => {
       try {
         if (cluster.hash) {
-          cluster.hash = decryptString(cluster.hash);
+          cluster.hash = decryptString(cluster.hash, ENCRYPTION_KEY);
         }
 
         const isReachable = await module.exports.isClusterReachable(
@@ -882,9 +879,9 @@ exports.updateWUAction = async (clusterId, WUactionBody) => {
 //
 //       project = project.toJSON();
 //
-//       if (project.ghToken) project.ghToken = decryptString(project.ghToken);
+//       if (project.ghToken) project.ghToken = decryptString(project.ghToken, ENCRYPTION_KEY);
 //       if (project.ghUserName)
-//         project.ghUserName = decryptString(project.ghUserName);
+//         project.ghUserName = decryptString(project.ghUserName, ENCRYPTION_KEY);
 //
 //       let { ghLink, ghBranchOrTag, ghUserName, ghToken } = project;
 //
@@ -1246,10 +1243,9 @@ exports.getSuperFiles = async (clusterId, fileName) => {
     }
 
     //if no filename was passed in, just pass wildcard
+    let searchName = '*';
     if (fileName) {
       searchName = fileName + '*';
-    } else {
-      searchName = '*';
     }
 
     //gets superfile, with size and count of subfiles

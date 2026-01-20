@@ -7,9 +7,11 @@ const {
 const {
   passwordExpiryInProximityNotificationPayload,
 } = require('./clusterReachabilityMonitoringUtils.js');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 const { Cluster, NotificationQueue } = require('../../models');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 async function monitorClusterReachability() {
   // UTC time
@@ -24,7 +26,7 @@ async function monitorClusterReachability() {
     const allClusters = await Cluster.findAll({ raw: true });
     allClusters.forEach(cluster => {
       if (cluster.hash) {
-        const password = decryptString(cluster.hash);
+        const password = decryptString(cluster.hash, ENCRYPTION_KEY);
         cluster.password = password;
       } else {
         cluster.password = null;

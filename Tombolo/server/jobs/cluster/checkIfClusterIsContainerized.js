@@ -3,7 +3,9 @@ const axios = require('axios');
 
 // Local imports
 const { Cluster } = require('../../models');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 (async () => {
   const startTime = new Date();
@@ -31,7 +33,7 @@ const { decryptString } = require('../../utils/cipher');
         let password = null;
         if (clusterInfo.hash) {
           try {
-            password = decryptString(clusterInfo.hash);
+            password = decryptString(clusterInfo.hash, ENCRYPTION_KEY);
           } catch (error) {
             logOrPostMessage({
               level: 'error',

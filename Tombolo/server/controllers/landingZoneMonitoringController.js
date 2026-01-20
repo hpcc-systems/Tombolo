@@ -1,11 +1,11 @@
 // Imports from libraries
-const { TopologyService, FileSprayService, send } = require('@hpcc-js/comms');
+const { TopologyService, FileSprayService } = require('@hpcc-js/comms');
 const Sequelize = require('sequelize');
 
 // Local Imports
 const logger = require('../config/logger');
-const { Cluster, LandingZoneMonitoring, User } = require('../models');
-const { decryptString } = require('../utils/cipher');
+const { Cluster, LandingZoneMonitoring } = require('../models');
+const { decryptString } = require('@tombolo/shared');
 const { getClusterOptions } = require('../utils/getClusterOptions');
 const {
   uniqueConstraintErrorHandler,
@@ -13,6 +13,8 @@ const {
 const { APPROVAL_STATUS } = require('../config/constants');
 const { sendError, sendSuccess } = require('../utils/response');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 // Function to get dropzones and associated machines when a cluster id is provided
 const getDropzonesForACluster = async (req, res) => {
@@ -40,7 +42,7 @@ const getDropzonesForACluster = async (req, res) => {
         {
           baseUrl,
           userID: clusterDetails.username || '',
-          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash) : ''}`,
+          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash, ENCRYPTION_KEY) : ''}`,
         },
         clusterDetails.allowSelfSigned
       )
@@ -81,7 +83,7 @@ const getFileList = async (req, res) => {
         {
           baseUrl,
           userID: clusterDetails.username || '',
-          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash) : ''}`,
+          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash, ENCRYPTION_KEY) : ''}`,
         },
         clusterDetails.allowSelfSigned
       )

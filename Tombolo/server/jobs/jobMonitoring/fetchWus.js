@@ -1,7 +1,7 @@
 // Imports
-const { parentPort, workerData } = require('worker_threads');
+const { workerData } = require('worker_threads');
 const { logOrPostMessage } = require('../jobUtils');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 
 // Local Imports
 const { Cluster, JobMonitoringData } = require('../../models');
@@ -9,6 +9,8 @@ const { WorkunitsService } = require('@hpcc-js/comms');
 const shallowCopyWithoutNested = require('../../utils/shallowCopyWithoutNested.js');
 const { WUInfoOptions } = require('./monitorJobsUtil');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 // Self Invoking function
 (async () => {
@@ -48,7 +50,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
     // If cluster information & hash present - decrypt
     if (clusterInfo) {
       if (clusterInfo.hash) {
-        clusterInfo.password = decryptString(clusterInfo.hash);
+        clusterInfo.password = decryptString(clusterInfo.hash, ENCRYPTION_KEY);
       } else {
         clusterInfo.password = null;
       }
