@@ -23,6 +23,7 @@ import { Application } from './Application.js';
 import { Cluster } from './Cluster.js';
 import { JobMonitoringData } from './JobMonitoringData.js';
 import { JobMonitoringDataArchive } from './JobMonitoringDataArchive.js';
+import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'job_monitorings',
@@ -35,7 +36,7 @@ import { JobMonitoringDataArchive } from './JobMonitoringDataArchive.js';
     },
   ],
 })
-export class JobMonitoring extends Model<
+export class JobMonitoring extends DeleteMixin(Model)<
   InferAttributes<JobMonitoring>,
   InferCreationAttributes<JobMonitoring>
 > {

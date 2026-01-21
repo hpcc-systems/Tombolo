@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Sequelize } from 'sequelize-typescript';
-import type { InferAttributes } from 'sequelize';
+import type { InferAttributes, Options as SequelizeOptions } from 'sequelize';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
@@ -112,7 +112,9 @@ const loadConfig = () => {
 const config = loadConfig();
 
 // Initialize Sequelize with TypeScript support
-export const sequelize = new Sequelize({
+const sequelizeOptions: SequelizeOptions & { models: any[] } = {
+  ...(config.dialectOptions && { dialectOptions: config.dialectOptions }),
+  ...(config.ssl && { ssl: config.ssl }),
   database: config.database,
   username: config.username,
   password: config.password,
@@ -160,9 +162,9 @@ export const sequelize = new Sequelize({
     WorkUnitDetails,
     WorkUnitException,
   ],
-  ...(config.dialectOptions && { dialectOptions: config.dialectOptions }),
-  ...(config.ssl && { ssl: config.ssl }),
-});
+};
+
+export const sequelize = new Sequelize(sequelizeOptions);
 
 // Export Sequelize for compatibility
 export { Sequelize };
