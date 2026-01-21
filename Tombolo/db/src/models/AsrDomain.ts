@@ -24,13 +24,14 @@ import { MonitoringType } from './MonitoringType.js';
 import { AsrMonitoringTypeToDomainsRelation } from './AsrMonitoringTypeToDomainsRelation.js';
 import { AsrProduct } from './AsrProduct.js';
 import { AsrDomainToProductsRelation } from './AsrDomainToProductsRelation.js';
+import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'asr_domains',
   paranoid: true,
   timestamps: true,
 })
-export class AsrDomain extends Model<
+export class AsrDomain extends DeleteMixin(Model)<
   InferAttributes<AsrDomain>,
   InferCreationAttributes<AsrDomain>
 > {

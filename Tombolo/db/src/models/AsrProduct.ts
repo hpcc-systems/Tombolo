@@ -22,13 +22,14 @@ import type {
 import { User } from './User.js';
 import { AsrDomain } from './AsrDomain.js';
 import { AsrDomainToProductsRelation } from './AsrDomainToProductsRelation.js';
+import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'asr_products',
   paranoid: true,
   timestamps: true,
 })
-export class AsrProduct extends Model<
+export class AsrProduct extends DeleteMixin(Model)<
   InferAttributes<AsrProduct>,
   InferCreationAttributes<AsrProduct>
 > {
