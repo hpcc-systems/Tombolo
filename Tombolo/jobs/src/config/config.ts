@@ -22,6 +22,15 @@ export const redisConnectionOptions: RedisOptions = {
   username: process.env.REDIS_USER,
   password: process.env.REDIS_PASSWORD,
   db: Number(process.env.REDIS_DB) || 0,
+  maxRetriesPerRequest: 3,
+  retryStrategy: (times: number) => {
+    // Retry after 1s, 2s, 4s, 8s, etc., with a max of 10s
+    const delay = Math.min(times * 1000, 10000);
+    console.log(`Redis connection retry attempt ${times}, waiting ${delay}ms`);
+    return delay;
+  },
+  connectTimeout: 10000, // 10 seconds
+  enableReadyCheck: true,
   // Enable if you use Redis TLS in prod
   //   tls: process.env.NODE_ENV === 'production' ? {} : undefined,
 };
