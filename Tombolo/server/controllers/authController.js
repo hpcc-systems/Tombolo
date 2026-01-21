@@ -448,6 +448,9 @@ const resetPasswordWithToken = async (req, res) => {
     ) {
       throw { status: 400, message: 'Reset token has expired' };
     }
+    const user = await User.findByPk(accountVerificationCode.userId, {
+      transaction,
+    });
 
     // Fetch user with roles and applications
     const user = await User.findByPk(accountVerificationCode.userId, {
