@@ -5,7 +5,7 @@ const {
   User,
   RoleType,
   UserRole,
-  InstanceSetting,
+  InstanceSettings,
   AccountVerificationCode,
   NotificationQueue,
   sequelize,
@@ -253,8 +253,8 @@ const manageInstanceSettings = async (
   { name, userId, description },
   transaction
 ) => {
-  await InstanceSetting.destroy({ where: {} }, { transaction });
-  await InstanceSetting.create(
+  await InstanceSettings.destroy({ where: {} }, { transaction });
+  await InstanceSettings.create(
     {
       name,
       metaData: {

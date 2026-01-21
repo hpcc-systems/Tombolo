@@ -25,7 +25,7 @@
     "db:seed": "pnpm --filter=@tombolo/db db:seed",
     "db:create": "pnpm --filter=@tombolo/db db:create",
     "db:init": "pnpm db:create && pnpm db:migrate && pnpm db:seed",
-    "esm:build": "turbo build --filter=@tombolo/shared --filter=@tombolo/db",
+    "esm:build": "turbo build --filter=@tombolo/shared --filter=@tombolo/db --filter=@tombolo/core",
     "docker:build": "cd Tombolo && docker compose build",
     "docker:up": "cd Tombolo && docker compose up -d",
     "docker:down": "cd Tombolo && docker compose down",

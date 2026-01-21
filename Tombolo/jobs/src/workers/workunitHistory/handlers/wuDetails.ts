@@ -17,7 +17,7 @@ type WorkUnitDetailRow = {
   scopeName: string;
   scopeType: string;
   label: string | null;
-  kind: string | null;
+  kind: number | null;
   fileName: string | null;
   [key: string]: string | number | null; // Dynamic metric fields
 };
@@ -407,7 +407,7 @@ function processScopeToRow(scope: Scope, clusterId: string, wuId: string) {
     scopeName: scopeName,
     scopeType: scopeType,
     label: label ? truncateString(label, 250) : null,
-    kind: kind || null,
+    kind: kind ? parseInt(kind, 10) : null,
     fileName: filename ? truncateString(filename, 125) : null,
     ...metrics,
   };

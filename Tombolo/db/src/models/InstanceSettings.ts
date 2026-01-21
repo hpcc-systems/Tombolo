@@ -22,6 +22,7 @@ import { User } from './User.js';
 @Table({
   tableName: 'instance_settings',
   timestamps: true,
+  paranoid: true,
 })
 export class InstanceSettings extends Model<
   InferAttributes<InstanceSettings>,
@@ -64,7 +65,6 @@ export class InstanceSettings extends Model<
   declare updatedAt: CreationOptional<Date>;
 
   @DeletedAt
-  @Default(DataType.NOW)
   @Column(DataType.DATE)
   declare deletedAt?: CreationOptional<Date> | null;
 

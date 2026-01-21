@@ -38,7 +38,12 @@ function Settings() {
         const instanceSettings = await instanceSettingsService.getAll();
         setInstanceSettings(instanceSettings);
       } catch (error) {
-        handleError(error.message);
+        // Handle 404 specifically
+        if (error.status === 404) {
+          handleError('Failed to fetch instance settings');
+        } else {
+          handleError(error.messages || error.message || 'Failed to fetch instance settings');
+        }
       }
     };
 
@@ -46,7 +51,7 @@ function Settings() {
   }, []);
 
   // Handle setting change
-  const handleSettingChange = (setting) => {
+  const handleSettingChange = setting => {
     setSelectedSetting(setting);
   };
 
@@ -64,7 +69,7 @@ function Settings() {
       <Layout className={styles.settingsLayout}>
         <Sider theme="light" className={styles.settingsSider}>
           <div>
-            {Object.keys(settings).map((setting) => (
+            {Object.keys(settings).map(setting => (
               <div
                 key={settings[setting].id}
                 className={`${styles.settingItem} ${selectedSetting === setting ? styles.selectedSetting : ''}`}

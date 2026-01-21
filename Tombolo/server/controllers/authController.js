@@ -22,7 +22,6 @@ const {
   PasswordResetLink,
   AccountVerificationCode,
   SentNotification,
-  InstanceSetting,
   sequelize,
 } = require('../models');
 const {
@@ -88,10 +87,6 @@ const createApplicationOwner = async (req, res) => {
       },
       newUser: true,
     });
-
-    logger.debug('------------------------');
-    logger.debug('Password security violation: ');
-    logger.debug('------------------------');
 
     if (passwordSecurityViolations.length > 0) {
       return sendError(
@@ -453,7 +448,34 @@ const resetPasswordWithToken = async (req, res) => {
     ) {
       throw { status: 400, message: 'Reset token has expired' };
     }
+
+    // Fetch user with roles and applications
     const user = await User.findByPk(accountVerificationCode.userId, {
+      include: [
+        {
+          model: UserRole,
+          attributes: ['id'],
+          as: 'roles',
+          include: [
+            {
+              model: RoleType,
+              as: 'role_details',
+              attributes: ['id', 'roleName'],
+            },
+          ],
+        },
+        {
+          model: UserApplication,
+          attributes: ['id'],
+          as: 'applications',
+          include: [
+            {
+              model: Application,
+              attributes: ['id', 'title', 'description'],
+            },
+          ],
+        },
+      ],
       transaction,
     });
 
@@ -1506,6 +1528,59 @@ const refreshAccessToken = async (req, res) => {
   }
 };
 
+// Get current authenticated user's profile
+const getCurrentUser = async (req, res) => {
+  try {
+    // Decode token to get user id
+    const accessToken = req.accessToken;
+    const decodedToken = jwt.verify(accessToken, process.env.JWT_SECRET);
+    const userId = decodedToken.id;
+
+    const user = await User.findOne({
+      where: { id: userId },
+      include: [
+        {
+          model: UserRole,
+          as: 'roles',
+          attributes: ['id'],
+          include: [
+            {
+              model: RoleType,
+              as: 'role_details',
+              attributes: ['id', 'roleName', 'description'],
+            },
+          ],
+        },
+        {
+          model: UserApplication,
+          as: 'applications',
+          attributes: ['id', 'application_id'],
+          include: [
+            {
+              model: Application,
+              as: 'application',
+              attributes: ['id', 'title'],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!user) {
+      return sendError(res, 'User not found', 404);
+    }
+
+    // Convert to plain object and remove sensitive data
+    const userObj = user.toJSON();
+    delete userObj.hash;
+
+    return sendSuccess(res, userObj, 'User retrieved successfully');
+  } catch (error) {
+    logger.error('getCurrentUser: ', error);
+    return sendError(res, error);
+  }
+};
+
 //Exports
 module.exports = {
   createBasicUser,
@@ -1523,4 +1598,5 @@ module.exports = {
   getUserDetailsWithToken,
   getUserDetailsWithVerificationCode,
   requestPasswordReset,
+  getCurrentUser,
 };

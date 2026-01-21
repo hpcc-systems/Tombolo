@@ -50,7 +50,7 @@ function ResetTempPassword({ email }) {
           generateContent: true,
           user: userDetails,
           oldPasswordCheck: true,
-          newUser: userDetails.newUser,
+          newUser: userDetails?.newUser || false,
         })
       );
     } else {
@@ -59,7 +59,7 @@ function ResetTempPassword({ email }) {
           password: pw,
           generateContent: true,
           user: userDetails,
-          newUser: userDetails.newUser,
+          newUser: userDetails?.newUser || false,
         })
       );
     }
@@ -99,43 +99,37 @@ function ResetTempPassword({ email }) {
   // }, [resetToken, userDetails]);
 
   // Handle form submission
-  const handleSubmit = async () => {
+  const onFinish = async values => {
     try {
       setLoading(true);
-      let values;
-      try {
-        values = await form.validateFields();
-      } catch (err) {
-        return;
-      }
-      // values.token = resetToken;
       const resetData = {
         ...values,
         email,
         deviceInfo: getDeviceInfo(),
       };
-      const user = await authService.resetTempPassword(resetData);
+      const response = await authService.resetTempPassword(resetData);
 
       //set isAuthenticated to true so application loads
+      const user = response.data || response;
       user.isAuthenticated = true;
 
       // Save user token to local storage
       setUser(JSON.stringify(user));
       window.location.href = '/';
     } catch (err) {
-      handleError(err.message);
+      handleError(err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Form layout="vertical" form={form} style={{ marginTop: '2rem' }}>
+    <Form onFinish={onFinish} layout="vertical" form={form} style={{ marginTop: '2rem' }}>
       <Form.Item
         required
         label="Temporary Password"
         name="tempPassword"
-        normalize={(value) => value.trim()}
+        normalize={value => value.trim()}
         rules={[
           {
             required: true,
@@ -144,25 +138,58 @@ function ResetTempPassword({ email }) {
         ]}>
         <Input.Password size="large" autoComplete="new-temp-password" />
       </Form.Item>
-      <Form.Item required label="New Password" name="password" normalize={(value) => value.trim()}>
+      <Form.Item
+        required
+        label="New Password"
+        name="password"
+        normalize={value => value.trim()}
+        rules={[
+          {
+            required: true,
+            message: 'Please input your new password!',
+          },
+          {
+            max: 64,
+            message: 'Maximum of 64 characters allowed',
+          },
+        ]}>
         <Input.Password
           size="large"
           autoComplete="new-password"
-          onChange={(e) => {
+          onChange={e => {
             validatePassword(e.target.value);
           }}
-          onFocus={(e) => {
+          onFocus={e => {
             validatePassword(e.target.value, true);
           }}
-          onBlur={(e) => {
+          onBlur={e => {
             validatePassword(e.target.value, true);
           }}
         />
       </Form.Item>
-      <Form.Item required label="Confirm Password" name="confirmPassword" normalize={(value) => value.trim()}>
+      <Form.Item
+        required
+        label="Confirm Password"
+        name="confirmPassword"
+        normalize={value => value.trim()}
+        dependencies={['password']}
+        rules={[
+          {
+            required: true,
+            message: 'Please confirm your password!',
+          },
+          ({ getFieldValue }) => ({
+            validator(_, value) {
+              if (!value || getFieldValue('password') === value) {
+                return Promise.resolve();
+              }
+              return Promise.reject(new Error('The two passwords do not match!'));
+            },
+          }),
+        ]}>
         <Input.Password size="large" autoComplete="confirm-new-password" />
       </Form.Item>
-      <Button type="primary" htmlType="submit" disabled={loading && true} onClick={handleSubmit} className="fullWidth">
+      <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">
         Reset Password {loading && <Spin style={{ marginLeft: '1rem' }} />}
       </Button>
     </Form>

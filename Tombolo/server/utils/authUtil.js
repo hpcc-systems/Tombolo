@@ -18,7 +18,7 @@ const {
   UserArchive,
   UserApplication,
   Application,
-  InstanceSetting,
+  InstanceSettings,
   NotificationQueue,
   AccountVerificationCode,
 } = require('../models');
@@ -103,17 +103,31 @@ const setTokenCookie = async (res, token) => {
 
 const generateAndSetCSRFToken = async (req, res, accessToken) => {
   try {
-    //set token in req as well so csrf token can be generated
+    // Ensure token is available in req.cookies for CSRF generation
+    if (!req.cookies) {
+      req.cookies = {};
+    }
     req.cookies.token = accessToken;
 
-    // Clear any existing CSRF cookie to prevent validation conflicts
+    // Clear any existing CSRF cookie from both response and request
+    // This prevents validation conflicts when generating token for a new session
     res.clearCookie('x-csrf-token', {
       sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'Lax',
       secure: process.env.NODE_ENV === 'production',
     });
 
+    // Remove from request cookies to prevent the library from trying to validate old token
+    if (req.cookies && req.cookies['x-csrf-token']) {
+      delete req.cookies['x-csrf-token'];
+    }
+
+    // Also clear from headers if present
+    if (req.headers && req.headers['x-csrf-token']) {
+      delete req.headers['x-csrf-token'];
+    }
+
     // Generate the token pair using doubleCsrf
-    const csrfToken = generateToken(req, res);
+    const csrfToken = generateToken(req, res, true); // Force generation
 
     //attach csrfToken to x-csrf-token header for client to store and use in subsequent requests
     res.setHeader(csrfHeaderName, csrfToken);
@@ -174,7 +188,7 @@ const setLastLoginAndReturn = user => {
 // Get Support Notification Recipient's Emails
 const getSupportContactEmails = async () => {
   // Get Instance Setting
-  const instanceSetting = await InstanceSetting.findOne({ raw: true });
+  const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
   let supportEmailRecipientsEmail =
     instanceSetting.metaData.supportEmailRecipients || [];
@@ -222,7 +236,7 @@ const getSupportContactEmails = async () => {
 // Get Access Request Notification Recipient's Emails
 const getAccessRequestContactEmails = async () => {
   // Get Instance Setting
-  const instanceSetting = await InstanceSetting.findOne({ raw: true });
+  const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
   let accessRequestEmailRecipientsEmail =
     instanceSetting.metaData.accessRequestEmailRecipientsEmail || [];
@@ -586,7 +600,7 @@ const deleteUser = async (id, reason) => {
 // Get access request notification recipients from instance settings and role-based recipients
 const getAccessRequestRecipients = async () => {
   try {
-    const instance_setting = await InstanceSetting.findOne({ raw: true });
+    const instance_setting = await InstanceSettings.findOne({ raw: true });
 
     if (!instance_setting) {
       logger.warn('No instance settings found for notification recipients');
