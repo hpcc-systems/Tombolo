@@ -18,7 +18,7 @@ const {
   UserArchive,
   UserApplication,
   Application,
-  InstanceSetting,
+  InstanceSettings,
   NotificationQueue,
   AccountVerificationCode,
 } = require('../models');
@@ -188,7 +188,7 @@ const setLastLoginAndReturn = user => {
 // Get Support Notification Recipient's Emails
 const getSupportContactEmails = async () => {
   // Get Instance Setting
-  const instanceSetting = await InstanceSetting.findOne({ raw: true });
+  const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
   let supportEmailRecipientsEmail =
     instanceSetting.metaData.supportEmailRecipients || [];
@@ -236,7 +236,7 @@ const getSupportContactEmails = async () => {
 // Get Access Request Notification Recipient's Emails
 const getAccessRequestContactEmails = async () => {
   // Get Instance Setting
-  const instanceSetting = await InstanceSetting.findOne({ raw: true });
+  const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
   let accessRequestEmailRecipientsEmail =
     instanceSetting.metaData.accessRequestEmailRecipientsEmail || [];
@@ -600,7 +600,7 @@ const deleteUser = async (id, reason) => {
 // Get access request notification recipients from instance settings and role-based recipients
 const getAccessRequestRecipients = async () => {
   try {
-    const instance_setting = await InstanceSetting.findOne({ raw: true });
+    const instance_setting = await InstanceSettings.findOne({ raw: true });
 
     if (!instance_setting) {
       logger.warn('No instance settings found for notification recipients');

@@ -3,7 +3,7 @@ const { app } = require('../test_server');
 const {
   SentNotification,
   User,
-  InstanceSetting,
+  InstanceSettings,
   NotificationQueue,
   RefreshToken,
 } = require('../../models');
@@ -152,7 +152,7 @@ describe('Auth Routes', () => {
       // Remove accessRequestEmailRecipientsRoles to avoid unmocked DB queries
     };
     User.findOne.mockResolvedValue(user);
-    InstanceSetting.findOne.mockResolvedValue(instanceSettings);
+    InstanceSettings.findOne.mockResolvedValue(instanceSettings);
     SentNotification.findOne.mockResolvedValue(null);
     NotificationQueue.create.mockResolvedValue(true);
 
@@ -163,7 +163,7 @@ describe('Auth Routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Access requested successfully');
     expect(User.findOne).toHaveBeenCalled();
-    expect(InstanceSetting.findOne).toHaveBeenCalled();
+    expect(InstanceSettings.findOne).toHaveBeenCalled();
     expect(SentNotification.findOne).toHaveBeenCalled();
     expect(NotificationQueue.create).toHaveBeenCalled();
   });
@@ -182,7 +182,7 @@ describe('Auth Routes', () => {
       .format('YYYY-MM-DD HH:mm:ss');
 
     User.findOne.mockResolvedValue(user);
-    InstanceSetting.findOne.mockResolvedValue(instanceSettings);
+    InstanceSettings.findOne.mockResolvedValue(instanceSettings);
     SentNotification.findOne.mockResolvedValue(sentNotification);
     NotificationQueue.create.mockResolvedValue(true);
 
@@ -193,7 +193,7 @@ describe('Auth Routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Access requested successfully');
     expect(User.findOne).toHaveBeenCalled();
-    expect(InstanceSetting.findOne).toHaveBeenCalled();
+    expect(InstanceSettings.findOne).toHaveBeenCalled();
     expect(SentNotification.findOne).toHaveBeenCalled();
     expect(NotificationQueue.create).toHaveBeenCalled();
   });
@@ -211,7 +211,7 @@ describe('Auth Routes', () => {
     expect(res.status).toBe(404);
     expect(res.body.message).toBe('User not found');
     expect(User.findOne).toHaveBeenCalled();
-    expect(InstanceSetting.findOne).not.toHaveBeenCalled();
+    expect(InstanceSettings.findOne).not.toHaveBeenCalled();
     expect(SentNotification.findOne).not.toHaveBeenCalled();
   });
 
@@ -229,7 +229,7 @@ describe('Auth Routes', () => {
       .format('YYYY-MM-DD HH:mm:ss');
 
     User.findOne.mockResolvedValue(user);
-    InstanceSetting.findOne.mockResolvedValue(instanceSettings);
+    InstanceSettings.findOne.mockResolvedValue(instanceSettings);
     SentNotification.findOne.mockResolvedValue(sentNotification);
 
     const res = await request(app)
@@ -239,7 +239,7 @@ describe('Auth Routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('Access request already sent');
     expect(User.findOne).toHaveBeenCalled();
-    expect(InstanceSetting.findOne).toHaveBeenCalled();
+    expect(InstanceSettings.findOne).toHaveBeenCalled();
     expect(SentNotification.findOne).toHaveBeenCalled();
     expect(NotificationQueue.create).not.toHaveBeenCalled();
   });
