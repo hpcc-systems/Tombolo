@@ -83,6 +83,6 @@ export class AsrDomainToProductsRelation extends Model<
   @BelongsTo(() => AsrDomain, 'domain_id')
   declare domain?: AsrDomain;
 
-  @BelongsTo(() => AsrProduct, 'product_id')
-  declare product?: AsrProduct;
+  @BelongsTo(() => AsrProduct, { foreignKey: 'product_id', as: 'AsrProduct' })
+  declare AsrProduct?: AsrProduct;
 }
