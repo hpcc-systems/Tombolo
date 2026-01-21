@@ -64,18 +64,14 @@ const ResetPassword = () => {
     try {
       const response = await authService.getUserDetailsWithToken(resetToken);
 
-      if (!response.success) {
-        if (response.message) {
-          handleError(response.message);
-        } else {
-          handleError('An undefined error occurred. Please try again later');
-        }
+      if (!response || !response.user) {
+        handleError('An error occurred while validating the reset token');
         return;
       }
 
-      setUserDetails(response.data?.user || response.user);
+      setUserDetails(response.user);
     } catch (err) {
-      handleError(err.message);
+      handleError(err);
     }
   };
 
@@ -98,7 +94,7 @@ const ResetPassword = () => {
     }
   }, []);
 
-  const onFinish = async (values) => {
+  const onFinish = async values => {
     try {
       const password = values.newPassword;
       const deviceInfo = getDeviceInfo();
@@ -109,25 +105,19 @@ const ResetPassword = () => {
         deviceInfo,
       });
 
-      if (!response.success) {
-        if (response.message) {
-          handleError(response.message);
-        } else {
-          handleError('An undefined error occurred. Please try again later');
-        }
+      if (!response) {
+        handleError('An error occurred while resetting your password');
         return;
       }
 
       handleSuccess('Password reset successfully.');
-      if (response.success === true) {
-        const userData = response.data || response;
-        userData.isAuthenticated = true;
-        setUser(userData);
-        //reload window
-        window.location.href = '/';
-      }
+      const userData = response;
+      userData.isAuthenticated = true;
+      setUser(userData);
+      //reload window
+      window.location.href = '/';
     } catch (err) {
-      handleError(err.message);
+      handleError(err);
     }
   };
 
@@ -178,13 +168,13 @@ const ResetPassword = () => {
           <Input.Password
             size="large"
             autoComplete="new-password"
-            onChange={(e) => {
+            onChange={e => {
               validatePassword(e.target.value);
             }}
-            onFocus={(e) => {
+            onFocus={e => {
               validatePassword(e.target.value, true);
             }}
-            onBlur={(e) => {
+            onBlur={e => {
               validatePassword(e.target.value, true);
             }}
           />

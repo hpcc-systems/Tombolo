@@ -1,4 +1,4 @@
-const { InstanceSetting, User } = require('../models');
+const { InstanceSettings, User } = require('../models');
 const logger = require('../config/logger');
 const { sendSuccess, sendError } = require('../utils/response');
 const CustomError = require('../utils/customError');
@@ -6,7 +6,7 @@ const CustomError = require('../utils/customError');
 // Get a single instance setting by name
 const getInstanceSetting = async (req, res) => {
   try {
-    const instance = await InstanceSetting.findOne({
+    const instance = await InstanceSettings.findOne({
       where: { id: 1 },
       // Include users details - createdBy user details
       include: [
@@ -24,6 +24,7 @@ const getInstanceSetting = async (req, res) => {
     });
 
     if (!instance) {
+      logger.error('Failed to get instance settings');
       return sendError(res, 'Instance setting not found', 404);
     }
     return sendSuccess(
@@ -41,7 +42,7 @@ const getInstanceSetting = async (req, res) => {
 const updateInstanceSetting = async (req, res) => {
   try {
     // Get the instance setting with the ID = 1
-    const instance = await InstanceSetting.findOne({
+    const instance = await InstanceSettings.findOne({
       where: { id: 1 },
       raw: true,
     });
@@ -62,7 +63,7 @@ const updateInstanceSetting = async (req, res) => {
     const finalPayload = { metaData: updatedMetaData, ...payload };
 
     // Update the instance setting
-    const updatedInstanceCount = await InstanceSetting.update(finalPayload, {
+    const updatedInstanceCount = await InstanceSettings.update(finalPayload, {
       where: { id: 1 },
       raw: true,
     });
@@ -73,7 +74,7 @@ const updateInstanceSetting = async (req, res) => {
     }
 
     // Get the updated instance setting
-    const updatedInstance = await InstanceSetting.findOne({
+    const updatedInstance = await InstanceSettings.findOne({
       where: { id: 1 },
       include: [
         {

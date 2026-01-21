@@ -3,12 +3,13 @@ const {
   AccountService,
   TopologyService,
   WorkunitsService,
+  LogaccessService,
 } = require('@hpcc-js/comms');
 const axios = require('axios');
 
 const logger = require('../config/logger');
 const { Cluster } = require('../models');
-const { encryptString } = require('../utils/cipher.js');
+const { encryptString, decryptString } = require('../utils/cipher.js');
 const CustomError = require('../utils/customError.js');
 const { getClusterOptions } = require('../utils/getClusterOptions');
 const hpccUtil = require('../utils/hpcc-util.js');
@@ -739,6 +740,97 @@ const clusterStorageHistory = async (req, res) => {
   }
 };
 
+// Get cluster logs
+const getClusterLogs = async (req, res) => {
+  try {
+    const { id: clusterId } = req.params;
+
+    // Get cluster details from database
+    const cluster = await Cluster.findOne({
+      where: { id: clusterId },
+      raw: true,
+    });
+
+    if (!cluster) {
+      return sendError(res, 'Cluster not found', 404);
+    }
+
+    // Decrypt password
+    const password = cluster.hash ? decryptString(cluster.hash) : null;
+
+    // Create LogAccess service using existing utility
+    const clusterOptions = getClusterOptions(
+      {
+        baseUrl: `${cluster.thor_host}:${cluster.thor_port}`,
+        userID: cluster.username,
+        password: password,
+      },
+      cluster.allowSelfSigned
+    );
+
+    const logSvc = new LogaccessService(clusterOptions);
+
+    // Check if LogAccess is available first
+    let logAccessInfo;
+    try {
+      logAccessInfo = await logSvc.GetLogAccessInfo();
+    } catch (infoError) {
+      logger.error(
+        `LogAccess service not available for cluster ${cluster.name}:`,
+        infoError
+      );
+      return sendError(
+        res,
+        'LogAccess service not available for this cluster',
+        503
+      );
+    }
+
+    // Build query parameters - Use proper data types for LogAccess API
+    const logQuery = {
+      LogLineStartFrom: parseInt(req.query.startFrom) || 0,
+      LogLineLimit: parseInt(req.query.limit) || 1000,
+    };
+
+    // Add optional filters with proper data types
+    if (req.query.class) {
+      logQuery.class = Array.isArray(req.query.class)
+        ? req.query.class
+        : [req.query.class];
+    }
+    if (req.query.audience) {
+      logQuery.audience = req.query.audience;
+    }
+    if (req.query.startDate) {
+      logQuery.StartDate = new Date(req.query.startDate);
+    }
+    if (req.query.endDate) {
+      logQuery.EndDate = new Date(req.query.endDate);
+    }
+
+    // Get logs
+    const logs = await logSvc.GetLogsEx(logQuery);
+
+    return sendSuccess(res, 'Cluster logs retrieved successfully', {
+      cluster: {
+        id: cluster.id,
+        name: cluster.name,
+      },
+      total: logs.total,
+      lines: logs.lines,
+      logAccessInfo: logAccessInfo,
+      query: logQuery,
+    });
+  } catch (error) {
+    logger.error('getClusterLogs error:', error);
+    return sendError(
+      res,
+      'Failed to fetch cluster logs. LogAccess service may not be available.',
+      500
+    );
+  }
+};
+
 module.exports = {
   addCluster,
   addClusterWithProgress,
@@ -752,4 +844,5 @@ module.exports = {
   pingExistingCluster,
   clusterUsage,
   clusterStorageHistory,
+  getClusterLogs,
 };

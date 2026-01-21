@@ -34,6 +34,7 @@ const {
   getUserDetailsWithToken,
   getUserDetailsWithVerificationCode,
   requestPasswordReset,
+  getCurrentUser,
 } = require('../controllers/authController');
 
 // Basic (Traditional) User Routes ----------------------------------------------------------------------------
@@ -100,6 +101,9 @@ router.get(
   validate(validateResetToken),
   getUserDetailsWithVerificationCode
 );
+
+// Get current authenticated user
+router.get('/me', verifyValidTokenExists, getCurrentUser);
 
 // Catch-all route for debugging - this will help identify malformed requests
 router.all('*path', (req, res) => {

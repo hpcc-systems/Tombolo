@@ -1,7 +1,7 @@
 // import { getRoleNameArray } from './AuthUtil';
 // import { handleError as handleResponseError } from '../../utils/handleResponse';
 
-// const csrfHeaderName = 'x-csrf-token';
+const csrfHeaderName = 'x-csrf-token';
 
 // export function handleError(response) {
 //   //if response is false, it means that we cannot communicate with backend, set backend status to false so UI will show error message
@@ -27,19 +27,19 @@
 //   }
 // }
 
-// // When the client sends a fetch request the header requires an auth token.
-// // This function grabs the token from the Local Storage. The returned value is palaced in the header of the API calls
-// // If the application is using Azure sso, the fetch request are intercepted and the headers are modified with fresh azure token
-// export function authHeader() {
-//   //grab csrf token directly from cookie and echo it back in proper header name
-//   let csrfToken = document.cookie.split(';').find((cookie) => cookie.trim().startsWith(csrfHeaderName + '='));
+// When the client sends a fetch request the header requires an auth token.
+// This function grabs the token from the Local Storage. The returned value is palaced in the header of the API calls
+// If the application is using Azure sso, the fetch request are intercepted and the headers are modified with fresh azure token
+export function authHeader() {
+  //grab csrf token directly from cookie and echo it back in proper header name
+  let csrfToken = document.cookie.split(';').find(cookie => cookie.trim().startsWith(csrfHeaderName + '='));
 
-//   if (csrfToken) {
-//     csrfToken = csrfToken.split('=')[1].split('%')[0];
-//     return { Accept: 'application/json', 'Content-Type': 'application/json', [csrfHeaderName]: csrfToken };
-//   }
-//   return { Accept: 'application/json', 'Content-Type': 'application/json' };
-// }
+  if (csrfToken) {
+    csrfToken = csrfToken.split('=')[1].split('%')[0];
+    return { Accept: 'application/json', 'Content-Type': 'application/json', [csrfHeaderName]: csrfToken };
+  }
+  return { Accept: 'application/json', 'Content-Type': 'application/json' };
+}
 
 // const { fetch: originalFetch } = window;
 
