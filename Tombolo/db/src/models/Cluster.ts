@@ -22,14 +22,13 @@ import { User } from './User.js';
 import { FileMonitoring } from './FileMonitoring.js';
 import { LandingZoneMonitoring } from './LandingZoneMonitoring.js';
 import { ClusterMonitoring } from './ClusterMonitoring.js';
-import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'clusters',
   paranoid: true,
   timestamps: true,
 })
-export class Cluster extends DeleteMixin(Model)<
+export class Cluster extends Model<
   InferAttributes<Cluster>,
   InferCreationAttributes<Cluster>
 > {

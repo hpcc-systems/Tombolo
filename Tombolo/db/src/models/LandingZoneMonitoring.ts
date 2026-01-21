@@ -20,7 +20,6 @@ import type {
 import { Application } from './Application.js';
 import { Cluster } from './Cluster.js';
 import { User } from './User.js';
-import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'landing_zone_monitorings',
@@ -33,7 +32,7 @@ import { DeleteMixin } from '../mixins/DeleteMixin.js';
     },
   ],
 })
-export class LandingZoneMonitoring extends DeleteMixin(Model)<
+export class LandingZoneMonitoring extends Model<
   InferAttributes<LandingZoneMonitoring>,
   InferCreationAttributes<LandingZoneMonitoring>
 > {
@@ -57,18 +56,12 @@ export class LandingZoneMonitoring extends DeleteMixin(Model)<
   declare isActive: boolean;
 
   @AllowNull(false)
-  @Column({
-    type: DataType.ENUM('fileCount', 'spaceUsage', 'fileMovement'),
-    field: 'lzMonitoringType',
-  })
+  @Column({ type: DataType.ENUM('fileCount', 'spaceUsage', 'fileMovement'), field: 'lzMonitoringType' })
   declare lzMonitoringType: 'fileCount' | 'spaceUsage' | 'fileMovement';
 
   @AllowNull(false)
   @Default('pending')
-  @Column({
-    type: DataType.ENUM('approved', 'rejected', 'pending'),
-    field: 'approvalStatus',
-  })
+  @Column({ type: DataType.ENUM('approved', 'rejected', 'pending'), field: 'approvalStatus' })
   declare approvalStatus: 'approved' | 'rejected' | 'pending';
 
   @ForeignKey(() => User)

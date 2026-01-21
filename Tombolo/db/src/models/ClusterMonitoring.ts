@@ -19,7 +19,6 @@ import type {
 } from 'sequelize';
 import { User } from './User.js';
 import { Cluster } from './Cluster.js';
-import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'cluster_monitorings',
@@ -32,7 +31,7 @@ import { DeleteMixin } from '../mixins/DeleteMixin.js';
     },
   ],
 })
-export class ClusterMonitoring extends DeleteMixin(Model)<
+export class ClusterMonitoring extends Model<
   InferAttributes<ClusterMonitoring>,
   InferCreationAttributes<ClusterMonitoring>
 > {

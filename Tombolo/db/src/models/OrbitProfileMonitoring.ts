@@ -19,7 +19,6 @@ import type {
 } from 'sequelize';
 import { User } from './User.js';
 import { Application } from './Application.js';
-import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'orbit_profile_monitorings',
@@ -32,7 +31,7 @@ import { DeleteMixin } from '../mixins/DeleteMixin.js';
     },
   ],
 })
-export class OrbitProfileMonitoring extends DeleteMixin(Model)<
+export class OrbitProfileMonitoring extends Model<
   InferAttributes<OrbitProfileMonitoring>,
   InferCreationAttributes<OrbitProfileMonitoring>
 > {
@@ -61,10 +60,7 @@ export class OrbitProfileMonitoring extends DeleteMixin(Model)<
 
   @AllowNull(false)
   @Default('pending')
-  @Column({
-    type: DataType.ENUM('approved', 'rejected', 'pending'),
-    field: 'approvalStatus',
-  })
+  @Column({ type: DataType.ENUM('approved', 'rejected', 'pending'), field: 'approvalStatus' })
   declare approvalStatus: 'approved' | 'rejected' | 'pending';
 
   @ForeignKey(() => User)

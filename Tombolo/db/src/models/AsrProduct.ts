@@ -22,14 +22,13 @@ import type {
 import { User } from './User.js';
 import { AsrDomain } from './AsrDomain.js';
 import { AsrDomainToProductsRelation } from './AsrDomainToProductsRelation.js';
-import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'asr_products',
   paranoid: true,
   timestamps: true,
 })
-export class AsrProduct extends DeleteMixin(Model)<
+export class AsrProduct extends Model<
   InferAttributes<AsrProduct>,
   InferCreationAttributes<AsrProduct>
 > {
@@ -89,11 +88,10 @@ export class AsrProduct extends DeleteMixin(Model)<
   @BelongsTo(() => User, 'deletedBy')
   declare deleter?: User;
 
-  @BelongsToMany(() => AsrDomain, {
-    through: () => AsrDomainToProductsRelation,
-    foreignKey: 'product_id',
-    otherKey: 'domain_id',
-    as: 'associatedDomains',
-  })
+  @BelongsToMany(
+    () => AsrDomain,
+    () => AsrDomainToProductsRelation,
+    'product_id'
+  )
   declare associatedDomains?: AsrDomain[];
 }

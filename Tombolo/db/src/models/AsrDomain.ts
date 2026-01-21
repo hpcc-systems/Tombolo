@@ -24,14 +24,13 @@ import { MonitoringType } from './MonitoringType.js';
 import { AsrMonitoringTypeToDomainsRelation } from './AsrMonitoringTypeToDomainsRelation.js';
 import { AsrProduct } from './AsrProduct.js';
 import { AsrDomainToProductsRelation } from './AsrDomainToProductsRelation.js';
-import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'asr_domains',
   paranoid: true,
   timestamps: true,
 })
-export class AsrDomain extends DeleteMixin(Model)<
+export class AsrDomain extends Model<
   InferAttributes<AsrDomain>,
   InferCreationAttributes<AsrDomain>
 > {
@@ -97,19 +96,17 @@ export class AsrDomain extends DeleteMixin(Model)<
   @BelongsTo(() => User, 'deletedBy')
   declare deleter?: User;
 
-  @BelongsToMany(() => MonitoringType, {
-    through: () => AsrMonitoringTypeToDomainsRelation,
-    foreignKey: 'domain_id',
-    otherKey: 'monitoring_type_id',
-    as: 'monitoringTypes',
-  })
+  @BelongsToMany(
+    () => MonitoringType,
+    () => AsrMonitoringTypeToDomainsRelation,
+    'domain_id'
+  )
   declare monitoringTypes?: MonitoringType[];
 
-  @BelongsToMany(() => AsrProduct, {
-    through: () => AsrDomainToProductsRelation,
-    foreignKey: 'domain_id',
-    otherKey: 'product_id',
-    as: 'associatedProducts',
-  })
+  @BelongsToMany(
+    () => AsrProduct,
+    () => AsrDomainToProductsRelation,
+    'domain_id'
+  )
   declare associatedProducts?: AsrProduct[];
 }

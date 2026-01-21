@@ -19,7 +19,6 @@ import type {
 } from 'sequelize';
 import { User } from './User.js';
 import { Application } from './Application.js';
-import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'cost_monitorings',
@@ -32,7 +31,7 @@ import { DeleteMixin } from '../mixins/DeleteMixin.js';
     },
   ],
 })
-export class CostMonitoring extends DeleteMixin(Model)<
+export class CostMonitoring extends Model<
   InferAttributes<CostMonitoring>,
   InferCreationAttributes<CostMonitoring>
 > {

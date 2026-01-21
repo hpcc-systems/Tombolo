@@ -20,14 +20,13 @@ import type {
 import { User } from './User.js';
 import { AsrDomain } from './AsrDomain.js';
 import { AsrProduct } from './AsrProduct.js';
-import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'asr_domain_to_products_relations',
   paranoid: true,
   timestamps: true,
 })
-export class AsrDomainToProductsRelation extends DeleteMixin(Model)<
+export class AsrDomainToProductsRelation extends Model<
   InferAttributes<AsrDomainToProductsRelation>,
   InferCreationAttributes<AsrDomainToProductsRelation>
 > {
@@ -84,6 +83,6 @@ export class AsrDomainToProductsRelation extends DeleteMixin(Model)<
   @BelongsTo(() => AsrDomain, 'domain_id')
   declare domain?: AsrDomain;
 
-  @BelongsTo(() => AsrProduct, { foreignKey: 'product_id', as: 'AsrProduct' })
-  declare AsrProduct?: AsrProduct;
+  @BelongsTo(() => AsrProduct, 'product_id')
+  declare product?: AsrProduct;
 }
