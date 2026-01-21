@@ -16,8 +16,8 @@ catalogs:
       specifier: ^1.13.2
       version: 1.13.2
     dotenv:
-      specifier: ^8.6.0
-      version: 8.6.0
+      specifier: ^16.4.7
+      version: 16.6.1
     lodash:
       specifier: ^4.17.21
       version: 4.17.21
@@ -202,6 +202,19 @@ importers:
       axios:
         specifier: 'catalog:'
         version: 1.13.2
+      dotenv:
+        specifier: 'catalog:'
+        version: 16.6.1
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.10.1
+      tsup:
+        specifier: 'catalog:'
+        version: 8.5.1(@swc/core@1.15.3)(jiti@1.21.7)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
 
   Tombolo/db:
     dependencies:
@@ -210,7 +223,7 @@ importers:
         version: link:../shared
       dotenv:
         specifier: 'catalog:'
-        version: 8.6.0
+        version: 16.6.1
       mysql2:
         specifier: 'catalog:'
         version: 3.15.3
@@ -262,7 +275,7 @@ importers:
         version: 5.65.1
       dotenv:
         specifier: 'catalog:'
-        version: 8.6.0
+        version: 16.6.1
       express:
         specifier: ^5.1.0
         version: 5.2.1
@@ -335,7 +348,7 @@ importers:
         version: 3.2.2
       dotenv:
         specifier: 'catalog:'
-        version: 8.6.0
+        version: 16.6.1
       ejs:
         specifier: ^3.1.10
         version: 3.1.10
@@ -436,7 +449,7 @@ importers:
         version: 24.10.1
       dotenv:
         specifier: 'catalog:'
-        version: 8.6.0
+        version: 16.6.1
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -4752,9 +4765,9 @@ packages:
     resolution: {integrity: sha512-tE7ztYzXHIeyvc7N+hR3oi7FIbf/NIjVP9hmAt3yMXzrQ072/fpjGLx2GxNxGxUl5V73MEqYzioOMoVhGMJ5cA==}
     engines: {node: '>=10'}
 
-  dotenv@8.6.0:
-    resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
-    engines: {node: '>=10'}
+  dotenv@16.6.1:
+    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
 
   dottie@2.0.6:
     resolution: {integrity: sha512-iGCHkfUc5kFekGiqhe8B/mdaurD+lakO9txNnTvKtA6PISrw86LgqHvRzWYPyoE2Ph5aMIrCw9/uko6XHTKCwA==}
@@ -15383,7 +15396,7 @@ snapshots:
     dependencies:
       is-obj: 2.0.0
 
-  dotenv@8.6.0: {}
+  dotenv@16.6.1: {}
 
   dottie@2.0.6: {}
 

@@ -1,20 +1,27 @@
-const axios = require('axios');
+import axios from 'axios';
 
-/*
-response :  undefined -> cluster not reached network issue or cluster not available
-response.status : 200 -> Cluster reachable
-response.status : 403 -> Cluster reachable but Unauthorized
-*/
+interface ClusterReachabilityResult {
+  reached: boolean;
+  statusCode: number;
+  message: string;
+  error: any;
+}
 
 /**
- * @param {string} clusterHost
- * @param {number | string} port
- * @param {string?} username
- * @param {string?} password
- * @returns {Promise<object>} Returns a customized IOptions
+ * Check if an HPCC cluster is reachable
+ * @param clusterHost - The host URL of the cluster
+ * @param port - The port number
+ * @param username - Optional username for authentication
+ * @param password - Optional password for authentication
+ * @returns Promise with reachability status
  */
-const isClusterReachable = async (clusterHost, port, username, password) => {
-  let auth = {
+export async function isClusterReachable(
+  clusterHost: string,
+  port: number | string,
+  username?: string,
+  password?: string
+): Promise<ClusterReachabilityResult> {
+  const auth = {
     username: username || '',
     password: password || '',
   };
@@ -40,13 +47,12 @@ const isClusterReachable = async (clusterHost, port, username, password) => {
         error: null,
       };
     }
-  } catch (error) {
-    let message;
+  } catch (error: any) {
+    let message: string;
     if (error.response) {
       // Server responded with an error status
       if (error.response.status === 401) {
         message = `${clusterHost} - Access denied`;
-
         return { reached: true, statusCode: 403, message, error };
       } else {
         message = 'Unknown Error';
@@ -58,6 +64,4 @@ const isClusterReachable = async (clusterHost, port, username, password) => {
 
     return { reached: false, statusCode: 503, message, error };
   }
-};
-
-module.exports = isClusterReachable;
+}
