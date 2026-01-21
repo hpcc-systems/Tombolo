@@ -73,6 +73,18 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    await queryInterface.addConstraint('work_unit_exceptions', {
+      fields: ['wuId', 'clusterId'],
+      type: 'foreign key',
+      name: 'work_unit_exceptions_workunit_fk',
+      references: {
+        table: 'work_units',
+        fields: ['wuId', 'clusterId'],
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    });
   },
 
   // eslint-disable-next-line

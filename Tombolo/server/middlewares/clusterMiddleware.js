@@ -9,7 +9,7 @@ const {
 
 const createUpdateClusterValidations = [
   stringBody('username', true, {
-    alphaNumeric: true,
+    alphaNumeric: false,
   }),
   arrayBody('adminEmails', true),
   emailBody('adminEmails.*', true),
@@ -36,7 +36,7 @@ const validateUpdateClusterInputs = [
 const validateClusterPingPayload = [
   stringBody('name'),
   stringBody('username', true, {
-    alphaNumeric: true,
+    alphaNumeric: false,
   }),
   stringBody('password', true),
 ];

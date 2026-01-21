@@ -3,24 +3,38 @@
   "version": "0.1.0",
   "private": true,
   "description": "Core business logic and shared services for Tombolo",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "require": "./index.js",
-      "default": "./index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "esm:build": "tsup",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "test": "echo \"No tests yet\"",
-    "clean": "rm -rf .turbo",
+    "clean": "rm -rf dist .turbo",
     "clean:deps": "rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@tombolo/db": "workspace:*",
     "@tombolo/shared": "workspace:*",
     "@hpcc-js/comms": "catalog:",
-    "axios": "catalog:"
+    "axios": "catalog:",
+    "dotenv": "catalog:"
   }
 }

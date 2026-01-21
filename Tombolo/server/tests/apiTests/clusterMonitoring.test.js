@@ -100,7 +100,7 @@ describe('Cluster Monitoring routes Routes', () => {
     expect(ClusterMonitoring.update).toHaveBeenCalledWith(
       {
         isActive: !monitoring.isActive,
-        updatedBy: expect.stringMatching(UUID_REGEX),
+        lastUpdatedBy: expect.stringMatching(UUID_REGEX),
       },
       {
         where: { id: monitoringId },

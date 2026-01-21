@@ -1,0 +1,78 @@
+.logLink {
+  cursor: pointer;
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.clusterInfo {
+  text-align: right;
+}
+
+.clusterName {
+  font-weight: bold;
+  font-size: 16px;
+  color: var(--dark);
+}
+
+.statusText {
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.cardContainer {
+  margin: 1rem;
+}
+
+.filtersContainer {
+  margin-bottom: 1rem;
+}
+
+.filtersRow {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+}
+
+.filterGroup {
+  flex: 1;
+  min-width: 80px;
+}
+
+.filterGroupWide {
+  flex: 2;
+  min-width: 250px;
+}
+
+.filterGroupMedium {
+  flex: 2;
+  min-width: 150px;
+}
+
+.filterGroupComponent {
+  flex: 1;
+  min-width: 120px;
+}
+
+.filterLabel {
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: var(--secondary);
+  font-weight: bold;
+}
+
+.filterInput {
+  width: 100%;
+}
+
+.modalContent {
+  padding: 16px;
+  background-color: var(--modal-dark-bg);
+  border-radius: 4px;
+}

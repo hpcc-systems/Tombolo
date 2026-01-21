@@ -13,7 +13,7 @@ export default function config({ mode }) {
 
   return defineConfig({
     root: './',
-    base: './', // Ensure relative paths work correctly
+    base: '/', // Use absolute paths for assets to work on all routes
     plugins: [
       react(),
       eslint({

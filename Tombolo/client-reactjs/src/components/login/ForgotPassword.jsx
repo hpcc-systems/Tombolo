@@ -4,17 +4,19 @@ import { Form, Input, Button, Divider } from 'antd';
 import { Link } from 'react-router-dom';
 
 // Local imports
-import { handleError, handleSuccess } from '../common/handleResponse';
+import { handleSuccess } from '../common/handleResponse';
 import authService from '@/services/auth.service';
 import styles from './login.module.css';
 
 const ForgotPassword = () => {
-  const onFinish = async (values) => {
+  const onFinish = async values => {
     try {
       await authService.handlePasswordResetRequest(values.email);
-      handleSuccess('If a user with this email exists, a password reset link will be sent to the email address.');
-    } catch (err) {
-      handleError(err.message);
+    } catch (_err) {
+      // Intentionally ignore errors to prevent email enumeration
+    } finally {
+      // Always show success message regardless of whether email exists
+      handleSuccess('If an account with this email exists, a password reset link will be sent to the email address.');
     }
   };
 
@@ -24,6 +26,7 @@ const ForgotPassword = () => {
       <Form.Item
         label="Email"
         name="email"
+        normalize={value => value?.trim()}
         rules={[
           {
             required: true,
