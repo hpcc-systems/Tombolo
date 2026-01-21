@@ -11,8 +11,6 @@ const { decryptString } = require('@tombolo/shared');
 const { Cluster, NotificationQueue } = require('../../models');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-
 async function monitorClusterReachability() {
   // UTC time
   const now = new Date();
@@ -26,7 +24,10 @@ async function monitorClusterReachability() {
     const allClusters = await Cluster.findAll({ raw: true });
     allClusters.forEach(cluster => {
       if (cluster.hash) {
-        const password = decryptString(cluster.hash, ENCRYPTION_KEY);
+        const password = decryptString(
+          cluster.hash,
+          process.env.ENCRYPTION_KEY
+        );
         cluster.password = password;
       } else {
         cluster.password = null;

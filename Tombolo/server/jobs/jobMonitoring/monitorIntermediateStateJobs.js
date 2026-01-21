@@ -28,8 +28,6 @@ const {
 const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-
 (async () => {
   logOrPostMessage({
     level: 'info',
@@ -87,7 +85,7 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
         if (clusterInfo.hash) {
           clusterInfo.password = decryptString(
             clusterInfo.hash,
-            ENCRYPTION_KEY
+            process.env.ENCRYPTION_KEY
           );
         } else {
           clusterInfo.password = null;

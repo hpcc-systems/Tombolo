@@ -21,8 +21,6 @@ const {
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 const { sendSuccess, sendError } = require('../utils/response');
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-
 // Add a cluster - Without sending progress updates to client
 const addCluster = async (req, res) => {
   try {
@@ -133,7 +131,7 @@ const addCluster = async (req, res) => {
 
     // Has password and add to the obj if it exists
     if (password) {
-      clusterPayload.hash = encryptString(password, ENCRYPTION_KEY);
+      clusterPayload.hash = encryptString(password, process.env.ENCRYPTION_KEY);
     }
 
     // Create cluster
@@ -434,7 +432,7 @@ const addClusterWithProgress = async (req, res) => {
 
     // Has password and add to the obj if it exists
     if (password) {
-      clusterPayload.hash = encryptString(password, ENCRYPTION_KEY);
+      clusterPayload.hash = encryptString(password, process.env.ENCRYPTION_KEY);
     }
     // Create cluster
     const newCluster = await Cluster.create(clusterPayload);
@@ -518,7 +516,7 @@ const updateCluster = async (req, res) => {
     if (!cluster) throw new CustomError('Cluster not found', 404);
     if (allowSelfSigned) cluster.allowSelfSigned = allowSelfSigned;
     if (username) cluster.username = username;
-    if (password) cluster.hash = encryptString(password, ENCRYPTION_KEY);
+    if (password) cluster.hash = encryptString(password, process.env.ENCRYPTION_KEY);
     if (adminEmails) cluster.adminEmails = adminEmails;
     cluster.updatedBy = req.user.id;
 
@@ -759,7 +757,7 @@ const getClusterLogs = async (req, res) => {
 
     // Decrypt password
     const password = cluster.hash
-      ? decryptString(cluster.hash, ENCRYPTION_KEY)
+      ? decryptString(cluster.hash, process.env.ENCRYPTION_KEY)
       : null;
 
     // Create LogAccess service using existing utility

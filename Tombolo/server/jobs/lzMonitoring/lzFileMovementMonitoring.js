@@ -18,7 +18,6 @@ const {
 const { APPROVAL_STATUS } = require('../../config/constants');
 
 const monitoring_name = 'Landing Zone Monitoring';
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 (async () => {
   // Get monitoring type ID for "Job Monitoring"
@@ -90,7 +89,10 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
       if (isClusterIdUnique) {
         let clusterPw;
         if (lzMonitoring.cluster.hash) {
-          clusterPw = decryptString(lzMonitoring.cluster.hash, ENCRYPTION_KEY);
+          clusterPw = decryptString(
+            lzMonitoring.cluster.hash,
+            process.env.ENCRYPTION_KEY
+          );
         }
         uniqueClusters.push({ ...lzMonitoring.cluster, password: clusterPw });
       }

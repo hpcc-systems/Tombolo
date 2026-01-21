@@ -10,8 +10,6 @@ const shallowCopyWithoutNested = require('../../utils/shallowCopyWithoutNested.j
 const { WUInfoOptions } = require('./monitorJobsUtil');
 const { getClusterOptions } = require('../../utils/getClusterOptions');
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-
 // Self Invoking function
 (async () => {
   const { job } = workerData;
@@ -50,7 +48,10 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
     // If cluster information & hash present - decrypt
     if (clusterInfo) {
       if (clusterInfo.hash) {
-        clusterInfo.password = decryptString(clusterInfo.hash, ENCRYPTION_KEY);
+        clusterInfo.password = decryptString(
+          clusterInfo.hash,
+          process.env.ENCRYPTION_KEY
+        );
       } else {
         clusterInfo.password = null;
       }

@@ -14,8 +14,6 @@ const { APPROVAL_STATUS } = require('../config/constants');
 const { sendError, sendSuccess } = require('../utils/response');
 const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-
 // Function to get dropzones and associated machines when a cluster id is provided
 const getDropzonesForACluster = async (req, res) => {
   try {
@@ -42,7 +40,7 @@ const getDropzonesForACluster = async (req, res) => {
         {
           baseUrl,
           userID: clusterDetails.username || '',
-          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash, ENCRYPTION_KEY) : ''}`,
+          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash, process.env.ENCRYPTION_KEY) : ''}`,
         },
         clusterDetails.allowSelfSigned
       )
@@ -83,7 +81,7 @@ const getFileList = async (req, res) => {
         {
           baseUrl,
           userID: clusterDetails.username || '',
-          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash, ENCRYPTION_KEY) : ''}`,
+          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash, process.env.ENCRYPTION_KEY) : ''}`,
         },
         clusterDetails.allowSelfSigned
       )

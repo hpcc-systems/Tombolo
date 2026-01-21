@@ -32,7 +32,6 @@ const { APPROVAL_STATUS } = require('../../config/constants');
 
 // Variables
 const monitoring_name = 'Job Monitoring';
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 (async () => {
   logOrPostMessage({
@@ -111,7 +110,7 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
         if (clusterInfo.hash) {
           clusterInfo.password = decryptString(
             clusterInfo.hash,
-            ENCRYPTION_KEY
+            process.env.ENCRYPTION_KEY
           );
         } else {
           clusterInfo.password = null;

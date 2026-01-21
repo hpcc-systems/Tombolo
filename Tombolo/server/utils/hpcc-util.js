@@ -12,8 +12,6 @@ const { getClusterOptions } = require('../utils/getClusterOptions');
 const cp = require('child_process');
 const logger = require('../config/logger');
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-
 exports.fileInfo = async (fileName, clusterId) => {
   try {
     const dfuService = await exports.getDFUService(clusterId);
@@ -395,7 +393,7 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
 //         {
 //           baseUrl: thor_host + ':' + thor_port,
 //           userID: clusterCredentials.cluster_username,
-//           password: decryptString(clusterCredentials.cluster_hash, ENCRYPTION_KEY),
+//           password: decryptString(clusterCredentials.cluster_hash, process.env.ENCRYPTION_KEY),
 //         },
 //         allowSelfSigned
 //       );
@@ -433,7 +431,7 @@ exports.getJobInfo = async (clusterId, jobWuid, jobType) => {
 //       });
 //       cluster_auth = {
 //         user: clusterCred.dataValues.cluster_username,
-//         password: decryptString(clusterCred.dataValues.cluster_hash, ENCRYPTION_KEY),
+//         password: decryptString(clusterCred.dataValues.cluster_hash, process.env.ENCRYPTION_KEY),
 //       };
 //     } catch (error) {
 //       logger.error('hpcc-util - resubmitWU: ', error);
@@ -601,7 +599,7 @@ exports.getCluster = clusterId => {
         throw new Error(`Cluster with id ${clusterId} not in database`);
       }
       if (cluster.hash) {
-        cluster.hash = decryptString(cluster.hash, ENCRYPTION_KEY);
+        cluster.hash = decryptString(cluster.hash, process.env.ENCRYPTION_KEY);
       }
 
       let isReachable = await module.exports.isClusterReachable(
@@ -644,7 +642,10 @@ exports.getClusters = async clusterIds => {
     const clusterPromises = clusters.map(async cluster => {
       try {
         if (cluster.hash) {
-          cluster.hash = decryptString(cluster.hash, ENCRYPTION_KEY);
+          cluster.hash = decryptString(
+            cluster.hash,
+            process.env.ENCRYPTION_KEY
+          );
         }
 
         const isReachable = await module.exports.isClusterReachable(
@@ -879,9 +880,9 @@ exports.updateWUAction = async (clusterId, WUactionBody) => {
 //
 //       project = project.toJSON();
 //
-//       if (project.ghToken) project.ghToken = decryptString(project.ghToken, ENCRYPTION_KEY);
+//       if (project.ghToken) project.ghToken = decryptString(project.ghToken, process.env.ENCRYPTION_KEY);
 //       if (project.ghUserName)
-//         project.ghUserName = decryptString(project.ghUserName, ENCRYPTION_KEY);
+//         project.ghUserName = decryptString(project.ghUserName, process.env.ENCRYPTION_KEY);
 //
 //       let { ghLink, ghBranchOrTag, ghUserName, ghToken } = project;
 //
