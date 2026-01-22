@@ -1,7 +1,7 @@
 import { Cluster } from '@tombolo/db';
 import { decryptString } from '@tombolo/shared';
 import { isClusterReachable } from './isClusterReachable.js';
-import { ENCRYPTION_KEY } from '../config/config.js';
+import { getEncryptionKey } from '../config/config.js';
 
 interface ClusterWithError {
   error?: string;
@@ -24,7 +24,7 @@ export async function getClusters(
       const clusterData = cluster.get({ plain: true }) as any;
 
       if (clusterData.hash) {
-        clusterData.hash = decryptString(clusterData.hash, ENCRYPTION_KEY);
+        clusterData.hash = decryptString(clusterData.hash, getEncryptionKey());
       }
 
       const isReachable = await isClusterReachable(

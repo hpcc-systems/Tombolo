@@ -4,8 +4,8 @@ const Sequelize = require('sequelize');
 
 // Local Imports
 const logger = require('../config/logger');
-const { Cluster, LandingZoneMonitoring, User } = require('../models');
-const { decryptString } = require('../utils/cipher');
+const { Cluster, LandingZoneMonitoring } = require('../models');
+const { decryptString } = require('@tombolo/shared');
 const { getClusterOptions } = require('../utils/getClusterOptions');
 const {
   uniqueConstraintErrorHandler,
@@ -40,7 +40,7 @@ const getDropzonesForACluster = async (req, res) => {
         {
           baseUrl,
           userID: clusterDetails.username || '',
-          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash) : ''}`,
+          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash, process.env.ENCRYPTION_KEY) : ''}`,
         },
         clusterDetails.allowSelfSigned
       )
@@ -81,7 +81,7 @@ const getFileList = async (req, res) => {
         {
           baseUrl,
           userID: clusterDetails.username || '',
-          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash) : ''}`,
+          password: `${clusterDetails.hash ? decryptString(clusterDetails.hash, process.env.ENCRYPTION_KEY) : ''}`,
         },
         clusterDetails.allowSelfSigned
       )

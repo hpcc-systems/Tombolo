@@ -9,7 +9,7 @@ const axios = require('axios');
 
 const logger = require('../config/logger');
 const { Cluster } = require('../models');
-const { encryptString, decryptString } = require('../utils/cipher.js');
+const { encryptString, decryptString } = require('@tombolo/shared');
 const CustomError = require('../utils/customError.js');
 const { getClusterOptions } = require('../utils/getClusterOptions');
 const hpccUtil = require('../utils/hpcc-util.js');
@@ -131,7 +131,7 @@ const addCluster = async (req, res) => {
 
     // Has password and add to the obj if it exists
     if (password) {
-      clusterPayload.hash = encryptString(password);
+      clusterPayload.hash = encryptString(password, process.env.ENCRYPTION_KEY);
     }
 
     // Create cluster
@@ -432,7 +432,7 @@ const addClusterWithProgress = async (req, res) => {
 
     // Has password and add to the obj if it exists
     if (password) {
-      clusterPayload.hash = encryptString(password);
+      clusterPayload.hash = encryptString(password, process.env.ENCRYPTION_KEY);
     }
     // Create cluster
     const newCluster = await Cluster.create(clusterPayload);
@@ -516,7 +516,7 @@ const updateCluster = async (req, res) => {
     if (!cluster) throw new CustomError('Cluster not found', 404);
     if (allowSelfSigned) cluster.allowSelfSigned = allowSelfSigned;
     if (username) cluster.username = username;
-    if (password) cluster.hash = encryptString(password);
+    if (password) cluster.hash = encryptString(password, process.env.ENCRYPTION_KEY);
     if (adminEmails) cluster.adminEmails = adminEmails;
     cluster.updatedBy = req.user.id;
 
@@ -756,7 +756,9 @@ const getClusterLogs = async (req, res) => {
     }
 
     // Decrypt password
-    const password = cluster.hash ? decryptString(cluster.hash) : null;
+    const password = cluster.hash
+      ? decryptString(cluster.hash, process.env.ENCRYPTION_KEY)
+      : null;
 
     // Create LogAccess service using existing utility
     const clusterOptions = getClusterOptions(

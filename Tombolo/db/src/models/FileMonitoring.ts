@@ -20,13 +20,14 @@ import type {
 import { User } from './User.js';
 import { Application } from './Application.js';
 import { Cluster } from './Cluster.js';
+import { DeleteMixin } from '../mixins/DeleteMixin.js';
 
 @Table({
   tableName: 'file_monitoring',
   paranoid: true,
   timestamps: true,
 })
-export class FileMonitoring extends Model<
+export class FileMonitoring extends DeleteMixin(Model)<
   InferAttributes<FileMonitoring>,
   InferCreationAttributes<FileMonitoring>
 > {

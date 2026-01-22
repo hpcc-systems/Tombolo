@@ -18,8 +18,8 @@
     "dist"
   ],
   "scripts": {
-    "esm:build": "tsup",
     "build": "tsup",
+    "esm:build": "tsup",
     "dev": "tsup --watch",
     "test": "echo \"No tests yet\"",
     "clean": "rm -rf dist .turbo",

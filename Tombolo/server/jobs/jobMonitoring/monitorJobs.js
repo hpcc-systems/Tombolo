@@ -12,7 +12,7 @@ const {
   NotificationQueue,
   JobMonitoringData,
 } = require('../../models');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 const {
   matchJobName,
   wuStartTimeWhenLastScanAvailable,
@@ -108,7 +108,10 @@ const monitoring_name = 'Job Monitoring';
       try {
         clusterInfoObj[clusterInfo.id] = clusterInfo;
         if (clusterInfo.hash) {
-          clusterInfo.password = decryptString(clusterInfo.hash);
+          clusterInfo.password = decryptString(
+            clusterInfo.hash,
+            process.env.ENCRYPTION_KEY
+          );
         } else {
           clusterInfo.password = null;
         }

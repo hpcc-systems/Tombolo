@@ -89,6 +89,6 @@ export class AsrMonitoringTypeToDomainsRelation extends Model<
   @BelongsTo(() => MonitoringType, 'monitoring_type_id')
   declare monitoringType?: MonitoringType;
 
-  @BelongsTo(() => AsrDomain, 'domain_id')
-  declare domain?: AsrDomain;
+  @BelongsTo(() => AsrDomain, { foreignKey: 'domain_id', as: 'AsrDomain' })
+  declare AsrDomain?: AsrDomain;
 }
