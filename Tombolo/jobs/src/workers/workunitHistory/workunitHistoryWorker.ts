@@ -30,11 +30,30 @@ workunitHistoryWorker.on('completed', (job, result) => {
 });
 
 workunitHistoryWorker.on('failed', (job, err) => {
-  logger.error(`Job ${job?.id} failed`, { error: String(err) });
+  logger.error(`Job ${job?.id} failed`, {
+    error: err instanceof Error ? err.message : String(err),
+    stack: err instanceof Error ? err.stack : undefined,
+    // For AggregateError, log individual errors
+    errors: (err as any)?.errors?.map((e: any) => ({
+      message: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
+    })),
+  });
 });
 
 workunitHistoryWorker.on('error', err => {
-  logger.error('Worker error', { error: String(err) });
+  logger.error('Worker error', {
+    error: err instanceof Error ? err.message : String(err),
+    stack: err instanceof Error ? err.stack : undefined,
+    // For AggregateError, log individual errors
+    errors: (err as any)?.errors?.map((e: any) => ({
+      message: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
+      code: e?.code,
+      errno: e?.errno,
+      syscall: e?.syscall,
+    })),
+  });
 });
 
 // Graceful shutdown

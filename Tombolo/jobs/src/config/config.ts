@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import type { RedisOptions } from 'ioredis';
+import logger from './logger.js';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -13,7 +14,7 @@ const tomboloENV = path.join(__dirname, '..', '..', '..', '.env'); // Tombolo/.e
 const jobsENV = path.join(process.cwd(), '.env'); // Tombolo/jobs/.env
 const ENVPath = fs.existsSync(tomboloENV) ? tomboloENV : jobsENV;
 
-console.log('Loading .env from:', ENVPath); // Debug log
+logger.info(`Loading .env from: ${ENVPath}`);
 dotenv.config({ path: ENVPath });
 
 export const redisConnectionOptions: RedisOptions = {
@@ -22,6 +23,17 @@ export const redisConnectionOptions: RedisOptions = {
   username: process.env.REDIS_USER,
   password: process.env.REDIS_PASSWORD,
   db: Number(process.env.REDIS_DB) || 0,
+  maxRetriesPerRequest: 3,
+  retryStrategy: (times: number) => {
+    // Retry after 1s, 2s, 4s, 8s, etc., with a max of 10s
+    const delay = Math.min(times * 1000, 10000);
+    logger.warn(
+      `Redis connection retry attempt ${times}, waiting ${delay}ms`
+    );
+    return delay;
+  },
+  connectTimeout: 10000, // 10 seconds
+  enableReadyCheck: true,
   // Enable if you use Redis TLS in prod
   //   tls: process.env.NODE_ENV === 'production' ? {} : undefined,
 };
