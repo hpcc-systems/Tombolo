@@ -4,7 +4,7 @@ const {
 const { Cluster, NotificationQueue } = require('../../models');
 const { parentPort } = require('worker_threads');
 const { AccountService } = require('@hpcc-js/comms');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 const {
   passwordExpiryAlertDaysForCluster,
 } = require('../../config/monitorings');
@@ -14,13 +14,24 @@ const {
 
 jest.mock('worker_threads');
 jest.mock('@hpcc-js/comms');
-jest.mock('../../utils/cipher');
+jest.mock('@tombolo/shared');
 jest.mock('../../jobs/cluster/clusterReachabilityMonitoringUtils');
 jest.mock('../../config/monitorings');
 
 describe('monitorClusterReachability', () => {
+  const originalEnv = process.env;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set up ENCRYPTION_KEY for tests
+    process.env = {
+      ...originalEnv,
+      ENCRYPTION_KEY: 'dGVzdEVuY3J5cHRpb25LZXlGb3JUZXN0aW5nMTIzNDU2',
+    };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   it('should post info when monitoring starts and completes', async () => {
@@ -70,7 +81,7 @@ describe('monitorClusterReachability', () => {
     Cluster.update.mockResolvedValue({});
     parentPort.postMessage = jest.fn();
     await monitorClusterReachability();
-    expect(decryptString).toHaveBeenCalledWith('encrypted');
+    expect(decryptString).toHaveBeenCalledWith('encrypted', expect.any(String));
     expect(NotificationQueue.create).toHaveBeenCalled();
     expect(Cluster.update).toHaveBeenCalled();
     expect(parentPort.postMessage).toHaveBeenCalledWith(

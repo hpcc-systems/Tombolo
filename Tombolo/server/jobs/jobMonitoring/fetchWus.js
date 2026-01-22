@@ -1,7 +1,7 @@
 // Imports
-const { parentPort, workerData } = require('worker_threads');
+const { workerData } = require('worker_threads');
 const { logOrPostMessage } = require('../jobUtils');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 
 // Local Imports
 const { Cluster, JobMonitoringData } = require('../../models');
@@ -48,7 +48,10 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
     // If cluster information & hash present - decrypt
     if (clusterInfo) {
       if (clusterInfo.hash) {
-        clusterInfo.password = decryptString(clusterInfo.hash);
+        clusterInfo.password = decryptString(
+          clusterInfo.hash,
+          process.env.ENCRYPTION_KEY
+        );
       } else {
         clusterInfo.password = null;
       }

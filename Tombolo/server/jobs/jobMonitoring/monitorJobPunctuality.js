@@ -4,7 +4,7 @@ const { logOrPostMessage } = require('../jobUtils');
 const _ = require('lodash');
 
 // Local imports
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 const {
   calculateRunOrCompleteByTimes,
   generateJobName,
@@ -70,7 +70,10 @@ const monitoringTypeName = 'Job Monitoring';
     clusters.forEach(clusterInfo => {
       try {
         if (clusterInfo.hash) {
-          clusterInfo.password = decryptString(clusterInfo.hash);
+          clusterInfo.password = decryptString(
+            clusterInfo.hash,
+            process.env.ENCRYPTION_KEY
+          );
         } else {
           clusterInfo.password = null;
         }
@@ -188,9 +191,9 @@ const monitoringTypeName = 'Job Monitoring';
           continue;
         }
 
-        alertTimePassed = window.start < window.currentTime;
+        let alertTimePassed = window.start < window.currentTime;
 
-        lateByInMinutes = Math.floor(
+        let lateByInMinutes = Math.floor(
           (window.currentTime - window.start) / 60000
         );
 
