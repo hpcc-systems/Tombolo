@@ -1,11 +1,14 @@
 /**
  * Truncates a string to a maximum length, keeping the start and end with ellipsis in the middle
  * Also removes whitespace and newlines
- * @param {string} str - The string to truncate
- * @param {number} maxLength - Maximum length (default: 245)
- * @returns {string|null} Truncated string or null if input is null
+ * @param str - The string to truncate
+ * @param maxLength - Maximum length (default: 245)
+ * @returns Truncated string or null if input is null
  */
-function truncateString(str, maxLength = 245) {
+function truncateString(
+  str: string | null | undefined,
+  maxLength: number = 245
+): string | null {
   if (!str) return null;
 
   const newStr = str.replace(/\s+/g, ' ').trim();

@@ -1,10 +1,10 @@
 /**
  * Checks if a string is empty
  * Also removes whitespace and newlines
- * @param {string} str - The string to check
- * @returns {string|null} Cleaned string or null
+ * @param str - The string to check
+ * @returns Cleaned string or null
  */
-function ifEmptyNull(str) {
+function ifEmptyNull(str: string | null | undefined): string | null {
   if (!str) return null;
   const newStr = str.replace(/\s+/g, ' ').trim();
   if (newStr === '') return null;
@@ -14,10 +14,10 @@ function ifEmptyNull(str) {
 /**
  * Checks if a string is empty
  * Also removes whitespace and newlines
- * @param {string} str - The string to check
- * @returns {string|undefined} Cleaned string or undefined
+ * @param str - The string to check
+ * @returns Cleaned string or undefined
  */
-function ifEmptyUndef(str) {
+function ifEmptyUndef(str: string | null | undefined): string | undefined {
   if (!str) return undefined;
   const newStr = str.replace(/\s+/g, ' ').trim();
   if (newStr === '') return undefined;
