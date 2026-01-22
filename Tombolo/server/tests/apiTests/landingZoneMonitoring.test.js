@@ -36,7 +36,7 @@ jest.mock('@hpcc-js/comms', () => ({
 }));
 
 // Mock utility functions
-jest.mock('../../utils/cipher', () => ({
+jest.mock('@tombolo/shared', () => ({
   decryptString: jest.fn().mockReturnValue('mocked_password'),
 }));
 
@@ -49,10 +49,21 @@ const validClusterId = uuidv4();
 const validUserId = uuidv4();
 
 describe('Landing Zone Monitoring Routes', () => {
+  const originalEnv = process.env;
+
   beforeEach(() => {
     jest.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
     jest.clearAllMocks();
+    // Set up ENCRYPTION_KEY for tests
+    process.env = {
+      ...originalEnv,
+      ENCRYPTION_KEY: 'dGVzdEVuY3J5cHRpb25LZXlGb3JUZXN0aW5nMTIzNDU2',
+    };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   afterEach(() => {

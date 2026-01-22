@@ -258,20 +258,19 @@ COPY Tombolo/core/package.json ./Tombolo/core/
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy jobs source code
-COPY Tombolo/jobs ./Tombolo/jobs
+# Copy built shared package from shared-builder (dist + package.json + source for types)
+COPY --from=shared-builder /app/Tombolo/shared ./Tombolo/shared
 
-# Copy built shared package from shared-builder
-COPY --from=shared-builder /app/Tombolo/shared/dist ./Tombolo/shared/dist
-COPY --from=shared-builder /app/Tombolo/shared/package.json ./Tombolo/shared/package.json
-
-# Copy built core package from core-builder
+# Copy built core package from core-builder (dist + package.json)
 COPY --from=core-builder /app/Tombolo/core/dist ./Tombolo/core/dist
 COPY --from=core-builder /app/Tombolo/core/package.json ./Tombolo/core/package.json
 
-# Copy built db package from db-builder
+# Copy built db package from db-builder (dist + package.json)
 COPY --from=db-builder /app/Tombolo/db/dist ./Tombolo/db/dist
 COPY --from=db-builder /app/Tombolo/db/package.json ./Tombolo/db/package.json
+
+# Copy jobs source code
+COPY Tombolo/jobs ./Tombolo/jobs
 
 # Copy db migrations, seeders, config, and utils (needed at runtime)
 COPY Tombolo/db/migrations ./Tombolo/db/migrations

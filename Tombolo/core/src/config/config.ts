@@ -8,4 +8,7 @@ const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
 dotenv.config({ path: ENVPath });
 
-export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '';
+
+export function getEncryptionKey() {
+  return process.env.ENCRYPTION_KEY || '';
+}

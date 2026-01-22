@@ -9,21 +9,32 @@ const {
 } = require('../../models');
 const { parentPort } = require('worker_threads');
 const axios = require('axios');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 const {
   generateNotificationId,
 } = require('../../jobs/jobMonitoring/monitorJobsUtil');
 
 jest.mock('worker_threads');
 jest.mock('axios');
-jest.mock('../../utils/cipher');
+jest.mock('@tombolo/shared');
 jest.mock('../../jobs/jobMonitoring/monitorJobsUtil');
+
+const originalEnv = process.env;
 
 beforeEach(() => {
   jest.clearAllMocks();
   parentPort.postMessage = jest.fn();
   NotificationQueue.create.mockResolvedValue({});
   MonitoringLog.upsert.mockResolvedValue({});
+  // Set up ENCRYPTION_KEY for tests
+  process.env = {
+    ...originalEnv,
+    ENCRYPTION_KEY: 'dGVzdEVuY3J5cHRpb25LZXlGb3JUZXN0aW5nMTIzNDU2',
+  };
+});
+
+afterEach(() => {
+  process.env = originalEnv;
 });
 
 describe('monitorCluster', () => {

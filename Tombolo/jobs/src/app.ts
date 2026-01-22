@@ -12,6 +12,27 @@ import logger from './config/logger.js';
 // Create Redis client for health checks
 const redisClient = new Redis(redisConnectionOptions);
 
+// Add Redis error handlers
+redisClient.on('error', err => {
+  logger.error('Redis client error', {
+    error: err instanceof Error ? err.message : String(err),
+    code: (err as any)?.code,
+    stack: err instanceof Error ? err.stack : undefined,
+  });
+});
+
+redisClient.on('connect', () => {
+  logger.info('Redis client connected');
+});
+
+redisClient.on('ready', () => {
+  logger.info('Redis client ready');
+});
+
+redisClient.on('reconnecting', () => {
+  logger.warn('Redis client reconnecting...');
+});
+
 const PORT = process.env.BULL_BOARD_PORT || 3005;
 
 async function startJobProcessor() {
@@ -96,6 +117,14 @@ async function startJobProcessor() {
 startJobProcessor()
   .then(() => logger.info('BullMQ job processor is running'))
   .catch(err => {
-    logger.error(`Failed to start job processor: ${String(err)}`);
+    logger.error('Failed to start job processor', {
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+      errors: (err as any)?.errors?.map((e: any) => ({
+        message: e instanceof Error ? e.message : String(e),
+        code: e?.code,
+        errno: e?.errno,
+      })),
+    });
     process.exit(1);
   });

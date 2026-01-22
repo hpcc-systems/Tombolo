@@ -15,7 +15,7 @@ const {
   MonitoringLog,
 } = require('../../models');
 const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
-const { decryptString } = require('../../utils/cipher');
+const { decryptString } = require('@tombolo/shared');
 const { APPROVAL_STATUS } = require('../../config/constants');
 
 // Helper functions
@@ -190,7 +190,7 @@ async function monitorCluster() {
     const clusterObject = {};
     activeClusterStatusMonitoring.forEach(monitoring => {
       let clusterPw = monitoring.cluster.hash
-        ? decryptString(monitoring.cluster.hash)
+        ? decryptString(monitoring.cluster.hash, process.env.ENCRYPTION_KEY)
         : null;
       clusterObject[monitoring.cluster.id] = {
         ...monitoring.cluster,
