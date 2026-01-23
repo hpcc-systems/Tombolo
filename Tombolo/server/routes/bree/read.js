@@ -1,10 +1,10 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const jobScheduler = require('../../jobSchedular/job-scheduler');
-const { body, query } = require('express-validator');
-const { validate } = require('../../middlewares/validateRequestBody');
-const logger = require('../../config/logger');
-const { sendSuccess, sendError } = require('../../utils/response');
+import jobScheduler from '../../jobSchedular/job-scheduler.js';
+import { body, query } from 'express-validator';
+import { validate } from '../../middlewares/validateRequestBody.js';
+import logger from '../../config/logger.js';
+import { sendSuccess, sendError } from '../../utils/response.js';
 
 const validateName = [body('name').notEmpty().isString()];
 
@@ -84,4 +84,4 @@ router.put('/stop_all', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

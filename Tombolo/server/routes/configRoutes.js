@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const { getInstanceDetails } = require('../controllers/configController');
+import { getInstanceDetails } from '../controllers/configController.js';
 
 router.get('/instanceDetails', getInstanceDetails); // GET - instance details
 
-module.exports = router;
+export default router;

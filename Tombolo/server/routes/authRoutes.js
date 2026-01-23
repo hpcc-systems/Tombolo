@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Import user middleware
-const {
+import {
   validateNewUserPayload,
   validateLoginPayload,
   validateEmailDuplicate,
@@ -14,11 +14,11 @@ const {
   validateAccessRequest,
   validateEmailInBody,
   validateResetToken,
-} = require('../middlewares/authMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
+} from '../middlewares/authMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
 
 // Import user controller
-const {
+import {
   createBasicUser,
   loginBasicUser,
   refreshAccessToken,
@@ -35,7 +35,7 @@ const {
   getUserDetailsWithVerificationCode,
   requestPasswordReset,
   getCurrentUser,
-} = require('../controllers/authController');
+} from '../controllers/authController.js';
 
 // Basic (Traditional) User Routes ----------------------------------------------------------------------------
 router.post(
@@ -112,4 +112,4 @@ router.all('*path', (req, res) => {
     .json({ message: 'Auth endpoint not found', path: req.originalUrl });
 });
 
-module.exports = router;
+export default router;

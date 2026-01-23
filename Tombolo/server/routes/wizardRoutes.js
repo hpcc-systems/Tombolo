@@ -1,12 +1,10 @@
-const express = require('express');
+import express from 'express';
 
 const router = express.Router();
 
-const {
-  createInstanceSettingFirstRun,
-} = require('../controllers/wizardController');
-const { validate } = require('../middlewares/validateRequestBody');
-const { validateWizardPayload } = require('../middlewares/wizardMiddleware');
+import { createInstanceSettingFirstRun } from '../controllers/wizardController.js';
+import { validate } from '../middlewares/validateRequestBody.js';
+import { validateWizardPayload } from '../middlewares/wizardMiddleware.js';
 
 // Create a new instance setting -- only accessible when no users exist for wizard
 router.post(
@@ -15,4 +13,4 @@ router.post(
   createInstanceSettingFirstRun
 );
 
-module.exports = router;
+export default router;

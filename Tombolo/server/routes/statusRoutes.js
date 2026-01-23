@@ -1,10 +1,10 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
   healthcheck,
   checkStatus,
   checkOwnerExists,
-} = require('../controllers/statusController');
+} from '../controllers/statusController.js';
 
 // Healthcheck endpoint for Docker (no auth required)
 router.get('/health', healthcheck);
@@ -13,4 +13,4 @@ router.get('/health', healthcheck);
 router.get('/', checkStatus); // Check if backend is running
 router.get('/ownerExists', checkOwnerExists); // Check if owner exists
 
-module.exports = router;
+export default router;

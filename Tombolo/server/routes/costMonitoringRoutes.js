@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const {
+import {
   validateUpdateCostMonitoring,
   validateCreateCostMonitoring,
   validateDeleteCostMonitoring,
@@ -11,9 +11,9 @@ const {
   validateBulkDelete,
   validateBulkUpdate,
   validateGetCostMonitoringByAppId,
-} = require('../middlewares/costMonitoringMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+} from '../middlewares/costMonitoringMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   getCostMonitoringById,
   getCostMonitorings,
   deleteCostMonitoring,
@@ -23,7 +23,7 @@ const {
   toggleCostMonitoringActive,
   bulkDeleteCostMonitoring,
   bulkUpdateCostMonitoring,
-} = require('../controllers/costMonitoringController');
+} from '../controllers/costMonitoringController.js';
 
 router.patch(
   '/evaluate',
@@ -58,4 +58,4 @@ router.delete(
   deleteCostMonitoring
 );
 
-module.exports = router;
+export default router;

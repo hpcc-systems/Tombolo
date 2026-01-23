@@ -1,19 +1,19 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 //Local imports
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   validateCreateNotificationQueue,
   validatePatchNotificationQueue,
   validateDeleteNotificationQueue,
-} = require('../middlewares/notificationQueueMiddleware');
-const {
+} from '../middlewares/notificationQueueMiddleware.js';
+import {
   createNotificationQueue,
   getNotifications,
   updateNotificationQueue,
   deleteNotificationQueue,
-} = require('../controllers/notificationQueueController');
+} from '../controllers/notificationQueueController.js';
 
 // Create a new notification
 router.post(
@@ -39,4 +39,4 @@ router.delete(
   deleteNotificationQueue
 );
 
-module.exports = router;
+export default router;

@@ -1,16 +1,16 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const {
+import {
   validateAddClusterInputs,
   validateClusterId,
   validateUpdateClusterInputs,
   validateClusterPingPayload,
   validateQueryData,
-} = require('../middlewares/clusterMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
+} from '../middlewares/clusterMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
 
-const {
+import {
   addCluster,
   addClusterWithProgress,
   getClusters,
@@ -24,10 +24,10 @@ const {
   clusterStorageHistory,
   checkClusterHealth,
   getClusterLogs,
-} = require('../controllers/clusterController');
-const role = require('../config/roleTypes');
+} from '../controllers/clusterController.js';
+import role from '../config/roleTypes.js';
 
-const { validateUserRole } = require('../middlewares/rbacMiddleware');
+import { validateUserRole } from '../middlewares/rbacMiddleware.js';
 
 router.get('/', getClusters); // GET - all clusters
 router.get('/getOne/:id', validate(validateClusterId), getCluster); // GET - one cluster by id
@@ -71,4 +71,4 @@ router.post(
 router.delete('/:id', validate(validateClusterId), deleteCluster); // DELETE - one cluster by id
 router.patch('/:id', validate(validateUpdateClusterInputs), updateCluster); // UPDATE - one cluster by id
 
-module.exports = router;
+export default router;

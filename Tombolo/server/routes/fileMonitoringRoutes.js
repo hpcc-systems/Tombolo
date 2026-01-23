@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const {
+import {
   validateUpdateFileMonitoring,
   validateCreateFileMonitoring,
   validateGetFileMonitoringById,
@@ -10,9 +10,9 @@ const {
   validateBulkDelete,
   validateBulkUpdate,
   validateGetFileMonitoringByAppId,
-} = require('../middlewares/fileMonitoringMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+} from '../middlewares/fileMonitoringMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   getFileMonitoringById,
   getFileMonitoring,
   updateFileMonitoring,
@@ -21,7 +21,7 @@ const {
   toggleFileMonitoringActive,
   deleteFileMonitoring,
   bulkUpdateFileMonitoring,
-} = require('../controllers/fileMonitoringController');
+} from '../controllers/fileMonitoringController.js';
 
 router.post('/', validate(validateCreateFileMonitoring), createFileMonitoring);
 
@@ -55,4 +55,4 @@ router.patch(
 router.delete('/', validate(validateBulkDelete), deleteFileMonitoring);
 router.patch('/bulk', validate(validateBulkUpdate), bulkUpdateFileMonitoring);
 
-module.exports = router;
+export default router;

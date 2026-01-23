@@ -1,10 +1,10 @@
 // Imports from libraries
-const express = require('express');
+import express from 'express';
 
 // Local imports
 const router = express.Router();
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   validateCreateDomain,
   validateUpdateDomain,
   validateDeleteDomain,
@@ -13,8 +13,8 @@ const {
   validateDeleteProduct,
   validateGetDomainsForMonitoringType,
   validateGetCategoriesForDomain,
-} = require('../middlewares/asrMiddleware');
-const {
+} from '../middlewares/asrMiddleware.js';
+import {
   createDomain,
   getDomains,
   getDomainsOnly,
@@ -27,7 +27,7 @@ const {
   deleteProduct,
   getDomainByMonitoringType,
   getProductsByDomain,
-} = require('../controllers/asrController');
+} from '../controllers/asrController.js';
 
 // Create a new domain
 router.post('/domains/', validate(validateCreateDomain), createDomain);
@@ -75,4 +75,4 @@ router.get(
   getProductsByDomain
 );
 
-module.exports = router;
+export default router;
