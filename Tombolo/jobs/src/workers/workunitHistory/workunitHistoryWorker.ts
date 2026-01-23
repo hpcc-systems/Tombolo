@@ -1,6 +1,7 @@
 import { Worker } from 'bullmq';
 import { redisConnectionOptions } from '../../config/config.js';
 import logger from '../../config/logger.js';
+import { formatErrorForLogging } from '../../utils/errorFormatter.js';
 
 // Import the processor function directly (runs in main thread)
 import processWorkunitHistoryJob from './processor.js';
@@ -30,30 +31,11 @@ workunitHistoryWorker.on('completed', (job, result) => {
 });
 
 workunitHistoryWorker.on('failed', (job, err) => {
-  logger.error(`Job ${job?.id} failed`, {
-    error: err instanceof Error ? err.message : String(err),
-    stack: err instanceof Error ? err.stack : undefined,
-    // For AggregateError, log individual errors
-    errors: (err as any)?.errors?.map((e: any) => ({
-      message: e instanceof Error ? e.message : String(e),
-      stack: e instanceof Error ? e.stack : undefined,
-    })),
-  });
+  logger.error(`Job ${job?.id} failed`, formatErrorForLogging(err));
 });
 
 workunitHistoryWorker.on('error', err => {
-  logger.error('Worker error', {
-    error: err instanceof Error ? err.message : String(err),
-    stack: err instanceof Error ? err.stack : undefined,
-    // For AggregateError, log individual errors
-    errors: (err as any)?.errors?.map((e: any) => ({
-      message: e instanceof Error ? e.message : String(e),
-      stack: e instanceof Error ? e.stack : undefined,
-      code: e?.code,
-      errno: e?.errno,
-      syscall: e?.syscall,
-    })),
-  });
+  logger.error('Worker error', formatErrorForLogging(err));
 });
 
 // Graceful shutdown
