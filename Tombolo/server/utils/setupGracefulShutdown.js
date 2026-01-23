@@ -1,6 +1,6 @@
-const logger = require('../config/logger');
+import logger from '../config/logger';
 
-module.exports = function setupGracefulShutdown({
+export default function setupGracefulShutdown({
   server,
   sockets,
   dbConnection,
@@ -99,4 +99,4 @@ module.exports = function setupGracefulShutdown({
     logger.error('Unhandled promise rejection', reason);
     gracefulShutdown('unhandledRejection', { timeoutMs: 10000 });
   });
-};
+}

@@ -1,5 +1,5 @@
-const { ArchiveManager } = require('../utils/archiveUtils');
-const { Op } = require('sequelize');
+import { ArchiveManager } from '../utils/archiveUtils.js';
+import { Op } from 'sequelize';
 
 class ArchiveService {
   constructor(sequelize) {
@@ -74,4 +74,4 @@ class ArchiveService {
   }
 }
 
-module.exports = { ArchiveService };
+export { ArchiveService };

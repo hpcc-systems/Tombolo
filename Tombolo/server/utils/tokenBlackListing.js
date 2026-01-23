@@ -1,5 +1,5 @@
-const { TokenBlackList } = require('../models');
-const logger = require('../config/logger');
+import { TokenBlackList } from '../models';
+import logger from '../config/logger';
 
 // Create the Map (tokenId as key and expiration time as value)
 const tokenBlacklist = new Map();
@@ -65,7 +65,7 @@ function stopCleanupInterval() {
 }
 
 // Export the Map and functions
-module.exports = {
+export {
   tokenBlacklist,
   blacklistToken,
   isTokenBlacklisted,

@@ -1,9 +1,8 @@
-// config/roleTypes.js
 const ROLE_TYPES = {
-  OWNER : "owner",
-  ADMIN: "administrator",
-  CONTRIBUTOR: "contributor",
-  READER : "reader",
+  OWNER: 'owner',
+  ADMIN: 'administrator',
+  CONTRIBUTOR: 'contributor',
+  READER: 'reader',
 };
 
-module.exports = ROLE_TYPES;
+export default ROLE_TYPES;

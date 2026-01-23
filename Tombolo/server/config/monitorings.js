@@ -32,7 +32,7 @@ const userAccountMonitoring = {
 };
 
 // Export
-module.exports = {
+export default {
   ...jobMonitoringConfig,
   ...cluster_monitoring,
   ...lz_monitoring_intervals,
