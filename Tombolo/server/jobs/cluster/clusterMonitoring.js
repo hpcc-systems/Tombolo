@@ -1,11 +1,11 @@
 // Library Imports
-const axios = require('axios');
-const _ = require('lodash');
-const { logOrPostMessage } = require('../jobUtils');
-const { MachineService } = require('@hpcc-js/comms');
+import axios from 'axios';
+import _ from 'lodash';
+import { logOrPostMessage } from '../jobUtils.js';
+import { MachineService } from '@hpcc-js/comms';
 
 // Local Imports
-const {
+import {
   ClusterMonitoring,
   Cluster,
   MonitoringType,
@@ -13,10 +13,10 @@ const {
   AsrProduct,
   AsrDomain,
   MonitoringLog,
-} = require('../../models');
-const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
-const { decryptString } = require('@tombolo/shared');
-const { APPROVAL_STATUS } = require('../../config/constants');
+} from '../../models.js';
+import { generateNotificationId } from '../jobMonitoring/monitorJobsUtil.js';
+import { decryptString } from '@tombolo/shared';
+import { APPROVAL_STATUS } from '../../config/constants.js';
 
 // Helper functions
 async function enrichAsrMetaData(asrSpecificMetaData) {
@@ -461,6 +461,4 @@ async function monitorCluster() {
   await monitorCluster();
 })();
 
-module.exports = {
-  monitorCluster,
-};
+export { monitorCluster };

@@ -1,6 +1,6 @@
-const Bree = require('bree');
-const logger = require('../config/logger.js');
-const {
+import Bree from 'bree';
+import logger from '../config/logger.js';
+import {
   logBreeJobs,
   createNewBreeJob,
   removeJobFromScheduler,
@@ -10,58 +10,58 @@ const {
   stopAllJobs,
   startJob,
   startAllJobs,
-} = require('../jobSchedularMethods/breeJobs.js');
+} from '../jobSchedularMethods/breeJobs.js';
 
-const {
+import {
   scheduleClusterTimezoneOffset,
   startClusterMonitoring,
   checkClusterReachability,
   checkClusterContainerization,
-} = require('../jobSchedularMethods/clusterJobs.js');
+} from '../jobSchedularMethods/clusterJobs.js';
 
-const {
+import {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   scheduleFileMonitoringBreeJob,
   scheduleFileMonitoring,
-} = require('../jobSchedularMethods/hpccFiles.js');
-const {
+} from '../jobSchedularMethods/hpccFiles.js';
+import {
   scheduleEmailNotificationProcessing,
   //   scheduleTeamsNotificationProcessing,
-} = require('../jobSchedularMethods/notificationJobs.js');
+} from '../jobSchedularMethods/notificationJobs.js';
 
-const {
+import {
   startJobMonitoring,
   startIntermediateJobsMonitoring,
   startJobPunctualityMonitoring,
   startTimeSeriesAnalysisMonitoring,
   createWuInfoFetchingJob,
-} = require('../jobSchedularMethods/jobMonitoring.js');
+} from '../jobSchedularMethods/jobMonitoring.js';
 
-const {
+import {
   // createOrbitMegaphoneJob,
   createOrbitProfileMonitoringJob,
   // scheduleOrbitMonitoringOnServerStart,
-} = require('../jobSchedularMethods/orbitJobs.js');
+} from '../jobSchedularMethods/orbitJobs.js';
 
-const {
+import {
   createMonitorCostJob,
   createAnalyzeCostJob,
-} = require('../jobSchedularMethods/costMonitoring');
+} from '../jobSchedularMethods/costMonitoring.js';
 
-const { createDataArchiveJob } = require('../jobSchedularMethods/archive');
+import { createDataArchiveJob } from '../jobSchedularMethods/archive.js';
 
-const {
+import {
   removeUnverifiedUser,
   sendPasswordExpiryEmails,
   sendAccountDeleteEmails,
-} = require('../jobSchedularMethods/userManagementJobs.js');
+} from '../jobSchedularMethods/userManagementJobs.js';
 
-const {
+import {
   startLzFileMovementMonitoring,
   startLzFileCountMonitoring,
   startLzSpaceUsageMonitoring,
-} = require('../jobSchedularMethods/lzMonitoring.js');
+} from '../jobSchedularMethods/lzMonitoring.js';
 
 class JobScheduler {
   constructor() {
@@ -357,4 +357,4 @@ class JobScheduler {
   }
 }
 
-module.exports = new JobScheduler();
+export default new JobScheduler();

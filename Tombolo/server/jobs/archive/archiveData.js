@@ -1,6 +1,6 @@
-const { CostMonitoringDataArchiveService } = require('../../services');
-const { sequelize } = require('../../models');
-const { parentPort } = require('worker_threads');
+import { CostMonitoringDataArchiveService } from '../../services.js';
+import { sequelize } from '../../models.js';
+import { parentPort } from 'worker_threads';
 
 const costMonitoringArchiveService = new CostMonitoringDataArchiveService(
   sequelize

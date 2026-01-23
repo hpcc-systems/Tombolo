@@ -1,13 +1,13 @@
-const logger = require('../config/logger');
-const {
+import logger from '../config/logger.js';
+import {
   Integration,
   IntegrationMapping,
   OrbitBuild,
   MonitoringNotification,
   NotificationQueue,
-} = require('../models');
+} from '../models.js';
 
-const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
+import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
 (async () => {
   try {

@@ -1,5 +1,5 @@
-const { NotificationQueue } = require('../../models');
-const logger = require('../../config/logger');
+import { NotificationQueue } from '../../models.js';
+import logger from '../../config/logger.js';
 
 const {
   retryOptions: { maxRetries, retryDelays },
@@ -45,7 +45,4 @@ async function updateNotificationQueueOnError({
   }
 }
 
-module.exports = {
-  calculateRetryAfter,
-  updateNotificationQueueOnError,
-};
+export { calculateRetryAfter, updateNotificationQueueOnError };

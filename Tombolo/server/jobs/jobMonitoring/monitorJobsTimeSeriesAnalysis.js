@@ -1,20 +1,20 @@
-const logger = require('../../config/logger');
-const { logOrPostMessage } = require('../jobUtils');
-const Sequelize = require('sequelize');
-const { v4: uuidv4 } = require('uuid');
-const {
+import logger from '../../config/logger.js';
+import { logOrPostMessage } from '../jobUtils.js';
+import Sequelize from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
+import {
   NotificationQueue,
   JobMonitoringData,
   JobMonitoring,
-} = require('../../models');
-const {
+} from '../../models.js';
+import {
   WUAlertDataPoints,
   convertTotalClusterTimeToSeconds,
   convertSecondsToHumanReadableTime,
   getOwnerEmailFromUsername,
-} = require('./monitorJobsUtil');
+} from './monitorJobsUtil.js';
 
-const { trimURL } = require('../../utils/authUtil');
+import { trimURL } from '../../utils/authUtil.js';
 
 // Models
 

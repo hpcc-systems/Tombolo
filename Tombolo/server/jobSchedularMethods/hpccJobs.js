@@ -1,6 +1,6 @@
-const path = require('path');
+import path from 'path';
 
-const logger = require('../config/logger');
+import logger from '../config/logger.js';
 
 const JOB_STATUS_POLLER = 'statusPoller.js';
 
@@ -28,6 +28,4 @@ async function scheduleJobStatusPolling() {
   }
 }
 
-module.exports = {
-  scheduleJobStatusPolling,
-};
+export { scheduleJobStatusPolling };

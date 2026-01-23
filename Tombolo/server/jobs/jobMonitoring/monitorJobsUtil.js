@@ -1,10 +1,10 @@
 // Local imports
-const { AsrDomain, AsrProduct } = require('../../models');
+import { AsrDomain, AsrProduct } from '../../models.js';
 
 //Package(s)
-const moment = require('moment');
-const cronParser = require('cron-parser');
-const logger = require('../../config/logger');
+import moment from 'moment';
+import cronParser from 'cron-parser';
+import logger from '../../config/logger.js';
 
 // All possible intermediate states
 const intermediateStates = [
@@ -564,7 +564,7 @@ function calculateRunOrCompleteByTimes({
   backDateInMs = 0,
 }) {
   // determine frequency
-  frequency = schedule[0].frequency;
+  let frequency = schedule[0].frequency;
 
   switch (frequency) {
     case 'daily':
@@ -998,7 +998,7 @@ const getOwnerEmailFromUsername = async username => {
   }
 };
 
-module.exports = {
+export {
   matchJobName,
   findStartAndEndTimes,
   calculateRunOrCompleteByTimes,

@@ -1,17 +1,15 @@
 // Packages
-const { Op } = require('sequelize');
+import { Op } from 'sequelize';
 
 //Local Imports
-const { NotificationQueue, SentNotification } = require('../../models');
-const logger = require('../../config/logger');
+import { NotificationQueue, SentNotification } from '../../models.js';
+import logger from '../../config/logger.js';
 const {
   sendEmail,
   retryOptions: { maxRetries },
 } = require('../../config/emailConfig');
-const {
-  updateNotificationQueueOnError,
-} = require('./notificationsHelperFunctions');
-const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode');
+import { updateNotificationQueueOnError } from './notificationsHelperFunctions.js';
+import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js';
 
 (async () => {
   try {
@@ -99,7 +97,7 @@ const emailNotificationHtmlCode = require('../../utils/emailNotificationHtmlCode
           };
 
           // Send email
-          const emailResponse = await sendEmail({ ...emailPayload });
+          await sendEmail({ ...emailPayload });
 
           // Assume success - if no error is thrown
           successfulDelivery.push({ ...emailPayload, templateName });

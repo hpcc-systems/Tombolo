@@ -1,15 +1,15 @@
 /* eslint-disable */
-const path = require('path');
-const {
+import path from 'path';
+import {
   lz_monitoring_interval,
   lz_file_count_monitoring_interval,
   lz_space_usage_monitoring_interval,
-} = require('../config/monitorings');
-const logger = require('../config/logger');
-const {
+} from '../config/monitorings.js';
+import logger from '../config/logger.js';
+import {
   generateTimeSlotsForJobMonitoring,
   generateIntervalString,
-} = require('./jobSchedularUtils.js');
+} from './jobSchedularUtils.js';
 
 // Constants
 const LZ_FILE_MOVEMENT_MONITORING_FILE_NAME = 'lzFileMovementMonitoring.js';
@@ -125,7 +125,7 @@ async function startLzSpaceUsageMonitoring() {
   }
 }
 
-module.exports = {
+export {
   startLzFileMovementMonitoring,
   startLzFileCountMonitoring,
   startLzSpaceUsageMonitoring,

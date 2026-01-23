@@ -1,12 +1,12 @@
-const path = require('path');
+import path from 'path';
 
 //Local imports
-const logger = require('../config/logger');
-const {
+import logger from '../config/logger.js';
+import {
   clusterReachabilityMonitoringInterval,
   cluster_monitoring_interval,
   clusterContainerizationCheckInterval,
-} = require('../config/monitorings.js');
+} from '../config/monitorings.js';
 
 // Constants
 const CLUSTER_MONITORING_FILE_NAME = 'clusterMonitoring.js';
@@ -149,7 +149,7 @@ async function checkClusterContainerization() {
   }
 }
 
-module.exports = {
+export {
   scheduleClusterTimezoneOffset,
   createClusterUsageHistoryJob,
   checkClusterReachability,

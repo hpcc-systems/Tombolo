@@ -1,5 +1,5 @@
-const logger = require('../config/logger');
-const path = require('path');
+import logger from '../config/logger.js';
+import path from 'path';
 
 function createNewBreeJob({
   uniqueJobName,
@@ -197,7 +197,7 @@ function logBreeJobs() {
   }
 }
 
-module.exports = {
+export {
   createNewBreeJob,
   removeJobFromScheduler,
   removeAllFromBree,

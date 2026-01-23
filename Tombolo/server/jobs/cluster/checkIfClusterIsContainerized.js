@@ -1,9 +1,9 @@
-const { logOrPostMessage } = require('../jobUtils');
-const axios = require('axios');
+import { logOrPostMessage } from '../jobUtils.js';
+import axios from 'axios';
 
 // Local imports
-const { Cluster } = require('../../models');
-const { decryptString } = require('@tombolo/shared');
+import { Cluster } from '../../models.js';
+import { decryptString } from '@tombolo/shared';
 
 (async () => {
   const startTime = new Date();

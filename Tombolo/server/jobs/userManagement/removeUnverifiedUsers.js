@@ -1,10 +1,10 @@
 // imports
-const { Op } = require('sequelize');
-const { deleteUser } = require('../../utils/authUtil');
+import { Op } from 'sequelize';
+import { deleteUser } from '../../utils/authUtil.js';
 
 //Local Imports
-const { logOrPostMessage } = require('../jobUtils');
-const { user } = require('../../models');
+import { logOrPostMessage } from '../jobUtils.js';
+import { user } from '../../models.js';
 
 (async () => {
   try {

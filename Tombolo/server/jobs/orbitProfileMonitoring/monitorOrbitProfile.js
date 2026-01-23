@@ -1,10 +1,7 @@
-const { logOrPostMessage } = require('../jobUtils');
-const { OrbitProfileMonitoring, OrbitBuildData } = require('../../models');
+import { logOrPostMessage } from '../jobUtils.js';
+import { OrbitProfileMonitoring, OrbitBuildData } from '../../models.js';
 
-const {
-  runMySQLQuery,
-  orbitDbConfig,
-} = require('../../utils/runSQLQueries.js');
+import { runMySQLQuery, orbitDbConfig } from '../../utils/runSQLQueries.js';
 
 async function monitorOrbitProfile() {
   const timeStarted = new Date();
@@ -197,6 +194,4 @@ async function monitorOrbitProfile() {
   await monitorOrbitProfile();
 })();
 
-module.exports = {
-  monitorOrbitProfile,
-};
+export { monitorOrbitProfile };

@@ -1,14 +1,14 @@
 // Imports
-const { workerData } = require('worker_threads');
-const { logOrPostMessage } = require('../jobUtils');
-const { decryptString } = require('@tombolo/shared');
+import { workerData } from 'worker_threads';
+import { logOrPostMessage } from '../jobUtils.js';
+import { decryptString } from '@tombolo/shared';
 
 // Local Imports
-const { Cluster, JobMonitoringData } = require('../../models');
-const { WorkunitsService } = require('@hpcc-js/comms');
-const shallowCopyWithoutNested = require('../../utils/shallowCopyWithoutNested.js');
-const { WUInfoOptions } = require('./monitorJobsUtil');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
+import { Cluster, JobMonitoringData } from '../../models.js';
+import { WorkunitsService } from '@hpcc-js/comms';
+import shallowCopyWithoutNested from '../../utils/shallowCopyWithoutNested.js';
+import { WUInfoOptions } from './monitorJobsUtil.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 // Self Invoking function
 (async () => {

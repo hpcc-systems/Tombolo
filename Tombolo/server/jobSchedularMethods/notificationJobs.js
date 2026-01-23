@@ -1,12 +1,8 @@
-const path = require('path');
-const logger = require('../config/logger');
+import path from 'path';
+import logger from '../config/logger.js';
 const PROCESS_EMAIL_NOTIFICATIONS = path.join(
   'notifications',
   'processEmailNotifications.js'
-);
-const PROCESS_TEAMS_NOTIFICATIONS = path.join(
-  'notifications',
-  // 'processTeamsNotifications.js'
 );
 
 async function scheduleEmailNotificationProcessing() {
@@ -53,7 +49,7 @@ async function scheduleEmailNotificationProcessing() {
 //   }
 // }
 
-module.exports = {
+export {
   scheduleEmailNotificationProcessing,
   // scheduleTeamsNotificationProcessing,
 };

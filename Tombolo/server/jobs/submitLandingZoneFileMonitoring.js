@@ -1,18 +1,18 @@
-const axios = require('axios');
-const { parentPort, workerData } = require('worker_threads');
-const { v4: uuidv4 } = require('uuid');
-const moment = require('moment');
+import axios from 'axios';
+import { parentPort, workerData } from 'worker_threads';
+import { v4 as uuidv4 } from 'uuid';
+import moment from 'moment';
 
-const { notify } = require('../routes/notifications/email-notification');
-const logger = require('../config/logger');
-const { FileMonitoring, MonitoringNotification } = require('../models');
-const hpccUtil = require('../utils/hpcc-util');
-const wildCardStringMatch = require('../utils/wildCardStringMatch');
+import { notify } from '../routes/notifications/email-notification.js';
+import logger from '../config/logger.js';
+import { FileMonitoring, MonitoringNotification } from '../models.js';
+import hpccUtil from '../utils/hpcc-util.js';
+import wildCardStringMatch from '../utils/wildCardStringMatch.js';
 
-const {
+import {
   emailBody,
   messageCardBody,
-} = require('./messageCards/notificationTemplate');
+} from './messageCards/notificationTemplate.js';
 
 (async () => {
   try {
@@ -46,8 +46,8 @@ const {
       },
     } = fileMonitoringDetails;
 
-    const cluster = await hpccUtil.getCluster(cluster_id);
-    const { timezone_offset } = cluster;
+    // const cluster = await hpccUtil.getCluster(cluster_id);
+    // const { timezone_offset } = cluster;
 
     let currentTimeStamp = moment.utc().valueOf();
 
@@ -321,7 +321,7 @@ const {
         const { recipients } = teamsNotificationDetails;
         for (let recipient of recipients) {
           try {
-            const { details, value } = currentlyMonitoringNotificationDetails;
+            const { _details, value } = currentlyMonitoringNotificationDetails;
             const notification_id = uuidv4();
             let body = messageCardBody({
               notificationDetails: currentlyMonitoringNotificationDetails,

@@ -1,9 +1,9 @@
-const hpccJSComms = require('@hpcc-js/comms');
-const { logOrPostMessage } = require('../jobUtils');
+import hpccJSComms from '@hpcc-js/comms';
+import { logOrPostMessage } from '../jobUtils.js';
 
-const { Cluster } = require('../../models');
-const hpccUtil = require('../../utils/hpcc-util');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
+import { Cluster } from '../../models.js';
+import hpccUtil from '../../utils/hpcc-util.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 (async () => {
   const startTime = Date.now();

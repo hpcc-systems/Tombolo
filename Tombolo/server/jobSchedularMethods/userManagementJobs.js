@@ -1,5 +1,5 @@
-const path = require('path');
-const logger = require('../config/logger');
+import path from 'path';
+import logger from '../config/logger.js';
 
 async function removeUnverifiedUser() {
   try {
@@ -87,7 +87,7 @@ async function sendAccountDeleteEmails() {
   }
 }
 
-module.exports = {
+export {
   removeUnverifiedUser,
   sendPasswordExpiryEmails,
   sendAccountDeleteEmails,

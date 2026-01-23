@@ -1,14 +1,14 @@
-const axios = require('axios');
-const { notify } = require('../routes/notifications/email-notification');
-const { parentPort, workerData } = require('worker_threads');
-const logger = require('../config/logger');
-const { FileMonitoring, MonitoringNotification } = require('../models');
-const hpccUtil = require('../utils/hpcc-util');
-const { v4: uuidv4 } = require('uuid');
-const {
+import axios from 'axios';
+import { notify } from '../routes/notifications/email-notification.js';
+import { parentPort, workerData } from 'worker_threads';
+import logger from '../config/logger.js';
+import { FileMonitoring, MonitoringNotification } from '../models.js';
+import hpccUtil from '../utils/hpcc-util.js';
+import { v4 as uuidv4 } from 'uuid';
+import {
   emailBody,
   messageCardBody,
-} = require('./messageCards/notificationTemplate');
+} from './messageCards/notificationTemplate.js';
 
 (async () => {
   try {
