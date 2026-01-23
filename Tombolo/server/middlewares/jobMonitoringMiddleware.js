@@ -1,4 +1,4 @@
-const {
+import {
   paramUuids,
   stringBody,
   bodyUuids,
@@ -7,7 +7,7 @@ const {
   arrayBody,
   uuidBody,
   booleanBody,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const validateParamApplicationId = [paramUuids.applicationId];
 const arrayIds = [arrayBody('ids'), uuidBody('ids.*')];
@@ -52,7 +52,7 @@ const validateBulkUpdateJobMonitoring = [arrayBody('metaData')];
 
 const validateGetJobMonitoringById = [paramUuids.id];
 
-module.exports = {
+export {
   validateCreateJobMonitoring,
   validateParamApplicationId,
   validateUpdateJobMonitoring,

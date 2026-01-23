@@ -1,5 +1,5 @@
-const { body } = require('express-validator');
-const {
+import { body } from 'express-validator';
+import {
   emailBody,
   objectBody,
   uuidParam,
@@ -7,12 +7,12 @@ const {
   COMMENT_LENGTH,
   stringBody,
   bodyUuids,
-} = require('./commonMiddleware');
-const jwt = require('jsonwebtoken');
-const { sendError } = require('../utils/response');
+} from './commonMiddleware.js';
+import jwt from 'jsonwebtoken';
+import { sendError } from '../utils/response.js';
 
-const logger = require('../config/logger');
-const { User } = require('../models');
+import logger from '../config/logger.js';
+import { User } from '../models.js';
 
 // Validate registration payload
 const validateNewUserPayload = [
@@ -135,7 +135,7 @@ const validateEmailInBody = [emailBody('email')];
 const validateResetToken = [uuidParam('token')];
 
 // Exports
-module.exports = {
+export {
   validateNewUserPayload,
   validateLoginPayload,
   validateEmailDuplicate,

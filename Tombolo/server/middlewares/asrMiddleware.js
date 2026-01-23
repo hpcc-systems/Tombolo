@@ -1,4 +1,4 @@
-const {
+import {
   stringBody,
   intBody,
   arrayBody,
@@ -6,7 +6,7 @@ const {
   uuidParam,
   uuidBody,
   paramUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const createUpdateDomainValidations = [
   stringBody('name'),
@@ -46,7 +46,7 @@ const validateGetDomainsForMonitoringType = [uuidParam('monitoringTypeId')];
 
 const validateGetCategoriesForDomain = [uuidParam('domainId')];
 
-module.exports = {
+export {
   validateCreateDomain,
   validateUpdateDomain,
   validateDeleteDomain,
