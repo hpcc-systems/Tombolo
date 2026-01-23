@@ -1,17 +1,17 @@
 // Imports from node modules
-const { v4: UUIDV4 } = require('uuid');
-const bcrypt = require('bcryptjs');
-const moment = require('moment');
-const { v4: uuidv4 } = require('uuid');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const { sequelize } = require('../models');
-const { Op } = require('sequelize');
+import { v4 as UUIDV4 } from 'uuid';
+import bcrypt from 'bcryptjs';
+import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { sequelize } from '../models/index.js';
+import { Op } from 'sequelize';
 
 // Local imports
-const logger = require('../config/logger');
-const { sendSuccess, sendError } = require('../utils/response');
-const {
+import logger from '../config/logger.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import {
   User,
   UserRole,
   UserApplication,
@@ -19,21 +19,21 @@ const {
   AccountVerificationCode,
   PasswordResetLink,
   RefreshToken,
-} = require('../models');
-const {
+} from '../models/index.js';
+import {
   setPasswordExpiry,
   trimURL,
   checkPasswordSecurityViolations,
   setPreviousPasswords,
   generatePassword,
   sendAccountUnlockedEmail,
-  deleteUser: deleteUserUtil,
+  deleteUser as deleteUserUtil,
   checkIfSystemUser,
   generateAccessToken,
   generateRefreshToken,
   setTokenCookie,
   generateAndSetCSRFToken,
-} = require('../utils/authUtil');
+} from '../utils/authUtil.js';
 
 const whereNotSystemUser = {
   firstName: {
@@ -281,7 +281,10 @@ const changePassword = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Decode refresh token to get iat and exp
-    const { iat, exp } = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Create new refresh token in database
     await RefreshToken.create(
@@ -731,7 +734,7 @@ const unlockAccount = async (req, res) => {
 };
 
 //Exports
-module.exports = {
+export {
   createUser,
   deleteUser,
   updateBasicUserInfo,

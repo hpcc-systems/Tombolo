@@ -1,17 +1,17 @@
 // Imports from libraries
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-const axios = require('axios');
-const { Op } = require('sequelize');
-const moment = require('moment');
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
+import { Op } from 'sequelize';
+import moment from 'moment';
 
 // Local imports
-const logger = require('../config/logger');
-const roleTypes = require('../config/roleTypes');
-const { sendSuccess, sendError } = require('../utils/response');
-const CustomError = require('../utils/customError');
-const {
+import logger from '../config/logger.js';
+import roleTypes from '../config/roleTypes.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import CustomError from '../utils/customError.js';
+import {
   User,
   UserRole,
   UserApplication,
@@ -23,8 +23,8 @@ const {
   AccountVerificationCode,
   SentNotification,
   sequelize,
-} = require('../models');
-const {
+} from '../models/index.js';
+import {
   generateAccessToken,
   generateRefreshToken,
   getAUser,
@@ -39,8 +39,8 @@ const {
   setLastLogin,
   handleInvalidLoginAttempt,
   getAccessRequestRecipients,
-} = require('../utils/authUtil');
-const { blacklistToken } = require('../utils/tokenBlackListing');
+} from '../utils/authUtil.js';
+import { blacklistToken } from '../utils/tokenBlackListing.js';
 
 // Helper function to create minimal JWT payload
 const createTokenPayload = (user, tokenId) => {
@@ -1582,7 +1582,7 @@ const getCurrentUser = async (req, res) => {
 };
 
 //Exports
-module.exports = {
+export {
   createBasicUser,
   verifyEmail,
   resetPasswordWithToken,
