@@ -20,7 +20,7 @@
       "env": ["NODE_ENV", "VITE_*"]
     },
     "test": {
-      "cache": true,
+      "cache": false,
       "outputs": ["coverage/**"]
     },
     "lint": {
