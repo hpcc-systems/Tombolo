@@ -281,7 +281,10 @@ const changePassword = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Decode refresh token to get iat and exp
-    const { iat, exp } = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Create new refresh token in database
     await RefreshToken.create(
@@ -480,7 +483,7 @@ const createUser = async (req, res) => {
       email,
       registrationMethod = 'traditional',
       registrationStatus = 'active',
-      verifiedUser = false,
+      verifiedUser = true,
       roles,
       applications,
     } = req.body;
@@ -694,33 +697,11 @@ const unlockAccount = async (req, res) => {
       return sendError(res, 'User not found', 404);
     }
 
-    // Generate temporary password/hash
-    const tempPassword = generatePassword();
-    const salt = bcrypt.genSaltSync(10);
-
-    // Add updated user details
-    user.hash = bcrypt.hashSync(tempPassword, salt);
-    user.forcePasswordReset = true;
-    user.passwordExpiresAt = new Date(
-      new Date().setDate(new Date().getDate() + 2) // 48 hours
-    );
     user.loginAttempts = 0;
     user.accountLocked = { isLocked: false, lockedReason: [] };
 
     // Save user with updated details
     await user.save();
-
-    // Send notification to the user
-    const verificationCode = UUIDV4();
-
-    // Create account verification code
-    await AccountVerificationCode.create({
-      code: verificationCode,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 172800000),
-    });
-
-    await sendAccountUnlockedEmail({ user, tempPassword, verificationCode });
 
     // Response
     return sendSuccess(res, null, 'User account unlocked successfully');
