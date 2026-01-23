@@ -4,7 +4,7 @@ import { Table, Card, Tag, Button, Tooltip, Select, DatePicker, Input, Modal, me
 import { ReloadOutlined, SearchOutlined, CopyOutlined } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import BreadCrumbs from '@/components/common/BreadCrumbs';
-import { authHeader } from '@/components/common/AuthHeader';
+import clustersService from '@/services/clusters.service';
 import moment from 'moment';
 import styles from './ClusterLogs.module.css';
 
@@ -14,6 +14,7 @@ function ClusterLogs() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [clusterID, setClusterID] = useState(null);
+  const [wuid, setWuid] = useState(null);
   const [logs, setLogs] = useState([]);
   const [clusterInfo, setClusterInfo] = useState(null);
   const [logAccessInfo, setLogAccessInfo] = useState(null);
@@ -35,6 +36,7 @@ function ClusterLogs() {
     const searchParams = new URLSearchParams(location.search);
     const clusterId = searchParams.get('clusterID');
     const clusterName = searchParams.get('clusterName');
+    const workunitId = searchParams.get('wuid');
 
     if (!clusterId) {
       history.push('/admin/clusters');
@@ -42,11 +44,12 @@ function ClusterLogs() {
     }
 
     setClusterID(clusterId);
+    setWuid(workunitId);
     if (clusterName) {
       setClusterInfo(prev => ({ ...prev, name: decodeURIComponent(clusterName) }));
     }
     fetchLogAccessInfo(clusterId);
-    fetchLogs(clusterId);
+    fetchLogs(clusterId, {}, workunitId);
   }, [location.search, history]);
 
   // Update time display every minute
@@ -60,47 +63,28 @@ function ClusterLogs() {
 
   const fetchLogAccessInfo = async clusterId => {
     try {
-      const headers = authHeader();
-      const response = await fetch(`/api/cluster/logs/${clusterId}?accessInfoOnly=true`, {
-        headers: headers,
-      });
-      const result = await response.json();
-      if (result.success) {
-        setLogAccessInfo(result.message.logAccessInfo);
-      }
+      const result = await clustersService.getClusterLogs(clusterId, { accessInfoOnly: true });
+      setLogAccessInfo(result.logAccessInfo);
     } catch (error) {
       console.error('Error fetching log access info:', error);
     }
   };
 
-  const fetchLogs = async (clusterId, filterParams = {}) => {
+  const fetchLogs = async (clusterId, filterParams = {}, workunitId = null) => {
     setLoading(true);
     try {
-      const headers = authHeader();
-      const queryParams = new URLSearchParams();
+      const params = {
+        class: filterParams.class,
+        audience: filterParams.audience,
+        startDate: filterParams.startDate,
+        endDate: filterParams.endDate,
+        wuid: workunitId,
+      };
 
-      if (filterParams.class?.length > 0) {
-        filterParams.class.forEach(cls => queryParams.append('class', cls));
-      }
-      if (filterParams.audience) queryParams.append('audience', filterParams.audience);
-      if (filterParams.startDate) queryParams.append('startDate', filterParams.startDate);
-      if (filterParams.endDate) queryParams.append('endDate', filterParams.endDate);
-
-      const url = `/api/cluster/logs/${clusterId}${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-
-      const response = await fetch(url, {
-        headers: headers,
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setLogs(result.message.lines || []);
-        setClusterInfo(prev => ({ ...prev, ...result.message.cluster }));
-        setLastFetched(new Date());
-      } else {
-        console.error('Failed to fetch logs:', result.message);
-      }
+      const result = await clustersService.getClusterLogs(clusterId, params);
+      setLogs(result.lines || []);
+      setClusterInfo(prev => ({ ...prev, ...result.cluster }));
+      setLastFetched(new Date());
     } catch (error) {
       console.error('Error fetching logs:', error);
     } finally {
@@ -111,7 +95,7 @@ function ClusterLogs() {
 
   const handleRefresh = () => {
     if (clusterID) {
-      fetchLogs(clusterID, serverFilters);
+      fetchLogs(clusterID, serverFilters, wuid);
     }
   };
 
@@ -119,7 +103,7 @@ function ClusterLogs() {
     const newFilters = { ...serverFilters, [key]: value };
     setServerFilters(newFilters);
     if (clusterID) {
-      fetchLogs(clusterID, newFilters);
+      fetchLogs(clusterID, newFilters, wuid);
     }
   };
 
@@ -183,9 +167,7 @@ function ClusterLogs() {
       key: 'logid',
       width: 100,
       render: (text, record) => (
-        <span
-          className={styles.logLink}
-          onClick={() => setLogDetailsModal({ visible: true, data: record })}>
+        <span className={styles.logLink} onClick={() => setLogDetailsModal({ visible: true, data: record })}>
           {text}
         </span>
       ),
