@@ -1,5 +1,5 @@
-const { body, param, query } = require('express-validator');
-const { APPROVAL_STATUS } = require('../config/constants');
+import { body, param, query } from 'express-validator';
+import { APPROVAL_STATUS } from '../config/constants.js';
 
 const NAME_LENGTH = { min: 2, max: 50 };
 const DESCRIPTION_LENGTH = { min: 10, max: 500 };
@@ -8,7 +8,7 @@ const COMMENT_LENGTH = { min: 4, max: 200 };
 const EMAIL_LENGTH = { max: 100 };
 const PASSWORD_LENGTH = { min: 8, max: 75 };
 const DEFAULT_LENGTH = { max: 200 };
-const TITLE_REGEX = /^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/;
+const TITLE_REGEX = /^[a-zA-Z]{1}[a-zA-Z0-9_: .-]*$/;
 const APPROVAL_STATUSES = [
   APPROVAL_STATUS.APPROVED,
   APPROVAL_STATUS.REJECTED,
@@ -307,7 +307,7 @@ const paramUuids = {
   dataFlowId: uuidParam('dataFlowId'),
 };
 
-module.exports = {
+export {
   stringBody,
   stringQuery,
   stringParam,

@@ -1,9 +1,9 @@
-const {
+import {
   stringBody,
   DESCRIPTION_LENGTH,
   arrayBody,
   emailBody,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const validateInstancePayload = [
   stringBody('name', true),
@@ -18,6 +18,4 @@ const validateInstancePayload = [
   stringBody('accessRequestEmailRecipientsRoles.*', true),
 ];
 
-module.exports = {
-  validateInstancePayload,
-};
+export { validateInstancePayload };

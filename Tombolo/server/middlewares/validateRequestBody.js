@@ -1,7 +1,7 @@
-const { validationResult } = require('express-validator');
-const validatorUtil = require('../utils/validator');
-const logger = require('../config/logger');
-const { sendValidationError } = require('../utils/response');
+import { validationResult } from 'express-validator';
+import validatorUtil from '../utils/validator.js';
+import logger from '../config/logger.js';
+import { sendValidationError } from '../utils/response.js';
 
 const validateRequestBody = (req, res, next) => {
   const errors = validationResult(req).formatWith(validatorUtil.errorFormatter);
@@ -17,7 +17,4 @@ const validate = (...rules) => {
   return [...allRules, validateRequestBody];
 };
 
-module.exports = {
-  validateRequestBody,
-  validate,
-};
+export { validateRequestBody, validate };

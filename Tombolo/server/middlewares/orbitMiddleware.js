@@ -1,11 +1,11 @@
-const {
+import {
   paramUuids,
   bodyUuids,
   cronBody,
   regexParam,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
-const sharedRegex = /^[a-zA-Z0-9_.\-:\*\? ]*$/;
+const sharedRegex = /^[a-zA-Z0-9_.\-:*? ]*$/;
 
 const validateGetOrbitsByAppId = [paramUuids.application_id];
 const validateCreateOrbit = [bodyUuids.application_id, cronBody('cron')];
@@ -32,7 +32,7 @@ const validateUpdateList = [paramUuids.application_id];
 const validateGetDomains = [paramUuids.application_id];
 const validateGetProducts = [paramUuids.application_id];
 
-module.exports = {
+export {
   validateCreateOrbit,
   validateGetOrbitsByAppId,
   validateSearchByKeyword,
