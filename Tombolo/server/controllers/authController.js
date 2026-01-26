@@ -617,24 +617,50 @@ const resetPasswordWithToken = async (req, res) => {
 
 //Reset Password with Temp Password - Owner/Admin requested
 const resetTempPassword = async (req, res) => {
+  let transaction;
   try {
-    const { password, deviceInfo, token } = req.body;
+    const { password, tempPassword, deviceInfo, token } = req.body;
+
+    // Validate inputs before starting transaction
+    if (!password || !token || !tempPassword) {
+      throw {
+        status: 400,
+        message: 'Password, temp password, and token are required',
+      };
+    }
+
+    // Start transaction
+    transaction = await sequelize.transaction();
 
     const vc = await AccountVerificationCode.findOne({
       where: { code: token },
+      transaction,
     });
 
-    // If no user found send error
+    // If no verification code found
     if (!vc) {
-      return sendError(res, 'User not found', 404);
+      throw { status: 404, message: 'Invalid or expired verification code' };
+    }
+
+    // Check if the token is expired
+    if (vc.expiresAt && moment().isAfter(vc.expiresAt)) {
+      throw { status: 400, message: 'Verification code has expired' };
     }
 
     // Find user by ID
-    let user = await User.findOne({ where: { id: vc.userId } });
+    const user = await User.findOne({
+      where: { id: vc.userId },
+      transaction,
+    });
 
     // If user not found
     if (!user) {
       throw { status: 404, message: 'User not found' };
+    }
+
+    // Verify temp password matches current hash
+    if (!bcrypt.compareSync(tempPassword, user.hash)) {
+      throw { status: 401, message: 'Invalid temporary password' };
     }
 
     // check if password meets security requirements
@@ -644,6 +670,7 @@ const resetTempPassword = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
+      await transaction.rollback();
       return sendError(
         res,
         'Password does not meet security requirements',
@@ -651,33 +678,36 @@ const resetTempPassword = async (req, res) => {
       );
     }
 
-    // Hash the new password and set expiry
-    const salt = bcrypt.genSaltSync(10);
-    user.hash = bcrypt.hashSync(password, salt);
-    user.verifiedUser = true;
-    user.verifiedAt = new Date();
-    user.forcePasswordReset = false;
-    setPasswordExpiry(user);
-    setPreviousPasswords(user);
-    setLastLoginAndReturn(user);
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Save user with updated details
-    await User.update(
+    // Update user with new password and related fields
+    await user.update(
       {
-        hash: user.hash,
-        metaData: user.metaData,
-        passwordExpiresAt: user.passwordExpiresAt,
-        forcePasswordReset: user.forcePasswordReset,
-        lastLoginAt: user.lastLoginAt,
+        hash: hashedPassword,
+        verifiedUser: true,
+        verifiedAt: new Date(),
+        forcePasswordReset: false,
+        lastPasswordUpdate: new Date(),
+        passwordExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+        metaData: {
+          ...user.metaData,
+          previousPasswords: [
+            ...(user.metaData?.previousPasswords || []),
+            user.hash,
+          ].slice(-5), // Keep last 5 passwords
+        },
       },
-      {
-        where: { id: user.id },
-      }
+      { transaction }
     );
+
+    // Remove the verification code
+    await vc.destroy({ transaction });
 
     //remove all sessions for user before initiating new session
     await RefreshToken.destroy({
       where: { userId: user.id },
+      transaction,
     });
 
     // Create token id
@@ -696,22 +726,21 @@ const resetTempPassword = async (req, res) => {
     );
 
     // Save refresh token in DB
-    await RefreshToken.create({
-      id: tokenId,
-      userId: user.id,
-      token: refreshToken,
-      deviceInfo,
-      metaData: {},
-      iat: new Date(iat * 1000),
-      exp: new Date(exp * 1000),
-    });
+    await RefreshToken.create(
+      {
+        id: tokenId,
+        userId: user.id,
+        token: refreshToken,
+        deviceInfo,
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      },
+      { transaction }
+    );
 
-    await setTokenCookie(res, accessToken);
-
-    await generateAndSetCSRFToken(req, res, accessToken);
-
-    //set last login
-    await setLastLogin(user);
+    // Commit transaction before setting cookies
+    await transaction.commit();
 
     // User data obj to send to the client
     const userObj = {
@@ -721,9 +750,24 @@ const resetTempPassword = async (req, res) => {
     // remove hash from user object
     delete userObj.hash;
 
+    // Set cookies and tokens after successful transaction
+    await setTokenCookie(res, accessToken);
+    await generateAndSetCSRFToken(req, res, accessToken);
+
+    //set last login (outside transaction to avoid conflicts)
+    await setLastLogin(user);
+
     // Success response
     return sendSuccess(res, userObj, 'Password updated successfully');
   } catch (err) {
+    // Rollback transaction if it exists
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (rollbackErr) {
+        logger.error(`Transaction rollback failed: ${rollbackErr.message}`);
+      }
+    }
     logger.error(`Reset Temp Password: ${err.message}`);
     return sendError(res, err);
   }
