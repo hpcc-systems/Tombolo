@@ -1,8 +1,8 @@
-const { Op, QueryTypes } = require('sequelize');
-const { WorkUnit, WorkUnitDetails, sequelize } = require('../models');
-const { sendSuccess, sendError } = require('../utils/response');
-const logger = require('../config/logger');
-const { forbiddenSqlKeywords } = require('@tombolo/shared');
+import { Op, QueryTypes } from 'sequelize';
+import { WorkUnit, WorkUnitDetails, sequelize } from '../models/index.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import logger from '../config/logger.js';
+import { forbiddenSqlKeywords } from '@tombolo/shared';
 
 // Build hierarchy from flat details (graphs, scoped by parent prefixes)
 const buildScopeHierarchy = details => {
@@ -232,7 +232,11 @@ async function executeWorkunitSql(req, res) {
     for (const kw of forbiddenSqlKeywords) {
       const re = new RegExp(`\\b${kw}\\b`, 'i');
       if (re.test(withoutComments)) {
-        return sendError(res, 'Only non-destructive SELECT queries are allowed', 400);
+        return sendError(
+          res,
+          'Only non-destructive SELECT queries are allowed',
+          400
+        );
       }
     }
 
@@ -253,19 +257,33 @@ async function executeWorkunitSql(req, res) {
     const tokens = remainder.split(/\s+/);
     const tableToken = tokens[0].replace(/[`\[\]"]/g, '');
     if (tableToken !== 'work_unit_details') {
-      return sendError(res, 'You may only query the work_unit_details table', 400);
+      return sendError(
+        res,
+        'You may only query the work_unit_details table',
+        400
+      );
     }
 
     tokens.shift();
     if (tokens[0] && tokens[0].toLowerCase() === 'as') tokens.shift();
-    const alias = tokens[0] && !['where', 'order', 'group', 'limit', 'join'].includes(tokens[0].toLowerCase()) ? tokens.shift() : 'work_unit_details';
+    const alias =
+      tokens[0] &&
+      !['where', 'order', 'group', 'limit', 'join'].includes(
+        tokens[0].toLowerCase()
+      )
+        ? tokens.shift()
+        : 'work_unit_details';
 
     const rest = tokens.join(' ');
 
     // Disallow multi-table constructs
     const restLower = rest.toLowerCase();
     if (/(\bjoin\b|\bunion\b|\bfrom\b)/i.test(restLower)) {
-      return sendError(res, 'JOINs, UNIONs, and subqueries are not allowed', 400);
+      return sendError(
+        res,
+        'JOINs, UNIONs, and subqueries are not allowed',
+        400
+      );
     }
 
     // Merge enforced WHERE with user's WHERE while preserving ORDER/GROUP/LIMIT
@@ -277,26 +295,37 @@ async function executeWorkunitSql(req, res) {
     if (whereMatch && typeof whereMatch.index === 'number') {
       const whereIdx = whereMatch.index;
       const beforeWhere = restTrimmedAll.substring(0, whereIdx).trim();
-      const afterWhereAll = restTrimmedAll.substring(whereIdx + whereMatch[0].length).trim();
+      const afterWhereAll = restTrimmedAll
+        .substring(whereIdx + whereMatch[0].length)
+        .trim();
 
       let tailStartIdx = -1;
-      const tailMatch = afterWhereAll.match(/\b(order\s+by|group\s+by|limit)\b/i);
+      const tailMatch = afterWhereAll.match(
+        /\b(order\s+by|group\s+by|limit)\b/i
+      );
       if (tailMatch && typeof tailMatch.index === 'number') {
         tailStartIdx = tailMatch.index;
       }
 
-      const userWhereCond = tailStartIdx >= 0 ? afterWhereAll.substring(0, tailStartIdx).trim() : afterWhereAll;
-      const tail = tailStartIdx >= 0 ? afterWhereAll.substring(tailStartIdx).trim() : '';
+      const userWhereCond =
+        tailStartIdx >= 0
+          ? afterWhereAll.substring(0, tailStartIdx).trim()
+          : afterWhereAll;
+      const tail =
+        tailStartIdx >= 0 ? afterWhereAll.substring(tailStartIdx).trim() : '';
 
       const prefix = beforeWhere ? beforeWhere + ' ' : '';
       safeWhereJoined = `${prefix}WHERE (${userWhereCond}) AND (${enforcedWhere})${tail ? ' ' + tail : ''}`;
     } else {
       const restTrimmed = restTrimmedAll;
-      safeWhereJoined = restTrimmed ? `WHERE ${enforcedWhere} ${restTrimmed}` : `WHERE ${enforcedWhere}`;
+      safeWhereJoined = restTrimmed
+        ? `WHERE ${enforcedWhere} ${restTrimmed}`
+        : `WHERE ${enforcedWhere}`;
     }
 
     // Enforce LIMIT cap
-    let finalSql = `SELECT ${selectList} FROM \`work_unit_details\` ${alias === 'work_unit_details' ? '' : 'AS ' + alias} ${safeWhereJoined}`.trim();
+    let finalSql =
+      `SELECT ${selectList} FROM \`work_unit_details\` ${alias === 'work_unit_details' ? '' : 'AS ' + alias} ${safeWhereJoined}`.trim();
     const limitMatch = finalSql.toLowerCase().match(/\blimit\s+(\d+)/);
     if (limitMatch) {
       const n = parseInt(limitMatch[1], 10);
@@ -313,16 +342,18 @@ async function executeWorkunitSql(req, res) {
       logging: false,
     });
 
-    const columns = Array.isArray(rows) && rows.length ? Object.keys(rows[0]) : [];
+    const columns =
+      Array.isArray(rows) && rows.length ? Object.keys(rows[0]) : [];
     return sendSuccess(res, { columns, rows });
   } catch (err) {
     logger.error('Execute workunit SQL error: ', err);
-    const msg = err?.parent?.sqlMessage || err?.message || 'Failed to execute SQL';
+    const msg =
+      err?.parent?.sqlMessage || err?.message || 'Failed to execute SQL';
     return sendError(res, msg, 400);
   }
 }
 
-module.exports = {
+export {
   getWorkunits,
   getWorkunit,
   getWorkunitDetails,

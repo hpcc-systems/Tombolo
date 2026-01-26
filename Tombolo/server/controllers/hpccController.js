@@ -1,15 +1,15 @@
-const axios = require('axios');
-const hpccUtil = require('../utils/hpcc-util');
+import axios from 'axios';
+import hpccUtil from '../utils/hpcc-util.js';
 // const assetUtil = require('../../utils/assets');
-const { Cluster } = require('../models');
-let hpccJSComms = require('@hpcc-js/comms');
+import { Cluster } from '../models/index.js';
+import hpccJSComms from '@hpcc-js/comms';
 
-const lodash = require('lodash');
+import lodash from 'lodash';
 
-const logger = require('../config/logger');
-const moment = require('moment');
-const { getClusterOptions } = require('../utils/getClusterOptions');
-const { sendSuccess, sendError } = require('../utils/response');
+import logger from '../config/logger.js';
+import moment from 'moment';
+import { getClusterOptions } from '../utils/getClusterOptions.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 
 async function fileSearch(req, res) {
   let cluster;
@@ -601,7 +601,7 @@ async function getClusterMetaData(req, res) {
   }
 }
 
-module.exports = {
+export {
   fileSearch,
   superfileSearch,
   querySearch,

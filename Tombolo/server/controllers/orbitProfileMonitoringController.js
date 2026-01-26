@@ -1,15 +1,13 @@
 // Imports from libraries
-const Sequelize = require('sequelize');
+import Sequelize from 'sequelize';
 
 // Local Imports
-const logger = require('../config/logger');
-const { OrbitProfileMonitoring, sequelize } = require('../models');
-const { APPROVAL_STATUS } = require('../config/constants');
-const { sendError, sendSuccess } = require('../utils/response');
-const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
-const {
-  uniqueConstraintErrorHandler,
-} = require('../utils/uniqueConstraintErrorHandler');
+import logger from '../config/logger.js';
+import { OrbitProfileMonitoring, sequelize } from '../models/index.js';
+import { APPROVAL_STATUS } from '../config/constants.js';
+import { sendError, sendSuccess } from '../utils/response.js';
+import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
+import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
 
 // Get all orbit profile monitorings for an application
 const getAllOrbitProfileMonitorings = async (req, res) => {
@@ -266,7 +264,10 @@ const bulkUpdateOrbitProfileMonitoring = async (req, res) => {
 
     if (!Array.isArray(inputMonitorings) || inputMonitorings.length === 0) {
       await transaction.rollback();
-      return sendError(res, 'At least one monitoring record must be provided for bulk update');
+      return sendError(
+        res,
+        'At least one monitoring record must be provided for bulk update'
+      );
     }
     for (const monitoring of inputMonitorings) {
       const { id, metaData } = monitoring;
@@ -293,7 +294,7 @@ const bulkUpdateOrbitProfileMonitoring = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getAllOrbitProfileMonitorings,
   getOrbitProfileMonitoringById,
   createOrbitProfileMonitoring,

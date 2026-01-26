@@ -1,18 +1,16 @@
 // Local imports
-const { sequelize } = require('../models');
-const { sendError, sendSuccess } = require('../utils/response');
-const {
+import { sequelize } from '../models/index.js';
+import { sendError, sendSuccess } from '../utils/response.js';
+import {
   MonitoringType,
   AsrDomain,
-  AsrMonitoringTypeToDomainsRelation: AsrDomainMonitoringTypeToDomains,
+  AsrMonitoringTypeToDomainsRelation as AsrDomainMonitoringTypeToDomains,
   AsrProduct,
   AsrDomainToProductsRelation,
-} = require('../models');
-const logger = require('../config/logger');
-const {
-  uniqueConstraintErrorHandler,
-} = require('../utils/uniqueConstraintErrorHandler');
-const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
+} from '../models/index.js';
+import logger from '../config/logger.js';
+import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
+import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
 
 async function createDomain(req, res) {
   try {
@@ -428,7 +426,7 @@ async function getProductsByDomain(req, res) {
   }
 }
 
-module.exports = {
+export {
   getProductsByDomain,
   getDomainByMonitoringType,
   deleteProduct,

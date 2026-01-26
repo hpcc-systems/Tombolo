@@ -1,12 +1,12 @@
-const Sequelize = require('sequelize');
+import Sequelize from 'sequelize';
 
 //Local imports
-const logger = require('../config/logger');
-const { sendError, sendSuccess } = require('../utils/response');
-const { JobMonitoring, JobMonitoringData, Cluster } = require('../models');
-const JobScheduler = require('../jobSchedular/job-scheduler');
-const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
-const { APPROVAL_STATUS } = require('../config/constants');
+import logger from '../config/logger.js';
+import { sendError, sendSuccess } from '../utils/response.js';
+import { JobMonitoring, JobMonitoringData, Cluster } from '../models/index.js';
+import JobScheduler from '../jobSchedular/job-scheduler.js';
+import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
+import { APPROVAL_STATUS } from '../config/constants.js';
 
 const Op = Sequelize.Op;
 
@@ -361,7 +361,7 @@ async function getJobMonitoringData(req, res) {
   }
 }
 
-module.exports = {
+export {
   getJobMonitoringData,
   bulkUpdateJobMonitoring,
   toggleJobMonitoring,

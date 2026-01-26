@@ -1,6 +1,6 @@
-const { MonitoringType } = require('../models');
-const logger = require('../config/logger');
-const { sendError, sendSuccess } = require('../utils/response');
+import { MonitoringType } from '../models/index.js';
+import logger from '../config/logger.js';
+import { sendError, sendSuccess } from '../utils/response.js';
 
 async function getMonitoringTypes(req, res) {
   try {
@@ -79,7 +79,7 @@ async function getMonitoringTypeByName(req, res) {
   }
 }
 
-module.exports = {
+export {
   getMonitoringTypeByName,
   updateMonitoringType,
   deleteMonitoringType,

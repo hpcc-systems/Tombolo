@@ -1,27 +1,25 @@
-const clusters = require('../cluster-whitelist');
-const {
+import clusters from '../cluster-whitelist.js';
+import {
   AccountService,
   TopologyService,
   WorkunitsService,
   LogaccessService,
-} = require('@hpcc-js/comms');
-const axios = require('axios');
-const xml2js = require('xml2js');
+} from '@hpcc-js/comms';
+import axios from 'axios';
+import xml2js from 'xml2js';
 
-const logger = require('../config/logger');
-const { Cluster } = require('../models');
-const { parseWorkunitTimestamp } = require('@tombolo/shared');
-const { encryptString, decryptString } = require('@tombolo/shared');
-const CustomError = require('../utils/customError.js');
-const { getClusterOptions } = require('../utils/getClusterOptions');
-const hpccUtil = require('../utils/hpcc-util.js');
-const hpccJSComms = require('@hpcc-js/comms');
-const moment = require('moment');
-const {
-  uniqueConstraintErrorHandler,
-} = require('../utils/uniqueConstraintErrorHandler');
-const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
-const { sendSuccess, sendError } = require('../utils/response');
+import logger from '../config/logger.js';
+import { Cluster } from '../models/index.js';
+import { parseWorkunitTimestamp } from '@tombolo/shared';
+import { encryptString, decryptString } from '@tombolo/shared';
+import CustomError from '../utils/customError.js';
+import { getClusterOptions } from '../utils/getClusterOptions.js';
+import hpccUtil from '../utils/hpcc-util.js';
+import hpccJSComms from '@hpcc-js/comms';
+import moment from 'moment';
+import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
+import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 
 // Add a cluster - Without sending progress updates to client
 const addCluster = async (req, res) => {
@@ -912,7 +910,7 @@ const getClusterLogs = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   addCluster,
   addClusterWithProgress,
   getClusters,
