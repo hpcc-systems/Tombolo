@@ -36,8 +36,8 @@ vi.mock('@/components/common/passwordComplexityValidator', () => ({
     if (options?.generateContent) {
       return <div>Password requirements</div>;
     }
-    // When used for validation, return array with one element (password validator expects at least one element)
-    return [{ attribute: 'dummy' }];
+    // When used for validation, return object with errors array
+    return { errors: [{ attribute: 'dummy' }] };
   }),
 }));
 
@@ -53,7 +53,7 @@ describe('ResetTempPassword', () => {
     vi.clearAllMocks();
     // Mock window.location.href
     delete window.location;
-    window.location = { href: vi.fn() };
+    window.location = { href: 'http://localhost/reset-password/mock-token-123' };
   });
 
   describe('Component Rendering', () => {
@@ -183,6 +183,7 @@ describe('ResetTempPassword', () => {
           password: 'NewSecurePassword123!',
           confirmPassword: 'NewSecurePassword123!',
           email: mockEmail,
+          token: 'mock-token-123',
           deviceInfo: expect.any(Object),
         });
       });

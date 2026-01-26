@@ -46,8 +46,8 @@ vi.mock('@/components/common/passwordComplexityValidator', () => ({
     if (options.generateContent) {
       return <div>Password requirements</div>;
     }
-    // When used for validation, return array with one element (password validator expects at least one element)
-    return [{ attribute: 'dummy' }];
+    // When used for validation, return object with errors array
+    return { errors: [{ attribute: 'dummy' }] };
   }),
 }));
 

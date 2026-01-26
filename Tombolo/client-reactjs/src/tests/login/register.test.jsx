@@ -42,12 +42,12 @@ vi.mock('@/components/common/passwordComplexityValidator', () => ({
       return React.createElement('div', {}, 'Password Complexity');
     }
 
-    // Otherwise return error array
+    // Otherwise return object with errors array
     if (hasErrors) {
-      return [{ attributes: [] }, { type: 'length' }];
+      return { errors: [{ attributes: [] }, { type: 'length' }] };
     }
 
-    return [{ attributes: [] }];
+    return { errors: [{ attributes: [] }] };
   }),
 }));
 
