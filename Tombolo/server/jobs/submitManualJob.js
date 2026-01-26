@@ -1,9 +1,9 @@
-// const { parentPort, workerData } = require('worker_threads');
+// import {parentPort, workerData} from 'worker_threads';
 // const workFlowUtil = require('../utils/workflow-util');
 // const assetUtil = require('../utils/assets.js');
-// const { JobExecution } = require('../models');
-// const { v4: uuidv4 } = require('uuid');
-// const { log, dispatch } = require('./workerUtils')(parentPort);
+// import {JobExecution} from '../models.js';
+// import {v4 as uuidv4} from 'uuid';
+// import {log, dispatch} from './workerUtils.js';(parentPort);
 //
 // let isCancelled = false;
 // if (parentPort) {

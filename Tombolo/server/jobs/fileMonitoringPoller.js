@@ -1,10 +1,10 @@
-// const { parentPort } = require('worker_threads');
+// import {parentPort} from 'worker_threads';
 //
 // const hpccUtil = require('../utils/hpcc-util');
 // const workflowUtil = require('../utils/workflow-util');
-// const { FileMonitoring } = require('../models');
+// import {FileMonitoring} from '../models.js';
 //
-// const { log, dispatch } = require('./workerUtils')(parentPort);
+// import {log, dispatch} from './workerUtils.js';(parentPort);
 //
 // (async wuid => {
 //   try {

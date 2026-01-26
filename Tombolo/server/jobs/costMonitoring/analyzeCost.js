@@ -1,7 +1,5 @@
-const logger = require('../../config/logger');
-const { logOrPostMessage } = require('../jobUtils');
-const { parentPort } = require('worker_threads');
-const {
+import { logOrPostMessage } from '../jobUtils.js';
+import {
   CostMonitoring,
   CostMonitoringData,
   NotificationQueue,
@@ -11,17 +9,17 @@ const {
   AsrProduct,
   Integration,
   SentNotification,
-} = require('../../models');
-const {
+} from '../../models.js';
+import {
   createNotificationPayload,
   findLocalDateTimeAtCluster,
   generateNotificationId,
   nocAlertDescription,
   generateNotificationIdempotencyKey,
-} = require('../jobMonitoring/monitorJobsUtil');
-const { Op } = require('sequelize');
-const _ = require('lodash');
-const currencyCodeToSymbol = require('../../utils/currencyCodeToSymbol');
+} from '../jobMonitoring/monitorJobsUtil.js';
+import { Op } from 'sequelize';
+import _ from 'lodash';
+import currencyCodeToSymbol from '../../utils/currencyCodeToSymbol.js';
 
 const notificationPrefix = 'CM';
 const domainMap = new Map();
@@ -609,7 +607,7 @@ async function analyzeCost() {
   await analyzeCost();
 })();
 
-module.exports = {
+export {
   buildCMIdempotencyKey,
   createCMNotificationPayload,
   getClusters,

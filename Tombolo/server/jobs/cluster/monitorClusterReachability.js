@@ -1,15 +1,11 @@
-const { logOrPostMessage } = require('../jobUtils');
-const { AccountService } = require('@hpcc-js/comms');
+import { logOrPostMessage } from '../jobUtils.js';
+import { AccountService } from '@hpcc-js/comms';
 
-const {
-  passwordExpiryAlertDaysForCluster,
-} = require('../../config/monitorings.js');
-const {
-  passwordExpiryInProximityNotificationPayload,
-} = require('./clusterReachabilityMonitoringUtils.js');
-const { decryptString } = require('@tombolo/shared');
-const { Cluster, NotificationQueue } = require('../../models');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
+import { passwordExpiryAlertDaysForCluster } from '../../config/monitorings.js';
+import { passwordExpiryInProximityNotificationPayload } from './clusterReachabilityMonitoringUtils.js';
+import { decryptString } from '@tombolo/shared';
+import { Cluster, NotificationQueue } from '../../models.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 async function monitorClusterReachability() {
   // UTC time
@@ -153,6 +149,4 @@ async function monitorClusterReachability() {
   await monitorClusterReachability();
 })();
 
-module.exports = {
-  monitorClusterReachability,
-};
+export { monitorClusterReachability };

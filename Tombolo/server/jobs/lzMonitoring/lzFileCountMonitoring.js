@@ -1,21 +1,21 @@
-const {
+import {
   LandingZoneMonitoring,
   Cluster,
   MonitoringType,
   NotificationQueue,
   AsrProduct,
   AsrDomain,
-} = require('../../models');
-const { logOrPostMessage } = require('../jobUtils');
-const { decryptString } = require('@tombolo/shared');
-const { FileSprayService } = require('@hpcc-js/comms');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
-const { generateNotificationId } = require('../jobMonitoring/monitorJobsUtil');
-const {
+} from '../../models.js';
+import { logOrPostMessage } from '../jobUtils.js';
+import { decryptString } from '@tombolo/shared';
+import { FileSprayService } from '@hpcc-js/comms';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
+import { generateNotificationId } from '../jobMonitoring/monitorJobsUtil.js';
+import {
   getFilesFromSingleLzDirectory,
   findLocalDateTimeAtCluster,
-} = require('./lzFileMonitoringUtils');
-const { APPROVAL_STATUS } = require('../../config/constants');
+} from './lzFileMonitoringUtils.js';
+import { APPROVAL_STATUS } from '../../config/constants.js';
 
 const monitoring_name = 'Landing Zone Monitoring';
 

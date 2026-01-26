@@ -1,19 +1,19 @@
 // Imports from libraries
-const { logOrPostMessage } = require('../jobUtils');
-const { WorkunitsService } = require('@hpcc-js/comms');
-const _ = require('lodash');
+import { logOrPostMessage } from '../jobUtils.js';
+import { WorkunitsService } from '@hpcc-js/comms';
+import _ from 'lodash';
 
 // Local imports
-const {
+import {
   JobMonitoring,
   Cluster,
   MonitoringType,
   MonitoringLog,
   NotificationQueue,
   JobMonitoringData,
-} = require('../../models');
-const { decryptString } = require('@tombolo/shared');
-const {
+} from '../../models.js';
+import { decryptString } from '@tombolo/shared';
+import {
   matchJobName,
   wuStartTimeWhenLastScanAvailable,
   wuStartTimeWhenLastScanUnavailable,
@@ -25,10 +25,10 @@ const {
   findLocalDateTimeAtCluster,
   nocAlertDescription,
   WUInfoOptions,
-} = require('./monitorJobsUtil');
-const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
-const { APPROVAL_STATUS } = require('../../config/constants');
+} from './monitorJobsUtil.js';
+import shallowCopyWithOutNested from '../../utils/shallowCopyWithoutNested.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
+import { APPROVAL_STATUS } from '../../config/constants.js';
 
 // Variables
 const monitoring_name = 'Job Monitoring';
@@ -357,6 +357,7 @@ const monitoring_name = 'Job Monitoring';
               text: `Job monitoring: Error while trying to retrieve/save wuInfo for ${wu.Wuid} : ${err.message}`,
             });
           } finally {
+            // eslint-disable-next-line no-unsafe-finally
             continue;
           }
         }

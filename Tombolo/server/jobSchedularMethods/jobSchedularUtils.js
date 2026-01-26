@@ -44,7 +44,4 @@ Expected Result :
 "at 00:00 also at 03:00 also at 06:00"
 */
 
-module.exports = {
-  generateTimeSlotsForJobMonitoring,
-  generateIntervalString,
-};
+export { generateTimeSlotsForJobMonitoring, generateIntervalString };

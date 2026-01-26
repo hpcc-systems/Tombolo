@@ -1,5 +1,5 @@
-const path = require('path');
-const logger = require('../config/logger');
+import path from 'path';
+import logger from '../config/logger.js';
 
 const INTEGRATION_CREATION = 'integrationCreation.js';
 
@@ -15,6 +15,4 @@ async function createIntegrationCreationJob() {
   logger.info('📈 INTEGRATION CREATION JOB STARTED ...');
 }
 
-module.exports = {
-  createIntegrationCreationJob,
-};
+export { createIntegrationCreationJob };

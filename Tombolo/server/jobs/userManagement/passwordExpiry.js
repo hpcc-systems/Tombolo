@@ -1,11 +1,11 @@
 // imports from node modules
-const { Op } = require('sequelize');
-const { v4: uuidv4 } = require('uuid');
+import { Op } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 
 //Local Imports
-const { logOrPostMessage } = require('../jobUtils');
-const { User, NotificationQueue } = require('../../models');
-const { trimURL, getSupportContactEmails } = require('../../utils/authUtil');
+import { logOrPostMessage } from '../jobUtils.js';
+import { User, NotificationQueue } from '../../models.js';
+import { trimURL, getSupportContactEmails } from '../../utils/authUtil.js';
 
 // Constants
 const passwordResetLink = `${trimURL(process.env.WEB_URL)}/myaccount`;

@@ -1,19 +1,19 @@
 const MONITORING_NAME = 'Job Monitoring';
-const { logOrPostMessage } = require('../jobUtils');
-const { WorkunitsService } = require('@hpcc-js/comms');
-const _ = require('lodash');
+import { logOrPostMessage } from '../jobUtils.js';
+import { WorkunitsService } from '@hpcc-js/comms';
+import _ from 'lodash';
 
 // Local imports
-const {
+import {
   Cluster,
   NotificationQueue,
   MonitoringType,
   MonitoringLog,
   JobMonitoringData,
-} = require('../../models');
-const { decryptString } = require('@tombolo/shared');
+} from '../../models.js';
+import { decryptString } from '@tombolo/shared';
 
-const {
+import {
   findLocalDateTimeAtCluster,
   checkIfCurrentTimeIsWithinRunWindow,
   intermediateStates,
@@ -24,9 +24,9 @@ const {
   nocAlertDescription,
   WUInfoOptions,
   inferWuStartTime,
-} = require('./monitorJobsUtil');
-const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
+} from './monitorJobsUtil.js';
+import shallowCopyWithOutNested from '../../utils/shallowCopyWithoutNested.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 (async () => {
   logOrPostMessage({

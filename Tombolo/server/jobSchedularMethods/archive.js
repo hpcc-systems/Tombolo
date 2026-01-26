@@ -1,5 +1,5 @@
-const path = require('path');
-const logger = require('../config/logger');
+import path from 'path';
+import logger from '../config/logger.js';
 
 const ARCHIVE_DATA_FILE_NAME = 'archiveData.js';
 
@@ -30,6 +30,4 @@ function createDataArchiveJob() {
   }
 }
 
-module.exports = {
-  createDataArchiveJob,
-};
+export { createDataArchiveJob };

@@ -1,15 +1,15 @@
-const logger = require('../../config/logger');
-const { parentPort } = require('worker_threads');
-const { logOrPostMessage } = require('../jobUtils');
-const {
+import logger from '../../config/logger.js';
+import { parentPort } from 'worker_threads';
+import { logOrPostMessage } from '../jobUtils.js';
+import {
   CostMonitoring,
   CostMonitoringData,
   MonitoringLog,
   MonitoringType,
-} = require('../../models');
-const { Workunit } = require('@hpcc-js/comms');
-const { getClusters } = require('../../utils/hpcc-util');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
+} from '../../models.js';
+import { Workunit } from '@hpcc-js/comms';
+import { getClusters } from '../../utils/hpcc-util.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 function dateAtOffset(date, offsetMinutes) {
   return new Date(date.getTime() + offsetMinutes * 60 * 1000);
@@ -30,7 +30,7 @@ function toLocalDay(date, offsetMinutes) {
  * @param {boolean} [toIso=false] - Whether to return dates as ISO strings.
  * @returns {{endTime: (Date|string), startTime: (Date|string), isNewDay: (boolean)}}
  */
-function getStartAndEndTime(lastScanTime, offset = 0, toIso = false) {
+function getStartAndEndTime(lastScanTime, _offset = 0, toIso = false) {
   // Always operate in UTC; do not apply any timezone offset.
   const nowUtc = new Date();
 
@@ -354,7 +354,7 @@ async function monitorCost() {
   await monitorCost();
 })();
 
-module.exports = {
+export {
   getStartAndEndTime,
   handleMonitorLogs,
   getCostMonitorings,

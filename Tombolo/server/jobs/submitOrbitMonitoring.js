@@ -1,23 +1,19 @@
-const axios = require('axios');
-const { notify } = require('../routes/notifications/email-notification');
-const { parentPort, workerData } = require('worker_threads');
-const logger = require('../config/logger');
-const {
+import axios from 'axios';
+import { notify } from '../routes/notifications/email-notification.js';
+import { parentPort, workerData } from 'worker_threads';
+import logger from '../config/logger.js';
+import {
   OrbitMonitoring,
   OrbitBuild,
   MonitoringNotification,
-} = require('../models');
-const { v4: uuidv4 } = require('uuid');
-const {
+} from '../models.js';
+import { v4 as uuidv4 } from 'uuid';
+import {
   orbitMonitoringEmailBody,
   orbitMonitoringMessageCard,
-} = require('./messageCards/notificationTemplate');
+} from './messageCards/notificationTemplate.js';
 
-const {
-  runMySQLQuery,
-
-  orbitDbConfig,
-} = require('../utils/runSQLQueries.js');
+import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
 (async () => {
   try {
@@ -28,10 +24,10 @@ const {
 
     const {
       id,
-      name,
+      _name,
       cron,
       build,
-      isActive,
+      _isActive,
       severityCode,
       product,
       businessUnit,
@@ -40,7 +36,7 @@ const {
       secondaryContact,
       application_id,
       metaData: {
-        lastWorkUnit,
+        _lastWorkUnit,
         notifications,
         monitoringCondition,
         monitoringCondition: { notifyCondition },
@@ -148,7 +144,7 @@ const {
       // update orbit monitoring last monitored date
       const date = new Date();
       const currentTimeStamp = date.getTime();
-      metaData = orbitMonitoringDetails.metaData;
+      let metaData = orbitMonitoringDetails.metaData;
       metaData.lastMonitored = currentTimeStamp;
 
       await OrbitMonitoring.update({ metaData }, { where: { id } });

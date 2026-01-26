@@ -1,9 +1,9 @@
-// const { notify } = require('../routes/notifications/email-notification');
-// const { parentPort } = require('worker_threads');
+// import {notify} from '../routes/notifications/email-notification.js';
+// import {parentPort} from 'worker_threads';
 // const logger = require('../config/logger');
-// const { ApiKey, MonitoringNotification } = require('../models');
-// const { v4: uuidv4 } = require('uuid');
-// const { emailBody } = require('./messageCards/notificationTemplate');
+// import {ApiKey, MonitoringNotification} from '../models.js';
+// import {v4 as uuidv4} from 'uuid';
+// import {emailBody} from './messageCards/notificationTemplate.js';
 //
 // (async () => {
 //   try {

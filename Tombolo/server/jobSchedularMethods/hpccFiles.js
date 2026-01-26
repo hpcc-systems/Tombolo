@@ -1,7 +1,7 @@
-const path = require('path');
+import path from 'path';
 
-const { FileMonitoring } = require('../models');
-const logger = require('../config/logger');
+import { FileMonitoring } from '../models.js';
+import logger from '../config/logger.js';
 
 const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
   'submitLandingZoneFileMonitoring.js';
@@ -91,7 +91,7 @@ async function scheduleFileMonitoring() {
   }
 }
 
-module.exports = {
+export {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
