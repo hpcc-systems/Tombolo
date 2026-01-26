@@ -8,6 +8,23 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/tests/setupTests.js',
+    coverage: {
+      enabled: true,
+      provider: 'v8',
+      reporter: ['text-summary', 'lcov', 'html'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'src/tests/',
+        '**/*.test.{js,jsx,ts,tsx}',
+        '**/*.spec.{js,jsx,ts,tsx}',
+        '**/vite.config.js',
+        '**/vitest.config.js',
+        'nginx/',
+        'public/',
+        'eslint.config.mjs',
+      ],
+    },
     // Better test isolation configuration
     pool: 'forks',
     poolOptions: {
