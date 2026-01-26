@@ -11,7 +11,6 @@ import { getDeviceInfo } from './utils';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
-import ResetTempPassword from './ResetTempPassword';
 
 import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 import styles from './login.module.css';
@@ -21,17 +20,17 @@ const authMethodsRaw = import.meta.env.VITE_AUTH_METHODS;
 const methods = Array.isArray(authMethodsRaw)
   ? authMethodsRaw
   : typeof authMethodsRaw === 'string'
-  ? authMethodsRaw
-      .split(',')
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean)
-  : [];
+    ? authMethodsRaw
+        .split(',')
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean)
+    : [];
 
 const hasAllAzureEnv = [
   import.meta.env.VITE_AZURE_CLIENT_ID,
   import.meta.env.VITE_AZURE_TENENT_ID,
   import.meta.env.VITE_AZURE_REDIRECT_URI,
-].every((v) => typeof v === 'string' && v.trim().length > 0);
+].every(v => typeof v === 'string' && v.trim().length > 0);
 
 // Warn once if Azure requested but misconfigured
 if (methods.includes('azure') && !hasAllAzureEnv) {
@@ -43,7 +42,6 @@ const Login = () => {
 
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
-  const [isTempPassword, setIsTempPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [azureLoginAttempted, setAzureLoginAttempted] = useState(false);
   const [email, setEmail] = useState(null);
@@ -51,7 +49,7 @@ const Login = () => {
   const [loginForm] = Form.useForm();
 
   // When the form is submitted, this function is called
-  const onFinish = async (values) => {
+  const onFinish = async values => {
     const { email, password } = values;
     setEmail(email);
     setLoading(true);
@@ -60,16 +58,6 @@ const Login = () => {
     const deviceInfo = getDeviceInfo();
 
     const test = await dispatch(login({ email, password, deviceInfo }));
-
-    if (test?.payload?.type === Constants.LOGIN_TEMP_PW) {
-      setLoading(false);
-      // Since resetLink is no longer provided in the response,
-      // show a message to check email for reset instructions
-      // handleError('You have a temporary password. Please check your email for password reset instructions.');
-      setIsTempPassword(true);
-
-      return;
-    }
 
     if (test.payload?.type === Constants.LOGIN_UNVERIFIED) {
       setUnverifiedUserLoginAttempt(true);
@@ -129,13 +117,13 @@ const Login = () => {
     azureLoginRedirect();
   };
 
-  const azureLoginFunc = async (code) => {
+  const azureLoginFunc = async code => {
     try {
       setLoading(true);
       const res = await dispatch(loginOrRegisterAzureUser(code));
 
       if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
-        //reload page if login is succesful
+        //reload page if login is successful
         window.location.href = '/';
         return;
       }
@@ -158,9 +146,8 @@ const Login = () => {
       {unverifiedUserLoginAttempt && (
         <UnverifiedUser setUnverifiedUserLoginAttempt={setUnverifiedUserLoginAttempt} email={email} />
       )}
-      {isTempPassword && <ResetTempPassword email={email} />}
       {expiredPassword && <ExpiredPassword email={email} />}
-      {!unverifiedUserLoginAttempt && !expiredPassword && !isTempPassword && (
+      {!unverifiedUserLoginAttempt && !expiredPassword && (
         <>
           <Form onFinish={onFinish} layout="vertical" form={loginForm}>
             {loading && (

@@ -618,10 +618,19 @@ const resetPasswordWithToken = async (req, res) => {
 //Reset Password with Temp Password - Owner/Admin requested
 const resetTempPassword = async (req, res) => {
   try {
-    const { password, email, deviceInfo } = req.body;
+    const { password, deviceInfo, token } = req.body;
+
+    const vc = await AccountVerificationCode.findOne({
+      where: { code: token },
+    });
+
+    // If no user found send error
+    if (!vc) {
+      return sendError(res, 'User not found', 404);
+    }
 
     // Find user by ID
-    let user = await getAUser({ email });
+    let user = await User.findOne({ where: { id: vc.userId } });
 
     // If user not found
     if (!user) {
@@ -743,10 +752,20 @@ const loginBasicUser = async (req, res) => {
       );
     }
 
+    //Compare password
+    if (!bcrypt.compareSync(password, user.hash)) {
+      logger.error(`Login : Invalid password for user with email ${email}`);
+      await handleInvalidLoginAttempt({ user, errMessage: genericError });
+    }
+
     // If force password reset is true it means user is issued a temp password and must reset password
     if (user?.forcePasswordReset) {
       logger.error(`Login : Login attempt by user with Temp PW - ${user.id}`);
-      return sendError(res, 'temp-pw', 401); // Use Constants.LOGIN_TEMP_PW
+      return sendError(
+        res,
+        'You are trying to log in with a temporary password. Please follow the secure link sent to your email to set a new password.',
+        401
+      ); // Use Constants.LOGIN_TEMP_PW
     }
 
     // If the accountLocked.isLocked is true, return generic error
@@ -754,13 +773,11 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login Attempt by user with locked account ${email}`
       );
-      return sendError(res, 'account-locked', 401);
-    }
-
-    //Compare password
-    if (!bcrypt.compareSync(password, user.hash)) {
-      logger.error(`Login : Invalid password for user with email ${email}`);
-      await handleInvalidLoginAttempt({ user, errMessage: genericError });
+      return sendError(
+        res,
+        'Your account is locked. Please contact your administrator to regain access',
+        401
+      );
     }
 
     // If not verified user return error
@@ -1206,7 +1223,11 @@ const requestAccess = async (req, res) => {
     const recipients = await getAccessRequestRecipients();
 
     if (recipients.length === 0) {
-      return sendError(res, 'No notification recipients configured', 404);
+      return sendError(
+        res,
+        'Unable to process request - no notification recipients configured to receive access requests. Please contact your administrator.',
+        404
+      );
     }
 
     const existingNotification = await SentNotification.findOne({
@@ -1334,17 +1355,16 @@ const getUserDetailsWithToken = async (req, res) => {
     const { token } = req.params;
 
     //get the user id by the password reset link
-    const userId = await PasswordResetLink.findOne({
+    const resetLink = await PasswordResetLink.findOne({
       where: { id: token },
-
       attributes: ['userId'],
     });
 
-    if (!userId) {
+    if (!resetLink) {
       return sendError(res, 'User not found', 404);
     }
 
-    const id = userId.userId;
+    const id = resetLink.userId;
 
     const user = await User.findOne({
       where: { id: id },
@@ -1375,17 +1395,17 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
     const { token } = req.params;
 
     //get the user id by the password reset link
-    const userId = await AccountVerificationCode.findOne({
+    const verificationCode = await AccountVerificationCode.findOne({
       where: { code: token },
 
       attributes: ['userId'],
     });
 
-    if (!userId) {
+    if (!verificationCode) {
       return sendError(res, 'User not found', 404);
     }
 
-    const id = userId.userId;
+    const id = verificationCode.userId;
 
     const user = await User.findOne({
       where: { id: id },
@@ -1410,11 +1430,11 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      metaData: user.metaData,
+      // metaData: user.metaData,
       newUser: user.newUser,
     };
 
-    return sendSuccess(res, { user: userObj });
+    return sendSuccess(res, userObj);
   } catch (err) {
     logger.error(`getUserDetailsWithVerificationCode: ${err.message}`);
     return sendError(res, err);

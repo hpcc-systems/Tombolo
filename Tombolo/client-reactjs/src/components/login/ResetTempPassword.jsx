@@ -1,5 +1,3 @@
-/* eslint-disable unused-imports/no-unused-imports */
-/* eslint-disable unused-imports/no-unused-vars */
 // Imports from libraries
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Button, Spin, Popover } from 'antd';
@@ -14,7 +12,7 @@ import authService from '@/services/auth.service';
 function ResetTempPassword({ email }) {
   const [loading, setLoading] = useState(false);
   const [popOverContent, setPopOverContent] = useState(null);
-  // const [resetToken, setResetToken] = useState(null);
+  const [resetToken, setResetToken] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
   const [form] = Form.useForm();
 
@@ -22,7 +20,7 @@ function ResetTempPassword({ email }) {
   const finishedTypingRef = useRef(false);
   const isFirstLoad = useRef(true);
 
-  //need to detect when user is finished typing to run check previous password validator, otherwise perofrmance is too slow
+  //need to detect when user is finished typing to run check previous password validator, otherwise performance is too slow
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isFirstLoad.current) {
@@ -47,9 +45,8 @@ function ResetTempPassword({ email }) {
       setPopOverContent(
         passwordComplexityValidator({
           password: pw,
-          generateContent: true,
           user: userDetails,
-          oldPasswordCheck: true,
+          oldPasswordCheck: false,
           newUser: userDetails?.newUser || false,
         })
       );
@@ -57,46 +54,43 @@ function ResetTempPassword({ email }) {
       setPopOverContent(
         passwordComplexityValidator({
           password: pw,
-          generateContent: true,
           user: userDetails,
           newUser: userDetails?.newUser || false,
         })
       );
     }
   };
+
   // On component load, get the token from the URL
-  // useEffect(() => {
-  //   const url = window.location.href;
-  //   const urlParts = url.split('/');
-  //   const token = urlParts[urlParts.length - 1];
-  //   setResetToken(token);
-  // }, []);
+  useEffect(() => {
+    const url = window.location.href;
+    const urlParts = url.split('/');
+    const token = urlParts[urlParts.length - 1];
+    setResetToken(token);
+  }, []);
 
-  // const onLoad = async () => {
-  //   //get user details from service
-  //   try {
-  //     const response = await authService.getUserDetailsWithVerificationCode(resetToken);
+  const onLoad = async () => {
+    //get user details from service
+    try {
+      const response = await authService.getUserDetailsWithVerificationCode(resetToken);
 
-  //     if (!response.success) {
-  //       if (response.message) {
-  //         handleError(response.message);
-  //       } else {
-  //         handleError('An undefined error occurred. Please try again later');
-  //       }
-  //       return;
-  //     }
+      if (!response.email) {
+        throw new Error();
+      }
 
-  //     setUserDetails(response.data?.user || response.user);
-  //   } catch (err) {
-  //     handleError(err.message);
-  //   }
-  // };
+      setUserDetails(response.data?.user || response.user);
+    } catch {
+      handleError(
+        'Unable to validate the password reset link. The link may have expired or been copied incorrectly. Please contact your administrator for a new link.'
+      );
+    }
+  };
 
-  // useEffect(() => {
-  //   if (userDetails === null && resetToken !== null) {
-  //     onLoad();
-  //   }
-  // }, [resetToken, userDetails]);
+  useEffect(() => {
+    if (userDetails === null && resetToken !== null) {
+      onLoad();
+    }
+  }, [resetToken, userDetails]);
 
   // Handle form submission
   const onFinish = async values => {
@@ -105,6 +99,7 @@ function ResetTempPassword({ email }) {
       const resetData = {
         ...values,
         email,
+        token: resetToken,
         deviceInfo: getDeviceInfo(),
       };
       const response = await authService.resetTempPassword(resetData);
@@ -138,35 +133,38 @@ function ResetTempPassword({ email }) {
         ]}>
         <Input.Password size="large" autoComplete="new-temp-password" />
       </Form.Item>
-      <Form.Item
-        required
-        label="New Password"
-        name="password"
-        normalize={value => value.trim()}
-        rules={[
-          {
-            required: true,
-            message: 'Please input your new password!',
-          },
-          {
-            max: 64,
-            message: 'Maximum of 64 characters allowed',
-          },
-        ]}>
-        <Input.Password
-          size="large"
-          autoComplete="new-password"
-          onChange={e => {
-            validatePassword(e.target.value);
-          }}
-          onFocus={e => {
-            validatePassword(e.target.value, true);
-          }}
-          onBlur={e => {
-            validatePassword(e.target.value, true);
-          }}
-        />
-      </Form.Item>
+
+      <Popover placement="right" trigger="focus" title="Password Complexity" content={popOverContent}>
+        <Form.Item
+          required
+          label="New Password"
+          name="password"
+          normalize={value => value.trim()}
+          rules={[
+            {
+              required: true,
+              message: 'Please input your new password!',
+            },
+            {
+              max: 64,
+              message: 'Maximum of 64 characters allowed',
+            },
+          ]}>
+          <Input.Password
+            size="large"
+            autoComplete="new-password"
+            onChange={e => {
+              validatePassword(e.target.value);
+            }}
+            onFocus={e => {
+              validatePassword(e.target.value, true);
+            }}
+            onBlur={e => {
+              validatePassword(e.target.value, true);
+            }}
+          />
+        </Form.Item>
+      </Popover>
       <Form.Item
         required
         label="Confirm Password"

@@ -10,24 +10,23 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
   const [popOverContent, setPopOverContent] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const validatePassword = (value) => {
+  const validatePassword = value => {
     setPopOverContent(
       passwordComplexityValidator({
         password: value,
-        generateContent: true,
         user: {
-          firstName: form.getFieldValue('firstName'),
-          lastName: form.getFieldValue('lastName'),
-          email: form.getFieldValue('email'),
+          firstName: form.getFieldValue('firstName') || '',
+          lastName: form.getFieldValue('lastName') || '',
+          email: form.getFieldValue('email') || '',
         },
-        newUser: true, //disable old password check
+        oldPasswordCheck: false,
       })
     );
   };
 
   useEffect(() => {}, [popOverContent, loading]);
 
-  const onSubmit = async (values) => {
+  const onSubmit = async values => {
     try {
       setLoading(true);
       await onFinish(values);
@@ -120,10 +119,10 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
           <Input.Password
             size="large"
             autoComplete="new-password"
-            onChange={(e) => {
+            onChange={e => {
               validatePassword(e.target.value);
             }}
-            onFocus={(e) => {
+            onFocus={e => {
               validatePassword(e.target.value);
             }}
           />

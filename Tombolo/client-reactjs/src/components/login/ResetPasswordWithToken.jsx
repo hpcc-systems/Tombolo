@@ -48,13 +48,12 @@ const ResetPassword = () => {
         setPopOverContent(
           passwordComplexityValidator({
             password: pw,
-            generateContent: true,
             user: userDetails,
             oldPasswordCheck: true,
           })
         );
       } else {
-        setPopOverContent(passwordComplexityValidator({ password: pw, generateContent: true, user: userDetails }));
+        setPopOverContent(passwordComplexityValidator({ password: pw, user: userDetails }));
       }
     }
   };

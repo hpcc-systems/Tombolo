@@ -43,8 +43,8 @@ const UserManagementTable = ({
       await usersService.unlockAccount({ id });
 
       // Update the user in the table
-      setUsers((prev) =>
-        prev.map((user) => {
+      setUsers(prev =>
+        prev.map(user => {
           if (user.id === id) {
             return {
               ...user,
@@ -59,8 +59,8 @@ const UserManagementTable = ({
       );
 
       // If filters are applied, update the filtered users as well
-      setFilteredUsers((prev) =>
-        prev.map((user) => {
+      setFilteredUsers(prev =>
+        prev.map(user => {
           if (user.id === id) {
             return {
               ...user,
@@ -83,8 +83,8 @@ const UserManagementTable = ({
   const handleDeleteUser = async ({ id }) => {
     try {
       await usersService.delete({ id });
-      setUsers((prev) => prev.filter((user) => user.id !== id));
-      setFilteredUsers((prev) => prev.filter((user) => user.id !== id));
+      setUsers(prev => prev.filter(user => user.id !== id));
+      setFilteredUsers(prev => prev.filter(user => user.id !== id));
       handleSuccess('User deleted successfully');
     } catch (err) {
       handleError('Failed to delete user');
@@ -95,9 +95,9 @@ const UserManagementTable = ({
   const columns = [
     {
       title: '',
-      key: (record) => record.id,
+      key: record => record.id,
       width: 1,
-      render: (record) =>
+      render: record =>
         record.accountLocked &&
         record.accountLocked.isLocked && (
           <Tooltip title="Account Locked">
@@ -125,11 +125,11 @@ const UserManagementTable = ({
       title: 'Roles',
       dataIndex: 'roles',
       key: 'roles',
-      render: (userRoles) => {
+      render: userRoles => {
         const currentRoles = [];
-        userRoles.map((role) => {
+        userRoles.map(role => {
           const userRoleId = role.roleId;
-          roles.map((role) => {
+          roles.map(role => {
             if (role.id === userRoleId) {
               currentRoles.push(role);
             }
@@ -138,7 +138,7 @@ const UserManagementTable = ({
 
         return currentRoles
           .sort((a, b) => a.roleName.localeCompare(b.roleName))
-          .map((role) => <Tag key={role.id}>{role.roleName}</Tag>);
+          .map(role => <Tag key={role.id}>{role.roleName}</Tag>);
       },
     },
     {
@@ -209,7 +209,7 @@ const UserManagementTable = ({
                         <>
                           <div style={{ fontWeight: 'bold' }}>{`Unlock Account`} </div>
                           <div style={{ maxWidth: 460 }}>
-                            {`Clicking 'Yes' will unlock the user's account and send them a password reset link. Do you want to continue?`}
+                            {`Clicking 'Yes' will unlock the user's account. Do you want to continue?`}
                           </div>
                         </>
                       }
@@ -240,13 +240,13 @@ const UserManagementTable = ({
   ];
 
   // When eye icon is clicked, display the user details modal
-  const viewUserDetails = (record) => {
+  const viewUserDetails = record => {
     setSelectedUser(record);
     setDisplayUserDetailsModal(true);
   };
 
   // When edit icon is clicked, display the add  user modal and set the selected user
-  const editUser = (record) => {
+  const editUser = record => {
     setSelectedUser(record);
     setDisplayEditUserModal(true);
   };

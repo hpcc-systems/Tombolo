@@ -39,11 +39,9 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
     }
 
     if (checkOldPassword) {
-      setPopOverContent(
-        passwordComplexityValidator({ password: pw, generateContent: true, user, oldPasswordCheck: true })
-      );
+      setPopOverContent(passwordComplexityValidator({ password: pw, user, oldPasswordCheck: true }));
     } else {
-      setPopOverContent(passwordComplexityValidator({ password: pw, generateContent: true, user }));
+      setPopOverContent(passwordComplexityValidator({ password: pw, user }));
     }
   };
 
@@ -146,13 +144,13 @@ const ChangePasswordModal = ({ changePasswordModalVisible, setChangePasswordModa
             <Input.Password
               size="large"
               autoComplete="new-password"
-              onChange={(e) => {
+              onChange={e => {
                 validatePassword(e.target.value);
               }}
-              onFocus={(e) => {
+              onFocus={e => {
                 validatePassword(e.target.value, true);
               }}
-              onBlur={(e) => {
+              onBlur={e => {
                 validatePassword(e.target.value, true);
               }}
             />

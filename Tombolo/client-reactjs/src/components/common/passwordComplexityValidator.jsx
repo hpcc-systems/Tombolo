@@ -2,7 +2,7 @@ import React from 'react';
 import { CloseCircleOutlined, CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import bcrypt from 'bcryptjs-react';
 
-function passwordComplexityValidator({ password, generateContent, user, oldPasswordCheck, newUser }) {
+function passwordComplexityValidator({ password, user, oldPasswordCheck }) {
   // Define your password complexity rules here
   const minLength = 8;
   const hasUppercase = /[A-Z]/.test(password);
@@ -18,8 +18,8 @@ function passwordComplexityValidator({ password, generateContent, user, oldPassw
   //need to only check for old passwords if oldPasswordCheck flag is passed,
   //this is to avoid performance issues when checking password complexity on the client side
   let isNotOldPassword = 'loading';
-  if (oldPasswordCheck && !newUser) {
-    isNotOldPassword = user?.metaData?.previousPasswords?.every((oldPassword) => {
+  if (oldPasswordCheck) {
+    isNotOldPassword = user?.metaData?.previousPasswords?.every(oldPassword => {
       return !bcrypt.compareSync(password, oldPassword);
     });
   }
@@ -45,7 +45,7 @@ function passwordComplexityValidator({ password, generateContent, user, oldPassw
     ],
   });
 
-  if (!newUser) {
+  if (oldPasswordCheck) {
     errors[0].attributes.push({ name: 'oldPassword', message: oldPasswordMessage });
   }
 
@@ -68,48 +68,42 @@ function passwordComplexityValidator({ password, generateContent, user, oldPassw
   if (!isNotUserInfo) {
     errors.push({ type: 'userInfo' });
   }
-  if (!isNotOldPassword && oldPasswordCheck && !newUser) {
+  if (oldPasswordCheck) {
     errors.push({ type: 'oldPassword' });
   }
 
-  if (generateContent) {
-    const passwordComplexityContent = errors[0].attributes.map((error) => {
-      const errorExistsForAttribute = errors.some((error2) => error2?.type === error.name);
+  const passwordComplexityContent = errors[0].attributes.map(error => {
+    const errorExistsForAttribute = errors.some(error2 => error2?.type === error.name);
 
-      return (
-        <li key={error.name} style={{ marginBottom: '.5rem' }}>
-          {errorExistsForAttribute ? (
-            <>
-              {error.name === 'oldPassword' && isNotOldPassword === 'loading' ? (
-                <LoadingOutlined style={{ color: 'orange', marginRight: '.5rem' }} />
-              ) : (
-                <CloseCircleOutlined style={{ color: 'red', marginRight: '.5rem' }} />
-              )}
-            </>
-          ) : (
-            <>
-              {error.name === 'oldPassword' && isNotOldPassword === 'loading' ? (
-                <LoadingOutlined style={{ color: 'orange', marginRight: '.5rem' }} />
-              ) : (
-                <CheckCircleOutlined style={{ color: 'green', marginRight: '.5rem' }} />
-              )}
-            </>
-          )}
-          <span>{error.message}</span>
-        </li>
-      );
-    });
-
-    const finalContent = (
-      <>
-        <ul style={{ listStyle: 'none', marginLeft: 0, paddingInlineStart: 0 }}>{passwordComplexityContent}</ul>
-      </>
+    return (
+      <li key={error.name} style={{ marginBottom: '.5rem' }}>
+        {errorExistsForAttribute ? (
+          <>
+            {error.name === 'oldPassword' && isNotOldPassword === 'loading' ? (
+              <LoadingOutlined style={{ color: 'orange', marginRight: '.5rem' }} />
+            ) : (
+              <CloseCircleOutlined style={{ color: 'red', marginRight: '.5rem' }} />
+            )}
+          </>
+        ) : (
+          <>
+            {error.name === 'oldPassword' && isNotOldPassword === 'loading' ? (
+              <LoadingOutlined style={{ color: 'orange', marginRight: '.5rem' }} />
+            ) : (
+              <CheckCircleOutlined style={{ color: 'green', marginRight: '.5rem' }} />
+            )}
+          </>
+        )}
+        <span>{error.message}</span>
+      </li>
     );
+  });
 
-    return finalContent;
-  }
-
-  return errors;
+  return (
+    <>
+      <ul style={{ listStyle: 'none', marginLeft: 0, paddingInlineStart: 0 }}>{passwordComplexityContent}</ul>
+    </>
+  );
 }
 
 export default passwordComplexityValidator;
