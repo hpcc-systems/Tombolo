@@ -12,7 +12,7 @@ import jwt from 'jsonwebtoken';
 import { sendError } from '../utils/response.js';
 
 import logger from '../config/logger.js';
-import { User } from '../models.js';
+import { User } from '../models/index.js';
 
 // Validate registration payload
 const validateNewUserPayload = [
