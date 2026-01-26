@@ -1,6 +1,6 @@
 import sql from 'mssql';
 import mysql from 'mysql2/promise';
-import logger from '../config/logger';
+import logger from '../config/logger.js';
 
 const orbitDbConfig = {
   host: process.env.ORBIT_DB ? process.env.ORBIT_DB : '',

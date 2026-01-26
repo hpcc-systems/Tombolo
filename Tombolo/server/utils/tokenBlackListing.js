@@ -1,5 +1,5 @@
-import { TokenBlackList } from '../models';
-import logger from '../config/logger';
+import { TokenBlackList } from '../models/index.js';
+import logger from '../config/logger.js';
 
 // Create the Map (tokenId as key and expiration time as value)
 const tokenBlacklist = new Map();

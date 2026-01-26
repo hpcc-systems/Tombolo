@@ -1,4 +1,4 @@
-import logger from '../config/logger';
+import logger from '../config/logger.js';
 import https from 'https';
 import tls from 'tls';
 import fs from 'fs';

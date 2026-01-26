@@ -3,14 +3,15 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 import moment from 'moment';
+import bcrypt from 'bcryptjs';
 
 // Local Imports
-import logger from '../config/logger';
+import logger from '../config/logger.js';
 import {
   ACCESS_TOKEN_EXPIRY,
   REFRESH_TOKEN_EXPIRY,
   TOKEN_COOKIE_MAX_AGE,
-} from '../config/tokens';
+} from '../config/tokens.js';
 import {
   User,
   UserRole,
@@ -21,9 +22,8 @@ import {
   InstanceSettings,
   NotificationQueue,
   AccountVerificationCode,
-} from '../models';
-import { generateToken } from '../middlewares/csrfMiddleware';
-import bcrypt from 'bcryptjs';
+} from '../models/index.js';
+import { generateToken } from '../middlewares/csrfMiddleware.js';
 
 const csrfHeaderName = 'x-csrf-token';
 

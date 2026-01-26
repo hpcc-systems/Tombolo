@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { Cluster } from '../models';
+import { Cluster } from '../models/index.js';
 import * as hpccJSComms from '@hpcc-js/comms';
 import { decryptString } from '@tombolo/shared';
 import { getClusterOptions } from './getClusterOptions.js';
+import logger from '../config/logger.js';
 
 import cp from 'child_process';
-import logger from '../config/logger';
 
 export async function fileInfo(fileName, clusterId) {
   try {
@@ -72,10 +72,10 @@ async function getIndexColumns(cluster, indexName) {
     );
     const result = response.data;
     if (result.DFUGetFileMetaDataResponse != undefined) {
-      var indexColumns =
-          result.DFUGetFileMetaDataResponse.DataColumns.DFUDataColumn,
-        nonkeyedColumns = [],
-        keyedColumns = [];
+      const indexColumns =
+        result.DFUGetFileMetaDataResponse.DataColumns.DFUDataColumn;
+      const nonkeyedColumns = [];
+      const keyedColumns = [];
       if (indexColumns != undefined) {
         indexColumns.forEach(function (column) {
           if (column.IsKeyedColumn) {
@@ -100,7 +100,7 @@ async function getIndexColumns(cluster, indexName) {
     }
     return columns;
   } catch (err) {
-    logger.error('error occured: ' + err);
+    logger.error('error occurred: ' + err);
     return columns;
   }
 }

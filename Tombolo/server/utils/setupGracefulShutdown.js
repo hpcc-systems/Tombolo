@@ -1,4 +1,4 @@
-import logger from '../config/logger';
+import logger from '../config/logger.js';
 
 export default function setupGracefulShutdown({
   server,
