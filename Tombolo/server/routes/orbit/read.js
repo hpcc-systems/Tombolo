@@ -62,7 +62,7 @@ router.post('/', validate(validateCreateOrbit), async (req, res) => {
     }
 
     //destructure out of recordset and place inside of new metaData
-    const { WorkUnit, Date, Status } = wuResult[0][0];
+    const { WorkUnit, Date, Status } = wuResult[0];
 
     const metaData = req.body.metaData;
 
@@ -268,7 +268,6 @@ router.put('/', validate(validateUpdateOrbitMonitor), async (req, res) => {
       id,
       name,
       build,
-      _notifyCondition,
       severityCode,
       product,
       businessUnit,
@@ -559,7 +558,7 @@ router.post(
       const query =
         "select * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc LIMIT 10";
 
-      const result = runMySQLQuery(query, orbitDbConfig);
+      const result = await runMySQLQuery(query, orbitDbConfig);
 
       const sentNotifications = [];
       //just grab the rows from result
@@ -646,7 +645,7 @@ router.post(
                   { lastRun: newBuild.metaData.lastRun },
                   { workunit: newBuild.metaData.workunit },
                 ];
-                let title = 'Orbit Build Detectd With Megaphone Status';
+                let title = 'Orbit Build Detected With Megaphone Status';
                 let notification_id = uuidv4();
                 const cardBody = notificationTemplate.orbitBuildMessageCard(
                   title,
