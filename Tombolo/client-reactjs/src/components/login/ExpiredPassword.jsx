@@ -71,7 +71,7 @@ function ExpiredPassword({ email }) {
       setSuccessMessage(response.message);
       setResetting(false);
       setResetSuccess(true);
-    } catch (err) {
+    } catch {
       setResetError(true);
       setResetting(false);
     }

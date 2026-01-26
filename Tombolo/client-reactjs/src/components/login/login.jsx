@@ -34,6 +34,7 @@ const hasAllAzureEnv = [
 
 // Warn once if Azure requested but misconfigured
 if (methods.includes('azure') && !hasAllAzureEnv) {
+  // eslint-disable-next-line no-console
   console.warn('[Login] Azure auth is enabled but missing/invalid environment variables');
 }
 

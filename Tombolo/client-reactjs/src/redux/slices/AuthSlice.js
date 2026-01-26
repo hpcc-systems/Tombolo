@@ -79,7 +79,7 @@ export const login = createAsyncThunk('auth/login', async ({ email, password, de
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
     await authService.logoutBasicUser();
-  } catch (error) {
+  } catch {
     // Even if logout API fails, we still want to clear local storage
     // Error logged by interceptor
   }
@@ -174,7 +174,7 @@ export const azureLoginRedirect = () => {
     const tenant_id = import.meta.env.VITE_AZURE_TENENT_ID;
 
     window.location.href = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
-  } catch (e) {
+  } catch {
     // Error logged by global error handler
     handleError('An error occurred while trying to login with Microsoft.');
   }
@@ -241,9 +241,6 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
-        console.log('------------------------');
-        console.log('action.payload.type: ', action.payload.type);
-        console.log('------------------------');
         state.loading = false;
         if (action.payload.type === Constants.LOGIN_SUCCESS) {
           const user = action.payload.user;

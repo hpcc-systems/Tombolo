@@ -31,7 +31,7 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
       setLoading(true);
       await onFinish(values);
       setLoading(false);
-    } catch (e) {
+    } catch {
       setLoading(false);
     }
   };

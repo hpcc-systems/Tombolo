@@ -71,7 +71,7 @@ const Wizard = () => {
       try {
         await instanceForm.validateFields();
         setCurrentStep(currentStep + 1);
-      } catch (error) {
+      } catch {
         return;
       }
       return;
@@ -80,7 +80,7 @@ const Wizard = () => {
       try {
         await userForm.validateFields();
         setCurrentStep(currentStep + 1);
-      } catch (error) {
+      } catch {
         return;
       }
       return;
@@ -142,7 +142,7 @@ const Wizard = () => {
       await wizardService.completeFirstRun({
         instanceInfo: values,
         abortController,
-        onProgress: (text) => {
+        onProgress: text => {
           // Get only the new data since last progress event
           const newData = text.substring(processedLength);
           processedLength = text.length;
@@ -150,24 +150,24 @@ const Wizard = () => {
           if (newData.trim()) {
             const jsonStrings = newData
               .split('\n')
-              .filter((str) => str.trim() !== '')
-              .map((str) => str.replace(/^data: /, ''));
+              .filter(str => str.trim() !== '')
+              .map(str => str.replace(/^data: /, ''));
 
             const serverSentEvents = jsonStrings
-              .map((str) => {
+              .map(str => {
                 try {
                   return JSON.parse(str);
-                } catch (e) {
+                } catch {
                   return null;
                 }
               })
-              .filter((event) => event !== null);
+              .filter(event => event !== null);
 
             // Check if any of these events are errors or step is 999
             let hasError = false;
             let errorMessage = '';
 
-            serverSentEvents.forEach((e) => {
+            serverSentEvents.forEach(e => {
               if (e.step === 99) {
                 // Error step
                 hasError = true;
@@ -181,7 +181,7 @@ const Wizard = () => {
             });
 
             // Always update UI with all events first
-            setStepMessage((prev) => [...prev, ...serverSentEvents]);
+            setStepMessage(prev => [...prev, ...serverSentEvents]);
 
             // Handle error after UI update
             if (hasError) {
