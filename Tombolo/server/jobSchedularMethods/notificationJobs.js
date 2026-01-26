@@ -27,29 +27,4 @@ async function scheduleEmailNotificationProcessing() {
   }
 }
 
-// async function scheduleTeamsNotificationProcessing() {
-//   try {
-//     let jobName = 'teams-notification-processing-' + new Date().getTime();
-//     this.bree.add({
-//       name: jobName,
-//       interval: '60s', // Make it 120 seconds in production
-//       path: path.join(__dirname, '..', 'jobs', PROCESS_TEAMS_NOTIFICATIONS),
-//       worker: {
-//         workerData: {
-//           jobName: jobName,
-//           WORKER_CREATED_AT: Date.now(),
-//         },
-//       },
-//     });
-//
-//     this.bree.start(jobName);
-//     logger.info('Teams notification processing job initialized ...');
-//   } catch (err) {
-//     console.error(err);
-//   }
-// }
-
-export {
-  scheduleEmailNotificationProcessing,
-  // scheduleTeamsNotificationProcessing,
-};
+export { scheduleEmailNotificationProcessing };

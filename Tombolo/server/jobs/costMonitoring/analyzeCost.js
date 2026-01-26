@@ -18,7 +18,7 @@ import {
   generateNotificationIdempotencyKey,
 } from '../jobMonitoring/monitorJobsUtil.js';
 import { Op } from 'sequelize';
-import { cloneDeep } from 'lodash';
+import _ from 'lodash';
 import currencyCodeToSymbol from '../../utils/currencyCodeToSymbol.js';
 
 const notificationPrefix = 'CM';
@@ -226,7 +226,7 @@ async function sendNocNotification(
     const hasSeverityRecipients =
       severityRecipients && severityRecipients.length > 0;
     if (severityThresholdPassed && hasSeverityRecipients) {
-      const nocNotificationPayload = cloneDeep(notificationPayload);
+      const nocNotificationPayload = _.cloneDeep(notificationPayload);
       nocNotificationPayload.metaData.notificationDescription =
         nocAlertDescription;
       nocNotificationPayload.metaData.mainRecipients = severityRecipients;

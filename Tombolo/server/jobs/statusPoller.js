@@ -47,9 +47,8 @@ if (parentPort) {
 
         // Workunit is found
         if (WUinfo.Workunit) {
-          ((WUResult.State = WUinfo.Workunit.State),
-            (WUResult.TotalClusterTime =
-              WUinfo.Workunit?.TotalClusterTime || null));
+          WUResult.State = WUinfo.Workunit.State;
+          WUResult.TotalClusterTime = WUinfo.Workunit?.TotalClusterTime || null;
         } else {
           // Workunit is not found
           WUResult.State = 'error';
