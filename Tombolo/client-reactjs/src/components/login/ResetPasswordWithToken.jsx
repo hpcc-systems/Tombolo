@@ -50,10 +50,10 @@ const ResetPassword = () => {
             password: pw,
             user: userDetails,
             oldPasswordCheck: true,
-          })
+          }).content
         );
       } else {
-        setPopOverContent(passwordComplexityValidator({ password: pw, user: userDetails }));
+        setPopOverContent(passwordComplexityValidator({ password: pw, user: userDetails }).content);
       }
     }
   };
@@ -145,18 +145,18 @@ const ResetPassword = () => {
                 if (form.getFieldValue('currentPassword') === value) {
                   return Promise.reject(new Error('New password cannot be the same as the current password!'));
                 }
-                let errors = [];
+                let result;
 
                 if (finishedTypingRef.current) {
-                  errors = passwordComplexityValidator({ password: value, user: userDetails, oldPasswordCheck: true });
+                  result = passwordComplexityValidator({ password: value, user: userDetails, oldPasswordCheck: true });
                 } else {
-                  errors = passwordComplexityValidator({ password: value, user: userDetails });
+                  result = passwordComplexityValidator({ password: value, user: userDetails });
                 }
 
                 finishedTypingRef.current = false;
 
-                //passwordComplexityValidator always returns an array with at least one attributes element
-                if (!value || errors.length === 1) {
+                //passwordComplexityValidator always returns an object with errors array with at least one attributes element
+                if (!value || result.errors.length === 1) {
                   return Promise.resolve();
                 } else {
                   return Promise.reject(new Error('Password does not meet complexity requirements!'));

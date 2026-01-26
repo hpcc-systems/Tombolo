@@ -11,17 +11,16 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
   const [loading, setLoading] = useState(false);
 
   const validatePassword = value => {
-    setPopOverContent(
-      passwordComplexityValidator({
-        password: value,
-        user: {
-          firstName: form.getFieldValue('firstName') || '',
-          lastName: form.getFieldValue('lastName') || '',
-          email: form.getFieldValue('email') || '',
-        },
-        oldPasswordCheck: false,
-      })
-    );
+    const result = passwordComplexityValidator({
+      password: value,
+      user: {
+        firstName: form.getFieldValue('firstName') || '',
+        lastName: form.getFieldValue('lastName') || '',
+        email: form.getFieldValue('email') || '',
+      },
+      oldPasswordCheck: false,
+    });
+    setPopOverContent(result.content);
   };
 
   useEffect(() => {}, [popOverContent, loading]);
@@ -100,16 +99,21 @@ const RegisterUserForm = ({ form, onFinish, ownerRegistration }) => {
             { max: 64, message: 'Maximum of 64 characters allowed' },
             () => ({
               validator(_, value) {
-                //passwordComplexityValidator always returns an array with at least one attributes element
-                const errors = passwordComplexityValidator({
+                if (!value) return Promise.resolve();
+
+                const result = passwordComplexityValidator({
                   password: value,
                   user: {
-                    firstName: form.getFieldValue('firstName'),
-                    lastName: form.getFieldValue('lastName'),
-                    email: form.getFieldValue('email'),
+                    firstName: form.getFieldValue('firstName') || '',
+                    lastName: form.getFieldValue('lastName') || '',
+                    email: form.getFieldValue('email') || '',
                   },
+                  oldPasswordCheck: false,
                 });
-                if (!value || errors.length === 1) {
+
+                // errors array always has at least one element (attributes object)
+                // if length is 1, password passes all checks
+                if (result.errors.length === 1) {
                   return Promise.resolve();
                 }
                 return Promise.reject(new Error('Password does not meet complexity requirements!'));

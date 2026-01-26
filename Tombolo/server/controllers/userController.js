@@ -36,10 +36,6 @@ const {
 } = require('../utils/authUtil');
 
 const whereNotSystemUser = {
-  firstName: {
-    [Op.ne]: 'System',
-  },
-  lastName: { [Op.ne]: 'User' },
   email: { [Op.ne]: 'system-user@example.com' },
 };
 

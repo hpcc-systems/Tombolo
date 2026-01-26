@@ -48,7 +48,7 @@ function ResetTempPassword({ email }) {
           user: userDetails,
           oldPasswordCheck: false,
           newUser: userDetails?.newUser || false,
-        })
+        }).content
       );
     } else {
       setPopOverContent(
@@ -56,7 +56,7 @@ function ResetTempPassword({ email }) {
           password: pw,
           user: userDetails,
           newUser: userDetails?.newUser || false,
-        })
+        }).content
       );
     }
   };
@@ -149,6 +149,38 @@ function ResetTempPassword({ email }) {
               max: 64,
               message: 'Maximum of 64 characters allowed',
             },
+            () => ({
+              validator(_, value) {
+                if (!value) {
+                  return Promise.reject();
+                }
+
+                let result;
+
+                if (finishedTypingRef.current) {
+                  result = passwordComplexityValidator({
+                    password: value,
+                    user: userDetails,
+                    oldPasswordCheck: false,
+                    newUser: userDetails?.newUser || false,
+                  });
+                } else {
+                  result = passwordComplexityValidator({
+                    password: value,
+                    user: userDetails,
+                    newUser: userDetails?.newUser || false,
+                  });
+                }
+
+                finishedTypingRef.current = false;
+
+                if (!value || result.errors.length === 1) {
+                  return Promise.resolve();
+                } else {
+                  return Promise.reject(new Error('Password does not meet complexity requirements!'));
+                }
+              },
+            }),
           ]}>
           <Input.Password
             size="large"

@@ -68,7 +68,7 @@ function passwordComplexityValidator({ password, user, oldPasswordCheck }) {
   if (!isNotUserInfo) {
     errors.push({ type: 'userInfo' });
   }
-  if (oldPasswordCheck) {
+  if (oldPasswordCheck && isNotOldPassword === false) {
     errors.push({ type: 'oldPassword' });
   }
 
@@ -99,11 +99,13 @@ function passwordComplexityValidator({ password, user, oldPasswordCheck }) {
     );
   });
 
-  return (
+  const content = (
     <>
       <ul style={{ listStyle: 'none', marginLeft: 0, paddingInlineStart: 0 }}>{passwordComplexityContent}</ul>
     </>
   );
+
+  return { errors, content };
 }
 
 export default passwordComplexityValidator;
