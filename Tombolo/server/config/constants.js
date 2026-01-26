@@ -4,4 +4,4 @@ const APPROVAL_STATUS = {
   REJECTED: 'rejected',
 };
 
-module.exports = { APPROVAL_STATUS };
+export { APPROVAL_STATUS };
