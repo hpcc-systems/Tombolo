@@ -24,7 +24,7 @@ import {
 import { Bar } from '@ant-design/plots';
 import { formatSeconds, formatNumber, formatBytes, renderAnyMetric, SCOPE_TYPES } from '@tombolo/shared';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
-import styles from './workunitHistory.module.css';
+import styles from '../../workunitHistory.module.css';
 
 const { Option } = Select;
 

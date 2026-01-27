@@ -241,13 +241,6 @@ const WorkUnitHistory = () => {
       },
     },
     {
-      title: 'Start Date',
-      dataIndex: 'workUnitTimestamp',
-      key: 'startDate',
-      width: 160,
-      render: date => (date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '-'),
-    },
-    {
       title: 'Cost',
       dataIndex: 'totalCost',
       key: 'totalCost',

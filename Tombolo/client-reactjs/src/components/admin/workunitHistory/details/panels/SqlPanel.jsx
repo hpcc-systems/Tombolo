@@ -5,7 +5,7 @@ import workunitsService from '@/services/workunits.service';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor from '@monaco-editor/react';
 import debounce from 'lodash/debounce';
-import styles from './workunitHistory.module.css';
+import styles from '../../workunitHistory.module.css';
 
 const { Text, Paragraph } = Typography;
 

@@ -4,7 +4,7 @@ import { Spin, Button, message, Alert, Space } from 'antd';
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import workunitsService from '@/services/workunits.service';
 import WorkUnitView from './WorkUnitView';
-import styles from './workunitHistory.module.css';
+import styles from '../workunitHistory.module.css';
 
 const WorkUnitDetails = () => {
   const { clusterId, wuid } = useParams();
@@ -22,7 +22,7 @@ const WorkUnitDetails = () => {
       const wuData = await workunitsService.getById(clusterId, wuid);
       setWu(wuData);
 
-      // Try to fetch details, but handle 404 gracefully
+      // Try to fetch details but handle 404 gracefully
       try {
         const detailsData = await workunitsService.getDetails(clusterId, wuid);
 

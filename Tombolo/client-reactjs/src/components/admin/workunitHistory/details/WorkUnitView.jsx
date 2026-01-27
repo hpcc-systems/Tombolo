@@ -8,11 +8,11 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import AllMetricsPanel from './AllMetricsPanel';
-import OverviewPanel from './OverviewPanel';
-import TimelinePanel from './TimelinePanel';
-import SqlPanel from './SqlPanel';
-import styles from './workunitHistory.module.css';
+import AllMetricsPanel from './panels/AllMetricsPanel';
+import OverviewPanel from './panels/OverviewPanel';
+import TimelinePanel from './panels/TimelinePanel';
+import SqlPanel from './panels/SqlPanel';
+import styles from '../workunitHistory.module.css';
 dayjs.extend(duration);
 
 const { Title, Text } = Typography;
