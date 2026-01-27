@@ -617,15 +617,51 @@ const resetPasswordWithToken = async (req, res) => {
 
 //Reset Password with Temp Password - Owner/Admin requested
 const resetTempPassword = async (req, res) => {
+  let transaction;
   try {
-    const { password, email, deviceInfo } = req.body;
+    const { password, tempPassword, deviceInfo, token } = req.body;
+
+    // Validate inputs before starting transaction
+    if (!password || !token || !tempPassword) {
+      throw {
+        status: 400,
+        message: 'Password, temp password, and token are required',
+      };
+    }
+
+    // Start transaction
+    transaction = await sequelize.transaction();
+
+    const vc = await AccountVerificationCode.findOne({
+      where: { code: token },
+      transaction,
+    });
+
+    // If no verification code found
+    if (!vc) {
+      throw { status: 404, message: 'Invalid or expired verification code' };
+    }
+
+    // Check if the token is expired
+    if (vc.expiresAt && moment().isAfter(vc.expiresAt)) {
+      throw { status: 400, message: 'Verification code has expired' };
+    }
 
     // Find user by ID
-    let user = await getAUser({ email });
+    const user = await User.findOne({
+      where: { id: vc.userId },
+      transaction,
+    });
 
     // If user not found
     if (!user) {
       throw { status: 404, message: 'User not found' };
+    }
+
+    // Verify temp password matches current hash
+    if (!bcrypt.compareSync(tempPassword, user.hash)) {
+      await transaction.rollback();
+      return sendError(res, 'Invalid temporary password', 401);
     }
 
     // check if password meets security requirements
@@ -635,40 +671,42 @@ const resetTempPassword = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
-      return sendError(
-        res,
-        'Password does not meet security requirements',
-        400
-      );
+      throw {
+        status: 400,
+        message: 'Password does not meet security requirements',
+      };
     }
 
-    // Hash the new password and set expiry
-    const salt = bcrypt.genSaltSync(10);
-    user.hash = bcrypt.hashSync(password, salt);
-    user.verifiedUser = true;
-    user.verifiedAt = new Date();
-    user.forcePasswordReset = false;
-    setPasswordExpiry(user);
-    setPreviousPasswords(user);
-    setLastLoginAndReturn(user);
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Save user with updated details
-    await User.update(
+    // Update user with new password and related fields
+    await user.update(
       {
-        hash: user.hash,
-        metaData: user.metaData,
-        passwordExpiresAt: user.passwordExpiresAt,
-        forcePasswordReset: user.forcePasswordReset,
-        lastLoginAt: user.lastLoginAt,
+        hash: hashedPassword,
+        verifiedUser: true,
+        verifiedAt: new Date(),
+        forcePasswordReset: false,
+        lastPasswordUpdate: new Date(),
+        passwordExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+        metaData: {
+          ...user.metaData,
+          previousPasswords: [
+            ...(user.metaData?.previousPasswords || []),
+            user.hash,
+          ].slice(-5), // Keep last 5 passwords
+        },
       },
-      {
-        where: { id: user.id },
-      }
+      { transaction }
     );
+
+    // Remove the verification code
+    await vc.destroy({ transaction });
 
     //remove all sessions for user before initiating new session
     await RefreshToken.destroy({
       where: { userId: user.id },
+      transaction,
     });
 
     // Create token id
@@ -687,22 +725,21 @@ const resetTempPassword = async (req, res) => {
     );
 
     // Save refresh token in DB
-    await RefreshToken.create({
-      id: tokenId,
-      userId: user.id,
-      token: refreshToken,
-      deviceInfo,
-      metaData: {},
-      iat: new Date(iat * 1000),
-      exp: new Date(exp * 1000),
-    });
+    await RefreshToken.create(
+      {
+        id: tokenId,
+        userId: user.id,
+        token: refreshToken,
+        deviceInfo,
+        metaData: {},
+        iat: new Date(iat * 1000),
+        exp: new Date(exp * 1000),
+      },
+      { transaction }
+    );
 
-    await setTokenCookie(res, accessToken);
-
-    await generateAndSetCSRFToken(req, res, accessToken);
-
-    //set last login
-    await setLastLogin(user);
+    // Commit transaction before setting cookies
+    await transaction.commit();
 
     // User data obj to send to the client
     const userObj = {
@@ -712,9 +749,24 @@ const resetTempPassword = async (req, res) => {
     // remove hash from user object
     delete userObj.hash;
 
+    // Set cookies and tokens after successful transaction
+    await setTokenCookie(res, accessToken);
+    await generateAndSetCSRFToken(req, res, accessToken);
+
+    //set last login (outside transaction to avoid conflicts)
+    await setLastLogin(user);
+
     // Success response
     return sendSuccess(res, userObj, 'Password updated successfully');
   } catch (err) {
+    // Rollback transaction if it exists
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (rollbackErr) {
+        logger.error(`Transaction rollback failed: ${rollbackErr.message}`);
+      }
+    }
     logger.error(`Reset Temp Password: ${err.message}`);
     return sendError(res, err);
   }
@@ -746,7 +798,7 @@ const loginBasicUser = async (req, res) => {
     // If force password reset is true it means user is issued a temp password and must reset password
     if (user?.forcePasswordReset) {
       logger.error(`Login : Login attempt by user with Temp PW - ${user.id}`);
-      return sendError(res, 'temp-pw', 401); // Use Constants.LOGIN_TEMP_PW
+      return sendError(res, 'temp-pw', 401);
     }
 
     // If the accountLocked.isLocked is true, return generic error
@@ -754,13 +806,11 @@ const loginBasicUser = async (req, res) => {
       logger.error(
         `Login : Login Attempt by user with locked account ${email}`
       );
-      return sendError(res, 'account-locked', 401);
-    }
-
-    //Compare password
-    if (!bcrypt.compareSync(password, user.hash)) {
-      logger.error(`Login : Invalid password for user with email ${email}`);
-      await handleInvalidLoginAttempt({ user, errMessage: genericError });
+      return sendError(
+        res,
+        'Your account is locked. Please contact your administrator to regain access',
+        401
+      );
     }
 
     // If not verified user return error
@@ -786,6 +836,12 @@ const loginBasicUser = async (req, res) => {
         'Email is registered with a Microsoft account. Please sign in with Microsoft',
         401
       );
+    }
+
+    //Compare password - check after all account status checks to prevent account enumeration
+    if (!bcrypt.compareSync(password, user.hash)) {
+      logger.error(`Login : Invalid password for user with email ${email}`);
+      await handleInvalidLoginAttempt({ user, errMessage: genericError });
     }
 
     // Remove hash from user object
@@ -1206,7 +1262,11 @@ const requestAccess = async (req, res) => {
     const recipients = await getAccessRequestRecipients();
 
     if (recipients.length === 0) {
-      return sendError(res, 'No notification recipients configured', 404);
+      return sendError(
+        res,
+        'Unable to process request - no notification recipients configured to receive access requests. Please contact your administrator.',
+        404
+      );
     }
 
     const existingNotification = await SentNotification.findOne({
@@ -1334,17 +1394,16 @@ const getUserDetailsWithToken = async (req, res) => {
     const { token } = req.params;
 
     //get the user id by the password reset link
-    const userId = await PasswordResetLink.findOne({
+    const resetLink = await PasswordResetLink.findOne({
       where: { id: token },
-
       attributes: ['userId'],
     });
 
-    if (!userId) {
+    if (!resetLink) {
       return sendError(res, 'User not found', 404);
     }
 
-    const id = userId.userId;
+    const id = resetLink.userId;
 
     const user = await User.findOne({
       where: { id: id },
@@ -1375,17 +1434,17 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
     const { token } = req.params;
 
     //get the user id by the password reset link
-    const userId = await AccountVerificationCode.findOne({
+    const verificationCode = await AccountVerificationCode.findOne({
       where: { code: token },
 
       attributes: ['userId'],
     });
 
-    if (!userId) {
+    if (!verificationCode) {
       return sendError(res, 'User not found', 404);
     }
 
-    const id = userId.userId;
+    const id = verificationCode.userId;
 
     const user = await User.findOne({
       where: { id: id },
@@ -1410,11 +1469,11 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      metaData: user.metaData,
+      // metaData: user.metaData,
       newUser: user.newUser,
     };
 
-    return sendSuccess(res, { user: userObj });
+    return sendSuccess(res, userObj);
   } catch (err) {
     logger.error(`getUserDetailsWithVerificationCode: ${err.message}`);
     return sendError(res, err);
