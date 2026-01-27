@@ -4,6 +4,7 @@ import {
   TopologyService,
   WorkunitsService,
   LogaccessService,
+  MachineService,
 } from '@hpcc-js/comms';
 import axios from 'axios';
 import xml2js from 'xml2js';
@@ -14,8 +15,7 @@ import { parseWorkunitTimestamp } from '@tombolo/shared';
 import { encryptString, decryptString } from '@tombolo/shared';
 import CustomError from '../utils/customError.js';
 import { getClusterOptions } from '../utils/getClusterOptions.js';
-import hpccUtil from '../utils/hpcc-util.js';
-import hpccJSComms from '@hpcc-js/comms';
+import { getCluster } from '../utils/hpcc-util.js';
 import moment from 'moment';
 import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
 import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
@@ -451,7 +451,7 @@ const addClusterWithProgress = async (req, res) => {
 };
 
 // Retrieve all clusters
-const getClusters = async (req, res) => {
+const getClustersCtr = async (req, res) => {
   try {
     // Get clusters ASC by name
     const clusters = await Cluster.findAll({
@@ -470,7 +470,7 @@ const getClusters = async (req, res) => {
 };
 
 // Retrieve a cluster
-const getCluster = async (req, res) => {
+const getClusterCtr = async (req, res) => {
   try {
     // Get one cluster by id
     const cluster = await Cluster.findOne({
@@ -635,7 +635,7 @@ const checkClusterHealth = async (req, res) => {
 const pingExistingCluster = async (req, res) => {
   const { id } = req.params;
   try {
-    await hpccUtil.getCluster(id);
+    await getCluster(id);
     // Update the reachability info for the cluster
     await Cluster.update(
       {
@@ -673,7 +673,7 @@ const clusterUsage = async (req, res) => {
     const { id } = req.params;
 
     //Get cluster details
-    let cluster = await hpccUtil.getCluster(id); // Checks if cluster is reachable and decrypts cluster credentials if any
+    let cluster = await getCluster(id); // Checks if cluster is reachable and decrypts cluster credentials if any
     const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
     const clusterDetails = getClusterOptions(
       {
@@ -685,7 +685,7 @@ const clusterUsage = async (req, res) => {
     );
 
     //Use JS comms library to fetch current usage
-    const machineService = new hpccJSComms.MachineService(clusterDetails);
+    const machineService = new MachineService(clusterDetails);
     const targetClusterUsage = await machineService.GetTargetClusterUsageEx();
 
     const maxUsage = targetClusterUsage.map(target => ({
@@ -913,8 +913,8 @@ const getClusterLogs = async (req, res) => {
 export {
   addCluster,
   addClusterWithProgress,
-  getClusters,
-  getCluster,
+  getClustersCtr,
+  getClusterCtr,
   deleteCluster,
   updateCluster,
   getClusterWhiteList,

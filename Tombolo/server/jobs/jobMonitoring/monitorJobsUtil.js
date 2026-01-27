@@ -1,5 +1,5 @@
 // Local imports
-import { AsrDomain, AsrProduct } from '../../models.js';
+import { AsrDomain, AsrProduct } from '../../models/index.js';
 
 //Package(s)
 import moment from 'moment';

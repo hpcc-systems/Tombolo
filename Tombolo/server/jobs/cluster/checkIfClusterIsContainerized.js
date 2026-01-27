@@ -2,7 +2,7 @@ import { logOrPostMessage } from '../jobUtils.js';
 import axios from 'axios';
 
 // Local imports
-import { Cluster } from '../../models.js';
+import { Cluster } from '../../models/index.js';
 import { decryptString } from '@tombolo/shared';
 
 (async () => {

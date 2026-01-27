@@ -1,7 +1,9 @@
 import path from 'path';
 import { monitor_cost_interval } from '../config/monitorings.js';
-
 import logger from '../config/logger.js';
+import { getDirname } from '../utils/polyfills.js';
+
+const __dirname = getDirname(import.meta.url);
 const MONITOR_COST_FILE_NAME = 'monitorCost.js';
 const ANALYZE_COST_FILE_NAME = 'analyzeCost.js';
 

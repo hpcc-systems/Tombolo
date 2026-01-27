@@ -13,8 +13,8 @@ import { validate } from '../middlewares/validateRequestBody.js';
 import {
   addCluster,
   addClusterWithProgress,
-  getClusters,
-  getCluster,
+  getClustersCtr,
+  getClusterCtr,
   updateCluster,
   deleteCluster,
   getClusterWhiteList,
@@ -29,8 +29,8 @@ import role from '../config/roleTypes.js';
 
 import { validateUserRole } from '../middlewares/rbacMiddleware.js';
 
-router.get('/', getClusters); // GET - all clusters
-router.get('/getOne/:id', validate(validateClusterId), getCluster); // GET - one cluster by id
+router.get('/', getClustersCtr); // GET - all clusters
+router.get('/getOne/:id', validate(validateClusterId), getClusterCtr); // GET - one cluster by id
 router.get('/logs/:id', validate(validateClusterId), getClusterLogs); // GET - cluster logs
 
 //cluster dashboards

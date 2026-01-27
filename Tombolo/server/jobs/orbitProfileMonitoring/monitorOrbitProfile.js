@@ -1,5 +1,5 @@
 import { logOrPostMessage } from '../jobUtils.js';
-import { OrbitProfileMonitoring, OrbitBuildData } from '../../models.js';
+import { OrbitProfileMonitoring, OrbitBuildData } from '../../models/index.js';
 
 import { runMySQLQuery, orbitDbConfig } from '../../utils/runSQLQueries.js';
 

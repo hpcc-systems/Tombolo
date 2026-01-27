@@ -1,7 +1,10 @@
 import path from 'path';
 import logger from '../config/logger.js';
+import { getDirname } from '../utils/polyfills.js';
 
 const ARCHIVE_DATA_FILE_NAME = 'archiveData.js';
+
+const __dirname = getDirname(import.meta.url);
 
 function createDataArchiveJob() {
   try {

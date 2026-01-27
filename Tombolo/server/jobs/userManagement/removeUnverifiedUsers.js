@@ -4,7 +4,7 @@ import { deleteUser } from '../../utils/authUtil.js';
 
 //Local Imports
 import { logOrPostMessage } from '../jobUtils.js';
-import { user } from '../../models.js';
+import { user } from '../../models/index.js';
 
 (async () => {
   try {

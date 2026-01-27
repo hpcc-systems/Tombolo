@@ -7,8 +7,10 @@ import {
   cluster_monitoring_interval,
   clusterContainerizationCheckInterval,
 } from '../config/monitorings.js';
+import { getDirname } from '../utils/polyfills.js';
 
 // Constants
+const __dirname = getDirname(import.meta.url);
 const CLUSTER_MONITORING_FILE_NAME = 'clusterMonitoring.js';
 const CLUSTER_TIMEZONE_OFFSET = 'clustertimezoneoffset.js';
 const CLUSTER_USAGE_HISTORY_TRACKER = 'submitClusterUsageTracker.js';

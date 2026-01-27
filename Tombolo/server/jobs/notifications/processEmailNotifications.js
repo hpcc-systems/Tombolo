@@ -2,13 +2,10 @@
 import { Op } from 'sequelize';
 
 //Local Imports
-import { NotificationQueue, SentNotification } from '../../models.js';
+import { NotificationQueue, SentNotification } from '../../models/index.js';
 import logger from '../../config/logger.js';
-import emailConfig from '../../config/emailConfig.js';
-const {
-  sendEmail,
-  retryOptions: { maxRetries },
-} = emailConfig;
+import { sendEmail, retryOptions } from '../../config/emailConfig.js';
+const { maxRetries } = retryOptions;
 import { updateNotificationQueueOnError } from './notificationsHelperFunctions.js';
 import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js';
 

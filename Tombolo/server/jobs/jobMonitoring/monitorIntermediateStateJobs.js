@@ -10,7 +10,7 @@ import {
   MonitoringType,
   MonitoringLog,
   JobMonitoringData,
-} from '../../models.js';
+} from '../../models/index.js';
 import { decryptString } from '@tombolo/shared';
 
 import {

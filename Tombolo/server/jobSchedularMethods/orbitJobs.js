@@ -1,8 +1,10 @@
 import path from 'path';
 import logger from '../config/logger.js';
 
-import { OrbitMonitoring } from '../models.js';
+import { OrbitMonitoring } from '../models/index.js';
+import { getDirname } from '../utils/polyfills.js';
 
+const __dirname = getDirname(import.meta.url);
 const MEGAPHONE_JOB = 'orbitMegaphone.js';
 const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
 const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';

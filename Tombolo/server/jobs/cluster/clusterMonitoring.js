@@ -13,7 +13,7 @@ import {
   AsrProduct,
   AsrDomain,
   MonitoringLog,
-} from '../../models.js';
+} from '../../models/index.js';
 import { generateNotificationId } from '../jobMonitoring/monitorJobsUtil.js';
 import { decryptString } from '@tombolo/shared';
 import { APPROVAL_STATUS } from '../../config/constants.js';

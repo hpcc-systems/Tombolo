@@ -4,7 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 //Local Imports
 import { logOrPostMessage } from '../jobUtils.js';
-import { User, UserRole, RoleType, NotificationQueue } from '../../models.js';
+import {
+  User,
+  UserRole,
+  RoleType,
+  NotificationQueue,
+} from '../../models/index.js';
 import { trimURL, deleteUser } from '../../utils/authUtil.js';
 
 // Constants

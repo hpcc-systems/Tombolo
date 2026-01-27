@@ -1,5 +1,5 @@
 import { CostMonitoringDataArchiveService } from '../../services.js';
-import { sequelize } from '../../models.js';
+import { sequelize } from '../../models/index.js';
 import { parentPort } from 'worker_threads';
 
 const costMonitoringArchiveService = new CostMonitoringDataArchiveService(

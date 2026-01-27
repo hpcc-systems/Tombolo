@@ -4,7 +4,7 @@ import { logOrPostMessage } from '../jobUtils.js';
 import { decryptString } from '@tombolo/shared';
 
 // Local Imports
-import { Cluster, JobMonitoringData } from '../../models.js';
+import { Cluster, JobMonitoringData } from '../../models/index.js';
 import { WorkunitsService } from '@hpcc-js/comms';
 import shallowCopyWithoutNested from '../../utils/shallowCopyWithoutNested.js';
 import { WUInfoOptions } from './monitorJobsUtil.js';

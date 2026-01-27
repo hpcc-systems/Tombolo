@@ -1,9 +1,11 @@
 import path from 'path';
 import logger from '../config/logger.js';
+import { getDirname } from '../utils/polyfills.js';
 const PROCESS_EMAIL_NOTIFICATIONS = path.join(
   'notifications',
   'processEmailNotifications.js'
 );
+const __dirname = getDirname(import.meta.url);
 
 async function scheduleEmailNotificationProcessing() {
   try {

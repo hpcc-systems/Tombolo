@@ -6,7 +6,7 @@ import {
   CostMonitoringData,
   MonitoringLog,
   MonitoringType,
-} from '../../models.js';
+} from '../../models/index.js';
 import { Workunit } from '@hpcc-js/comms';
 import { getClusters } from '../../utils/hpcc-util.js';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';

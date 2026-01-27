@@ -1,5 +1,8 @@
 import logger from '../config/logger.js';
 import path from 'path';
+import { getDirname } from '../utils/polyfills.js';
+
+const __dirname = getDirname(import.meta.url);
 
 function createNewBreeJob({
   uniqueJobName,
