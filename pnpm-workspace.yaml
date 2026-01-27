@@ -22,3 +22,5 @@ catalog:
   typescript-eslint: ^8.46.2
   winston: ^3.18.3
   winston-daily-rotate-file: ^5.0.0
+  vitest: ^3.2.4
+  "@vitest/coverage-v8": ^3.2.4

@@ -1,29 +1,28 @@
-const { monitorCluster } = require('../../jobs/cluster/clusterMonitoring');
-const {
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { monitorCluster } from '../../jobs/cluster/clusterMonitoring.js';
+import {
   ClusterMonitoring,
   MonitoringType,
   NotificationQueue,
   AsrProduct,
   AsrDomain,
   MonitoringLog,
-} = require('../../models');
-const { parentPort } = require('worker_threads');
-const axios = require('axios');
-const { decryptString } = require('@tombolo/shared');
-const {
-  generateNotificationId,
-} = require('../../jobs/jobMonitoring/monitorJobsUtil');
+} from '../../models/index.js';
+import { parentPort } from 'worker_threads';
+import axios from 'axios';
+import { decryptString } from '@tombolo/shared';
+import { generateNotificationId } from '../../jobs/jobMonitoring/monitorJobsUtil.js';
 
-jest.mock('worker_threads');
-jest.mock('axios');
-jest.mock('@tombolo/shared');
-jest.mock('../../jobs/jobMonitoring/monitorJobsUtil');
+vi.mock('worker_threads');
+vi.mock('axios');
+vi.mock('@tombolo/shared');
+vi.mock('../../jobs/jobMonitoring/monitorJobsUtil.js');
 
 const originalEnv = process.env;
 
 beforeEach(() => {
-  jest.clearAllMocks();
-  parentPort.postMessage = jest.fn();
+  vi.clearAllMocks();
+  parentPort.postMessage = vi.fn();
   NotificationQueue.create.mockResolvedValue({});
   MonitoringLog.upsert.mockResolvedValue({});
   // Set up ENCRYPTION_KEY for tests

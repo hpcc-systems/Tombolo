@@ -1,19 +1,20 @@
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const request = require('supertest');
-const { app } = require('../test_server');
-const { v4: uuidv4 } = require('uuid');
-const { WorkUnit, WorkUnitDetails } = require('../../models');
-const { getWorkUnit, getWorkUnitDetails } = require('../helpers');
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { v4 as uuidv4 } from 'uuid';
+import { WorkUnit, WorkUnitDetails } from '../../models/index.js';
+import { getWorkUnit, getWorkUnitDetails } from '../helpers.js';
 
 describe('Workunit Routes', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   describe('GET /api/workunits', () => {

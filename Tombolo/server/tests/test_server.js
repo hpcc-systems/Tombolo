@@ -1,11 +1,12 @@
-const path = require('path');
+import path from 'path';
 const pathToEnv = path.join(process.cwd(), '..', '..', '.env');
-require('dotenv').config({ path: pathToEnv });
-const express = require('express');
-// const db = require('../models');
-const logger = require('../config/logger');
-const cookieParser = require('cookie-parser');
-const { fakeValidateTokenMiddleware } = require('./helpers');
+import dotenv from 'dotenv';
+dotenv.config({ path: pathToEnv });
+import express from 'express';
+// import db from '../models/index.js';
+import logger from '../config/logger.js';
+import cookieParser from 'cookie-parser';
+import { fakeValidateTokenMiddleware } from './helpers.js';
 
 // Change the NODE_ENV to test
 process.env.NODE_ENV = 'test';
@@ -18,18 +19,18 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Import routes
-const auth = require('../routes/authRoutes');
-const user = require('../routes/userRoutes');
-const instance = require('../routes/instanceRoutes');
-const cluster = require('../routes/clusterRoutes');
-const session = require('../routes/sessionRoutes');
-const roles = require('../routes/roleTypesRoute');
-const landingZoneMonitoring = require('../routes/landingZoneMonitoring');
-const costMonitoring = require('../routes/costMonitoringRoutes');
-const clusterMonitoring = require('../routes/clusterMonitoringRoutes');
-const fileMonitoring = require('../routes/fileMonitoringRoutes');
-const orbitProfileMonitoring = require('../routes/orbitProfileMonitoringRoutes');
-const workunits = require('../routes/workunitRoutes');
+import auth from '../routes/authRoutes.js';
+import user from '../routes/userRoutes.js';
+import instance from '../routes/instanceRoutes.js';
+import cluster from '../routes/clusterRoutes.js';
+import session from '../routes/sessionRoutes.js';
+import roles from '../routes/roleTypesRoute.js';
+import landingZoneMonitoring from '../routes/landingZoneMonitoring.js';
+import costMonitoring from '../routes/costMonitoringRoutes.js';
+import clusterMonitoring from '../routes/clusterMonitoringRoutes.js';
+import fileMonitoring from '../routes/fileMonitoringRoutes.js';
+import orbitProfileMonitoring from '../routes/orbitProfileMonitoringRoutes.js';
+import workunits from '../routes/workunitRoutes.js';
 
 // Use routes
 app.use('/api/auth', auth);
@@ -76,8 +77,11 @@ const closeServer = () => {
 };
 
 // Start the server if this file is run directly
-if (require.main === module) {
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+
+if (process.argv[1] === __filename) {
   startServer();
 }
 
-module.exports = { app, startServer, closeServer };
+export { app, startServer, closeServer };

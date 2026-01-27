@@ -1,31 +1,30 @@
-const { parentPort } = require('worker_threads');
-const {
-  CostMonitoringDataArchiveService,
-} = require('../../services/costMonitoringDataArchiveService');
-const { Op } = require('sequelize');
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { parentPort } from 'worker_threads';
+import { CostMonitoringDataArchiveService } from '../../services/costMonitoringDataArchiveService.js';
+import { Op } from 'sequelize';
 
 const archiveModelMock = {
-  findAll: jest.fn(),
-  destroy: jest.fn(),
+  findAll: vi.fn(),
+  destroy: vi.fn(),
 };
 const transactionMock = {
-  rollback: jest.fn(),
-  commit: jest.fn(),
+  rollback: vi.fn(),
+  commit: vi.fn(),
 };
 const sequelizeMock = {
   models: {
     CostMonitoringData: {},
   },
-  transaction: jest.fn().mockResolvedValue(transactionMock),
-  fn: jest.fn(),
-  col: jest.fn(),
+  transaction: vi.fn().mockResolvedValue(transactionMock),
+  fn: vi.fn(),
+  col: vi.fn(),
 };
 
-jest.mock('../../utils/archiveUtils', () => ({
+vi.mock('../../utils/archiveUtils', () => ({
   ArchiveManager: function () {
     return {
-      getArchiveModel: jest.fn(),
-      archiveRecords: jest.fn(),
+      getArchiveModel: vi.fn(),
+      archiveRecords: vi.fn(),
     };
   },
 }));
@@ -34,11 +33,11 @@ const ArchiveService = require('../../services/archiveService').ArchiveService;
 ArchiveService.prototype.getArchiveModel = jest
   .fn()
   .mockResolvedValue(archiveModelMock);
-ArchiveService.prototype.archiveRecords = jest.fn().mockResolvedValue(42);
+ArchiveService.prototype.archiveRecords = vi.fn().mockResolvedValue(42);
 ArchiveService.prototype.getArchivedData = jest
   .fn()
   .mockResolvedValue([{ id: 1 }]);
-ArchiveService.prototype.restoreArchivedData = jest.fn().mockResolvedValue(1);
+ArchiveService.prototype.restoreArchivedData = vi.fn().mockResolvedValue(1);
 archiveModelMock.findAll.mockResolvedValue([
   {
     id: 1,
@@ -53,8 +52,8 @@ const service = new CostMonitoringDataArchiveService(sequelizeMock);
 
 describe('CostMonitoringDataArchiveService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    parentPort.postMessage = jest.fn();
+    vi.clearAllMocks();
+    parentPort.postMessage = vi.fn();
   });
 
   it('should archive old cost data', async () => {

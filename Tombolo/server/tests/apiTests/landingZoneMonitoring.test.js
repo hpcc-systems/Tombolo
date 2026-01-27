@@ -1,9 +1,10 @@
-const request = require('supertest');
-const { app } = require('../test_server');
-const { LandingZoneMonitoring, Cluster } = require('../../models');
-const { v4: uuidv4 } = require('uuid');
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const {
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { LandingZoneMonitoring, Cluster } from '../../models/index.js';
+import { v4 as uuidv4 } from 'uuid';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import {
   getLandingZoneMonitoring,
   getLandingZoneMonitoringCreatePayload,
   getLandingZoneMonitoringUpdatePayload,
@@ -11,13 +12,13 @@ const {
   getFileListQuery,
   nonExistentID,
   AUTHED_USER_ID,
-} = require('../helpers');
-const { APPROVAL_STATUS } = require('../../config/constants');
+} from '../helpers.js';
+import { APPROVAL_STATUS } from '../../config/constants.js';
 
 // Mock HPCC-JS services
-jest.mock('@hpcc-js/comms', () => ({
-  TopologyService: jest.fn().mockImplementation(() => ({
-    TpDropZoneQuery: jest.fn().mockResolvedValue({
+vi.mock('@hpcc-js/comms', () => ({
+  TopologyService: vi.fn().mockImplementation(() => ({
+    TpDropZoneQuery: vi.fn().mockResolvedValue({
       TpDropZones: {
         TpDropZone: [
           {
@@ -28,7 +29,7 @@ jest.mock('@hpcc-js/comms', () => ({
       },
     }),
   })),
-  FileSprayService: jest.fn().mockImplementation(() => ({
+  FileSprayService: vi.fn().mockImplementation(() => ({
     FileList: jest
       .fn()
       .mockResolvedValue([{ name: 'file1' }, { name: 'file2' }]),
@@ -36,12 +37,12 @@ jest.mock('@hpcc-js/comms', () => ({
 }));
 
 // Mock utility functions
-jest.mock('@tombolo/shared', () => ({
-  decryptString: jest.fn().mockReturnValue('mocked_password'),
+vi.mock('@tombolo/shared', () => ({
+  decryptString: vi.fn().mockReturnValue('mocked_password'),
 }));
 
-jest.mock('../../utils/getClusterOptions', () => ({
-  getClusterOptions: jest.fn().mockImplementation(options => options),
+vi.mock('../../utils/getClusterOptions.js', () => ({
+  getClusterOptions: vi.fn().mockImplementation(options => options),
 }));
 
 const validApplicationId = uuidv4();
@@ -52,9 +53,9 @@ describe('Landing Zone Monitoring Routes', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Set up ENCRYPTION_KEY for tests
     process.env = {
       ...originalEnv,
@@ -67,7 +68,7 @@ describe('Landing Zone Monitoring Routes', () => {
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
+    vi.clearAllTimers();
   });
 
   describe('GET /api/landingZoneMonitoring/getDropzones', () => {

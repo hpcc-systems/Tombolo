@@ -1,28 +1,23 @@
-const {
-  monitorClusterReachability,
-} = require('../../jobs/cluster/monitorClusterReachability');
-const { Cluster, NotificationQueue } = require('../../models');
-const { parentPort } = require('worker_threads');
-const { AccountService } = require('@hpcc-js/comms');
-const { decryptString } = require('@tombolo/shared');
-const {
-  passwordExpiryAlertDaysForCluster,
-} = require('../../config/monitorings');
-const {
-  passwordExpiryInProximityNotificationPayload,
-} = require('../../jobs/cluster/clusterReachabilityMonitoringUtils');
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { monitorClusterReachability } from '../../jobs/cluster/monitorClusterReachability.js';
+import { Cluster, NotificationQueue } from '../../models/index.js';
+import { parentPort } from 'worker_threads';
+import { AccountService } from '@hpcc-js/comms';
+import { decryptString } from '@tombolo/shared';
+import { passwordExpiryAlertDaysForCluster } from '../../config/monitorings.js';
+import { passwordExpiryInProximityNotificationPayload } from '../../jobs/cluster/clusterReachabilityMonitoringUtils.js';
 
-jest.mock('worker_threads');
-jest.mock('@hpcc-js/comms');
-jest.mock('@tombolo/shared');
-jest.mock('../../jobs/cluster/clusterReachabilityMonitoringUtils');
-jest.mock('../../config/monitorings');
+vi.mock('worker_threads');
+vi.mock('@hpcc-js/comms');
+vi.mock('@tombolo/shared');
+vi.mock('../../jobs/cluster/clusterReachabilityMonitoringUtils.js');
+vi.mock('../../config/monitorings.js');
 
 describe('monitorClusterReachability', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Set up ENCRYPTION_KEY for tests
     process.env = {
       ...originalEnv,
@@ -36,7 +31,7 @@ describe('monitorClusterReachability', () => {
 
   it('should post info when monitoring starts and completes', async () => {
     Cluster.findAll.mockResolvedValue([]);
-    parentPort.postMessage = jest.fn();
+    parentPort.postMessage = vi.fn();
     await monitorClusterReachability();
     expect(parentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -71,7 +66,7 @@ describe('monitorClusterReachability', () => {
     ]);
     decryptString.mockReturnValue('decrypted');
     AccountService.mockImplementation(() => ({
-      MyAccount: jest.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
+      MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
     }));
     passwordExpiryAlertDaysForCluster.includes = jest
       .fn()
@@ -79,7 +74,7 @@ describe('monitorClusterReachability', () => {
     passwordExpiryInProximityNotificationPayload.mockReturnValue({});
     NotificationQueue.create.mockResolvedValue({});
     Cluster.update.mockResolvedValue({});
-    parentPort.postMessage = jest.fn();
+    parentPort.postMessage = vi.fn();
     await monitorClusterReachability();
     expect(decryptString).toHaveBeenCalledWith('encrypted', expect.any(String));
     expect(NotificationQueue.create).toHaveBeenCalled();
@@ -108,13 +103,13 @@ describe('monitorClusterReachability', () => {
       },
     ]);
     AccountService.mockImplementation(() => ({
-      MyAccount: jest.fn().mockResolvedValue({ passwordDaysRemaining: 10 }),
+      MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 10 }),
     }));
     passwordExpiryAlertDaysForCluster.includes = jest
       .fn()
       .mockReturnValue(false);
     Cluster.update.mockResolvedValue({});
-    parentPort.postMessage = jest.fn();
+    parentPort.postMessage = vi.fn();
     await monitorClusterReachability();
     expect(decryptString).not.toHaveBeenCalled();
     expect(Cluster.update).toHaveBeenCalled();
@@ -143,7 +138,7 @@ describe('monitorClusterReachability', () => {
     ]);
     decryptString.mockReturnValue('decrypted');
     AccountService.mockImplementation(() => ({
-      MyAccount: jest.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
+      MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
     }));
     passwordExpiryAlertDaysForCluster.includes = jest
       .fn()
@@ -151,7 +146,7 @@ describe('monitorClusterReachability', () => {
     passwordExpiryInProximityNotificationPayload.mockReturnValue({});
     NotificationQueue.create.mockRejectedValue(new Error('Queue error'));
     Cluster.update.mockResolvedValue({});
-    parentPort.postMessage = jest.fn();
+    parentPort.postMessage = vi.fn();
     await monitorClusterReachability();
     expect(parentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -178,10 +173,10 @@ describe('monitorClusterReachability', () => {
     ]);
     decryptString.mockReturnValue('decrypted');
     AccountService.mockImplementation(() => ({
-      MyAccount: jest.fn().mockRejectedValue(new Error('Unreachable')),
+      MyAccount: vi.fn().mockRejectedValue(new Error('Unreachable')),
     }));
     Cluster.update.mockResolvedValue({});
-    parentPort.postMessage = jest.fn();
+    parentPort.postMessage = vi.fn();
     await monitorClusterReachability();
     expect(parentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -194,7 +189,7 @@ describe('monitorClusterReachability', () => {
 
   it('should handle top-level error', async () => {
     Cluster.findAll.mockRejectedValue(new Error('Top level error'));
-    parentPort.postMessage = jest.fn();
+    parentPort.postMessage = vi.fn();
     await monitorClusterReachability();
     expect(parentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({

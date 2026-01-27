@@ -1,5 +1,6 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
+import { vi } from 'vitest';
 
 // Set NODE_ENV to test BEFORE any other modules are loaded
 process.env.NODE_ENV = 'test';
@@ -7,140 +8,141 @@ process.env.NODE_ENV = 'test';
 const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-require('dotenv').config({ path: ENVPath });
+import dotenv from 'dotenv';
+dotenv.config({ path: ENVPath });
 
 global.console = {
   ...console,
   // uncomment to ignore a specific log level
-  log: jest.fn(() => {}),
-  debug: jest.fn(() => {}),
-  info: jest.fn(() => {}),
-  // warn: jest.fn(() => {}),
-  error: jest.fn(() => {}),
+  log: vi.fn(() => {}),
+  debug: vi.fn(() => {}),
+  info: vi.fn(() => {}),
+  // warn: vi.fn(() => {}),
+  error: vi.fn(() => {}),
 };
 
-jest.mock('worker_threads', () => ({
+vi.mock('worker_threads', () => ({
   parentPort: {
-    postMessage: jest.fn(),
+    postMessage: vi.fn(),
   },
 }));
 
 // Replace all calls of models to simulate database interactions
-jest.mock('../models', () => {
-  const commit = jest.fn();
-  const rollback = jest.fn();
-  const transaction = jest.fn(() => Promise.resolve({ commit, rollback }));
+vi.mock('../models/index.js', () => {
+  const commit = vi.fn();
+  const rollback = vi.fn();
+  const transaction = vi.fn(() => Promise.resolve({ commit, rollback }));
 
   return {
     TokenBlackList: {
-      findAll: jest.fn(),
+      findAll: vi.fn(),
     },
     Integration: {
-      findOne: jest.fn(),
+      findOne: vi.fn(),
     },
     AsrDomain: {
-      findOne: jest.fn(),
-      findByPk: jest.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
     },
     AsrProduct: {
-      findOne: jest.fn(),
-      findByPk: jest.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
     },
     User: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      findByPk: jest.fn(),
-      create: jest.fn(),
-      bulkCreate: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
-      save: jest.fn(),
-      toJSON: jest.fn(),
-      handleDelete: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      save: vi.fn(),
+      toJSON: vi.fn(),
+      handleDelete: vi.fn(),
     },
     RefreshToken: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      create: jest.fn(),
-      bulkCreate: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      create: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
     },
     NotificationQueue: {
-      create: jest.fn(),
-      findOne: jest.fn(),
-      findAll: jest.fn(),
+      create: vi.fn(),
+      findOne: vi.fn(),
+      findAll: vi.fn(),
     },
     SentNotification: {
-      create: jest.fn(),
-      findOne: jest.fn(),
-      findAll: jest.fn(),
+      create: vi.fn(),
+      findOne: vi.fn(),
+      findAll: vi.fn(),
     },
     AccountVerificationCode: {
-      create: jest.fn(),
-      findOne: jest.fn(),
+      create: vi.fn(),
+      findOne: vi.fn(),
     },
     PasswordResetLink: {
-      create: jest.fn(),
-      findOne: jest.fn(),
+      create: vi.fn(),
+      findOne: vi.fn(),
     },
     InstanceSettings: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      update: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      update: vi.fn(),
     },
     Cluster: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      bulkCreate: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
-      handleDelete: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      create: vi.fn(),
+      save: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      handleDelete: vi.fn(),
     },
     MonitoringType: {
-      findOne: jest.fn(),
-      findAll: jest.fn(),
+      findOne: vi.fn(),
+      findAll: vi.fn(),
     },
     MonitoringLog: {
-      findOne: jest.fn(),
-      create: jest.fn(),
-      upsert: jest.fn(),
-      update: jest.fn(),
+      findOne: vi.fn(),
+      create: vi.fn(),
+      upsert: vi.fn(),
+      update: vi.fn(),
     },
     LandingZoneMonitoring: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      findByPk: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      bulkCreate: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
-      handleDelete: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      save: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      handleDelete: vi.fn(),
     },
     ClusterMonitoring: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      findByPk: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      bulkCreate: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
-      handleDelete: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      save: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      handleDelete: vi.fn(),
     },
     CostMonitoring: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      findByPk: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      bulkCreate: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
-      handleDelete: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      save: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      handleDelete: vi.fn(),
       sequelize: {
         transaction,
         __commit: commit, // Expose for test access
@@ -148,24 +150,24 @@ jest.mock('../models', () => {
       },
     },
     CostMonitoringData: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      findByPk: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      getClusterDataTotals: jest.fn(),
-      getDataTotals: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      getClusterDataTotals: vi.fn(),
+      getDataTotals: vi.fn(),
     },
     OrbitProfileMonitoring: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      findByPk: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      bulkCreate: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
-      handleDelete: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      save: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      handleDelete: vi.fn(),
       sequelize: {
         transaction,
         __commit: commit,
@@ -173,16 +175,16 @@ jest.mock('../models', () => {
       },
     },
     WorkUnit: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      findAndCountAll: jest.fn(),
-      findByPk: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      bulkCreate: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
-      handleDelete: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findAndCountAll: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      save: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      handleDelete: vi.fn(),
       sequelize: {
         transaction,
         __commit: commit,
@@ -190,16 +192,16 @@ jest.mock('../models', () => {
       },
     },
     WorkUnitDetails: {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
-      findAndCountAll: jest.fn(),
-      findByPk: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      bulkCreate: jest.fn(),
-      update: jest.fn(),
-      destroy: jest.fn(),
-      handleDelete: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findAndCountAll: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      save: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      handleDelete: vi.fn(),
       sequelize: {
         transaction,
         __commit: commit,
@@ -207,7 +209,7 @@ jest.mock('../models', () => {
       },
     },
     UserArchive: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
     sequelize: {
       transaction,
@@ -219,21 +221,21 @@ jest.mock('../models', () => {
 });
 
 // Replace all calls of logger with empty function to ensure no tests are logged
-jest.mock('winston', () => {
+vi.mock('winston', () => {
   const mockLogger = {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-    verbose: jest.fn(),
-    add: jest.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+    verbose: vi.fn(),
+    add: vi.fn(),
   };
 
   return {
     createLogger: jest.fn(() => mockLogger),
     transports: {
-      Console: jest.fn(),
-      DailyRotateFile: jest.fn(),
+      Console: vi.fn(),
+      DailyRotateFile: vi.fn(),
     },
     format: {
       combine: jest.fn((...args) => ({ combine: args })), // Return a mock format object
@@ -245,12 +247,12 @@ jest.mock('winston', () => {
         colorize: true,
         addColors: jest.fn(() => ({})), // Mock addColors to return an empty object or as needed
       })),
-      uncolorize: jest.fn(),
-      printf: jest.fn(),
-      errors: jest.fn(),
+      uncolorize: vi.fn(),
+      printf: vi.fn(),
+      errors: vi.fn(),
     },
   };
 });
 
 // Mock winston-daily-rotate-file
-jest.mock('winston-daily-rotate-file', () => jest.fn());
+vi.mock('winston-daily-rotate-file', () => vi.fn());

@@ -1,25 +1,26 @@
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const request = require('supertest');
-const { app } = require('../test_server');
-const { v4: uuidv4 } = require('uuid');
-const { Op } = require('sequelize');
-const { OrbitProfileMonitoring, sequelize } = require('../../models');
-const {
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
+import { OrbitProfileMonitoring, sequelize } from '../../models/index.js';
+import {
   getOrbitProfileMonitoring,
   AUTHED_USER_ID,
   getUuids,
-} = require('../helpers');
-const { APPROVAL_STATUS } = require('../../config/constants');
+} from '../helpers.js';
+import { APPROVAL_STATUS } from '../../config/constants.js';
 
 describe('orbitProfileMonitoring Routes', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   it('POST / should create a new orbit profile monitoring', async () => {
@@ -188,7 +189,7 @@ describe('orbitProfileMonitoring Routes', () => {
     };
 
     // Mock transaction - for callback pattern sequelize.transaction(async t => {...})
-    const mockTransaction = { commit: jest.fn(), rollback: jest.fn() };
+    const mockTransaction = { commit: vi.fn(), rollback: vi.fn() };
     jest.spyOn(sequelize, 'transaction').mockImplementation(async callback => {
       return await callback(mockTransaction);
     });

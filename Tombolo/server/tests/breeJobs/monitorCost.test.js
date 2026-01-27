@@ -1,26 +1,27 @@
-const {
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import {
   getStartAndEndTime,
   handleMonitorLogs,
   getCostMonitorings,
   monitorCost,
-} = require('../../jobs/costMonitoring/monitorCost');
+} from '../../jobs/costMonitoring/monitorCost.js';
 
-const {
+import {
   MonitoringLog,
   CostMonitoring,
   CostMonitoringData,
   Cluster,
   MonitoringType,
-} = require('../../models');
+} from '../../models/index.js';
 
-const { Workunit } = require('@hpcc-js/comms');
-const { getClusters } = require('../../utils/hpcc-util');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
-const { parentPort } = require('worker_threads');
+import { Workunit } from '@hpcc-js/comms';
+import { getClusters } from '../../utils/hpcc-util.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
+import { parentPort } from 'worker_threads';
 
-jest.mock('@hpcc-js/comms');
-jest.mock('../../utils/hpcc-util');
-jest.mock('../../utils/getClusterOptions');
+vi.mock('@hpcc-js/comms');
+vi.mock('../../utils/hpcc-util.js');
+vi.mock('../../utils/getClusterOptions.js');
 
 describe('monitorCost', () => {
   describe('getStartAndEndTime', () => {
@@ -60,7 +61,7 @@ describe('monitorCost', () => {
     });
 
     it('should update scan_time if MonitoringLog exists', async () => {
-      const mockLog = { scan_time: null, save: jest.fn() };
+      const mockLog = { scan_time: null, save: vi.fn() };
       await handleMonitorLogs(mockLog, 1, 2, new Date());
       expect(mockLog.save).toHaveBeenCalled();
     });
@@ -87,7 +88,7 @@ describe('monitorCost', () => {
 
   describe('monitorCost', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should post message if no cost monitorings found', async () => {
@@ -168,9 +169,7 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([
-        { id: 1, error: 'Cluster error' },
-      ]);
+      getClusters.mockResolvedValue([{ id: 1, error: 'Cluster error' }]);
       await monitorCost();
       expect(parentPort.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -273,7 +272,7 @@ describe('monitorCost', () => {
       jest.resetModules();
       jest.doMock('worker_threads', () => ({ parentPort: undefined }));
       const logger = require('../../config/logger');
-      logger.error = jest.fn();
+      logger.error = vi.fn();
 
       // Re-require dependencies after mocking worker_threads
       const { CostMonitoring, MonitoringType } = require('../../models');

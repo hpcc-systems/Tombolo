@@ -1,28 +1,38 @@
-const request = require('supertest');
-const { app } = require('../test_server');
-const { FileMonitoring, sequelize } = require('../../models');
-const { v4: uuidv4 } = require('uuid');
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const { AUTHED_USER_ID } = require('../helpers');
-const { APPROVAL_STATUS } = require('../../config/constants');
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from 'vitest';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { FileMonitoring, sequelize } from '../../models/index.js';
+import { v4 as uuidv4 } from 'uuid';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import { AUTHED_USER_ID } from '../helpers.js';
+import { APPROVAL_STATUS } from '../../config/constants.js';
 
-beforeAll(() => {
-  global.console = require('console'); // restore native console
+beforeAll(async () => {
+  const consoleModule = await import('console');
+  global.console = consoleModule.default; // restore native console
 });
 
-jest.mock('../../models', () => {
-  const actual = jest.requireActual('../../models');
+vi.mock('../../models/index.js', () => {
+  const actual = vi.importActual('../../models/index.js');
   return {
     ...actual,
     FileMonitoring: {
-      create: jest.fn(),
-      update: jest.fn(),
-      findByPk: jest.fn(),
-      findAll: jest.fn(),
-      destroy: jest.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      findByPk: vi.fn(),
+      findAll: vi.fn(),
+      destroy: vi.fn(),
     },
     Cluster: {
-      findOne: jest.fn(),
+      findOne: vi.fn(),
     },
   };
 });
@@ -49,13 +59,13 @@ function getFileMonitoringPayload(overrides = {}) {
 
 describe('File Monitoring API', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   it('POST /api/fileMonitoring should create a new file monitoring', async () => {
@@ -135,14 +145,14 @@ describe('File Monitoring API', () => {
   });
 
   it('DELETE /api/fileMonitoring should delete file monitoring', async () => {
-    const commit = jest.fn();
-    const rollback = jest.fn();
+    const commit = vi.fn();
+    const rollback = vi.fn();
     jest
       .spyOn(sequelize, 'transaction')
       .mockResolvedValue({ commit, rollback });
 
-    FileMonitoring.update = jest.fn().mockResolvedValue([1]);
-    FileMonitoring.destroy = jest.fn().mockResolvedValue(1);
+    FileMonitoring.update = vi.fn().mockResolvedValue([1]);
+    FileMonitoring.destroy = vi.fn().mockResolvedValue(1);
 
     const res = await request(app)
       .delete('/api/fileMonitoring')

@@ -1,20 +1,29 @@
-const request = require('supertest');
-const { app } = require('../test_server');
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const { InstanceSettings } = require('../../models');
-const { getInstanceSettings } = require('../helpers');
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from 'vitest';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import { InstanceSettings } from '../../models/index.js';
+import { getInstanceSettings } from '../helpers.js';
 
 beforeAll(async () => {});
 
 describe('Instance Routes', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   it('get-instance-settings should get instance settings', async () => {

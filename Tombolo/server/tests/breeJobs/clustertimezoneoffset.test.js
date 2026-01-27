@@ -1,20 +1,23 @@
-const getClusterTimezoneOffset = require('../../jobs/cluster/clustertimezoneoffset');
-const hpccUtil = require('../../utils/hpcc-util');
-const { Cluster } = require('../../models');
-const { parentPort } = require('worker_threads');
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import getClusterTimezoneOffset from '../../jobs/cluster/clustertimezoneoffset.js';
+import * as hpccUtil from '../../utils/hpcc-util.js';
+import { Cluster } from '../../models/index.js';
+import { parentPort } from 'worker_threads';
 
-jest.mock('../../utils/hpcc-util');
-jest.mock('worker_threads');
-jest.mock('../../jobs/workerUtils', () => () => ({
-  log: jest.fn(),
+vi.mock('../../utils/hpcc-util.js');
+vi.mock('worker_threads');
+vi.mock('../../jobs/workerUtils.js', () => () => ({
+  log: vi.fn(),
 }));
 
 describe('getClusterTimezoneOffset', () => {
+  // eslint-disable-next-line no-unused-vars
   let log;
-  beforeEach(() => {
-    jest.clearAllMocks();
-    parentPort.postMessage = jest.fn();
-    log = require('../../jobs/workerUtils')().log;
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    parentPort.postMessage = vi.fn();
+    const workerUtils = (await import('../../jobs/workerUtils.js')).default;
+    log = workerUtils().log;
   });
 
   it('should post info and exit if no clusters', async () => {
