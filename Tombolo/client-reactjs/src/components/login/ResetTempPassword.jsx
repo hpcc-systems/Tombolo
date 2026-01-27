@@ -78,7 +78,7 @@ function ResetTempPassword() {
         throw new Error();
       }
 
-      setUserDetails(response.data?.user || response.user);
+      setUserDetails(response);
     } catch {
       handleError(
         'Unable to validate the password reset link. The link may have expired or been copied incorrectly. Please contact your administrator for a new link.'
