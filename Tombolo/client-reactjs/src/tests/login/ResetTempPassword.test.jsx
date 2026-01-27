@@ -262,7 +262,7 @@ describe('ResetTempPassword', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(handleError).toHaveBeenCalledWith(apiError);
+        expect(handleError).toHaveBeenCalledWith('The temporary password you entered is incorrect. Please try again.');
       });
 
       expect(setUser).not.toHaveBeenCalled();
