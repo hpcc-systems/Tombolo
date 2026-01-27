@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   validateFileSearch,
   validateSuperfileSearch,
   validateQuerySearch,
@@ -14,9 +14,9 @@ const {
   validateDropZoneFileSearch,
   validateGetSuperfileDetails,
   validateClusterMetaData,
-} = require('../middlewares/hpccMiddleware');
+} from '../middlewares/hpccMiddleware.js';
 
-const {
+import {
   fileSearch,
   superfileSearch,
   querySearch,
@@ -34,7 +34,7 @@ const {
   dropzoneFileSearch,
   getSuperfileDetails,
   getClusterMetaData,
-} = require('../controllers/hpccController');
+} from '../controllers/hpccController.js';
 
 router.post('/filesearch', validate(validateFileSearch), fileSearch);
 
@@ -97,4 +97,4 @@ router.get(
   getClusterMetaData
 );
 
-module.exports = router;
+export default router;

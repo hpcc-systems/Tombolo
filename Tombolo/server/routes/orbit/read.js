@@ -1,16 +1,12 @@
-const {
+import {
   OrbitBuild,
   OrbitMonitoring,
   MonitoringNotification,
-} = require('../../models');
-const express = require('express');
-const { validate } = require('../../middlewares/validateRequestBody');
-const {
-  sendSuccess,
-  sendError,
-  sendValidationError,
-} = require('../../utils/response');
-const {
+} from '../../models/index.js';
+import express from 'express';
+import { validate } from '../../middlewares/validateRequestBody.js';
+import { sendSuccess, sendError } from '../../utils/response.js';
+import {
   validateCreateOrbit,
   validateGetOrbitsByAppId,
   validateSearchByKeyword,
@@ -23,31 +19,32 @@ const {
   validateUpdateList,
   validateGetDomains,
   validateGetProducts,
-} = require('../../middlewares/orbitMiddleware');
+} from '../../middlewares/orbitMiddleware.js';
 const router = express.Router();
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
 const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-const notificationTemplate = require('../../jobs/messageCards/notificationTemplate');
+import notificationTemplate from '../../jobs/messageCards/notificationTemplate.js';
 // const { notify } = require('../notifications/email-notification');
-const { v4: uuidv4 } = require('uuid');
-const axios = require('axios');
-const SqlString = require('sqlstring');
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
+import SqlString from 'sqlstring';
 
-const jobScheduler = require('../../jobSchedular/job-scheduler.js');
+import jobScheduler from '../../jobSchedular/job-scheduler.js';
 
-const {
+import {
   runMySQLQuery,
   runSQLQuery,
   orbitDbConfig,
   fidoDbConfig,
-} = require('../../utils/runSQLQueries.js');
+} from '../../utils/runSQLQueries.js';
 
-const logger = require('../../config/logger.js');
+import logger from '../../config/logger.js';
 
-require('dotenv').config({ path: ENVPath });
+import dotenv from 'dotenv';
+dotenv.config({ path: ENVPath });
 
 //create one monitoring
 //TODO get workunits from past 2 weeks as well in orbitbuilds table
@@ -61,11 +58,11 @@ router.post('/', validate(validateCreateOrbit), async (req, res) => {
     const wuResult = await runMySQLQuery(query, orbitDbConfig);
 
     if (wuResult?.err) {
-      throw Error(result.message);
+      throw Error(wuResult.message);
     }
 
     //destructure out of recordset and place inside of new metaData
-    const { WorkUnit, Date, Status } = wuResult[0][0];
+    const { WorkUnit, Date, Status } = wuResult[0];
 
     const metaData = req.body.metaData;
 
@@ -271,7 +268,6 @@ router.put('/', validate(validateUpdateOrbitMonitor), async (req, res) => {
       id,
       name,
       build,
-      notifyCondition,
       severityCode,
       product,
       businessUnit,
@@ -325,7 +321,7 @@ router.put('/', validate(validateUpdateOrbitMonitor), async (req, res) => {
     const wuResult = await runMySQLQuery(query, orbitDbConfig);
 
     if (wuResult.err) {
-      throw Error(result.message);
+      throw Error(wuResult.message);
     }
 
     //destructure out of recordset and place inside of new metaData
@@ -365,7 +361,7 @@ router.put('/', validate(validateUpdateOrbitMonitor), async (req, res) => {
     if (isActive && oldInfo.isActive === 0) {
       const schedularOptions = {
         orbitMonitoring_id: id,
-        cron: newOrbitMonitoring.cron,
+        cron: newInfo.cron,
       };
 
       jobScheduler.createOrbitMonitoringJob(schedularOptions);
@@ -464,7 +460,7 @@ router.delete(
       const breeJobs = jobScheduler.getAllJobs();
       const expectedJobName = `Orbit Monitoring - ${id}`;
       if (breeJobs?.length) {
-        for (job of breeJobs) {
+        for (const job of breeJobs) {
           if (job.name === expectedJobName) {
             jobScheduler.removeJobFromScheduler(expectedJobName);
             break;
@@ -560,10 +556,9 @@ router.post(
       if (!application_id) throw Error('Invalid app ID');
 
       const query =
-        // eslint-disable-next-line quotes
         "select * from DimBuildInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc LIMIT 10";
 
-      const result = runMySQLQuery(query, orbitDbConfig);
+      const result = await runMySQLQuery(query, orbitDbConfig);
 
       const sentNotifications = [];
       //just grab the rows from result
@@ -602,6 +597,7 @@ router.post(
               //if megaphone, send notification
               // if (build.SubStatus_Code === "MEGAPHONE")
 
+              // TODO: integration is undefined
               //build and send email notification
               if (integration.metaData.notificationEmails) {
                 let buildDetails = {
@@ -649,8 +645,8 @@ router.post(
                   { lastRun: newBuild.metaData.lastRun },
                   { workunit: newBuild.metaData.workunit },
                 ];
-                let title = 'Orbit Build Detectd With Megaphone Status';
-                notification_id = uuidv4();
+                let title = 'Orbit Build Detected With Megaphone Status';
+                let notification_id = uuidv4();
                 const cardBody = notificationTemplate.orbitBuildMessageCard(
                   title,
                   facts,
@@ -755,4 +751,4 @@ router.get(
   }
 );
 
-module.exports = router;
+export default router;

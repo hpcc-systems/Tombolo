@@ -1,9 +1,9 @@
 // Imports from libraries
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Middlewares
-const {
+import {
   validateClusterId,
   validateFileListParams,
   validateCreateLandingZoneMonitoring,
@@ -14,11 +14,11 @@ const {
   validateToggleStatus,
   validateIds,
   validateBulkUpdatePayload,
-} = require('../middlewares/landingZoneMonitoringMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
+} from '../middlewares/landingZoneMonitoringMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
 
 // Controllers
-const {
+import {
   getDropzonesForACluster,
   getFileList,
   createLandingZoneMonitoring,
@@ -30,7 +30,7 @@ const {
   toggleLandingZoneMonitoringStatus,
   bulkDeleteLandingZoneMonitoring,
   bulkUpdateLzMonitoring,
-} = require('../controllers/landingZoneMonitoringController');
+} from '../controllers/landingZoneMonitoringController.js';
 
 router.post(
   '/',
@@ -78,4 +78,4 @@ router.patch(
 );
 
 // export the router
-module.exports = router;
+export default router;

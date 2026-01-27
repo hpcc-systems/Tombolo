@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const { getAllRoles } = require('../controllers/roleTypesController');
-const { validateUserRole } = require('../middlewares/rbacMiddleware');
-const role = require('../config/roleTypes');
+import { getAllRoles } from '../controllers/roleTypesController.js';
+import { validateUserRole } from '../middlewares/rbacMiddleware.js';
+import role from '../config/roleTypes.js';
 
 // Middleware to get all roles
 router.use(
@@ -13,4 +13,4 @@ router.use(
 // Get all roles
 router.get('/', getAllRoles);
 
-module.exports = router;
+export default router;
