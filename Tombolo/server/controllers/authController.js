@@ -670,12 +670,10 @@ const resetTempPassword = async (req, res) => {
     });
 
     if (passwordSecurityViolations.length > 0) {
-      await transaction.rollback();
-      return sendError(
-        res,
-        'Password does not meet security requirements',
-        400
-      );
+      throw {
+        status: 400,
+        message: 'Password does not meet security requirements',
+      };
     }
 
     // Hash the new password
