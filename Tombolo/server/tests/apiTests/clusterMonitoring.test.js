@@ -1,27 +1,28 @@
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const request = require('supertest');
-const { app } = require('../test_server');
-const { ClusterMonitoring } = require('../../models');
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { ClusterMonitoring } from '../../models/index.js';
 
-const {
+import {
   getClusterMonitoring,
   UUID_REGEX,
   AUTHED_USER_ID,
-} = require('../helpers');
-const { v4: uuidv4 } = require('uuid');
-const { APPROVAL_STATUS } = require('../../config/constants');
+} from '../helpers.js';
+import { v4 as uuidv4 } from 'uuid';
+import { APPROVAL_STATUS } from '../../config/constants.js';
 
 const monitoringId = uuidv4();
 
 describe('Cluster Monitoring routes Routes', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   // Create new cluster  monitoring
@@ -63,7 +64,7 @@ describe('Cluster Monitoring routes Routes', () => {
     const monitoring = getClusterMonitoring({ id: monitoringId });
 
     // Mock the instance update method
-    monitoring.update = jest.fn().mockResolvedValue(monitoring);
+    monitoring.update = vi.fn().mockResolvedValue(monitoring);
 
     ClusterMonitoring.findOne.mockResolvedValue(monitoring);
 

@@ -1,39 +1,38 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
 
 const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-require('dotenv').config({ path: ENVPath });
-const { preloadSecrets } = require('./config/secrets');
+import dotenv from 'dotenv';
+dotenv.config({ path: ENVPath });
+import { preloadSecrets } from './config/secrets.js';
 
 /* Use UTC as default timezone */
 process.env.TZ = 'UTC';
 
 /* LIBRARIES */
-const express = require('express');
-const rateLimit = require('express-rate-limit');
-const {
-  tokenValidationMiddleware: validateToken,
-} = require('./middlewares/tokenValidationMiddleware');
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import { tokenValidationMiddleware as validateToken } from './middlewares/tokenValidationMiddleware.js';
 
-const cors = require('cors');
-const compression = require('compression');
-const helmet = require('helmet');
-const { sequelize: dbConnection } = require('./models');
+import cors from 'cors';
+import compression from 'compression';
+import helmet from 'helmet';
+import { sequelize as dbConnection } from './models/index.js';
 
-const logger = require('./config/logger');
-require('./utils/tokenBlackListing');
+import logger from './config/logger.js';
+import './utils/tokenBlackListing.js';
 
-const cookieParser = require('cookie-parser');
+import cookieParser from 'cookie-parser';
 
-const { doubleCsrfProtection } = require('./middlewares/csrfMiddleware');
+import { doubleCsrfProtection } from './middlewares/csrfMiddleware.js';
 
-const { readSelfSignedCerts } = require('./utils/readSelfSignedCerts');
-const { sendError } = require('./utils/response');
+import { readSelfSignedCerts } from './utils/readSelfSignedCerts.js';
+import { sendError } from './utils/response.js';
 
 /* BREE JOB SCHEDULER */
-const JobScheduler = require('./jobSchedular/job-scheduler');
+import JobScheduler from './jobSchedular/job-scheduler.js';
 
 readSelfSignedCerts();
 
@@ -52,7 +51,8 @@ app.use((req, res, next) => {
   next();
 });
 
-const server = require('http').Server(app);
+import http from 'http';
+const server = http.createServer(app);
 server.maxHeadersCount = 1000;
 server.keepAliveTimeout = 65000;
 server.headersTimeout = 66000;
@@ -81,33 +81,33 @@ app.use(limiter);
 app.use(cookieParser());
 
 /*  ROUTES */
-const bree = require('./routes/bree/read');
-const applications = require('./routes/applicationRoutes');
-const hpccRead = require('./routes/hpccRoutes');
-const jobmonitoring = require('./routes/jobMonitoringRoutes');
-const configurations = require('./routes/configRoutes');
-const orbit = require('./routes/orbit/read');
-const integrations = require('./routes/integrations/read');
-const notification_queue = require('./routes/notificationQueueRoutes');
-const sent_notifications = require('./routes/sentNotificationRoutes');
-const monitorings = require('./routes/monitoringTypeRoutes');
-const asr = require('./routes/asrRoutes');
-const wizard = require('./routes/wizardRoutes');
+import bree from './routes/bree/read.js';
+import applications from './routes/applicationRoutes.js';
+import hpccRead from './routes/hpccRoutes.js';
+import jobmonitoring from './routes/jobMonitoringRoutes.js';
+import configurations from './routes/configRoutes.js';
+import orbit from './routes/orbit/read.js';
+import integrations from './routes/integrations/read.js';
+import notification_queue from './routes/notificationQueueRoutes.js';
+import sent_notifications from './routes/sentNotificationRoutes.js';
+import monitorings from './routes/monitoringTypeRoutes.js';
+import asr from './routes/asrRoutes.js';
+import wizard from './routes/wizardRoutes.js';
 
 //MVC & TESTED
-const auth = require('./routes/authRoutes');
-const users = require('./routes/userRoutes');
-const sessions = require('./routes/sessionRoutes');
-const cluster = require('./routes/clusterRoutes');
-const roles = require('./routes/roleTypesRoute');
-const status = require('./routes/statusRoutes');
-const instanceSettings = require('./routes/instanceRoutes');
-const costMonitoring = require('./routes/costMonitoringRoutes');
-const landingZoneMonitoring = require('./routes/landingZoneMonitoring');
-const clusterMonitoring = require('./routes/clusterMonitoringRoutes');
-const fileMonitoring = require('./routes/fileMonitoringRoutes');
-const orbitProfileMonitoring = require('./routes/orbitProfileMonitoringRoutes');
-const workunits = require('./routes/workunitRoutes');
+import auth from './routes/authRoutes.js';
+import users from './routes/userRoutes.js';
+import sessions from './routes/sessionRoutes.js';
+import cluster from './routes/clusterRoutes.js';
+import roles from './routes/roleTypesRoute.js';
+import status from './routes/statusRoutes.js';
+import instanceSettings from './routes/instanceRoutes.js';
+import costMonitoring from './routes/costMonitoringRoutes.js';
+import landingZoneMonitoring from './routes/landingZoneMonitoring.js';
+import clusterMonitoring from './routes/clusterMonitoringRoutes.js';
+import fileMonitoring from './routes/fileMonitoringRoutes.js';
+import orbitProfileMonitoring from './routes/orbitProfileMonitoringRoutes.js';
+import workunits from './routes/workunitRoutes.js';
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -145,7 +145,7 @@ app.use('/api/orbitProfileMonitoring', orbitProfileMonitoring);
 app.use('/api/workunits', workunits);
 
 // Safety net for unhandled errors
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   logger.error(
     `Error caught by Express error handler on route ${req.path}`,
     err
@@ -158,7 +158,7 @@ process.env['NODE_TLS_REJECT_UNAUTHORIZED'] =
   process.env.NODE_ENV === 'production' ? 1 : 0;
 
 // Attach graceful shutdown handlers
-const setupGracefulShutdown = require('./utils/setupGracefulShutdown');
+import setupGracefulShutdown from './utils/setupGracefulShutdown.js';
 setupGracefulShutdown({ server, sockets, dbConnection, JobScheduler });
 
 /* Start server */
