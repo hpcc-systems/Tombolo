@@ -11,12 +11,10 @@ import {
   NotificationQueue,
 } from '../../models/index.js';
 import { trimURL, deleteUser } from '../../utils/authUtil.js';
+import { accountDeleteAlertDaysForUser } from '../../config/monitorings.js';
 
 // Constants
 const accountUnlockLink = `${trimURL(process.env.WEB_URL)}`;
-
-const accountDeleteAlertDaysForUser =
-  require('../../config/monitorings.js').accountDeleteAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   const expiryDate = new Date(

@@ -6,11 +6,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { logOrPostMessage } from '../jobUtils.js';
 import { User, NotificationQueue } from '../../models/index.js';
 import { trimURL, getSupportContactEmails } from '../../utils/authUtil.js';
+import { passwordExpiryAlertDaysForUser } from '../../config/monitorings.js';
 
 // Constants
 const passwordResetLink = `${trimURL(process.env.WEB_URL)}/myaccount`;
-const passwordExpiryAlertDaysForUser =
-  require('../../config/monitorings.js').passwordExpiryAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   // Queue notification
