@@ -805,11 +805,7 @@ const loginBasicUser = async (req, res) => {
     // If force password reset is true it means user is issued a temp password and must reset password
     if (user?.forcePasswordReset) {
       logger.error(`Login : Login attempt by user with Temp PW - ${user.id}`);
-      return sendError(
-        res,
-        'You are trying to log in with a temporary password. Please follow the secure link sent to your email to set a new password.',
-        401
-      ); // Use Constants.LOGIN_TEMP_PW
+      return sendError(res, 'temp-pw', 401);
     }
 
     // If the accountLocked.isLocked is true, return generic error
