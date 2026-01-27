@@ -44,13 +44,12 @@ export const login = createAsyncThunk('auth/login', async ({ email, password, de
       user: userData,
     };
   } catch (err) {
-    handleError(err.messages);
-
     // Extract error message
     const errMessage =
       Array.isArray(err?.messages) && err.messages.length > 0 ? err.messages[0] : err?.message || 'Unknown error';
 
-    // Handle specific authentication states
+    // Handle specific authentication states without displaying error toast
+    // The login component will handle displaying appropriate messages
     if (errMessage === Constants.LOGIN_TEMP_PW) {
       return rejectWithValue({
         type: Constants.LOGIN_TEMP_PW,
@@ -67,7 +66,8 @@ export const login = createAsyncThunk('auth/login', async ({ email, password, de
         message: errMessage,
       });
     } else {
-      // Handle any other unexpected errors
+      // Handle any other unexpected errors - show error toast for these
+      handleError(err.messages);
       return rejectWithValue({
         type: Constants.LOGIN_FAILED,
         message: errMessage,

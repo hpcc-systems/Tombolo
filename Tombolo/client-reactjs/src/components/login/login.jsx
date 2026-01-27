@@ -60,6 +60,12 @@ const Login = () => {
 
     const test = await dispatch(login({ email, password, deviceInfo }));
 
+    if (test.payload?.type === Constants.LOGIN_TEMP_PW) {
+      handleError('You are trying to log in with a temporary password. Please follow the secure link sent to your email to set a new password.');
+      setLoading(false);
+      return;
+    }
+
     if (test.payload?.type === Constants.LOGIN_UNVERIFIED) {
       setUnverifiedUserLoginAttempt(true);
       setLoading(false);
