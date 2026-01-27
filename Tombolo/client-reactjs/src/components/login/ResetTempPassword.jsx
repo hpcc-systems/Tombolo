@@ -74,8 +74,8 @@ function ResetTempPassword() {
     try {
       const response = await authService.getUserDetailsWithVerificationCode(resetToken);
 
-      if (!response.email) {
-        throw new Error();
+      if (!response || !response.email || !response.firstName || !response.lastName) {
+        throw new Error('Invalid user data received');
       }
 
       setUserDetails(response);
