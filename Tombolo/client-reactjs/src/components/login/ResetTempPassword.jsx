@@ -1,5 +1,5 @@
 // Imports from libraries
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Form, Input, Button, Spin, Popover } from 'antd';
 
 // Local imports
@@ -15,6 +15,7 @@ function ResetTempPassword() {
   const [popOverContent, setPopOverContent] = useState(null);
   const [resetToken, setResetToken] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
+  const [loadError, setLoadError] = useState(false);
   const [form] = Form.useForm();
 
   //ref to track if user is finished typing
@@ -70,7 +71,7 @@ function ResetTempPassword() {
     setResetToken(token);
   }, []);
 
-  const onLoad = async () => {
+  const onLoad = useCallback(async () => {
     //get user details from service
     try {
       const response = await authService.getUserDetailsWithVerificationCode(resetToken);
@@ -81,17 +82,19 @@ function ResetTempPassword() {
 
       setUserDetails(response);
     } catch {
+      setLoadError(true);
+      setUserDetails({}); // Prevent infinite loop by setting to empty object
       handleError(
         'Unable to validate the password reset link. The link may have expired or been copied incorrectly. Please contact your administrator for a new link.'
       );
     }
-  };
+  }, [resetToken]);
 
   useEffect(() => {
-    if (userDetails === null && resetToken !== null) {
+    if (userDetails === null && resetToken !== null && !loadError) {
       onLoad();
     }
-  }, [resetToken, userDetails]);
+  }, [resetToken, userDetails, loadError, onLoad]);
 
   // Handle form submission
   const onFinish = async values => {
