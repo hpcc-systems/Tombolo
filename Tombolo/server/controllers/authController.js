@@ -660,7 +660,8 @@ const resetTempPassword = async (req, res) => {
 
     // Verify temp password matches current hash
     if (!bcrypt.compareSync(tempPassword, user.hash)) {
-      throw { status: 401, message: 'Invalid temporary password' };
+      await transaction.rollback();
+      return sendError(res, 'Invalid temporary password', 401);
     }
 
     // check if password meets security requirements

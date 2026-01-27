@@ -6,6 +6,8 @@ export const Constants = {
   LOGIN_PW_EXPIRED: 'password-expired',
   LOGIN_UNVERIFIED: 'unverified',
 
+  RESET_TEMP_PW_INVALID: 'Invalid temporary password',
+
   LOGOUT_SUCCESS: 'USERS_LOGOUT',
   LOGOUT_FAILED: 'USERS_LOGOUT_FAILED',
   CHANGE_PASSWORD_SUCCESS: 'USERS_CHANGE_PASSWORD_SUCCESS',

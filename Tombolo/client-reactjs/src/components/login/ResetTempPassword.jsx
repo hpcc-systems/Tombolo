@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Form, Input, Button, Spin, Popover } from 'antd';
 
 // Local imports
+import { Constants } from '../common/Constants';
 import { getDeviceInfo } from './utils';
 import passwordComplexityValidator from '../common/passwordComplexityValidator';
 import { setUser } from '../common/userStorage';
@@ -111,7 +112,14 @@ function ResetTempPassword() {
       setUser(JSON.stringify(user));
       window.location.href = '/';
     } catch (err) {
-      handleError(err);
+      // Check if error messages array contains the invalid temp password message
+      if (err?.messages?.includes(Constants.RESET_TEMP_PW_INVALID)) {
+        handleError('The temporary password you entered is incorrect. Please try again.');
+      } else if (err?.messages) {
+        handleError(err.messages);
+      } else {
+        handleError('An error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

@@ -59,6 +59,7 @@ export const authInterceptor = (axiosInstance) => {
         error.response?.status === 401 &&
         !originalRequest._retry &&
         !originalRequest.url.includes('/auth/loginBasicUser') &&
+        !originalRequest.url.includes('/auth/resetTempPassword') &&
         !originalRequest.url.includes('/auth/refreshToken') &&
         !isLoggedOut // Don't try to refresh if already logged out
       ) {
