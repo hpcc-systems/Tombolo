@@ -9,7 +9,7 @@ import { setUser } from '../common/userStorage';
 import { handleError } from '../common/handleResponse';
 import authService from '@/services/auth.service';
 
-function ResetTempPassword({ email }) {
+function ResetTempPassword() {
   const [loading, setLoading] = useState(false);
   const [popOverContent, setPopOverContent] = useState(null);
   const [resetToken, setResetToken] = useState(null);
@@ -98,7 +98,6 @@ function ResetTempPassword({ email }) {
       setLoading(true);
       const resetData = {
         ...values,
-        email,
         token: resetToken,
         deviceInfo: getDeviceInfo(),
       };

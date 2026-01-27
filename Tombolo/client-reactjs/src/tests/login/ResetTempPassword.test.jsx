@@ -47,8 +47,6 @@ import { handleError } from '@/components/common/handleResponse';
 import { setUser } from '@/components/common/userStorage';
 
 describe('ResetTempPassword', () => {
-  const mockEmail = 'test@example.com';
-
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock window.location.href
@@ -60,7 +58,7 @@ describe('ResetTempPassword', () => {
     it('renders the temp password reset form', () => {
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -77,7 +75,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -96,7 +94,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -123,7 +121,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -151,7 +149,7 @@ describe('ResetTempPassword', () => {
       const mockResponse = {
         data: {
           id: '123',
-          email: mockEmail,
+          email: 'test@example.com',
           firstName: 'John',
           lastName: 'Doe',
           roles: [],
@@ -162,7 +160,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -182,7 +180,6 @@ describe('ResetTempPassword', () => {
           tempPassword: 'TempPass123!',
           password: 'NewSecurePassword123!',
           confirmPassword: 'NewSecurePassword123!',
-          email: mockEmail,
           token: 'mock-token-123',
           deviceInfo: expect.any(Object),
         });
@@ -202,7 +199,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -227,7 +224,7 @@ describe('ResetTempPassword', () => {
         data: {
           user: {
             id: '123',
-            email: mockEmail,
+            email: 'test@example.com',
             firstName: 'John',
             lastName: 'Doe',
           },
@@ -249,7 +246,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -277,7 +274,7 @@ describe('ResetTempPassword', () => {
       const mockResponse = {
         data: {
           id: '123',
-          email: mockEmail,
+          email: 'test@example.com',
           firstName: 'John',
           lastName: 'Doe',
         },
@@ -286,7 +283,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -307,53 +304,17 @@ describe('ResetTempPassword', () => {
     });
   });
 
-  describe('Email Prop', () => {
-    it('uses provided email in reset request', async () => {
-      const user = userEvent.setup();
-      const customEmail = 'custom@example.com';
-      authService.resetTempPassword.mockResolvedValue({
-        id: '123',
-        email: customEmail,
-      });
-
-      render(
-        <BrowserRouter>
-          <ResetTempPassword email={customEmail} />
-        </BrowserRouter>
-      );
-
-      const tempPasswordInput = screen.getByLabelText(/Temporary Password/i);
-      const newPasswordInput = screen.getByLabelText(/New Password/i);
-      const confirmPasswordInput = screen.getByLabelText(/Confirm Password/i);
-
-      await user.type(tempPasswordInput, 'TempPass123!');
-      await user.type(newPasswordInput, 'NewPassword123!');
-      await user.type(confirmPasswordInput, 'NewPassword123!');
-
-      const submitButton = screen.getByRole('button', { name: /Reset Password/i });
-      await user.click(submitButton);
-
-      await waitFor(() => {
-        expect(authService.resetTempPassword).toHaveBeenCalledWith(
-          expect.objectContaining({
-            email: customEmail,
-          })
-        );
-      });
-    });
-  });
-
   describe('Device Info', () => {
     it('includes device info in reset request', async () => {
       const user = userEvent.setup();
       authService.resetTempPassword.mockResolvedValue({
         id: '123',
-        email: mockEmail,
+        email: 'test@example.com',
       });
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
