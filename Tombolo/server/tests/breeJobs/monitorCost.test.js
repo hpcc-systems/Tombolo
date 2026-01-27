@@ -271,18 +271,19 @@ describe('monitorCost', () => {
     it('should log error if parentPort is undefined and MonitoringType not found', async () => {
       vi.resetModules();
       vi.doMock('worker_threads', () => ({ parentPort: undefined }));
-      const logger = require('../../config/logger');
-      logger.error = vi.fn();
+      const logger = await import('../../config/logger.js');
+      logger.default.error = vi.fn();
 
-      // Re-require dependencies after mocking worker_threads
-      const { CostMonitoring, MonitoringType } = require('../../models');
-      const { monitorCost } = require('../../jobs/costMonitoring/monitorCost');
+      // Re-import dependencies after mocking worker_threads
+      const models = await import('../../models/index.js');
+      const monitorCostModule =
+        await import('../../jobs/costMonitoring/monitorCost.js');
 
-      CostMonitoring.findAll.mockResolvedValue([{ id: 'some-id' }]);
-      MonitoringType.findOne.mockResolvedValue(null);
+      models.CostMonitoring.findAll.mockResolvedValue([{ id: 'some-id' }]);
+      models.MonitoringType.findOne.mockResolvedValue(null);
 
-      await monitorCost();
-      expect(logger.error).toHaveBeenCalledWith(
+      await monitorCostModule.monitorCost();
+      expect(logger.default.error).toHaveBeenCalledWith(
         expect.objectContaining({
           level: 'error',
           text: 'monitorCost: MonitoringType, "Cost Monitoring" not found',

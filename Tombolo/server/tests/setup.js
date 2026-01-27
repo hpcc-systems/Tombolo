@@ -60,6 +60,34 @@ vi.mock('../models/index.js', () => {
       toJSON: vi.fn(),
       handleDelete: vi.fn(),
     },
+    UserRole: {
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+    },
+    UserApplication: {
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+    },
+    Application: {
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+    },
+    RoleType: {
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+    },
     RefreshToken: {
       findAll: vi.fn(),
       findOne: vi.fn(),
@@ -255,4 +283,6 @@ vi.mock('winston', () => {
 });
 
 // Mock winston-daily-rotate-file
-vi.mock('winston-daily-rotate-file', () => vi.fn());
+vi.mock('winston-daily-rotate-file', () => ({
+  default: vi.fn(),
+}));

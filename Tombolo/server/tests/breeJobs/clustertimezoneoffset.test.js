@@ -5,9 +5,10 @@ import { Cluster } from '../../models/index.js';
 import { parentPort } from 'worker_threads';
 
 vi.mock('../../utils/hpcc-util.js');
-vi.mock('worker_threads');
-vi.mock('../../jobs/workerUtils.js', () => () => ({
-  log: vi.fn(),
+vi.mock('../../jobs/workerUtils.js', () => ({
+  default: () => ({
+    log: vi.fn(),
+  }),
 }));
 
 describe('getClusterTimezoneOffset', () => {
@@ -15,7 +16,7 @@ describe('getClusterTimezoneOffset', () => {
   let log;
   beforeEach(async () => {
     vi.clearAllMocks();
-    parentPort.postMessage = vi.fn();
+    vi.clearAllMocks();
     const workerUtils = (await import('../../jobs/workerUtils.js')).default;
     log = workerUtils().log;
   });

@@ -147,6 +147,15 @@ describe('Cluster Monitoring routes Routes', () => {
       ],
     };
 
+    // Mock the findAll to return existing monitoring
+    ClusterMonitoring.findAll.mockResolvedValue(
+      completePayload.clusterMonitoring.map(m => ({
+        id: m.id,
+        metaData: { contacts: {} },
+      }))
+    );
+    ClusterMonitoring.update.mockResolvedValue([1]);
+
     const res = await request(app)
       .patch('/api/clusterMonitoring/bulkUpdate')
       .send(completePayload);
