@@ -699,6 +699,32 @@ const unlockAccount = async (req, res) => {
     // Save user with updated details
     await user.save();
 
+    // Queue notification to inform user account has been unlocked
+    try {
+      const notificationId = `USR_UNLCK_${moment().format('YYYYMMDD_HHmmss_SSS')}`;
+      await NotificationQueue.create({
+        type: 'email',
+        templateName: 'accountUnlocked',
+        notificationOrigin: 'Account Management',
+        deliveryType: 'immediate',
+        metaData: {
+          notificationId,
+          recipientName: `${user.firstName} ${user.lastName}`,
+          notificationOrigin: 'Account Management',
+          subject: 'Your account has been unlocked',
+          mainRecipients: [user.email],
+          notificationDescription: 'Account Unlocked',
+          loginLink: `${trimURL(process.env.WEB_URL)}/login`,
+        },
+        createdBy: req.user?.id || 'System',
+      });
+    } catch (notificationErr) {
+      logger.error(
+        `Failed to send unlock notification for user ${user.id}: ${notificationErr.message}`
+      );
+      // Don't fail unlock if notification fails
+    }
+
     // Response
     return sendSuccess(res, null, 'User account unlocked successfully');
   } catch (err) {

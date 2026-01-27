@@ -48,10 +48,7 @@
                   Hello,
                 </div>
                 <div>
-                  Your account has been unlocked, and a temporary password has been issued.
-                  <div>
-                    You must change this temporary password <span class="bold-text"> within 48 hours </span> to maintain account security. Below are the details:
-                  </div>
+                  Your account has been unlocked and you can now log in to your account.
                 </div>
               </td>
             </tr>
@@ -59,8 +56,7 @@
 
             <tr>
               <td class="section-header-td">
-                <div class="tabbedText"> <span class="bold-text">Password Reset Link: </span><a href=<%= typeof passwordResetLink !== 'undefined' ? passwordResetLink : ""  %>><%= typeof passwordResetLink !== 'undefined' ? passwordResetLink : ""  %></a> </div>
-                <div class="tabbedText"> <span class="bold-text">Temporary Password: </span> <%= typeof tempPassword !== 'undefined' ? tempPassword : ""  %> </div>
+                <div class="tabbedText"> <span class="bold-text">Login here: </span><a href=<%= typeof loginLink !== 'undefined' ? loginLink : ""  %>><%= typeof loginLink !== 'undefined' ? loginLink : ""  %></a> </div>
               </td>
             </tr>
 
