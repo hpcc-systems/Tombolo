@@ -795,12 +795,6 @@ const loginBasicUser = async (req, res) => {
       );
     }
 
-    //Compare password
-    if (!bcrypt.compareSync(password, user.hash)) {
-      logger.error(`Login : Invalid password for user with email ${email}`);
-      await handleInvalidLoginAttempt({ user, errMessage: genericError });
-    }
-
     // If force password reset is true it means user is issued a temp password and must reset password
     if (user?.forcePasswordReset) {
       logger.error(`Login : Login attempt by user with Temp PW - ${user.id}`);
@@ -842,6 +836,12 @@ const loginBasicUser = async (req, res) => {
         'Email is registered with a Microsoft account. Please sign in with Microsoft',
         401
       );
+    }
+
+    //Compare password - check after all account status checks to prevent account enumeration
+    if (!bcrypt.compareSync(password, user.hash)) {
+      logger.error(`Login : Invalid password for user with email ${email}`);
+      await handleInvalidLoginAttempt({ user, errMessage: genericError });
     }
 
     // Remove hash from user object
