@@ -30,11 +30,11 @@ vi.mock('../../utils/archiveUtils', () => ({
 }));
 
 const ArchiveService = require('../../services/archiveService').ArchiveService;
-ArchiveService.prototype.getArchiveModel = jest
+ArchiveService.prototype.getArchiveModel = vi
   .fn()
   .mockResolvedValue(archiveModelMock);
 ArchiveService.prototype.archiveRecords = vi.fn().mockResolvedValue(42);
-ArchiveService.prototype.getArchivedData = jest
+ArchiveService.prototype.getArchivedData = vi
   .fn()
   .mockResolvedValue([{ id: 1 }]);
 ArchiveService.prototype.restoreArchivedData = vi.fn().mockResolvedValue(1);

@@ -269,8 +269,8 @@ describe('monitorCost', () => {
     });
 
     it('should log error if parentPort is undefined and MonitoringType not found', async () => {
-      jest.resetModules();
-      jest.doMock('worker_threads', () => ({ parentPort: undefined }));
+      vi.resetModules();
+      vi.doMock('worker_threads', () => ({ parentPort: undefined }));
       const logger = require('../../config/logger');
       logger.error = vi.fn();
 

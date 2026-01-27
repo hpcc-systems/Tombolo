@@ -68,9 +68,7 @@ describe('monitorClusterReachability', () => {
     AccountService.mockImplementation(() => ({
       MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
     }));
-    passwordExpiryAlertDaysForCluster.includes = jest
-      .fn()
-      .mockReturnValue(true);
+    passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(true);
     passwordExpiryInProximityNotificationPayload.mockReturnValue({});
     NotificationQueue.create.mockResolvedValue({});
     Cluster.update.mockResolvedValue({});
@@ -105,9 +103,7 @@ describe('monitorClusterReachability', () => {
     AccountService.mockImplementation(() => ({
       MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 10 }),
     }));
-    passwordExpiryAlertDaysForCluster.includes = jest
-      .fn()
-      .mockReturnValue(false);
+    passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(false);
     Cluster.update.mockResolvedValue({});
     parentPort.postMessage = vi.fn();
     await monitorClusterReachability();
@@ -140,9 +136,7 @@ describe('monitorClusterReachability', () => {
     AccountService.mockImplementation(() => ({
       MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
     }));
-    passwordExpiryAlertDaysForCluster.includes = jest
-      .fn()
-      .mockReturnValue(true);
+    passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(true);
     passwordExpiryInProximityNotificationPayload.mockReturnValue({});
     NotificationQueue.create.mockRejectedValue(new Error('Queue error'));
     Cluster.update.mockResolvedValue({});

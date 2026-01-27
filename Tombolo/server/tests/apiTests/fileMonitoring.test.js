@@ -20,8 +20,8 @@ beforeAll(async () => {
   global.console = consoleModule.default; // restore native console
 });
 
-vi.mock('../../models/index.js', () => {
-  const actual = vi.importActual('../../models/index.js');
+vi.mock('../../models/index.js', async () => {
+  const actual = await vi.importActual('../../models/index.js');
   return {
     ...actual,
     FileMonitoring: {
@@ -147,9 +147,7 @@ describe('File Monitoring API', () => {
   it('DELETE /api/fileMonitoring should delete file monitoring', async () => {
     const commit = vi.fn();
     const rollback = vi.fn();
-    jest
-      .spyOn(sequelize, 'transaction')
-      .mockResolvedValue({ commit, rollback });
+    vi.spyOn(sequelize, 'transaction').mockResolvedValue({ commit, rollback });
 
     FileMonitoring.update = vi.fn().mockResolvedValue([1]);
     FileMonitoring.destroy = vi.fn().mockResolvedValue(1);

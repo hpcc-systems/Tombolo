@@ -30,9 +30,7 @@ vi.mock('@hpcc-js/comms', () => ({
     }),
   })),
   FileSprayService: vi.fn().mockImplementation(() => ({
-    FileList: jest
-      .fn()
-      .mockResolvedValue([{ name: 'file1' }, { name: 'file2' }]),
+    FileList: vi.fn().mockResolvedValue([{ name: 'file1' }, { name: 'file2' }]),
   })),
 }));
 

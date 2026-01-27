@@ -119,7 +119,7 @@ describe('analyzeCost.js', () => {
 
   describe('getAsrData', () => {
     it('should return contacts and asr metaData', async () => {
-      const spyBuildNotifId = jest
+      const spyBuildNotifId = vi
         .spyOn(
           require('../../jobs/jobMonitoring/monitorJobsUtil'),
           'generateNotificationId'
@@ -193,13 +193,13 @@ describe('analyzeCost.js', () => {
     });
 
     it('should send notification if summedCost >= threshold', async () => {
-      const spyBuildKey = jest
+      const spyBuildKey = vi
         .spyOn(
           require('../../jobs/jobMonitoring/monitorJobsUtil'),
           'generateNotificationIdempotencyKey'
         )
         .mockImplementation(() => 'key');
-      const spyBuildPayload = jest
+      const spyBuildPayload = vi
         .spyOn(
           require('../../jobs/jobMonitoring/monitorJobsUtil'),
           'createNotificationPayload'
@@ -248,20 +248,20 @@ describe('analyzeCost.js', () => {
       // Should not call NotificationQueue.create
     });
     it('should send notification if summedCost >= threshold', async () => {
-      const spyBuildKey = jest
+      const spyBuildKey = vi
         .spyOn(
           require('../../jobs/jobMonitoring/monitorJobsUtil'),
           'generateNotificationIdempotencyKey'
         )
         .mockImplementation(() => 'key');
-      const spyBuildPayload = jest
+      const spyBuildPayload = vi
         .spyOn(
           require('../../jobs/jobMonitoring/monitorJobsUtil'),
           'createNotificationPayload'
         )
         .mockImplementation(() => {});
 
-      const spyBuildNotifId = jest
+      const spyBuildNotifId = vi
         .spyOn(
           require('../../jobs/jobMonitoring/monitorJobsUtil'),
           'generateNotificationId'

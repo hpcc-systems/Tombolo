@@ -122,7 +122,7 @@ describe('orbitProfileMonitoring Routes', () => {
     OrbitProfileMonitoring.findOne.mockResolvedValue(orbitProfileMonitoring);
 
     // Mock the update method on the instance
-    orbitProfileMonitoring.update = jest
+    orbitProfileMonitoring.update = vi
       .fn()
       .mockResolvedValue(updatedMonitoring);
 
@@ -190,7 +190,7 @@ describe('orbitProfileMonitoring Routes', () => {
 
     // Mock transaction - for callback pattern sequelize.transaction(async t => {...})
     const mockTransaction = { commit: vi.fn(), rollback: vi.fn() };
-    jest.spyOn(sequelize, 'transaction').mockImplementation(async callback => {
+    vi.spyOn(sequelize, 'transaction').mockImplementation(async callback => {
       return await callback(mockTransaction);
     });
 

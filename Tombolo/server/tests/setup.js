@@ -213,7 +213,7 @@ vi.mock('../models/index.js', () => {
     },
     sequelize: {
       transaction,
-      literal: jest.fn(value => value),
+      literal: vi.fn(value => value),
       __commit: commit, // Expose for test access
       __rollback: rollback, // Expose for test access
     },
@@ -232,20 +232,20 @@ vi.mock('winston', () => {
   };
 
   return {
-    createLogger: jest.fn(() => mockLogger),
+    createLogger: vi.fn(() => mockLogger),
     transports: {
       Console: vi.fn(),
       DailyRotateFile: vi.fn(),
     },
     format: {
-      combine: jest.fn((...args) => ({ combine: args })), // Return a mock format object
-      timestamp: jest.fn(() => ({ timestamp: true })),
-      simple: jest.fn(() => ({ simple: true })),
-      json: jest.fn(() => ({ json: true })),
-      colorize: jest.fn(() => ({
+      combine: vi.fn((...args) => ({ combine: args })), // Return a mock format object
+      timestamp: vi.fn(() => ({ timestamp: true })),
+      simple: vi.fn(() => ({ simple: true })),
+      json: vi.fn(() => ({ json: true })),
+      colorize: vi.fn(() => ({
         // Mock colorize to return an object with addColors
         colorize: true,
-        addColors: jest.fn(() => ({})), // Mock addColors to return an empty object or as needed
+        addColors: vi.fn(() => ({})), // Mock addColors to return an empty object or as needed
       })),
       uncolorize: vi.fn(),
       printf: vi.fn(),
