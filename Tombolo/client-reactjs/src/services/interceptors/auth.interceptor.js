@@ -5,7 +5,7 @@ let failedQueue = [];
 let isLoggedOut = false;
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
+  failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
     } else {
@@ -23,14 +23,14 @@ export const resetAuthState = () => {
   failedQueue = [];
 };
 
-export const authInterceptor = (axiosInstance) => {
+export const authInterceptor = axiosInstance => {
   // Request interceptor - Add CSRF token to headers for state-changing methods
   axiosInstance.interceptors.request.use(
-    (config) => {
+    config => {
       // For POST, PUT, DELETE requests, extract CSRF token from cookie
       if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
         // Extract CSRF token from cookie format: "secretToken|hashToken"
-        const csrfCookie = document.cookie.split(';').find((c) => c.trim().startsWith('x-csrf-token='));
+        const csrfCookie = document.cookie.split(';').find(c => c.trim().startsWith('x-csrf-token='));
 
         if (csrfCookie) {
           const cookieValue = csrfCookie.split('=')[1];
@@ -45,13 +45,13 @@ export const authInterceptor = (axiosInstance) => {
       }
       return config;
     },
-    (error) => Promise.reject(error)
+    error => Promise.reject(error)
   );
 
   // Response interceptor - Handle 401s and refresh tokens
   axiosInstance.interceptors.response.use(
-    (response) => response,
-    async (error) => {
+    response => response,
+    async error => {
       const originalRequest = error.config;
 
       // Check if it's a 401 error and not already a retry and not an ignored route
@@ -59,6 +59,7 @@ export const authInterceptor = (axiosInstance) => {
         error.response?.status === 401 &&
         !originalRequest._retry &&
         !originalRequest.url.includes('/auth/loginBasicUser') &&
+        !originalRequest.url.includes('/auth/resetTempPassword') &&
         !originalRequest.url.includes('/auth/refreshToken') &&
         !isLoggedOut // Don't try to refresh if already logged out
       ) {
@@ -70,7 +71,7 @@ export const authInterceptor = (axiosInstance) => {
             .then(() => {
               return axiosInstance(originalRequest);
             })
-            .catch((err) => {
+            .catch(err => {
               return Promise.reject(err);
             });
         }

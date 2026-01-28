@@ -9,7 +9,7 @@ import {
   AsrProduct,
   Integration,
   SentNotification,
-} from '../../models.js';
+} from '../../models/index.js';
 import {
   createNotificationPayload,
   findLocalDateTimeAtCluster,

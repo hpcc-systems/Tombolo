@@ -1,7 +1,7 @@
 // import {parentPort, workerData} from 'worker_threads';
 // const workFlowUtil = require('../utils/workflow-util');
 // const assetUtil = require('../utils/assets.js');
-// import {JobExecution} from '../models.js';
+// import {JobExecution} from '../models/index.js';
 // import {v4 as uuidv4} from 'uuid';
 // import {log, dispatch} from './workerUtils.js';(parentPort);
 //

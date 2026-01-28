@@ -1,7 +1,8 @@
 import { parentPort } from 'worker_threads';
-import hpccUtil from '../utils/hpcc-util.js';
-import assetUtil from '../utils/assets.js';
-import workflowUtil from '../utils/workflow-util.js';
+import { workunitInfo } from '../utils/hpcc-util.js';
+// Neither assetUtil or workflowutil exist
+// import assetUtil from '../utils/assets.js';
+// import workflowUtil from '../utils/workflow-util.js';
 import workerUtils from './workerUtils.js';
 
 const { log, dispatch } = workerUtils(parentPort);
@@ -16,7 +17,8 @@ if (parentPort) {
 
 (async () => {
   try {
-    const jobExecutions = await assetUtil.getJobEXecutionForProcessing();
+    // const jobExecutions = await assetUtil.getJobEXecutionForProcessing();
+    const jobExecutions = [];
     if (jobExecutions.length === 0)
       return log(
         'verbose',
@@ -40,7 +42,7 @@ if (parentPort) {
 
       try {
         // Getting info about WU from HPCC
-        const WUinfo = await hpccUtil.workunitInfo(
+        const WUinfo = await workunitInfo(
           jobExecution.wuid,
           jobExecution.clusterId
         );
@@ -105,13 +107,13 @@ if (parentPort) {
             'info',
             `Job "${jobName}" is completed, checking if notification required...`
           );
-          await workflowUtil.notifyJob({
-            dataflowId,
-            jobExecutionGroupId,
-            jobId,
-            wuid,
-            status: WUResult.State,
-          });
+          // await workflowUtil.notifyJob({
+          //   dataflowId,
+          //   jobExecutionGroupId,
+          //   jobId,
+          //   wuid,
+          //   status: WUResult.State,
+          // });
 
           // Executed a single Job and we are done.
           if (!dataflowId) continue;
@@ -134,22 +136,22 @@ if (parentPort) {
             'error',
             `Job "${jobName}" failed checking if notification required...`
           );
-          await workflowUtil.notifyJob({
-            dataflowId,
-            jobExecutionGroupId,
-            jobId,
-            wuid,
-            status: WUResult.State,
-            exceptions: WUResult.Exceptions,
-          });
-          await workflowUtil.notifyWorkflow({
-            dataflowId,
-            jobExecutionGroupId,
-            jobName,
-            wuid,
-            status: WUResult.State,
-            exceptions: WUResult.Exceptions,
-          });
+          // await workflowUtil.notifyJob({
+          //   dataflowId,
+          //   jobExecutionGroupId,
+          //   jobId,
+          //   wuid,
+          //   status: WUResult.State,
+          //   exceptions: WUResult.Exceptions,
+          // });
+          // await workflowUtil.notifyWorkflow({
+          //   dataflowId,
+          //   jobExecutionGroupId,
+          //   jobName,
+          //   wuid,
+          //   status: WUResult.State,
+          //   exceptions: WUResult.Exceptions,
+          // });
         }
       }
     }

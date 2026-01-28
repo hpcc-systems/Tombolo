@@ -13,7 +13,6 @@ import axios from 'axios';
 import { decryptString } from '@tombolo/shared';
 import { generateNotificationId } from '../../jobs/jobMonitoring/monitorJobsUtil.js';
 
-vi.mock('worker_threads');
 vi.mock('axios');
 vi.mock('@tombolo/shared');
 vi.mock('../../jobs/jobMonitoring/monitorJobsUtil.js');
@@ -22,7 +21,7 @@ const originalEnv = process.env;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  parentPort.postMessage = vi.fn();
+  vi.clearAllMocks();
   NotificationQueue.create.mockResolvedValue({});
   MonitoringLog.upsert.mockResolvedValue({});
   // Set up ENCRYPTION_KEY for tests

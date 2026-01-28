@@ -12,6 +12,9 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
+        // ESM doesn't have __dirname and __filename - must be explicitly defined
+        __dirname: 'off',
+        __filename: 'off',
       },
     },
     rules: {
@@ -34,6 +37,8 @@ export default [
       globals: {
         ...globals.node,
         ...globals.vitest,
+        __dirname: 'off',
+        __filename: 'off',
       },
     },
   },

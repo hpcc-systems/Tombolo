@@ -1,6 +1,11 @@
 import axios from 'axios';
 import { Cluster } from '../models/index.js';
-import * as hpccJSComms from '@hpcc-js/comms';
+import {
+  DFUService,
+  FileSprayService,
+  EclService,
+  WorkunitsService,
+} from '@hpcc-js/comms';
 import { decryptString } from '@tombolo/shared';
 import { getClusterOptions } from './getClusterOptions.js';
 import logger from '../config/logger.js';
@@ -110,7 +115,7 @@ export const indexInfo = (clusterId, indexName) => {
     try {
       getCluster(clusterId).then(function (cluster) {
         let clusterAuth = getClusterAuth(cluster);
-        let dfuService = new hpccJSComms.DFUService(
+        let dfuService = new DFUService(
           getClusterOptions(
             {
               baseUrl: cluster.thor_host + ':' + cluster.thor_port,
@@ -162,7 +167,7 @@ export async function getDirectories({
     },
     cluster.allowSelfSigned
   );
-  const fileSprayService = new hpccJSComms.FileSprayService(clusterDetails);
+  const fileSprayService = new FileSprayService(clusterDetails);
 
   const fileList = await fileSprayService.FileList({
     DirectoryOnly,
@@ -218,7 +223,7 @@ export function queryInfo(clusterId, queryName) {
     return new Promise((resolve, reject) => {
       getCluster(clusterId).then(function (cluster) {
         let clusterAuth = getClusterAuth(cluster);
-        let eclService = new hpccJSComms.EclService(
+        let eclService = new EclService(
           getClusterOptions(
             {
               baseUrl: cluster.roxie_host + ':' + cluster.roxie_port,
@@ -377,7 +382,7 @@ export async function getJobInfo(clusterId, jobWuid, jobType) {
 //         allowSelfSigned
 //       );
 //
-//       wuService = new hpccJSComms.WorkunitsService(connectionSettings);
+//       wuService = new WorkunitsService(connectionSettings);
 //     }
 //
 //     if (!wuService) throw new Error('Failed to get WorkunitsService');
@@ -726,7 +731,7 @@ export async function getWorkunitsService(clusterId) {
     allowSelfSigned
   );
 
-  return new hpccJSComms.WorkunitsService(connectionSettings);
+  return new WorkunitsService(connectionSettings);
 }
 
 export async function getDFUService(clusterId) {
@@ -742,7 +747,7 @@ export async function getDFUService(clusterId) {
     cluster.allowSelfSigned
   );
 
-  return new hpccJSComms.DFUService(connectionSettings);
+  return new DFUService(connectionSettings);
 }
 
 export async function createWorkUnit(clusterId, WUbody = {}) {

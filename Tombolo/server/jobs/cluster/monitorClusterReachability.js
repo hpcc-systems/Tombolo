@@ -4,7 +4,7 @@ import { AccountService } from '@hpcc-js/comms';
 import { passwordExpiryAlertDaysForCluster } from '../../config/monitorings.js';
 import { passwordExpiryInProximityNotificationPayload } from './clusterReachabilityMonitoringUtils.js';
 import { decryptString } from '@tombolo/shared';
-import { Cluster, NotificationQueue } from '../../models.js';
+import { Cluster, NotificationQueue } from '../../models/index.js';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 async function monitorClusterReachability() {

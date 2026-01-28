@@ -5,7 +5,7 @@ import {
   OrbitBuild,
   MonitoringNotification,
   NotificationQueue,
-} from '../models.js';
+} from '../models/index.js';
 
 import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 

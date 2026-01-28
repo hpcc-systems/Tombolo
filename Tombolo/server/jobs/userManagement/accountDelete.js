@@ -4,14 +4,17 @@ import { v4 as uuidv4 } from 'uuid';
 
 //Local Imports
 import { logOrPostMessage } from '../jobUtils.js';
-import { User, UserRole, RoleType, NotificationQueue } from '../../models.js';
+import {
+  User,
+  UserRole,
+  RoleType,
+  NotificationQueue,
+} from '../../models/index.js';
 import { trimURL, deleteUser } from '../../utils/authUtil.js';
+import { accountDeleteAlertDaysForUser } from '../../config/monitorings.js';
 
 // Constants
 const accountUnlockLink = `${trimURL(process.env.WEB_URL)}`;
-
-const accountDeleteAlertDaysForUser =
-  require('../../config/monitorings.js').accountDeleteAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   const expiryDate = new Date(

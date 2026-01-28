@@ -20,7 +20,7 @@ import {
   Cluster,
   NotificationQueue,
   MonitoringType,
-} from '../../models.js';
+} from '../../models/index.js';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
 

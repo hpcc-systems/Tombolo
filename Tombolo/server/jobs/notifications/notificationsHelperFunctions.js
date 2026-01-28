@@ -1,10 +1,8 @@
-import { NotificationQueue } from '../../models.js';
+import { NotificationQueue } from '../../models/index.js';
 import logger from '../../config/logger.js';
 
-import emailConfig from '../../config/emailConfig.js';
-const {
-  retryOptions: { maxRetries, retryDelays },
-} = emailConfig;
+import { retryOptions } from '../../config/emailConfig.js';
+const { maxRetries, retryDelays } = retryOptions;
 
 // Function to calculate the retryAfter time
 const calculateRetryAfter = ({
@@ -24,7 +22,7 @@ const calculateRetryAfter = ({
 async function updateNotificationQueueOnError({
   notificationId,
   attemptCount,
-  notification,
+  _notification,
   error,
 }) {
   try {

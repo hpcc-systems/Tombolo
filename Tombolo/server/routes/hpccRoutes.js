@@ -21,8 +21,8 @@ import {
   superfileSearch,
   querySearch,
   jobSearch,
-  getClusters,
-  getCluster,
+  getClustersCtr,
+  getClusterCtr,
   getLogicalFileDetails,
   hpccGetData,
   getFileProfile,
@@ -50,9 +50,9 @@ router.post(
   jobSearch
 );
 
-router.get('/getClusters', getClusters);
+router.get('/getClusters', getClustersCtr);
 
-router.get('/getCluster', getCluster);
+router.get('/getCluster', getClusterCtr);
 
 // Gets file detail straight from HPCC regardless of whether it exists in Tombolo DB
 router.get(

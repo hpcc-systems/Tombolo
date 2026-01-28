@@ -6,7 +6,7 @@ import {
   OrbitMonitoring,
   OrbitBuild,
   MonitoringNotification,
-} from '../models.js';
+} from '../models/index.js';
 import { v4 as uuidv4 } from 'uuid';
 import {
   orbitMonitoringEmailBody,

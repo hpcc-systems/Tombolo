@@ -6,7 +6,7 @@ import {
   NotificationQueue,
   JobMonitoringData,
   JobMonitoring,
-} from '../../models.js';
+} from '../../models/index.js';
 import {
   WUAlertDataPoints,
   convertTotalClusterTimeToSeconds,

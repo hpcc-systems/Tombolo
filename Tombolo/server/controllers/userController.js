@@ -36,10 +36,6 @@ import {
 } from '../utils/authUtil.js';
 
 const whereNotSystemUser = {
-  firstName: {
-    [Op.ne]: 'System',
-  },
-  lastName: { [Op.ne]: 'User' },
   email: { [Op.ne]: 'system-user@example.com' },
 };
 
@@ -483,7 +479,7 @@ const createUser = async (req, res) => {
       email,
       registrationMethod = 'traditional',
       registrationStatus = 'active',
-      verifiedUser = false,
+      verifiedUser = true,
       roles,
       applications,
     } = req.body;
@@ -697,33 +693,37 @@ const unlockAccount = async (req, res) => {
       return sendError(res, 'User not found', 404);
     }
 
-    // Generate temporary password/hash
-    const tempPassword = generatePassword();
-    const salt = bcrypt.genSaltSync(10);
-
-    // Add updated user details
-    user.hash = bcrypt.hashSync(tempPassword, salt);
-    user.forcePasswordReset = true;
-    user.passwordExpiresAt = new Date(
-      new Date().setDate(new Date().getDate() + 2) // 48 hours
-    );
     user.loginAttempts = 0;
     user.accountLocked = { isLocked: false, lockedReason: [] };
 
     // Save user with updated details
     await user.save();
 
-    // Send notification to the user
-    const verificationCode = UUIDV4();
-
-    // Create account verification code
-    await AccountVerificationCode.create({
-      code: verificationCode,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 172800000),
-    });
-
-    await sendAccountUnlockedEmail({ user, tempPassword, verificationCode });
+    // Queue notification to inform user account has been unlocked
+    try {
+      const notificationId = `USR_UNLCK_${moment().format('YYYYMMDD_HHmmss_SSS')}`;
+      await NotificationQueue.create({
+        type: 'email',
+        templateName: 'accountUnlocked',
+        notificationOrigin: 'Account Management',
+        deliveryType: 'immediate',
+        metaData: {
+          notificationId,
+          recipientName: `${user.firstName} ${user.lastName}`,
+          notificationOrigin: 'Account Management',
+          subject: 'Your account has been unlocked',
+          mainRecipients: [user.email],
+          notificationDescription: 'Account Unlocked',
+          loginLink: `${trimURL(process.env.WEB_URL)}/login`,
+        },
+        createdBy: req.user?.id || 'System',
+      });
+    } catch (notificationErr) {
+      logger.error(
+        `Failed to send unlock notification for user ${user.id}: ${notificationErr.message}`
+      );
+      // Don't fail unlock if notification fails
+    }
 
     // Response
     return sendSuccess(res, null, 'User account unlocked successfully');

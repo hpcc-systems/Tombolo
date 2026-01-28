@@ -2,7 +2,7 @@
 //
 // const hpccUtil = require('../utils/hpcc-util');
 // const workflowUtil = require('../utils/workflow-util');
-// import {FileMonitoring} from '../models.js';
+// import {FileMonitoring} from '../models/index.js';
 //
 // import {log, dispatch} from './workerUtils.js';(parentPort);
 //

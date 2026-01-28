@@ -5,7 +5,7 @@ import {
   NotificationQueue,
   AsrProduct,
   AsrDomain,
-} from '../../models.js';
+} from '../../models/index.js';
 import { logOrPostMessage } from '../jobUtils.js';
 import { decryptString } from '@tombolo/shared';
 import { FileSprayService } from '@hpcc-js/comms';

@@ -1,6 +1,8 @@
 import path from 'path';
 import logger from '../config/logger.js';
+import { getDirname } from '../utils/polyfills.js';
 
+const __dirname = getDirname(import.meta.url);
 const INTEGRATION_CREATION = 'integrationCreation.js';
 
 async function createIntegrationCreationJob() {

@@ -5,8 +5,8 @@ import moment from 'moment';
 
 import { notify } from '../routes/notifications/email-notification.js';
 import logger from '../config/logger.js';
-import { FileMonitoring, MonitoringNotification } from '../models.js';
-import hpccUtil from '../utils/hpcc-util.js';
+import { FileMonitoring, MonitoringNotification } from '../models/index.js';
+import { getDirectories } from '../utils/hpcc-util.js';
 import wildCardStringMatch from '../utils/wildCardStringMatch.js';
 
 import {
@@ -46,14 +46,14 @@ import {
       },
     } = fileMonitoringDetails;
 
-    // const cluster = await hpccUtil.getCluster(cluster_id);
+    // const cluster = await getCluster(cluster_id);
     // const { timezone_offset } = cluster;
 
     let currentTimeStamp = moment.utc().valueOf();
 
     const Path = `/var/lib/HPCCSystems/${landingZone}/${dirToMonitor.join('/')}/`;
 
-    const result = await hpccUtil.getDirectories({
+    const result = await getDirectories({
       clusterId: cluster_id,
       Netaddr,
       Path,

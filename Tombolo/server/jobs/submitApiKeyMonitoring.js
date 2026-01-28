@@ -1,7 +1,7 @@
 // import {notify} from '../routes/notifications/email-notification.js';
 // import {parentPort} from 'worker_threads';
 // const logger = require('../config/logger');
-// import {ApiKey, MonitoringNotification} from '../models.js';
+// import {ApiKey, MonitoringNotification} from '../models/index.js';
 // import {v4 as uuidv4} from 'uuid';
 // import {emailBody} from './messageCards/notificationTemplate.js';
 //

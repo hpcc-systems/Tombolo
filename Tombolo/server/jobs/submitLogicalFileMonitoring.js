@@ -2,8 +2,8 @@ import axios from 'axios';
 import { notify } from '../routes/notifications/email-notification.js';
 import { parentPort, workerData } from 'worker_threads';
 import logger from '../config/logger.js';
-import { FileMonitoring, MonitoringNotification } from '../models.js';
-import hpccUtil from '../utils/hpcc-util.js';
+import { FileMonitoring, MonitoringNotification } from '../models/index.js';
+import { logicalFileDetails } from '../utils/hpcc-util.js';
 import { v4 as uuidv4 } from 'uuid';
 import {
   emailBody,
@@ -38,7 +38,7 @@ import {
     } = fileMonitoringDetails;
 
     // Get file details from HPCC to compare  if any things of interest have been changed
-    let logicalFileDetail = await hpccUtil.logicalFileDetails(Name, cluster_id);
+    let logicalFileDetail = await logicalFileDetails(Name, cluster_id);
 
     const notificationDetails = { details: { 'File Name': Name } };
 

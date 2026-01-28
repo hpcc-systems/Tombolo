@@ -1,8 +1,9 @@
 import { parentPort, workerData } from 'worker_threads';
 import { v4 as uuidv4 } from 'uuid';
-import hpccUtil from '../utils/hpcc-util.js';
-import assetUtil from '../utils/assets.js';
-import workflowUtil from '../utils/workflow-util.js';
+import { getJobWuDetails } from '../utils/hpcc-util.js';
+// Neither assetUtil or workflowUtil exist
+// import assetUtil from '../utils/assets.js';
+// import workflowUtil from '../utils/workflow-util.js';
 import workerUtils from './workerUtils.js';
 
 const { log, dispatch } = workerUtils(parentPort);
@@ -27,11 +28,7 @@ if (parentPort) {
       `Started submitting job ${jobName} | clusterId: ${clusterId} | dataflowId : ${dataflowId}`
     );
 
-    const result = await hpccUtil.getJobWuDetails(
-      clusterId,
-      jobName,
-      dataflowId
-    );
+    const result = await getJobWuDetails(clusterId, jobName, dataflowId);
     if (!result) throw new Error(`Failed to get data about job: ${jobName}`);
 
     const { wuid, wuService } = result;
@@ -54,28 +51,28 @@ if (parentPort) {
     if (!newWUID) throw new Error('Failed to get WU in respose');
 
     workerData.status = 'submitted';
-    await assetUtil.recordJobExecution(workerData, newWUID);
+    // await assetUtil.recordJobExecution(workerData, newWUID);
   } catch (error) {
     log('error', `Error in job submit ${workerData.jobName}`, error);
     workerData.status = 'error';
-    await assetUtil.recordJobExecution(workerData, '');
+    // await assetUtil.recordJobExecution(workerData, '');
 
-    const { jobId, jobName, dataflowId, jobExecutionGroupId } = workerData;
+    // const { jobId, jobName, dataflowId, jobExecutionGroupId } = workerData;
 
-    await workflowUtil.notifyJob({
-      dataflowId,
-      jobExecutionGroupId,
-      jobId,
-      status: 'error',
-      exceptions: error.message,
-    });
-    await workflowUtil.notifyWorkflow({
-      dataflowId,
-      jobExecutionGroupId,
-      jobName,
-      status: 'error',
-      exceptions: error.message,
-    });
+    // await workflowUtil.notifyJob({
+    //   dataflowId,
+    //   jobExecutionGroupId,
+    //   jobId,
+    //   status: 'error',
+    //   exceptions: error.message,
+    // });
+    // await workflowUtil.notifyWorkflow({
+    //   dataflowId,
+    //   jobExecutionGroupId,
+    //   jobName,
+    //   status: 'error',
+    //   exceptions: error.message,
+    // });
   } finally {
     if (!workerData.isCronJob) dispatch('remove'); // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
     parentPort ? parentPort.postMessage('done') : process.exit(0);

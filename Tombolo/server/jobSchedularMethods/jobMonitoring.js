@@ -10,8 +10,10 @@ import {
   generateTimeSlotsForJobMonitoring,
   generateIntervalString,
 } from './jobSchedularUtils.js';
+import { getDirname } from '../utils/polyfills.js';
 
 // Constants
+const __dirname = getDirname(import.meta.url);
 const MONITOR_JOBS_FILE_NAME = 'monitorJobs.js';
 const MONITOR_INTERMEDIATE_JOBS_FILE_NAME = 'monitorIntermediateStateJobs.js';
 const MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME = 'monitorJobPunctuality.js';

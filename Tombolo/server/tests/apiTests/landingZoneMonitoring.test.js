@@ -16,23 +16,31 @@ import {
 import { APPROVAL_STATUS } from '../../config/constants.js';
 
 // Mock HPCC-JS services
-vi.mock('@hpcc-js/comms', () => ({
-  TopologyService: vi.fn().mockImplementation(() => ({
-    TpDropZoneQuery: vi.fn().mockResolvedValue({
-      TpDropZones: {
-        TpDropZone: [
-          {
-            Name: 'test_dropzone',
-            Path: '/var/lib/HPCCSystems/dropzone',
+vi.mock('@hpcc-js/comms', async () => {
+  return {
+    TopologyService: class {
+      constructor() {}
+      TpDropZoneQuery() {
+        return Promise.resolve({
+          TpDropZones: {
+            TpDropZone: [
+              {
+                Name: 'test_dropzone',
+                Path: '/var/lib/HPCCSystems/dropzone',
+              },
+            ],
           },
-        ],
-      },
-    }),
-  })),
-  FileSprayService: vi.fn().mockImplementation(() => ({
-    FileList: vi.fn().mockResolvedValue([{ name: 'file1' }, { name: 'file2' }]),
-  })),
-}));
+        });
+      }
+    },
+    FileSprayService: class {
+      constructor() {}
+      FileList() {
+        return Promise.resolve([{ name: 'file1' }, { name: 'file2' }]);
+      }
+    },
+  };
+});
 
 // Mock utility functions
 vi.mock('@tombolo/shared', () => ({

@@ -1,10 +1,10 @@
-/* eslint-disable */
 import path from 'path';
 import {
   lz_monitoring_interval,
   lz_file_count_monitoring_interval,
   lz_space_usage_monitoring_interval,
 } from '../config/monitorings.js';
+import { getDirname } from '../utils/polyfills.js';
 import logger from '../config/logger.js';
 import {
   generateTimeSlotsForJobMonitoring,
@@ -12,6 +12,7 @@ import {
 } from './jobSchedularUtils.js';
 
 // Constants
+const __dirname = getDirname(import.meta.url);
 const LZ_FILE_MOVEMENT_MONITORING_FILE_NAME = 'lzFileMovementMonitoring.js';
 const LZ_FILE_COUNT_MONITORING_FILE_NAME = 'lzFileCountMonitoring.js';
 const LZ_SPACE_USAGE_MONITORING_FILE_NAME = 'lzSpaceUsageMonitoring.js';

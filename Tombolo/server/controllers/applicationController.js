@@ -5,7 +5,10 @@ import Sequelize from 'sequelize';
 import { sendError, sendSuccess } from '../utils/response.js';
 const Op = Sequelize.Op;
 import logger from '../config/logger.js';
+import { getDirname } from '../utils/polyfills.js';
 // const NotificationModule = require('../notifications/email-notification');
+
+const __dirname = getDirname(import.meta.url);
 
 async function getApplications(req, res) {
   try {

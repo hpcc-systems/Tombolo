@@ -1,8 +1,10 @@
 import path from 'path';
 
-import { FileMonitoring } from '../models.js';
+import { FileMonitoring } from '../models/index.js';
+import { getDirname } from '../utils/polyfills.js';
 import logger from '../config/logger.js';
 
+const __dirname = getDirname(import.meta.url);
 const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
   'submitLandingZoneFileMonitoring.js';
 const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
@@ -45,6 +47,27 @@ function createLogicalFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
     },
   };
   this.bree.add(job);
+}
+
+async function scheduleFileMonitoringBreeJob({
+  filemonitoring_id,
+  name,
+  cron,
+  monitoringAssetType,
+}) {
+  if (monitoringAssetType === 'landingZoneFile') {
+    createLandingZoneFileMonitoringBreeJob.call(this, {
+      filemonitoring_id,
+      name,
+      cron,
+    });
+  } else if (monitoringAssetType === 'logicalFile') {
+    createLogicalFileMonitoringBreeJob.call(this, {
+      filemonitoring_id,
+      name,
+      cron,
+    });
+  }
 }
 
 async function scheduleFileMonitoringOnServerStart() {
@@ -94,6 +117,7 @@ async function scheduleFileMonitoring() {
 export {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
+  scheduleFileMonitoringBreeJob,
   scheduleFileMonitoringOnServerStart,
   scheduleFileMonitoring,
 };

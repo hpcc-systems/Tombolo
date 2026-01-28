@@ -1,9 +1,10 @@
 import { parentPort, workerData } from 'worker_threads';
 import { v4 as uuidv4 } from 'uuid';
 
-import workflowUtil from '../utils/workflow-util.js';
-import assetUtil from '../utils/assets.js';
-import hpccUtil from '../utils/hpcc-util.js';
+// Neither workflow util or assetUtil exist
+// import workflowUtil from '../utils/workflow-util.js';
+// import assetUtil from '../utils/assets.js';
+import { getJobWuDetails } from '../utils/hpcc-util.js';
 import workerUtils from './workerUtils.js';
 
 const { log, dispatch } = workerUtils(parentPort);
@@ -34,7 +35,7 @@ if (parentPort) {
       `Started Query Publish job ${jobName} | clusterId: ${clusterId} | dataflowId : ${dataflowId} | dfVersion: ${dataflowVersionId}`
     );
 
-    const result = await hpccUtil.getJobWuDetails(
+    const result = await getJobWuDetails(
       clusterId,
       jobName,
       dataflowId,
@@ -77,29 +78,30 @@ if (parentPort) {
       throw new Error(`Failed to get status on ${jobName} | ${response.Wuid}`);
 
     workerData.status = status;
-    await assetUtil.recordJobExecution(workerData, response.Wuid);
+    // await assetUtil.recordJobExecution(workerData, response.Wuid);
 
     log(
       'info',
       `Job "${jobName}" is ${status}, checking if notification required...`
     );
-    await workflowUtil.notifyJob({
-      dataflowId,
-      jobExecutionGroupId,
-      jobId,
-      status,
-    });
+    // await workflowUtil.notifyJob({
+    //   dataflowId,
+    //   jobExecutionGroupId,
+    //   jobId,
+    //   status,
+    // });
 
     if (status !== 'compiled') {
       // Try to notify on dataflow level about failure and exit, do not schedule next job;
       log('error', `Publish Query status is not compiled: status = ${status}`);
-      return await workflowUtil.notifyWorkflow({
-        dataflowId,
-        jobExecutionGroupId,
-        jobName,
-        status,
-        exceptions: 'Failed to compile',
-      });
+      return true;
+      // return await workflowUtil.notifyWorkflow({
+      //   dataflowId,
+      //   jobExecutionGroupId,
+      //   jobName,
+      //   status,
+      //   exceptions: 'Failed to compile',
+      // });
     }
 
     if (dataflowId) {
@@ -113,22 +115,22 @@ if (parentPort) {
   } catch (error) {
     log('error', 'Publish Query error', error);
     workerData.status = 'error';
-    await assetUtil.recordJobExecution(workerData, '');
+    // await assetUtil.recordJobExecution(workerData, '');
 
-    const { jobId, jobName, dataflowId, jobExecutionGroupId } = workerData;
+    // const { jobId, jobName, dataflowId, jobExecutionGroupId } = workerData;
 
-    await workflowUtil.notifyJob({
-      dataflowId,
-      jobExecutionGroupId,
-      jobId,
-      status: 'error',
-    });
-    await workflowUtil.notifyWorkflow({
-      dataflowId,
-      jobExecutionGroupId,
-      jobName,
-      status: 'error',
-    });
+    // await workflowUtil.notifyJob({
+    //   dataflowId,
+    //   jobExecutionGroupId,
+    //   jobId,
+    //   status: 'error',
+    // });
+    // await workflowUtil.notifyWorkflow({
+    //   dataflowId,
+    //   jobExecutionGroupId,
+    //   jobName,
+    //   status: 'error',
+    // });
   } finally {
     if (!workerData.isCronJob) dispatch('remove'); // REMOVE JOB FROM BREE IF ITS NOT CRON JOB!
     parentPort ? parentPort.postMessage('done') : process.exit(0);
