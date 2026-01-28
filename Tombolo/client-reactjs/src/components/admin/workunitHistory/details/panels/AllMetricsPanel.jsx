@@ -28,9 +28,9 @@ import {
   BarsOutlined,
 } from '@ant-design/icons';
 import { formatSeconds, formatNumber, formatBytes, renderAnyMetric } from '@tombolo/shared';
-import styles from './workunitHistory.module.css';
+import styles from '../../workunitHistory.module.css';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
-import { flattenTree } from './common';
+import { flattenTree } from '../../common';
 
 const { Option } = Select;
 const { Item: MenuItem, ItemGroup: MenuItemGroup } = Menu;

@@ -17,8 +17,8 @@ const IntegrationSettings = React.lazy(() => import('./Integrations/IntegrationS
 const TeamsNotification = React.lazy(() => import('./notifications/MsTeams/Teams'));
 const UserManagement = React.lazy(() => import('./userManagement/index.jsx'));
 const Settings = React.lazy(() => import('./settings'));
-const WorkUnitHistory = React.lazy(() => import('./workunitHistory/WorkUnitHistory'));
-const WorkUnitDetails = React.lazy(() => import('./workunitHistory/WorkUnitDetails'));
+const WorkUnitHistory = React.lazy(() => import('./workunitHistory/index.jsx'));
+const WorkUnitDetails = React.lazy(() => import('./workunitHistory/details/index.jsx'));
 
 const AdminRoutes = () => {
   return (

@@ -8,11 +8,11 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import AllMetricsPanel from './AllMetricsPanel';
-import OverviewPanel from './OverviewPanel';
-import TimelinePanel from './TimelinePanel';
-import SqlPanel from './SqlPanel';
-import styles from './workunitHistory.module.css';
+import AllMetricsPanel from './panels/AllMetricsPanel';
+import OverviewPanel from './panels/OverviewPanel';
+import TimelinePanel from './panels/TimelinePanel';
+import SqlPanel from './panels/SqlPanel';
+import styles from '../workunitHistory.module.css';
 dayjs.extend(duration);
 
 const { Title, Text } = Typography;
@@ -20,7 +20,7 @@ const { TabPane } = Tabs;
 
 const formatTime = seconds => (seconds == null ? '-' : dayjs.duration(seconds, 'seconds').format('HH:mm:ss.SSS'));
 
-const WorkUnitView = ({ wu, details }) => {
+const WorkUnitView = ({ wu, details, clusterName }) => {
 
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
@@ -37,7 +37,8 @@ const WorkUnitView = ({ wu, details }) => {
               </Tag>
             </Title>
             <Text type="secondary">
-              {wu.wuId} • {wu.clusterId} • Submitted {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
+              {wu.wuId} • {clusterName || wu.clusterId} • Submitted{' '}
+              {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
             </Text>
           </Col>
           <Col>
@@ -68,7 +69,7 @@ const WorkUnitView = ({ wu, details }) => {
               />
             </Card>
           ) : (
-            <OverviewPanel wu={wu} details={details} />
+            <OverviewPanel wu={wu} details={details} clusterName={clusterName} />
           )}
         </TabPane>
 
@@ -113,7 +114,7 @@ const WorkUnitView = ({ wu, details }) => {
             </span>
           }
           key="sql">
-          <SqlPanel clusterId={wu.clusterId} wuid={wu.wuId} />
+          <SqlPanel clusterId={wu.clusterId} wuid={wu.wuId} clusterName={clusterName} />
         </TabPane>
       </Tabs>
     </div>

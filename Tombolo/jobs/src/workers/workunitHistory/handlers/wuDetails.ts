@@ -355,12 +355,13 @@ function extractPerformanceMetrics(
 
   // Extract properties into clean + converted metrics object
   scope.Properties.Property.forEach(prop => {
-    if (relevantMetricsSet.has(prop.Name)) {
+    const propName = prop.Name as string;
+    if (relevantMetricsSet.has(propName as any)) {
       const value =
         prop.RawValue !== undefined ? prop.RawValue : prop.Formatted;
-      const converted = convertByUnit(prop.Name, value);
+      const converted = convertByUnit(propName, value);
       if (converted !== null) {
-        (metrics as Record<string, number>)[prop.Name] = converted;
+        (metrics as Record<string, number>)[propName] = converted;
       }
     }
   });
