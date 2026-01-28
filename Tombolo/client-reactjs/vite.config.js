@@ -33,6 +33,7 @@ export default function config({ mode }) {
         '@antv/coord',
         '@antv/scale',
         'color-string',
+        'monaco-editor',
       ],
     },
     css: {
@@ -69,7 +70,9 @@ export default function config({ mode }) {
       rollupOptions: {
         output: {
           chunkFileNames: 'static/js/[name].chunk.js', // makes Dockerfile glob match
-          manualChunks: undefined, // Let Vite handle chunk splitting automatically
+          manualChunks: {
+            monaco: ['monaco-editor'],
+          },
         },
       },
     },

@@ -37,7 +37,8 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
               </Tag>
             </Title>
             <Text type="secondary">
-              {wu.wuId} • {clusterName || wu.clusterId} • Submitted {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
+              {wu.wuId} • {clusterName || wu.clusterId} • Submitted{' '}
+              {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
             </Text>
           </Col>
           <Col>
@@ -113,7 +114,7 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
             </span>
           }
           key="sql">
-          <SqlPanel clusterId={wu.clusterId} wuid={wu.wuId} />
+          <SqlPanel clusterId={wu.clusterId} wuid={wu.wuId} clusterName={clusterName} />
         </TabPane>
       </Tabs>
     </div>
