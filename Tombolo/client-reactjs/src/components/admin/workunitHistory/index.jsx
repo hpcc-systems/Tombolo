@@ -28,6 +28,7 @@ import {
 import dayjs from 'dayjs';
 import workunitsService from '@/services/workunits.service';
 import clustersService from '@/services/clusters.service';
+import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import styles from './workunitHistory.module.css';
 
 const { Title, Text } = Typography;
@@ -49,23 +50,36 @@ const WorkUnitHistory = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(50);
-  const [sortField, setSortField] = useState('workUnitTimestamp');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [page, setPage] = useState(() => loadLocalStorage('wuh.list.page', 1));
+  const [limit, setLimit] = useState(() => loadLocalStorage('wuh.list.limit', 50));
+  const [sortField, setSortField] = useState(() => loadLocalStorage('wuh.list.sortField', 'workUnitTimestamp'));
+  const [sortOrder, setSortOrder] = useState(() => loadLocalStorage('wuh.list.sortOrder', 'desc'));
   const [clusters, setClusters] = useState([]);
   const [clusterMap, setClusterMap] = useState({});
 
   // Filters
-  const [filters, setFilters] = useState({
-    clusterId: undefined,
-    state: undefined,
-    owner: undefined,
-    jobName: undefined,
-    dateRange: undefined,
-    costAbove: undefined,
-    detailsFetched: undefined,
+  const [filters, setFilters] = useState(() => {
+    const saved = loadLocalStorage('wuh.list.filters', {});
+    if (saved.dateRange) {
+      saved.dateRange = saved.dateRange.map(d => (d ? dayjs(d) : null));
+    }
+    return {
+      clusterId: undefined,
+      state: undefined,
+      owner: undefined,
+      jobName: undefined,
+      dateRange: undefined,
+      costAbove: undefined,
+      detailsFetched: undefined,
+      ...saved,
+    };
   });
+
+  useEffect(() => saveLocalStorage('wuh.list.page', page), [page]);
+  useEffect(() => saveLocalStorage('wuh.list.limit', limit), [limit]);
+  useEffect(() => saveLocalStorage('wuh.list.sortField', sortField), [sortField]);
+  useEffect(() => saveLocalStorage('wuh.list.sortOrder', sortOrder), [sortOrder]);
+  useEffect(() => saveLocalStorage('wuh.list.filters', filters), [filters]);
 
   const [statistics, setStatistics] = useState({
     totalJobs: 0,
@@ -180,7 +194,7 @@ const WorkUnitHistory = () => {
   };
 
   const handleReset = () => {
-    setFilters({
+    const defaultFilters = {
       clusterId: undefined,
       state: undefined,
       owner: undefined,
@@ -188,8 +202,11 @@ const WorkUnitHistory = () => {
       dateRange: undefined,
       costAbove: undefined,
       detailsFetched: undefined,
-    });
+    };
+    setFilters(defaultFilters);
     setPage(1);
+    setSortField('workUnitTimestamp');
+    setSortOrder('desc');
     // fetchData will be called by useEffect
   };
 
@@ -268,9 +285,16 @@ const WorkUnitHistory = () => {
       key: 'actions',
       width: 100,
       render: (_, record) => (
-        <Button type="primary" size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
-          View
-        </Button>
+        <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
+          <Button
+            type="primary"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            disabled={!record.detailsFetchedAt}>
+            Details
+          </Button>
+        </Tooltip>
       ),
     },
   ];
