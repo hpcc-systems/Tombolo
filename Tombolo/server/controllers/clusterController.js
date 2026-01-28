@@ -6,9 +6,11 @@ const {
   LogaccessService,
 } = require('@hpcc-js/comms');
 const axios = require('axios');
+const xml2js = require('xml2js');
 
 const logger = require('../config/logger');
 const { Cluster } = require('../models');
+const { parseWorkunitTimestamp } = require('@tombolo/shared');
 const { encryptString, decryptString } = require('@tombolo/shared');
 const CustomError = require('../utils/customError.js');
 const { getClusterOptions } = require('../utils/getClusterOptions');
@@ -516,7 +518,8 @@ const updateCluster = async (req, res) => {
     if (!cluster) throw new CustomError('Cluster not found', 404);
     if (allowSelfSigned) cluster.allowSelfSigned = allowSelfSigned;
     if (username) cluster.username = username;
-    if (password) cluster.hash = encryptString(password, process.env.ENCRYPTION_KEY);
+    if (password)
+      cluster.hash = encryptString(password, process.env.ENCRYPTION_KEY);
     if (adminEmails) cluster.adminEmails = adminEmails;
     cluster.updatedBy = req.user.id;
 
@@ -810,19 +813,95 @@ const getClusterLogs = async (req, res) => {
       logQuery.EndDate = new Date(req.query.endDate);
     }
 
+    // Handle wuid parameter - fetch workunit info to get execution time window
+    if (req.query.wuid) {
+      const soapEnvelope = `<?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns="urn:hpccsystems:ws:wsworkunits">
+        <soap:Body>
+          <WUInfo>
+            <Wuid>${req.query.wuid}</Wuid>
+            <TruncateEclTo64k>1</TruncateEclTo64k>
+            <IncludeTotalClusterTime>1</IncludeTotalClusterTime>
+            <Type/>
+          </WUInfo>
+        </soap:Body>
+      </soap:Envelope>`;
+
+      const wuUrl = `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUInfo`;
+      const wuResponse = await axios.post(wuUrl, soapEnvelope, {
+        headers: { 'Content-Type': 'text/xml' },
+        auth: {
+          username: cluster.username,
+          password: password,
+        },
+      });
+
+      // Parse XML response
+      const parser = new xml2js.Parser({ explicitArray: false });
+      const parsed = await parser.parseStringPromise(wuResponse.data);
+
+      // Extract workunit details
+      const workunit =
+        parsed['soap:Envelope']['soap:Body'].WUInfoResponse.Workunit;
+      let timeValue = null;
+
+      // Check if TotalClusterTime exists first (preferred)
+      if (workunit.TotalClusterTime) {
+        timeValue = workunit.TotalClusterTime;
+      } else {
+        // Fall back to extracting "Total thor time" from Timers
+        const timers = workunit.Timers?.ECLTimer;
+        if (timers) {
+          const timerArray = Array.isArray(timers) ? timers : [timers];
+          const totalThorTimer = timerArray.find(
+            t => t.Name === 'Total thor time'
+          );
+          if (totalThorTimer) {
+            timeValue = totalThorTimer.Value;
+          }
+        }
+      }
+
+      if (timeValue) {
+        // Parse the time value (format: "1m30.028s" or "5m49.357s")
+        const timeRegex = /(\d+)m([\d.]+)s/;
+        const match = timeValue.match(timeRegex);
+
+        if (match) {
+          const minutes = parseInt(match[1]);
+          const seconds = parseFloat(match[2]);
+          const totalMilliseconds = (minutes * 60 + seconds) * 1000;
+
+          // Get start time from wuid
+          const startTime = parseWorkunitTimestamp(req.query.wuid);
+
+          // Calculate end time
+          const endTime = new Date(startTime.getTime() + totalMilliseconds);
+
+          // Set the date range in logQuery
+          logQuery.StartDate = startTime;
+          logQuery.EndDate = endTime;
+        }
+      }
+    }
+
     // Get logs
     const logs = await logSvc.GetLogsEx(logQuery);
 
-    return sendSuccess(res, 'Cluster logs retrieved successfully', {
-      cluster: {
-        id: cluster.id,
-        name: cluster.name,
+    return sendSuccess(
+      res,
+      {
+        cluster: {
+          id: cluster.id,
+          name: cluster.name,
+        },
+        total: logs.total,
+        lines: logs.lines,
+        logAccessInfo: logAccessInfo,
+        query: logQuery,
       },
-      total: logs.total,
-      lines: logs.lines,
-      logAccessInfo: logAccessInfo,
-      query: logQuery,
-    });
+      'Cluster logs retrieved successfully'
+    );
   } catch (error) {
     logger.error('getClusterLogs error:', error);
     return sendError(

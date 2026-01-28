@@ -1,7 +1,10 @@
-const formatNumber = n => (n == null ? '-' : Number(n).toLocaleString());
-const formatSeconds = s =>
+const formatNumber = (n: any): string =>
+  n == null ? '-' : Number(n).toLocaleString();
+
+const formatSeconds = (s: any): string =>
   s == null || isNaN(s) ? '-' : `${Number(s).toFixed(3)}s`;
-const formatBytes = bytes => {
+
+const formatBytes = (bytes: any): string => {
   if (bytes == null || isNaN(bytes)) return '-';
   let size = Number(bytes);
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -12,16 +15,20 @@ const formatBytes = bytes => {
   }
   return `${size.toFixed(2)} ${units[i]}`;
 };
-const formatPercentage = p => (p == null ? '-' : `${Number(p).toFixed(2)}%`);
+
+const formatPercentage = (p: any): string =>
+  p == null ? '-' : `${Number(p).toFixed(2)}%`;
 
 /**
  * Parses workunit timestamp from wuId and applies timezone offset
- * @param {string} wuId - The workunit ID
- * @param {number} timezoneOffset - Timezone offset in minutes
- * @returns {Date} Parsed and adjusted timestamp
+ * @param wuId - The workunit ID
+ * @param timezoneOffset - Timezone offset in minutes
+ * @returns Parsed and adjusted timestamp
  */
-
-function parseWorkunitTimestamp(wuId, timezoneOffset = 0) {
+function parseWorkunitTimestamp(
+  wuId: string,
+  timezoneOffset: number = 0
+): Date {
   // Handle workunit ID format: W[YYYYMMDD]-[HHMMSS]-[SEQUENCE]
   // Extract just the date/time part, ignoring the sequence number
   const wuIdMatch = wuId.match(/^W(\d{8})-(\d{6})-?\d*$/);
@@ -53,11 +60,22 @@ function parseWorkunitTimestamp(wuId, timezoneOffset = 0) {
   return timestamp;
 }
 
-function renderAnyMetric(key, value) {
+function renderAnyMetric(key: string, value: any): string {
   const lower = String(key).toLowerCase();
-  if (lower.includes('time') || lower.includes('elapsed') || lower.includes('execute')) return formatSeconds(value);
-  if (lower.startsWith('num') || lower.includes('count')) return formatNumber(value);
-  if (lower.includes('size') || lower.includes('disk') || lower.includes('memory')) return formatBytes(value);
+  if (
+    lower.includes('time') ||
+    lower.includes('elapsed') ||
+    lower.includes('execute')
+  )
+    return formatSeconds(value);
+  if (lower.startsWith('num') || lower.includes('count'))
+    return formatNumber(value);
+  if (
+    lower.includes('size') ||
+    lower.includes('disk') ||
+    lower.includes('memory')
+  )
+    return formatBytes(value);
   return String(value);
 }
 
@@ -67,5 +85,5 @@ export {
   formatBytes,
   formatPercentage,
   parseWorkunitTimestamp,
-  renderAnyMetric
+  renderAnyMetric,
 };

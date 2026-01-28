@@ -36,8 +36,8 @@ vi.mock('@/components/common/passwordComplexityValidator', () => ({
     if (options?.generateContent) {
       return <div>Password requirements</div>;
     }
-    // When used for validation, return array with one element (password validator expects at least one element)
-    return [{ attribute: 'dummy' }];
+    // When used for validation, return object with errors array
+    return { errors: [{ attribute: 'dummy' }] };
   }),
 }));
 
@@ -47,20 +47,18 @@ import { handleError } from '@/components/common/handleResponse';
 import { setUser } from '@/components/common/userStorage';
 
 describe('ResetTempPassword', () => {
-  const mockEmail = 'test@example.com';
-
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock window.location.href
     delete window.location;
-    window.location = { href: vi.fn() };
+    window.location = { href: 'http://localhost/reset-password/mock-token-123' };
   });
 
   describe('Component Rendering', () => {
     it('renders the temp password reset form', () => {
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -77,7 +75,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -96,7 +94,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -123,7 +121,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -151,7 +149,7 @@ describe('ResetTempPassword', () => {
       const mockResponse = {
         data: {
           id: '123',
-          email: mockEmail,
+          email: 'test@example.com',
           firstName: 'John',
           lastName: 'Doe',
           roles: [],
@@ -162,7 +160,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -182,7 +180,7 @@ describe('ResetTempPassword', () => {
           tempPassword: 'TempPass123!',
           password: 'NewSecurePassword123!',
           confirmPassword: 'NewSecurePassword123!',
-          email: mockEmail,
+          token: 'mock-token-123',
           deviceInfo: expect.any(Object),
         });
       });
@@ -201,7 +199,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -226,7 +224,7 @@ describe('ResetTempPassword', () => {
         data: {
           user: {
             id: '123',
-            email: mockEmail,
+            email: 'test@example.com',
             firstName: 'John',
             lastName: 'Doe',
           },
@@ -248,7 +246,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -264,7 +262,7 @@ describe('ResetTempPassword', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(handleError).toHaveBeenCalledWith(apiError);
+        expect(handleError).toHaveBeenCalledWith('The temporary password you entered is incorrect. Please try again.');
       });
 
       expect(setUser).not.toHaveBeenCalled();
@@ -276,7 +274,7 @@ describe('ResetTempPassword', () => {
       const mockResponse = {
         data: {
           id: '123',
-          email: mockEmail,
+          email: 'test@example.com',
           firstName: 'John',
           lastName: 'Doe',
         },
@@ -285,7 +283,7 @@ describe('ResetTempPassword', () => {
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 
@@ -306,53 +304,17 @@ describe('ResetTempPassword', () => {
     });
   });
 
-  describe('Email Prop', () => {
-    it('uses provided email in reset request', async () => {
-      const user = userEvent.setup();
-      const customEmail = 'custom@example.com';
-      authService.resetTempPassword.mockResolvedValue({
-        id: '123',
-        email: customEmail,
-      });
-
-      render(
-        <BrowserRouter>
-          <ResetTempPassword email={customEmail} />
-        </BrowserRouter>
-      );
-
-      const tempPasswordInput = screen.getByLabelText(/Temporary Password/i);
-      const newPasswordInput = screen.getByLabelText(/New Password/i);
-      const confirmPasswordInput = screen.getByLabelText(/Confirm Password/i);
-
-      await user.type(tempPasswordInput, 'TempPass123!');
-      await user.type(newPasswordInput, 'NewPassword123!');
-      await user.type(confirmPasswordInput, 'NewPassword123!');
-
-      const submitButton = screen.getByRole('button', { name: /Reset Password/i });
-      await user.click(submitButton);
-
-      await waitFor(() => {
-        expect(authService.resetTempPassword).toHaveBeenCalledWith(
-          expect.objectContaining({
-            email: customEmail,
-          })
-        );
-      });
-    });
-  });
-
   describe('Device Info', () => {
     it('includes device info in reset request', async () => {
       const user = userEvent.setup();
       authService.resetTempPassword.mockResolvedValue({
         id: '123',
-        email: mockEmail,
+        email: 'test@example.com',
       });
 
       render(
         <BrowserRouter>
-          <ResetTempPassword email={mockEmail} />
+          <ResetTempPassword />
         </BrowserRouter>
       );
 

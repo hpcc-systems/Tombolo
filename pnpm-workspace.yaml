@@ -5,8 +5,6 @@ packages:
   - "Tombolo/shared"
   - "Tombolo/core"
   - "Tombolo/jobs"
-  - "e2e_tests"
-  - "tombolo_docs"
 
 catalog:
   axios: ^1.13.2

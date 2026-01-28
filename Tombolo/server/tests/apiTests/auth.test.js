@@ -136,7 +136,9 @@ describe('Auth Routes', () => {
       .send(payload);
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe('account-locked');
+    expect(res.body.message).toBe(
+      'Your account is locked. Please contact your administrator to regain access'
+    );
     expect(res.body.success).toBe(false);
     expect(User.findOne).toHaveBeenCalled();
     expect(RefreshToken.create).not.toHaveBeenCalled();

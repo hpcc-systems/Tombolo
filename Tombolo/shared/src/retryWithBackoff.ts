@@ -1,12 +1,25 @@
+export interface RetryableError extends Error {
+  noRetry?: boolean;
+}
+
+export interface Logger {
+  warn: (message: string, ...args: any[]) => void;
+}
+
 /**
  * Retry function with exponential backoff
- * @param {Function} fn - Function to retry
- * @param {any} logger - Logging output method
- * @param {number} maxRetries - Maximum number of retries
- * @param {number} delay - Initial delay in milliseconds
- * @returns {Promise} Result of the function
+ * @param fn - Function to retry
+ * @param logger - Logging output method
+ * @param maxRetries - Maximum number of retries
+ * @param delay - Initial delay in milliseconds
+ * @returns Result of the function
  */
-async function retryWithBackoff(fn, logger, maxRetries = 3, delay = 2000) {
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  logger?: Logger,
+  maxRetries: number = 3,
+  delay: number = 2000
+): Promise<T> {
   // Maximum delay cap to prevent setTimeout overflow (max ~24.8 days = 2^31-1 ms)
   const MAX_DELAY = 60000; // Cap at 60 seconds
 
@@ -14,13 +27,15 @@ async function retryWithBackoff(fn, logger, maxRetries = 3, delay = 2000) {
     try {
       return await fn();
     } catch (err) {
+      const error = err as RetryableError;
+
       // Don't retry if error is marked as non-retryable
-      if (err.noRetry) {
-        throw err;
+      if (error.noRetry) {
+        throw error;
       }
 
       if (attempt === maxRetries) {
-        throw err;
+        throw error;
       }
 
       // Calculate backoff with exponential delay, capped at MAX_DELAY
@@ -29,7 +44,7 @@ async function retryWithBackoff(fn, logger, maxRetries = 3, delay = 2000) {
 
       if (logger) {
         logger.warn(
-          `Attempt ${attempt + 1} failed: ${err.message}. Retrying in ${backoffDelay}ms...`
+          `Attempt ${attempt + 1} failed: ${error.message}. Retrying in ${backoffDelay}ms...`
         );
       }
 
@@ -49,6 +64,9 @@ async function retryWithBackoff(fn, logger, maxRetries = 3, delay = 2000) {
       }
     }
   }
+
+  // This should never be reached due to the throw in the catch block
+  throw new Error('Unexpected end of retry loop');
 }
 
 export { retryWithBackoff };

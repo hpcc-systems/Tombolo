@@ -2,9 +2,9 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
-    index: 'index.js',
-    backend: 'backend.js',
-    browser: 'browser.js',
+    index: 'index.ts',
+    backend: 'backend.ts',
+    browser: 'browser.ts',
   },
   format: ['cjs', 'esm'],
   dts: true, // Generate TypeScript declarations

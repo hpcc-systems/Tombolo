@@ -4,4 +4,4 @@
  * Backend-only utilities (Node.js backend)
  */
 
-export * from './backend/index.js';
+export * from './src/backend/index.js';

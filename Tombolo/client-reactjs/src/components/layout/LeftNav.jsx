@@ -339,11 +339,10 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       className="custom-scroll"
       style={{
         color: 'rgba(255, 255, 255, 0.65)',
-        marginTop: '46px',
         overflow: 'auto',
         position: 'fixed',
         left: 0,
-        top: 0,
+        top: '46px',
         bottom: 0,
         zIndex: 100,
       }}>

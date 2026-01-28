@@ -8,17 +8,14 @@ import { workunitHistoryQueue } from './queues/workunitHistoryQueue.js';
 import { workunitHistoryWorker } from './workers/workunitHistory/workunitHistoryWorker.js';
 import { redisConnectionOptions } from './config/config.js';
 import logger from './config/logger.js';
+import { formatErrorForLogging } from './utils/errorFormatter.js';
 
 // Create Redis client for health checks
 const redisClient = new Redis(redisConnectionOptions);
 
 // Add Redis error handlers
 redisClient.on('error', err => {
-  logger.error('Redis client error', {
-    error: err instanceof Error ? err.message : String(err),
-    code: (err as any)?.code,
-    stack: err instanceof Error ? err.stack : undefined,
-  });
+  logger.error('Redis client error', formatErrorForLogging(err));
 });
 
 redisClient.on('connect', () => {
@@ -117,14 +114,6 @@ async function startJobProcessor() {
 startJobProcessor()
   .then(() => logger.info('BullMQ job processor is running'))
   .catch(err => {
-    logger.error('Failed to start job processor', {
-      error: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined,
-      errors: (err as any)?.errors?.map((e: any) => ({
-        message: e instanceof Error ? e.message : String(e),
-        code: e?.code,
-        errno: e?.errno,
-      })),
-    });
+    logger.error('Failed to start job processor', formatErrorForLogging(err));
     process.exit(1);
   });

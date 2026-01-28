@@ -5,6 +5,8 @@ import {
   formatPercentage,
 } from '../format/index.js';
 
+type FormatFunction = (value: any) => string;
+
 const relevantMetrics = [
   // Time-based metrics
   'TimeElapsed',
@@ -163,9 +165,9 @@ const relevantMetrics = [
   'NodeMaxLookAhead',
   'NodeMinFirstRow',
   'NodeMaxFirstRow',
-];
+] as const;
 
-const FORMAT_LOOKUP = {
+const FORMAT_LOOKUP: Record<string, FormatFunction> = {
   TimeElapsed: formatSeconds,
   TimeAvgElapsed: formatSeconds,
   TimeMinElapsed: formatSeconds,
@@ -323,7 +325,7 @@ const FORMAT_LOOKUP = {
   NodeMaxFirstRow: formatNumber,
 };
 
-const UNIT_LOOKUP = {
+const UNIT_LOOKUP: Record<string, string> = {
   TimeElapsed: 'nanoseconds',
   TimeAvgElapsed: 'nanoseconds',
   TimeMinElapsed: 'nanoseconds',
@@ -481,7 +483,7 @@ const UNIT_LOOKUP = {
   NodeMaxFirstRow: 'int',
 };
 
-const readableLabels = {
+const readableLabels: Record<string, string> = {
   'grouped keyed join': 'Grouped Keyed Join',
   'filtered csv read': 'Filtered Csv Read',
   'keyed join': 'Keyed Join',
@@ -491,7 +493,9 @@ const readableLabels = {
   store: 'Store',
 };
 
-function normalizeLabel(label) {
+function normalizeLabel(
+  label: string | null | undefined
+): string | null | undefined {
   if (!label) return label;
   // Normalize: replace newlines and multiple spaces with a single space
   const normalized = label.replace(/\s+/g, ' ').trim();
@@ -504,9 +508,9 @@ function normalizeLabel(label) {
   return normalized;
 }
 
-const TERMINAL_STATES = ['completed', 'failed', 'aborted'];
+const TERMINAL_STATES = ['completed', 'failed', 'aborted'] as const;
 
-const SCOPE_TYPES = ['graph', 'subgraph', 'activity', 'operation'];
+const SCOPE_TYPES = ['graph', 'subgraph', 'activity', 'operation'] as const;
 
 export {
   relevantMetrics,
