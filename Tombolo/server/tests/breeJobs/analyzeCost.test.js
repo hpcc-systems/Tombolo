@@ -21,7 +21,6 @@ import {
   NotificationQueue,
   MonitoringType,
 } from '../../models/index.js';
-import { findLocalDateTimeAtCluster } from '../../jobs/jobMonitoring/monitorJobsUtil.js';
 import * as monitorJobsUtil from '../../jobs/jobMonitoring/monitorJobsUtil.js';
 import { getCostMonitoring } from '../helpers.js';
 import { parentPort } from 'worker_threads';
@@ -51,6 +50,11 @@ describe('analyzeCost.js', () => {
 
   describe('createCMNotificationPayload', () => {
     it('should create notification payload for clusters scope', () => {
+      const mockDate = new Date('2026-01-28T19:40:07.000Z');
+      const spyFindLocalDateTime = vi
+        .spyOn(monitorJobsUtil, 'findLocalDateTimeAtCluster')
+        .mockReturnValue(mockDate);
+
       const input = {
         monitoringType: { id: 1 },
         costMonitoring: {
@@ -90,12 +94,12 @@ describe('analyzeCost.js', () => {
             executeCost: cluster.executeCost,
             compileCost: cluster.compileCost,
             clusterName: cluster.clusterName,
-            'Discovered At': findLocalDateTimeAtCluster(
-              cluster.timezone_offset
-            ).toLocaleString(),
+            'Discovered At': mockDate.toLocaleString(),
           };
         }),
       });
+
+      spyFindLocalDateTime.mockRestore();
     });
 
     it('should throw error for invalid scope', () => {
