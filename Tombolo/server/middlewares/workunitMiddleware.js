@@ -2,7 +2,7 @@ const {
   stringParam,
   stringQuery,
   intQuery,
-  dateQuery,
+  dateTimeQuery,
 } = require('./commonMiddleware');
 const { body } = require('express-validator');
 
@@ -27,8 +27,8 @@ const validateGetWorkunits = [
   stringQuery('state', true), // comma-separated list
   stringQuery('owner', true),
   stringQuery('jobName', true),
-  dateQuery('dateFrom', true),
-  dateQuery('dateTo', true),
+  dateTimeQuery('dateFrom', true),
+  dateTimeQuery('dateTo', true),
   stringQuery('costAbove', true),
   stringQuery('sort', true, {
     isIn: VALID_SORT_FIELDS,

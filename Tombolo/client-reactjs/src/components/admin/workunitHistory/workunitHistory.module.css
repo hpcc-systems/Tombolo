@@ -83,6 +83,16 @@
 .ml12 {
   margin-left: 12px;
 }
+.linkButton {
+  padding: 0;
+  height: auto;
+  text-align: left;
+}
+.smallTag {
+  font-size: 10px;
+  line-height: 16px;
+  padding: 0 4px;
+}
 
 /* Card helpers */
 .cardMarginBottom16 {
@@ -166,6 +176,16 @@
 .menuCheckboxFull {
   width: 100%;
   padding: 6px 12px;
+}
+
+/* Fix for fixed table columns overlapping other elements (like tooltips or headers)
+   When scrolling horizontally, AntD uses fixed positioning for some columns.
+   We need them to stay below the global app header (which now has z-index: 1000)
+   and standard overlays.
+*/
+:global(.ant-table-cell-fix-right),
+:global(.ant-table-cell-fix-left) {
+  z-index: 10 !important;
 }
 
 /* Table row highlights (global classes used by rowClassName) */

@@ -62,33 +62,25 @@ async function getWorkunits(req, res) {
 
     if (clusterId) where.clusterId = clusterId;
     if (state) where.state = { [Op.in]: state.split(',') };
-    if (owner) where.owner = { [Op.iLike]: `%${owner}%` };
-    if (jobName) where.jobName = { [Op.iLike]: `%${jobName}%` };
-    if (dateFrom)
-      where.workUnitTimestamp = {
-        ...where.workUnitTimestamp,
-        [Op.gte]: new Date(dateFrom),
-      };
-    if (dateTo)
-      where.workUnitTimestamp = {
-        ...where.workUnitTimestamp,
-        [Op.lte]: new Date(dateTo),
-      };
-    if (costAbove)
-      where.totalCost = { ...where.totalCost, [Op.gt]: parseFloat(costAbove) };
+    if (owner) where.owner = { [Op.like]: `%${owner}%` };
+    if (jobName) where.jobName = { [Op.like]: `%${jobName}%` };
+    if (dateFrom) {
+      where.workUnitTimestamp = where.workUnitTimestamp || {};
+      where.workUnitTimestamp[Op.gte] = new Date(dateFrom);
+    }
+    if (dateTo) {
+      where.workUnitTimestamp = where.workUnitTimestamp || {};
+      where.workUnitTimestamp[Op.lte] = new Date(dateTo);
+    }
+    if (costAbove) {
+      where.totalCost = where.totalCost || {};
+      where.totalCost[Op.gt] = parseFloat(costAbove);
+    }
     if (req.query.detailsFetched !== undefined) {
       if (req.query.detailsFetched === 'true') {
-        where[Op.and] = [
-          sequelize.literal(
-            'EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId` AND `work_unit_details`.`clusterId` = `WorkUnit`.`clusterId`)'
-          ),
-        ];
+        where.detailsFetchedAt = { [Op.ne]: null };
       } else if (req.query.detailsFetched === 'false') {
-        where[Op.and] = [
-          sequelize.literal(
-            'NOT EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId` AND `work_unit_details`.`clusterId` = `WorkUnit`.`clusterId`)'
-          ),
-        ];
+        where.detailsFetchedAt = null;
       }
     }
 
@@ -105,9 +97,7 @@ async function getWorkunits(req, res) {
         'workUnitTimestamp',
         'detailsFetchedAt',
         [
-          sequelize.literal(
-            'EXISTS(SELECT 1 FROM `work_unit_details` WHERE `work_unit_details`.`wuId` = `WorkUnit`.`wuId` AND `work_unit_details`.`clusterId` = `WorkUnit`.`clusterId`)'
-          ),
+          sequelize.literal('detailsFetchedAt IS NOT NULL'),
           'hasDetails',
         ],
       ],
@@ -251,7 +241,7 @@ async function executeWorkunitSql(req, res) {
 
     // Validate base table and capture optional alias
     const tokens = remainder.split(/\s+/);
-    const tableToken = tokens[0].replace(/[`\[\]"]/g, '');
+    const tableToken = tokens[0].replace(/[`"\[\]]/g, '');
     if (tableToken !== 'work_unit_details') {
       return sendError(res, 'You may only query the work_unit_details table', 400);
     }
@@ -269,7 +259,7 @@ async function executeWorkunitSql(req, res) {
     }
 
     // Merge enforced WHERE with user's WHERE while preserving ORDER/GROUP/LIMIT
-    const enforcedWhere = `${alias}.\`clusterId\` = :clusterId AND ${alias}.\`wuId\` = :wuid`;
+    const enforcedWhere = `${alias}.clusterId = :clusterId AND ${alias}.wuId = :wuid`;
 
     let safeWhereJoined = '';
     const restTrimmedAll = rest.trim();
@@ -296,7 +286,7 @@ async function executeWorkunitSql(req, res) {
     }
 
     // Enforce LIMIT cap
-    let finalSql = `SELECT ${selectList} FROM \`work_unit_details\` ${alias === 'work_unit_details' ? '' : 'AS ' + alias} ${safeWhereJoined}`.trim();
+    let finalSql = `SELECT ${selectList} FROM work_unit_details ${alias === 'work_unit_details' ? '' : 'AS ' + alias} ${safeWhereJoined}`.trim();
     const limitMatch = finalSql.toLowerCase().match(/\blimit\s+(\d+)/);
     if (limitMatch) {
       const n = parseInt(limitMatch[1], 10);

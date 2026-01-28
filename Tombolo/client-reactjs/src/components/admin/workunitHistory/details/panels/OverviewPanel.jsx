@@ -16,7 +16,11 @@ import {
   Breadcrumb,
   Divider,
   Empty,
+  Typography,
 } from 'antd';
+
+const { Text } = Typography;
+
 import {
   SearchOutlined,
   ProfileOutlined,
@@ -25,7 +29,14 @@ import {
   DatabaseOutlined,
   ClusterOutlined,
 } from '@ant-design/icons';
-import { formatSeconds, formatNumber, formatBytes, SCOPE_TYPES } from '@tombolo/shared';
+import {
+  formatSeconds,
+  formatNumber,
+  formatBytes,
+  SCOPE_TYPES,
+  normalizeLabel,
+  renderAnyMetric,
+} from '@tombolo/shared';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import { flattenTree } from '../../common';
 import styles from '../../workunitHistory.module.css';
@@ -71,7 +82,7 @@ function findPathByKey(nodes, key) {
   return stack.map(n => ({ title: n.scopeName, key: n.key }));
 }
 
-const OverviewPanel = ({ wu, details }) => {
+const OverviewPanel = ({ wu, details, clusterName }) => {
   // Preferences / UI state
   const [types, setTypes] = useState(loadLocalStorage('wuh.overview.types', SCOPE_TYPES));
   const [q, setQ] = useState(loadLocalStorage('wuh.overview.q', ''));
@@ -143,6 +154,7 @@ const OverviewPanel = ({ wu, details }) => {
         {n.scopeType}
       </Tag>
       <span className={styles.ellipsis}>{n.scopeName}</span>
+      {n.label && <span className={styles.mutedTextSmall}>({normalizeLabel(n.label)})</span>}
       <span className={`${styles.subtleText} ${styles.numericText}`}>
         <Tooltip title="Elapsed">⏱ {formatSeconds(n.TimeElapsed)}</Tooltip>
         {n.NumRowsProcessed != null && (
@@ -191,11 +203,18 @@ const OverviewPanel = ({ wu, details }) => {
       dataIndex: 'scopeName',
       key: 'scopeName',
       render: (v, r) => (
-        <Space size={6}>
+        <Space size={6} align="start">
           <Tag color="blue" className={`${styles.tagCapitalize} ${styles.mr0}`}>
             {r.scopeType}
           </Tag>
-          <span>{v}</span>
+          <Space direction="vertical" size={0}>
+            <span>{v}</span>
+            {r.label && (
+              <Text type="secondary" className={styles.smallText}>
+                {r.label}
+              </Text>
+            )}
+          </Space>
         </Space>
       ),
     },
@@ -240,7 +259,7 @@ const OverviewPanel = ({ wu, details }) => {
                 </Tag>
               </Space>
               <div className={styles.mutedTextMid}>
-                {wu.wuId} • Engine: {wu.engine} • Owner: {wu.owner}
+                {wu.wuId} • Engine: {wu.engine} • Cluster: {clusterName || wu.clusterId} • Owner: {wu.owner}
               </div>
             </Space>
           </Col>
@@ -343,29 +362,43 @@ const OverviewPanel = ({ wu, details }) => {
             </div>
           </Card>
 
-          <Card title="Top Activities (Elapsed)" className={`${styles.mt16} ${styles.cardBodyPadTop8}`}>
-            {topActivities.length ? (
-              <Table
-                size="small"
-                pagination={false}
-                rowKey="key"
-                dataSource={topActivities}
-                columns={[
-                  { title: '#', render: (_v, _r, i) => i + 1, width: 48 },
-                  { title: 'Activity', dataIndex: 'scopeName', ellipsis: true },
-                  {
-                    title: 'Elapsed',
-                    dataIndex: 'TimeElapsed',
-                    align: 'right',
-                    render: v => <span className={styles.numericText}>{formatSeconds(v)}</span>,
-                  },
-                ]}
-                onRow={record => ({ onClick: () => setSelectedKey(record.key) })}
-              />
-            ) : (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No activities" />
-            )}
-          </Card>
+          {/*<Card title="Top Activities (Elapsed)" className={`${styles.mt16} ${styles.cardBodyPadTop8}`}>*/}
+          {/*  {topActivities.length ? (*/}
+          {/*    <Table*/}
+          {/*      size="small"*/}
+          {/*      pagination={false}*/}
+          {/*      rowKey="key"*/}
+          {/*      dataSource={topActivities}*/}
+          {/*      columns={[*/}
+          {/*        { title: '#', render: (_v, _r, i) => i + 1, width: 48 },*/}
+          {/*        {*/}
+          {/*          title: 'Activity',*/}
+          {/*          dataIndex: 'scopeName',*/}
+          {/*          ellipsis: true,*/}
+          {/*          render: (v, r) => (*/}
+          {/*            <Space direction="vertical" size={0}>*/}
+          {/*              <span>{v}</span>*/}
+          {/*              {r.label && (*/}
+          {/*                <Text type="secondary" className={styles.smallText}>*/}
+          {/*                  {r.label}*/}
+          {/*                </Text>*/}
+          {/*              )}*/}
+          {/*            </Space>*/}
+          {/*          ),*/}
+          {/*        },*/}
+          {/*        {*/}
+          {/*          title: 'Elapsed',*/}
+          {/*          dataIndex: 'TimeElapsed',*/}
+          {/*          align: 'right',*/}
+          {/*          render: v => <span className={styles.numericText}>{formatSeconds(v)}</span>,*/}
+          {/*        },*/}
+          {/*      ]}*/}
+          {/*      onRow={record => ({ onClick: () => setSelectedKey(record.key) })}*/}
+          {/*    />*/}
+          {/*  ) : (*/}
+          {/*    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No activities" />*/}
+          {/*  )}*/}
+          {/*</Card>*/}
         </Col>
 
         <Col xs={24} lg={14} xxl={16}>
@@ -374,11 +407,15 @@ const OverviewPanel = ({ wu, details }) => {
               <Space>
                 <NodeIndexOutlined /> Scope Details
               </Space>
-            }>
+            }
+            className={styles.cardNoBodyPadding}>
             {!selectedNode ? (
-              <Empty description="Select a scope from the tree to view details" />
+              <Empty
+                description="Select a scope from the tree to view details"
+                className={styles.contentPadding}
+              />
             ) : (
-              <>
+              <div className={styles.scrollAreaTall}>
                 <Breadcrumb className={styles.mb12}>
                   {breadcrumb.map(b => (
                     <Breadcrumb.Item key={b.key} onClick={() => setSelectedKey(b.key)} className={styles.cursorPointer}>
@@ -387,20 +424,27 @@ const OverviewPanel = ({ wu, details }) => {
                   ))}
                 </Breadcrumb>
                 <Descriptions size="small" bordered column={2}>
-                  <Descriptions.Item label="Scope Name" span={2}>
-                    {selectedNode.scopeName}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Type">{selectedNode.scopeType}</Descriptions.Item>
-                  <Descriptions.Item label="File">{selectedNode.fileName || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="Label" span={2}>
-                    {selectedNode.label || '-'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Elapsed">{formatSeconds(selectedNode.TimeElapsed)}</Descriptions.Item>
-                  <Descriptions.Item label="Execute">{formatSeconds(selectedNode.TimeTotalExecute)}</Descriptions.Item>
-                  <Descriptions.Item label="Rows">{formatNumber(selectedNode.NumRowsProcessed)}</Descriptions.Item>
-                  <Descriptions.Item label="Disk Read">{formatBytes(selectedNode.SizeDiskRead)}</Descriptions.Item>
-                  <Descriptions.Item label="Disk Write">{formatBytes(selectedNode.SizeDiskWrite)}</Descriptions.Item>
-                  <Descriptions.Item label="Peak Memory">{formatBytes(selectedNode.PeakMemoryUsage)}</Descriptions.Item>
+                  {Object.entries(selectedNode)
+                    .filter(([key, value]) => {
+                      if (['key', 'children', 'id', '_level', 'scopeId', 'clusterId', 'wuId'].includes(key)) return false;
+                      if (value === null || value === undefined || value === '') return false;
+                      return true;
+                    })
+                    .sort(([a], [b]) => {
+                      // Keep important fields at top
+                      const top = ['scopeName', 'scopeType', 'label', 'fileName'];
+                      const ia = top.indexOf(a);
+                      const ib = top.indexOf(b);
+                      if (ia !== -1 && ib !== -1) return ia - ib;
+                      if (ia !== -1) return -1;
+                      if (ib !== -1) return 1;
+                      return a.localeCompare(b);
+                    })
+                    .map(([key, value]) => (
+                      <Descriptions.Item key={key} label={key} span={['scopeName', 'label'].includes(key) ? 2 : 1}>
+                        {renderAnyMetric(key, value)}
+                      </Descriptions.Item>
+                    ))}
                 </Descriptions>
 
                 {!!(selectedNode.children && selectedNode.children.length) && (
@@ -415,7 +459,7 @@ const OverviewPanel = ({ wu, details }) => {
                     />
                   </Card>
                 )}
-              </>
+              </div>
             )}
           </Card>
         </Col>

@@ -20,7 +20,7 @@ const { TabPane } = Tabs;
 
 const formatTime = seconds => (seconds == null ? '-' : dayjs.duration(seconds, 'seconds').format('HH:mm:ss.SSS'));
 
-const WorkUnitView = ({ wu, details }) => {
+const WorkUnitView = ({ wu, details, clusterName }) => {
 
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
@@ -37,7 +37,7 @@ const WorkUnitView = ({ wu, details }) => {
               </Tag>
             </Title>
             <Text type="secondary">
-              {wu.wuId} • {wu.clusterId} • Submitted {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
+              {wu.wuId} • {clusterName || wu.clusterId} • Submitted {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
             </Text>
           </Col>
           <Col>
@@ -68,7 +68,7 @@ const WorkUnitView = ({ wu, details }) => {
               />
             </Card>
           ) : (
-            <OverviewPanel wu={wu} details={details} />
+            <OverviewPanel wu={wu} details={details} clusterName={clusterName} />
           )}
         </TabPane>
 

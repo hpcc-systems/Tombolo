@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Spin, Button, message, Alert, Space } from 'antd';
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import workunitsService from '@/services/workunits.service';
@@ -9,6 +10,14 @@ import styles from '../workunitHistory.module.css';
 const WorkUnitDetails = () => {
   const { clusterId, wuid } = useParams();
   const history = useHistory();
+  const clusters = useSelector(state => state.application.clusters);
+
+  const clusterName = useMemo(() => {
+    if (!clusters || !clusterId) return clusterId;
+    const cluster = clusters.find(c => c.id === clusterId);
+    return cluster ? cluster.name : clusterId;
+  }, [clusters, clusterId]);
+
   const [loading, setLoading] = useState(true);
   const [wu, setWu] = useState(null);
   const [details, setDetails] = useState([]);
@@ -132,7 +141,7 @@ const WorkUnitDetails = () => {
 
       {/* Summary header */}
       <div className={styles.contentPadding}>
-        <WorkUnitView wu={wu} details={details} />
+        <WorkUnitView wu={wu} details={details} clusterName={clusterName} />
       </div>
     </div>
   );
