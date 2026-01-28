@@ -24,8 +24,12 @@ export default function config({ mode }) {
         // lintOnStart: true,
       }),
     ].filter(Boolean),
+    worker: {
+      format: 'es', // Use ESM workers for monaco
+    },
     optimizeDeps: {
       include: [
+        'monaco-editor',
         '@ant-design/plots',
         '@ant-design/charts',
         '@antv/g2',
