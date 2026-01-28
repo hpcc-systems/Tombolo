@@ -178,6 +178,45 @@ describe('Workunit Routes', () => {
         })
       );
     });
+
+    it('should filter workunits by detailsFetched', async () => {
+      WorkUnit.findAndCountAll.mockResolvedValue({
+        count: 1,
+        rows: [getWorkUnit({ detailsFetchedAt: new Date() }, true)],
+      });
+
+      const res = await request(app).get('/api/workunits').query({
+        detailsFetched: 'true',
+      });
+
+      expect(res.status).toBe(200);
+      expect(WorkUnit.findAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            detailsFetchedAt: expect.any(Object),
+          }),
+        })
+      );
+
+      WorkUnit.findAndCountAll.mockClear();
+      WorkUnit.findAndCountAll.mockResolvedValue({
+        count: 1,
+        rows: [getWorkUnit({ detailsFetchedAt: null }, true)],
+      });
+
+      const res2 = await request(app).get('/api/workunits').query({
+        detailsFetched: 'false',
+      });
+
+      expect(res2.status).toBe(200);
+      expect(WorkUnit.findAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            detailsFetchedAt: null,
+          }),
+        })
+      );
+    });
   });
 
   describe('GET /api/workunits/:clusterId/:wuid', () => {
