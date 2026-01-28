@@ -9,6 +9,10 @@ import './index.css';
 
 import { Provider } from 'react-redux';
 import { store } from './redux/store/Store';
+import { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
+
+loader.config({ monaco });
 
 const container = document.getElementById('root');
 const root = createRoot(container);

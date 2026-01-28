@@ -1,4 +1,4 @@
-const { uuidParam } = require('./commonMiddleware');
+import { uuidParam } from './commonMiddleware.js';
 
 // Validate user ID
 const validateUserId = [uuidParam('id')];
@@ -7,4 +7,4 @@ const validateUserId = [uuidParam('id')];
 const validateSessionId = [uuidParam('sessionId')];
 
 //Exports
-module.exports = { validateUserId, validateSessionId };
+export { validateUserId, validateSessionId };

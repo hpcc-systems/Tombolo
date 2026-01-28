@@ -2,15 +2,17 @@
   "name": "@tombolo/server",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "",
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
     "bootstrap-server": "(pnpm install) && (pnpm exec nodemon server.js)",
     "build": "echo 'No build step for server'",
-    "test": "jest --detectOpenHandles",
-    "test:jobs": "jest --detectOpenHandles --selectProjects jobs",
-    "test:api": "jest --detectOpenHandles --selectProjects api",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:jobs": "vitest run --project jobs",
+    "test:api": "vitest run --project api",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "clean": "rm -rf .turbo",
@@ -53,13 +55,11 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.5",
-    "@babel/preset-env": "^7.28.5",
-    "babel-jest": "^30.2.0",
+    "@vitest/coverage-v8": "catalog:",
     "cross-env": "^7.0.3",
-    "jest": "^29.5.0",
     "nodemon": "catalog:",
     "prettier": "catalog:",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "vitest": "catalog:"
   }
 }

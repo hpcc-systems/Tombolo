@@ -1,11 +1,12 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
+import dotenv from 'dotenv';
+import logger from './logger.js';
+
 const rootENV = path.join(process.cwd(), '..', '.env');
 const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
-require('dotenv').config({ path: ENVPath });
-
-const logger = require('./logger');
+dotenv.config({ path: ENVPath });
 
 // Common database configuration options
 const commonDbConfigOptions = {
@@ -61,8 +62,4 @@ const test = {
   logging: false,
 };
 
-module.exports = {
-  development,
-  production,
-  test,
-};
+export { development, production, test };

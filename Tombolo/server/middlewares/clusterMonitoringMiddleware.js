@@ -1,4 +1,4 @@
-const {
+import {
   DESCRIPTION_LENGTH,
   MONITORING_NAME_LENGTH,
   COMMENT_LENGTH,
@@ -10,7 +10,7 @@ const {
   enumBody,
   arrayBody,
   emailBody,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 // Creating and updating monitoring
 const createOrUpdateMonitoringPayload = [
@@ -51,7 +51,7 @@ const bulkUpdateContacts = [
 const deleteMonitoringPayload = [arrayBody('ids'), uuidBody('ids.*')];
 
 // Exports
-module.exports = {
+export {
   createOrUpdateMonitoringPayload,
   monitoringIdAsParam,
   monitoringIdOnBody,

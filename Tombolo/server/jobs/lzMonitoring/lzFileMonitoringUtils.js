@@ -1,4 +1,4 @@
-const logger = require('../../config/logger');
+import logger from '../../config/logger.js';
 
 // Match strings using * and ? wildcards
 const wildcardMatch = (pattern, str) => {
@@ -133,7 +133,7 @@ const formatSize = (bytes, unit) => {
   return `${size.toFixed(2)} ${unit}`;
 };
 
-module.exports = {
+export {
   getFilesFromSingleLzDirectory,
   getFilesFromLandingZoneRecursivly,
   findLocalDateTimeAtCluster,

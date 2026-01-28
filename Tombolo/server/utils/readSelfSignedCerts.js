@@ -1,7 +1,7 @@
-const logger = require('../config/logger');
-const https = require('https');
-const tls = require('tls');
-const fs = require('fs');
+import logger from '../config/logger.js';
+import https from 'https';
+import tls from 'tls';
+import fs from 'fs';
 
 const loggedCertWarnings = new Set();
 
@@ -68,6 +68,4 @@ const readSelfSignedCerts = () => {
   }
 };
 
-module.exports = {
-  readSelfSignedCerts,
-};
+export { readSelfSignedCerts };

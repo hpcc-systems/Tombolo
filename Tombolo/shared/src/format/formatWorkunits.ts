@@ -1,3 +1,5 @@
+import { readableLabels } from '../constants';
+
 const formatNumber = (n: any): string =>
   n == null ? '-' : Number(n).toLocaleString();
 
@@ -79,10 +81,27 @@ function renderAnyMetric(key: string, value: any): string {
   return String(value);
 }
 
+function normalizeLabel(
+  label: string | null | undefined
+): string | null | undefined {
+  if (!label) return label;
+
+  // Normalize: replace newlines, &apos;, and multiple spaces with a single space
+  const normalized = label.replace(/&apos;|\s+/g, ' ').trim();
+  const lower = normalized.toLowerCase();
+  for (const prefix in readableLabels) {
+    if (lower.startsWith(prefix)) {
+      return readableLabels[prefix];
+    }
+  }
+  return normalized;
+}
+
 export {
   formatNumber,
   formatSeconds,
   formatBytes,
+  normalizeLabel,
   formatPercentage,
   parseWorkunitTimestamp,
   renderAnyMetric,
