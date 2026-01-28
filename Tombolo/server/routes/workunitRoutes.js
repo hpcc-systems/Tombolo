@@ -6,6 +6,9 @@ import {
   getWorkunitHotspots,
   getWorkunitTimeline,
   executeWorkunitSql,
+  getJobHistoryByJobName,
+  getJobHistoryByJobNameWStats,
+  comparePreviousByWuid,
 } from '../controllers/workunitController.js';
 import {
   validateGetWorkunits,
@@ -52,5 +55,14 @@ router.post(
   validate(validateExecuteWorkunitSql),
   executeWorkunitSql
 );
+
+router.get('/:clusterId/job-history/:jobName', getJobHistoryByJobName);
+
+router.get(
+  '/:clusterId/job-history/:jobName/stats',
+  getJobHistoryByJobNameWStats
+);
+
+router.get('/:clusterId/:wuid/compare-previous', comparePreviousByWuid);
 
 export default router;

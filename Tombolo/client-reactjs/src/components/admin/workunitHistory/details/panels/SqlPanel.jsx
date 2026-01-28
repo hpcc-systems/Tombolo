@@ -194,19 +194,17 @@ export default function SqlPanel({ clusterId, wuid, clusterName }) {
           type="info"
           showIcon
           message={
-            <Space>
+            <Space size="small">
               <SafetyOutlined />
               <Text strong>Read-only SQL</Text>
             </Space>
           }
           description={
-            <>
-              <Paragraph className={styles.tightParagraph}>
-                Only SELECT statements against the <Text code>work_unit_details</Text> table are allowed. Queries are
-                automatically scoped to this workunit (<Text code>{wuid}</Text>) and cluster (
-                <Text code>{clusterName}</Text>), and limited to a maximum of 1000 rows.
-              </Paragraph>
-            </>
+            <span>
+              Only SELECT statements against the <Text code>work_unit_details</Text> table are allowed. Queries are
+              automatically scoped to this workunit (<Text code>{wuid}</Text>) and cluster (
+              <Text code>{clusterName}</Text>), and limited to a maximum of 1000 rows.
+            </span>
           }
         />
 
