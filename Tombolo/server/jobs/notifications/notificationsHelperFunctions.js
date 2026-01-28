@@ -1,9 +1,8 @@
-const { NotificationQueue } = require('../../models');
-const logger = require('../../config/logger');
+import { NotificationQueue } from '../../models/index.js';
+import logger from '../../config/logger.js';
 
-const {
-  retryOptions: { maxRetries, retryDelays },
-} = require('../../config/emailConfig');
+import { retryOptions } from '../../config/emailConfig.js';
+const { maxRetries, retryDelays } = retryOptions;
 
 // Function to calculate the retryAfter time
 const calculateRetryAfter = ({
@@ -23,7 +22,7 @@ const calculateRetryAfter = ({
 async function updateNotificationQueueOnError({
   notificationId,
   attemptCount,
-  notification,
+  _notification,
   error,
 }) {
   try {
@@ -45,7 +44,4 @@ async function updateNotificationQueueOnError({
   }
 }
 
-module.exports = {
-  calculateRetryAfter,
-  updateNotificationQueueOnError,
-};
+export { calculateRetryAfter, updateNotificationQueueOnError };

@@ -1,15 +1,14 @@
-const axios = require('axios');
-const { parentPort, workerData } = require('worker_threads');
-
-const { notify } = require('../routes/notifications/email-notification');
-const logger = require('../config/logger');
-const { FileMonitoring, MonitoringNotification } = require('../models');
-const hpccUtil = require('../utils/hpcc-util');
-const { v4: uuidv4 } = require('uuid');
-const {
+import axios from 'axios';
+import { parentPort, workerData } from 'worker_threads';
+import { notify } from '../routes/notifications/email-notification.js';
+import logger from '../config/logger.js';
+import { FileMonitoring, MonitoringNotification } from '../models/index.js';
+import { logicalFileDetails } from '../utils/hpcc-util.js';
+import { v4 as uuidv4 } from 'uuid';
+import {
   emailBody,
   messageCardBody,
-} = require('./messageCards/notificationTemplate');
+} from './messageCards/notificationTemplate.js';
 
 (async () => {
   try {
@@ -40,7 +39,7 @@ const {
     } = fileMonitoringDetails;
 
     // Get file details from HPCC to compare  if any things of interest have been changed
-    let logicalFileDetail = await hpccUtil.logicalFileDetails(Name, cluster_id);
+    let logicalFileDetail = await logicalFileDetails(Name, cluster_id);
 
     const notificationDetails = { details: { 'File Name': Name } };
 

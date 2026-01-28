@@ -1,8 +1,7 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
-const logger = require('../config/logger');
-const { setTokenCookie } = require('../utils/authUtil');
-const { isTokenBlacklisted } = require('../utils/tokenBlackListing');
+import { setTokenCookie } from '../utils/authUtil.js';
+import { isTokenBlacklisted } from '../utils/tokenBlackListing.js';
 
 // Main middleware function
 const tokenValidationMiddleware = async (req, res, next) => {
@@ -53,4 +52,4 @@ const verifyToken = (token, secret) => {
 
 // Refresh token logic moved to authController.js - refreshAccessToken method
 
-module.exports = { tokenValidationMiddleware };
+export { tokenValidationMiddleware };

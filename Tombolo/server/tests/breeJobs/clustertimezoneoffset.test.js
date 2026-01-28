@@ -1,20 +1,24 @@
-const getClusterTimezoneOffset = require('../../jobs/cluster/clustertimezoneoffset');
-const hpccUtil = require('../../utils/hpcc-util');
-const { Cluster } = require('../../models');
-const { parentPort } = require('worker_threads');
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import getClusterTimezoneOffset from '../../jobs/cluster/clustertimezoneoffset.js';
+import { getClusterTimezoneOffset as utilGetClusterTzOffset } from '../../utils/hpcc-util.js';
+import { Cluster } from '../../models/index.js';
+import { parentPort } from 'worker_threads';
 
-jest.mock('../../utils/hpcc-util');
-jest.mock('worker_threads');
-jest.mock('../../jobs/workerUtils', () => () => ({
-  log: jest.fn(),
+vi.mock('../../utils/hpcc-util.js');
+vi.mock('../../jobs/workerUtils.js', () => ({
+  default: () => ({
+    log: vi.fn(),
+  }),
 }));
 
 describe('getClusterTimezoneOffset', () => {
+  // eslint-disable-next-line no-unused-vars
   let log;
-  beforeEach(() => {
-    jest.clearAllMocks();
-    parentPort.postMessage = jest.fn();
-    log = require('../../jobs/workerUtils')().log;
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.clearAllMocks();
+    const workerUtils = (await import('../../jobs/workerUtils.js')).default;
+    log = workerUtils().log;
   });
 
   it('should post info and exit if no clusters', async () => {
@@ -30,7 +34,7 @@ describe('getClusterTimezoneOffset', () => {
 
   it('should post info for up-to-date timezone offset', async () => {
     Cluster.findAll.mockResolvedValue([{ id: 1 }]);
-    hpccUtil.getClusterTimezoneOffset.mockResolvedValue(100);
+    utilGetClusterTzOffset.mockResolvedValue(100);
     Cluster.findOne.mockResolvedValue({ id: 1, timezone_offset: 100 });
     await getClusterTimezoneOffset();
     expect(parentPort.postMessage).toHaveBeenCalledWith(
@@ -43,7 +47,7 @@ describe('getClusterTimezoneOffset', () => {
 
   it('should update cluster and post info if offset changed', async () => {
     Cluster.findAll.mockResolvedValue([{ id: 2 }]);
-    hpccUtil.getClusterTimezoneOffset.mockResolvedValue(200);
+    utilGetClusterTzOffset.mockResolvedValue(200);
     Cluster.findOne.mockResolvedValue({ id: 2, timezone_offset: 100 });
     Cluster.update.mockResolvedValue({});
     await getClusterTimezoneOffset();
@@ -61,7 +65,7 @@ describe('getClusterTimezoneOffset', () => {
 
   it('should post error if hpccUtil throws', async () => {
     Cluster.findAll.mockResolvedValue([{ id: 3 }]);
-    hpccUtil.getClusterTimezoneOffset.mockRejectedValue(new Error('fail'));
+    utilGetClusterTzOffset.mockRejectedValue(new Error('fail'));
     await getClusterTimezoneOffset();
     expect(parentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -73,7 +77,7 @@ describe('getClusterTimezoneOffset', () => {
 
   it('should post completion message at end', async () => {
     Cluster.findAll.mockResolvedValue([{ id: 4 }]);
-    hpccUtil.getClusterTimezoneOffset.mockResolvedValue(100);
+    utilGetClusterTzOffset.mockResolvedValue(100);
     Cluster.findOne.mockResolvedValue({ id: 4, timezone_offset: 100 });
     await getClusterTimezoneOffset();
     expect(parentPort.postMessage).toHaveBeenCalledWith(

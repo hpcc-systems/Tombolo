@@ -1,20 +1,26 @@
-const axios = require('axios');
-const hpccUtil = require('../utils/hpcc-util');
-// const assetUtil = require('../../utils/assets');
-const { Cluster } = require('../models');
-let hpccJSComms = require('@hpcc-js/comms');
+import axios from 'axios';
+import {
+  getCluster,
+  getClusterAuth,
+  getSuperFiles,
+  getSuperFile,
+  getWorkunitsService,
+  logicalFileDetails,
+  getDirectories,
+} from '../utils/hpcc-util.js';
+import { Cluster } from '../models/index.js';
+import { DFUService, WorkunitsService, TopologyService } from '@hpcc-js/comms';
+import lodash from 'lodash';
 
-const lodash = require('lodash');
-
-const logger = require('../config/logger');
-const moment = require('moment');
-const { getClusterOptions } = require('../utils/getClusterOptions');
-const { sendSuccess, sendError } = require('../utils/response');
+import logger from '../config/logger.js';
+import moment from 'moment';
+import { getClusterOptions } from '../utils/getClusterOptions.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 
 async function fileSearch(req, res) {
   let cluster;
   try {
-    cluster = await hpccUtil.getCluster(req.body.clusterid);
+    cluster = await getCluster(req.body.clusterid);
   } catch (err) {
     logger.error(err);
     return sendError(
@@ -27,9 +33,9 @@ async function fileSearch(req, res) {
   try {
     let results = [];
 
-    let clusterAuth = hpccUtil.getClusterAuth(cluster);
+    let clusterAuth = getClusterAuth(cluster);
     let contentType = req.body.indexSearch ? 'key' : '';
-    let dfuService = new hpccJSComms.DFUService(
+    let dfuService = new DFUService(
       getClusterOptions(
         {
           baseUrl: cluster.thor_host + ':' + cluster.thor_port,
@@ -86,7 +92,7 @@ async function fileSearch(req, res) {
 
 async function superfileSearch(req, res) {
   try {
-    await hpccUtil.getCluster(req.body.clusterid);
+    await getCluster(req.body.clusterid);
   } catch (err) {
     logger.error('hpcc/read - superfileSearch - Cluster not reachable: ', err);
     return sendError(
@@ -110,10 +116,7 @@ async function superfileSearch(req, res) {
       logicalFileName = '*' + req.body.keyword + '*';
     }
 
-    let superfile = await hpccUtil.getSuperFiles(
-      req.body.clusterid,
-      logicalFileName
-    );
+    let superfile = await getSuperFiles(req.body.clusterid, logicalFileName);
 
     return sendSuccess(res, superfile);
   } catch (err) {
@@ -129,7 +132,7 @@ async function superfileSearch(req, res) {
 async function querySearch(req, res) {
   let cluster;
   try {
-    cluster = await hpccUtil.getCluster(req.body.clusterid);
+    cluster = await getCluster(req.body.clusterid);
   } catch (err) {
     logger.error('Cluster not reachable: ' + JSON.stringify(err));
     return sendError(
@@ -141,8 +144,8 @@ async function querySearch(req, res) {
 
   try {
     let querySearchAutoComplete = [];
-    let clusterAuth = hpccUtil.getClusterAuth(cluster);
-    let wsWorkunits = new hpccJSComms.WorkunitsService(
+    let clusterAuth = getClusterAuth(cluster);
+    let wsWorkunits = new WorkunitsService(
       getClusterOptions(
         {
           baseUrl: cluster.thor_host + ':' + cluster.thor_port,
@@ -187,7 +190,7 @@ async function querySearch(req, res) {
 async function jobSearch(req, res) {
   try {
     const { keyword, clusterId, clusterType } = req.body;
-    const wuService = await hpccUtil.getWorkunitsService(clusterId);
+    const wuService = await getWorkunitsService(clusterId);
 
     //If no * add to start and end
     // If there are one or more astrik leave as they are
@@ -226,7 +229,7 @@ async function jobSearch(req, res) {
   }
 }
 
-async function getClusters(req, res) {
+async function getClustersCtr(req, res) {
   try {
     const clusters = await Cluster.findAll({
       attributes: { exclude: ['hash', 'username', 'metaData'] },
@@ -240,7 +243,7 @@ async function getClusters(req, res) {
   }
 }
 
-async function getCluster(req, res) {
+async function getClusterCtr(req, res) {
   try {
     const clusters = await Cluster.findOne({
       where: { id: req.query.cluster_id },
@@ -255,7 +258,7 @@ async function getCluster(req, res) {
 async function getLogicalFileDetails(req, res) {
   try {
     const { fileName, clusterid } = req.query;
-    const details = await hpccUtil.logicalFileDetails(fileName, clusterid);
+    const details = await logicalFileDetails(fileName, clusterid);
     // Removing unnecessary data before sending to client
     details.DFUFilePartsOnClusters
       ? delete details.DFUFilePartsOnClusters
@@ -271,10 +274,10 @@ async function getLogicalFileDetails(req, res) {
 
 async function hpccGetData(req, res) {
   try {
-    const cluster = await hpccUtil.getCluster(req.query.clusterid);
+    const cluster = await getCluster(req.query.clusterid);
 
-    let clusterAuth = hpccUtil.getClusterAuth(cluster);
-    let wuService = new hpccJSComms.WorkunitsService(
+    let clusterAuth = getClusterAuth(cluster);
+    let wuService = new WorkunitsService(
       getClusterOptions(
         {
           baseUrl: cluster.thor_host + ':' + cluster.thor_port,
@@ -309,11 +312,11 @@ async function hpccGetData(req, res) {
 
 async function getFileProfile(req, res) {
   try {
-    const cluster = await hpccUtil.getCluster(req.query.clusterid);
+    const cluster = await getCluster(req.query.clusterid);
     const response = await axios.get(
       `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUResult.json?LogicalName=${req.query.fileName}.profile`,
       {
-        auth: hpccUtil.getClusterAuth(cluster),
+        auth: getClusterAuth(cluster),
       }
     );
 
@@ -344,7 +347,7 @@ async function getFileProfile(req, res) {
 
 async function getFileProfileHtml(req, res) {
   try {
-    const cluster = await hpccUtil.getCluster(req.query.clusterid); //call DFUInfo to get workunit id
+    const cluster = await getCluster(req.query.clusterid); //call DFUInfo to get workunit id
     const wuid = req.query.dataProfileWuid; //get resource url's from wuinfo
 
     const response = await axios.post(
@@ -367,7 +370,7 @@ async function getFileProfileHtml(req, res) {
         SuppressResultSchemas: true,
       }).toString(),
       {
-        auth: hpccUtil.getClusterAuth(cluster),
+        auth: getClusterAuth(cluster),
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       }
     );
@@ -390,7 +393,7 @@ async function getFileProfileHtml(req, res) {
 
 async function getQueryFiles(req, res) {
   try {
-    const wuService = await hpccUtil.getWorkunitsService(req.query.clusterId);
+    const wuService = await getWorkunitsService(req.query.clusterId);
     const response = await wuService.WUQueryDetails({
       QueryId: req.query.hpcc_queryId,
       IncludeSuperFiles: true,
@@ -409,11 +412,11 @@ async function getQueryFiles(req, res) {
 
 async function getDropZones(req, res) {
   try {
-    const cluster = await hpccUtil.getCluster(req.query.clusterId);
+    const cluster = await getCluster(req.query.clusterId);
     const url = `${cluster.thor_host}:${cluster.thor_port}/WsTopology/TpDropZoneQuery.json`;
 
     const response = await axios.get(url, {
-      auth: hpccUtil.getClusterAuth(cluster),
+      auth: getClusterAuth(cluster),
     });
 
     const result = response.data;
@@ -453,7 +456,7 @@ async function getDropZones(req, res) {
 async function getDropzoneDirectories(req, res) {
   try {
     const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
-    const directories = await hpccUtil.getDirectories({
+    const directories = await getDirectories({
       clusterId,
       Netaddr,
       Path,
@@ -472,7 +475,7 @@ async function getDropzoneDirectoryDetails(req, res) {
   try {
     const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
 
-    const directories = await hpccUtil.getDirectories({
+    const directories = await getDirectories({
       clusterId,
       Netaddr,
       Path,
@@ -522,7 +525,7 @@ async function getDropzoneDirectoryDetails(req, res) {
 
 async function dropzoneFileSearch(req, res) {
   try {
-    const cluster = await hpccUtil.getCluster(req.body.clusterId);
+    const cluster = await getCluster(req.body.clusterId);
     const response = await axios.post(
       `${cluster.thor_host}:${cluster.thor_port}/FileSpray/DropZoneFileSearch.json`,
       new URLSearchParams({
@@ -535,7 +538,7 @@ async function dropzoneFileSearch(req, res) {
         rawxml_: true,
       }).toString(),
       {
-        auth: hpccUtil.getClusterAuth(cluster),
+        auth: getClusterAuth(cluster),
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       }
     );
@@ -556,7 +559,7 @@ async function getSuperfileDetails(req, res) {
   try {
     const { fileName, clusterid } = req.query;
 
-    const details = await hpccUtil.getSuperFile(clusterid, fileName);
+    const details = await getSuperFile(clusterid, fileName);
 
     return sendSuccess(res, details);
   } catch (error) {
@@ -571,7 +574,7 @@ async function getClusterMetaData(req, res) {
     //Validate cluster Id
     //If cluster id is valid ->      const { clusterId } = req.query;
     //Get cluster details
-    let cluster = await hpccUtil.getCluster(clusterId);
+    let cluster = await getCluster(clusterId);
     const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
     const clusterDetails = getClusterOptions(
       {
@@ -581,7 +584,7 @@ async function getClusterMetaData(req, res) {
       },
       allowSelfSigned
     );
-    const topologyService = new hpccJSComms.TopologyService(clusterDetails);
+    const topologyService = new TopologyService(clusterDetails);
     const tpServiceQuery = await topologyService.TpServiceQuery({
       Type: 'ALLSERVICES',
     });
@@ -601,13 +604,13 @@ async function getClusterMetaData(req, res) {
   }
 }
 
-module.exports = {
+export {
   fileSearch,
   superfileSearch,
   querySearch,
   jobSearch,
-  getClusters,
-  getCluster,
+  getClustersCtr,
+  getClusterCtr,
   getLogicalFileDetails,
   hpccGetData,
   getFileProfile,

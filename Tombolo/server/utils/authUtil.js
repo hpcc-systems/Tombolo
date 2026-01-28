@@ -1,17 +1,18 @@
 // Imports from node modules
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-const { Op } = require('sequelize');
-const moment = require('moment');
+import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
+import moment from 'moment';
+import bcrypt from 'bcryptjs';
 
 // Local Imports
-const logger = require('../config/logger');
-const {
+import logger from '../config/logger.js';
+import {
   ACCESS_TOKEN_EXPIRY,
   REFRESH_TOKEN_EXPIRY,
   TOKEN_COOKIE_MAX_AGE,
-} = require('../config/tokens');
-const {
+} from '../config/tokens.js';
+import {
   User,
   UserRole,
   RoleType,
@@ -21,9 +22,8 @@ const {
   InstanceSettings,
   NotificationQueue,
   AccountVerificationCode,
-} = require('../models');
-const { generateToken } = require('../middlewares/csrfMiddleware');
-const bcrypt = require('bcryptjs');
+} from '../models/index.js';
+import { generateToken } from '../middlewares/csrfMiddleware.js';
 
 const csrfHeaderName = 'x-csrf-token';
 
@@ -650,7 +650,7 @@ const getAccessRequestRecipients = async () => {
 };
 
 //Exports
-module.exports = {
+export {
   generateAccessToken,
   generateRefreshToken,
   verifyToken,

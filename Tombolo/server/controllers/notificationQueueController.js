@@ -1,6 +1,6 @@
-const logger = require('../config/logger');
-const { NotificationQueue } = require('../models');
-const { sendSuccess, sendError } = require('../utils/response');
+import logger from '../config/logger.js';
+import { NotificationQueue } from '../models/index.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 
 async function createNotificationQueue(req, res) {
   try {
@@ -59,7 +59,7 @@ async function deleteNotificationQueue(req, res) {
   }
 }
 
-module.exports = {
+export {
   deleteNotificationQueue,
   updateNotificationQueue,
   getNotifications,

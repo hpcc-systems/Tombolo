@@ -1,6 +1,6 @@
-const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcryptjs');
-const { APPROVAL_STATUS } = require('../config/constants');
+import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
+import { APPROVAL_STATUS } from '../config/constants.js';
 
 const testingPassword = 'Password123!';
 const AUTHED_USER_ID = uuidv4();
@@ -415,7 +415,7 @@ const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-module.exports = {
+export {
   getUsers,
   getInstanceSettings,
   getCluster,

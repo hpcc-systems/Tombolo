@@ -1,12 +1,12 @@
-const { check, oneOf } = require('express-validator');
-const {
+import { check, oneOf } from 'express-validator';
+import {
   intQuery,
   regexQuery,
   intBody,
   regexBody,
   bodyUuids,
   queryUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const appGroupIdFalsy = [
   queryUuids.app_id,
@@ -58,7 +58,7 @@ const validateMoveAsset = [
   intBody('destGroupId', true, { checkFalsy: true }),
 ];
 
-module.exports = {
+export {
   validateGetDetails,
   validateGetGroup,
   validateGetAssets,

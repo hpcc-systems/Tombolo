@@ -1,13 +1,12 @@
-const {
+import {
   DESCRIPTION_LENGTH,
   stringQuery,
-  uuidBody,
   regexBody,
   TITLE_REGEX,
   stringBody,
   bodyUuids,
   queryUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const validateGetAppByUsername = [stringQuery('user_name')];
 
@@ -23,7 +22,7 @@ const validateUnshareApp = [bodyUuids.applicationId, stringBody('username')];
 
 const validateExportApp = [bodyUuids.id];
 
-module.exports = {
+export {
   validateGetAppByUsername,
   validateGetAppById,
   validateSaveApp,

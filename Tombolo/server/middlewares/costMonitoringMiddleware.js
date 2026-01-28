@@ -1,4 +1,4 @@
-const {
+import {
   DESCRIPTION_LENGTH,
   MONITORING_NAME_LENGTH,
   COMMENT_LENGTH,
@@ -7,15 +7,14 @@ const {
   arrayBody,
   objectBody,
   regexBody,
-  TITLE_REGEX,
   numericBody,
   uuidParam,
   booleanBody,
   bodyUuids,
   paramUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
-const usersRegex = /^(?:[a-zA-Z][a-zA-Z0-9_:.\-]*|\*)$/;
+const usersRegex = /^(?:[a-zA-Z][a-zA-Z0-9_:.-]*|\*)$/;
 
 const createUpdateValidations = [
   bodyUuids.applicationId,
@@ -62,7 +61,7 @@ const validateBulkUpdate = [
 
 const validateGetCostMonitoringByAppId = [uuidParam('applicationId')];
 
-module.exports = {
+export {
   validateUpdateCostMonitoring,
   validateCreateCostMonitoring,
   validateDeleteCostMonitoring,

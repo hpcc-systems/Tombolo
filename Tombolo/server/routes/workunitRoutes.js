@@ -1,21 +1,21 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getWorkunits,
   getWorkunit,
   getWorkunitDetails,
   getWorkunitHotspots,
   getWorkunitTimeline,
   executeWorkunitSql,
-} = require('../controllers/workunitController');
-const {
+} from '../controllers/workunitController.js';
+import {
   validateGetWorkunits,
   validateGetWorkunit,
   validateGetWorkunitDetails,
   validateGetWorkunitHotspots,
   validateGetWorkunitTimeline,
   validateExecuteWorkunitSql,
-} = require('../middlewares/workunitMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
+} from '../middlewares/workunitMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
 
 const router = express.Router();
 
@@ -53,4 +53,4 @@ router.post(
   executeWorkunitSql
 );
 
-module.exports = router;
+export default router;

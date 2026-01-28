@@ -1,10 +1,10 @@
-const {
+import {
   NAME_LENGTH,
   DESCRIPTION_LENGTH,
   PASSWORD_LENGTH,
   stringBody,
   emailBody,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const validateWizardPayload = [
   stringBody('firstName', false, { length: { ...NAME_LENGTH } }),
@@ -15,4 +15,4 @@ const validateWizardPayload = [
   stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
 ];
 
-module.exports = { validateWizardPayload };
+export { validateWizardPayload };

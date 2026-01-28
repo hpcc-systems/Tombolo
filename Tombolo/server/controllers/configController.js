@@ -1,4 +1,4 @@
-// Get instance details form .env file
+import logger from '../config/logger.js'; // Get instance details from .env file
 const getInstanceDetails = async (req, res) => {
   try {
     const instanceName = process.env.INSTANCE_NAME;
@@ -16,6 +16,4 @@ const getInstanceDetails = async (req, res) => {
 };
 
 //Exports
-module.exports = {
-  getInstanceDetails,
-};
+export { getInstanceDetails };
