@@ -1,11 +1,11 @@
-const {
+import {
   bodyUuids,
   stringBody,
   objectBody,
   paramUuids,
   arrayBody,
   dateTimeBody,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const validateCreateSentNotification = [
   bodyUuids.applicationId,
@@ -29,7 +29,7 @@ const validateBulkDeleteSentNotifications = [...bodyUuids.arrayIds];
 const validateUpdateSentNotifications = [arrayBody('ids')];
 const validateBodyId = [bodyUuids.id];
 
-module.exports = {
+export {
   validateCreateSentNotification,
   validateGetSentNotificationByAppId,
   validateGetSentNotificationById,

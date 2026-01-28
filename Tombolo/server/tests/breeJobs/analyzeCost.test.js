@@ -1,4 +1,5 @@
-const {
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import {
   buildCMIdempotencyKey,
   createCMNotificationPayload,
   getClusters,
@@ -7,9 +8,9 @@ const {
   analyzeClusterCost,
   analyzeUserCost,
   analyzeCost,
-} = require('../../jobs/costMonitoring/analyzeCost');
+} from '../../jobs/costMonitoring/analyzeCost.js';
 
-const {
+import {
   Integration,
   Cluster,
   CostMonitoring,
@@ -19,16 +20,15 @@ const {
   SentNotification,
   NotificationQueue,
   MonitoringType,
-} = require('../../models');
-const {
-  findLocalDateTimeAtCluster,
-} = require('../../jobs/jobMonitoring/monitorJobsUtil');
-const { getCostMonitoring } = require('../helpers');
-const { parentPort } = require('worker_threads');
+} from '../../models/index.js';
+import { findLocalDateTimeAtCluster } from '../../jobs/jobMonitoring/monitorJobsUtil.js';
+import * as monitorJobsUtil from '../../jobs/jobMonitoring/monitorJobsUtil.js';
+import { getCostMonitoring } from '../helpers.js';
+import { parentPort } from 'worker_threads';
 
 describe('analyzeCost.js', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('buildCMIdempotencyKey', () => {
@@ -120,11 +120,8 @@ describe('analyzeCost.js', () => {
 
   describe('getAsrData', () => {
     it('should return contacts and asr metaData', async () => {
-      const spyBuildNotifId = jest
-        .spyOn(
-          require('../../jobs/jobMonitoring/monitorJobsUtil'),
-          'generateNotificationId'
-        )
+      const spyBuildNotifId = vi
+        .spyOn(monitorJobsUtil, 'generateNotificationId')
         .mockImplementation(() => 'notifId');
 
       Integration.findOne.mockResolvedValue({});
@@ -180,7 +177,10 @@ describe('analyzeCost.js', () => {
         isSummed: true,
       };
       const monitoringType = { id: 1 };
-      const clusterCostTotals = { aggregatedCostsByCluster: {}, overallTotalCost: 50 };
+      const clusterCostTotals = {
+        aggregatedCostsByCluster: {},
+        overallTotalCost: 50,
+      };
       await analyzeClusterCost(
         clusterCostTotals,
         costMonitoring,
@@ -191,19 +191,14 @@ describe('analyzeCost.js', () => {
     });
 
     it('should send notification if summedCost >= threshold', async () => {
-      const spyBuildKey = jest
-        .spyOn(
-          require('../../jobs/jobMonitoring/monitorJobsUtil'),
-          'generateNotificationIdempotencyKey'
-        )
+      const spyBuildKey = vi
+        .spyOn(monitorJobsUtil, 'generateNotificationIdempotencyKey')
         .mockImplementation(() => 'key');
-      const spyBuildPayload = jest
-        .spyOn(
-          require('../../jobs/jobMonitoring/monitorJobsUtil'),
-          'createNotificationPayload'
-        )
+      const spyBuildPayload = vi
+        .spyOn(monitorJobsUtil, 'createNotificationPayload')
         .mockImplementation(() => {});
 
+      Cluster.findAll.mockResolvedValue([{ id: 1, name: 'test-cluster' }]);
       SentNotification.findOne.mockResolvedValue(null);
       NotificationQueue.create.mockResolvedValue({});
       const costMonitoring = {
@@ -246,24 +241,15 @@ describe('analyzeCost.js', () => {
       // Should not call NotificationQueue.create
     });
     it('should send notification if summedCost >= threshold', async () => {
-      const spyBuildKey = jest
-        .spyOn(
-          require('../../jobs/jobMonitoring/monitorJobsUtil'),
-          'generateNotificationIdempotencyKey'
-        )
+      const spyBuildKey = vi
+        .spyOn(monitorJobsUtil, 'generateNotificationIdempotencyKey')
         .mockImplementation(() => 'key');
-      const spyBuildPayload = jest
-        .spyOn(
-          require('../../jobs/jobMonitoring/monitorJobsUtil'),
-          'createNotificationPayload'
-        )
+      const spyBuildPayload = vi
+        .spyOn(monitorJobsUtil, 'createNotificationPayload')
         .mockImplementation(() => {});
 
-      const spyBuildNotifId = jest
-        .spyOn(
-          require('../../jobs/jobMonitoring/monitorJobsUtil'),
-          'generateNotificationId'
-        )
+      const spyBuildNotifId = vi
+        .spyOn(monitorJobsUtil, 'generateNotificationId')
         .mockImplementation(() => 'notifId');
 
       SentNotification.findOne.mockResolvedValue(null);

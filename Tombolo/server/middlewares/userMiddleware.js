@@ -1,4 +1,4 @@
-const {
+import {
   NAME_LENGTH,
   uuidBody,
   stringBody,
@@ -7,7 +7,7 @@ const {
   arrayBody,
   paramUuids,
   bodyUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const validateUserId = [paramUuids.id];
 const validateUserIdInBody = [bodyUuids.id];
@@ -81,7 +81,7 @@ const validatePatchUserRolesPayload = [
   uuidBody('roles.*'),
 ];
 
-module.exports = {
+export {
   validateManuallyCreatedUserPayload,
   validateUserId,
   validateUserIdInBody,

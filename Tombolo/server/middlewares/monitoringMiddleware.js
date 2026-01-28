@@ -1,10 +1,10 @@
-const {
+import {
   stringParam,
   bodyUuids,
   stringBody,
   objectBody,
   paramUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const monitoringId = [bodyUuids.id];
 
@@ -23,7 +23,7 @@ const validateUpdateMonitoring = [
 
 const validateGetMonitoringByTypeName = [stringParam('monitoringTypeName')];
 
-module.exports = {
+export {
   validateCreateMonitoring,
   validateDeleteMonitoring,
   validateUpdateMonitoring,

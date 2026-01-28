@@ -1,5 +1,4 @@
-// rbacMiddleware.js
-const { sendError } = require('../utils/response');
+import { sendError } from '../utils/response.js';
 
 const validateUserRole = allowedRoles => {
   return (req, res, next) => {
@@ -21,4 +20,4 @@ const validateUserRole = allowedRoles => {
   };
 };
 
-module.exports = { validateUserRole };
+export { validateUserRole };

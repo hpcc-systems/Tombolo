@@ -1,16 +1,16 @@
 // Library Imports
-const express = require('express');
+import express from 'express';
 
 // Local Imports
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   validateGetAppByUsername,
   validateGetAppById,
   validateSaveApp,
   validateUnshareApp,
   validateExportApp,
-} = require('../middlewares/appMiddleware');
-const {
+} from '../middlewares/appMiddleware.js';
+import {
   shareApplication,
   stopApplicationShare,
   deleteApplication,
@@ -18,7 +18,7 @@ const {
   saveApplication,
   getApplicationById,
   getApplicationsByUser,
-} = require('../controllers/applicationController');
+} from '../controllers/applicationController.js';
 
 // Constants & Config
 const router = express.Router();
@@ -51,4 +51,4 @@ router.post(
 
 router.post('/export', validate(validateExportApp), exportApplication);
 
-module.exports = router;
+export default router;

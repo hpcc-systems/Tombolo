@@ -1,11 +1,9 @@
-const { FileMonitoring, Cluster, sequelize } = require('../models');
-const logger = require('../config/logger');
-const {
-  uniqueConstraintErrorHandler,
-} = require('../utils/uniqueConstraintErrorHandler');
-const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
-const { APPROVAL_STATUS } = require('../config/constants');
-const { sendError, sendSuccess } = require('../utils/response');
+import { FileMonitoring, Cluster, sequelize } from '../models/index.js';
+import logger from '../config/logger.js';
+import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
+import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
+import { APPROVAL_STATUS } from '../config/constants.js';
+import { sendError, sendSuccess } from '../utils/response.js';
 
 // Wrapper function to get common includes
 const getCommonIncludes = () => [
@@ -313,7 +311,7 @@ async function bulkUpdateFileMonitoring(req, res) {
   }
 }
 
-module.exports = {
+export {
   createFileMonitoring,
   updateFileMonitoring,
   getFileMonitoringById,
