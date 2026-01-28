@@ -1,15 +1,15 @@
-const sequelize = require('sequelize');
-const express = require('express');
+import sequelize from 'sequelize';
+import express from 'express';
 
-const { validate } = require('../../middlewares/validateRequestBody');
-const {
+import { validate } from '../../middlewares/validateRequestBody.js';
+import {
   validateIntegrationDetails,
   validateToggleStatus,
   validateUpdateIntegrationSettings,
-} = require('../../middlewares/integrationsMiddleware');
-const logger = require('../../config/logger');
-const { sendError, sendSuccess } = require('../../utils/response');
-const { Integration, IntegrationMapping } = require('../../models');
+} from '../../middlewares/integrationsMiddleware.js';
+import logger from '../../config/logger.js';
+import { sendError, sendSuccess } from '../../utils/response.js';
+import { Integration, IntegrationMapping } from '../../models/index.js';
 
 const router = express.Router();
 
@@ -166,4 +166,4 @@ router.put(
   }
 );
 
-module.exports = router;
+export default router;

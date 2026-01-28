@@ -1,4 +1,4 @@
-const { queryUuids, stringQuery, uuidBody } = require('./commonMiddleware');
+import { queryUuids, stringQuery, uuidBody } from './commonMiddleware.js';
 
 const notificationType = stringQuery('type', false, { isIn: ['JSON', 'CSV'] });
 const optionalNonFalsyId = uuidBody('id', true, { checkFalsy: false });
@@ -12,7 +12,7 @@ const validateDeleteNotificationByType = [
 const validateDeleteNotifications = [optionalNonFalsyId];
 const validatePutUpdateNotification = [optionalNonFalsyId];
 
-module.exports = {
+export {
   validateGetNotifications,
   validateNotificationByType,
   validateDeleteNotificationByType,

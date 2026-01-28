@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 //Local imports
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   validateCreateJobMonitoring,
   validateParamApplicationId,
   validateUpdateJobMonitoring,
@@ -13,8 +13,8 @@ const {
   validateToggleJobMonitoring,
   validateBulkUpdateJobMonitoring,
   validateGetJobMonitoringById,
-} = require('../middlewares/jobMonitoringMiddleware');
-const {
+} from '../middlewares/jobMonitoringMiddleware.js';
+import {
   createJobMonitoring,
   getAllJobMonitorings,
   getJobMonitoringById,
@@ -25,7 +25,7 @@ const {
   toggleJobMonitoring,
   bulkUpdateJobMonitoring,
   getJobMonitoringData,
-} = require('../controllers/jobMonitoringController');
+} from '../controllers/jobMonitoringController.js';
 
 // Create new job monitoring
 router.post('/', validate(validateCreateJobMonitoring), createJobMonitoring);
@@ -86,4 +86,4 @@ router.get(
 );
 
 // Export the router
-module.exports = router;
+export default router;

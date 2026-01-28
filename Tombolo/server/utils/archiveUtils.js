@@ -1,4 +1,4 @@
-const { DataTypes, Op } = require('sequelize');
+import { DataTypes, Op } from 'sequelize';
 
 class ArchiveManager {
   constructor(sequelize) {
@@ -78,4 +78,4 @@ class ArchiveManager {
   }
 }
 
-module.exports = { ArchiveManager };
+export { ArchiveManager };

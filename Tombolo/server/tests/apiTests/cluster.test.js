@@ -1,21 +1,22 @@
-const request = require('supertest');
-const { app } = require('../test_server');
-const { Cluster } = require('../../models');
-const { v4: uuidv4 } = require('uuid');
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const { getCluster, AUTHED_USER_ID, UUID_REGEX } = require('../helpers');
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { Cluster } from '../../models/index.js';
+import { v4 as uuidv4 } from 'uuid';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import { getCluster, AUTHED_USER_ID, UUID_REGEX } from '../helpers.js';
 
 const nonExistentID = uuidv4();
 
 describe('Cluster Routes', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   it('get-clusters should get all clusters', async () => {
@@ -67,7 +68,7 @@ describe('Cluster Routes', () => {
   it('update-cluster should update a cluster by ID', async () => {
     const updatedUsername = 'UpdatedUsername';
 
-    const cluster = { ...getCluster(), save: jest.fn() };
+    const cluster = { ...getCluster(), save: vi.fn() };
     Cluster.findOne.mockResolvedValue(cluster);
     cluster.save.mockResolvedValue(true);
 

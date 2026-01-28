@@ -1,9 +1,9 @@
 // Imports from libraries
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Middlewares
-const {
+import {
   createOrbitMonitoringPayloadValidations,
   validateAppIdInReqParam,
   validateMonitoringIdInBody,
@@ -12,11 +12,11 @@ const {
   monitoringTogglePayloadValidations,
   validateMonitoringEvaluationPayload,
   validateBulkUpdate,
-} = require('../middlewares/orbitProfileMonitoringMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
+} from '../middlewares/orbitProfileMonitoringMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
 
 // Controllers
-const {
+import {
   createOrbitProfileMonitoring,
   getAllOrbitProfileMonitorings,
   getOrbitProfileMonitoringById,
@@ -25,7 +25,7 @@ const {
   toggleOrbitProfileMonitoringStatus,
   evaluateOrbitProfileMonitoring,
   bulkUpdateOrbitProfileMonitoring,
-} = require('../controllers/orbitProfileMonitoringController');
+} from '../controllers/orbitProfileMonitoringController.js';
 
 // Routes
 router.post(
@@ -76,4 +76,4 @@ router.patch(
   bulkUpdateOrbitProfileMonitoring
 );
 
-module.exports = router;
+export default router;

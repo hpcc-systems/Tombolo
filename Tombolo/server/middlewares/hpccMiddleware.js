@@ -1,4 +1,4 @@
-const {
+import {
   regexBody,
   stringQuery,
   uuidQuery,
@@ -6,10 +6,10 @@ const {
   queryUuids,
   booleanQuery,
   bodyUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
-const looseKeywordRegex = /^[a-zA-Z0-9_. \-:\*\?]*$/;
-const strictLetterRegex = /^[a-zA-Z]{1}[a-zA-Z0-9_: .\-]*$/;
+const looseKeywordRegex = /^[a-zA-Z0-9_. \-:*?]*$/;
+const strictLetterRegex = /^[a-zA-Z]{1}[a-zA-Z0-9_: .-]*$/;
 const digitFirstLetterRegex = /^[a-zA-Z0-9]{1}[a-zA-Z0-9_:\-.]*$/;
 
 const keywordRegexBody = regexBody('keyword', false, {
@@ -68,10 +68,9 @@ const validateGetSuperfileDetails = [
   uuidQuery('clusterid', true, { checkFalsy: true }),
 ];
 
-
 const validateClusterMetaData = [queryUuids.clusterId];
 
-module.exports = {
+export {
   validateFileSearch,
   validateSuperfileSearch,
   validateQuerySearch,

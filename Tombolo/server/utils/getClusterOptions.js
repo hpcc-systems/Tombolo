@@ -8,6 +8,4 @@ function getClusterOptions(iOptions, allowSelfSigned) {
   return iOptions;
 }
 
-module.exports = {
-  getClusterOptions,
-};
+export { getClusterOptions };

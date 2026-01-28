@@ -1,9 +1,13 @@
-const { createLogger } = require('@tombolo/shared/backend');
-const path = require('path');
+import { createLogger } from '@tombolo/shared/backend';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create logger instance with server-specific configuration
 const logger = createLogger({
   logDir: path.join(__dirname, '..', 'logs'), // Absolute path to server/logs
 });
 
-module.exports = logger;
+export default logger;
