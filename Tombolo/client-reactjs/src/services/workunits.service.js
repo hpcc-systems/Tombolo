@@ -90,31 +90,11 @@ const workunitsService = {
    * @param {number} options.limit - Max results (default 100)
    * @returns {Promise<Array>} Array of workunit objects
    */
-  async getJobHistory(clusterId, jobName, options = {}) {
-    try {
-      const params = new URLSearchParams();
-
-      if (options.startDate) {
-        params.append('startDate', options.startDate);
-      }
-
-      if (options.limit) {
-        params.append('limit', options.limit.toString());
-      }
-
-      const response = await fetch(
-        `/api/workunits/${clusterId}/job-history/${encodeURIComponent(jobName)}?${params.toString()}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch job history: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error in getJobHistory:', error);
-      throw error;
-    }
+  getJobHistory: async (clusterId, jobName, options = {}) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/job-history/${encodeURIComponent(jobName)}`, {
+      params: options,
+    });
+    return response.data;
   },
 
   /**
@@ -124,27 +104,11 @@ const workunitsService = {
    * @param {object} options - Query options
    * @returns {Promise<{runs: Array, statistics: Object}>}
    */
-  async getJobHistoryWithStats(clusterId, jobName, options = {}) {
-    try {
-      const params = new URLSearchParams();
-
-      if (options.startDate) {
-        params.append('startDate', options.startDate);
-      }
-
-      const response = await fetch(
-        `/api/workunits/${clusterId}/job-history/${encodeURIComponent(jobName)}/stats?${params.toString()}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch job history with stats: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error in getJobHistoryWithStats:', error);
-      throw error;
-    }
+  getJobHistoryWithStats: async (clusterId, jobName, options = {}) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/job-history/${encodeURIComponent(jobName)}/stats`, {
+      params: options,
+    });
+    return response.data;
   },
 
   /**
@@ -153,19 +117,9 @@ const workunitsService = {
    * @param {string} wuid - Workunit ID
    * @returns {Promise<{current: Object, previous: Object, comparison: Object}>}
    */
-  async compareToPrevious(clusterId, wuid) {
-    try {
-      const response = await fetch(`/api/workunits/${clusterId}/${wuid}/compare-previous`);
-
-      if (!response.ok) {
-        throw new Error(`Failed to compare workunit: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error in compareToPrevious:', error);
-      throw error;
-    }
+  compareToPrevious: async (clusterId, wuid) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/compare-previous`);
+    return response.data;
   },
 };
 

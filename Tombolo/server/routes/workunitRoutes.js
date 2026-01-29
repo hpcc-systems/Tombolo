@@ -17,6 +17,9 @@ import {
   validateGetWorkunitHotspots,
   validateGetWorkunitTimeline,
   validateExecuteWorkunitSql,
+  validateGetJobHistoryByJobName,
+  validateGetJobHistoryByJobNameWStats,
+  validateComparePreviousByWuid,
 } from '../middlewares/workunitMiddleware.js';
 import { validate } from '../middlewares/validateRequestBody.js';
 
@@ -56,13 +59,22 @@ router.post(
   executeWorkunitSql
 );
 
-router.get('/:clusterId/job-history/:jobName', getJobHistoryByJobName);
+router.get(
+  '/:clusterId/job-history/:jobName',
+  validate(validateGetJobHistoryByJobName),
+  getJobHistoryByJobName
+);
 
 router.get(
   '/:clusterId/job-history/:jobName/stats',
+  validate(validateGetJobHistoryByJobNameWStats),
   getJobHistoryByJobNameWStats
 );
 
-router.get('/:clusterId/:wuid/compare-previous', comparePreviousByWuid);
+router.get(
+  '/:clusterId/:wuid/compare-previous',
+  validate(validateComparePreviousByWuid),
+  comparePreviousByWuid
+);
 
 export default router;

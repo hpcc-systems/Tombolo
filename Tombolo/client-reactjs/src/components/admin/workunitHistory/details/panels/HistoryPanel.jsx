@@ -48,7 +48,8 @@ const formatDuration = seconds => {
 
 // Calculate percentage difference
 const getPercentChange = (current, previous) => {
-  if (!previous || previous === 0) return null;
+  if (current == null || previous == null || previous === 0) return null;
+  if (!Number.isFinite(current) || !Number.isFinite(previous)) return null;
   return ((current - previous) / previous) * 100;
 };
 
@@ -87,7 +88,6 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
       const data = await workunitsService.getJobHistory(clusterId, wu.jobName, {
         startDate,
         limit: 100,
-        includeCurrentWuid: true,
       });
 
       setHistory(data || []);
@@ -233,7 +233,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
       dataIndex: 'totalClusterTime',
       key: 'totalClusterTime',
       width: 120,
-      render: (time, record) => {
+      render: (time, _record) => {
         if (time == null) return '-';
 
         // Compare to average
