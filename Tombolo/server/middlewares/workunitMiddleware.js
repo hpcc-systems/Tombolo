@@ -2,7 +2,6 @@ import {
   stringParam,
   stringQuery,
   intQuery,
-  dateQuery,
   dateTimeQuery,
 } from './commonMiddleware.js';
 import { body } from 'express-validator';
@@ -79,6 +78,27 @@ const validateExecuteWorkunitSql = [
     .withMessage('sql is required'),
 ];
 
+// Validation for GET /api/workunits/:clusterId/job-history/:jobName
+const validateGetJobHistoryByJobName = [
+  stringParam('clusterId', false),
+  stringParam('jobName', false),
+  dateTimeQuery('startDate', true),
+  intQuery('limit', true, { min: 1, max: 1000 }),
+];
+
+// Validation for GET /api/workunits/:clusterId/job-history/:jobName/stats
+const validateGetJobHistoryByJobNameWStats = [
+  stringParam('clusterId', false),
+  stringParam('jobName', false),
+  dateTimeQuery('startDate', true),
+];
+
+// Validation for GET /api/workunits/:clusterId/:wuid/compare-previous
+const validateComparePreviousByWuid = [
+  stringParam('clusterId', false),
+  stringParam('wuid', false),
+];
+
 export {
   validateGetWorkunits,
   validateGetWorkunit,
@@ -88,4 +108,7 @@ export {
   VALID_SORT_FIELDS,
   VALID_ORDER_DIRECTIONS,
   validateExecuteWorkunitSql,
+  validateGetJobHistoryByJobName,
+  validateGetJobHistoryByJobNameWStats,
+  validateComparePreviousByWuid,
 };

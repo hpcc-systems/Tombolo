@@ -135,10 +135,17 @@ const TimelinePanel = ({ wu, details }) => {
   const timelineBounds = useMemo(() => {
     if (filteredItems.length === 0) return { min: 0, max: 0, duration: 0 };
 
-    const starts = filteredItems.map(i => i.start);
-    const ends = filteredItems.map(i => i.end);
-    const min = Math.min(...starts);
-    const max = Math.max(...ends, Number(wu?.totalClusterTime || 0));
+    let min = Infinity;
+    let max = -Infinity;
+
+    for (const item of filteredItems) {
+      if (item.start < min) min = item.start;
+      if (item.end > max) max = item.end;
+    }
+
+    // Also consider total cluster time
+    const totalClusterTime = Number(wu?.totalClusterTime || 0);
+    if (totalClusterTime > max) max = totalClusterTime;
 
     return { min, max, duration: max - min };
   }, [filteredItems, wu]);
@@ -470,7 +477,7 @@ const TimelinePanel = ({ wu, details }) => {
                       paddingBottom: 4,
                     }}>
                     <span>{formatSeconds(timelineBounds.min)}</span>
-                    <span>{formatSeconds(timelineBounds.max / 2)}</span>
+                    <span>{formatSeconds((timelineBounds.min + timelineBounds.max) / 2)}</span>
                     <span>{formatSeconds(timelineBounds.max)}</span>
                   </div>
                 </Col>

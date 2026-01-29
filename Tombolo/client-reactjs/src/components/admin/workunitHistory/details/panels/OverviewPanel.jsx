@@ -188,12 +188,12 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
     [treeFiltered, selectedKey]
   );
 
-  const topActivities = useMemo(() => {
-    return flatList
-      .filter(d => d.scopeType === 'activity')
-      .sort((a, b) => (b.TimeElapsed || 0) - (a.TimeElapsed || 0))
-      .slice(0, 10);
-  }, [flatList]);
+  // const topActivities = useMemo(() => {
+  //   return flatList
+  //     .filter(d => d.scopeType === 'activity')
+  //     .sort((a, b) => (b.TimeElapsed || 0) - (a.TimeElapsed || 0))
+  //     .slice(0, 10);
+  // }, [flatList]);
 
   // Children table columns
   const childCols = [

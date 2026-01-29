@@ -343,7 +343,7 @@ async function executeWorkunitSql(req, res) {
 async function getJobHistoryByJobName(req, res) {
   try {
     const { clusterId, jobName } = req.params;
-    const { startDate, limit = 100, _includeCurrentWuid } = req.query;
+    const { startDate, limit = 100 } = req.query;
 
     // Build where clause
     const where = {
@@ -375,7 +375,7 @@ async function getJobHistoryByJobName(req, res) {
       ],
     });
 
-    res.json(workunits);
+    return sendSuccess(res, workunits);
   } catch (error) {
     logger.error('Error fetching job history:', error);
     return sendError(res, 'Failed to fetch job history', 500);
@@ -434,7 +434,7 @@ async function getJobHistoryByJobNameWStats(req, res) {
       maxDuration: durations.length > 0 ? Math.max(...durations) : 0,
     };
 
-    res.json({
+    return sendSuccess(res, {
       runs: workunits,
       statistics: stats,
     });
@@ -470,7 +470,7 @@ async function comparePreviousByWuid(req, res) {
     });
 
     if (!previous) {
-      return res.json({
+      return sendSuccess(res, {
         current,
         previous: null,
         comparison: null,
@@ -478,24 +478,36 @@ async function comparePreviousByWuid(req, res) {
     }
 
     // Calculate comparison metrics
-    const durationChange = previous.totalClusterTime
-      ? ((current.totalClusterTime - previous.totalClusterTime) /
-          previous.totalClusterTime) *
-        100
-      : null;
+    const durationChange =
+      current.totalClusterTime != null && previous.totalClusterTime != null
+        ? ((current.totalClusterTime - previous.totalClusterTime) /
+            previous.totalClusterTime) *
+          100
+        : null;
 
-    const costChange = previous.totalCost
-      ? ((current.totalCost - previous.totalCost) / previous.totalCost) * 100
-      : null;
+    const costChange =
+      current.totalCost != null && previous.totalCost != null
+        ? ((current.totalCost - previous.totalCost) / previous.totalCost) * 100
+        : null;
 
-    res.json({
+    const timeDelta =
+      current.totalClusterTime != null && previous.totalClusterTime != null
+        ? current.totalClusterTime - previous.totalClusterTime
+        : null;
+
+    const costDelta =
+      current.totalCost != null && previous.totalCost != null
+        ? current.totalCost - previous.totalCost
+        : null;
+
+    return sendSuccess(res, {
       current,
       previous,
       comparison: {
         durationChange,
         costChange,
-        timeDelta: current.totalClusterTime - previous.totalClusterTime,
-        costDelta: current.totalCost - previous.totalCost,
+        timeDelta,
+        costDelta,
       },
     });
   } catch (error) {
