@@ -291,7 +291,6 @@ const TimelinePanel = ({ wu, details }) => {
     );
   };
 
-  // Render simple list view
   const renderListView = () => {
     return (
       <div>
