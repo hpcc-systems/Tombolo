@@ -1,8 +1,8 @@
-const logger = require('../config/logger');
+import logger from '../config/logger.js';
+import { parentPort } from 'worker_threads';
 
 function logOrPostMessage(input) {
   try {
-    const { parentPort } = require('worker_threads');
     if (parentPort) {
       parentPort.postMessage(input);
       return;
@@ -28,4 +28,4 @@ function logOrPostMessage(input) {
   }
 }
 
-module.exports = { logOrPostMessage };
+export { logOrPostMessage };

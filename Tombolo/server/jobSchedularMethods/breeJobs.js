@@ -1,5 +1,8 @@
-const logger = require('../config/logger');
-const path = require('path');
+import logger from '../config/logger.js';
+import path from 'path';
+import { getDirname } from '../utils/polyfills.js';
+
+const __dirname = getDirname(import.meta.url);
 
 function createNewBreeJob({
   uniqueJobName,
@@ -197,7 +200,7 @@ function logBreeJobs() {
   }
 }
 
-module.exports = {
+export {
   createNewBreeJob,
   removeJobFromScheduler,
   removeAllFromBree,

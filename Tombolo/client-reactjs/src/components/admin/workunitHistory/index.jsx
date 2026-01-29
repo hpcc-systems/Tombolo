@@ -15,7 +15,6 @@ import {
   Row,
   Col,
   Statistic,
-  Divider,
 } from 'antd';
 import {
   ReloadOutlined,
@@ -28,6 +27,7 @@ import {
 import dayjs from 'dayjs';
 import workunitsService from '@/services/workunits.service';
 import clustersService from '@/services/clusters.service';
+import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import styles from './workunitHistory.module.css';
 
 const { Title, Text } = Typography;
@@ -49,23 +49,36 @@ const WorkUnitHistory = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(50);
-  const [sortField, setSortField] = useState('workUnitTimestamp');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [page, setPage] = useState(() => loadLocalStorage('wuh.list.page', 1));
+  const [limit, setLimit] = useState(() => loadLocalStorage('wuh.list.limit', 50));
+  const [sortField, setSortField] = useState(() => loadLocalStorage('wuh.list.sortField', 'workUnitTimestamp'));
+  const [sortOrder, setSortOrder] = useState(() => loadLocalStorage('wuh.list.sortOrder', 'desc'));
   const [clusters, setClusters] = useState([]);
   const [clusterMap, setClusterMap] = useState({});
 
   // Filters
-  const [filters, setFilters] = useState({
-    clusterId: undefined,
-    state: undefined,
-    owner: undefined,
-    jobName: undefined,
-    dateRange: undefined,
-    costAbove: undefined,
-    detailsFetched: undefined,
+  const [filters, setFilters] = useState(() => {
+    const saved = loadLocalStorage('wuh.list.filters', {});
+    if (saved.dateRange) {
+      saved.dateRange = saved.dateRange.map(d => (d ? dayjs(d) : null));
+    }
+    return {
+      clusterId: undefined,
+      state: undefined,
+      owner: undefined,
+      jobName: undefined,
+      dateRange: undefined,
+      costAbove: undefined,
+      detailsFetched: undefined,
+      ...saved,
+    };
   });
+
+  useEffect(() => saveLocalStorage('wuh.list.page', page), [page]);
+  useEffect(() => saveLocalStorage('wuh.list.limit', limit), [limit]);
+  useEffect(() => saveLocalStorage('wuh.list.sortField', sortField), [sortField]);
+  useEffect(() => saveLocalStorage('wuh.list.sortOrder', sortOrder), [sortOrder]);
+  useEffect(() => saveLocalStorage('wuh.list.filters', filters), [filters]);
 
   const [statistics, setStatistics] = useState({
     totalJobs: 0,
@@ -180,7 +193,7 @@ const WorkUnitHistory = () => {
   };
 
   const handleReset = () => {
-    setFilters({
+    const defaultFilters = {
       clusterId: undefined,
       state: undefined,
       owner: undefined,
@@ -188,8 +201,11 @@ const WorkUnitHistory = () => {
       dateRange: undefined,
       costAbove: undefined,
       detailsFetched: undefined,
-    });
+    };
+    setFilters(defaultFilters);
     setPage(1);
+    setSortField('workUnitTimestamp');
+    setSortOrder('desc');
     // fetchData will be called by useEffect
   };
 
@@ -202,11 +218,28 @@ const WorkUnitHistory = () => {
       title: 'Job Name',
       dataIndex: 'jobName',
       key: 'jobName',
-      width: 200,
+      ellipsis: true,
       render: (text, record) => (
         <Space direction="vertical" size={0}>
-          <Text strong>{text || record.wuId}</Text>
-          <Text type="secondary" className={styles.smallText}>
+          <Space size={4} align="center">
+            <Button
+              type="link"
+              className={styles.linkButton}
+              onClick={() => handleView(record)}
+              disabled={!record.detailsFetchedAt}>
+              <Text strong className={styles.ellipsis}>
+                {text || record.wuId}
+              </Text>
+            </Button>
+            {!record.detailsFetchedAt && (
+              <Tooltip title="Details not yet fetched">
+                <Tag color="default" className={styles.smallTag}>
+                  Not Fetched
+                </Tag>
+              </Tooltip>
+            )}
+          </Space>
+          <Text type="secondary" className={`${styles.smallText} ${styles.ellipsis}`}>
             {record.wuId}
           </Text>
         </Space>
@@ -217,19 +250,21 @@ const WorkUnitHistory = () => {
       dataIndex: 'clusterId',
       key: 'clusterId',
       width: 120,
+      ellipsis: true,
       render: clusterId => clusterMap[clusterId] || clusterId,
     },
     {
       title: 'Owner',
       dataIndex: 'owner',
       key: 'owner',
-      width: 120,
+      width: 100,
+      ellipsis: true,
     },
     {
       title: 'State',
       dataIndex: 'state',
       key: 'state',
-      width: 100,
+      width: 90,
       render: state => {
         const colorMap = {
           completed: 'success',
@@ -241,43 +276,44 @@ const WorkUnitHistory = () => {
       },
     },
     {
-      title: 'Start Date',
-      dataIndex: 'workUnitTimestamp',
-      key: 'startDate',
-      width: 160,
-      render: date => (date ? dayjs(date).format('YYYY-MM-DD HH:mm:ss') : '-'),
-    },
-    {
       title: 'Cost',
       dataIndex: 'totalCost',
       key: 'totalCost',
-      width: 100,
+      width: 80,
       sorter: true,
       render: cost => (cost != null ? `$${cost.toFixed(4)}` : '-'),
     },
-    {
-      title: 'Details',
-      dataIndex: 'hasDetails',
-      key: 'hasDetails',
-      width: 80,
-      align: 'center',
-      render: hasDetails =>
-        hasDetails ? (
-          <Tag color="green">Available</Tag>
-        ) : (
-          <Tooltip title="Details not yet fetched">
-            <Tag color="default">N/A</Tag>
-          </Tooltip>
-        ),
-    },
+    // {
+    //   title: 'Details',
+    //   dataIndex: 'hasDetails',
+    //   key: 'hasDetails',
+    //   width: 85,
+    //   align: 'center',
+    //   render: hasDetails =>
+    //     hasDetails ? (
+    //       <Tag color="green">Yes</Tag>
+    //     ) : (
+    //       <Tooltip title="Details not yet fetched">
+    //         <Tag color="default">No</Tag>
+    //       </Tooltip>
+    //     ),
+    // },
     {
       title: 'Actions',
       key: 'actions',
-      width: 100,
+      width: 80,
+      fixed: 'right',
       render: (_, record) => (
-        <Button type="primary" size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
-          View
-        </Button>
+        <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
+          <Button
+            type="primary"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            disabled={!record.detailsFetchedAt}>
+            Details
+          </Button>
+        </Tooltip>
       ),
     },
   ];
@@ -287,83 +323,98 @@ const WorkUnitHistory = () => {
       <Title level={2}>Workunit History</Title>
 
       {/* Statistics */}
-      <Row gutter={16} className={styles.mb16}>
-        <Col span={8}>
-          <Card>
-            <Statistic title="Total Jobs" value={statistics.totalJobs} prefix={<ClockCircleOutlined />} />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
+      <Card size="small" className={styles.mb16}>
+        <Row gutter={16}>
+          <Col span={8}>
             <Statistic
-              title="Total Cost"
+              title={<Text type="secondary" style={{ fontSize: '12px' }}>Total Workunits</Text>}
+              value={statistics.totalJobs}
+              prefix={<ClockCircleOutlined style={{ fontSize: '14px' }} />}
+              valueStyle={{ fontSize: '20px' }}
+            />
+          </Col>
+          <Col span={8}>
+            <Statistic
+              title={<Text type="secondary" style={{ fontSize: '12px' }}>Total Cost</Text>}
               value={statistics.totalCost}
               precision={2}
-              prefix={<DollarOutlined />}
-              suffix="USD"
+              prefix={<DollarOutlined style={{ fontSize: '14px' }} />}
+              suffix={<Text type="secondary" style={{ fontSize: '12px', marginLeft: '4px' }}>USD</Text>}
+              valueStyle={{ fontSize: '20px' }}
             />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic title="Avg Time" value={formatTime(statistics.avgTime)} prefix={<ClockCircleOutlined />} />
-          </Card>
-        </Col>
-      </Row>
+          </Col>
+          <Col span={8}>
+            <Statistic
+              title={<Text type="secondary" style={{ fontSize: '12px' }}>Avg Time</Text>}
+              value={formatTime(statistics.avgTime)}
+              prefix={<ClockCircleOutlined style={{ fontSize: '14px' }} />}
+              valueStyle={{ fontSize: '20px' }}
+            />
+          </Col>
+        </Row>
+      </Card>
 
       {/* Filters */}
       <Card className={styles.cardMarginBottom16}>
         <Space direction="vertical" size="middle" className={styles.fullWidth}>
           {/* Preset Filters */}
-          <Row>
-            <Space wrap>
-              <Text strong>Quick Filters:</Text>
-              <Button
-                size="small"
-                onClick={() => {
-                  setFilters({ ...filters, state: 'running' });
-                  handleSearch();
-                }}>
-                Running
-              </Button>
-              <Button
-                size="small"
-                onClick={() => {
-                  setFilters({ ...filters, state: 'failed' });
-                  handleSearch();
-                }}>
-                Failed
-              </Button>
-              <Button
-                size="small"
-                onClick={() => {
-                  setFilters({ ...filters, state: 'running', minClusterTime: 3600 });
-                  handleSearch();
-                }}>
-                Long Running (&gt;1h)
-              </Button>
-              <Button
-                size="small"
-                onClick={() => {
-                  const today = dayjs().startOf('day');
-                  setFilters({ ...filters, dateRange: [today, dayjs()] });
-                  handleSearch();
-                }}>
-                Today
-              </Button>
-              <Button
-                size="small"
-                onClick={() => {
-                  const weekAgo = dayjs().subtract(7, 'day');
-                  setFilters({ ...filters, dateRange: [weekAgo, dayjs()] });
-                  handleSearch();
-                }}>
-                Last 7 Days
-              </Button>
-            </Space>
-          </Row>
-          <Divider className={styles.dividerTighter} />
+          {/*<Row>*/}
+          {/*  <Space wrap>*/}
+          {/*    <Text strong>Quick Filters:</Text>*/}
+          {/*    <Button*/}
+          {/*      size="small"*/}
+          {/*      onClick={() => {*/}
+          {/*        setFilters({ ...filters, state: 'running' });*/}
+          {/*        handleSearch();*/}
+          {/*      }}>*/}
+          {/*      Running*/}
+          {/*    </Button>*/}
+          {/*    <Button*/}
+          {/*      size="small"*/}
+          {/*      onClick={() => {*/}
+          {/*        setFilters({ ...filters, state: 'failed' });*/}
+          {/*        handleSearch();*/}
+          {/*      }}>*/}
+          {/*      Failed*/}
+          {/*    </Button>*/}
+          {/*    <Button*/}
+          {/*      size="small"*/}
+          {/*      onClick={() => {*/}
+          {/*        setFilters({ ...filters, state: 'running', minClusterTime: 3600 });*/}
+          {/*        handleSearch();*/}
+          {/*      }}>*/}
+          {/*      Long Running (&gt;1h)*/}
+          {/*    </Button>*/}
+          {/*    <Button*/}
+          {/*      size="small"*/}
+          {/*      onClick={() => {*/}
+          {/*        const today = dayjs().startOf('day');*/}
+          {/*        setFilters({ ...filters, dateRange: [today, dayjs()] });*/}
+          {/*        handleSearch();*/}
+          {/*      }}>*/}
+          {/*      Today*/}
+          {/*    </Button>*/}
+          {/*    <Button*/}
+          {/*      size="small"*/}
+          {/*      onClick={() => {*/}
+          {/*        const weekAgo = dayjs().subtract(7, 'day');*/}
+          {/*        setFilters({ ...filters, dateRange: [weekAgo, dayjs()] });*/}
+          {/*        handleSearch();*/}
+          {/*      }}>*/}
+          {/*      Last 7 Days*/}
+          {/*    </Button>*/}
+          {/*  </Space>*/}
+          {/*</Row>*/}
+          {/*<Divider className={styles.dividerTighter} />*/}
           <Row gutter={[16, 16]}>
+            <Col span={6}>
+              <Input
+                placeholder="Job Name"
+                value={filters.jobName}
+                onChange={e => setFilters({ ...filters, jobName: e.target.value })}
+                allowClear
+              />
+            </Col>
             <Col span={6}>
               <Select
                 placeholder="Select Cluster"
@@ -394,17 +445,6 @@ const WorkUnitHistory = () => {
               </Select>
             </Col>
             <Col span={6}>
-              <Select
-                placeholder="Details Fetched"
-                value={filters.detailsFetched}
-                onChange={value => setFilters({ ...filters, detailsFetched: value })}
-                className={styles.fullWidth}
-                allowClear>
-                <Option value={true}>Yes</Option>
-                <Option value={false}>No</Option>
-              </Select>
-            </Col>
-            <Col span={6}>
               <Input
                 placeholder="Owner"
                 value={filters.owner}
@@ -414,7 +454,7 @@ const WorkUnitHistory = () => {
             </Col>
           </Row>
           <Row gutter={[16, 16]}>
-            <Col span={12}>
+            <Col span={8}>
               <RangePicker
                 value={filters.dateRange}
                 onChange={dates => setFilters({ ...filters, dateRange: dates })}
@@ -422,7 +462,18 @@ const WorkUnitHistory = () => {
                 showTime
               />
             </Col>
-            <Col span={6}>
+            <Col span={4}>
+              <Select
+                placeholder="Details fetched"
+                value={filters.detailsFetched}
+                onChange={value => setFilters({ ...filters, detailsFetched: value })}
+                className={styles.fullWidth}
+                allowClear>
+                <Option value={true}>Yes</Option>
+                <Option value={false}>No</Option>
+              </Select>
+            </Col>
+            <Col span={4}>
               <Input
                 placeholder="Min Cost ($)"
                 type="number"
@@ -431,7 +482,7 @@ const WorkUnitHistory = () => {
                 allowClear
               />
             </Col>
-            <Col span={6}>
+            <Col span={8}>
               <Space>
                 <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
                   Search
@@ -474,7 +525,7 @@ const WorkUnitHistory = () => {
             }
             return '';
           }}
-          scroll={{ x: 1400 }}
+          scroll={{ x: 'max-content' }}
         />
       </Card>
     </div>

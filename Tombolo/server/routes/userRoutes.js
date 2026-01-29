@@ -1,10 +1,10 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const role = require('../config/roleTypes');
+import role from '../config/roleTypes.js';
 
 // Import user middleware
-const {
+import {
   validateUserId,
   validateUpdateUserPayload,
   validateChangePasswordPayload,
@@ -13,11 +13,11 @@ const {
   validatePatchUserRolesPayload,
   validateManuallyCreatedUserPayload,
   validateUserIdInBody,
-} = require('../middlewares/userMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
+} from '../middlewares/userMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
 
 // Import user controller
-const {
+import {
   createUser,
   deleteUser,
   updateBasicUserInfo,
@@ -30,9 +30,9 @@ const {
   updateUserApplications,
   resetPasswordForUser,
   unlockAccount,
-} = require('../controllers/userController');
+} from '../controllers/userController.js';
 
-const { validateUserRole } = require('../middlewares/rbacMiddleware');
+import { validateUserRole } from '../middlewares/rbacMiddleware.js';
 
 // TODO - Add guards so only users can change their own password
 router.patch(
@@ -75,4 +75,4 @@ router.post(
 ); // Reset password for user
 router.post('/unlock-account', validate(validateUserIdInBody), unlockAccount); // Unlock account
 
-module.exports = router;
+export default router;

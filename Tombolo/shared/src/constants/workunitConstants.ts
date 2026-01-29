@@ -493,20 +493,7 @@ const readableLabels: Record<string, string> = {
   store: 'Store',
 };
 
-function normalizeLabel(
-  label: string | null | undefined
-): string | null | undefined {
-  if (!label) return label;
-  // Normalize: replace newlines and multiple spaces with a single space
-  const normalized = label.replace(/\s+/g, ' ').trim();
-  const lower = normalized.toLowerCase();
-  for (const prefix in readableLabels) {
-    if (lower.startsWith(prefix)) {
-      return readableLabels[prefix];
-    }
-  }
-  return normalized;
-}
+
 
 const TERMINAL_STATES = ['completed', 'failed', 'aborted'] as const;
 
@@ -516,7 +503,6 @@ export {
   relevantMetrics,
   UNIT_LOOKUP,
   readableLabels,
-  normalizeLabel,
   FORMAT_LOOKUP,
   TERMINAL_STATES,
   SCOPE_TYPES,

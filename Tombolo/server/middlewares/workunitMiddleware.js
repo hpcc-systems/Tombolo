@@ -1,10 +1,11 @@
-const {
+import {
   stringParam,
   stringQuery,
   intQuery,
   dateQuery,
-} = require('./commonMiddleware');
-const { body } = require('express-validator');
+  dateTimeQuery,
+} from './commonMiddleware.js';
+import { body } from 'express-validator';
 
 // Valid sort fields for workunits
 const VALID_SORT_FIELDS = [
@@ -27,8 +28,8 @@ const validateGetWorkunits = [
   stringQuery('state', true), // comma-separated list
   stringQuery('owner', true),
   stringQuery('jobName', true),
-  dateQuery('dateFrom', true),
-  dateQuery('dateTo', true),
+  dateTimeQuery('dateFrom', true),
+  dateTimeQuery('dateTo', true),
   stringQuery('costAbove', true),
   stringQuery('sort', true, {
     isIn: VALID_SORT_FIELDS,
@@ -66,7 +67,19 @@ const validateGetWorkunitTimeline = [
   stringParam('wuid', false),
 ];
 
-module.exports = {
+// POST /api/workunits/:clusterId/:wuid/sql
+const validateExecuteWorkunitSql = [
+  stringParam('clusterId', false),
+  stringParam('wuid', false),
+  body('sql')
+    .isString()
+    .withMessage('sql must be a string')
+    .bail()
+    .notEmpty()
+    .withMessage('sql is required'),
+];
+
+export {
   validateGetWorkunits,
   validateGetWorkunit,
   validateGetWorkunitDetails,
@@ -74,15 +87,5 @@ module.exports = {
   validateGetWorkunitTimeline,
   VALID_SORT_FIELDS,
   VALID_ORDER_DIRECTIONS,
-  // POST /api/workunits/:clusterId/:wuid/sql
-  validateExecuteWorkunitSql: [
-    stringParam('clusterId', false),
-    stringParam('wuid', false),
-    body('sql')
-      .isString()
-      .withMessage('sql must be a string')
-      .bail()
-      .notEmpty()
-      .withMessage('sql is required'),
-  ],
+  validateExecuteWorkunitSql,
 };

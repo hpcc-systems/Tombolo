@@ -5,7 +5,7 @@ import workunitsService from '@/services/workunits.service';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor from '@monaco-editor/react';
 import debounce from 'lodash/debounce';
-import styles from './workunitHistory.module.css';
+import styles from '../../workunitHistory.module.css';
 
 const { Text, Paragraph } = Typography;
 
@@ -19,7 +19,7 @@ WHERE 1=1
 ORDER BY TimeElapsed DESC
 LIMIT 100`;
 
-export default function SqlPanel({ clusterId, wuid }) {
+export default function SqlPanel({ clusterId, wuid, clusterName }) {
   const storageKey = `wuSql.${clusterId}.${wuid}`;
   const [sql, setSql] = useState(() => localStorage.getItem(storageKey) || DEFAULT_SQL);
   const [executing, setExecuting] = useState(false);
@@ -204,7 +204,7 @@ export default function SqlPanel({ clusterId, wuid }) {
               <Paragraph className={styles.tightParagraph}>
                 Only SELECT statements against the <Text code>work_unit_details</Text> table are allowed. Queries are
                 automatically scoped to this workunit (<Text code>{wuid}</Text>) and cluster (
-                <Text code>{clusterId}</Text>), and limited to a maximum of 1000 rows.
+                <Text code>{clusterName}</Text>), and limited to a maximum of 1000 rows.
               </Paragraph>
             </>
           }

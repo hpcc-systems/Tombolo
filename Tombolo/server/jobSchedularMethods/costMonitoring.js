@@ -1,7 +1,9 @@
-const path = require('path');
-const { monitor_cost_interval } = require('../config/monitorings.js');
+import path from 'path';
+import { monitor_cost_interval } from '../config/monitorings.js';
+import logger from '../config/logger.js';
+import { getDirname } from '../utils/polyfills.js';
 
-const logger = require('../config/logger');
+const __dirname = getDirname(import.meta.url);
 const MONITOR_COST_FILE_NAME = 'monitorCost.js';
 const ANALYZE_COST_FILE_NAME = 'analyzeCost.js';
 
@@ -57,7 +59,4 @@ function createAnalyzeCostJob() {
   }
 }
 
-module.exports = {
-  createMonitorCostJob,
-  createAnalyzeCostJob,
-};
+export { createMonitorCostJob, createAnalyzeCostJob };

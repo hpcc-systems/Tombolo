@@ -1,33 +1,34 @@
-const request = require('supertest');
-const { app } = require('../test_server');
-const {
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import {
   SentNotification,
   User,
   InstanceSettings,
   NotificationQueue,
   RefreshToken,
-} = require('../../models');
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const {
+} from '../../models/index.js';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import {
   getUsers,
   getInstanceSettings,
   getSentNotification,
   getLoginPayload,
   nonExistentID,
-} = require('../helpers');
-const moment = require('moment');
+} from '../helpers.js';
+import moment from 'moment';
 
 const getUser = () => getUsers()[0];
 
 describe('Auth Routes', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   it('basic-login Should log in a user', async () => {

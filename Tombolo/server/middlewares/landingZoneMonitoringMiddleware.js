@@ -1,4 +1,4 @@
-const {
+import {
   DESCRIPTION_LENGTH,
   MONITORING_NAME_LENGTH,
   COMMENT_LENGTH,
@@ -13,7 +13,7 @@ const {
   queryUuids,
   paramUuids,
   APPROVAL_STATUSES,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 // Validate cluster id from the query parameters
 const validateClusterId = [queryUuids.clusterId];
@@ -83,7 +83,7 @@ const validateBulkUpdatePayload = [
 ];
 
 //Exports
-module.exports = {
+export {
   validateClusterId,
   validateFileListParams,
   validateCreateLandingZoneMonitoring,

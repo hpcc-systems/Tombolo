@@ -1,7 +1,7 @@
-const { InstanceSettings, User } = require('../models');
-const logger = require('../config/logger');
-const { sendSuccess, sendError } = require('../utils/response');
-const CustomError = require('../utils/customError');
+import { InstanceSettings, User } from '../models/index.js';
+import logger from '../config/logger.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import CustomError from '../utils/customError.js';
 
 // Get a single instance setting by name
 const getInstanceSetting = async (req, res) => {
@@ -101,7 +101,4 @@ const updateInstanceSetting = async (req, res) => {
   }
 };
 
-module.exports = {
-  getInstanceSetting,
-  updateInstanceSetting,
-};
+export { getInstanceSetting, updateInstanceSetting };

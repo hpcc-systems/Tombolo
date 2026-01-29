@@ -1,11 +1,11 @@
-const { doubleCsrf } = require('csrf-csrf');
+import { doubleCsrf } from 'csrf-csrf';
+import jwt from 'jsonwebtoken';
 
-const logger = require('../config/logger');
+import logger from '../config/logger.js';
 
 const csrf = doubleCsrf({
   getSecret: req => {
     try {
-      const jwt = require('jsonwebtoken');
       const token = req.cookies.token;
 
       if (!token) {
@@ -34,7 +34,7 @@ const csrf = doubleCsrf({
   },
 });
 
-module.exports = {
-  doubleCsrfProtection: csrf.doubleCsrfProtection,
-  generateToken: csrf.generateToken,
-};
+const doubleCsrfProtection = csrf.doubleCsrfProtection;
+const generateToken = csrf.generateToken;
+
+export { doubleCsrfProtection, generateToken };

@@ -1,5 +1,6 @@
-const util = require('../../jobs/jobMonitoring/monitorJobsUtil');
-const moment = require('moment');
+import { describe, it, expect } from 'vitest';
+import * as util from '../../jobs/jobMonitoring/monitorJobsUtil.js';
+import moment from 'moment';
 
 describe('monitorJobsUtil', () => {
   describe('matchJobName', () => {
