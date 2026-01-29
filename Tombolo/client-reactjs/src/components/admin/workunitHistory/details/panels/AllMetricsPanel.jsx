@@ -467,5 +467,4 @@ const AllMetricsPanel = ({ wu, details }) => {
   );
 };
 
-
 export default AllMetricsPanel;

@@ -96,10 +96,7 @@ async function getWorkunits(req, res) {
         'totalCost',
         'workUnitTimestamp',
         'detailsFetchedAt',
-        [
-          sequelize.literal('detailsFetchedAt IS NOT NULL'),
-          'hasDetails',
-        ],
+        [sequelize.literal('detailsFetchedAt IS NOT NULL'), 'hasDetails'],
       ],
       order: [[sort, order]],
       limit: parseInt(limit),
@@ -245,7 +242,7 @@ async function executeWorkunitSql(req, res) {
 
     // Validate base table and capture optional alias
     const tokens = remainder.split(/\s+/);
-    const tableToken = tokens[0].replace(/[`"\[\]]/g, '');
+    const tableToken = tokens[0].replace(/[`"[\]]/g, '');
     if (tableToken !== 'work_unit_details') {
       return sendError(
         res,
@@ -314,7 +311,8 @@ async function executeWorkunitSql(req, res) {
     }
 
     // Enforce LIMIT cap
-    let finalSql = `SELECT ${selectList} FROM work_unit_details ${alias === 'work_unit_details' ? '' : 'AS ' + alias} ${safeWhereJoined}`.trim();
+    let finalSql =
+      `SELECT ${selectList} FROM work_unit_details ${alias === 'work_unit_details' ? '' : 'AS ' + alias} ${safeWhereJoined}`.trim();
     const limitMatch = finalSql.toLowerCase().match(/\blimit\s+(\d+)/);
     if (limitMatch) {
       const n = parseInt(limitMatch[1], 10);
@@ -342,6 +340,182 @@ async function executeWorkunitSql(req, res) {
   }
 }
 
+async function getJobHistoryByJobName(req, res) {
+  try {
+    const { clusterId, jobName } = req.params;
+    const { startDate, limit = 100 } = req.query;
+
+    // Build where clause
+    const where = {
+      clusterId,
+      jobName,
+    };
+
+    // Add date filter if provided
+    if (startDate) {
+      where.workUnitTimestamp = {
+        [Op.gte]: new Date(startDate),
+      };
+    }
+
+    // Fetch workunits
+    const workunits = await WorkUnit.findAll({
+      where,
+      order: [['workUnitTimestamp', 'DESC']], // Most recent first
+      limit: parseInt(limit),
+      attributes: [
+        'wuId',
+        'jobName',
+        'state',
+        'workUnitTimestamp',
+        'totalClusterTime',
+        'totalCost',
+        'owner',
+        'clusterId',
+      ],
+    });
+
+    return sendSuccess(res, workunits);
+  } catch (error) {
+    logger.error('Error fetching job history:', error);
+    return sendError(res, 'Failed to fetch job history', 500);
+  }
+}
+
+async function getJobHistoryByJobNameWStats(req, res) {
+  try {
+    const { clusterId, jobName } = req.params;
+    const { startDate } = req.query;
+
+    const where = {
+      clusterId,
+      jobName,
+    };
+
+    if (startDate) {
+      where.workUnitTimestamp = {
+        [Op.gte]: new Date(startDate),
+      };
+    }
+
+    // Get all runs
+    const workunits = await WorkUnit.findAll({
+      where,
+      order: [['workUnitTimestamp', 'DESC']],
+      attributes: [
+        'wuId',
+        'jobName',
+        'state',
+        'workUnitTimestamp',
+        'totalClusterTime',
+        'totalCost',
+        'owner',
+        'clusterId',
+      ],
+    });
+
+    // Calculate statistics on the backend
+    const completed = workunits.filter(w => w.state === 'completed');
+    const durations = completed
+      .map(w => w.totalClusterTime)
+      .filter(d => d != null);
+
+    const stats = {
+      totalRuns: workunits.length,
+      completedRuns: completed.length,
+      failedRuns: workunits.filter(w => w.state === 'failed').length,
+      successRate:
+        workunits.length > 0 ? (completed.length / workunits.length) * 100 : 0,
+      avgDuration:
+        durations.length > 0
+          ? durations.reduce((a, b) => a + b, 0) / durations.length
+          : 0,
+      minDuration: durations.length > 0 ? Math.min(...durations) : 0,
+      maxDuration: durations.length > 0 ? Math.max(...durations) : 0,
+    };
+
+    return sendSuccess(res, {
+      runs: workunits,
+      statistics: stats,
+    });
+  } catch (error) {
+    logger.error('Error fetching job history with stats:', error);
+    return sendError(res, 'Failed to fetch job history', 500);
+  }
+}
+
+async function comparePreviousByWuid(req, res) {
+  try {
+    const { clusterId, wuid } = req.params;
+
+    // Get current workunit
+    const current = await WorkUnit.findOne({
+      where: { clusterId, wuId: wuid },
+    });
+
+    if (!current) {
+      return res.status(404).json({ error: 'Workunit not found' });
+    }
+
+    // Get previous run of same job
+    const previous = await WorkUnit.findOne({
+      where: {
+        clusterId,
+        jobName: current.jobName,
+        workUnitTimestamp: {
+          [Op.lt]: current.workUnitTimestamp,
+        },
+      },
+      order: [['workUnitTimestamp', 'DESC']],
+    });
+
+    if (!previous) {
+      return sendSuccess(res, {
+        current,
+        previous: null,
+        comparison: null,
+      });
+    }
+
+    // Calculate comparison metrics
+    const durationChange =
+      current.totalClusterTime != null && previous.totalClusterTime != null
+        ? ((current.totalClusterTime - previous.totalClusterTime) /
+            previous.totalClusterTime) *
+          100
+        : null;
+
+    const costChange =
+      current.totalCost != null && previous.totalCost != null
+        ? ((current.totalCost - previous.totalCost) / previous.totalCost) * 100
+        : null;
+
+    const timeDelta =
+      current.totalClusterTime != null && previous.totalClusterTime != null
+        ? current.totalClusterTime - previous.totalClusterTime
+        : null;
+
+    const costDelta =
+      current.totalCost != null && previous.totalCost != null
+        ? current.totalCost - previous.totalCost
+        : null;
+
+    return sendSuccess(res, {
+      current,
+      previous,
+      comparison: {
+        durationChange,
+        costChange,
+        timeDelta,
+        costDelta,
+      },
+    });
+  } catch (error) {
+    logger.error('Error comparing workunits:', error);
+    return sendError(res, 'Failed to compare workunits', 500);
+  }
+}
+
 export {
   getWorkunits,
   getWorkunit,
@@ -349,4 +523,7 @@ export {
   getWorkunitHotspots,
   getWorkunitTimeline,
   executeWorkunitSql,
+  getJobHistoryByJobName,
+  getJobHistoryByJobNameWStats,
+  comparePreviousByWuid,
 };

@@ -180,6 +180,10 @@ function fakeValidateTokenMiddleware(req, res, next) {
   next();
 }
 
+function fakeCsrfProtection(req, res, next) {
+  next();
+}
+
 const nonExistentID = uuidv4();
 
 function getMockClusterForApi(clusterId) {
@@ -427,6 +431,7 @@ export {
   getMockClusterForApi,
   getFileListQuery,
   fakeValidateTokenMiddleware,
+  fakeCsrfProtection,
   getUuids,
   getCostMonitoring,
   getOrbitProfileMonitoring,

@@ -80,6 +80,47 @@ const workunitsService = {
     const response = await apiClient.post(`/workunits/${clusterId}/${wuid}/sql`, { sql });
     return response.data;
   },
+
+  /**
+   * Get history of all runs for a specific job name
+   * @param {string} clusterId - Cluster ID
+   * @param {string} jobName - Job name to fetch history for
+   * @param {object} options - Query options
+   * @param {string} options.startDate - ISO date string to filter from (optional)
+   * @param {number} options.limit - Max results (default 100)
+   * @returns {Promise<Array>} Array of workunit objects
+   */
+  getJobHistory: async (clusterId, jobName, options = {}) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/job-history/${encodeURIComponent(jobName)}`, {
+      params: options,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get job history with calculated statistics
+   * @param {string} clusterId - Cluster ID
+   * @param {string} jobName - Job name
+   * @param {object} options - Query options
+   * @returns {Promise<{runs: Array, statistics: Object}>}
+   */
+  getJobHistoryWithStats: async (clusterId, jobName, options = {}) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/job-history/${encodeURIComponent(jobName)}/stats`, {
+      params: options,
+    });
+    return response.data;
+  },
+
+  /**
+   * Compare current workunit with previous run of same job
+   * @param {string} clusterId - Cluster ID
+   * @param {string} wuid - Workunit ID
+   * @returns {Promise<{current: Object, previous: Object, comparison: Object}>}
+   */
+  compareToPrevious: async (clusterId, wuid) => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/compare-previous`);
+    return response.data;
+  },
 };
 
 export default workunitsService;

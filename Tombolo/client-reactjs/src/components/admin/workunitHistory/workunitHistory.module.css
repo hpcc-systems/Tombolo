@@ -215,3 +215,10 @@
 :global(.problem-row-warning:hover) {
   background-color: #ffe8cc !important;
 }
+.highlightRow {
+  background-color: #e6f7ff !important;
+  border-left: 3px solid #1890ff;
+}
+.highlightRow:hover {
+  background-color: #bae7ff !important;
+}

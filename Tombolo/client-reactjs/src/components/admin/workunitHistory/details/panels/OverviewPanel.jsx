@@ -66,7 +66,6 @@ function buildScopeTree(details) {
   return roots;
 }
 
-
 function findPathByKey(nodes, key) {
   const stack = [];
   const dfs = list => {
@@ -189,12 +188,12 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
     [treeFiltered, selectedKey]
   );
 
-  const topActivities = useMemo(() => {
-    return flatList
-      .filter(d => d.scopeType === 'activity')
-      .sort((a, b) => (b.TimeElapsed || 0) - (a.TimeElapsed || 0))
-      .slice(0, 10);
-  }, [flatList]);
+  // const topActivities = useMemo(() => {
+  //   return flatList
+  //     .filter(d => d.scopeType === 'activity')
+  //     .sort((a, b) => (b.TimeElapsed || 0) - (a.TimeElapsed || 0))
+  //     .slice(0, 10);
+  // }, [flatList]);
 
   // Children table columns
   const childCols = [
@@ -410,10 +409,7 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
             }
             className={styles.cardNoBodyPadding}>
             {!selectedNode ? (
-              <Empty
-                description="Select a scope from the tree to view details"
-                className={styles.contentPadding}
-              />
+              <Empty description="Select a scope from the tree to view details" className={styles.contentPadding} />
             ) : (
               <div className={styles.scrollAreaTall}>
                 <Breadcrumb className={styles.mb12}>
@@ -426,7 +422,8 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
                 <Descriptions size="small" bordered column={2}>
                   {Object.entries(selectedNode)
                     .filter(([key, value]) => {
-                      if (['key', 'children', 'id', '_level', 'scopeId', 'clusterId', 'wuId'].includes(key)) return false;
+                      if (['key', 'children', 'id', '_level', 'scopeId', 'clusterId', 'wuId'].includes(key))
+                        return false;
                       if (value === null || value === undefined || value === '') return false;
                       return true;
                     })
