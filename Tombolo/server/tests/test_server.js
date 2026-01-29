@@ -6,7 +6,7 @@ import express from 'express';
 // import db from '../models/index.js';
 import logger from '../config/logger.js';
 import cookieParser from 'cookie-parser';
-import { fakeValidateTokenMiddleware } from './helpers.js';
+import { fakeValidateTokenMiddleware, fakeCsrfProtection } from './helpers.js';
 
 // Change the NODE_ENV to test
 process.env.NODE_ENV = 'test';
@@ -17,6 +17,7 @@ const port = process.env.TEST_SERVER_PORT || 3004;
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
+app.use(fakeCsrfProtection); // Mock CSRF protection for testing
 
 // Import routes
 import auth from '../routes/authRoutes.js';
