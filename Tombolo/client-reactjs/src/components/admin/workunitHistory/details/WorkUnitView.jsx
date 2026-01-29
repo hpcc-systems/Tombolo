@@ -5,6 +5,7 @@ import {
   FieldTimeOutlined,
   TableOutlined,
   DatabaseOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -12,7 +13,9 @@ import AllMetricsPanel from './panels/AllMetricsPanel';
 import OverviewPanel from './panels/OverviewPanel';
 import TimelinePanel from './panels/TimelinePanel';
 import SqlPanel from './panels/SqlPanel';
+import HistoryPanel from './panels/HistoryPanel';
 import styles from '../workunitHistory.module.css';
+
 dayjs.extend(duration);
 
 const { Title, Text } = Typography;
@@ -21,7 +24,6 @@ const { TabPane } = Tabs;
 const formatTime = seconds => (seconds == null ? '-' : dayjs.duration(seconds, 'seconds').format('HH:mm:ss.SSS'));
 
 const WorkUnitView = ({ wu, details, clusterName }) => {
-
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
       {/* Header */}
@@ -93,6 +95,17 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
           ) : (
             <TimelinePanel wu={wu} details={details} />
           )}
+        </TabPane>
+
+        {/* History */}
+        <TabPane
+          tab={
+            <span>
+              <HistoryOutlined /> Previous Runs
+            </span>
+          }
+          key="history">
+          <HistoryPanel wu={wu} clusterId={wu.clusterId} clusterName={clusterName} />
         </TabPane>
 
         {/* Full Metrics Details */}
