@@ -568,7 +568,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
           onRow={record => ({
             onClick: () => {
               if (record.wuId !== wu?.wuId) {
-                window.open(`/admin/workunits/${clusterId}/${record.wuId}`, '_blank');
+                window.open(`/workunits/history/${clusterId}/${record.wuId}`, '_blank');
               }
             },
             style: {
