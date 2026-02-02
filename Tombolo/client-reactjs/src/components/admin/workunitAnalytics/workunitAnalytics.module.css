@@ -34,11 +34,15 @@
 /* Layout Override for Dark Theme */
 .analytics-workspace .ant-layout {
   background: var(--aw-bg-primary);
+  height: 100vh;
+  overflow: hidden;
 }
 
 .analytics-workspace .ant-layout-sider {
   background: var(--aw-bg-secondary);
   border-right: 1px solid var(--aw-border);
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .analytics-workspace .left-sidebar,
@@ -72,7 +76,7 @@
 
 /* Sidebar Headers */
 .sidebar-header {
-  padding: 20px 16px 16px;
+  padding: 16px 16px;
   border-bottom: 1px solid var(--aw-border);
   background: linear-gradient(135deg, var(--aw-bg-secondary) 0%, var(--aw-bg-tertiary) 100%);
 }
@@ -90,19 +94,24 @@
   padding: 0;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .content-header {
-  padding: 24px 32px;
+  padding: 16px 32px;
   border-bottom: 1px solid var(--aw-border);
   background: linear-gradient(180deg, var(--aw-bg-secondary) 0%, var(--aw-bg-primary) 100%);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .content-header .ant-typography {
   color: var(--aw-text-primary);
+  margin: 0 !important;
 }
 
 .content-header .header-left {
@@ -137,7 +146,7 @@
 
 /* Query Library */
 .query-library {
-  padding: 16px;
+  padding: 0 16px 16px;
 }
 
 .library-collapse .ant-collapse-header {
@@ -244,7 +253,7 @@
 
 /* Schema Browser */
 .schema-browser {
-  padding: 16px;
+  padding: 0 16px 16px;
 }
 
 .schema-browser .ant-tree {

@@ -702,7 +702,7 @@ const AnalyticsWorkspace = () => {
 
   return (
     <div className={styles.analyticsWorkspace}>
-      <Layout style={{ minHeight: '100vh' }}>
+      <Layout style={{ height: '100vh' }}>
         {/* Left Sidebar - Query Library */}
         {!leftCollapsed && (
           <Sider width={300} theme="light" className={styles.leftSidebar}>
