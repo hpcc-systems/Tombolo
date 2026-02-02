@@ -305,7 +305,7 @@ async function getDatabaseStats(req, res) {
         data_length + index_length as total_size
       FROM information_schema.tables
       WHERE table_schema = DATABASE()
-        AND table_name IN ('work_unit_details', 'workunits', 'cluster')
+        AND table_name IN ('work_unit_details', 'workunits', 'clusters')
     `);
 
     // Get record count by cluster from work_unit_details

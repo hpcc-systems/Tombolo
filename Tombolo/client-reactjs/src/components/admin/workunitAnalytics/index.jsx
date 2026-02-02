@@ -601,7 +601,10 @@ const AnalyticsWorkspace = () => {
         // If column is wuId, make it clickable
         if (col === 'wuId' && record.clusterId) {
           return (
-            <Button type="link" size="small" onClick={() => history.push(`/workunits/${record.clusterId}/${text}`)}>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => history.push(`/workunits/history/${record.clusterId}/${text}`)}>
               {text}
             </Button>
           );
@@ -743,7 +746,7 @@ const AnalyticsWorkspace = () => {
                 <Button icon={<FormatPainterOutlined />} onClick={formatSql}>
                   Format SQL
                 </Button>
-                <Button icon={<SaveOutlined />} onClick={() => message.info('Not implemented')}>
+                <Button icon={<SaveOutlined />} onClick={() => setSaveModalVisible(true)}>
                   Save Query
                 </Button>
                 <Button icon={<ClearOutlined />} onClick={clearEditor}>

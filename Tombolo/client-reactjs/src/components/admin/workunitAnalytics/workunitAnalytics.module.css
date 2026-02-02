@@ -188,7 +188,7 @@
 }
 
 .saved-query-card.selected {
-  background: linear-gradient(135deg, var(--aw-accent-primary) 20, var(--aw-bg-tertiary)) !important;
+  background: linear-gradient(135deg, var(--aw-accent-primary) 20%, var(--aw-bg-tertiary)) !important;
   border-color: var(--aw-accent-primary) !important;
 }
 
@@ -270,7 +270,7 @@
 }
 
 .schema-browser .ant-tree-node-selected .ant-tree-node-content-wrapper {
-  background: var(--aw-accent-primary) 30 !important;
+  background: rgba(59, 130, 246, 0.3) !important;
 }
 
 .schema-browser .ant-tree-title {

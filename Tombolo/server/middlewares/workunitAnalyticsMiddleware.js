@@ -3,6 +3,7 @@ import {
   stringBody,
   stringQuery,
   intBody,
+  intQuery,
   booleanQuery,
   dateTimeQuery,
   objectBody,
@@ -229,8 +230,8 @@ const validateGetSavedQueries = [
   booleanQuery('includePublic', true),
   stringQuery('tag', true),
   stringQuery('search', true, { length: { max: 255 } }),
-  intBody('page', true, { min: 1 }),
-  intBody('limit', true, { min: 1, max: 100 }),
+  intQuery('page', true, { min: 1 }),
+  intQuery('limit', true, { min: 1, max: 100 }),
 ];
 
 // Validation for query export
