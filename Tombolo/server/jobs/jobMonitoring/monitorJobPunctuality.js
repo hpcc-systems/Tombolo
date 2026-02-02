@@ -151,7 +151,7 @@ const monitoringTypeName = 'Job Monitoring';
           } catch (error) {
             logOrPostMessage({
               level: 'error',
-              text: `Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}`,
+              text: `Job Punctuality Monitoring [MonitoringID: ${id}]: Error while getting Domain level severity: ${error.message}`,
             });
           }
         }
@@ -414,7 +414,7 @@ const monitoringTypeName = 'Job Monitoring';
       } catch (error) {
         logOrPostMessage({
           level: 'error',
-          text: `Job Punctuality Monitoring: Error while processing jobs for  punctuality check ${jobMonitoring.id}: ${error.message}`,
+          text: `Job Punctuality Monitoring [MonitoringID: ${jobMonitoring.id}]: Error while processing jobs for punctuality check: ${error.message}`,
         });
       }
     }

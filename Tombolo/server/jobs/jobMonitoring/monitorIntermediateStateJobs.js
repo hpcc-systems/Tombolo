@@ -168,15 +168,19 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
         try {
           newWuDetails = (await wuService.WUInfo(WUInfoOptions(Wuid))).Workunit;
         } catch (err) {
-          logOrPostMessage({
-            level: 'error',
-            text: `Intermediate state JM : Error getting WU details for ${Wuid} on cluster ${clusterDetail.id}: ${err.message}`,
-          });
-
           // If  err.message include Invalid Workunit ID", remove the WU from monitoring
           if (err.message.includes('Invalid Workunit ID')) {
             wuToStopMonitoring.push(Wuid);
             keepWu = false;
+            logOrPostMessage({
+              level: 'error',
+              text: `Intermediate state JM: Cannot read workunit ${Wuid} on cluster ID ${clusterDetail.id} - removing from monitoring: ${err.message}`,
+            });
+          } else {
+            logOrPostMessage({
+              level: 'error',
+              text: `Intermediate state JM: Error getting WU details for ${Wuid} on cluster ${clusterDetail.id}: ${err.message}`,
+            });
           }
           continue;
         }

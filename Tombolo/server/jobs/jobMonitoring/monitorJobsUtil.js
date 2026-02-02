@@ -607,6 +607,8 @@ function calculateRunOrCompleteByTimes({
         timezone_offset,
         backDateInMs,
       });
+    case 'anytime':
+      return null;
     default:
       throw new Error(`Unknown frequency: ${frequency}`);
   }
