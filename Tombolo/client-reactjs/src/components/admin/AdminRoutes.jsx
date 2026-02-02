@@ -19,6 +19,7 @@ const UserManagement = React.lazy(() => import('./userManagement/index.jsx'));
 const Settings = React.lazy(() => import('./settings'));
 const WorkUnitHistory = React.lazy(() => import('./workunitHistory/index.jsx'));
 const WorkUnitDetails = React.lazy(() => import('./workunitHistory/details/index.jsx'));
+const WorkUnitAnalytics = React.lazy(() => import('./workunitAnalytics/index.jsx'));
 
 const AdminRoutes = () => {
   return (
@@ -38,6 +39,7 @@ const AdminRoutes = () => {
       <PrivateRoute path="/admin/settings" component={Settings} />
       <PrivateRoute exact path="/admin/workunits/:clusterId/:wuid" component={WorkUnitDetails} />
       <PrivateRoute path="/admin/workunits" component={WorkUnitHistory} />
+      <PrivateRoute path="/admin/workunitAnalytics" component={WorkUnitAnalytics} />
     </Switch>
   );
 };
