@@ -23,11 +23,76 @@ async function executeAnalyticsQuery(req, res) {
     const rawSql = req.body.sql.trim();
     const options = req.body.options || {};
 
+    // Apply automatic scoping if provided
+    let scopedSql = rawSql;
+    if (options.scopeToWuid || options.scopeToClusterId) {
+      // Parse the SQL to add WHERE conditions for scoping
+      const lowerSql = rawSql.toLowerCase();
+
+      // Build the scoping conditions
+      const scopeConditions = [];
+      if (options.scopeToWuid) {
+        scopeConditions.push(
+          `wuId = '${options.scopeToWuid.replace(/'/g, "''")}'`
+        );
+      }
+      if (options.scopeToClusterId) {
+        scopeConditions.push(
+          `clusterId = '${options.scopeToClusterId.replace(/'/g, "''")}'`
+        );
+      }
+
+      const scopeClause = scopeConditions.join(' AND ');
+
+      // Check if query already has a WHERE clause
+      const whereIndex = lowerSql.indexOf(' where ');
+      if (whereIndex !== -1) {
+        // Find where the WHERE clause ends (before ORDER BY, GROUP BY, HAVING, or LIMIT)
+        const afterWhereStart = whereIndex + 7; // start after ' where '
+        const afterWhereSql = rawSql.substring(afterWhereStart);
+        const afterWhereLower = lowerSql.substring(afterWhereStart);
+
+        // Find the first occurrence of ORDER BY, GROUP BY, HAVING, or LIMIT
+        const endClausePattern = /\s+(order\s+by|group\s+by|having|limit)\s+/i;
+        const endMatch = endClausePattern.exec(afterWhereLower);
+
+        if (endMatch) {
+          // Extract just the WHERE conditions (before ORDER BY, etc.)
+          const whereConditions = afterWhereSql.substring(0, endMatch.index);
+          const restOfQuery = afterWhereSql.substring(endMatch.index);
+          const beforeWhere = rawSql.substring(0, whereIndex + 7);
+          scopedSql = `${beforeWhere}(${scopeClause}) AND (${whereConditions})${restOfQuery}`;
+        } else {
+          // No ORDER BY, GROUP BY, HAVING, or LIMIT - WHERE conditions go to end
+          const beforeWhere = rawSql.substring(0, whereIndex + 7);
+          scopedSql = `${beforeWhere}(${scopeClause}) AND (${afterWhereSql})`;
+        }
+      } else {
+        // Add WHERE clause before ORDER BY, GROUP BY, or LIMIT
+        const insertBeforePattern = /\s+(order\s+by|group\s+by|limit)\s+/i;
+        const match = insertBeforePattern.exec(rawSql);
+
+        if (match) {
+          const insertPos = match.index;
+          scopedSql = `${rawSql.substring(0, insertPos)} WHERE ${scopeClause} ${rawSql.substring(insertPos)}`;
+        } else {
+          // No WHERE, ORDER BY, GROUP BY, or LIMIT - add at the end
+          scopedSql = `${rawSql} WHERE ${scopeClause}`;
+        }
+      }
+
+      logger.debug('Applied scoping to query:', {
+        original: rawSql,
+        scoped: scopedSql,
+        options,
+      });
+    }
+
     // Enforce row limit (already validated to be <= 5000)
     const MAX_LIMIT = options.limit || 1000;
 
     // Check if query already has a LIMIT clause
-    let finalSql = rawSql;
+    let finalSql = scopedSql;
     const limitMatch = finalSql.toLowerCase().match(/\blimit\s+(\d+)/);
 
     if (limitMatch) {

@@ -743,7 +743,7 @@ const AnalyticsWorkspace = () => {
                 <Button icon={<FormatPainterOutlined />} onClick={formatSql}>
                   Format SQL
                 </Button>
-                <Button icon={<SaveOutlined />} onClick={() => setSaveModalVisible(true)}>
+                <Button icon={<SaveOutlined />} onClick={() => message.info('Not implemented')}>
                   Save Query
                 </Button>
                 <Button icon={<ClearOutlined />} onClick={clearEditor}>

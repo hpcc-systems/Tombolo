@@ -25,8 +25,8 @@ const router = express.Router();
 router.post(
   '/query',
   (req, res, next) => {
-    logger.info('=== POST /workunitAnalytics/query ===');
-    logger.info('Request body:', JSON.stringify(req.body, null, 2));
+    logger.debug('=== POST /workunitAnalytics/query ===');
+    logger.debug('Request body:', JSON.stringify(req.body, null, 2));
     next();
   },
   validate(validateAnalyticsQuery),

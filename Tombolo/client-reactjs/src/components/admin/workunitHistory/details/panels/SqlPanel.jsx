@@ -100,10 +100,13 @@ export default function SqlPanel({ clusterId, wuid, clusterName }) {
     setExecuting(true);
     setError(null);
     try {
-      // Use the new workunitAnalytics endpoint
+      // Use the new workunitAnalytics endpoint with scoping
       const response = await apiClient.post('/workunitAnalytics/query', {
         sql,
-        options: {},
+        options: {
+          scopeToWuid: wuid,
+          scopeToClusterId: clusterId,
+        },
       });
       setResult(response.data);
     } catch (err) {

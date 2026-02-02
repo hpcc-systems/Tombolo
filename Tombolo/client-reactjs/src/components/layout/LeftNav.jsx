@@ -87,7 +87,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       clusterUsage: '5b',
       clusters: '6',
       workunits: '7a',
-      workunitAnalytics: '7b',
+      sql: '7b',
       consumers: '9',
       applications: '10',
       userManagement: '11',
@@ -258,7 +258,7 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       <Link to={'/workunits/history'}>
         <span>
           <HistoryOutlined />
-          <span style={{ marginLeft: '1rem' }}>Workunit History</span>
+          <span style={{ marginLeft: '1rem' }}>History</span>
         </span>
       </Link>,
       '7a',
@@ -268,10 +268,10 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       disabled
     ),
     getItem(
-      <Link to={'/workunits/analytics'}>
+      <Link to={'/workunits/sql'}>
         <span>
           <ThunderboltOutlined />
-          <span style={{ marginLeft: '1rem' }}>Workunit Analytics</span>
+          <span style={{ marginLeft: '1rem' }}>SQL</span>
         </span>
       </Link>,
       '7b',

@@ -43,12 +43,12 @@ const validateAnalyticsQuery = [
         .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
         .trim();
 
-      logger.info('SQL after sanitization:', JSON.stringify(cleaned));
+      logger.debug('SQL after sanitization:', JSON.stringify(cleaned));
       return cleaned;
     })
     .custom(value => {
       // At this point value has comments stripped and whitespace normalized
-      logger.info('Checking if SELECT, value:', JSON.stringify(value));
+      logger.debug('Checking if SELECT, value:', JSON.stringify(value));
 
       // Check if starts with SELECT (case-insensitive)
       if (!value.toLowerCase().startsWith('select')) {
