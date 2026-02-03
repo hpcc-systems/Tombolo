@@ -267,19 +267,24 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       null,
       disabled
     ),
-    getItem(
-      <Link to={'/workunits/sql'}>
-        <span>
-          <ThunderboltOutlined />
-          <span style={{ marginLeft: '1rem' }}>SQL</span>
-        </span>
-      </Link>,
-      '7b',
-      null,
-      null,
-      null,
-      disabled
-    ),
+    // SQL Analytics - only visible to owner and administrator
+    ...(roleArray.includes('owner') || roleArray.includes('administrator')
+      ? [
+          getItem(
+            <Link to={'/workunits/sql'}>
+              <span>
+                <ThunderboltOutlined />
+                <span style={{ marginLeft: '1rem' }}>SQL</span>
+              </span>
+            </Link>,
+            '7b',
+            null,
+            null,
+            null,
+            disabled
+          ),
+        ]
+      : []),
   ];
 
   const adminItems = [

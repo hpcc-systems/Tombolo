@@ -12,9 +12,14 @@ import {
   validateGetDatabaseStats,
 } from '../middlewares/workunitAnalyticsMiddleware.js';
 import { validate } from '../middlewares/validateRequestBody.js';
+import { validateUserRole } from '../middlewares/rbacMiddleware.js';
+import role from '../config/roleTypes.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
+
+// All routes below require OWNER or ADMIN role
+router.use(validateUserRole([role.OWNER, role.ADMIN]));
 
 /**
  * @route   POST /api/workunitAnalytics/query
