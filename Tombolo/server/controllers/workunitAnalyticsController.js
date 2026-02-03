@@ -53,9 +53,8 @@ async function executeAnalyticsQuery(req, res) {
         const afterWhereLower = lowerSql.substring(afterWhereStart);
 
         // Find the first occurrence of ORDER BY, GROUP BY, HAVING, or LIMIT
-        // Use possessive quantifiers to prevent ReDoS with many spaces
-        const endClausePattern =
-          /\s+(?:order\s+by|group\s+by|having|limit)(?=\s)/i;
+        // Use word boundaries to prevent ReDoS with repeated whitespace
+        const endClausePattern = /\b(?:order\s+by|group\s+by|having|limit)\b/i;
         const endMatch = endClausePattern.exec(afterWhereLower);
 
         if (endMatch) {
@@ -71,7 +70,8 @@ async function executeAnalyticsQuery(req, res) {
         }
       } else {
         // Add WHERE clause before ORDER BY, GROUP BY, or LIMIT
-        const insertBeforePattern = /\s+(?:order\s+by|group\s+by|limit)(?=\s)/i;
+        // Use word boundaries to prevent ReDoS with repeated whitespace
+        const insertBeforePattern = /\b(?:order\s+by|group\s+by|limit)\b/i;
         const match = insertBeforePattern.exec(rawSql);
 
         if (match) {
