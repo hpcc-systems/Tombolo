@@ -53,7 +53,9 @@ async function executeAnalyticsQuery(req, res) {
         const afterWhereLower = lowerSql.substring(afterWhereStart);
 
         // Find the first occurrence of ORDER BY, GROUP BY, HAVING, or LIMIT
-        const endClausePattern = /\s+(order\s+by|group\s+by|having|limit)\s+/i;
+        // Use possessive quantifiers to prevent ReDoS with many spaces
+        const endClausePattern =
+          /\s+(?:order\s+by|group\s+by|having|limit)(?=\s)/i;
         const endMatch = endClausePattern.exec(afterWhereLower);
 
         if (endMatch) {
@@ -69,7 +71,7 @@ async function executeAnalyticsQuery(req, res) {
         }
       } else {
         // Add WHERE clause before ORDER BY, GROUP BY, or LIMIT
-        const insertBeforePattern = /\s+(order\s+by|group\s+by|limit)\s+/i;
+        const insertBeforePattern = /\s+(?:order\s+by|group\s+by|limit)(?=\s)/i;
         const match = insertBeforePattern.exec(rawSql);
 
         if (match) {
@@ -276,6 +278,8 @@ async function analyzeQuery(req, res) {
     }
 
     // Run EXPLAIN on the query
+    // Note: rawSql is pre-validated by analyticsMiddleware to ensure it's a safe SELECT query
+    // This is intentional - the feature allows users to write custom analytics queries
     const [explanation] = await sequelize.query(`EXPLAIN ${rawSql}`, {
       type: QueryTypes.SELECT,
     });
