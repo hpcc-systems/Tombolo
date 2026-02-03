@@ -1,27 +1,58 @@
 #!/bin/sh
+set -euo pipefail
 
 host="$1"
 port="$2"
 
-# Wait for MySQL to be ready
-until $(nc -z $host $port); do
-  echo "Waiting for MySQL at $host:$port..."
+# Defaults
+: "${host:=mysql_db}"
+: "${port:=3306}"
+
+log() { printf '%s %s\n' "$(date --iso-8601=seconds 2>/dev/null || date)" "$*"; }
+
+log "Waiting for MySQL at ${host}:${port}..."
+while ! nc -z "${host}" "${port}" >/dev/null 2>&1; do
+  log "Waiting for MySQL at ${host}:${port}..."
   sleep 2
 done
 
-echo "MySQL is ready, initializing database..."
+log "MySQL is ready, initializing database..."
 
-# Create database if it doesn't exist (ignore error if it already exists)
-sequelize db:create || true
+if command -v sequelize >/dev/null 2>&1; then
+  if ! sequelize db:create >/dev/null 2>&1; then
+    log "sequelize db:create returned non-zero (continuing)"
+  fi
 
-# Run migrations
-echo "Running migrations..."
-sequelize db:migrate
+  log "Running migrations..."
+  sequelize db:migrate || log "migrations failed"
 
-# Run seeds
-echo "Running seeds..."
-sequelize db:seed:all
+  log "Running seeds..."
+  sequelize db:seed:all || log "seeds failed"
+else
+  log "sequelize not found in PATH; skipping migrations/seeds"
+fi
 
-# Start the application
-echo "Starting server with PM2..."
-pm2-runtime start process.yml
+# Ensure mounted log directory exists and is writable (for application logs)
+mkdir -p /app/logs
+chmod 0755 /app/logs || true
+chown -R $(id -u 2>/dev/null || 0):$(id -g 2>/dev/null || 0) /app/logs || true
+
+# Do NOT configure PM2 to write logs into the mounted folder and do NOT
+# install or configure pm2-logrotate here. PM2 will use its default
+# internal log handling (not persisted to the host) to avoid duplicating
+# application file-based logs.
+
+if command -v pm2-runtime >/dev/null 2>&1; then
+  log "Starting pm2-runtime (logging/logrotate disabled)"
+  exec pm2-runtime start process.yml
+else
+  log "pm2-runtime not found; attempting fallback start"
+  if [ -f /app/server.js ]; then
+    exec node /app/server.js
+  elif [ -f /app/dist/app.js ]; then
+    exec node /app/dist/app.js
+  else
+    log "No start command found; exiting"
+    exit 1
+  fi
+fi
