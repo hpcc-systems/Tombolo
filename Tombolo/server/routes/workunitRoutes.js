@@ -5,7 +5,6 @@ import {
   getWorkunitDetails,
   getWorkunitHotspots,
   getWorkunitTimeline,
-  executeWorkunitSql,
   getJobHistoryByJobName,
   getJobHistoryByJobNameWStats,
   comparePreviousByWuid,
@@ -16,7 +15,6 @@ import {
   validateGetWorkunitDetails,
   validateGetWorkunitHotspots,
   validateGetWorkunitTimeline,
-  validateExecuteWorkunitSql,
   validateGetJobHistoryByJobName,
   validateGetJobHistoryByJobNameWStats,
   validateComparePreviousByWuid,
@@ -50,13 +48,6 @@ router.get(
   '/:clusterId/:wuid/timeline',
   validate(validateGetWorkunitTimeline),
   getWorkunitTimeline
-);
-
-// POST /api/workunits/:clusterId/:wuid/sql - Execute read-only SQL against work_unit_details
-router.post(
-  '/:clusterId/:wuid/sql',
-  validate(validateExecuteWorkunitSql),
-  executeWorkunitSql
 );
 
 router.get(

@@ -210,7 +210,7 @@ const WorkUnitHistory = () => {
   };
 
   const handleView = record => {
-    history.push(`/admin/workunits/${record.clusterId}/${record.wuId}`);
+    history.push(`/workunits/history/${record.clusterId}/${record.wuId}`);
   };
 
   const columns = [
@@ -327,7 +327,11 @@ const WorkUnitHistory = () => {
         <Row gutter={16}>
           <Col span={8}>
             <Statistic
-              title={<Text type="secondary" style={{ fontSize: '12px' }}>Total Workunits</Text>}
+              title={
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  Total Workunits
+                </Text>
+              }
               value={statistics.totalJobs}
               prefix={<ClockCircleOutlined style={{ fontSize: '14px' }} />}
               valueStyle={{ fontSize: '20px' }}
@@ -335,17 +339,29 @@ const WorkUnitHistory = () => {
           </Col>
           <Col span={8}>
             <Statistic
-              title={<Text type="secondary" style={{ fontSize: '12px' }}>Total Cost</Text>}
+              title={
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  Total Cost
+                </Text>
+              }
               value={statistics.totalCost}
               precision={2}
               prefix={<DollarOutlined style={{ fontSize: '14px' }} />}
-              suffix={<Text type="secondary" style={{ fontSize: '12px', marginLeft: '4px' }}>USD</Text>}
+              suffix={
+                <Text type="secondary" style={{ fontSize: '12px', marginLeft: '4px' }}>
+                  USD
+                </Text>
+              }
               valueStyle={{ fontSize: '20px' }}
             />
           </Col>
           <Col span={8}>
             <Statistic
-              title={<Text type="secondary" style={{ fontSize: '12px' }}>Avg Time</Text>}
+              title={
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  Avg Time
+                </Text>
+              }
               value={formatTime(statistics.avgTime)}
               prefix={<ClockCircleOutlined style={{ fontSize: '14px' }} />}
               valueStyle={{ fontSize: '20px' }}
