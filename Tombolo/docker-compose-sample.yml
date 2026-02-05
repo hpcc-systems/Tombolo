@@ -59,7 +59,10 @@ services:
     environment:
       LOG_DIR: /app/logs/db
     logging:
-      driver: "none" # This line disables Docker logs. All logs are written to the file system
+      driver: "json-file" # Capture container stdout/stderr in JSON files
+      options:
+        max-size: "2m" # rotate when file reaches 2MB
+        max-file: "3" # keep 3 rotated files
     healthcheck:
       test:
         [
@@ -94,6 +97,11 @@ services:
     environment:
       DB_PORT: 3306 # Override for container-to-container communication
       LOG_DIR: /app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "2m"
+        max-file: "3"
     healthcheck:
       test:
         [

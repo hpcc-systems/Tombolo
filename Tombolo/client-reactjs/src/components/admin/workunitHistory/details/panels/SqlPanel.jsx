@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Card, Empty, Space, Table, Typography, message } from 'antd';
 import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined } from '@ant-design/icons';
-import workunitsService from '@/services/workunits.service';
+import { apiClient } from '@/services/api';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor from '@monaco-editor/react';
 import debounce from 'lodash/debounce';
 import styles from '../../workunitHistory.module.css';
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 const BASE_COLUMNS = ['id', 'wuId', 'clusterId', 'scopeId', 'scopeName', 'scopeType', 'label', 'fileName'];
 const SUGGEST_COLUMNS = Array.from(new Set([...BASE_COLUMNS, ...relevantMetrics]));
@@ -100,10 +100,17 @@ export default function SqlPanel({ clusterId, wuid, clusterName }) {
     setExecuting(true);
     setError(null);
     try {
-      const data = await workunitsService.executeSql(clusterId, wuid, sql);
-      setResult(data);
+      // Use the new workunitAnalytics endpoint with scoping
+      const response = await apiClient.post('/workunitAnalytics/query', {
+        sql,
+        options: {
+          scopeToWuid: wuid,
+          scopeToClusterId: clusterId,
+        },
+      });
+      setResult(response.data);
     } catch (err) {
-      const serverMsg = err?.messages?.[0];
+      const serverMsg = err?.response?.data?.message || err?.messages?.[0];
       const detailedMsg = serverMsg || err?.raw?.message || 'Failed to execute SQL';
       setError(detailedMsg);
       message.error('Failed to execute SQL');

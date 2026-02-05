@@ -15,6 +15,7 @@ import TimelinePanel from './panels/TimelinePanel';
 import SqlPanel from './panels/SqlPanel';
 import HistoryPanel from './panels/HistoryPanel';
 import styles from '../workunitHistory.module.css';
+import { getRoleNameArray } from '@/components/common/AuthUtil';
 
 dayjs.extend(duration);
 
@@ -24,6 +25,8 @@ const { TabPane } = Tabs;
 const formatTime = seconds => (seconds == null ? '-' : dayjs.duration(seconds, 'seconds').format('HH:mm:ss.SSS'));
 
 const WorkUnitView = ({ wu, details, clusterName }) => {
+  const roleArray = getRoleNameArray();
+  const isAdminOrOwner = roleArray.includes('owner') || roleArray.includes('administrator');
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
       {/* Header */}
@@ -119,16 +122,18 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
           <AllMetricsPanel wu={wu} details={details} />
         </TabPane>
 
-        {/* SQL */}
-        <TabPane
-          tab={
-            <span>
-              <DatabaseOutlined /> SQL
-            </span>
-          }
-          key="sql">
-          <SqlPanel clusterId={wu.clusterId} wuid={wu.wuId} clusterName={clusterName} />
-        </TabPane>
+        {/* SQL - only visible to owner and administrator */}
+        {isAdminOrOwner && (
+          <TabPane
+            tab={
+              <span>
+                <DatabaseOutlined /> SQL
+              </span>
+            }
+            key="sql">
+            <SqlPanel clusterId={wu.clusterId} wuid={wu.wuId} clusterName={clusterName} />
+          </TabPane>
+        )}
       </Tabs>
     </div>
   );

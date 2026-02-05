@@ -76,10 +76,6 @@ const workunitsService = {
    * @param {string} sql
    * @returns {Promise<{columns: string[], rows: any[]}>}
    */
-  executeSql: async (clusterId, wuid, sql) => {
-    const response = await apiClient.post(`/workunits/${clusterId}/${wuid}/sql`, { sql });
-    return response.data;
-  },
 
   /**
    * Get history of all runs for a specific job name
