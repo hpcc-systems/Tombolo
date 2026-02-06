@@ -1,7 +1,7 @@
 // Imports from libraries
 import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
 // Local imports
@@ -40,6 +40,28 @@ if (methods.includes('azure') && !hasAllAzureEnv) {
 
 const Login = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
+
+  // Helper function to get redirect URL after successful login
+  const getRedirectUrl = () => {
+    // First try to get from localStorage (more reliable)
+    const intendedUrl = localStorage.getItem('intendedUrl');
+    if (intendedUrl && intendedUrl !== '/login') {
+      localStorage.removeItem('intendedUrl'); // Clean up
+      return intendedUrl;
+    }
+
+    // Fallback to location state
+    if (location.state?.from) {
+      const { pathname, search = '', hash = '' } = location.state.from;
+      const fullPath = `${pathname}${search}${hash}`;
+      if (fullPath !== '/') {
+        return fullPath;
+      }
+    }
+
+    return '/';
+  };
 
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
@@ -81,8 +103,8 @@ const Login = () => {
     }
 
     if (test.payload?.type === Constants.LOGIN_SUCCESS) {
-      // reload the page if login is successful
-      window.location.href = '/';
+      // redirect to intended page or home if login is successful
+      window.location.href = getRedirectUrl();
       return;
     }
 
@@ -132,8 +154,8 @@ const Login = () => {
       const res = await dispatch(loginOrRegisterAzureUser(code));
 
       if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
-        //reload page if login is successful
-        window.location.href = '/';
+        //redirect to intended page or home if login is successful
+        window.location.href = getRedirectUrl();
         return;
       }
     } catch (err) {
