@@ -62,7 +62,7 @@ export const authInterceptor = axiosInstance => {
         !originalRequest.url.includes('/auth/resetTempPassword') &&
         !originalRequest.url.includes('/auth/refreshToken') &&
         !isLoggedOut // Don't try to refresh if already logged out
-      ) {
+      ) {    
         // If already refreshing, queue this request
         if (isRefreshing) {
           return new Promise((resolve, reject) => {

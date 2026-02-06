@@ -1506,7 +1506,24 @@ const requestPasswordReset = async (req, res) => {
 const refreshAccessToken = async (req, res) => {
   try {
     const token = req.cookies.token;
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Try to decode the token, even if expired, to get the tokenId
+    let decodedToken;
+    try {
+      decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      // If token is expired, decode it anyway to get the tokenId
+      if (err.name === 'TokenExpiredError') {
+        decodedToken = jwt.decode(token); // Decode without verification
+      } else {
+        throw err; // Re-throw other errors
+      }
+    }
+
+    if (!decodedToken || !decodedToken.tokenId) {
+      return sendError(res, 'Invalid token structure', 401);
+    }
+
     const { id: userId, tokenId } = decodedToken;
 
     // Check if corresponding refresh token exists in DB
