@@ -63,9 +63,25 @@ const Login = () => {
   const getRedirectUrl = () => {
     // First try to get from localStorage (more reliable)
     const intendedUrl = localStorage.getItem('intendedUrl');
-    if (intendedUrl && intendedUrl !== '/login' && isValidInternalUrl(intendedUrl)) {
-      localStorage.removeItem('intendedUrl'); // Clean up
-      return intendedUrl;
+    if (intendedUrl) {
+      // Treat auth routes as invalid redirect targets to avoid loops
+      const isAuthRoute =
+        intendedUrl === '/login' ||
+        intendedUrl.startsWith('/login?') ||
+        intendedUrl.startsWith('/login/') ||
+        intendedUrl === '/register' ||
+        intendedUrl.startsWith('/register?') ||
+        intendedUrl.startsWith('/register/') ||
+        intendedUrl === '/forgot-password' ||
+        intendedUrl.startsWith('/forgot-password?') ||
+        intendedUrl.startsWith('/forgot-password/');
+      if (!isAuthRoute && isValidInternalUrl(intendedUrl)) {
+        // Use and clear the stored intended URL
+        localStorage.removeItem('intendedUrl'); // Clean up used value
+        return intendedUrl;
+      }
+      // Clear stale/invalid or auth-route intended URL
+      localStorage.removeItem('intendedUrl');
     }
 
     // Fallback to location state
