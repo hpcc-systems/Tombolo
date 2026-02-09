@@ -98,7 +98,7 @@ const WorkUnitDetails = () => {
               <Button size="small" onClick={fetchData} icon={<ReloadOutlined />}>
                 Retry
               </Button>
-              <Button size="small" onClick={() => history.push('/admin/workunits')}>
+              <Button size="small" onClick={() => history.push('/workunits/history')}>
                 Back to List
               </Button>
             </Space>
@@ -117,7 +117,7 @@ const WorkUnitDetails = () => {
           type="warning"
           showIcon
           action={
-            <Button size="small" onClick={() => history.push('/admin/workunits')}>
+            <Button size="small" onClick={() => history.push('/workunits/history')}>
               Back to List
             </Button>
           }
@@ -130,7 +130,7 @@ const WorkUnitDetails = () => {
     <div>
       <div className={styles.headerBar}>
         <Space wrap>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => history.push('/admin/workunits')}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => history.push('/workunits/history')}>
             Back to Workunit History
           </Button>
           <Button icon={<ReloadOutlined />} onClick={fetchData}>

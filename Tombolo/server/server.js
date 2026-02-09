@@ -107,6 +107,7 @@ import clusterMonitoring from './routes/clusterMonitoringRoutes.js';
 import fileMonitoring from './routes/fileMonitoringRoutes.js';
 import orbitProfileMonitoring from './routes/orbitProfileMonitoringRoutes.js';
 import workunits from './routes/workunitRoutes.js';
+import workunitAnalytics from './routes/workunitAnalyticsRoutes.js';
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -141,6 +142,7 @@ app.use('/api/landingZoneMonitoring', landingZoneMonitoring);
 app.use('/api/clusterMonitoring', clusterMonitoring);
 app.use('/api/orbitProfileMonitoring', orbitProfileMonitoring);
 app.use('/api/workunits', workunits);
+app.use('/api/workunitAnalytics', workunitAnalytics);
 
 // Safety net for unhandled errors
 app.use((err, req, res) => {

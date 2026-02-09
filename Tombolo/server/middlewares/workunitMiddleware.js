@@ -4,7 +4,6 @@ import {
   intQuery,
   dateTimeQuery,
 } from './commonMiddleware.js';
-import { body } from 'express-validator';
 
 // Valid sort fields for workunits
 const VALID_SORT_FIELDS = [
@@ -66,18 +65,6 @@ const validateGetWorkunitTimeline = [
   stringParam('wuid', false),
 ];
 
-// POST /api/workunits/:clusterId/:wuid/sql
-const validateExecuteWorkunitSql = [
-  stringParam('clusterId', false),
-  stringParam('wuid', false),
-  body('sql')
-    .isString()
-    .withMessage('sql must be a string')
-    .bail()
-    .notEmpty()
-    .withMessage('sql is required'),
-];
-
 // Validation for GET /api/workunits/:clusterId/job-history/:jobName
 const validateGetJobHistoryByJobName = [
   stringParam('clusterId', false),
@@ -107,7 +94,6 @@ export {
   validateGetWorkunitTimeline,
   VALID_SORT_FIELDS,
   VALID_ORDER_DIRECTIONS,
-  validateExecuteWorkunitSql,
   validateGetJobHistoryByJobName,
   validateGetJobHistoryByJobNameWStats,
   validateComparePreviousByWuid,

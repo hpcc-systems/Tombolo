@@ -58,12 +58,12 @@ const App = () => {
   const clusterLinkRef = useRef(null);
 
   // get redux states (select only needed properties)
-  const application = useSelector((state) => state.application.application);
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const isConnected = useSelector((state) => state.backend.isConnected);
-  const statusRetrieved = useSelector((state) => state.backend.statusRetrieved);
-  const ownerExists = useSelector((state) => state.backend.ownerExists);
-  const ownerRetrieved = useSelector((state) => state.backend.ownerRetrieved);
+  const application = useSelector(state => state.application.application);
+  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
+  const isConnected = useSelector(state => state.backend.isConnected);
+  const statusRetrieved = useSelector(state => state.backend.statusRetrieved);
+  const ownerExists = useSelector(state => state.backend.ownerExists);
+  const ownerRetrieved = useSelector(state => state.backend.ownerRetrieved);
 
   //retrieve backend status on load to display message to user or application
   useEffect(() => {
@@ -82,8 +82,25 @@ const App = () => {
     }
   }, [isAuthenticated, user]);
 
+  // Capture intended URL when user needs to authenticate
+  useEffect(() => {
+    if (ownerExists && !user?.isAuthenticated) {
+      const currentPath = history.location.pathname + history.location.search + history.location.hash;
+      // Don't store auth routes or home page
+      if (
+        !currentPath.startsWith('/login') &&
+        !currentPath.startsWith('/register') &&
+        !currentPath.startsWith('/forgot-password') &&
+        !currentPath.startsWith('/reset-') &&
+        currentPath !== '/'
+      ) {
+        localStorage.setItem('intendedUrl', currentPath);
+      }
+    }
+  }, [ownerExists, user?.isAuthenticated]);
+
   //left nav collapse method
-  const onCollapse = (collapsed) => {
+  const onCollapse = collapsed => {
     setCollapsed(collapsed);
     localStorage.setItem('collapsed', collapsed);
   };
