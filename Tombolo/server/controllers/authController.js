@@ -1514,7 +1514,9 @@ const refreshAccessToken = async (req, res) => {
     } catch (err) {
       // If token is expired, verify it again but ignore expiration to get the tokenId
       if (err.name === 'TokenExpiredError') {
-        decodedToken = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
+        decodedToken = jwt.verify(token, process.env.JWT_SECRET, {
+          ignoreExpiration: true,
+        });
       } else {
         throw err; // Re-throw other errors
       }
