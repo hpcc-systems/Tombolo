@@ -42,11 +42,32 @@ const Login = () => {
   const dispatch = useDispatch();
   const location = useLocation();
 
+  // Validate URL is safe for redirect to prevent XSS
+  const isValidInternalUrl = url => {
+    try {
+      // Must start with / (relative path)
+      if (!url.startsWith('/')) return false;
+
+      // Block javascript: data: and external protocols
+      if (url.match(/^(javascript|data|vbscript|about):/i)) return false;
+
+      // Block double slashes (protocol-relative URLs)
+      if (url.startsWith('//')) return false;
+
+      // Additional safety: block any URL with script tags or common XSS patterns
+      if (url.toLowerCase().includes('<script')) return false;
+
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // Helper function to get redirect URL after successful login
   const getRedirectUrl = () => {
     // First try to get from localStorage (more reliable)
     const intendedUrl = localStorage.getItem('intendedUrl');
-    if (intendedUrl && intendedUrl !== '/login') {
+    if (intendedUrl && intendedUrl !== '/login' && isValidInternalUrl(intendedUrl)) {
       localStorage.removeItem('intendedUrl'); // Clean up
       return intendedUrl;
     }
@@ -55,14 +76,31 @@ const Login = () => {
     if (location.state?.from) {
       const { pathname, search = '', hash = '' } = location.state.from;
       const fullPath = `${pathname}${search}${hash}`;
-      if (fullPath !== '/') {
+      if (fullPath !== '/' && isValidInternalUrl(fullPath)) {
         return fullPath;
       }
     }
 
+    // Always return safe default
     return '/';
   };
 
+  // Safe redirect function to prevent XSS
+  const safeRedirect = url => {
+    try {
+      if (isValidInternalUrl(url)) {
+        const baseUrl = window.location.origin;
+        const fullUrl = new URL(url, baseUrl);
+        if (fullUrl.origin === baseUrl) {
+          window.location.href = fullUrl.pathname + fullUrl.search + fullUrl.hash;
+          return;
+        }
+      }
+    } catch (e) {
+      // URL parsing failed, use safe default
+    }
+    window.location.href = '/';
+  };
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -104,7 +142,7 @@ const Login = () => {
 
     if (test.payload?.type === Constants.LOGIN_SUCCESS) {
       // redirect to intended page or home if login is successful
-      window.location.href = getRedirectUrl();
+      safeRedirect(getRedirectUrl());
       return;
     }
 
@@ -155,7 +193,7 @@ const Login = () => {
 
       if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
         //redirect to intended page or home if login is successful
-        window.location.href = getRedirectUrl();
+        safeRedirect(getRedirectUrl());
         return;
       }
     } catch (err) {
