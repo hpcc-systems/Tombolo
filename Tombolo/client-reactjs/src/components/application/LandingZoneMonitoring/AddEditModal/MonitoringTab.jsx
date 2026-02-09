@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, Form, InputNumber, Row, Col, Select, Cascader, Input } from 'antd';
-import { handleError } from '@/components/common/handleResponse';
+import React, { useState, useEffect } from 'react';
+import { Card, Form, InputNumber, Row, Col, Select, Input } from 'antd';
 import { convertToMB } from '../Utils';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../../common/InfoDrawer';
@@ -35,16 +34,8 @@ function MonitoringTab({
 }) {
   const [dropzones, setDropzones] = useState([]);
   const [machines, setMachines] = useState([]);
-  const [directoryOptions, setDirectoryOptions] = useState([]);
-  const [selectedDropzone, setSelectedDropzone] = useState(null);
-  const [selectedMachine, setSelectedMachine] = useState(null);
-  const [directoryLoading, setDirectoryLoading] = useState(false);
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [selectedUserGuideName, setSelectedUserGuideName] = useState('');
-
-  // Ref to store current abort controller for canceling requests
-  const abortControllerRef = useRef(null);
-  const loadingTimeoutRef = useRef(null);
 
   // Set Threshold Unit
   const setThresholdUnit = (value, field) => {
@@ -56,12 +47,12 @@ function MonitoringTab({
   };
 
   // Threshold Addons
-  const renderThresholdAddon = (field) => (
+  const renderThresholdAddon = field => (
     <Select
       defaultValue={field === 'minThreshold' ? minSizeThresholdUnit : maxSizeThresholdUnit}
       style={{ width: 80 }}
-      onChange={(value) => setThresholdUnit(value, field)}>
-      {storageUnits.map((unit) => (
+      onChange={value => setThresholdUnit(value, field)}>
+      {storageUnits.map(unit => (
         <Option key={unit.id} value={unit.value}>
           {unit.label}
         </Option>
@@ -86,9 +77,8 @@ function MonitoringTab({
   }, [selectedCluster]);
 
   // Handle dropzone selection to populate machines - Clear dependent fields
-  const handleDropzoneChange = (dropzoneName) => {
-    const selectedDropzoneObj = dropzones.find((dz) => dz.Name === dropzoneName);
-    setSelectedDropzone(selectedDropzoneObj);
+  const handleDropzoneChange = dropzoneName => {
+    const selectedDropzoneObj = dropzones.find(dz => dz.Name === dropzoneName);
 
     if (selectedDropzoneObj && selectedDropzoneObj.TpMachines && selectedDropzoneObj.TpMachines.TpMachine) {
       setMachines(selectedDropzoneObj.TpMachines.TpMachine);
@@ -96,182 +86,32 @@ function MonitoringTab({
       setMachines([]);
     }
 
-    // Clear dependent fields when dropzone changes
-    setDirectoryOptions([]);
-    setSelectedMachine(null);
-
     // Clear form values for dependent fields
     form.setFieldValue('machine', undefined);
     form.setFieldValue('directory', undefined);
-
-    // Cancel any pending directory requests
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-      loadingTimeoutRef.current = null;
-    }
   };
 
-  // Handle machine selection to initialize directory options - Clear directory field
-  const handleMachineChange = (Netaddress) => {
-    const selectedMachineObj = machines.find((machine) => machine.Netaddress === Netaddress);
-    setSelectedMachine(selectedMachineObj);
+  // Handle machine selection - Clear directory field
+  const handleMachineChange = Netaddress => {
+    const selectedMachineObj = machines.find(machine => machine.Netaddress === Netaddress);
 
     // Clear directory field when machine changes
     form.setFieldValue('directory', undefined);
-
-    // Cancel any pending directory requests
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-      loadingTimeoutRef.current = null;
-    }
-
-    if (selectedMachineObj && selectedDropzone) {
-      // Initialize directory options with root directory
-      const rootOption = {
-        label: selectedDropzone.Path || '/',
-        value: selectedDropzone.Path || '/',
-        isLeaf: false,
-      };
-      setDirectoryOptions([rootOption]);
-    } else {
-      setDirectoryOptions([]);
-    }
-  }; // Load directory data for cascader with proper error handling and request cancellation
-  const loadDirectoryData = async (selectedOptions) => {
-    const targetOption = selectedOptions[selectedOptions.length - 1];
-
-    if (!selectedCluster || !selectedDropzone || !selectedMachine) {
-      handleError('Please select cluster, dropzone, and machine first');
-      return;
-    }
-
-    // Cancel previous request if it exists
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Clear any existing loading timeout
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-    }
-
-    // Create new abort controller for this request
-    abortControllerRef.current = new AbortController();
-    const currentAbortSignal = abortControllerRef.current.signal;
-
-    // Add debouncing - wait 300ms before making the call
-    loadingTimeoutRef.current = setTimeout(async () => {
-      // Check if aborted before starting
-      if (currentAbortSignal.aborted) {
-        return;
-      }
-
-      // Set loading state
-      setDirectoryLoading(true);
-      targetOption.loading = true;
-      setDirectoryOptions([...directoryOptions]); // Trigger re-render to show loading
-
-      try {
-        const response = await landingZoneMonitoringService.getDirectoryList({
-          clusterId: selectedCluster.id,
-          dropzoneName: selectedDropzone.Name,
-          netaddr: selectedMachine.Netaddress,
-          path: targetOption.value,
-          signal: currentAbortSignal, // Use stored signal reference
-        });
-
-        // Check if request was aborted
-        if (currentAbortSignal.aborted) {
-          return;
-        }
-
-        if (response.success && response.data.files && response.data.files.PhysicalFileStruct) {
-          const directories = response.data.files.PhysicalFileStruct.filter((item) => item.isDir).map((dir) => ({
-            label: dir.name,
-            value: `${targetOption.value}${targetOption.value.endsWith('/') ? '' : '/'}${dir.name}`,
-            isLeaf: false, // New directories start as expandable
-          }));
-
-          if (directories.length > 0) {
-            // Has subdirectories - set as branch node
-            targetOption.children = directories;
-            targetOption.isLeaf = false; // Ensure it's marked as expandable
-          } else {
-            // No subdirectories found - mark as leaf node
-            targetOption.isLeaf = true;
-            delete targetOption.children; // Remove children property completely
-          }
-        } else {
-          // Handle API success but no data - mark as leaf
-          targetOption.isLeaf = true;
-          delete targetOption.children; // Remove children property completely
-        }
-      } catch (error) {
-        // Don't show error if request was aborted (user moved to another option)
-        if (error.name === 'AbortError') {
-          return;
-        }
-
-        console.error('Error loading directory data:', error);
-
-        // Mark as leaf node and remove children property
-        targetOption.isLeaf = true;
-        delete targetOption.children;
-
-        // Show user-friendly error message
-        handleError('Failed to load directory contents. Please try again.');
-      } finally {
-        // Only clear loading states if request wasn't aborted
-        if (!currentAbortSignal.aborted) {
-          setDirectoryLoading(false);
-          delete targetOption.loading; // Remove loading property
-
-          // Force re-render of cascader with updated options
-          setDirectoryOptions([...directoryOptions]);
-
-          // Clear the abort controller if it's still the current one
-          if (abortControllerRef.current?.signal === currentAbortSignal) {
-            abortControllerRef.current = null;
-          }
-        }
-      }
-    }, 300); // 300ms debounce
   };
 
   // Handle cluster change - Clear all dependent fields
-  const handleClusterChange = (value) => {
-    const selectedClusterDetails = clusters.find((cluster) => cluster.id === value);
+  const handleClusterChange = value => {
+    const selectedClusterDetails = clusters.find(cluster => cluster.id === value);
     setSelectedCluster(selectedClusterDetails);
 
     // Clear all dependent fields when cluster changes
     setDropzones([]);
     setMachines([]);
-    setDirectoryOptions([]);
-    setSelectedDropzone(null);
-    setSelectedMachine(null);
 
     // Clear form values for dependent fields
     form.setFieldValue('dropzone', undefined);
     form.setFieldValue('machine', undefined);
     form.setFieldValue('directory', undefined);
-
-    // Cancel any pending directory requests
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-      loadingTimeoutRef.current = null;
-    }
   };
 
   return (
@@ -280,8 +120,8 @@ function MonitoringTab({
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item label="Cluster" name="clusterId" rules={[{ required: true, message: 'Required field' }]}>
-              <Select onChange={(value) => handleClusterChange(value)}>
-                {clusters.map((cluster) => {
+              <Select onChange={value => handleClusterChange(value)}>
+                {clusters.map(cluster => {
                   return (
                     <Option key={cluster.id} value={cluster.id}>
                       {cluster.name}
@@ -307,8 +147,8 @@ function MonitoringTab({
               }
               name="lzMonitoringType"
               rules={[{ required: true, message: 'Required field' }]}>
-              <Select onChange={(value) => setLzMonitoringType(value)}>
-                {monitoringTypes.map((type) => (
+              <Select onChange={value => setLzMonitoringType(value)}>
+                {monitoringTypes.map(type => (
                   <Option
                     key={type.id}
                     value={type.value}
@@ -329,7 +169,7 @@ function MonitoringTab({
               <Select onChange={handleDropzoneChange}>
                 {dropzones
                   .sort((a, b) => a.Name.localeCompare(b.Name))
-                  .map((dropzone) => (
+                  .map(dropzone => (
                     <Option key={dropzone.Name} value={dropzone.Name}>
                       {`${dropzone.Name} - ${dropzone.Path}`}
                     </Option>
@@ -340,7 +180,7 @@ function MonitoringTab({
           <Col span={12}>
             <Form.Item label="Machine" name="machine" rules={[{ required: true, message: 'Required field' }]}>
               <Select onChange={handleMachineChange}>
-                {machines.map((machine) => (
+                {machines.map(machine => (
                   <Option key={machine.Name} value={machine.Netaddress}>
                     {`${machine.Name} - ${machine.Netaddress}`}
                   </Option>
@@ -350,33 +190,14 @@ function MonitoringTab({
           </Col>
         </Row>
 
-        <Form.Item label="Directory" name="directory" rules={[{ required: true, message: 'Required field' }]}>
-          <Cascader
-            options={directoryOptions}
-            loadData={loadDirectoryData}
-            allowClear={true}
-            changeOnSelect={true}
-            expandTrigger="hover"
-            placeholder="Select directory"
-            loading={directoryLoading}
-            notFoundContent={directoryLoading ? 'Loading directories...' : 'No directories found'}
-            fieldNames={{ label: 'label', value: 'value', children: 'children' }}
-            showSearch={{
-              filter: (inputValue, path) =>
-                path.some((option) => option.label.toLowerCase().includes(inputValue.toLowerCase())),
-            }}
-            onChange={(value) => {
-              // Allow selection at any level without closing panel
-              if (value && value.length > 0) {
-                const fullPath = value[value.length - 1];
-                form.setFieldsValue({ directory: fullPath });
-              }
-            }}
-            displayRender={(labels) => {
-              // Show the full path in the input
-              return labels.join(' / ');
-            }}
-          />
+        <Form.Item
+          label="Directory"
+          name="directory"
+          rules={[
+            { required: true, message: 'Required field' },
+            { max: 250, message: 'Maximum of 250 characters allowed' },
+          ]}>
+          <Input placeholder="Enter directory path" maxLength={250} />
         </Form.Item>
 
         {lzMonitoringType === 'fileMovement' && (
