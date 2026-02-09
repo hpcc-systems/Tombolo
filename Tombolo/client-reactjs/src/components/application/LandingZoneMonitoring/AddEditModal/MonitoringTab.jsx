@@ -92,8 +92,8 @@ function MonitoringTab({
   };
 
   // Handle machine selection - Clear directory field
-  const handleMachineChange = Netaddress => {
-    const selectedMachineObj = machines.find(machine => machine.Netaddress === Netaddress);
+  const handleMachineChange = _Netaddress => {
+    // const selectedMachineObj = machines.find(machine => machine.Netaddress === Netaddress);
 
     // Clear directory field when machine changes
     form.setFieldValue('directory', undefined);
