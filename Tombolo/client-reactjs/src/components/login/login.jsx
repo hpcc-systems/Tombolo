@@ -1,7 +1,7 @@
 // Imports from libraries
 import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
 // Local imports
@@ -40,7 +40,79 @@ if (methods.includes('azure') && !hasAllAzureEnv) {
 
 const Login = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
 
+  // Validate URL is safe for internal redirect (prevent open-redirects to other origins)
+  const isValidInternalUrl = url => {
+    try {
+      // Must be a non-empty string
+      if (typeof url !== 'string' || !url) return false;
+
+      // Must start with / (relative path on this origin)
+      if (!url.startsWith('/')) return false;
+
+      // Block double slashes (protocol-relative URLs like //example.com)
+      if (url.startsWith('//')) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Helper function to get redirect URL after successful login
+  const getRedirectUrl = () => {
+    // First try to get from localStorage (more reliable)
+    const intendedUrl = localStorage.getItem('intendedUrl');
+    if (intendedUrl) {
+      // Treat auth routes as invalid redirect targets to avoid loops
+      const isAuthRoute =
+        intendedUrl === '/login' ||
+        intendedUrl.startsWith('/login?') ||
+        intendedUrl.startsWith('/login/') ||
+        intendedUrl === '/register' ||
+        intendedUrl.startsWith('/register?') ||
+        intendedUrl.startsWith('/register/') ||
+        intendedUrl === '/forgot-password' ||
+        intendedUrl.startsWith('/forgot-password?') ||
+        intendedUrl.startsWith('/forgot-password/');
+      if (!isAuthRoute && isValidInternalUrl(intendedUrl)) {
+        // Use and clear the stored intended URL
+        localStorage.removeItem('intendedUrl'); // Clean up used value
+        return intendedUrl;
+      }
+      // Clear stale/invalid or auth-route intended URL
+      localStorage.removeItem('intendedUrl');
+    }
+
+    // Fallback to location state
+    if (location.state?.from) {
+      const { pathname, search = '', hash = '' } = location.state.from;
+      const fullPath = `${pathname}${search}${hash}`;
+      if (fullPath !== '/' && isValidInternalUrl(fullPath)) {
+        return fullPath;
+      }
+    }
+
+    // Always return safe default
+    return '/';
+  };
+
+  // Safe redirect function to prevent XSS
+  const safeRedirect = url => {
+    try {
+      if (isValidInternalUrl(url)) {
+        const baseUrl = window.location.origin;
+        const fullUrl = new URL(url, baseUrl);
+        if (fullUrl.origin === baseUrl) {
+          window.location.href = fullUrl.pathname + fullUrl.search + fullUrl.hash;
+          return;
+        }
+      }
+    } catch (e) {
+      // URL parsing failed, use safe default
+    }
+    window.location.href = '/';
+  };
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -81,8 +153,8 @@ const Login = () => {
     }
 
     if (test.payload?.type === Constants.LOGIN_SUCCESS) {
-      // reload the page if login is successful
-      window.location.href = '/';
+      // redirect to intended page or home if login is successful
+      safeRedirect(getRedirectUrl());
       return;
     }
 
@@ -132,8 +204,8 @@ const Login = () => {
       const res = await dispatch(loginOrRegisterAzureUser(code));
 
       if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
-        //reload page if login is successful
-        window.location.href = '/';
+        //redirect to intended page or home if login is successful
+        safeRedirect(getRedirectUrl());
         return;
       }
     } catch (err) {
