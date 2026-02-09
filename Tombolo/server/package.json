@@ -6,9 +6,11 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js",
-    "bootstrap-server": "(pnpm install) && (pnpm exec nodemon server.js)",
-    "build": "echo 'No build step for server'",
+    "dev": "tsx watch server.ts",
+    "bootstrap-server": "(pnpm install) && (pnpm exec tsx watch server.ts)",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:jobs": "vitest run --project jobs",
@@ -55,11 +57,26 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.7.5",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "catalog:",
+    "@types/nodemailer": "^6.4.19",
+    "@types/uuid": "catalog:",
+    "@types/xml2js": "^0.4.14",
     "@vitest/coverage-v8": "catalog:",
     "cross-env": "^7.0.3",
     "nodemon": "catalog:",
     "prettier": "catalog:",
     "supertest": "^7.1.4",
+    "tsup": "catalog:",
+    "tsx": "^4.20.6",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
     "vitest": "catalog:"
   }
 }
