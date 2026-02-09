@@ -42,21 +42,17 @@ const Login = () => {
   const dispatch = useDispatch();
   const location = useLocation();
 
-  // Validate URL is safe for redirect to prevent XSS
+  // Validate URL is safe for internal redirect (prevent open-redirects to other origins)
   const isValidInternalUrl = url => {
     try {
-      // Must start with / (relative path)
+      // Must be a non-empty string
+      if (typeof url !== 'string' || !url) return false;
+
+      // Must start with / (relative path on this origin)
       if (!url.startsWith('/')) return false;
 
-      // Block javascript: data: and external protocols
-      if (url.match(/^(javascript|data|vbscript|about):/i)) return false;
-
-      // Block double slashes (protocol-relative URLs)
+      // Block double slashes (protocol-relative URLs like //example.com)
       if (url.startsWith('//')) return false;
-
-      // Additional safety: block any URL with script tags or common XSS patterns
-      if (url.toLowerCase().includes('<script')) return false;
-
       return true;
     } catch {
       return false;
