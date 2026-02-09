@@ -34,8 +34,6 @@ function MonitoringTab({
 }) {
   const [dropzones, setDropzones] = useState([]);
   const [machines, setMachines] = useState([]);
-  const [_selectedDropzone, setSelectedDropzone] = useState(null);
-  const [_selectedMachine, setSelectedMachine] = useState(null);
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [selectedUserGuideName, setSelectedUserGuideName] = useState('');
 
@@ -81,16 +79,12 @@ function MonitoringTab({
   // Handle dropzone selection to populate machines - Clear dependent fields
   const handleDropzoneChange = dropzoneName => {
     const selectedDropzoneObj = dropzones.find(dz => dz.Name === dropzoneName);
-    setSelectedDropzone(selectedDropzoneObj);
 
     if (selectedDropzoneObj && selectedDropzoneObj.TpMachines && selectedDropzoneObj.TpMachines.TpMachine) {
       setMachines(selectedDropzoneObj.TpMachines.TpMachine);
     } else {
       setMachines([]);
     }
-
-    // Clear dependent fields when dropzone changes
-    setSelectedMachine(null);
 
     // Clear form values for dependent fields
     form.setFieldValue('machine', undefined);
@@ -100,7 +94,6 @@ function MonitoringTab({
   // Handle machine selection - Clear directory field
   const handleMachineChange = Netaddress => {
     const selectedMachineObj = machines.find(machine => machine.Netaddress === Netaddress);
-    setSelectedMachine(selectedMachineObj);
 
     // Clear directory field when machine changes
     form.setFieldValue('directory', undefined);
@@ -114,8 +107,6 @@ function MonitoringTab({
     // Clear all dependent fields when cluster changes
     setDropzones([]);
     setMachines([]);
-    setSelectedDropzone(null);
-    setSelectedMachine(null);
 
     // Clear form values for dependent fields
     form.setFieldValue('dropzone', undefined);
