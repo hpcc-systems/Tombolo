@@ -24,3 +24,4 @@ catalog:
   winston-daily-rotate-file: ^5.0.0
   vitest: ^3.2.4
   "@vitest/coverage-v8": ^3.2.4
+  "@types/uuid": ^8.3.4
