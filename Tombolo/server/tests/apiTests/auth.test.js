@@ -17,6 +17,8 @@ import {
   nonExistentID,
 } from '../helpers.js';
 import moment from 'moment';
+import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 
 const getUser = () => getUsers()[0];
 
@@ -245,5 +247,186 @@ describe('Auth Routes', () => {
     expect(InstanceSettings.findOne).toHaveBeenCalled();
     expect(SentNotification.findOne).toHaveBeenCalled();
     expect(NotificationQueue.create).not.toHaveBeenCalled();
+  });
+
+  describe('refresh-token endpoint', () => {
+    const user = getUser();
+    const tokenId = uuidv4();
+    const refreshTokenExp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+
+    const createValidToken = (expired = false) => {
+      const tokenData = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        tokenId,
+      };
+
+      return jwt.sign(
+        tokenData,
+        process.env.JWT_SECRET,
+        { expiresIn: expired ? '-1h' : '15m' } // Expired or valid token
+      );
+    };
+
+    const createRefreshTokenRecord = () => ({
+      id: tokenId,
+      userId: user.id,
+      token: 'mock-refresh-token',
+      deviceInfo: 'test-device',
+      iat: new Date(),
+      exp: refreshTokenExp,
+      destroy: vi.fn().mockResolvedValue(true),
+    });
+
+    it('should refresh token successfully with expired access token', async () => {
+      const expiredToken = createValidToken(true);
+      const refreshTokenRecord = createRefreshTokenRecord();
+
+      RefreshToken.findOne.mockResolvedValue(refreshTokenRecord);
+      RefreshToken.create.mockResolvedValue(true);
+      User.findOne.mockResolvedValue({
+        ...user,
+        toJSON: () => ({ ...user }),
+      });
+
+      const res = await request(app)
+        .post('/api/auth/refreshToken')
+        .set('Cookie', [`token=${expiredToken}`])
+        .send();
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Token refreshed successfully');
+
+      // Account for transformations in controller: hash removed, date serialized
+      const expectedUser = { ...user };
+      delete expectedUser.hash;
+      expectedUser.passwordExpiresAt =
+        expectedUser.passwordExpiresAt.toISOString();
+      expect(res.body.data.user).toEqual(expectedUser);
+
+      // Verify refresh token operations
+      expect(RefreshToken.findOne).toHaveBeenCalledWith({
+        where: { id: tokenId },
+      });
+      expect(RefreshToken.create).toHaveBeenCalled();
+      expect(refreshTokenRecord.destroy).toHaveBeenCalled();
+
+      // Verify new token is set in cookie
+      expect(res.headers['set-cookie']).toBeDefined();
+      expect(
+        res.headers['set-cookie'].some(cookie => cookie.includes('token='))
+      ).toBe(true);
+    });
+
+    it('should refresh token successfully with valid access token', async () => {
+      const validToken = createValidToken(false);
+      const refreshTokenRecord = createRefreshTokenRecord();
+
+      RefreshToken.findOne.mockResolvedValue(refreshTokenRecord);
+      RefreshToken.create.mockResolvedValue(true);
+      User.findOne.mockResolvedValue({
+        ...user,
+        toJSON: () => ({ ...user }),
+      });
+
+      const res = await request(app)
+        .post('/api/auth/refreshToken')
+        .set('Cookie', [`token=${validToken}`])
+        .send();
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Token refreshed successfully');
+    });
+
+    it('should return 401 when refresh token not found in database', async () => {
+      const expiredToken = createValidToken(true);
+
+      RefreshToken.findOne.mockResolvedValue(null); // No refresh token found
+
+      const res = await request(app)
+        .post('/api/auth/refreshToken')
+        .set('Cookie', [`token=${expiredToken}`])
+        .send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Session expired');
+    });
+
+    it('should return 401 when refresh token session has expired', async () => {
+      const expiredToken = createValidToken(true);
+      const expiredRefreshTokenRecord = {
+        ...createRefreshTokenRecord(),
+        exp: new Date(Date.now() - 24 * 60 * 60 * 1000), // Expired yesterday
+      };
+
+      RefreshToken.findOne.mockResolvedValue(expiredRefreshTokenRecord);
+
+      const res = await request(app)
+        .post('/api/auth/refreshToken')
+        .set('Cookie', [`token=${expiredToken}`])
+        .send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Session expired');
+      expect(expiredRefreshTokenRecord.destroy).toHaveBeenCalled();
+    });
+
+    it('should return 401 when user not found', async () => {
+      const expiredToken = createValidToken(true);
+      const refreshTokenRecord = createRefreshTokenRecord();
+
+      RefreshToken.findOne.mockResolvedValue(refreshTokenRecord);
+      User.findOne.mockResolvedValue(null); // User not found
+
+      const res = await request(app)
+        .post('/api/auth/refreshToken')
+        .set('Cookie', [`token=${expiredToken}`])
+        .send();
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('User not found');
+    });
+
+    it('should return 401 for invalid token structure', async () => {
+      const invalidToken = jwt.sign(
+        { missingTokenId: true }, // Missing required tokenId
+        process.env.JWT_SECRET,
+        { expiresIn: '-1h' }
+      );
+
+      const res = await request(app)
+        .post('/api/auth/refreshToken')
+        .set('Cookie', [`token=${invalidToken}`])
+        .send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Invalid token structure');
+    });
+
+    it('should return 401 for completely invalid token', async () => {
+      const res = await request(app)
+        .post('/api/auth/refreshToken')
+        .set('Cookie', ['token=invalid-jwt-token'])
+        .send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Invalid refresh token');
+    });
+
+    it('should return 401 when no token cookie provided', async () => {
+      const res = await request(app).post('/api/auth/refreshToken').send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
   });
 });

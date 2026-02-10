@@ -162,6 +162,32 @@ const validateAnalyticsQuery = [
   objectBody('options', true),
   intBody('options.limit', true, { min: 1, max: 5000 }),
   stringBody('options.clusterId', true),
+  // Optional scoping fields used by executeAnalyticsQuery — validate strictly
+  body('options.scopeToWuid')
+    .optional()
+    .isString()
+    .withMessage('scopeToWuid must be a string')
+    .bail()
+    .trim()
+    .isLength({ min: 1, max: 128 })
+    .withMessage('scopeToWuid must be 1-128 characters')
+    .matches(/^[A-Za-z0-9_.:-]+$/)
+    .withMessage(
+      'scopeToWuid may only contain letters, numbers, dot, underscore, colon, and hyphen'
+    ),
+
+  body('options.scopeToClusterId')
+    .optional()
+    .isString()
+    .withMessage('scopeToClusterId must be a string')
+    .bail()
+    .trim()
+    .isLength({ min: 1, max: 128 })
+    .withMessage('scopeToClusterId must be 1-128 characters')
+    .matches(/^[A-Za-z0-9_.:-]+$/)
+    .withMessage(
+      'scopeToClusterId may only contain letters, numbers, dot, underscore, colon, and hyphen'
+    ),
 ];
 
 // Validation for POST /api/analytics/analyze
