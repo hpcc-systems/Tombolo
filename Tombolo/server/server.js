@@ -13,7 +13,7 @@ process.env.TZ = 'UTC';
 
 /* LIBRARIES */
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+import { rateLimit } from 'express-rate-limit';
 import { tokenValidationMiddleware as validateToken } from './middlewares/tokenValidationMiddleware.js';
 
 import cors from 'cors';
@@ -68,7 +68,7 @@ app.set('trust proxy', 1);
 // Limit the rate of requests to 400 per 15 minutes
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: Number.isNaN(parseInt(process.env.RATE_LIMIT_REQUEST_MAX, 10))
+  limit: Number.isNaN(parseInt(process.env.RATE_LIMIT_REQUEST_MAX, 10))
     ? 400
     : parseInt(process.env.RATE_LIMIT_REQUEST_MAX, 10),
 });
