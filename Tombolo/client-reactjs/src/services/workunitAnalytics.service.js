@@ -13,7 +13,7 @@ const analyticsService = {
   executeQuery: async (sql, options = {}) => {
     const response = await apiClient.post('/workunitAnalytics/query', {
       sql,
-      ...options,
+      options,
     });
     return response.data;
   },
@@ -25,48 +25,6 @@ const analyticsService = {
   getSchema: async () => {
     const response = await apiClient.get('/workunitAnalytics/schema');
     return response.data;
-  },
-
-  /**
-   * Get saved queries for the current user
-   * @returns {Promise<Array>} Array of saved query objects
-   */
-  getSavedQueries: async () => {
-    const response = await apiClient.get('/workunitAnalytics/queries');
-    return response.data;
-  },
-
-  /**
-   * Save a new query
-   * @param {object} query - Query object
-   * @param {string} query.name - Query name
-   * @param {string} query.sql - SQL query
-   * @param {string} query.description - Optional description
-   * @returns {Promise<Object>} Saved query object
-   */
-  saveQuery: async query => {
-    const response = await apiClient.post('/workunitAnalytics/queries', query);
-    return response.data;
-  },
-
-  /**
-   * Update an existing saved query
-   * @param {number} queryId - Query ID
-   * @param {object} updates - Fields to update
-   * @returns {Promise<Object>} Updated query object
-   */
-  updateQuery: async (queryId, updates) => {
-    const response = await apiClient.put(`/workunitAnalytics/queries/${queryId}`, updates);
-    return response.data;
-  },
-
-  /**
-   * Delete a saved query
-   * @param {number} queryId - Query ID
-   * @returns {Promise<void>}
-   */
-  deleteQuery: async queryId => {
-    await apiClient.delete(`/workunitAnalytics/queries/${queryId}`);
   },
 
   /**

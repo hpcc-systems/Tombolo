@@ -1,12 +1,10 @@
 #!/bin/sh
-set -euo pipefail
+set -eu
 
-host="$1"
-port="$2"
-
-# Defaults
-: "${host:=mysql_db}"
-: "${port:=3306}"
+# Use positional args with sensible defaults to avoid unset dereferences
+# (portable POSIX sh: avoid `pipefail` and preserve `set -u` by providing defaults)
+host="${1:-mysql_db}"
+port="${2:-3306}"
 
 log() { printf '%s %s\n' "$(date --iso-8601=seconds 2>/dev/null || date)" "$*"; }
 
