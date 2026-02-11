@@ -6,39 +6,39 @@ const serverENV = path.join(process.cwd(), '.env');
 const ENVPath = fs.existsSync(rootENV) ? rootENV : serverENV;
 import dotenv from 'dotenv';
 dotenv.config({ path: ENVPath });
-import { preloadSecrets } from './config/secrets.js';
+import { preloadSecrets } from '../config/secrets.js';
 
 /* Use UTC as default timezone */
 process.env.TZ = 'UTC';
 
 /* LIBRARIES */
 import express from 'express';
-import rateLimit from 'express-rate-limit';
-import { tokenValidationMiddleware as validateToken } from './middlewares/tokenValidationMiddleware.js';
+import { rateLimit } from 'express-rate-limit';
+import { tokenValidationMiddleware as validateToken } from '../middlewares/tokenValidationMiddleware.js';
 
 import cors from 'cors';
 import compression from 'compression';
 import helmet from 'helmet';
-import { sequelize as dbConnection } from './models/index.js';
+import { sequelize as dbConnection } from '../models/index.js';
 
-import logger from './config/logger.js';
-import './utils/tokenBlackListing.js';
+import logger from '../config/logger.js';
+import '../utils/tokenBlackListing.js';
 
 import cookieParser from 'cookie-parser';
 
-import { doubleCsrfProtection } from './middlewares/csrfMiddleware.js';
+import { doubleCsrfProtection } from '../middlewares/csrfMiddleware.js';
 
-import { readSelfSignedCerts } from './utils/readSelfSignedCerts.js';
-import { sendError } from './utils/response.js';
+import { readSelfSignedCerts } from '../utils/readSelfSignedCerts.js';
+import { sendError } from '../utils/response.js';
 
 /* BREE JOB SCHEDULER */
-import JobScheduler from './jobSchedular/job-scheduler.js';
+import JobScheduler from '../jobSchedular/job-scheduler.js';
 
 readSelfSignedCerts();
 
 /* Initialize express app */
 const app = express();
-const port = process.env.SERVER_PORT || 3001;
+const port = parseInt(process.env.SERVER_PORT || '3001', 10);
 
 // Log all requests
 app.disable('etag'); // Don't send etags so that the client does not cache the response
@@ -66,13 +66,11 @@ server.on('connection', socket => {
 app.set('trust proxy', 1);
 
 // Limit the rate of requests to 400 per 15 minutes
+const rl = process.env.RATE_LIMIT_REQUEST_MAX || '400';
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: Number.isNaN(parseInt(process.env.RATE_LIMIT_REQUEST_MAX, 10))
-    ? 400
-    : parseInt(process.env.RATE_LIMIT_REQUEST_MAX, 10),
+  limit: Number.isNaN(parseInt(rl, 10)) ? 400 : parseInt(rl, 10),
 });
-
 // MIDDLEWARE -> apply to all requests
 app.use(helmet());
 app.use(cors());
@@ -81,33 +79,33 @@ app.use(limiter);
 app.use(cookieParser());
 
 /*  ROUTES */
-import bree from './routes/bree/read.js';
-import applications from './routes/applicationRoutes.js';
-import hpccRead from './routes/hpccRoutes.js';
-import jobmonitoring from './routes/jobMonitoringRoutes.js';
-import configurations from './routes/configRoutes.js';
-import integrations from './routes/integrations/read.js';
-import notification_queue from './routes/notificationQueueRoutes.js';
-import sent_notifications from './routes/sentNotificationRoutes.js';
-import monitorings from './routes/monitoringTypeRoutes.js';
-import asr from './routes/asrRoutes.js';
-import wizard from './routes/wizardRoutes.js';
+import bree from '../routes/bree/read.js';
+import applications from '../routes/applicationRoutes.js';
+import hpccRead from '../routes/hpccRoutes.js';
+import jobmonitoring from '../routes/jobMonitoringRoutes.js';
+import configurations from '../routes/configRoutes.js';
+import integrations from '../routes/integrations/read.js';
+import notification_queue from '../routes/notificationQueueRoutes.js';
+import sent_notifications from '../routes/sentNotificationRoutes.js';
+import monitorings from '../routes/monitoringTypeRoutes.js';
+import asr from '../routes/asrRoutes.js';
+import wizard from '../routes/wizardRoutes.js';
 
 //MVC & TESTED
-import auth from './routes/authRoutes.js';
-import users from './routes/userRoutes.js';
-import sessions from './routes/sessionRoutes.js';
-import cluster from './routes/clusterRoutes.js';
-import roles from './routes/roleTypesRoute.js';
-import status from './routes/statusRoutes.js';
-import instanceSettings from './routes/instanceRoutes.js';
-import costMonitoring from './routes/costMonitoringRoutes.js';
-import landingZoneMonitoring from './routes/landingZoneMonitoring.js';
-import clusterMonitoring from './routes/clusterMonitoringRoutes.js';
-import fileMonitoring from './routes/fileMonitoringRoutes.js';
-import orbitProfileMonitoring from './routes/orbitProfileMonitoringRoutes.js';
-import workunits from './routes/workunitRoutes.js';
-import workunitAnalytics from './routes/workunitAnalyticsRoutes.js';
+import auth from '../routes/authRoutes.js';
+import users from '../routes/userRoutes.js';
+import sessions from '../routes/sessionRoutes.js';
+import cluster from '../routes/clusterRoutes.js';
+import roles from '../routes/roleTypesRoute.js';
+import status from '../routes/statusRoutes.js';
+import instanceSettings from '../routes/instanceRoutes.js';
+import costMonitoring from '../routes/costMonitoringRoutes.js';
+import landingZoneMonitoring from '../routes/landingZoneMonitoring.js';
+import clusterMonitoring from '../routes/clusterMonitoringRoutes.js';
+import fileMonitoring from '../routes/fileMonitoringRoutes.js';
+import orbitProfileMonitoring from '../routes/orbitProfileMonitoringRoutes.js';
+import workunits from '../routes/workunitRoutes.js';
+import workunitAnalytics from '../routes/workunitAnalyticsRoutes.js';
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -145,20 +143,27 @@ app.use('/api/workunits', workunits);
 app.use('/api/workunitAnalytics', workunitAnalytics);
 
 // Safety net for unhandled errors
-app.use((err, req, res) => {
-  logger.error(
-    `Error caught by Express error handler on route ${req.path}`,
-    err
-  );
-  return sendError(res, 'Something went wrong', 500);
-});
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    logger.error(
+      `Error caught by Express error handler on route ${req.path}`,
+      err
+    );
+    return sendError(res, 'Something went wrong', 500);
+  }
+);
 
 // Disables SSL verification for self-signed certificates in development mode
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] =
-  process.env.NODE_ENV === 'production' ? 1 : 0;
+  process.env.NODE_ENV === 'production' ? '1' : '0';
 
 // Attach graceful shutdown handlers
-import setupGracefulShutdown from './utils/setupGracefulShutdown.js';
+import setupGracefulShutdown from '../utils/setupGracefulShutdown.js';
 setupGracefulShutdown({ server, sockets, dbConnection, JobScheduler });
 
 /* Start server */
