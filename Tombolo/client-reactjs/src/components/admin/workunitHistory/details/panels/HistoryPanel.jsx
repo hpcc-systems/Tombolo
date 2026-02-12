@@ -279,6 +279,9 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
         const change = getPercentChange(record.totalClusterTime, previous.totalClusterTime);
         const indicator = getPerformanceIndicator(change);
 
+        // If we can't compute a valid percent change (e.g., previous value is 0), show a placeholder
+        if (change == null || indicator == null) return '-';
+
         if (indicator === 'similar') {
           return (
             <Text type="secondary">
@@ -439,7 +442,9 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
                   <Col span={12}>
                     <Space>
                       <Text strong>Duration:</Text>
-                      {comparison.durationIndicator === 'better' ? (
+                      {comparison.durationChange == null || comparison.durationIndicator == null ? (
+                        <Text type="secondary">-</Text>
+                      ) : comparison.durationIndicator === 'better' ? (
                         <Text type="success">
                           <FallOutlined /> {Number(Math.abs(comparison.durationChange) ?? 0).toFixed(1)}% faster
                         </Text>
@@ -457,7 +462,9 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
                   <Col span={12}>
                     <Space>
                       <Text strong>Cost:</Text>
-                      {comparison.costIndicator === 'better' ? (
+                      {comparison.costChange == null || comparison.costIndicator == null ? (
+                        <Text type="secondary">-</Text>
+                      ) : comparison.costIndicator === 'better' ? (
                         <Text type="success">
                           <FallOutlined /> {Number(Math.abs(comparison.costChange) ?? 0).toFixed(1)}% cheaper
                         </Text>
