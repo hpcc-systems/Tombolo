@@ -42,12 +42,14 @@ import {
   KeyOutlined,
   LinkOutlined,
   MenuOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import { format } from 'sql-formatter';
 import { apiClient } from '@/services/api';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import QUERY_TEMPLATES from './queryTemplates';
+import ChartModal from './ChartModal';
 
 const { Sider, Content } = Layout;
 const { Panel } = Collapse;
@@ -73,6 +75,7 @@ const AnalyticsWorkspace = () => {
   const [executionStats, setExecutionStats] = useState(null);
   const [schemaData, setSchemaData] = useState(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(true);
+  const [chartModalVisible, setChartModalVisible] = useState(false);
 
   // Persist sidebar preferences to localStorage
   useEffect(() => {
@@ -624,6 +627,9 @@ const AnalyticsWorkspace = () => {
             <Tag color="green">{queryResults.executionTime}ms</Tag>
           </Space>
           <Space>
+            <Button icon={<LineChartOutlined />} size="small" onClick={() => setChartModalVisible(true)}>
+              Visualize
+            </Button>
             <Button icon={<DownloadOutlined />} size="small" onClick={exportToCSV}>
               Export CSV
             </Button>
@@ -846,6 +852,9 @@ const AnalyticsWorkspace = () => {
           ))}
         </Space>
       </Modal>
+
+      {/* Chart Modal */}
+      <ChartModal visible={chartModalVisible} onClose={() => setChartModalVisible(false)} data={queryResults} />
     </div>
   );
 };

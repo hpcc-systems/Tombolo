@@ -89,7 +89,6 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
         startDate,
         limit: 100,
       });
-
       setHistory(data || []);
     } catch (err) {
       console.error('Error fetching job history:', err);
@@ -103,6 +102,9 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
   useEffect(() => {
     if (wu?.jobName) {
       fetchHistory();
+    } else {
+      // No jobName available — ensure we stop showing the global loading spinner
+      setLoading(false);
     }
   }, [wu?.jobName, timeRange]);
 
@@ -244,12 +246,12 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
           <Space>
             <Text>{formatDuration(time)}</Text>
             {indicator === 'worse' && diff > 20 && (
-              <Tooltip title={`${diff.toFixed(1)}% slower than average`}>
+              <Tooltip title={`${Number(diff ?? 0).toFixed(1)}% slower than average`}>
                 <RiseOutlined style={{ color: '#ff4d4f' }} />
               </Tooltip>
             )}
             {indicator === 'better' && diff < -20 && (
-              <Tooltip title={`${Math.abs(diff).toFixed(1)}% faster than average`}>
+              <Tooltip title={`${Number(Math.abs(diff) ?? 0).toFixed(1)}% faster than average`}>
                 <FallOutlined style={{ color: '#52c41a' }} />
               </Tooltip>
             )}
@@ -277,10 +279,13 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
         const change = getPercentChange(record.totalClusterTime, previous.totalClusterTime);
         const indicator = getPerformanceIndicator(change);
 
+        // If we can't compute a valid percent change (e.g., previous value is 0), show a placeholder
+        if (change == null || indicator == null) return '-';
+
         if (indicator === 'similar') {
           return (
             <Text type="secondary">
-              <SwapOutlined /> ~{Math.abs(change).toFixed(1)}%
+              <SwapOutlined /> ~{Number(Math.abs(change) ?? 0).toFixed(1)}%
             </Text>
           );
         }
@@ -288,14 +293,14 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
         if (indicator === 'better') {
           return (
             <Text type="success">
-              <FallOutlined /> {Math.abs(change).toFixed(1)}%
+              <FallOutlined /> {Number(Math.abs(change) ?? 0).toFixed(1)}%
             </Text>
           );
         }
 
         return (
           <Text type="danger">
-            <RiseOutlined /> +{change.toFixed(1)}%
+            <RiseOutlined /> +{Number(change ?? 0).toFixed(1)}%
           </Text>
         );
       },
@@ -387,7 +392,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
   if (!wu?.jobName) {
     return (
       <Card>
-        <Empty description="No job name available for this workunit" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <Empty description="No previous runs available for this workunit" image={Empty.PRESENTED_IMAGE_SIMPLE} />
       </Card>
     );
   }
@@ -437,17 +442,19 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
                   <Col span={12}>
                     <Space>
                       <Text strong>Duration:</Text>
-                      {comparison.durationIndicator === 'better' ? (
+                      {comparison.durationChange == null || comparison.durationIndicator == null ? (
+                        <Text type="secondary">-</Text>
+                      ) : comparison.durationIndicator === 'better' ? (
                         <Text type="success">
-                          <FallOutlined /> {Math.abs(comparison.durationChange).toFixed(1)}% faster
+                          <FallOutlined /> {Number(Math.abs(comparison.durationChange) ?? 0).toFixed(1)}% faster
                         </Text>
                       ) : comparison.durationIndicator === 'worse' ? (
                         <Text type="danger">
-                          <RiseOutlined /> {comparison.durationChange.toFixed(1)}% slower
+                          <RiseOutlined /> {Number(comparison.durationChange ?? 0).toFixed(1)}% slower
                         </Text>
                       ) : (
                         <Text type="secondary">
-                          <SwapOutlined /> Similar (~{Math.abs(comparison.durationChange).toFixed(1)}%)
+                          <SwapOutlined /> Similar (~{Number(Math.abs(comparison.durationChange) ?? 0).toFixed(1)}%)
                         </Text>
                       )}
                     </Space>
@@ -455,17 +462,19 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
                   <Col span={12}>
                     <Space>
                       <Text strong>Cost:</Text>
-                      {comparison.costIndicator === 'better' ? (
+                      {comparison.costChange == null || comparison.costIndicator == null ? (
+                        <Text type="secondary">-</Text>
+                      ) : comparison.costIndicator === 'better' ? (
                         <Text type="success">
-                          <FallOutlined /> {Math.abs(comparison.costChange).toFixed(1)}% cheaper
+                          <FallOutlined /> {Number(Math.abs(comparison.costChange) ?? 0).toFixed(1)}% cheaper
                         </Text>
                       ) : comparison.costIndicator === 'worse' ? (
                         <Text type="danger">
-                          <RiseOutlined /> {comparison.costChange.toFixed(1)}% more expensive
+                          <RiseOutlined /> {Number(comparison.costChange ?? 0).toFixed(1)}% more expensive
                         </Text>
                       ) : (
                         <Text type="secondary">
-                          <SwapOutlined /> Similar (~{Math.abs(comparison.costChange).toFixed(1)}%)
+                          <SwapOutlined /> Similar (~{Number(Math.abs(comparison.costChange) ?? 0).toFixed(1)}%)
                         </Text>
                       )}
                     </Space>

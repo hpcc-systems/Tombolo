@@ -129,11 +129,15 @@ const WorkUnitDetails = () => {
   return (
     <div>
       <div className={styles.headerBar}>
-        <Space wrap>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => history.push('/workunits/history')}>
+        <Space wrap size="small">
+          <Button
+            size="small"
+            className={styles.compactBtn}
+            icon={<ArrowLeftOutlined />}
+            onClick={() => history.push('/workunits/history')}>
             Back to Workunit History
           </Button>
-          <Button icon={<ReloadOutlined />} onClick={fetchData}>
+          <Button size="small" className={styles.compactBtn} icon={<ReloadOutlined />} onClick={fetchData}>
             Refresh
           </Button>
         </Space>
