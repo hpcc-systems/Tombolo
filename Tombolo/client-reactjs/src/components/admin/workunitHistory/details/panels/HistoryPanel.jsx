@@ -251,7 +251,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
               </Tooltip>
             )}
             {indicator === 'better' && diff < -20 && (
-              <Tooltip title={`${Number(Math.abs(diff) ?? 0).toFixed(1)}% faster than average`}>
+              <Tooltip title={`${Math.abs(diff ?? 0).toFixed(1)}% faster than average`}>
                 <FallOutlined style={{ color: '#52c41a' }} />
               </Tooltip>
             )}
@@ -285,7 +285,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
         if (indicator === 'similar') {
           return (
             <Text type="secondary">
-              <SwapOutlined /> ~{Number(Math.abs(change) ?? 0).toFixed(1)}%
+              <SwapOutlined /> ~{Math.abs(change ?? 0).toFixed(1)}%
             </Text>
           );
         }
@@ -293,7 +293,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
         if (indicator === 'better') {
           return (
             <Text type="success">
-              <FallOutlined /> {Number(Math.abs(change) ?? 0).toFixed(1)}%
+              <FallOutlined /> {Math.abs(change ?? 0).toFixed(1)}%
             </Text>
           );
         }
@@ -446,7 +446,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
                         <Text type="secondary">-</Text>
                       ) : comparison.durationIndicator === 'better' ? (
                         <Text type="success">
-                          <FallOutlined /> {Number(Math.abs(comparison.durationChange) ?? 0).toFixed(1)}% faster
+                          <FallOutlined /> {Math.abs(comparison.durationChange ?? 0).toFixed(1)}% faster
                         </Text>
                       ) : comparison.durationIndicator === 'worse' ? (
                         <Text type="danger">
@@ -454,7 +454,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
                         </Text>
                       ) : (
                         <Text type="secondary">
-                          <SwapOutlined /> Similar (~{Number(Math.abs(comparison.durationChange) ?? 0).toFixed(1)}%)
+                          <SwapOutlined /> Similar (~{Math.abs(comparison.durationChange ?? 0).toFixed(1)}%)
                         </Text>
                       )}
                     </Space>
@@ -466,7 +466,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
                         <Text type="secondary">-</Text>
                       ) : comparison.costIndicator === 'better' ? (
                         <Text type="success">
-                          <FallOutlined /> {Number(Math.abs(comparison.costChange) ?? 0).toFixed(1)}% cheaper
+                          <FallOutlined /> {Math.abs(comparison.costChange ?? 0).toFixed(1)}% cheaper
                         </Text>
                       ) : comparison.costIndicator === 'worse' ? (
                         <Text type="danger">
@@ -474,7 +474,7 @@ const HistoryPanel = ({ wu, clusterId, clusterName }) => {
                         </Text>
                       ) : (
                         <Text type="secondary">
-                          <SwapOutlined /> Similar (~{Number(Math.abs(comparison.costChange) ?? 0).toFixed(1)}%)
+                          <SwapOutlined /> Similar (~{Math.abs(comparison.costChange ?? 0).toFixed(1)}%)
                         </Text>
                       )}
                     </Space>
