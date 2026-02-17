@@ -1,0 +1,84 @@
+import React, { Component } from 'react';
+import { Breadcrumb } from 'antd';
+import { withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
+
+import styles from './common.module.css';
+
+type Props = any;
+
+class BreadCrumbs extends Component<Props> {
+  render() {
+    // const { t } = this.props; // translation
+
+    const getBreadCrumbs = () => {
+      const { location, application } = this.props;
+
+      //grab the application id from redux applicationReducer
+
+      const pathSnippets = location.pathname.split('/');
+
+      //rebuild pathSnippets with label and value
+      const newPathSnippets = pathSnippets.map((item: string, index: number) => {
+        if (item === application.applicationId || item === 'admin' || index === 1)
+          return { label: 'Home', value: item };
+        return { label: item, value: item };
+      });
+
+      let count = 2;
+
+      let newBreadCrumbItems: any[] = [];
+
+      //map through path snippets and add new breadcrumb items
+      newPathSnippets.map((item: any) => {
+        //if there is no path, just return
+        if (item.value === '') return;
+
+        //define new variables
+        let newItem: any = {};
+        let href = '/' + newPathSnippets[1].value;
+
+        //add '/' and newPathSnippets[count] to href for each count less than the current count
+        for (let i = 2; i < count; i++) {
+          href += '/' + newPathSnippets[i].value;
+        }
+
+        if (item.value !== 'dashboard') {
+          newItem.key = count - 1;
+          newItem.href = href;
+          newItem.title = item.label;
+        }
+
+        //iterate count and add item to return array
+        count++;
+        if (newItem?.key) {
+          newBreadCrumbItems.push(newItem);
+        }
+      });
+
+      const alteredCrumbs = newBreadCrumbItems.map(item => {
+        return { ...item, title: item.title[0].charAt(0).toUpperCase() + item.title.slice(1) };
+      });
+
+      return alteredCrumbs;
+    };
+
+    return (
+      <div className={styles.breadcrumbContainer}>
+        <Breadcrumb items={getBreadCrumbs()} />
+        {this.props.extraContent || null}
+      </div>
+    );
+  }
+}
+
+function mapStateToProps(state: any) {
+  const application = state.application.application;
+  const dataflow = state.dataflow;
+
+  return { application, dataflow };
+}
+
+let connectedBreadCrumbs = connect(mapStateToProps)(withRouter(BreadCrumbs as any));
+
+export default connectedBreadCrumbs;
