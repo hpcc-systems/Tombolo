@@ -5,3 +5,4 @@ export * from './monitoring';
 export * from './role';
 export * from './asr';
 export * from './notification';
+export * from './integration';
