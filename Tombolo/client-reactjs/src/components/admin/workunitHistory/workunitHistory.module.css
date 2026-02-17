@@ -106,7 +106,11 @@
   border-bottom: 1px solid #f0f0f0;
 }
 .scrollAreaTall {
-  height: 520px;
+  /* Use max-height to prevent the explorer from forcing the page taller than the viewport
+     and set a slightly shorter minimum height so it doesn't extend below the screen
+     when combined with other page components. */
+  max-height: 520px;
+  min-height: 320px;
   overflow: auto;
   padding: 12px;
 }
@@ -176,6 +180,13 @@
 .menuCheckboxFull {
   width: 100%;
   padding: 6px 12px;
+}
+
+/* Compact button for tight header use (reduced padding and font-size) */
+.compactBtn {
+  padding: 4px 8px;
+  height: 28px;
+  font-size: 12px;
 }
 
 /* Fix for fixed table columns overlapping other elements (like tooltips or headers)
