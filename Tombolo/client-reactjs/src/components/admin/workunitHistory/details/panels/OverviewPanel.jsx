@@ -310,7 +310,7 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
 
       {/* Explorer and details */}
       <Row gutter={16}>
-        <Col xs={24} lg={10} xxl={8}>
+        <Col xs={24} lg={12} xxl={10}>
           <Card
             title={
               <Space>
@@ -400,7 +400,7 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
           {/*</Card>*/}
         </Col>
 
-        <Col xs={24} lg={14} xxl={16}>
+        <Col xs={24} lg={12} xxl={14}>
           <Card
             title={
               <Space>

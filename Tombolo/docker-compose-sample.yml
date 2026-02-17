@@ -1,5 +1,6 @@
 services:
   web:
+    mem_limit: 1g
     build:
       context: ..
       dockerfile: Tombolo/Dockerfile
@@ -35,6 +36,7 @@ services:
       start_period: 40s
 
   node:
+    mem_limit: 3g
     entrypoint: ["sh", "/app/docker-entry.sh", "mysql_db", "3306"]
     build:
       context: ..
@@ -58,6 +60,7 @@ services:
       - .env
     environment:
       LOG_DIR: /app/logs/db
+      NODE_OPTIONS: --max-old-space-size=2048
     logging:
       driver: "json-file" # Capture container stdout/stderr in JSON files
       options:
@@ -77,6 +80,7 @@ services:
       start_period: 60s
 
   jobs:
+    mem_limit: 4g
     build:
       context: ..
       dockerfile: Tombolo/Dockerfile
@@ -97,6 +101,7 @@ services:
     environment:
       DB_PORT: 3306 # Override for container-to-container communication
       LOG_DIR: /app/logs
+      NODE_OPTIONS: --max-old-space-size=2048
     logging:
       driver: "json-file"
       options:
@@ -118,9 +123,19 @@ services:
       start_period: 40s
 
   mysql_db:
+    mem_limit: 5g
     image: mysql:8.0
     restart: always
-    command: --innodb_use_native_aio=0 --sql_mode=""
+    command: >
+      --innodb_buffer_pool_size=2560M
+      --innodb_log_file_size=512M
+      --innodb_flush_log_at_trx_commit=2
+      --innodb_flush_method=O_DIRECT
+      --innodb_io_capacity=1000
+      --innodb_io_capacity_max=2000
+      --innodb_buffer_pool_instances=4
+      --innodb_use_native_aio=0
+      --sql_mode=""
     volumes:
       - ./mysql-data:/var/lib/mysql
       - ./dockerLogs/db:/var/log/mysql
@@ -154,6 +169,7 @@ services:
       start_period: 30s
 
   redis:
+    mem_limit: 512m
     image: redis:8.4-alpine
     restart: always
     networks:
@@ -166,14 +182,24 @@ services:
       - ./redis-data:/data
     command: >
       sh -c "
+        LIMIT_BYTES=\$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || cat /sys/fs/cgroup/memory.max 2>/dev/null || echo 536870912)
+        MAXMEM_BYTES=\$((LIMIT_BYTES - 100 * 1024 * 1024))  # subtract ~100 MiB overhead
+        MAXMEM_HUMAN=\$(awk \"BEGIN {printf \\\"%.0fmb\\\", \$MAXMEM_BYTES / 1024 / 1024}\")
+        
         if [ -n \"${REDIS_PASSWORD}\" ]; then
           if [ -n \"${REDIS_USER}\" ]; then
-            redis-server --requirepass ${REDIS_PASSWORD} --user ${REDIS_USER} on >${REDIS_PASSWORD} ~* &* +@all
+            redis-server --requirepass ${REDIS_PASSWORD} --user ${REDIS_USER} on >${REDIS_PASSWORD} ~* &* +@all \
+              --maxmemory \$MAXMEM_HUMAN \
+              --maxmemory-policy allkeys-lru
           else
-            redis-server --requirepass ${REDIS_PASSWORD}
+            redis-server --requirepass ${REDIS_PASSWORD} \
+              --maxmemory \$MAXMEM_HUMAN \
+              --maxmemory-policy allkeys-lru
           fi
         else
-          redis-server
+          redis-server \
+            --maxmemory \$MAXMEM_HUMAN \
+            --maxmemory-policy allkeys-lru
         fi
       "
     healthcheck:
