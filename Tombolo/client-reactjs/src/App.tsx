@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-import type { AppDispatch, RootState } from './redux/store/Store';
 
 //libraries and hooks
 import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
@@ -7,7 +6,6 @@ import { useAppSelector, useAppDispatch } from '@/redux/store/hooks';
 import { Layout, ConfigProvider } from 'antd';
 import { Router } from 'react-router-dom';
 import history from './components/common/History';
-import { useDispatch } from 'react-redux';
 
 // Shared layout, etc.
 import LeftNav from './components/layout/LeftNav.jsx';
