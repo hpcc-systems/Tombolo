@@ -280,10 +280,9 @@ COPY Tombolo/db/config ./Tombolo/db/config
 WORKDIR /app/Tombolo/jobs
 RUN pnpm build:prod
 
-# Create a production-ready deployment by installing with --shamefully-hoist
-# This creates a flat node_modules without symlinks, avoiding malformed package.json files
+# Use pnpm deploy to create a clean deployment structure
 WORKDIR /app
-RUN CI=true pnpm install --frozen-lockfile --prod --shamefully-hoist
+RUN pnpm --filter @tombolo/jobs deploy /deploy/jobs --prod --legacy
 
 # ===========================================
 # Jobs Worker Runtime Stage
@@ -301,17 +300,13 @@ ENV PATH=$PNPM_HOME:$PATH
 # Install PM2 globally
 RUN pnpm add -g pm2
 
-# Copy workspace metadata
-COPY --from=jobs-builder /app/package.json /app/pnpm-workspace.yaml ./
+# Copy deployed jobs from builder (includes node_modules with workspace deps resolved)
+COPY --from=jobs-builder /deploy/jobs /app
 
-# Copy all necessary packages with their built outputs and node_modules
-COPY --from=jobs-builder /app/node_modules ./node_modules
-COPY --from=jobs-builder /app/Tombolo/jobs ./Tombolo/jobs
-COPY --from=jobs-builder /app/Tombolo/shared ./Tombolo/shared
-COPY --from=jobs-builder /app/Tombolo/core ./Tombolo/core
-COPY --from=jobs-builder /app/Tombolo/db ./Tombolo/db
+# Copy the built dist folder with proper structure
+COPY --from=jobs-builder /app/Tombolo/jobs/dist ./dist
 
-WORKDIR /app/Tombolo/jobs
+WORKDIR /app
 
 # Disable source map support in production
 ENV NODE_OPTIONS="--no-enable-source-maps"
