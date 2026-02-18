@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '@/redux/store/hooks';
 import { handleError } from '@/components/common/handleResponse';
 import BreadCrumbs from '@/components/common/BreadCrumbs';
 import ClusterActionBtn from '@/components/admin/clusters/ClusterActionBtn';
@@ -13,19 +13,19 @@ import { clustersAddButtonTourShown, clustersFound } from '@/redux/slices/Applic
 
 function Clusters() {
   // States
-  const [clusters, setClusters] = useState([]); // Already saved clusters
-  const [clusterWhiteList, setClusterWhiteList] = useState([]); // Cluster white list
+  const [clusters, setClusters] = useState<any[]>([]); // Already saved clusters
+  const [clusterWhiteList, setClusterWhiteList] = useState<any[]>([]); // Cluster white list
   const [displayClusterDetailsModal, setDisplayClusterDetailsModal] = useState(false);
-  const [selectedCluster, setSelectedCluster] = useState(null);
+  const [selectedCluster, setSelectedCluster] = useState<any | null>(null);
   const [displayAddClusterModal, setDisplayAddClusterModal] = useState(false);
   const [displayEditClusterModal, setDisplayEditClusterModal] = useState(false);
-  const [tombolo_instance_name, setTombolo_instance_name] = useState(null);
+  const [tombolo_instance_name, setTombolo_instance_name] = useState<string | null>(null);
 
   //tour management
-  const noClusters = useSelector(store => store.application.noClusters);
-  const addClusterButtonRef = useRef(null);
+  const noClusters = useAppSelector(store => store.application.noClusters);
+  const addClusterButtonRef = useRef<HTMLButtonElement | null>(null);
   const [tourOpen, setTourOpen] = useState(false);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   // Effects
   useEffect(() => {
@@ -36,6 +36,7 @@ function Clusters() {
         setClusters(clusters);
       } catch (e) {
         handleError('Failed to fetch clusters');
+        console.error(e);
       }
     })();
 
@@ -46,6 +47,7 @@ function Clusters() {
         setClusterWhiteList(clusterWhiteList);
       } catch (e) {
         handleError('Failed to fetch cluster white list');
+        console.error(e);
       }
     })();
 
@@ -56,6 +58,7 @@ function Clusters() {
         setTombolo_instance_name(instanceName);
       } catch (e) {
         handleError('Failed to fetch instance name');
+        console.error(e);
       }
     })();
   }, []);
@@ -66,12 +69,12 @@ function Clusters() {
       setTourOpen(true);
       dispatch(clustersAddButtonTourShown(true));
     }
-  }, [noClusters]);
+  }, [noClusters, dispatch]);
 
   //when cluster state is adjusted, dispatch redux action to update clusters in redux
   useEffect(() => {
     dispatch(clustersFound(clusters));
-  }, [clusters]);
+  }, [clusters, dispatch]);
 
   return (
     <>

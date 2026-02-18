@@ -1,14 +1,24 @@
-// Imports from libraries
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-
-// Local imports
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { handleError } from '@/components/common/handleResponse';
 import { getUser, setUser } from '@/components/common/userStorage';
 import { Constants } from '@/components/common/Constants';
 import authService from '@/services/auth.service';
 import { resetAuthState } from '@/services/interceptors/auth.interceptor';
 
-const initialState = {
+export interface AuthState {
+  isAuthenticated: boolean;
+  token: string | null;
+  roles: any[];
+  applications: any[];
+  user: any | null;
+  firstName: string;
+  lastName: string;
+  id: string;
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: AuthState = {
   isAuthenticated: false,
   token: null,
   roles: [],
@@ -21,67 +31,49 @@ const initialState = {
   error: null,
 };
 
-// Function to clear only auth-related storage
 const clearStorage = () => {
   localStorage.removeItem('user');
 };
 
-// Async thunks
-export const login = createAsyncThunk('auth/login', async ({ email, password, deviceInfo }, { rejectWithValue }) => {
-  clearStorage();
+export const login = createAsyncThunk(
+  'auth/login',
+  async ({ email, password, deviceInfo }: any, { rejectWithValue }) => {
+    clearStorage();
 
-  try {
-    const response = await authService.loginBasicUser(email, password, deviceInfo);
+    try {
+      const response = await authService.loginBasicUser(email, password, deviceInfo);
+      resetAuthState();
 
-    // Login success - reset auth interceptor state
-    resetAuthState();
+      const userData = response.data || response;
+      userData.isAuthenticated = true;
+      setUser(JSON.stringify(userData));
+      return {
+        type: Constants.LOGIN_SUCCESS,
+        user: userData,
+      };
+    } catch (err: any) {
+      const errMessage =
+        Array.isArray(err?.messages) && err.messages.length > 0 ? err.messages[0] : err?.message || 'Unknown error';
 
-    const userData = response.data || response;
-    userData.isAuthenticated = true;
-    setUser(JSON.stringify(userData));
-    return {
-      type: Constants.LOGIN_SUCCESS,
-      user: userData,
-    };
-  } catch (err) {
-    // Extract error message
-    const errMessage =
-      Array.isArray(err?.messages) && err.messages.length > 0 ? err.messages[0] : err?.message || 'Unknown error';
-
-    // Handle specific authentication states without displaying error toast
-    // The login component will handle displaying appropriate messages
-    if (errMessage === Constants.LOGIN_TEMP_PW) {
-      return rejectWithValue({
-        type: Constants.LOGIN_TEMP_PW,
-        message: errMessage,
-      });
-    } else if (errMessage === Constants.LOGIN_UNVERIFIED) {
-      return rejectWithValue({
-        type: Constants.LOGIN_UNVERIFIED,
-        message: errMessage,
-      });
-    } else if (errMessage === Constants.LOGIN_FAILED) {
-      return rejectWithValue({
-        type: Constants.LOGIN_FAILED,
-        message: errMessage,
-      });
-    } else {
-      // Handle any other unexpected errors - show error toast for these
-      handleError(err.messages);
-      return rejectWithValue({
-        type: Constants.LOGIN_FAILED,
-        message: errMessage,
-      });
+      if (errMessage === Constants.LOGIN_TEMP_PW) {
+        return rejectWithValue({ type: Constants.LOGIN_TEMP_PW, message: errMessage });
+      } else if (errMessage === Constants.LOGIN_UNVERIFIED) {
+        return rejectWithValue({ type: Constants.LOGIN_UNVERIFIED, message: errMessage });
+      } else if (errMessage === Constants.LOGIN_FAILED) {
+        return rejectWithValue({ type: Constants.LOGIN_FAILED, message: errMessage });
+      } else {
+        handleError(err.messages);
+        return rejectWithValue({ type: Constants.LOGIN_FAILED, message: errMessage });
+      }
     }
   }
-});
+);
 
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
     await authService.logoutBasicUser();
   } catch {
-    // Even if logout API fails, we still want to clear local storage
-    // Error logged by interceptor
+    // ignore
   }
 
   clearStorage();
@@ -93,7 +85,7 @@ export const loadUserFromStorage = createAsyncThunk('auth/loadUserFromStorage', 
   return user || null;
 });
 
-export const registerBasicUser = createAsyncThunk('auth/registerBasicUser', async values => {
+export const registerBasicUser = createAsyncThunk('auth/registerBasicUser', async (values: any) => {
   try {
     const data = await authService.registerBasicUser(values);
     return data;
@@ -103,11 +95,11 @@ export const registerBasicUser = createAsyncThunk('auth/registerBasicUser', asyn
   }
 });
 
-export const registerOwner = createAsyncThunk('auth/registerOwner', async values => {
+export const registerOwner = createAsyncThunk('auth/registerOwner', async (values: any) => {
   try {
     const data = await authService.registerApplicationOwner(values);
     return data;
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       handleError(error.response);
     }
@@ -117,7 +109,7 @@ export const registerOwner = createAsyncThunk('auth/registerOwner', async values
 
 export const loginOrRegisterAzureUser = createAsyncThunk(
   'auth/loginOrRegisterAzureUser',
-  async (code, { rejectWithValue }) => {
+  async (code: any, { rejectWithValue }) => {
     clearStorage();
 
     try {
@@ -131,13 +123,9 @@ export const loginOrRegisterAzureUser = createAsyncThunk(
           user: response.data,
         };
       } else {
-        return rejectWithValue({
-          status: null,
-          message: response.message || 'Azure login failed',
-        });
+        return rejectWithValue({ status: null, message: (response as any)?.message || 'Azure login failed' });
       }
-    } catch (error) {
-      // Handle axios errors
+    } catch (error: any) {
       if (error.response) {
         const { status, data } = error.response;
 
@@ -147,23 +135,15 @@ export const loginOrRegisterAzureUser = createAsyncThunk(
           handleError(error);
         }
 
-        return rejectWithValue({
-          status: status,
-          message: data.message || 'Azure login failed',
-        });
+        return rejectWithValue({ status: status, message: data.message || 'Azure login failed' });
       }
       handleError(error.messages || error);
 
-      // Handle network errors or other unexpected issues
-      return rejectWithValue({
-        status: null,
-        message: error.message || 'Network error during Azure login',
-      });
+      return rejectWithValue({ status: null, message: error.message || 'Network error during Azure login' });
     }
   }
 );
 
-// Sync action for Azure login redirect
 export const azureLoginRedirect = () => {
   try {
     const response_type = 'code';
@@ -171,11 +151,10 @@ export const azureLoginRedirect = () => {
     const redirect_uri = import.meta.env.VITE_AZURE_REDIRECT_URI;
     const scope = 'openid';
     const client_id = import.meta.env.VITE_AZURE_CLIENT_ID;
-    const tenant_id = import.meta.env.VITE_AZURE_TENENT_ID;
+    const tenant_id = import.meta.env.VITE_AZURE_TEENT_ID as string | undefined;
 
     window.location.href = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
   } catch {
-    // Error logged by global error handler
     handleError('An error occurred while trying to login with Microsoft.');
   }
 };
@@ -184,7 +163,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    loginSuccess: (state, action) => {
+    loginSuccess(state, action: PayloadAction<any>) {
       state.isAuthenticated = true;
       state.token = action.payload.token;
       state.roles = action.payload.roles;
@@ -196,7 +175,7 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    loginFailed: state => {
+    loginFailed(state) {
       state.isAuthenticated = false;
       state.token = null;
       state.roles = [];
@@ -207,7 +186,7 @@ const authSlice = createSlice({
       state.id = '';
       state.loading = false;
     },
-    logoutSuccess: state => {
+    logoutSuccess(state) {
       state.isAuthenticated = false;
       state.token = null;
       state.roles = [];
@@ -219,7 +198,7 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    logoutFailed: (state, action) => {
+    logoutFailed(state, action: PayloadAction<any>) {
       state.isAuthenticated = true;
       state.token = action.payload.token;
       state.roles = action.payload.roles;
@@ -229,13 +208,12 @@ const authSlice = createSlice({
       state.lastName = action.payload.lastName;
       state.id = action.payload.id;
     },
-    clearError: state => {
+    clearError(state) {
       state.error = null;
     },
   },
   extraReducers: builder => {
     builder
-      // login
       .addCase(login.pending, state => {
         state.loading = true;
         state.error = null;
@@ -253,7 +231,6 @@ const authSlice = createSlice({
           state.id = user.id;
           state.user = user;
         } else if (action.payload.type === Constants.LOGIN_FAILED) {
-          // Ensure UI sees a non-loading state and an error message
           state.isAuthenticated = false;
           state.token = null;
           state.roles = [];
@@ -262,14 +239,12 @@ const authSlice = createSlice({
           state.firstName = '';
           state.lastName = '';
           state.id = '';
-          state.error = action.payload.error || 'Login failed';
+          state.error = (action.payload as any)?.error || (action.payload as any)?.message || 'Login failed';
         }
-        // For temp-pw, password-expired, unverified cases,
-        // the component will handle based on the returned payload
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || String(action.payload);
         state.isAuthenticated = false;
         state.token = null;
         state.roles = [];
@@ -280,7 +255,6 @@ const authSlice = createSlice({
         state.id = '';
       })
 
-      // logout
       .addCase(logout.pending, state => {
         state.loading = true;
       })
@@ -298,8 +272,7 @@ const authSlice = createSlice({
       })
       .addCase(logout.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
-        // Still clear auth state even if API call failed
+        state.error = action.error.message || String(action.payload);
         state.isAuthenticated = false;
         state.token = null;
         state.roles = [];
@@ -310,7 +283,6 @@ const authSlice = createSlice({
         state.id = '';
       })
 
-      // loadUserFromStorage
       .addCase(loadUserFromStorage.fulfilled, (state, action) => {
         if (action.payload) {
           const user = action.payload;
@@ -325,7 +297,6 @@ const authSlice = createSlice({
         }
       })
 
-      // registerBasicUser
       .addCase(registerBasicUser.pending, state => {
         state.loading = true;
         state.error = null;
@@ -335,10 +306,9 @@ const authSlice = createSlice({
       })
       .addCase(registerBasicUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || String(action.payload);
       })
 
-      // registerOwner
       .addCase(registerOwner.pending, state => {
         state.loading = true;
         state.error = null;
@@ -348,10 +318,9 @@ const authSlice = createSlice({
       })
       .addCase(registerOwner.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || String(action.payload);
       })
 
-      // loginOrRegisterAzureUser
       .addCase(loginOrRegisterAzureUser.pending, state => {
         state.loading = true;
         state.error = null;
@@ -372,7 +341,7 @@ const authSlice = createSlice({
       })
       .addCase(loginOrRegisterAzureUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = (action.payload as any)?.message || action.error.message || String(action.payload);
         state.isAuthenticated = false;
         state.token = null;
         state.roles = [];
@@ -387,22 +356,18 @@ const authSlice = createSlice({
 
 export const { loginSuccess, loginFailed, logoutSuccess, logoutFailed, clearError } = authSlice.actions;
 
-// Export combined actions object (maintains compatibility with existing code)
 export const authActions = {
-  // Sync actions
   loginSuccess,
   loginFailed,
   logoutSuccess,
   logoutFailed,
   clearError,
-  // Async actions
   login,
   logout,
   loadUserFromStorage,
   registerBasicUser,
   registerOwner,
   loginOrRegisterAzureUser,
-  // Sync utility
   azureLoginRedirect,
 };
 

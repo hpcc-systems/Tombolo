@@ -1,6 +1,9 @@
+import type { FC } from 'react';
+import type { AppDispatch, RootState } from './redux/store/Store';
+
 //libraries and hooks
 import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '@/redux/store/hooks';
 import { Layout, ConfigProvider } from 'antd';
 import { Router } from 'react-router-dom';
 import history from './components/common/History';
@@ -35,12 +38,12 @@ import Wizard from './components/InitialExperience/Wizard.jsx';
 
 const { Content } = Layout;
 
-const App = () => {
+const App: FC = () => {
   //left nav collapsed state
   const [collapsed, setCollapsed] = useState(localStorage.getItem('collapsed') === 'true');
 
-  //redux dispatch
-  const dispatch = useDispatch();
+  //redux dispatch using typed hooks
+  const dispatch = useAppDispatch();
 
   // Sync Redux auth state with local storage on app mount
   useEffect(() => {
@@ -48,22 +51,23 @@ const App = () => {
   }, [dispatch]);
 
   //login page states
-  const [user, setUser] = useState(getUser());
+  const [user, setUser] = useState<any>(getUser());
 
   //loading message states
   const [message, setMessage] = useState('');
 
   //tour refs
-  const appLinkRef = useRef(null);
-  const clusterLinkRef = useRef(null);
+  const appLinkRef = useRef<any>(null);
+  const clusterLinkRef = useRef<any>(null);
 
   // get redux states (select only needed properties)
-  const application = useSelector(state => state.application.application);
-  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
-  const isConnected = useSelector(state => state.backend.isConnected);
-  const statusRetrieved = useSelector(state => state.backend.statusRetrieved);
-  const ownerExists = useSelector(state => state.backend.ownerExists);
-  const ownerRetrieved = useSelector(state => state.backend.ownerRetrieved);
+  const application = useAppSelector(state => state.application.application);
+  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
+  const authenticationReducer = useAppSelector(state => state.auth);
+  const isConnected = useAppSelector(state => state.backend.isConnected);
+  const statusRetrieved = useAppSelector(state => state.backend.statusRetrieved);
+  const ownerExists = useAppSelector(state => state.backend.ownerExists);
+  const ownerRetrieved = useAppSelector(state => state.backend.ownerRetrieved);
 
   //retrieve backend status on load to display message to user or application
   useEffect(() => {
@@ -100,9 +104,9 @@ const App = () => {
   }, [ownerExists, user?.isAuthenticated]);
 
   //left nav collapse method
-  const onCollapse = collapsed => {
-    setCollapsed(collapsed);
-    localStorage.setItem('collapsed', collapsed);
+  const onCollapse = (c: boolean) => {
+    setCollapsed(c);
+    localStorage.setItem('collapsed', String(c));
   };
 
   const roleArray = useMemo(() => getRoleNameArray(), []);
@@ -152,7 +156,7 @@ const App = () => {
                               {!userHasRoleandApplication && !isOwnerOrAdmin ? (
                                 <NoAccessRoutes />
                               ) : (
-                                <AppRoutes application={application} isAuthenticated={isAuthenticated} />
+                                <AppRoutes application={application} authenticationReducer={authenticationReducer} />
                               )}
 
                               {isOwnerOrAdmin && <AdminRoutes />}
@@ -174,4 +178,4 @@ const App = () => {
 
 export default App;
 
-<>{/* Main Application, Only enters if user is authenticated and backend is connected */}</>;
+// Main Application, Only enters if user is authenticated and backend is connected

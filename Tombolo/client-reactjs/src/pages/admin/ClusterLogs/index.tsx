@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
+import { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Table, Card, Tag, Button, Tooltip, Select, DatePicker, Input, Modal, message } from 'antd';
 import { ReloadOutlined, SearchOutlined, CopyOutlined } from '@ant-design/icons';
@@ -8,29 +9,46 @@ import clustersService from '@/services/clusters.service';
 import moment from 'moment';
 import styles from './ClusterLogs.module.css';
 
-function ClusterLogs() {
+interface ServerFilters {
+  class: string[];
+  audience?: string | undefined;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+interface ClientFilters {
+  search: string;
+  component: string;
+}
+
+interface LogDetailsModal {
+  visible: boolean;
+  data: any | null;
+}
+
+function ClusterLogs(): ReactElement {
   const history = useHistory();
   const location = useLocation();
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [clusterID, setClusterID] = useState(null);
-  const [wuid, setWuid] = useState(null);
-  const [logs, setLogs] = useState([]);
-  const [clusterInfo, setClusterInfo] = useState(null);
-  const [logAccessInfo, setLogAccessInfo] = useState(null);
-  const [serverFilters, setServerFilters] = useState({
+  const [loading, setLoading] = useState<boolean>(false);
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
+  const [clusterID, setClusterID] = useState<string | null>(null);
+  const [wuid, setWuid] = useState<string | null>(null);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [clusterInfo, setClusterInfo] = useState<any | null>(null);
+  const [logAccessInfo, setLogAccessInfo] = useState<any | null>(null);
+  const [serverFilters, setServerFilters] = useState<ServerFilters>({
     class: [],
     audience: undefined,
     startDate: null,
     endDate: null,
   });
-  const [clientFilters, setClientFilters] = useState({
+  const [clientFilters, setClientFilters] = useState<ClientFilters>({
     search: '',
     component: '',
   });
-  const [lastFetched, setLastFetched] = useState(null);
+  const [lastFetched, setLastFetched] = useState<Date | null>(null);
   const [, forceUpdate] = useState(0);
-  const [logDetailsModal, setLogDetailsModal] = useState({ visible: false, data: null });
+  const [logDetailsModal, setLogDetailsModal] = useState<LogDetailsModal>({ visible: false, data: null });
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -46,7 +64,7 @@ function ClusterLogs() {
     setClusterID(clusterId);
     setWuid(workunitId);
     if (clusterName) {
-      setClusterInfo(prev => ({ ...prev, name: decodeURIComponent(clusterName) }));
+      setClusterInfo((prev: any) => ({ ...(prev || {}), name: decodeURIComponent(clusterName) }));
     }
     fetchLogAccessInfo(clusterId);
     fetchLogs(clusterId, {}, workunitId);
@@ -56,12 +74,12 @@ function ClusterLogs() {
   useEffect(() => {
     const interval = setInterval(() => {
       forceUpdate(prev => prev + 1);
-    }, 60000); // Update every minute
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const fetchLogAccessInfo = async clusterId => {
+  const fetchLogAccessInfo = async (clusterId: string) => {
     try {
       const result = await clustersService.getClusterLogs(clusterId, { accessInfoOnly: true });
       setLogAccessInfo(result.logAccessInfo);
@@ -70,7 +88,11 @@ function ClusterLogs() {
     }
   };
 
-  const fetchLogs = async (clusterId, filterParams = {}, workunitId = null) => {
+  const fetchLogs = async (
+    clusterId: string,
+    filterParams: Partial<ServerFilters> = {},
+    workunitId: string | null = null
+  ) => {
     setLoading(true);
     try {
       const params = {
@@ -83,7 +105,7 @@ function ClusterLogs() {
 
       const result = await clustersService.getClusterLogs(clusterId, params);
       setLogs(result.lines || []);
-      setClusterInfo(prev => ({ ...prev, ...result.cluster }));
+      setClusterInfo((prev: any) => ({ ...(prev || {}), ...result.cluster }));
       setLastFetched(new Date());
     } catch (error) {
       console.error('Error fetching logs:', error);
@@ -99,22 +121,22 @@ function ClusterLogs() {
     }
   };
 
-  const handleServerFilterChange = (key, value) => {
-    const newFilters = { ...serverFilters, [key]: value };
+  const handleServerFilterChange = (key: keyof ServerFilters, value: any) => {
+    const newFilters = { ...serverFilters, [key]: value } as ServerFilters;
     setServerFilters(newFilters);
     if (clusterID) {
       fetchLogs(clusterID, newFilters, wuid);
     }
   };
 
-  const handleClientFilterChange = (key, value) => {
+  const handleClientFilterChange = (key: keyof ClientFilters, value: any) => {
     setClientFilters(prev => ({ ...prev, [key]: value }));
   };
 
   // Extract filter options from logAccessInfo
-  const getFilterOptions = columnName => {
-    if (!logAccessInfo?.Columns?.Column) return [];
-    const column = logAccessInfo.Columns.Column.find(col => col.Name === columnName);
+  const getFilterOptions = (columnName: string) => {
+    if (!logAccessInfo?.Columns?.Column) return [] as string[];
+    const column = logAccessInfo.Columns.Column.find((col: any) => col.Name === columnName);
     return column?.EnumeratedValues?.Item || [];
   };
 
@@ -129,7 +151,9 @@ function ClusterLogs() {
     const searchMatch =
       !clientFilters.search ||
       ['message', 'components', 'pod'].some(field =>
-        log[field]?.toLowerCase().includes(clientFilters.search.toLowerCase())
+        String(log[field] || '')
+          .toLowerCase()
+          .includes(clientFilters.search.toLowerCase())
       );
     const componentMatch = !clientFilters.component || log.components === clientFilters.component;
     return searchMatch && componentMatch;
@@ -146,7 +170,7 @@ function ClusterLogs() {
     if (loading) return 'Refreshing logs...';
     if (!lastFetched) return 'No data';
 
-    const minutesAgo = Math.floor((new Date() - lastFetched) / 60000);
+    const minutesAgo = Math.floor((new Date().getTime() - lastFetched.getTime()) / 60000);
     if (minutesAgo < 1) return 'Logs fetched just now';
     if (minutesAgo === 1) return 'Logs fetched 1 min ago';
     return `Logs fetched ${minutesAgo} mins ago`;
@@ -157,16 +181,16 @@ function ClusterLogs() {
       title: 'Timestamp',
       dataIndex: 'timestamp',
       key: 'timestamp',
-      render: text => moment(text).format('MM-DD HH:mm:ss'),
+      render: (text: any) => moment(text).format('MM-DD HH:mm:ss'),
       width: 120,
-      fixed: 'left',
+      fixed: 'left' as const,
     },
     {
       title: 'Log ID',
       dataIndex: 'logid',
       key: 'logid',
       width: 100,
-      render: (text, record) => (
+      render: (text: any, record: any) => (
         <span className={styles.logLink} onClick={() => setLogDetailsModal({ visible: true, data: record })}>
           {text}
         </span>
@@ -177,17 +201,19 @@ function ClusterLogs() {
       dataIndex: 'class',
       key: 'class',
       width: 60,
-      render: text => {
+      render: (text: string) => {
         const color =
-          {
-            ERR: 'red',
-            WRN: 'orange',
-            INF: 'green',
-            PRO: 'blue',
-            DIS: 'gray',
-            MET: 'purple',
-            EVT: 'cyan',
-          }[text] || 'default';
+          (
+            {
+              ERR: 'red',
+              WRN: 'orange',
+              INF: 'green',
+              PRO: 'blue',
+              DIS: 'gray',
+              MET: 'purple',
+              EVT: 'cyan',
+            } as Record<string, string>
+          )[text] || 'default';
         return <Tag color={color}>{text}</Tag>;
       },
     },
@@ -196,7 +222,7 @@ function ClusterLogs() {
       dataIndex: 'audience',
       key: 'audience',
       width: 80,
-      render: text => <Tag color="orange">{text}</Tag>,
+      render: (text: any) => <Tag color="orange">{text}</Tag>,
     },
     {
       title: 'Component',
@@ -206,7 +232,7 @@ function ClusterLogs() {
       ellipsis: {
         showTitle: false,
       },
-      render: text => (
+      render: (text: any) => (
         <Tooltip title={text}>
           <Tag color="blue">{text}</Tag>
         </Tooltip>
@@ -220,7 +246,7 @@ function ClusterLogs() {
       ellipsis: {
         showTitle: false,
       },
-      render: text => <Tooltip title={text}>{text}</Tooltip>,
+      render: (text: any) => <Tooltip title={text}>{text}</Tooltip>,
     },
     {
       title: 'Message',
@@ -229,7 +255,7 @@ function ClusterLogs() {
       ellipsis: {
         showTitle: false,
       },
-      render: text => <Tooltip title={text}>{text}</Tooltip>,
+      render: (text: any) => <Tooltip title={text}>{text}</Tooltip>,
     },
     {
       title: 'Pod',
@@ -239,7 +265,7 @@ function ClusterLogs() {
       ellipsis: {
         showTitle: false,
       },
-      render: text => <Tooltip title={text}>{text}</Tooltip>,
+      render: (text: any) => <Tooltip title={text}>{text}</Tooltip>,
     },
   ];
 
@@ -264,7 +290,7 @@ function ClusterLogs() {
                 allowClear
                 value={serverFilters.class}
                 onChange={value => handleServerFilterChange('class', value)}
-                options={getFilterOptions('hpcc_log_class').map(item => ({ label: item, value: item }))}
+                options={getFilterOptions('hpcc_log_class').map((item: any) => ({ label: item, value: item }))}
               />
             </div>
             <div className={styles.filterGroup}>
@@ -275,7 +301,7 @@ function ClusterLogs() {
                 allowClear
                 value={serverFilters.audience}
                 onChange={value => handleServerFilterChange('audience', value)}
-                options={getFilterOptions('hpcc_log_audience').map(item => ({ label: item, value: item }))}
+                options={getFilterOptions('hpcc_log_audience').map((item: any) => ({ label: item, value: item }))}
               />
             </div>
             <div className={styles.filterGroupWide}>
@@ -283,10 +309,10 @@ function ClusterLogs() {
               <DatePicker.RangePicker
                 className={styles.filterInput}
                 format="YYYY-MM-DD"
-                disabledDate={current => current && current > moment().endOf('day')}
+                disabledDate={(current: any) => (current && (current as any) > moment().endOf('day')) as boolean}
                 value={
                   serverFilters.startDate && serverFilters.endDate
-                    ? [moment(serverFilters.startDate), moment(serverFilters.endDate)]
+                    ? ([moment(serverFilters.startDate), moment(serverFilters.endDate)] as any)
                     : null
                 }
                 onChange={dates => {
@@ -333,7 +359,7 @@ function ClusterLogs() {
           columns={columns}
           dataSource={filteredLogs}
           loading={loading}
-          rowKey={record => `${record.logid}-${record.timestamp}`}
+          rowKey={(record: any) => `${record.logid}-${record.timestamp}`}
           scroll={{ x: 1200, y: 600 }}
           size="small"
           pagination={{
@@ -386,10 +412,10 @@ function ClusterLogs() {
                 glyphMargin: false,
                 lineDecorationsWidth: 0,
                 lineNumbersMinChars: 0,
-                padding: { top: 16, right: 16, bottom: 16, left: 16 },
+                padding: { top: 16, bottom: 16 },
                 selectOnLineNumbers: false,
                 selectionHighlight: false,
-                occurrencesHighlight: false,
+                occurrencesHighlight: 'off',
                 renderLineHighlight: 'none',
                 hideCursorInOverviewRuler: true,
                 domReadOnly: true,

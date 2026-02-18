@@ -3,9 +3,6 @@ import applicationReducer from '../slices/ApplicationSlice';
 import assetReducer from '../slices/AssetSlice';
 import authReducer from '../slices/AuthSlice';
 import backendReducer from '../slices/BackendSlice';
-import dataflowReducer from '../slices/DataflowSlice';
-// import groupsReducer from '../slices/GroupSlice';
-// import propagationReducer from '../slices/PropagationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -13,16 +10,17 @@ export const store = configureStore({
     asset: assetReducer,
     auth: authReducer,
     backend: backendReducer,
-    dataflow: dataflowReducer,
-    // groups: groupsReducer,
-    // propagation: propagationReducer,
   },
-  middleware: (getDefaultMiddleware) =>
+  middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
-      // You can customize middleware here if needed
       serializableCheck: {
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
       },
     }),
   devTools: process.env.NODE_ENV !== 'production',
 });
+
+export type AppDispatch = typeof store.dispatch;
+export type RootState = ReturnType<typeof store.getState>;
+
+export default store;

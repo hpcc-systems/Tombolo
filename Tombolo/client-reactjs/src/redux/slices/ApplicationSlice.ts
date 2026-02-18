@@ -3,7 +3,24 @@ import integrationsService from '@/services/integrations.service.js';
 import applicationsService from '@/services/applications.service';
 import clustersService from '@/services/clusters.service';
 
-const initialState = {
+export interface NoItemState {
+  firstTourShown: boolean;
+  addButtonTourShown: boolean;
+  noApplication?: boolean;
+  noClusters?: boolean;
+}
+
+export interface ApplicationState {
+  application: any;
+  applications: any[];
+  applicationsRetrieved: boolean;
+  noApplication: NoItemState;
+  noClusters: NoItemState;
+  clusters: any[];
+  integrations: any[];
+}
+
+const initialState: ApplicationState = {
   application: {},
   applications: [],
   applicationsRetrieved: false,
@@ -14,10 +31,9 @@ const initialState = {
 };
 
 // Async thunks
-export const getClusters = createAsyncThunk('application/getClusters', async (_, { dispatch }) => {
+export const getClusters = createAsyncThunk('application/getClusters', async (_: void, { dispatch }) => {
   const clusters = await clustersService.getAll();
 
-  // If there are no clusters, set this to null for later checks
   if (clusters.length === 0) {
     dispatch(noClustersFound(true));
     return null;
@@ -26,7 +42,7 @@ export const getClusters = createAsyncThunk('application/getClusters', async (_,
   return clusters;
 });
 
-export const getApplications = createAsyncThunk('application/getApplications', async (_, { dispatch }) => {
+export const getApplications = createAsyncThunk('application/getApplications', async (_: void, { dispatch }) => {
   const applications = await applicationsService.getAll();
 
   if (!applications || applications.length === 0) {
@@ -41,10 +57,10 @@ export const getApplications = createAsyncThunk('application/getApplications', a
 export const getAllActiveIntegrations = createAsyncThunk('application/getAllActiveIntegrations', async () => {
   const data = await integrationsService.getAllActive();
 
-  const integrations = [];
+  const integrations: any[] = [];
 
   if (data.length > 0) {
-    data.forEach((d) => {
+    data.forEach((d: any) => {
       integrations.push({
         name: d.integration.name,
         integration_id: d.integration_id,
@@ -96,9 +112,8 @@ const applicationSlice = createSlice({
       state.integrations = action.payload;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
-      // getClusters
       .addCase(getClusters.fulfilled, (state, action) => {
         if (action.payload) {
           state.clusters = action.payload;
@@ -107,8 +122,6 @@ const applicationSlice = createSlice({
       .addCase(getClusters.rejected, (_state, _action) => {
         // Error handled by global error interceptor
       })
-
-      // getApplications
       .addCase(getApplications.fulfilled, (state, action) => {
         state.applications = action.payload;
         state.applicationsRetrieved = true;
@@ -116,10 +129,8 @@ const applicationSlice = createSlice({
       .addCase(getApplications.rejected, (state, _action) => {
         state.noApplication.noApplication = true;
         state.applications = [];
-        state.application = { applicationId: null, applicationTitle: null };
+        state.application = { applicationId: null, applicationTitle: null } as any;
       })
-
-      // getAllActiveIntegrations
       .addCase(getAllActiveIntegrations.fulfilled, (state, action) => {
         state.integrations = action.payload;
       })
@@ -143,9 +154,7 @@ export const {
   updateIntegrations,
 } = applicationSlice.actions;
 
-// Export combined actions object (maintains compatibility with existing code)
 export const applicationActions = {
-  // Sync actions
   applicationSelected,
   applicationsRetrieved,
   noApplicationFound,
@@ -157,11 +166,9 @@ export const applicationActions = {
   clustersFound,
   integrationsRetrieved,
   updateIntegrations,
-  // Async actions
   getClusters,
   getApplications,
   getAllActiveIntegrations,
-  // Aliases for backward compatibility
   updateApplicationAddButtonTourShown: applicationAddButtonTourShown,
   updateApplicationLeftTourShown: applicationLeftTourShown,
   updateNoApplicationFound: noApplicationFound,

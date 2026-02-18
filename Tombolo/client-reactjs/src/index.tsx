@@ -14,8 +14,8 @@ import * as monaco from 'monaco-editor';
 
 loader.config({ monaco });
 
-const container = document.getElementById('root');
-const root = createRoot(container);
+const container = document.getElementById('root') as HTMLElement | null;
+const root = createRoot(container as HTMLElement);
 
 root.render(
   <Provider store={store}>

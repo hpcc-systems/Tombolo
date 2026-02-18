@@ -6,26 +6,24 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
-export default function config({ mode }) {
+export default function config({ mode }: { mode: string }) {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
 
   const isDev = mode === 'development';
 
   return defineConfig({
     root: './',
-    base: '/', // Use absolute paths for assets to work on all routes
+    base: '/',
     plugins: [
       react(),
       eslint({
         lintInWorker: true, // Non-blocking (recommended)
-        formatter: 'stylish', // or 'codeframe', 'visualstudio', etc.
+        formatter: 'stylish',
         overrideConfigFile: './eslint.config.mjs',
-        // Optional: only lint on save/start
-        // lintOnStart: true,
       }),
     ].filter(Boolean),
     worker: {
-      format: 'es', // Use ESM workers for monaco
+      format: 'es',
     },
     optimizeDeps: {
       include: [
@@ -46,34 +44,29 @@ export default function config({ mode }) {
       },
     },
     server: {
-      port: 3000, // Match CRA's default port
-      open: true, // Auto-open browser like CRA
+      port: 3000,
+      open: true,
       proxy: {
         '/api': {
-          target: process.env.VITE_PROXY_URL, // Use process.env for Node.js context
-          changeOrigin: true, // Adjusts the Host header to match the target
-          secure: false, // Disable SSL verification if needed (e.g., for self-signed certs)
+          target: process.env.VITE_PROXY_URL,
+          changeOrigin: true,
+          secure: false,
         },
       },
-      // Can be used to configure a custom proxy
-      // configureServer(server) {
-      //   handleProxy(server.middlewares, process.env.VITE_PROXY_URL);
-      // },
     },
     resolve: {
-      extensions: ['.js', '.jsx', '.css', '.module.css'],
+      extensions: ['.js', '.jsx', '.css', '.module.css', '.ts', '.tsx'],
       alias: {
-        '@': path.resolve(__dirname, './src'), // Optional: for absolute imports (e.g., '@/components')
-        '~': path.resolve(__dirname, '../../node_modules'), // Alias for node_modules (monorepo root)
+        '@': path.resolve(__dirname, './src'),
+        '~': path.resolve(__dirname, '../../node_modules'),
       },
     },
-    // Test configuration moved to vitest.config.js
     build: {
       outDir: 'build',
-      sourcemap: isDev, // Enable sourcemaps in development
+      sourcemap: isDev,
       rollupOptions: {
         output: {
-          chunkFileNames: 'static/js/[name].chunk.js', // makes Dockerfile glob match
+          chunkFileNames: 'static/js/[name].chunk.js',
           manualChunks: {
             monaco: ['monaco-editor'],
           },
