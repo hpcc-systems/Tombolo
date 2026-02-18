@@ -49,6 +49,7 @@
       "cache": false
     },
     "esm:build": {
+      "dependsOn": ["^esm:build"],
       "cache": true,
       "outputs": ["dist/**"]
     },

@@ -383,18 +383,22 @@ const bulkUpdateUsers = async (req, res) => {
 
 // Update user roles
 const updateUserRoles = async (req, res) => {
+  const t = await sequelize.transaction(); // Start a transaction
+
   try {
     const { id } = req.params;
     const { roles } = req.body;
     const creator = req.user.id;
 
     // Find existing user details
-    const existingUser = await User.findOne({ where: { id } });
+    const existingUser = await User.findOne({ where: { id }, transaction: t });
 
     // If user not found
     if (!existingUser || checkIfSystemUser(existingUser)) {
+      await t.rollback();
       return sendError(res, 'User not found', 404);
     }
+
     // Create id and role pair
     const userRoles = roles.map(role => ({
       userId: id,
@@ -403,7 +407,10 @@ const updateUserRoles = async (req, res) => {
     }));
 
     // Get all existing roles for a user
-    const existingRoles = await UserRole.findAll({ where: { userId: id } });
+    const existingRoles = await UserRole.findAll({
+      where: { userId: id },
+      transaction: t,
+    });
 
     // Delete existing roles that are not in the new list
     const rolesToDelete = existingRoles.filter(
@@ -411,31 +418,60 @@ const updateUserRoles = async (req, res) => {
     );
     await UserRole.destroy({
       where: { id: rolesToDelete.map(role => role.id) },
+      transaction: t,
     });
 
-    // Crete new roles that are not in the existing list
+    // Create new roles that are not in the existing list
     const rolesToAdd = userRoles.filter(
       role => !existingRoles.map(role => role.roleId).includes(role.roleId)
     );
-    const newRoles = await UserRole.bulkCreate(rolesToAdd);
+    const newRoles = await UserRole.bulkCreate(rolesToAdd, { transaction: t });
+
+    // Make registrationStatus active
+    if (existingUser.registrationStatus !== 'active') {
+      existingUser.registrationStatus = 'active';
+      await existingUser.save({ transaction: t });
+    }
+
+    // Commit the transaction
+    await t.commit();
 
     // Response
     return sendSuccess(res, newRoles, 'User roles updated successfully');
   } catch (err) {
+    // Rollback transaction if anything goes wrong
+    await t.rollback();
     logger.error('Update user roles: ', err);
     return sendError(res, err);
   }
 };
 
 const updateUserApplications = async (req, res) => {
+  const t = await sequelize.transaction(); // Start a transaction
+
   try {
     // Get user applications by id
     const { user } = req;
     const { id: user_id } = req.params;
     const { applications } = req.body;
 
-    // Find existing user details
-    const existing = await UserApplication.findAll({ where: { user_id } });
+    // Find existing user details to ensure user exists
+    const existingUser = await User.findOne({
+      where: { id: user_id },
+      transaction: t,
+    });
+
+    // If user not found
+    if (!existingUser || checkIfSystemUser(existingUser)) {
+      await t.rollback();
+      return sendError(res, 'User not found', 404);
+    }
+
+    // Find existing user applications
+    const existing = await UserApplication.findAll({
+      where: { user_id },
+      transaction: t,
+    });
     const existingApplications = existing.map(app => app.application_id);
 
     // Delete applications that are not in the new list
@@ -444,6 +480,7 @@ const updateUserApplications = async (req, res) => {
     );
     await UserApplication.destroy({
       where: { application_id: applicationsToDelete },
+      transaction: t,
     });
 
     // Create new applications that are not in the existing list
@@ -455,8 +492,19 @@ const updateUserApplications = async (req, res) => {
       application_id: app,
       createdBy: user.id,
     }));
-    const newApplications =
-      await UserApplication.bulkCreate(applicationUserPair);
+    const newApplications = await UserApplication.bulkCreate(
+      applicationUserPair,
+      { transaction: t }
+    );
+
+    // Make registrationStatus active when giving access to applications
+    if (existingUser.registrationStatus !== 'active') {
+      existingUser.registrationStatus = 'active';
+      await existingUser.save({ transaction: t });
+    }
+
+    // Commit the transaction
+    await t.commit();
 
     // Response
     return sendSuccess(
@@ -465,6 +513,8 @@ const updateUserApplications = async (req, res) => {
       'User applications updated successfully'
     );
   } catch (err) {
+    // Rollback transaction if anything goes wrong
+    await t.rollback();
     logger.error(`Update user applications: ${err.message}`);
     return sendError(res, err);
   }
