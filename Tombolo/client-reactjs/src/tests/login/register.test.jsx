@@ -102,7 +102,7 @@ describe('Register', () => {
       expect(screen.getByLabelText(/^Email$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Confirm Password/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Register/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /Register/i })).toHaveLength(2);
     });
 
     it('renders link to login page', () => {
@@ -120,7 +120,8 @@ describe('Register', () => {
       const user = userEvent.setup();
       renderWithProviders(<Register />);
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -132,7 +133,8 @@ describe('Register', () => {
       const user = userEvent.setup();
       renderWithProviders(<Register />);
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -144,7 +146,8 @@ describe('Register', () => {
       const user = userEvent.setup();
       renderWithProviders(<Register />);
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -159,7 +162,8 @@ describe('Register', () => {
       const emailInput = screen.getByLabelText(/^Email$/i);
       await user.type(emailInput, 'invalid-email');
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -175,7 +179,8 @@ describe('Register', () => {
       const longName = 'a'.repeat(65);
       await user.type(firstNameInput, longName);
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -191,7 +196,8 @@ describe('Register', () => {
       const longName = 'a'.repeat(65);
       await user.type(lastNameInput, longName);
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -207,7 +213,8 @@ describe('Register', () => {
       const longEmail = 'a'.repeat(250) + '@test.com';
       await user.type(emailInput, longEmail);
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -219,7 +226,8 @@ describe('Register', () => {
       const user = userEvent.setup();
       renderWithProviders(<Register />);
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -235,7 +243,8 @@ describe('Register', () => {
       const longPassword = 'a'.repeat(65);
       await user.type(passwordInput, longPassword);
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -247,7 +256,8 @@ describe('Register', () => {
       const user = userEvent.setup();
       renderWithProviders(<Register />);
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -265,7 +275,8 @@ describe('Register', () => {
       await user.type(passwordInput, 'Password123!@#');
       await user.type(confirmPasswordInput, 'DifferentPassword123');
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -280,7 +291,8 @@ describe('Register', () => {
       const passwordInput = screen.getByLabelText(/^Password$/i);
       await user.type(passwordInput, 'weak');
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -309,7 +321,8 @@ describe('Register', () => {
       await user.type(screen.getByLabelText(/^Password$/i), 'SecurePass123!@#');
       await user.type(screen.getByLabelText(/Confirm Password/i), 'SecurePass123!@#');
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       // Note: Full integration testing would require mocking the Redux store more completely
@@ -329,7 +342,8 @@ describe('Register', () => {
       await user.type(screen.getByLabelText(/^Password$/i), 'SecurePass123!@#');
       await user.type(screen.getByLabelText(/Confirm Password/i), 'SecurePass123!@#');
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       // This would require mocking the successful registration response
@@ -436,7 +450,8 @@ describe('Register', () => {
       await user.type(screen.getByLabelText(/^Password$/i), 'SecurePass123!@#');
       await user.type(screen.getByLabelText(/Confirm Password/i), 'SecurePass123!@#');
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       // Note: Testing loading state would require better Redux mock setup
@@ -496,7 +511,8 @@ describe('Register', () => {
       const emailInput = screen.getByLabelText(/^Email$/i);
       await user.type(emailInput, '   ');
 
-      const submitButton = screen.getByRole('button', { name: /Register/i });
+      const registerButtons = screen.getAllByRole('button', { name: /Register/i });
+      const submitButton = registerButtons.find(button => button.type === 'submit');
       await user.click(submitButton);
 
       await waitFor(() => {
