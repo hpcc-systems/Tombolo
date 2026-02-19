@@ -13,9 +13,10 @@
     "allowJs": true,
     "checkJs": false,
     "baseUrl": "./src",
-    "rootDir": "./",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["*"],
+      "@tombolo/shared": ["../../shared/src/index.ts"],
+      "@tombolo/shared/*": ["../../shared/src/*"]
     },
     "types": ["vite/client"]
   },

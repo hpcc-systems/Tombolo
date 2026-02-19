@@ -36,8 +36,8 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
     "@types/node": "catalog:",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^8.55.0",
     "@typescript-eslint/parser": "^8.55.0",
     "@vitejs/plugin-react-swc": "^3.11.0",
@@ -60,11 +60,11 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
-    "type-check": "tsc --noEmit",
     "lint:fix": "eslint --fix .",
     "clean": "rm -rf dist build .vite .turbo",
     "clean:deps": "rm -rf node_modules",
-    "clean:cache": "rm -rf .turbo"
+    "clean:cache": "rm -rf .turbo",
+    "typecheck": "tsc --noEmit"
   },
   "browserslist": {
     "production": [
