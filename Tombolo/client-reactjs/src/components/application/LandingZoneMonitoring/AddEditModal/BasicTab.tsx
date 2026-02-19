@@ -22,7 +22,9 @@ function BasicTab({
   const applicationId = useSelector((state: any) => state.application.application.applicationId);
   const integrations = useSelector((state: any) => state.application.integrations);
 
-  const asrIntegration = integrations.some((integration: any) => integration.name === 'ASR' && integration.application_id === applicationId);
+  const asrIntegration = integrations.some(
+    (integration: any) => integration.name === 'ASR' && integration.application_id === applicationId
+  );
 
   useEffect(() => {
     if (selectedCluster?.timezone_offset === null || selectedCluster?.timezone_offset === undefined) return;
@@ -63,20 +65,37 @@ function BasicTab({
             () => ({
               validator(_, value: string) {
                 if (isEditing) return Promise.resolve();
-                if (!value || !landingZoneMonitoring.find((directory: any) => directory.name === value)) return Promise.resolve();
+                if (!value || !landingZoneMonitoring.find((directory: any) => directory.name === value))
+                  return Promise.resolve();
                 return Promise.reject(new Error('Monitoring name must be unique'));
               },
             }),
           ]}>
-          <Input placeholder="Enter a name" ref={nameRef} onBlur={() => form.setFields([{ name: 'name', warnings: [] }])} />
+          <Input
+            placeholder="Enter a name"
+            ref={nameRef}
+            onBlur={() => form.setFields([{ name: 'name', warnings: [] }])}
+          />
         </Form.Item>
 
         <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
-          <TextArea placeholder="Enter a short description" rows={2} maxLength={150} showCount autoSize={{ minRows: 2, maxRows: 4 }} />
+          <TextArea
+            placeholder="Enter a short description"
+            rows={2}
+            maxLength={150}
+            showCount
+            autoSize={{ minRows: 2, maxRows: 4 }}
+          />
         </Form.Item>
 
         {asrIntegration && (
-          <AsrSpecificMonitoring form={form} clusterOffset={clusterOffset} domains={domains} productCategories={productCategories} setSelectedDomain={setSelectedDomain} />
+          <AsrSpecificMonitoring
+            form={form}
+            clusterOffset={clusterOffset}
+            domains={domains}
+            productCategories={productCategories}
+            setSelectedDomain={setSelectedDomain}
+          />
         )}
       </Form>
     </Card>

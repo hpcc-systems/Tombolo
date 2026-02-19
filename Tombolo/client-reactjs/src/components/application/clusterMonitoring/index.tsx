@@ -4,13 +4,13 @@ import { useSelector } from 'react-redux';
 import { Form } from 'antd';
 
 // Local Imports
-import { getRoleNameArray } from '../../common/AuthUtil.js';
+import { getRoleNameArray } from '../../common/AuthUtil';
 import ClusterMonitoringTable from './ClusterMonitoringTable';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import clusterMonitoringService from '@/services/clusterMonitoring.service';
 import { findUniqueName } from './clusterMonitoringUtils';
 import ViewDetailsModal from './ViewDetailsModal';
-import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton';
 import AddEditModal from './AddEditModal/AddEditModal';
 import { useDomainAndCategories } from '@/hooks/useDomainsAndProductCategories';
 import { useMonitorType } from '@/hooks/useMonitoringType';

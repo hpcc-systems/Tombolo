@@ -42,19 +42,20 @@ function ViewDetailsModal({
   useEffect(() => {
     if (!selectedMonitoring) return;
     if (selectedMonitoring['metaData.asrSpecificMetaData.domain']) {
-      const d = domains.find((domain) => domain.value === selectedMonitoring['metaData.asrSpecificMetaData.domain']);
+      const d = domains.find(domain => domain.value === selectedMonitoring['metaData.asrSpecificMetaData.domain']);
       setSelectedDomain(d);
     }
     if (selectedMonitoring['metaData.asrSpecificMetaData.productCategory']) {
       const pc = productCategories.find(
-        (productCategory) => productCategory.value === selectedMonitoring['metaData.asrSpecificMetaData.productCategory']
+        productCategory => productCategory.value === selectedMonitoring['metaData.asrSpecificMetaData.productCategory']
       );
       setSelectedProductCategory(pc);
     }
   }, [selectedMonitoring]);
 
   if (selectedMonitoring === null) return null;
-  const { monitoringName, description, lzMonitoringType, isActive, approvalStatus, approverComment } = selectedMonitoring;
+  const { monitoringName, description, lzMonitoringType, isActive, approvalStatus, approverComment } =
+    selectedMonitoring;
   return (
     <Modal
       maskClosable={false}
@@ -77,26 +78,40 @@ function ViewDetailsModal({
             <span style={{ color: 'var(--primary)' }}>{selectedMonitoring['cluster.name']}</span>
           </Tooltip>
         </Descriptions.Item>
-        <Descriptions.Item label="Landing Zone ">{selectedMonitoring['metaData.monitoringData.dropzone']}</Descriptions.Item>
+        <Descriptions.Item label="Landing Zone ">
+          {selectedMonitoring['metaData.monitoringData.dropzone']}
+        </Descriptions.Item>
         {selectedMonitoring['metaData.monitoringData.machine'] && (
-          <Descriptions.Item label="Machine ">{selectedMonitoring['metaData.monitoringData.machine']}</Descriptions.Item>
+          <Descriptions.Item label="Machine ">
+            {selectedMonitoring['metaData.monitoringData.machine']}
+          </Descriptions.Item>
         )}
         {selectedMonitoring['metaData.monitoringData.directory'] && (
-          <Descriptions.Item label="Directory ">{selectedMonitoring['metaData.monitoringData.directory']}</Descriptions.Item>
+          <Descriptions.Item label="Directory ">
+            {selectedMonitoring['metaData.monitoringData.directory']}
+          </Descriptions.Item>
         )}
         {selectedMonitoring['metaData.monitoringData.fileName'] && (
           <Descriptions.Item label="File ">{selectedMonitoring['metaData.monitoringData.fileName']}</Descriptions.Item>
         )}
         {selectedMonitoring['metaData.monitoringData.threshold'] && (
-          <Descriptions.Item label="Threshold in Minutes ">{selectedMonitoring['metaData.monitoringData.threshold']}</Descriptions.Item>
+          <Descriptions.Item label="Threshold in Minutes ">
+            {selectedMonitoring['metaData.monitoringData.threshold']}
+          </Descriptions.Item>
         )}
         {selectedMonitoring['metaData.monitoringData.maxDepth'] && (
-          <Descriptions.Item label="Max Depth ">{selectedMonitoring['metaData.monitoringData.maxDepth']}</Descriptions.Item>
+          <Descriptions.Item label="Max Depth ">
+            {selectedMonitoring['metaData.monitoringData.maxDepth']}
+          </Descriptions.Item>
         )}
         {selectedDomain && <Descriptions.Item label="Domain ">{selectedDomain.label}</Descriptions.Item>}
-        {selectedProductCategory && <Descriptions.Item label="Product Category ">{selectedProductCategory.label}</Descriptions.Item>}
+        {selectedProductCategory && (
+          <Descriptions.Item label="Product Category ">{selectedProductCategory.label}</Descriptions.Item>
+        )}
         {selectedMonitoring['metaData.asrSpecificMetaData.severity'] && (
-          <Descriptions.Item label="Severity ">{selectedMonitoring['metaData.asrSpecificMetaData.severity']}</Descriptions.Item>
+          <Descriptions.Item label="Severity ">
+            {selectedMonitoring['metaData.asrSpecificMetaData.severity']}
+          </Descriptions.Item>
         )}
 
         <Descriptions.Item label="Active ">
@@ -114,16 +129,24 @@ function ViewDetailsModal({
         </Descriptions.Item>
 
         {selectedMonitoring['metaData.contacts.primaryContacts'] && (
-          <Descriptions.Item label="Primary Contact ">{selectedMonitoring['metaData.contacts.primaryContacts'].join(', ')}</Descriptions.Item>
+          <Descriptions.Item label="Primary Contact ">
+            {selectedMonitoring['metaData.contacts.primaryContacts'].join(', ')}
+          </Descriptions.Item>
         )}
 
-        {selectedMonitoring['metaData.contacts.secondaryContacts'] && selectedMonitoring['metaData.contacts.secondaryContacts'].length > 0 && (
-          <Descriptions.Item label="Secondary Contact ">{selectedMonitoring['metaData.contacts.secondaryContacts'].join(', ')}</Descriptions.Item>
-        )}
+        {selectedMonitoring['metaData.contacts.secondaryContacts'] &&
+          selectedMonitoring['metaData.contacts.secondaryContacts'].length > 0 && (
+            <Descriptions.Item label="Secondary Contact ">
+              {selectedMonitoring['metaData.contacts.secondaryContacts'].join(', ')}
+            </Descriptions.Item>
+          )}
 
-        {selectedMonitoring['metaData.contacts.notifyContacts'] && selectedMonitoring['metaData.contacts.notifyContacts'] > 0 && (
-          <Descriptions.Item label="Notify Contacts ">{selectedMonitoring['metaData.contacts.notifyContacts'].join(', ')}</Descriptions.Item>
-        )}
+        {selectedMonitoring['metaData.contacts.notifyContacts'] &&
+          selectedMonitoring['metaData.contacts.notifyContacts'] > 0 && (
+            <Descriptions.Item label="Notify Contacts ">
+              {selectedMonitoring['metaData.contacts.notifyContacts'].join(', ')}
+            </Descriptions.Item>
+          )}
         {approverComment && (
           <Descriptions.Item label="Approver Comment " span={2}>
             {approverComment}

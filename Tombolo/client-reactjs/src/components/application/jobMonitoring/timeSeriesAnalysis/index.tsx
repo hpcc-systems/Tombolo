@@ -113,9 +113,9 @@ const TimeSeriesAnalysis: React.FC = () => {
         { Wuid: 'Z-Index', ...zIndex },
       ];
 
-      const tableData = metricsKeys.map((metric) => {
+      const tableData = metricsKeys.map(metric => {
         const row: any = { metric };
-        allWus.forEach((item) => {
+        allWus.forEach(item => {
           row[item.Wuid] = item[metric];
         });
         return row;
@@ -126,10 +126,10 @@ const TimeSeriesAnalysis: React.FC = () => {
   }, [wus]);
 
   useEffect(() => {
-    setWus((prev) => {
-      const selected = prev.find((wu) => wu.Wuid === selectedLeftWuid);
+    setWus(prev => {
+      const selected = prev.find(wu => wu.Wuid === selectedLeftWuid);
       if (selected) {
-        return [selected, ...prev.filter((wu) => wu.Wuid !== selectedLeftWuid)];
+        return [selected, ...prev.filter(wu => wu.Wuid !== selectedLeftWuid)];
       }
       return prev;
     });
@@ -153,7 +153,7 @@ const TimeSeriesAnalysis: React.FC = () => {
       );
     };
 
-    const dynamicColumns = wus.map((item) => ({
+    const dynamicColumns = wus.map(item => ({
       title: (
         <Popover content={workUnitHiddenInfo(item)}>
           <span style={{ textDecoration: 'underline', color: 'var(--hyperLinkBlue)' }}>{item.Wuid}</span>
@@ -165,14 +165,14 @@ const TimeSeriesAnalysis: React.FC = () => {
     }));
 
     if (dynamicColumns.length > 0 && selectedLeftWuid) {
-      const selectedColumn = dynamicColumns.find((col) => col.key === selectedLeftWuid) || dynamicColumns[0];
+      const selectedColumn = dynamicColumns.find(col => col.key === selectedLeftWuid) || dynamicColumns[0];
       const filterMenu = (
         <Menu>
           <Radio.Group
             value={selectedLeftWuid}
-            onChange={(e) => setSelectedLeftWuid(e.target.value)}
+            onChange={e => setSelectedLeftWuid(e.target.value)}
             style={{ padding: 8, display: 'block' }}>
-            {wus.map((item) => (
+            {wus.map(item => (
               <Radio key={item.Wuid} value={item.Wuid} style={{ display: 'block', marginBottom: 8 }}>
                 {item.Wuid}
               </Radio>
@@ -208,8 +208,8 @@ const TimeSeriesAnalysis: React.FC = () => {
     }
 
     const middleDynamicColumns = dynamicColumns
-      .filter((col) => col.key !== selectedLeftWuid)
-      .map((col) => ({
+      .filter(col => col.key !== selectedLeftWuid)
+      .map(col => ({
         ...col,
         title: (
           <div style={{ display: 'flex', alignItems: 'center' }}>

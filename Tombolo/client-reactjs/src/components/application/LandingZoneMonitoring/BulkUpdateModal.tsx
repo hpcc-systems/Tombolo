@@ -32,24 +32,24 @@ const BulkUpdateModal = ({
   const [removedNotifyContacts, setRemovedNotifyContacts] = useState<string[]>([]);
 
   const handlePrimaryContactsChange = (value: string[]) => {
-    const addedPc = value.filter((v) => !primaryContacts.includes(v));
-    const removedPc = primaryContacts.filter((v) => !value.includes(v));
+    const addedPc = value.filter(v => !primaryContacts.includes(v));
+    const removedPc = primaryContacts.filter(v => !value.includes(v));
 
     setNewPrimaryContacts(addedPc);
     setRemovedPrimaryContacts(removedPc);
   };
 
   const handleSecondaryContactsChange = (value: string[]) => {
-    const addedSc = value.filter((v) => !secondaryContacts.includes(v));
-    const removedSc = secondaryContacts.filter((v) => !value.includes(v));
+    const addedSc = value.filter(v => !secondaryContacts.includes(v));
+    const removedSc = secondaryContacts.filter(v => !value.includes(v));
 
     setNewSecondaryContacts(addedSc);
     setRemovedSecondaryContacts(removedSc);
   };
 
   const handleNotifyContactsChange = (value: string[]) => {
-    const addedNc = value.filter((v) => !notifyContacts.includes(v));
-    const removedNc = notifyContacts.filter((v) => !value.includes(v));
+    const addedNc = value.filter(v => !notifyContacts.includes(v));
+    const removedNc = notifyContacts.filter(v => !value.includes(v));
 
     setNewNotifyContacts(addedNc);
     setRemovedNotifyContacts(removedNc);
@@ -73,15 +73,15 @@ const BulkUpdateModal = ({
       const { primaryContacts: pc, secondaryContacts: sc, notifyContacts: nc } = contacts || {};
 
       if (pc) {
-        setPrimaryContacts((prev) => [...new Set([...prev, ...pc])]);
+        setPrimaryContacts(prev => [...new Set([...prev, ...pc])]);
       }
 
       if (sc) {
-        setSecondaryContacts((prev) => [...new Set([...prev, ...sc])]);
+        setSecondaryContacts(prev => [...new Set([...prev, ...sc])]);
       }
 
       if (nc) {
-        setNotifyContacts((prev) => [...new Set([...prev, ...nc])]);
+        setNotifyContacts(prev => [...new Set([...prev, ...nc])]);
       }
     });
   }, [landingZoneMonitoring, selectedRows]);
@@ -134,8 +134,8 @@ const BulkUpdateModal = ({
       handleSuccess('Landing zone monitoring updated successfully');
 
       setLandingZoneMonitoring((prev: any[]) =>
-        prev.map((row) => {
-          const updatedRow = updatedRows.find((data) => data.id === row.id);
+        prev.map(row => {
+          const updatedRow = updatedRows.find(data => data.id === row.id);
           return flattenObject({ ...row, metaData: updatedRow?.metaData });
         })
       );
@@ -178,11 +178,20 @@ const BulkUpdateModal = ({
               },
             },
           ]}>
-          <Select mode="tags" open={false} allowClear placeholder="Enter a comma-delimited list of email addresses" tokenSeparators={[',']} onChange={handlePrimaryContactsChange} />
+          <Select
+            mode="tags"
+            open={false}
+            allowClear
+            placeholder="Enter a comma-delimited list of email addresses"
+            tokenSeparators={[',']}
+            onChange={handlePrimaryContactsChange}
+          />
         </Form.Item>
 
         {integrations &&
-          integrations.some((integration: any) => integration.name === 'ASR' && integration.application_id === applicationId) && (
+          integrations.some(
+            (integration: any) => integration.name === 'ASR' && integration.application_id === applicationId
+          ) && (
             <>
               <Form.Item
                 label="Secondary Contact(s)"
@@ -197,7 +206,13 @@ const BulkUpdateModal = ({
                     },
                   },
                 ]}>
-                <Select onChange={handleSecondaryContactsChange} mode="tags" allowClear placeholder="Enter a comma-delimited list of email addresses" tokenSeparators={[',']} />
+                <Select
+                  onChange={handleSecondaryContactsChange}
+                  mode="tags"
+                  allowClear
+                  placeholder="Enter a comma-delimited list of email addresses"
+                  tokenSeparators={[',']}
+                />
               </Form.Item>
 
               <Form.Item
@@ -213,7 +228,13 @@ const BulkUpdateModal = ({
                     },
                   },
                 ]}>
-                <Select onChange={handleNotifyContactsChange} mode="tags" allowClear placeholder="Enter a comma-delimited list of email addresses" tokenSeparators={[',']} />
+                <Select
+                  onChange={handleNotifyContactsChange}
+                  mode="tags"
+                  allowClear
+                  placeholder="Enter a comma-delimited list of email addresses"
+                  tokenSeparators={[',']}
+                />
               </Form.Item>
             </>
           )}

@@ -71,7 +71,13 @@ export interface TimeSeriesResult {
   outliers: string[];
 }
 
-export function performTimeSeriesAnalysis({ leftData, rightData }: { leftData: WorkUnit; rightData: WorkUnit[] }): TimeSeriesResult {
+export function performTimeSeriesAnalysis({
+  leftData,
+  rightData,
+}: {
+  leftData: WorkUnit;
+  rightData: WorkUnit[];
+}): TimeSeriesResult {
   // Convert left data TotalClusterTime to numeric value
   for (const [key, value] of Object.entries(leftData)) {
     if (key === 'TotalClusterTime') {
@@ -80,7 +86,7 @@ export function performTimeSeriesAnalysis({ leftData, rightData }: { leftData: W
   }
 
   // Convert right data TotalClusterTime to numeric value
-  rightData.forEach((run) => {
+  rightData.forEach(run => {
     for (const [key, value] of Object.entries(run)) {
       if (key === 'TotalClusterTime') {
         run.TotalClusterTime = convertTotalClusterTimeToSeconds(value);
@@ -92,16 +98,16 @@ export function performTimeSeriesAnalysis({ leftData, rightData }: { leftData: W
 
   // Step 1: Calculate averages from rightData
   const average: Record<string, number> = {};
-  alertDataPoints.forEach((point) => {
-    const values = rightData.map((item) => Number(item[point] ?? 0));
+  alertDataPoints.forEach(point => {
+    const values = rightData.map(item => Number(item[point] ?? 0));
     const sum = values.reduce((acc, val) => acc + val, 0);
     average[point] = sum / Math.max(1, rightData.length);
   });
 
   // Calculate differences (Mean - Current value) and square them
   const rightDataCopy = structuredClone(rightData) as WorkUnit[];
-  alertDataPoints.forEach((point) => {
-    rightDataCopy.forEach((run) => {
+  alertDataPoints.forEach(point => {
+    rightDataCopy.forEach(run => {
       const value = Number(run[point] ?? 0);
       const diff = value - (average[point] ?? 0);
       const squared = diff ** 2;
@@ -111,8 +117,8 @@ export function performTimeSeriesAnalysis({ leftData, rightData }: { leftData: W
 
   // Standard deviation
   const standardDeviationForEachDataPoint: Record<string, number> = {};
-  alertDataPoints.forEach((point) => {
-    const values = rightDataCopy.map((item) => Number(item[point] ?? 0));
+  alertDataPoints.forEach(point => {
+    const values = rightDataCopy.map(item => Number(item[point] ?? 0));
     const sum = values.reduce((acc, val) => acc + val, 0);
     const avg = sum / Math.max(1, rightData.length);
     standardDeviationForEachDataPoint[point] = Math.sqrt(avg);
@@ -120,7 +126,7 @@ export function performTimeSeriesAnalysis({ leftData, rightData }: { leftData: W
 
   // Step 2: Calculate expected min/max (min capped at 0)
   const expectedMinMax: Record<string, { min: number; max: number }> = {};
-  alertDataPoints.forEach((point) => {
+  alertDataPoints.forEach(point => {
     const mean = average[point] ?? 0;
     const decimals = getDecimalPlaces(mean);
     const factor = Math.pow(10, decimals);
@@ -131,7 +137,7 @@ export function performTimeSeriesAnalysis({ leftData, rightData }: { leftData: W
 
   // Step 3: Calculate Z-scores for leftData
   const zIndex: Record<string, number> = {};
-  alertDataPoints.forEach((point) => {
+  alertDataPoints.forEach(point => {
     const mean = Number(average[point]) || 0;
     const value = Number(leftData[point] ?? 0);
     const stdDev = Number(standardDeviationForEachDataPoint[point]) || 0;
@@ -149,7 +155,7 @@ export function performTimeSeriesAnalysis({ leftData, rightData }: { leftData: W
 
   // Step 4: Calculate delta (mean - current)
   const delta: Record<string, string> = {};
-  alertDataPoints.forEach((point) => {
+  alertDataPoints.forEach(point => {
     const mean = average[point] ?? 0;
     const value = Number(leftData[point] ?? 0);
     const rawDelta = mean - value;
@@ -158,7 +164,7 @@ export function performTimeSeriesAnalysis({ leftData, rightData }: { leftData: W
 
   // Step 5: Identify outliers (true if outside min/max range)
   const outliers: string[] = [];
-  alertDataPoints.forEach((point) => {
+  alertDataPoints.forEach(point => {
     const value = Number(leftData[point] ?? 0);
     const { min, max } = expectedMinMax[point];
     if (value < min || value > max) {
