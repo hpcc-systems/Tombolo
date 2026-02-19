@@ -5,7 +5,15 @@ import { getDirname } from './polyfills.js';
 
 const __dirname = getDirname(import.meta.url);
 
-const emailNotificationHtmlCode = ({ templateName, data }) => {
+interface EmailTemplateOptions {
+  templateName: string;
+  data: any;
+}
+
+const emailNotificationHtmlCode = ({
+  templateName,
+  data,
+}: EmailTemplateOptions): string => {
   const templatePath = path.join(
     __dirname,
     '..',
