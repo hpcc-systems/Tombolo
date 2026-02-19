@@ -6,11 +6,11 @@ import { useDispatch } from 'react-redux';
 
 // Local imports
 import { handleError } from '../common/handleResponse';
-import msLogo from '../../images/mslogo.png';
 import { getDeviceInfo } from './utils';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
+import AzureLoginButton from './AzureLoginButton';
 
 import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 import styles from './login.module.css';
@@ -236,16 +236,9 @@ const Login = () => {
                 <Spin size="large" style={{ margin: '0 auto' }} />
               </div>
             )}
-            <Divider>Log In With</Divider>
             {azureEnabled && (
               <Form.Item>
-                <Button
-                  size="large"
-                  style={{ background: 'black', color: 'white' }}
-                  className="fullWidth"
-                  onClick={() => azureLogin()}>
-                  <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
-                </Button>
+                <AzureLoginButton onClick={() => azureLogin()} label="Login with Microsoft" />
               </Form.Item>
             )}
 
