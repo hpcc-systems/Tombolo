@@ -51,6 +51,7 @@ export default defineConfig({
     // Better environment setup
     env: {
       NODE_ENV: 'test',
+      VITE_AUTH_METHODS: 'traditional,azure',
     },
   },
   resolve: {
