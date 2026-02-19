@@ -1,7 +1,7 @@
 // Imports from libraries
 import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin } from 'antd';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useHistory } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
 // Local imports
@@ -41,6 +41,7 @@ if (methods.includes('azure') && !hasAllAzureEnv) {
 const Login = () => {
   const dispatch = useDispatch();
   const location = useLocation();
+  const history = useHistory();
 
   // Validate URL is safe for internal redirect (prevent open-redirects to other origins)
   const isValidInternalUrl = url => {
@@ -204,8 +205,9 @@ const Login = () => {
       const res = await dispatch(loginOrRegisterAzureUser(code));
 
       if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
-        //redirect to intended page or home if login is successful
-        safeRedirect(getRedirectUrl());
+        //redirect to intended page or home if login is successful, using replace to clean URL
+        const redirectUrl = getRedirectUrl();
+        history.replace(redirectUrl);
         return;
       }
     } catch (err) {
