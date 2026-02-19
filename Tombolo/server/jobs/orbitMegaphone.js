@@ -36,7 +36,6 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
       let application_id = integration.dataValues?.application_id;
 
-      // eslint-disable-next-line quotes
       const query = `select * from orbitreport.DimReceiveInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc limit 1`;
       const result = await runMySQLQuery(query, orbitDbConfig);
 
