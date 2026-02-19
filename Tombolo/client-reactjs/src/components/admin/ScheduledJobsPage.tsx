@@ -54,8 +54,7 @@ const ScheduledJobsPage: React.FC = () => {
 
       handleSuccess(`Job ${record.name} is ${action === 'stop' ? 'stopped' : 'started'}`);
     } catch (error: any) {
-      // eslint-disable-next-line no-console
-      console.log('Error fetch', error);
+      console.error('Error fetch', error);
       setJobs(prev => ({ ...prev, loading: false, error: error.message }));
       handleError(error.message);
     }
@@ -72,8 +71,7 @@ const ScheduledJobsPage: React.FC = () => {
 
       handleSuccess(`Job ${record.name} is removed`);
     } catch (error: any) {
-      // eslint-disable-next-line no-console
-      console.log('Error fetch', error);
+      console.error('Error fetch', error);
       setJobs(prev => ({ ...prev, loading: false, error: error.message }));
       handleError(error.message);
     }

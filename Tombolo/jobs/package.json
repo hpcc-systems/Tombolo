@@ -26,7 +26,7 @@
     "@tombolo/shared": "workspace:*",
     "bullmq": "^5.63.2",
     "dotenv": "catalog:",
-    "express": "^5.1.0",
+    "express": "catalog:",
     "ioredis": "^5.8.2",
     "mysql2": "catalog:"
   },
