@@ -60,7 +60,6 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
-    "type-check": "tsc --noEmit",
     "lint:fix": "eslint --fix .",
     "clean": "rm -rf dist build .vite .turbo",
     "clean:deps": "rm -rf node_modules",
