@@ -128,6 +128,9 @@ services:
     restart: always
     command: >
       --innodb_buffer_pool_size=2560M
+      --binlog_expire_logs_seconds=86400
+      --max_binlog_size=128M
+      --innodb_redo_log_capacity=536870912
       --innodb_log_file_size=512M
       --innodb_flush_log_at_trx_commit=2
       --innodb_flush_method=O_DIRECT
@@ -185,7 +188,7 @@ services:
         LIMIT_BYTES=\$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || cat /sys/fs/cgroup/memory.max 2>/dev/null || echo 536870912)
         MAXMEM_BYTES=\$((LIMIT_BYTES - 100 * 1024 * 1024))  # subtract ~100 MiB overhead
         MAXMEM_HUMAN=\$(awk \"BEGIN {printf \\\"%.0fmb\\\", \$MAXMEM_BYTES / 1024 / 1024}\")
-        
+
         if [ -n \"${REDIS_PASSWORD}\" ]; then
           if [ -n \"${REDIS_USER}\" ]; then
             redis-server --requirepass ${REDIS_PASSWORD} --user ${REDIS_USER} on >${REDIS_PASSWORD} ~* &* +@all \
