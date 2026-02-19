@@ -51,6 +51,10 @@ export default defineConfig({
     // Better environment setup
     env: {
       NODE_ENV: 'test',
+      VITE_AUTH_METHODS: 'traditional,azure',
+      VITE_AZURE_CLIENT_ID: 'test-client-id',
+      VITE_AZURE_TENENT_ID: 'test-tenant-id',
+      VITE_AZURE_REDIRECT_URI: 'http://localhost:3000',
     },
   },
   resolve: {
