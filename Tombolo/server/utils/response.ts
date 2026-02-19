@@ -1,30 +1,47 @@
+import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import CustomError from './customError.js';
 
+interface ResponseOptions {
+  status?: number;
+  success?: boolean;
+  message?: string;
+  data?: any;
+  errors?: Array<string | Error | object>;
+}
+
+interface ErrorInfo {
+  statusCode: number;
+  message: string;
+  name: string;
+}
+
+interface ErrorMapEntry {
+  code: number;
+  message: string;
+}
+
 /**
  * Sends a standardized JSON response to the client.
- *
- * @param {import('express').Response} res - Express response object
- * @param {Object} options - Response options
- * @param {number} [options.status=200] - HTTP status code
- * @param {boolean} [options.success=true] - Whether the request was successful
- * @param {string} [options.message=''] - Message to send
- * @param {*} [options.data=null] - Response payload
- * @param {Array<string|Error|Object>} [options.errors=[]] - Array of error messages or error objects
- * @returns {import('express').Response} Express response
  */
 const sendResponse = (
-  res,
-  { status = 200, success = true, message = '', data = null, errors = [] }
-) => {
+  res: Response,
+  {
+    status = 200,
+    success = true,
+    message = '',
+    data = null,
+    errors = [],
+  }: ResponseOptions
+): Response => {
   const normalizedErrors = Array.isArray(errors)
     ? errors.map(e =>
-        typeof e === 'string' ? e : e?.message || JSON.stringify(e)
+        typeof e === 'string' ? e : (e as any)?.message || JSON.stringify(e)
       )
     : [
         typeof errors === 'string'
           ? errors
-          : errors?.message || JSON.stringify(errors),
+          : (errors as any)?.message || JSON.stringify(errors),
       ];
 
   return res.status(status).json({
@@ -37,29 +54,28 @@ const sendResponse = (
 
 /**
  * Sends a successful response to the client.
- *
- * @param {import('express').Response} res - Express response object
- * @param {*} data - Data payload
- * @param {string} [message='OK'] - Success message
- * @returns {import('express').Response} Express response
  */
-const sendSuccess = (res, data, message = 'OK', status = 200) =>
+const sendSuccess = (
+  res: Response,
+  data: any,
+  message = 'OK',
+  status = 200
+): Response =>
   sendResponse(res, { status, success: true, data, message, errors: [] });
 
 /**
  * Sends an error response to the client.
- *
- * @param {import('express').Response} res - Express response object
- * @param {string|Error|Array} error - Error object or message(s)
- * @param {number} [status=500] - HTTP status code
- * @returns {import('express').Response} Express response
  */
-const sendError = (res, error, status = 500) => {
-  let errorsArray;
+const sendError = (
+  res: Response,
+  error: string | Error | Array<string | Error>,
+  status = 500
+): Response => {
+  let errorsArray: string[];
 
   if (Array.isArray(error)) {
     errorsArray = error.map(e =>
-      typeof e === 'string' ? e : e?.message || JSON.stringify(e)
+      typeof e === 'string' ? e : (e as any)?.message || JSON.stringify(e)
     );
   } else if (typeof error === 'string') {
     errorsArray = [error];
@@ -86,22 +102,18 @@ const sendError = (res, error, status = 500) => {
 
 /**
  * Sends a validation error response to the client.
- *
- * @param {import('express').Response} res - Express response object
- * @param {Array<string>} errors - Array of validation error messages
- * @param {string} [message='Validation failed'] - Optional message
- * @returns {import('express').Response} Express response
  */
-const sendValidationError = (res, errors, message = 'Validation failed') =>
+const sendValidationError = (
+  res: Response,
+  errors: string[],
+  message = 'Validation failed'
+): Response =>
   sendResponse(res, { status: 422, success: false, message, errors });
 
 /**
  * Retrieves structured error information for known error types.
- *
- * @param {Error} error - Error object
- * @returns {{statusCode: number, message: string, name: string}} Structured error info
  */
-const getErrorInfo = error => {
+const getErrorInfo = (error: Error): ErrorInfo => {
   if (error instanceof CustomError) {
     let errorName = 'CustomError';
     if (error.message.toLowerCase().includes('not found')) {
@@ -140,8 +152,7 @@ const getErrorInfo = error => {
   };
 };
 
-/** @type {Record<string, {code: number, message: string}>} */
-const ERROR_MAP = {
+const ERROR_MAP: Record<string, ErrorMapEntry> = {
   UnauthorizedError: {
     code: StatusCodes.UNAUTHORIZED,
     message: 'Invalid credentials provided.',
@@ -216,3 +227,22 @@ const ERROR_MAP = {
 };
 
 export { sendResponse, sendSuccess, sendError, sendValidationError };
+
+// Test case 1: Send a successful response
+const mockRes = {
+  status: function (code: number) {
+    console.log(`Status set to: ${code}`);
+    return this;
+  },
+  json: function (data: any) {
+    console.log('Response JSON:', JSON.stringify(data, null, 2));
+    return this;
+  },
+} as unknown as Response;
+
+sendSuccess(
+  mockRes,
+  { id: 1, name: 'Test' },
+  'Data retrieved successfully',
+  200
+);
