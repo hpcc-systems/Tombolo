@@ -12,7 +12,10 @@ import logger from '../config/logger.js';
 
 import cp from 'child_process';
 
-export async function fileInfo(fileName, clusterId) {
+export async function fileInfo(
+  fileName: string,
+  clusterId: string
+): Promise<any> {
   try {
     const dfuService = await getDFUService(clusterId);
     const fileInfo = await dfuService.DFUInfo({ Name: fileName });
@@ -52,18 +55,21 @@ export async function fileInfo(fileName, clusterId) {
 }
 
 // Gets details about the file without modifying anything - just whatever jscomms gives
-export async function logicalFileDetails(fileName, clusterId) {
+export async function logicalFileDetails(
+  fileName: string,
+  clusterId: string
+): Promise<any> {
   const dfuService = await getDFUService(clusterId);
   const { FileDetail } = await dfuService.DFUInfo({ Name: fileName });
 
-  if (FileDetail.Exceptions?.Exception) {
-    throw FileDetail.Exceptions.Exception[0];
+  if ((FileDetail as any).Exceptions?.Exception) {
+    throw (FileDetail as any).Exceptions.Exception[0];
   }
   return FileDetail;
 }
 
-async function getIndexColumns(cluster, indexName) {
-  let columns = {};
+async function getIndexColumns(cluster: any, indexName: string): Promise<any> {
+  let columns: any = {};
   try {
     const response = await axios.get(
       cluster.thor_host +
@@ -72,7 +78,7 @@ async function getIndexColumns(cluster, indexName) {
         '/WsDfu/DFUGetFileMetaData.json?LogicalFileName=' +
         indexName,
       {
-        auth: getClusterAuth(cluster),
+        auth: getClusterAuth(cluster) as any,
       }
     );
     const result = response.data;
@@ -110,7 +116,10 @@ async function getIndexColumns(cluster, indexName) {
   }
 }
 
-export const indexInfo = (clusterId, indexName) => {
+export const indexInfo = (
+  clusterId: string,
+  indexName: string
+): Promise<any> => {
   return new Promise((resolve, reject) => {
     try {
       getCluster(clusterId).then(function (cluster) {
@@ -127,7 +136,7 @@ export const indexInfo = (clusterId, indexName) => {
         );
         dfuService.DFUInfo({ Name: indexName }).then(response => {
           if (response.FileDetail) {
-            let indexInfo = {};
+            let indexInfo: any = {};
             getIndexColumns(cluster, indexName).then(function (indexColumns) {
               indexInfo.basic = {
                 name: response.FileDetail.Name,
@@ -157,7 +166,12 @@ export async function getDirectories({
   Netaddr,
   Path,
   DirectoryOnly,
-}) {
+}: {
+  clusterId: string;
+  Netaddr: string;
+  Path: string;
+  DirectoryOnly: boolean;
+}): Promise<any[]> {
   const cluster = await getCluster(clusterId);
   const clusterDetails = getClusterOptions(
     {
@@ -177,7 +191,7 @@ export async function getDirectories({
   return fileList.files?.PhysicalFileStruct || [];
 }
 
-export async function executeSprayJob(job) {
+export async function executeSprayJob(job: any): Promise<any> {
   // try {
   try {
     const cluster = await getCluster(job.cluster_id);
@@ -190,8 +204,8 @@ export async function executeSprayJob(job) {
       sourceIP: job.sprayDropZone,
       sourcePath: `/var/lib/HPCCSystems/mydropzone/${job.sprayFileName}`,
       destLogicalName: `${job.sprayedFileScope}::${job.sprayFileName}`,
-      rawxml_: 1,
-      sourceFormat: 1,
+      rawxml_: '1',
+      sourceFormat: '1',
       sourceCsvSeparate: ',',
       sourceCsvTerminate: '\n,\r\n',
       sourceCsvQuote: '"',
@@ -201,9 +215,9 @@ export async function executeSprayJob(job) {
 
     const response = await axios.post(
       `${cluster.thor_host}:${cluster.thor_port}/FileSpray/SprayVariable.json`,
-      new URLSearchParams(sprayPayload).toString(),
+      new URLSearchParams(sprayPayload as any).toString(),
       {
-        auth: getClusterAuth(cluster),
+        auth: getClusterAuth(cluster) as any,
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       }
     );
@@ -215,8 +229,8 @@ export async function executeSprayJob(job) {
   }
 }
 
-export function queryInfo(clusterId, queryName) {
-  let resultObj = { basic: {} },
+export function queryInfo(clusterId: string, queryName: string): Promise<any> {
+  let resultObj: any = { basic: {} },
     requestObj = [],
     responseObj = [];
   try {
@@ -284,7 +298,11 @@ export function queryInfo(clusterId, queryName) {
   }
 }
 
-export async function getJobInfo(clusterId, jobWuid, jobType) {
+export async function getJobInfo(
+  clusterId: string,
+  jobWuid: string,
+  jobType: string
+): Promise<any> {
   try {
     const wuService = await getWorkunitsService(clusterId);
     const wuInfo = await wuService.WUInfo({
@@ -338,7 +356,7 @@ export async function getJobInfo(clusterId, jobWuid, jobType) {
         });
       });
 
-      wuInfo.Workunit?.Results?.ECLResult?.forEach(file => {
+      wuInfo.Workunit?.Results?.ECLResult?.forEach((file: any) => {
         if (file.FileName)
           sourceFiles.push({
             name: file.FileName,
@@ -478,7 +496,10 @@ export async function getJobInfo(clusterId, jobWuid, jobType) {
 //   }
 // };
 
-export async function workunitInfo(wuid, clusterId) {
+export async function workunitInfo(
+  wuid: string,
+  clusterId: string
+): Promise<any> {
   const wuService = await getWorkunitsService(clusterId);
   return await wuService.WUInfo({
     Wuid: wuid,
@@ -491,7 +512,13 @@ export async function workunitInfo(wuid, clusterId) {
 }
 
 // RETURNS THE OUTPUT OF WORK UNIT
-export async function workUnitOutput({ wuid, clusterId }) {
+export async function workUnitOutput({
+  wuid,
+  clusterId,
+}: {
+  wuid: string;
+  clusterId: string;
+}): Promise<any> {
   try {
     const wuService = await getWorkunitsService(clusterId);
     return await wuService.WUResult({ Wuid: wuid });
@@ -510,7 +537,7 @@ const getFileLayout = async (cluster, fileName, format) => {
           cluster.thor_port +
           '/WsDfu/DFURecordTypeInfo.json?Name=' +
           fileName,
-        { auth }
+        { auth: auth as any }
       );
       const result = response.data;
       const fields = result?.DFURecordTypeInfoResponse?.jsonInfo?.fields || [];
@@ -530,7 +557,7 @@ const getFileLayout = async (cluster, fileName, format) => {
         cluster.thor_port +
         '/WsDfu/DFUGetFileMetaData.json?LogicalFileName=' +
         fileName,
-      { auth }
+      { auth: auth as any }
     );
     const result = response.data;
     const fileInfoResponse =
@@ -547,7 +574,7 @@ const getFileLayout = async (cluster, fileName, format) => {
 
     const layoutResults = fileInfoResponse.reduce((acc, column, idx) => {
       if (column.ColumnLabel !== '__fileposition__') {
-        const layout = createLayoutObj(column, idx);
+        const layout: any = createLayoutObj(column, idx);
         if (column.DataColumns)
           layout.children = column.DataColumns.DFUDataColumn.map(
             (childColumn, idx) => createLayoutObj(childColumn, idx)
@@ -563,17 +590,17 @@ const getFileLayout = async (cluster, fileName, format) => {
   }
 };
 
-export function getClusterAuth(cluster) {
-  let auth = {};
+export function getClusterAuth(
+  cluster: any
+): { user: string; password: string } | null {
   if (cluster.username && cluster.hash) {
-    ((auth.user = cluster.username), (auth.password = cluster.hash));
-    return auth;
+    return { user: cluster.username, password: cluster.hash };
   } else {
     return null;
   }
 }
 
-export async function getCluster(clusterId) {
+export async function getCluster(clusterId: string): Promise<any> {
   try {
     let cluster = await Cluster.findOne({ where: { id: clusterId } });
     if (cluster == null) {
@@ -616,7 +643,7 @@ export async function getCluster(clusterId) {
  * @returns {Promise<Object[]>} Resolves to an array of cluster objects with an error key included if there were errors
  * @throws {Error} If there is a database or internal error
  */
-export async function getClusters(clusterIds) {
+export async function getClusters(clusterIds: string[]): Promise<any[]> {
   try {
     const clusters = await Cluster.findAll({ where: { id: clusterIds } });
     const clusterPromises = clusters.map(async cluster => {
@@ -670,11 +697,11 @@ response.status : 403 -> Cluster reachable but Unauthorized
 */
 
 export async function isClusterReachable(
-  clusterHost,
-  port,
-  username,
-  password
-) {
+  clusterHost: string,
+  port: string,
+  username: string,
+  password: string
+): Promise<any> {
   let auth = {
     username: username || '',
     password: password || '',
@@ -707,7 +734,7 @@ export async function isClusterReachable(
   }
 }
 
-export function updateCommonData(objArray, fields) {
+export function updateCommonData(objArray: any[], fields: any): any[] {
   if (objArray && objArray.length > 0) {
     Object.keys(fields).forEach(function (key, _index) {
       objArray.forEach(function (obj) {
@@ -718,7 +745,9 @@ export function updateCommonData(objArray, fields) {
   return objArray;
 }
 
-export async function getWorkunitsService(clusterId) {
+export async function getWorkunitsService(
+  clusterId: string
+): Promise<WorkunitsService> {
   const cluster = await getCluster(clusterId);
   const { hash, username, allowSelfSigned, thor_host, thor_port } = cluster;
 
@@ -734,7 +763,7 @@ export async function getWorkunitsService(clusterId) {
   return new WorkunitsService(connectionSettings);
 }
 
-export async function getDFUService(clusterId) {
+export async function getDFUService(clusterId: string): Promise<DFUService> {
   const cluster = await getCluster(clusterId);
   const clusterAuth = getClusterAuth(cluster);
 
@@ -750,16 +779,19 @@ export async function getDFUService(clusterId) {
   return new DFUService(connectionSettings);
 }
 
-export async function createWorkUnit(clusterId, WUbody = {}) {
+export async function createWorkUnit(
+  clusterId: string,
+  WUbody: any = {}
+): Promise<any> {
   try {
     const wuService = await getWorkunitsService(clusterId);
-    const respond = await wuService.WUCreate(WUbody);
+    const respond = await (wuService.WUCreate as any)(WUbody);
     const wuid = respond.Workunit?.Wuid;
     if (!wuid) throw respond;
     return wuid;
   } catch (error) {
     logger.error('hpcc-util - createWorkUnit: ', error);
-    const customError = new Error('Failed to create new Work Unit.');
+    const customError: any = new Error('Failed to create new Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
   }
@@ -773,7 +805,7 @@ export async function updateWorkUnit(clusterId, WUupdateBody) {
     return respond;
   } catch (error) {
     logger.error('hpcc-util - updateWorkUnit: ', error);
-    const customError = new Error('Failed to update Work Unit.');
+    const customError: any = new Error('Failed to update Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
   }
@@ -787,7 +819,7 @@ export async function submitWU(clusterId, WUsubmitBody) {
     return respond;
   } catch (error) {
     logger.error('hpcc-util - submitWU: ', error);
-    const customError = new Error('Failed to submit Work Unit.');
+    const customError: any = new Error('Failed to submit Work Unit.');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
   }
@@ -804,7 +836,7 @@ export async function updateWUAction(clusterId, WUactionBody) {
     return respond;
   } catch (error) {
     logger.error('hpcc-util - updateWUAction: ', error);
-    const customError = new Error('Failed to update Work Unit action');
+    const customError: any = new Error('Failed to update Work Unit action');
     customError.details = error; // RESPOND WITH EXCEPTIONS CAN BE FOUND HERE.
     throw customError;
   }
@@ -891,7 +923,7 @@ export async function getClusterTimezoneOffset(clusterId) {
     const jobname = `timezone-offset-${process.env.INSTANCE_NAME}`;
 
     // Create empty WU, will give wuID
-    const workUnit = await wuService.WUCreate(clusterId, {
+    const workUnit = await (wuService.WUCreate as any)({
       jobname,
     });
 
@@ -937,7 +969,7 @@ export async function getClusterTimezoneOffset(clusterId) {
 
     const {
       Result: { Row },
-    } = wuResult;
+    } = wuResult as any;
     const timeZoneOffsetInMinutes = Number(Row[0].Result_1) / 60;
 
     // if NaN throw error
@@ -966,7 +998,7 @@ export async function getSuperFile(clusterId, fileName) {
     });
 
     //output
-    let output;
+    let output: any;
     //if one is found, build returns
     if (superFileList.DFULogicalFiles.DFULogicalFile[0]) {
       //get number of sub files
@@ -1043,7 +1075,7 @@ export async function getSuperFiles(clusterId, fileName) {
     });
 
     //build output
-    let output = [];
+    let output: any = [];
     if (
       superFileList.DFULogicalFiles &&
       superFileList.DFULogicalFiles.DFULogicalFile.length > 0
