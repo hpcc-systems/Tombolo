@@ -14,7 +14,6 @@ const ScheduledJobsPage = React.lazy(() => import('./ScheduledJobsPage'));
 // const Compliance = React.lazy(() => import('./Compliance/Compliance'));
 const Integrations = React.lazy(() => import('./Integrations'));
 const IntegrationSettings = React.lazy(() => import('./Integrations/IntegrationSettings'));
-const TeamsNotification = React.lazy(() => import('./notifications/MsTeams/Teams'));
 const UserManagement = React.lazy(() => import('./userManagement/index.jsx'));
 const Settings = React.lazy(() => import('./settings'));
 const WorkUnitHistory = React.lazy(() => import('./workunitHistory/index.jsx'));
@@ -29,7 +28,6 @@ const AdminRoutes = () => {
       <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
       <PrivateRoute path="/admin/clusters/logs" component={ClusterLogs} />
       <PrivateRoute path="/admin/clusters" component={Clusters} />
-      <PrivateRoute path="/admin/notification-settings/msTeams" component={TeamsNotification} />
       {/* <PrivateRoute path="/admin/github" component={GitHubSettings} /> */}
       {/* <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} /> */}
       <PrivateRoute path="/admin/users" component={Users} />
