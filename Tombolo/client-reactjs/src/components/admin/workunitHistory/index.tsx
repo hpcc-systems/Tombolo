@@ -1,0 +1,480 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useHistory } from 'react-router-dom';
+import {
+  Table,
+  Card,
+  Space,
+  Button,
+  Input,
+  Select,
+  DatePicker,
+  Tag,
+  Typography,
+  message,
+  Tooltip,
+  Row,
+  Col,
+  Statistic,
+} from 'antd';
+import {
+  ReloadOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  EyeOutlined,
+  ClockCircleOutlined,
+  DollarOutlined,
+} from '@ant-design/icons';
+import dayjs from 'dayjs';
+import workunitsService from '@/services/workunits.service';
+import clustersService from '@/services/clusters.service';
+import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
+import styles from './workunitHistory.module.css';
+
+const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
+const { Option } = Select;
+
+const formatTime = (seconds: any) => {
+  if (seconds == null) return '-';
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  if (hours > 0) return `${hours}h ${mins}m`;
+  if (mins > 0) return `${mins}m ${secs}s`;
+  return `${secs}s`;
+};
+
+const WorkUnitHistory: React.FC = () => {
+  const history = useHistory();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [data, setData] = useState<any[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [page, setPage] = useState<number>(() => loadLocalStorage('wuh.list.page', 1));
+  const [limit, setLimit] = useState<number>(() => loadLocalStorage('wuh.list.limit', 50));
+  const [sortField, setSortField] = useState<string>(() => loadLocalStorage('wuh.list.sortField', 'workUnitTimestamp'));
+  const [sortOrder, setSortOrder] = useState<string>(() => loadLocalStorage('wuh.list.sortOrder', 'desc'));
+  const [clusters, setClusters] = useState<any[]>([]);
+  const [clusterMap, setClusterMap] = useState<Record<string, string>>({});
+
+  // Filters
+  const [filters, setFilters] = useState<any>(() => {
+    const saved = loadLocalStorage('wuh.list.filters', {}) as any;
+    if (saved.dateRange) {
+      saved.dateRange = saved.dateRange.map((d: any) => (d ? dayjs(d) : null));
+    }
+    return {
+      clusterId: undefined,
+      state: undefined,
+      owner: undefined,
+      jobName: undefined,
+      dateRange: undefined,
+      costAbove: undefined,
+      detailsFetched: undefined,
+      ...saved,
+    };
+  });
+
+  useEffect(() => saveLocalStorage('wuh.list.page', page), [page]);
+  useEffect(() => saveLocalStorage('wuh.list.limit', limit), [limit]);
+  useEffect(() => saveLocalStorage('wuh.list.sortField', sortField), [sortField]);
+  useEffect(() => saveLocalStorage('wuh.list.sortOrder', sortOrder), [sortOrder]);
+  useEffect(() => saveLocalStorage('wuh.list.filters', filters), [filters]);
+
+  const [statistics, setStatistics] = useState({
+    totalJobs: 0,
+    totalCost: 0,
+    avgTime: 0,
+  });
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const queryParams: any = {
+        page,
+        limit,
+        sort: sortField,
+        order: sortOrder,
+      };
+
+      // Apply filters
+      if (filters.clusterId) queryParams.clusterId = filters.clusterId;
+      if (filters.state) queryParams.state = filters.state;
+      if (filters.owner) queryParams.owner = filters.owner;
+      if (filters.jobName) queryParams.jobName = filters.jobName;
+      if (filters.dateRange && filters.dateRange[0]) {
+        queryParams.dateFrom = filters.dateRange[0].toISOString();
+        queryParams.dateTo = filters.dateRange[1].toISOString();
+      }
+      if (filters.costAbove) queryParams.costAbove = filters.costAbove;
+      if (filters.detailsFetched !== undefined) queryParams.detailsFetched = filters.detailsFetched;
+
+      const result = await workunitsService.getAll(queryParams);
+      setData(result.data || []);
+      setTotal(result.total || 0);
+
+      // Calculate statistics
+      if (result.data && result.data.length > 0) {
+        const totalCost = result.data.reduce((sum: number, wu: any) => sum + (wu.totalCost || 0), 0);
+        const avgTime =
+          result.data.reduce((sum: number, wu: any) => sum + (wu.totalClusterTime || 0), 0) / result.data.length;
+        setStatistics({
+          totalJobs: result.total,
+          totalCost,
+          avgTime,
+        });
+      } else {
+        setStatistics({
+          totalJobs: 0,
+          totalCost: 0,
+          avgTime: 0,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching workunits:', error);
+      message.error('Failed to load workunit history');
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    page,
+    limit,
+    sortField,
+    sortOrder,
+    filters.clusterId,
+    filters.state,
+    filters.owner,
+    filters.jobName,
+    filters.dateRange,
+    filters.costAbove,
+    filters.detailsFetched,
+  ]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Fetch clusters on mount
+  useEffect(() => {
+    const fetchClusters = async () => {
+      try {
+        const clusterData = await clustersService.getAll();
+        setClusters(clusterData || []);
+
+        const map: Record<string, string> = {};
+        (clusterData || []).forEach((cluster: any) => {
+          map[cluster.id] = cluster.name;
+        });
+        setClusterMap(map);
+      } catch (error) {
+        console.error('Error fetching clusters:', error);
+      }
+    };
+
+    fetchClusters();
+  }, []);
+
+  const handleTableChange = (newPagination: any, _filters: any, sorter: any) => {
+    setPage(newPagination.current);
+    setLimit(newPagination.pageSize);
+
+    if (sorter.field) {
+      setSortField(sorter.field);
+      setSortOrder(sorter.order === 'ascend' ? 'asc' : 'desc');
+    }
+  };
+
+  const handleSearch = () => {
+    setPage(1);
+    if (page === 1) {
+      fetchData();
+    }
+  };
+
+  const handleReset = () => {
+    const defaultFilters = {
+      clusterId: undefined,
+      state: undefined,
+      owner: undefined,
+      jobName: undefined,
+      dateRange: undefined,
+      costAbove: undefined,
+      detailsFetched: undefined,
+    };
+    setFilters(defaultFilters);
+    setPage(1);
+    setSortField('workUnitTimestamp');
+    setSortOrder('desc');
+  };
+
+  const handleView = (record: any) => {
+    history.push(`/workunits/history/${record.clusterId}/${record.wuId}`);
+  };
+
+  const columns = [
+    {
+      title: 'Job Name',
+      dataIndex: 'jobName',
+      key: 'jobName',
+      ellipsis: true,
+      render: (text: any, record: any) => (
+        <Space direction="vertical" size={0}>
+          <Space size={4} align="center">
+            <Button
+              type="link"
+              className={styles.linkButton}
+              onClick={() => handleView(record)}
+              disabled={!record.detailsFetchedAt}>
+              <Text strong className={styles.ellipsis}>
+                {text || record.wuId}
+              </Text>
+            </Button>
+            {!record.detailsFetchedAt && (
+              <Tooltip title="Details not yet fetched">
+                <Tag color="default" className={styles.smallTag}>
+                  Not Fetched
+                </Tag>
+              </Tooltip>
+            )}
+          </Space>
+          <Text type="secondary" className={`${styles.smallText} ${styles.ellipsis}`}>
+            {record.wuId}
+          </Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Cluster',
+      dataIndex: 'clusterId',
+      key: 'clusterId',
+      width: 120,
+      ellipsis: true,
+      render: (clusterId: string) => clusterMap[clusterId] || clusterId,
+    },
+    {
+      title: 'Owner',
+      dataIndex: 'owner',
+      key: 'owner',
+      width: 100,
+      ellipsis: true,
+    },
+    {
+      title: 'State',
+      dataIndex: 'state',
+      key: 'state',
+      width: 90,
+      render: (state: any) => {
+        const colorMap: Record<string, any> = {
+          completed: 'success',
+          failed: 'error',
+          running: 'processing',
+          aborted: 'warning',
+        };
+        return <Tag color={colorMap[state] || 'default'}>{state ? state.toUpperCase() : 'UNKNOWN'}</Tag>;
+      },
+    },
+    {
+      title: 'Cost',
+      dataIndex: 'totalCost',
+      key: 'totalCost',
+      width: 80,
+      sorter: true,
+      render: (cost: any) => (cost != null ? `$${cost.toFixed(4)}` : '-'),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 80,
+      fixed: 'right' as const,
+      render: (_: any, record: any) => (
+        <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
+          <Button
+            type="primary"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            disabled={!record.detailsFetchedAt}>
+            Details
+          </Button>
+        </Tooltip>
+      ),
+    },
+  ];
+
+  return (
+    <div className={`${styles.pageContainer} ${styles.pageBgLight}`}>
+      <Title level={2}>Workunit History</Title>
+
+      <Card size="small" className={styles.mb16}>
+        <Row gutter={16}>
+          <Col span={8}>
+            <Statistic
+              title={
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  Total Workunits
+                </Text>
+              }
+              value={statistics.totalJobs}
+              prefix={<ClockCircleOutlined style={{ fontSize: '14px' }} />}
+              valueStyle={{ fontSize: '20px' }}
+            />
+          </Col>
+          <Col span={8}>
+            <Statistic
+              title={
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  Total Cost
+                </Text>
+              }
+              value={statistics.totalCost}
+              precision={2}
+              prefix={<DollarOutlined style={{ fontSize: '14px' }} />}
+              suffix={
+                <Text type="secondary" style={{ fontSize: '12px', marginLeft: '4px' }}>
+                  USD
+                </Text>
+              }
+              valueStyle={{ fontSize: '20px' }}
+            />
+          </Col>
+          <Col span={8}>
+            <Statistic
+              title={
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  Avg Time
+                </Text>
+              }
+              value={formatTime(statistics.avgTime)}
+              prefix={<ClockCircleOutlined style={{ fontSize: '14px' }} />}
+              valueStyle={{ fontSize: '20px' }}
+            />
+          </Col>
+        </Row>
+      </Card>
+
+      <Card className={styles.cardMarginBottom16}>
+        <Space direction="vertical" size="middle" className={styles.fullWidth}>
+          <Row gutter={[16, 16]}>
+            <Col span={6}>
+              <Input
+                placeholder="Job Name"
+                value={filters.jobName}
+                onChange={e => setFilters({ ...filters, jobName: e.target.value })}
+                allowClear
+              />
+            </Col>
+            <Col span={6}>
+              <Select
+                placeholder="Select Cluster"
+                value={filters.clusterId}
+                onChange={value => setFilters({ ...filters, clusterId: value })}
+                className={styles.fullWidth}
+                allowClear
+                showSearch
+                filterOption={(input, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
+                {clusters.map(cluster => (
+                  <Option key={cluster.id} value={cluster.id}>
+                    {cluster.name}
+                  </Option>
+                ))}
+              </Select>
+            </Col>
+            <Col span={6}>
+              <Select
+                placeholder="State"
+                value={filters.state}
+                onChange={value => setFilters({ ...filters, state: value })}
+                className={styles.fullWidth}
+                allowClear>
+                <Option value="completed">Completed</Option>
+                <Option value="failed">Failed</Option>
+                <Option value="running">Running</Option>
+                <Option value="aborted">Aborted</Option>
+              </Select>
+            </Col>
+            <Col span={6}>
+              <Input
+                placeholder="Owner"
+                value={filters.owner}
+                onChange={e => setFilters({ ...filters, owner: e.target.value })}
+                allowClear
+              />
+            </Col>
+          </Row>
+          <Row gutter={[16, 16]}>
+            <Col span={8}>
+              <RangePicker
+                value={filters.dateRange}
+                onChange={dates => setFilters({ ...filters, dateRange: dates })}
+                className={styles.fullWidth}
+                showTime
+              />
+            </Col>
+            <Col span={4}>
+              <Select
+                placeholder="Details fetched"
+                value={filters.detailsFetched}
+                onChange={value => setFilters({ ...filters, detailsFetched: value })}
+                className={styles.fullWidth}
+                allowClear>
+                <Option value={true}>Yes</Option>
+                <Option value={false}>No</Option>
+              </Select>
+            </Col>
+            <Col span={4}>
+              <Input
+                placeholder="Min Cost ($)"
+                type="number"
+                value={filters.costAbove}
+                onChange={e => setFilters({ ...filters, costAbove: e.target.value })}
+                allowClear
+              />
+            </Col>
+            <Col span={8}>
+              <Space>
+                <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+                  Search
+                </Button>
+                <Button icon={<FilterOutlined />} onClick={handleReset}>
+                  Reset
+                </Button>
+                <Button icon={<ReloadOutlined />} onClick={() => fetchData()}>
+                  Refresh
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </Space>
+      </Card>
+
+      <Card>
+        <Table
+          columns={columns}
+          dataSource={data}
+          rowKey="wuId"
+          loading={loading}
+          pagination={{
+            current: page,
+            pageSize: limit,
+            total: total,
+            showSizeChanger: true,
+            showTotal: total => `Total ${total} workunits`,
+            pageSizeOptions: ['25', '50', '100', '200'],
+          }}
+          onChange={handleTableChange}
+          rowClassName={record => {
+            if (record.state === 'failed' || record.state === 'aborted') {
+              return 'wu-row-failed';
+            }
+            if (record.state === 'running' && (record.totalClusterTime || 0) > 7200) {
+              return 'wu-row-long-running';
+            }
+            return '';
+          }}
+          scroll={{ x: 'max-content' }}
+        />
+      </Card>
+    </div>
+  );
+};
+
+export default WorkUnitHistory;
