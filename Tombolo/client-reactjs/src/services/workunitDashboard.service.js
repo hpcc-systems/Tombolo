@@ -8,7 +8,7 @@ const workunitDashboardService = {
    * @param {string} params.endDate - End date (ISO string, required)
    * @param {string} params.clusterId - Cluster ID (UUID, optional)
    * @returns {Promise<{
-   *   summary: { totalCost, totalJobs, avgCostPerJob, totalCpuHours, failedCount, failedCost },
+   *   summary: { totalCost, totalJobs, avgCostPerJob, totalRuntimeHours, failedCount, failedCost },
    *   dailyCosts: Array<{ date, cost }>,
    *   clusterBreakdown: Array<{ cluster, cost, count }>,
    *   ownerBreakdown: Array<{ owner, cost, count }>,

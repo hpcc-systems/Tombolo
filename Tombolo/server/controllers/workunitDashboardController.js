@@ -34,7 +34,7 @@ async function getDashboardData(req, res) {
           COALESCE(SUM(totalCost), 0) as totalCost,
           COUNT(*) as totalJobs,
           COALESCE(AVG(totalCost), 0) as avgCostPerJob,
-          COALESCE(SUM(totalClusterTime), 0) as totalCpuHours,
+          COALESCE(SUM(totalClusterTime), 0) as totalRuntimeHours,
           SUM(CASE WHEN state = 'failed' THEN 1 ELSE 0 END) as failedCount,
           COALESCE(SUM(CASE WHEN state = 'failed' THEN totalCost ELSE 0 END), 0) as failedCost
         FROM work_units
@@ -214,7 +214,7 @@ async function getDashboardData(req, res) {
       totalCost: 0,
       totalJobs: 0,
       avgCostPerJob: 0,
-      totalCpuHours: 0,
+      totalRuntimeHours: 0,
       failedCount: 0,
       failedCost: 0,
     };
@@ -253,7 +253,7 @@ async function getDashboardData(req, res) {
           totalCost: parseFloat(summary.totalCost) || 0,
           totalJobs: parseInt(summary.totalJobs, 10) || 0,
           avgCostPerJob: parseFloat(summary.avgCostPerJob) || 0,
-          totalCpuHours: parseFloat(summary.totalCpuHours) || 0,
+          totalRuntimeHours: parseFloat(summary.totalRuntimeHours) || 0,
           failedCount: parseInt(summary.failedCount, 10) || 0,
           failedCost: parseFloat(summary.failedCost) || 0,
         },
