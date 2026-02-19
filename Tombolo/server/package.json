@@ -6,9 +6,10 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js",
-    "bootstrap-server": "(pnpm install) && (pnpm exec nodemon server.js)",
-    "build": "echo 'No build step for server'",
+    "dev": "tsx watch server.js",
+    "dev:old": "nodemon server.js",
+    "bootstrap-server": "(pnpm install) && (pnpm exec tsx watch server.js)",
+    "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:jobs": "vitest run --project jobs",
@@ -55,11 +56,23 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/compression": "^1.8.1",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "catalog:",
+    "@types/nodemailer": "^7.0.10",
     "@vitest/coverage-v8": "catalog:",
     "cross-env": "^7.0.3",
     "nodemon": "catalog:",
     "prettier": "catalog:",
     "supertest": "^7.1.4",
+    "tsup": "catalog:",
+    "tsx": "^4.21.0",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }
