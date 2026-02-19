@@ -53,7 +53,10 @@ async function getDashboardData(req, res) {
         `
         SELECT 
           DATE(workUnitTimestamp) as date,
-          COALESCE(SUM(totalCost), 0) as cost
+          COALESCE(SUM(totalCost), 0) as cost,
+          COALESCE(SUM(CASE WHEN state = 'failed' THEN 1 ELSE 0 END), 0) as failed,
+          COALESCE(SUM(CASE WHEN state = 'blocked' THEN 1 ELSE 0 END), 0) as blocked,
+          COALESCE(SUM(CASE WHEN state NOT IN ('failed', 'blocked') THEN 1 ELSE 0 END), 0) as other
         FROM work_units
         WHERE workUnitTimestamp BETWEEN :startDate AND :endDate
           AND (:clusterId IS NULL OR clusterId = :clusterId)
@@ -184,6 +187,7 @@ async function getDashboardData(req, res) {
         SELECT 
           wu.wuId as wuid,
           wu.jobName,
+          wu.clusterId,
           c.name as cluster,
           wu.owner,
           wu.state,
@@ -193,7 +197,8 @@ async function getDashboardData(req, res) {
           DATE_ADD(wu.workUnitTimestamp, INTERVAL wu.totalClusterTime HOUR) as endTime,
           wu.executeCost,
           wu.fileAccessCost,
-          wu.compileCost
+          wu.compileCost,
+          wu.detailsFetchedAt
         FROM work_units wu
         INNER JOIN clusters c ON wu.clusterId = c.id
         WHERE wu.workUnitTimestamp BETWEEN :startDate AND :endDate
@@ -229,6 +234,7 @@ async function getDashboardData(req, res) {
     const workunits = (workunitsResult || []).map(wu => ({
       wuid: wu.wuid,
       jobName: wu.jobName,
+      clusterId: wu.clusterId,
       cluster: wu.cluster,
       owner: wu.owner,
       state: wu.state,
@@ -236,6 +242,7 @@ async function getDashboardData(req, res) {
       cpuHours: parseFloat(wu.cpuHours) || 0,
       duration: parseFloat(wu.duration) || 0,
       endTime: wu.endTime,
+      detailsFetchedAt: wu.detailsFetchedAt,
       costBreakdown: {
         compute: parseFloat(wu.executeCost) || 0,
         fileAccess: parseFloat(wu.fileAccessCost) || 0,
@@ -260,6 +267,9 @@ async function getDashboardData(req, res) {
         dailyCosts: dailyCosts.map(d => ({
           date: d.date,
           cost: parseFloat(d.cost) || 0,
+          failed: parseInt(d.failed, 10) || 0,
+          blocked: parseInt(d.blocked, 10) || 0,
+          other: parseInt(d.other, 10) || 0,
         })),
         clusterBreakdown: clusterBreakdown.map(c => ({
           cluster: c.cluster,

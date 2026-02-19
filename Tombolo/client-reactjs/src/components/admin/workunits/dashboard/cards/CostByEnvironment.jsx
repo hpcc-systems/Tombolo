@@ -21,6 +21,7 @@ export default function CostByCluster({ data }) {
         background: '#ffffff',
         borderColor: '#e5e7eb',
         borderRadius: 8,
+        height: '100%',
       }}
       styles={{ body: { padding: '16px 20px' } }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

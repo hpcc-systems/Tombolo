@@ -1,7 +1,6 @@
-import { Table, Tag, Tooltip, Input, Select } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Table, Tag, Tooltip, Input, Select, Button } from 'antd';
+import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
 import { useState, useMemo } from 'react';
-import dayjs from 'dayjs';
 // import type { ColumnsType } from "antd/es/table";
 
 // interface WorkunitTableProps {
@@ -127,7 +126,7 @@ export default function WorkunitTable({ workunits }) {
       sorter: (a, b) => a.duration - b.duration,
       render: val => {
         const h = Math.floor(val / 60);
-        const m = val % 60;
+        const m = Math.round(val % 60);
         return (
           <span style={{ color: '#6b7280', fontSize: 12 }}>
             {h > 0 ? `${h}h ` : ''}
@@ -191,15 +190,33 @@ export default function WorkunitTable({ workunits }) {
       },
     },
     {
-      title: 'End Time',
-      dataIndex: 'endTime',
-      key: 'endTime',
-      width: 160,
-      render: val => (
-        <span style={{ color: '#9ca3af', fontSize: 11 }}>
-          {val ? dayjs(val).format('YYYY-MM-DD HH:mm:ss') : '-'}
-        </span>
-      ),
+      title: 'Details',
+      key: 'details',
+      width: 100,
+      align: 'center',
+      render: (_, record) => {
+        const hasDetails = record.clusterId && record.wuid && record.detailsFetchedAt;
+        const detailsUrl = hasDetails ? `/workunits/history/${record.clusterId}/${record.wuid}` : null;
+
+        return (
+          <Button
+            type="link"
+            size="small"
+            icon={<EyeOutlined />}
+            disabled={!hasDetails}
+            onClick={() => {
+              if (detailsUrl) {
+                window.open(detailsUrl, '_blank', 'noopener,noreferrer');
+              }
+            }}
+            style={{
+              color: hasDetails ? '#2563eb' : '#9ca3af',
+              padding: 0,
+            }}>
+            View
+          </Button>
+        );
+      },
     },
   ];
 
