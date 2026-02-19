@@ -1,4 +1,4 @@
-function wildCardStringMatch(wilCardString, text) {
+function wildCardStringMatch(wilCardString: string, text: string): boolean {
   if (wilCardString.length === 0 && text.length === 0) return true;
 
   if (wilCardString.length > 1 && wilCardString[0] === '*' && text.length === 0)
@@ -24,7 +24,7 @@ function wildCardStringMatch(wilCardString, text) {
 export default wildCardStringMatch;
 
 //Tests
-// wilCardStringMatch('*?-*?-*', '20-20-2222') --> true
-// wilCardStringMatch('*.csv', '.csv') --> true
-// wilCardStringMatch('*?-*?-*.csv', '20-20-2222.csv') --> false
-// wilCardStringMatch('*.a*?test*?t**', '.a::salesdata_testcomplete') --> true
+// wildCardStringMatch('*?-*?-*', '20-20-2222');
+// wildCardStringMatch('*.csv', '.csv') --> true
+// wildCardStringMatch('*?-*?-*.csv', '20-20-2222.csv') --> false
+// wildCardStringMatch('*.a*?test*?t**', '.a::salesdata_testcomplete') --> true
