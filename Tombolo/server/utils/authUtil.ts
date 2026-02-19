@@ -1,9 +1,10 @@
 // Imports from node modules
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 import moment from 'moment';
 import bcrypt from 'bcryptjs';
+import { Response, Request } from 'express';
 
 // Local Imports
 import logger from '../config/logger.js';
@@ -28,34 +29,37 @@ import { generateToken } from '../middlewares/csrfMiddleware.js';
 const csrfHeaderName = 'x-csrf-token';
 
 // Generate access token
-const generateAccessToken = user => {
-  return jwt.sign(user, process.env.JWT_SECRET, {
+const generateAccessToken = (user: any): string => {
+  return jwt.sign(user, process.env.JWT_SECRET as string, {
     expiresIn: ACCESS_TOKEN_EXPIRY,
   });
 };
 
 // Generate refresh token
-const generateRefreshToken = (tokenId, customExpiry = null) => {
-  const options = customExpiry
+const generateRefreshToken = (
+  tokenId: any,
+  customExpiry: Date | null = null
+): string => {
+  const options: SignOptions = customExpiry
     ? { expiresIn: Math.floor((customExpiry.getTime() - Date.now()) / 1000) } // seconds until custom expiry
     : { expiresIn: REFRESH_TOKEN_EXPIRY }; // default from config
 
-  return jwt.sign(tokenId, process.env.JWT_REFRESH_SECRET, options);
+  return jwt.sign(tokenId, process.env.JWT_REFRESH_SECRET as string, options);
 };
 
 // Verify token
-const verifyToken = token => {
-  return jwt.verify(token, process.env.JWT_SECRET);
+const verifyToken = (token: string): any => {
+  return jwt.verify(token, process.env.JWT_SECRET as string);
 };
 
 // Verify refresh token
-const verifyRefreshToken = token => {
-  return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+const verifyRefreshToken = (token: string): any => {
+  return jwt.verify(token, process.env.JWT_REFRESH_SECRET as string);
 };
 
 // Get user by E-mail or ID
 // identifier is either email or id , example : getAUser({id: 'xyz'}) or getAUser({email: 'xyz@xyz.com'})
-const getAUser = async identifier => {
+const getAUser = async (identifier: any): Promise<any> => {
   return await User.findOne({
     where: { ...identifier },
     include: [
@@ -91,17 +95,24 @@ const getAUser = async identifier => {
   });
 };
 
-const setTokenCookie = async (res, token) => {
+const setTokenCookie = async (
+  res: Response,
+  token: string
+): Promise<boolean> => {
   res.cookie('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Strict',
+    sameSite: 'strict',
     maxAge: TOKEN_COOKIE_MAX_AGE, // From config
   });
   return true;
 };
 
-const generateAndSetCSRFToken = async (req, res, accessToken) => {
+const generateAndSetCSRFToken = async (
+  req: Request,
+  res: Response,
+  accessToken: string
+): Promise<boolean> => {
   try {
     // Ensure token is available in req.cookies for CSRF generation
     if (!req.cookies) {
@@ -112,7 +123,7 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
     // Clear any existing CSRF cookie from both response and request
     // This prevents validation conflicts when generating token for a new session
     res.clearCookie('x-csrf-token', {
-      sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'Lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       secure: process.env.NODE_ENV === 'production',
     });
 
@@ -140,7 +151,7 @@ const generateAndSetCSRFToken = async (req, res, accessToken) => {
 };
 
 //function to trim url so we can have consistent links without //
-const trimURL = url => {
+const trimURL = (url: string): string => {
   //cut off last character if it is a slash
   if (url[url.length - 1] === '/') {
     url = url.slice(0, -1);
@@ -148,7 +159,7 @@ const trimURL = url => {
   return url;
 };
 
-const setPasswordExpiry = user => {
+const setPasswordExpiry = (user: any): any => {
   //set forcePasswordReset to 0
   user.forcePasswordReset = 0;
   //set passwordExpiry to 90 days
@@ -169,7 +180,7 @@ const setPasswordExpiry = user => {
   return user;
 };
 
-const setLastLoginAndReturn = user => {
+const setLastLoginAndReturn = (user: any): any => {
   user.lastLoginAt = new Date();
 
   //reset password Expiry email sent flags
@@ -186,7 +197,7 @@ const setLastLoginAndReturn = user => {
 };
 
 // Get Support Notification Recipient's Emails
-const getSupportContactEmails = async () => {
+const getSupportContactEmails = async (): Promise<string[]> => {
   // Get Instance Setting
   const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
@@ -225,7 +236,7 @@ const getSupportContactEmails = async () => {
   });
 
   // Get the e-mail addresses
-  ownerAndAdminEmails.forEach(user => {
+  ownerAndAdminEmails.forEach((user: any) => {
     supportRolesEmail.push(user.email);
   });
 
@@ -234,7 +245,7 @@ const getSupportContactEmails = async () => {
 };
 
 // Get Access Request Notification Recipient's Emails
-const getAccessRequestContactEmails = async () => {
+const getAccessRequestContactEmails = async (): Promise<string[]> => {
   // Get Instance Setting
   const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
@@ -273,14 +284,16 @@ const getAccessRequestContactEmails = async () => {
   });
 
   // Get the e-mail addresses
-  ownerAndAdminEmails.forEach(user => {
+  ownerAndAdminEmails.forEach((user: any) => {
     accessRequestRolesEmail.push(user.email);
   });
 
   return [...accessRequestEmailRecipientsEmail, ...accessRequestRolesEmail];
 };
 
-const sendPasswordExpiredEmail = async user => {
+const sendPasswordExpiredEmail = async (
+  user: any
+): Promise<{ success: boolean; message: string }> => {
   //check that lastAdminNotification was more than 24 hours ago to avoid spamming the admin
   const currentTime = new Date();
   const lastAdminNotification = new Date(
@@ -288,7 +301,7 @@ const sendPasswordExpiredEmail = async user => {
   );
 
   const timeSinceLastNotification =
-    (currentTime - lastAdminNotification) / 1000 / 60 / 60;
+    (currentTime.getTime() - lastAdminNotification.getTime()) / 1000 / 60 / 60;
 
   if (timeSinceLastNotification < 24 || !isNaN(timeSinceLastNotification)) {
     return {
@@ -334,7 +347,15 @@ const sendPasswordExpiredEmail = async user => {
   };
 };
 
-const checkPasswordSecurityViolations = ({ password, user, newUser }) => {
+const checkPasswordSecurityViolations = ({
+  password,
+  user,
+  newUser,
+}: {
+  password: string;
+  user: any;
+  newUser: boolean;
+}): string[] => {
   //check password for user.email, user.firstName, user.lastName
   const passwordViolations = [];
 
@@ -360,7 +381,7 @@ const checkPasswordSecurityViolations = ({ password, user, newUser }) => {
   //dont do previous password check if it is a new user being registered
   if (!newUser) {
     //TODO -- check if password contains any of previous 12 passwords
-    previousPasswords.forEach(oldPassword => {
+    previousPasswords.forEach((oldPassword: string) => {
       if (bcrypt.compareSync(password, oldPassword)) {
         passwordViolations.push(
           'Password cannot be the same as one of the previous passwords'
@@ -372,7 +393,7 @@ const checkPasswordSecurityViolations = ({ password, user, newUser }) => {
   return passwordViolations;
 };
 
-const setPreviousPasswords = async user => {
+const setPreviousPasswords = async (user: any): Promise<any> => {
   //get existing previous passwords
   let previousPasswords = user.metaData.previousPasswords || [];
 
@@ -390,7 +411,7 @@ const setPreviousPasswords = async user => {
 };
 
 // Generate a random password - 12 chars
-function generatePassword(length = 12) {
+function generatePassword(length = 12): string {
   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const numbers = '0123456789';
@@ -415,7 +436,7 @@ function generatePassword(length = 12) {
     .join('');
 }
 
-const setLastLogin = async user => {
+const setLastLogin = async (user: any): Promise<void> => {
   const date = new Date();
 
   const updatedUser = await User.update(
@@ -447,7 +468,13 @@ const setLastLogin = async user => {
 };
 
 // Record failed login attempt
-const handleInvalidLoginAttempt = async ({ user, errMessage }) => {
+const handleInvalidLoginAttempt = async ({
+  user,
+  errMessage,
+}: {
+  user: any;
+  errMessage: string;
+}): Promise<never> => {
   const loginAttempts = user.loginAttempts + 1;
   const accountLocked = user.accountLocked;
 
@@ -479,14 +506,14 @@ const handleInvalidLoginAttempt = async ({ user, errMessage }) => {
   }
 
   // Incorrect E-mail password combination error
-  const invalidCredentialsErr = new Error(errMessage);
+  const invalidCredentialsErr = new Error(errMessage) as any;
   invalidCredentialsErr.status = 401;
   invalidCredentialsErr.name = 'UnauthorizedError';
   throw invalidCredentialsErr;
 };
 
 // Function to send account locked email
-const sendAccountLockedEmail = async user => {
+const sendAccountLockedEmail = async (user: any): Promise<void> => {
   // Get support email recipients
   const supportEmailRecipients = await getSupportContactEmails();
 
@@ -516,7 +543,11 @@ const sendAccountUnlockedEmail = async ({
   user,
   tempPassword,
   verificationCode,
-}) => {
+}: {
+  user: any;
+  tempPassword: string;
+  verificationCode: string;
+}): Promise<void> => {
   await NotificationQueue.create({
     type: 'email',
     templateName: 'accountUnlocked',
@@ -540,7 +571,7 @@ const sendAccountUnlockedEmail = async ({
   });
 };
 
-const checkIfSystemUser = userObj => {
+const checkIfSystemUser = (userObj: any): boolean => {
   if (!userObj) return false;
   return (
     userObj.firstName === 'System' &&
@@ -549,7 +580,7 @@ const checkIfSystemUser = userObj => {
   );
 };
 
-const deleteUser = async (id, reason) => {
+const deleteUser = async (id: string, reason: string): Promise<boolean> => {
   try {
     if (!reason || reason === '') {
       throw new Error('Reason for deletion is required');
@@ -566,7 +597,7 @@ const deleteUser = async (id, reason) => {
       throw new Error('System user cannot be deleted');
     }
 
-    const removedAt = Date.now();
+    const removedAt = new Date();
     const removedBy = reason;
 
     //remove hash from user
@@ -598,7 +629,7 @@ const deleteUser = async (id, reason) => {
 };
 
 // Get access request notification recipients from instance settings and role-based recipients
-const getAccessRequestRecipients = async () => {
+const getAccessRequestRecipients = async (): Promise<string[]> => {
   try {
     const instance_setting = await InstanceSettings.findOne({ raw: true });
 
@@ -623,7 +654,7 @@ const getAccessRequestRecipients = async () => {
         raw: true,
       });
 
-      const roleIds = roleDetails.map(r => r.id);
+      const roleIds = roleDetails.map((r: any) => r.id);
 
       // Get all users with the roleIds above
       const users = await UserRole.findAll({
@@ -637,12 +668,14 @@ const getAccessRequestRecipients = async () => {
         ],
       });
 
-      const emails = users.map(u => u.user.email);
+      const emails = users.map((u: any) => u.user.email);
       recipients = [...recipients, ...emails];
     }
 
     // Remove duplicates and filter out empty values
-    return [...new Set(recipients.filter(email => email && email.trim()))];
+    return [
+      ...new Set(recipients.filter((email: any) => email && email.trim())),
+    ] as string[];
   } catch (error) {
     logger.error(`Error getting notification recipients: ${error.message}`);
     return [];
