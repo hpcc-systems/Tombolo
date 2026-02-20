@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import clusters from '../cluster-whitelist.js';
 import {
   AccountService,
@@ -22,7 +23,7 @@ import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 
 // Add a cluster - Without sending progress updates to client
-const addCluster = async (req, res) => {
+const addCluster = async (req: Request, res: Response) => {
   try {
     const {
       name: clusterName,
@@ -45,7 +46,7 @@ const addCluster = async (req, res) => {
     // Check if cluster is reachable
     await new AccountService(
       getClusterOptions({ baseUrl, userID, password }, allowSelfSigned)
-    ).MyAccount();
+    ).MyAccount({});
 
     // Get default cluster (engine) if exists - if not pick the first one
     const {
@@ -59,7 +60,7 @@ const addCluster = async (req, res) => {
         },
         allowSelfSigned
       )
-    ).TpLogicalClusterQuery();
+    ).TpLogicalClusterQuery({});
 
     let defaultEngine = null;
     if (TpLogicalCluster.length > 0) {
@@ -114,7 +115,7 @@ const addCluster = async (req, res) => {
     const offSetInMinutes = parseInt(wuSummary.Result.Value) / 60;
 
     // Payload
-    const clusterPayload = {
+    const clusterPayload: any = {
       name: cluster.name,
       thor_host: cluster.thor,
       thor_port: cluster.thor_port,
@@ -124,7 +125,7 @@ const addCluster = async (req, res) => {
       username: userID,
       timezone_offset: offSetInMinutes,
       adminEmails,
-      createdBy: req.user.id,
+      createdBy: (req as any).user.id,
       allowSelfSigned,
       metaData,
     };
@@ -149,7 +150,7 @@ const addCluster = async (req, res) => {
 };
 
 // Add a cluster and continuously send progress updates
-const addClusterWithProgress = async (req, res) => {
+const addClusterWithProgress = async (req: Request, res: Response) => {
   // Set headers for SSE
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -209,7 +210,7 @@ const addClusterWithProgress = async (req, res) => {
         },
         allowSelfSigned
       )
-    ).MyAccount();
+    ).MyAccount({});
 
     logger.info(`Authentication successful for cluster ${clusterName}`);
     sendUpdate({
@@ -237,7 +238,7 @@ const addClusterWithProgress = async (req, res) => {
         },
         allowSelfSigned
       )
-    ).TpLogicalClusterQuery();
+    ).TpLogicalClusterQuery({});
 
     logger.info(`Found ${TpLogicalCluster.length} logical clusters`);
 
@@ -366,7 +367,7 @@ const addClusterWithProgress = async (req, res) => {
     });
 
     // Payload
-    const clusterPayload = {
+    const clusterPayload: any = {
       name: cluster.name,
       thor_host: cluster.thor,
       thor_port: cluster.thor_port,
@@ -376,7 +377,7 @@ const addClusterWithProgress = async (req, res) => {
       username: userID,
       timezone_offset: offSetInMinutes,
       adminEmails,
-      createdBy: req.user.id,
+      createdBy: (req as any).user.id,
       allowSelfSigned,
       metaData,
     };
@@ -384,7 +385,7 @@ const addClusterWithProgress = async (req, res) => {
     const endpoint = `${cluster.thor}:${cluster.thor_port}/WsSMC/GetBuildInfo.json`;
 
     // Prepare axios config
-    const axiosConfig = {
+    const axiosConfig: any = {
       method: 'GET',
       url: endpoint,
       timeout: 30000, // 30 second timeout
@@ -451,7 +452,7 @@ const addClusterWithProgress = async (req, res) => {
 };
 
 // Retrieve all clusters
-const getClustersCtr = async (req, res) => {
+const getClustersCtr = async (req: Request, res: Response) => {
   try {
     // Get clusters ASC by name
     const clusters = await Cluster.findAll({
@@ -470,11 +471,11 @@ const getClustersCtr = async (req, res) => {
 };
 
 // Retrieve a cluster
-const getClusterCtr = async (req, res) => {
+const getClusterCtr = async (req: Request, res: Response) => {
   try {
     // Get one cluster by id
     const cluster = await Cluster.findOne({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       attributes: {
         exclude: ['hash', 'metaData'],
       },
@@ -492,12 +493,12 @@ const getClusterCtr = async (req, res) => {
 };
 
 // Delete a cluster
-const deleteCluster = async (req, res) => {
+const deleteCluster = async (req: Request, res: Response) => {
   try {
     // Delete a cluster by id
     const cluster = await Cluster.handleDelete({
-      id: req.params.id,
-      deletedByUserId: req.user.id,
+      id: req.params.id as string,
+      deletedByUserId: (req as any).user.id,
     });
     if (!cluster) throw new CustomError('Cluster not found', 404);
     return sendSuccess(res, cluster, 'Cluster deleted successfully');
@@ -508,18 +509,20 @@ const deleteCluster = async (req, res) => {
 };
 
 // Update a cluster
-const updateCluster = async (req, res) => {
+const updateCluster = async (req: Request, res: Response) => {
   // Only username, password, adminEmails can be updated. only update that if it is present in the request body
   try {
     const { username, password, adminEmails, allowSelfSigned } = req.body;
-    const cluster = await Cluster.findOne({ where: { id: req.params.id } });
+    const cluster = await Cluster.findOne({
+      where: { id: req.params.id as string },
+    });
     if (!cluster) throw new CustomError('Cluster not found', 404);
     if (allowSelfSigned) cluster.allowSelfSigned = allowSelfSigned;
     if (username) cluster.username = username;
     if (password)
       cluster.hash = encryptString(password, process.env.ENCRYPTION_KEY);
     if (adminEmails) cluster.adminEmails = adminEmails;
-    cluster.updatedBy = req.user.id;
+    cluster.updatedBy = (req as any).user.id;
 
     await cluster.save();
     return sendSuccess(res, cluster, 'Cluster updated successfully');
@@ -530,7 +533,7 @@ const updateCluster = async (req, res) => {
 };
 
 // Retrieve all whitelisted clusters
-const getClusterWhiteList = async (req, res) => {
+const getClusterWhiteList = async (req: Request, res: Response) => {
   try {
     if (!clusters) throw new CustomError('Cluster whitelist not found', 404);
     return sendSuccess(res, clusters);
@@ -541,7 +544,7 @@ const getClusterWhiteList = async (req, res) => {
 };
 
 // Ping HPCC cluster to check if it is reachable (with given username and password)
-const pingCluster = async (req, res) => {
+const pingCluster = async (req: Request, res: Response) => {
   let baseUrl;
   try {
     logger.verbose(`Pinging HPCC cluster: ${req.body.name}`);
@@ -584,7 +587,7 @@ const pingCluster = async (req, res) => {
 };
 
 // Check if cluster is alive - pings with no username and password
-const checkClusterHealth = async (req, res) => {
+const checkClusterHealth = async (req: Request, res: Response) => {
   let baseUrl;
   try {
     logger.verbose(`Checking HPCC cluster health: ${req.body.name}`);
@@ -632,10 +635,10 @@ const checkClusterHealth = async (req, res) => {
 };
 
 // Ping HPCC cluster that is already saved in the database
-const pingExistingCluster = async (req, res) => {
+const pingExistingCluster = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    await getCluster(id);
+    await getCluster(id as string);
     // Update the reachability info for the cluster
     await Cluster.update(
       {
@@ -646,7 +649,7 @@ const pingExistingCluster = async (req, res) => {
         },
       },
       {
-        where: { id },
+        where: { id: id as string },
       }
     );
     return sendSuccess(res, null, 'Reachable');
@@ -661,19 +664,19 @@ const pingExistingCluster = async (req, res) => {
         },
       },
       {
-        where: { id },
+        where: { id: id as string },
       }
     );
     return sendError(res, err.message || err, 503);
   }
 };
 
-const clusterUsage = async (req, res) => {
+const clusterUsage = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
     //Get cluster details
-    let cluster = await getCluster(id); // Checks if cluster is reachable and decrypts cluster credentials if any
+    let cluster = await getCluster(id as string); // Checks if cluster is reachable and decrypts cluster credentials if any
     const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
     const clusterDetails = getClusterOptions(
       {
@@ -700,10 +703,10 @@ const clusterUsage = async (req, res) => {
   }
 };
 
-const clusterStorageHistory = async (req, res) => {
+const clusterStorageHistory = async (req: Request, res: Response) => {
   try {
     const { queryData } = req.params;
-    const query = JSON.parse(queryData);
+    const query = JSON.parse(queryData as string);
 
     const data = await Cluster.findOne({
       where: { id: query.clusterId },
@@ -742,13 +745,13 @@ const clusterStorageHistory = async (req, res) => {
 };
 
 // Get cluster logs
-const getClusterLogs = async (req, res) => {
+const getClusterLogs = async (req: Request, res: Response) => {
   try {
     const { id: clusterId } = req.params;
 
     // Get cluster details from database
     const cluster = await Cluster.findOne({
-      where: { id: clusterId },
+      where: { id: clusterId as string },
       raw: true,
     });
 
@@ -790,9 +793,9 @@ const getClusterLogs = async (req, res) => {
     }
 
     // Build query parameters - Use proper data types for LogAccess API
-    const logQuery = {
-      LogLineStartFrom: parseInt(req.query.startFrom) || 0,
-      LogLineLimit: parseInt(req.query.limit) || 1000,
+    const logQuery: any = {
+      LogLineStartFrom: parseInt(req.query.startFrom as string) || 0,
+      LogLineLimit: parseInt(req.query.limit as string) || 1000,
     };
 
     // Add optional filters with proper data types
@@ -805,10 +808,10 @@ const getClusterLogs = async (req, res) => {
       logQuery.audience = req.query.audience;
     }
     if (req.query.startDate) {
-      logQuery.StartDate = new Date(req.query.startDate);
+      logQuery.StartDate = new Date(req.query.startDate as string);
     }
     if (req.query.endDate) {
-      logQuery.EndDate = new Date(req.query.endDate);
+      logQuery.EndDate = new Date(req.query.endDate as string);
     }
 
     // Handle wuid parameter - fetch workunit info to get execution time window
@@ -871,7 +874,7 @@ const getClusterLogs = async (req, res) => {
           const totalMilliseconds = (minutes * 60 + seconds) * 1000;
 
           // Get start time from wuid
-          const startTime = parseWorkunitTimestamp(req.query.wuid);
+          const startTime = parseWorkunitTimestamp(req.query.wuid as string);
 
           // Calculate end time
           const endTime = new Date(startTime.getTime() + totalMilliseconds);
