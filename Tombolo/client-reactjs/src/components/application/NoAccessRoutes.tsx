@@ -5,6 +5,7 @@ import NoAccess from './noAccess';
 const NoAccessRoutes: React.FC<any> = () => (
   <Switch>
     <Route path="/no-access" component={NoAccess} />
+    <Route component={NoAccess} />
   </Switch>
 );
 
