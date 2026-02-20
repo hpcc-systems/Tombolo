@@ -17,6 +17,6 @@ const convertToISODateString = (string: string): string => {
 export default convertToISODateString;
 
 // Tests
-console.log(convertToISODateString('2023-09-15T12:30:45Z')); // Expected output: '2023-09-15T12:30:46.000Z'
-console.log(convertToISODateString('2023/09/15 12:30:45')); // Expected output: '2023-09-15T12:30:46.000Z'
-console.log(convertToISODateString('20230915123045')); // Expected output: '2023-09-15T12:30:46.000Z'
+// console.log(convertToISODateString('2023-09-15T12:30:45Z')); // Expected output: '2023-09-15T12:30:46.000Z'
+// console.log(convertToISODateString('2023/09/15 12:30:45')); // Expected output: '2023-09-15T12:30:46.000Z'
+// console.log(convertToISODateString('20230915123045')); // Expected output: '2023-09-15T12:30:46.000Z'
