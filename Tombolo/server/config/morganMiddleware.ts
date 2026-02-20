@@ -1,12 +1,13 @@
 import morgan from 'morgan';
+import { Request, Response } from 'express';
 import logger from './logger.js';
 
 // Docs: https://github.com/expressjs/morgan
 const stream = {
-  write: message => logger.http(message.trim()), // Use the http level to have logs available in prod and dev
+  write: (message: string) => logger.http(message.trim()), // Use the http level to have logs available in prod and dev
 };
 
-const skip = (req, res) => {
+const skip = (req: Request, res: Response): boolean => {
   const url = req.originalUrl || req.url;
   if (url.includes('/api/bree/all')) return true; // do not log any bree route polling
   if (url.includes('/api/dataflowgraph/save')) return true; // do not log graph changes route
@@ -14,17 +15,19 @@ const skip = (req, res) => {
   return false;
 };
 
-morgan.token('user', req => {
-  return req.authInfo?.email || req.user?.email || 'unknown user';
+morgan.token('user', (req: Request): string => {
+  return (
+    (req as any).authInfo?.email || (req as any).user?.email || 'unknown user'
+  );
 });
 
-morgan.token('URL', req => {
+morgan.token('URL', (req: Request): string => {
   const url = req.originalUrl || req.url;
   const beforeQuery = url.split('?')[0];
   return beforeQuery;
 });
 
-morgan.token('query', req => {
+morgan.token('query', (req: Request): string => {
   if (Object.keys(req.query).length > 0) {
     return `\n query: ${JSON.stringify(req.query)}`;
   }

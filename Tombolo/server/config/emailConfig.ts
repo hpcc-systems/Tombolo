@@ -11,7 +11,7 @@
 import nodemailer from 'nodemailer';
 
 // SMTP configuration
-const smtpConfig = {
+const smtpConfig: any = {
   host: process.env.EMAIL_SMTP_HOST,
   port: process.env.EMAIL_PORT,
   secure: false, // use SSL,
@@ -35,7 +35,19 @@ if (
 const transporter = nodemailer.createTransport(smtpConfig);
 
 // Send email function
-const sendEmail = ({ receiver, cc, subject, plainTextBody, htmlBody }) => {
+const sendEmail = ({
+  receiver,
+  cc,
+  subject,
+  plainTextBody,
+  htmlBody,
+}: {
+  receiver: string;
+  cc?: string;
+  subject: string;
+  plainTextBody?: string;
+  htmlBody?: string;
+}): Promise<any> => {
   return new Promise((resolve, reject) => {
     const mailOptions = {
       from: smtpConfig.sender,

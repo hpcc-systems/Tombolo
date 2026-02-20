@@ -10,11 +10,11 @@ dotenv.config({ path: ENVPath });
 
 // Common database configuration options
 const commonDbConfigOptions = {
-  dialect: 'mysql',
-  seederStorage: 'sequelize',
+  dialect: 'mysql' as const,
+  seederStorage: 'sequelize' as const,
   seederStorageTableName: 'sequelize_seeders',
   migrationStorageTableName: 'sequelize_migrations',
-  logging: msg => logger.debug(msg), // change winston settings to 'debug' to see this log
+  logging: (msg: string) => logger.debug(msg), // change winston settings to 'debug' to see this log
 };
 
 // SSL configuration if enabled

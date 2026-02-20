@@ -5,7 +5,7 @@ const client = new akeyless.ApiClient();
 client.basePath = process.env.AKEYLESS_API_URL;
 const api = new akeyless.V2Api(client);
 
-async function getToken() {
+async function getToken(): Promise<string> {
   if (!process.env.AKEYLESS_ACCESS_ID || !process.env.AKEYLESS_ACCESS_KEY) {
     const errorMsg =
       'Missing AKEYLESS_ACCESS_ID or AKEYLESS_ACCESS_KEY in .env';
@@ -26,7 +26,9 @@ async function getToken() {
   }
 }
 
-async function listSecrets(path = process.env.AKEYLESS_PATH_PREFIX) {
+async function listSecrets(
+  path: string | undefined = process.env.AKEYLESS_PATH_PREFIX
+): Promise<any[]> {
   if (!path) {
     const errorMsg = 'AKEYLESS_PATH_PREFIX is not defined in .env';
     logger?.error(errorMsg);
@@ -44,14 +46,16 @@ async function listSecrets(path = process.env.AKEYLESS_PATH_PREFIX) {
   }
 }
 
-async function fetchAllSecretsInPath(path = process.env.AKEYLESS_PATH_PREFIX) {
+async function fetchAllSecretsInPath(
+  path: string | undefined = process.env.AKEYLESS_PATH_PREFIX
+): Promise<string[]> {
   const items = await listSecrets(path);
   return items
-    .filter(item => item.item_type === 'STATIC_SECRET')
-    .map(item => item.item_name);
+    .filter((item: any) => item.item_type === 'STATIC_SECRET')
+    .map((item: any) => item.item_name);
 }
 
-async function getSecret(name) {
+async function getSecret(name: string): Promise<any> {
   try {
     const tok = await getToken();
     const req = { names: [name], token: tok };
@@ -66,7 +70,7 @@ async function getSecret(name) {
   }
 }
 
-async function preloadSecrets() {
+async function preloadSecrets(): Promise<void> {
   try {
     const secretNames = await fetchAllSecretsInPath();
     logger?.info(
