@@ -1,8 +1,9 @@
+import { Request, Response } from 'express';
 import { MonitoringType } from '../models/index.js';
 import logger from '../config/logger.js';
 import { sendError, sendSuccess } from '../utils/response.js';
 
-async function getMonitoringTypes(req, res) {
+async function getMonitoringTypes(req: Request, res: Response) {
   try {
     const monitoringTypes = await MonitoringType.findAll();
     return sendSuccess(res, monitoringTypes);
@@ -13,7 +14,7 @@ async function getMonitoringTypes(req, res) {
 }
 
 // Note - this route is for testing only. Monitoring types should be seeded in the database
-async function createMonitoringType(req, res) {
+async function createMonitoringType(req: Request, res: Response) {
   try {
     if (process.env.NODE_ENV === 'production') {
       return sendError(res, 'Monitoring types cannot be created in production');
@@ -30,9 +31,11 @@ async function createMonitoringType(req, res) {
   }
 }
 
-async function deleteMonitoringType(req, res) {
+async function deleteMonitoringType(req: Request, res: Response) {
   try {
-    const monitoringType = await MonitoringType.findByPk(req.params.id);
+    const monitoringType = await MonitoringType.findByPk(
+      (req.params as { id: string }).id
+    );
     if (!monitoringType) {
       return sendError(res, 'Monitoring type not found', 404);
     }
@@ -44,9 +47,11 @@ async function deleteMonitoringType(req, res) {
   }
 }
 
-async function updateMonitoringType(req, res) {
+async function updateMonitoringType(req: Request, res: Response) {
   try {
-    const monitoringType = await MonitoringType.findByPk(req.params.id);
+    const monitoringType = await MonitoringType.findByPk(
+      (req.params as { id: string }).id
+    );
     if (!monitoringType) {
       return sendError(res, 'Monitoring type not found', 404);
     }
@@ -62,11 +67,11 @@ async function updateMonitoringType(req, res) {
   }
 }
 
-async function getMonitoringTypeByName(req, res) {
+async function getMonitoringTypeByName(req: Request, res: Response) {
   try {
     const monitoringType = await MonitoringType.findOne({
       where: {
-        name: req.params.monitoringTypeName,
+        name: (req.params as { monitoringTypeName: string }).monitoringTypeName,
       },
     });
     if (!monitoringType) {
