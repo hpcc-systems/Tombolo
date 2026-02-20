@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 // Local imports
 import { sequelize } from '../models/index.js';
 import { sendError, sendSuccess } from '../utils/response.js';
@@ -12,7 +13,7 @@ import logger from '../config/logger.js';
 import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
 import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
 
-async function createDomain(req, res) {
+async function createDomain(req: Request, res: Response) {
   try {
     /* if a monitoring type is provided,
       create a domain, then iterate over monitoringTypeId and make entry to asr_domain_monitoring_types*/
@@ -31,7 +32,7 @@ async function createDomain(req, res) {
         region,
         severityThreshold,
         severityAlertRecipients,
-        createdBy: req.user.id,
+        createdBy: (req as any).user.id,
       });
 
       // create domain monitoring type mapping
@@ -39,7 +40,7 @@ async function createDomain(req, res) {
         return AsrDomainMonitoringTypeToDomains.create({
           domain_id: domain.id,
           monitoring_type_id: monitoringId,
-          createdBy: req.user.id,
+          createdBy: (req as any).user.id,
         });
       });
 
@@ -53,7 +54,7 @@ async function createDomain(req, res) {
         region,
         severityThreshold,
         severityAlertRecipients,
-        createdBy: req.user.id,
+        createdBy: (req as any).user.id,
       });
     }
     return sendSuccess(res, domain, 'Domain created successfully');
@@ -71,7 +72,7 @@ async function createDomain(req, res) {
   }
 }
 
-async function getDomains(req, res) {
+async function getDomains(req: Request, res: Response) {
   try {
     // get all domains and the associated monitoring types by using includes
     const domains = await AsrDomain.findAll({
@@ -96,7 +97,7 @@ async function getDomains(req, res) {
   }
 }
 
-async function getDomainsOnly(req, res) {
+async function getDomainsOnly(req: Request, res: Response) {
   try {
     // get all domains only
     const domains = await AsrDomain.findAll({
@@ -111,7 +112,7 @@ async function getDomainsOnly(req, res) {
   }
 }
 
-async function updateDomain(req, res) {
+async function updateDomain(req: Request, res: Response) {
   try {
     // Update domain and delete or add relation in the junction table
     const {
@@ -130,7 +131,7 @@ async function updateDomain(req, res) {
             region,
             severityThreshold,
             severityAlertRecipients,
-            updatedBy: req.user.id,
+            updatedBy: (req as any).user.id,
           },
           { where: { id: req.params.id }, transaction: t }
         );
@@ -146,9 +147,9 @@ async function updateDomain(req, res) {
         const createPromises = monitoringTypeIds.map(monitoringId => {
           return AsrDomainMonitoringTypeToDomains.create(
             {
-              domain_id: req.params.id,
+              domain_id: req.params.id as string,
               monitoring_type_id: monitoringId,
-              createdBy: req.user.id,
+              createdBy: (req as any).user.id,
             },
             { transaction: t }
           );
@@ -163,7 +164,7 @@ async function updateDomain(req, res) {
           region,
           severityThreshold,
           severityAlertRecipients,
-          updatedBy: req.user.id,
+          updatedBy: (req as any).user.id,
         },
         { where: { id: req.params.id } }
       );
@@ -179,11 +180,11 @@ async function updateDomain(req, res) {
   }
 }
 
-async function deleteDomain(req, res) {
+async function deleteDomain(req: Request, res: Response) {
   try {
     const response = await AsrDomain.handleDelete({
       id: req.params.id,
-      deletedByUserId: req.user.id,
+      deletedByUserId: (req as any).user.id,
     });
 
     if (response === 0) {
@@ -196,7 +197,7 @@ async function deleteDomain(req, res) {
   }
 }
 
-async function createProduct(req, res) {
+async function createProduct(req: Request, res: Response) {
   try {
     // If domainId is provided, create product domain relationship also
     const { name, shortCode, tier, domainIds } = req.body;
@@ -207,7 +208,7 @@ async function createProduct(req, res) {
         name,
         shortCode,
         tier,
-        createdBy: req.user.id,
+        createdBy: (req as any).user.id,
       });
 
       //Create product domain mapping
@@ -215,7 +216,7 @@ async function createProduct(req, res) {
         return AsrDomainToProductsRelation.create({
           product_id: product.id,
           domain_id: domainId,
-          createdBy: req.user.id,
+          createdBy: (req as any).user.id,
         });
       });
       await Promise.all(createPromises);
@@ -224,7 +225,7 @@ async function createProduct(req, res) {
         name,
         shortCode,
         tier,
-        createdBy: req.user.id,
+        createdBy: (req as any).user.id,
       });
     }
     return sendSuccess(res, product, 'Product created successfully');
@@ -242,7 +243,7 @@ async function createProduct(req, res) {
   }
 }
 
-async function getProductsAndDomains(req, res) {
+async function getProductsAndDomains(req: Request, res: Response) {
   try {
     // get all products and the associated domains
     const products = await AsrProduct.findAll({
@@ -274,7 +275,7 @@ async function getProductsAndDomains(req, res) {
   }
 }
 
-async function getProducts(req, res) {
+async function getProducts(req: Request, res: Response) {
   try {
     // get all products only
     const products = await AsrProduct.findAll({
@@ -289,7 +290,7 @@ async function getProducts(req, res) {
   }
 }
 
-async function updateProduct(req, res) {
+async function updateProduct(req: Request, res: Response) {
   try {
     // Update product and delete or add relation in the junction table
     const { name, shortCode, tier, domainIds } = req.body;
@@ -298,7 +299,7 @@ async function updateProduct(req, res) {
     if (domainIds) {
       response = await sequelize.transaction(async t => {
         await AsrProduct.update(
-          { name, shortCode, tier, updatedBy: req.user.id },
+          { name, shortCode, tier, updatedBy: (req as any).user.id },
           { where: { id: req.params.id }, transaction: t }
         );
 
@@ -315,7 +316,7 @@ async function updateProduct(req, res) {
             {
               product_id: req.params.id,
               domain_id: domainId,
-              updatedBy: req.user.id,
+              updatedBy: (req as any).user.id,
             },
             { transaction: t }
           );
@@ -325,7 +326,7 @@ async function updateProduct(req, res) {
       });
     } else {
       response = await AsrProduct.update(
-        { name, shortCode, tier, updatedBy: req.user.id },
+        { name, shortCode, tier, updatedBy: (req as any).user.id },
         { where: { id: req.params.id } }
       );
     }
@@ -340,11 +341,11 @@ async function updateProduct(req, res) {
   }
 }
 
-async function deleteProduct(req, res) {
+async function deleteProduct(req: Request, res: Response) {
   try {
     const response = await AsrProduct.handleDelete({
       id: req.params.id,
-      deletedByUserId: req.user.id,
+      deletedByUserId: (req as any).user.id,
     });
 
     if (response === 0) {
@@ -357,7 +358,7 @@ async function deleteProduct(req, res) {
   }
 }
 
-async function getDomainByMonitoringType(req, res) {
+async function getDomainByMonitoringType(req: Request, res: Response) {
   try {
     const monitoringTypeId = req.params.monitoringTypeId;
 
@@ -392,7 +393,7 @@ async function getDomainByMonitoringType(req, res) {
   }
 }
 
-async function getProductsByDomain(req, res) {
+async function getProductsByDomain(req: Request, res: Response) {
   try {
     const domainId = req.params.domainId;
 
