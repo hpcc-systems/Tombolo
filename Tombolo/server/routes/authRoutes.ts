@@ -40,12 +40,14 @@ import {
 // Basic (Traditional) User Routes ----------------------------------------------------------------------------
 router.post(
   '/registerApplicationOwner',
-  validate(validateNewUserPayload, validateEmailDuplicate),
+  validate(validateNewUserPayload),
+  validateEmailDuplicate,
   createApplicationOwner
 ); // Create an owner (Traditional)
 router.post(
   '/registerBasicUser',
-  validate(validateNewUserPayload, validateEmailDuplicate),
+  validate(validateNewUserPayload),
+  validateEmailDuplicate,
   createBasicUser
 ); // Create a new user (Traditional)
 router.post('/loginBasicUser', validate(validateLoginPayload), loginBasicUser); // Login user ( Traditional )
