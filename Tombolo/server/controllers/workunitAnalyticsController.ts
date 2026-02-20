@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import { QueryTypes } from 'sequelize';
 import { sequelize } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
@@ -11,7 +12,7 @@ import logger from '../config/logger.js';
  * Note: SQL validation is now handled by middleware (analyticsMiddleware.js)
  * This function receives pre-validated SQL
  */
-async function executeAnalyticsQuery(req, res) {
+async function executeAnalyticsQuery(req: Request, res: Response) {
   try {
     // Log the incoming request body for debugging
     logger.debug(
@@ -114,7 +115,6 @@ async function executeAnalyticsQuery(req, res) {
     const rows = await sequelize.query(finalSql, {
       type: QueryTypes.SELECT,
       logging: sql => logger.debug('Analytics query:', sql),
-      timeout: 120000, // 2 minutes timeout for analytics queries
     });
 
     const executionTime = Date.now() - startTime;
@@ -147,9 +147,9 @@ async function executeAnalyticsQuery(req, res) {
 /**
  * Get database schema information
  */
-async function getSchema(req, res) {
+async function getSchema(req: Request, res: Response) {
   try {
-    const tableName = req.query.tableName;
+    const tableName = req.query.tableName as string | undefined;
     const allowedTables = ['work_unit_details', 'work_units', 'clusters'];
 
     // If tableName is provided, return just that table's schema
@@ -204,7 +204,7 @@ async function getSchema(req, res) {
       const filteredColumns =
         tableName === 'clusters'
           ? columns.filter(
-              col => !sensitiveColumns.includes(col.name.toLowerCase())
+              col => !sensitiveColumns.includes((col as any).name.toLowerCase())
             )
           : columns;
 
@@ -251,7 +251,7 @@ async function getSchema(req, res) {
       // Filter out sensitive columns from clusters table
       if (table === 'clusters') {
         allSchemas[table] = columns.filter(
-          col => !sensitiveColumns.includes(col.name.toLowerCase())
+          col => !sensitiveColumns.includes((col as any).name.toLowerCase())
         );
       } else {
         allSchemas[table] = columns;
@@ -269,7 +269,7 @@ async function getSchema(req, res) {
  * Analyze query without executing it
  * Returns estimated execution plan
  */
-async function analyzeQuery(req, res) {
+async function analyzeQuery(req: Request, res: Response) {
   try {
     const rawSql = (req.body.sql || '').trim();
 
@@ -297,7 +297,7 @@ async function analyzeQuery(req, res) {
 /**
  * Get database statistics
  */
-async function getDatabaseStats(req, res) {
+async function getDatabaseStats(req: Request, res: Response) {
   try {
     // Get table statistics for both tables
     const [tableStats] = await sequelize.query(`
