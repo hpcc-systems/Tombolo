@@ -2,7 +2,7 @@ import { ArchiveManager } from '../utils/archiveUtils.js';
 import { Op, Sequelize, ModelStatic, Model } from 'sequelize';
 
 class ArchiveService {
-  private sequelize: Sequelize;
+  protected sequelize: Sequelize;
   private archiveManager: ArchiveManager;
 
   constructor(sequelize: Sequelize) {
