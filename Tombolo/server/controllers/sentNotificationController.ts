@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import moment from 'moment';
 import { Op } from 'sequelize';
 
@@ -7,10 +8,10 @@ import { SentNotification, sequelize } from '../models/index.js';
 import emailNotificationHtmlCode from '../utils/emailNotificationHtmlCode.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 
-async function createSentNotification(req, res) {
+async function createSentNotification(req: Request, res: Response) {
   try {
     const response = await SentNotification.create(
-      { ...req.body, createdBy: req.user.id },
+      { ...req.body, createdBy: (req as any).user.id },
       { raw: true }
     );
     return sendSuccess(
@@ -25,7 +26,7 @@ async function createSentNotification(req, res) {
   }
 }
 
-async function getSentNotifications(req, res) {
+async function getSentNotifications(req: Request, res: Response) {
   try {
     // Get notifications from the last 60 days only
     const sixtyDaysAgo = moment().subtract(60, 'days').toDate();
@@ -49,9 +50,11 @@ async function getSentNotifications(req, res) {
   }
 }
 
-async function getSentNotification(req, res) {
+async function getSentNotification(req: Request, res: Response) {
   try {
-    const notification = await SentNotification.findByPk(req.params.id);
+    const notification = await SentNotification.findByPk(
+      (req.params as { id: string }).id
+    );
     if (!notification) {
       return sendError(res, 'Sent notification not found', 404);
     }
@@ -66,10 +69,10 @@ async function getSentNotification(req, res) {
   }
 }
 
-async function deleteSentNotification(req, res) {
+async function deleteSentNotification(req: Request, res: Response) {
   try {
     const deletedCount = await SentNotification.destroy({
-      where: { id: req.params.id },
+      where: { id: (req.params as { id: string }).id },
     });
     if (deletedCount === 0) {
       return sendError(res, 'Sent notification not found', 404);
@@ -81,7 +84,7 @@ async function deleteSentNotification(req, res) {
   }
 }
 
-async function deleteSentNotifications(req, res) {
+async function deleteSentNotifications(req: Request, res: Response) {
   try {
     const deletedCount = await SentNotification.destroy({
       where: { id: req.body.ids },
@@ -97,7 +100,7 @@ async function deleteSentNotifications(req, res) {
   }
 }
 
-async function updateSentNotifications(req, res) {
+async function updateSentNotifications(req: Request, res: Response) {
   try {
     const allNotificationToBeUpdated = [];
 
@@ -162,7 +165,7 @@ async function updateSentNotifications(req, res) {
   }
 }
 
-async function getNotificationHtml(req, res) {
+async function getNotificationHtml(req: Request, res: Response) {
   try {
     const notification = await SentNotification.findByPk(req.body.id);
     if (!notification) {
