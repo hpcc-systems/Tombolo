@@ -160,7 +160,7 @@ const validateAnalyticsQuery = [
     }),
 
   objectBody('options', true),
-  intBody('options.limit', true, { min: 1, max: 5000 }),
+  intBody('options.limit', true),
   stringBody('options.clusterId', true),
   // Optional scoping fields used by executeAnalyticsQuery — validate strictly
   body('options.scopeToWuid')
@@ -256,8 +256,8 @@ const validateGetSavedQueries = [
   booleanQuery('includePublic', true),
   stringQuery('tag', true),
   stringQuery('search', true, { length: { max: 255 } }),
-  intQuery('page', true, { min: 1 }),
-  intQuery('limit', true, { min: 1, max: 100 }),
+  intQuery('page', true),
+  intQuery('limit', true),
 ];
 
 // Validation for query export
