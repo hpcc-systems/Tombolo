@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import { CostMonitoring, sequelize } from '../models/index.js';
 import logger from '../config/logger.js';
 import { Op } from 'sequelize';
@@ -6,9 +7,9 @@ import { sendSuccess, sendError } from '../utils/response.js';
 import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
 import { APPROVAL_STATUS } from '../config/constants.js';
 
-async function createCostMonitoring(req, res) {
+async function createCostMonitoring(req: Request, res: Response) {
   try {
-    const { id: userId } = req.user;
+    const { id: userId } = (req as any).user;
 
     const createResult = await CostMonitoring.create({
       ...req.body,
@@ -31,9 +32,9 @@ async function createCostMonitoring(req, res) {
   }
 }
 
-async function updateCostMonitoring(req, res) {
+async function updateCostMonitoring(req: Request, res: Response) {
   try {
-    const updatedData = { ...req.body, lastUpdatedBy: req.user.id };
+    const updatedData = { ...req.body, lastUpdatedBy: (req as any).user.id };
     const affected = await CostMonitoring.update(updatedData, {
       where: { id: updatedData.id },
     });
@@ -53,10 +54,10 @@ async function updateCostMonitoring(req, res) {
   }
 }
 
-async function getCostMonitorings(req, res) {
+async function getCostMonitorings(req: Request, res: Response) {
   try {
     const costMonitorings = await CostMonitoring.findAll({
-      where: { applicationId: req.params.applicationId },
+      where: { applicationId: req.params.applicationId as string },
       include: getUserFkIncludes(true),
       order: [['createdAt', 'DESC']],
     });
@@ -67,11 +68,14 @@ async function getCostMonitorings(req, res) {
   }
 }
 
-async function getCostMonitoringById(req, res) {
+async function getCostMonitoringById(req: Request, res: Response) {
   try {
-    const costMonitoringRecord = await CostMonitoring.findByPk(req.params.id, {
-      include: getUserFkIncludes(true),
-    });
+    const costMonitoringRecord = await CostMonitoring.findByPk(
+      req.params.id as string,
+      {
+        include: getUserFkIncludes(true),
+      }
+    );
     if (!costMonitoringRecord) {
       return sendError(res, 'Cost monitoring not found', 404);
     }
@@ -82,12 +86,12 @@ async function getCostMonitoringById(req, res) {
   }
 }
 
-async function deleteCostMonitoring(req, res) {
+async function deleteCostMonitoring(req: Request, res: Response) {
   const transaction = await sequelize.transaction();
   try {
     const result = await CostMonitoring.handleDelete({
-      id: req.params.id,
-      deletedByUserId: req.user.id,
+      id: req.params.id as string,
+      deletedByUserId: (req as any).user.id,
       transaction,
     });
 
@@ -104,9 +108,9 @@ async function deleteCostMonitoring(req, res) {
   }
 }
 
-async function evaluateCostMonitoring(req, res) {
+async function evaluateCostMonitoring(req: Request, res: Response) {
   try {
-    const { id: approverId } = req.user;
+    const { id: approverId } = (req as any).user;
     const approvalStatus = req.body.approvalStatus;
     const isApproved = approvalStatus === APPROVAL_STATUS.APPROVED;
     await CostMonitoring.update(
@@ -121,7 +125,6 @@ async function evaluateCostMonitoring(req, res) {
         where: {
           id: { [Op.in]: req.body.ids },
         },
-        include: getUserFkIncludes(true),
       }
     );
 
@@ -141,12 +144,12 @@ async function evaluateCostMonitoring(req, res) {
   }
 }
 
-async function toggleCostMonitoringActive(req, res) {
+async function toggleCostMonitoringActive(req: Request, res: Response) {
   let transaction;
   try {
     transaction = await CostMonitoring.sequelize.transaction();
     const { ids, action } = req.body;
-    const { id: userId } = req.user;
+    const { id: userId } = (req as any).user;
 
     const costMonitorings = await CostMonitoring.findAll({
       where: { id: { [Op.in]: ids }, approvalStatus: APPROVAL_STATUS.APPROVED },
@@ -189,12 +192,12 @@ async function toggleCostMonitoringActive(req, res) {
   }
 }
 
-async function bulkDeleteCostMonitoring(req, res) {
+async function bulkDeleteCostMonitoring(req: Request, res: Response) {
   const transaction = await sequelize.transaction();
   try {
     await CostMonitoring.handleDelete({
       id: req.body.ids,
-      deletedByUserId: req.user.id,
+      deletedByUserId: (req as any).user.id,
       transaction,
     });
 
@@ -207,7 +210,7 @@ async function bulkDeleteCostMonitoring(req, res) {
   }
 }
 
-async function bulkUpdateCostMonitoring(req, res) {
+async function bulkUpdateCostMonitoring(req: Request, res: Response) {
   let transaction;
   try {
     transaction = await CostMonitoring.sequelize.transaction();
