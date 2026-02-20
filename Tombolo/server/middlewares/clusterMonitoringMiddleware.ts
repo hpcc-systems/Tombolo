@@ -30,7 +30,8 @@ const monitoringIdOnBody = [uuidBody('id')];
 
 // evaluateMonitoringPayload
 const evaluateMonitoringPayload = [
-  [arrayBody('ids'), uuidBody('ids.*')],
+  arrayBody('ids'),
+  uuidBody('ids.*'),
   stringBody('approverComment', false, {
     length: { ...COMMENT_LENGTH },
   }),
