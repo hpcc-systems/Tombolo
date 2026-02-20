@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 const router = express.Router();
 import jobScheduler from '../../jobSchedular/job-scheduler.js';
 import { body, query } from 'express-validator';
@@ -8,7 +8,7 @@ import { sendSuccess, sendError } from '../../utils/response.js';
 
 const validateName = [body('name').notEmpty().isString()];
 
-router.get('/all', async (req, res) => {
+router.get('/all', async (req: Request, res: Response) => {
   try {
     const breeJobs = jobScheduler.getAllJobs();
     return sendSuccess(
@@ -22,34 +22,42 @@ router.get('/all', async (req, res) => {
   }
 });
 
-router.put('/stop_job', validate(validateName), async (req, res) => {
-  // Route logic
-  const jobName = req.body.name;
-  try {
-    const result = await jobScheduler.stopJob(jobName);
-    return sendSuccess(res, result, 'Job stopped successfully');
-  } catch (error) {
-    logger.error('Something went wrong', error);
-    return sendError(res, error);
+router.put(
+  '/stop_job',
+  validate(validateName),
+  async (req: Request, res: Response) => {
+    // Route logic
+    const jobName = req.body.name;
+    try {
+      const result = await jobScheduler.stopJob(jobName);
+      return sendSuccess(res, result, 'Job stopped successfully');
+    } catch (error) {
+      logger.error('Something went wrong', error);
+      return sendError(res, error);
+    }
   }
-});
+);
 
-router.put('/start_job', validate(validateName), async (req, res) => {
-  // Route logic
-  const jobName = req.body.name;
-  try {
-    const result = jobScheduler.startJob(jobName);
-    return sendSuccess(res, result, 'Job started successfully');
-  } catch (error) {
-    logger.error('Something went wrong', error);
-    return sendError(res, error);
+router.put(
+  '/start_job',
+  validate(validateName),
+  async (req: Request, res: Response) => {
+    // Route logic
+    const jobName = req.body.name;
+    try {
+      const result = jobScheduler.startJob(jobName);
+      return sendSuccess(res, result, 'Job started successfully');
+    } catch (error) {
+      logger.error('Something went wrong', error);
+      return sendError(res, error);
+    }
   }
-});
+);
 
 router.delete(
   '/remove_job',
   validate([query('name').notEmpty().isString()]),
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     // Route logic
     const jobName = req.query.name;
     try {
@@ -62,7 +70,7 @@ router.delete(
   }
 );
 
-router.put('/start_all', async (req, res) => {
+router.put('/start_all', async (req: Request, res: Response) => {
   // Route logic
   try {
     const result = jobScheduler.startAllJobs();
@@ -73,7 +81,7 @@ router.put('/start_all', async (req, res) => {
   }
 });
 
-router.put('/stop_all', async (req, res) => {
+router.put('/stop_all', async (req: Request, res: Response) => {
   // Route logic
   try {
     const result = await jobScheduler.stopAllJobs();

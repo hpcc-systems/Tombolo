@@ -1,5 +1,5 @@
 import sequelize from 'sequelize';
-import express from 'express';
+import express, { Request, Response } from 'express';
 
 import { validate } from '../../middlewares/validateRequestBody.js';
 import {
@@ -14,7 +14,7 @@ import { Integration, IntegrationMapping } from '../../models/index.js';
 const router = express.Router();
 
 //Get all integrations - active or not from integrations table
-router.get('/all', async (req, res) => {
+router.get('/all', async (req: Request, res: Response) => {
   try {
     const result = await Integration.findAll();
     return sendSuccess(res, result);
@@ -25,23 +25,19 @@ router.get('/all', async (req, res) => {
 });
 
 // Get all active integrations from the integrations to application mapping table
-router.get('/getAllActive/', async (req, res) => {
+router.get('/getAllActive/', async (req: Request, res: Response) => {
   try {
-    const integrationMappingDetails = await IntegrationMapping.findAll(
-      {
-        include: [
-          {
-            model: Integration,
-            as: 'integration',
-            required: true,
-            attributes: ['name', 'description', 'metaData'],
-          },
-        ],
-      },
-      {
-        raw: true,
-      }
-    );
+    const integrationMappingDetails = await IntegrationMapping.findAll({
+      include: [
+        {
+          model: Integration,
+          as: 'integration',
+          required: true,
+          attributes: ['name', 'description', 'metaData'],
+        },
+      ],
+      raw: true,
+    });
     return sendSuccess(res, integrationMappingDetails);
   } catch (err) {
     logger.error('integrations/read getAllActive: ', err);
@@ -53,7 +49,7 @@ router.get('/getAllActive/', async (req, res) => {
 router.get(
   '/integrationDetails/:id',
   validate(validateIntegrationDetails),
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const result = await IntegrationMapping.findOne({
         where: {
@@ -94,7 +90,7 @@ router.get(
 router.post(
   '/toggleStatus',
   validate(validateToggleStatus),
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       /*
      Intention to active
@@ -146,7 +142,7 @@ router.post(
 router.put(
   '/updateIntegrationSettings/:id',
   validate(validateUpdateIntegrationSettings),
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const result = await IntegrationMapping.update(
         {
