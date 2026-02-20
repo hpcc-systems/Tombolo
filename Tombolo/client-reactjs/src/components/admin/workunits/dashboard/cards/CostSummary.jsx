@@ -6,17 +6,12 @@ import { DollarOutlined, ClusterOutlined, ThunderboltOutlined, FieldTimeOutlined
 // }
 
 export default function CostSummary({ summary }) {
-  console.log('CostSummary received summary:', summary);
-  console.log('totalRuntimeHours from summary:', summary.totalRuntimeHours);
-
   const totalCost = summary.totalCost || 0;
   const totalJobs = summary.totalJobs || 0;
   const totalRuntimeHours = summary.totalRuntimeHours || 0;
   const avgCostPerJob = summary.avgCostPerJob || 0;
   const failedJobs = summary.failedCount || 0;
   const failedCost = summary.failedCost || 0;
-
-  console.log('Extracted totalRuntimeHours:', totalRuntimeHours);
 
   const stats = [
     {

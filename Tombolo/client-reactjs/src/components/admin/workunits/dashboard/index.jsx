@@ -30,9 +30,6 @@ export default function DashboardPage() {
           startDate: startDate.format('YYYY-MM-DD HH:mm:ss'),
           endDate: endDate.format('YYYY-MM-DD HH:mm:ss'),
         });
-        console.log('Dashboard data received from API:', data);
-        console.log('Summary from API:', data?.summary);
-        console.log('totalRuntimeHours from API:', data?.summary?.totalRuntimeHours);
         setDashboardData(data);
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
@@ -46,7 +43,6 @@ export default function DashboardPage() {
   }, [startDate, endDate]);
 
   const summary = dashboardData?.summary || {};
-  console.log('Summary being passed to CostSummary:', summary);
   const workunits = dashboardData?.workunits || [];
   const problematicJobs = dashboardData?.problematicJobs || [];
   const dailyCosts = dashboardData?.dailyCosts || [];
