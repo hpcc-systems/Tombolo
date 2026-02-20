@@ -8,31 +8,31 @@ import { Router } from 'react-router-dom';
 import history from './components/common/History';
 
 // Shared layout, etc.
-import LeftNav from './components/layout/LeftNav.jsx';
-import AppHeader from './components/layout/Header/Header.jsx';
+import LeftNav from './components/layout/LeftNav';
+import AppHeader from './components/layout/Header/Header';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Fallback from './components/common/Fallback';
 import { checkBackendStatus, checkOwnerExists } from '@/redux/slices/BackendSlice';
-import { getRoleNameArray } from './components/common/AuthUtil.js';
-import { getUser } from './components/common/userStorage.js';
+import { getRoleNameArray } from './components/common/AuthUtil';
+import { getUser } from './components/common/userStorage';
 import { loadUserFromStorage } from '@/redux/slices/AuthSlice';
 
 // Loading screen
-import LoadingScreen from './components/layout/LoadingScreen.jsx';
+import LoadingScreen from './components/layout/LoadingScreen';
 
 // Auth pages
-import AuthRoutes from './components/login/AuthRoutes.jsx';
+import AuthRoutes from './components/login/AuthRoutes';
 
 // App Pages
-import AppRoutes from './components/application/AppRoutes.jsx';
-import NoAccessRoutes from './components/application/NoAccessRoutes.jsx';
+import AppRoutes from './components/application/AppRoutes';
+import NoAccessRoutes from './components/application/NoAccessRoutes';
 
 // Admin Pages
-import AdminRoutes from './components/admin/AdminRoutes.jsx';
+import AdminRoutes from './components/admin/AdminRoutes';
 
 //initial Experience
-import Tours from './components/InitialExperience/Tours.jsx';
-import Wizard from './components/InitialExperience/Wizard.jsx';
+import Tours from './components/InitialExperience/Tours';
+import Wizard from './components/InitialExperience/Wizard';
 
 const { Content } = Layout;
 

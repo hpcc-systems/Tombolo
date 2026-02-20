@@ -88,7 +88,7 @@ const AddEditModal = ({
       label: 'Notifications',
       children: <NotificationTab form={form} />,
     },
-  ].map((tab) => ({
+  ].map(tab => ({
     ...tab,
     label: erroneousTabs.includes(tab.key) ? (
       <span>

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Form, Tag, Descriptions } from 'antd';
 import { handleError, handleSuccess } from '@/components/common/handleResponse';
 
-import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton';
 import AddEditCostMonitoringModal from './AddEditCostMonitoringModal';
 import costMonitoringService from '@/services/costMonitoring.service';
 

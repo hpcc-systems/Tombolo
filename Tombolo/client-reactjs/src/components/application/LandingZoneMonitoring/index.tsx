@@ -3,14 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import BreadCrumbs from '../../common/BreadCrumbs';
 import { useSelector } from 'react-redux';
 import { Form } from 'antd';
-import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service.js';
+import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service';
 import { identifyErroneousTabs, handleLandingZoneMonitoringApproval } from './Utils';
 import { flattenObject } from '../../common/CommonUtil';
-import asrService from '@/services/asr.service.js';
-import monitoringTypeService from '@/services/monitoringType.service.js';
+import asrService from '@/services/asr.service';
+import monitoringTypeService from '@/services/monitoringType.service';
 import { getRoleNameArray } from '../../common/AuthUtil';
 import AddEditModal from './AddEditModal/Modal';
-import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton';
 import LandingZoneMonitoringTable from './LandingZoneMonitoringTable';
 import ApproveRejectModal from '../../common/Monitoring/ApproveRejectModal';
 import BulkUpdateModal from './BulkUpdateModal';
@@ -163,7 +163,10 @@ const LandigZoneMonitoring: React.FC = () => {
       validForm = false;
     }
 
-    const erroneousFields = form.getFieldsError().filter((f: any) => f.errors.length > 0).map((f: any) => f.name[0]);
+    const erroneousFields = form
+      .getFieldsError()
+      .filter((f: any) => f.errors.length > 0)
+      .map((f: any) => f.name[0]);
     const badTabs = identifyErroneousTabs({ erroneousFields });
 
     if (badTabs.length > 0) setErroneousTabs(badTabs);
@@ -176,13 +179,41 @@ const LandigZoneMonitoring: React.FC = () => {
       let userFieldInputs = form.getFieldsValue();
       const metaData: any = {};
       const { primaryContacts, secondaryContacts, notifyContacts } = userFieldInputs;
-      metaData.contacts = { primaryContacts, secondaryContacts: secondaryContacts ? secondaryContacts : [], notifyContacts: notifyContacts ? notifyContacts : [] };
+      metaData.contacts = {
+        primaryContacts,
+        secondaryContacts: secondaryContacts ? secondaryContacts : [],
+        notifyContacts: notifyContacts ? notifyContacts : [],
+      };
       delete userFieldInputs.primaryContacts;
       delete userFieldInputs.secondaryContacts;
       delete userFieldInputs.notifyContacts;
 
-      const { dropzone, machine, directory, maxDepth, fileName, threshold, maxThreshold, minThreshold, minFileCount, maxFileCount } = userFieldInputs;
-      metaData.monitoringData = { dropzone, machine, directory, maxDepth, threshold, fileName, maxThreshold, maxSizeThresholdUnit, minThreshold, minSizeThresholdUnit, minFileCount, maxFileCount };
+      const {
+        dropzone,
+        machine,
+        directory,
+        maxDepth,
+        fileName,
+        threshold,
+        maxThreshold,
+        minThreshold,
+        minFileCount,
+        maxFileCount,
+      } = userFieldInputs;
+      metaData.monitoringData = {
+        dropzone,
+        machine,
+        directory,
+        maxDepth,
+        threshold,
+        fileName,
+        maxThreshold,
+        maxSizeThresholdUnit,
+        minThreshold,
+        minSizeThresholdUnit,
+        minFileCount,
+        maxFileCount,
+      };
 
       delete userFieldInputs.dropzone;
       delete userFieldInputs.machine;
@@ -228,7 +259,10 @@ const LandigZoneMonitoring: React.FC = () => {
         validForm = false;
       }
 
-      const erroneousFields = form.getFieldsError().filter((f: any) => f.errors.length > 0).map((f: any) => f.name[0]);
+      const erroneousFields = form
+        .getFieldsError()
+        .filter((f: any) => f.errors.length > 0)
+        .map((f: any) => f.name[0]);
       const badTabs = identifyErroneousTabs({ erroneousFields });
       if (badTabs.length > 0) setErroneousTabs(badTabs);
       if (!validForm) {
@@ -243,16 +277,16 @@ const LandigZoneMonitoring: React.FC = () => {
       const asrSpecificFields = ['domain', 'productCategory', 'severity'];
 
       const touchedFields: string[] = [];
-      fields.forEach((field) => {
+      fields.forEach(field => {
         if (form.isFieldTouched(field)) touchedFields.push(field);
       });
 
       if (touchedFields.length === 0) return handleError('No changes detected');
 
       let updatedData: any = { ...selectedMonitoring };
-      const touchedAsrSpecificMetaDataFields = touchedFields.filter((field) => asrSpecificFields.includes(field));
-      const touchedMonitoringDataFields = touchedFields.filter((field) => monitoringDataFields.includes(field));
-      const touchedContactsFields = touchedFields.filter((field) => notificationMetaDataFields.includes(field));
+      const touchedAsrSpecificMetaDataFields = touchedFields.filter(field => asrSpecificFields.includes(field));
+      const touchedMonitoringDataFields = touchedFields.filter(field => monitoringDataFields.includes(field));
+      const touchedContactsFields = touchedFields.filter(field => notificationMetaDataFields.includes(field));
 
       if (touchedAsrSpecificMetaDataFields.length > 0) {
         let existingAsrSpecificMetaData = selectedMonitoring?.metaData?.asrSpecificMetaData || {};
@@ -276,7 +310,7 @@ const LandigZoneMonitoring: React.FC = () => {
       }
 
       const allMetaDataFields = [...asrSpecificFields, ...monitoringDataFields, ...notificationMetaDataFields];
-      const otherFields = fields.filter((field) => !allMetaDataFields.includes(field));
+      const otherFields = fields.filter(field => !allMetaDataFields.includes(field));
       const otherFieldsValues = form.getFieldsValue(otherFields);
       const newOtherFields = { ...selectedMonitoring, ...otherFieldsValues };
       updatedData = { ...updatedData, ...newOtherFields };
@@ -354,7 +388,7 @@ const LandigZoneMonitoring: React.FC = () => {
   const handleBulkDeleteSelectedLandingZones = async (ids: string[]) => {
     try {
       await landingZoneMonitoringService.bulkDelete(ids);
-      setLandingZoneMonitoring((prev: any[]) => prev.filter((lz) => !ids.includes(lz.id)));
+      setLandingZoneMonitoring((prev: any[]) => prev.filter(lz => !ids.includes(lz.id)));
       setSelectedRows([]);
       handleSuccess('Selected landing zone monitoring deleted successfully');
     } catch (err) {
@@ -374,7 +408,7 @@ const LandigZoneMonitoring: React.FC = () => {
 
   const handleOpenBulkEdit = () => setBulkEditModalVisibility(true);
   const handleOpenApproveReject = () => setDisplayApprovalModal(true);
-  const handleToggleFilters = () => setFiltersVisible((prev) => !prev);
+  const handleToggleFilters = () => setFiltersVisible(prev => !prev);
 
   return (
     <>

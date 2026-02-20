@@ -14,7 +14,7 @@ function NotificationTab({ form, showNotificationDrawerSetter }: any) {
       <Card size="small">
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item label="Notify on" name="notifyOn" rules={[{ required: true, message: 'Required field' }]}> 
+            <Form.Item label="Notify on" name="notifyOn" rules={[{ required: true, message: 'Required field' }]}>
               <Select>
                 <Option value="thresholdExceeded">Threshold Exceeded</Option>
                 <Option value="fileDropped">File Dropped</Option>
@@ -24,12 +24,21 @@ function NotificationTab({ form, showNotificationDrawerSetter }: any) {
           </Col>
 
           <Col span={12}>
-            <Form.Item label={
-              <>
-                <span>Notification Type</span>
-                <InfoCircleOutlined style={{ marginLeft: '.5rem', color: 'var(--primary)' }} onClick={() => { setShowUserGuide(true); setSelectedUserGuideName('notificationTypes'); }} />
-              </>
-            } name="notificationType" rules={[{ required: true, message: 'Required field' }]}> 
+            <Form.Item
+              label={
+                <>
+                  <span>Notification Type</span>
+                  <InfoCircleOutlined
+                    style={{ marginLeft: '.5rem', color: 'var(--primary)' }}
+                    onClick={() => {
+                      setShowUserGuide(true);
+                      setSelectedUserGuideName('notificationTypes');
+                    }}
+                  />
+                </>
+              }
+              name="notificationType"
+              rules={[{ required: true, message: 'Required field' }]}>
               <Select>
                 <Option value="email">Email</Option>
                 <Option value="slack">Slack</Option>
@@ -46,7 +55,10 @@ function NotificationTab({ form, showNotificationDrawerSetter }: any) {
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="Frequency (mins)" name="frequency" rules={[{ required: true, message: 'Required field' }]}>
+            <Form.Item
+              label="Frequency (mins)"
+              name="frequency"
+              rules={[{ required: true, message: 'Required field' }]}>
               <InputNumber style={{ width: '100%' }} />
             </Form.Item>
           </Col>
@@ -66,7 +78,12 @@ function NotificationTab({ form, showNotificationDrawerSetter }: any) {
         </Row>
       </Card>
 
-      <InfoDrawer open={showUserGuide} onClose={() => setShowUserGuide(false)} width="500px" content={selectedUserGuideName} />
+      <InfoDrawer
+        open={showUserGuide}
+        onClose={() => setShowUserGuide(false)}
+        width="500px"
+        content={selectedUserGuideName}
+      />
     </Form>
   );
 }

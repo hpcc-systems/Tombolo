@@ -5,7 +5,7 @@ import { Form, Descriptions, Tag } from 'antd';
 
 // Local imports
 import { handleError, handleSuccess } from '@/components/common/handleResponse';
-import MonitoringActionButton from '../../common/Monitoring/ActionButton.jsx';
+import MonitoringActionButton from '../../common/Monitoring/ActionButton';
 import AddEditFileMonitoringModal from './AddEditFileMonitoringModal';
 import fileMonitoringService from '@/services/fileMonitoring.service.js';
 import { identifyErroneousTabs } from '../jobMonitoring/jobMonitoringUtils';
@@ -94,8 +94,9 @@ function FileMonitoring() {
     if (editingData?.isEditing || duplicatingData?.isDuplicating) {
       if (!selectedMonitoring) return;
       form.setFieldsValue(selectedMonitoring);
-    const clusterIds = (selectedMonitoring as any).clusterIds ?? (selectedMonitoring.clusterId ? [selectedMonitoring.clusterId] : []);
-    setSelectedClusters(clusters.filter(c => clusterIds.includes(c.id)));
+      const clusterIds =
+        (selectedMonitoring as any).clusterIds ?? (selectedMonitoring.clusterId ? [selectedMonitoring.clusterId] : []);
+      setSelectedClusters(clusters.filter(c => clusterIds.includes(c.id)));
 
       // Set states that are responsible for hiding/displaying dependent fields
       setSelectedNotificationCondition(selectedMonitoring?.metaData?.monitoringData?.notificationCondition || []);

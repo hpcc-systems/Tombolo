@@ -7,9 +7,9 @@ const formFields: Record<number, string[]> = {
 
 export const identifyErroneousTabs = ({ erroneousFields }: { erroneousFields: string[] }): string[] => {
   const erroneousTabs: string[] = [];
-  const tab0ErroneousFields = erroneousFields.filter((item) => formFields[0].includes(item));
-  const tab1ErroneousFields = erroneousFields.filter((item) => formFields[1].includes(item));
-  const tab2ErroneousFields = erroneousFields.filter((item) => formFields[2].includes(item));
+  const tab0ErroneousFields = erroneousFields.filter(item => formFields[0].includes(item));
+  const tab1ErroneousFields = erroneousFields.filter(item => formFields[1].includes(item));
+  const tab2ErroneousFields = erroneousFields.filter(item => formFields[2].includes(item));
 
   if (tab0ErroneousFields.length > 0) erroneousTabs.push((0).toString());
   if (tab1ErroneousFields.length > 0) erroneousTabs.push((1).toString());
