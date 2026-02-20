@@ -1,10 +1,15 @@
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
 
 import { setTokenCookie } from '../utils/authUtil.js';
 import { isTokenBlacklisted } from '../utils/tokenBlackListing.js';
 
 // Main middleware function
-const tokenValidationMiddleware = async (req, res, next) => {
+const tokenValidationMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const token = req.cookies.token;
 
   if (!token) {
@@ -13,11 +18,11 @@ const tokenValidationMiddleware = async (req, res, next) => {
 
   try {
     // Verify and decode token
-    const decoded = await verifyToken(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const decoded = await verifyToken(token, process.env.JWT_SECRET!);
+    (req as any).user = decoded;
 
     // If token is blacklisted - return unauthorized
-    if (isTokenBlacklisted(decoded.tokenId)) {
+    if (isTokenBlacklisted((decoded as any).tokenId)) {
       return res
         .status(401)
         .json({ message: 'Unauthorized: Token no longer valid' });
@@ -38,13 +43,16 @@ const tokenValidationMiddleware = async (req, res, next) => {
 };
 
 // Function to verify token
-const verifyToken = (token, secret) => {
+const verifyToken = (
+  token: string,
+  secret: string
+): Promise<JwtPayload | string> => {
   return new Promise((resolve, reject) => {
     jwt.verify(token, secret, (err, decoded) => {
       if (err) {
         reject(err);
       } else {
-        resolve(decoded);
+        resolve(decoded!);
       }
     });
   });

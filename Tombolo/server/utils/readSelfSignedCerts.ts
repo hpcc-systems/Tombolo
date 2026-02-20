@@ -3,12 +3,12 @@ import https from 'https';
 import tls from 'tls';
 import fs from 'fs';
 
-const loggedCertWarnings = new Set();
+const loggedCertWarnings = new Set<string>();
 
 /**
  * Extract 1 or many pems from a file
  */
-const extractPemCertificates = filePath => {
+const extractPemCertificates = (filePath: string): string[] => {
   const content = fs.readFileSync(filePath, 'utf-8').trim();
 
   const pemMatches = content.match(
@@ -23,10 +23,10 @@ const extractPemCertificates = filePath => {
 /**
  * Reads all .crt and .pem files in the customCerts folder and appends them to the global http.Agent
  */
-const readSelfSignedCerts = () => {
+const readSelfSignedCerts = (): void => {
   const certsFolder = '../customCerts';
   if (fs.existsSync(certsFolder) && fs.lstatSync(certsFolder).isDirectory()) {
-    const customCertFiles = [];
+    const customCertFiles: string[] = [];
 
     fs.readdirSync(certsFolder).forEach(certFileName => {
       if (certFileName.endsWith('.crt') || certFileName.endsWith('.pem')) {
@@ -45,7 +45,7 @@ const readSelfSignedCerts = () => {
     const customAgent = new https.Agent({
       ca: [...tls.rootCertificates, ...customCertFiles],
       rejectUnauthorized: true,
-      checkServerIdentity: (hostname, cert) => {
+      checkServerIdentity: (hostname: string, cert: any) => {
         const certCN = cert.subject?.CN || '';
         // Use warning key to ensure no duplicate logs
         const warningKey = `${hostname}:${certCN}`;

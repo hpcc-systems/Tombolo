@@ -1,19 +1,35 @@
 import logger from '../config/logger.js';
+import { Server } from 'http';
+import { Socket } from 'net';
+
+interface SetupOptions {
+  server: Server;
+  sockets: Set<Socket>;
+  dbConnection: any;
+  JobScheduler?: any;
+}
+
+interface ShutdownOptions {
+  timeoutMs?: number;
+}
 
 export default function setupGracefulShutdown({
   server,
   sockets,
   dbConnection,
   JobScheduler,
-}) {
+}: SetupOptions): void {
   let shuttingDown = false;
 
-  async function gracefulShutdown(reason, { timeoutMs = 30000 } = {}) {
+  async function gracefulShutdown(
+    reason: string,
+    { timeoutMs = 30000 }: ShutdownOptions = {}
+  ): Promise<void> {
     if (shuttingDown) return;
     shuttingDown = true;
     logger.info(`Graceful shutdown initiated: ${reason}`);
 
-    const tasks = [];
+    const tasks: Promise<any>[] = [];
 
     // 1) Stop accepting new HTTP connections
     tasks.push(
@@ -21,7 +37,7 @@ export default function setupGracefulShutdown({
         server.close(err => {
           if (err) logger.error('Error closing HTTP server', err);
           else logger.info('HTTP server closed');
-          resolve();
+          resolve(undefined);
         });
       })
     );
@@ -35,7 +51,7 @@ export default function setupGracefulShutdown({
               socket.destroy();
             } catch (_) {}
           }
-          resolve();
+          resolve(undefined);
         }, 5000);
       })
     );
@@ -44,7 +60,7 @@ export default function setupGracefulShutdown({
     try {
       if (JobScheduler?.stopAllJobs) {
         tasks.push(
-          JobScheduler.stopAllJobs().catch(err =>
+          JobScheduler.stopAllJobs().catch((err: any) =>
             logger.error('Error stopping all jobs', err)
           )
         );
@@ -59,7 +75,9 @@ export default function setupGracefulShutdown({
         dbConnection
           .close()
           .then(() => logger.info('Sequelize connection closed'))
-          .catch(err => logger.error('Error closing Sequelize connection', err))
+          .catch((err: any) =>
+            logger.error('Error closing Sequelize connection', err)
+          )
       );
     } catch (e) {
       logger.error('Exception closing Sequelize connection', e);
@@ -72,10 +90,10 @@ export default function setupGracefulShutdown({
           const transports = Array.isArray(logger.transports)
             ? logger.transports
             : Object.values(logger.transports || {});
-          transports.forEach(t => t.flush?.());
+          transports.forEach((t: any) => t.flush?.());
           setTimeout(resolve, 500);
         } catch (_) {
-          resolve();
+          resolve(undefined);
         }
       })
     );

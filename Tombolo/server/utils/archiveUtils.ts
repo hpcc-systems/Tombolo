@@ -1,17 +1,28 @@
-import { DataTypes, Op } from 'sequelize';
+import {
+  DataTypes,
+  Op,
+  Sequelize,
+  Model,
+  Transaction,
+  ModelStatic,
+  ModelAttributes,
+} from 'sequelize';
 
 class ArchiveManager {
-  constructor(sequelize) {
+  private sequelize: Sequelize;
+  private archiveModels: Map<string, ModelStatic<Model>>;
+
+  constructor(sequelize: Sequelize) {
     this.sequelize = sequelize;
     this.archiveModels = new Map();
   }
 
-  getArchiveModel(originalModel) {
+  getArchiveModel(originalModel: ModelStatic<Model>): ModelStatic<Model> {
     const modelName = originalModel.name;
     const archiveModelName = `${modelName}Archive`;
 
     if (this.archiveModels.has(archiveModelName)) {
-      return this.archiveModels.get(archiveModelName);
+      return this.archiveModels.get(archiveModelName)!;
     }
 
     const archiveModel = this.createArchiveModel(
@@ -22,9 +33,14 @@ class ArchiveManager {
     return archiveModel;
   }
 
-  createArchiveModel(originalModel, archiveModelName) {
+  createArchiveModel(
+    originalModel: ModelStatic<Model>,
+    archiveModelName: string
+  ): ModelStatic<Model> {
     // Use getAttributes() which returns current attributes, not cached rawAttributes
-    const attributes = { ...originalModel.getAttributes() };
+    const attributes: ModelAttributes<Model> = {
+      ...originalModel.getAttributes(),
+    };
 
     // Add archivedAt field for tracking when records were archived
     attributes.archivedAt = {
@@ -40,10 +56,14 @@ class ArchiveManager {
     });
   }
 
-  async archiveRecords(originalModel, whereClause, archiveMetadata = {}) {
+  async archiveRecords(
+    originalModel: ModelStatic<Model>,
+    whereClause: any,
+    archiveMetadata: Record<string, any> = {}
+  ): Promise<number> {
     const ArchiveModel = this.getArchiveModel(originalModel);
 
-    const transaction = await this.sequelize.transaction();
+    const transaction: Transaction = await this.sequelize.transaction();
     try {
       const recordsToArchive = await originalModel.findAll({
         where: whereClause,
@@ -57,7 +77,7 @@ class ArchiveManager {
 
       const archiveData = recordsToArchive.map(record => ({
         ...record.toJSON(),
-        originalId: record.id,
+        originalId: record.get('id'),
         archivedAt: new Date(),
         ...archiveMetadata,
       }));
@@ -65,7 +85,7 @@ class ArchiveManager {
       await ArchiveModel.bulkCreate(archiveData, { transaction });
 
       await originalModel.destroy({
-        where: { id: { [Op.in]: recordsToArchive.map(r => r.id) } },
+        where: { id: { [Op.in]: recordsToArchive.map(r => r.get('id')) } },
         transaction,
       });
 

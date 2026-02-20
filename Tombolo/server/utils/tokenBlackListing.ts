@@ -2,7 +2,7 @@ import { TokenBlackList } from '../models/index.js';
 import logger from '../config/logger.js';
 
 // Create the Map (tokenId as key and expiration time as value)
-const tokenBlacklist = new Map();
+const tokenBlacklist = new Map<string, number>();
 
 // Sync blacklisted tokens from DB to RAM
 // Only sync in production/non-test environments
@@ -11,7 +11,7 @@ if (process.env.NODE_ENV !== 'test') {
     try {
       logger.info('Syncing blacklisted tokens from the database');
       const tokens = await TokenBlackList.findAll();
-      tokens.forEach(({ id, exp }) => {
+      tokens.forEach(({ id, exp }: any) => {
         tokenBlacklist.set(id, exp);
       });
     } catch (err) {
@@ -20,8 +20,16 @@ if (process.env.NODE_ENV !== 'test') {
   })();
 }
 
+interface BlacklistTokenParams {
+  tokenId: string;
+  exp: number;
+}
+
 // Function to add tokens to the blacklist
-async function blacklistToken({ tokenId, exp }) {
+async function blacklistToken({
+  tokenId,
+  exp,
+}: BlacklistTokenParams): Promise<void> {
   tokenBlacklist.set(tokenId, exp);
 
   // Save token to the database
@@ -29,16 +37,16 @@ async function blacklistToken({ tokenId, exp }) {
 }
 
 // Function to check if a token is blacklisted
-function isTokenBlacklisted(tokenId) {
+function isTokenBlacklisted(tokenId: string): boolean {
   return tokenBlacklist.has(tokenId);
 }
 
 // Function to remove token from the blacklist manually
-function removeBlacklistedToken(token) {
+function removeBlacklistedToken(token: string): void {
   tokenBlacklist.delete(token);
 }
 
-let blacklistTokenIntervalId;
+let blacklistTokenIntervalId: NodeJS.Timeout | null = null;
 
 // Periodically check and remove expired tokens from the Map
 // Don't start the interval during tests
@@ -57,7 +65,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Function to clear the interval (for cleanup during tests or shutdown)
-function stopCleanupInterval() {
+function stopCleanupInterval(): void {
   if (blacklistTokenIntervalId) {
     clearInterval(blacklistTokenIntervalId);
     blacklistTokenIntervalId = null;

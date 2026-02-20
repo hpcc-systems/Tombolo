@@ -1,5 +1,16 @@
-function uniqueConstraintErrorHandler(err, defaultMessage) {
-  let result = {
+interface ErrorHandlerResult {
+  responseObject: {
+    success: boolean;
+    message: string;
+  };
+  statusCode: number;
+}
+
+function uniqueConstraintErrorHandler(
+  err: any,
+  defaultMessage: string
+): ErrorHandlerResult {
+  let result: ErrorHandlerResult = {
     responseObject: { success: false, message: defaultMessage },
     statusCode: 500,
   };

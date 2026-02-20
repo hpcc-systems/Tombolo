@@ -1,9 +1,14 @@
-import { validationResult } from 'express-validator';
+import { validationResult, ValidationChain } from 'express-validator';
+import { Request, Response, NextFunction } from 'express';
 import errorFormatter from '../utils/validator.js';
 import logger from '../config/logger.js';
 import { sendValidationError } from '../utils/response.js';
 
-const validateRequestBody = (req, res, next) => {
+const validateRequestBody = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
     logger.error('Validation errors:', JSON.stringify(errors.array(), null, 2));
@@ -13,7 +18,9 @@ const validateRequestBody = (req, res, next) => {
   next();
 };
 
-const validate = (...rules) => {
+const validate = (
+  ...rules: (ValidationChain | ValidationChain[])[]
+): (ValidationChain | typeof validateRequestBody)[] => {
   const allRules = rules.flat();
   return [...allRules, validateRequestBody];
 };

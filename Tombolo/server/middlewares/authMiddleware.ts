@@ -1,4 +1,5 @@
 import { body } from 'express-validator';
+import { Request, Response, NextFunction } from 'express';
 import {
   emailBody,
   objectBody,
@@ -19,8 +20,8 @@ const validateNewUserPayload = [
   stringBody('registrationMethod', false, {
     isIn: ['traditional', 'azure'],
   }),
-  stringBody('firstName', { length: { ...NAME_LENGTH } }),
-  stringBody('lastName', { length: { ...NAME_LENGTH } }),
+  stringBody('firstName', false, { length: { ...NAME_LENGTH } }),
+  stringBody('lastName', false, { length: { ...NAME_LENGTH } }),
   emailBody('email'),
   body('password')
     .if(body('registrationMethod').equals('traditional'))
@@ -44,7 +45,7 @@ const validateNewUserPayload = [
 const validateLoginPayload = [emailBody('email'), stringBody('password')];
 
 const validateEmailDuplicate = [
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
     const message = 'Email already in use';
     const user = await User.findOne({ where: { email } });
@@ -56,7 +57,11 @@ const validateEmailDuplicate = [
 ];
 
 // Validate valid access token is present in the request header
-const verifyValidTokenExists = (req, res, next) => {
+const verifyValidTokenExists = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const accessToken = req.cookies.token;
 
   if (!accessToken) {
@@ -66,12 +71,12 @@ const verifyValidTokenExists = (req, res, next) => {
 
   try {
     // Verify the token (checks for tampering and expiration)
-    jwt.verify(accessToken, process.env.JWT_SECRET);
+    jwt.verify(accessToken, process.env.JWT_SECRET!);
 
     // Attach token to req object for further processing in the controller
-    req.accessToken = accessToken;
+    (req as any).accessToken = accessToken;
     next(); // Proceed to the controller
-  } catch (err) {
+  } catch (err: any) {
     logger.error('Authorization: Invalid or expired access token', err.message);
     return sendError(res, 'Invalid or expired access token', 401);
   }
@@ -113,11 +118,15 @@ const validateAzureAuthCode = [
 
 const validateAccessRequest = [
   bodyUuids.id,
-  stringBody('comment', { length: { ...COMMENT_LENGTH } }),
+  stringBody('comment', false, { length: { ...COMMENT_LENGTH } }),
 ];
 
 // Validate refresh token request - only checks if token exists in cookie, not if it's valid
-const validateRefreshTokenRequest = (req, res, next) => {
+const validateRefreshTokenRequest = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const token = req.cookies.token;
 
   if (!token) {
@@ -126,7 +135,7 @@ const validateRefreshTokenRequest = (req, res, next) => {
   }
 
   // Attach token to req object for controller processing
-  req.accessToken = token;
+  (req as any).accessToken = token;
   next();
 };
 

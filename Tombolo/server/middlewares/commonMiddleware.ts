@@ -1,4 +1,4 @@
-import { body, param, query } from 'express-validator';
+import { body, param, query, ValidationChain } from 'express-validator';
 import { APPROVAL_STATUS } from '../config/constants.js';
 
 const NAME_LENGTH = { min: 2, max: 50 };
@@ -17,38 +17,43 @@ const APPROVAL_STATUSES = [
 
 /**
  * Configuration options for validation middleware.
- * @typedef {Object} ValidationOptions
- * @property {boolean} [required=false] - If true, the field must not be empty. Ignored if optional is true.
- * @property {boolean} [optional=false] - If true, the field is optional and may be falsy or null based on checkFalsy and nullable.
- * @property {boolean} [checkFalsy=true] - If true and optional is true, falsy values (e.g., '', false, 0) are allowed.
- * @property {boolean} [nullable=false] - If true and optional is true, null values are allowed.
- * @property {string} [msg] - Custom error message to override the default message.
- * @property {boolean} [alphaNumeric=false] - If true, the field must contain only alphanumeric characters.
- * @property {Array<string>} [isIn] - An array of allowed values for the field (e.g., ['active', 'inactive']).
- * @property {Object} [length] - Length constraints for the field.
- * @property {number} [length.min=1] - Minimum length for the field.
- * @property {number} [length.max=500] - Maximum length for the field.
- * @property {RegExp} [regex] - A regular expression the field must match.
- * @property {boolean} [email=false] - If true, the field must be a valid email address.
- * @property {number} [arrMin] - Minimum number of items for array fields.
  */
+interface ValidationOptions {
+  required?: boolean;
+  optional?: boolean;
+  checkFalsy?: boolean;
+  nullable?: boolean;
+  msg?: string;
+  alphaNumeric?: boolean;
+  isIn?: string[];
+  length?: { min?: number; max?: number };
+  regex?: RegExp;
+  email?: boolean;
+  arrMin?: number;
+}
 
 /**
  * Creates a validator function with a specified default error message generator.
- * @param {function(string): string} defaultMessageFn - A function that generates a default error message for a given field name.
- * @returns {function(function, function, string, ValidationOptions, ...any): Object} A validator function that creates express-validator middleware.
  */
-const createValidationFactory = defaultMessageFn => {
+const createValidationFactory = (
+  defaultMessageFn: (field: string) => string
+): ((
+  source: typeof body | typeof param | typeof query,
+  validationFn: (v: any, ...args: any[]) => any,
+  field: string,
+  options?: ValidationOptions,
+  ...args: any[]
+) => ValidationChain) => {
   /**
    * Creates express-validator middleware for a specific source, validation function, and field.
-   * @param {function} source - An express-validator source function (e.g., body, param, query) to specify the request field location.
-   * @param {function} validationFn - A function that applies the primary validation rule (e.g., v => v.isString()) to the source field.
-   * @param {string} field - The name of the field to validate (e.g., 'name', 'email'). Used in error messages.
-   * @param {ValidationOptions} [options] - Configuration options for the validator. See ValidationOptions for details.
-   * @param {...any} args - Additional arguments passed to the validationFn.
-   * @returns {Object} An express-validator middleware object for validating the specified field.
    */
-  return (source, validationFn, field, options = {}, ...args) => {
+  return (
+    source: typeof body | typeof param | typeof query,
+    validationFn: (v: any, ...args: any[]) => any,
+    field: string,
+    options: ValidationOptions = {},
+    ...args: any[]
+  ): ValidationChain => {
     let validator = validationFn(source(field), ...args);
     const message = options.msg || defaultMessageFn(field);
 
@@ -109,21 +114,39 @@ const createValidationFactory = defaultMessageFn => {
   };
 };
 
-const defaultMessage = field => `Invalid ${field}`;
+const defaultMessage = (field: string): string => `Invalid ${field}`;
 const createValidator = createValidationFactory(defaultMessage);
 
-const createStringValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createStringValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isString(), field, { ...options, optional });
 };
 
-const createUuidValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createUuidValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isUUID(4), field, { ...options, optional });
 };
 
-const createEmailValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createEmailValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isEmail(), field, {
       ...options,
       email: true,
@@ -132,42 +155,78 @@ const createEmailValidator = source => {
     });
 };
 
-const createRegexValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createRegexValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.matches(options.regex), field, {
       ...options,
       optional,
     });
 };
 
-const createBooleanValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createBooleanValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isBoolean(), field, {
       ...options,
       optional,
     });
 };
 
-const createIntValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createIntValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isInt(), field, { ...options, optional });
 };
 
-const createNumericValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createNumericValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isNumeric(), field, {
       ...options,
       optional,
     });
 };
 
-const createArrayValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createArrayValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isArray(), field, { ...options, optional });
 };
 
-const createObjectValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createObjectValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(
       source,
       v => v.isObject().withMessage(`${field} must be an object`),
@@ -176,8 +235,14 @@ const createObjectValidator = source => {
     );
 };
 
-const createCronValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createCronValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(
       source,
       v =>
@@ -195,29 +260,54 @@ const createCronValidator = source => {
     );
 };
 
-const createUrlValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createUrlValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isURL(), field, { ...options, optional });
 };
 
-const createDateValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createDateValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isDate(), field, {
       ...options,
       optional,
     });
 };
 
-const createDateTimeValidator = source => {
-  return (field, optional = false, options = {}) =>
+const createDateTimeValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isISO8601(), field, {
       ...options,
       optional,
     });
 };
 
-const createEnumValidator = source => {
-  return (field, optional = false, enumValues, options = {}) =>
+const createEnumValidator = (
+  source: typeof body | typeof param | typeof query
+) => {
+  return (
+    field: string,
+    optional: boolean = false,
+    enumValues: string[],
+    options: ValidationOptions = {}
+  ): ValidationChain =>
     createValidator(source, v => v.isIn(enumValues), field, {
       ...options,
       optional,

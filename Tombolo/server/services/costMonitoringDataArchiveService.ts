@@ -1,14 +1,16 @@
 import { ArchiveService } from './archiveService.js';
-import { Op } from 'sequelize';
+import { Op, Sequelize, Model } from 'sequelize';
 import logger from '../config/logger.js';
 
 class CostMonitoringDataArchiveService extends ArchiveService {
-  constructor(sequelize) {
+  private modelName: string;
+
+  constructor(sequelize: Sequelize) {
     super(sequelize);
     this.modelName = 'CostMonitoringData';
   }
 
-  async archiveOldCostData(daysToKeep = 30) {
+  async archiveOldCostData(daysToKeep: number = 30): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
@@ -27,11 +29,11 @@ class CostMonitoringDataArchiveService extends ArchiveService {
     }
   }
 
-  async getCostDataArchive(filters = {}) {
+  async getCostDataArchive(filters: any = {}): Promise<Model[]> {
     return await this.getArchivedData(this.modelName, filters);
   }
 
-  async restoreCostData(archivedRecordIds) {
+  async restoreCostData(archivedRecordIds: any[]): Promise<number> {
     try {
       const restoredCount = await this.restoreArchivedData(
         this.modelName,
@@ -45,7 +47,7 @@ class CostMonitoringDataArchiveService extends ArchiveService {
     }
   }
 
-  async getArchiveStats() {
+  async getArchiveStats(): Promise<any> {
     const ArchiveModel = await this.getArchiveModel(this.modelName);
 
     const stats = await ArchiveModel.findAll({
@@ -73,7 +75,9 @@ class CostMonitoringDataArchiveService extends ArchiveService {
     return stats[0];
   }
 
-  async cleanupOldArchives(archiveRetentionDays = 365) {
+  async cleanupOldArchives(
+    archiveRetentionDays: number = 365
+  ): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - archiveRetentionDays);
 
@@ -97,7 +101,10 @@ class CostMonitoringDataArchiveService extends ArchiveService {
    * @param {Object} additionalFilters - Additional filter criteria
    * @returns {Promise<Array>} Archived records for the cluster
    */
-  async getArchivedDataByCluster(clusterId, additionalFilters = {}) {
+  async getArchivedDataByCluster(
+    clusterId: string,
+    additionalFilters: any = {}
+  ): Promise<Model[]> {
     return await this.getCostDataArchive({
       clusterId,
       ...additionalFilters,
@@ -110,7 +117,10 @@ class CostMonitoringDataArchiveService extends ArchiveService {
    * @param {number} daysToKeep - Number of days to keep before archiving
    * @returns {Promise<number>} Number of records archived
    */
-  async archiveOldCostDataByCluster(clusterId, daysToKeep = 30) {
+  async archiveOldCostDataByCluster(
+    clusterId: string,
+    daysToKeep: number = 30
+  ): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
@@ -137,7 +147,7 @@ class CostMonitoringDataArchiveService extends ArchiveService {
    * Get archive statistics grouped by cluster
    * @returns {Promise<Array>} Statistics per cluster including record counts and date ranges
    */
-  async getArchiveStatsByCluster() {
+  async getArchiveStatsByCluster(): Promise<any[]> {
     const ArchiveModel = await this.getArchiveModel(this.modelName);
 
     const stats = await ArchiveModel.findAll({

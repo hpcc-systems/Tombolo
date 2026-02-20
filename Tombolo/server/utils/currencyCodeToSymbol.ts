@@ -1,4 +1,4 @@
-function currencyCodeToSymbol(currencyCode) {
+function currencyCodeToSymbol(currencyCode: string): string {
   if (!currencyCode) throw new Error('Currency code is required');
 
   if (currencyCode === 'USD') {
