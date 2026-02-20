@@ -1,9 +1,10 @@
+import { Request, Response } from 'express';
 import logger from '../config/logger.js';
 import { UserRole, RoleType, sequelize } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 
 // Lightweight healthcheck for Docker - no auth required
-const healthcheck = async (req, res) => {
+const healthcheck = async (req: Request, res: Response) => {
   try {
     // Check database connectivity
     await sequelize.authenticate();
@@ -23,11 +24,11 @@ const healthcheck = async (req, res) => {
   }
 };
 
-const checkStatus = async (req, res) => {
+const checkStatus = async (req: Request, res: Response) => {
   return sendSuccess(res, null, "Tombolo's Backend is running successfully");
 };
 
-const checkOwnerExists = async (req, res) => {
+const checkOwnerExists = async (req: Request, res: Response) => {
   try {
     const ownerRole = await RoleType.findOne({
       where: { roleName: 'owner' },
