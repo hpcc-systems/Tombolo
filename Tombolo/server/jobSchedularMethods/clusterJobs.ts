@@ -19,7 +19,7 @@ const CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME =
   'checkIfClusterIsContainerized.js';
 
 // Cluster status monitoring bree job
-async function startClusterMonitoring() {
+async function startClusterMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'cluster-monitoring' + new Date().getTime();
     this.bree.add({
@@ -47,7 +47,7 @@ async function startClusterMonitoring() {
   }
 }
 
-async function scheduleClusterTimezoneOffset() {
+async function scheduleClusterTimezoneOffset(this: any): Promise<void> {
   logger.info('Cluster timezone offset checker job initialized ...');
   try {
     let jobName = 'cluster-timezone-offset-' + new Date().getTime();
@@ -75,7 +75,7 @@ async function scheduleClusterTimezoneOffset() {
   }
 }
 
-async function createClusterUsageHistoryJob() {
+async function createClusterUsageHistoryJob(this: any): Promise<void> {
   const uniqueJobName = 'Cluster Usage History Tracker';
   const job = {
     interval: 14400000, // 4 hours
@@ -94,7 +94,7 @@ async function createClusterUsageHistoryJob() {
   logger.info('Cluster usage monitoring job initialized ...');
 }
 
-async function checkClusterReachability() {
+async function checkClusterReachability(this: any): Promise<void> {
   try {
     let jobName = 'cluster-reachability-monitoring' + new Date().getTime();
     this.bree.add({
@@ -122,7 +122,7 @@ async function checkClusterReachability() {
   }
 }
 
-async function checkClusterContainerization() {
+async function checkClusterContainerization(this: any): Promise<void> {
   try {
     let jobName = 'cluster-containerization-check-' + new Date().getTime();
     this.bree.add({

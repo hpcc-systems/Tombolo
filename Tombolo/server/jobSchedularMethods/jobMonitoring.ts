@@ -30,7 +30,7 @@ const humanReadableIntervalForJobMonitoring = generateIntervalString({
 });
 
 // Job monitoring bree job
-async function startJobMonitoring() {
+async function startJobMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'job-monitoring' + new Date().getTime();
     this.bree.add({
@@ -69,7 +69,7 @@ const humanReadableIntervalForIntermediateJobMonitoring =
   });
 
 // Intermediate jobs monitoring bree job
-async function startIntermediateJobsMonitoring() {
+async function startIntermediateJobsMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'intermediate-state-jobs-monitoring' + new Date().getTime();
     this.bree.add({
@@ -109,7 +109,7 @@ const humanReadableIntervalForJobPunctualityMonitoring = generateIntervalString(
 );
 
 // Job punctuality monitoring bree job
-async function startJobPunctualityMonitoring() {
+async function startJobPunctualityMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'job-punctuality-monitoring' + new Date().getTime();
     this.bree.add({
@@ -146,7 +146,7 @@ const humanReadableIntervalForTimeSeriesJobMonitoring = generateIntervalString({
   timeSlots: timeSeriesJobMonitoringTimeSlots,
 });
 
-async function startTimeSeriesAnalysisMonitoring() {
+async function startTimeSeriesAnalysisMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'job-time-series-analysis-monitoring' + new Date().getTime();
     this.bree.add({
@@ -175,7 +175,7 @@ async function startTimeSeriesAnalysisMonitoring() {
 }
 
 // Bree job that gets wu Info
-function createWuInfoFetchingJob(data = {}) {
+function createWuInfoFetchingJob(this: any, data: any = {}): void {
   try {
     let jobName = 'fetch-wu-info' + new Date().getTime();
     this.bree.add({
