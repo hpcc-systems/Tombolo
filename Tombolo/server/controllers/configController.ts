@@ -1,5 +1,8 @@
-import logger from '../config/logger.js'; // Get instance details from .env file
-const getInstanceDetails = async (req, res) => {
+import { Request, Response } from 'express';
+import logger from '../config/logger.js';
+
+// Get instance details from .env file
+const getInstanceDetails = async (req: Request, res: Response) => {
   try {
     const instanceName = process.env.INSTANCE_NAME;
     const environment = process.env.NODE_ENV;
