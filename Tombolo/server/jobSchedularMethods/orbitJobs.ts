@@ -9,7 +9,7 @@ const MEGAPHONE_JOB = 'orbitMegaphone.js';
 const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
 const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';
 
-function createOrbitMegaphoneJob() {
+function createOrbitMegaphoneJob(this: any): void {
   const uniqueJobName = 'Orbit Megaphone Job';
   const job = {
     interval: '30m',
@@ -21,7 +21,10 @@ function createOrbitMegaphoneJob() {
   logger.info('Orbit megaphone job initialized ...');
 }
 
-function createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
+function createOrbitMonitoringJob(
+  this: any,
+  { orbitMonitoring_id, cron }: { orbitMonitoring_id: string; cron: string }
+): void {
   const uniqueJobName = `Orbit Monitoring - ${orbitMonitoring_id}`;
   const job = {
     cron,
@@ -35,9 +38,12 @@ function createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
   this.bree.start(uniqueJobName);
 }
 
-function createOrbitProfileMonitoringJob({
-  uniqueJobName = 'Orbit Profile Monitoring',
-} = {}) {
+function createOrbitProfileMonitoringJob(
+  this: any,
+  {
+    uniqueJobName = 'Orbit Profile Monitoring',
+  }: { uniqueJobName?: string } = {}
+): void {
   const jobName = uniqueJobName;
   const job = {
     interval: '10s',
@@ -55,7 +61,7 @@ function createOrbitProfileMonitoringJob({
   logger.info(`Orbit profile monitoring job scheduled ...`);
 }
 
-async function scheduleOrbitMonitoringOnServerStart() {
+async function scheduleOrbitMonitoringOnServerStart(this: any): Promise<void> {
   try {
     logger.info('Orbit monitoring initialized ...');
     const orbitMonitorings = await OrbitMonitoring.findAll({ raw: true });

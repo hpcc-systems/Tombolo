@@ -7,7 +7,7 @@ const __dirname = getDirname(import.meta.url);
 const MONITOR_COST_FILE_NAME = 'monitorCost.js';
 const ANALYZE_COST_FILE_NAME = 'analyzeCost.js';
 
-function createMonitorCostJob() {
+function createMonitorCostJob(this: any): void {
   try {
     let jobName = 'monitor-cost-' + new Date().getTime();
     this.bree.add({
@@ -34,7 +34,7 @@ function createMonitorCostJob() {
   }
 }
 
-function createAnalyzeCostJob() {
+function createAnalyzeCostJob(this: any): void {
   const analyzeCostJobName = `analyze-cost-${new Date().getTime()}`;
   try {
     this.bree.add({
