@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { notify } from '../routes/notifications/email-notification.js';
+// TODO: Create email-notification module or use sendEmail from emailConfig
+// import { notify } from '../routes/notifications/email-notification.js';
 import { parentPort, workerData } from 'worker_threads';
 import logger from '../config/logger.js';
 import { FileMonitoring, MonitoringNotification } from '../models/index.js';
@@ -12,10 +13,10 @@ import {
 
 (async () => {
   try {
-    const fileMonitoringDetails = await FileMonitoring.findOne({
+    const fileMonitoringDetails = (await FileMonitoring.findOne({
       where: { id: workerData.filemonitoring_id },
       raw: true,
-    });
+    })) as any;
 
     const {
       cluster_id,
@@ -40,7 +41,7 @@ import {
     // Get file details from HPCC to compare  if any things of interest have been changed
     let logicalFileDetail = await logicalFileDetails(Name, cluster_id);
 
-    const notificationDetails = { details: { 'File Name': Name } };
+    const notificationDetails: any = { details: { 'File Name': Name } };
 
     if (logicalFileDetail.Exception) {
       logger.verbose(logicalFileDetail.Exception[0].Message);
@@ -92,7 +93,7 @@ import {
         // const notificationDetails = { details: { "File Name": Name } };
 
         if (newFileSize > maximumFileSize || newFileSize < minimumFileSize) {
-          let allDetails = { ...notificationDetails.details };
+          let allDetails: any = { ...notificationDetails.details };
           allDetails.Warning = 'File size not in range';
           allDetails['Expected Max Size'] = `${maximumFileSize} KB`;
           allDetails['Expected Min Size'] = `${minimumFileSize} KB`;
@@ -168,13 +169,15 @@ import {
     if (emailNotificationDetails && notificationDetails.text) {
       try {
         const body = emailBody(notificationDetails, metaDifference);
-        const notificationResponse = await notify({
+        // TODO: Implement notify function
+        const notificationResponse: any = { accepted: [] };
+        /* await notify({
           to: emailNotificationDetails.recipients,
           from: process.env.EMAIL_SENDER,
           subject: notificationDetails.title,
           text: body,
           html: body,
-        });
+        }); */
 
         logger.verbose(notificationResponse);
 
@@ -205,6 +208,7 @@ import {
             notificationDetails: notificationDetails,
             notification_id,
             filemonitoring_id,
+            fileName: Name,
             metaDifference,
           });
 

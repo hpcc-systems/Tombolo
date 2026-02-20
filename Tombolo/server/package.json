@@ -65,6 +65,7 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "catalog:",
     "@types/nodemailer": "^7.0.10",
+    "@types/uuid": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "cross-env": "^7.0.3",
     "nodemon": "catalog:",

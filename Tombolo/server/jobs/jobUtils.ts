@@ -1,7 +1,7 @@
 import logger from '../config/logger.js';
 import { parentPort } from 'worker_threads';
 
-function logOrPostMessage(input) {
+function logOrPostMessage(input: any): void {
   try {
     if (parentPort) {
       parentPort.postMessage(input);

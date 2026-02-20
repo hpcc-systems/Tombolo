@@ -2,7 +2,7 @@ import logger from '../config/logger.js';
 import {
   Integration,
   IntegrationMapping,
-  OrbitBuild,
+  OrbitBuilds,
   MonitoringNotification,
   NotificationQueue,
 } from '../models/index.js';
@@ -45,7 +45,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       await Promise.all(
         result[0].map(async build => {
           //check if the build already exists
-          let orbitBuild = await OrbitBuild.findOne({
+          let orbitBuild = await OrbitBuilds.findOne({
             where: {
               build_id: build.ReceiveInstanceIdKey,
               application_id: application_id,
@@ -56,7 +56,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
           //if it doesn't exist, create it and send a notification
           if (!orbitBuild) {
             //create build
-            const newBuild = await OrbitBuild.create({
+            const newBuild = await OrbitBuilds.create({
               application_id: application_id,
               build_id: build.ReceiveInstanceIdKey,
               monitoring_id: null,
@@ -186,7 +186,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
           } else {
             //if it does exist, update the "final status metadata"
 
-            await OrbitBuild.update(
+            await OrbitBuilds.update(
               {
                 metaData: {
                   ...orbitBuild.metaData,
