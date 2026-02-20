@@ -268,8 +268,6 @@ const OrbitMonitoring: React.FC = () => {
       <div className={styles.content}>
         <OrbitMonitoringTable
           orbitMonitoringData={filteredOrbitMonitoring}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
           onEdit={handleEditMonitoring}
           onCopy={handleCopyMonitoring}
           onDelete={handleDeleteMonitoring}

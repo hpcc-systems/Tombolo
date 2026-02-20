@@ -18,7 +18,6 @@ import RegisterUserForm from '../login/registerUserForm';
 import { getDeviceInfo } from '../login/utils';
 import BasicLayout from '../common/BasicLayout';
 import { handleSuccess, handleError } from '../common/handleResponse';
-import type { FormInstance } from 'antd';
 
 // Colors for the steps (aligned with cluster pattern)
 const stepColor: Record<string, string> = {

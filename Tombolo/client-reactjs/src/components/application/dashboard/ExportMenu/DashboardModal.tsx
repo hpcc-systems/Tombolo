@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Button, Input } from 'antd';
 import InfoDrawer from '../../../common/InfoDrawer';
 import useWindowSize from '@/hooks/useWindowSize';
-import { handleSuccess, handleError as handleResponseError } from '@/components/common/handleResponse';
+import { handleError as handleResponseError } from '@/components/common/handleResponse';
 import { InfoCircleOutlined, CopyOutlined } from '@ant-design/icons';
 import DashboardApiTable from './DashboardApiTable';
 import KeyForm from './KeyForm';
