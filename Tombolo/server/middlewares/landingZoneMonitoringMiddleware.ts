@@ -32,11 +32,13 @@ const validateFileListParams = [
 // Validate landing zone monitoring creation payload
 const validateCreateLandingZoneMonitoring = [
   bodyUuids.applicationId,
-  stringBody('monitoringName', { length: { ...MONITORING_NAME_LENGTH } }),
+  stringBody('monitoringName', false, {
+    length: { ...MONITORING_NAME_LENGTH },
+  }),
   stringBody('lzMonitoringType', false, {
     isIn: ['fileCount', 'spaceUsage', 'fileMovement'],
   }),
-  stringBody('description', { length: { ...DESCRIPTION_LENGTH } }),
+  stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
   bodyUuids.clusterId,
   objectBody('metaData'),
 ];
@@ -55,7 +57,7 @@ const validateUpdateLandingZoneMonitoring = [
   stringBody('lzMonitoringType', true, {
     isIn: ['fileCount', 'spaceUsage', 'fileMovement'],
   }),
-  stringBody('description', { length: { ...DESCRIPTION_LENGTH } }),
+  stringBody('description', false, { length: { ...DESCRIPTION_LENGTH } }),
   uuidBody('clusterId', true),
   objectBody('metaData', true),
   booleanBody('isActive', true),
