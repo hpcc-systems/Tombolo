@@ -1,6 +1,10 @@
 /* Converts a given interval in minutes into an array of timestamps in HH:MM format,
  spanning from 00:00 to 23:59. */
-function generateTimeSlotsForJobMonitoring({ interval }) {
+function generateTimeSlotsForJobMonitoring({
+  interval,
+}: {
+  interval: number;
+}): string[] {
   const timeSlots = [];
   const roundedInterval = Math.ceil(interval); // round to closet upper integer
   const intervalsPerDay = Math.ceil((24 * 60) / roundedInterval);
@@ -26,7 +30,11 @@ Result :
 ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00", "23:59"]
 */
 
-function generateIntervalString({ timeSlots }) {
+function generateIntervalString({
+  timeSlots,
+}: {
+  timeSlots: string[];
+}): string {
   let intervalString = '';
   timeSlots.forEach(time => {
     intervalString += `at ${time} also `;

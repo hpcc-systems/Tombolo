@@ -6,7 +6,7 @@ const ARCHIVE_DATA_FILE_NAME = 'archiveData.js';
 
 const __dirname = getDirname(import.meta.url);
 
-function createDataArchiveJob() {
+function createDataArchiveJob(this: any): void {
   try {
     let jobName = 'archive-data' + new Date().getTime();
     this.bree.add({

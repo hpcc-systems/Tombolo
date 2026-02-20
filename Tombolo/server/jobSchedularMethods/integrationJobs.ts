@@ -5,7 +5,7 @@ import { getDirname } from '../utils/polyfills.js';
 const __dirname = getDirname(import.meta.url);
 const INTEGRATION_CREATION = 'integrationCreation.js';
 
-async function createIntegrationCreationJob() {
+async function createIntegrationCreationJob(this: any): Promise<void> {
   const uniqueJobName = `Integration Creation Job`;
   const job = {
     interval: '60s',
