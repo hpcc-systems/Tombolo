@@ -1,10 +1,11 @@
+import { Request, Response } from 'express';
 import { InstanceSettings, User } from '../models/index.js';
 import logger from '../config/logger.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import CustomError from '../utils/customError.js';
 
 // Get a single instance setting by name
-const getInstanceSetting = async (req, res) => {
+const getInstanceSetting = async (req: Request, res: Response) => {
   try {
     const instance = await InstanceSettings.findOne({
       where: { id: 1 },
@@ -39,7 +40,7 @@ const getInstanceSetting = async (req, res) => {
 };
 
 // Update an existing instance setting by ID
-const updateInstanceSetting = async (req, res) => {
+const updateInstanceSetting = async (req: Request, res: Response) => {
   try {
     // Get the instance setting with the ID = 1
     const instance = await InstanceSettings.findOne({
@@ -50,7 +51,7 @@ const updateInstanceSetting = async (req, res) => {
     // Get rest of the fields from the request body
     const reqData = { ...req.body };
 
-    const payload = {};
+    const payload: any = {};
 
     if (reqData.name) {
       payload.name = reqData.name;
@@ -65,7 +66,6 @@ const updateInstanceSetting = async (req, res) => {
     // Update the instance setting
     const updatedInstanceCount = await InstanceSettings.update(finalPayload, {
       where: { id: 1 },
-      raw: true,
     });
 
     // If updated instance count is 0, throw an error
