@@ -1,4 +1,5 @@
 // Imports from libraries
+import { Request, Response } from 'express';
 import Sequelize from 'sequelize';
 
 // Local Imports
@@ -10,9 +11,9 @@ import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
 import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
 
 // Get all orbit profile monitorings for an application
-const getAllOrbitProfileMonitorings = async (req, res) => {
+const getAllOrbitProfileMonitorings = async (req: Request, res: Response) => {
   try {
-    const { applicationId } = req.params;
+    const { applicationId } = req.params as { applicationId: string };
 
     const orbitProfileMonitorings = await OrbitProfileMonitoring.findAll({
       where: { applicationId },
@@ -28,9 +29,9 @@ const getAllOrbitProfileMonitorings = async (req, res) => {
 };
 
 // Get orbit profile monitoring by ID
-const getOrbitProfileMonitoringById = async (req, res) => {
+const getOrbitProfileMonitoringById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const orbitProfileMonitoring = await OrbitProfileMonitoring.findOne({
       where: { id },
@@ -49,10 +50,10 @@ const getOrbitProfileMonitoringById = async (req, res) => {
 };
 
 // Create new orbit profile monitoring
-const createOrbitProfileMonitoring = async (req, res) => {
+const createOrbitProfileMonitoring = async (req: Request, res: Response) => {
   try {
     const { monitoringName, description, metaData, applicationId } = req.body;
-    const userId = req.user.id;
+    const userId = (req as any).user.id;
 
     const newOrbitProfileMonitoring = await OrbitProfileMonitoring.create({
       applicationId,
@@ -90,11 +91,11 @@ const createOrbitProfileMonitoring = async (req, res) => {
 };
 
 // Update orbit profile monitoring
-const updateOrbitProfileMonitoring = async (req, res) => {
+const updateOrbitProfileMonitoring = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const updateData = req.body;
-    const userId = req.user.id;
+    const userId = (req as any).user.id;
 
     // Remove application id from update data to prevent modification
     delete updateData.applicationId;
@@ -135,10 +136,10 @@ const updateOrbitProfileMonitoring = async (req, res) => {
 };
 
 // Delete orbit profile monitoring (soft delete)
-const deleteOrbitProfileMonitoring = async (req, res) => {
+const deleteOrbitProfileMonitoring = async (req: Request, res: Response) => {
   try {
     const { ids } = req.body;
-    const userId = req.user.id;
+    const userId = (req as any).user.id;
 
     // Find the orbit profile monitoring for all the ids and delete them and also update deletedBy and deletedAt
     await sequelize.transaction(async t => {
@@ -162,10 +163,13 @@ const deleteOrbitProfileMonitoring = async (req, res) => {
 };
 
 // Toggle orbit profile monitoring status ( Pausing or starting the monitoring  )
-const toggleOrbitProfileMonitoringStatus = async (req, res) => {
+const toggleOrbitProfileMonitoringStatus = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { ids, isActive } = req.body;
-    const userId = req.user.id;
+    const userId = (req as any).user.id;
 
     // Find all for ids where the approvalStatus is approved
     const orbitProfileMonitorings = await OrbitProfileMonitoring.findAll({
@@ -212,10 +216,10 @@ const toggleOrbitProfileMonitoringStatus = async (req, res) => {
 };
 
 // Approve orbit profile monitoring
-const evaluateOrbitProfileMonitoring = async (req, res) => {
+const evaluateOrbitProfileMonitoring = async (req: Request, res: Response) => {
   try {
     const { approverComment, ids, isActive, approvalStatus } = req.body;
-    const userId = req.user.id;
+    const userId = (req as any).user.id;
 
     // Find all for ids and update approverComment, approvalStatus, isActive
     await OrbitProfileMonitoring.update(
@@ -251,7 +255,10 @@ const evaluateOrbitProfileMonitoring = async (req, res) => {
 };
 
 // Bulk update orbit profile monitorings
-const bulkUpdateOrbitProfileMonitoring = async (req, res) => {
+const bulkUpdateOrbitProfileMonitoring = async (
+  req: Request,
+  res: Response
+) => {
   let transaction;
   try {
     transaction = await sequelize.transaction();
@@ -260,7 +267,7 @@ const bulkUpdateOrbitProfileMonitoring = async (req, res) => {
     if (!Array.isArray(inputMonitorings) || inputMonitorings.length === 0) {
       return sendError(res, 'No monitorings provided for bulk update', 400);
     }
-    const userId = req.user.id;
+    const userId = (req as any).user.id;
 
     if (!Array.isArray(inputMonitorings) || inputMonitorings.length === 0) {
       await transaction.rollback();
