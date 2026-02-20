@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { RefreshToken } from '../models/index.js';
 import { blacklistToken } from '../utils/tokenBlackListing.js';
@@ -6,10 +7,10 @@ import { verifyToken } from '../utils/authUtil.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 
 // Get all active sessions
-const activeSessionsByUserId = async (req, res) => {
+const activeSessionsByUserId = async (req: Request, res: Response) => {
   try {
     // Get user id from the token
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // Find all sessions for the user
     const sessions = await RefreshToken.findAll({
@@ -27,7 +28,7 @@ const activeSessionsByUserId = async (req, res) => {
     });
 
     //grab current session token id from the request
-    const token = req.cookies.token;
+    const token = (req as any).cookies.token;
     let decoded = await verifyToken(token, process.env.JWT_SECRET);
     const currentTokenId = decoded.tokenId;
 
@@ -49,10 +50,10 @@ const activeSessionsByUserId = async (req, res) => {
 };
 
 // Destroy one active session
-const destroyOneActiveSession = async (req, res) => {
+const destroyOneActiveSession = async (req: Request, res: Response) => {
   try {
     // Get user id from the token
-    const { sessionId } = req.params;
+    const { sessionId } = req.params as { sessionId: string };
 
     // Destroy session/refresh token by Id
     const destroyedSessions = await RefreshToken.destroy({
@@ -77,10 +78,10 @@ const destroyOneActiveSession = async (req, res) => {
 };
 
 // Destroy all active sessions
-const destroyActiveSessions = async (req, res) => {
+const destroyActiveSessions = async (req: Request, res: Response) => {
   try {
     // Get user id from the token
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // Find all sessions for the user
     const sessions = await RefreshToken.findAll({
