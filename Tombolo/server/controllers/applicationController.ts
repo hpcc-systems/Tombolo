@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { UserApplication, Application, User } from '../models/index.js';
@@ -10,9 +11,9 @@ import { getDirname } from '../utils/polyfills.js';
 
 const __dirname = getDirname(import.meta.url);
 
-async function getApplications(req, res) {
+async function getApplications(req: Request, res: Response) {
   try {
-    const { id: userId } = req.user;
+    const { id: userId } = (req as any).user;
 
     // 1. Get application IDs linked to the user
     const userApps = await UserApplication.findAll({
@@ -44,10 +45,10 @@ async function getApplications(req, res) {
   }
 }
 
-async function getApplicationsByUser(req, res) {
+async function getApplicationsByUser(req: Request, res: Response) {
   const { user_id } = req.query;
   // Use authenticated user ID if user_id is not provided
-  const userId = user_id || req.user?.id;
+  const userId = user_id || (req as any).user?.id;
 
   if (!userId) {
     return sendError(res, 'User ID is required', 400);
@@ -80,10 +81,10 @@ async function getApplicationsByUser(req, res) {
   }
 }
 
-async function getApplicationById(req, res) {
+async function getApplicationById(req: Request, res: Response) {
   try {
     const application = await Application.findOne({
-      where: { id: req.query.app_id },
+      where: { id: req.query.app_id as string },
     });
     return sendSuccess(res, application);
   } catch (err) {
@@ -92,20 +93,20 @@ async function getApplicationById(req, res) {
   }
 }
 
-async function saveApplication(req, res) {
+async function saveApplication(req: Request, res: Response) {
   try {
     if (req.body.id === '') {
       const application = await Application.create({
         title: req.body.title,
         description: req.body.description,
-        creator: req.user.id,
+        creator: (req as any).user.id,
         visibility: req.body.visibility,
       });
-      if (req.user.id) {
+      if ((req as any).user.id) {
         const userApp = await UserApplication.create({
-          user_id: req.user.id,
+          user_id: (req as any).user.id,
           application_id: application.id,
-          createdBy: req.user.id,
+          createdBy: (req as any).user.id,
           user_app_relation: 'created',
         });
 
@@ -127,12 +128,12 @@ async function saveApplication(req, res) {
         );
       }
     } else {
-      const result = await Application.update(req.body, {
+      await Application.update(req.body, {
         where: { id: req.body.id },
       });
       return sendSuccess(
         res,
-        { id: result.id },
+        { id: req.body.id },
         'Application updated successfully'
       );
     }
@@ -142,7 +143,7 @@ async function saveApplication(req, res) {
   }
 }
 
-async function deleteApplication(req, res) {
+async function deleteApplication(req: Request, res: Response) {
   try {
     await UserApplication.destroy({
       where: { application_id: req.body.appIdToDelete, user_id: req.body.user },
@@ -159,7 +160,7 @@ async function deleteApplication(req, res) {
   }
 }
 
-async function shareApplication(req, res) {
+async function shareApplication(req: Request, res: Response) {
   const { data: appShareDetails } = req.body;
 
   try {
@@ -186,7 +187,7 @@ async function shareApplication(req, res) {
   }
 }
 
-async function stopApplicationShare(req, res) {
+async function stopApplicationShare(req: Request, res: Response) {
   try {
     const { application_id, username: user_id } = req.body;
     await UserApplication.destroy({ where: { application_id, user_id } });
@@ -197,7 +198,7 @@ async function stopApplicationShare(req, res) {
   }
 }
 
-async function exportApplication(req, res) {
+async function exportApplication(req: Request, res: Response) {
   try {
     let applicationExport = {};
     Application.findOne({
@@ -207,7 +208,6 @@ async function exportApplication(req, res) {
         application: {
           title: application.title,
           description: application.description,
-          cluster: application.cluster,
         },
       };
 
