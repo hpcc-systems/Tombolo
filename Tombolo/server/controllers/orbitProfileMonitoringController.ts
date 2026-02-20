@@ -83,7 +83,15 @@ const createOrbitProfileMonitoring = async (req: Request, res: Response) => {
     logger.error('Error creating orbit profile monitoring:', err);
 
     if (err instanceof Sequelize.UniqueConstraintError) {
-      return uniqueConstraintErrorHandler(res, err);
+      const errorResult = uniqueConstraintErrorHandler(
+        err,
+        'Failed to create orbit profile monitoring'
+      );
+      return sendError(
+        res,
+        errorResult.responseObject.message,
+        errorResult.statusCode
+      );
     }
 
     sendError(res, 'Failed to create orbit profile monitoring');
@@ -128,7 +136,15 @@ const updateOrbitProfileMonitoring = async (req: Request, res: Response) => {
     logger.error('Error updating orbit profile monitoring:', err);
 
     if (err instanceof Sequelize.UniqueConstraintError) {
-      return uniqueConstraintErrorHandler(res, err);
+      const errorResult = uniqueConstraintErrorHandler(
+        err,
+        'Failed to update orbit profile monitoring'
+      );
+      return sendError(
+        res,
+        errorResult.responseObject.message,
+        errorResult.statusCode
+      );
     }
 
     sendError(res, 'Failed to update orbit profile monitoring');

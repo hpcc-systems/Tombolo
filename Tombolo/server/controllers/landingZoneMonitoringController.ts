@@ -43,7 +43,7 @@ const getDropzonesForACluster = async (req: Request, res: Response) => {
         },
         clusterDetails.allowSelfSigned
       )
-    ).TpDropZoneQuery();
+    ).TpDropZoneQuery({});
 
     sendSuccess(res, TpDropZone);
   } catch (err) {
