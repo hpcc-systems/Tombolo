@@ -29,12 +29,12 @@ const activeSessionsByUserId = async (req: Request, res: Response) => {
 
     //grab current session token id from the request
     const token = (req as any).cookies.token;
-    let decoded = await verifyToken(token, process.env.JWT_SECRET);
+    let decoded = await verifyToken(token);
     const currentTokenId = decoded.tokenId;
 
     // Mark the current token
     activeSessions.forEach(session => {
-      session.dataValues.current = session.id === currentTokenId;
+      (session.dataValues as any).current = session.id === currentTokenId;
     });
 
     // response
