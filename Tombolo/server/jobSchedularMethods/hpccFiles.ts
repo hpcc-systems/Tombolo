@@ -11,11 +11,14 @@ const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
   'submitLogicalFileMonitoring.js';
 const FILE_MONITORING = 'fileMonitoringPoller.js';
 
-function createLandingZoneFileMonitoringBreeJob({
-  filemonitoring_id,
-  name,
-  cron,
-}) {
+function createLandingZoneFileMonitoringBreeJob(
+  this: any,
+  {
+    filemonitoring_id,
+    name,
+    cron,
+  }: { filemonitoring_id: string; name: string; cron: string }
+): void {
   const job = {
     cron,
     name,
@@ -32,7 +35,14 @@ function createLandingZoneFileMonitoringBreeJob({
   this.bree.add(job);
 }
 
-function createLogicalFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
+function createLogicalFileMonitoringBreeJob(
+  this: any,
+  {
+    filemonitoring_id,
+    name,
+    cron,
+  }: { filemonitoring_id: string; name: string; cron: string }
+): void {
   const job = {
     cron,
     name,
@@ -49,12 +59,20 @@ function createLogicalFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
   this.bree.add(job);
 }
 
-async function scheduleFileMonitoringBreeJob({
-  filemonitoring_id,
-  name,
-  cron,
-  monitoringAssetType,
-}) {
+async function scheduleFileMonitoringBreeJob(
+  this: any,
+  {
+    filemonitoring_id,
+    name,
+    cron,
+    monitoringAssetType,
+  }: {
+    filemonitoring_id: string;
+    name: string;
+    cron: string;
+    monitoringAssetType: string;
+  }
+): Promise<void> {
   if (monitoringAssetType === 'landingZoneFile') {
     createLandingZoneFileMonitoringBreeJob.call(this, {
       filemonitoring_id,
@@ -70,15 +88,15 @@ async function scheduleFileMonitoringBreeJob({
   }
 }
 
-async function scheduleFileMonitoringOnServerStart() {
+async function scheduleFileMonitoringOnServerStart(this: any): Promise<void> {
   try {
-    const activeLandingZoneFileMonitoring = await FileMonitoring.findAll({
+    const activeLandingZoneFileMonitoring = (await FileMonitoring.findAll({
       where: {
         monitoringActive: true,
         // monitoringAssetType: "landingZoneFile",
       },
       raw: true,
-    });
+    })) as any[];
     for (const monitoring of activeLandingZoneFileMonitoring) {
       await this.scheduleFileMonitoringBreeJob({
         filemonitoring_id: monitoring.id,
@@ -92,7 +110,7 @@ async function scheduleFileMonitoringOnServerStart() {
   }
 }
 
-async function scheduleFileMonitoring() {
+async function scheduleFileMonitoring(this: any): Promise<void> {
   logger.info('File monitoring initialized ...');
   try {
     let jobName = 'file-monitoring-' + new Date().getTime();

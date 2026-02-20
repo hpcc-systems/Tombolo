@@ -4,28 +4,51 @@ import { getDirname } from '../utils/polyfills.js';
 
 const __dirname = getDirname(import.meta.url);
 
-function createNewBreeJob({
-  uniqueJobName,
-  cron,
-  jobfileName,
-  sprayedFileScope,
-  manualJob_meta,
-  sprayFileName,
-  sprayDropZone,
-  applicationId,
-  dataflowId,
-  dataflowVersionId = null,
-  clusterId,
-  metaData,
-  jobName,
-  contact,
-  jobType,
-  status,
-  jobId,
-  title,
-  jobExecutionGroupId,
-}) {
-  const job = {
+function createNewBreeJob(
+  this: any,
+  {
+    uniqueJobName,
+    cron,
+    jobfileName,
+    sprayedFileScope,
+    manualJob_meta,
+    sprayFileName,
+    sprayDropZone,
+    applicationId,
+    dataflowId,
+    dataflowVersionId = null,
+    clusterId,
+    metaData,
+    jobName,
+    contact,
+    jobType,
+    status,
+    jobId,
+    title,
+    jobExecutionGroupId,
+  }: {
+    uniqueJobName: string;
+    cron?: string;
+    jobfileName: string;
+    sprayedFileScope?: any;
+    manualJob_meta?: any;
+    sprayFileName?: string;
+    sprayDropZone?: string;
+    applicationId?: string;
+    dataflowId?: string;
+    dataflowVersionId?: string | null;
+    clusterId?: string;
+    metaData?: any;
+    jobName?: string;
+    contact?: string;
+    jobType?: string;
+    status?: string;
+    jobId?: string;
+    title?: string;
+    jobExecutionGroupId?: string;
+  }
+): void {
+  const job: any = {
     name: uniqueJobName,
     path: path.join(__dirname, '..', 'jobs', jobfileName),
     worker: {
@@ -60,7 +83,7 @@ function createNewBreeJob({
   this.bree.add(job);
 }
 
-async function removeJobFromScheduler(name) {
+async function removeJobFromScheduler(this: any, name: string): Promise<any> {
   try {
     const existingJob = this.bree.config.jobs.find(job => job.name === name);
     if (existingJob) {
@@ -79,7 +102,7 @@ async function removeJobFromScheduler(name) {
   }
 }
 
-async function removeAllFromBree(namePart) {
+async function removeAllFromBree(this: any, namePart: string): Promise<void> {
   try {
     const existingJobs = this.bree.config.jobs.filter(job =>
       job.name.includes(namePart)
@@ -102,11 +125,11 @@ async function removeAllFromBree(namePart) {
   }
 }
 
-function getAllJobs() {
+function getAllJobs(this: any): any[] {
   return this.bree.config.jobs;
 }
 
-async function stopJob(jobName) {
+async function stopJob(this: any, jobName: string): Promise<any> {
   const job = this.bree.config.jobs.find(job => job.name === jobName);
   try {
     if (job) {
@@ -129,7 +152,7 @@ async function stopJob(jobName) {
   }
 }
 
-async function stopAllJobs() {
+async function stopAllJobs(this: any): Promise<any> {
   try {
     const allJobs = [...this.bree.config.jobs];
     await this.bree.stop();
@@ -144,7 +167,7 @@ async function stopAllJobs() {
   }
 }
 
-function startJob(jobName) {
+function startJob(this: any, jobName: string): any {
   const job = this.bree.config.jobs.find(job => job.name === jobName);
   try {
     if (job) {
@@ -167,7 +190,7 @@ function startJob(jobName) {
   }
 }
 
-function startAllJobs() {
+function startAllJobs(this: any): any {
   try {
     const allJobs = [...this.bree.config.jobs];
     this.bree.start();
@@ -182,7 +205,7 @@ function startAllJobs() {
   }
 }
 
-function logBreeJobs() {
+function logBreeJobs(this: any): void {
   if (process.env.NODE_ENV === 'production') return; //do not polute logs during production;
   const jobs = this.bree.config.jobs;
   logger.verbose('📢 Bree jobs:');

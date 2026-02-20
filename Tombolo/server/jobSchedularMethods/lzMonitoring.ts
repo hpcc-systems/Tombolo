@@ -39,7 +39,7 @@ const humanReadableIntervalForSpaceUsageMonitoring = generateIntervalString({
 });
 
 // Job monitoring bree job
-async function startLzFileMovementMonitoring() {
+async function startLzFileMovementMonitoring(this: any): Promise<void> {
   try {
     let jobName =
       'landing-zone-file-movement-monitoring' + new Date().getTime();
@@ -69,7 +69,7 @@ async function startLzFileMovementMonitoring() {
 }
 
 // File count monitoring bree job
-async function startLzFileCountMonitoring() {
+async function startLzFileCountMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'landing-zone-file-count-monitoring' + new Date().getTime();
     this.bree.add({
@@ -98,7 +98,7 @@ async function startLzFileCountMonitoring() {
 }
 
 // Space usage monitoring bree job
-async function startLzSpaceUsageMonitoring() {
+async function startLzSpaceUsageMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'landing-zone-space-usage-monitoring' + new Date().getTime();
     this.bree.add({
