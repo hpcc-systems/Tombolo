@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import logger from '../config/logger.js';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,7 +14,7 @@ import {
 import { trimURL, checkPasswordSecurityViolations } from '../utils/authUtil.js';
 
 // Main controller function
-const createInstanceSettingFirstRun = async (req, res) => {
+const createInstanceSettingFirstRun = async (req: Request, res: Response) => {
   // Set headers for SSE
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -179,15 +180,20 @@ const createInstanceSettingFirstRun = async (req, res) => {
 };
 
 // Helper: Send SSE updates to the client
-const sendUpdate = (res, data) => {
+const sendUpdate = (res: Response, data: any) => {
   res.write(`data: ${JSON.stringify(data)}\n\n`);
   res.flush();
 };
 
 // Helper: Create user
 const createUser = async (
-  { firstName, lastName, email, password },
-  transaction
+  {
+    firstName,
+    lastName,
+    email,
+    password,
+  }: { firstName: string; lastName: string; email: string; password: string },
+  transaction: any
 ) => {
   const errors = checkPasswordSecurityViolations({
     password: password,
@@ -231,7 +237,7 @@ const createUser = async (
 };
 
 // Helper: Assign owner role
-const assignOwnerRole = async (userId, transaction) => {
+const assignOwnerRole = async (userId: string, transaction: any) => {
   const { id: ownerId } = await RoleType.findOne({
     where: { roleName: 'owner' },
   });
@@ -247,10 +253,14 @@ const assignOwnerRole = async (userId, transaction) => {
 
 // Helper: Manage instance settings
 const manageInstanceSettings = async (
-  { name, userId, description },
-  transaction
+  {
+    name,
+    userId,
+    description,
+  }: { name: string; userId: string; description: string },
+  transaction: any
 ) => {
-  await InstanceSettings.destroy({ where: {} }, { transaction });
+  await InstanceSettings.destroy({ where: {}, transaction });
   await InstanceSettings.create(
     {
       name,
@@ -267,7 +277,7 @@ const manageInstanceSettings = async (
 };
 
 // Helper: Send verification email
-const sendVerificationEmail = async (user, transaction) => {
+const sendVerificationEmail = async (user: any, transaction: any) => {
   let verificationCode = uuidv4();
   const notificationId = uuidv4();
 
