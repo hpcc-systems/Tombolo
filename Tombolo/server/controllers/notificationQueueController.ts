@@ -1,8 +1,9 @@
+import { Request, Response } from 'express';
 import logger from '../config/logger.js';
 import { NotificationQueue } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 
-async function createNotificationQueue(req, res) {
+async function createNotificationQueue(req: Request, res: Response) {
   try {
     const response = await NotificationQueue.create(req.body, { raw: true });
     return sendSuccess(res, response, 'Notification created successfully');
@@ -12,7 +13,7 @@ async function createNotificationQueue(req, res) {
   }
 }
 
-async function getNotifications(req, res) {
+async function getNotifications(req: Request, res: Response) {
   try {
     const notifications = await NotificationQueue.findAll();
     return sendSuccess(
@@ -26,7 +27,7 @@ async function getNotifications(req, res) {
   }
 }
 
-async function updateNotificationQueue(req, res) {
+async function updateNotificationQueue(req: Request, res: Response) {
   try {
     const updatedRows = await NotificationQueue.update(req.body, {
       where: { id: req.body.id },
@@ -49,9 +50,11 @@ async function updateNotificationQueue(req, res) {
   }
 }
 
-async function deleteNotificationQueue(req, res) {
+async function deleteNotificationQueue(req: Request, res: Response) {
   try {
-    await NotificationQueue.destroy({ where: { id: req.params.id } });
+    await NotificationQueue.destroy({
+      where: { id: (req.params as { id: string }).id },
+    });
     return sendSuccess(res, null, 'Notification deleted successfully');
   } catch (err) {
     logger.error('deleteNotificationQueue: ', err);
