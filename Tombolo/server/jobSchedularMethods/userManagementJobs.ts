@@ -4,7 +4,7 @@ import { getDirname } from '../utils/polyfills.js';
 
 const __dirname = getDirname(import.meta.url);
 
-async function removeUnverifiedUser() {
+async function removeUnverifiedUser(this: any): Promise<void> {
   try {
     let jobName = 'remove-unverified-users-' + new Date().getTime();
     this.bree.add({
@@ -32,7 +32,7 @@ async function removeUnverifiedUser() {
   }
 }
 
-async function sendPasswordExpiryEmails() {
+async function sendPasswordExpiryEmails(this: any): Promise<void> {
   try {
     let jobName = 'password-expiry-' + new Date().getTime();
     this.bree.add({
@@ -62,7 +62,7 @@ async function sendPasswordExpiryEmails() {
   }
 }
 
-async function sendAccountDeleteEmails() {
+async function sendAccountDeleteEmails(this: any): Promise<void> {
   try {
     let jobName = 'account-delete-' + new Date().getTime();
     this.bree.add({

@@ -7,7 +7,7 @@ const PROCESS_EMAIL_NOTIFICATIONS = path.join(
 );
 const __dirname = getDirname(import.meta.url);
 
-async function scheduleEmailNotificationProcessing() {
+async function scheduleEmailNotificationProcessing(this: any): Promise<void> {
   try {
     let jobName = 'email-notification-processing-' + new Date().getTime();
     this.bree.add({
