@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import axios from 'axios';
 import {
   getCluster,
@@ -17,7 +18,7 @@ import moment from 'moment';
 import { getClusterOptions } from '../utils/getClusterOptions.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 
-async function fileSearch(req, res) {
+async function fileSearch(req: Request, res: Response) {
   let cluster;
   try {
     cluster = await getCluster(req.body.clusterid);
@@ -90,7 +91,7 @@ async function fileSearch(req, res) {
   }
 }
 
-async function superfileSearch(req, res) {
+async function superfileSearch(req: Request, res: Response) {
   try {
     await getCluster(req.body.clusterid);
   } catch (err) {
@@ -129,7 +130,7 @@ async function superfileSearch(req, res) {
   }
 }
 
-async function querySearch(req, res) {
+async function querySearch(req: Request, res: Response) {
   let cluster;
   try {
     cluster = await getCluster(req.body.clusterid);
@@ -187,7 +188,7 @@ async function querySearch(req, res) {
   }
 }
 
-async function jobSearch(req, res) {
+async function jobSearch(req: Request, res: Response) {
   try {
     const { keyword, clusterId, clusterType } = req.body;
     const wuService = await getWorkunitsService(clusterId);
@@ -229,7 +230,7 @@ async function jobSearch(req, res) {
   }
 }
 
-async function getClustersCtr(req, res) {
+async function getClustersCtr(req: Request, res: Response) {
   try {
     const clusters = await Cluster.findAll({
       attributes: { exclude: ['hash', 'username', 'metaData'] },
@@ -243,7 +244,7 @@ async function getClustersCtr(req, res) {
   }
 }
 
-async function getClusterCtr(req, res) {
+async function getClusterCtr(req: Request, res: Response) {
   try {
     const clusters = await Cluster.findOne({
       where: { id: req.query.cluster_id },
@@ -255,10 +256,13 @@ async function getClusterCtr(req, res) {
   }
 }
 
-async function getLogicalFileDetails(req, res) {
+async function getLogicalFileDetails(req: Request, res: Response) {
   try {
     const { fileName, clusterid } = req.query;
-    const details = await logicalFileDetails(fileName, clusterid);
+    const details = await logicalFileDetails(
+      fileName as string,
+      clusterid as string
+    );
     // Removing unnecessary data before sending to client
     details.DFUFilePartsOnClusters
       ? delete details.DFUFilePartsOnClusters
@@ -272,9 +276,9 @@ async function getLogicalFileDetails(req, res) {
   }
 }
 
-async function hpccGetData(req, res) {
+async function hpccGetData(req: Request, res: Response) {
   try {
-    const cluster = await getCluster(req.query.clusterid);
+    const cluster = await getCluster(req.query.clusterid as string);
 
     let clusterAuth = getClusterAuth(cluster);
     let wuService = new WorkunitsService(
@@ -289,13 +293,16 @@ async function hpccGetData(req, res) {
     );
 
     const response = await wuService.WUResult({
-      LogicalName: req.query.fileName,
+      LogicalName: req.query.fileName as string,
       Cluster: 'mythor',
       Count: 50,
     });
 
-    if (response.Result !== undefined && response.Result.Row !== undefined) {
-      const rows = response.Result.Row;
+    if (
+      (response as any).Result !== undefined &&
+      (response as any).Result.Row !== undefined
+    ) {
+      const rows = (response as any).Result.Row;
 
       if (rows.length > 0) {
         rows.shift();
@@ -310,13 +317,13 @@ async function hpccGetData(req, res) {
   }
 }
 
-async function getFileProfile(req, res) {
+async function getFileProfile(req: Request, res: Response) {
   try {
-    const cluster = await getCluster(req.query.clusterid);
+    const cluster = await getCluster(req.query.clusterid as string);
     const response = await axios.get(
       `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUResult.json?LogicalName=${req.query.fileName}.profile`,
       {
-        auth: getClusterAuth(cluster),
+        auth: getClusterAuth(cluster) as any as any,
       }
     );
 
@@ -345,32 +352,32 @@ async function getFileProfile(req, res) {
   }
 }
 
-async function getFileProfileHtml(req, res) {
+async function getFileProfileHtml(req: Request, res: Response) {
   try {
-    const cluster = await getCluster(req.query.clusterid); //call DFUInfo to get workunit id
-    const wuid = req.query.dataProfileWuid; //get resource url's from wuinfo
+    const cluster = await getCluster(req.query.clusterid as string); //call DFUInfo to get workunit id
+    const wuid = req.query.dataProfileWuid as string; //get resource url's from wuinfo
 
     const response = await axios.post(
       `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUInfo.json`,
       new URLSearchParams({
         Wuid: wuid,
-        TruncateEclTo64k: true,
-        IncludeResourceURLs: true,
-        IncludeExceptions: false,
-        IncludeGraphs: false,
-        IncludeSourceFiles: false,
-        IncludeResults: false,
-        IncludeResultsViewNames: false,
-        IncludeVariables: false,
-        IncludeTimers: false,
-        IncludeDebugValues: false,
-        IncludeApplicationValues: false,
-        IncludeWorkflows: false,
-        IncludeXmlSchemas: false,
-        SuppressResultSchemas: true,
-      }).toString(),
+        TruncateEclTo64k: 'true' as any,
+        IncludeResourceURLs: 'true' as any,
+        IncludeExceptions: 'false' as any,
+        IncludeGraphs: 'false' as any,
+        IncludeSourceFiles: 'false' as any,
+        IncludeResults: 'false' as any,
+        IncludeResultsViewNames: 'false' as any,
+        IncludeVariables: 'false' as any,
+        IncludeTimers: 'false' as any,
+        IncludeDebugValues: 'false' as any,
+        IncludeApplicationValues: 'false' as any,
+        IncludeWorkflows: 'false' as any,
+        IncludeXmlSchemas: 'false' as any,
+        SuppressResultSchemas: 'true' as any,
+      } as any).toString(),
       {
-        auth: getClusterAuth(cluster),
+        auth: getClusterAuth(cluster) as any,
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       }
     );
@@ -391,11 +398,11 @@ async function getFileProfileHtml(req, res) {
   }
 }
 
-async function getQueryFiles(req, res) {
+async function getQueryFiles(req: Request, res: Response) {
   try {
-    const wuService = await getWorkunitsService(req.query.clusterId);
+    const wuService = await getWorkunitsService(req.query.clusterId as string);
     const response = await wuService.WUQueryDetails({
-      QueryId: req.query.hpcc_queryId,
+      QueryId: req.query.hpcc_queryId as string,
       IncludeSuperFiles: true,
       QuerySet: 'roxie',
     });
@@ -410,13 +417,13 @@ async function getQueryFiles(req, res) {
   }
 }
 
-async function getDropZones(req, res) {
+async function getDropZones(req: Request, res: Response) {
   try {
-    const cluster = await getCluster(req.query.clusterId);
+    const cluster = await getCluster(req.query.clusterId as string);
     const url = `${cluster.thor_host}:${cluster.thor_port}/WsTopology/TpDropZoneQuery.json`;
 
     const response = await axios.get(url, {
-      auth: getClusterAuth(cluster),
+      auth: getClusterAuth(cluster) as any,
     });
 
     const result = response.data;
@@ -453,14 +460,14 @@ async function getDropZones(req, res) {
   }
 }
 
-async function getDropzoneDirectories(req, res) {
+async function getDropzoneDirectories(req: Request, res: Response) {
   try {
     const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
     const directories = await getDirectories({
-      clusterId,
-      Netaddr,
-      Path,
-      DirectoryOnly,
+      clusterId: clusterId as string,
+      Netaddr: Netaddr as string,
+      Path: Path as string,
+      DirectoryOnly: DirectoryOnly === 'true',
     });
     return sendSuccess(res, directories);
   } catch (error) {
@@ -469,24 +476,25 @@ async function getDropzoneDirectories(req, res) {
   }
 }
 
-async function getDropzoneDirectoryDetails(req, res) {
+async function getDropzoneDirectoryDetails(req: Request, res: Response) {
   const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
   logger.info('Cluster id etc. ', clusterId, Netaddr, Path, DirectoryOnly);
   try {
     const { clusterId, Netaddr, Path, DirectoryOnly } = req.query;
 
     const directories = await getDirectories({
-      clusterId,
-      Netaddr,
-      Path,
-      DirectoryOnly,
+      clusterId: clusterId as string,
+      Netaddr: Netaddr as string,
+      Path: Path as string,
+      DirectoryOnly: DirectoryOnly === 'true',
     });
     let fileCount = 0;
     let directoryCount = 0;
     let oldestFile = null;
     const allAssets = [];
-    if (directories.FileListResponse?.files) {
-      const { PhysicalFileStruct: assets } = directories.FileListResponse.files;
+    if ((directories as any).FileListResponse?.files) {
+      const { PhysicalFileStruct: assets } = (directories as any)
+        .FileListResponse.files;
       for (let asset of assets) {
         asset.age = moment(asset.modifiedtime).fromNow(true);
         if (asset.isDir) {
@@ -523,7 +531,7 @@ async function getDropzoneDirectoryDetails(req, res) {
   }
 }
 
-async function dropzoneFileSearch(req, res) {
+async function dropzoneFileSearch(req: Request, res: Response) {
   try {
     const cluster = await getCluster(req.body.clusterId);
     const response = await axios.post(
@@ -534,11 +542,11 @@ async function dropzoneFileSearch(req, res) {
         NameFilter: `*${req.body.nameFilter}*`,
         '__dropZoneMachine.label': req.body.server,
         '__dropZoneMachine.value': req.body.server,
-        '__dropZoneMachine.selected': true,
-        rawxml_: true,
-      }).toString(),
+        '__dropZoneMachine.selected': 'true' as any,
+        rawxml_: 'true' as any,
+      } as any).toString(),
       {
-        auth: getClusterAuth(cluster),
+        auth: getClusterAuth(cluster) as any,
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       }
     );
@@ -555,7 +563,7 @@ async function dropzoneFileSearch(req, res) {
   }
 }
 
-async function getSuperfileDetails(req, res) {
+async function getSuperfileDetails(req: Request, res: Response) {
   try {
     const { fileName, clusterid } = req.query;
 
@@ -568,13 +576,13 @@ async function getSuperfileDetails(req, res) {
   }
 }
 
-async function getClusterMetaData(req, res) {
+async function getClusterMetaData(req: Request, res: Response) {
   try {
     const { clusterId } = req.query;
     //Validate cluster Id
     //If cluster id is valid ->      const { clusterId } = req.query;
     //Get cluster details
-    let cluster = await getCluster(clusterId);
+    let cluster = await getCluster(clusterId as string);
     const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
     const clusterDetails = getClusterOptions(
       {
@@ -588,7 +596,9 @@ async function getClusterMetaData(req, res) {
     const tpServiceQuery = await topologyService.TpServiceQuery({
       Type: 'ALLSERVICES',
     });
-    const tpLogicalClusterQuery = await topologyService.TpLogicalClusterQuery(); // Active execution engines
+    const tpLogicalClusterQuery = await topologyService.TpLogicalClusterQuery(
+      {}
+    ); // Active execution engines
     const dropZones = tpServiceQuery.ServiceList?.TpDropZones?.TpDropZone; // Landing zones and their local dir paths
     const clusterMetaData = {
       TpDfuServer: tpServiceQuery.ServiceList,
