@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import { FileMonitoring, Cluster, sequelize } from '../models/index.js';
 import logger from '../config/logger.js';
 import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
@@ -15,9 +16,9 @@ const getCommonIncludes = () => [
   },
 ];
 
-async function createFileMonitoring(req, res) {
+async function createFileMonitoring(req: Request, res: Response) {
   try {
-    const { id: userId } = req.user;
+    const { id: userId } = (req as any).user;
 
     const createResult = await FileMonitoring.create({
       ...req.body,
@@ -47,11 +48,11 @@ async function createFileMonitoring(req, res) {
   }
 }
 
-async function updateFileMonitoring(req, res) {
+async function updateFileMonitoring(req: Request, res: Response) {
   try {
     const { id } = req.params;
 
-    const updatedData = { ...req.body, lastUpdatedBy: req.user.id };
+    const updatedData = { ...req.body, lastUpdatedBy: (req as any).user.id };
     const result = await FileMonitoring.update(updatedData, {
       where: { id },
     });
@@ -61,7 +62,7 @@ async function updateFileMonitoring(req, res) {
     }
 
     // Get the updated file monitoring entry
-    const updatedFileMonitoring = await FileMonitoring.findByPk(id, {
+    const updatedFileMonitoring = await FileMonitoring.findByPk(id as string, {
       include: getCommonIncludes(),
     });
 
@@ -81,10 +82,10 @@ async function updateFileMonitoring(req, res) {
   }
 }
 
-async function getFileMonitoringById(req, res) {
+async function getFileMonitoringById(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const result = await FileMonitoring.findByPk(id, {
+    const result = await FileMonitoring.findByPk(id as string, {
       include: getUserFkIncludes(true),
     });
 
@@ -99,7 +100,7 @@ async function getFileMonitoringById(req, res) {
   }
 }
 
-async function getFileMonitoring(req, res) {
+async function getFileMonitoring(req: Request, res: Response) {
   try {
     const { applicationId } = req.params;
     const result = await FileMonitoring.findAll({
@@ -114,7 +115,7 @@ async function getFileMonitoring(req, res) {
   }
 }
 
-async function evaluateFileMonitoring(req, res) {
+async function evaluateFileMonitoring(req: Request, res: Response) {
   try {
     const { ids, approvalStatus, approverComment, isActive } = req.body;
 
@@ -137,7 +138,7 @@ async function evaluateFileMonitoring(req, res) {
           approvalStatus,
           approverComment,
           isActive: !!(approvalStatus === APPROVAL_STATUS.APPROVED && isActive),
-          lastUpdatedBy: req.user.id,
+          lastUpdatedBy: (req as any).user.id,
         },
         {
           where: { id: fileMonitoring.id },
@@ -162,7 +163,7 @@ async function evaluateFileMonitoring(req, res) {
   }
 }
 
-async function toggleFileMonitoringActive(req, res) {
+async function toggleFileMonitoringActive(req: Request, res: Response) {
   try {
     const { ids, isActive } = req.body;
 
@@ -195,7 +196,7 @@ async function toggleFileMonitoringActive(req, res) {
       eligibleForToggle.map(fileMonitoring =>
         fileMonitoring.update({
           isActive,
-          lastUpdatedBy: req.user.id,
+          lastUpdatedBy: (req as any).user.id,
         })
       )
     );
@@ -217,14 +218,14 @@ async function toggleFileMonitoringActive(req, res) {
   }
 }
 
-async function deleteFileMonitoring(req, res) {
+async function deleteFileMonitoring(req: Request, res: Response) {
   const transaction = await sequelize.transaction();
   try {
     const { ids } = req.body;
 
     // First update the deletedBy field
     await FileMonitoring.update(
-      { deletedBy: req.user.id },
+      { deletedBy: (req as any).user.id },
       { where: { id: ids }, transaction }
     );
 
@@ -250,7 +251,7 @@ async function deleteFileMonitoring(req, res) {
   }
 }
 
-async function bulkUpdateFileMonitoring(req, res) {
+async function bulkUpdateFileMonitoring(req: Request, res: Response) {
   const { updatedData } = req.body;
 
   const results = {
