@@ -1,13 +1,18 @@
 import { ArchiveManager } from '../utils/archiveUtils.js';
-import { Op } from 'sequelize';
+import { Op, Sequelize, ModelStatic, Model } from 'sequelize';
 
 class ArchiveService {
-  constructor(sequelize) {
+  private sequelize: Sequelize;
+  private archiveManager: ArchiveManager;
+
+  constructor(sequelize: Sequelize) {
     this.sequelize = sequelize;
     this.archiveManager = new ArchiveManager(sequelize);
   }
 
-  async getArchiveModel(originalModelName) {
+  async getArchiveModel(
+    originalModelName: string
+  ): Promise<ModelStatic<Model>> {
     const originalModel = this.sequelize.models[originalModelName];
     if (!originalModel) {
       throw new Error(`Original model ${originalModelName} not found`);
@@ -15,7 +20,11 @@ class ArchiveService {
     return this.archiveManager.getArchiveModel(originalModel);
   }
 
-  async archiveRecords(originalModelName, whereClause, archiveMetadata = {}) {
+  async archiveRecords(
+    originalModelName: string,
+    whereClause: any,
+    archiveMetadata: Record<string, any> = {}
+  ): Promise<number> {
     const originalModel = this.sequelize.models[originalModelName];
     if (!originalModel) {
       throw new Error(`Original model ${originalModelName} not found`);
@@ -28,7 +37,10 @@ class ArchiveService {
     );
   }
 
-  async getArchivedData(originalModelName, filters = {}) {
+  async getArchivedData(
+    originalModelName: string,
+    filters: any = {}
+  ): Promise<Model[]> {
     const ArchiveModel = await this.getArchiveModel(originalModelName);
     return await ArchiveModel.findAll({
       where: filters,
@@ -36,7 +48,10 @@ class ArchiveService {
     });
   }
 
-  async restoreArchivedData(originalModelName, archivedRecordIds) {
+  async restoreArchivedData(
+    originalModelName: string,
+    archivedRecordIds: any[]
+  ): Promise<number> {
     const ArchiveModel = await this.getArchiveModel(originalModelName);
     const originalModel = this.sequelize.models[originalModelName];
 
