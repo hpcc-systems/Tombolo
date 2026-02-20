@@ -1,4 +1,5 @@
 // Imports from libraries
+import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
@@ -55,7 +56,7 @@ const createTokenPayload = (user, tokenId) => {
 };
 
 // Register application owner
-const createApplicationOwner = async (req, res) => {
+const createApplicationOwner = async (req: Request, res: Response) => {
   try {
     const payload = req.body;
 
@@ -152,7 +153,7 @@ const createApplicationOwner = async (req, res) => {
 };
 
 // Register basic user [ Self registration by user ]
-const createBasicUser = async (req, res) => {
+const createBasicUser = async (req: Request, res: Response) => {
   try {
     const payload = req.body;
 
@@ -261,7 +262,7 @@ const createBasicUser = async (req, res) => {
 };
 
 // Verify email
-const verifyEmail = async (req, res) => {
+const verifyEmail = async (req: Request, res: Response) => {
   let transaction;
   try {
     const { token } = req.body;
@@ -353,7 +354,7 @@ const verifyEmail = async (req, res) => {
     const { iat, exp } = jwt.verify(
       refreshToken,
       process.env.JWT_REFRESH_SECRET
-    );
+    ) as any;
 
     // Save refresh token in DB
     await RefreshToken.create(
@@ -415,7 +416,7 @@ const verifyEmail = async (req, res) => {
 };
 
 //Reset Password With Token - Self Requested
-const resetPasswordWithToken = async (req, res) => {
+const resetPasswordWithToken = async (req: Request, res: Response) => {
   let transaction;
   try {
     const { password, token, deviceInfo } = req.body;
@@ -429,12 +430,10 @@ const resetPasswordWithToken = async (req, res) => {
     transaction = await sequelize.transaction();
 
     // From the AccountVerificationCode table findUser ID by code, where code is resetToken
-    const accountVerificationCode = await AccountVerificationCode.findOne(
-      {
-        where: { code: token },
-      },
-      { transaction }
-    );
+    const accountVerificationCode = await AccountVerificationCode.findOne({
+      where: { code: token },
+      transaction,
+    });
 
     // If accountVerificationCode not found
     if (!accountVerificationCode) {
@@ -487,6 +486,7 @@ const resetPasswordWithToken = async (req, res) => {
     const passwordSecurityViolations = checkPasswordSecurityViolations({
       password,
       user,
+      newUser: false,
     });
 
     if (passwordSecurityViolations.length > 0) {
@@ -501,7 +501,7 @@ const resetPasswordWithToken = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Update user password and related fields
-    await user.update(
+    await (user as any).update(
       {
         hash: hashedPassword,
         lastPasswordUpdate: new Date(),
@@ -540,7 +540,7 @@ const resetPasswordWithToken = async (req, res) => {
     const { iat, exp } = jwt.verify(
       refreshToken,
       process.env.JWT_REFRESH_SECRET
-    );
+    ) as any;
 
     // Save refresh token in DB
     await RefreshToken.create(
@@ -616,7 +616,7 @@ const resetPasswordWithToken = async (req, res) => {
 };
 
 //Reset Password with Temp Password - Owner/Admin requested
-const resetTempPassword = async (req, res) => {
+const resetTempPassword = async (req: Request, res: Response) => {
   let transaction;
   try {
     const { password, tempPassword, deviceInfo, token } = req.body;
@@ -668,6 +668,7 @@ const resetTempPassword = async (req, res) => {
     const passwordSecurityViolations = checkPasswordSecurityViolations({
       password,
       user,
+      newUser: false,
     });
 
     if (passwordSecurityViolations.length > 0) {
@@ -681,7 +682,7 @@ const resetTempPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Update user with new password and related fields
-    await user.update(
+    await (user as any).update(
       {
         hash: hashedPassword,
         verifiedUser: true,
@@ -722,7 +723,7 @@ const resetTempPassword = async (req, res) => {
     const { iat, exp } = jwt.verify(
       refreshToken,
       process.env.JWT_REFRESH_SECRET
-    );
+    ) as any;
 
     // Save refresh token in DB
     await RefreshToken.create(
@@ -776,7 +777,7 @@ const resetTempPassword = async (req, res) => {
 // 401 - Unverified , Temp PW, Expired PW | 403 - Incorrect E-mail password combination | 500 - Internal server error | 200 - Success
 //Login Basic user
 // 401 - Invalid credentials | 403 - Account restrictions (unverified, temp pw, expired pw, locked) | 500 - Internal server error | 200 - Success
-const loginBasicUser = async (req, res) => {
+const loginBasicUser = async (req: Request, res: Response) => {
   try {
     const { email, password, deviceInfo } = req.body;
 
@@ -863,7 +864,7 @@ const loginBasicUser = async (req, res) => {
     const { iat, exp } = jwt.verify(
       refreshToken,
       process.env.JWT_REFRESH_SECRET
-    );
+    ) as any;
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -895,13 +896,16 @@ const loginBasicUser = async (req, res) => {
 };
 
 // Logout Basic user
-const logOutBasicUser = async (req, res) => {
+const logOutBasicUser = async (req: Request, res: Response) => {
   try {
     // Clear the token cookie
     res.clearCookie('token');
     res.clearCookie('x-csrf-token');
     // Verify the token to get the tokenId securely
-    const decodedToken = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(
+      req.cookies.token,
+      process.env.JWT_SECRET
+    ) as any;
 
     const { tokenId } = decodedToken;
 
@@ -921,7 +925,7 @@ const logOutBasicUser = async (req, res) => {
 };
 
 // Fulfill password reset request - Self Requested
-const handlePasswordResetRequest = async (req, res) => {
+const handlePasswordResetRequest = async (req: Request, res: Response) => {
   try {
     // Get user email
     const { email } = req.body;
@@ -1084,7 +1088,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     const { access_token: azureAccessToken, id_token } = response.data;
 
     // Decode ID token
-    const decodedIdToken = jwt.decode(id_token);
+    const decodedIdToken = jwt.decode(id_token) as any;
     const { email } = decodedIdToken;
 
     // Check if user exists in the db
@@ -1114,7 +1118,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     // If user does not exist create user - issues necessary tokens etc just like registering  traditional user
     if (!userExists.exists) {
       // Decode access token and get fist and last name
-      const decodedAccessToken = jwt.decode(azureAccessToken);
+      const decodedAccessToken = jwt.decode(azureAccessToken) as any;
       const { given_name, family_name } = decodedAccessToken;
 
       // Create a new user
@@ -1174,7 +1178,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
       const { iat, exp } = jwt.verify(
         refreshToken,
         process.env.JWT_REFRESH_SECRET
-      );
+      ) as any;
 
       // Save refresh token in DB
       await RefreshToken.create({
@@ -1215,7 +1219,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
     const { iat, exp } = jwt.verify(
       refreshToken,
       process.env.JWT_REFRESH_SECRET
-    );
+    ) as any;
 
     // Save refresh token in DB
     await RefreshToken.create({
@@ -1249,7 +1253,7 @@ const loginOrRegisterAzureUser = async (req, res, next) => {
   }
 };
 
-const requestAccess = async (req, res) => {
+const requestAccess = async (req: Request, res: Response) => {
   try {
     const { id, comment } = req.body;
 
@@ -1277,7 +1281,7 @@ const requestAccess = async (req, res) => {
     if (existingNotification) {
       const currentTime = new Date();
       const notificationTime = new Date(existingNotification.createdAt);
-      const diff = Math.abs(currentTime - notificationTime);
+      const diff = Math.abs(currentTime.getTime() - notificationTime.getTime());
       const diffHours = Math.ceil(diff / (1000 * 60 * 60));
 
       if (diffHours < 24) {
@@ -1321,7 +1325,7 @@ const requestAccess = async (req, res) => {
 };
 
 // Resend verification code - user provides email
-const resendVerificationCode = async (req, res) => {
+const resendVerificationCode = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
 
@@ -1342,7 +1346,7 @@ const resendVerificationCode = async (req, res) => {
     }
 
     // If the code was created in last 90 seconds, throw an error
-    if (user.lastVerificationCodeSentAt > Date.now() - 90000) {
+    if ((user as any).lastVerificationCodeSentAt > Date.now() - 90000) {
       throw {
         status: 429,
         message: 'Please wait 90 seconds before requesting a new code',
@@ -1380,7 +1384,7 @@ const resendVerificationCode = async (req, res) => {
     });
 
     // Update last verification code sent timestamp
-    await user.update({ lastVerificationCodeSentAt: Date.now() });
+    await (user as any).update({ lastVerificationCodeSentAt: Date.now() });
 
     return sendSuccess(res, null, 'Verification code sent successfully');
   } catch (err) {
@@ -1389,7 +1393,7 @@ const resendVerificationCode = async (req, res) => {
   }
 };
 
-const getUserDetailsWithToken = async (req, res) => {
+const getUserDetailsWithToken = async (req: Request, res: Response) => {
   try {
     const { token } = req.params;
 
@@ -1419,7 +1423,7 @@ const getUserDetailsWithToken = async (req, res) => {
       lastName: user.lastName,
       email: user.email,
       metaData: user.metaData,
-      newUser: user.newUser,
+      newUser: (user as any).newUser,
     };
 
     return sendSuccess(res, { user: userObj });
@@ -1429,7 +1433,10 @@ const getUserDetailsWithToken = async (req, res) => {
   }
 };
 
-const getUserDetailsWithVerificationCode = async (req, res) => {
+const getUserDetailsWithVerificationCode = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { token } = req.params;
 
@@ -1459,9 +1466,9 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       !user.metaData?.previousPasswords ||
       user.metaData?.previousPasswords.length === 0
     ) {
-      user.newUser = true;
+      (user as any).newUser = true;
     } else {
-      user.newUser = false;
+      (user as any).newUser = false;
     }
 
     //only grab the details we need
@@ -1470,7 +1477,7 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
       lastName: user.lastName,
       email: user.email,
       // metaData: user.metaData,
-      newUser: user.newUser,
+      newUser: (user as any).newUser,
     };
 
     return sendSuccess(res, userObj);
@@ -1481,7 +1488,7 @@ const getUserDetailsWithVerificationCode = async (req, res) => {
 };
 
 // Request password reset
-const requestPasswordReset = async (req, res) => {
+const requestPasswordReset = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
 
@@ -1503,7 +1510,7 @@ const requestPasswordReset = async (req, res) => {
 };
 
 // Refresh Access Token - Explicit Client-Side Refresh
-const refreshAccessToken = async (req, res) => {
+const refreshAccessToken = async (req: Request, res: Response) => {
   try {
     const token = req.cookies.token;
 
@@ -1607,11 +1614,11 @@ const refreshAccessToken = async (req, res) => {
 };
 
 // Get current authenticated user's profile
-const getCurrentUser = async (req, res) => {
+const getCurrentUser = async (req: Request, res: Response) => {
   try {
     // Decode token to get user id
-    const accessToken = req.accessToken;
-    const decodedToken = jwt.verify(accessToken, process.env.JWT_SECRET);
+    const accessToken = (req as any).accessToken;
+    const decodedToken = jwt.verify(accessToken, process.env.JWT_SECRET) as any;
     const userId = decodedToken.id;
 
     const user = await User.findOne({
