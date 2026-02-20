@@ -64,11 +64,13 @@ import {
 } from '../jobSchedularMethods/lzMonitoring.js';
 
 class JobScheduler {
+  bree: Bree;
+
   constructor() {
     this.bree = new Bree({
       root: false,
       logger: false,
-      errorHandler: (error, workerMetadata) => {
+      errorHandler: (error: any, workerMetadata: any) => {
         const baseMessage = `Error in worker ${workerMetadata.name}${
           workerMetadata.threadId
             ? ` (thread ID: ${workerMetadata.threadId})`
@@ -83,7 +85,7 @@ class JobScheduler {
           }
         );
       },
-      workerMessageHandler: async worker => {
+      workerMessageHandler: async (worker: any) => {
         // message type is <any>, when worker exits message ='done' by default.
         //To pass more props we use object {level?: info|verbose|error ; text?:any; error?: instanceof Error; action?: scheduleNext|remove; data?:any }
 
@@ -128,7 +130,7 @@ class JobScheduler {
     });
   }
 
-  bootstrap() {
+  bootstrap(): void {
     (async () => {
       await this.scheduleClusterTimezoneOffset();
       await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
@@ -156,7 +158,7 @@ class JobScheduler {
   }
 
   //Bree related methods
-  logBreeJobs() {
+  logBreeJobs(): any {
     return logBreeJobs.call(this);
   }
 
@@ -180,7 +182,27 @@ class JobScheduler {
     jobId,
     title,
     jobExecutionGroupId,
-  }) {
+  }: {
+    uniqueJobName: string;
+    cron?: string;
+    jobfileName?: string;
+    sprayedFileScope?: string;
+    manualJob_meta?: any;
+    sprayFileName?: string;
+    sprayDropZone?: string;
+    applicationId?: string;
+    dataflowId?: string;
+    dataflowVersionId?: string | null;
+    clusterId?: string;
+    metaData?: any;
+    jobName?: string;
+    contact?: string;
+    jobType?: string;
+    status?: string;
+    jobId?: string;
+    title?: string;
+    jobExecutionGroupId?: string;
+  }): any {
     return createNewBreeJob.call(this, {
       uniqueJobName,
       cron,
@@ -204,57 +226,63 @@ class JobScheduler {
     });
   }
 
-  async removeJobFromScheduler(name) {
+  async removeJobFromScheduler(name: string): Promise<any> {
     return await removeJobFromScheduler.call(this, name);
   }
 
-  async removeAllFromBree() {
+  async removeAllFromBree(): Promise<any> {
     return await removeAllFromBree.call(this);
   }
 
-  getAllJobs() {
+  getAllJobs(): any {
     return getAllJobs.call(this);
   }
 
-  async stopJob(jobName) {
+  async stopJob(jobName: string): Promise<any> {
     return await stopJob.call(this, jobName);
   }
 
-  async stopAllJobs() {
+  async stopAllJobs(): Promise<any> {
     return await stopAllJobs.call(this);
   }
 
-  startJob(jobName) {
+  startJob(jobName: string): any {
     return startJob.call(this, jobName);
   }
 
-  startAllJobs() {
+  startAllJobs(): any {
     return startAllJobs.call(this);
   }
 
   // Job that fetches workunit info
-  createWuInfoFetchingJob(data) {
+  createWuInfoFetchingJob(data: any): any {
     return createWuInfoFetchingJob.call(this, data);
   }
 
-  createDataArchiveJob() {
+  createDataArchiveJob(): any {
     return createDataArchiveJob.call(this);
   }
 
-  createMonitorCostJob() {
+  createMonitorCostJob(): any {
     return createMonitorCostJob.call(this);
   }
 
-  createAnalyzeCostJob() {
+  createAnalyzeCostJob(): any {
     return createAnalyzeCostJob.call(this);
   }
 
   // Cluster jobs
-  scheduleClusterTimezoneOffset() {
+  scheduleClusterTimezoneOffset(): any {
     return scheduleClusterTimezoneOffset.call(this);
   }
 
-  startClusterMonitoring({ clusterMonitoring_id, cron }) {
+  startClusterMonitoring({
+    clusterMonitoring_id,
+    cron,
+  }: {
+    clusterMonitoring_id: string;
+    cron: string;
+  }): any {
     return startClusterMonitoring.call(this, {
       clusterMonitoring_id,
       cron,
@@ -262,7 +290,15 @@ class JobScheduler {
   }
 
   // file Monitoring
-  createLandingZoneFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
+  createLandingZoneFileMonitoringBreeJob({
+    filemonitoring_id,
+    name,
+    cron,
+  }: {
+    filemonitoring_id: string;
+    name: string;
+    cron: string;
+  }): any {
     return createLandingZoneFileMonitoringBreeJob.call(this, {
       filemonitoring_id,
       name,
@@ -270,7 +306,15 @@ class JobScheduler {
     });
   }
 
-  createLogicalFileMonitoringBreeJob({ filemonitoring_id, name, cron }) {
+  createLogicalFileMonitoringBreeJob({
+    filemonitoring_id,
+    name,
+    cron,
+  }: {
+    filemonitoring_id: string;
+    name: string;
+    cron: string;
+  }): any {
     return createLogicalFileMonitoringBreeJob.call(this, {
       filemonitoring_id,
       name,
@@ -283,7 +327,12 @@ class JobScheduler {
     name,
     cron,
     monitoringAssetType,
-  }) {
+  }: {
+    filemonitoring_id: string;
+    name: string;
+    cron: string;
+    monitoringAssetType: string;
+  }): any {
     return scheduleFileMonitoringBreeJob.call(this, {
       filemonitoring_id,
       name,
@@ -292,28 +341,28 @@ class JobScheduler {
     });
   }
 
-  scheduleFileMonitoring() {
+  scheduleFileMonitoring(): any {
     return scheduleFileMonitoring.call(this);
   }
 
   // Job monitoring
-  startJobMonitoring() {
+  startJobMonitoring(): any {
     return startJobMonitoring.call(this);
   }
-  startIntermediateJobsMonitoring() {
+  startIntermediateJobsMonitoring(): any {
     return startIntermediateJobsMonitoring.call(this);
   }
 
-  startJobPunctualityMonitoring() {
+  startJobPunctualityMonitoring(): any {
     return startJobPunctualityMonitoring.call(this);
   }
 
-  startTimeSeriesAnalysisMonitoring() {
+  startTimeSeriesAnalysisMonitoring(): any {
     return startTimeSeriesAnalysisMonitoring.call(this);
   }
 
   //Process notification queue
-  scheduleEmailNotificationProcessing() {
+  scheduleEmailNotificationProcessing(): any {
     return scheduleEmailNotificationProcessing.call(this);
   }
 
@@ -321,39 +370,34 @@ class JobScheduler {
   //   return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
   // }
 
-  createOrbitProfileMonitoringJob() {
+  createOrbitProfileMonitoringJob(): any {
     return createOrbitProfileMonitoringJob.call(this);
   }
 
-  checkClusterReachability() {
+  checkClusterReachability(): any {
     return checkClusterReachability.call(this);
   }
 
-  checkClusterContainerization() {
+  checkClusterContainerization(): any {
     return checkClusterContainerization.call(this);
   }
 
   // User management jobs
-  removeUnverifiedUser() {
+  removeUnverifiedUser(): any {
     return removeUnverifiedUser.call(this);
   }
 
   // Landing Zone Monitoring
-  startLzFileMovementMonitoring() {
+  startLzFileMovementMonitoring(): any {
     return startLzFileMovementMonitoring.call(this);
   }
 
-  startLzFileCountMonitoring() {
+  startLzFileCountMonitoring(): any {
     return startLzFileCountMonitoring.call(this);
   }
 
-  startLzSpaceUsageMonitoring() {
+  startLzSpaceUsageMonitoring(): any {
     return startLzSpaceUsageMonitoring.call(this);
-  }
-
-  // Cluster Status Monitoring
-  startClusterMonitoring() {
-    return startClusterMonitoring.call(this);
   }
 }
 
