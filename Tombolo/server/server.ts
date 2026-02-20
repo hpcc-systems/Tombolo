@@ -12,7 +12,7 @@ import { preloadSecrets } from './config/secrets.js';
 process.env.TZ = 'UTC';
 
 /* LIBRARIES */
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { tokenValidationMiddleware as validateToken } from './middlewares/tokenValidationMiddleware.js';
 
@@ -38,11 +38,11 @@ readSelfSignedCerts();
 
 /* Initialize express app */
 const app = express();
-const port = process.env.SERVER_PORT || 3001;
+const port = parseInt(process.env.SERVER_PORT || '3001', 10);
 
 // Log all requests
 app.disable('etag'); // Don't send etags so that the client does not cache the response
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   res.on('finish', () => {
     logger.http(
       `[${req.ip}] [${req.method}] [${req.baseUrl}] [${res.statusCode}]`
@@ -57,8 +57,8 @@ server.maxHeadersCount = 1000;
 server.keepAliveTimeout = 65000;
 server.headersTimeout = 66000;
 
-const sockets = new Set();
-server.on('connection', socket => {
+const sockets = new Set<any>();
+server.on('connection', (socket: any) => {
   sockets.add(socket);
   socket.on('close', () => sockets.delete(socket));
 });
@@ -145,7 +145,7 @@ app.use('/api/workunits', workunits);
 app.use('/api/workunitAnalytics', workunitAnalytics);
 
 // Safety net for unhandled errors
-app.use((err, req, res) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   logger.error(
     `Error caught by Express error handler on route ${req.path}`,
     err
@@ -155,7 +155,7 @@ app.use((err, req, res) => {
 
 // Disables SSL verification for self-signed certificates in development mode
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] =
-  process.env.NODE_ENV === 'production' ? 1 : 0;
+  process.env.NODE_ENV === 'production' ? '1' : '0';
 
 // Attach graceful shutdown handlers
 import setupGracefulShutdown from './utils/setupGracefulShutdown.js';
