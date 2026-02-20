@@ -3,6 +3,6 @@ const ROLE_TYPES = {
   ADMIN: 'administrator',
   CONTRIBUTOR: 'contributor',
   READER: 'reader',
-};
+} as const;
 
 export default ROLE_TYPES;

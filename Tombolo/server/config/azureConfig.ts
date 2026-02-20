@@ -9,4 +9,4 @@ export default {
   allowMultiAudiencesInToken: true, // Set to true if you accept access_token whose `aud` claim contains multiple values.
   // loggingLevel: INFO,
   // loggingNoPII: false,
-};
+} as const;
