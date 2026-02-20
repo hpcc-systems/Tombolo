@@ -1,4 +1,5 @@
 // Imports from node modules
+import { Request, Response } from 'express';
 import { v4 as UUIDV4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import moment from 'moment';
@@ -40,11 +41,11 @@ const whereNotSystemUser = {
 };
 
 // Delete user with ID
-const deleteUser = async (req, res) => {
+const deleteUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const deleted = await deleteUserUtil(id, 'Admin Removal');
+    const deleted = await deleteUserUtil(id as string, 'Admin Removal');
 
     // If the deleted count is 0, user not found
     if (!deleted) {
@@ -60,7 +61,7 @@ const deleteUser = async (req, res) => {
 };
 
 // Patch user with ID - not password
-const updateBasicUserInfo = async (req, res) => {
+const updateBasicUserInfo = async (req: Request, res: Response) => {
   const t = await sequelize.transaction(); // Start a transaction
 
   try {
@@ -134,7 +135,7 @@ const updateBasicUserInfo = async (req, res) => {
           notificationDescription: 'Account Change',
           changedInfo,
         },
-        createdBy: req.user.id,
+        createdBy: (req as any).user.id,
       },
       { transaction: t }
     );
@@ -152,7 +153,7 @@ const updateBasicUserInfo = async (req, res) => {
 };
 
 // Get user by ID
-const getUser = async (req, res) => {
+const getUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const user = await User.findOne({ where: { id } });
@@ -169,7 +170,7 @@ const getUser = async (req, res) => {
 };
 
 // Get all users
-const getAllUsers = async (req, res) => {
+const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await User.findAll({
       where: whereNotSystemUser,
@@ -188,7 +189,7 @@ const getAllUsers = async (req, res) => {
 };
 
 //Update password - Ensure current password provided is correct
-const changePassword = async (req, res) => {
+const changePassword = async (req: Request, res: Response) => {
   const t = await sequelize.transaction(); // Start transaction
 
   try {
@@ -213,6 +214,7 @@ const changePassword = async (req, res) => {
     const errors = checkPasswordSecurityViolations({
       password: newPassword,
       user: existingUser,
+      newUser: false,
     });
 
     if (errors.length > 0) {
@@ -260,7 +262,7 @@ const changePassword = async (req, res) => {
           notificationDescription: 'Account Change',
           changedInfo: ['password'],
         },
-        createdBy: id,
+        createdBy: id as string,
       },
       { transaction: t }
     );
@@ -280,7 +282,7 @@ const changePassword = async (req, res) => {
     const { iat, exp } = jwt.verify(
       refreshToken,
       process.env.JWT_REFRESH_SECRET
-    );
+    ) as any;
 
     // Create new refresh token in database
     await RefreshToken.create(
@@ -298,7 +300,7 @@ const changePassword = async (req, res) => {
 
     // Set new tokens in cookies BEFORE committing transaction
     // If this fails, transaction will rollback
-    await setTokenCookie(res, accessToken, refreshToken);
+    await setTokenCookie(res, accessToken);
     await generateAndSetCSRFToken(req, res, accessToken);
 
     // Commit transaction only after tokens are set successfully
@@ -313,7 +315,7 @@ const changePassword = async (req, res) => {
 };
 
 // Bulk Delete users with IDs
-const bulkDeleteUsers = async (req, res) => {
+const bulkDeleteUsers = async (req: Request, res: Response) => {
   try {
     const { ids } = req.body;
 
@@ -339,7 +341,7 @@ const bulkDeleteUsers = async (req, res) => {
 };
 
 // Bulk Update users with
-const bulkUpdateUsers = async (req, res) => {
+const bulkUpdateUsers = async (req: Request, res: Response) => {
   try {
     const { users } = req.body;
     const errors = [];
@@ -382,13 +384,13 @@ const bulkUpdateUsers = async (req, res) => {
 };
 
 // Update user roles
-const updateUserRoles = async (req, res) => {
+const updateUserRoles = async (req: Request, res: Response) => {
   const t = await sequelize.transaction(); // Start a transaction
 
   try {
     const { id } = req.params;
     const { roles } = req.body;
-    const creator = req.user.id;
+    const creator = (req as any).user.id;
 
     // Find existing user details
     const existingUser = await User.findOne({ where: { id }, transaction: t });
@@ -446,12 +448,12 @@ const updateUserRoles = async (req, res) => {
   }
 };
 
-const updateUserApplications = async (req, res) => {
+const updateUserApplications = async (req: Request, res: Response) => {
   const t = await sequelize.transaction(); // Start a transaction
 
   try {
     // Get user applications by id
-    const { user } = req;
+    const { user } = req as any;
     const { id: user_id } = req.params;
     const { applications } = req.body;
 
@@ -521,7 +523,7 @@ const updateUserApplications = async (req, res) => {
 };
 
 // Create new user - User Created by Admin/Owner
-const createUser = async (req, res) => {
+const createUser = async (req: Request, res: Response) => {
   try {
     const {
       firstName,
@@ -581,7 +583,7 @@ const createUser = async (req, res) => {
     const userRoles = roles.map(role => ({
       userId: newUser.id,
       roleId: role,
-      createdBy: req.user.id,
+      createdBy: (req as any).user.id,
     }));
     await UserRole.bulkCreate(userRoles);
 
@@ -589,7 +591,7 @@ const createUser = async (req, res) => {
     const userApplications = applications.map(application => ({
       user_id: newUser.id,
       application_id: application,
-      createdBy: req.user.id,
+      createdBy: (req as any).user.id,
     }));
     await UserApplication.bulkCreate(userApplications);
 
@@ -634,7 +636,7 @@ const createUser = async (req, res) => {
         notificationDescription: 'Complete your Registration',
         validForHours: 24,
       },
-      createdBy: req.user.id,
+      createdBy: (req as any).user.id,
     });
 
     // Remove hash
@@ -648,7 +650,7 @@ const createUser = async (req, res) => {
 };
 
 // Reset password for user
-const resetPasswordForUser = async (req, res) => {
+const resetPasswordForUser = async (req: Request, res: Response) => {
   const transaction = await sequelize.transaction(); // Start a transaction
 
   try {
@@ -732,7 +734,7 @@ const resetPasswordForUser = async (req, res) => {
 };
 
 // unlockAccount
-const unlockAccount = async (req, res) => {
+const unlockAccount = async (req: Request, res: Response) => {
   try {
     // Get user by ID
     const { id } = req.body;
@@ -766,7 +768,7 @@ const unlockAccount = async (req, res) => {
           notificationDescription: 'Account Unlocked',
           loginLink: `${trimURL(process.env.WEB_URL)}/login`,
         },
-        createdBy: req.user?.id || 'System',
+        createdBy: (req as any).user?.id || 'System',
       });
     } catch (notificationErr) {
       logger.error(
