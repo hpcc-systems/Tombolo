@@ -1,4 +1,5 @@
 // Imports from libraries
+import { Request, Response } from 'express';
 import { TopologyService, FileSprayService } from '@hpcc-js/comms';
 import Sequelize from 'sequelize';
 
@@ -13,9 +14,9 @@ import { sendError, sendSuccess } from '../utils/response.js';
 import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
 
 // Function to get dropzones and associated machines when a cluster id is provided
-const getDropzonesForACluster = async (req, res) => {
+const getDropzonesForACluster = async (req: Request, res: Response) => {
   try {
-    const { clusterId } = req.query;
+    const { clusterId } = req.query as { clusterId: string };
     const clusterDetails = await Cluster.findOne({
       where: { id: clusterId },
       attributes: {
@@ -52,9 +53,16 @@ const getDropzonesForACluster = async (req, res) => {
 };
 
 // Function to get filesdirs from specific path in a dropzone
-const getFileList = async (req, res) => {
+const getFileList = async (req: Request, res: Response) => {
   try {
-    const { clusterId, DropZoneName, Netaddr, Path, DirectoryOnly } = req.query;
+    const { clusterId, DropZoneName, Netaddr, Path, DirectoryOnly } =
+      req.query as {
+        clusterId: string;
+        DropZoneName: string;
+        Netaddr: string;
+        Path: string;
+        DirectoryOnly: string;
+      };
 
     logger.info(
       `Getting file list - Cluster: ${clusterId}, DropZone: ${DropZoneName}, Path: ${Path}`
@@ -103,9 +111,9 @@ const getFileList = async (req, res) => {
 };
 
 // Create new landing zone monitoring
-const createLandingZoneMonitoring = async (req, res) => {
+const createLandingZoneMonitoring = async (req: Request, res: Response) => {
   try {
-    const { id: userId } = req.user;
+    const { id: userId } = (req as any).user;
 
     // Create the landing zone monitoring record with pending approval status
     const response = await LandingZoneMonitoring.create(
@@ -141,9 +149,9 @@ const createLandingZoneMonitoring = async (req, res) => {
 };
 
 // Get all landing zone monitorings by application ID
-const getAllLandingZoneMonitorings = async (req, res) => {
+const getAllLandingZoneMonitorings = async (req: Request, res: Response) => {
   try {
-    const { applicationId } = req.params;
+    const { applicationId } = req.params as { applicationId: string };
 
     const landingZoneMonitoring = await LandingZoneMonitoring.findAll({
       where: { applicationId },
@@ -167,9 +175,9 @@ const getAllLandingZoneMonitorings = async (req, res) => {
 };
 
 // Get single landing zone monitoring by ID
-const getLandingZoneMonitoringById = async (req, res) => {
+const getLandingZoneMonitoringById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     logger.info(`Getting landing zone monitoring with ID: ${id}`);
 
     const landingZoneMonitoring = await LandingZoneMonitoring.findByPk(id);
@@ -192,7 +200,7 @@ const getLandingZoneMonitoringById = async (req, res) => {
 };
 
 // Update landing zone monitoring
-const updateLandingZoneMonitoring = async (req, res) => {
+const updateLandingZoneMonitoring = async (req: Request, res: Response) => {
   try {
     const { id } = req.body;
 
@@ -233,9 +241,9 @@ const updateLandingZoneMonitoring = async (req, res) => {
 };
 
 // Delete landing zone monitoring (soft delete)
-const deleteLandingZoneMonitoring = async (req, res) => {
+const deleteLandingZoneMonitoring = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     logger.info(`Deleting landing zone monitoring with ID: ${id}`);
 
     // Check if the record exists
@@ -248,7 +256,7 @@ const deleteLandingZoneMonitoring = async (req, res) => {
     // Soft delete the record (sets deletedAt timestamp)
     await LandingZoneMonitoring.handleDelete({
       id,
-      deletedByUserId: req.user.id,
+      deletedByUserId: (req as any).user.id,
     });
 
     logger.info(`Successfully deleted landing zone monitoring: ${id}`);
@@ -270,7 +278,7 @@ const deleteLandingZoneMonitoring = async (req, res) => {
 };
 
 // Bulk delete landing zone monitoring
-const bulkDeleteLandingZoneMonitoring = async (req, res) => {
+const bulkDeleteLandingZoneMonitoring = async (req: Request, res: Response) => {
   try {
     const { ids } = req.body;
 
@@ -290,7 +298,7 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
     // Soft delete the records
     await LandingZoneMonitoring.handleDelete({
       id: ids,
-      deletedByUserId: req.user.id,
+      deletedByUserId: (req as any).user.id,
     });
 
     sendSuccess(res, null, 'Landing zone monitoring deleted successfully');
@@ -302,9 +310,9 @@ const bulkDeleteLandingZoneMonitoring = async (req, res) => {
 };
 
 // Evaluate landing zone monitoring (approve/reject)
-const evaluateLandingZoneMonitoring = async (req, res) => {
+const evaluateLandingZoneMonitoring = async (req: Request, res: Response) => {
   try {
-    const { id: approver } = req.user;
+    const { id: approver } = (req as any).user;
     const { ids, approvalStatus, approverComment, isActive } = req.body;
 
     const updateData = {
@@ -350,7 +358,10 @@ const evaluateLandingZoneMonitoring = async (req, res) => {
 };
 
 // Toggle landing zone monitoring status (activate/deactivate)
-const toggleLandingZoneMonitoringStatus = async (req, res) => {
+const toggleLandingZoneMonitoringStatus = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { ids, isActive } = req.body;
 
@@ -426,7 +437,7 @@ get all rows with the ids
 update metaData of those rows
 */
 
-const bulkUpdateLzMonitoring = async (req, res) => {
+const bulkUpdateLzMonitoring = async (req: Request, res: Response) => {
   try {
     const { updatedData } = req.body;
 
