@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import Sequelize from 'sequelize';
 
 //Local imports
@@ -21,14 +22,14 @@ const getCommonIncludes = ({ customIncludes = [] }) => {
   ];
 };
 
-async function createJobMonitoring(req, res) {
+async function createJobMonitoring(req: Request, res: Response) {
   try {
     //Save the job monitoring
     const response = await JobMonitoring.create(
       {
         ...req.body,
         approvalStatus: APPROVAL_STATUS.PENDING,
-        createdBy: req.user.id,
+        createdBy: (req as any).user.id,
       },
       { raw: true }
     );
@@ -62,10 +63,10 @@ async function createJobMonitoring(req, res) {
   }
 }
 
-async function getAllJobMonitorings(req, res) {
+async function getAllJobMonitorings(req: Request, res: Response) {
   try {
     const jobMonitorings = await JobMonitoring.findAll({
-      where: { applicationId: req.params.applicationId },
+      where: { applicationId: req.params.applicationId as string },
       // Get user association
       include: getCommonIncludes({}),
 
@@ -78,10 +79,10 @@ async function getAllJobMonitorings(req, res) {
   }
 }
 
-async function getJobMonitoringById(req, res) {
+async function getJobMonitoringById(req: Request, res: Response) {
   try {
     const jobMonitoring = await JobMonitoring.findOne({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: getCommonIncludes({}),
     });
     return sendSuccess(res, jobMonitoring);
@@ -91,7 +92,7 @@ async function getJobMonitoringById(req, res) {
   }
 }
 
-async function patchJobMonitoring(req, res) {
+async function patchJobMonitoring(req: Request, res: Response) {
   try {
     // Get existing monitoring
     const existingMonitoring = await JobMonitoring.findByPk(req.body.id);
@@ -129,7 +130,7 @@ async function patchJobMonitoring(req, res) {
     payload.approvedBy = null;
     payload.approvedAt = null;
     payload.isActive = false;
-    payload.lastUpdatedBy = req.user.id;
+    payload.lastUpdatedBy = (req as any).user.id;
 
     //Update the job monitoring
     const updatedRows = await JobMonitoring.update(payload, {
@@ -176,14 +177,14 @@ async function patchJobMonitoring(req, res) {
   }
 }
 
-async function evaluateJobMonitoring(req, res) {
+async function evaluateJobMonitoring(req: Request, res: Response) {
   try {
     const { ids, approverComment, approvalStatus, isActive } = req.body;
     await JobMonitoring.update(
       {
         approvalStatus,
         approverComment,
-        approvedBy: req.user.id,
+        approvedBy: (req as any).user.id,
         approvedAt: new Date(),
         isActive,
       },
@@ -196,11 +197,11 @@ async function evaluateJobMonitoring(req, res) {
   }
 }
 
-async function bulkDeleteJobMonitoring(req, res) {
+async function bulkDeleteJobMonitoring(req: Request, res: Response) {
   try {
     const response = await JobMonitoring.handleDelete({
       id: req.body.ids,
-      deletedByUserId: req.user.id,
+      deletedByUserId: (req as any).user.id,
     });
     return sendSuccess(res, response);
   } catch (err) {
@@ -209,11 +210,11 @@ async function bulkDeleteJobMonitoring(req, res) {
   }
 }
 
-async function deleteJobMonitoring(req, res) {
+async function deleteJobMonitoring(req: Request, res: Response) {
   try {
     await JobMonitoring.handleDelete({
-      id: req.params.id,
-      deletedByUserId: req.user.id,
+      id: req.params.id as string,
+      deletedByUserId: (req as any).user.id,
     });
     return sendSuccess(res, 'success');
   } catch (err) {
@@ -222,7 +223,7 @@ async function deleteJobMonitoring(req, res) {
   }
 }
 
-async function toggleJobMonitoring(req, res) {
+async function toggleJobMonitoring(req: Request, res: Response) {
   let transaction;
 
   try {
@@ -257,7 +258,7 @@ async function toggleJobMonitoring(req, res) {
     if (action) {
       // If action is start or pause change isActive to true or false respectively
       await JobMonitoring.update(
-        { isActive: action === 'start', lastUpdatedBy: req.user.id },
+        { isActive: action === 'start', lastUpdatedBy: (req as any).user.id },
         {
           where: { id: { [Op.in]: approvedIds } },
           transaction,
@@ -268,7 +269,7 @@ async function toggleJobMonitoring(req, res) {
       await JobMonitoring.update(
         {
           isActive: Sequelize.literal('NOT isActive'),
-          lastUpdatedBy: req.user.id,
+          lastUpdatedBy: (req as any).user.id,
         },
         {
           where: { id: { [Op.in]: approvedIds } },
@@ -303,7 +304,7 @@ async function toggleJobMonitoring(req, res) {
   }
 }
 
-async function bulkUpdateJobMonitoring(req, res) {
+async function bulkUpdateJobMonitoring(req: Request, res: Response) {
   try {
     const { metaData: payload } = req.body;
 
@@ -313,7 +314,7 @@ async function bulkUpdateJobMonitoring(req, res) {
           metaData: data.metaData,
           isActive: false,
           approvalStatus: APPROVAL_STATUS.PENDING,
-          lastUpdatedBy: req.user.id,
+          lastUpdatedBy: (req as any).user.id,
         },
         {
           where: { id: data.id },
@@ -331,7 +332,7 @@ async function bulkUpdateJobMonitoring(req, res) {
   }
 }
 
-async function getJobMonitoringData(req, res) {
+async function getJobMonitoringData(req: Request, res: Response) {
   const { id } = req.params;
 
   try {
