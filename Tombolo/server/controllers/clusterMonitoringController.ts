@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { ClusterMonitoring, sequelize, Cluster } from '../models/index.js';
 import logger from '../config/logger.js';
@@ -19,12 +20,12 @@ const getCommonIncludes = ({ customIncludes = [] }) => {
 };
 
 // Create a new cluster status monitoring
-const createClusterMonitoring = async (req, res) => {
+const createClusterMonitoring = async (req: Request, res: Response) => {
   try {
     const newMonitoring = await ClusterMonitoring.create({
       ...req.body,
-      createdBy: req.user.id,
-      lastUpdatedBy: req.user.id,
+      createdBy: (req as any).user.id,
+      lastUpdatedBy: (req as any).user.id,
     });
 
     // Get the monitoring data with associated models
@@ -47,10 +48,10 @@ const createClusterMonitoring = async (req, res) => {
 };
 
 // Get cluster monitoring by ID
-const getClusterMonitoringById = async (req, res) => {
+const getClusterMonitoringById = async (req: Request, res: Response) => {
   try {
     const monitoring = await ClusterMonitoring.findOne({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: getCommonIncludes({ customIncludes: [] }),
     });
     if (!monitoring) {
@@ -64,7 +65,7 @@ const getClusterMonitoringById = async (req, res) => {
 };
 
 // Get all the cluster status monitoring
-const getAllClusterMonitoring = async (req, res) => {
+const getAllClusterMonitoring = async (req: Request, res: Response) => {
   try {
     const monitoring = await ClusterMonitoring.findAll({
       include: getCommonIncludes({ customIncludes: [] }),
@@ -78,7 +79,7 @@ const getAllClusterMonitoring = async (req, res) => {
 };
 
 // Update cluster status monitoring by ID
-const updateClusterMonitoring = async (req, res) => {
+const updateClusterMonitoring = async (req: Request, res: Response) => {
   try {
     const monitoring = await ClusterMonitoring.findOne({
       where: { id: req.body.id },
@@ -94,7 +95,7 @@ const updateClusterMonitoring = async (req, res) => {
         ...req.body,
         isActive: false,
         approvalStatus: APPROVAL_STATUS.PENDING,
-        lastUpdatedBy: req.user.id,
+        lastUpdatedBy: (req as any).user.id,
       },
       {
         where: { id: req.body.id },
@@ -119,7 +120,7 @@ const updateClusterMonitoring = async (req, res) => {
 };
 
 // Toggle monitoring status
-const toggleClusterMonitoringStatus = async (req, res) => {
+const toggleClusterMonitoringStatus = async (req: Request, res: Response) => {
   try {
     const monitoring = await ClusterMonitoring.findOne({
       where: {
@@ -144,7 +145,7 @@ const toggleClusterMonitoringStatus = async (req, res) => {
     await ClusterMonitoring.update(
       {
         isActive: !monitoring.isActive,
-        lastUpdatedBy: req.user.id,
+        lastUpdatedBy: (req as any).user.id,
       },
       {
         where: { id: req.body.id },
@@ -162,7 +163,10 @@ const toggleClusterMonitoringStatus = async (req, res) => {
 };
 
 // Bulk toggle req.body (ids: [], isActive: true/false)
-const toggleBulkClusterMonitoringStatus = async (req, res) => {
+const toggleBulkClusterMonitoringStatus = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { ids, isActive } = req.body;
 
@@ -196,7 +200,7 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
         {
           message: 'No monitorings to toggle. All are in unapproved state',
           unapprovedIds: unapprovedMonitorings.map(mon => mon.id),
-        },
+        } as any,
         400
       );
     }
@@ -205,7 +209,7 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
     await ClusterMonitoring.update(
       {
         isActive,
-        lastUpdatedBy: req.user.id,
+        lastUpdatedBy: (req as any).user.id,
       },
       {
         where: { id: { [Op.in]: idsToProceedWith } },
@@ -224,12 +228,12 @@ const toggleBulkClusterMonitoringStatus = async (req, res) => {
 };
 
 // Change approval status (evaluate -> approved, rejected)
-const evaluateClusterMonitoring = async (req, res) => {
+const evaluateClusterMonitoring = async (req: Request, res: Response) => {
   try {
     const { ids, approvalStatus, approverComment, isActive } = req.body;
     await ClusterMonitoring.update(
       {
-        approvedBy: req.user.id,
+        approvedBy: (req as any).user.id,
         approvalStatus,
         approverComment,
         approvedAt: new Date(),
@@ -263,7 +267,7 @@ const evaluateClusterMonitoring = async (req, res) => {
 };
 
 // Bulk update ( only contacts can be bulk updated)
-const bulkUpdateClusterMonitoring = async (req, res) => {
+const bulkUpdateClusterMonitoring = async (req: Request, res: Response) => {
   try {
     const { clusterMonitoring } = req.body;
 
@@ -295,7 +299,7 @@ const bulkUpdateClusterMonitoring = async (req, res) => {
               ...monitoring.metaData,
               contacts: updateDataObj[monitoring.id],
             },
-            lastUpdatedBy: req.user.id,
+            lastUpdatedBy: (req as any).user.id,
           },
           { where: { id: monitoring.id } }
         );
@@ -335,7 +339,7 @@ const bulkUpdateClusterMonitoring = async (req, res) => {
 };
 
 // Delete monitoring by id(s)
-const deleteClusterMonitoring = async (req, res) => {
+const deleteClusterMonitoring = async (req: Request, res: Response) => {
   const transaction = await sequelize.transaction();
 
   try {
@@ -343,13 +347,13 @@ const deleteClusterMonitoring = async (req, res) => {
 
     // Update deletedBy before soft-delete
     await ClusterMonitoring.update(
-      { deletedBy: req.user.id },
+      { deletedBy: (req as any).user.id },
       { where: { id: ids }, transaction }
     );
 
     await ClusterMonitoring.handleDelete({
       id: ids,
-      deletedByUserId: req.user.id,
+      deletedByUserId: (req as any).user.id,
       transaction,
     });
 
