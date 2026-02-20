@@ -1,60 +1,44 @@
-// Package imports
 import React, { useState, useEffect } from 'react';
 import { Tabs, Card, Button, Dropdown, Space } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { handleError } from '../../../common/handleResponse';
 
-// Local Imports
-import BreadCrumbs from '../../../common/BreadCrumbs.jsx';
-import GeneralTab from './GeneralTab.jsx';
-import DomainsTab from './DomainsTab.jsx';
-import ProductsTab from './ProductsTab.jsx';
-import GeneralSettingsEditModal from './GeneralSettingsEditModal.jsx';
+import BreadCrumbs from '../../../common/BreadCrumbs';
+import GeneralTab from './GeneralTab';
+import DomainsTab from './DomainsTab';
+import ProductsTab from './ProductsTab';
+import GeneralSettingsEditModal from './GeneralSettingsEditModal';
 import integrationsService from '@/services/integrations.service';
 import monitoringTypeService from '@/services/monitoringType.service';
 import asrService from '@/services/asr.service';
-import DomainModal from './DomainModal.jsx';
-import ProductModal from './ProductModal.jsx';
+import DomainModal from './DomainModal';
+import ProductModal from './ProductModal';
 
-// Constants
 const { TabPane } = Tabs;
 
-function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
-  // Local states
-  const [activeTab, setActiveTab] = useState('1');
-  const [tabExtraContent, setTabExtraContent] = useState(null);
-  const [displayGeneralSettingsEditModal, setDisplayGeneralSettingsEditModal] = useState(false);
-  const [integrationDetails, setIntegrationDetails] = useState(null);
-  const [domainModalOpen, setDomainModalOpen] = useState(false);
-  const [productModalOpen, setProductModalOpen] = useState(false);
-  const [monitoringTypes, setMonitoringTypes] = useState([]);
-  const [domains, setDomains] = useState([]);
-  const [selectedDomain, setSelectedDomain] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [teamsChannels, setTeamsChannels] = useState([]);
+interface Props {
+  integration_to_app_mapping_id?: string;
+}
 
-  // Action items for the domains tab
-  const domainActionItems = [
-    {
-      label: 'Add Domain',
-      onClick: () => setDomainModalOpen(true),
-      key: '1',
-    },
-  ];
+const AsrIntegrationSettings: React.FC<Props> = ({ integration_to_app_mapping_id }) => {
+  const [activeTab, setActiveTab] = useState<string>('1');
+  const [tabExtraContent, setTabExtraContent] = useState<React.ReactNode | null>(null);
+  const [displayGeneralSettingsEditModal, setDisplayGeneralSettingsEditModal] = useState<boolean>(false);
+  const [integrationDetails, setIntegrationDetails] = useState<any>(null);
+  const [domainModalOpen, setDomainModalOpen] = useState<boolean>(false);
+  const [productModalOpen, setProductModalOpen] = useState<boolean>(false);
+  const [monitoringTypes, setMonitoringTypes] = useState<any[]>([]);
+  const [domains, setDomains] = useState<any[]>([]);
+  const [selectedDomain, setSelectedDomain] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [teamsChannels, setTeamsChannels] = useState<any[]>([]);
 
-  // Action items for the products tab
-  const productTabActions = [
-    {
-      label: 'Add Product',
-      onClick: () => setProductModalOpen(true),
-      key: '1',
-    },
-  ];
+  const domainActionItems = [{ label: 'Add Domain', onClick: () => setDomainModalOpen(true), key: '1' }];
 
-  // Get integration Details for the selected integration
+  const productTabActions = [{ label: 'Add Product', onClick: () => setProductModalOpen(true), key: '1' }];
+
   useEffect(() => {
-    //Get integration details
     (async () => {
       try {
         const integrationDetails = await integrationsService.getDetailsByRelationId({
@@ -66,7 +50,6 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
       }
     })();
 
-    // Get all monitoring types
     (async () => {
       try {
         const monitoringTypes = await monitoringTypeService.getAll();
@@ -77,9 +60,7 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
     })();
   }, [integration_to_app_mapping_id]);
 
-  // Get all domains and products - only once when the component mounts
   useEffect(() => {
-    // Get domains
     (async () => {
       try {
         const domains = await asrService.getAllDomains();
@@ -89,7 +70,6 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
       }
     })();
 
-    //Get products
     (async () => {
       try {
         const products = await asrService.getAllProducts();
@@ -99,7 +79,6 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
       }
     })();
 
-    // Get teams channels
     (async () => {
       try {
         const response = await asrService.getTeamsChannels();
@@ -110,12 +89,8 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
     })();
   }, []);
 
-  //Handle Tab change
-  const handleTabChange = (value) => {
-    setActiveTab(value);
-  };
+  const handleTabChange = (value: string) => setActiveTab(value);
 
-  // Render tab bar extra content based on the active tab
   useEffect(() => {
     if (activeTab === '1') {
       setTabExtraContent(
@@ -152,22 +127,17 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
     }
   }, [activeTab]);
 
-  //JSX return
   return (
     <>
       <BreadCrumbs />
       <Card size="small" style={{ height: '95vh' }}>
-        <Tabs
-          defaultActiveKey={activeTab}
-          tabBarExtraContent={tabExtraContent}
-          onChange={(value) => handleTabChange(value)}>
+        <Tabs defaultActiveKey={activeTab} tabBarExtraContent={tabExtraContent} onChange={v => handleTabChange(v)}>
           <TabPane tab="General Settings" key="1">
-            {<GeneralTab integrationDetails={integrationDetails} teamsChannels={teamsChannels} />}
+            <GeneralTab integrationDetails={integrationDetails} teamsChannels={teamsChannels} />
           </TabPane>
           <TabPane tab="Domains" key="2">
             <DomainsTab
               domains={domains}
-              setDomains={setDomains}
               setSelectedDomain={setSelectedDomain}
               setDomainModalOpen={setDomainModalOpen}
             />
@@ -176,7 +146,6 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
             <ProductsTab
               products={products}
               setProducts={setProducts}
-              selectedProduct={selectedProduct}
               setSelectedProduct={setSelectedProduct}
               setProductModalOpen={setProductModalOpen}
             />
@@ -193,6 +162,7 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
           teamsChannels={teamsChannels}
         />
       )}
+
       <DomainModal
         domainModalOpen={domainModalOpen}
         setDomainModalOpen={setDomainModalOpen}
@@ -202,17 +172,17 @@ function AsrIntegrationSettings({ integration_to_app_mapping_id }) {
         selectedDomain={selectedDomain}
         setSelectedDomain={setSelectedDomain}
       />
+
       <ProductModal
         productModalOpen={productModalOpen}
         setProductModalOpen={setProductModalOpen}
         domains={domains}
-        products={products}
         setProducts={setProducts}
         selectedProduct={selectedProduct}
         setSelectedProduct={setSelectedProduct}
       />
     </>
   );
-}
+};
 
 export default AsrIntegrationSettings;

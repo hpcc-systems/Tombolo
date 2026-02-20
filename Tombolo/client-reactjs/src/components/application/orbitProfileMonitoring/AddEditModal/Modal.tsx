@@ -1,11 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Badge, Button, Card } from 'antd';
 
-import BasicTab from './BasicTab.jsx';
-import MonitoringTab from './MonitoringTab.jsx';
-import NotificationTab from './NotificationTab.jsx';
+import BasicTab from './BasicTab';
+import MonitoringTab from './MonitoringTab';
+import NotificationTab from './NotificationTab';
 
-const AddEditModal = ({
+type AnyForm = any;
+
+interface Props {
+  displayAddEditModal: boolean;
+  setDisplayAddEditModal: (v: boolean) => void;
+  form: AnyForm;
+  applicationId: any;
+  domains: any[];
+  productCategories: any[];
+  selectedDomain: any;
+  setSelectedDomain: (d: any) => void;
+  isEditing: boolean;
+  isDuplicating: boolean;
+  erroneousTabs: string[];
+  setErroneousTabs: (t: string[]) => void;
+  resetStates: () => void;
+  activeTab: string | number;
+  setActiveTab: (k: any) => void;
+  selectedMonitoring: any;
+  orbitMonitoringData: any[];
+  savingOrbitMonitoring: boolean;
+  saveOrbitMonitoring: (v: any, a?: boolean, b?: boolean) => Promise<void>;
+}
+
+const AddEditModal: React.FC<Props> = ({
   displayAddEditModal,
   setDisplayAddEditModal,
   form,
@@ -26,11 +50,8 @@ const AddEditModal = ({
   savingOrbitMonitoring,
   saveOrbitMonitoring,
 }) => {
-  // Keep track of visited tabs
-  const [visitedTabs, setVisitedTabs] = useState(['0']);
+  const [visitedTabs, setVisitedTabs] = useState<string[]>(['0']);
 
-  // Populate form fields when editing or duplicating. When duplicating, also
-  // generate a unique name and place a warning on the field.
   useEffect(() => {
     if ((isEditing || isDuplicating) && selectedMonitoring && form) {
       const { metaData } = selectedMonitoring;
@@ -56,8 +77,7 @@ const AddEditModal = ({
       }
 
       if (isDuplicating) {
-        // Generate unique name
-        const doesNameExist = name => orbitMonitoringData.some(m => m.monitoringName === name);
+        const doesNameExist = (name: string) => orbitMonitoringData.some(m => m.monitoringName === name);
 
         const currentName = selectedMonitoring.monitoringName;
         let newName = `copy-${currentName}`;
@@ -79,44 +99,29 @@ const AddEditModal = ({
     }
   }, [isEditing, isDuplicating, selectedMonitoring, form, orbitMonitoringData, setSelectedDomain]);
 
-  // Handle Cancel
   const handleCancel = () => {
     setDisplayAddEditModal(false);
     resetStates();
   };
 
-  // Handle tab change
-  const handleTabChange = key => {
+  const handleTabChange = (key: string) => {
     setActiveTab(key);
-    if (!visitedTabs.includes(key)) {
-      setVisitedTabs([...visitedTabs, key]);
-    }
-
-    // Clear error indicator for visited tab
-    if (erroneousTabs.includes(key)) {
-      setErroneousTabs(erroneousTabs.filter(tab => tab !== key));
-    }
+    if (!visitedTabs.includes(key)) setVisitedTabs([...visitedTabs, key]);
+    if (erroneousTabs.includes(key)) setErroneousTabs(erroneousTabs.filter(tab => tab !== key));
   };
 
-  // When the next button is clicked, go to the next tab
   const handleNext = () => {
-    const nextTab = (parseInt(activeTab) + 1).toString();
+    const nextTab = (parseInt(activeTab as string) + 1).toString();
     setActiveTab(nextTab);
-    if (!visitedTabs.includes(nextTab)) {
-      setVisitedTabs([...visitedTabs, nextTab]);
-    }
+    if (!visitedTabs.includes(nextTab)) setVisitedTabs([...visitedTabs, nextTab]);
   };
 
-  // When the previous button is clicked, go back to the previous tab
   const handlePrevious = () => {
-    const previousTab = (parseInt(activeTab) - 1).toString();
+    const previousTab = (parseInt(activeTab as string) - 1).toString();
     setActiveTab(previousTab);
-    if (!visitedTabs.includes(previousTab)) {
-      setVisitedTabs([...visitedTabs, previousTab]);
-    }
+    if (!visitedTabs.includes(previousTab)) setVisitedTabs([...visitedTabs, previousTab]);
   };
 
-  // Handle form submission
   const handleSaveOrbitMonitoringModal = async () => {
     try {
       await form.validateFields();
@@ -126,20 +131,15 @@ const AddEditModal = ({
       const monitoringDataFromForm = values.monitoringData || {};
       values.applicationId = applicationId;
 
-      // all contacts
       const contacts = { primaryContacts, secondaryContacts, notifyContacts };
       const asrSpecificMetaData = { domain, productCategory, severity, buildName };
-      const monitoringData = {
-        ...monitoringDataFromForm,
-      };
+      const monitoringData = { ...monitoringDataFromForm };
 
-      // Metadata
-      const metaData = {};
+      const metaData: any = {};
       metaData['asrSpecificMetaData'] = asrSpecificMetaData;
       metaData['monitoringData'] = monitoringData;
       metaData['contacts'] = contacts;
 
-      // Remove items added in metaData
       delete values.primaryContacts;
       delete values.secondaryContacts;
       delete values.notifyContacts;
@@ -149,7 +149,6 @@ const AddEditModal = ({
       delete values.monitoringData;
       delete values.buildName;
 
-      // Add metaData to values
       values.metaData = metaData;
 
       if (isEditing) {
@@ -158,12 +157,10 @@ const AddEditModal = ({
         await saveOrbitMonitoring(values, false, isDuplicating);
       }
     } catch (error) {
-      // Handle error in form validation with utility function
       console.error('Form validation failed:', error);
     }
   };
 
-  // Tabs for modal
   const tabs = [
     {
       label: 'Basic',
@@ -183,16 +180,15 @@ const AddEditModal = ({
     {
       label: 'Monitoring Details',
       id: 2,
-      component: () => <MonitoringTab form={form} isEditing={isEditing} selectedMonitoring={selectedMonitoring} />,
+      component: () => <MonitoringTab form={form} _isEditing={isEditing} _selectedMonitoring={selectedMonitoring} />,
     },
     {
       label: 'Notifications',
       id: 3,
-      component: () => <NotificationTab form={form} isEditing={isEditing} selectedMonitoring={selectedMonitoring} />,
+      component: () => <NotificationTab form={form} _isEditing={isEditing} _selectedMonitoring={selectedMonitoring} />,
     },
   ];
 
-  // Define tab items for a Tabs component
   const tabItems = tabs.map((tab, index) => ({
     key: index.toString(),
     label: erroneousTabs.includes(index.toString()) ? (
@@ -205,13 +201,11 @@ const AddEditModal = ({
     children: tab.component(),
   }));
 
-  // Render footer buttons based on the active tab
   const renderFooter = () => {
     const totalTabs = tabs.length;
-    const currentTabIndex = parseInt(activeTab);
+    const currentTabIndex = parseInt(activeTab as string);
 
     if (currentTabIndex === 0) {
-      // First tab - only Next button
       return (
         <>
           <Button onClick={handleCancel}>Cancel</Button>
@@ -221,7 +215,6 @@ const AddEditModal = ({
         </>
       );
     } else if (currentTabIndex === totalTabs - 1) {
-      // Last tab - Previous and Submit/Update buttons
       return (
         <>
           <Button onClick={handleCancel}>Cancel</Button>
@@ -234,7 +227,6 @@ const AddEditModal = ({
         </>
       );
     } else {
-      // Middle tabs - Previous and Next buttons
       return (
         <>
           <Button onClick={handleCancel}>Cancel</Button>
@@ -249,15 +241,10 @@ const AddEditModal = ({
     }
   };
 
-  // Modal title based on action
   const getModalTitle = () => {
-    if (isDuplicating) {
-      return 'Duplicate Orbit Monitoring';
-    } else if (isEditing) {
-      return 'Edit Orbit Monitoring';
-    } else {
-      return 'Add Orbit Monitoring';
-    }
+    if (isDuplicating) return 'Duplicate Orbit Monitoring';
+    if (isEditing) return 'Edit Orbit Monitoring';
+    return 'Add Orbit Monitoring';
   };
 
   return (

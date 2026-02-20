@@ -1,17 +1,13 @@
-// Package imports
 import React, { useState, useEffect } from 'react';
 import { handleError } from '../../common/handleResponse';
 
-//Local Imports
-import IntegrationsTable from './IntegrationsTable.jsx';
-import BreadCrumbs from '../../common/BreadCrumbs.jsx';
+import IntegrationsTable from './IntegrationsTable';
+import BreadCrumbs from '../../common/BreadCrumbs';
 import integrationsService from '@/services/integrations.service';
 
-function Integrations() {
-  //Local States
-  const [allIntegrations, setAllIntegrations] = useState([]);
+const Integrations: React.FC = () => {
+  const [allIntegrations, setAllIntegrations] = useState<any[]>([]);
 
-  // Get all Integrations
   useEffect(() => {
     (async () => {
       try {
@@ -29,6 +25,6 @@ function Integrations() {
       <IntegrationsTable allIntegrations={allIntegrations} setAllIntegrations={setAllIntegrations} />
     </>
   );
-}
+};
 
 export default Integrations;

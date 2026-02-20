@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Card,
   Row,
@@ -18,9 +18,6 @@ import {
   Empty,
   Typography,
 } from 'antd';
-
-const { Text } = Typography;
-
 import {
   SearchOutlined,
   ProfileOutlined,
@@ -41,16 +38,13 @@ import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import { flattenTree } from '../../common';
 import styles from '../../workunitHistory.module.css';
 
-// Build hierarchical tree from flat details using scopeId path (e.g., G1:SG2:A3)
-function buildScopeTree(details) {
+function buildScopeTree(details: any[]) {
   const map = new Map();
-  const roots = [];
-  // First pass: create nodes
+  const roots: any[] = [];
   details.forEach(d => {
     const key = d.scopeId || d.scopeName;
     map.set(key, { ...d, key, children: [] });
   });
-  // Second pass: attach to parent by trimming last segment in scopeId
   details.forEach(d => {
     const key = d.scopeId || d.scopeName;
     const node = map.get(key);
@@ -66,9 +60,9 @@ function buildScopeTree(details) {
   return roots;
 }
 
-function findPathByKey(nodes, key) {
-  const stack = [];
-  const dfs = list => {
+function findPathByKey(nodes: any[], key: any) {
+  const stack: any[] = [];
+  const dfs = (list: any[]) => {
     for (const n of list) {
       stack.push(n);
       if (n.key === key) return true;
@@ -81,25 +75,30 @@ function findPathByKey(nodes, key) {
   return stack.map(n => ({ title: n.scopeName, key: n.key }));
 }
 
-const OverviewPanel = ({ wu, details, clusterName }) => {
-  // Preferences / UI state
-  const [types, setTypes] = useState(loadLocalStorage('wuh.overview.types', SCOPE_TYPES));
-  const [q, setQ] = useState(loadLocalStorage('wuh.overview.q', ''));
-  const [minElapsed, setMinElapsed] = useState(loadLocalStorage('wuh.overview.minElapsed', 0));
-  const [expandedKeys, setExpandedKeys] = useState(loadLocalStorage('wuh.overview.expandedKeys', []));
-  const [selectedKey, setSelectedKey] = useState(null);
+const { Text } = Typography;
+
+interface Props {
+  wu: any;
+  details: any[];
+  clusterName?: string;
+}
+
+const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
+  const [types, setTypes] = useState<any>(loadLocalStorage('wuh.overview.types', SCOPE_TYPES));
+  const [q, setQ] = useState<string>(loadLocalStorage('wuh.overview.q', ''));
+  const [minElapsed, setMinElapsed] = useState<number>(loadLocalStorage('wuh.overview.minElapsed', 0));
+  const [expandedKeys, setExpandedKeys] = useState<any[]>(loadLocalStorage('wuh.overview.expandedKeys', []));
+  const [selectedKey, setSelectedKey] = useState<any>(null);
 
   useEffect(() => saveLocalStorage('wuh.overview.types', types), [types]);
   useEffect(() => saveLocalStorage('wuh.overview.q', q), [q]);
   useEffect(() => saveLocalStorage('wuh.overview.minElapsed', minElapsed), [minElapsed]);
   useEffect(() => saveLocalStorage('wuh.overview.expandedKeys', expandedKeys), [expandedKeys]);
 
-  // Build tree once
   const treeRaw = useMemo(() => buildScopeTree(details || []), [details]);
 
-  // Filtering functions
   const term = q.trim().toLowerCase();
-  const nodeMatches = n => {
+  const nodeMatches = (n: any) => {
     if (!types.includes(n.scopeType)) return false;
     if (minElapsed && Number(n.TimeElapsed || 0) < Number(minElapsed)) return false;
     if (term) {
@@ -109,11 +108,10 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
     return true;
   };
 
-  // Prune tree to matches but keep parents of matches
   const treeFiltered = useMemo(() => {
-    const clone = node => ({ ...node, children: node.children?.map(clone) || [] });
+    const clone = (node: any) => ({ ...node, children: node.children?.map(clone) || [] });
     const roots = treeRaw.map(clone);
-    const prune = node => {
+    const prune = (node: any) => {
       const match = nodeMatches(node);
       node.children = node.children.map(prune).filter(Boolean);
       return match || node.children.length ? node : null;
@@ -121,7 +119,6 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
     return roots.map(prune).filter(Boolean);
   }, [treeRaw, types, term, minElapsed]);
 
-  // Aggregates
   const flatList = useMemo(() => flattenTree(treeFiltered), [treeFiltered]);
   const summary = useMemo(() => {
     let rows = 0,
@@ -129,7 +126,7 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
       diskW = 0,
       maxMem = 0,
       totalElapsed = 0;
-    flatList.forEach(d => {
+    flatList.forEach((d: any) => {
       rows += Number(d.NumRowsProcessed || 0);
       diskR += Number(d.SizeDiskRead || 0);
       diskW += Number(d.SizeDiskWrite || 0);
@@ -138,16 +135,15 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
     });
     const counts = {
       total: flatList.length,
-      graph: flatList.filter(d => d.scopeType === 'graph').length,
-      subgraph: flatList.filter(d => d.scopeType === 'subgraph').length,
-      activity: flatList.filter(d => d.scopeType === 'activity').length,
-      operation: flatList.filter(d => d.scopeType === 'operation').length,
+      graph: flatList.filter((d: any) => d.scopeType === 'graph').length,
+      subgraph: flatList.filter((d: any) => d.scopeType === 'subgraph').length,
+      activity: flatList.filter((d: any) => d.scopeType === 'activity').length,
+      operation: flatList.filter((d: any) => d.scopeType === 'operation').length,
     };
     return { rows, diskR, diskW, maxMem, totalElapsed, counts };
   }, [flatList]);
 
-  // Prepare tree data for AntD
-  const renderTitle = n => (
+  const renderTitle = (n: any) => (
     <Space size={8}>
       <Tag color="blue" className={styles.tagCapitalize}>
         {n.scopeType}
@@ -172,7 +168,7 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
     </Space>
   );
 
-  const toAntTreeNodes = nodes =>
+  const toAntTreeNodes = (nodes: any[]) =>
     nodes.map(n => ({
       key: n.key,
       title: renderTitle(n),
@@ -181,27 +177,18 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
 
   const antTreeData = useMemo(() => toAntTreeNodes(treeFiltered), [treeFiltered]);
 
-  // Selected node and details
-  const selectedNode = useMemo(() => flatList.find(n => n.key === selectedKey) || null, [flatList, selectedKey]);
+  const selectedNode = useMemo(() => flatList.find((n: any) => n.key === selectedKey) || null, [flatList, selectedKey]);
   const breadcrumb = useMemo(
     () => (selectedKey ? findPathByKey(treeFiltered, selectedKey) : []),
     [treeFiltered, selectedKey]
   );
 
-  // const topActivities = useMemo(() => {
-  //   return flatList
-  //     .filter(d => d.scopeType === 'activity')
-  //     .sort((a, b) => (b.TimeElapsed || 0) - (a.TimeElapsed || 0))
-  //     .slice(0, 10);
-  // }, [flatList]);
-
-  // Children table columns
   const childCols = [
     {
       title: 'Scope',
       dataIndex: 'scopeName',
       key: 'scopeName',
-      render: (v, r) => (
+      render: (v: any, r: any) => (
         <Space size={6} align="start">
           <Tag color="blue" className={`${styles.tagCapitalize} ${styles.mr0}`}>
             {r.scopeType}
@@ -221,31 +208,30 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
       title: 'Elapsed',
       dataIndex: 'TimeElapsed',
       key: 'TimeElapsed',
-      align: 'right',
-      render: v => <span className={styles.numericText}>{formatSeconds(v)}</span>,
-      sorter: (a, b) => (a.TimeElapsed || 0) - (b.TimeElapsed || 0),
+      align: 'right' as const,
+      render: (v: any) => <span className={styles.numericText}>{formatSeconds(v)}</span>,
+      sorter: (a: any, b: any) => (a.TimeElapsed || 0) - (b.TimeElapsed || 0),
     },
     {
       title: 'Rows',
       dataIndex: 'NumRowsProcessed',
       key: 'NumRowsProcessed',
-      align: 'right',
-      render: v => <span className={styles.numericText}>{formatNumber(v)}</span>,
-      sorter: (a, b) => (a.NumRowsProcessed || 0) - (b.NumRowsProcessed || 0),
+      align: 'right' as const,
+      render: (v: any) => <span className={styles.numericText}>{formatNumber(v)}</span>,
+      sorter: (a: any, b: any) => (a.NumRowsProcessed || 0) - (b.NumRowsProcessed || 0),
     },
     {
       title: 'Memory',
       dataIndex: 'PeakMemoryUsage',
       key: 'PeakMemoryUsage',
-      align: 'right',
-      render: v => <span className={styles.numericText}>{formatBytes(v)}</span>,
-      sorter: (a, b) => (a.PeakMemoryUsage || 0) - (b.PeakMemoryUsage || 0),
+      align: 'right' as const,
+      render: (v: any) => <span className={styles.numericText}>{formatBytes(v)}</span>,
+      sorter: (a: any, b: any) => (a.PeakMemoryUsage || 0) - (b.PeakMemoryUsage || 0),
     },
   ];
 
   return (
     <Space direction="vertical" size={16} className={styles.fullWidth}>
-      {/* Workunit header summary */}
       <Card>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
@@ -308,7 +294,6 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
         </Row>
       </Card>
 
-      {/* Explorer and details */}
       <Row gutter={16}>
         <Col xs={24} lg={12} xxl={10}>
           <Card
@@ -340,7 +325,12 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
                 />
                 <Space size={8}>
                   <span>Min Elapsed</span>
-                  <InputNumber min={0} value={minElapsed} onChange={setMinElapsed} placeholder="s" />
+                  <InputNumber
+                    min={0}
+                    value={minElapsed}
+                    onChange={(v: any) => setMinElapsed(Number(v || 0))}
+                    placeholder="s"
+                  />
                 </Space>
               </Space>
             </div>
@@ -360,44 +350,6 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
               )}
             </div>
           </Card>
-
-          {/*<Card title="Top Activities (Elapsed)" className={`${styles.mt16} ${styles.cardBodyPadTop8}`}>*/}
-          {/*  {topActivities.length ? (*/}
-          {/*    <Table*/}
-          {/*      size="small"*/}
-          {/*      pagination={false}*/}
-          {/*      rowKey="key"*/}
-          {/*      dataSource={topActivities}*/}
-          {/*      columns={[*/}
-          {/*        { title: '#', render: (_v, _r, i) => i + 1, width: 48 },*/}
-          {/*        {*/}
-          {/*          title: 'Activity',*/}
-          {/*          dataIndex: 'scopeName',*/}
-          {/*          ellipsis: true,*/}
-          {/*          render: (v, r) => (*/}
-          {/*            <Space direction="vertical" size={0}>*/}
-          {/*              <span>{v}</span>*/}
-          {/*              {r.label && (*/}
-          {/*                <Text type="secondary" className={styles.smallText}>*/}
-          {/*                  {r.label}*/}
-          {/*                </Text>*/}
-          {/*              )}*/}
-          {/*            </Space>*/}
-          {/*          ),*/}
-          {/*        },*/}
-          {/*        {*/}
-          {/*          title: 'Elapsed',*/}
-          {/*          dataIndex: 'TimeElapsed',*/}
-          {/*          align: 'right',*/}
-          {/*          render: v => <span className={styles.numericText}>{formatSeconds(v)}</span>,*/}
-          {/*        },*/}
-          {/*      ]}*/}
-          {/*      onRow={record => ({ onClick: () => setSelectedKey(record.key) })}*/}
-          {/*    />*/}
-          {/*  ) : (*/}
-          {/*    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No activities" />*/}
-          {/*  )}*/}
-          {/*</Card>*/}
         </Col>
 
         <Col xs={24} lg={12} xxl={14}>
@@ -413,7 +365,7 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
             ) : (
               <div className={styles.scrollAreaTall}>
                 <Breadcrumb className={styles.mb12}>
-                  {breadcrumb.map(b => (
+                  {breadcrumb.map((b: any) => (
                     <Breadcrumb.Item key={b.key} onClick={() => setSelectedKey(b.key)} className={styles.cursorPointer}>
                       {b.title}
                     </Breadcrumb.Item>
@@ -428,7 +380,6 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
                       return true;
                     })
                     .sort(([a], [b]) => {
-                      // Keep important fields at top
                       const top = ['scopeName', 'scopeType', 'label', 'fileName'];
                       const ia = top.indexOf(a);
                       const ib = top.indexOf(b);
@@ -449,7 +400,7 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
                     <Table
                       size="small"
                       pagination={{ pageSize: 10 }}
-                      rowKey={r => r.key}
+                      rowKey={(r: any) => r.key}
                       dataSource={selectedNode.children}
                       columns={childCols}
                       onRow={record => ({ onClick: () => setSelectedKey(record.key) })}

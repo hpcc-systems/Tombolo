@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Spin, Button, message, Alert, Space } from 'antd';
@@ -7,39 +7,35 @@ import workunitsService from '@/services/workunits.service';
 import WorkUnitView from './WorkUnitView';
 import styles from '../workunitHistory.module.css';
 
-const WorkUnitDetails = () => {
-  const { clusterId, wuid } = useParams();
+const WorkUnitDetails: React.FC = () => {
+  const { clusterId, wuid } = useParams<any>();
   const history = useHistory();
-  const clusters = useSelector(state => state.application.clusters);
+  const clusters = useSelector((state: any) => state.application.clusters);
 
   const clusterName = useMemo(() => {
     if (!clusters || !clusterId) return clusterId;
-    const cluster = clusters.find(c => c.id === clusterId);
+    const cluster = clusters.find((c: any) => c.id === clusterId);
     return cluster ? cluster.name : clusterId;
   }, [clusters, clusterId]);
 
-  const [loading, setLoading] = useState(true);
-  const [wu, setWu] = useState(null);
-  const [details, setDetails] = useState([]);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [wu, setWu] = useState<any>(null);
+  const [details, setDetails] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch workunit first
       const wuData = await workunitsService.getById(clusterId, wuid);
       setWu(wuData);
 
-      // Try to fetch details but handle 404 gracefully
       try {
         const detailsData = await workunitsService.getDetails(clusterId, wuid);
 
-        // Flatten the hierarchical structure into a flat array
-        const flattenDetails = graphs => {
-          const result = [];
-          const traverse = (node, parentId = null, level = 0) => {
-            // Normalize a few common fields so the table has consistent columns
+        const flattenDetails = (graphs: any[]) => {
+          const result: any[] = [];
+          const traverse = (node: any, parentId: any = null, level = 0) => {
             const normalized = {
               ...node,
               _parentId: parentId,
@@ -47,7 +43,7 @@ const WorkUnitDetails = () => {
             };
             result.push(normalized);
             if (node.children && node.children.length > 0) {
-              node.children.forEach(child => traverse(child, node.id ?? node.scopeId ?? null, level + 1));
+              node.children.forEach((child: any) => traverse(child, node.id ?? node.scopeId ?? null, level + 1));
             }
           };
           graphs.forEach(g => traverse(g));
@@ -57,11 +53,10 @@ const WorkUnitDetails = () => {
         const flattenedDetails = flattenDetails(detailsData.graphs || []);
         setDetails(flattenedDetails);
       } catch (error) {
-        // If details are not found (404), just continue with empty details
         console.error('Error fetching workunit details (expected for 404):', error);
         setDetails([]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching workunit details:', err);
       setError(err.message || 'Failed to load workunit details');
       message.error('Failed to load workunit details');
@@ -76,7 +71,6 @@ const WorkUnitDetails = () => {
     }
   }, [wuid]);
 
-  // After all hooks are declared, it's safe to return early conditionally
   if (loading) {
     return (
       <div className={styles.centerScreen}>
@@ -143,7 +137,6 @@ const WorkUnitDetails = () => {
         </Space>
       </div>
 
-      {/* Summary header */}
       <div className={styles.contentPadding}>
         <WorkUnitView wu={wu} details={details} clusterName={clusterName} />
       </div>

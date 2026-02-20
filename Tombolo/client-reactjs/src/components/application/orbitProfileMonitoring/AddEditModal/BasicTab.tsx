@@ -7,19 +7,28 @@ const { Option } = Select;
 
 const severityLevels = [0, 1, 2, 3];
 
-function BasicTab({ form, domains, productCategories, setSelectedDomain, isEditing }) {
-  //Local State
-  const nameRef = useRef(null);
+type AnyForm = any;
 
-  // Focus on monitoring name input when adding new
+interface Props {
+  form: AnyForm;
+  domains: any[];
+  productCategories: any[];
+  selectedDomain?: any;
+  setSelectedDomain: (d: any) => void;
+  isEditing: boolean;
+  selectedMonitoring?: any;
+}
+
+const BasicTab: React.FC<Props> = ({ form, domains, productCategories, setSelectedDomain, isEditing }) => {
+  const nameRef = useRef<any>(null);
+
   useEffect(() => {
     if (form && !isEditing && nameRef.current) {
       nameRef.current.focus();
     }
   }, [form, isEditing]);
 
-  //Handle domain change function
-  const handleDomainChange = value => {
+  const handleDomainChange = (value: any) => {
     form.setFieldsValue({ productCategory: undefined });
     setSelectedDomain(value);
   };
@@ -34,7 +43,6 @@ function BasicTab({ form, domains, productCategories, setSelectedDomain, isEditi
           () => ({
             validator(_, value) {
               if (isEditing) return Promise.resolve();
-              // Add uniqueness validation logic here if needed
               return Promise.resolve();
             },
           }),
@@ -55,7 +63,6 @@ function BasicTab({ form, domains, productCategories, setSelectedDomain, isEditi
         />
       </Form.Item>
 
-      {/* ASR Specific Fields - Always visible and mandatory for Orbit Monitoring New */}
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item label="Domain" name="domain" rules={[{ required: true, message: 'Please select a domain' }]}>
@@ -98,6 +105,6 @@ function BasicTab({ form, domains, productCategories, setSelectedDomain, isEditi
       </Form.Item>
     </Form>
   );
-}
+};
 
 export default BasicTab;

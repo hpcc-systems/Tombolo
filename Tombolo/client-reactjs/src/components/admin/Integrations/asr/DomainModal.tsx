@@ -1,33 +1,38 @@
-// Package imports
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Select, Row, Col } from 'antd';
 import { isEmail } from 'validator';
 import { handleError, handleSuccess } from '../../../common/handleResponse';
-
-//Local Imports
 import asrService from '@/services/asr.service';
 
-// Constants
 const { Option } = Select;
 const severityThresholds = [0, 1, 2, 3];
 const regions = ['UK', 'USA'];
 
-const DomainModal = ({
+interface Props {
+  domainModalOpen?: boolean;
+  setDomainModalOpen?: (open: boolean) => void;
+  monitoringTypes?: any[];
+  setDomains?: (domains: any[]) => void;
+  domains?: any[];
+  selectedDomain?: any;
+  setSelectedDomain?: (d: any) => void;
+}
+
+const DomainModal: React.FC<Props> = ({
   domainModalOpen,
   setDomainModalOpen,
-  monitoringTypes,
+  monitoringTypes = [],
   setDomains,
-  domains,
+  domains = [],
   selectedDomain,
   setSelectedDomain,
 }) => {
   const [form] = Form.useForm();
 
-  //Effects
   useEffect(() => {
     if (selectedDomain) {
-      let activityTypesIds = selectedDomain.activityTypes.map((d) => d.id);
-      activityTypesIds = activityTypesIds.filter((id) => id !== null);
+      let activityTypesIds = selectedDomain.activityTypes.map((d: any) => d.id);
+      activityTypesIds = activityTypesIds.filter((id: any) => id !== null);
       form.setFieldsValue({
         name: selectedDomain.name,
         region: selectedDomain.region,
@@ -38,81 +43,65 @@ const DomainModal = ({
     }
   }, [selectedDomain]);
 
-  // Update Domain
   const saveUpdatedDomain = async () => {
-    // Validate form
     try {
       await form.validateFields();
     } catch (err) {
       return;
     }
 
-    // Save domain
     try {
       const payload = form.getFieldsValue();
       await asrService.updateDomain({ id: selectedDomain.id, payload });
-      // Get all domains and replace the current domains with the new ones
-      const domains = await asrService.getAllDomains();
-      setDomains(domains);
+      const refreshed = await asrService.getAllDomains();
+      setDomains && setDomains(refreshed);
       handleSuccess('Domain updated successfully');
-      setSelectedDomain(null);
+      setSelectedDomain && setSelectedDomain(null);
       form.resetFields();
-      setDomainModalOpen(false);
+      setDomainModalOpen && setDomainModalOpen(false);
     } catch (err) {
       handleError('Failed to update domain');
     }
   };
 
-  // Create/save new domain
   const saveDomain = async () => {
-    // Validate form
     try {
       await form.validateFields();
     } catch (err) {
       return;
     }
 
-    //Check if name is already taken
     const name = form.getFieldValue('name');
-    const domainExists = domains.some((domain) => domain.name === name);
+    const domainExists = domains.some((domain: any) => domain.name === name);
     if (domainExists) {
       handleError('Domain already exists');
       return;
     }
 
-    // Save domain
     try {
       const payload = form.getFieldsValue();
-
       await asrService.createDomain({ payload });
-      // Get all domains and replace the current domains with the new ones
-      const domains = await asrService.getAllDomains();
-      setDomains(domains);
+      const refreshed = await asrService.getAllDomains();
+      setDomains && setDomains(refreshed);
       handleSuccess('Domain saved successfully');
       form.resetFields();
-      setDomainModalOpen(false);
+      setDomainModalOpen && setDomainModalOpen(false);
     } catch (err) {
       handleError('Failed to save domain');
     }
   };
 
-  // const handle form submission
   const handleFromSubmission = () => {
-    if (selectedDomain) {
-      saveUpdatedDomain();
-    } else {
-      saveDomain();
-    }
+    if (selectedDomain) saveUpdatedDomain();
+    else saveDomain();
   };
 
-  // When cancel button or close icon is clicked
   const handleCancel = () => {
-    setSelectedDomain(null);
+    setSelectedDomain && setSelectedDomain(null);
     form.resetFields();
-    setDomainModalOpen(false);
+    setDomainModalOpen && setDomainModalOpen(false);
   };
 
-  // JSX return
   return (
     <Modal
       title={selectedDomain ? 'Edit Domain' : 'Add Domain'}
@@ -136,7 +125,7 @@ const DomainModal = ({
           <Col span={7}>
             <Form.Item label="Region" name="region" rules={[{ required: true, message: 'Please Select a region' }]}>
               <Select>
-                {regions.map((region) => (
+                {regions.map(region => (
                   <Option key={region} value={region}>
                     {region}
                   </Option>
@@ -151,7 +140,7 @@ const DomainModal = ({
               rules={[{ required: true, message: 'Severity threshold is required' }]}
               name="severityThreshold">
               <Select>
-                {severityThresholds.map((severity) => (
+                {severityThresholds.map(severity => (
                   <Option key={severity} value={severity}>
                     {severity}
                   </Option>
@@ -167,16 +156,11 @@ const DomainModal = ({
           required
           rules={[
             {
-              validator: (_, value) => {
-                if (!value || value.length === 0) {
-                  return Promise.reject(new Error('Please add at least one email!'));
-                }
-                if (value.length > 20) {
-                  return Promise.reject(new Error('Too many emails'));
-                }
-                if (!value.every((v) => isEmail(v))) {
+              validator: (_: any, value: any[]) => {
+                if (!value || value.length === 0) return Promise.reject(new Error('Please add at least one email!'));
+                if (value.length > 20) return Promise.reject(new Error('Too many emails'));
+                if (!value.every((v: string) => isEmail(v)))
                   return Promise.reject(new Error('One or more emails are invalid'));
-                }
                 return Promise.resolve();
               },
             },
@@ -191,7 +175,7 @@ const DomainModal = ({
 
         <Form.Item label="Activity Type(s)" name="monitoringTypeIds" rules={[{ required: false }]}>
           <Select mode="multiple">
-            {monitoringTypes.map((type) => (
+            {monitoringTypes.map((type: any) => (
               <Option key={type.id} value={type.id}>
                 {type.name}
               </Option>

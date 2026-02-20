@@ -1,3 +1,4 @@
+import React from 'react';
 import { Tabs, Card, Tag, Typography, Space, Row, Col, Statistic, Alert } from 'antd';
 import {
   ClockCircleOutlined,
@@ -20,16 +21,22 @@ import { getRoleNameArray } from '@/components/common/AuthUtil';
 dayjs.extend(duration);
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
+const { TabPane } = Tabs as any;
 
-const formatTime = seconds => (seconds == null ? '-' : dayjs.duration(seconds, 'seconds').format('HH:mm:ss.SSS'));
+const formatTime = (seconds: any) =>
+  seconds == null ? '-' : dayjs.duration(seconds, 'seconds').format('HH:mm:ss.SSS');
 
-const WorkUnitView = ({ wu, details, clusterName }) => {
+interface Props {
+  wu: any;
+  details: any[];
+  clusterName?: string;
+}
+
+const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
   const roleArray = getRoleNameArray();
   const isAdminOrOwner = roleArray.includes('owner') || roleArray.includes('administrator');
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
-      {/* Header */}
       <Card className={styles.cardMarginBottom16}>
         <Row justify="space-between" align="middle">
           <Col>
@@ -56,7 +63,6 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
       </Card>
 
       <Tabs defaultActiveKey="overview" size="large">
-        {/* Overview */}
         <TabPane
           tab={
             <span>
@@ -78,7 +84,6 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
           )}
         </TabPane>
 
-        {/* Timeline */}
         <TabPane
           tab={
             <span>
@@ -100,7 +105,6 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
           )}
         </TabPane>
 
-        {/* History */}
         <TabPane
           tab={
             <span>
@@ -111,7 +115,6 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
           <HistoryPanel wu={wu} clusterId={wu.clusterId} clusterName={clusterName} />
         </TabPane>
 
-        {/* Full Metrics Details */}
         <TabPane
           tab={
             <span>
@@ -122,7 +125,6 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
           <AllMetricsPanel wu={wu} details={details} />
         </TabPane>
 
-        {/* SQL - only visible to owner and administrator */}
         {isAdminOrOwner && (
           <TabPane
             tab={

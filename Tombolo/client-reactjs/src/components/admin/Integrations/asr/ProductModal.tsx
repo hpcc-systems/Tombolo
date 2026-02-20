@@ -1,12 +1,10 @@
-// Package imports
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Select } from 'antd';
 import { handleError, handleSuccess } from '../../../common/handleResponse';
-
-// Local imports
 import asrService from '@/services/asr.service';
 
-// Product tiers
+const { Option } = Select;
+
 const tiers = [
   { label: 'No Tier', value: 0 },
   { label: 'Tier 1', value: 1 },
@@ -14,23 +12,30 @@ const tiers = [
   { label: 'Tier 3', value: 3 },
 ];
 
-const ProductModal = ({
+interface Props {
+  productModalOpen?: boolean;
+  setProductModalOpen?: (open: boolean) => void;
+  domains?: any[];
+  selectedProduct?: any;
+  setSelectedProduct?: (p: any) => void;
+  setProducts?: (ps: any[]) => void;
+}
+
+const ProductModal: React.FC<Props> = ({
   productModalOpen,
   setProductModalOpen,
-  domains,
+  domains = [],
   selectedProduct,
   setSelectedProduct,
   setProducts,
 }) => {
   const [form] = Form.useForm();
 
-  //Effects
   useEffect(() => {
     if (selectedProduct) {
-      let associatedDomains = [];
+      let associatedDomains: any[] = [];
       if (selectedProduct.domains) {
-        // Remove null domains
-        associatedDomains = selectedProduct.domains.filter((d) => d.id !== null).map((d) => d.id);
+        associatedDomains = selectedProduct.domains.filter((d: any) => d.id !== null).map((d: any) => d.id);
       }
       form.setFieldsValue({
         name: selectedProduct.name,
@@ -41,16 +46,14 @@ const ProductModal = ({
     }
   }, [selectedProduct]);
 
-  // When Ok (Save/update) modal on from is clicked
   const handleOk = async () => {
-    // Validate form
     try {
       await form.validateFields();
     } catch (error) {
       console.error('Failed to validate form', error);
+      return;
     }
 
-    // Create a new product
     try {
       const formValues = form.getFieldsValue();
       if (!selectedProduct) {
@@ -60,21 +63,18 @@ const ProductModal = ({
       }
 
       const products = await asrService.getAllProducts();
-      setProducts(products);
+      setProducts && setProducts(products);
       form.resetFields();
-      setSelectedProduct(null);
-      setProductModalOpen(false);
+      setSelectedProduct && setSelectedProduct(null);
+      setProductModalOpen && setProductModalOpen(false);
     } catch (err) {
       handleError('Failed to create product');
     }
   };
 
-  // Create a new product
-  const saveNewProduct = async (values) => {
+  const saveNewProduct = async (values: any) => {
     try {
-      const payload = {
-        ...values,
-      };
+      const payload = { ...values };
       await asrService.createProduct({ payload });
       handleSuccess('Product created successfully');
     } catch (error) {
@@ -82,13 +82,9 @@ const ProductModal = ({
     }
   };
 
-  // Const update product
-  const updateExistingProduct = async (values) => {
+  const updateExistingProduct = async (values: any) => {
     try {
-      const payload = {
-        ...values,
-        id: selectedProduct.id,
-      };
+      const payload = { ...values, id: selectedProduct.id };
       await asrService.updateProduct({ id: selectedProduct.id, payload });
       handleSuccess('Product updated successfully');
     } catch (error) {
@@ -96,14 +92,12 @@ const ProductModal = ({
     }
   };
 
-  // When cancel is clicked
   const handleCancel = () => {
     form.resetFields();
-    setSelectedProduct(null);
-    setProductModalOpen(false);
+    setSelectedProduct && setSelectedProduct(null);
+    setProductModalOpen && setProductModalOpen(false);
   };
 
-  // JSX
   return (
     <Modal
       open={productModalOpen}
@@ -116,7 +110,7 @@ const ProductModal = ({
         <Form.Item
           name="name"
           label="Product name"
-          rules={[{ required: true, message: 'Please input the product name!' }]}>
+          rules={[{ required: true, message: 'Please input the product name!' }, { max: 100 }]}>
           <Input placeholder="Product Name" />
         </Form.Item>
         <Form.Item
@@ -127,21 +121,21 @@ const ProductModal = ({
         </Form.Item>
         <Form.Item label="Tier" name="tier" rules={[{ required: true, message: 'Please select a tier' }]}>
           <Select placeholder="Select Tier">
-            {tiers.map((tier) => (
-              <Select.Option key={tier.value} value={tier.value}>
+            {tiers.map(tier => (
+              <Option key={tier.value} value={tier.value}>
                 {tier.label}
-              </Select.Option>
+              </Option>
             ))}
           </Select>
         </Form.Item>
         <Form.Item label="Domain" name="domainIds">
           <Select placeholder="Select Domain" mode="multiple">
-            {[...new Set(domains.map((domain) => domain.id))].map((domainId) => {
-              const domain = domains.find((d) => d.id === domainId);
+            {[...new Set(domains.map((domain: any) => domain.id))].map((domainId: any) => {
+              const domain = domains.find((d: any) => d.id === domainId);
               return (
-                <Select.Option key={domain.id} value={domain.id}>
+                <Option key={domain.id} value={domain.id}>
                   {domain.name}
-                </Select.Option>
+                </Option>
               );
             })}
           </Select>

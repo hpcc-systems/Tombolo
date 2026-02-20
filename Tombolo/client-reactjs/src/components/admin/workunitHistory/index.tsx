@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
   Table,
@@ -34,7 +34,7 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
-const formatTime = seconds => {
+const formatTime = (seconds: any) => {
   if (seconds == null) return '-';
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
@@ -44,23 +44,23 @@ const formatTime = seconds => {
   return `${secs}s`;
 };
 
-const WorkUnitHistory = () => {
+const WorkUnitHistory: React.FC = () => {
   const history = useHistory();
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(() => loadLocalStorage('wuh.list.page', 1));
-  const [limit, setLimit] = useState(() => loadLocalStorage('wuh.list.limit', 50));
-  const [sortField, setSortField] = useState(() => loadLocalStorage('wuh.list.sortField', 'workUnitTimestamp'));
-  const [sortOrder, setSortOrder] = useState(() => loadLocalStorage('wuh.list.sortOrder', 'desc'));
-  const [clusters, setClusters] = useState([]);
-  const [clusterMap, setClusterMap] = useState({});
+  const [loading, setLoading] = useState<boolean>(false);
+  const [data, setData] = useState<any[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [page, setPage] = useState<number>(() => loadLocalStorage('wuh.list.page', 1));
+  const [limit, setLimit] = useState<number>(() => loadLocalStorage('wuh.list.limit', 50));
+  const [sortField, setSortField] = useState<string>(() => loadLocalStorage('wuh.list.sortField', 'workUnitTimestamp'));
+  const [sortOrder, setSortOrder] = useState<string>(() => loadLocalStorage('wuh.list.sortOrder', 'desc'));
+  const [clusters, setClusters] = useState<any[]>([]);
+  const [clusterMap, setClusterMap] = useState<Record<string, string>>({});
 
   // Filters
-  const [filters, setFilters] = useState(() => {
-    const saved = loadLocalStorage('wuh.list.filters', {});
+  const [filters, setFilters] = useState<any>(() => {
+    const saved = loadLocalStorage('wuh.list.filters', {}) as any;
     if (saved.dateRange) {
-      saved.dateRange = saved.dateRange.map(d => (d ? dayjs(d) : null));
+      saved.dateRange = saved.dateRange.map((d: any) => (d ? dayjs(d) : null));
     }
     return {
       clusterId: undefined,
@@ -89,7 +89,7 @@ const WorkUnitHistory = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const queryParams = {
+      const queryParams: any = {
         page,
         limit,
         sort: sortField,
@@ -114,8 +114,9 @@ const WorkUnitHistory = () => {
 
       // Calculate statistics
       if (result.data && result.data.length > 0) {
-        const totalCost = result.data.reduce((sum, wu) => sum + (wu.totalCost || 0), 0);
-        const avgTime = result.data.reduce((sum, wu) => sum + (wu.totalClusterTime || 0), 0) / result.data.length;
+        const totalCost = result.data.reduce((sum: number, wu: any) => sum + (wu.totalCost || 0), 0);
+        const avgTime =
+          result.data.reduce((sum: number, wu: any) => sum + (wu.totalClusterTime || 0), 0) / result.data.length;
         setStatistics({
           totalJobs: result.total,
           totalCost,
@@ -159,9 +160,8 @@ const WorkUnitHistory = () => {
         const clusterData = await clustersService.getAll();
         setClusters(clusterData || []);
 
-        // Create a map from cluster ID to cluster name
-        const map = {};
-        (clusterData || []).forEach(cluster => {
+        const map: Record<string, string> = {};
+        (clusterData || []).forEach((cluster: any) => {
           map[cluster.id] = cluster.name;
         });
         setClusterMap(map);
@@ -173,7 +173,7 @@ const WorkUnitHistory = () => {
     fetchClusters();
   }, []);
 
-  const handleTableChange = (newPagination, _filters, sorter) => {
+  const handleTableChange = (newPagination: any, _filters: any, sorter: any) => {
     setPage(newPagination.current);
     setLimit(newPagination.pageSize);
 
@@ -185,8 +185,6 @@ const WorkUnitHistory = () => {
 
   const handleSearch = () => {
     setPage(1);
-    // fetchData will be called by useEffect when page changes
-    // If already on page 1, trigger manually
     if (page === 1) {
       fetchData();
     }
@@ -206,10 +204,9 @@ const WorkUnitHistory = () => {
     setPage(1);
     setSortField('workUnitTimestamp');
     setSortOrder('desc');
-    // fetchData will be called by useEffect
   };
 
-  const handleView = record => {
+  const handleView = (record: any) => {
     history.push(`/workunits/history/${record.clusterId}/${record.wuId}`);
   };
 
@@ -219,7 +216,7 @@ const WorkUnitHistory = () => {
       dataIndex: 'jobName',
       key: 'jobName',
       ellipsis: true,
-      render: (text, record) => (
+      render: (text: any, record: any) => (
         <Space direction="vertical" size={0}>
           <Space size={4} align="center">
             <Button
@@ -251,7 +248,7 @@ const WorkUnitHistory = () => {
       key: 'clusterId',
       width: 120,
       ellipsis: true,
-      render: clusterId => clusterMap[clusterId] || clusterId,
+      render: (clusterId: string) => clusterMap[clusterId] || clusterId,
     },
     {
       title: 'Owner',
@@ -265,8 +262,8 @@ const WorkUnitHistory = () => {
       dataIndex: 'state',
       key: 'state',
       width: 90,
-      render: state => {
-        const colorMap = {
+      render: (state: any) => {
+        const colorMap: Record<string, any> = {
           completed: 'success',
           failed: 'error',
           running: 'processing',
@@ -281,29 +278,14 @@ const WorkUnitHistory = () => {
       key: 'totalCost',
       width: 80,
       sorter: true,
-      render: cost => (cost != null ? `$${cost.toFixed(4)}` : '-'),
+      render: (cost: any) => (cost != null ? `$${cost.toFixed(4)}` : '-'),
     },
-    // {
-    //   title: 'Details',
-    //   dataIndex: 'hasDetails',
-    //   key: 'hasDetails',
-    //   width: 85,
-    //   align: 'center',
-    //   render: hasDetails =>
-    //     hasDetails ? (
-    //       <Tag color="green">Yes</Tag>
-    //     ) : (
-    //       <Tooltip title="Details not yet fetched">
-    //         <Tag color="default">No</Tag>
-    //       </Tooltip>
-    //     ),
-    // },
     {
       title: 'Actions',
       key: 'actions',
       width: 80,
-      fixed: 'right',
-      render: (_, record) => (
+      fixed: 'right' as const,
+      render: (_: any, record: any) => (
         <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
           <Button
             type="primary"
@@ -322,7 +304,6 @@ const WorkUnitHistory = () => {
     <div className={`${styles.pageContainer} ${styles.pageBgLight}`}>
       <Title level={2}>Workunit History</Title>
 
-      {/* Statistics */}
       <Card size="small" className={styles.mb16}>
         <Row gutter={16}>
           <Col span={8}>
@@ -370,58 +351,8 @@ const WorkUnitHistory = () => {
         </Row>
       </Card>
 
-      {/* Filters */}
       <Card className={styles.cardMarginBottom16}>
         <Space direction="vertical" size="middle" className={styles.fullWidth}>
-          {/* Preset Filters */}
-          {/*<Row>*/}
-          {/*  <Space wrap>*/}
-          {/*    <Text strong>Quick Filters:</Text>*/}
-          {/*    <Button*/}
-          {/*      size="small"*/}
-          {/*      onClick={() => {*/}
-          {/*        setFilters({ ...filters, state: 'running' });*/}
-          {/*        handleSearch();*/}
-          {/*      }}>*/}
-          {/*      Running*/}
-          {/*    </Button>*/}
-          {/*    <Button*/}
-          {/*      size="small"*/}
-          {/*      onClick={() => {*/}
-          {/*        setFilters({ ...filters, state: 'failed' });*/}
-          {/*        handleSearch();*/}
-          {/*      }}>*/}
-          {/*      Failed*/}
-          {/*    </Button>*/}
-          {/*    <Button*/}
-          {/*      size="small"*/}
-          {/*      onClick={() => {*/}
-          {/*        setFilters({ ...filters, state: 'running', minClusterTime: 3600 });*/}
-          {/*        handleSearch();*/}
-          {/*      }}>*/}
-          {/*      Long Running (&gt;1h)*/}
-          {/*    </Button>*/}
-          {/*    <Button*/}
-          {/*      size="small"*/}
-          {/*      onClick={() => {*/}
-          {/*        const today = dayjs().startOf('day');*/}
-          {/*        setFilters({ ...filters, dateRange: [today, dayjs()] });*/}
-          {/*        handleSearch();*/}
-          {/*      }}>*/}
-          {/*      Today*/}
-          {/*    </Button>*/}
-          {/*    <Button*/}
-          {/*      size="small"*/}
-          {/*      onClick={() => {*/}
-          {/*        const weekAgo = dayjs().subtract(7, 'day');*/}
-          {/*        setFilters({ ...filters, dateRange: [weekAgo, dayjs()] });*/}
-          {/*        handleSearch();*/}
-          {/*      }}>*/}
-          {/*      Last 7 Days*/}
-          {/*    </Button>*/}
-          {/*  </Space>*/}
-          {/*</Row>*/}
-          {/*<Divider className={styles.dividerTighter} />*/}
           <Row gutter={[16, 16]}>
             <Col span={6}>
               <Input
@@ -439,7 +370,7 @@ const WorkUnitHistory = () => {
                 className={styles.fullWidth}
                 allowClear
                 showSearch
-                filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
+                filterOption={(input, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
                 {clusters.map(cluster => (
                   <Option key={cluster.id} value={cluster.id}>
                     {cluster.name}
@@ -515,7 +446,6 @@ const WorkUnitHistory = () => {
         </Space>
       </Card>
 
-      {/* Table */}
       <Card>
         <Table
           columns={columns}
@@ -535,7 +465,6 @@ const WorkUnitHistory = () => {
             if (record.state === 'failed' || record.state === 'aborted') {
               return 'wu-row-failed';
             }
-            // Orange for long running (>2h)
             if (record.state === 'running' && (record.totalClusterTime || 0) > 7200) {
               return 'wu-row-long-running';
             }

@@ -1,15 +1,12 @@
-// Package Imports
 import React from 'react';
 import { Result, Button } from 'antd';
 import { useHistory } from 'react-router-dom';
 
-// Local Imports
 import styles from './integrations.module.css';
 
-function IntegrationNotFound() {
+const IntegrationNotFound: React.FC = () => {
   const history = useHistory();
 
-  // Handle Go to Integration
   const handleGoToIntegration = () => {
     history.push('/admin/integrations');
   };
@@ -28,6 +25,6 @@ function IntegrationNotFound() {
       />
     </div>
   );
-}
+};
 
 export default IntegrationNotFound;

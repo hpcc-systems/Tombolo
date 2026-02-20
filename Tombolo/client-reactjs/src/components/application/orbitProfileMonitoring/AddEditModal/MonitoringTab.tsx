@@ -16,7 +16,15 @@ const buildStatuses = [
   { label: 'Skipped', value: 'skipped' },
 ];
 
-function MonitoringTab({ form, _isEditing, _selectedMonitoring }) {
+type AnyForm = any;
+
+interface Props {
+  form: AnyForm;
+  _isEditing?: boolean;
+  _selectedMonitoring?: any;
+}
+
+const MonitoringTab: React.FC<Props> = ({ form }) => {
   return (
     <Form form={form} layout="vertical">
       <Form.Item
@@ -58,17 +66,11 @@ function MonitoringTab({ form, _isEditing, _selectedMonitoring }) {
                         name={['monitoringData', 'updateInterval']}
                         rules={[
                           {
-                            // Only validate numeric constraints when a value is provided.
-                            validator: (_, value) => {
-                              if (value === undefined || value === null || value === '') {
-                                return Promise.resolve();
-                              }
-                              if (typeof value !== 'number' || Number.isNaN(value)) {
+                            validator: (_: any, value: any) => {
+                              if (value === undefined || value === null || value === '') return Promise.resolve();
+                              if (typeof value !== 'number' || Number.isNaN(value))
                                 return Promise.reject(new Error('Enter a valid number'));
-                              }
-                              if (value < 0) {
-                                return Promise.reject(new Error('Enter a non-negative number'));
-                              }
+                              if (value < 0) return Promise.reject(new Error('Enter a non-negative number'));
                               return Promise.resolve();
                             },
                           },
@@ -92,9 +94,6 @@ function MonitoringTab({ form, _isEditing, _selectedMonitoring }) {
                     </Col>
                   </Row>
 
-                  {/* Cross-field validator: when updateInterval condition is selected, require at least one of
-                      Update Interval (days) or Update Interval Days to be provided. This Form.Item is hidden
-                      and only rendered when the condition is active so validation runs on submit. */}
                   <Form.Item
                     name={['monitoringData', '_updateInterval_required']}
                     rules={[
@@ -104,9 +103,7 @@ function MonitoringTab({ form, _isEditing, _selectedMonitoring }) {
                           const days = form.getFieldValue(['monitoringData', 'updateIntervalDays']);
                           const hasInterval = interval !== undefined && interval !== null && interval !== '';
                           const hasDays = Array.isArray(days) && days.length > 0;
-                          if (hasInterval || hasDays) {
-                            return Promise.resolve();
-                          }
+                          if (hasInterval || hasDays) return Promise.resolve();
                           return Promise.reject(
                             new Error('Provide either Update Interval (days) or select Update Interval Days')
                           );
@@ -138,6 +135,6 @@ function MonitoringTab({ form, _isEditing, _selectedMonitoring }) {
       </Form.Item>
     </Form>
   );
-}
+};
 
 export default MonitoringTab;

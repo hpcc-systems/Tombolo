@@ -1,7 +1,15 @@
 import React from 'react';
 import { Form, Select } from 'antd';
 
-function NotificationTab({ form, _isEditing, _selectedMonitoring }) {
+type AnyForm = any;
+
+interface Props {
+  form: AnyForm;
+  _isEditing?: boolean;
+  _selectedMonitoring?: any;
+}
+
+const NotificationTab: React.FC<Props> = ({ form }) => {
   return (
     <Form form={form} layout="vertical">
       <Form.Item
@@ -39,6 +47,6 @@ function NotificationTab({ form, _isEditing, _selectedMonitoring }) {
       </Form.Item>
     </Form>
   );
-}
+};
 
 export default NotificationTab;
