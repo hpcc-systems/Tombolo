@@ -105,7 +105,7 @@ beforeEach(() => {
 
 describe('MonitoringActionButton', () => {
   it('disables bulk items when fewer than 2 rows selected', () => {
-    render(<MonitoringActionButton selectedRows={[{ id: 1 }]} />);
+    render(<MonitoringActionButton selectedRows={[{ id: '1' }]} />);
 
     // Dropdown menu is always rendered by the mock
     expect(screen.getByTestId('menu')).toBeInTheDocument();
@@ -120,7 +120,7 @@ describe('MonitoringActionButton', () => {
     const onAdd = vi.fn();
     const onBulkEdit = vi.fn();
 
-    render(<MonitoringActionButton selectedRows={[{ id: 1 }, { id: 2 }]} onAdd={onAdd} onBulkEdit={onBulkEdit} />);
+    render(<MonitoringActionButton selectedRows={[{ id: '1' }, { id: '2' }]} onAdd={onAdd} onBulkEdit={onBulkEdit} />);
 
     await user.click(screen.getByRole('button', { name: 'Add New' }));
     expect(onAdd).toHaveBeenCalledTimes(1);
@@ -135,7 +135,7 @@ describe('MonitoringActionButton', () => {
 
     render(
       <MonitoringActionButton
-        selectedRows={[{ id: 1 }, { id: 2 }]}
+        selectedRows={[{ id: '1' }, { id: '2' }]}
         showBulkApproveReject
         onBulkApproveReject={onBulkApproveReject}
       />
@@ -169,7 +169,7 @@ describe('MonitoringActionButton', () => {
     const user = userEvent.setup();
     const onBulkDelete = vi.fn();
 
-    render(<MonitoringActionButton selectedRows={[{ id: 1 }, { id: 2 }]} onBulkDelete={onBulkDelete} />);
+    render(<MonitoringActionButton selectedRows={[{ id: '1' }, { id: '2' }]} onBulkDelete={onBulkDelete} />);
 
     // Popconfirm is rendered inline; click confirm to trigger onConfirm
     const confirmButtons = screen.getAllByRole('button', { name: 'confirm' });
@@ -177,7 +177,7 @@ describe('MonitoringActionButton', () => {
     // For simplicity, click the last one which corresponds to Popconfirm in menu items order
     await user.click(confirmButtons[confirmButtons.length - 1]);
 
-    expect(onBulkDelete).toHaveBeenCalledWith([1, 2]);
+    expect(onBulkDelete).toHaveBeenCalledWith(['1', '2']);
   });
 
   it('bulk start/pause applies selected action and shows success; error path shows error', async () => {
@@ -185,7 +185,7 @@ describe('MonitoringActionButton', () => {
     const onBulkStartPause = vi.fn().mockResolvedValue(undefined);
     // success path
     const { rerender } = render(
-      <MonitoringActionButton selectedRows={[{ id: 1 }, { id: 2 }]} onBulkStartPause={onBulkStartPause} />
+      <MonitoringActionButton selectedRows={[{ id: '1' }, { id: '2' }]} onBulkStartPause={onBulkStartPause} />
     );
 
     // Popover content is rendered into data-testid="popover"; choose action by interacting with its select.
@@ -201,12 +201,12 @@ describe('MonitoringActionButton', () => {
 
     await waitFor(() => expect(onBulkStartPause).toHaveBeenCalled());
     const call = onBulkStartPause.mock.calls[0][0];
-    expect(call.ids).toEqual([1, 2]);
+    expect(call.ids).toEqual(['1', '2']);
     // Component doesn't show success notification, it only closes the popover on success
 
     // Error path: make handler throw
     const failing = vi.fn().mockRejectedValue(new Error('nope'));
-    rerender(<MonitoringActionButton selectedRows={[{ id: 7 }, { id: 8 }]} onBulkStartPause={failing} />);
+    rerender(<MonitoringActionButton selectedRows={[{ id: '7' }, { id: '8' }]} onBulkStartPause={failing} />);
     const applyBtn2 = screen.getByRole('button', { name: 'Apply' });
     await user.click(applyBtn2);
 

@@ -49,7 +49,7 @@ describe('useMonitoringFilters', () => {
 
     const { result } = renderHook(() =>
       useMonitoringFilters(
-        form as FormInstance,
+        form as unknown as FormInstance,
         setFiltersVisible,
         setFilters,
         setSelectedDomain,
@@ -74,7 +74,7 @@ describe('useMonitoringFilters', () => {
 
     const { result } = renderHook(() =>
       useMonitoringFilters(
-        form as FormInstance,
+        form as unknown as FormInstance,
         setFiltersVisible,
         setFilters,
         setSelectedDomain,
@@ -101,7 +101,7 @@ describe('useMonitoringFilters', () => {
 
     const { result } = renderHook(() =>
       useMonitoringFilters(
-        form as FormInstance,
+        form as unknown as FormInstance,
         vi.fn(),
         vi.fn(),
         setSelectedDomain,
@@ -131,7 +131,7 @@ describe('useMonitoringFilters', () => {
             return {};
           },
           resetFields() {},
-        } as FormInstance,
+        } as unknown as FormInstance,
         setFiltersVisible,
         vi.fn(),
         vi.fn(),
@@ -156,7 +156,18 @@ describe('useMonitoringFilters', () => {
     const setFilters = vi.fn();
 
     const { result } = renderHook(() =>
-      useMonitoringFilters(form as FormInstance, vi.fn(), setFilters, vi.fn(), [], [], null, [], lsKey, visibleLsKey)
+      useMonitoringFilters(
+        form as unknown as FormInstance,
+        vi.fn(),
+        setFilters,
+        vi.fn(),
+        [],
+        [],
+        null,
+        [],
+        lsKey,
+        visibleLsKey
+      )
     );
 
     act(() => {
@@ -187,7 +198,7 @@ describe('useMonitoringFilters', () => {
     // Case A: no selectedDomain -> should use allProductCategories
     const { result: resA } = renderHook(() =>
       useMonitoringFilters(
-        form as FormInstance,
+        form as unknown as FormInstance,
         vi.fn(),
         vi.fn(),
         vi.fn(),
@@ -230,7 +241,7 @@ describe('useMonitoringFilters', () => {
     // Case B: with selectedDomain -> should use productCategories labels
     const { result: resB } = renderHook(() =>
       useMonitoringFilters(
-        form as FormInstance,
+        form as unknown as FormInstance,
         vi.fn(),
         vi.fn(),
         vi.fn(),

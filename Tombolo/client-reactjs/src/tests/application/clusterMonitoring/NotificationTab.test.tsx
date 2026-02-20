@@ -15,7 +15,7 @@ describe('ClusterMonitoring NotificationTab', () => {
   it('renders NotificationContacts with provided form', () => {
     const Wrapper: React.FC = () => {
       const [form] = Form.useForm();
-      return <NotificationTab form={form as FormInstance} />;
+      return <NotificationTab form={form as unknown as FormInstance} />;
     };
 
     render(<Wrapper />);

@@ -105,7 +105,7 @@ describe('ApproveRejectModal', () => {
         setSelectedMonitoring={() => {}}
         setMonitoring={() => {}}
         evaluateMonitoring={() => {}}
-        selectedRows={[{ id: 1 }]}
+        selectedRows={[{ id: '1' }]}
         getContainer={() => document.body}
       />
     );
@@ -125,11 +125,11 @@ describe('ApproveRejectModal', () => {
   });
 
   it('submits approve action with isActive true by default', async () => {
-    const evaluateMonitoring = vi.fn().mockResolvedValue({ data: { id: 10 }, message: 'ok' });
+    const evaluateMonitoring = vi.fn().mockResolvedValue({ data: { id: '10' }, message: 'ok' });
     const setMonitoring = vi.fn();
     const onCancel = vi.fn();
 
-    const { user } = setup({ evaluateMonitoring, setMonitoring, onCancel, selectedMonitoring: { id: 10 } });
+    const { user } = setup({ evaluateMonitoring, setMonitoring, onCancel, selectedMonitoring: { id: '10' } });
 
     // open Select and choose Approve
     const actionSelect = screen.getByLabelText('Action');
@@ -152,7 +152,7 @@ describe('ApproveRejectModal', () => {
       approvalStatus: APPROVED,
       approverComment: 'Looks good',
       isActive: true,
-      ids: [10],
+      ids: ['10'],
     });
 
     await waitFor(() => expect(notification.success).toHaveBeenCalled());
@@ -160,10 +160,10 @@ describe('ApproveRejectModal', () => {
   });
 
   it('forces isActive false and disables checkbox when Reject is selected', async () => {
-    const evaluateMonitoring = vi.fn().mockResolvedValue({ data: { id: 21 }, message: 'saved' });
+    const evaluateMonitoring = vi.fn().mockResolvedValue({ data: { id: '21' }, message: 'saved' });
     const onCancel = vi.fn();
 
-    const { user } = setup({ evaluateMonitoring, onCancel, selectedMonitoring: { id: 21 } });
+    const { user } = setup({ evaluateMonitoring, onCancel, selectedMonitoring: { id: '21' } });
 
     // choose Reject
     const actionSelect = screen.getByLabelText('Action');
@@ -188,11 +188,11 @@ describe('ApproveRejectModal', () => {
   });
 
   it('handles array response from evaluateMonitoring by updating setMonitoring and selectedMonitoring', async () => {
-    const updated = [{ id: 1, approvalStatus: APPROVED }];
+    const updated = [{ id: '1', approvalStatus: APPROVED }];
     const evaluateMonitoring = vi.fn().mockResolvedValue({ data: updated, message: 'updated' });
     const setMonitoring = vi.fn(updater => {
       // simulate updater call with prev
-      const prev = [{ id: 1, approvalStatus: 'pending' }];
+      const prev = [{ id: '1', approvalStatus: 'pending' }];
       updater(prev);
     });
     const setSelectedMonitoring = vi.fn();
@@ -203,7 +203,7 @@ describe('ApproveRejectModal', () => {
       setMonitoring,
       setSelectedMonitoring,
       onCancel,
-      selectedMonitoring: { id: 1 },
+      selectedMonitoring: { id: '1' },
     });
 
     // Approve path
@@ -222,7 +222,7 @@ describe('ApproveRejectModal', () => {
 
   it('shows evaluated view and toggles back to form on Modify', async () => {
     const selectedMonitoring = {
-      id: 5,
+      id: '5',
       approvalStatus: APPROVED,
       approver: { firstName: 'Jane', lastName: 'Doe', email: 'jane@doe.com' },
       approvedAt: new Date().toISOString(),
@@ -252,7 +252,7 @@ describe('ApproveRejectModal', () => {
       onSuccess,
       onCancel,
       setSelectedMonitoring,
-      selectedMonitoring: { id: 99 },
+      selectedMonitoring: { id: '99' },
     });
 
     const actionSelect = screen.getByLabelText('Action');
@@ -277,7 +277,7 @@ describe('ApproveRejectModal', () => {
       onSuccess,
       onCancel,
       setSelectedMonitoring,
-      selectedMonitoring: { id: 99 },
+      selectedMonitoring: { id: '99' },
     });
 
     const actionSelect = screen.getByLabelText('Action');

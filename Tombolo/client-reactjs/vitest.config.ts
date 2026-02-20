@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: './src/tests/setupTests.js',
+    setupFiles: './src/tests/setupTests.ts',
     coverage: {
       enabled: true,
       provider: 'v8',
@@ -25,7 +25,6 @@ export default defineConfig({
         'eslint.config.mjs',
       ],
     },
-    // Better test isolation configuration
     pool: 'forks',
     poolOptions: {
       forks: {
@@ -34,21 +33,14 @@ export default defineConfig({
     },
     isolate: true,
     maxConcurrency: 1,
-    sequence: {
-      sequential: true,
-    },
-    // Add error reporting configuration
-    reporter: ['verbose', 'json'],
+    reporters: ['verbose', 'json'],
     outputFile: {
       json: './test-results.json',
     },
-    // Increase timeout to help with debugging
     testTimeout: 10000,
     hookTimeout: 10000,
-    // Clear mocks and DOM after each test
     clearMocks: true,
     restoreMocks: true,
-    // Better environment setup
     env: {
       NODE_ENV: 'test',
     },
@@ -59,7 +51,6 @@ export default defineConfig({
       '~': path.resolve(__dirname, '../../node_modules'),
     },
   },
-  // Ensure proper module resolution for monorepo
   optimizeDeps: {
     include: [
       '@ant-design/plots',

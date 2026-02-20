@@ -95,7 +95,7 @@ import LandingZoneMonitoringTable from '@/components/application/LandingZoneMoni
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
 const rowApproved = {
-  id: 1,
+  id: '1',
   monitoringName: 'LZ Mon A',
   description: 'Desc',
   'cluster.name': 'Cluster One',
@@ -107,7 +107,7 @@ const rowApproved = {
   approvalStatus: APPROVAL_STATUS.APPROVED,
 };
 
-const rowPending = { ...rowApproved, id: 2, isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
+const rowPending = { ...rowApproved, id: '2', isActive: false, approvalStatus: APPROVAL_STATUS.PENDING };
 
 describe('LandingZoneMonitoringTable', () => {
   beforeEach(() => {

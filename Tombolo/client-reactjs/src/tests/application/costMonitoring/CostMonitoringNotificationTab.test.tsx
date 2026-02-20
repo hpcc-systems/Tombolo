@@ -56,7 +56,7 @@ describe('CostMonitoringNotificationTab', () => {
 
   it('renders NotificationContacts and shows euro symbol when first selected cluster has EUR', () => {
     const form = makeForm('clusters', ['c1']);
-    render(<CostMonitoringNotificationTab form={form as FormInstance} clusters={clusters} />);
+    render(<CostMonitoringNotificationTab form={form as unknown as FormInstance} clusters={clusters} />);
 
     // Presence of NotificationContacts
     expect(screen.getByTestId('notification-contacts')).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('CostMonitoringNotificationTab', () => {
 
   it('shows users scope labels in summed dropdown', () => {
     const form = makeForm('users', ['c2']);
-    render(<CostMonitoringNotificationTab form={form as FormInstance} clusters={clusters} />);
+    render(<CostMonitoringNotificationTab form={form as unknown as FormInstance} clusters={clusters} />);
 
     // Users scope renders "Per user" and "Total"
     expect(screen.getByTestId('addon-after')).toHaveTextContent('Per user');

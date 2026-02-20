@@ -104,21 +104,21 @@ import ClusterMonitoringTable from '@/components/application/clusterMonitoring/C
 import type { ClusterMonitoringDTO } from '@tombolo/shared';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
 
-const rowApproved: ClusterMonitoringDTO = {
-  id: 1,
+const rowApproved = {
+  id: '1',
   monitoringName: 'Cluster Mon A',
   cluster: { name: 'Cluster One', thor_host: 'h', thor_port: 123 },
   clusterMonitoringType: ['CPU'],
   isActive: true,
   approvalStatus: APPROVAL_STATUS.APPROVED,
-};
+} as unknown as ClusterMonitoringDTO;
 
-const rowPending: ClusterMonitoringDTO = {
+const rowPending = {
   ...rowApproved,
-  id: 2,
+  id: '2',
   isActive: false,
   approvalStatus: APPROVAL_STATUS.PENDING,
-};
+} as unknown as ClusterMonitoringDTO;
 
 describe('ClusterMonitoringTable', () => {
   beforeEach(() => {

@@ -366,7 +366,7 @@ describe('Register', () => {
     });
 
     it('successfully verifies email and redirects to home', async () => {
-      const mockUser = { id: 1, email: 'test@example.com' };
+      const mockUser = { id: '1', email: 'test@example.com' };
       authService.verifyEmail.mockResolvedValue(mockUser);
 
       renderWithProviders(<Register />, { route: '/register?regId=test-reg-id' });
@@ -489,7 +489,7 @@ describe('Register', () => {
 
   describe('Edge Cases', () => {
     it('handles regId parameter parsing correctly', async () => {
-      authService.verifyEmail.mockResolvedValue({ id: 1 });
+      authService.verifyEmail.mockResolvedValue({ id: '1' });
 
       renderWithProviders(<Register />, { route: '/register?regId=test123&other=param' });
 

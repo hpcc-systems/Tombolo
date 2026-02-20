@@ -33,7 +33,10 @@ describe('JobMonitoringNotificationTab', () => {
     const form = {};
     const intermittentScheduling = { frequency: 'anytime' };
     render(
-      <JobMonitoringNotificationTab form={form as FormInstance} intermittentScheduling={intermittentScheduling} />
+      <JobMonitoringNotificationTab
+        form={form as unknown as FormInstance}
+        intermittentScheduling={intermittentScheduling}
+      />
     );
 
     expect(screen.getByTestId('notification-contacts')).toBeInTheDocument();

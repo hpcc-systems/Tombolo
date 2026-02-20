@@ -13,8 +13,8 @@ import NotificationTab from '@/components/application/LandingZoneMonitoring/AddE
 describe('LandingZoneMonitoring NotificationTab', () => {
   it('renders NotificationContacts with provided form', () => {
     const Wrapper: React.FC = () => {
-      const [form] = Form.useForm();
-      return <NotificationTab form={form as FormInstance} />;
+      const [form] = Form.useForm() as unknown as [FormInstance, any];
+      return <NotificationTab form={form} />;
     };
 
     render(<Wrapper />);

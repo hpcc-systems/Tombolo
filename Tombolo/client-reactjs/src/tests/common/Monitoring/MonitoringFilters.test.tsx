@@ -64,8 +64,8 @@ beforeEach(() => {
 const baseOptions = {
   approvalStatusOptions: ['pending', 'approved', 'rejected'],
   activeStatusOptions: ['Active', 'Inactive'],
-  domainOptions: [{ id: 1, name: 'Domain A' }],
-  productOptions: [{ id: 10, name: 'Product X' }],
+  domainOptions: [{ id: '1', name: 'Domain A' }],
+  productOptions: [{ id: '10', name: 'Product X' }],
   clusterOptions: [
     { id: 'c1', name: 'alpha' },
     { id: 'c2', name: 'beta' },

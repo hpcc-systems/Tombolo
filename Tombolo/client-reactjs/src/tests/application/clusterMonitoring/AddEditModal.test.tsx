@@ -55,8 +55,8 @@ vi.mock('@/components/application/clusterMonitoring/AddEditModal/NotificationTab
 
 vi.mock('@/services/clusterMonitoring.service', () => ({
   default: {
-    create: vi.fn().mockResolvedValue({ data: { id: 111 } }),
-    update: vi.fn().mockResolvedValue({ data: { id: 222 } }),
+    create: vi.fn().mockResolvedValue({ data: { id: '111' } }),
+    update: vi.fn().mockResolvedValue({ data: { id: '222' } }),
   },
 }));
 
@@ -99,7 +99,7 @@ describe('Cluster AddEditModal', () => {
       clusterMonitoring: [],
       setEditingMonitoring: vi.fn(),
       editingMonitoring: false,
-      selectedMonitoring: { id: 5 },
+      selectedMonitoring: { id: '5' },
       setDuplicatingData: vi.fn(),
       isDuplicating: false,
       monitoringType: [],
@@ -145,7 +145,7 @@ describe('Cluster AddEditModal', () => {
     expect(screen.getByText(/Submit|Update/)).toBeInTheDocument();
 
     // Editing path: expect Submit and updateClusterMonitoring called
-    rerender(<AddEditModal {...baseProps} editingMonitoring selectedMonitoring={{ id: 77 }} />);
+    rerender(<AddEditModal {...baseProps} editingMonitoring selectedMonitoring={{ id: '77' }} />);
     const nextBtn2 = screen.queryByText('Next');
     if (nextBtn2) {
       await user.click(nextBtn2);

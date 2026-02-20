@@ -57,7 +57,7 @@ describe('FileMonitoringNotificationTab', () => {
     const { rerender } = render(
       (
         <FileMonitoringNotificationTab
-          form={form as FormInstance}
+          form={form as unknown as FormInstance}
           monitoringFileType="stdLogicalFile"
           selectedNotificationCondition={selectedNotificationCondition}
           setSelectedNotificationCondition={setSelectedNotificationCondition}
@@ -79,7 +79,7 @@ describe('FileMonitoringNotificationTab', () => {
     rerender(
       (
         <FileMonitoringNotificationTab
-          form={form as FormInstance}
+          form={form as unknown as FormInstance}
           monitoringFileType="superFile"
           selectedNotificationCondition={selectedNotificationCondition}
           setSelectedNotificationCondition={setSelectedNotificationCondition}

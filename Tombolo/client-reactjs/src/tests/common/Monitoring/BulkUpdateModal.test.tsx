@@ -46,7 +46,7 @@ beforeEach(() => {
 
 const rows = [
   {
-    id: 1,
+    id: '1',
     monitoringName: 'A',
     metaData: {
       notificationMetaData: {
@@ -57,7 +57,7 @@ const rows = [
     },
   },
   {
-    id: 2,
+    id: '2',
     monitoringName: 'B',
     metaData: {
       notificationMetaData: {
@@ -84,7 +84,7 @@ describe('BulkUpdateModal', () => {
   it('requires primary contacts on save and blocks submission', async () => {
     const rowsMissingPrimary = [
       {
-        id: 1,
+        id: '1',
         monitoringName: 'A',
         metaData: { notificationMetaData: { primaryContacts: [], secondaryContacts: ['s@x.com'], notifyContacts: [] } },
       },

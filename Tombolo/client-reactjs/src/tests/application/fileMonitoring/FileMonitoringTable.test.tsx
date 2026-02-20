@@ -111,8 +111,8 @@ const clusters = [
 const domains = [{ value: 'd1', label: 'Domain One' }];
 const allProductCategories = [{ id: 'p1', name: 'Product Long Name', shortCode: 'PLN' }];
 
-const rowApproved: FileMonitoringDTO = {
-  id: 1,
+const rowApproved = {
+  id: '1',
   monitoringName: 'File Mon A',
   description: 'Desc',
   cluster: { name: 'Cluster One', thor_host: 'h', thor_port: 123 },
@@ -121,15 +121,15 @@ const rowApproved: FileMonitoringDTO = {
   creator: { firstName: 'Jane', lastName: 'Doe', email: 'jane@x.com' },
   isActive: true,
   approvalStatus: APPROVAL_STATUS.APPROVED,
-};
+} as unknown as FileMonitoringDTO;
 
-const rowPending: FileMonitoringDTO = {
+const rowPending = {
   ...rowApproved,
-  id: 2,
+  id: '2',
   clusterId: 'c2',
   isActive: false,
   approvalStatus: APPROVAL_STATUS.PENDING,
-};
+} as unknown as FileMonitoringDTO;
 
 describe('FileMonitoringTable', () => {
   beforeEach(() => {

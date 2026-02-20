@@ -118,8 +118,8 @@ const clusters = [
 const domains = [{ value: 'd1', label: 'Domain One' }];
 const allProductCategories = [{ id: 'p1', name: 'Product Long Name', shortCode: 'PLN' }];
 
-const rowApproved: CostMonitoringDTO = {
-  id: 1,
+const rowApproved = {
+  id: '1',
   monitoringName: 'Cost Mon A',
   description: 'Desc',
   clusterIds: ['c1'],
@@ -127,15 +127,15 @@ const rowApproved: CostMonitoringDTO = {
   creator: { firstName: 'Jane', lastName: 'Doe', email: 'jane@x.com' },
   isActive: true,
   approvalStatus: 'approved',
-};
+} as unknown as CostMonitoringDTO;
 
-const rowPending: CostMonitoringDTO = {
+const rowPending = {
   ...rowApproved,
-  id: 2,
+  id: '2',
   clusterIds: ['c2'],
   isActive: true,
   approvalStatus: 'pending',
-};
+} as unknown as CostMonitoringDTO;
 
 beforeEach(() => {
   vi.clearAllMocks();

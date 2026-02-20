@@ -110,7 +110,7 @@ import OrbitMonitoringTable from '@/components/application/orbitProfileMonitorin
 const OrbitMonitoringTableAny = OrbitMonitoringTable as any;
 
 const rowApproved = {
-  id: 1,
+  id: '1',
   monitoringName: 'Orbit Mon A',
   description: 'Desc',
   metaData: {

@@ -117,8 +117,8 @@ const clusters = [
 const domains = [{ value: 'd1', label: 'Domain One' }];
 const allProductCategories = [{ id: 'p1', name: 'Product Long Name', shortCode: 'PLN' }];
 
-const rowApproved: JobMonitoringDTO = {
-  id: 1,
+const rowApproved = {
+  id: '1',
   monitoringName: 'Job Mon A',
   description: 'Desc',
   clusterId: 'c1',
@@ -127,15 +127,15 @@ const rowApproved: JobMonitoringDTO = {
   creator: { firstName: 'Jane', lastName: 'Doe', email: 'jane@x.com' },
   isActive: true,
   approvalStatus: APPROVAL_STATUS.APPROVED,
-};
+} as unknown as JobMonitoringDTO;
 
-const rowPending: JobMonitoringDTO = {
+const rowPending = {
   ...rowApproved,
-  id: 2,
+  id: '2',
   clusterId: 'c2',
   isActive: false,
   approvalStatus: APPROVAL_STATUS.PENDING,
-};
+} as unknown as JobMonitoringDTO;
 
 describe('JobMonitoringTable', () => {
   beforeEach(() => {
