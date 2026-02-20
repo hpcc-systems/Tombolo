@@ -242,7 +242,7 @@ async function toggleJobMonitoring(req: Request, res: Response) {
 
     // Filter out the job monitorings that are not approved
     const approvedJobMonitorings = jobMonitorings.filter(
-      jobMonitoring => jobMonitoring.approvalStatus === 'Approved' // Issue created to use Constant
+      jobMonitoring => jobMonitoring.approvalStatus === APPROVAL_STATUS.APPROVED
     );
 
     if (approvedJobMonitorings.length === 0) {
