@@ -1,9 +1,10 @@
+import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { WorkUnit, WorkUnitDetails, sequelize } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 // Build hierarchy from flat details (graphs, scoped by parent prefixes)
-const buildScopeHierarchy = details => {
+const buildScopeHierarchy = (details: any) => {
   const map = new Map();
   const roots = [];
   const orphans = [];
@@ -39,7 +40,7 @@ const buildScopeHierarchy = details => {
   return [...roots, ...orphans];
 };
 
-async function getWorkunits(req, res) {
+async function getWorkunits(req: Request, res: Response) {
   try {
     const {
       page = 1,
@@ -55,24 +56,24 @@ async function getWorkunits(req, res) {
       order = 'desc',
     } = req.query;
 
-    const offset = (page - 1) * limit;
-    const where = {};
+    const offset = (Number(page) - 1) * Number(limit);
+    const where: any = {};
 
     if (clusterId) where.clusterId = clusterId;
-    if (state) where.state = { [Op.in]: state.split(',') };
+    if (state) where.state = { [Op.in]: String(state).split(',') };
     if (owner) where.owner = { [Op.like]: `%${owner}%` };
     if (jobName) where.jobName = { [Op.like]: `%${jobName}%` };
     if (dateFrom) {
       where.workUnitTimestamp = where.workUnitTimestamp || {};
-      where.workUnitTimestamp[Op.gte] = new Date(dateFrom);
+      where.workUnitTimestamp[Op.gte] = new Date(String(dateFrom));
     }
     if (dateTo) {
       where.workUnitTimestamp = where.workUnitTimestamp || {};
-      where.workUnitTimestamp[Op.lte] = new Date(dateTo);
+      where.workUnitTimestamp[Op.lte] = new Date(String(dateTo));
     }
     if (costAbove) {
       where.totalCost = where.totalCost || {};
-      where.totalCost[Op.gt] = parseFloat(costAbove);
+      where.totalCost[Op.gt] = parseFloat(String(costAbove));
     }
     if (req.query.detailsFetched !== undefined) {
       if (req.query.detailsFetched === 'true') {
@@ -96,16 +97,16 @@ async function getWorkunits(req, res) {
         'detailsFetchedAt',
         [sequelize.literal('detailsFetchedAt IS NOT NULL'), 'hasDetails'],
       ],
-      order: [[sort, order]],
-      limit: parseInt(limit),
+      order: [[String(sort), String(order)]],
+      limit: parseInt(String(limit)),
       offset,
       raw: true,
     });
 
     return sendSuccess(res, {
       total: count,
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: parseInt(String(page)),
+      limit: parseInt(String(limit)),
       data: rows,
     });
   } catch (err) {
@@ -114,10 +115,14 @@ async function getWorkunits(req, res) {
   }
 }
 
-async function getWorkunit(req, res) {
+async function getWorkunit(req: Request, res: Response) {
   try {
+    const { wuid, clusterId } = req.params as {
+      wuid: string;
+      clusterId: string;
+    };
     const wu = await WorkUnit.findOne({
-      where: { wuId: req.params.wuid, clusterId: req.params.clusterId },
+      where: { wuId: wuid, clusterId },
       attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] },
     });
 
@@ -130,10 +135,14 @@ async function getWorkunit(req, res) {
   }
 }
 
-async function getWorkunitDetails(req, res) {
+async function getWorkunitDetails(req: Request, res: Response) {
   try {
+    const { wuid, clusterId } = req.params as {
+      wuid: string;
+      clusterId: string;
+    };
     const details = await WorkUnitDetails.findAll({
-      where: { wuId: req.params.wuid, clusterId: req.params.clusterId },
+      where: { wuId: wuid, clusterId },
       order: [['id', 'ASC']],
     });
 
@@ -144,8 +153,8 @@ async function getWorkunitDetails(req, res) {
     const graphs = buildScopeHierarchy(details);
 
     return sendSuccess(res, {
-      wuId: req.params.wuid,
-      clusterId: req.params.clusterId,
+      wuId: wuid,
+      clusterId,
       fetchedAt: details[0].createdAt || new Date(),
       graphs,
     });
@@ -155,12 +164,16 @@ async function getWorkunitDetails(req, res) {
   }
 }
 
-async function getWorkunitHotspots(req, res) {
+async function getWorkunitHotspots(req: Request, res: Response) {
   try {
-    const limit = parseInt(req.query.limit) || 15;
+    const limit = parseInt(String(req.query.limit || '15'));
+    const { wuid, clusterId } = req.params as {
+      wuid: string;
+      clusterId: string;
+    };
 
     const details = await WorkUnitDetails.findAll({
-      where: { wuId: req.params.wuid, clusterId: req.params.clusterId },
+      where: { wuId: wuid, clusterId },
       order: [['TimeElapsed', 'DESC']],
       limit,
     });
@@ -175,10 +188,14 @@ async function getWorkunitHotspots(req, res) {
   }
 }
 
-async function getWorkunitTimeline(req, res) {
+async function getWorkunitTimeline(req: Request, res: Response) {
   try {
+    const { wuid, clusterId } = req.params as {
+      wuid: string;
+      clusterId: string;
+    };
     const details = await WorkUnitDetails.findAll({
-      where: { wuId: req.params.wuid, clusterId: req.params.clusterId },
+      where: { wuId: wuid, clusterId },
       order: [['TimeFirstRow', 'ASC']],
     });
 
@@ -192,13 +209,16 @@ async function getWorkunitTimeline(req, res) {
   }
 }
 
-async function getJobHistoryByJobName(req, res) {
+async function getJobHistoryByJobName(req: Request, res: Response) {
   try {
-    const { clusterId, jobName } = req.params;
+    const { clusterId, jobName } = req.params as {
+      clusterId: string;
+      jobName: string;
+    };
     const { startDate, limit = 100 } = req.query;
 
     // Build where clause
-    const where = {
+    const where: any = {
       clusterId,
       jobName,
     };
@@ -206,7 +226,7 @@ async function getJobHistoryByJobName(req, res) {
     // Add date filter if provided
     if (startDate) {
       where.workUnitTimestamp = {
-        [Op.gte]: new Date(startDate),
+        [Op.gte]: new Date(String(startDate)),
       };
     }
 
@@ -214,7 +234,7 @@ async function getJobHistoryByJobName(req, res) {
     const workunits = await WorkUnit.findAll({
       where,
       order: [['workUnitTimestamp', 'DESC']], // Most recent first
-      limit: parseInt(limit),
+      limit: parseInt(String(limit)),
       attributes: [
         'wuId',
         'jobName',
@@ -234,19 +254,22 @@ async function getJobHistoryByJobName(req, res) {
   }
 }
 
-async function getJobHistoryByJobNameWStats(req, res) {
+async function getJobHistoryByJobNameWStats(req: Request, res: Response) {
   try {
-    const { clusterId, jobName } = req.params;
+    const { clusterId, jobName } = req.params as {
+      clusterId: string;
+      jobName: string;
+    };
     const { startDate } = req.query;
 
-    const where = {
+    const where: any = {
       clusterId,
       jobName,
     };
 
     if (startDate) {
       where.workUnitTimestamp = {
-        [Op.gte]: new Date(startDate),
+        [Op.gte]: new Date(String(startDate)),
       };
     }
 
@@ -296,9 +319,12 @@ async function getJobHistoryByJobNameWStats(req, res) {
   }
 }
 
-async function comparePreviousByWuid(req, res) {
+async function comparePreviousByWuid(req: Request, res: Response) {
   try {
-    const { clusterId, wuid } = req.params;
+    const { clusterId, wuid } = req.params as {
+      clusterId: string;
+      wuid: string;
+    };
 
     // Get current workunit
     const current = await WorkUnit.findOne({
