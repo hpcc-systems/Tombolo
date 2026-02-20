@@ -13,7 +13,7 @@ const workunitDashboardService = {
    *   clusterBreakdown: Array<{ cluster, cost, count }>,
    *   ownerBreakdown: Array<{ owner, cost, count }>,
    *   problematicJobs: Array<{ wuid, jobName, issue, severity, cost, owner, cluster }>,
-   *   workunits: Array<{ wuid, jobName, cluster, owner, state, cost, cpuHours, duration, startTime, costBreakdown }>
+   *   workunits: Array<{ wuid, jobName, cluster, owner, state, cost, cpuHours, duration, endTime, costBreakdown }>
    * }>}
    */
   getDashboardData: async params => {

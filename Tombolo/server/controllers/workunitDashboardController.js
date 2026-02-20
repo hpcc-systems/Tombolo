@@ -12,7 +12,8 @@ import logger from '../config/logger.js';
  */
 async function getDashboardData(req, res) {
   try {
-    const { startDate, endDate, clusterId = null } = req.query;
+    const { startDate, endDate } = req.query;
+    const clusterId = req.query.clusterId || null;
 
     logger.debug(
       `Fetching dashboard data: ${startDate} to ${endDate}, cluster: ${clusterId || 'all'}`

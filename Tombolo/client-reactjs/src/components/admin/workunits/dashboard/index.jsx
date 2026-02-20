@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ConfigProvider, theme as antdTheme, Row, Col, Card, Spin, Alert } from 'antd';
 import { ClusterOutlined, DashboardOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -27,8 +27,8 @@ export default function DashboardPage() {
         setLoading(true);
         setError(null);
         const data = await workunitDashboardService.getDashboardData({
-          startDate: startDate.format('YYYY-MM-DD HH:mm:ss'),
-          endDate: endDate.format('YYYY-MM-DD HH:mm:ss'),
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
         });
         setDashboardData(data);
       } catch (err) {
@@ -48,6 +48,8 @@ export default function DashboardPage() {
   const dailyCosts = dashboardData?.dailyCosts || [];
   const clusterCosts = dashboardData?.clusterBreakdown || [];
   const ownerCosts = dashboardData?.ownerBreakdown || [];
+
+  const totalOwnerCost = useMemo(() => ownerCosts.reduce((sum, owner) => sum + owner.cost, 0), [ownerCosts]);
 
   const handlePresetChange = p => setPreset(p);
   const handleRangeChange = (start, end) => {
@@ -173,7 +175,7 @@ export default function DashboardPage() {
             <>
               {/* Cost Summary Stats */}
               <div style={{ marginBottom: 24 }}>
-                <CostSummary workunits={workunits} summary={summary} />
+                <CostSummary summary={summary} />
               </div>
 
               {/* Charts Row */}
@@ -213,7 +215,6 @@ export default function DashboardPage() {
                         gap: 12,
                       }}>
                       {ownerCosts.map(o => {
-                        const totalOwnerCost = ownerCosts.reduce((s, x) => s + x.cost, 0);
                         const pct = totalOwnerCost > 0 ? (o.cost / totalOwnerCost) * 100 : 0;
                         return (
                           <div

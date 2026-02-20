@@ -25,10 +25,10 @@ export default function WorkunitTable({ workunits }) {
       const q = search.toLowerCase();
       data = data.filter(
         wu =>
-          wu.jobName.toLowerCase().includes(q) ||
-          wu.wuid.toLowerCase().includes(q) ||
-          wu.owner.toLowerCase().includes(q) ||
-          wu.cluster.toLowerCase().includes(q)
+          (wu.jobName || '').toLowerCase().includes(q) ||
+          (wu.wuid || '').toLowerCase().includes(q) ||
+          (wu.owner || '').toLowerCase().includes(q) ||
+          (wu.cluster || '').toLowerCase().includes(q)
       );
     }
     if (stateFilter) {
@@ -255,7 +255,7 @@ export default function WorkunitTable({ workunits }) {
       <Table
         columns={columns}
         dataSource={filtered}
-        rowKey="wuid"
+        rowKey={record => `${record.clusterId}:${record.wuid}`}
         size="small"
         scroll={{ x: 1200 }}
         pagination={{
