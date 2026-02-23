@@ -1,4 +1,4 @@
-import { IOptions, Scope, Workunit } from '@hpcc-js/comms';
+import { IOptions, WsWorkunits, Workunit } from '@hpcc-js/comms';
 import { getClusters, getClusterOptions } from '@tombolo/core';
 import { WorkUnit, WorkUnitDetails } from '@tombolo/db';
 import {
@@ -265,7 +265,7 @@ const relevantMetricsSet = new Set(relevantMetrics);
  * @param {string} wuId - The workunit ID for error tracking
  */
 function extractPerformanceMetrics(
-  scope: Scope,
+  scope: WsWorkunits.Scope,
   clusterId: string,
   wuId: string
 ) {
@@ -373,7 +373,11 @@ function extractPerformanceMetrics(
  * Processes a single scope and converts it to a DB row
  * Returns null if scope should be filtered out
  */
-function processScopeToRow(scope: Scope, clusterId: string, wuId: string) {
+function processScopeToRow(
+  scope: WsWorkunits.Scope,
+  clusterId: string,
+  wuId: string
+) {
   // The empty string is intentional
   const scopeType = scope?.ScopeType;
   const scopeName = scope?.ScopeName;
@@ -425,7 +429,7 @@ async function fetchWorkunitDetails(clusterOptions: IOptions, wuId: string) {
 
       // Highly optimized fetchDetails call - minimal data transfer
 
-      return await attachedWu.fetchDetails({
+      return await attachedWu.fetchDetailsRaw({
         ScopeFilter: {
           MaxDepth: 999999,
           // Only get scopes that typically have performance data
@@ -471,6 +475,59 @@ async function fetchWorkunitDetails(clusterOptions: IOptions, wuId: string) {
       throw err;
     }
   });
+}
+
+/**
+ * Processes scopes and stores them in the database in chunks.
+ * Handles memory management, GC, and event loop yielding.
+ */
+async function processAndStoreScopes(
+  scopes: WsWorkunits.Scope[],
+  clusterId: string,
+  wuId: string
+): Promise<number> {
+  const scopeCount = scopes.length;
+  const CHUNK = 5000;
+  let rows: WorkUnitDetailRow[] = [];
+  let processedScopes = 0;
+
+  for (let i = 0; i < scopeCount; i++) {
+    const scope = scopes[i];
+    const row = processScopeToRow(scope, clusterId, wuId);
+
+    if (row) {
+      rows.push(row);
+    }
+
+    // Clear the scope reference to allow GC
+    (scopes as unknown[])[i] = null;
+    processedScopes++;
+
+    // Insert when chunk is full
+    if (rows.length >= CHUNK) {
+      await bulkCreateWithDiagnostics(rows);
+      rows = [];
+
+      // Yield every 5 chunks to keep event loop responsive
+      const chunkNumber = Math.floor(processedScopes / CHUNK);
+      if (chunkNumber % 5 === 0) {
+        await new Promise(resolve => setImmediate(resolve));
+      }
+
+      // Aggressive GC on large datasets
+      if (global.gc && scopeCount > 10000 && processedScopes % 10000 === 0) {
+        global.gc();
+        logger.info(`GC after ${processedScopes}/${scopeCount} scopes`);
+      }
+    }
+  }
+
+  // Insert remaining rows
+  if (rows.length > 0) {
+    await bulkCreateWithDiagnostics(rows);
+  }
+
+  return processedScopes;
 }
 
 /**
@@ -565,7 +622,7 @@ async function getWorkunitDetails() {
 
         // Process each workunit
         for (const workunit of workunitsToProcess) {
-          let detailedInfo = null;
+          let detailedInfo: WsWorkunits.Scope[] | null = null;
 
           try {
             logger.info(
@@ -605,66 +662,16 @@ async function getWorkunitDetails() {
               continue;
             }
 
-            // Process scopes in streaming fashion with large chunks
-            // Large chunks (2000) drastically reduce DB operations and timer creation
-            // For 88k scopes: 44 bulkCreate calls vs 176 with CHUNK=500
-            const CHUNK = 5000;
-            let rows: WorkUnitDetailRow[] = [];
-            let processedScopes = 0;
-
-            // Process scopes one at a time to minimize memory footprint
-            for (let i = 0; i < scopeCount; i++) {
-              const scope = detailedInfo[i];
-
-              // Convert scope to row (cast to access internal _espState)
-              const row = processScopeToRow(scope, clusterId, workunit.wuId);
-
-              if (row) {
-                rows.push(row);
-              }
-
-              // Clear the scope reference to allow GC
-              (detailedInfo as unknown[])[i] = null;
-              processedScopes++;
-
-              // Insert when chunk is full
-              if (rows.length >= CHUNK) {
-                await bulkCreateWithDiagnostics(rows);
-                // Create new array instead of clearing - more reliable for GC
-                rows = [];
-
-                // Yield only every 5 chunks (reduces microtasks by 80%)
-                // For 88k scopes: only 9 yields instead of 44
-                const chunkNumber = Math.floor(processedScopes / CHUNK);
-                if (chunkNumber % 5 === 0) {
-                  await new Promise(resolve => setImmediate(resolve));
-                }
-
-                // Aggressive GC on large datasets
-                if (
-                  global.gc &&
-                  scopeCount > 10000 &&
-                  processedScopes % 10000 === 0
-                ) {
-                  global.gc();
-                  logger.info(
-                    `GC after ${processedScopes}/${scopeCount} scopes`
-                  );
-                }
-              }
-            }
-
-            // Insert remaining rows
-            if (rows.length > 0) {
-              await bulkCreateWithDiagnostics(rows);
-              rows = [];
-            }
+            // Process and store scopes in chunks
+            const processedScopes = await processAndStoreScopes(
+              detailedInfo,
+              clusterId,
+              workunit.wuId
+            );
 
             // Clear detailedInfo array completely
-            if (detailedInfo) {
-              detailedInfo.length = 0;
-              detailedInfo = null;
-            }
+            detailedInfo.length = 0;
+            detailedInfo = null;
 
             // Force GC after processing large workunits
             if (scopeCount > 1000) {
