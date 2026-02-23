@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-function emailBody(notificationDetails, metaDifference) {
+function emailBody(notificationDetails: any, metaDifference?: any[]): string {
   const { details, text } = notificationDetails;
 
   let tableRows = '';
@@ -34,7 +34,7 @@ function emailBody(notificationDetails, metaDifference) {
   return body;
 }
 
-function orbitMonitoringEmailBody(buildDetails) {
+function orbitMonitoringEmailBody(buildDetails: any): string {
   //build out issue row
   let issue = ``;
 
@@ -90,7 +90,11 @@ function orbitMonitoringEmailBody(buildDetails) {
   return body;
 }
 
-function orbitMonitoringMessageCard(title, buildDetails, notification_id) {
+function orbitMonitoringMessageCard(
+  title: string,
+  buildDetails: any,
+  notification_id: string
+): string {
   let issue = ``;
 
   if (
@@ -223,7 +227,7 @@ function orbitMonitoringMessageCard(title, buildDetails, notification_id) {
   return body;
 }
 
-function orbitBuildEmailBody(buildDetails) {
+function orbitBuildEmailBody(buildDetails: any): string {
   const tableRows = `<tr>
             <td>${buildDetails.name}</td>
             <td>${buildDetails.status}</td>
@@ -247,7 +251,11 @@ function orbitBuildEmailBody(buildDetails) {
   return body;
 }
 
-function orbitBuildMessageCard(title, facts, notification_id) {
+function orbitBuildMessageCard(
+  title: string,
+  facts: any[],
+  notification_id: string
+): string {
   let allFacts = [];
   const cardData = `"notification_id": "${notification_id}"`;
   facts.forEach(fact => {
@@ -338,7 +346,7 @@ function orbitBuildMessageCard(title, facts, notification_id) {
   return body;
 }
 
-function clusterMonitoringEmailBody(facts) {
+function clusterMonitoringEmailBody(facts: any[]): string {
   let body = '<div>';
   facts.forEach(fact => {
     for (let key in fact) {
@@ -350,7 +358,11 @@ function clusterMonitoringEmailBody(facts) {
   return body;
 }
 
-function clusterMonitoringMessageCard(title, facts, notification_id) {
+function clusterMonitoringMessageCard(
+  title: string,
+  facts: any[],
+  notification_id: string
+): any {
   let allFacts = [];
   const cardData = `"notification_id": "${notification_id}"`;
   facts.forEach(fact => {
@@ -447,7 +459,13 @@ function messageCardBody({
   filemonitoring_id,
   fileName,
   metaDifference,
-}) {
+}: {
+  notificationDetails: any;
+  notification_id: any;
+  filemonitoring_id: any;
+  fileName: any;
+  metaDifference: any;
+}): string {
   const { details, title } = notificationDetails;
 
   // -----------------------------------------------------------------------------
