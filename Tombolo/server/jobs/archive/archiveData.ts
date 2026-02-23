@@ -1,4 +1,4 @@
-import { CostMonitoringDataArchiveService } from '../../services.js';
+import { CostMonitoringDataArchiveService } from '../../services/index.js';
 import { sequelize } from '../../models/index.js';
 import { parentPort } from 'worker_threads';
 
@@ -6,7 +6,9 @@ const costMonitoringArchiveService = new CostMonitoringDataArchiveService(
   sequelize
 );
 
-async function runCostMonitoringDataArchive() {
+async function runCostMonitoringDataArchive(): Promise<
+  { archivedCount: number; cleanedCount: number; stats: any } | undefined
+> {
   try {
     parentPort &&
       parentPort.postMessage({
@@ -40,7 +42,7 @@ async function runCostMonitoringDataArchive() {
     parentPort &&
       parentPort.postMessage({
         level: 'error',
-        text: `costMonitoringData Archive: Archive job failed: ${error.message}`,
+        text: `costMonitoringData Archive: Archive job failed: ${(error as Error).message}`,
       });
   }
 }
