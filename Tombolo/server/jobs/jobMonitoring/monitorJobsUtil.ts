@@ -24,7 +24,13 @@ const intermediateStates = [
 ];
 
 // Convert date to string in the format YYYYMMDD
-const replaceDatePlaceholders = ({ formatWithWildcards, timezone_offset }) => {
+const replaceDatePlaceholders = ({
+  formatWithWildcards,
+  timezone_offset,
+}: {
+  formatWithWildcards: string;
+  timezone_offset: number;
+}): string => {
   return formatWithWildcards.replace(/<DATE(,[^>]+)?>/g, (_, dateOptions) => {
     if (!dateOptions) {
       // No options, just replace with current date in YYYYMMDD format
@@ -63,7 +69,15 @@ const replaceDatePlaceholders = ({ formatWithWildcards, timezone_offset }) => {
 };
 
 // Match job name with job name format
-const matchJobName = ({ jobNameFormat, jobName, timezone_offset }) => {
+const matchJobName = ({
+  jobNameFormat,
+  jobName,
+  timezone_offset,
+}: {
+  jobNameFormat: string;
+  jobName: string;
+  timezone_offset: number;
+}): boolean => {
   // Replace wildcard * with regex equivalent .* and  ? with .
   const formatWithWildcards = jobNameFormat
     .replace(/\*/g, '.*')
@@ -81,7 +95,11 @@ const matchJobName = ({ jobNameFormat, jobName, timezone_offset }) => {
 };
 
 // Find start and end time of a work unit since js communication library does not give that
-function findStartAndEndTimes(data) {
+function findStartAndEndTimes(data: any[]): {
+  startTime: string;
+  endTime: string;
+  timeTaken: number;
+} {
   let minDate = Infinity;
   let maxDate = -Infinity;
 
@@ -105,37 +123,42 @@ function findStartAndEndTimes(data) {
 }
 
 // Takes last scan time , which is recorded in UTC and adjusts to the local time of the cluster
-function wuStartTimeWhenLastScanAvailable(scanTime, offSet) {
+function wuStartTimeWhenLastScanAvailable(
+  scanTime: string | Date,
+  offSet: number
+): Date {
   const originalTimeStamp = new Date(scanTime).getTime();
-  let adjustedTimeStamp = originalTimeStamp + offSet * 60 * 1000;
-  adjustedTimeStamp = new Date(adjustedTimeStamp);
-  return adjustedTimeStamp;
+  const adjustedTimeStamp = originalTimeStamp + offSet * 60 * 1000;
+  const adjustedDate = new Date(adjustedTimeStamp);
+  return adjustedDate;
 }
 
 // Takes current UTC time, adjust to local and back date to x minutes
 function wuStartTimeWhenLastScanUnavailable(
-  currentTime,
-  offSet,
-  backDateMinutes
-) {
+  currentTime: string | Date,
+  offSet: number,
+  backDateMinutes: number
+): Date {
   const originalTimeStamp = new Date(currentTime).getTime();
-  let adjustedTimeStamp = originalTimeStamp + offSet * 60 * 1000;
-  adjustedTimeStamp = new Date(adjustedTimeStamp - backDateMinutes * 60 * 1000);
-  return adjustedTimeStamp;
+  const adjustedTimeStamp = originalTimeStamp + offSet * 60 * 1000;
+  const adjustedDate = new Date(
+    adjustedTimeStamp - backDateMinutes * 60 * 1000
+  );
+  return adjustedDate;
 }
 
 // Assume the system running below code is in UTC. Given timezone offset in minutes, calculate date and time.
-function findLocalDateTimeAtCluster(timeZoneOffset) {
+function findLocalDateTimeAtCluster(timeZoneOffset: number): Date {
   const newDate = new Date();
   const localTime = new Date(newDate.getTime() + timeZoneOffset * 60 * 1000);
   return localTime;
 }
 
 // set time to a date
-function setTimeToDate(date, time) {
+function setTimeToDate(date: Date, time: string): Date {
   const newDate = new Date(date.getTime());
   const [hours, minutes] = time.split(':');
-  newDate.setHours(hours, minutes, 0, 0);
+  newDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
   return newDate;
 }
 
@@ -279,7 +302,7 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({
     localDateTimeAtCluster.getTime() - backDateInMs
   );
 
-  let window = {
+  let window: any = {
     currentTime: localDateTimeAtCluster,
     frequency: 'monthly',
   };
@@ -398,7 +421,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({
     }
 
     // Add schedule by to the window object
-    window.scheduleBy = 'month-date';
+    (window as any).scheduleBy = 'month-date';
 
     // Calculate start and end time
     const startAndEnd = calculateStartAndEndDateTime({
@@ -420,8 +443,8 @@ function calculateRunOrCompleteByTimeForYearlyJobs({
 
     // Days
     const days = schedule.map(s => s.day);
-    const day = dayAtCluster.toString();
-    const scheduleDayMatch = days.includes(day);
+    const dayString = dayAtCluster.toString();
+    const scheduleDayMatch = days.includes(dayString);
 
     // if today in not in list of days
     if (!scheduleDayMatch) {
@@ -440,13 +463,16 @@ function calculateRunOrCompleteByTimeForYearlyJobs({
       return null;
     }
 
+    // Find matching schedule object for day
+    const daySchedule = schedule.find(s => s.day === dayString);
+
     // Add schedule by to the window object
-    window.scheduleBy = 'week-day-month';
+    (window as any).scheduleBy = 'week-day-month';
 
     // Calculate start and end time
     const startAndEnd = calculateStartAndEndDateTime({
       localDateTimeAtCluster: adjustedLocalDateTimeAtCluster,
-      runWindow: day.runWindow,
+      runWindow: daySchedule.runWindow,
       expectedStartTime,
       expectedCompletionTime,
     });
@@ -781,7 +807,9 @@ function getDateReplacements(date) {
     '%b': date.toLocaleString('en-US', { month: 'short' }),
     '%h': date.toLocaleString('en-US', { month: 'short' }),
     '%e': date.getDate().toString().padStart(2, '0'),
-    '%j': Math.ceil((date - new Date(date.getFullYear(), 0, 0)) / 86400000)
+    '%j': Math.ceil(
+      (date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000
+    )
       .toString()
       .padStart(3, '0'),
   };
@@ -862,7 +890,7 @@ function differenceInMs({ startTime, endTime, daysDifference }) {
 
   startDate.setDate(startDate.getDate() - daysDifference);
 
-  const difference = endDate - startDate; // Convert milliseconds to minutes
+  const difference = endDate.getTime() - startDate.getTime(); // Convert milliseconds to minutes
   return Math.abs(difference);
 }
 
