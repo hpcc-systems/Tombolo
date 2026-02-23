@@ -1,10 +1,9 @@
 import axios from 'axios';
-import { notify } from '../routes/notifications/email-notification.js';
 import { parentPort, workerData } from 'worker_threads';
 import logger from '../config/logger.js';
 import {
   OrbitMonitoring,
-  OrbitBuild,
+  OrbitBuilds,
   MonitoringNotification,
 } from '../models/index.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,12 +11,13 @@ import {
   orbitMonitoringEmailBody,
   orbitMonitoringMessageCard,
 } from './messageCards/notificationTemplate.js';
+import { sendEmail } from '../config/emailConfig.js';
 
 import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
 (async () => {
   try {
-    const orbitMonitoringDetails = await OrbitMonitoring.findOne({
+    const orbitMonitoringDetails: any = await OrbitMonitoring.findOne({
       where: { id: workerData.orbitMonitoring_id },
       raw: true,
     });
@@ -47,14 +47,14 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
     const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status', Version, BuildTemplateIdKey as 'BuildID'  from DimBuildInstance where Name = '${build}' AND HpccWorkUnit IS NOT NULL order by Date desc Limit 10`;
 
-    const wuResult = await runMySQLQuery(query, orbitDbConfig);
+    const wuResult: any = await runMySQLQuery(query, orbitDbConfig);
 
     if (wuResult.err) {
       throw Error(wuResult.err);
     }
 
     // Keep track of changes
-    const metaDifference = [];
+    const metaDifference: any[] = [];
 
     if (!wuResult || !wuResult[0] || !wuResult[0][0]) return;
 
@@ -81,6 +81,9 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       let updateInterval = monitoringCondition?.updateInterval;
       let updateIntervalDays = monitoringCondition?.updateIntervalDays;
 
+      // TODO: This code block references undefined variables 'modified' and 'newModified'
+      // Commenting out until the proper implementation is available
+      /*
       // let orbit = await hpccUtil.getorbit(clusterid, Name);
 
       // let newModified = orbit.modified;
@@ -91,11 +94,11 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       const currentDate = new Date();
 
       //get integer difference of days
-      const diffInMilliseconds = Math.abs(newDate - lastDate);
+      const diffInMilliseconds = Math.abs(newDate.getTime() - lastDate.getTime());
       const diffDays = Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
 
       //get integer difference of days to current date
-      const diffInMilliCurrent = Math.abs(currentDate - lastDate);
+      const diffInMilliCurrent = Math.abs(currentDate.getTime() - lastDate.getTime());
       const diffDaysCurrent = Math.ceil(
         diffInMilliCurrent / (1000 * 60 * 60 * 24)
       );
@@ -140,6 +143,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
           });
         }
       }
+      */
 
       // update orbit monitoring last monitored date
       const date = new Date();
@@ -156,8 +160,8 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
     await Promise.all(
       wuResult[0].map(async result => {
-        //check if the result is in the OrbitBuild table
-        const orbitBuild = await OrbitBuild.findOne({
+        //check if the result is in the OrbitBuilds table
+        const orbitBuild: any = await OrbitBuilds.findOne({
           where: {
             wuid: result.WorkUnit,
             monitoring_id: id,
@@ -168,7 +172,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
         if (orbitBuild) {
           //if it does, update it
-          await OrbitBuild.update(
+          await OrbitBuilds.update(
             {
               metaData: {
                 ...orbitBuild.metaData,
@@ -179,7 +183,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
           );
         } else {
           //if it doesn't, create it
-          await OrbitBuild.create({
+          await OrbitBuilds.create({
             application_id: application_id,
             build_id: result.BuildID,
             monitoring_id: id,
@@ -203,8 +207,8 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
     //------------------------------------------------------------------------------
 
     // Check what notification channel is set up
-    let emailNotificationDetails;
-    let teamsNotificationDetails;
+    let emailNotificationDetails: any;
+    let teamsNotificationDetails: any;
 
     // notifications.channel === "eMail"
 
@@ -217,9 +221,9 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       }
     }
 
-    const sentNotifications = [];
+    const sentNotifications: any[] = [];
 
-    let notificationDetails = {};
+    let notificationDetails: any = {};
 
     if (metaDifference.length > 0) {
       // Note - this does not cover Orbit Build size not in range
@@ -264,12 +268,11 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
     if (emailNotificationDetails && notificationDetails.text) {
       try {
         const body = orbitMonitoringEmailBody(buildDetails);
-        const notificationResponse = await notify({
-          to: emailNotificationDetails.recipients,
-          from: process.env.EMAIL_SENDER,
+        const notificationResponse = await sendEmail({
+          receiver: emailNotificationDetails.recipients,
           subject: notificationDetails.title,
-          text: body,
-          html: body,
+          plainTextBody: body,
+          htmlBody: body,
         });
 
         if (notificationResponse.accepted) {
