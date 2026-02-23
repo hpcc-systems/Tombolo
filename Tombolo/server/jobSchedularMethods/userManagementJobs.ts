@@ -1,6 +1,7 @@
 import path from 'path';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
+import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 const __dirname = getDirname(import.meta.url);
 
@@ -15,7 +16,7 @@ async function removeUnverifiedUser(this: any): Promise<void> {
         '..',
         'jobs',
         'userManagement',
-        'removeUnverifiedUsers.js'
+        `removeUnverifiedUsers.${JOB_EXTENSION}`
       ),
       worker: {
         workerData: {
@@ -43,7 +44,7 @@ async function sendPasswordExpiryEmails(this: any): Promise<void> {
         '..',
         'jobs',
         'userManagement',
-        'passwordExpiry.js'
+        `passwordExpiry.${JOB_EXTENSION}`
       ),
       worker: {
         workerData: {
@@ -73,7 +74,7 @@ async function sendAccountDeleteEmails(this: any): Promise<void> {
         '..',
         'jobs',
         'userManagement',
-        'accountDelete.js'
+        `accountDelete.${JOB_EXTENSION}`
       ),
       worker: {
         workerData: {

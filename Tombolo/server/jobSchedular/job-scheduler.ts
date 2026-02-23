@@ -23,7 +23,7 @@ import {
   createLandingZoneFileMonitoringBreeJob,
   createLogicalFileMonitoringBreeJob,
   scheduleFileMonitoringBreeJob,
-  scheduleFileMonitoring,
+  // scheduleFileMonitoring,
 } from '../jobSchedularMethods/hpccFiles.js';
 import {
   scheduleEmailNotificationProcessing,
@@ -133,7 +133,7 @@ class JobScheduler {
   bootstrap(): void {
     (async () => {
       await this.scheduleClusterTimezoneOffset();
-      await this.scheduleFileMonitoring(); // file monitoring with templates - old file monitoring implementation
+      // await this.scheduleFileMonitoring();
       await this.scheduleEmailNotificationProcessing();
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
@@ -341,9 +341,9 @@ class JobScheduler {
     });
   }
 
-  scheduleFileMonitoring(): any {
-    return scheduleFileMonitoring.call(this);
-  }
+  // scheduleFileMonitoring(): any {
+  //   return scheduleFileMonitoring.call(this);
+  // }
 
   // Job monitoring
   startJobMonitoring(): any {

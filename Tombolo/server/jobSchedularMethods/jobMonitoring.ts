@@ -11,14 +11,14 @@ import {
   generateIntervalString,
 } from './jobSchedularUtils.js';
 import { getDirname } from '../utils/polyfills.js';
+import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 // Constants
 const __dirname = getDirname(import.meta.url);
-const MONITOR_JOBS_FILE_NAME = 'monitorJobs.js';
-const MONITOR_INTERMEDIATE_JOBS_FILE_NAME = 'monitorIntermediateStateJobs.js';
-const MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME = 'monitorJobPunctuality.js';
-const MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME =
-  'monitorJobsTimeSeriesAnalysis.js';
+const MONITOR_JOBS_FILE_NAME = `monitorJobs.${JOB_EXTENSION}`;
+const MONITOR_INTERMEDIATE_JOBS_FILE_NAME = `monitorIntermediateStateJobs.${JOB_EXTENSION}`;
+const MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME = `monitorJobPunctuality.${JOB_EXTENSION}`;
+const MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME = `monitorJobsTimeSeriesAnalysis.${JOB_EXTENSION}`;
 
 // Job monitoring
 // Job monitoring interval
@@ -182,7 +182,13 @@ function createWuInfoFetchingJob(this: any, data: any = {}): void {
       name: jobName,
       data,
       timeout: 0,
-      path: path.join(__dirname, '..', 'jobs', 'jobMonitoring', 'fetchWus.js'),
+      path: path.join(
+        __dirname,
+        '..',
+        'jobs',
+        'jobMonitoring',
+        `fetchWus.${JOB_EXTENSION}`
+      ),
     });
     this.bree.start(jobName);
   } catch (err) {

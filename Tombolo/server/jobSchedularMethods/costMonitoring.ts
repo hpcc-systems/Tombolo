@@ -2,10 +2,11 @@ import path from 'path';
 import { monitor_cost_interval } from '../config/monitorings.js';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
+import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 const __dirname = getDirname(import.meta.url);
-const MONITOR_COST_FILE_NAME = 'monitorCost.js';
-const ANALYZE_COST_FILE_NAME = 'analyzeCost.js';
+const MONITOR_COST_FILE_NAME = `monitorCost.${JOB_EXTENSION}`;
+const ANALYZE_COST_FILE_NAME = `analyzeCost.${JOB_EXTENSION}`;
 
 function createMonitorCostJob(this: any): void {
   try {

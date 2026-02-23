@@ -1,8 +1,9 @@
 import path from 'path';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
+import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
-const ARCHIVE_DATA_FILE_NAME = 'archiveData.js';
+const ARCHIVE_DATA_FILE_NAME = `archiveData.${JOB_EXTENSION}`;
 
 const __dirname = getDirname(import.meta.url);
 

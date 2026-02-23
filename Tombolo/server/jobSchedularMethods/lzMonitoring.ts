@@ -10,12 +10,13 @@ import {
   generateTimeSlotsForJobMonitoring,
   generateIntervalString,
 } from './jobSchedularUtils.js';
+import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 // Constants
 const __dirname = getDirname(import.meta.url);
-const LZ_FILE_MOVEMENT_MONITORING_FILE_NAME = 'lzFileMovementMonitoring.js';
-const LZ_FILE_COUNT_MONITORING_FILE_NAME = 'lzFileCountMonitoring.js';
-const LZ_SPACE_USAGE_MONITORING_FILE_NAME = 'lzSpaceUsageMonitoring.js';
+const LZ_FILE_MOVEMENT_MONITORING_FILE_NAME = `lzFileMovementMonitoring.${JOB_EXTENSION}`;
+const LZ_FILE_COUNT_MONITORING_FILE_NAME = `lzFileCountMonitoring.${JOB_EXTENSION}`;
+const LZ_SPACE_USAGE_MONITORING_FILE_NAME = `lzSpaceUsageMonitoring.${JOB_EXTENSION}`;
 
 const jobMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({
   interval: lz_monitoring_interval,

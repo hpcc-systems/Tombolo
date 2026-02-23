@@ -3,11 +3,12 @@ import logger from '../config/logger.js';
 
 import { OrbitMonitoring } from '../models/index.js';
 import { getDirname } from '../utils/polyfills.js';
+import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 const __dirname = getDirname(import.meta.url);
-const MEGAPHONE_JOB = 'orbitMegaphone.js';
-const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
-const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';
+const MEGAPHONE_JOB = `orbitMegaphone.${JOB_EXTENSION}`;
+const ORBIT_MONITORING = `submitOrbitMonitoring.${JOB_EXTENSION}`;
+const ORBIT_PROFILE_MONITORING = `monitorOrbitProfile.${JOB_EXTENSION}`;
 
 function createOrbitMegaphoneJob(this: any): void {
   const uniqueJobName = 'Orbit Megaphone Job';

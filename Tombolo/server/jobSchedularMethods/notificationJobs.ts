@@ -1,9 +1,10 @@
 import path from 'path';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
+import { JOB_EXTENSION } from '../utils/jobExtension.js';
 const PROCESS_EMAIL_NOTIFICATIONS = path.join(
   'notifications',
-  'processEmailNotifications.js'
+  `processEmailNotifications.${JOB_EXTENSION}`
 );
 const __dirname = getDirname(import.meta.url);
 

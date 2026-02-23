@@ -2,9 +2,10 @@ import path from 'path';
 
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
+import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 const __dirname = getDirname(import.meta.url);
-const JOB_STATUS_POLLER = 'statusPoller.js';
+const JOB_STATUS_POLLER = `statusPoller.${JOB_EXTENSION}`;
 
 async function scheduleJobStatusPolling(this: any): Promise<void> {
   logger.info('Status puller for dataflow jobs initialized ...');
