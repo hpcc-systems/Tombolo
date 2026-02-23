@@ -4,7 +4,7 @@ import { deleteUser } from '../../utils/authUtil.js';
 
 //Local Imports
 import { logOrPostMessage } from '../jobUtils.js';
-import { user } from '../../models/index.js';
+import { User } from '../../models/index.js';
 
 (async () => {
   try {
@@ -16,7 +16,7 @@ import { user } from '../../models/index.js';
     const now = Date.now();
 
     // get all unverified users, if the user is unverified for more than 24 hours, delete the user
-    const unverifiedUsers = await user.findAll({
+    const unverifiedUsers = await User.findAll({
       where: {
         verifiedUser: false,
         createdAt: {

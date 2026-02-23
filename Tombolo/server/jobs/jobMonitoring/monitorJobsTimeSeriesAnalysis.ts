@@ -318,7 +318,7 @@ import { trimURL } from '../../utils/authUtil.js';
     logOrPostMessage({
       level: 'info',
       text: `Job Monitoring Time Series Analysis: Monitoring completed in ${
-        new Date() - now
+        new Date().getTime() - now.getTime()
       } ms`,
     });
   }

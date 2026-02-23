@@ -70,7 +70,7 @@ async function getClusterTimezoneOffset() {
   //once function is done, exit and report finished
   logOrPostMessage({
     level: 'info',
-    text: `Cluster Timezone Offset Job completed in ${(new Date() - startTime) / 1000} seconds`,
+    text: `Cluster Timezone Offset Job completed in ${(new Date().getTime() - startTime.getTime()) / 1000} seconds`,
   });
 }
 

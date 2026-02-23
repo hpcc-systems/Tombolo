@@ -82,16 +82,17 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
     // Decrypt cluster passwords if they exist
     clustersInfo.forEach(clusterInfo => {
       try {
+        const clusterExtended = clusterInfo as any;
         if (clusterInfo.hash) {
-          clusterInfo.password = decryptString(
+          clusterExtended.password = decryptString(
             clusterInfo.hash,
             process.env.ENCRYPTION_KEY
           );
         } else {
-          clusterInfo.password = null;
+          clusterExtended.password = null;
         }
 
-        clusterInfo.localTime = findLocalDateTimeAtCluster(
+        clusterExtended.localTime = findLocalDateTimeAtCluster(
           clusterInfo.timezone_offset || 0
         );
       } catch (error) {
@@ -268,8 +269,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
               // time elapse since job started
               const timeElapsedSinceWuStarted = Math.round(
-                (currentTimeAtCluster - wuStartTime) / 6000,
-                3
+                (currentTimeAtCluster.getTime() - wuStartTime.getTime()) / 6000
               );
               const isJobRunningTooLong =
                 timeElapsedSinceWuStarted > maxExecutionTime;
@@ -362,10 +362,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
               secondaryContacts: notificationMetaData.secondaryContacts || [],
               notifyContacts: notificationMetaData.notifyContacts || [],
             },
-            jobName: jobName,
-            wuState: wuData.State,
             wuId: Wuid,
-            monitoringName,
             issue: {
               Issue: _.startCase(notificationDescription),
               Cluster: clusterDetail.name,
@@ -483,7 +480,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
   } finally {
     logOrPostMessage({
       level: 'info',
-      text: `Intermediate state JM: Job completed successfully in ${new Date() - now} ms`,
+      text: `Intermediate state JM: Job completed successfully in ${new Date().getTime() - now.getTime()} ms`,
     });
   }
 })();

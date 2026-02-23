@@ -104,7 +104,9 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
       let userInternal = user.dataValues;
       const lastLoginAt = userInternal.lastLoginAt;
       const daysToExpiry =
-        Math.floor((lastLoginAt - deletionDate) / (1000 * 60 * 60 * 24)) + 1;
+        Math.floor(
+          (Number(lastLoginAt) - deletionDate) / (1000 * 60 * 60 * 24)
+        ) + 1;
 
       if (
         daysToExpiry <= accountDeleteAlertDaysForUser[0] &&

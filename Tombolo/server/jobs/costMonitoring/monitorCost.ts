@@ -167,7 +167,7 @@ async function monitorCost() {
     }
 
     // 1. Gather all unique cluster IDs referenced by any cost monitoring (or all clusters if any monitoring has clusterIds null/empty)
-    let allClusterIds = new Set();
+    let allClusterIds = new Set<string>();
     for (const costMonitor of costMonitorings) {
       costMonitor.clusterIds.forEach(id => allClusterIds.add(id));
     }
@@ -226,8 +226,8 @@ async function monitorCost() {
 
         // Query for workunits during timeframe
         const response = await Workunit.query(clusterOptions, {
-          StartDate: startDate,
-          EndDate: endDate,
+          StartDate: startDate as string,
+          EndDate: endDate as string,
           PageSize: 99999, // Ensure we get all workunits
         });
 

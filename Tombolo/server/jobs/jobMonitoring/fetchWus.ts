@@ -48,12 +48,12 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
     // If cluster information & hash present - decrypt
     if (clusterInfo) {
       if (clusterInfo.hash) {
-        clusterInfo.password = decryptString(
+        (clusterInfo as any).password = decryptString(
           clusterInfo.hash,
           process.env.ENCRYPTION_KEY
         );
       } else {
-        clusterInfo.password = null;
+        (clusterInfo as any).password = null;
       }
     }
 
@@ -63,7 +63,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
         {
           baseUrl: `${clusterInfo.thor_host}:${clusterInfo.thor_port}/`,
           userID: clusterInfo.username || '',
-          password: clusterInfo.password || '',
+          password: (clusterInfo as any).password || '',
         },
         clusterInfo.allowSelfSigned
       )
@@ -115,7 +115,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
         wuId: wu.Wuid,
         wuState: wu.State,
         monitoringId,
-        date: startTime,
+        date: new Date(startTime),
         wuTopLevelInfo: wu,
         wuDetailInfo: allWuInfo.find(wuInfo => wuInfo.Wuid === wu.Wuid),
         metaData: JSON.stringify({}),

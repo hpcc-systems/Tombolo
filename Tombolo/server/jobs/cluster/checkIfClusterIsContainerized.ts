@@ -48,7 +48,7 @@ import { decryptString } from '@tombolo/shared';
         const endpoint = `${clusterInfo.thor_host}:${clusterInfo.thor_port}/WsSMC/GetBuildInfo.json`;
 
         // Prepare axios config
-        const axiosConfig = {
+        const axiosConfig: any = {
           method: 'GET',
           url: endpoint,
           timeout: 30000, // 30 second timeout
@@ -103,7 +103,7 @@ import { decryptString } from '@tombolo/shared';
     });
   } finally {
     const endTime = new Date();
-    const executionTime = endTime - startTime;
+    const executionTime = endTime.getTime() - startTime.getTime();
 
     logOrPostMessage({
       level: 'info',

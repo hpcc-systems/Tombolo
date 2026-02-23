@@ -106,6 +106,7 @@ function createCMNotificationPayload({
     throw new Error('Invalid monitoring scope');
   }
 
+  const currentTime = findLocalDateTimeAtCluster(tzOffset);
   return createNotificationPayload({
     type: 'email',
     notificationDescription: description,
@@ -114,7 +115,6 @@ function createCMNotificationPayload({
     applicationId: costMonitoring.applicationId,
     subject: `Cost Monitoring Alert from ${process.env.INSTANCE_NAME} : Cost threshold ${currencySymbol}${threshold} passed`,
     recipients: { primaryContacts, secondaryContacts, notifyContacts },
-    monitoringName: costMonitoring.monitoringName,
     issue: { currencySymbol, ...issueObject },
     asrSpecificMetaData,
     notificationId: generateNotificationId({
@@ -123,6 +123,8 @@ function createCMNotificationPayload({
     }),
     notificationOrigin: 'Cost Monitoring',
     wuId: undefined,
+    firstLogged: currentTime,
+    lastLogged: currentTime,
     idempotencyKey,
   });
 }
@@ -318,6 +320,8 @@ async function analyzeClusterCost(
       costMonitoring,
       threshold,
       erroringClusters,
+      clusters: [],
+      erroringUsers: [],
       primaryContacts,
       secondaryContacts,
       notifyContacts,
@@ -326,7 +330,7 @@ async function analyzeClusterCost(
       currencyCode,
     });
 
-    await NotificationQueue.create(notificationPayload);
+    await NotificationQueue.create(notificationPayload as any);
     logOrPostMessage({
       level: 'info',
       text: 'Notification(s) sent for analyzeCost (per cluster)',
@@ -381,6 +385,8 @@ async function analyzeClusterCost(
     costMonitoring,
     threshold,
     erroringClusters,
+    clusters: [],
+    erroringUsers: [],
     primaryContacts,
     secondaryContacts,
     notifyContacts,
@@ -389,7 +395,7 @@ async function analyzeClusterCost(
     currencyCode,
   });
 
-  await NotificationQueue.create(notificationPayload);
+  await NotificationQueue.create(notificationPayload as any);
   logOrPostMessage({
     level: 'info',
     text: 'Notification(s) sent for analyzeCost (per cluster)',
@@ -451,6 +457,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       monitoringType,
       costMonitoring,
       threshold,
+      erroringClusters: [],
       erroringUsers: top5Users,
       clusters,
       primaryContacts,
@@ -461,7 +468,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       currencyCode,
     });
 
-    await NotificationQueue.create(notificationPayload);
+    await NotificationQueue.create(notificationPayload as any);
     logOrPostMessage({
       level: 'info',
       text: 'Notification(s) sent for analyzeCost',
@@ -524,6 +531,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     monitoringType,
     costMonitoring,
     threshold,
+    erroringClusters: [],
     erroringUsers,
     clusters,
     primaryContacts,
@@ -534,7 +542,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     currencyCode,
   });
 
-  await NotificationQueue.create(notificationPayload);
+  await NotificationQueue.create(notificationPayload as any);
   logOrPostMessage({
     level: 'info',
     text: 'Notification(s) sent for analyzeCost',

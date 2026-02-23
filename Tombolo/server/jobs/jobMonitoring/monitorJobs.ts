@@ -107,13 +107,14 @@ const monitoring_name = 'Job Monitoring';
     clustersInfo.forEach(clusterInfo => {
       try {
         clusterInfoObj[clusterInfo.id] = clusterInfo;
+        const clusterExtended = clusterInfo as any;
         if (clusterInfo.hash) {
-          clusterInfo.password = decryptString(
+          clusterExtended.password = decryptString(
             clusterInfo.hash,
             process.env.ENCRYPTION_KEY
           );
         } else {
-          clusterInfo.password = null;
+          clusterExtended.password = null;
         }
       } catch (error) {
         logOrPostMessage({
@@ -135,13 +136,14 @@ const monitoring_name = 'Job Monitoring';
         scanDetails => scanDetails.cluster_id === clusterInfo.id
       );
 
+      const clusterExtended = clusterInfo as any;
       if (lastScanDetails) {
-        clusterInfo.startTime = wuStartTimeWhenLastScanAvailable(
+        clusterExtended.startTime = wuStartTimeWhenLastScanAvailable(
           lastScanDetails.scan_time,
           clusterInfo.timezone_offset
         );
       } else {
-        clusterInfo.startTime = wuStartTimeWhenLastScanUnavailable(
+        clusterExtended.startTime = wuStartTimeWhenLastScanUnavailable(
           now,
           clusterInfo.timezone_offset,
           30
@@ -159,14 +161,15 @@ const monitoring_name = 'Job Monitoring';
             {
               baseUrl: `${clusterInfo.thor_host}:${clusterInfo.thor_port}/`,
               userID: clusterInfo.username || '',
-              password: clusterInfo.password || '',
+              password: (clusterInfo as any).password || '',
             },
             clusterInfo.allowSelfSigned
           )
         );
 
         // Date to string
-        const startTime = clusterInfo.startTime.toISOString();
+        const clusterExtended = clusterInfo as any;
+        const startTime = clusterExtended.startTime.toISOString();
 
         let {
           Workunits: { ECLWorkunit },
@@ -213,7 +216,7 @@ const monitoring_name = 'Job Monitoring';
 
         // Existing intermediate state jobs
         let existingIntermediateStateJobs = [];
-        let existingMetaData = {};
+        let existingMetaData: any = {};
 
         if (log) {
           existingMetaData = log.metaData || {};
@@ -222,21 +225,15 @@ const monitoring_name = 'Job Monitoring';
         }
 
         try {
-          await MonitoringLog.upsert(
-            {
-              cluster_id: id,
-              monitoring_type_id: monitoringTypeId,
-              scan_time: now,
-              metaData: {
-                ...existingMetaData,
-                wuInIntermediateState: existingIntermediateStateJobs,
-              },
+          await MonitoringLog.upsert({
+            cluster_id: id,
+            monitoring_type_id: monitoringTypeId,
+            scan_time: now,
+            metaData: {
+              ...existingMetaData,
+              wuInIntermediateState: existingIntermediateStateJobs,
             },
-            {
-              returning: true, // This option ensures the method returns the updated or created entry
-              conflictTarget: ['cluster_id', 'monitoring_type_id'], // Specify the fields to check for conflicts
-            }
-          );
+          });
         } catch (err) {
           logOrPostMessage({
             level: 'error',
@@ -345,10 +342,10 @@ const monitoring_name = 'Job Monitoring';
               monitoringId: jmId,
               applicationId: jobMonitoringObj[jmId].applicationId,
               wuId: Wuid,
-              wuState: Workunit.State,
+              wuState: (Workunit as any).State,
               wuTopLevelInfo: shallowCopyWithOutNested(Workunit),
               wuDetailInfo: { ...Workunit },
-              analzyed: false,
+              analyzed: false,
               date: now,
             });
           } catch (err) {
@@ -456,10 +453,7 @@ const monitoring_name = 'Job Monitoring';
         applicationId: jobMonitoring.applicationId,
         subject: `Job Monitoring Alert from ${process.env.INSTANCE_NAME} : Job in ${wu.State} state`,
         recipients: { primaryContacts, secondaryContacts, notifyContacts },
-        jobName: jobName,
-        wuState: wu.State,
         wuId: wu.Wuid,
-        monitoringName,
         issue: {
           Issue: `Job in ${wu.State} state`,
           Cluster: clusterInfoObj[clusterId].name || '',
@@ -489,7 +483,7 @@ const monitoring_name = 'Job Monitoring';
       });
 
       //Create notification queue
-      await NotificationQueue.create(notificationPayload);
+      await NotificationQueue.create(notificationPayload as any);
 
       // If severity is above threshold, send out NOC notification
       if (severity >= severityThreshHold && severeEmailRecipients) {
@@ -504,7 +498,7 @@ const monitoring_name = 'Job Monitoring';
             timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
           });
         delete notificationPayloadForNoc.metaData.cc;
-        await NotificationQueue.create(notificationPayloadForNoc);
+        await NotificationQueue.create(notificationPayloadForNoc as any);
       }
     }
 
@@ -527,8 +521,8 @@ const monitoring_name = 'Job Monitoring';
           job => job.clusterId === id
         );
 
-        let existingIntermediateStateJobs = [];
-        let existingMetaData = {};
+        let existingIntermediateStateJobs: any = [];
+        let existingMetaData: any = {};
 
         existingMetaData = log?.metaData || {};
         existingIntermediateStateJobs =
@@ -546,8 +540,6 @@ const monitoring_name = 'Job Monitoring';
               ...intermediateStateJobsForCluster,
             ],
           },
-          returning: true,
-          conflictTarget: ['cluster_id', 'monitoring_type_id'],
         });
       } catch (err) {
         logOrPostMessage({
@@ -566,7 +558,7 @@ const monitoring_name = 'Job Monitoring';
   } finally {
     logOrPostMessage({
       level: 'info',
-      text: `Job Monitoring: Monitoring completed in ${new Date() - now} ms`,
+      text: `Job Monitoring: Monitoring completed in ${new Date().getTime() - now.getTime()} ms`,
     });
   }
 })();

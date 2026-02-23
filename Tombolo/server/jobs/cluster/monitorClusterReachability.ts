@@ -19,14 +19,15 @@ async function monitorClusterReachability() {
     // Get clusters and decrypt passwords
     const allClusters = await Cluster.findAll({ raw: true });
     allClusters.forEach(cluster => {
+      const clusterExtended = cluster as any;
       if (cluster.hash) {
         const password = decryptString(
           cluster.hash,
           process.env.ENCRYPTION_KEY
         );
-        cluster.password = password;
+        clusterExtended.password = password;
       } else {
-        cluster.password = null;
+        clusterExtended.password = null;
       }
     });
 
@@ -42,7 +43,10 @@ async function monitorClusterReachability() {
 
       try {
         // Cluster payload
-        const newAccountMetaData = { ...accountMetaData, lastMonitored: now };
+        const newAccountMetaData: any = {
+          ...accountMetaData,
+          lastMonitored: now,
+        };
 
         //Create an instance
         const accountService = new AccountService(
@@ -50,20 +54,22 @@ async function monitorClusterReachability() {
             {
               baseUrl: `${cluster.thor_host}:${cluster.thor_port}`,
               userID: cluster.username,
-              password: cluster.password,
+              password: (cluster as any).password,
             },
             cluster.allowSelfSigned
           )
         );
 
         // Get account information
-        const myAccount = await accountService.MyAccount();
+        const myAccount = await accountService.MyAccount({});
         const { passwordDaysRemaining } = myAccount;
 
         // If passwordDaysRemaining not in the alert range, update the accountMetaData and continue
         if (
           passwordDaysRemaining &&
-          passwordExpiryAlertDaysForCluster.includes(passwordDaysRemaining)
+          (passwordExpiryAlertDaysForCluster as any).includes(
+            passwordDaysRemaining
+          )
         ) {
           // Check if alert was sent for the day
           const passwordExpiryAlertSentForDay =
@@ -82,7 +88,7 @@ async function monitorClusterReachability() {
                 notificationId: `PWD_EXPIRY_${now.getTime()}`,
               });
 
-              await NotificationQueue.create(payload);
+              await NotificationQueue.create(payload as any);
 
               //Update accountMetaData
               newAccountMetaData.passwordExpiryAlertSentForDay =
@@ -140,7 +146,7 @@ async function monitorClusterReachability() {
   } finally {
     logOrPostMessage({
       level: 'info',
-      text: `Cluster reachability:  monitoring completed in ${new Date() - now} ms`,
+      text: `Cluster reachability:  monitoring completed in ${new Date().getTime() - now.getTime()} ms`,
     });
   }
 }

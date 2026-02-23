@@ -68,7 +68,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
 
       const daysToExpiry =
         Math.floor(
-          (userInternal.passwordExpiresAt - now) / (1000 * 60 * 60 * 24)
+          (Number(userInternal.passwordExpiresAt) - now) / (1000 * 60 * 60 * 24)
         ) + 1;
 
       if (

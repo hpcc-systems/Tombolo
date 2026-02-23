@@ -69,13 +69,14 @@ const monitoringTypeName = 'Job Monitoring';
     // Decrypt cluster passwords if they exist
     clusters.forEach(clusterInfo => {
       try {
+        const clusterExtended = clusterInfo as any;
         if (clusterInfo.hash) {
-          clusterInfo.password = decryptString(
+          clusterExtended.password = decryptString(
             clusterInfo.hash,
             process.env.ENCRYPTION_KEY
           );
         } else {
-          clusterInfo.password = null;
+          clusterExtended.password = null;
         }
       } catch (error) {
         logOrPostMessage({
@@ -194,7 +195,7 @@ const monitoringTypeName = 'Job Monitoring';
         let alertTimePassed = window.start < window.currentTime;
 
         let lateByInMinutes = Math.floor(
-          (window.currentTime - window.start) / 60000
+          (window.currentTime.getTime() - window.start.getTime()) / 60000
         );
 
         // If the time has not passed, or with in grace period of 10 minutes, continue
@@ -245,8 +246,8 @@ const monitoringTypeName = 'Job Monitoring';
         const {
           Workunits: { ECLWorkunit },
         } = await wuService.WUQuery({
-          StartDate: window.start,
-          EndDate: window.end,
+          StartDate: window.start.toISOString(),
+          EndDate: window.end.toISOString(),
           Jobname: translatedJobName,
         });
 
@@ -261,8 +262,8 @@ const monitoringTypeName = 'Job Monitoring';
           const {
             Workunits: { ECLWorkunit: ECLWorkunitNextDay },
           } = await wuService.WUQuery({
-            StartDate: window.start,
-            EndDate: window.end,
+            StartDate: window.start.toISOString(),
+            EndDate: window.end.toISOString(),
             Jobname: translatedJobNameNextDay,
           });
 
@@ -335,9 +336,7 @@ const monitoringTypeName = 'Job Monitoring';
               secondaryContacts,
               notifyContacts,
             },
-            jobName: jobNamePattern,
-            wuState: null,
-            monitoringName,
+            wuId: null,
             issue: {
               Issue: 'Job not started on expected time',
               Cluster: clusterInfo.name,
@@ -364,7 +363,7 @@ const monitoringTypeName = 'Job Monitoring';
           });
 
           // Queue email notification
-          await NotificationQueue.create(notificationPayload);
+          await NotificationQueue.create(notificationPayload as any);
           logOrPostMessage({
             level: 'verbose',
             text: `Job Punctuality Monitoring: Notification queued for ${monitoringName},  job not started on time`,
@@ -383,7 +382,7 @@ const monitoringTypeName = 'Job Monitoring';
                 timezoneOffset: offSet || 0,
               });
             delete notificationPayloadForNoc.metaData.cc;
-            await NotificationQueue.create(notificationPayloadForNoc);
+            await NotificationQueue.create(notificationPayloadForNoc as any);
             logOrPostMessage({
               level: 'verbose',
               text: `Job Punctuality Monitoring: NOC Notification queued for ${monitoringName},  job not started on time`,

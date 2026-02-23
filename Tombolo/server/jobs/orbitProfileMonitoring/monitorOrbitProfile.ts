@@ -81,7 +81,7 @@ async function monitorOrbitProfile() {
     // Separate the build that already exist in our OrbitBuildData table -> Array of objects
     const existingBuilds = await OrbitBuildData.findAll({
       where: {
-        buildInstanceIdKey: wuResult.map(wu => wu.BuildInstanceIdKey),
+        BuildInstanceIdKey: wuResult.map(wu => wu.BuildInstanceIdKey),
       },
       raw: true,
     });
@@ -165,7 +165,7 @@ async function monitorOrbitProfile() {
             ...b,
           },
           {
-            where: { buildInstanceIdKey: b.BuildInstanceIdKey },
+            where: { BuildInstanceIdKey: b.BuildInstanceIdKey },
           }
         );
       } catch (updateErr) {
@@ -182,7 +182,7 @@ async function monitorOrbitProfile() {
     });
   } finally {
     const timeEnded = new Date();
-    const duration = (timeEnded - timeStarted) / 1000; // duration in seconds
+    const duration = (timeEnded.getTime() - timeStarted.getTime()) / 1000; // duration in seconds
     logOrPostMessage({
       level: 'info',
       text: `Checking  Orbit server for new builds and status changes completed in ${duration} seconds.`,
