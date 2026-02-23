@@ -10,7 +10,12 @@ const calculateRetryAfter = ({
   retryDelays, // Configs related to emails should not be passed as params
   maxRetries,
   currentDateTime,
-}) => {
+}: {
+  attemptCount: number;
+  retryDelays: number[];
+  maxRetries: number;
+  currentDateTime: number;
+}): Date | null => {
   if (attemptCount === maxRetries - 1) {
     return null;
   } else {
@@ -24,7 +29,12 @@ async function updateNotificationQueueOnError({
   attemptCount,
   _notification,
   error,
-}) {
+}: {
+  notificationId: string;
+  attemptCount: number;
+  _notification: any;
+  error: Error;
+}): Promise<void> {
   try {
     await NotificationQueue.update(
       {
