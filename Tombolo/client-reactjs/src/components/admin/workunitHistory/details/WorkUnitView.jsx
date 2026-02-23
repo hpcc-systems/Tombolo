@@ -48,7 +48,7 @@ const WorkUnitView = ({ wu, details, clusterName }) => {
           </Col>
           <Col>
             <Space size="large">
-              <Statistic title="Total Time" value={formatTime(wu.totalClusterTime)} prefix={<ClockCircleOutlined />} />
+              <Statistic title="Total Time" value={formatTime(wu.totalClusterTime * 3600)} prefix={<ClockCircleOutlined />} />
               <Statistic title="Total Cost" value={wu.totalCost != null ? `$${wu.totalCost.toFixed(4)}` : '-'} />
             </Space>
           </Col>
