@@ -3,11 +3,11 @@ import { parentPort, workerData } from 'worker_threads';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
 
-import { notify } from '../routes/notifications/email-notification.js';
 import logger from '../config/logger.js';
 import { FileMonitoring, MonitoringNotification } from '../models/index.js';
 import { getDirectories } from '../utils/hpcc-util.js';
 import wildCardStringMatch from '../utils/wildCardStringMatch.js';
+import { sendEmail } from '../config/emailConfig.js';
 
 import {
   emailBody,
@@ -16,7 +16,7 @@ import {
 
 (async () => {
   try {
-    const fileMonitoringDetails = await FileMonitoring.findOne({
+    const fileMonitoringDetails: any = await FileMonitoring.findOne({
       where: { id: workerData.filemonitoring_id },
       raw: true,
     });
@@ -59,14 +59,14 @@ import {
       Path,
       DirectoryOnly: false,
     });
-    let files = result.filter(item => !item.isDir);
+    let files: any[] = result.filter(item => !item.isDir);
 
-    const newFilesToMonitor = [];
-    const fileAndTimeStamps = [];
+    const newFilesToMonitor: any[] = [];
+    const fileAndTimeStamps: any[] = [];
 
     // Notification Details
-    let emailNotificationDetails;
-    let teamsNotificationDetails;
+    let emailNotificationDetails: any;
+    let teamsNotificationDetails: any;
     for (let notification of notifications) {
       if (notification.channel === 'eMail') {
         emailNotificationDetails = notification;
@@ -77,7 +77,7 @@ import {
     }
 
     // Check for file detected, incorrect file size - if found push to this array
-    let newFileNotificationDetails = [];
+    let newFileNotificationDetails: any[] = [];
 
     //Check if new files that matches the fileName(wild card) have arrived since last monitored
     for (let i = 0; i < files.length; i++) {
@@ -85,24 +85,23 @@ import {
 
       let fileModifiedTime = moment(modifiedtime); // Convert uploaded_at to a Moment object
       // fileModifiedTime = fileModifiedTime.utc().valueOf() - (60000 * timezone_offset);
-      fileModifiedTime = fileModifiedTime.utc().valueOf();
+      const fileModifiedTimeValue = fileModifiedTime.utc().valueOf();
 
       logger.verbose(
-        `Last monitored : ${lastMonitored}, File Uploaded At : ${fileModifiedTime}, ${
-          (lastMonitored - fileModifiedTime,
-          lastMonitored < fileModifiedTime &&
+        `Last monitored : ${lastMonitored}, File Uploaded At : ${fileModifiedTimeValue}, ${
+          lastMonitored < fileModifiedTimeValue &&
           wildCardStringMatch(fileNameWildCard, fileName)
             ? 'NEW FILE'
-            : 'OLD FILE')
+            : 'OLD FILE'
         }`
       );
 
       if (
-        lastMonitored < fileModifiedTime &&
+        lastMonitored < fileModifiedTimeValue &&
         wildCardStringMatch(fileNameWildCard, fileName)
       ) {
         //Check if user wants to be notified when new file arrives
-        let notificationDetail;
+        let notificationDetail: any;
         if (notifyCondition.includes('fileDetected')) {
           notificationDetail = {
             value: 'file_detected',
@@ -112,7 +111,7 @@ import {
               'File Name': fileName,
               'Landing zone': landingZone,
               Directory: dirToMonitor.join('/'),
-              'File detected at': new Date(fileModifiedTime).toString(),
+              'File detected at': fileModifiedTime.toDate().toString(),
             },
           };
         }
@@ -134,7 +133,7 @@ import {
               'Expected minimum size': `${minimumFileSize} KB`,
               'Landing zone': landingZone,
               Directory: dirToMonitor.join('/'),
-              'File detected at': new Date(fileModifiedTime).toString(),
+              'File detected at': fileModifiedTime.toDate().toString(),
             },
           };
           if (maximumFileSize < filesize / 1000) {
@@ -156,7 +155,7 @@ import {
         if (notifyCondition.includes('fileNotMoving')) {
           newFilesToMonitor.push({
             name: fileName,
-            modifiedTime: fileModifiedTime,
+            modifiedTime: fileModifiedTimeValue,
             expectedFileMoveTime:
               currentTimeStamp + expectedFileMoveTime * 60 * 1000,
             notified: [],
@@ -170,12 +169,11 @@ import {
       for (let detail of newFileNotificationDetails) {
         try {
           const body = emailBody(detail);
-          const notificationResponse = await notify({
-            to: emailNotificationDetails.recipients,
-            from: process.env.EMAIL_SENDER,
+          const notificationResponse = await sendEmail({
+            receiver: emailNotificationDetails.recipients,
             subject: detail.title,
-            text: body,
-            html: body,
+            plainTextBody: body,
+            htmlBody: body,
           });
           logger.verbose(notificationResponse);
 
@@ -189,7 +187,7 @@ import {
               notification_reason: detail.value,
               monitoring_id: filemonitoring_id,
               monitoring_type: 'file',
-            });
+            } as any);
           }
         } catch (err) {
           logger.error(
@@ -209,6 +207,9 @@ import {
             let body = messageCardBody({
               notificationDetails: detail,
               notification_id,
+              filemonitoring_id: filemonitoring_id,
+              fileName: '',
+              metaDifference: {},
             });
 
             await axios.post(recipient, body);
@@ -223,7 +224,7 @@ import {
               notification_reason: detail.value,
               monitoring_id: filemonitoring_id,
               monitoring_type: 'file',
-            });
+            } as any);
           } catch (err) {
             logger.error(
               'submitLandingZoneFileMonitoring teamsNotification: ',
@@ -286,12 +287,11 @@ import {
         try {
           const { value, title } = currentlyMonitoringNotificationDetails;
           const body = emailBody(currentlyMonitoringNotificationDetails);
-          const notificationResponse = await notify({
-            to: emailNotificationDetails.recipients,
-            from: process.env.EMAIL_SENDER,
+          const notificationResponse = await sendEmail({
+            receiver: emailNotificationDetails.recipients,
             subject: title,
-            text: body,
-            html: body,
+            plainTextBody: body,
+            htmlBody: body,
           });
           logger.verbose(notificationResponse);
 
@@ -306,7 +306,7 @@ import {
               notification_reason: value,
               monitoring_id: filemonitoring_id,
               monitoring_type: 'file',
-            });
+            } as any);
           }
         } catch (err) {
           logger.error(
@@ -321,13 +321,14 @@ import {
         const { recipients } = teamsNotificationDetails;
         for (let recipient of recipients) {
           try {
-            const { _details, value } = currentlyMonitoringNotificationDetails;
+            const { value } = currentlyMonitoringNotificationDetails;
             const notification_id = uuidv4();
             let body = messageCardBody({
               notificationDetails: currentlyMonitoringNotificationDetails,
               notification_id,
               filemonitoring_id,
               fileName: current.name,
+              metaDifference: {},
             });
 
             await axios.post(recipient, body);
@@ -343,7 +344,7 @@ import {
               notification_reason: value,
               monitoring_id: filemonitoring_id,
               monitoring_type: 'file',
-            });
+            } as any);
           } catch (err) {
             logger.error(
               'submitLandingZoneFileMonitoring teamsNotification: ',
