@@ -1,4 +1,4 @@
-import { IOptions, Scope, Workunit } from '@hpcc-js/comms';
+import { Workunit, WsWorkunits } from '@hpcc-js/comms';
 import { getClusters, getClusterOptions } from '@tombolo/core';
 import { WorkUnit, WorkUnitDetails } from '@tombolo/db';
 import {
@@ -8,6 +8,8 @@ import {
   relevantMetrics,
 } from '@tombolo/shared';
 import logger from '../../../config/logger.js';
+
+import type { IOptions } from '@hpcc-js/comms';
 
 // Type for database row objects (what processScopeToRow returns)
 type WorkUnitDetailRow = {
@@ -265,7 +267,7 @@ const relevantMetricsSet = new Set(relevantMetrics);
  * @param {string} wuId - The workunit ID for error tracking
  */
 function extractPerformanceMetrics(
-  scope: Scope,
+  scope: WsWorkunits.Scope,
   clusterId: string,
   wuId: string
 ) {
@@ -373,7 +375,11 @@ function extractPerformanceMetrics(
  * Processes a single scope and converts it to a DB row
  * Returns null if scope should be filtered out
  */
-function processScopeToRow(scope: Scope, clusterId: string, wuId: string) {
+function processScopeToRow(
+  scope: WsWorkunits.Scope,
+  clusterId: string,
+  wuId: string
+) {
   // The empty string is intentional
   const scopeType = scope?.ScopeType;
   const scopeName = scope?.ScopeName;
@@ -415,6 +421,291 @@ function processScopeToRow(scope: Scope, clusterId: string, wuId: string) {
 }
 
 /**
+ * Processes an array of raw scopes: converts to DB rows and bulk inserts in chunks.
+ * Nulls out processed scopes to allow garbage collection during processing.
+ */
+async function processAndStoreScopes(
+  scopes: WsWorkunits.Scope[],
+  clusterId: string,
+  wuId: string
+): Promise<number> {
+  const scopeCount = scopes?.length || 0;
+  if (scopeCount === 0) return 0;
+
+  const CHUNK = 5000;
+  let rows: WorkUnitDetailRow[] = [];
+  let processedScopes = 0;
+
+  for (let i = 0; i < scopeCount; i++) {
+    const scope = scopes[i];
+    const row = processScopeToRow(scope, clusterId, wuId);
+
+    if (row) {
+      rows.push(row);
+    }
+
+    // Clear the scope reference to allow GC
+    (scopes as unknown[])[i] = null;
+    processedScopes++;
+
+    // Insert when chunk is full
+    if (rows.length >= CHUNK) {
+      await bulkCreateWithDiagnostics(rows);
+      rows = [];
+
+      // Yield every 5 chunks to avoid starving the event loop
+      const chunkNumber = Math.floor(processedScopes / CHUNK);
+      if (chunkNumber % 5 === 0) {
+        await new Promise(resolve => setImmediate(resolve));
+      }
+
+      // Aggressive GC on large datasets
+      if (global.gc && scopeCount > 10000 && processedScopes % 10000 === 0) {
+        global.gc();
+        logger.info(`GC after ${processedScopes}/${scopeCount} scopes`);
+      }
+    }
+  }
+
+  // Insert remaining rows
+  if (rows.length > 0) {
+    await bulkCreateWithDiagnostics(rows);
+    rows = [];
+  }
+
+  return processedScopes;
+}
+
+/**
+ * Common request options for fetchDetailsRaw calls.
+ * Minimizes data transfer from HPCC by requesting only the properties we need.
+ */
+function getDetailRequestOptions(
+  scopeFilterOverrides?: Partial<{
+    Scopes: string[];
+    ScopeTypes: string[];
+    MaxDepth: number;
+  }>
+) {
+  return {
+    ScopeFilter: {
+      MaxDepth: 999999,
+      ScopeTypes: ACCEPTED_SCOPE_TYPES,
+      ...scopeFilterOverrides,
+    },
+    ScopeOptions: {
+      IncludeId: true,
+      IncludeScope: true,
+      IncludeScopeType: true,
+    },
+    PropertyOptions: {
+      IncludeName: true,
+      IncludeRawValue: true,
+      IncludeFormatted: false,
+      IncludeMeasure: false,
+      IncludeCreator: false,
+      IncludeCreatorType: false,
+    },
+    PropertiesToReturn: {
+      AllStatistics: true,
+      AllProperties: false,
+      AllAttributes: false,
+      AllHints: false,
+      AllNotes: false,
+      AllScopes: false,
+      Properties: ['Kind', 'Label', 'Filename'].concat(relevantMetrics),
+    },
+  };
+}
+
+// Workunits with more scopes than this threshold will be re-fetched graph-by-graph
+// to keep peak memory bounded. Below this threshold, a single fetch is used.
+const GRAPH_BY_GRAPH_THRESHOLD = 200_000;
+
+/**
+ * Fetches and processes workunit details. Uses a single fetch for most workunits.
+ * Only falls back to graph-by-graph fetching when a workunit exceeds the scope
+ * threshold (200k), trading extra HTTP requests for bounded memory usage.
+ */
+async function fetchAndProcessWorkunit(
+  clusterOptions: IOptions,
+  clusterId: string,
+  wuId: string
+): Promise<number> {
+  // Step 1: Try fetching all scopes in a single call (fast path for most workunits)
+  let allScopes = await fetchWorkunitDetails(clusterOptions, wuId);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  const scopeCount = allScopes?.length || 0;
+
+  logger.info(`Fetched ${scopeCount} scopes for workunit ${wuId}`);
+
+  if (scopeCount > 1000) {
+    logMemoryUsage(`after fetching ${scopeCount} scopes`);
+  }
+
+  // Step 2: If under threshold, process directly — single fetch, no extra requests
+  if (scopeCount <= GRAPH_BY_GRAPH_THRESHOLD) {
+    if (scopeCount > 50_000) {
+      logger.warn(
+        `Workunit ${wuId} has ${scopeCount} scopes - this may take significant time`
+      );
+    }
+
+    const totalProcessed = await processAndStoreScopes(
+      allScopes,
+      clusterId,
+      wuId
+    );
+
+    // Cleanup
+    if (allScopes) allScopes.length = 0;
+    allScopes = null as unknown as WsWorkunits.Scope[];
+
+    if (scopeCount > 1000) {
+      forceGCAndLog(`after processing ${scopeCount} scopes`);
+    }
+
+    return totalProcessed;
+  }
+
+  // Step 3: Exceeds threshold — free the large response and switch to graph-by-graph
+  logger.warn(
+    `Workunit ${wuId} has ${scopeCount} scopes (exceeds ${GRAPH_BY_GRAPH_THRESHOLD} threshold) — switching to graph-by-graph fetching`
+  );
+
+  // Free the large response before fetching again
+  allScopes.length = 0;
+  allScopes = null as unknown as WsWorkunits.Scope[];
+  if (global.gc) global.gc();
+
+  const attachedWu = Workunit.attach(clusterOptions, wuId);
+
+  // Get graph list to chunk the work
+  let graphNames: string[] = [];
+  try {
+    const graphs = await retryWithBackoff(async () => attachedWu.fetchGraphs());
+    await new Promise(resolve => setTimeout(resolve, 500));
+    graphNames = graphs.map(g => g.Name);
+    logger.info(`Workunit ${wuId} has ${graphNames.length} graph(s)`);
+  } catch (graphErr: unknown) {
+    if (
+      graphErr instanceof Error &&
+      graphErr.message?.toLowerCase().includes('cannot open workunit')
+    ) {
+      throw graphErr;
+    }
+    // If we can't get graphs, we can't chunk — re-fetch and process all at once
+    logger.warn(
+      `Could not fetch graph list for ${wuId}, falling back to single fetch: ${String(graphErr)}`
+    );
+    const fallbackScopes = await fetchWorkunitDetails(clusterOptions, wuId);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const processed = await processAndStoreScopes(
+      fallbackScopes,
+      clusterId,
+      wuId
+    );
+    if (fallbackScopes) fallbackScopes.length = 0;
+    forceGCAndLog(`after fallback processing ${wuId}`);
+    return processed;
+  }
+
+  // Fetch and process one graph at a time to keep memory bounded
+  let totalScopesProcessed = 0;
+
+  logger.info(
+    `Processing ${wuId} graph-by-graph (${graphNames.length} graphs)`
+  );
+
+  for (let g = 0; g < graphNames.length; g++) {
+    const graphName = graphNames[g];
+
+    const graphScopes = await retryWithBackoff(async () => {
+      try {
+        return await attachedWu.fetchDetailsRaw({
+          ...getDetailRequestOptions({ Scopes: [graphName] }),
+          NestedFilter: {
+            Depth: 999999,
+            ScopeTypes: ACCEPTED_SCOPE_TYPES,
+          },
+        });
+      } catch (err: unknown) {
+        if (
+          err instanceof Error &&
+          err.message?.toLowerCase().includes('cannot open workunit')
+        ) {
+          const e = new Error(err.message);
+          // @ts-expect-error Writing non standard key to Error object
+          e.noRetry = true;
+          throw e;
+        }
+        throw err;
+      }
+    });
+
+    const graphScopeCount = graphScopes?.length || 0;
+    logger.info(
+      `[Graph ${g + 1}/${graphNames.length}] ${graphName}: ${graphScopeCount} scopes`
+    );
+
+    if (graphScopeCount > 0) {
+      if (graphScopeCount > 1000) {
+        logMemoryUsage(
+          `after fetching ${graphName} (${graphScopeCount} scopes)`
+        );
+      }
+
+      const processed = await processAndStoreScopes(
+        graphScopes,
+        clusterId,
+        wuId
+      );
+      totalScopesProcessed += processed;
+    }
+
+    // Free memory between graphs
+    if (graphScopes) graphScopes.length = 0;
+    if (global.gc) {
+      global.gc();
+      if (graphScopeCount > 1000) {
+        logMemoryUsage(`after GC for ${graphName}`);
+      }
+    }
+
+    // Delay after each graph fetch to avoid hammering the HPCC system
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  // Fetch any workflow/global scopes that aren't under a graph hierarchy
+  try {
+    const globalScopes = await retryWithBackoff(async () => {
+      return await attachedWu.fetchDetailsRaw(
+        getDetailRequestOptions({ ScopeTypes: ['workflow', ''] })
+      );
+    });
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const globalCount = globalScopes?.length || 0;
+    if (globalCount > 0) {
+      logger.info(`Workflow/global scopes: ${globalCount}`);
+      const processed = await processAndStoreScopes(
+        globalScopes,
+        clusterId,
+        wuId
+      );
+      totalScopesProcessed += processed;
+      globalScopes.length = 0;
+    }
+  } catch (globalErr: unknown) {
+    logger.warn(
+      `Could not fetch workflow scopes for ${wuId}: ${String(globalErr)}`
+    );
+  }
+
+  return totalScopesProcessed;
+}
+
+/**
  * Fetches workunit details with retry logic
  */
 async function fetchWorkunitDetails(clusterOptions: IOptions, wuId: string) {
@@ -425,7 +716,7 @@ async function fetchWorkunitDetails(clusterOptions: IOptions, wuId: string) {
 
       // Highly optimized fetchDetails call - minimal data transfer
 
-      return await attachedWu.fetchDetails({
+      return await attachedWu.fetchDetailsRaw({
         ScopeFilter: {
           MaxDepth: 999999,
           // Only get scopes that typically have performance data
@@ -565,113 +856,19 @@ async function getWorkunitDetails() {
 
         // Process each workunit
         for (const workunit of workunitsToProcess) {
-          let detailedInfo = null;
-
           try {
             logger.info(
               `[${processedCount + 1}/${workunitsToProcess.length}] Processing workunit ${workunit.wuId} for cluster ${clusterId}`
             );
 
-            // Fetch detailed performance data (raw scopes)
-            detailedInfo = await fetchWorkunitDetails(
+            const totalScopesProcessed = await fetchAndProcessWorkunit(
               clusterOptions,
+              clusterId,
               workunit.wuId
             );
 
-            const scopeCount = detailedInfo?.length || 0;
             logger.info(
-              `Fetched ${scopeCount} scopes for workunit ${workunit.wuId}`
-            );
-
-            // Log memory usage for large workunits
-            if (scopeCount > 1000) {
-              logMemoryUsage(`after fetching ${scopeCount} scopes`);
-            }
-
-            // Warn about very large workunits but continue processing
-            if (scopeCount > 50000) {
-              logger.warn(
-                `Workunit ${workunit.wuId} has ${scopeCount} scopes - this will take significant time and resources`
-              );
-            }
-
-            // Safety check for extremely large workunits
-            if (scopeCount > 200000) {
-              logger.error(
-                `Workunit ${workunit.wuId} has ${scopeCount} scopes - exceeds processing limit. Skipping.`
-              );
-              processedCount++;
-              continue;
-            }
-
-            // Process scopes in streaming fashion with large chunks
-            // Large chunks (2000) drastically reduce DB operations and timer creation
-            // For 88k scopes: 44 bulkCreate calls vs 176 with CHUNK=500
-            const CHUNK = 5000;
-            let rows: WorkUnitDetailRow[] = [];
-            let processedScopes = 0;
-
-            // Process scopes one at a time to minimize memory footprint
-            for (let i = 0; i < scopeCount; i++) {
-              const scope = detailedInfo[i];
-
-              // Convert scope to row (cast to access internal _espState)
-              const row = processScopeToRow(scope, clusterId, workunit.wuId);
-
-              if (row) {
-                rows.push(row);
-              }
-
-              // Clear the scope reference to allow GC
-              (detailedInfo as unknown[])[i] = null;
-              processedScopes++;
-
-              // Insert when chunk is full
-              if (rows.length >= CHUNK) {
-                await bulkCreateWithDiagnostics(rows);
-                // Create new array instead of clearing - more reliable for GC
-                rows = [];
-
-                // Yield only every 5 chunks (reduces microtasks by 80%)
-                // For 88k scopes: only 9 yields instead of 44
-                const chunkNumber = Math.floor(processedScopes / CHUNK);
-                if (chunkNumber % 5 === 0) {
-                  await new Promise(resolve => setImmediate(resolve));
-                }
-
-                // Aggressive GC on large datasets
-                if (
-                  global.gc &&
-                  scopeCount > 10000 &&
-                  processedScopes % 10000 === 0
-                ) {
-                  global.gc();
-                  logger.info(
-                    `GC after ${processedScopes}/${scopeCount} scopes`
-                  );
-                }
-              }
-            }
-
-            // Insert remaining rows
-            if (rows.length > 0) {
-              await bulkCreateWithDiagnostics(rows);
-              rows = [];
-            }
-
-            // Clear detailedInfo array completely
-            if (detailedInfo) {
-              detailedInfo.length = 0;
-              detailedInfo = null;
-            }
-
-            // Force GC after processing large workunits
-            if (scopeCount > 1000) {
-              forceGCAndLog(`after GC for ${scopeCount} scopes`);
-            }
-
-            logger.info(
-              `Stored ${processedScopes} scope details for workunit ${workunit.wuId}`
+              `Stored ${totalScopesProcessed} scope details for workunit ${workunit.wuId}`
             );
 
             // Add to successful list instead of updating immediately
@@ -709,12 +906,6 @@ async function getWorkunitDetails() {
             }
 
             processedCount++;
-
-            // Clean up on error
-            if (detailedInfo) {
-              detailedInfo.length = 0;
-              detailedInfo = null;
-            }
             if (global.gc) global.gc();
           }
         }
@@ -781,6 +972,8 @@ async function getWorkunitDetails() {
 export {
   getWorkunitDetails,
   fetchWorkunitDetails,
+  fetchAndProcessWorkunit,
+  processAndStoreScopes,
   extractPerformanceMetrics,
   processScopeToRow,
   outOfRangeTimeValues,
