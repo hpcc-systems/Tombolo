@@ -59,9 +59,7 @@ const App: FC = () => {
   const clusterLinkRef = useRef<any>(null);
 
   // get redux states (select only needed properties)
-  const application = useAppSelector(state => state.application.application);
   const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
-  const authenticationReducer = useAppSelector(state => state.auth);
   const isConnected = useAppSelector(state => state.backend.isConnected);
   const statusRetrieved = useAppSelector(state => state.backend.statusRetrieved);
   const ownerExists = useAppSelector(state => state.backend.ownerExists);
@@ -153,11 +151,7 @@ const App: FC = () => {
                           }}>
                           <ErrorBoundary>
                             <Suspense fallback={<Fallback />}>
-                              {!userHasRoleandApplication && !isOwnerOrAdmin ? (
-                                <NoAccessRoutes />
-                              ) : (
-                                <AppRoutes application={application} authenticationReducer={authenticationReducer} />
-                              )}
+                              {!userHasRoleandApplication && !isOwnerOrAdmin ? <NoAccessRoutes /> : <AppRoutes />}
 
                               {isOwnerOrAdmin && <AdminRoutes />}
                             </Suspense>
