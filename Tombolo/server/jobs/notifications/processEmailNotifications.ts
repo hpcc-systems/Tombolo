@@ -12,9 +12,9 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
 (async () => {
   try {
     const now = Date.now();
-    let notifications;
-    const notificationsToBeSent = []; // Notification that meets the criteria to be sent
-    const successfulDelivery = [];
+    let notifications: any[];
+    const notificationsToBeSent: any[] = []; // Notification that meets the criteria to be sent
+    const successfulDelivery: any[] = [];
 
     // Get notifications with attempt count less than maxRetries and type email
     try {
@@ -71,7 +71,7 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
         };
 
         //E-mail payload
-        let emailPayload;
+        let emailPayload: any;
 
         // Notification origin is manual - send the email as it is
         if (notificationOrigin === 'manual') {
@@ -108,15 +108,18 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
         await updateNotificationQueueOnError({
           notificationId: notificationQueueId,
           attemptCount,
-          notification,
-          error,
+          _notification: notification,
+          error: error as Error,
         });
       }
     }
 
     // Update last scanned
     try {
-      await NotificationQueue.update({ lastScanned: now }, { where: {} });
+      await NotificationQueue.update(
+        { lastScanned: new Date(now) },
+        { where: {} }
+      );
     } catch (error) {
       logger.error(
         'processEmailNotifications: Failed to update last scanned: ',
