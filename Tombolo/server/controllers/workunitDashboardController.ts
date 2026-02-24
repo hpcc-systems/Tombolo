@@ -1,23 +1,86 @@
+import { Request, Response } from 'express';
 import { sequelize } from '@tombolo/db';
 import { QueryTypes } from 'sequelize';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 
+// Raw query result types
+interface SummaryRow {
+  totalCost: string;
+  totalJobs: string;
+  avgCostPerJob: string;
+  totalRuntimeHours: string;
+  failedCount: string;
+  failedCost: string;
+}
+
+interface DailyCostRow {
+  date: string;
+  cost: string;
+  failed: string;
+  blocked: string;
+  other: string;
+}
+
+interface ClusterBreakdownRow {
+  cluster: string;
+  cost: string;
+  count: string;
+}
+
+interface OwnerBreakdownRow {
+  owner: string;
+  cost: string;
+  count: string;
+}
+
+interface ProblematicJobRow {
+  wuid: string;
+  jobName: string;
+  issue: string;
+  severity: string;
+  cost: string;
+  owner: string;
+  cluster: string;
+}
+
+interface WorkunitRow {
+  wuid: string;
+  jobName: string;
+  clusterId: string;
+  cluster: string;
+  owner: string;
+  state: string;
+  cost: string;
+  cpuHours: string;
+  duration: string;
+  endTime: string | null;
+  executeCost: string;
+  fileAccessCost: string;
+  compileCost: string;
+  detailsFetchedAt: string | null;
+}
+
 /**
  * Get dashboard data with aggregations
  * @route GET /api/workunit-dashboard
- * @param {Object} req.query.startDate - ISO date string (required)
- * @param {Object} req.query.endDate - ISO date string (required)
- * @param {Object} req.query.clusterId - UUID (optional)
+ * @param req.query.startDate - ISO date string (required)
+ * @param req.query.endDate - ISO date string (required)
+ * @param req.query.clusterId - UUID (optional)
  */
-async function getDashboardData(req, res) {
+async function getDashboardData(req: Request, res: Response) {
   try {
-    const { startDate, endDate } = req.query;
-    const clusterId = req.query.clusterId || null;
+    const { startDate, endDate } = req.query as {
+      startDate: string;
+      endDate: string;
+    };
+    const clusterId = (req.query.clusterId as string) || null;
 
     logger.debug(
       `Fetching dashboard data: ${startDate} to ${endDate}, cluster: ${clusterId || 'all'}`
     );
+
+    const replacements = { startDate, endDate, clusterId };
 
     // Execute all queries in parallel for efficiency
     const [
@@ -29,7 +92,7 @@ async function getDashboardData(req, res) {
       workunitsResult,
     ] = await Promise.all([
       // 1. Summary Stats Query
-      sequelize.query(
+      sequelize.query<SummaryRow>(
         `
         SELECT 
           COALESCE(SUM(totalCost), 0) as totalCost,
@@ -43,14 +106,11 @@ async function getDashboardData(req, res) {
           AND (:clusterId IS NULL OR clusterId = :clusterId)
           AND deletedAt IS NULL
         `,
-        {
-          replacements: { startDate, endDate, clusterId },
-          type: QueryTypes.SELECT,
-        }
+        { replacements, type: QueryTypes.SELECT }
       ),
 
       // 2. Daily Costs Query
-      sequelize.query(
+      sequelize.query<DailyCostRow>(
         `
         SELECT 
           DATE(workUnitTimestamp) as date,
@@ -65,14 +125,11 @@ async function getDashboardData(req, res) {
         GROUP BY DATE(workUnitTimestamp)
         ORDER BY date ASC
         `,
-        {
-          replacements: { startDate, endDate, clusterId },
-          type: QueryTypes.SELECT,
-        }
+        { replacements, type: QueryTypes.SELECT }
       ),
 
       // 3. Cluster Breakdown Query
-      sequelize.query(
+      sequelize.query<ClusterBreakdownRow>(
         `
         SELECT 
           c.name as cluster,
@@ -86,14 +143,11 @@ async function getDashboardData(req, res) {
         GROUP BY wu.clusterId, c.name
         ORDER BY cost DESC
         `,
-        {
-          replacements: { startDate, endDate, clusterId },
-          type: QueryTypes.SELECT,
-        }
+        { replacements, type: QueryTypes.SELECT }
       ),
 
       // 4. Owner Breakdown Query
-      sequelize.query(
+      sequelize.query<OwnerBreakdownRow>(
         `
         SELECT 
           owner,
@@ -107,14 +161,11 @@ async function getDashboardData(req, res) {
         ORDER BY cost DESC
         LIMIT 10
         `,
-        {
-          replacements: { startDate, endDate, clusterId },
-          type: QueryTypes.SELECT,
-        }
+        { replacements, type: QueryTypes.SELECT }
       ),
 
       // 5. Problematic Jobs Query
-      sequelize.query(
+      sequelize.query<ProblematicJobRow>(
         `
         (
           SELECT 
@@ -176,14 +227,11 @@ async function getDashboardData(req, res) {
           cost DESC
         LIMIT 8
         `,
-        {
-          replacements: { startDate, endDate, clusterId },
-          type: QueryTypes.SELECT,
-        }
+        { replacements, type: QueryTypes.SELECT }
       ),
 
       // 6. Workunits List Query (paginated)
-      sequelize.query(
+      sequelize.query<WorkunitRow>(
         `
         SELECT 
           wu.wuId as wuid,
@@ -208,31 +256,23 @@ async function getDashboardData(req, res) {
         ORDER BY wu.workUnitTimestamp DESC
         LIMIT 100
         `,
-        {
-          replacements: { startDate, endDate, clusterId },
-          type: QueryTypes.SELECT,
-        }
+        { replacements, type: QueryTypes.SELECT }
       ),
     ]);
 
     // Extract results
-    const summary = summaryResult[0] || {
-      totalCost: 0,
-      totalJobs: 0,
-      avgCostPerJob: 0,
-      totalRuntimeHours: 0,
-      failedCount: 0,
-      failedCost: 0,
+    const summary: SummaryRow = summaryResult[0] ?? {
+      totalCost: '0',
+      totalJobs: '0',
+      avgCostPerJob: '0',
+      totalRuntimeHours: '0',
+      failedCount: '0',
+      failedCost: '0',
     };
-
-    const dailyCosts = dailyCostsResult || [];
-    const clusterBreakdown = clusterBreakdownResult || [];
-    const ownerBreakdown = ownerBreakdownResult || [];
-    const problematicJobs = problematicJobsResult || [];
 
     // TODO: Verify that duration calculation (totalClusterTime * 60) accurately represents job duration
     // Post-process workunits to add costBreakdown structure
-    const workunits = (workunitsResult || []).map(wu => ({
+    const workunits = workunitsResult.map(wu => ({
       wuid: wu.wuid,
       jobName: wu.jobName,
       clusterId: wu.clusterId,
@@ -265,24 +305,24 @@ async function getDashboardData(req, res) {
           failedCount: parseInt(summary.failedCount, 10) || 0,
           failedCost: parseFloat(summary.failedCost) || 0,
         },
-        dailyCosts: dailyCosts.map(d => ({
+        dailyCosts: dailyCostsResult.map(d => ({
           date: d.date,
           cost: parseFloat(d.cost) || 0,
           failed: parseInt(d.failed, 10) || 0,
           blocked: parseInt(d.blocked, 10) || 0,
           other: parseInt(d.other, 10) || 0,
         })),
-        clusterBreakdown: clusterBreakdown.map(c => ({
+        clusterBreakdown: clusterBreakdownResult.map(c => ({
           cluster: c.cluster,
           cost: parseFloat(c.cost) || 0,
           count: parseInt(c.count, 10) || 0,
         })),
-        ownerBreakdown: ownerBreakdown.map(o => ({
+        ownerBreakdown: ownerBreakdownResult.map(o => ({
           owner: o.owner,
           cost: parseFloat(o.cost) || 0,
           count: parseInt(o.count, 10) || 0,
         })),
-        problematicJobs: problematicJobs.map(p => ({
+        problematicJobs: problematicJobsResult.map(p => ({
           wuid: p.wuid,
           jobName: p.jobName,
           issue: p.issue,
