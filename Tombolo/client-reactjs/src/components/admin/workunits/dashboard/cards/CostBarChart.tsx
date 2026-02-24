@@ -1,31 +1,39 @@
 import { Card, Tooltip } from 'antd';
 
-// interface CostBarChartProps {
-//   data: { date: string; cost: number; failed: number; blocked: number; other: number }[];
-// }
+export interface DailyCost {
+  date: string;
+  cost: number;
+  failed: number;
+  blocked: number;
+  other: number;
+}
 
-export default function CostBarChart({ data }) {
+interface CostBarChartProps {
+  data: DailyCost[];
+}
+
+export default function CostBarChart({ data }: CostBarChartProps) {
   const maxTotal = Math.max(...data.map(d => d.failed + d.blocked + d.other), 1);
   const maxCost = Math.max(...data.map(d => d.cost || 0), 1);
 
   // Format date to "Jan 19" format
-  const formatDate = dateStr => {
+  const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${months[date.getMonth()]} ${date.getDate()}`;
   };
 
   // Generate nice y-axis labels
-  const getYAxisSteps = max => {
+  const getYAxisSteps = (max: number): number[] => {
     const magnitude = Math.pow(10, Math.floor(Math.log10(max)));
     const normalized = max / magnitude;
-    let step;
+    let step: number;
     if (normalized <= 1) step = 0.2 * magnitude;
     else if (normalized <= 2) step = 0.5 * magnitude;
     else if (normalized <= 5) step = 1 * magnitude;
     else step = 2 * magnitude;
 
-    const steps = [];
+    const steps: number[] = [];
     for (let i = 0; i <= max; i += step) {
       steps.push(i);
     }
@@ -115,6 +123,7 @@ export default function CostBarChart({ data }) {
               const failedPct = (item.failed / maxTotal) * 100;
               const blockedPct = (item.blocked / maxTotal) * 100;
               const otherPct = (item.other / maxTotal) * 100;
+              const combinedPct = otherPct + blockedPct + failedPct;
 
               return (
                 <Tooltip
@@ -160,7 +169,7 @@ export default function CostBarChart({ data }) {
                         <div
                           style={{
                             width: '100%',
-                            height: `${(failedPct / (otherPct + blockedPct + failedPct)) * 100}%`,
+                            height: `${(failedPct / combinedPct) * 100}%`,
                             background: 'linear-gradient(180deg, #ef4444 0%, #dc2626 100%)',
                             borderRadius: '4px 4px 0 0',
                             transition: 'opacity 0.2s',
@@ -168,10 +177,10 @@ export default function CostBarChart({ data }) {
                             minHeight: item.failed > 0 ? 2 : 0,
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.opacity = '1';
+                            (e.currentTarget as HTMLDivElement).style.opacity = '1';
                           }}
                           onMouseLeave={e => {
-                            e.currentTarget.style.opacity = '0.9';
+                            (e.currentTarget as HTMLDivElement).style.opacity = '0.9';
                           }}
                         />
                       )}
@@ -180,7 +189,7 @@ export default function CostBarChart({ data }) {
                         <div
                           style={{
                             width: '100%',
-                            height: `${(blockedPct / (otherPct + blockedPct + failedPct)) * 100}%`,
+                            height: `${(blockedPct / combinedPct) * 100}%`,
                             background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)',
                             borderRadius: item.failed === 0 ? '4px 4px 0 0' : '0',
                             transition: 'opacity 0.2s',
@@ -188,10 +197,10 @@ export default function CostBarChart({ data }) {
                             minHeight: item.blocked > 0 ? 2 : 0,
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.opacity = '1';
+                            (e.currentTarget as HTMLDivElement).style.opacity = '1';
                           }}
                           onMouseLeave={e => {
-                            e.currentTarget.style.opacity = '0.9';
+                            (e.currentTarget as HTMLDivElement).style.opacity = '0.9';
                           }}
                         />
                       )}
@@ -200,7 +209,7 @@ export default function CostBarChart({ data }) {
                         <div
                           style={{
                             width: '100%',
-                            height: `${(otherPct / (otherPct + blockedPct + failedPct)) * 100}%`,
+                            height: `${(otherPct / combinedPct) * 100}%`,
                             background: 'linear-gradient(180deg, #22c55e 0%, #16a34a 100%)',
                             borderRadius: item.failed === 0 && item.blocked === 0 ? '4px 4px 0 0' : '0',
                             transition: 'opacity 0.2s',
@@ -208,10 +217,10 @@ export default function CostBarChart({ data }) {
                             minHeight: item.other > 0 ? 2 : 0,
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.opacity = '1';
+                            (e.currentTarget as HTMLDivElement).style.opacity = '1';
                           }}
                           onMouseLeave={e => {
-                            e.currentTarget.style.opacity = '0.9';
+                            (e.currentTarget as HTMLDivElement).style.opacity = '0.9';
                           }}
                         />
                       )}

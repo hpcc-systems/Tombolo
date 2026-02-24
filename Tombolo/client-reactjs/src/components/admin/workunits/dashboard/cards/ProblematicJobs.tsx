@@ -1,11 +1,32 @@
+import React from 'react';
 import { Card, Tag, Badge, Empty } from 'antd';
 import { WarningOutlined, CloseCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 
-// interface ProblematicJobsProps {
-//   jobs: ProblematicJob[];
-// }
+export type JobSeverity = 'critical' | 'warning' | 'info';
 
-const severityConfig = {
+export interface ProblematicJob {
+  wuid: string;
+  jobName: string;
+  severity: JobSeverity;
+  issue: string;
+  cost: number;
+  owner: string;
+  cluster?: string;
+}
+
+interface ProblematicJobsProps {
+  jobs: ProblematicJob[];
+}
+
+interface SeverityConfig {
+  color: string;
+  bg: string;
+  border: string;
+  icon: React.ReactNode;
+  tag: string;
+}
+
+const severityConfig: Record<JobSeverity, SeverityConfig> = {
   critical: {
     color: '#dc2626',
     bg: '#fef2f2',
@@ -29,7 +50,7 @@ const severityConfig = {
   },
 };
 
-export default function ProblematicJobs({ jobs }) {
+export default function ProblematicJobs({ jobs }: ProblematicJobsProps) {
   const criticalCount = jobs.filter(j => j.severity === 'critical').length;
   const warningCount = jobs.filter(j => j.severity === 'warning').length;
 

@@ -1,11 +1,30 @@
+import React from 'react';
 import { Card, Statistic, Row, Col } from 'antd';
 import { DollarOutlined, ClusterOutlined, ThunderboltOutlined, FieldTimeOutlined } from '@ant-design/icons';
 
-// interface CostSummaryProps {
-//   summary: Object;
-// }
+export interface DashboardSummary {
+  totalCost?: number;
+  totalJobs?: number;
+  avgCostPerJob?: number;
+  totalRuntimeHours?: number;
+  failedCount?: number;
+  failedCost?: number;
+}
 
-export default function CostSummary({ summary }) {
+interface CostSummaryProps {
+  summary: DashboardSummary;
+}
+
+interface StatItem {
+  title: string;
+  value: number;
+  prefix?: string;
+  precision: number;
+  icon: React.ReactNode;
+  color: string;
+}
+
+export default function CostSummary({ summary }: CostSummaryProps) {
   const totalCost = summary.totalCost || 0;
   const totalJobs = summary.totalJobs || 0;
   const totalRuntimeHours = summary.totalRuntimeHours || 0;
@@ -13,7 +32,7 @@ export default function CostSummary({ summary }) {
   const failedJobs = summary.failedCount || 0;
   const failedCost = summary.failedCost || 0;
 
-  const stats = [
+  const stats: StatItem[] = [
     {
       title: 'Total Cost',
       value: totalCost,

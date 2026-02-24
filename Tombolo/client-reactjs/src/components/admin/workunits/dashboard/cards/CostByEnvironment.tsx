@@ -1,17 +1,23 @@
 import { Card, Progress } from 'antd';
 
-// interface CostByClusterProps {
-//   data: { cluster: string; cost: number; count: number }[];
-// }
+export interface ClusterCost {
+  cluster: string;
+  cost: number;
+  count: number;
+}
 
-const clusterColors = {
+interface CostByEnvironmentProps {
+  data: ClusterCost[];
+}
+
+const clusterColors: Record<string, string> = {
   thor: '#16a34a',
   roxie: '#2563eb',
   hthor: '#d97706',
   thor_400: '#7c3aed',
 };
 
-export default function CostByCluster({ data }) {
+export default function CostByCluster({ data }: CostByEnvironmentProps) {
   const totalCost = data.reduce((s, d) => s + d.cost, 0);
 
   return (

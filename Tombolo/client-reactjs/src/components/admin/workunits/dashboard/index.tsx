@@ -2,24 +2,23 @@ import { useState, useEffect, useMemo } from 'react';
 import { ConfigProvider, theme as antdTheme, Row, Col, Card, Spin, Alert } from 'antd';
 import { ClusterOutlined, DashboardOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-// import type { Dayjs } from "dayjs";
+import type { Dayjs } from 'dayjs';
 
-import CostSummary from './cards/CostSummary';
-import CostBarChart from './cards/CostBarChart';
-import CostByCluster from './cards/CostByEnvironment';
-import ProblematicJobs from './cards/ProblematicJobs';
-import WorkunitTable from './cards/WorkunitTable';
-import TimeRangeSelector from './cards/TimeRangeSelector';
-import workunitDashboardService from '@/services/workunitDashboard.service';
-// import type { TimePreset } from "./cards/TimeRangeSelector";
+import CostSummary, { type DashboardSummary } from './cards/CostSummary';
+import CostBarChart, { type DailyCost } from './cards/CostBarChart';
+import CostByCluster, { type ClusterCost } from './cards/CostByEnvironment';
+import ProblematicJobs, { type ProblematicJob } from './cards/ProblematicJobs';
+import WorkunitTable, { type WorkunitRecord } from './cards/WorkunitTable';
+import TimeRangeSelector, { type TimePreset } from './cards/TimeRangeSelector';
+import workunitDashboardService, { type DashboardData, type OwnerCost } from '@/services/workunitDashboard.service';
 
 export default function DashboardPage() {
-  const [preset, setPreset] = useState('30d');
-  const [startDate, setStartDate] = useState(dayjs().subtract(29, 'day').startOf('day'));
-  const [endDate, setEndDate] = useState(dayjs().endOf('day'));
+  const [preset, setPreset] = useState<TimePreset>('30d');
+  const [startDate, setStartDate] = useState<Dayjs>(dayjs().subtract(29, 'day').startOf('day'));
+  const [endDate, setEndDate] = useState<Dayjs>(dayjs().endOf('day'));
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [dashboardData, setDashboardData] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -33,7 +32,7 @@ export default function DashboardPage() {
         setDashboardData(data);
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
-        setError(err.message || 'Failed to load dashboard data');
+        setError((err as Error).message || 'Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
@@ -42,17 +41,17 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [startDate, endDate]);
 
-  const summary = dashboardData?.summary || {};
-  const workunits = dashboardData?.workunits || [];
-  const problematicJobs = dashboardData?.problematicJobs || [];
-  const dailyCosts = dashboardData?.dailyCosts || [];
-  const clusterCosts = dashboardData?.clusterBreakdown || [];
-  const ownerCosts = dashboardData?.ownerBreakdown || [];
+  const summary: DashboardSummary = dashboardData?.summary || {};
+  const workunits: WorkunitRecord[] = dashboardData?.workunits || [];
+  const problematicJobs: ProblematicJob[] = dashboardData?.problematicJobs || [];
+  const dailyCosts: DailyCost[] = dashboardData?.dailyCosts || [];
+  const clusterCosts: ClusterCost[] = dashboardData?.clusterBreakdown || [];
+  const ownerCosts: OwnerCost[] = dashboardData?.ownerBreakdown || [];
 
   const totalOwnerCost = useMemo(() => ownerCosts.reduce((sum, owner) => sum + owner.cost, 0), [ownerCosts]);
 
-  const handlePresetChange = p => setPreset(p);
-  const handleRangeChange = (start, end) => {
+  const handlePresetChange = (p: TimePreset) => setPreset(p);
+  const handleRangeChange = (start: Dayjs, end: Dayjs) => {
     setStartDate(start);
     setEndDate(end);
   };

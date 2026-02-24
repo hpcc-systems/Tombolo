@@ -14,7 +14,7 @@ import {
   getMonthLabel,
   getDateLabel,
   getWeekLabel,
-} from '../../common/scheduleOptions.js';
+} from '../../common/scheduleOptions';
 
 const dailyRunWindowAndIntervals = [
   { label: 'All day (00:00 - 23:59)', value: 'daily' },

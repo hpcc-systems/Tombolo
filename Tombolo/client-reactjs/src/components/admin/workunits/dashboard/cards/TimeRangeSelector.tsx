@@ -1,22 +1,28 @@
 import { DatePicker, Radio, Space } from 'antd';
 import { CalendarOutlined } from '@ant-design/icons';
+import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-// import type { Dayjs } from "dayjs";
 
 const { RangePicker } = DatePicker;
 
-// export type TimePreset = "today" | "7d" | "30d" | "90d" | "custom";
+export type TimePreset = 'today' | '7d' | '30d' | '90d' | 'custom';
 
-// interface TimeRangeSelectorProps {
-//   preset: TimePreset;
-//   startDate: Dayjs;
-//   endDate: Dayjs;
-//   onPresetChange: (preset: TimePreset) => void;
-//   onRangeChange: (start: Dayjs, end: Dayjs) => void;
-// }
+interface TimeRangeSelectorProps {
+  preset: TimePreset;
+  startDate: Dayjs;
+  endDate: Dayjs;
+  onPresetChange: (preset: TimePreset) => void;
+  onRangeChange: (start: Dayjs, end: Dayjs) => void;
+}
 
-export default function TimeRangeSelector({ preset, startDate, endDate, onPresetChange, onRangeChange }) {
-  const handlePreset = val => {
+export default function TimeRangeSelector({
+  preset,
+  startDate,
+  endDate,
+  onPresetChange,
+  onRangeChange,
+}: TimeRangeSelectorProps) {
+  const handlePreset = (val: TimePreset) => {
     onPresetChange(val);
     const now = dayjs();
     switch (val) {
@@ -51,7 +57,7 @@ export default function TimeRangeSelector({ preset, startDate, endDate, onPreset
       </div>
       <Radio.Group
         value={preset}
-        onChange={e => handlePreset(e.target.value)}
+        onChange={e => handlePreset(e.target.value as TimePreset)}
         optionType="button"
         buttonStyle="solid"
         size="small">

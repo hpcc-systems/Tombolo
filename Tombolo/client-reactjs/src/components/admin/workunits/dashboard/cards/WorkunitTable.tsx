@@ -1,13 +1,34 @@
 import { Table, Tag, Tooltip, Input, Select, Button } from 'antd';
 import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
 import { useState, useMemo } from 'react';
-// import type { ColumnsType } from "antd/es/table";
+import type { ColumnsType } from 'antd/es/table';
 
-// interface WorkunitTableProps {
-//   workunits: WorkunitRecord[];
-// }
+export interface CostBreakdown {
+  compute: number;
+  fileAccess: number;
+  compile: number;
+}
 
-const stateColors = {
+export interface WorkunitRecord {
+  wuid: string;
+  jobName?: string;
+  cluster?: string;
+  owner?: string;
+  state?: string;
+  cost: number;
+  duration: number;
+  cpuHours?: number;
+  endTime?: string;
+  costBreakdown: CostBreakdown;
+  clusterId?: string;
+  detailsFetchedAt?: string;
+}
+
+interface WorkunitTableProps {
+  workunits: WorkunitRecord[];
+}
+
+const stateColors: Record<string, string> = {
   completed: 'green',
   failed: 'red',
   running: 'blue',
@@ -15,9 +36,9 @@ const stateColors = {
   waiting: 'default',
 };
 
-export default function WorkunitTable({ workunits }) {
+export default function WorkunitTable({ workunits }: WorkunitTableProps) {
   const [search, setSearch] = useState('');
-  const [stateFilter, setStateFilter] = useState(undefined);
+  const [stateFilter, setStateFilter] = useState<string | undefined>(undefined);
 
   const filtered = useMemo(() => {
     let data = workunits;
@@ -37,13 +58,13 @@ export default function WorkunitTable({ workunits }) {
     return data;
   }, [workunits, search, stateFilter]);
 
-  const columns = [
+  const columns: ColumnsType<WorkunitRecord> = [
     {
       title: 'WUID',
       dataIndex: 'wuid',
       key: 'wuid',
       width: 180,
-      render: val => (
+      render: (val: string) => (
         <span
           style={{
             fontFamily: 'var(--font-mono), monospace',
@@ -59,7 +80,7 @@ export default function WorkunitTable({ workunits }) {
       dataIndex: 'jobName',
       key: 'jobName',
       ellipsis: true,
-      render: val => (
+      render: (val: string) => (
         <Tooltip title={val}>
           <span style={{ color: '#374151', fontWeight: 500 }}>{val}</span>
         </Tooltip>
@@ -70,7 +91,7 @@ export default function WorkunitTable({ workunits }) {
       dataIndex: 'cluster',
       key: 'cluster',
       width: 100,
-      render: val => (
+      render: (val: string) => (
         <Tag
           style={{
             borderRadius: 4,
@@ -87,14 +108,14 @@ export default function WorkunitTable({ workunits }) {
       dataIndex: 'owner',
       key: 'owner',
       width: 120,
-      render: val => <span style={{ color: '#6b7280', fontSize: 12 }}>{val}</span>,
+      render: (val: string) => <span style={{ color: '#6b7280', fontSize: 12 }}>{val}</span>,
     },
     {
       title: 'State',
       dataIndex: 'state',
       key: 'state',
       width: 100,
-      render: val => (
+      render: (val: string) => (
         <Tag color={stateColors[val]} style={{ borderRadius: 4 }}>
           {val}
         </Tag>
@@ -107,7 +128,7 @@ export default function WorkunitTable({ workunits }) {
       width: 100,
       sorter: (a, b) => a.cost - b.cost,
       defaultSortOrder: 'descend',
-      render: val => (
+      render: (val: number) => (
         <span
           style={{
             fontFamily: 'var(--font-mono), monospace',
@@ -124,7 +145,7 @@ export default function WorkunitTable({ workunits }) {
       key: 'duration',
       width: 100,
       sorter: (a, b) => a.duration - b.duration,
-      render: val => {
+      render: (val: number) => {
         const h = Math.floor(val / 60);
         const m = Math.round(val % 60);
         return (
@@ -240,7 +261,7 @@ export default function WorkunitTable({ workunits }) {
         <Select
           placeholder="Filter by state"
           value={stateFilter}
-          onChange={val => setStateFilter(val)}
+          onChange={(val: string | undefined) => setStateFilter(val)}
           allowClear
           style={{ minWidth: 160 }}
           options={[
@@ -252,7 +273,7 @@ export default function WorkunitTable({ workunits }) {
           ]}
         />
       </div>
-      <Table
+      <Table<WorkunitRecord>
         columns={columns}
         dataSource={filtered}
         rowKey={record => `${record.clusterId}:${record.wuid}`}

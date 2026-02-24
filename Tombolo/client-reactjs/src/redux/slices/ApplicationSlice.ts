@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import integrationsService from '@/services/integrations.service.js';
+import integrationsService from '@/services/integrations.service';
 import applicationsService from '@/services/applications.service';
 import clustersService from '@/services/clusters.service';
 
