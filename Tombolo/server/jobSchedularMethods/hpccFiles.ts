@@ -3,6 +3,7 @@ import path from 'path';
 import { FileMonitoring } from '../models/index.js';
 import { getDirname } from '../utils/polyfills.js';
 import logger from '../config/logger.js';
+import { resolveJobPath } from './jobPathResolver.js';
 
 const __dirname = getDirname(import.meta.url);
 const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
@@ -19,17 +20,18 @@ function createLandingZoneFileMonitoringBreeJob(
     cron,
   }: { filemonitoring_id: string; name: string; cron: string }
 ): void {
+  const defaultDistPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'jobs',
+    SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME.replace('.ts', '.js')
+  );
   const job = {
     cron,
     name,
-    path: path.join(
-      __dirname,
-      '..',
-      '..',
-      'dist',
-      'jobs',
-      SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME.replace('.ts', '.js')
-    ),
+    path: resolveJobPath(defaultDistPath),
     worker: {
       workerData: { filemonitoring_id },
     },
@@ -45,17 +47,18 @@ function createLogicalFileMonitoringBreeJob(
     cron,
   }: { filemonitoring_id: string; name: string; cron: string }
 ): void {
+  const defaultDistPath2 = path.join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'jobs',
+    SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME.replace('.ts', '.js')
+  );
   const job = {
     cron,
     name,
-    path: path.join(
-      __dirname,
-      '..',
-      '..',
-      'dist',
-      'jobs',
-      SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME.replace('.ts', '.js')
-    ),
+    path: resolveJobPath(defaultDistPath2),
     worker: {
       workerData: { filemonitoring_id },
     },

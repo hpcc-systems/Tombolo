@@ -1,5 +1,6 @@
 import path from 'path';
 import logger from '../config/logger.js';
+import { resolveJobPath } from './jobPathResolver.js';
 
 import { OrbitMonitoring } from '../models/index.js';
 import { getDirname } from '../utils/polyfills.js';
@@ -11,10 +12,18 @@ const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';
 
 function createOrbitMegaphoneJob(this: any): void {
   const uniqueJobName = 'Orbit Megaphone Job';
+  const defaultDistPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'jobs',
+    MEGAPHONE_JOB
+  );
   const job = {
     interval: '30m',
     name: uniqueJobName,
-    path: path.join(__dirname, '..', '..', 'dist', 'jobs', MEGAPHONE_JOB),
+    path: resolveJobPath(defaultDistPath),
   };
   this.bree.add(job);
   this.bree.start(uniqueJobName);
@@ -26,10 +35,18 @@ function createOrbitMonitoringJob(
   { orbitMonitoring_id, cron }: { orbitMonitoring_id: string; cron: string }
 ): void {
   const uniqueJobName = `Orbit Monitoring - ${orbitMonitoring_id}`;
+  const defaultDistPath2 = path.join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'jobs',
+    ORBIT_MONITORING
+  );
   const job = {
     cron,
     name: uniqueJobName,
-    path: path.join(__dirname, '..', '..', 'dist', 'jobs', ORBIT_MONITORING),
+    path: resolveJobPath(defaultDistPath2),
     worker: {
       workerData: { orbitMonitoring_id },
     },
@@ -45,18 +62,19 @@ function createOrbitProfileMonitoringJob(
   }: { uniqueJobName?: string } = {}
 ): void {
   const jobName = uniqueJobName;
+  const defaultDistPath3 = path.join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'jobs',
+    'orbitProfileMonitoring',
+    ORBIT_PROFILE_MONITORING
+  );
   const job = {
     interval: '10s',
     name: jobName,
-    path: path.join(
-      __dirname,
-      '..',
-      '..',
-      'dist',
-      'jobs',
-      'orbitProfileMonitoring',
-      ORBIT_PROFILE_MONITORING
-    ),
+    path: resolveJobPath(defaultDistPath3),
   };
   this.bree.add(job);
   this.bree.start(jobName);

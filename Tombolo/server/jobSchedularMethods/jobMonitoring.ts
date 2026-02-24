@@ -6,6 +6,7 @@ import {
   job_time_series_analysis_interval,
 } from '../config/monitorings.js';
 import logger from '../config/logger.js';
+import { resolveJobPath } from './jobPathResolver.js';
 import {
   generateTimeSlotsForJobMonitoring,
   generateIntervalString,
@@ -33,19 +34,20 @@ const humanReadableIntervalForJobMonitoring = generateIntervalString({
 async function startJobMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'job-monitoring' + new Date().getTime();
+    const defaultDistPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'dist',
+      'jobs',
+      'jobMonitoring',
+      MONITOR_JOBS_FILE_NAME.replace('.ts', '.js')
+    );
     this.bree.add({
       name: jobName,
       // interval: "1m", // For development
       interval: humanReadableIntervalForJobMonitoring,
-      path: path.join(
-        __dirname,
-        '..',
-        '..',
-        'dist',
-        'jobs',
-        'jobMonitoring',
-        MONITOR_JOBS_FILE_NAME.replace('.ts', '.js')
-      ),
+      path: resolveJobPath(defaultDistPath),
       worker: {
         workerData: {
           jobName: jobName,
@@ -74,19 +76,20 @@ const humanReadableIntervalForIntermediateJobMonitoring =
 async function startIntermediateJobsMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'intermediate-state-jobs-monitoring' + new Date().getTime();
+    const defaultDistPath2 = path.join(
+      __dirname,
+      '..',
+      '..',
+      'dist',
+      'jobs',
+      'jobMonitoring',
+      MONITOR_INTERMEDIATE_JOBS_FILE_NAME.replace('.ts', '.js')
+    );
     this.bree.add({
       name: jobName,
       // interval: "20s", // For development
       interval: humanReadableIntervalForIntermediateJobMonitoring,
-      path: path.join(
-        __dirname,
-        '..',
-        '..',
-        'dist',
-        'jobs',
-        'jobMonitoring',
-        MONITOR_INTERMEDIATE_JOBS_FILE_NAME.replace('.ts', '.js')
-      ),
+      path: resolveJobPath(defaultDistPath2),
       worker: {
         workerData: {
           jobName: jobName,
@@ -116,19 +119,20 @@ const humanReadableIntervalForJobPunctualityMonitoring = generateIntervalString(
 async function startJobPunctualityMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'job-punctuality-monitoring' + new Date().getTime();
+    const defaultDistPath3 = path.join(
+      __dirname,
+      '..',
+      '..',
+      'dist',
+      'jobs',
+      'jobMonitoring',
+      MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME.replace('.ts', '.js')
+    );
     this.bree.add({
       name: jobName,
       // interval: "30s", // For development
       interval: humanReadableIntervalForJobPunctualityMonitoring,
-      path: path.join(
-        __dirname,
-        '..',
-        '..',
-        'dist',
-        'jobs',
-        'jobMonitoring',
-        MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME.replace('.ts', '.js')
-      ),
+      path: resolveJobPath(defaultDistPath3),
       worker: {
         workerData: {
           jobName: jobName,
@@ -155,19 +159,20 @@ const humanReadableIntervalForTimeSeriesJobMonitoring = generateIntervalString({
 async function startTimeSeriesAnalysisMonitoring(this: any): Promise<void> {
   try {
     let jobName = 'job-time-series-analysis-monitoring' + new Date().getTime();
+    const defaultDistPath4 = path.join(
+      __dirname,
+      '..',
+      '..',
+      'dist',
+      'jobs',
+      'jobMonitoring',
+      MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME.replace('.ts', '.js')
+    );
     this.bree.add({
       name: jobName,
       // interval: "60s", // For development
       interval: humanReadableIntervalForTimeSeriesJobMonitoring,
-      path: path.join(
-        __dirname,
-        '..',
-        '..',
-        'dist',
-        'jobs',
-        'jobMonitoring',
-        MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME.replace('.ts', '.js')
-      ),
+      path: resolveJobPath(defaultDistPath4),
       worker: {
         workerData: {
           jobName: jobName,
@@ -186,19 +191,20 @@ async function startTimeSeriesAnalysisMonitoring(this: any): Promise<void> {
 function createWuInfoFetchingJob(this: any, data: any = {}): void {
   try {
     let jobName = 'fetch-wu-info' + new Date().getTime();
+    const defaultDistPath5 = path.join(
+      __dirname,
+      '..',
+      '..',
+      'dist',
+      'jobs',
+      'jobMonitoring',
+      'fetchWus.js'
+    );
     this.bree.add({
       name: jobName,
       data,
       timeout: 0,
-      path: path.join(
-        __dirname,
-        '..',
-        '..',
-        'dist',
-        'jobs',
-        'jobMonitoring',
-        'fetchWus.js'
-      ),
+      path: resolveJobPath(defaultDistPath5),
     });
     this.bree.start(jobName);
   } catch (err) {

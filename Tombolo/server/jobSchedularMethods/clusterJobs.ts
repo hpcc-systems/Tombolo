@@ -1,4 +1,5 @@
 import path from 'path';
+import { resolveJobPath } from './jobPathResolver.js';
 
 //Local imports
 import logger from '../config/logger.js';
@@ -26,12 +27,14 @@ async function startClusterMonitoring(this: any): Promise<void> {
       name: jobName,
       // interval: '10s', // For development
       interval: `${cluster_monitoring_interval}m`,
-      path: path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'cluster',
-        CLUSTER_MONITORING_FILE_NAME
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          'jobs',
+          'cluster',
+          CLUSTER_MONITORING_FILE_NAME
+        )
       ),
       worker: {
         workerData: {
@@ -54,12 +57,8 @@ async function scheduleClusterTimezoneOffset(this: any): Promise<void> {
     this.bree.add({
       name: jobName,
       interval: 'at 02:30am also at 02:30pm',
-      path: path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'cluster',
-        CLUSTER_TIMEZONE_OFFSET
+      path: resolveJobPath(
+        path.join(__dirname, '..', 'jobs', 'cluster', CLUSTER_TIMEZONE_OFFSET)
       ),
       worker: {
         workerData: {
@@ -81,12 +80,14 @@ async function createClusterUsageHistoryJob(this: any): Promise<void> {
     interval: 14400000, // 4 hours
     // interval: "10s", // For development
     name: uniqueJobName,
-    path: path.join(
-      __dirname,
-      '..',
-      'jobs',
-      'cluster',
-      CLUSTER_USAGE_HISTORY_TRACKER
+    path: resolveJobPath(
+      path.join(
+        __dirname,
+        '..',
+        'jobs',
+        'cluster',
+        CLUSTER_USAGE_HISTORY_TRACKER
+      )
     ),
   };
   this.bree.add(job);
@@ -101,12 +102,14 @@ async function checkClusterReachability(this: any): Promise<void> {
       name: jobName,
       // interval: "10s", // For development
       interval: clusterReachabilityMonitoringInterval,
-      path: path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'cluster',
-        MONITOR_CLUSTER_REACHABILITY_FILE_NAME
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          'jobs',
+          'cluster',
+          MONITOR_CLUSTER_REACHABILITY_FILE_NAME
+        )
       ),
       worker: {
         workerData: {
@@ -129,12 +132,14 @@ async function checkClusterContainerization(this: any): Promise<void> {
       name: jobName,
       // interval: '10s', // For development
       cron: clusterContainerizationCheckInterval,
-      path: path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'cluster',
-        CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          'jobs',
+          'cluster',
+          CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME
+        )
       ),
       worker: {
         workerData: {

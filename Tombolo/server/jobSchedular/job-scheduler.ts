@@ -1,5 +1,8 @@
 import Bree from 'bree';
+import path from 'path';
+import { pathToFileURL } from 'url';
 import logger from '../config/logger.js';
+import { getDirname } from '../utils/polyfills.js';
 import {
   logBreeJobs,
   createNewBreeJob,
@@ -67,12 +70,21 @@ class JobScheduler {
   bree: Bree;
 
   constructor() {
+    // In dev, tsx's ESM hooks need to be explicitly re-registered in worker
+    // threads because tsx skips registration when isMainThread is false.
+    // The tsx-worker-loader.mjs preload script handles this.
+    const __dirname = getDirname(import.meta.url);
+    const tsxWorkerLoader = pathToFileURL(
+      path.resolve(__dirname, '..', 'tsx-worker-loader.mjs')
+    ).toString();
+
     this.bree = new Bree({
       root: false,
       logger: false,
-      worker: {
-        execArgv: [],
-      },
+      worker:
+        process.env.NODE_ENV !== 'production'
+          ? { execArgv: ['--import', tsxWorkerLoader] }
+          : { execArgv: [] },
       errorHandler: (error: any, workerMetadata: any) => {
         const baseMessage = `Error in worker ${workerMetadata.name}${
           workerMetadata.threadId

@@ -10,6 +10,7 @@ import {
   generateTimeSlotsForJobMonitoring,
   generateIntervalString,
 } from './jobSchedularUtils.js';
+import { resolveJobPath } from './jobPathResolver.js';
 
 // Constants
 const __dirname = getDirname(import.meta.url);
@@ -47,14 +48,16 @@ async function startLzFileMovementMonitoring(this: any): Promise<void> {
       name: jobName,
       // interval: '20s', // For development
       interval: humanReadableIntervalForJobMonitoring,
-      path: path.join(
-        __dirname,
-        '..',
-        '..',
-        'dist',
-        'jobs',
-        'lzMonitoring',
-        LZ_FILE_MOVEMENT_MONITORING_FILE_NAME.replace('.ts', '.js')
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          '..',
+          'dist',
+          'jobs',
+          'lzMonitoring',
+          LZ_FILE_MOVEMENT_MONITORING_FILE_NAME.replace('.ts', '.js')
+        )
       ),
       worker: {
         workerData: {
@@ -78,14 +81,16 @@ async function startLzFileCountMonitoring(this: any): Promise<void> {
       name: jobName,
       // interval: '20s', // For development
       interval: humanReadableIntervalForFileCountMonitoring,
-      path: path.join(
-        __dirname,
-        '..',
-        '..',
-        'dist',
-        'jobs',
-        'lzMonitoring',
-        LZ_FILE_COUNT_MONITORING_FILE_NAME.replace('.ts', '.js')
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          '..',
+          'dist',
+          'jobs',
+          'lzMonitoring',
+          LZ_FILE_COUNT_MONITORING_FILE_NAME.replace('.ts', '.js')
+        )
       ),
       worker: {
         workerData: {
@@ -109,14 +114,16 @@ async function startLzSpaceUsageMonitoring(this: any): Promise<void> {
       name: jobName,
       // interval: '20s', // For development
       interval: humanReadableIntervalForSpaceUsageMonitoring,
-      path: path.join(
-        __dirname,
-        '..',
-        '..',
-        'dist',
-        'jobs',
-        'lzMonitoring',
-        LZ_SPACE_USAGE_MONITORING_FILE_NAME.replace('.ts', '.js')
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          '..',
+          'dist',
+          'jobs',
+          'lzMonitoring',
+          LZ_SPACE_USAGE_MONITORING_FILE_NAME.replace('.ts', '.js')
+        )
       ),
       worker: {
         workerData: {

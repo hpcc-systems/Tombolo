@@ -6,7 +6,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "tsc && nodemon dist/server.js",
+    "dev": "NODE_OPTIONS='--import tsx/esm' nodemon --exec tsx server.ts",
     "typecheck": "tsc --noEmit",
     "bootstrap-server": "(pnpm install) && (pnpm exec node dist/server.js)",
     "build": "pnpm typecheck && tsup",

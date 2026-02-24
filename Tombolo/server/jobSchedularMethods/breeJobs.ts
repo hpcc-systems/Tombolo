@@ -1,6 +1,7 @@
 import logger from '../config/logger.js';
 import path from 'path';
 import { getDirname } from '../utils/polyfills.js';
+import { resolveJobPath } from './jobPathResolver.js';
 
 const __dirname = getDirname(import.meta.url);
 
@@ -48,9 +49,17 @@ function createNewBreeJob(
     jobExecutionGroupId?: string;
   }
 ): void {
+  const defaultDistPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'jobs',
+    jobfileName
+  );
   const job: any = {
     name: uniqueJobName,
-    path: path.join(__dirname, '..', '..', 'dist', 'jobs', jobfileName),
+    path: resolveJobPath(defaultDistPath),
     worker: {
       workerData: {
         WORKER_CREATED_AT: Date.now(),

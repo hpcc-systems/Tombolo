@@ -1,6 +1,7 @@
 import path from 'path';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
+import { resolveJobPath } from './jobPathResolver.js';
 
 const __dirname = getDirname(import.meta.url);
 
@@ -10,12 +11,14 @@ async function removeUnverifiedUser(this: any): Promise<void> {
     this.bree.add({
       name: jobName,
       interval: '3600s',
-      path: path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'userManagement',
-        'removeUnverifiedUsers.js'
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          'jobs',
+          'userManagement',
+          'removeUnverifiedUsers.js'
+        )
       ),
       worker: {
         workerData: {
@@ -38,12 +41,14 @@ async function sendPasswordExpiryEmails(this: any): Promise<void> {
     this.bree.add({
       name: jobName,
       interval: '12h',
-      path: path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'userManagement',
-        'passwordExpiry.js'
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          'jobs',
+          'userManagement',
+          'passwordExpiry.js'
+        )
       ),
       worker: {
         workerData: {
@@ -68,12 +73,8 @@ async function sendAccountDeleteEmails(this: any): Promise<void> {
     this.bree.add({
       name: jobName,
       interval: '12h',
-      path: path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'userManagement',
-        'accountDelete.js'
+      path: resolveJobPath(
+        path.join(__dirname, '..', 'jobs', 'userManagement', 'accountDelete.js')
       ),
       worker: {
         workerData: {

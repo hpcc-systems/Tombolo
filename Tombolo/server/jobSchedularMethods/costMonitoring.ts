@@ -2,6 +2,7 @@ import path from 'path';
 import { monitor_cost_interval } from '../config/monitorings.js';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
+import { resolveJobPath } from './jobPathResolver.js';
 
 const __dirname = getDirname(import.meta.url);
 const MONITOR_COST_FILE_NAME = 'monitorCost.js';
@@ -13,12 +14,14 @@ function createMonitorCostJob(this: any): void {
     this.bree.add({
       name: jobName,
       interval: monitor_cost_interval,
-      path: path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'costMonitoring',
-        MONITOR_COST_FILE_NAME
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          'jobs',
+          'costMonitoring',
+          MONITOR_COST_FILE_NAME
+        )
       ),
       worker: {
         workerData: {
@@ -39,12 +42,14 @@ function createAnalyzeCostJob(this: any): void {
   try {
     this.bree.add({
       name: analyzeCostJobName,
-      path: path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'costMonitoring',
-        ANALYZE_COST_FILE_NAME
+      path: resolveJobPath(
+        path.join(
+          __dirname,
+          '..',
+          'jobs',
+          'costMonitoring',
+          ANALYZE_COST_FILE_NAME
+        )
       ),
       timeout: 0, // Run immediately
       worker: {
