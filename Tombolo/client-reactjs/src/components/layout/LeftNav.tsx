@@ -253,13 +253,26 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
 
   const workunitItems = [
     getItem(
+      <Link to={'/workunits/dashboard'}>
+        <span>
+          <DashboardOutlined />
+          <span style={{ marginLeft: '1rem' }}>Dashboard</span>
+        </span>
+      </Link>,
+      '7a',
+      null,
+      null,
+      null,
+      disabled
+    ),
+    getItem(
       <Link to={'/workunits/history'}>
         <span>
           <HistoryOutlined />
           <span style={{ marginLeft: '1rem' }}>History</span>
         </span>
       </Link>,
-      '7a',
+      '7b',
       null,
       null,
       null,
@@ -274,7 +287,7 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
                 <span style={{ marginLeft: '1rem' }}>SQL</span>
               </span>
             </Link>,
-            '7b',
+            '7c',
             null,
             null,
             null,
