@@ -115,7 +115,8 @@ const WorkUnitHistory = () => {
       // Calculate statistics
       if (result.data && result.data.length > 0) {
         const totalCost = result.data.reduce((sum, wu) => sum + (wu.totalCost || 0), 0);
-        const avgTime = result.data.reduce((sum, wu) => sum + (wu.totalClusterTime || 0), 0) / result.data.length;
+        // totalClusterTime is in hours, convert to seconds for display
+        const avgTime = result.data.reduce((sum, wu) => sum + (wu.totalClusterTime || 0), 0) / result.data.length * 3600;
         setStatistics({
           totalJobs: result.total,
           totalCost,
@@ -535,8 +536,8 @@ const WorkUnitHistory = () => {
             if (record.state === 'failed' || record.state === 'aborted') {
               return 'wu-row-failed';
             }
-            // Orange for long running (>2h)
-            if (record.state === 'running' && (record.totalClusterTime || 0) > 7200) {
+            // Orange for long running (>2h) - totalClusterTime is in hours
+            if (record.state === 'running' && (record.totalClusterTime || 0) > 2) {
               return 'wu-row-long-running';
             }
             return '';
