@@ -1,16 +1,16 @@
 // Imports from libraries
 import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin } from 'antd';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useHistory } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
 // Local imports
 import { handleError } from '../common/handleResponse';
-import msLogo from '../../images/mslogo.png';
 import { getDeviceInfo } from './utils';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
+import AzureLoginButton from './AzureLoginButton';
 
 import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 import styles from './login.module.css';
@@ -41,6 +41,7 @@ if (methods.includes('azure') && !hasAllAzureEnv) {
 const Login = () => {
   const dispatch = useDispatch();
   const location = useLocation();
+  const history = useHistory();
 
   // Validate URL is safe for internal redirect (prevent open-redirects to other origins)
   const isValidInternalUrl = url => {
@@ -204,8 +205,9 @@ const Login = () => {
       const res = await dispatch(loginOrRegisterAzureUser(code));
 
       if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
-        //redirect to intended page or home if login is successful
-        safeRedirect(getRedirectUrl());
+        //redirect to intended page or home if login is successful, using replace to clean URL
+        const redirectUrl = getRedirectUrl();
+        history.replace(redirectUrl);
         return;
       }
     } catch (err) {
@@ -236,16 +238,9 @@ const Login = () => {
                 <Spin size="large" style={{ margin: '0 auto' }} />
               </div>
             )}
-            <Divider>Log In With</Divider>
             {azureEnabled && (
               <Form.Item>
-                <Button
-                  size="large"
-                  style={{ background: 'black', color: 'white' }}
-                  className="fullWidth"
-                  onClick={() => azureLogin()}>
-                  <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
-                </Button>
+                <AzureLoginButton onClick={() => azureLogin()} label="Login with Microsoft" />
               </Form.Item>
             )}
 

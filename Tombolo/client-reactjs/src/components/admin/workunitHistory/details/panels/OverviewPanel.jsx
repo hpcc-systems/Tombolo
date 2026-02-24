@@ -267,7 +267,7 @@ const OverviewPanel = ({ wu, details, clusterName }) => {
               <Col span={8}>
                 <Statistic
                   title="Total Elapsed"
-                  valueRender={() => <span>{formatSeconds(wu.totalClusterTime)}</span>}
+                  valueRender={() => <span>{formatSeconds(wu.totalClusterTime * 3600)}</span>}
                   prefix={<FieldTimeOutlined />}
                 />
               </Col>
