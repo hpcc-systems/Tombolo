@@ -88,13 +88,15 @@ const App: FC = () => {
   useEffect(() => {
     if (ownerExists && !user?.isAuthenticated) {
       const currentPath = history.location.pathname + history.location.search + history.location.hash;
-      // Don't store auth routes or home page
+      // Don't store auth routes, home page, or URLs with Azure auth parameters
       if (
         !currentPath.startsWith('/login') &&
         !currentPath.startsWith('/register') &&
         !currentPath.startsWith('/forgot-password') &&
         !currentPath.startsWith('/reset-') &&
-        currentPath !== '/'
+        currentPath !== '/' &&
+        !currentPath.includes('?code=') &&
+        !currentPath.includes('&code=')
       ) {
         localStorage.setItem('intendedUrl', currentPath);
       }

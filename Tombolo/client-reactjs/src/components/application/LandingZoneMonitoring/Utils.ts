@@ -1,4 +1,3 @@
-// Function to identify erroneous tab(s)
 const formFields: Record<number, string[]> = {
   0: ['monitoringName', 'description', 'monitoringScope', 'clusterId', 'directoryName'],
   1: ['domain', 'productCategory', 'expectedStartTime', 'expectedCompletionTime', 'severity', 'requireComplete'],
@@ -18,8 +17,7 @@ export const identifyErroneousTabs = ({ erroneousFields }: { erroneousFields: st
   return erroneousTabs;
 };
 
-// Check if 2 schedule are the same
-export function isScheduleUpdated({ existingSchedule, newSchedule }: { existingSchedule: any[]; newSchedule: any[] }) {
+export function isScheduleUpdated({ existingSchedule, newSchedule }: { existingSchedule: any[]; newSchedule: any[] }): boolean {
   if (existingSchedule.length !== newSchedule.length) return true;
   for (let i = 0; i < existingSchedule.length; i++) {
     if (JSON.stringify(existingSchedule[i]) !== JSON.stringify(newSchedule[i])) return true;
@@ -27,13 +25,11 @@ export function isScheduleUpdated({ existingSchedule, newSchedule }: { existingS
   return false;
 }
 
-// Convert storage values to MB for comparison
-export const convertToMB = (value: number, unit: string) => {
+export const convertToMB = (value: number, unit: string): number => {
   const multipliers: Record<string, number> = { MB: 1, GB: 1024, TB: 1024 * 1024, PB: 1024 * 1024 * 1024 };
   return value * (multipliers[unit] || 1);
 };
 
-// Handle landing zone monitoring approval with success/error handling and data refresh
 export async function handleLandingZoneMonitoringApproval({
   formData,
   landingZoneMonitoringService,

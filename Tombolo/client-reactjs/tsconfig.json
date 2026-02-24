@@ -20,6 +20,6 @@
     },
     "types": ["vite/client"]
   },
-  "include": ["src/**/*", "vite.config.*", "src/**/*.d.ts"],
+  "include": ["src/**/*", "vite.config.*", "vitest.config.*", "src/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -73,7 +73,8 @@ const MonitoringDetailsModal: React.FC<any> = ({
 
   const clusterNames = getClusterNames(clusterIds || []);
 
-  const AuditInfo: React.FC = () => {
+  // Inline Audit info so Ant Design `Descriptions` receives `Descriptions.Item` nodes directly
+  const renderAuditInfo = () => {
     if (fkUuids) {
       return (
         <>
@@ -87,8 +88,9 @@ const MonitoringDetailsModal: React.FC<any> = ({
           )}
 
           <Descriptions.Item label="Created by">
-            <Tooltip title={<div>Email: {creator.email}</div>}>
-              <span style={{ color: 'var(--primary)' }}>{`${creator.firstName} ${creator.lastName}`}</span>
+            <Tooltip title={<div>Email: {creator?.email}</div>}>
+              <span
+                style={{ color: 'var(--primary)' }}>{`${creator?.firstName || ''} ${creator?.lastName || ''}`}</span>
             </Tooltip>{' '}
             on {new Date(createdAt).toLocaleDateString('en-US', Constants.DATE_FORMAT_OPTIONS)}
           </Descriptions.Item>
@@ -263,7 +265,7 @@ const MonitoringDetailsModal: React.FC<any> = ({
 
         {approverComment && <Descriptions.Item label="Approver's comment">{approverComment}</Descriptions.Item>}
 
-        <AuditInfo />
+        {renderAuditInfo()}
       </Descriptions>
     </Modal>
   );
