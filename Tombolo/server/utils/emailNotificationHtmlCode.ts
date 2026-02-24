@@ -14,13 +14,25 @@ const emailNotificationHtmlCode = ({
   templateName,
   data,
 }: EmailTemplateOptions): string => {
-  const templatePath = path.join(
-    __dirname,
-    '..',
-    'notificationTemplates',
-    'email',
-    `${templateName}.ejs`
-  );
+  // Check if running from compiled dist or source
+  const isCompiledVersion = __dirname.includes('/dist/');
+  const templatePath = isCompiledVersion
+    ? path.join(
+        __dirname,
+        '..',
+        '..',
+        'notificationTemplates',
+        'email',
+        `${templateName}.ejs`
+      )
+    : path.join(
+        __dirname,
+        '..',
+        'notificationTemplates',
+        'email',
+        `${templateName}.ejs`
+      );
+
   const template = fs.readFileSync(templatePath, 'utf-8');
   return ejs.render(template, data);
 };

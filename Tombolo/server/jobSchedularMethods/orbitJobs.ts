@@ -3,19 +3,18 @@ import logger from '../config/logger.js';
 
 import { OrbitMonitoring } from '../models/index.js';
 import { getDirname } from '../utils/polyfills.js';
-import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 const __dirname = getDirname(import.meta.url);
-const MEGAPHONE_JOB = `orbitMegaphone.${JOB_EXTENSION}`;
-const ORBIT_MONITORING = `submitOrbitMonitoring.${JOB_EXTENSION}`;
-const ORBIT_PROFILE_MONITORING = `monitorOrbitProfile.${JOB_EXTENSION}`;
+const MEGAPHONE_JOB = 'orbitMegaphone.js';
+const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
+const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';
 
 function createOrbitMegaphoneJob(this: any): void {
   const uniqueJobName = 'Orbit Megaphone Job';
   const job = {
     interval: '30m',
     name: uniqueJobName,
-    path: path.join(__dirname, '..', 'jobs', MEGAPHONE_JOB),
+    path: path.join(__dirname, '..', '..', 'dist', 'jobs', MEGAPHONE_JOB),
   };
   this.bree.add(job);
   this.bree.start(uniqueJobName);
@@ -30,7 +29,7 @@ function createOrbitMonitoringJob(
   const job = {
     cron,
     name: uniqueJobName,
-    path: path.join(__dirname, '..', 'jobs', ORBIT_MONITORING),
+    path: path.join(__dirname, '..', '..', 'dist', 'jobs', ORBIT_MONITORING),
     worker: {
       workerData: { orbitMonitoring_id },
     },
@@ -52,6 +51,8 @@ function createOrbitProfileMonitoringJob(
     path: path.join(
       __dirname,
       '..',
+      '..',
+      'dist',
       'jobs',
       'orbitProfileMonitoring',
       ORBIT_PROFILE_MONITORING

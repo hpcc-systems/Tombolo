@@ -8,15 +8,15 @@ import {
   clusterContainerizationCheckInterval,
 } from '../config/monitorings.js';
 import { getDirname } from '../utils/polyfills.js';
-import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 // Constants
 const __dirname = getDirname(import.meta.url);
-const CLUSTER_MONITORING_FILE_NAME = `clusterMonitoring.${JOB_EXTENSION}`;
-const CLUSTER_TIMEZONE_OFFSET = `clustertimezoneoffset.${JOB_EXTENSION}`;
-const CLUSTER_USAGE_HISTORY_TRACKER = `submitClusterUsageTracker.${JOB_EXTENSION}`;
-const MONITOR_CLUSTER_REACHABILITY_FILE_NAME = `monitorClusterReachability.${JOB_EXTENSION}`;
-const CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME = `checkIfClusterIsContainerized.${JOB_EXTENSION}`;
+const CLUSTER_MONITORING_FILE_NAME = 'clusterMonitoring.js';
+const CLUSTER_TIMEZONE_OFFSET = 'clustertimezoneoffset.js';
+const CLUSTER_USAGE_HISTORY_TRACKER = 'submitClusterUsageTracker.js';
+const MONITOR_CLUSTER_REACHABILITY_FILE_NAME = 'monitorClusterReachability.js';
+const CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME =
+  'checkIfClusterIsContainerized.js';
 
 // Cluster status monitoring bree job
 async function startClusterMonitoring(this: any): Promise<void> {

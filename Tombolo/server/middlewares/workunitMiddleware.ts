@@ -20,8 +20,8 @@ const VALID_ORDER_DIRECTIONS = ['asc', 'desc', 'ASC', 'DESC'];
 
 // Validation for GET /api/workunits (list with filters)
 const validateGetWorkunits = [
-  intQuery('page', true, { min: 1 }),
-  intQuery('limit', true, { min: 1, max: 100 }),
+  intQuery('page', true),
+  intQuery('limit', true),
   stringQuery('clusterId', true),
   stringQuery('state', true), // comma-separated list
   stringQuery('owner', true),
@@ -56,7 +56,7 @@ const validateGetWorkunitDetails = [
 const validateGetWorkunitHotspots = [
   stringParam('clusterId', false),
   stringParam('wuid', false),
-  intQuery('limit', true, { min: 1, max: 100 }),
+  intQuery('limit', true),
 ];
 
 // Validation for GET /api/workunits/:clusterId/:wuid/timeline
@@ -70,7 +70,7 @@ const validateGetJobHistoryByJobName = [
   stringParam('clusterId', false),
   stringParam('jobName', false),
   dateTimeQuery('startDate', true),
-  intQuery('limit', true, { min: 1, max: 1000 }),
+  intQuery('limit', true),
 ];
 
 // Validation for GET /api/workunits/:clusterId/job-history/:jobName/stats

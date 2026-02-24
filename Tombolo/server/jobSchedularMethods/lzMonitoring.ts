@@ -10,13 +10,12 @@ import {
   generateTimeSlotsForJobMonitoring,
   generateIntervalString,
 } from './jobSchedularUtils.js';
-import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 // Constants
 const __dirname = getDirname(import.meta.url);
-const LZ_FILE_MOVEMENT_MONITORING_FILE_NAME = `lzFileMovementMonitoring.${JOB_EXTENSION}`;
-const LZ_FILE_COUNT_MONITORING_FILE_NAME = `lzFileCountMonitoring.${JOB_EXTENSION}`;
-const LZ_SPACE_USAGE_MONITORING_FILE_NAME = `lzSpaceUsageMonitoring.${JOB_EXTENSION}`;
+const LZ_FILE_MOVEMENT_MONITORING_FILE_NAME = 'lzFileMovementMonitoring.js';
+const LZ_FILE_COUNT_MONITORING_FILE_NAME = 'lzFileCountMonitoring.js';
+const LZ_SPACE_USAGE_MONITORING_FILE_NAME = 'lzSpaceUsageMonitoring.js';
 
 const jobMonitoringTimeSlots = generateTimeSlotsForJobMonitoring({
   interval: lz_monitoring_interval,
@@ -51,9 +50,11 @@ async function startLzFileMovementMonitoring(this: any): Promise<void> {
       path: path.join(
         __dirname,
         '..',
+        '..',
+        'dist',
         'jobs',
         'lzMonitoring',
-        LZ_FILE_MOVEMENT_MONITORING_FILE_NAME
+        LZ_FILE_MOVEMENT_MONITORING_FILE_NAME.replace('.ts', '.js')
       ),
       worker: {
         workerData: {
@@ -80,9 +81,11 @@ async function startLzFileCountMonitoring(this: any): Promise<void> {
       path: path.join(
         __dirname,
         '..',
+        '..',
+        'dist',
         'jobs',
         'lzMonitoring',
-        LZ_FILE_COUNT_MONITORING_FILE_NAME
+        LZ_FILE_COUNT_MONITORING_FILE_NAME.replace('.ts', '.js')
       ),
       worker: {
         workerData: {
@@ -109,9 +112,11 @@ async function startLzSpaceUsageMonitoring(this: any): Promise<void> {
       path: path.join(
         __dirname,
         '..',
+        '..',
+        'dist',
         'jobs',
         'lzMonitoring',
-        LZ_SPACE_USAGE_MONITORING_FILE_NAME
+        LZ_SPACE_USAGE_MONITORING_FILE_NAME.replace('.ts', '.js')
       ),
       worker: {
         workerData: {

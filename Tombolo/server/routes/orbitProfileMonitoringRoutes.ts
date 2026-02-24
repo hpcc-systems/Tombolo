@@ -54,7 +54,7 @@ router.put(
 
 router.delete(
   '/',
-  validate(deleteOrbitMonitoringPayloadValidations),
+  validate(...deleteOrbitMonitoringPayloadValidations),
   deleteOrbitProfileMonitoring
 );
 

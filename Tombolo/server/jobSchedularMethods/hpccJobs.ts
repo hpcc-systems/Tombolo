@@ -2,10 +2,9 @@ import path from 'path';
 
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
-import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 const __dirname = getDirname(import.meta.url);
-const JOB_STATUS_POLLER = `statusPoller.${JOB_EXTENSION}`;
+const JOB_STATUS_POLLER = 'statusPoller.js';
 
 async function scheduleJobStatusPolling(this: any): Promise<void> {
   logger.info('Status puller for dataflow jobs initialized ...');
@@ -16,7 +15,14 @@ async function scheduleJobStatusPolling(this: any): Promise<void> {
     this.bree.add({
       name: jobName,
       interval: '20s',
-      path: path.join(__dirname, '..', 'jobs', JOB_STATUS_POLLER),
+      path: path.join(
+        __dirname,
+        '..',
+        '..',
+        'dist',
+        'jobs',
+        JOB_STATUS_POLLER.replace('.ts', '.js')
+      ),
       worker: {
         workerData: {
           jobName: jobName,

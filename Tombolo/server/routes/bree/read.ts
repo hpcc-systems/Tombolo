@@ -59,7 +59,7 @@ router.delete(
   validate([query('name').notEmpty().isString()]),
   async (req: Request, res: Response) => {
     // Route logic
-    const jobName = req.query.name;
+    const jobName = req.query.name as string;
     try {
       const result = await jobScheduler.removeJobFromScheduler(jobName);
       return sendSuccess(res, result, 'Job removed successfully');

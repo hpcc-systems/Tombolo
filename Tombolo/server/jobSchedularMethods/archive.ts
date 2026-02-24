@@ -1,9 +1,8 @@
 import path from 'path';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
-import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
-const ARCHIVE_DATA_FILE_NAME = `archiveData.${JOB_EXTENSION}`;
+const ARCHIVE_DATA_FILE_NAME = 'archiveData.js';
 
 const __dirname = getDirname(import.meta.url);
 
@@ -16,9 +15,11 @@ function createDataArchiveJob(this: any): void {
       path: path.join(
         __dirname,
         '..',
+        '..',
+        'dist',
         'jobs',
         'archive',
-        ARCHIVE_DATA_FILE_NAME
+        ARCHIVE_DATA_FILE_NAME.replace('.ts', '.js')
       ),
       worker: {
         workerData: {

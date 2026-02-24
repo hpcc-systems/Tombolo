@@ -3,11 +3,12 @@ import path from 'path';
 import { FileMonitoring } from '../models/index.js';
 import { getDirname } from '../utils/polyfills.js';
 import logger from '../config/logger.js';
-import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 const __dirname = getDirname(import.meta.url);
-const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME = `submitLandingZoneFileMonitoring.${JOB_EXTENSION}`;
-const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME = `submitLogicalFileMonitoring.${JOB_EXTENSION}`;
+const SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME =
+  'submitLandingZoneFileMonitoring.js';
+const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
+  'submitLogicalFileMonitoring.js';
 // const FILE_MONITORING = `fileMonitoringPoller.${JOB_EXTENSION}`;
 
 function createLandingZoneFileMonitoringBreeJob(
@@ -24,8 +25,10 @@ function createLandingZoneFileMonitoringBreeJob(
     path: path.join(
       __dirname,
       '..',
+      '..',
+      'dist',
       'jobs',
-      SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME
+      SUBMIT_LANDINGZONE_FILEMONITORING_FILE_NAME.replace('.ts', '.js')
     ),
     worker: {
       workerData: { filemonitoring_id },
@@ -48,8 +51,10 @@ function createLogicalFileMonitoringBreeJob(
     path: path.join(
       __dirname,
       '..',
+      '..',
+      'dist',
       'jobs',
-      SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME
+      SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME.replace('.ts', '.js')
     ),
     worker: {
       workerData: { filemonitoring_id },

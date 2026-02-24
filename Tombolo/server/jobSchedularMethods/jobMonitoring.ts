@@ -11,14 +11,14 @@ import {
   generateIntervalString,
 } from './jobSchedularUtils.js';
 import { getDirname } from '../utils/polyfills.js';
-import { JOB_EXTENSION } from '../utils/jobExtension.js';
 
 // Constants
 const __dirname = getDirname(import.meta.url);
-const MONITOR_JOBS_FILE_NAME = `monitorJobs.${JOB_EXTENSION}`;
-const MONITOR_INTERMEDIATE_JOBS_FILE_NAME = `monitorIntermediateStateJobs.${JOB_EXTENSION}`;
-const MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME = `monitorJobPunctuality.${JOB_EXTENSION}`;
-const MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME = `monitorJobsTimeSeriesAnalysis.${JOB_EXTENSION}`;
+const MONITOR_JOBS_FILE_NAME = 'monitorJobs.js';
+const MONITOR_INTERMEDIATE_JOBS_FILE_NAME = 'monitorIntermediateStateJobs.js';
+const MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME = 'monitorJobPunctuality.js';
+const MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME =
+  'monitorJobsTimeSeriesAnalysis.js';
 
 // Job monitoring
 // Job monitoring interval
@@ -40,9 +40,11 @@ async function startJobMonitoring(this: any): Promise<void> {
       path: path.join(
         __dirname,
         '..',
+        '..',
+        'dist',
         'jobs',
         'jobMonitoring',
-        MONITOR_JOBS_FILE_NAME
+        MONITOR_JOBS_FILE_NAME.replace('.ts', '.js')
       ),
       worker: {
         workerData: {
@@ -79,9 +81,11 @@ async function startIntermediateJobsMonitoring(this: any): Promise<void> {
       path: path.join(
         __dirname,
         '..',
+        '..',
+        'dist',
         'jobs',
         'jobMonitoring',
-        MONITOR_INTERMEDIATE_JOBS_FILE_NAME
+        MONITOR_INTERMEDIATE_JOBS_FILE_NAME.replace('.ts', '.js')
       ),
       worker: {
         workerData: {
@@ -119,9 +123,11 @@ async function startJobPunctualityMonitoring(this: any): Promise<void> {
       path: path.join(
         __dirname,
         '..',
+        '..',
+        'dist',
         'jobs',
         'jobMonitoring',
-        MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME
+        MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME.replace('.ts', '.js')
       ),
       worker: {
         workerData: {
@@ -156,9 +162,11 @@ async function startTimeSeriesAnalysisMonitoring(this: any): Promise<void> {
       path: path.join(
         __dirname,
         '..',
+        '..',
+        'dist',
         'jobs',
         'jobMonitoring',
-        MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME
+        MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME.replace('.ts', '.js')
       ),
       worker: {
         workerData: {
@@ -185,9 +193,11 @@ function createWuInfoFetchingJob(this: any, data: any = {}): void {
       path: path.join(
         __dirname,
         '..',
+        '..',
+        'dist',
         'jobs',
         'jobMonitoring',
-        `fetchWus.${JOB_EXTENSION}`
+        'fetchWus.js'
       ),
     });
     this.bree.start(jobName);

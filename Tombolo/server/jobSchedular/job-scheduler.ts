@@ -70,6 +70,9 @@ class JobScheduler {
     this.bree = new Bree({
       root: false,
       logger: false,
+      worker: {
+        execArgv: [],
+      },
       errorHandler: (error: any, workerMetadata: any) => {
         const baseMessage = `Error in worker ${workerMetadata.name}${
           workerMetadata.threadId

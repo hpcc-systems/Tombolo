@@ -50,7 +50,7 @@ function createNewBreeJob(
 ): void {
   const job: any = {
     name: uniqueJobName,
-    path: path.join(__dirname, '..', 'jobs', jobfileName),
+    path: path.join(__dirname, '..', '..', 'dist', 'jobs', jobfileName),
     worker: {
       workerData: {
         WORKER_CREATED_AT: Date.now(),
