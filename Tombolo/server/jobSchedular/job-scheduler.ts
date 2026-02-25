@@ -73,18 +73,23 @@ class JobScheduler {
     // In dev, tsx's ESM hooks need to be explicitly re-registered in worker
     // threads because tsx skips registration when isMainThread is false.
     // The tsx-worker-loader.mjs preload script handles this.
+    // In production (compiled dist/), workers run plain JS and don't need tsx.
     const __dirname = getDirname(import.meta.url);
-    const tsxWorkerLoader = pathToFileURL(
-      path.resolve(__dirname, '..', 'tsx-worker-loader.mjs')
-    ).toString();
+    const tsxWorkerLoaderPath = path.resolve(
+      __dirname,
+      '..',
+      'tsx-worker-loader.mjs'
+    );
+    const tsxWorkerLoader = pathToFileURL(tsxWorkerLoaderPath).toString();
+    const isCompiled =
+      __dirname.includes('/dist/') || __dirname.includes('\\dist\\');
 
     this.bree = new Bree({
       root: false,
       logger: false,
-      worker:
-        process.env.NODE_ENV !== 'production'
-          ? { execArgv: ['--import', tsxWorkerLoader] }
-          : { execArgv: [] },
+      worker: isCompiled
+        ? { execArgv: [] }
+        : { execArgv: ['--import', tsxWorkerLoader] },
       errorHandler: (error: any, workerMetadata: any) => {
         const baseMessage = `Error in worker ${workerMetadata.name}${
           workerMetadata.threadId

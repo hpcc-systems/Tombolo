@@ -55,7 +55,7 @@ export default function config({ mode }: { mode: string }) {
       },
     },
     resolve: {
-      extensions: ['.js', '.jsx', '.css', '.module.css', '.ts', '.tsx'],
+      extensions: ['.ts', '.tsx', '.js', '.jsx'],
       alias: {
         '@': path.resolve(__dirname, './src'),
         '~': path.resolve(__dirname, '../../node_modules'),

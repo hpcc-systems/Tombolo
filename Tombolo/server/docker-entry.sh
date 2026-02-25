@@ -16,16 +16,20 @@ done
 
 log "MySQL is ready, initializing database..."
 
+# sequelize-cli flags to avoid needing a .sequelizerc file
+# (the server package uses "type": "module" which conflicts with CJS .sequelizerc)
+SEQ_OPTS="--config node_modules/@tombolo/db/config/config.cjs --migrations-path node_modules/@tombolo/db/migrations --seeders-path node_modules/@tombolo/db/seeders --models-path node_modules/@tombolo/db/models"
+
 if command -v sequelize >/dev/null 2>&1; then
-  if ! sequelize db:create >/dev/null 2>&1; then
+  if ! sequelize db:create ${SEQ_OPTS} >/dev/null 2>&1; then
     log "sequelize db:create returned non-zero (continuing)"
   fi
 
   log "Running migrations..."
-  sequelize db:migrate || log "migrations failed"
+  sequelize db:migrate ${SEQ_OPTS} || log "migrations failed"
 
   log "Running seeds..."
-  sequelize db:seed:all || log "seeds failed"
+  sequelize db:seed:all ${SEQ_OPTS} || log "seeds failed"
 else
   log "sequelize not found in PATH; skipping migrations/seeds"
 fi
@@ -45,10 +49,8 @@ if command -v pm2-runtime >/dev/null 2>&1; then
   exec pm2-runtime start process.yml
 else
   log "pm2-runtime not found; attempting fallback start"
-  if [ -f /app/server.js ]; then
-    exec node /app/server.js
-  elif [ -f /app/dist/app.js ]; then
-    exec node /app/dist/app.js
+  if [ -f /app/dist/server.js ]; then
+    exec node /app/dist/server.js
   else
     log "No start command found; exiting"
     exit 1

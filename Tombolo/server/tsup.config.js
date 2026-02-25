@@ -6,6 +6,7 @@ export default defineConfig({
     '**/*.ts',
     '!**/*.test.ts',
     '!**/*.spec.ts',
+    '!node_modules/**',
     '!vitest.config.js',
     '!*.sample.js',
     '!tsx-worker-loader.mjs',
@@ -17,7 +18,7 @@ export default defineConfig({
   clean: true,
   outDir: 'dist',
   shims: true,
-  external: [/.*/], // Keep all imports external (server runs with node_modules)
+  external: [/^[^./]/], // Externalize bare module imports (node_modules), not relative paths
   bundle: false, // Don't bundle - transpile each file individually, preserving structure
   onSuccess: async () => {
     await cp('notificationTemplates', 'dist/notificationTemplates', {
