@@ -74,29 +74,39 @@ function transformWorkunitData(
     parseFloat(String(workunit.FileAccessCost || 0)) || 0.0;
   const compileCost = parseFloat(String(workunit.CompileCost || 0)) || 0.0;
   const totalCost = executeCost + fileAccessCost + compileCost;
+  const totalClusterTime =
+    parseFloat(String(workunit.TotalClusterTime || 0)) || 0.0;
+
+  const workUnitTimestamp = parseWorkunitTimestamp(
+    String(workunit.Wuid),
+    timezoneOffset
+  );
+
+  const endTimestamp = new Date(
+    workUnitTimestamp.getTime() + totalClusterTime * 3600000
+  );
 
   return {
     wuId: String(workunit.Wuid),
     clusterId,
-    workUnitTimestamp: parseWorkunitTimestamp(
-      String(workunit.Wuid),
-      timezoneOffset
-    ),
+    workUnitTimestamp,
     owner: String(workunit.Owner || 'unknown'),
     engine: String(workunit.Cluster || 'unknown'),
     jobName: workunit.Jobname ? String(workunit.Jobname) : null,
-    stateId: Number(workunit.StateID) || 0,
     state: String(workunit.State || 'unknown'),
     protected: workunit.Protected === true,
-    action: Number(workunit.Action) || 0,
     actionEx: workunit.ActionEx ? String(workunit.ActionEx) : null,
     isPausing: workunit.IsPausing === true,
     thorLcr: workunit.ThorLCR === true,
-    totalClusterTime: parseFloat(String(workunit.TotalClusterTime || 0)) || 0.0,
+    totalClusterTime,
+    endTimestamp,
     executeCost,
     fileAccessCost,
     compileCost,
     totalCost,
+    savingPotential: workunit.CostSavingPotential
+      ? parseFloat(String(workunit.CostSavingPotential || 0))
+      : null,
   };
 }
 
@@ -202,18 +212,18 @@ async function getWorkUnits(
             'owner',
             'engine',
             'jobName',
-            'stateId',
             'state',
             'protected',
-            'action',
             'actionEx',
             'isPausing',
             'thorLcr',
             'totalClusterTime',
+            'endTimestamp',
             'executeCost',
             'fileAccessCost',
             'compileCost',
             'totalCost',
+            'savingPotential',
             'updatedAt',
           ],
         });
