@@ -79,6 +79,7 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
     setClusterDisabled(!(Array.isArray(clusters) && clusters.length > 0 && applicationId));
   }, [clusters, applicationId]);
 
+  //adjust the current highlighted menu item based on the current path
   useEffect(() => {
     const options: Record<string, string> = {
       fileMonitoring: '4a',
@@ -98,6 +99,7 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
       msTeams: '13a',
     };
 
+    // on init we check pathname if it contains options key in name, if it does => highlight that menu item
     for (const key in options) {
       const path = history.location.pathname;
       if (path.includes(key)) {
@@ -106,8 +108,12 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
     }
   }, [history.location.pathname]);
 
+  // Only render if authenticated
   if (!isAuthenticated) return null;
 
+  // const asrActive = integrations.some((i) => i.name === 'ASR' && i.application_id === applicationId);
+
+  //TODO - check if user has edit permission
   const ownerOrAdmin = roleArray?.includes('administrator') || roleArray?.includes('owner');
 
   const monitoringItems = [
@@ -278,6 +284,7 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
       null,
       disabled
     ),
+    // SQL Analytics - only visible to owner and administrator
     ...(roleArray.includes('owner') || roleArray.includes('administrator')
       ? [
           getItem(

@@ -41,7 +41,8 @@
     "db:seed": "sequelize db:seed:all",
     "db:drop": "sequelize db:drop",
     "clean": "rm -rf .turbo dist",
-    "clean:deps": "rm -rf node_modules"
+    "clean:deps": "rm -rf node_modules",
+    "migration:generate": "sequelize-cli migration:generate --name"
   },
   "devDependencies": {
     "@types/node": "catalog:",
