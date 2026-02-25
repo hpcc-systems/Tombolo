@@ -13,6 +13,7 @@ import logger from '../../../config/logger.js';
 // Constants
 const MONITORING_TYPE_NAME = 'WorkUnit History';
 const DB_BATCH_SIZE = 200; // Maximum records per database insert to prevent crashes
+const MS_IN_HOUR = 3_600_000;
 
 /**
  * Splits an array into chunks of specified size
@@ -83,7 +84,7 @@ function transformWorkunitData(
   );
 
   const endTimestamp = new Date(
-    workUnitTimestamp.getTime() + totalClusterTime * 3600000
+    workUnitTimestamp.getTime() + totalClusterTime * MS_IN_HOUR
   );
 
   return {
