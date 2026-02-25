@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
@@ -211,7 +211,7 @@ describe('Register', () => {
 
       const emailInput = screen.getByLabelText(/^Email$/i);
       const longEmail = 'a'.repeat(250) + '@test.com';
-      await user.type(emailInput, longEmail);
+      fireEvent.change(emailInput, { target: { value: longEmail } });
 
       const registerButtons = screen.getAllByRole('button', { name: /Register/i });
       const submitButton = registerButtons.find(button => button.type === 'submit');
@@ -241,7 +241,7 @@ describe('Register', () => {
 
       const passwordInput = screen.getByLabelText(/^Password$/i);
       const longPassword = 'a'.repeat(65);
-      await user.type(passwordInput, longPassword);
+      fireEvent.change(passwordInput, { target: { value: longPassword } });
 
       const registerButtons = screen.getAllByRole('button', { name: /Register/i });
       const submitButton = registerButtons.find(button => button.type === 'submit');
