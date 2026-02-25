@@ -15,7 +15,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
-import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service.js';
+import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service';
 
 import styles from './lzMonitoring.module.css';
 import commonStyles from '../../common/common.module.css';

@@ -7,7 +7,7 @@ import { Form, Descriptions, Tag } from 'antd';
 import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import MonitoringActionButton from '../../common/Monitoring/ActionButton';
 import AddEditFileMonitoringModal from './AddEditFileMonitoringModal';
-import fileMonitoringService from '@/services/fileMonitoring.service.js';
+import fileMonitoringService from '@/services/fileMonitoring.service';
 import { identifyErroneousTabs } from '../jobMonitoring/jobMonitoringUtils';
 import { getRoleNameArray } from '../../common/AuthUtil';
 import FileMonitoringTable from './FileMonitoringTable';

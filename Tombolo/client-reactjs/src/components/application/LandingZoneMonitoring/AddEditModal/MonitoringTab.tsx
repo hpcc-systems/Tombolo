@@ -3,7 +3,7 @@ import { Card, Form, InputNumber, Row, Col, Select, Input } from 'antd';
 import { convertToMB } from '../Utils';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import InfoDrawer from '../../../common/InfoDrawer';
-import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service.js';
+import landingZoneMonitoringService from '@/services/landingZoneMonitoring.service';
 
 const { Option } = Select;
 const monitoringTypes = [

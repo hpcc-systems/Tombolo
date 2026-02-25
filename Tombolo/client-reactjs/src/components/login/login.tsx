@@ -50,9 +50,12 @@ const Login: React.FC = () => {
     }
   };
 
+  // Helper function to get redirect URL after successful login
   const getRedirectUrl = () => {
+    // First try to get from localStorage (more reliable)
     const intendedUrl = localStorage.getItem('intendedUrl');
     if (intendedUrl) {
+      // Treat auth routes as invalid redirect targets to avoid loops
       const isAuthRoute =
         intendedUrl === '/login' ||
         intendedUrl.startsWith('/login?') ||
@@ -64,12 +67,15 @@ const Login: React.FC = () => {
         intendedUrl.startsWith('/forgot-password?') ||
         intendedUrl.startsWith('/forgot-password/');
       if (!isAuthRoute && isValidInternalUrl(intendedUrl)) {
-        localStorage.removeItem('intendedUrl');
+        // Use and clear the stored intended URL
+        localStorage.removeItem('intendedUrl'); // Clean up used value
         return intendedUrl;
       }
+      // Clear stale/invalid or auth-route intended URL
       localStorage.removeItem('intendedUrl');
     }
 
+    // Fallback to location state
     if (location.state?.from) {
       const { pathname, search = '', hash = '' } = location.state.from;
       const fullPath = `${pathname}${search}${hash}`;
@@ -78,6 +84,7 @@ const Login: React.FC = () => {
       }
     }
 
+    // Always return safe default
     return '/';
   };
 
@@ -92,7 +99,7 @@ const Login: React.FC = () => {
         }
       }
     } catch (e) {
-      console.error(e);
+      // URL parsing failed, use safe default
     }
     window.location.href = '/';
   };
@@ -110,6 +117,7 @@ const Login: React.FC = () => {
     setEmail(email);
     setLoading(true);
 
+    //get browser and os info and put in deviceInfo variable
     const deviceInfo = getDeviceInfo();
 
     const test: any = await dispatch(login({ email, password, deviceInfo }));
@@ -129,21 +137,25 @@ const Login: React.FC = () => {
     }
 
     if (test.payload?.type === Constants.LOGIN_PW_EXPIRED) {
+      // window.location.href = '/expired-password';
       setExpiredPassword(true);
       return;
     }
 
     if (test.payload?.type === Constants.LOGIN_SUCCESS) {
+      // redirect to intended page or home if login is successful
       safeRedirect(getRedirectUrl());
       return;
     }
 
+    //handle login failed
     if (test.payload?.type === Constants.LOGIN_FAILED) {
       loginForm.setFieldsValue({ password: null });
       setLoading(false);
       return;
     }
 
+    //handle all other errors
     if (!test) {
       handleError('An unexpected error occurred. Please try again.');
       setLoading(false);
@@ -151,6 +163,7 @@ const Login: React.FC = () => {
     return;
   };
 
+  //if session expired relay message to user what happened
   useEffect(() => {
     const sessionExpired = localStorage.getItem('sessionExpired');
 
@@ -158,9 +171,11 @@ const Login: React.FC = () => {
       localStorage.removeItem('sessionExpired');
       handleError('Session expired. Please log in again.');
     }
-  }, []);
+  });
 
+  // If the URL contains a code parameter, it means the user has been redirected from Azure AD
   useEffect(() => {
+    //get url and check for id token
     const url = new URL(window.location.href);
     const code = url.searchParams.get('code');
 
@@ -179,6 +194,7 @@ const Login: React.FC = () => {
       const res: any = await dispatch(loginOrRegisterAzureUser(code));
 
       if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
+        //redirect to intended page or home if login is successful, using replace to clean URL
         const redirectUrl = getRedirectUrl();
         history.replace(redirectUrl);
         return;
@@ -193,6 +209,7 @@ const Login: React.FC = () => {
     }
   };
 
+  // Determine which login methods are enabled by configuration
   const azureEnabled = methods.includes('azure') && hasAllAzureEnv;
   const traditionalEnabled = methods.includes('traditional');
 
