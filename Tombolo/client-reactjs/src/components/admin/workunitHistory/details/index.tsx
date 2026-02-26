@@ -69,7 +69,7 @@ const WorkUnitDetails: React.FC = () => {
     if (wuid) {
       fetchData();
     }
-  }, [wuid]);
+  }, [wuid, clusterId]);
 
   if (loading) {
     return (

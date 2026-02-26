@@ -107,7 +107,7 @@ const Tours: React.FC<Props> = ({ appLinkRef, clusterLinkRef }) => {
       ),
       placement: 'right' as const,
       arrow: true,
-      target: appLinkRef.current,
+      target: () => appLinkRef.current,
       nextButtonProps: { style: { display: 'none' }, disabled: true },
       prevButtonProps: { style: { display: 'none' }, disabled: true },
     },
@@ -132,7 +132,7 @@ const Tours: React.FC<Props> = ({ appLinkRef, clusterLinkRef }) => {
         </>
       ),
       placement: 'right' as const,
-      arrrow: true,
+      arrow: true,
       target: clusterLinkRef.current,
       nextButtonProps: { style: { display: 'none' }, disabled: true },
     },

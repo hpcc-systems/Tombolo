@@ -37,7 +37,7 @@ const ClusterDetailsModal: React.FC<ClusterDetailsModalProps> = ({
           {currencyCodeToSymbol(selectedCluster?.currencyCode)} {selectedCluster?.currencyCode}
         </Descriptions.Item>
         <Descriptions.Item label="Thor URL">{`${selectedCluster?.thor_host}:${selectedCluster?.thor_port}`}</Descriptions.Item>
-        <Descriptions.Item label="Roxie URL">{`${selectedCluster?.roxie_host}:${selectedCluster?.thor_port}`}</Descriptions.Item>
+        <Descriptions.Item label="Roxie URL">{`${selectedCluster?.roxie_host}:${selectedCluster?.roxie_port}`}</Descriptions.Item>
         {selectedCluster?.username && <Descriptions.Item label="User ID">{selectedCluster.username}</Descriptions.Item>}
         <Descriptions.Item label="Admin E-mails">
           {generateTagsForAdminEmails(selectedCluster?.adminEmails || [])}

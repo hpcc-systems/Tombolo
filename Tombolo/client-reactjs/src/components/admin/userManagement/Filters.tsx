@@ -66,7 +66,7 @@ const UserFilters: React.FC<Props> = ({ setFilters, users, setFiltersVisible, ro
     setApplicationOptions(filterOptions.application);
     setVerifiedOptions(filterOptions.verifiedUser);
     setRegistrationStatusOptions(filterOptions.registrationStatus);
-  }, [users, allApplications]);
+  }, [users, allApplications, roles]);
 
   const handleFormChange = () => {
     const allFilters = form.getFieldsValue();

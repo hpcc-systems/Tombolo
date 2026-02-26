@@ -84,7 +84,7 @@ const AddUserModal: React.FC<Props> = ({
             </Col>
             <Col span={12}>
               <Form.Item
-                label="LastName"
+                label="Last Name"
                 name="lastName"
                 required
                 rules={[
