@@ -10,7 +10,6 @@ interface Props {
   selectedRows: any[];
   setSelectedRows: (rows: any[]) => void;
   setUsers: (updater: (prev: any[]) => any[]) => void;
-  setBulkEditModalVisibility: (v: boolean) => void;
   setFilteredUsers: (updater: (prev: any[]) => any[]) => void;
 }
 
@@ -19,7 +18,6 @@ const UserManagementActionButton: React.FC<Props> = ({
   selectedRows,
   setSelectedRows,
   setUsers,
-  setBulkEditModalVisibility,
   setFilteredUsers,
 }) => {
   const deleteSelected = async () => {
@@ -38,8 +36,6 @@ const UserManagementActionButton: React.FC<Props> = ({
   const handleMenuSelection = (key: string) => {
     if (key === '1') {
       handleAddUserButtonClick();
-    } else if (key === '2') {
-      setBulkEditModalVisibility(true);
     }
   };
 

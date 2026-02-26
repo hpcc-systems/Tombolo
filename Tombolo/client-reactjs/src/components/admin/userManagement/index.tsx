@@ -21,7 +21,6 @@ const UserManagement: React.FC = () => {
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [filteredUsers, setFilteredUsers] = useState<any[]>(users);
 
-  const [_bulkEditModalVisibility, setBulkEditModalVisibility] = useState(false);
   const [displayAddUserModal, setDisplayAddUserModal] = useState(false);
   const [displayUserDetailsModal, setDisplayUserDetailsModal] = useState(false);
   const [displayEditUserModal, setDisplayEditUserModal] = useState(false);
@@ -95,7 +94,6 @@ const UserManagement: React.FC = () => {
             selectedRows={selectedRows}
             setSelectedRows={setSelectedRows}
             setUsers={setUsers}
-            setBulkEditModalVisibility={setBulkEditModalVisibility}
             setFilteredUsers={setFilteredUsers}
           />
         }
