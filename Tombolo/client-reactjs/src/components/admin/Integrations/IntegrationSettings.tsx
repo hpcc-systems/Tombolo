@@ -27,12 +27,13 @@ const IntegrationSettings: React.FC = () => {
 
   const IntegrationComponent = lazy(
     () =>
-      (loader ? loader() : Promise.reject(new Error(`No integration module found for "${integrationName}"`))).catch(
-        error => {
-          console.error('Failed to load component for %s:', integrationName, error);
-          return { default: IntegrationNotFound } as any;
-        }
-      ) as Promise<{ default: React.ComponentType<any> }>
+      (typeof loader === 'function'
+        ? loader()
+        : Promise.reject(new Error(`No integration module found for "${integrationName}"`))
+      ).catch(error => {
+        console.error('Failed to load component for %s:', integrationName, error);
+        return { default: IntegrationNotFound } as any;
+      }) as Promise<{ default: React.ComponentType<any> }>
   );
 
   return (

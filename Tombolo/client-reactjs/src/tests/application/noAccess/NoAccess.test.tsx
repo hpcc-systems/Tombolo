@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock auth service
 vi.mock('@/services/auth.service', () => ({
@@ -55,11 +55,18 @@ describe('NoAccess', () => {
     applications: [],
   };
 
+  let originalLocation: Location;
+
   beforeEach(() => {
+    originalLocation = window.location;
     vi.clearAllMocks();
     (getUser as any).mockReturnValue(mockUser);
     delete (window as any).location;
     (window as any).location = { replace: vi.fn() };
+  });
+
+  afterEach(() => {
+    (window as any).location = originalLocation;
   });
 
   describe('Component Rendering', () => {

@@ -299,7 +299,7 @@ describe('ResetTempPassword', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(setUser).toHaveBeenCalledWith(expect.stringContaining('"isAuthenticated":true'));
+        expect(setUser).toHaveBeenCalledWith(expect.objectContaining({ isAuthenticated: true }));
       });
     });
   });

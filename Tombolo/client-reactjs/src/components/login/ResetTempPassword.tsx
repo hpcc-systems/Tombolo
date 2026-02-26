@@ -37,23 +37,27 @@ const ResetTempPassword: React.FC = () => {
     let pw = value;
     if (!value) pw = '';
 
-      if (checkOldPassword) {
-        setPopOverContent(
-          (passwordComplexityValidator({
+    if (checkOldPassword) {
+      setPopOverContent(
+        (
+          passwordComplexityValidator({
             password: pw,
             user: userDetails,
             oldPasswordCheck: false,
             newUser: userDetails?.newUser || false,
-          } as any) as any).content
-        );
+          } as any) as any
+        ).content
+      );
     } else {
-        setPopOverContent(
-          (passwordComplexityValidator({
+      setPopOverContent(
+        (
+          passwordComplexityValidator({
             password: pw,
             user: userDetails,
             newUser: userDetails?.newUser || false,
-          } as any) as any).content
-        );
+          } as any) as any
+        ).content
+      );
     }
   };
 
@@ -76,7 +80,9 @@ const ResetTempPassword: React.FC = () => {
     } catch {
       setLoadError(true);
       setUserDetails({});
-      handleError('Unable to validate the password reset link. The link may have expired or been copied incorrectly. Please contact your administrator for a new link.');
+      handleError(
+        'Unable to validate the password reset link. The link may have expired or been copied incorrectly. Please contact your administrator for a new link.'
+      );
     }
   }, [resetToken]);
 
@@ -95,7 +101,7 @@ const ResetTempPassword: React.FC = () => {
       const user = response.data || response;
       user.isAuthenticated = true;
 
-      setUser(JSON.stringify(user));
+      setUser(user);
       window.location.href = '/';
     } catch (err: any) {
       if (err?.messages?.includes(Constants.RESET_TEMP_PW_INVALID)) {
@@ -112,22 +118,45 @@ const ResetTempPassword: React.FC = () => {
 
   return (
     <Form onFinish={onFinish} layout="vertical" form={form} style={{ marginTop: '2rem' }}>
-      <Form.Item required label="Temporary Password" name="tempPassword" normalize={(value: any) => value.trim()} rules={[{ required: true, message: 'Please input your temporary password!' }]}>
+      <Form.Item
+        required
+        label="Temporary Password"
+        name="tempPassword"
+        normalize={(value: any) => value.trim()}
+        rules={[{ required: true, message: 'Please input your temporary password!' }]}>
         <Input.Password size="large" autoComplete="new-temp-password" />
       </Form.Item>
 
       <Popover placement="right" trigger="focus" title="Password Complexity" content={popOverContent}>
-        <Form.Item required label="New Password" name="password" normalize={(value: any) => value.trim()} rules={[{ required: true, message: 'Please input your new password!' }, { max: 64, message: 'Maximum of 64 characters allowed' }, () => ({ validator(_, value: any) {
+        <Form.Item
+          required
+          label="New Password"
+          name="password"
+          normalize={(value: any) => value.trim()}
+          rules={[
+            { required: true, message: 'Please input your new password!' },
+            { max: 64, message: 'Maximum of 64 characters allowed' },
+            () => ({
+              validator(_, value: any) {
                 if (!value) {
                   return Promise.reject();
                 }
 
                 let result: any;
 
-                  if (finishedTypingRef.current) {
-                    result = (passwordComplexityValidator({ password: value, user: userDetails, oldPasswordCheck: false, newUser: userDetails?.newUser || false } as any) as any);
+                if (finishedTypingRef.current) {
+                  result = passwordComplexityValidator({
+                    password: value,
+                    user: userDetails,
+                    oldPasswordCheck: false,
+                    newUser: userDetails?.newUser || false,
+                  } as any) as any;
                 } else {
-                    result = (passwordComplexityValidator({ password: value, user: userDetails, newUser: userDetails?.newUser || false } as any) as any);
+                  result = passwordComplexityValidator({
+                    password: value,
+                    user: userDetails,
+                    newUser: userDetails?.newUser || false,
+                  } as any) as any;
                 }
 
                 finishedTypingRef.current = false;
@@ -137,14 +166,46 @@ const ResetTempPassword: React.FC = () => {
                 } else {
                   return Promise.reject(new Error('Password does not meet complexity requirements!'));
                 }
-              } })]}>
-          <Input.Password size="large" autoComplete="new-password" onChange={(e) => { validatePassword(e.target.value); }} onFocus={(e) => { validatePassword(e.target.value, true); }} onBlur={(e) => { validatePassword(e.target.value, true); }} />
+              },
+            }),
+          ]}>
+          <Input.Password
+            size="large"
+            autoComplete="new-password"
+            onChange={e => {
+              validatePassword(e.target.value);
+            }}
+            onFocus={e => {
+              validatePassword(e.target.value, true);
+            }}
+            onBlur={e => {
+              validatePassword(e.target.value, true);
+            }}
+          />
         </Form.Item>
       </Popover>
-      <Form.Item required label="Confirm Password" name="confirmPassword" normalize={(value: any) => value.trim()} dependencies={[ 'password' ]} rules={[{ required: true, message: 'Please confirm your password!' }, ({ getFieldValue }: any) => ({ validator(_, value: any) { if (!value || getFieldValue('password') === value) { return Promise.resolve(); } return Promise.reject(new Error('The two passwords do not match!')); } })]}>
+      <Form.Item
+        required
+        label="Confirm Password"
+        name="confirmPassword"
+        normalize={(value: any) => value.trim()}
+        dependencies={['password']}
+        rules={[
+          { required: true, message: 'Please confirm your password!' },
+          ({ getFieldValue }: any) => ({
+            validator(_, value: any) {
+              if (!value || getFieldValue('password') === value) {
+                return Promise.resolve();
+              }
+              return Promise.reject(new Error('The two passwords do not match!'));
+            },
+          }),
+        ]}>
         <Input.Password size="large" autoComplete="confirm-new-password" />
       </Form.Item>
-      <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">Reset Password {loading && <Spin style={{ marginLeft: '1rem' }} />}</Button>
+      <Button type="primary" htmlType="submit" disabled={loading && true} className="fullWidth">
+        Reset Password {loading && <Spin style={{ marginLeft: '1rem' }} />}
+      </Button>
     </Form>
   );
 };
