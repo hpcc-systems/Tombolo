@@ -14,7 +14,7 @@ interface Props {
 
 const ProductsTab: React.FC<Props> = ({ products = [], setSelectedProduct, setProductModalOpen, setProducts }) => {
   const [productData, setProductData] = useState<any[]>([]);
-  const [pageSize, setPageSize] = useState<number | null>(null);
+  const [pageSize, setPageSize] = useState<number>(10);
   const { inner } = useWindowSize();
 
   useEffect(() => {

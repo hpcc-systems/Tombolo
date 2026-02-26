@@ -130,14 +130,17 @@ const ProductModal: React.FC<Props> = ({
         </Form.Item>
         <Form.Item label="Domain" name="domainIds">
           <Select placeholder="Select Domain" mode="multiple">
-            {[...new Set(domains.map((domain: any) => domain.id))].map((domainId: any) => {
-              const domain = domains.find((d: any) => d.id === domainId);
-              return (
-                <Option key={domain.id} value={domain.id}>
-                  {domain.name}
-                </Option>
-              );
-            })}
+            {[...new Set(domains.map((domain: any) => domain.id).filter((id: any) => id != null))].map(
+              (domainId: any) => {
+                const domain = domains.find((d: any) => d.id === domainId);
+                if (!domain) return null;
+                return (
+                  <Option key={domain.id} value={domain.id}>
+                    {domain.name}
+                  </Option>
+                );
+              }
+            )}
           </Select>
         </Form.Item>
       </Form>
