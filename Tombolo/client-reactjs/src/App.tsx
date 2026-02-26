@@ -1,0 +1,175 @@
+import type { FC } from 'react';
+
+//libraries and hooks
+import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
+import { useAppSelector, useAppDispatch } from '@/redux/store/hooks';
+import { Layout, ConfigProvider } from 'antd';
+import { Router } from 'react-router-dom';
+import history from './components/common/History';
+
+// Shared layout, etc.
+import LeftNav from './components/layout/LeftNav';
+import AppHeader from './components/layout/Header/Header';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import Fallback from './components/common/Fallback';
+import { checkBackendStatus, checkOwnerExists } from '@/redux/slices/BackendSlice';
+import { getRoleNameArray } from './components/common/AuthUtil';
+import { getUser } from './components/common/userStorage';
+import { loadUserFromStorage } from '@/redux/slices/AuthSlice';
+
+// Loading screen
+import LoadingScreen from './components/layout/LoadingScreen';
+
+// Auth pages
+import AuthRoutes from './components/login/AuthRoutes';
+
+// App Pages
+import AppRoutes from './components/application/AppRoutes';
+import NoAccessRoutes from './components/application/NoAccessRoutes';
+
+// Admin Pages
+import AdminRoutes from './components/admin/AdminRoutes';
+
+//initial Experience
+import Tours from './components/InitialExperience/Tours';
+import Wizard from './components/InitialExperience/Wizard';
+
+const { Content } = Layout;
+
+const App: FC = () => {
+  //left nav collapsed state
+  const [collapsed, setCollapsed] = useState(localStorage.getItem('collapsed') === 'true');
+
+  //redux dispatch using typed hooks
+  const dispatch = useAppDispatch();
+
+  // Sync Redux auth state with local storage on app mount
+  useEffect(() => {
+    dispatch(loadUserFromStorage());
+  }, [dispatch]);
+
+  //login page states
+  const [user, setUser] = useState<any>(getUser());
+
+  //loading message states
+  const [message, setMessage] = useState('');
+
+  //tour refs
+  const appLinkRef = useRef<any>(null);
+  const clusterLinkRef = useRef<any>(null);
+
+  // get redux states (select only needed properties)
+  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
+  const isConnected = useAppSelector(state => state.backend.isConnected);
+  const statusRetrieved = useAppSelector(state => state.backend.statusRetrieved);
+  const ownerExists = useAppSelector(state => state.backend.ownerExists);
+  const ownerRetrieved = useAppSelector(state => state.backend.ownerRetrieved);
+
+  //retrieve backend status on load to display message to user or application
+  useEffect(() => {
+    if (!statusRetrieved) {
+      setMessage('Connecting to Server...');
+      dispatch(checkBackendStatus());
+      dispatch(checkOwnerExists());
+    }
+  }, [statusRetrieved, ownerRetrieved, dispatch]);
+
+  //Check if user matches what is currently in storage after authentication runs
+  useEffect(() => {
+    const newUser = getUser();
+    if (user?.id !== newUser?.id || user?.isAuthenticated !== newUser?.isAuthenticated) {
+      setUser(newUser);
+    }
+  }, [isAuthenticated, user]);
+
+  // Capture intended URL when user needs to authenticate
+  useEffect(() => {
+    if (ownerExists && !user?.isAuthenticated) {
+      const currentPath = history.location.pathname + history.location.search + history.location.hash;
+      // Don't store auth routes, home page, or URLs with Azure auth parameters
+      if (
+        !currentPath.startsWith('/login') &&
+        !currentPath.startsWith('/register') &&
+        !currentPath.startsWith('/forgot-password') &&
+        !currentPath.startsWith('/reset-') &&
+        currentPath !== '/' &&
+        !currentPath.includes('?code=') &&
+        !currentPath.includes('&code=')
+      ) {
+        localStorage.setItem('intendedUrl', currentPath);
+      }
+    }
+  }, [ownerExists, user?.isAuthenticated]);
+
+  //left nav collapse method
+  const onCollapse = (c: boolean) => {
+    setCollapsed(c);
+    localStorage.setItem('collapsed', String(c));
+  };
+
+  const roleArray = useMemo(() => getRoleNameArray(), []);
+  const isOwnerOrAdmin = useMemo(
+    () => roleArray?.includes('administrator') || roleArray?.includes('owner'),
+    [roleArray]
+  );
+  const isReader = useMemo(() => roleArray?.includes('reader') && roleArray.length === 1, [roleArray]);
+
+  const userHasRoleandApplication = user?.roles?.length > 0 && user?.applications?.length > 0;
+
+  return (
+    <ConfigProvider>
+      <Suspense fallback={<Fallback />}>
+        <Router history={history}>
+          <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
+            {/*Backend Loading sequence going until everthing is retrieved*/}
+            {!isConnected || !ownerRetrieved ? (
+              <LoadingScreen isConnected={isConnected} statusRetrieved={statusRetrieved} message={message} />
+            ) : (
+              <>
+                {/*No owner, force user to register one*/}
+                {!ownerExists ? <Wizard /> : null}
+                {/*User is not authenticated, show auth pages*/}
+                {!user?.isAuthenticated && ownerExists ? <AuthRoutes /> : null}
+                {/*User is authenticated, show application*/}
+                {user?.isAuthenticated && ownerExists ? (
+                  <>
+                    <AppHeader />
+                    <ConfigProvider componentDisabled={isReader}>
+                      <Layout style={{ marginTop: '69px' }}>
+                        <LeftNav
+                          onCollapse={onCollapse}
+                          collapsed={collapsed}
+                          appLinkRef={appLinkRef}
+                          clusterLinkRef={clusterLinkRef}
+                        />
+                        {isOwnerOrAdmin && <Tours appLinkRef={appLinkRef} clusterLinkRef={clusterLinkRef} />}
+                        <Content
+                          style={{
+                            transition: '.1s linear',
+                            // margin: '55px 0px',
+                            marginLeft: collapsed ? '55px' : '200px',
+                          }}>
+                          <ErrorBoundary>
+                            <Suspense fallback={<Fallback />}>
+                              {!userHasRoleandApplication && !isOwnerOrAdmin ? <NoAccessRoutes /> : <AppRoutes />}
+
+                              {isOwnerOrAdmin && <AdminRoutes />}
+                            </Suspense>
+                          </ErrorBoundary>
+                        </Content>
+                      </Layout>
+                    </ConfigProvider>
+                  </>
+                ) : null}
+              </>
+            )}
+          </Layout>
+        </Router>
+      </Suspense>
+    </ConfigProvider>
+  );
+};
+
+export default App;
+
+// Main Application, Only enters if user is authenticated and backend is connected

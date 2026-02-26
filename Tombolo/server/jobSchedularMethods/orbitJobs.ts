@@ -1,0 +1,107 @@
+import path from 'path';
+import logger from '../config/logger.js';
+import { resolveJobPath } from './jobPathResolver.js';
+
+import { OrbitMonitoring } from '../models/index.js';
+import { getDirname } from '../utils/polyfills.js';
+
+const __dirname = getDirname(import.meta.url);
+const MEGAPHONE_JOB = 'orbitMegaphone.js';
+const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
+const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';
+
+function createOrbitMegaphoneJob(this: any): void {
+  const uniqueJobName = 'Orbit Megaphone Job';
+  const defaultDistPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'jobs',
+    MEGAPHONE_JOB
+  );
+  const job = {
+    interval: '30m',
+    name: uniqueJobName,
+    path: resolveJobPath(defaultDistPath),
+  };
+  this.bree.add(job);
+  this.bree.start(uniqueJobName);
+  logger.info('Orbit megaphone job initialized ...');
+}
+
+function createOrbitMonitoringJob(
+  this: any,
+  { orbitMonitoring_id, cron }: { orbitMonitoring_id: string; cron: string }
+): void {
+  const uniqueJobName = `Orbit Monitoring - ${orbitMonitoring_id}`;
+  const defaultDistPath2 = path.join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'jobs',
+    ORBIT_MONITORING
+  );
+  const job = {
+    cron,
+    name: uniqueJobName,
+    path: resolveJobPath(defaultDistPath2),
+    worker: {
+      workerData: { orbitMonitoring_id },
+    },
+  };
+  this.bree.add(job);
+  this.bree.start(uniqueJobName);
+}
+
+function createOrbitProfileMonitoringJob(
+  this: any,
+  {
+    uniqueJobName = 'Orbit Profile Monitoring',
+  }: { uniqueJobName?: string } = {}
+): void {
+  const jobName = uniqueJobName;
+  const defaultDistPath3 = path.join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'jobs',
+    'orbitProfileMonitoring',
+    ORBIT_PROFILE_MONITORING
+  );
+  const job = {
+    interval: '10s',
+    name: jobName,
+    path: resolveJobPath(defaultDistPath3),
+  };
+  this.bree.add(job);
+  this.bree.start(jobName);
+  logger.info(`Orbit profile monitoring job scheduled ...`);
+}
+
+async function scheduleOrbitMonitoringOnServerStart(this: any): Promise<void> {
+  try {
+    logger.info('Orbit monitoring initialized ...');
+    const orbitMonitorings = await OrbitMonitoring.findAll({ raw: true });
+    for (let monitoring of orbitMonitorings) {
+      const { id, cron, isActive } = monitoring;
+      if (isActive) {
+        this.createOrbitMonitoringJob({
+          orbitMonitoring_id: id,
+          cron,
+        });
+      }
+    }
+  } catch (err) {
+    logger.error('Failed to start orbit monitoring', err);
+  }
+}
+
+export {
+  createOrbitMegaphoneJob,
+  createOrbitMonitoringJob,
+  createOrbitProfileMonitoringJob,
+  scheduleOrbitMonitoringOnServerStart,
+};
