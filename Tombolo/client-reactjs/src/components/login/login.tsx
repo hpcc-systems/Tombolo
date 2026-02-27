@@ -98,7 +98,7 @@ const Login: React.FC = () => {
           return;
         }
       }
-    } catch (e) {
+    } catch (_e) {
       // URL parsing failed, use safe default
     }
     window.location.href = '/';
@@ -252,9 +252,11 @@ const Login: React.FC = () => {
                   <Input size="large" />
                 </Form.Item>
                 <Form.Item
-                  label={<>
+                  label={
+                    <>
                       <span>Password&nbsp;</span>
-                    </>}
+                    </>
+                  }
                   name="password"
                   rules={[
                     { required: true, message: 'Please input your password!' },

@@ -56,7 +56,7 @@ const EditSettingsModel: React.FC<EditSettingsModelProps> = ({
       const response = await instanceSettingsService.update(updatedSettings);
       setInstanceSettings(response);
       setOpenEditModel(false);
-    } catch (error) {
+    } catch (_error) {
       handleError('Failed to save settings');
     }
   };

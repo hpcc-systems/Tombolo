@@ -28,7 +28,7 @@ const MyAccountInfo: React.FC<Props> = ({ user, editing, setEditing }) => {
     let validForm = true;
     try {
       await form.validateFields();
-    } catch (err) {
+    } catch (_err) {
       validForm = false;
     }
 
@@ -54,7 +54,7 @@ const MyAccountInfo: React.FC<Props> = ({ user, editing, setEditing }) => {
 
         setLoading(false);
       }
-    } catch (err) {
+    } catch (_err) {
       setLoading(false);
     }
   };

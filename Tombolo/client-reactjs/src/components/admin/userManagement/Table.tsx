@@ -41,7 +41,7 @@ const UserManagementTable: React.FC<Props> = ({
     try {
       await usersService.resetPassword({ id: String(id) });
       handleSuccess('Password reset successfully');
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to reset password');
     }
   };
@@ -56,7 +56,7 @@ const UserManagementTable: React.FC<Props> = ({
         prev.map(user => (user.id === id ? { ...user, accountLocked: { isLocked: false, lockedReason: [] } } : user))
       );
       handleSuccess('User account unlocked successfully');
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to unlock user account');
     }
   };
@@ -67,7 +67,7 @@ const UserManagementTable: React.FC<Props> = ({
       setUsers((prev: any[]) => prev.filter(user => user.id !== id));
       setFilteredUsers((prev: any[]) => prev.filter(user => user.id !== id));
       handleSuccess('User deleted successfully');
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to delete user');
     }
   };

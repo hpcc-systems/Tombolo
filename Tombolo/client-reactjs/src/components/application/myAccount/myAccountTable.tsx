@@ -46,7 +46,7 @@ const MyAccountTable: React.FC<Props> = ({ user }) => {
                 await sessionService.destroyActiveSession(id);
                 setSessions(prev => prev.filter(s => s.id !== id));
                 handleSuccess('Session revoked successfully');
-              } catch (err) {
+              } catch (_err) {
                 // handled by axios interceptor
               }
             }}>

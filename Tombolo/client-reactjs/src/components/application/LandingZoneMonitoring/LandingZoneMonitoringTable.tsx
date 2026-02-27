@@ -245,7 +245,7 @@ const LandingZoneMonitoringTable = ({
       );
 
       handleSuccess('Monitoring status toggled successfully');
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to toggle monitoring status');
     }
   };

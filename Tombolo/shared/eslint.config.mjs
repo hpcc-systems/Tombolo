@@ -6,11 +6,6 @@ export default [
   // Inherit root config
   ...rootConfig,
 
-  // Ignore patterns
-  {
-    ignores: ['dist/**', 'node_modules/**', '.turbo/**'],
-  },
-
   // TypeScript configuration
   ...tseslint.configs.recommended,
   {

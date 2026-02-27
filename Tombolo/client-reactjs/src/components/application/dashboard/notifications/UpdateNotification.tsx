@@ -103,7 +103,7 @@ const UpdateNotificationModal: React.FC<Props> = ({
   const updateNotifications = async () => {
     try {
       form.validateFields();
-    } catch (err) {
+    } catch (_err) {
       return;
     }
 
@@ -144,7 +144,7 @@ const UpdateNotificationModal: React.FC<Props> = ({
       setDisplayUpdateModal(false);
 
       if (selectedNotificationsIds.length === 1) setSelectedNotificationsIds([]);
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to save updated notification(s)');
     } finally {
       form.resetFields();
@@ -337,7 +337,7 @@ const UpdateNotificationModal: React.FC<Props> = ({
 
       try {
         await form.validateFields();
-      } catch (err) {
+      } catch (_err) {
         return;
       }
       const warnings = generateWarningMessage();

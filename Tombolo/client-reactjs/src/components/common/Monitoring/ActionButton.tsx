@@ -50,7 +50,7 @@ const MonitoringActionButton: React.FC<any> = ({
     try {
       const ids = selectedRows.map((r: any) => r.id);
       await onBulkDelete?.(ids);
-    } catch (err) {
+    } catch (_err) {
       handleError('Unable to delete selected items');
     }
   };
