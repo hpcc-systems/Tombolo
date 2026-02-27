@@ -260,6 +260,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      typescript-eslint:
+        specifier: 'catalog:'
+        version: 8.53.1(eslint@9.39.1(jiti@1.21.7))(typescript@5.9.3)
 
   Tombolo/db:
     dependencies:
@@ -294,6 +297,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      typescript-eslint:
+        specifier: 'catalog:'
+        version: 8.53.1(eslint@9.39.1(jiti@1.21.7))(typescript@5.9.3)
 
   Tombolo/jobs:
     dependencies:
@@ -500,6 +506,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      typescript-eslint:
+        specifier: 'catalog:'
+        version: 8.53.1(eslint@9.39.1(jiti@1.21.7))(typescript@5.9.3)
       vitest:
         specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.9)(jiti@1.21.7)(jsdom@26.1.0)(terser@5.46.0)(tsx@4.21.0)
@@ -7199,8 +7208,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.53.1(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.53.1(typescript@5.9.3)
-      '@typescript-eslint/types': 8.53.1
+      '@typescript-eslint/tsconfig-utils': 8.55.0(typescript@5.9.3)
+      '@typescript-eslint/types': 8.55.0
       debug: 4.4.3(supports-color@5.5.0)
       typescript: 5.9.3
     transitivePeerDependencies:

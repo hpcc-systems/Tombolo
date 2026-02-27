@@ -6,7 +6,7 @@ export default defineConfig({
     backend: 'backend.ts',
     browser: 'browser.ts',
   },
-  format: ['cjs', 'esm'],
+  format: 'esm',
   dts: true, // Generate TypeScript declarations
   splitting: false,
   sourcemap: true,
