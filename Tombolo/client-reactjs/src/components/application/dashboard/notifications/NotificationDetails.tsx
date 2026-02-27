@@ -22,7 +22,7 @@ const NotificationDetails: React.FC<Props> = ({ selectedNotification }) => {
           const { id } = selectedNotification;
           const notificationHtmlCode = await notificationsService.getNotificationHtmlCode(id);
           setNotificationHtmlCode(notificationHtmlCode);
-        } catch (err) {
+        } catch (_err) {
           // Error handled by service layer
         } finally {
           setFetchingNotificationDetails(false);

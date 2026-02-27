@@ -59,11 +59,10 @@ const defaultVisible = [
 ];
 
 interface Props {
-  wu: any;
   details: any[];
 }
 
-const AllMetricsPanel: React.FC<Props> = ({ wu, details }) => {
+const AllMetricsPanel: React.FC<Props> = ({ details }) => {
   // Preferences
   const [density, setDensity] = useState<Density>(loadLocalStorage('wuh.metrics.density', 'middle'));
   const [pageSize, setPageSize] = useState<number>(loadLocalStorage('wuh.metrics.pageSize', 50));

@@ -54,7 +54,7 @@ const ChangePasswordModal: React.FC<Props> = ({ changePasswordModalVisible, setC
     let validForm = true;
     try {
       await form.validateFields();
-    } catch (err) {
+    } catch (_err) {
       validForm = false;
     }
 
@@ -66,7 +66,7 @@ const ChangePasswordModal: React.FC<Props> = ({ changePasswordModalVisible, setC
         handleSuccess('Password changed successfully');
         setChangePasswordModalVisible(false);
         form.resetFields();
-      } catch (err) {
+      } catch (_err) {
         // Error handled by axios interceptor
       }
     }

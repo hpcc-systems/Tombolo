@@ -52,7 +52,7 @@ const Index: React.FC = () => {
       try {
         const data = await notificationsService.getAllSentNotifications(applicationId);
         setSentNotifications(data);
-      } catch (error) {
+      } catch (_error) {
         handleError('Unable to fetch  notifications');
       }
     })();
@@ -66,7 +66,7 @@ const Index: React.FC = () => {
       try {
         const response = await monitoringTypeService.getAll();
         setMonitorings(response);
-      } catch (error) {
+      } catch (_error) {
         handleError('Failed to fetch activity types');
       }
     })();
@@ -75,7 +75,7 @@ const Index: React.FC = () => {
       try {
         const response = await asrService.getAllDomains();
         setDomains(response);
-      } catch (error) {
+      } catch (_error) {
         handleError('Failed to fetch domains');
       }
     })();
@@ -84,7 +84,7 @@ const Index: React.FC = () => {
       try {
         const response = await asrService.getAllProductCategories();
         setProductCategories(response);
-      } catch (error) {
+      } catch (_error) {
         handleError('Failed to fetch product categories');
       }
     })();

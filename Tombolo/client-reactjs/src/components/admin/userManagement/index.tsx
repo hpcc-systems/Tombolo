@@ -68,7 +68,7 @@ const UserManagement: React.FC = () => {
         const data = await usersService.getAll();
         setUsers(data);
         setFilteredUsers(data);
-      } catch (error) {
+      } catch (_error) {
         handleError('Failed to get users');
       }
     };
@@ -78,7 +78,7 @@ const UserManagement: React.FC = () => {
       try {
         const allRoles = await rolesService.getAll();
         setRoles(allRoles);
-      } catch (error) {
+      } catch (_error) {
         handleError('Failed to get roles');
       }
     };

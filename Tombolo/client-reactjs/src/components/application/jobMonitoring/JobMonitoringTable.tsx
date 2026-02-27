@@ -370,7 +370,7 @@ const JobMonitoringTable: React.FC<Props> = ({
             : monitoring
         )
       );
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to toggle monitoring status');
     }
   };

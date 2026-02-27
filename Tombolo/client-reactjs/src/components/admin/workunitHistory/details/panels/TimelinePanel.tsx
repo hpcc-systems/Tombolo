@@ -217,7 +217,7 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
   };
 
   // Render timeline bar
-  const renderTimelineBar = (item: TimelineItem, index: number) => {
+  const renderTimelineBar = (item: TimelineItem) => {
     const { min, max } = timelineBounds;
     const totalSpan = max - min;
 
@@ -288,7 +288,7 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
                 <Tag>{items.length} scopes</Tag>
               </Space>
             }>
-            {items.map((item, idx) => renderTimelineBar(item, idx))}
+            {items.map(item => renderTimelineBar(item))}
           </Card>
         ))}
       </Space>
@@ -479,7 +479,7 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
               </Row>
             </div>
             <div style={{ maxHeight: 600, overflowY: 'auto' }}>
-              {viewMode === 'gantt' && filteredItems.map((item, idx) => renderTimelineBar(item, idx))}
+              {viewMode === 'gantt' && filteredItems.map(item => renderTimelineBar(item))}
               {viewMode === 'swim-lanes' && renderSwimLanes()}
               {viewMode === 'list' && renderListView()}
             </div>

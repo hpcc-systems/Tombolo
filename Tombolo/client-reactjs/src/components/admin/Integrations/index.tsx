@@ -13,7 +13,7 @@ const Integrations: React.FC = () => {
       try {
         const integrations = await integrationsService.getAll();
         setAllIntegrations(integrations);
-      } catch (error) {
+      } catch (_error) {
         handleError('Failed to get integrations');
       }
     })();

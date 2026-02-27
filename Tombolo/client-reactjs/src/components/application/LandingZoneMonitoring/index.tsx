@@ -104,7 +104,7 @@ const LandigZoneMonitoring: React.FC = () => {
           return { ...flat, ...monitoring };
         });
         setLandingZoneMonitoring(flattenedMonitorings);
-      } catch (error) {
+      } catch (_error) {
         handleError('Failed to fetch all landing zone monitoring');
       }
     })();
@@ -116,7 +116,7 @@ const LandigZoneMonitoring: React.FC = () => {
         try {
           const monitoringTypeId = await monitoringTypeService.getId({ monitoringTypeName });
           setMonitoringTypeId(monitoringTypeId);
-        } catch (error) {
+        } catch (_error) {
           handleError('Error fetching monitoring type ID');
         }
       })();
@@ -131,7 +131,7 @@ const LandigZoneMonitoring: React.FC = () => {
         let domainData = await asrService.getDomains({ monitoringTypeId });
         domainData = domainData.map((d: any) => ({ label: d.name, value: d.id }));
         setDomains(domainData);
-      } catch (error) {
+      } catch (_error) {
         handleError('Error fetching domains');
       }
     })();
@@ -146,7 +146,7 @@ const LandigZoneMonitoring: React.FC = () => {
         const pcs = await asrService.getProductCategories({ domainId: selectedDomain });
         const formatted = pcs.map((c: any) => ({ label: `${c.name} (${c.shortCode})`, value: c.id }));
         setProductCategories(formatted);
-      } catch (error) {
+      } catch (_error) {
         handleError('Error fetching product category');
       }
     })();
@@ -159,7 +159,7 @@ const LandigZoneMonitoring: React.FC = () => {
     let validForm = true;
     try {
       await form.validateFields();
-    } catch (err) {
+    } catch (_err) {
       validForm = false;
     }
 
@@ -242,7 +242,7 @@ const LandigZoneMonitoring: React.FC = () => {
       setDisplayAddEditModal(false);
       handleSuccess('Landing zone monitoring created successfully');
     } catch (err) {
-      console.log(err);
+      console.error(err);
       handleError('Failed to create landing zone monitoring');
     } finally {
       setSavingLzMonitoring(false);
@@ -255,7 +255,7 @@ const LandigZoneMonitoring: React.FC = () => {
       let validForm = true;
       try {
         await form.validateFields();
-      } catch (err) {
+      } catch (_err) {
         validForm = false;
       }
 
@@ -318,7 +318,7 @@ const LandigZoneMonitoring: React.FC = () => {
       await landingZoneMonitoringService.updateOne(updatedData);
       handleSuccess('Landingzone monitoring updated successfully');
       resetStates();
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to save landing zone monitoring');
     } finally {
       setSavingLzMonitoring(false);
@@ -391,7 +391,7 @@ const LandigZoneMonitoring: React.FC = () => {
       setLandingZoneMonitoring((prev: any[]) => prev.filter(lz => !ids.includes(lz.id)));
       setSelectedRows([]);
       handleSuccess('Selected landing zone monitoring deleted successfully');
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to delete selected landing zone monitoring');
     }
   };
@@ -401,7 +401,7 @@ const LandigZoneMonitoring: React.FC = () => {
       const startMonitoring = action === 'start';
       await landingZoneMonitoringService.toggle(ids, startMonitoring);
       handleSuccess(`Selected landing zone monitoring ${startMonitoring ? 'started' : 'paused'} successfully. `);
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to start/pause selected landing zone monitoring');
     }
   };

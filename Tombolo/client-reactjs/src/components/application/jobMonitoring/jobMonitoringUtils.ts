@@ -130,7 +130,7 @@ export async function handleJobMonitoringEvaluation({
 
     // Close the modal
     setDisplayAddRejectModal(false);
-  } catch (error) {
+  } catch (_error) {
     handleError('Unable to evaluate job monitoring');
   }
 }

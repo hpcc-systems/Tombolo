@@ -17,7 +17,13 @@ export const identifyErroneousTabs = ({ erroneousFields }: { erroneousFields: st
   return erroneousTabs;
 };
 
-export function isScheduleUpdated({ existingSchedule, newSchedule }: { existingSchedule: any[]; newSchedule: any[] }): boolean {
+export function isScheduleUpdated({
+  existingSchedule,
+  newSchedule,
+}: {
+  existingSchedule: any[];
+  newSchedule: any[];
+}): boolean {
   if (existingSchedule.length !== newSchedule.length) return true;
   for (let i = 0; i < existingSchedule.length; i++) {
     if (JSON.stringify(existingSchedule[i]) !== JSON.stringify(newSchedule[i])) return true;
@@ -50,7 +56,7 @@ export async function handleLandingZoneMonitoringApproval({
     setLandingZoneMonitoring(flattenedMonitoring);
     handleSuccess('Response saved successfully');
     setDisplayApprovalModal(false);
-  } catch (error) {
+  } catch (_error) {
     handleError('Failed to updated landing zone monitoring');
   }
 }

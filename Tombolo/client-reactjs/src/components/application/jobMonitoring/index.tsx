@@ -229,7 +229,7 @@ const JobMonitoring: React.FC = () => {
     let validForm = true;
     try {
       await form.validateFields();
-    } catch (err) {
+    } catch (_err) {
       validForm = false;
     }
 
@@ -331,7 +331,7 @@ const JobMonitoring: React.FC = () => {
       let validForm = true;
       try {
         await form.validateFields();
-      } catch (err) {
+      } catch (_err) {
         validForm = false;
       }
 
@@ -443,7 +443,7 @@ const JobMonitoring: React.FC = () => {
         })
       );
       resetStates();
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to update job monitoring');
     } finally {
       setSavingJobMonitoring(false);

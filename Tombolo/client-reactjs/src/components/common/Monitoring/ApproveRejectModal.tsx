@@ -48,7 +48,7 @@ const ApproveRejectModal: FC<any> = ({
     let formErr = false;
     try {
       await form.validateFields();
-    } catch (error) {
+    } catch (_error) {
       formErr = true;
     }
     if (formErr) {

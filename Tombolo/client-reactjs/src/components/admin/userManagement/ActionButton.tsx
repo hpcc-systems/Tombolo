@@ -28,7 +28,7 @@ const UserManagementActionButton: React.FC<Props> = ({
       setUsers((prev: any[]) => prev.filter((user: any) => !ids.includes(user.id)));
       setFilteredUsers((prev: any[]) => prev.filter((user: any) => !ids.includes(user.id)));
       handleSuccess('Selected users deleted successfully');
-    } catch (err) {
+    } catch (_err) {
       handleError('Unable to delete selected users');
     }
   };
