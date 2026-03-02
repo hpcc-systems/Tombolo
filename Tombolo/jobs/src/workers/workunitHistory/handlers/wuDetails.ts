@@ -435,6 +435,9 @@ async function fetchWorkunitDetails(clusterOptions: IOptions, wuId: string) {
           // Only get scopes that typically have performance data
           ScopeTypes: ACCEPTED_SCOPE_TYPES,
         },
+        NestedFilter: {
+          ScopeTypes: ACCEPTED_SCOPE_TYPES,
+        },
         ScopeOptions: {
           IncludeId: true,
           IncludeScope: true,
