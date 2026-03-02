@@ -5,6 +5,15 @@ import js from "@eslint/js";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
+  {
+    ignores: [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/.turbo/**",
+      "**/build/**",
+      "**/coverage/**",
+    ],
+  },
   js.configs.recommended,
   {
     languageOptions: {

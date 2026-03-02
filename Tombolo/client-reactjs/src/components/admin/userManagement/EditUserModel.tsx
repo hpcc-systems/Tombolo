@@ -63,7 +63,7 @@ const EditUserModel: React.FC<Props> = ({
     try {
       try {
         await basicUserDetailsForm.validateFields();
-      } catch (err) {
+      } catch (_err) {
         handleError('Failed to update user');
         return;
       }
@@ -124,7 +124,7 @@ const EditUserModel: React.FC<Props> = ({
       );
 
       handleSuccess('User roles updated successfully');
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to update user roles');
     }
   };
@@ -162,7 +162,7 @@ const EditUserModel: React.FC<Props> = ({
       );
 
       handleSuccess('User applications updated successfully');
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to update user applications');
     }
   };

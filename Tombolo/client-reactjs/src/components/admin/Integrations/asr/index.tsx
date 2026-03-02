@@ -45,7 +45,7 @@ const AsrIntegrationSettings: React.FC<Props> = ({ integration_to_app_mapping_id
           relationId: integration_to_app_mapping_id,
         });
         setIntegrationDetails(integrationDetails);
-      } catch (err) {
+      } catch (_err) {
         handleError('Unable to get integration details');
       }
     })();
@@ -54,7 +54,7 @@ const AsrIntegrationSettings: React.FC<Props> = ({ integration_to_app_mapping_id
       try {
         const monitoringTypes = await monitoringTypeService.getAll();
         setMonitoringTypes(monitoringTypes);
-      } catch (err) {
+      } catch (_err) {
         return;
       }
     })();
@@ -65,7 +65,7 @@ const AsrIntegrationSettings: React.FC<Props> = ({ integration_to_app_mapping_id
       try {
         const domains = await asrService.getAllDomains();
         setDomains(domains);
-      } catch (err) {
+      } catch (_err) {
         return;
       }
     })();
@@ -74,7 +74,7 @@ const AsrIntegrationSettings: React.FC<Props> = ({ integration_to_app_mapping_id
       try {
         const products = await asrService.getAllProducts();
         setProducts(products);
-      } catch (err) {
+      } catch (_err) {
         return;
       }
     })();
@@ -83,7 +83,7 @@ const AsrIntegrationSettings: React.FC<Props> = ({ integration_to_app_mapping_id
       try {
         const response = await asrService.getTeamsChannels();
         setTeamsChannels(response);
-      } catch (err) {
+      } catch (_err) {
         handleError('Failed to get teams channels');
       }
     })();

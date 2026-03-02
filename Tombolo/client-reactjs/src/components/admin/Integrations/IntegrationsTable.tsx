@@ -45,7 +45,7 @@ const IntegrationsTable: React.FC<Props> = ({ allIntegrations }) => {
     try {
       await integrationsService.toggle({ integrationId: record.id, application_id, active });
       dispatch(getAllActiveIntegrations());
-    } catch (error) {
+    } catch (_error) {
       handleError('Failed to toggle integration');
     }
   };

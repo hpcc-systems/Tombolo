@@ -21,7 +21,7 @@ const DashboardApiTable: React.FC<Props> = ({ keys, getKeys, active = 1 }) => {
       await getKeys();
       handleSuccess('Key Deleted');
       return;
-    } catch (error) {
+    } catch (_error) {
       handleResponseError('Failed to Delete key');
     }
   };

@@ -119,7 +119,7 @@ const AddClusterModal: FC<AddClusterModalProps> = ({
     let validationErrors = false;
     try {
       await form.validateFields();
-    } catch (e) {
+    } catch (_e) {
       validationErrors = true;
     }
     if (validationErrors) return;
@@ -137,7 +137,7 @@ const AddClusterModal: FC<AddClusterModalProps> = ({
           ]);
           return;
         }
-      } catch (e) {
+      } catch (_e) {
         form.setFields([{ name: 'name', errors: ['Unable to establish connection with the cluster'] }]);
         return;
       }
@@ -165,7 +165,7 @@ const AddClusterModal: FC<AddClusterModalProps> = ({
               .map(str => {
                 try {
                   return JSON.parse(str);
-                } catch (e) {
+                } catch (_e) {
                   return null;
                 }
               })
