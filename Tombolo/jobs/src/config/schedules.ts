@@ -2,7 +2,7 @@
  * Cron schedule definitions for recurring jobs
  */
 
-import { wuHistoryJobType } from './constants.js';
+import { wuHistoryJobType, hpccToolsJobType } from './constants.js';
 
 export interface ScheduledJob {
   name: string;
@@ -10,6 +10,7 @@ export interface ScheduledJob {
   data: Record<string, unknown>;
   schedule: string;
   description?: string;
+  queue?: 'workunit-history' | 'hpcc-tools';
 }
 
 export const scheduledJobs: ScheduledJob[] = [
@@ -34,5 +35,12 @@ export const scheduledJobs: ScheduledJob[] = [
     schedule: '0 */15 * * * *', // Every 10 minutes
     description: 'Fetch workunit info',
   },
-  // Add more scheduled jobs here as needed
+  {
+    name: 'hpccToolsSync',
+    jobId: 'hpccToolsSync-recurring',
+    data: { type: hpccToolsJobType.SYNC },
+    schedule: '0 0 * * * *', // Every hour
+    description: 'Sync hpcc-tools repository',
+    queue: 'hpcc-tools',
+  },
 ];

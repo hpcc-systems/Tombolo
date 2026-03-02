@@ -1,3 +1,8 @@
+export enum hpccToolsJobType {
+  // eslint-disable-next-line
+  SYNC = 'sync',
+}
+
 export enum wuHistoryJobType {
   // eslint-disable-next-line
   QUERY = 'query',

@@ -1,4 +1,4 @@
-import { workunitHistoryQueue } from './queues/index.js';
+import { workunitHistoryQueue, hpccToolsQueue } from './queues/index.js';
 import { scheduledJobs } from './config/schedules.js';
 import logger from './config/logger.js';
 
@@ -10,7 +10,10 @@ export async function registerScheduledJobs() {
 
   try {
     for (const job of scheduledJobs) {
-      await workunitHistoryQueue.add(job.name, job.data, {
+      const queue =
+        job.queue === 'hpcc-tools' ? hpccToolsQueue : workunitHistoryQueue;
+
+      await queue.add(job.name, job.data, {
         repeat: {
           pattern: job.schedule,
         },
@@ -37,7 +40,9 @@ export async function removeScheduledJobs() {
 
   try {
     for (const job of scheduledJobs) {
-      await workunitHistoryQueue.removeJobScheduler(job.jobId);
+      const queue =
+        job.queue === 'hpcc-tools' ? hpccToolsQueue : workunitHistoryQueue;
+      await queue.removeJobScheduler(job.jobId);
     }
 
     logger.info('Removed all scheduled jobs');

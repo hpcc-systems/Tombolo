@@ -117,6 +117,15 @@ app.use('/api/auth', auth);
 app.use('/api/status', status);
 app.use('/api/wizard', wizard);
 
+// Expose hpcc-tools documentation and data files
+// Served before authentication to ensure iframe accessibility and robust data fetching
+app.use(
+  '/api/hpcc-tools-docs',
+  express.static(
+    path.join(process.cwd(), '..', 'hpcc-tools', 'hpcc-tools', 'docs')
+  )
+);
+
 // Validate access token and csrf tokens, all routes below require these
 app.use(validateToken);
 app.use(doubleCsrfProtection);

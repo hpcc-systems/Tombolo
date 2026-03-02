@@ -15,6 +15,7 @@ const WorkUnitHistory = React.lazy(() => import('./workunitHistory/index'));
 const WorkUnitDetails = React.lazy(() => import('./workunitHistory/details/index'));
 const WorkUnitAnalytics = React.lazy(() => import('./workunitAnalytics/index'));
 const WorkUnitDashboard = React.lazy(() => import('./workunits/dashboard/'));
+const HPCC_Tools = React.lazy(() => import('./HPCC-Tools'));
 
 const AdminRoutes: React.FC = () => {
   return (
@@ -28,6 +29,7 @@ const AdminRoutes: React.FC = () => {
       <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
       <PrivateRoute path="/admin/integrations" component={Integrations} />
       <PrivateRoute path="/admin/settings" component={Settings} />
+      <PrivateRoute path="/admin/hpcc-tools" component={HPCC_Tools} />
       <PrivateRoute exact path="/workunits/history/:clusterId/:wuid" component={WorkUnitDetails} />
       <PrivateRoute path="/workunits/history" component={WorkUnitHistory} />
       <PrivateRoute path="/workunits/sql" component={WorkUnitAnalytics} />

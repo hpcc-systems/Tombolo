@@ -16,6 +16,7 @@ import {
   DollarOutlined,
   HistoryOutlined,
   ThunderboltOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 
 import { useAppSelector } from '@/redux/store/hooks';
@@ -97,6 +98,7 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
       integrations: '12',
       settings: '13',
       msTeams: '13a',
+      'hpcc-tools': '14',
     };
 
     // on init we check pathname if it contains options key in name, if it does => highlight that menu item
@@ -358,8 +360,19 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
       null,
       clusterDisabled
     ),
+    getItem(
+      <Link to={'/admin/hpcc-tools'}>
+        <span>
+          <FileTextOutlined />
+          <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>HPCC Tools</span>
+        </span>
+      </Link>,
+      '14',
+      null,
+      null,
+      null
+    ),
   ];
-
   const onClick = (e: any) => setCurrent(e.key);
 
   const title = (titleText: React.ReactNode) => (

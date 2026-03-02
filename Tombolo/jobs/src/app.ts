@@ -5,7 +5,9 @@ import { ExpressAdapter } from '@bull-board/express';
 import { Redis } from 'ioredis';
 import { registerScheduledJobs } from './scheduler.js';
 import { workunitHistoryQueue } from './queues/workunitHistoryQueue.js';
+import { hpccToolsQueue } from './queues/hpccToolsQueue.js';
 import { workunitHistoryWorker } from './workers/workunitHistory/workunitHistoryWorker.js';
+import { hpccToolsWorker } from './workers/hpccTools/hpccToolsWorker.js';
 import { redisConnectionOptions } from './config/config.js';
 import logger from './config/logger.js';
 import { formatErrorForLogging } from './utils/errorFormatter.js';
@@ -35,9 +37,12 @@ const PORT = process.env.BULL_BOARD_PORT || 3005;
 async function startJobProcessor() {
   logger.info('Starting BullMQ job processor...');
 
-  // Start the worker (it will process jobs as they come in)
+  // Start the workers (they will process jobs as they come in)
   logger.info(
     `Workunit history worker started (concurrency: 1) - Worker ready: ${workunitHistoryWorker.isRunning()}`
+  );
+  logger.info(
+    `hpcc-tools worker started (concurrency: 1) - Worker ready: ${hpccToolsWorker.isRunning()}`
   );
 
   // Register scheduled jobs
@@ -48,7 +53,7 @@ async function startJobProcessor() {
   serverAdapter.setBasePath('/admin/queues');
 
   createBullBoard({
-    queues: [new BullMQAdapter(workunitHistoryQueue)],
+    queues: [new BullMQAdapter(workunitHistoryQueue), new BullMQAdapter(hpccToolsQueue)],
     serverAdapter: serverAdapter,
   });
 
