@@ -52,6 +52,7 @@ const SqlPanel: React.FC<Props> = ({ clusterId, wuid, clusterName }) => {
 
     return () => {
       if (saveRef.current?.flush) saveRef.current.flush();
+      if (saveRef.current?.cancel) saveRef.current.cancel();
     };
   }, []);
 
@@ -129,11 +130,6 @@ const SqlPanel: React.FC<Props> = ({ clusterId, wuid, clusterName }) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
 
-    editor.onDidChangeModelContent(() => {
-      const value = editor.getValue();
-      setSql(value);
-    });
-
     const disposable = monaco.languages.registerCompletionItemProvider('sql', {
       triggerCharacters: ['.', ' ', '\n', '\t'],
       provideCompletionItems: (model, position) => {
@@ -208,7 +204,7 @@ const SqlPanel: React.FC<Props> = ({ clusterId, wuid, clusterName }) => {
             <span>
               Only SELECT statements against the <Text code>work_unit_details</Text> table are allowed. Queries are
               automatically scoped to this workunit (<Text code>{wuid}</Text>) and cluster (
-              <Text code>{clusterName}</Text>), and limited to a maximum of 1000 rows.
+              <Text code>{clusterName}</Text>), and server-limited to a maximum of 1000 rows.
             </span>
           }
         />
@@ -266,7 +262,9 @@ const SqlPanel: React.FC<Props> = ({ clusterId, wuid, clusterName }) => {
           ) : (
             <Table
               size="small"
-              rowKey={(_, i) => String(i)}
+              rowKey={(row, i) =>
+                String((row as Record<string, unknown>).id ?? (row as Record<string, unknown>).scopeId ?? i)
+              }
               dataSource={result.rows}
               columns={columns}
               pagination={{ pageSize: 50 }}

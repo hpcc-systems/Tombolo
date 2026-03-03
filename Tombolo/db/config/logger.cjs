@@ -10,11 +10,10 @@ try {
   createLogger = (opts = {}) => {
     const prefix = opts.logDir ? `[db:${opts.logDir}] ` : '[db] ';
     return {
-      // debug: (...args) => console.debug(prefix, ...args),
-      // eslint-disable-next-line
+      // eslint-disable-next-line no-unused-vars
       debug: (...args) => undefined,
       info: (...args) => console.info(prefix, ...args),
-      // eslint-disable-next-line
+      // eslint-disable-next-line no-console
       warn: (...args) => console.warn(prefix, ...args),
       error: (...args) => console.error(prefix, ...args),
     };
