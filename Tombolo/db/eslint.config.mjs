@@ -11,7 +11,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   ...baseConfig,
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.recommended.map(config => ({
+    ...config,
+    files: ['src/**/*.ts'],
+  })),
   {
     files: ['src/**/*.ts'],
     languageOptions: {

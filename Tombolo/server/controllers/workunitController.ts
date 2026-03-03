@@ -83,31 +83,49 @@ async function getWorkunits(req: Request, res: Response) {
       }
     }
 
-    const { count, rows } = await WorkUnit.findAndCountAll({
-      where,
-      attributes: [
-        'wuId',
-        'clusterId',
-        'jobName',
-        'owner',
-        'state',
-        'totalClusterTime',
-        'totalCost',
-        'workUnitTimestamp',
-        'detailsFetchedAt',
-        [sequelize.literal('detailsFetchedAt IS NOT NULL'), 'hasDetails'],
-      ],
-      order: [[String(sort), String(order)]],
-      limit: parseInt(String(limit)),
-      offset,
-      raw: true,
-    });
+    const [{ count, rows }, aggregateRows] = await Promise.all([
+      WorkUnit.findAndCountAll({
+        where,
+        attributes: [
+          'wuId',
+          'clusterId',
+          'jobName',
+          'owner',
+          'state',
+          'totalClusterTime',
+          'totalCost',
+          'workUnitTimestamp',
+          'detailsFetchedAt',
+          [sequelize.literal('detailsFetchedAt IS NOT NULL'), 'hasDetails'],
+        ],
+        order: [[String(sort), String(order)]],
+        limit: parseInt(String(limit)),
+        offset,
+        raw: true,
+      }),
+      WorkUnit.findAll({
+        where,
+        attributes: [
+          [sequelize.fn('SUM', sequelize.col('totalCost')), 'totalCost'],
+          [
+            sequelize.fn('AVG', sequelize.col('totalClusterTime')),
+            'avgClusterTime',
+          ],
+        ],
+        raw: true,
+      }),
+    ]);
+
+    const agg = (aggregateRows[0] as any) || {};
 
     return sendSuccess(res, {
       total: count,
       page: parseInt(String(page)),
       limit: parseInt(String(limit)),
       data: rows,
+      totalCost: agg.totalCost != null ? parseFloat(agg.totalCost) : 0,
+      avgClusterTime:
+        agg.avgClusterTime != null ? parseFloat(agg.avgClusterTime) : 0,
     });
   } catch (err) {
     logger.error('Get workunits error: ', err);

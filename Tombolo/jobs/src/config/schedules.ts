@@ -24,14 +24,14 @@ export const scheduledJobs: ScheduledJob[] = [
     name: 'wuDetails',
     jobId: 'wuDetails-recurring',
     data: { type: wuHistoryJobType.DETAILS },
-    schedule: '0 */15 * * * *', // Every 4 minutes
+    schedule: '0 */15 * * * *', // Every 15 minutes
     description: 'Fetch workunit performance details',
   },
   {
     name: 'wuInfo',
     jobId: 'wuInfo-recurring',
     data: { type: wuHistoryJobType.INFO },
-    schedule: '0 */15 * * * *', // Every 10 minutes
+    schedule: '0 */15 * * * *', // Every 15 minutes
     description: 'Fetch workunit info',
   },
   // Add more scheduled jobs here as needed
