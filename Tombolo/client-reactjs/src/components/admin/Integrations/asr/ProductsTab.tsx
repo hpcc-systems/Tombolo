@@ -64,7 +64,7 @@ const ProductsTab: React.FC<Props> = ({ products = [], setSelectedProduct, setPr
       await asrService.deleteProduct({ id: record.id });
       const updatedProducts = await asrService.getAllProducts();
       setProducts && setProducts(updatedProducts);
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to delete product');
     }
   };

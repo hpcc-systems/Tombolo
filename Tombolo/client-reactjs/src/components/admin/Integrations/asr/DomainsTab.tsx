@@ -58,7 +58,7 @@ const DomainsTab: React.FC<Props> = ({ domains = [], setSelectedDomain, setDomai
       await asrService.deleteDomain({ id: record.id });
       handleSuccess('Domain deleted successfully');
       setDomainData(prev => prev.filter(d => d.id !== record.id));
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to delete domain');
     }
   };

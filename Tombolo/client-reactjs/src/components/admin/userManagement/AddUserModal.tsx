@@ -53,7 +53,7 @@ const AddUserModal: React.FC<Props> = ({
       form.resetFields();
       handleSuccess('User created successfully');
       setDisplayAddUserModal(false);
-    } catch (error) {
+    } catch (_error) {
       handleError('Failed to create user');
     }
   };

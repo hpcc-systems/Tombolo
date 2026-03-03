@@ -67,7 +67,7 @@ const ProductModal: React.FC<Props> = ({
       form.resetFields();
       setSelectedProduct && setSelectedProduct(null);
       setProductModalOpen && setProductModalOpen(false);
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to create product');
     }
   };
@@ -77,7 +77,7 @@ const ProductModal: React.FC<Props> = ({
       const payload = { ...values };
       await asrService.createProduct({ payload });
       handleSuccess('Product created successfully');
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to create product');
     }
   };
@@ -87,7 +87,7 @@ const ProductModal: React.FC<Props> = ({
       const payload = { ...values, id: selectedProduct.id };
       await asrService.updateProduct({ id: selectedProduct.id, payload });
       handleSuccess('Product updated successfully');
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Failed to update product');
     }
   };

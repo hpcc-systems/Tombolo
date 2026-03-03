@@ -39,7 +39,7 @@ const GeneralSettingsEditModal: React.FC<Props> = ({
       setIntegrationDetails && setIntegrationDetails(refreshed);
       handleSuccess('Settings updated');
       setDisplayGeneralSettingsEditModal && setDisplayGeneralSettingsEditModal(false);
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to update settings');
     }
   };

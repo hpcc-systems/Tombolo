@@ -52,7 +52,7 @@ const CreateNotificationModal: React.FC<Props> = ({
       try {
         const data = await asrService.getDomains({ monitoringTypeId: selectedActivityType });
         setDomains(data);
-      } catch (err) {
+      } catch (_err) {
         handleError('Error fetching domains');
       }
     })();
@@ -64,7 +64,7 @@ const CreateNotificationModal: React.FC<Props> = ({
       try {
         const response = await asrService.getProductCategories({ domainId: selectedDomain });
         setProductCategories(response);
-      } catch (err) {
+      } catch (_err) {
         handleError('Failed to fetch product category for selected domain');
       }
     })();
@@ -80,7 +80,7 @@ const CreateNotificationModal: React.FC<Props> = ({
     try {
       setSelectedDomain(value);
       form.setFieldsValue({ productCategory: null });
-    } catch (error) {
+    } catch (_error) {
       handleError('Error fetching product category');
     }
   };
@@ -89,7 +89,7 @@ const CreateNotificationModal: React.FC<Props> = ({
     try {
       setSavingForm(true);
       await form.validateFields();
-    } catch (error) {
+    } catch (_error) {
       setSavingForm(false);
       return;
     }
@@ -125,7 +125,7 @@ const CreateNotificationModal: React.FC<Props> = ({
       setSavingForm(false);
       setDisplayCreateNotificationModal(false);
       form.resetFields();
-    } catch (error) {
+    } catch (_error) {
       handleError('Error saving notification');
       setSavingForm(false);
     }

@@ -51,7 +51,7 @@ const EditClusterModal: React.FC<EditClusterModalProps> = ({
     let validationErrorsExist = false;
     try {
       await form.validateFields();
-    } catch (err) {
+    } catch (_err) {
       validationErrorsExist = true;
     }
     if (validationErrorsExist) return;
@@ -69,7 +69,7 @@ const EditClusterModal: React.FC<EditClusterModalProps> = ({
           ]);
           return;
         }
-      } catch (e) {
+      } catch (_e) {
         clusterReachable = false;
         form.setFields([{ name: 'clusterName', errors: ['Unable to establish connection with the cluster'] }]);
       }
@@ -83,7 +83,7 @@ const EditClusterModal: React.FC<EditClusterModalProps> = ({
       setClusters(clusters => clusters.map(cluster => (cluster.id === updatedInfo.id ? updatedInfo : cluster)));
       handleSuccess('Cluster updated successfully');
       handleModalCancel();
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to update cluster');
     }
   };

@@ -42,7 +42,7 @@ const ClustersTable: FC<ClustersTableProps> = ({
       await clustersService.delete(id);
       handleSuccess('Cluster deleted successfully');
       setClusters((clusters: ClusterUI[]) => clusters.filter(cluster => cluster.id !== id));
-    } catch (e) {
+    } catch (_e) {
       handleError('Failed to delete cluster');
     }
   };
@@ -65,7 +65,7 @@ const ClustersTable: FC<ClustersTableProps> = ({
     try {
       setTestingConnection(record.id);
       await clustersService.pingExisting({ clusterId: record.id });
-    } catch (e) {
+    } catch (_e) {
       handleError('Failed to establish connection with cluster');
     } finally {
       setTestingConnection(null);
@@ -76,7 +76,7 @@ const ClustersTable: FC<ClustersTableProps> = ({
       setClusters((clusters: ClusterUI[]) =>
         clusters.map(cluster => (cluster.id === record.id ? updatedCluster : cluster))
       );
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to get updated cluster');
     }
   };

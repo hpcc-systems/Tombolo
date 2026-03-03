@@ -52,7 +52,7 @@ const SentNotificationsTable: React.FC<Props> = ({
     try {
       await notificationsService.deleteNotification(id);
       setSentNotifications(sentNotifications.filter(item => item.id !== id));
-    } catch (err) {
+    } catch (_err) {
       handleError('failed to delete notification. Please try again.');
     }
   };

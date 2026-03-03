@@ -49,7 +49,7 @@ const DashboardModal: React.FC<Props> = ({ modalVisible, setModalVisible, applic
 
       setKeys(data);
       return data;
-    } catch (error) {
+    } catch (_error) {
       handleResponseError('Failed to fetch keys');
     }
   };
@@ -63,7 +63,7 @@ const DashboardModal: React.FC<Props> = ({ modalVisible, setModalVisible, applic
       getKeys();
       setKey(data);
       return;
-    } catch (error) {
+    } catch (_error) {
       handleResponseError('Failed to get API Key');
     }
   };

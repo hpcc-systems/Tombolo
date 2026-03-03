@@ -46,7 +46,7 @@ const DomainModal: React.FC<Props> = ({
   const saveUpdatedDomain = async () => {
     try {
       await form.validateFields();
-    } catch (err) {
+    } catch (_err) {
       return;
     }
 
@@ -59,7 +59,7 @@ const DomainModal: React.FC<Props> = ({
       setSelectedDomain && setSelectedDomain(null);
       form.resetFields();
       setDomainModalOpen && setDomainModalOpen(false);
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to update domain');
     }
   };
@@ -67,7 +67,7 @@ const DomainModal: React.FC<Props> = ({
   const saveDomain = async () => {
     try {
       await form.validateFields();
-    } catch (err) {
+    } catch (_err) {
       return;
     }
 
@@ -86,7 +86,7 @@ const DomainModal: React.FC<Props> = ({
       handleSuccess('Domain saved successfully');
       form.resetFields();
       setDomainModalOpen && setDomainModalOpen(false);
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to save domain');
     }
   };
