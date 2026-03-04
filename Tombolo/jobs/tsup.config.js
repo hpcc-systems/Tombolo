@@ -10,14 +10,7 @@ export default defineConfig({
   outDir: 'dist',
   shims: true,
   bundle: true,
-  external: [
-    'bullmq',
-    'ioredis',
-    'express',
-    'mysql2',
-    'dotenv',
-    '@tombolo/core',
-    '@tombolo/db',
-    '@tombolo/shared',
-  ],
+  // Externalize all npm packages (unscoped like "bullmq" and scoped like "@hpcc-js/comms")
+  // but not path aliases like "@/..." which esbuild resolves to local files during bundling.
+  external: [/^[a-z]/, /^@[a-z]/],
 });
