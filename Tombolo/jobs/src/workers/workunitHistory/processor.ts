@@ -5,8 +5,8 @@ import { getWorkunitInfo } from './handlers/wuInfo.js';
 import {
   wuHistoryJobType,
   type WorkunitHistoryJobData,
-} from '../../types/index.js';
-import logger from '../../config/logger.js';
+} from '@/types/index.js';
+import logger from '@/config/logger.js';
 
 // Job processor function - exported as default for BullMQ worker threads
 export default async function processWorkunitHistoryJob(
