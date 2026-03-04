@@ -5,6 +5,9 @@ import { Cluster } from '../../models/index.js';
 import { v4 as uuidv4 } from 'uuid';
 import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import { getCluster, AUTHED_USER_ID, UUID_REGEX } from '../helpers.js';
+import axios from 'axios';
+
+vi.mock('axios');
 
 const nonExistentID = uuidv4();
 
@@ -12,6 +15,7 @@ describe('Cluster Routes', () => {
   beforeEach(() => {
     vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
+    axios.get.mockResolvedValue({ status: 200, data: {} });
   });
 
   afterEach(() => {
