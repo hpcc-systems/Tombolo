@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { redisConnectionOptions } from '../../config/config.js';
+import { redisConnectionOptions } from '../../config/redis.js';
 import logger from '../../config/logger.js';
 import { formatErrorForLogging } from '../../utils/errorFormatter.js';
 

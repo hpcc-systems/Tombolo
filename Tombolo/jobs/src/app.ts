@@ -3,10 +3,12 @@ import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { Redis } from 'ioredis';
-import { registerScheduledJobs } from './scheduler.js';
-import { workunitHistoryQueue } from './queues/workunitHistoryQueue.js';
-import { workunitHistoryWorker } from './workers/workunitHistory/workunitHistoryWorker.js';
-import { redisConnectionOptions } from './config/config.js';
+import {
+  workunitHistoryQueue,
+  registerScheduledJobs,
+} from './queues/workunitHistory.js';
+import { workunitHistoryWorker } from './workers/workunitHistory/index.js';
+import { redisConnectionOptions } from './config/redis.js';
 import logger from './config/logger.js';
 import { formatErrorForLogging } from './utils/errorFormatter.js';
 
@@ -40,7 +42,6 @@ async function startJobProcessor() {
     `Workunit history worker started (concurrency: 1) - Worker ready: ${workunitHistoryWorker.isRunning()}`
   );
 
-  // Register scheduled jobs
   await registerScheduledJobs();
 
   // Setup Bull Board
