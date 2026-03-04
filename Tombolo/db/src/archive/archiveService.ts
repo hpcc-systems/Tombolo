@@ -1,5 +1,11 @@
 import { ArchiveManager, type ArchiveOptions } from './archiveUtils.js';
-import { Sequelize, ModelStatic, Model, type WhereOptions } from 'sequelize';
+import {
+  Op,
+  Sequelize,
+  ModelStatic,
+  Model,
+  type WhereOptions,
+} from 'sequelize';
 
 class ArchiveService {
   protected sequelize: Sequelize;
@@ -48,6 +54,52 @@ class ArchiveService {
       where: filters,
       order: [['archivedAt', 'DESC']],
     });
+  }
+
+  async restoreArchivedData(
+    originalModelName: string,
+    ids: (string | number)[]
+  ): Promise<number> {
+    const originalModel = this.sequelize.models[originalModelName];
+    if (!originalModel) {
+      throw new Error(`Original model ${originalModelName} not found`);
+    }
+
+    const ArchiveModel = this.archiveManager.getArchiveModel(originalModel);
+    const transaction = await this.sequelize.transaction();
+
+    try {
+      const archivedRecords = await ArchiveModel.findAll({
+        where: { id: { [Op.in]: ids } },
+        transaction,
+      });
+
+      if (archivedRecords.length === 0) {
+        await transaction.rollback();
+        return 0;
+      }
+
+      const restoreData = archivedRecords.map(record => {
+        const { archivedAt: _archivedAt, ...data } = record.toJSON() as Record<
+          string,
+          unknown
+        >;
+        return data;
+      });
+
+      await originalModel.bulkCreate(restoreData, { transaction });
+
+      await ArchiveModel.destroy({
+        where: { id: { [Op.in]: ids } },
+        transaction,
+      });
+
+      await transaction.commit();
+      return archivedRecords.length;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 }
 
