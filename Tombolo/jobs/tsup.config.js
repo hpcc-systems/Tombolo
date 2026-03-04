@@ -1,9 +1,9 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/app.ts'],
   format: ['esm'],
-  dts: true,
+  dts: false,
   splitting: false,
   sourcemap: true,
   clean: true,
@@ -11,13 +11,13 @@ export default defineConfig({
   shims: true,
   bundle: true,
   external: [
-    'sequelize',
-    'sequelize-typescript',
+    'bullmq',
+    'ioredis',
+    'express',
     'mysql2',
-    'reflect-metadata',
     'dotenv',
+    '@tombolo/core',
+    '@tombolo/db',
     '@tombolo/shared',
-    '@tombolo/shared/backend',
   ],
-  noExternal: [],
 });
