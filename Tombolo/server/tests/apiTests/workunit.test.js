@@ -10,6 +10,7 @@ describe('Workunit Routes', () => {
   beforeEach(() => {
     vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
+    WorkUnit.findAll.mockResolvedValue([]);
   });
 
   afterEach(() => {
