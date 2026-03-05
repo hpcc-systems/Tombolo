@@ -372,11 +372,30 @@ check_dependencies() {
       missing+=("docker")
     fi
   else
-    if ! command -v pnpm >/dev/null 2>&1; then
-      missing+=("pnpm")
-    fi
     if ! command -v node >/dev/null 2>&1; then
       missing+=("node")
+    fi
+    if ! command -v pnpm >/dev/null 2>&1; then
+      say "pnpm is not installed."
+      local pnpm_installed=false
+      if command -v corepack >/dev/null 2>&1; then
+        if confirm "Install pnpm 10 (latest) now via corepack?" true; then
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm_installed=true
+        fi
+      elif command -v npm >/dev/null 2>&1; then
+        if confirm "Install pnpm 10 (latest) now via corepack (requires enabling corepack first)?" true; then
+          npm install -g corepack
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm_installed=true
+        fi
+      fi
+      if [[ "$pnpm_installed" == "false" ]]; then
+        say "Install pnpm manually: https://pnpm.io/installation"
+        missing+=("pnpm")
+      fi
     fi
   fi
   if [[ ${#missing[@]} -gt 0 ]]; then
@@ -395,13 +414,12 @@ wait_for_docker_daemon() {
 }
 
 detect_existing_setup() {
-  local found=0
-  [[ -f "$ENV_FILE" ]] && found=1
-  [[ -f "$CLIENT_ENV_FILE" ]] && found=1
-  [[ -f "$CLUSTER_WHITELIST" ]] && found=1
-  [[ -f "$COMPOSE_FILE" ]] && found=1
-  [[ -f "$NGINX_TEMPLATE" ]] && found=1
-  return $found
+  [[ -f "$ENV_FILE" ]] && return 0
+  [[ -f "$CLIENT_ENV_FILE" ]] && return 0
+  [[ -f "$CLUSTER_WHITELIST" ]] && return 0
+  [[ -f "$COMPOSE_FILE" ]] && return 0
+  [[ -f "$NGINX_TEMPLATE" ]] && return 0
+  return 1
 }
 
 read_env_value() {
@@ -415,7 +433,7 @@ try:
         for line in f:
             if line.strip().startswith("#"):
                 continue
-            m = re.match(rf"\\s*{re.escape(key)}\\s*=\\s*(.*)\\s*$", line)
+            m = re.match(rf"\s*{re.escape(key)}\s*=\s*(.*)\s*$", line)
             if m:
                 val = m.group(1).strip()
                 if (val.startswith("'") and val.endswith("'")) or (val.startswith('"') and val.endswith('"')):
@@ -513,8 +531,10 @@ if [[ "$RESUME_MODE" == "false" || "$CURRENT_STEP" -lt 1 ]]; then
     if confirm "Keep existing .env files?" true; then
       say "Keeping existing .env files."
     else
-      ensure_file_from_sample "$ENV_FILE" "$ENV_SAMPLE"
-      ensure_file_from_sample "$CLIENT_ENV_FILE" "$CLIENT_ENV_SAMPLE"
+      cp "$ENV_SAMPLE" "$ENV_FILE"
+      say "Overwrote $ENV_FILE from sample."
+      cp "$CLIENT_ENV_SAMPLE" "$CLIENT_ENV_FILE"
+      say "Overwrote $CLIENT_ENV_FILE from sample."
     fi
   else
     ensure_file_from_sample "$ENV_FILE" "$ENV_SAMPLE"
@@ -765,6 +785,40 @@ if [[ "$RESUME_MODE" == "false" || "$CURRENT_STEP" -lt 2 ]]; then
   WEB_URL_VAL="${WEB_SCHEME}://${HOSTNAME_VAL}:${WEB_PORT}"
   set_env_value "$ENV_FILE" "WEB_URL" "$WEB_URL_VAL"
 
+  # For local installs, Docker service names won't resolve — require real values.
+  if [[ "$install_type" == "local" ]]; then
+    if [[ "$DB_HOSTNAME_VAL" == "mysql_db" || -z "$DB_HOSTNAME_VAL" ]]; then
+      say ""
+      say "Local install: DB_HOSTNAME is '${DB_HOSTNAME_VAL:-empty}' (Docker service name won't work). Please enter real database settings."
+      DB_HOSTNAME_VAL="$(prompt_required "DB hostname" "localhost")"
+      DB_PORT_VAL="$(prompt_port "DB port" "${DB_PORT_VAL:-3306}")"
+      DB_NAME_VAL="$(prompt_required "DB name" "${DB_NAME_VAL:-tombolo}")"
+      DB_USERNAME_VAL="$(prompt_required "DB username" "${DB_USERNAME_VAL:-database_user}")"
+      DB_PASSWORD_VAL="$(prompt_required "DB password" "${DB_PASSWORD_VAL:-database_user_password}")"
+      if confirm "Enable MySQL SSL?" false; then MYSQL_SSL_ENABLED_VAL="true"; else MYSQL_SSL_ENABLED_VAL="false"; fi
+      set_env_value "$ENV_FILE" "DB_HOSTNAME" "$DB_HOSTNAME_VAL"
+      set_env_value "$ENV_FILE" "DB_PORT" "$DB_PORT_VAL"
+      set_env_value "$ENV_FILE" "DB_NAME" "$DB_NAME_VAL"
+      set_env_value "$ENV_FILE" "DB_USERNAME" "$DB_USERNAME_VAL"
+      set_env_value "$ENV_FILE" "DB_PASSWORD" "$DB_PASSWORD_VAL"
+      set_env_value "$ENV_FILE" "MYSQL_SSL_ENABLED" "$MYSQL_SSL_ENABLED_VAL"
+    fi
+    if [[ "$REDIS_HOST_VAL" == "redis" || -z "$REDIS_HOST_VAL" ]]; then
+      say ""
+      say "Local install: REDIS_HOST is '${REDIS_HOST_VAL:-empty}' (Docker service name won't work). Please enter real Redis settings."
+      REDIS_HOST_VAL="$(prompt_required "Redis hostname" "localhost")"
+      REDIS_PORT_VAL="$(prompt_port "Redis port" "${REDIS_PORT_VAL:-6379}")"
+      REDIS_USER_VAL="$(prompt "Redis username (optional)" "$REDIS_USER_VAL")"
+      REDIS_PASSWORD_VAL="$(prompt "Redis password (optional)" "$REDIS_PASSWORD_VAL")"
+      REDIS_DB_VAL="$(prompt_required "Redis DB" "${REDIS_DB_VAL:-0}")"
+      set_env_value "$ENV_FILE" "REDIS_HOST" "$REDIS_HOST_VAL"
+      set_env_value "$ENV_FILE" "REDIS_PORT" "$REDIS_PORT_VAL"
+      set_env_value "$ENV_FILE" "REDIS_USER" "$REDIS_USER_VAL"
+      set_env_value "$ENV_FILE" "REDIS_PASSWORD" "$REDIS_PASSWORD_VAL"
+      set_env_value "$ENV_FILE" "REDIS_DB" "$REDIS_DB_VAL"
+    fi
+  fi
+
   USE_AZURE=false
   if [[ -n "$CLIENT_ID_VAL" || -n "$TENANT_ID_VAL" || -n "$REDIRECT_URI_VAL" ]]; then
     USE_AZURE=true
@@ -826,24 +880,28 @@ fi
 say ""
 say "Step 3: Configure Nginx template"
 if [[ "$RESUME_MODE" == "false" || "$CURRENT_STEP" -lt 3 ]]; then
-if [[ "$USE_SSL" == "true" ]]; then
-  if [[ -f "$NGINX_SSL" ]]; then
-    if confirm "Use SSL Nginx template (overwrite nginx.conf.template)?" true; then
-      cp "$NGINX_SSL" "$NGINX_TEMPLATE"
-      say "Updated $NGINX_TEMPLATE from SSL template."
+if [[ "$install_type" == "docker" ]]; then
+  if [[ "$USE_SSL" == "true" ]]; then
+    if [[ -f "$NGINX_SSL" ]]; then
+      if confirm "Use SSL Nginx template (overwrite nginx.conf.template)?" true; then
+        cp "$NGINX_SSL" "$NGINX_TEMPLATE"
+        say "Updated $NGINX_TEMPLATE from SSL template."
+      fi
+    else
+      say "Warning: SSL template not found at $NGINX_SSL"
     fi
   else
-    say "Warning: SSL template not found at $NGINX_SSL"
+    if [[ -f "$NGINX_NO_SSL" ]]; then
+      if confirm "Use non-SSL Nginx template (overwrite nginx.conf.template)?" true; then
+        cp "$NGINX_NO_SSL" "$NGINX_TEMPLATE"
+        say "Updated $NGINX_TEMPLATE from non-SSL template."
+      fi
+    else
+      say "Warning: non-SSL template not found at $NGINX_NO_SSL"
+    fi
   fi
 else
-  if [[ -f "$NGINX_NO_SSL" ]]; then
-    if confirm "Use non-SSL Nginx template (overwrite nginx.conf.template)?" true; then
-      cp "$NGINX_NO_SSL" "$NGINX_TEMPLATE"
-      say "Updated $NGINX_TEMPLATE from non-SSL template."
-    fi
-  else
-    say "Warning: non-SSL template not found at $NGINX_NO_SSL"
-  fi
+  say "Skipping Nginx configuration (not used for local installs)."
 fi
 write_state 3
 fi
@@ -888,7 +946,13 @@ with open(path, "w", encoding="utf-8") as f:
     for c in arr:
         f.write("  {\n")
         for key in ["name", "thor", "thor_port", "roxie", "roxie_port"]:
-            f.write(f"    {key}: {json.dumps(c.get(key, ''))},\n")
+            val = c.get(key, '')
+            if key in ("thor_port", "roxie_port"):
+                try:
+                    val = int(val)
+                except (ValueError, TypeError):
+                    pass
+            f.write(f"    {key}: {json.dumps(val)},\n")
         f.write("  },\n")
     f.write("];\n\nexport default clusters;\n")
 PY
@@ -927,7 +991,7 @@ if [[ "$install_type" == "docker" ]]; then
   write_state 5
   fi
 
-  if [[ "$RESUME_MODE" == "false" || "$CURRENT_STEP" -lt 6 ]]; then
+  if [[ "$RESUME_MODE" == "false" || "$CURRENT_STEP" -lt 6 || "$FORCE_COMPOSE" == "true" ]]; then
   if [[ "$USE_DOCKER_DB" == "false" || "$USE_DOCKER_REDIS" == "false" ]]; then
     update_compose_for_custom_services "$COMPOSE_FILE" "$([[ "$USE_DOCKER_DB" == "false" ]] && echo true || echo false)" "$([[ "$USE_DOCKER_REDIS" == "false" ]] && echo true || echo false)"
     say "Updated $COMPOSE_FILE to disable custom services."

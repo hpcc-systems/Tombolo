@@ -288,8 +288,31 @@ function Check-Dependencies {
     if ($installType -eq "docker") {
         if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { $missing += "docker" }
     } else {
-        if (-not (Get-Command pnpm  -ErrorAction SilentlyContinue)) { $missing += "pnpm" }
-        if (-not (Get-Command node  -ErrorAction SilentlyContinue)) { $missing += "node" }
+        if (-not (Get-Command node -ErrorAction SilentlyContinue)) { $missing += "node" }
+        if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
+            Say "pnpm is not installed."
+            $pnpmInstalled = $false
+            $corepack = Get-Command corepack -ErrorAction SilentlyContinue
+            $npm      = Get-Command npm      -ErrorAction SilentlyContinue
+            if ($corepack) {
+                if (Confirm-Prompt "Install pnpm 10 (latest) now via corepack?" $true) {
+                    corepack enable
+                    corepack prepare pnpm@latest --activate
+                    $pnpmInstalled = $true
+                }
+            } elseif ($npm) {
+                if (Confirm-Prompt "Install pnpm 10 (latest) now via corepack (requires enabling corepack first)?" $true) {
+                    npm install -g corepack
+                    corepack enable
+                    corepack prepare pnpm@latest --activate
+                    $pnpmInstalled = $true
+                }
+            }
+            if (-not $pnpmInstalled) {
+                Say "Install pnpm manually: https://pnpm.io/installation"
+                $missing += "pnpm"
+            }
+        }
     }
     if ($missing.Count -gt 0) {
         Say "Error: Missing required dependencies: $($missing -join ', ')"
@@ -396,8 +419,10 @@ if (-not $resumeMode -or $currentStep -lt 1) {
         if (Confirm-Prompt "Keep existing .env files?" $true) {
             Say "Keeping existing .env files."
         } else {
-            Ensure-FileFromSample $EnvFile $EnvSample
-            Ensure-FileFromSample $ClientEnvFile $ClientEnvSample
+            Copy-Item $EnvSample $EnvFile -Force
+            Say "Overwrote $EnvFile from sample."
+            Copy-Item $ClientEnvSample $ClientEnvFile -Force
+            Say "Overwrote $ClientEnvFile from sample."
         }
     } else {
         Ensure-FileFromSample $EnvFile $EnvSample
@@ -592,6 +617,40 @@ if (-not $resumeMode -or $currentStep -lt 2) {
     $webUrlVal  = "${webScheme}://${hostnameVal}:${webPort}"
     Set-EnvValue $EnvFile "WEB_URL" $webUrlVal
 
+    # For local installs, Docker service names won't resolve - require real values.
+    if ($installType -eq "local") {
+        if ($dbHostnameVal -eq "mysql_db" -or [string]::IsNullOrEmpty($dbHostnameVal)) {
+            Say ""
+            Say "Local install: DB_HOSTNAME is '$(if ($dbHostnameVal) { $dbHostnameVal } else { 'empty' })' (Docker service name won't work). Please enter real database settings."
+            $dbHostnameVal = Prompt-Required "DB hostname" "localhost"
+            $dbPortVal     = Prompt-Port     "DB port"     (if ($dbPortVal) { $dbPortVal } else { "3306" })
+            $dbNameVal     = Prompt-Required "DB name"     (if ($dbNameVal)     { $dbNameVal }     else { "tombolo" })
+            $dbUsernameVal = Prompt-Required "DB username" (if ($dbUsernameVal) { $dbUsernameVal } else { "database_user" })
+            $dbPasswordVal = Prompt-Required "DB password" (if ($dbPasswordVal) { $dbPasswordVal } else { "database_user_password" })
+            $mysqlSslVal   = if (Confirm-Prompt "Enable MySQL SSL?" $false) { "true" } else { "false" }
+            Set-EnvValue $EnvFile "DB_HOSTNAME"       $dbHostnameVal
+            Set-EnvValue $EnvFile "DB_PORT"           $dbPortVal
+            Set-EnvValue $EnvFile "DB_NAME"           $dbNameVal
+            Set-EnvValue $EnvFile "DB_USERNAME"       $dbUsernameVal
+            Set-EnvValue $EnvFile "DB_PASSWORD"       $dbPasswordVal
+            Set-EnvValue $EnvFile "MYSQL_SSL_ENABLED" $mysqlSslVal
+        }
+        if ($redisHostVal -eq "redis" -or [string]::IsNullOrEmpty($redisHostVal)) {
+            Say ""
+            Say "Local install: REDIS_HOST is '$(if ($redisHostVal) { $redisHostVal } else { 'empty' })' (Docker service name won't work). Please enter real Redis settings."
+            $redisHostVal     = Prompt-Required "Redis hostname" "localhost"
+            $redisPortVal     = Prompt-Port     "Redis port"     (if ($redisPortVal) { $redisPortVal } else { "6379" })
+            $redisUserVal     = Prompt-Input    "Redis username (optional)" $redisUserVal
+            $redisPasswordVal = Prompt-Input    "Redis password (optional)" $redisPasswordVal
+            $redisDbVal       = Prompt-Required "Redis DB" (if ($redisDbVal) { $redisDbVal } else { "0" })
+            Set-EnvValue $EnvFile "REDIS_HOST"     $redisHostVal
+            Set-EnvValue $EnvFile "REDIS_PORT"     $redisPortVal
+            Set-EnvValue $EnvFile "REDIS_USER"     $redisUserVal
+            Set-EnvValue $EnvFile "REDIS_PASSWORD" $redisPasswordVal
+            Set-EnvValue $EnvFile "REDIS_DB"       $redisDbVal
+        }
+    }
+
     $useAzure = (-not [string]::IsNullOrEmpty($clientIdVal)) -or
                 (-not [string]::IsNullOrEmpty($tenantIdVal)) -or
                 (-not [string]::IsNullOrEmpty($redirectUriVal))
@@ -640,20 +699,24 @@ if (-not $resumeMode -or $currentStep -lt 2) {
 Say ""
 Say "Step 3: Configure Nginx template"
 if (-not $resumeMode -or $currentStep -lt 3) {
-    if ($useSsl) {
-        if (Test-Path $NginxSsl) {
-            if (Confirm-Prompt "Use SSL Nginx template (overwrite nginx.conf.template)?" $true) {
-                Copy-Item $NginxSsl $NginxTemplate -Force
-                Say "Updated $NginxTemplate from SSL template."
-            }
-        } else { Say "Warning: SSL template not found at $NginxSsl" }
+    if ($installType -eq "docker") {
+        if ($useSsl) {
+            if (Test-Path $NginxSsl) {
+                if (Confirm-Prompt "Use SSL Nginx template (overwrite nginx.conf.template)?" $true) {
+                    Copy-Item $NginxSsl $NginxTemplate -Force
+                    Say "Updated $NginxTemplate from SSL template."
+                }
+            } else { Say "Warning: SSL template not found at $NginxSsl" }
+        } else {
+            if (Test-Path $NginxNoSsl) {
+                if (Confirm-Prompt "Use non-SSL Nginx template (overwrite nginx.conf.template)?" $true) {
+                    Copy-Item $NginxNoSsl $NginxTemplate -Force
+                    Say "Updated $NginxTemplate from non-SSL template."
+                }
+            } else { Say "Warning: non-SSL template not found at $NginxNoSsl" }
+        }
     } else {
-        if (Test-Path $NginxNoSsl) {
-            if (Confirm-Prompt "Use non-SSL Nginx template (overwrite nginx.conf.template)?" $true) {
-                Copy-Item $NginxNoSsl $NginxTemplate -Force
-                Say "Updated $NginxTemplate from non-SSL template."
-            }
-        } else { Say "Warning: non-SSL template not found at $NginxNoSsl" }
+        Say "Skipping Nginx configuration (not used for local installs)."
     }
     Write-State "3"
 }
@@ -682,7 +745,12 @@ if (-not $resumeMode -or $currentStep -lt 4) {
         foreach ($c in $clusters) {
             [void]$sb.AppendLine("  {")
             foreach ($key in @("name","thor","thor_port","roxie","roxie_port")) {
-                [void]$sb.AppendLine("    ${key}: $($c[$key] | ConvertTo-Json),")
+                $val = $c[$key]
+                if ($key -eq "thor_port" -or $key -eq "roxie_port") {
+                    $intVal = 0
+                    if ([int]::TryParse($val, [ref]$intVal)) { $val = $intVal }
+                }
+                [void]$sb.AppendLine("    ${key}: $($val | ConvertTo-Json),")
             }
             [void]$sb.AppendLine("  },")
         }
@@ -725,7 +793,7 @@ if ($installType -eq "docker") {
         Write-State "5"
     }
 
-    if (-not $resumeMode -or $currentStep -lt 6) {
+    if (-not $resumeMode -or $currentStep -lt 6 -or $forceCompose) {
         if ($useDockerDb -eq "false" -or $useDockerRedis -eq "false") {
             Update-ComposeForCustomServices $ComposeFile ($useDockerDb -eq "false") ($useDockerRedis -eq "false")
             Say "Updated $ComposeFile to disable custom services."
