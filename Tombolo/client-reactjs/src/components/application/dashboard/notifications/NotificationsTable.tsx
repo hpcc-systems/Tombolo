@@ -110,7 +110,7 @@ const SentNotificationsTable: React.FC<Props> = ({
       title: 'Created At',
       dataIndex: 'createdAt',
       width: '15%',
-      render: (createdAt: any) => DateWithTooltip(createdAt),
+      render: (createdAt: any) => <DateWithTooltip timestamp={createdAt} />,
     },
     {
       title: 'Modified By',

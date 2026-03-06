@@ -78,7 +78,7 @@ function CostMonitoringNotificationTab({ form, clusters }: CostMonitoringNotific
 
   return (
     <Form form={form} layout="vertical">
-      <NotificationContacts>
+      <NotificationContacts enableOwnerSupervisorContact={true}>
         <Form.Item
           label="Cost Threshold"
           name="threshold"
