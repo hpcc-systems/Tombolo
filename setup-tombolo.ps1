@@ -38,7 +38,7 @@ function Say {
     Write-Host $Message
 }
 
-function Prompt-Input {
+function Read-Input {
     param([string]$Message, [string]$DefaultValue = "")
     if ($DefaultValue -ne "") {
         $val = Read-Host "$Message [$DefaultValue]"
@@ -49,26 +49,26 @@ function Prompt-Input {
     return $val
 }
 
-function Prompt-Required {
+function Read-RequiredInput {
     param([string]$Message, [string]$DefaultValue = "")
     while ($true) {
-        $val = Prompt-Input $Message $DefaultValue
+        $val = Read-Input $Message $DefaultValue
         if (-not [string]::IsNullOrEmpty($val)) { return $val }
         Say "Value is required."
     }
 }
 
-function Prompt-Port {
+function Read-Port {
     param([string]$Message, [string]$DefaultValue = "")
     while ($true) {
-        $val = Prompt-Input $Message $DefaultValue
+        $val = Read-Input $Message $DefaultValue
         $n = 0
         if ([int]::TryParse($val, [ref]$n) -and $n -ge 1 -and $n -le 65535) { return $val }
         Say "Please enter a valid port number (1-65535)."
     }
 }
 
-function Confirm-Prompt {
+function Get-Confirmation {
     param([string]$Message, [bool]$DefaultYes = $false)
     $suffix = if ($DefaultYes) { "[Y/n]" } else { "[y/N]" }
     $val = Read-Host "$Message $suffix"
@@ -76,10 +76,10 @@ function Confirm-Prompt {
     return ($val -match '^(y|Y|yes|YES)$')
 }
 
-function Ensure-FileFromSample {
+function Initialize-FileFromSample {
     param([string]$Target, [string]$Sample)
     if (Test-Path $Target) {
-        if (Confirm-Prompt "$Target exists. Overwrite with sample?" $false) {
+        if (Get-Confirmation "$Target exists. Overwrite with sample?" $false) {
             Copy-Item $Sample $Target -Force
             Say "Overwrote $Target from sample."
         } else {
@@ -123,7 +123,7 @@ function Read-EnvValue {
     return ""
 }
 
-function Gen-Secret {
+function New-Secret {
     $bytes = [System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)
     return [System.Convert]::ToBase64String($bytes)
 }
@@ -211,11 +211,11 @@ function Update-ComposeForCustomServices {
         $skip = $false
         if ($DisableMysql -and $raw -match "mysql_db") {
             if ($raw -match 'entrypoint|depends_on')            { $skip = $true }
-            if ($stripped -match '^\s*-\s*mysql_db\s*$')        { $skip = $true }
+            if ($stripped -match '^-\s*mysql_db\s*$')          { $skip = $true }
         }
         if ($DisableRedis -and $raw -match "\bredis\b") {
             if ($raw -match 'entrypoint|depends_on')            { $skip = $true }
-            if ($stripped -match '^\s*-\s*redis\s*$')           { $skip = $true }
+            if ($stripped -match '^-\s*redis\s*$')             { $skip = $true }
         }
         if (-not $skip) { $out.Add($raw) }
     }
@@ -228,20 +228,20 @@ function Update-ComposeForCustomServices {
     $out | Set-Content $FilePath -Encoding UTF8
 }
 
-function Prompt-ChangeValue {
+function Read-UpdatedValue {
     param([string]$FilePath, [string]$Key, [string]$Label, [string]$CurrentValue)
-    if (Confirm-Prompt "Change ${Label}?" $false) {
-        $val = Prompt-Input $Label $CurrentValue
+    if (Get-Confirmation "Change ${Label}?" $false) {
+        $val = Read-Input $Label $CurrentValue
         Set-EnvValue $FilePath $Key $val
         return $val
     }
     return $CurrentValue
 }
 
-function Prompt-ChangePort {
+function Read-UpdatedPort {
     param([string]$FilePath, [string]$Key, [string]$Label, [string]$CurrentValue)
-    if (Confirm-Prompt "Change ${Label}?" $false) {
-        $val = Prompt-Port $Label $CurrentValue
+    if (Get-Confirmation "Change ${Label}?" $false) {
+        $val = Read-Port $Label $CurrentValue
         Set-EnvValue $FilePath $Key $val
         return $val
     }
@@ -275,15 +275,15 @@ function Set-StateValue {
     $data | ConvertTo-Json | Set-Content $StateFile -Encoding UTF8
 }
 
-function Load-State  { return Get-StateValue "step" "0" }
-function Write-State { param([string]$Step) Set-StateValue "step" $Step }
-function Clear-State { if (Test-Path $StateFile) { Remove-Item $StateFile -Force } }
+function Get-SetupState   { return Get-StateValue "step" "0" }
+function Save-SetupState  { param([string]$Step) Set-StateValue "step" $Step }
+function Reset-SetupState { if (Test-Path $StateFile) { Remove-Item $StateFile -Force } }
 
 # ---------------------------------------------------------------------------
 # Dependency / daemon checks
 # ---------------------------------------------------------------------------
 
-function Check-Dependencies {
+function Test-Dependencies {
     $missing = @()
     if ($installType -eq "docker") {
         if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { $missing += "docker" }
@@ -295,13 +295,13 @@ function Check-Dependencies {
             $corepack = Get-Command corepack -ErrorAction SilentlyContinue
             $npm      = Get-Command npm      -ErrorAction SilentlyContinue
             if ($corepack) {
-                if (Confirm-Prompt "Install pnpm 10 (latest) now via corepack?" $true) {
+                if (Get-Confirmation "Install pnpm 10 (latest) now via corepack?" $true) {
                     corepack enable
                     corepack prepare pnpm@latest --activate
                     $pnpmInstalled = $true
                 }
             } elseif ($npm) {
-                if (Confirm-Prompt "Install pnpm 10 (latest) now via corepack (requires enabling corepack first)?" $true) {
+                if (Get-Confirmation "Install pnpm 10 (latest) now via corepack (requires enabling corepack first)?" $true) {
                     npm install -g corepack
                     corepack enable
                     corepack prepare pnpm@latest --activate
@@ -321,7 +321,7 @@ function Check-Dependencies {
     }
 }
 
-function Wait-ForDockerDaemon {
+function Wait-DockerDaemon {
     while ($true) {
         docker info 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) { break }
@@ -331,7 +331,7 @@ function Wait-ForDockerDaemon {
     }
 }
 
-function Detect-ExistingSetup {
+function Test-ExistingSetup {
     return (Test-Path $EnvFile) -or (Test-Path $ClientEnvFile) -or
            (Test-Path $ClusterWhitelist) -or (Test-Path $ComposeFile) -or
            (Test-Path $NginxTemplate)
@@ -349,16 +349,16 @@ $useDockerDb    = ""
 $useDockerRedis = ""
 $installType    = ""
 
-if ((Detect-ExistingSetup) -or (Test-Path $StateFile)) {
-    if (Confirm-Prompt "Found existing setup files or state. Continue where you left off?" $true) {
+if ((Test-ExistingSetup) -or (Test-Path $StateFile)) {
+    if (Get-Confirmation "Found existing setup files or state. Continue where you left off?" $true) {
         $resumeMode = $true
     } else {
-        Clear-State
+        Reset-SetupState
         Say "Starting over."
     }
 }
 
-$currentStep = [int](Load-State)
+$currentStep = [int](Get-SetupState)
 
 if ($resumeMode) {
     $installType    = Get-StateValue "install_type" ""
@@ -371,22 +371,22 @@ if ($installType -ne "") {
     Say "Using saved install type: $installType"
 } else {
     while ($true) {
-        $installType = Prompt-Input "Install type (docker/local)" "docker"
+        $installType = Read-Input "Install type (docker/local)" "docker"
         if ($installType -eq "docker" -or $installType -eq "local") { break }
         Say "Invalid install type. Please enter 'docker' or 'local'."
     }
 }
 Set-StateValue "install_type" $installType
 
-Check-Dependencies
+Test-Dependencies
 
 if ($installType -eq "docker") {
-    Wait-ForDockerDaemon
+    Wait-DockerDaemon
 }
 
 if ($installType -eq "docker" -and (Test-Path $ComposeFile)) {
     if (-not $forceCompose) {
-        if (Confirm-Prompt "docker-compose.yml exists. Overwrite with sample?" $false) {
+        if (Get-Confirmation "docker-compose.yml exists. Overwrite with sample?" $false) {
             $forceCompose = $true
         }
     }
@@ -395,14 +395,14 @@ Set-StateValue "force_compose" ($forceCompose.ToString().ToLower())
 
 if ($installType -eq "docker") {
     if ($useDockerDb -eq "") {
-        $useDockerDb = if (Confirm-Prompt "Use Docker-provided MySQL (mysql_db)?" $true) { "true" } else { "false" }
+        $useDockerDb = if (Get-Confirmation "Use Docker-provided MySQL (mysql_db)?" $true) { "true" } else { "false" }
     } else {
         Say "Using saved Docker MySQL preference: $useDockerDb"
     }
     Set-StateValue "use_docker_db" $useDockerDb
 
     if ($useDockerRedis -eq "") {
-        $useDockerRedis = if (Confirm-Prompt "Use Docker-provided Redis (redis)?" $true) { "true" } else { "false" }
+        $useDockerRedis = if (Get-Confirmation "Use Docker-provided Redis (redis)?" $true) { "true" } else { "false" }
     } else {
         Say "Using saved Docker Redis preference: $useDockerRedis"
     }
@@ -416,7 +416,7 @@ Say ""
 Say "Step 1: Ensure .env files"
 if (-not $resumeMode -or $currentStep -lt 1) {
     if ((Test-Path $EnvFile) -or (Test-Path $ClientEnvFile)) {
-        if (Confirm-Prompt "Keep existing .env files?" $true) {
+        if (Get-Confirmation "Keep existing .env files?" $true) {
             Say "Keeping existing .env files."
         } else {
             Copy-Item $EnvSample $EnvFile -Force
@@ -425,10 +425,10 @@ if (-not $resumeMode -or $currentStep -lt 1) {
             Say "Overwrote $ClientEnvFile from sample."
         }
     } else {
-        Ensure-FileFromSample $EnvFile $EnvSample
-        Ensure-FileFromSample $ClientEnvFile $ClientEnvSample
+        Initialize-FileFromSample $EnvFile $EnvSample
+        Initialize-FileFromSample $ClientEnvFile $ClientEnvSample
     }
-    Write-State "1"
+    Save-SetupState "1"
 }
 
 # ---------------------------------------------------------------------------
@@ -439,7 +439,7 @@ Say "Step 2: Configure environment"
 if (-not $resumeMode -or $currentStep -lt 2) {
     $changeVars = $false
     if ((Test-Path $EnvFile) -or (Test-Path $ClientEnvFile)) {
-        if (Confirm-Prompt "Would you like to change any variables?" $false) { $changeVars = $true }
+        if (Get-Confirmation "Would you like to change any variables?" $false) { $changeVars = $true }
     } else {
         $changeVars = $true
     }
@@ -478,23 +478,23 @@ if (-not $resumeMode -or $currentStep -lt 2) {
 
     # Auto-generate empty secrets for new installs
     $secretsGenerated = $false
-    if ([string]::IsNullOrEmpty($jwtSecretVal))  { $jwtSecretVal  = Gen-Secret; Set-EnvValue $EnvFile "JWT_SECRET"         $jwtSecretVal;  $secretsGenerated = $true }
-    if ([string]::IsNullOrEmpty($jwtRefreshVal)) { $jwtRefreshVal = Gen-Secret; Set-EnvValue $EnvFile "JWT_REFRESH_SECRET" $jwtRefreshVal; $secretsGenerated = $true }
-    if ([string]::IsNullOrEmpty($csrfSecretVal)) { $csrfSecretVal = Gen-Secret; Set-EnvValue $EnvFile "CSRF_SECRET"        $csrfSecretVal; $secretsGenerated = $true }
-    if ([string]::IsNullOrEmpty($encKeyVal))     { $encKeyVal     = Gen-Secret; Set-EnvValue $EnvFile "ENCRYPTION_KEY"     $encKeyVal;     $secretsGenerated = $true }
-    if ($secretsGenerated) { Say "Auto-generated empty secrets (JWT, CSRF, ENCRYPTION_KEY)." }
+    if ([string]::IsNullOrEmpty($jwtSecretVal))  { $jwtSecretVal  = New-Secret; Set-EnvValue $EnvFile "JWT_SECRET"         $jwtSecretVal;  $secretsGenerated = $true }
+    if ([string]::IsNullOrEmpty($jwtRefreshVal)) { $jwtRefreshVal = New-Secret; Set-EnvValue $EnvFile "JWT_REFRESH_SECRET" $jwtRefreshVal; $secretsGenerated = $true }
+    if ([string]::IsNullOrEmpty($csrfSecretVal)) { $csrfSecretVal = New-Secret; Set-EnvValue $EnvFile "CSRF_SECRET"        $csrfSecretVal; $secretsGenerated = $true }
+    if ([string]::IsNullOrEmpty($encKeyVal))     { $encKeyVal     = New-Secret; Set-EnvValue $EnvFile "ENCRYPTION_KEY"     $encKeyVal;     $secretsGenerated = $true }
+    if ($secretsGenerated) { Say "Auto-generated empty secrets (JWT_SECRET, JWT_REFRESH_SECRET, CSRF_SECRET, ENCRYPTION_KEY)." }
 
     if ($changeVars) {
-        $hostnameVal   = Prompt-ChangeValue $EnvFile "HOSTNAME"    "Hostname"    (if ($hostnameVal)   { $hostnameVal }   else { "localhost" })
-        $serverPortVal = Prompt-ChangePort  $EnvFile "SERVER_PORT" "Server port" (if ($serverPortVal) { $serverPortVal } else { "3001" })
-        $httpPortVal   = Prompt-ChangePort  $EnvFile "HTTP_PORT"   "HTTP port"   (if ($httpPortVal)   { $httpPortVal }   else { "3000" })
-        $httpsPortVal  = Prompt-ChangePort  $EnvFile "HTTPS_PORT"  "HTTPS port"  (if ($httpsPortVal)  { $httpsPortVal }  else { "443" })
+        $hostnameVal   = Read-UpdatedValue $EnvFile "HOSTNAME"    "Hostname"    (if ($hostnameVal)   { $hostnameVal }   else { "localhost" })
+        $serverPortVal = Read-UpdatedPort  $EnvFile "SERVER_PORT" "Server port" (if ($serverPortVal) { $serverPortVal } else { "3001" })
+        $httpPortVal   = Read-UpdatedPort  $EnvFile "HTTP_PORT"   "HTTP port"   (if ($httpPortVal)   { $httpPortVal }   else { "3000" })
+        $httpsPortVal  = Read-UpdatedPort  $EnvFile "HTTPS_PORT"  "HTTPS port"  (if ($httpsPortVal)  { $httpsPortVal }  else { "443" })
 
-        if (Confirm-Prompt "Change SSL/Nginx settings?" $false) {
-            if (Confirm-Prompt "Use SSL for Nginx?" $false) {
-                $certPathVal = Prompt-Required "Cert path"                (if ($certPathVal) { $certPathVal } else { "/certs" })
-                $certNameVal = Prompt-Required "Certificate file name"    $certNameVal
-                $certKeyVal  = Prompt-Required "Certificate key file name" $certKeyVal
+        if (Get-Confirmation "Change SSL/Nginx settings?" $false) {
+            if (Get-Confirmation "Use SSL for Nginx?" $false) {
+                $certPathVal = Read-RequiredInput "Cert path"                (if ($certPathVal) { $certPathVal } else { "/certs" })
+                $certNameVal = Read-RequiredInput "Certificate file name"    $certNameVal
+                $certKeyVal  = Read-RequiredInput "Certificate key file name" $certKeyVal
             } else {
                 $certPathVal = "/certs"; $certNameVal = ""; $certKeyVal = ""
             }
@@ -503,17 +503,17 @@ if (-not $resumeMode -or $currentStep -lt 2) {
             Set-EnvValue $EnvFile "CERTIFICATE_KEY"  $certKeyVal
         }
 
-        if (Confirm-Prompt "Change database settings?" $false) {
+        if (Get-Confirmation "Change database settings?" $false) {
             if ($installType -eq "docker" -and $useDockerDb -eq "true") {
                 $dbHostnameVal = "mysql_db"; $dbPortVal = "3306"
             } else {
-                $dbHostnameVal = Prompt-Required "DB hostname" (if ($dbHostnameVal) { $dbHostnameVal } else { "localhost" })
-                $dbPortVal     = Prompt-Port     "DB port"     (if ($dbPortVal)     { $dbPortVal }     else { "3306" })
+                $dbHostnameVal = Read-RequiredInput "DB hostname" (if ($dbHostnameVal) { $dbHostnameVal } else { "localhost" })
+                $dbPortVal     = Read-Port     "DB port"     (if ($dbPortVal)     { $dbPortVal }     else { "3306" })
             }
-            $dbNameVal     = Prompt-Required "DB name"     (if ($dbNameVal)     { $dbNameVal }     else { "tombolo" })
-            $dbUsernameVal = Prompt-Required "DB username" (if ($dbUsernameVal) { $dbUsernameVal } else { "database_user" })
-            $dbPasswordVal = Prompt-Required "DB password" (if ($dbPasswordVal) { $dbPasswordVal } else { "database_user_password" })
-            $mysqlSslVal   = if (Confirm-Prompt "Enable MySQL SSL?" $false) { "true" } else { "false" }
+            $dbNameVal     = Read-RequiredInput "DB name"     (if ($dbNameVal)     { $dbNameVal }     else { "tombolo" })
+            $dbUsernameVal = Read-RequiredInput "DB username" (if ($dbUsernameVal) { $dbUsernameVal } else { "database_user" })
+            $dbPasswordVal = Read-RequiredInput "DB password" (if ($dbPasswordVal) { $dbPasswordVal } else { "database_user_password" })
+            $mysqlSslVal   = if (Get-Confirmation "Enable MySQL SSL?" $false) { "true" } else { "false" }
             Set-EnvValue $EnvFile "DB_HOSTNAME"       $dbHostnameVal
             Set-EnvValue $EnvFile "DB_PORT"           $dbPortVal
             Set-EnvValue $EnvFile "DB_NAME"           $dbNameVal
@@ -522,16 +522,16 @@ if (-not $resumeMode -or $currentStep -lt 2) {
             Set-EnvValue $EnvFile "MYSQL_SSL_ENABLED" $mysqlSslVal
         }
 
-        if (Confirm-Prompt "Change Redis settings?" $false) {
+        if (Get-Confirmation "Change Redis settings?" $false) {
             if ($installType -eq "docker" -and $useDockerRedis -eq "true") {
                 $redisHostVal = "redis"; $redisPortVal = "6379"
             } else {
-                $redisHostVal = Prompt-Required "Redis hostname" (if ($redisHostVal) { $redisHostVal } else { "localhost" })
-                $redisPortVal = Prompt-Port     "Redis port"     (if ($redisPortVal) { $redisPortVal } else { "6379" })
+                $redisHostVal = Read-RequiredInput "Redis hostname" (if ($redisHostVal) { $redisHostVal } else { "localhost" })
+                $redisPortVal = Read-Port     "Redis port"     (if ($redisPortVal) { $redisPortVal } else { "6379" })
             }
-            $redisUserVal     = Prompt-Input "Redis username (optional)" $redisUserVal
-            $redisPasswordVal = Prompt-Input "Redis password (optional)" $redisPasswordVal
-            $redisDbVal       = Prompt-Required "Redis DB" (if ($redisDbVal) { $redisDbVal } else { "0" })
+            $redisUserVal     = Read-Input "Redis username (optional)" $redisUserVal
+            $redisPasswordVal = Read-Input "Redis password (optional)" $redisPasswordVal
+            $redisDbVal       = Read-RequiredInput "Redis DB" (if ($redisDbVal) { $redisDbVal } else { "0" })
             Set-EnvValue $EnvFile "REDIS_HOST"     $redisHostVal
             Set-EnvValue $EnvFile "REDIS_PORT"     $redisPortVal
             Set-EnvValue $EnvFile "REDIS_USER"     $redisUserVal
@@ -539,17 +539,17 @@ if (-not $resumeMode -or $currentStep -lt 2) {
             Set-EnvValue $EnvFile "REDIS_DB"       $redisDbVal
         }
 
-        if (Confirm-Prompt "Change JWT/CSRF/Encryption secrets?" $false) {
-            if (Confirm-Prompt "Auto-generate JWT/CSRF secrets and ENCRYPTION_KEY?" $true) {
-                $jwtSecretVal  = Gen-Secret
-                $jwtRefreshVal = Gen-Secret
-                $csrfSecretVal = Gen-Secret
-                $encKeyVal     = Gen-Secret
+        if (Get-Confirmation "Change JWT/CSRF/Encryption secrets?" $false) {
+            if (Get-Confirmation "Auto-generate JWT/CSRF secrets and ENCRYPTION_KEY?" $true) {
+                $jwtSecretVal  = New-Secret
+                $jwtRefreshVal = New-Secret
+                $csrfSecretVal = New-Secret
+                $encKeyVal     = New-Secret
             } else {
-                $jwtSecretVal  = Prompt-Required "JWT_SECRET"         $jwtSecretVal
-                $jwtRefreshVal = Prompt-Required "JWT_REFRESH_SECRET" $jwtRefreshVal
-                $csrfSecretVal = Prompt-Required "CSRF_SECRET"        $csrfSecretVal
-                $encKeyVal     = Prompt-Required "ENCRYPTION_KEY"     $encKeyVal
+                $jwtSecretVal  = Read-RequiredInput "JWT_SECRET"         $jwtSecretVal
+                $jwtRefreshVal = Read-RequiredInput "JWT_REFRESH_SECRET" $jwtRefreshVal
+                $csrfSecretVal = Read-RequiredInput "CSRF_SECRET"        $csrfSecretVal
+                $encKeyVal     = Read-RequiredInput "ENCRYPTION_KEY"     $encKeyVal
             }
             Set-EnvValue $EnvFile "JWT_SECRET"         $jwtSecretVal
             Set-EnvValue $EnvFile "JWT_REFRESH_SECRET" $jwtRefreshVal
@@ -557,12 +557,12 @@ if (-not $resumeMode -or $currentStep -lt 2) {
             Set-EnvValue $EnvFile "ENCRYPTION_KEY"     $encKeyVal
         }
 
-        if (Confirm-Prompt "Change Azure AD authentication settings?" $false) {
-            if (Confirm-Prompt "Enable Azure AD authentication?" $false) {
-                $tenantIdVal     = Prompt-Required "Tenant ID"     $tenantIdVal
-                $clientIdVal     = Prompt-Required "CLIENT_ID"     $clientIdVal
-                $clientSecretVal = Prompt-Required "CLIENT_SECRET" $clientSecretVal
-                $redirectUriVal  = Prompt-Required "REDIRECT_URI"  (if ($redirectUriVal) { $redirectUriVal } else { "http://localhost:3000" })
+        if (Get-Confirmation "Change Azure AD authentication settings?" $false) {
+            if (Get-Confirmation "Enable Azure AD authentication?" $false) {
+                $tenantIdVal     = Read-RequiredInput "Tenant ID"     $tenantIdVal
+                $clientIdVal     = Read-RequiredInput "CLIENT_ID"     $clientIdVal
+                $clientSecretVal = Read-RequiredInput "CLIENT_SECRET" $clientSecretVal
+                $redirectUriVal  = Read-RequiredInput "REDIRECT_URI"  (if ($redirectUriVal) { $redirectUriVal } else { "http://localhost:3000" })
             } else {
                 $tenantIdVal = ""; $clientIdVal = ""; $clientSecretVal = ""; $redirectUriVal = ""
             }
@@ -572,13 +572,13 @@ if (-not $resumeMode -or $currentStep -lt 2) {
             Set-EnvValue $EnvFile "REDIRECT_URI"  $redirectUriVal
         }
 
-        if (Confirm-Prompt "Change email (SMTP) settings?" $false) {
-            if (Confirm-Prompt "Configure email (SMTP) now?" $true) {
-                $emailSmtpHostVal = Prompt-Required "Email SMTP host" $emailSmtpHostVal
-                $emailPortVal     = Prompt-Port     "Email port"      (if ($emailPortVal)   { $emailPortVal }   else { "25" })
-                $emailSenderVal   = Prompt-Required "Email sender"    (if ($emailSenderVal) { $emailSenderVal } else { "donotreply@tombolo.com" })
-                $emailUserVal     = Prompt-Input    "Email user (optional)" $emailUserVal
-                $emailPassVal     = Prompt-Input    "Email pass (optional)" $emailPassVal
+        if (Get-Confirmation "Change email (SMTP) settings?" $false) {
+            if (Get-Confirmation "Configure email (SMTP) now?" $true) {
+                $emailSmtpHostVal = Read-RequiredInput "Email SMTP host" $emailSmtpHostVal
+                $emailPortVal     = Read-Port     "Email port"      (if ($emailPortVal)   { $emailPortVal }   else { "25" })
+                $emailSenderVal   = Read-RequiredInput "Email sender"    (if ($emailSenderVal) { $emailSenderVal } else { "donotreply@tombolo.com" })
+                $emailUserVal     = Read-Input    "Email user (optional)" $emailUserVal
+                $emailPassVal     = Read-Input    "Email pass (optional)" $emailPassVal
             } else {
                 $emailSmtpHostVal = ""; $emailPortVal = ""; $emailSenderVal = "donotreply@tombolo.com"
                 $emailUserVal = ""; $emailPassVal = ""
@@ -622,12 +622,12 @@ if (-not $resumeMode -or $currentStep -lt 2) {
         if ($dbHostnameVal -eq "mysql_db" -or [string]::IsNullOrEmpty($dbHostnameVal)) {
             Say ""
             Say "Local install: DB_HOSTNAME is '$(if ($dbHostnameVal) { $dbHostnameVal } else { 'empty' })' (Docker service name won't work). Please enter real database settings."
-            $dbHostnameVal = Prompt-Required "DB hostname" "localhost"
-            $dbPortVal     = Prompt-Port     "DB port"     (if ($dbPortVal) { $dbPortVal } else { "3306" })
-            $dbNameVal     = Prompt-Required "DB name"     (if ($dbNameVal)     { $dbNameVal }     else { "tombolo" })
-            $dbUsernameVal = Prompt-Required "DB username" (if ($dbUsernameVal) { $dbUsernameVal } else { "database_user" })
-            $dbPasswordVal = Prompt-Required "DB password" (if ($dbPasswordVal) { $dbPasswordVal } else { "database_user_password" })
-            $mysqlSslVal   = if (Confirm-Prompt "Enable MySQL SSL?" $false) { "true" } else { "false" }
+            $dbHostnameVal = Read-RequiredInput "DB hostname" "localhost"
+            $dbPortVal     = Read-Port     "DB port"     (if ($dbPortVal) { $dbPortVal } else { "3306" })
+            $dbNameVal     = Read-RequiredInput "DB name"     (if ($dbNameVal)     { $dbNameVal }     else { "tombolo" })
+            $dbUsernameVal = Read-RequiredInput "DB username" (if ($dbUsernameVal) { $dbUsernameVal } else { "database_user" })
+            $dbPasswordVal = Read-RequiredInput "DB password" (if ($dbPasswordVal) { $dbPasswordVal } else { "database_user_password" })
+            $mysqlSslVal   = if (Get-Confirmation "Enable MySQL SSL?" $false) { "true" } else { "false" }
             Set-EnvValue $EnvFile "DB_HOSTNAME"       $dbHostnameVal
             Set-EnvValue $EnvFile "DB_PORT"           $dbPortVal
             Set-EnvValue $EnvFile "DB_NAME"           $dbNameVal
@@ -638,11 +638,11 @@ if (-not $resumeMode -or $currentStep -lt 2) {
         if ($redisHostVal -eq "redis" -or [string]::IsNullOrEmpty($redisHostVal)) {
             Say ""
             Say "Local install: REDIS_HOST is '$(if ($redisHostVal) { $redisHostVal } else { 'empty' })' (Docker service name won't work). Please enter real Redis settings."
-            $redisHostVal     = Prompt-Required "Redis hostname" "localhost"
-            $redisPortVal     = Prompt-Port     "Redis port"     (if ($redisPortVal) { $redisPortVal } else { "6379" })
-            $redisUserVal     = Prompt-Input    "Redis username (optional)" $redisUserVal
-            $redisPasswordVal = Prompt-Input    "Redis password (optional)" $redisPasswordVal
-            $redisDbVal       = Prompt-Required "Redis DB" (if ($redisDbVal) { $redisDbVal } else { "0" })
+            $redisHostVal     = Read-RequiredInput "Redis hostname" "localhost"
+            $redisPortVal     = Read-Port     "Redis port"     (if ($redisPortVal) { $redisPortVal } else { "6379" })
+            $redisUserVal     = Read-Input    "Redis username (optional)" $redisUserVal
+            $redisPasswordVal = Read-Input    "Redis password (optional)" $redisPasswordVal
+            $redisDbVal       = Read-RequiredInput "Redis DB" (if ($redisDbVal) { $redisDbVal } else { "0" })
             Set-EnvValue $EnvFile "REDIS_HOST"     $redisHostVal
             Set-EnvValue $EnvFile "REDIS_PORT"     $redisPortVal
             Set-EnvValue $EnvFile "REDIS_USER"     $redisUserVal
@@ -669,7 +669,7 @@ if (-not $resumeMode -or $currentStep -lt 2) {
         Set-EnvValue $ClientEnvFile "VITE_AZURE_REDIRECT_URI" ""
     }
 
-    Write-State "2"
+    Save-SetupState "2"
 } else {
     # Resume path: read back values we need for later steps
     $hostnameVal    = Read-EnvValue $EnvFile "HOSTNAME"
@@ -702,14 +702,14 @@ if (-not $resumeMode -or $currentStep -lt 3) {
     if ($installType -eq "docker") {
         if ($useSsl) {
             if (Test-Path $NginxSsl) {
-                if (Confirm-Prompt "Use SSL Nginx template (overwrite nginx.conf.template)?" $true) {
+                if (Get-Confirmation "Use SSL Nginx template (overwrite nginx.conf.template)?" $true) {
                     Copy-Item $NginxSsl $NginxTemplate -Force
                     Say "Updated $NginxTemplate from SSL template."
                 }
             } else { Say "Warning: SSL template not found at $NginxSsl" }
         } else {
             if (Test-Path $NginxNoSsl) {
-                if (Confirm-Prompt "Use non-SSL Nginx template (overwrite nginx.conf.template)?" $true) {
+                if (Get-Confirmation "Use non-SSL Nginx template (overwrite nginx.conf.template)?" $true) {
                     Copy-Item $NginxNoSsl $NginxTemplate -Force
                     Say "Updated $NginxTemplate from non-SSL template."
                 }
@@ -718,7 +718,7 @@ if (-not $resumeMode -or $currentStep -lt 3) {
     } else {
         Say "Skipping Nginx configuration (not used for local installs)."
     }
-    Write-State "3"
+    Save-SetupState "3"
 }
 
 # ---------------------------------------------------------------------------
@@ -727,17 +727,17 @@ if (-not $resumeMode -or $currentStep -lt 3) {
 Say ""
 Say "Step 4: Cluster whitelist"
 if (-not $resumeMode -or $currentStep -lt 4) {
-    if (Confirm-Prompt "Would you like to add clusters to the whitelist?" $false) {
+    if (Get-Confirmation "Would you like to add clusters to the whitelist?" $false) {
         $clusters = [System.Collections.Generic.List[hashtable]]::new()
         while ($true) {
             $clusters.Add(@{
-                name       = Prompt-Required "Cluster name"
-                thor       = Prompt-Required "Thor host (thor)"
-                thor_port  = Prompt-Port     "Thor port (thor_port)"  "18010"
-                roxie      = Prompt-Required "Roxie host (roxie)"
-                roxie_port = Prompt-Port     "Roxie port (roxie_port)" "18002"
+                name       = Read-RequiredInput "Cluster name"
+                thor       = Read-RequiredInput "Thor host (thor)"
+                thor_port  = Read-Port     "Thor port (thor_port)"  "18010"
+                roxie      = Read-RequiredInput "Roxie host (roxie)"
+                roxie_port = Read-Port     "Roxie port (roxie_port)" "18002"
             })
-            if (-not (Confirm-Prompt "Add another cluster?" $false)) { break }
+            if (-not (Get-Confirmation "Add another cluster?" $false)) { break }
         }
 
         $sb = [System.Text.StringBuilder]::new()
@@ -761,7 +761,7 @@ if (-not $resumeMode -or $currentStep -lt 4) {
         Say "Wrote $ClusterWhitelist with your clusters."
     } else {
         if (Test-Path $ClusterWhitelist) {
-            if (Confirm-Prompt "Keep existing $ClusterWhitelist?" $true) {
+            if (Get-Confirmation "Keep existing $ClusterWhitelist?" $true) {
                 Say "Keeping existing $ClusterWhitelist."
             } else {
                 Copy-Item $ClusterWhitelistSample $ClusterWhitelist -Force
@@ -772,7 +772,7 @@ if (-not $resumeMode -or $currentStep -lt 4) {
             Say "Created $ClusterWhitelist from sample."
         }
     }
-    Write-State "4"
+    Save-SetupState "4"
 }
 
 # ---------------------------------------------------------------------------
@@ -790,7 +790,7 @@ if ($installType -eq "docker") {
             Copy-Item $ComposeSample $ComposeFile -Force
             Say "Created $ComposeFile from sample."
         }
-        Write-State "5"
+        Save-SetupState "5"
     }
 
     if (-not $resumeMode -or $currentStep -lt 6 -or $forceCompose) {
@@ -798,10 +798,10 @@ if ($installType -eq "docker") {
             Update-ComposeForCustomServices $ComposeFile ($useDockerDb -eq "false") ($useDockerRedis -eq "false")
             Say "Updated $ComposeFile to disable custom services."
         }
-        Write-State "6"
+        Save-SetupState "6"
     }
 
-    if (Confirm-Prompt "Run docker compose build and up -d now?" $false) {
+    if (Get-Confirmation "Run docker compose build and up -d now?" $false) {
         Push-Location $AppDir
         try {
             if (Get-Command "docker-compose" -ErrorAction SilentlyContinue) {
@@ -813,7 +813,7 @@ if ($installType -eq "docker") {
         Say ""
         Say "Database initialization (create, migrate, seed) runs automatically via the server entrypoint."
         Say "Monitor startup progress with: docker compose logs -f node"
-        Write-State "7"
+        Save-SetupState "7"
     } else {
         Say "Skipping docker compose."
         Say ""
@@ -822,7 +822,7 @@ if ($installType -eq "docker") {
     }
 } else {
     Say "Step 5: Local dev commands"
-    if (Confirm-Prompt "Run pnpm install, pnpm db:init, pnpm dev now?" $false) {
+    if (Get-Confirmation "Run pnpm install, pnpm db:init, pnpm dev now?" $false) {
         Push-Location $RepoRoot
         try { pnpm install; pnpm db:init; pnpm dev }
         finally { Pop-Location }

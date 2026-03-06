@@ -269,7 +269,7 @@ for i, line in enumerate(lines):
     if ("mysql_db" in raw and disable_mysql) or ("redis" in raw and disable_redis):
         if "entrypoint" in raw or "depends_on" in raw:
             continue
-        if re.match(r"^\s*-\s*(mysql_db|redis)\s*$", stripped):
+        if re.match(r"^-\s*(mysql_db|redis)\s*$", stripped):
             continue
 
     out.append(raw)
@@ -610,7 +610,7 @@ if [[ "$RESUME_MODE" == "false" || "$CURRENT_STEP" -lt 2 ]]; then
     SECRETS_GENERATED=true
   fi
   if [[ "$SECRETS_GENERATED" == "true" ]]; then
-    say "Auto-generated empty secrets (JWT, CSRF, ENCRYPTION_KEY)."
+    say "Auto-generated empty secrets (JWT_SECRET, JWT_REFRESH_SECRET, CSRF_SECRET, ENCRYPTION_KEY)."
   fi
 
   if [[ "$CHANGE_VARS" == "true" ]]; then
