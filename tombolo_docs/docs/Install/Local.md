@@ -1,8 +1,12 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 # Local Setup
+
+:::tip Prefer an automated setup?
+The [Guided Setup Script](./SetupScript) handles all the steps below interactively. Run `bash setup-tombolo.sh` (macOS/Linux) or `.\setup-tombolo.ps1` (Windows) from the repository root to get started.
+:::
 
 Local installation requires a few dependencies to be installed directly on your machine. This is the best choice for developers who want to contribute to the project, or develop integrations to customize their instance. If you intend to use this installation for production purposes, or do not want to configure your own system, we recommend a containerized installation using our [Docker Installation Guide](/docs/Install/Docker) instead.
 
