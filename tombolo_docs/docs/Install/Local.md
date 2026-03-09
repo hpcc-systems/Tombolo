@@ -5,7 +5,7 @@ sidebar_position: 2
 # Local Setup
 
 :::tip Prefer an automated setup?
-The [Guided Setup Script](./SetupScript) handles all the steps below interactively. Run `bash setup-tombolo.sh` (macOS/Linux) or `.\setup-tombolo.ps1` (Windows) from the repository root to get started.
+The [Guided Setup Script](./SetupScript) handles all the steps below interactively. Run `bash setup-tombolo.sh` from the repository root to get started.
 :::
 
 Local installation requires a few dependencies to be installed directly on your machine. This is the best choice for developers who want to contribute to the project, or develop integrations to customize their instance. If you intend to use this installation for production purposes, or do not want to configure your own system, we recommend a containerized installation using our [Docker Installation Guide](/docs/Install/Docker) instead.
@@ -33,7 +33,7 @@ Local installation requires a few dependencies to be installed directly on your 
 
 ### Recommended Software and Skills
 
-- Familiarity with basic commands associated with Command Prompt, Powershell, Terminal, or integrated terminal of your choice
+- Familiarity with basic terminal commands
 
 - [Visual Studio Code](https://code.visualstudio.com/download) or your preferred IDE with integrated terminal.
 
@@ -41,7 +41,7 @@ Local installation requires a few dependencies to be installed directly on your 
 
 ## Step 1 - Clone the Git Repository
 
-Open a Command Prompt, Powershell, Terminal, or any other integrated terminal and navigate to your desired installation location.
+Open a terminal and navigate to your desired installation location.
 
 Run the command below.
 

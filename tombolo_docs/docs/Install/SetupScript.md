@@ -9,20 +9,15 @@ title: Guided Setup Script
 
 Tombolo ships with an interactive setup script that automates the configuration steps described in the [Docker](./Docker) and [Local](./Local) setup guides. The script walks you through every required decision — install type, environment variables, Nginx configuration, cluster whitelist, and optionally launching the application — and saves your progress so it can be resumed if interrupted.
 
-| Script              | Platform             |
-| ------------------- | -------------------- |
-| `setup-tombolo.sh`  | macOS / Linux (Bash) |
-| `setup-tombolo.ps1` | Windows (PowerShell) |
-
-Both scripts live in the **repository root** and produce identical results. Running either one is an alternative to following the manual step-by-step guides.
+The script (`setup-tombolo.sh`) lives in the **repository root** and is an alternative to following the manual step-by-step guides.
 
 ---
 
 ## Prerequisites
 
-The same system requirements apply regardless of whether you use the scripts or the manual guides. See [Docker Setup](./Docker#system-requirements-and-prerequisites) or [Local Setup](./Local#system-requirements-and-prerequisites) for the full list.
+The same system requirements apply regardless of whether you use the script or the manual guides. See [Docker Setup](./Docker#system-requirements-and-prerequisites) or [Local Setup](./Local#system-requirements-and-prerequisites) for the full list.
 
-In addition, the scripts require:
+In addition, the script requires:
 
 - **Python 3** — used internally to read and write `.env` files and JSON state. Available by default on macOS and most Linux distributions. Download from [python.org](https://www.python.org/downloads/) if needed.
 - **Docker** (Docker install type) or **Node.js + pnpm** (local install type) — same as the manual guides.
@@ -30,8 +25,6 @@ In addition, the scripts require:
 ---
 
 ## Running the Script
-
-### macOS / Linux
 
 From the **repository root**:
 
@@ -43,21 +36,6 @@ or, if the file is already executable:
 
 ```bash
 ./setup-tombolo.sh
-```
-
-### Windows (PowerShell)
-
-From the **repository root** in a PowerShell terminal:
-
-```powershell
-.\setup-tombolo.ps1
-```
-
-If your execution policy blocks unsigned scripts, run:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\setup-tombolo.ps1
 ```
 
 ---

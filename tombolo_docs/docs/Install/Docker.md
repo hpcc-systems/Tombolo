@@ -8,7 +8,7 @@ title: Docker Setup
 # Docker Setup Instructions
 
 :::tip Prefer an automated setup?
-The [Guided Setup Script](./SetupScript) handles all the steps below interactively. Run `bash setup-tombolo.sh` (macOS/Linux) or `.\setup-tombolo.ps1` (Windows) from the repository root to get started.
+The [Guided Setup Script](./SetupScript) handles all the steps below interactively. Run `bash setup-tombolo.sh` from the repository root to get started.
 :::
 
 Tombolo can be deployed quickly by following a few simple steps and running a couple of Docker commands. With Docker, there are fewer prerequisites, and you don’t need to worry about installing multiple applications or having a specific operating system on your machine. This makes Docker the preferred packaging method for production, as it ensures consistency across environments, enhances portability, and simplifies the deployment process.
