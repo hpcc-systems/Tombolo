@@ -1,13 +1,11 @@
-const path = require('path');
-const logger = require('../config/logger');
+import path from 'path';
+import logger from '../config/logger.js';
+import { getDirname } from '../utils/polyfills.js';
 const PROCESS_EMAIL_NOTIFICATIONS = path.join(
   'notifications',
   'processEmailNotifications.js'
 );
-const PROCESS_TEAMS_NOTIFICATIONS = path.join(
-  'notifications',
-  // 'processTeamsNotifications.js'
-);
+const __dirname = getDirname(import.meta.url);
 
 async function scheduleEmailNotificationProcessing() {
   try {
@@ -31,29 +29,4 @@ async function scheduleEmailNotificationProcessing() {
   }
 }
 
-// async function scheduleTeamsNotificationProcessing() {
-//   try {
-//     let jobName = 'teams-notification-processing-' + new Date().getTime();
-//     this.bree.add({
-//       name: jobName,
-//       interval: '60s', // Make it 120 seconds in production
-//       path: path.join(__dirname, '..', 'jobs', PROCESS_TEAMS_NOTIFICATIONS),
-//       worker: {
-//         workerData: {
-//           jobName: jobName,
-//           WORKER_CREATED_AT: Date.now(),
-//         },
-//       },
-//     });
-//
-//     this.bree.start(jobName);
-//     logger.info('Teams notification processing job initialized ...');
-//   } catch (err) {
-//     console.error(err);
-//   }
-// }
-
-module.exports = {
-  scheduleEmailNotificationProcessing,
-  // scheduleTeamsNotificationProcessing,
-};
+export { scheduleEmailNotificationProcessing };

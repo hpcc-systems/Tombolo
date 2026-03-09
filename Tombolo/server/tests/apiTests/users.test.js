@@ -1,25 +1,34 @@
-const request = require('supertest');
-const { app } = require('../test_server');
-const {
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from 'vitest';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import {
   User,
   UserArchive,
   NotificationQueue,
   sequelize,
-} = require('../../models');
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const { getUsers, nonExistentID } = require('../helpers');
+} from '../../models/index.js';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import { getUsers, nonExistentID } from '../helpers.js';
 
 beforeAll(async () => {});
 
 describe('User Routes', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   it('get-users should get all users', async () => {
@@ -70,7 +79,7 @@ describe('User Routes', () => {
 
     User.findOne.mockResolvedValue({
       ...user,
-      save: jest.fn().mockResolvedValue(reqBody),
+      save: vi.fn().mockResolvedValue(reqBody),
     });
 
     const res = await request(app).patch(`/api/users/${user.id}`).send(reqBody);

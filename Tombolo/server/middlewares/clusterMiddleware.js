@@ -1,11 +1,11 @@
-const {
+import {
   stringBody,
   arrayBody,
   emailBody,
   objectBody,
   stringParam,
   paramUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const createUpdateClusterValidations = [
   stringBody('username', true, {
@@ -43,7 +43,7 @@ const validateClusterPingPayload = [
 
 const validateQueryData = [stringParam('queryData')];
 
-module.exports = {
+export {
   validateAddClusterInputs,
   validateClusterId,
   validateUpdateClusterInputs,

@@ -1,19 +1,19 @@
 const MONITORING_NAME = 'Job Monitoring';
-const { logOrPostMessage } = require('../jobUtils');
-const { WorkunitsService } = require('@hpcc-js/comms');
-const _ = require('lodash');
+import { logOrPostMessage } from '../jobUtils.js';
+import { WorkunitsService } from '@hpcc-js/comms';
+import _ from 'lodash';
 
 // Local imports
-const {
+import {
   Cluster,
   NotificationQueue,
   MonitoringType,
   MonitoringLog,
   JobMonitoringData,
-} = require('../../models');
-const { decryptString } = require('@tombolo/shared');
+} from '../../models/index.js';
+import { decryptString } from '@tombolo/shared';
 
-const {
+import {
   findLocalDateTimeAtCluster,
   checkIfCurrentTimeIsWithinRunWindow,
   intermediateStates,
@@ -24,9 +24,9 @@ const {
   nocAlertDescription,
   WUInfoOptions,
   inferWuStartTime,
-} = require('./monitorJobsUtil');
-const shallowCopyWithOutNested = require('../../utils/shallowCopyWithoutNested');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
+} from './monitorJobsUtil.js';
+import shallowCopyWithOutNested from '../../utils/shallowCopyWithoutNested.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 (async () => {
   logOrPostMessage({
@@ -168,15 +168,19 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
         try {
           newWuDetails = (await wuService.WUInfo(WUInfoOptions(Wuid))).Workunit;
         } catch (err) {
-          logOrPostMessage({
-            level: 'error',
-            text: `Intermediate state JM : Error getting WU details for ${Wuid} on cluster ${clusterDetail.id}: ${err.message}`,
-          });
-
           // If  err.message include Invalid Workunit ID", remove the WU from monitoring
           if (err.message.includes('Invalid Workunit ID')) {
             wuToStopMonitoring.push(Wuid);
             keepWu = false;
+            logOrPostMessage({
+              level: 'error',
+              text: `Intermediate state JM: Cannot read workunit ${Wuid} on cluster ID ${clusterDetail.id} - removing from monitoring: ${err.message}`,
+            });
+          } else {
+            logOrPostMessage({
+              level: 'error',
+              text: `Intermediate state JM: Error getting WU details for ${Wuid} on cluster ${clusterDetail.id}: ${err.message}`,
+            });
           }
           continue;
         }

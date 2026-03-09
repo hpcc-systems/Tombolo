@@ -8,10 +8,7 @@
 */
 
 //Packages imports
-const nodemailer = require('nodemailer');
-
-//Local imports
-const logger = require('./logger');
+import nodemailer from 'nodemailer';
 
 // SMTP configuration
 const smtpConfig = {
@@ -64,7 +61,4 @@ const retryOptions = {
 };
 
 // Exports
-module.exports = {
-  sendEmail,
-  retryOptions,
-};
+export { sendEmail, retryOptions };

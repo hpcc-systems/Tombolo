@@ -1,5 +1,5 @@
-const { StatusCodes } = require('http-status-codes');
-const CustomError = require('./customError');
+import { StatusCodes } from 'http-status-codes';
+import CustomError from './customError.js';
 
 /**
  * Sends a standardized JSON response to the client.
@@ -19,13 +19,13 @@ const sendResponse = (
 ) => {
   const normalizedErrors = Array.isArray(errors)
     ? errors.map(e =>
-      typeof e === 'string' ? e : e?.message || JSON.stringify(e)
-    )
+        typeof e === 'string' ? e : e?.message || JSON.stringify(e)
+      )
     : [
-      typeof errors === 'string'
-        ? errors
-        : errors?.message || JSON.stringify(errors),
-    ];
+        typeof errors === 'string'
+          ? errors
+          : errors?.message || JSON.stringify(errors),
+      ];
 
   return res.status(status).json({
     success,
@@ -92,11 +92,8 @@ const sendError = (res, error, status = 500) => {
  * @param {string} [message='Validation failed'] - Optional message
  * @returns {import('express').Response} Express response
  */
-const sendValidationError = (
-  res,
-  errors,
-  message = 'Validation failed'
-) => sendResponse(res, { status: 422, success: false, message, errors });
+const sendValidationError = (res, errors, message = 'Validation failed') =>
+  sendResponse(res, { status: 422, success: false, message, errors });
 
 /**
  * Retrieves structured error information for known error types.
@@ -218,4 +215,4 @@ const ERROR_MAP = {
   },
 };
 
-module.exports = { sendResponse, sendSuccess, sendError, sendValidationError };
+export { sendResponse, sendSuccess, sendError, sendValidationError };

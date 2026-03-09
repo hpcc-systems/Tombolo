@@ -24,8 +24,12 @@ export default function config({ mode }) {
         // lintOnStart: true,
       }),
     ].filter(Boolean),
+    worker: {
+      format: 'es', // Use ESM workers for monaco
+    },
     optimizeDeps: {
       include: [
+        'monaco-editor',
         '@ant-design/plots',
         '@ant-design/charts',
         '@antv/g2',
@@ -33,6 +37,7 @@ export default function config({ mode }) {
         '@antv/coord',
         '@antv/scale',
         'color-string',
+        'monaco-editor',
       ],
     },
     css: {
@@ -69,7 +74,9 @@ export default function config({ mode }) {
       rollupOptions: {
         output: {
           chunkFileNames: 'static/js/[name].chunk.js', // makes Dockerfile glob match
-          manualChunks: undefined, // Let Vite handle chunk splitting automatically
+          manualChunks: {
+            monaco: ['monaco-editor'],
+          },
         },
       },
     },

@@ -1,10 +1,9 @@
-const {
+import {
   stringParam,
   stringQuery,
   intQuery,
-  dateQuery,
-} = require('./commonMiddleware');
-const { body } = require('express-validator');
+  dateTimeQuery,
+} from './commonMiddleware.js';
 
 // Valid sort fields for workunits
 const VALID_SORT_FIELDS = [
@@ -27,8 +26,8 @@ const validateGetWorkunits = [
   stringQuery('state', true), // comma-separated list
   stringQuery('owner', true),
   stringQuery('jobName', true),
-  dateQuery('dateFrom', true),
-  dateQuery('dateTo', true),
+  dateTimeQuery('dateFrom', true),
+  dateTimeQuery('dateTo', true),
   stringQuery('costAbove', true),
   stringQuery('sort', true, {
     isIn: VALID_SORT_FIELDS,
@@ -66,7 +65,28 @@ const validateGetWorkunitTimeline = [
   stringParam('wuid', false),
 ];
 
-module.exports = {
+// Validation for GET /api/workunits/:clusterId/job-history/:jobName
+const validateGetJobHistoryByJobName = [
+  stringParam('clusterId', false),
+  stringParam('jobName', false),
+  dateTimeQuery('startDate', true),
+  intQuery('limit', true, { min: 1, max: 1000 }),
+];
+
+// Validation for GET /api/workunits/:clusterId/job-history/:jobName/stats
+const validateGetJobHistoryByJobNameWStats = [
+  stringParam('clusterId', false),
+  stringParam('jobName', false),
+  dateTimeQuery('startDate', true),
+];
+
+// Validation for GET /api/workunits/:clusterId/:wuid/compare-previous
+const validateComparePreviousByWuid = [
+  stringParam('clusterId', false),
+  stringParam('wuid', false),
+];
+
+export {
   validateGetWorkunits,
   validateGetWorkunit,
   validateGetWorkunitDetails,
@@ -74,15 +94,7 @@ module.exports = {
   validateGetWorkunitTimeline,
   VALID_SORT_FIELDS,
   VALID_ORDER_DIRECTIONS,
-  // POST /api/workunits/:clusterId/:wuid/sql
-  validateExecuteWorkunitSql: [
-    stringParam('clusterId', false),
-    stringParam('wuid', false),
-    body('sql')
-      .isString()
-      .withMessage('sql must be a string')
-      .bail()
-      .notEmpty()
-      .withMessage('sql is required'),
-  ],
+  validateGetJobHistoryByJobName,
+  validateGetJobHistoryByJobNameWStats,
+  validateComparePreviousByWuid,
 };

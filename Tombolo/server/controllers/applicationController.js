@@ -1,11 +1,14 @@
-const path = require('path');
-const fs = require('fs');
-const { UserApplication, Application, User } = require('../models');
-const Sequelize = require('sequelize');
-const { sendError, sendSuccess } = require('../utils/response');
+import path from 'path';
+import fs from 'fs';
+import { UserApplication, Application, User } from '../models/index.js';
+import Sequelize from 'sequelize';
+import { sendError, sendSuccess } from '../utils/response.js';
 const Op = Sequelize.Op;
-const logger = require('../config/logger');
+import logger from '../config/logger.js';
+import { getDirname } from '../utils/polyfills.js';
 // const NotificationModule = require('../notifications/email-notification');
+
+const __dirname = getDirname(import.meta.url);
 
 async function getApplications(req, res) {
   try {
@@ -256,7 +259,7 @@ async function exportApplication(req, res) {
   }
 }
 
-module.exports = {
+export {
   getApplications,
   getApplicationsByUser,
   getApplicationById,

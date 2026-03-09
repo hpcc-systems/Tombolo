@@ -1,11 +1,11 @@
-const moment = require('moment');
-const { Op } = require('sequelize');
+import moment from 'moment';
+import { Op } from 'sequelize';
 
 //Local imports
-const logger = require('../config/logger');
-const { SentNotification, sequelize } = require('../models');
-const emailNotificationHtmlCode = require('../utils/emailNotificationHtmlCode');
-const { sendSuccess, sendError } = require('../utils/response');
+import logger from '../config/logger.js';
+import { SentNotification, sequelize } from '../models/index.js';
+import emailNotificationHtmlCode from '../utils/emailNotificationHtmlCode.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 
 async function createSentNotification(req, res) {
   try {
@@ -193,7 +193,7 @@ async function getNotificationHtml(req, res) {
   }
 }
 
-module.exports = {
+export {
   getNotificationHtml,
   updateSentNotifications,
   deleteSentNotifications,

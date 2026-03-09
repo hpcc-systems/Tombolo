@@ -1,4 +1,4 @@
-const { User } = require('../models');
+import { User } from '../models/index.js';
 
 // Adds creator, updater and approver (if `includeApprover` is true)
 function getUserFkIncludes(includeApprover = false) {
@@ -25,6 +25,4 @@ function getUserFkIncludes(includeApprover = false) {
   return includeUserFks;
 }
 
-module.exports = {
-  getUserFkIncludes,
-};
+export { getUserFkIncludes };

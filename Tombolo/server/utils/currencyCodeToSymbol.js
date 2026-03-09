@@ -12,4 +12,4 @@ function currencyCodeToSymbol(currencyCode) {
   }
 }
 
-module.exports = currencyCodeToSymbol;
+export default currencyCodeToSymbol;

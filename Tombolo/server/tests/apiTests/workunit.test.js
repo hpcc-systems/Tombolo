@@ -1,19 +1,20 @@
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const request = require('supertest');
-const { app } = require('../test_server');
-const { v4: uuidv4 } = require('uuid');
-const { WorkUnit, WorkUnitDetails } = require('../../models');
-const { getWorkUnit, getWorkUnitDetails } = require('../helpers');
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { v4 as uuidv4 } from 'uuid';
+import { WorkUnit, WorkUnitDetails } from '../../models/index.js';
+import { getWorkUnit, getWorkUnitDetails } from '../helpers.js';
 
 describe('Workunit Routes', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   describe('GET /api/workunits', () => {
@@ -175,6 +176,45 @@ describe('Workunit Routes', () => {
         expect.objectContaining({
           offset: 10,
           limit: 10,
+        })
+      );
+    });
+
+    it('should filter workunits by detailsFetched', async () => {
+      WorkUnit.findAndCountAll.mockResolvedValue({
+        count: 1,
+        rows: [getWorkUnit({ detailsFetchedAt: new Date() }, true)],
+      });
+
+      const res = await request(app).get('/api/workunits').query({
+        detailsFetched: 'true',
+      });
+
+      expect(res.status).toBe(200);
+      expect(WorkUnit.findAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            detailsFetchedAt: expect.any(Object),
+          }),
+        })
+      );
+
+      WorkUnit.findAndCountAll.mockClear();
+      WorkUnit.findAndCountAll.mockResolvedValue({
+        count: 1,
+        rows: [getWorkUnit({ detailsFetchedAt: null }, true)],
+      });
+
+      const res2 = await request(app).get('/api/workunits').query({
+        detailsFetched: 'false',
+      });
+
+      expect(res2.status).toBe(200);
+      expect(WorkUnit.findAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            detailsFetchedAt: null,
+          }),
         })
       );
     });

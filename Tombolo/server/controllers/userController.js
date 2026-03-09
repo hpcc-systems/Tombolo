@@ -1,17 +1,17 @@
 // Imports from node modules
-const { v4: UUIDV4 } = require('uuid');
-const bcrypt = require('bcryptjs');
-const moment = require('moment');
-const { v4: uuidv4 } = require('uuid');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const { sequelize } = require('../models');
-const { Op } = require('sequelize');
+import { v4 as UUIDV4 } from 'uuid';
+import bcrypt from 'bcryptjs';
+import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { sequelize } from '../models/index.js';
+import { Op } from 'sequelize';
 
 // Local imports
-const logger = require('../config/logger');
-const { sendSuccess, sendError } = require('../utils/response');
-const {
+import logger from '../config/logger.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import {
   User,
   UserRole,
   UserApplication,
@@ -19,27 +19,23 @@ const {
   AccountVerificationCode,
   PasswordResetLink,
   RefreshToken,
-} = require('../models');
-const {
+} from '../models/index.js';
+import {
   setPasswordExpiry,
   trimURL,
   checkPasswordSecurityViolations,
   setPreviousPasswords,
   generatePassword,
   sendAccountUnlockedEmail,
-  deleteUser: deleteUserUtil,
+  deleteUser as deleteUserUtil,
   checkIfSystemUser,
   generateAccessToken,
   generateRefreshToken,
   setTokenCookie,
   generateAndSetCSRFToken,
-} = require('../utils/authUtil');
+} from '../utils/authUtil.js';
 
 const whereNotSystemUser = {
-  firstName: {
-    [Op.ne]: 'System',
-  },
-  lastName: { [Op.ne]: 'User' },
   email: { [Op.ne]: 'system-user@example.com' },
 };
 
@@ -281,7 +277,10 @@ const changePassword = async (req, res) => {
     const refreshToken = generateRefreshToken({ tokenId });
 
     // Decode refresh token to get iat and exp
-    const { iat, exp } = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const { iat, exp } = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
 
     // Create new refresh token in database
     await RefreshToken.create(
@@ -384,18 +383,22 @@ const bulkUpdateUsers = async (req, res) => {
 
 // Update user roles
 const updateUserRoles = async (req, res) => {
+  const t = await sequelize.transaction(); // Start a transaction
+
   try {
     const { id } = req.params;
     const { roles } = req.body;
     const creator = req.user.id;
 
     // Find existing user details
-    const existingUser = await User.findOne({ where: { id } });
+    const existingUser = await User.findOne({ where: { id }, transaction: t });
 
     // If user not found
     if (!existingUser || checkIfSystemUser(existingUser)) {
+      await t.rollback();
       return sendError(res, 'User not found', 404);
     }
+
     // Create id and role pair
     const userRoles = roles.map(role => ({
       userId: id,
@@ -404,7 +407,10 @@ const updateUserRoles = async (req, res) => {
     }));
 
     // Get all existing roles for a user
-    const existingRoles = await UserRole.findAll({ where: { userId: id } });
+    const existingRoles = await UserRole.findAll({
+      where: { userId: id },
+      transaction: t,
+    });
 
     // Delete existing roles that are not in the new list
     const rolesToDelete = existingRoles.filter(
@@ -412,31 +418,60 @@ const updateUserRoles = async (req, res) => {
     );
     await UserRole.destroy({
       where: { id: rolesToDelete.map(role => role.id) },
+      transaction: t,
     });
 
-    // Crete new roles that are not in the existing list
+    // Create new roles that are not in the existing list
     const rolesToAdd = userRoles.filter(
       role => !existingRoles.map(role => role.roleId).includes(role.roleId)
     );
-    const newRoles = await UserRole.bulkCreate(rolesToAdd);
+    const newRoles = await UserRole.bulkCreate(rolesToAdd, { transaction: t });
+
+    // Make registrationStatus active
+    if (existingUser.registrationStatus !== 'active') {
+      existingUser.registrationStatus = 'active';
+      await existingUser.save({ transaction: t });
+    }
+
+    // Commit the transaction
+    await t.commit();
 
     // Response
     return sendSuccess(res, newRoles, 'User roles updated successfully');
   } catch (err) {
+    // Rollback transaction if anything goes wrong
+    await t.rollback();
     logger.error('Update user roles: ', err);
     return sendError(res, err);
   }
 };
 
 const updateUserApplications = async (req, res) => {
+  const t = await sequelize.transaction(); // Start a transaction
+
   try {
     // Get user applications by id
     const { user } = req;
     const { id: user_id } = req.params;
     const { applications } = req.body;
 
-    // Find existing user details
-    const existing = await UserApplication.findAll({ where: { user_id } });
+    // Find existing user details to ensure user exists
+    const existingUser = await User.findOne({
+      where: { id: user_id },
+      transaction: t,
+    });
+
+    // If user not found
+    if (!existingUser || checkIfSystemUser(existingUser)) {
+      await t.rollback();
+      return sendError(res, 'User not found', 404);
+    }
+
+    // Find existing user applications
+    const existing = await UserApplication.findAll({
+      where: { user_id },
+      transaction: t,
+    });
     const existingApplications = existing.map(app => app.application_id);
 
     // Delete applications that are not in the new list
@@ -445,6 +480,7 @@ const updateUserApplications = async (req, res) => {
     );
     await UserApplication.destroy({
       where: { application_id: applicationsToDelete },
+      transaction: t,
     });
 
     // Create new applications that are not in the existing list
@@ -456,8 +492,19 @@ const updateUserApplications = async (req, res) => {
       application_id: app,
       createdBy: user.id,
     }));
-    const newApplications =
-      await UserApplication.bulkCreate(applicationUserPair);
+    const newApplications = await UserApplication.bulkCreate(
+      applicationUserPair,
+      { transaction: t }
+    );
+
+    // Make registrationStatus active when giving access to applications
+    if (existingUser.registrationStatus !== 'active') {
+      existingUser.registrationStatus = 'active';
+      await existingUser.save({ transaction: t });
+    }
+
+    // Commit the transaction
+    await t.commit();
 
     // Response
     return sendSuccess(
@@ -466,6 +513,8 @@ const updateUserApplications = async (req, res) => {
       'User applications updated successfully'
     );
   } catch (err) {
+    // Rollback transaction if anything goes wrong
+    await t.rollback();
     logger.error(`Update user applications: ${err.message}`);
     return sendError(res, err);
   }
@@ -480,7 +529,7 @@ const createUser = async (req, res) => {
       email,
       registrationMethod = 'traditional',
       registrationStatus = 'active',
-      verifiedUser = false,
+      verifiedUser = true,
       roles,
       applications,
     } = req.body;
@@ -694,33 +743,37 @@ const unlockAccount = async (req, res) => {
       return sendError(res, 'User not found', 404);
     }
 
-    // Generate temporary password/hash
-    const tempPassword = generatePassword();
-    const salt = bcrypt.genSaltSync(10);
-
-    // Add updated user details
-    user.hash = bcrypt.hashSync(tempPassword, salt);
-    user.forcePasswordReset = true;
-    user.passwordExpiresAt = new Date(
-      new Date().setDate(new Date().getDate() + 2) // 48 hours
-    );
     user.loginAttempts = 0;
     user.accountLocked = { isLocked: false, lockedReason: [] };
 
     // Save user with updated details
     await user.save();
 
-    // Send notification to the user
-    const verificationCode = UUIDV4();
-
-    // Create account verification code
-    await AccountVerificationCode.create({
-      code: verificationCode,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 172800000),
-    });
-
-    await sendAccountUnlockedEmail({ user, tempPassword, verificationCode });
+    // Queue notification to inform user account has been unlocked
+    try {
+      const notificationId = `USR_UNLCK_${moment().format('YYYYMMDD_HHmmss_SSS')}`;
+      await NotificationQueue.create({
+        type: 'email',
+        templateName: 'accountUnlocked',
+        notificationOrigin: 'Account Management',
+        deliveryType: 'immediate',
+        metaData: {
+          notificationId,
+          recipientName: `${user.firstName} ${user.lastName}`,
+          notificationOrigin: 'Account Management',
+          subject: 'Your account has been unlocked',
+          mainRecipients: [user.email],
+          notificationDescription: 'Account Unlocked',
+          loginLink: `${trimURL(process.env.WEB_URL)}/login`,
+        },
+        createdBy: req.user?.id || 'System',
+      });
+    } catch (notificationErr) {
+      logger.error(
+        `Failed to send unlock notification for user ${user.id}: ${notificationErr.message}`
+      );
+      // Don't fail unlock if notification fails
+    }
 
     // Response
     return sendSuccess(res, null, 'User account unlocked successfully');
@@ -731,7 +784,7 @@ const unlockAccount = async (req, res) => {
 };
 
 //Exports
-module.exports = {
+export {
   createUser,
   deleteUser,
   updateBasicUserInfo,

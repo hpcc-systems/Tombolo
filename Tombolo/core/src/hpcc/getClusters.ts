@@ -17,7 +17,7 @@ export async function getClusters(
   clusterIds: string[] | null
 ): Promise<ClusterWithError[]> {
   const whereClause = clusterIds === null ? {} : { where: { id: clusterIds } };
-  const clusters = await Cluster.findAll(whereClause);
+  const clusters: Cluster[] = await Cluster.findAll(whereClause);
 
   const clusterPromises = clusters.map(async cluster => {
     try {

@@ -44,20 +44,15 @@ export const login = createAsyncThunk('auth/login', async ({ email, password, de
       user: userData,
     };
   } catch (err) {
-    handleError(err.messages);
     // Extract error message
     const errMessage =
       Array.isArray(err?.messages) && err.messages.length > 0 ? err.messages[0] : err?.message || 'Unknown error';
 
-    // Handle specific authentication states
+    // Handle specific authentication states without displaying error toast
+    // The login component will handle displaying appropriate messages
     if (errMessage === Constants.LOGIN_TEMP_PW) {
       return rejectWithValue({
         type: Constants.LOGIN_TEMP_PW,
-        message: errMessage,
-      });
-    } else if (errMessage === Constants.LOGIN_PW_EXPIRED) {
-      return rejectWithValue({
-        type: Constants.LOGIN_PW_EXPIRED,
         message: errMessage,
       });
     } else if (errMessage === Constants.LOGIN_UNVERIFIED) {
@@ -71,7 +66,8 @@ export const login = createAsyncThunk('auth/login', async ({ email, password, de
         message: errMessage,
       });
     } else {
-      // Handle any other unexpected errors
+      // Handle any other unexpected errors - show error toast for these
+      handleError(err.messages);
       return rejectWithValue({
         type: Constants.LOGIN_FAILED,
         message: errMessage,
@@ -83,7 +79,7 @@ export const login = createAsyncThunk('auth/login', async ({ email, password, de
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
     await authService.logoutBasicUser();
-  } catch (error) {
+  } catch {
     // Even if logout API fails, we still want to clear local storage
     // Error logged by interceptor
   }
@@ -97,7 +93,7 @@ export const loadUserFromStorage = createAsyncThunk('auth/loadUserFromStorage', 
   return user || null;
 });
 
-export const registerBasicUser = createAsyncThunk('auth/registerBasicUser', async (values) => {
+export const registerBasicUser = createAsyncThunk('auth/registerBasicUser', async values => {
   try {
     const data = await authService.registerBasicUser(values);
     return data;
@@ -107,7 +103,7 @@ export const registerBasicUser = createAsyncThunk('auth/registerBasicUser', asyn
   }
 });
 
-export const registerOwner = createAsyncThunk('auth/registerOwner', async (values) => {
+export const registerOwner = createAsyncThunk('auth/registerOwner', async values => {
   try {
     const data = await authService.registerApplicationOwner(values);
     return data;
@@ -141,9 +137,6 @@ export const loginOrRegisterAzureUser = createAsyncThunk(
         });
       }
     } catch (error) {
-      console.log('------------------------');
-      console.log('ERRRRR: ', error);
-      console.log('------------------------');
       // Handle axios errors
       if (error.response) {
         const { status, data } = error.response;
@@ -181,7 +174,7 @@ export const azureLoginRedirect = () => {
     const tenant_id = import.meta.env.VITE_AZURE_TENENT_ID;
 
     window.location.href = `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?client_id=${client_id}&response_type=${response_type}&redirect_uri=${redirect_uri}&scope=${scope}&response_mode=${response_mode}`;
-  } catch (e) {
+  } catch {
     // Error logged by global error handler
     handleError('An error occurred while trying to login with Microsoft.');
   }
@@ -203,7 +196,7 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    loginFailed: (state) => {
+    loginFailed: state => {
       state.isAuthenticated = false;
       state.token = null;
       state.roles = [];
@@ -214,7 +207,7 @@ const authSlice = createSlice({
       state.id = '';
       state.loading = false;
     },
-    logoutSuccess: (state) => {
+    logoutSuccess: state => {
       state.isAuthenticated = false;
       state.token = null;
       state.roles = [];
@@ -236,14 +229,14 @@ const authSlice = createSlice({
       state.lastName = action.payload.lastName;
       state.id = action.payload.id;
     },
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
       // login
-      .addCase(login.pending, (state) => {
+      .addCase(login.pending, state => {
         state.loading = true;
         state.error = null;
       })
@@ -288,10 +281,10 @@ const authSlice = createSlice({
       })
 
       // logout
-      .addCase(logout.pending, (state) => {
+      .addCase(logout.pending, state => {
         state.loading = true;
       })
-      .addCase(logout.fulfilled, (state) => {
+      .addCase(logout.fulfilled, state => {
         state.loading = false;
         state.isAuthenticated = false;
         state.token = null;
@@ -333,11 +326,11 @@ const authSlice = createSlice({
       })
 
       // registerBasicUser
-      .addCase(registerBasicUser.pending, (state) => {
+      .addCase(registerBasicUser.pending, state => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerBasicUser.fulfilled, (state) => {
+      .addCase(registerBasicUser.fulfilled, state => {
         state.loading = false;
       })
       .addCase(registerBasicUser.rejected, (state, action) => {
@@ -346,11 +339,11 @@ const authSlice = createSlice({
       })
 
       // registerOwner
-      .addCase(registerOwner.pending, (state) => {
+      .addCase(registerOwner.pending, state => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerOwner.fulfilled, (state) => {
+      .addCase(registerOwner.fulfilled, state => {
         state.loading = false;
       })
       .addCase(registerOwner.rejected, (state, action) => {
@@ -359,7 +352,7 @@ const authSlice = createSlice({
       })
 
       // loginOrRegisterAzureUser
-      .addCase(loginOrRegisterAzureUser.pending, (state) => {
+      .addCase(loginOrRegisterAzureUser.pending, state => {
         state.loading = true;
         state.error = null;
       })

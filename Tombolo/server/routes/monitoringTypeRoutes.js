@@ -1,21 +1,21 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 //Local Imports
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   validateCreateMonitoring,
   validateDeleteMonitoring,
   validateUpdateMonitoring,
   validateGetMonitoringByTypeName,
-} = require('../middlewares/monitoringMiddleware');
-const {
+} from '../middlewares/monitoringMiddleware.js';
+import {
   getMonitoringTypes,
   createMonitoringType,
   deleteMonitoringType,
   updateMonitoringType,
   getMonitoringTypeByName,
-} = require('../controllers/monitoringTypeController');
+} from '../controllers/monitoringTypeController.js';
 
 // Route to get all monitoring types
 router.get('/', getMonitoringTypes);
@@ -37,4 +37,4 @@ router.get(
   getMonitoringTypeByName
 );
 
-module.exports = router;
+export default router;

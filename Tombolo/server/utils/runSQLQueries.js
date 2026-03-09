@@ -1,6 +1,6 @@
-const sql = require('mssql');
-const mysql = require('mysql2/promise');
-const logger = require('../config/logger');
+import sql from 'mssql';
+import mysql from 'mysql2/promise';
+import logger from '../config/logger.js';
 
 const orbitDbConfig = {
   host: process.env.ORBIT_DB ? process.env.ORBIT_DB : '',
@@ -54,9 +54,4 @@ const runSQLQuery = async (query, config) => {
   }
 };
 
-module.exports = {
-  runMySQLQuery,
-  runSQLQuery,
-  orbitDbConfig,
-  fidoDbConfig,
-};
+export { runMySQLQuery, runSQLQuery, orbitDbConfig, fidoDbConfig };

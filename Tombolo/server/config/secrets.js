@@ -1,5 +1,5 @@
-const logger = require('./logger');
-const akeyless = require('akeyless');
+import logger from './logger.js';
+import akeyless from 'akeyless';
 
 const client = new akeyless.ApiClient();
 client.basePath = process.env.AKEYLESS_API_URL;
@@ -96,4 +96,4 @@ async function preloadSecrets() {
   }
 }
 
-module.exports = { getSecret, preloadSecrets };
+export { getSecret, preloadSecrets };

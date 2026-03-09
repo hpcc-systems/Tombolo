@@ -1,4 +1,4 @@
-const {
+import {
   DESCRIPTION_LENGTH,
   MONITORING_NAME_LENGTH,
   COMMENT_LENGTH,
@@ -11,7 +11,7 @@ const {
   booleanBody,
   enumBody,
   APPROVAL_STATUSES,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const createOrbitMonitoringPayloadValidations = [
   uuidBody('applicationId', false),
@@ -50,7 +50,7 @@ const validateBulkUpdate = [
   objectBody('monitorings.*.metaData.monitoringData', true),
 ];
 
-module.exports = {
+export {
   createOrbitMonitoringPayloadValidations,
   validateAppIdInReqParam,
   validateMonitoringIdInBody,

@@ -1,5 +1,3 @@
-const { application } = require("express");
-
 const passwordExpiryInProximityNotificationPayload = ({
   clusterName,
   templateName,
@@ -8,15 +6,15 @@ const passwordExpiryInProximityNotificationPayload = ({
   notificationId,
 }) => {
   const payload = {
-    type: "email",
+    type: 'email',
     mainRecipients: recipients,
     templateName,
-    deliveryType: "immediate",
+    deliveryType: 'immediate',
     notificationDescription: `HPCC cluster password for  (${clusterName}) is expiring in ${passwordDaysRemaining} days`,
-    notificationOrigin: "Cluster Credential Monitoring",
+    notificationOrigin: 'Cluster Credential Monitoring',
     metaData: {
       notificationId,
-      notificationOrigin: "Cluster Credential Monitoring",
+      notificationOrigin: 'Cluster Credential Monitoring',
       subject: `Alert: Your HPCC Cluster (${clusterName}) Password is Expiring Soon`,
       mainRecipients: recipients || [],
       issue: `Your password for the HPCC cluster  (${clusterName}) is expiring in ${passwordDaysRemaining} days. Please update your password in HPCC and then update your credentials in Tombolo.`,
@@ -27,6 +25,4 @@ const passwordExpiryInProximityNotificationPayload = ({
   return payload;
 };
 
-module.exports = {
-  passwordExpiryInProximityNotificationPayload,
-};
+export { passwordExpiryInProximityNotificationPayload };

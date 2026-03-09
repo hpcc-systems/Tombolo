@@ -1,6 +1,6 @@
-const { ArchiveService } = require('./archiveService');
-const { Op } = require('sequelize');
-const logger = require('../config/logger');
+import { ArchiveService } from './archiveService.js';
+import { Op } from 'sequelize';
+import logger from '../config/logger.js';
 
 class CostMonitoringDataArchiveService extends ArchiveService {
   constructor(sequelize) {
@@ -163,6 +163,4 @@ class CostMonitoringDataArchiveService extends ArchiveService {
   }
 }
 
-module.exports = {
-  CostMonitoringDataArchiveService,
-};
+export { CostMonitoringDataArchiveService };

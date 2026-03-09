@@ -10,6 +10,4 @@ function uniqueConstraintErrorHandler(err, defaultMessage) {
   return result;
 }
 
-module.exports = {
-  uniqueConstraintErrorHandler,
-};
+export { uniqueConstraintErrorHandler };

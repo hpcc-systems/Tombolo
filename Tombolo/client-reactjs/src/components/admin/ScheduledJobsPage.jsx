@@ -10,16 +10,16 @@ function ScheduledJobsPage() {
 
   useEffect(() => {
     // defining polling function
-    const getScheduledJobs = async (stopPolling) => {
+    const getScheduledJobs = async stopPolling => {
       try {
-        setJobs((prev) => ({ ...prev, error: '' }));
+        setJobs(prev => ({ ...prev, error: '' }));
 
         const response = await breeService.getAll();
 
-        setJobs((prev) => ({ ...prev, data: response.jobs }));
+        setJobs(prev => ({ ...prev, data: response.jobs }));
       } catch (error) {
-        console.log('Error fetch', error);
-        setJobs((prev) => ({ ...prev, error: error.message }));
+        console.error('Error fetch', error);
+        setJobs(prev => ({ ...prev, error: error.message }));
         stopPolling();
         handleError(error.message);
       }
@@ -39,7 +39,7 @@ function ScheduledJobsPage() {
 
   const changeStatus = async (action, record) => {
     try {
-      setJobs((prev) => ({ ...prev, loading: true, error: '' }));
+      setJobs(prev => ({ ...prev, loading: true, error: '' }));
 
       // Call the appropriate service method
       if (action === 'stop') {
@@ -50,30 +50,30 @@ function ScheduledJobsPage() {
 
       // Refresh the job list to get updated state
       const updatedJobs = await breeService.getAll();
-      setJobs((prev) => ({ ...prev, loading: false, data: updatedJobs.jobs }));
+      setJobs(prev => ({ ...prev, loading: false, data: updatedJobs.jobs }));
 
       handleSuccess(`Job ${record.name} is ${action === 'stop' ? 'stopped' : 'started'}`);
     } catch (error) {
-      console.log('Error fetch', error);
-      setJobs((prev) => ({ ...prev, loading: false, error: error.message }));
+      console.error('Error fetch', error);
+      setJobs(prev => ({ ...prev, loading: false, error: error.message }));
       handleError(error.message);
     }
   };
 
-  const removeJob = async (record) => {
+  const removeJob = async record => {
     try {
-      setJobs((prev) => ({ ...prev, loading: true, error: '' }));
+      setJobs(prev => ({ ...prev, loading: true, error: '' }));
 
       await breeService.removeJob({ name: record.name });
 
       // Refresh the job list to get updated state
       const updatedJobs = await breeService.getAll();
-      setJobs((prev) => ({ ...prev, loading: false, data: updatedJobs.jobs }));
+      setJobs(prev => ({ ...prev, loading: false, data: updatedJobs.jobs }));
 
       handleSuccess(`Job ${record.name} is removed`);
     } catch (error) {
-      console.log('Error fetch', error);
-      setJobs((prev) => ({ ...prev, loading: false, error: error.message }));
+      console.error('Error fetch', error);
+      setJobs(prev => ({ ...prev, loading: false, error: error.message }));
       handleError(error.message);
     }
   };
@@ -89,7 +89,7 @@ function ScheduledJobsPage() {
       title: 'Created At',
       key: 'createdAt',
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      render: (record) => {
+      render: record => {
         const timestamp = record.worker?.workerData?.WORKER_CREATED_AT;
         return timestamp ? new Date(timestamp).toLocaleString() : '';
       },
@@ -98,7 +98,7 @@ function ScheduledJobsPage() {
       title: 'Dataflow',
       key: 'dataflow',
       sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (record) => {
+      render: record => {
         const dataflowId = record.worker?.workerData?.dataflowId;
         return dataflowId || '';
       },
@@ -118,7 +118,7 @@ function ScheduledJobsPage() {
       title: 'Action',
       dataIndex: '',
       key: 'x',
-      render: (record) => (
+      render: record => (
         <Space>
           <Button onClick={() => changeStatus('stop', record)} type="dashed">
             Stop
@@ -138,10 +138,10 @@ function ScheduledJobsPage() {
     <Table
       columns={columns}
       loading={jobs.loading}
-      rowKey={(record) => record.name}
+      rowKey={record => record.name}
       dataSource={jobs.data}
       expandable={{
-        expandedRowRender: (record) => <pre>{JSON.stringify(record, null, 2)}</pre>,
+        expandedRowRender: record => <pre>{JSON.stringify(record, null, 2)}</pre>,
       }}
     />
   );

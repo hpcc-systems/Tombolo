@@ -75,12 +75,13 @@ module.exports = {
   // Collect coverage information when running tests
   collectCoverage: true,
   coverageProvider: 'v8',
+  coverageDirectory: 'coverage',
 
   // Ignore specific paths when running in watch mode
   watchPathIgnorePatterns: ['/node_modules/'],
 
   // Choose coverage reporters
-  coverageReporters: ['text-summary'],
+  coverageReporters: ['text-summary', 'lcov', 'html'],
 
   // Limit the number of worker processes
   maxWorkers: '50%',

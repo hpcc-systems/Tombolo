@@ -1,10 +1,10 @@
-const {
+import {
   regexBody,
   uuidBody,
   TITLE_REGEX,
   urlBody,
   queryUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const validateCreateGhProject = [
   uuidBody('id', true),
@@ -17,7 +17,7 @@ const validateDeleteGhProject = [queryUuids.id, queryUuids.application_id];
 
 const validateGetGhProjects = [queryUuids.application_id];
 
-module.exports = {
+export {
   validateCreateGhProject,
   validateDeleteGhProject,
   validateGetGhProjects,

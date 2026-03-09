@@ -15,6 +15,8 @@ import {
   FolderOutlined,
   WarningFilled,
   DollarOutlined,
+  HistoryOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 
 import { getRoleNameArray } from '../common/AuthUtil';
@@ -84,6 +86,8 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       notifications: '5a',
       clusterUsage: '5b',
       clusters: '6',
+      workunits: '7a',
+      sql: '7b',
       consumers: '9',
       applications: '10',
       userManagement: '11',
@@ -249,6 +253,53 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
     ),
   ];
 
+  const workunitItems = [
+    getItem(
+      <Link to={'/workunits/dashboard'}>
+        <span>
+          <DashboardOutlined />
+          <span style={{ marginLeft: '1rem' }}>Dashboard</span>
+        </span>
+      </Link>,
+      '7a',
+      null,
+      null,
+      null,
+      disabled
+    ),
+    getItem(
+      <Link to={'/workunits/history'}>
+        <span>
+          <HistoryOutlined />
+          <span style={{ marginLeft: '1rem' }}>History</span>
+        </span>
+      </Link>,
+      '7b',
+      null,
+      null,
+      null,
+      disabled
+    ),
+    // SQL Analytics - only visible to owner and administrator
+    ...(roleArray.includes('owner') || roleArray.includes('administrator')
+      ? [
+          getItem(
+            <Link to={'/workunits/sql'}>
+              <span>
+                <ThunderboltOutlined />
+                <span style={{ marginLeft: '1rem' }}>SQL</span>
+              </span>
+            </Link>,
+            '7c',
+            null,
+            null,
+            null,
+            disabled
+          ),
+        ]
+      : []),
+  ];
+
   const adminItems = [
     getItem(
       <Link ref={appLinkRef} style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/applications'}>
@@ -339,11 +390,10 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
       className="custom-scroll"
       style={{
         color: 'rgba(255, 255, 255, 0.65)',
-        marginTop: '46px',
         overflow: 'auto',
         position: 'fixed',
         left: 0,
-        top: 0,
+        top: '46px',
         bottom: 0,
         zIndex: 100,
       }}>
@@ -353,6 +403,8 @@ const LeftNav = ({ collapsed, onCollapse, clusterLinkRef, appLinkRef }) => {
         <>
           {collapsed ? null : title('Connections')}
           {menu(connectionItems)}
+          {collapsed ? null : title('Workunits')}
+          {menu(workunitItems)}
           {collapsed ? null : title('Admin')}
           {menu(adminItems)}
         </>

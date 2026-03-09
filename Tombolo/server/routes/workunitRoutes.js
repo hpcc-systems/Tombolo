@@ -1,21 +1,25 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getWorkunits,
   getWorkunit,
   getWorkunitDetails,
   getWorkunitHotspots,
   getWorkunitTimeline,
-  executeWorkunitSql,
-} = require('../controllers/workunitController');
-const {
+  getJobHistoryByJobName,
+  getJobHistoryByJobNameWStats,
+  comparePreviousByWuid,
+} from '../controllers/workunitController.js';
+import {
   validateGetWorkunits,
   validateGetWorkunit,
   validateGetWorkunitDetails,
   validateGetWorkunitHotspots,
   validateGetWorkunitTimeline,
-  validateExecuteWorkunitSql,
-} = require('../middlewares/workunitMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
+  validateGetJobHistoryByJobName,
+  validateGetJobHistoryByJobNameWStats,
+  validateComparePreviousByWuid,
+} from '../middlewares/workunitMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
 
 const router = express.Router();
 
@@ -46,11 +50,22 @@ router.get(
   getWorkunitTimeline
 );
 
-// POST /api/workunits/:clusterId/:wuid/sql - Execute read-only SQL against work_unit_details
-router.post(
-  '/:clusterId/:wuid/sql',
-  validate(validateExecuteWorkunitSql),
-  executeWorkunitSql
+router.get(
+  '/:clusterId/job-history/:jobName',
+  validate(validateGetJobHistoryByJobName),
+  getJobHistoryByJobName
 );
 
-module.exports = router;
+router.get(
+  '/:clusterId/job-history/:jobName/stats',
+  validate(validateGetJobHistoryByJobNameWStats),
+  getJobHistoryByJobNameWStats
+);
+
+router.get(
+  '/:clusterId/:wuid/compare-previous',
+  validate(validateComparePreviousByWuid),
+  comparePreviousByWuid
+);
+
+export default router;

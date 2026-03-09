@@ -8,4 +8,4 @@ const clusters = [
   },
 ];
 
-module.exports = clusters;
+export default clusters;

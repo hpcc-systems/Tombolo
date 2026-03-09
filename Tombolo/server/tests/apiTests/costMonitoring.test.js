@@ -1,22 +1,23 @@
-const { blacklistTokenIntervalId } = require('../../utils/tokenBlackListing');
-const request = require('supertest');
-const { app } = require('../test_server');
-const { v4: uuidv4 } = require('uuid');
-const { CostMonitoring } = require('../../models');
-const { getUuids, getCostMonitoring, AUTHED_USER_ID } = require('../helpers');
-const { Op } = require('sequelize');
-const { getUserFkIncludes } = require('../../utils/getUserFkIncludes');
-const { APPROVAL_STATUS } = require('../../config/constants');
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { v4 as uuidv4 } from 'uuid';
+import { CostMonitoring } from '../../models/index.js';
+import { getUuids, getCostMonitoring, AUTHED_USER_ID } from '../helpers.js';
+import { Op } from 'sequelize';
+import { getUserFkIncludes } from '../../utils/getUserFkIncludes.js';
+import { APPROVAL_STATUS } from '../../config/constants.js';
 
 describe('costMonitoring Routes', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    vi.useFakeTimers('modern');
     clearInterval(blacklistTokenIntervalId);
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.clearAllMocks();
   });
 
   it('PATCH /evaluate should evaluate one monitoring', async () => {

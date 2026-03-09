@@ -1,9 +1,9 @@
-const hpccJSComms = require('@hpcc-js/comms');
-const { logOrPostMessage } = require('../jobUtils');
+import { MachineService } from '@hpcc-js/comms';
+import { logOrPostMessage } from '../jobUtils.js';
 
-const { Cluster } = require('../../models');
-const hpccUtil = require('../../utils/hpcc-util');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
+import { Cluster } from '../../models/index.js';
+import { getCluster } from '../../utils/hpcc-util.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 (async () => {
   const startTime = Date.now();
@@ -23,7 +23,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
     const allClusterDetails = [];
     for (const cl of allClusters) {
       try {
-        let cluster = await hpccUtil.getCluster(cl.id);
+        let cluster = await getCluster(cl.id);
         const { name, thor_host, thor_port, username, hash, allowSelfSigned } =
           cluster;
         const clusterDetails = {
@@ -50,7 +50,7 @@ const { getClusterOptions } = require('../../utils/getClusterOptions');
         // Try catch on each iteration because the loop needs to complete even if some  request fails
         // Get cluster detail with allowSelfSigned removed to ensure no side effect of passing the prop into MachineService
         const { allowSelfSigned, ...detailWOAllowSelfSigned } = detail;
-        const machineService = new hpccJSComms.MachineService(
+        const machineService = new MachineService(
           getClusterOptions(detailWOAllowSelfSigned, allowSelfSigned)
         );
         const targetClusterUsage =

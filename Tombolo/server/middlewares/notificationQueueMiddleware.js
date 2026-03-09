@@ -1,11 +1,11 @@
-const {
+import {
   stringBody,
   dateBody,
   intBody,
   objectBody,
   bodyUuids,
   paramUuids,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const createPatchNotificationQueueValidations = [
   stringBody('cron', true),
@@ -32,7 +32,7 @@ const validatePatchNotificationQueue = [
 
 const validateDeleteNotificationQueue = [paramUuids.id];
 
-module.exports = {
+export {
   validateCreateNotificationQueue,
   validatePatchNotificationQueue,
   validateDeleteNotificationQueue,

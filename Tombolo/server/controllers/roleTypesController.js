@@ -1,5 +1,5 @@
-const { RoleType } = require('../models');
-const { sendSuccess, sendError } = require('../utils/response');
+import { RoleType } from '../models/index.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 
 const getAllRoles = async (req, res) => {
   try {
@@ -10,6 +10,4 @@ const getAllRoles = async (req, res) => {
   }
 };
 
-module.exports = {
-  getAllRoles,
-};
+export { getAllRoles };

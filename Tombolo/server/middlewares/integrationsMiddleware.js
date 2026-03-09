@@ -1,10 +1,10 @@
-const {
+import {
   bodyUuids,
   booleanBody,
   uuidBody,
   paramUuids,
   objectBody,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
 const validateIntegrationDetails = [paramUuids.id];
 
@@ -19,7 +19,7 @@ const validateUpdateIntegrationSettings = [
   objectBody('integrationSettings'),
 ];
 
-module.exports = {
+export {
   validateIntegrationDetails,
   validateToggleStatus,
   validateUpdateIntegrationSettings,

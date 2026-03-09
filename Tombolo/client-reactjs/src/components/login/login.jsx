@@ -1,17 +1,16 @@
 // Imports from libraries
 import { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useHistory } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
 // Local imports
 import { handleError } from '../common/handleResponse';
-import msLogo from '../../images/mslogo.png';
 import { getDeviceInfo } from './utils';
 import { Constants } from '../common/Constants';
 import UnverifiedUser from './UnverifiedUser';
 import ExpiredPassword from './ExpiredPassword';
-import ResetTempPassword from './ResetTempPassword';
+import AzureLoginButton from './AzureLoginButton';
 
 import { login, azureLoginRedirect, loginOrRegisterAzureUser } from '@/redux/slices/AuthSlice';
 import styles from './login.module.css';
@@ -21,29 +20,102 @@ const authMethodsRaw = import.meta.env.VITE_AUTH_METHODS;
 const methods = Array.isArray(authMethodsRaw)
   ? authMethodsRaw
   : typeof authMethodsRaw === 'string'
-  ? authMethodsRaw
-      .split(',')
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean)
-  : [];
+    ? authMethodsRaw
+        .split(',')
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean)
+    : [];
 
 const hasAllAzureEnv = [
   import.meta.env.VITE_AZURE_CLIENT_ID,
   import.meta.env.VITE_AZURE_TENENT_ID,
   import.meta.env.VITE_AZURE_REDIRECT_URI,
-].every((v) => typeof v === 'string' && v.trim().length > 0);
+].every(v => typeof v === 'string' && v.trim().length > 0);
 
 // Warn once if Azure requested but misconfigured
 if (methods.includes('azure') && !hasAllAzureEnv) {
+  // eslint-disable-next-line no-console
   console.warn('[Login] Azure auth is enabled but missing/invalid environment variables');
 }
 
 const Login = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
+  const history = useHistory();
 
+  // Validate URL is safe for internal redirect (prevent open-redirects to other origins)
+  const isValidInternalUrl = url => {
+    try {
+      // Must be a non-empty string
+      if (typeof url !== 'string' || !url) return false;
+
+      // Must start with / (relative path on this origin)
+      if (!url.startsWith('/')) return false;
+
+      // Block double slashes (protocol-relative URLs like //example.com)
+      if (url.startsWith('//')) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Helper function to get redirect URL after successful login
+  const getRedirectUrl = () => {
+    // First try to get from localStorage (more reliable)
+    const intendedUrl = localStorage.getItem('intendedUrl');
+    if (intendedUrl) {
+      // Treat auth routes as invalid redirect targets to avoid loops
+      const isAuthRoute =
+        intendedUrl === '/login' ||
+        intendedUrl.startsWith('/login?') ||
+        intendedUrl.startsWith('/login/') ||
+        intendedUrl === '/register' ||
+        intendedUrl.startsWith('/register?') ||
+        intendedUrl.startsWith('/register/') ||
+        intendedUrl === '/forgot-password' ||
+        intendedUrl.startsWith('/forgot-password?') ||
+        intendedUrl.startsWith('/forgot-password/');
+      if (!isAuthRoute && isValidInternalUrl(intendedUrl)) {
+        // Use and clear the stored intended URL
+        localStorage.removeItem('intendedUrl'); // Clean up used value
+        return intendedUrl;
+      }
+      // Clear stale/invalid or auth-route intended URL
+      localStorage.removeItem('intendedUrl');
+    }
+
+    // Fallback to location state
+    if (location.state?.from) {
+      const { pathname, search = '', hash = '' } = location.state.from;
+      const fullPath = `${pathname}${search}${hash}`;
+      if (fullPath !== '/' && isValidInternalUrl(fullPath)) {
+        return fullPath;
+      }
+    }
+
+    // Always return safe default
+    return '/';
+  };
+
+  // Safe redirect function to prevent XSS
+  const safeRedirect = url => {
+    try {
+      if (isValidInternalUrl(url)) {
+        const baseUrl = window.location.origin;
+        const fullUrl = new URL(url, baseUrl);
+        if (fullUrl.origin === baseUrl) {
+          window.location.href = fullUrl.pathname + fullUrl.search + fullUrl.hash;
+          return;
+        }
+      }
+    } catch (e) {
+      // URL parsing failed, use safe default
+    }
+    window.location.href = '/';
+  };
   const [unverifiedUserLoginAttempt, setUnverifiedUserLoginAttempt] = useState(false);
   const [expiredPassword, setExpiredPassword] = useState(false);
-  const [isTempPassword, setIsTempPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [azureLoginAttempted, setAzureLoginAttempted] = useState(false);
   const [email, setEmail] = useState(null);
@@ -51,7 +123,7 @@ const Login = () => {
   const [loginForm] = Form.useForm();
 
   // When the form is submitted, this function is called
-  const onFinish = async (values) => {
+  const onFinish = async values => {
     const { email, password } = values;
     setEmail(email);
     setLoading(true);
@@ -61,13 +133,11 @@ const Login = () => {
 
     const test = await dispatch(login({ email, password, deviceInfo }));
 
-    if (test?.payload?.type === Constants.LOGIN_TEMP_PW) {
+    if (test.payload?.type === Constants.LOGIN_TEMP_PW) {
+      handleError(
+        'You are trying to log in with a temporary password. Please follow the secure link sent to your email to set a new password.'
+      );
       setLoading(false);
-      // Since resetLink is no longer provided in the response,
-      // show a message to check email for reset instructions
-      // handleError('You have a temporary password. Please check your email for password reset instructions.');
-      setIsTempPassword(true);
-
       return;
     }
 
@@ -84,8 +154,8 @@ const Login = () => {
     }
 
     if (test.payload?.type === Constants.LOGIN_SUCCESS) {
-      // reload the page if login is successful
-      window.location.href = '/';
+      // redirect to intended page or home if login is successful
+      safeRedirect(getRedirectUrl());
       return;
     }
 
@@ -129,14 +199,15 @@ const Login = () => {
     azureLoginRedirect();
   };
 
-  const azureLoginFunc = async (code) => {
+  const azureLoginFunc = async code => {
     try {
       setLoading(true);
       const res = await dispatch(loginOrRegisterAzureUser(code));
 
       if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
-        //reload page if login is succesful
-        window.location.href = '/';
+        //redirect to intended page or home if login is successful, using replace to clean URL
+        const redirectUrl = getRedirectUrl();
+        history.replace(redirectUrl);
         return;
       }
     } catch (err) {
@@ -158,9 +229,8 @@ const Login = () => {
       {unverifiedUserLoginAttempt && (
         <UnverifiedUser setUnverifiedUserLoginAttempt={setUnverifiedUserLoginAttempt} email={email} />
       )}
-      {isTempPassword && <ResetTempPassword email={email} />}
       {expiredPassword && <ExpiredPassword email={email} />}
-      {!unverifiedUserLoginAttempt && !expiredPassword && !isTempPassword && (
+      {!unverifiedUserLoginAttempt && !expiredPassword && (
         <>
           <Form onFinish={onFinish} layout="vertical" form={loginForm}>
             {loading && (
@@ -168,16 +238,9 @@ const Login = () => {
                 <Spin size="large" style={{ margin: '0 auto' }} />
               </div>
             )}
-            <Divider>Log In With</Divider>
             {azureEnabled && (
               <Form.Item>
-                <Button
-                  size="large"
-                  style={{ background: 'black', color: 'white' }}
-                  className="fullWidth"
-                  onClick={() => azureLogin()}>
-                  <img src={msLogo} style={{ height: '3rem', width: 'auto' }} />
-                </Button>
+                <AzureLoginButton onClick={() => azureLogin()} label="Login with Microsoft" />
               </Form.Item>
             )}
 

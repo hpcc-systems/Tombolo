@@ -1,19 +1,20 @@
 // Imports
-const router = require('express').Router();
-const {
+import express from 'express';
+const router = express.Router();
+import {
   validateUserId,
   validateSessionId,
-} = require('../middlewares/sessionMiddleware');
-const { validateUserRole } = require('../middlewares/rbacMiddleware');
-const { validate } = require('../middlewares/validateRequestBody');
-const role = require('../config/roleTypes');
+} from '../middlewares/sessionMiddleware.js';
+import { validateUserRole } from '../middlewares/rbacMiddleware.js';
+import { validate } from '../middlewares/validateRequestBody.js';
+import role from '../config/roleTypes.js';
 
 //Import Controllers
-const {
+import {
   activeSessionsByUserId,
   destroyOneActiveSession,
   destroyActiveSessions,
-} = require('../controllers/sessionController');
+} from '../controllers/sessionController.js';
 
 //TODO - Add guards so users can only destroy their own sessions
 router.delete(
@@ -37,4 +38,4 @@ router.delete(
 ); // Destroy all active sessions
 
 // Export router
-module.exports = router;
+export default router;

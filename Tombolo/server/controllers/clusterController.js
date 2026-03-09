@@ -1,25 +1,25 @@
-const clusters = require('../cluster-whitelist');
-const {
+import clusters from '../cluster-whitelist.js';
+import {
   AccountService,
   TopologyService,
   WorkunitsService,
   LogaccessService,
-} = require('@hpcc-js/comms');
-const axios = require('axios');
+  MachineService,
+} from '@hpcc-js/comms';
+import axios from 'axios';
+import xml2js from 'xml2js';
 
-const logger = require('../config/logger');
-const { Cluster } = require('../models');
-const { encryptString, decryptString } = require('@tombolo/shared');
-const CustomError = require('../utils/customError.js');
-const { getClusterOptions } = require('../utils/getClusterOptions');
-const hpccUtil = require('../utils/hpcc-util.js');
-const hpccJSComms = require('@hpcc-js/comms');
-const moment = require('moment');
-const {
-  uniqueConstraintErrorHandler,
-} = require('../utils/uniqueConstraintErrorHandler');
-const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
-const { sendSuccess, sendError } = require('../utils/response');
+import logger from '../config/logger.js';
+import { Cluster } from '../models/index.js';
+import { parseWorkunitTimestamp } from '@tombolo/shared';
+import { encryptString, decryptString } from '@tombolo/shared';
+import CustomError from '../utils/customError.js';
+import { getClusterOptions } from '../utils/getClusterOptions.js';
+import { getCluster } from '../utils/hpcc-util.js';
+import moment from 'moment';
+import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
+import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 
 // Add a cluster - Without sending progress updates to client
 const addCluster = async (req, res) => {
@@ -451,7 +451,7 @@ const addClusterWithProgress = async (req, res) => {
 };
 
 // Retrieve all clusters
-const getClusters = async (req, res) => {
+const getClustersCtr = async (req, res) => {
   try {
     // Get clusters ASC by name
     const clusters = await Cluster.findAll({
@@ -470,7 +470,7 @@ const getClusters = async (req, res) => {
 };
 
 // Retrieve a cluster
-const getCluster = async (req, res) => {
+const getClusterCtr = async (req, res) => {
   try {
     // Get one cluster by id
     const cluster = await Cluster.findOne({
@@ -516,7 +516,8 @@ const updateCluster = async (req, res) => {
     if (!cluster) throw new CustomError('Cluster not found', 404);
     if (allowSelfSigned) cluster.allowSelfSigned = allowSelfSigned;
     if (username) cluster.username = username;
-    if (password) cluster.hash = encryptString(password, process.env.ENCRYPTION_KEY);
+    if (password)
+      cluster.hash = encryptString(password, process.env.ENCRYPTION_KEY);
     if (adminEmails) cluster.adminEmails = adminEmails;
     cluster.updatedBy = req.user.id;
 
@@ -634,7 +635,7 @@ const checkClusterHealth = async (req, res) => {
 const pingExistingCluster = async (req, res) => {
   const { id } = req.params;
   try {
-    await hpccUtil.getCluster(id);
+    await getCluster(id);
     // Update the reachability info for the cluster
     await Cluster.update(
       {
@@ -672,7 +673,7 @@ const clusterUsage = async (req, res) => {
     const { id } = req.params;
 
     //Get cluster details
-    let cluster = await hpccUtil.getCluster(id); // Checks if cluster is reachable and decrypts cluster credentials if any
+    let cluster = await getCluster(id); // Checks if cluster is reachable and decrypts cluster credentials if any
     const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
     const clusterDetails = getClusterOptions(
       {
@@ -684,7 +685,7 @@ const clusterUsage = async (req, res) => {
     );
 
     //Use JS comms library to fetch current usage
-    const machineService = new hpccJSComms.MachineService(clusterDetails);
+    const machineService = new MachineService(clusterDetails);
     const targetClusterUsage = await machineService.GetTargetClusterUsageEx();
 
     const maxUsage = targetClusterUsage.map(target => ({
@@ -810,19 +811,95 @@ const getClusterLogs = async (req, res) => {
       logQuery.EndDate = new Date(req.query.endDate);
     }
 
+    // Handle wuid parameter - fetch workunit info to get execution time window
+    if (req.query.wuid) {
+      const soapEnvelope = `<?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns="urn:hpccsystems:ws:wsworkunits">
+        <soap:Body>
+          <WUInfo>
+            <Wuid>${req.query.wuid}</Wuid>
+            <TruncateEclTo64k>1</TruncateEclTo64k>
+            <IncludeTotalClusterTime>1</IncludeTotalClusterTime>
+            <Type/>
+          </WUInfo>
+        </soap:Body>
+      </soap:Envelope>`;
+
+      const wuUrl = `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUInfo`;
+      const wuResponse = await axios.post(wuUrl, soapEnvelope, {
+        headers: { 'Content-Type': 'text/xml' },
+        auth: {
+          username: cluster.username,
+          password: password,
+        },
+      });
+
+      // Parse XML response
+      const parser = new xml2js.Parser({ explicitArray: false });
+      const parsed = await parser.parseStringPromise(wuResponse.data);
+
+      // Extract workunit details
+      const workunit =
+        parsed['soap:Envelope']['soap:Body'].WUInfoResponse.Workunit;
+      let timeValue = null;
+
+      // Check if TotalClusterTime exists first (preferred)
+      if (workunit.TotalClusterTime) {
+        timeValue = workunit.TotalClusterTime;
+      } else {
+        // Fall back to extracting "Total thor time" from Timers
+        const timers = workunit.Timers?.ECLTimer;
+        if (timers) {
+          const timerArray = Array.isArray(timers) ? timers : [timers];
+          const totalThorTimer = timerArray.find(
+            t => t.Name === 'Total thor time'
+          );
+          if (totalThorTimer) {
+            timeValue = totalThorTimer.Value;
+          }
+        }
+      }
+
+      if (timeValue) {
+        // Parse the time value (format: "1m30.028s" or "5m49.357s")
+        const timeRegex = /(\d+)m([\d.]+)s/;
+        const match = timeValue.match(timeRegex);
+
+        if (match) {
+          const minutes = parseInt(match[1]);
+          const seconds = parseFloat(match[2]);
+          const totalMilliseconds = (minutes * 60 + seconds) * 1000;
+
+          // Get start time from wuid
+          const startTime = parseWorkunitTimestamp(req.query.wuid);
+
+          // Calculate end time
+          const endTime = new Date(startTime.getTime() + totalMilliseconds);
+
+          // Set the date range in logQuery
+          logQuery.StartDate = startTime;
+          logQuery.EndDate = endTime;
+        }
+      }
+    }
+
     // Get logs
     const logs = await logSvc.GetLogsEx(logQuery);
 
-    return sendSuccess(res, 'Cluster logs retrieved successfully', {
-      cluster: {
-        id: cluster.id,
-        name: cluster.name,
+    return sendSuccess(
+      res,
+      {
+        cluster: {
+          id: cluster.id,
+          name: cluster.name,
+        },
+        total: logs.total,
+        lines: logs.lines,
+        logAccessInfo: logAccessInfo,
+        query: logQuery,
       },
-      total: logs.total,
-      lines: logs.lines,
-      logAccessInfo: logAccessInfo,
-      query: logQuery,
-    });
+      'Cluster logs retrieved successfully'
+    );
   } catch (error) {
     logger.error('getClusterLogs error:', error);
     return sendError(
@@ -833,11 +910,11 @@ const getClusterLogs = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   addCluster,
   addClusterWithProgress,
-  getClusters,
-  getCluster,
+  getClustersCtr,
+  getClusterCtr,
   deleteCluster,
   updateCluster,
   getClusterWhiteList,

@@ -1,9 +1,9 @@
-const { Op } = require('sequelize');
-const { ClusterMonitoring, sequelize, Cluster } = require('../models');
-const logger = require('../config/logger');
-const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
-const { APPROVAL_STATUS } = require('../config/constants');
-const { sendError, sendSuccess, sendResponse } = require('../utils/response');
+import { Op } from 'sequelize';
+import { ClusterMonitoring, sequelize, Cluster } from '../models/index.js';
+import logger from '../config/logger.js';
+import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
+import { APPROVAL_STATUS } from '../config/constants.js';
+import { sendError, sendSuccess, sendResponse } from '../utils/response.js';
 
 // Common includes for cluster monitoring - customize with additional  if needed
 const getCommonIncludes = ({ customIncludes = [] }) => {
@@ -368,7 +368,7 @@ const deleteClusterMonitoring = async (req, res) => {
 };
 
 // Exports
-module.exports = {
+export {
   createClusterMonitoring,
   getClusterMonitoringById,
   getAllClusterMonitoring,

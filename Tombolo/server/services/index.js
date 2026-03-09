@@ -1,9 +1,2 @@
-const { ArchiveService } = require('./archiveService');
-const {
-  CostMonitoringDataArchiveService,
-} = require('./costMonitoringDataArchiveService');
-
-module.exports = {
-  ArchiveService,
-  CostMonitoringDataArchiveService,
-};
+export { ArchiveService } from './archiveService.js';
+export { CostMonitoringDataArchiveService } from './costMonitoringDataArchiveService.js';

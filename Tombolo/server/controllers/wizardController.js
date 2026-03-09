@@ -1,7 +1,7 @@
-const logger = require('../config/logger');
-const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
-const {
+import logger from '../config/logger.js';
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import {
   User,
   RoleType,
   UserRole,
@@ -9,11 +9,8 @@ const {
   AccountVerificationCode,
   NotificationQueue,
   sequelize,
-} = require('../models');
-const {
-  trimURL,
-  checkPasswordSecurityViolations,
-} = require('../utils/authUtil');
+} from '../models/index.js';
+import { trimURL, checkPasswordSecurityViolations } from '../utils/authUtil.js';
 
 // Main controller function
 const createInstanceSettingFirstRun = async (req, res) => {
@@ -317,6 +314,4 @@ const sendVerificationEmail = async (user, transaction) => {
   );
 };
 
-module.exports = {
-  createInstanceSettingFirstRun,
-};
+export { createInstanceSettingFirstRun };

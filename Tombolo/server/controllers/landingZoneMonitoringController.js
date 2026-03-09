@@ -1,18 +1,16 @@
 // Imports from libraries
-const { TopologyService, FileSprayService } = require('@hpcc-js/comms');
-const Sequelize = require('sequelize');
+import { TopologyService, FileSprayService } from '@hpcc-js/comms';
+import Sequelize from 'sequelize';
 
 // Local Imports
-const logger = require('../config/logger');
-const { Cluster, LandingZoneMonitoring } = require('../models');
-const { decryptString } = require('@tombolo/shared');
-const { getClusterOptions } = require('../utils/getClusterOptions');
-const {
-  uniqueConstraintErrorHandler,
-} = require('../utils/uniqueConstraintErrorHandler');
-const { APPROVAL_STATUS } = require('../config/constants');
-const { sendError, sendSuccess } = require('../utils/response');
-const { getUserFkIncludes } = require('../utils/getUserFkIncludes');
+import logger from '../config/logger.js';
+import { Cluster, LandingZoneMonitoring } from '../models/index.js';
+import { decryptString } from '@tombolo/shared';
+import { getClusterOptions } from '../utils/getClusterOptions.js';
+import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
+import { APPROVAL_STATUS } from '../config/constants.js';
+import { sendError, sendSuccess } from '../utils/response.js';
+import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
 
 // Function to get dropzones and associated machines when a cluster id is provided
 const getDropzonesForACluster = async (req, res) => {
@@ -468,7 +466,7 @@ const bulkUpdateLzMonitoring = async (req, res) => {
 };
 
 //Exports
-module.exports = {
+export {
   getDropzonesForACluster,
   getFileList,
   createLandingZoneMonitoring,

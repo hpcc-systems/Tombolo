@@ -1,17 +1,20 @@
 // imports from node modules
-const { Op } = require('sequelize');
-const { v4: uuidv4 } = require('uuid');
+import { Op } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 
 //Local Imports
-const { logOrPostMessage } = require('../jobUtils');
-const { User, UserRole, RoleType, NotificationQueue } = require('../../models');
-const { trimURL, deleteUser } = require('../../utils/authUtil');
+import { logOrPostMessage } from '../jobUtils.js';
+import {
+  User,
+  UserRole,
+  RoleType,
+  NotificationQueue,
+} from '../../models/index.js';
+import { trimURL, deleteUser } from '../../utils/authUtil.js';
+import { accountDeleteAlertDaysForUser } from '../../config/monitorings.js';
 
 // Constants
 const accountUnlockLink = `${trimURL(process.env.WEB_URL)}`;
-
-const accountDeleteAlertDaysForUser =
-  require('../../config/monitorings.js').accountDeleteAlertDaysForUser;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   const expiryDate = new Date(

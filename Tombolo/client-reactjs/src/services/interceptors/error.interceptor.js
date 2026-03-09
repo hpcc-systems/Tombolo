@@ -1,4 +1,4 @@
-const ignore401Routes = ['/auth/loginBasicUser'];
+const ignore401Routes = ['/auth/loginBasicUser', '/auth/resetTempPassword'];
 
 export const errorInterceptor = apiClient => {
   apiClient.interceptors.response.use(

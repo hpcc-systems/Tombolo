@@ -6,12 +6,12 @@ const clustersService = {
     return response.data;
   },
 
-  getOne: async (id) => {
+  getOne: async id => {
     const response = await apiClient.get(`/cluster/getOne/${id}`);
     return response.data;
   },
 
-  delete: async (id) => {
+  delete: async id => {
     const response = await apiClient.delete(`/cluster/${id}`);
     return response.data;
   },
@@ -51,13 +51,18 @@ const clustersService = {
       signal: abortController?.signal,
       responseType: 'text',
       timeout, // Timeout can be overridden by caller, defaults to 180 seconds for long-running cluster operations
-      onDownloadProgress: (progressEvent) => {
+      onDownloadProgress: progressEvent => {
         if (onProgress && progressEvent.event && progressEvent.event.target) {
           const text = progressEvent.event.target.responseText;
           onProgress(text);
         }
       },
     });
+    return response.data;
+  },
+
+  getClusterLogs: async (clusterId, params = {}) => {
+    const response = await apiClient.get(`/cluster/logs/${clusterId}`, { params });
     return response.data;
   },
 };

@@ -3,7 +3,7 @@
 const path = require('path');
 
 module.exports = {
-  'config': path.resolve(__dirname, 'node_modules', '@tombolo', 'db', 'config', 'config.js'),
+  'config': path.resolve(__dirname, 'node_modules', '@tombolo', 'db', 'config', 'config.cjs'),
   'migrations-path': path.resolve(__dirname, 'node_modules', '@tombolo', 'db', 'migrations'),
   'seeders-path': path.resolve(__dirname, 'node_modules', '@tombolo', 'db', 'seeders'),
   'models-path': path.resolve(__dirname, 'node_modules', '@tombolo', 'db', 'models')

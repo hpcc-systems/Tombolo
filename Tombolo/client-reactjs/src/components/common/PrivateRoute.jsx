@@ -6,13 +6,17 @@ export const PrivateRoute = ({ component: Component, ...rest }) => {
   return (
     <Route
       {...rest}
-      render={(props) =>
-        getUser() ? (
-          <Component {...props} {...rest} />
-        ) : (
-          <Redirect to={{ pathname: '/login', state: { from: props.location } }} />
-        )
-      }
+      render={props => {
+        if (getUser()) {
+          return <Component {...props} {...rest} />;
+        } else {
+          // Store the intended URL in localStorage for reliable access after login
+          const intendedUrl = `${props.location.pathname}${props.location.search || ''}${props.location.hash || ''}`;
+          localStorage.setItem('intendedUrl', intendedUrl);
+
+          return <Redirect to={{ pathname: '/login', state: { from: props.location } }} />;
+        }
+      }}
     />
   );
 };

@@ -30,13 +30,18 @@
   "scripts": {
     "build": "tsup",
     "esm:build": "tsup",
+    "typecheck": "tsc --noEmit",
     "dev": "tsup --watch",
     "test": "echo \"No tests yet\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "clean": "rm -rf dist .turbo",
     "clean:deps": "rm -rf node_modules"
   },
   "devDependencies": {
-    "tsup": "catalog:"
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
   },
   "dependencies": {
     "winston": "catalog:",

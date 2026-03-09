@@ -1,5 +1,4 @@
-const e = require('express');
-const {
+import {
   DESCRIPTION_LENGTH,
   MONITORING_NAME_LENGTH,
   COMMENT_LENGTH,
@@ -11,10 +10,9 @@ const {
   booleanBody,
   bodyUuids,
   paramUuids,
-  emailBody,
-} = require('./commonMiddleware');
+} from './commonMiddleware.js';
 
-const usersRegex = /^(?:[a-zA-Z][a-zA-Z0-9_:.\-]*|\*)$/;
+const usersRegex = /^(?:[a-zA-Z][a-zA-Z0-9_:.-]*|\*)$/;
 
 const createUpdateValidations = [
   bodyUuids.applicationId,
@@ -54,7 +52,7 @@ const validateBulkUpdate = [
 
 const validateGetFileMonitoringByAppId = [paramUuids.applicationId];
 
-module.exports = {
+export {
   validateUpdateFileMonitoring,
   validateCreateFileMonitoring,
   validateGetFileMonitoringById,

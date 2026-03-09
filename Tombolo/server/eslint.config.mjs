@@ -12,12 +12,21 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
+        // ESM doesn't have __dirname and __filename - must be explicitly defined
+        __dirname: 'off',
+        __filename: 'off',
       },
     },
     rules: {
       'no-unused-vars': [
         'error',
-        { vars: 'all', args: 'after-used', ignoreRestSiblings: false },
+        {
+          vars: 'all',
+          args: 'after-used',
+          ignoreRestSiblings: false,
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
       ],
       'no-console': ['warn', { allow: ['info', 'error'] }],
     },
@@ -27,7 +36,9 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.jest,
+        ...globals.vitest,
+        __dirname: 'off',
+        __filename: 'off',
       },
     },
   },

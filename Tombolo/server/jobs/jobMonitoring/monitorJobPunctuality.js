@@ -1,11 +1,11 @@
 // Import from libraries
-const { WorkunitsService } = require('@hpcc-js/comms');
-const { logOrPostMessage } = require('../jobUtils');
-const _ = require('lodash');
+import { WorkunitsService } from '@hpcc-js/comms';
+import { logOrPostMessage } from '../jobUtils.js';
+import _ from 'lodash';
 
 // Local imports
-const { decryptString } = require('@tombolo/shared');
-const {
+import { decryptString } from '@tombolo/shared';
+import {
   calculateRunOrCompleteByTimes,
   generateJobName,
   createNotificationPayload,
@@ -14,15 +14,15 @@ const {
   generateNotificationId,
   differenceInMs,
   nocAlertDescription,
-} = require('./monitorJobsUtil');
-const {
+} from './monitorJobsUtil.js';
+import {
   JobMonitoring,
   Cluster,
   NotificationQueue,
   MonitoringType,
-} = require('../../models');
-const { getClusterOptions } = require('../../utils/getClusterOptions');
-const { APPROVAL_STATUS } = require('../../config/constants');
+} from '../../models/index.js';
+import { getClusterOptions } from '../../utils/getClusterOptions.js';
+import { APPROVAL_STATUS } from '../../config/constants.js';
 
 const monitoringTypeName = 'Job Monitoring';
 
@@ -151,7 +151,7 @@ const monitoringTypeName = 'Job Monitoring';
           } catch (error) {
             logOrPostMessage({
               level: 'error',
-              text: `Job Punctuality Monitoring : Error while getting Domain level severity : ${error.message}`,
+              text: `Job Punctuality Monitoring [MonitoringID: ${id}]: Error while getting Domain level severity: ${error.message}`,
             });
           }
         }
@@ -414,7 +414,7 @@ const monitoringTypeName = 'Job Monitoring';
       } catch (error) {
         logOrPostMessage({
           level: 'error',
-          text: `Job Punctuality Monitoring: Error while processing jobs for  punctuality check ${jobMonitoring.id}: ${error.message}`,
+          text: `Job Punctuality Monitoring [MonitoringID: ${jobMonitoring.id}]: Error while processing jobs for punctuality check: ${error.message}`,
         });
       }
     }

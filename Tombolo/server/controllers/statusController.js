@@ -1,6 +1,6 @@
-const logger = require('../config/logger');
-const { UserRole, RoleType, sequelize } = require('../models');
-const { sendSuccess, sendError } = require('../utils/response');
+import logger from '../config/logger.js';
+import { UserRole, RoleType, sequelize } from '../models/index.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 
 // Lightweight healthcheck for Docker - no auth required
 const healthcheck = async (req, res) => {
@@ -50,8 +50,4 @@ const checkOwnerExists = async (req, res) => {
   }
 };
 
-module.exports = {
-  healthcheck,
-  checkStatus,
-  checkOwnerExists,
-};
+export { healthcheck, checkStatus, checkOwnerExists };

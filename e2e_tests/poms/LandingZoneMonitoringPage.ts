@@ -97,14 +97,14 @@ export class LandingZoneMonitoringPage {
   }): Promise<void> {
     // Fill monitoring name - target the form input specifically
     const nameInput = this.page.locator(
-      '.ant-modal input[id*="monitoringName"]'
+      '.ant-modal input[id*="monitoringName"]',
     );
     await nameInput.fill(data.monitoringName);
 
     // Fill description if provided
     if (data.description) {
       const descriptionInput = this.page.locator(
-        '.ant-modal textarea[id*="description"]'
+        '.ant-modal textarea[id*="description"]',
       );
       await descriptionInput.fill(data.description);
     }
@@ -185,7 +185,7 @@ export class LandingZoneMonitoringPage {
     // Select monitoring type if provided
     if (monitoringType) {
       console.log(
-        `[LandingZoneMonitoring] Selecting monitoring type: ${monitoringType}`
+        `[LandingZoneMonitoring] Selecting monitoring type: ${monitoringType}`,
       );
       const typeFormItem = this.page
         .locator(".ant-modal .ant-form-item")
@@ -200,7 +200,7 @@ export class LandingZoneMonitoringPage {
         .getByText(monitoringType, { exact: true });
       await typeOption.click();
       console.log(
-        `[LandingZoneMonitoring] Selected monitoring type: ${monitoringType}`
+        `[LandingZoneMonitoring] Selected monitoring type: ${monitoringType}`,
       );
     }
 
@@ -248,11 +248,11 @@ export class LandingZoneMonitoringPage {
       if (!isVisible) {
         // If not visible, let's check all available options
         const allOptions = this.page.locator(
-          ".ant-select-dropdown .ant-select-item"
+          ".ant-select-dropdown .ant-select-item",
         );
         const count = await allOptions.count();
         console.log(
-          `[LandingZoneMonitoring] Machine '${machine}' not found. Available options:`
+          `[LandingZoneMonitoring] Machine '${machine}' not found. Available options:`,
         );
         for (let i = 0; i < count; i++) {
           const optionText = await allOptions.nth(i).textContent();
@@ -268,54 +268,37 @@ export class LandingZoneMonitoringPage {
       await this.page.waitForTimeout(1000);
     }
 
-    // Select directory if provided
+    // Type directory if provided
     if (directory) {
-      console.log(`[LandingZoneMonitoring] Selecting directory: ${directory}`);
+      console.log(`[LandingZoneMonitoring] Typing directory: ${directory}`);
       const directoryFormItem = this.page
         .locator(".ant-modal .ant-form-item")
         .filter({ hasText: /^Directory/ });
-      const directoryCascader = directoryFormItem
-        .locator(".ant-cascader")
-        .first();
+      const directoryInput = directoryFormItem.locator("input").first();
 
-      await directoryCascader.click();
-      await this.page.waitForTimeout(500);
-
-      // For now, just select the first available directory option
-      const firstOption = this.page
-        .locator(".ant-cascader-dropdown .ant-cascader-menu-item")
-        .first();
-
-      const isVisible = await firstOption.isVisible();
-      if (isVisible) {
-        await firstOption.click();
-        console.log(
-          `[LandingZoneMonitoring] Selected first available directory`
-        );
-      } else {
-        throw new Error("No directory options available");
-      }
+      await directoryInput.fill(directory);
+      console.log(`[LandingZoneMonitoring] Typed directory: ${directory}`);
     }
 
     // Fill threshold fields based on monitoring type
     if (monitoringType === "Landing Zone Space") {
       if (minThreshold !== undefined) {
         const minThresholdInput = this.page.locator(
-          '.ant-modal input[id*="minThreshold"]'
+          '.ant-modal input[id*="minThreshold"]',
         );
         await minThresholdInput.fill(minThreshold.toString());
         console.log(
-          `[LandingZoneMonitoring] Filled min threshold: ${minThreshold}`
+          `[LandingZoneMonitoring] Filled min threshold: ${minThreshold}`,
         );
       }
 
       if (maxThreshold !== undefined) {
         const maxThresholdInput = this.page.locator(
-          '.ant-modal input[id*="maxThreshold"]'
+          '.ant-modal input[id*="maxThreshold"]',
         );
         await maxThresholdInput.fill(maxThreshold.toString());
         console.log(
-          `[LandingZoneMonitoring] Filled max threshold: ${maxThreshold}`
+          `[LandingZoneMonitoring] Filled max threshold: ${maxThreshold}`,
         );
       }
     }
@@ -323,7 +306,7 @@ export class LandingZoneMonitoringPage {
     if (monitoringType === "File(s) Not Moving") {
       if (threshold !== undefined) {
         const thresholdInput = this.page.locator(
-          '.ant-modal input[id*="threshold"]'
+          '.ant-modal input[id*="threshold"]',
         );
         await thresholdInput.fill(threshold.toString());
         console.log(`[LandingZoneMonitoring] Filled threshold: ${threshold}`);
@@ -331,7 +314,7 @@ export class LandingZoneMonitoringPage {
 
       if (fileName) {
         const fileNameInput = this.page.locator(
-          '.ant-modal input[id*="fileName"]'
+          '.ant-modal input[id*="fileName"]',
         );
         await fileNameInput.fill(fileName);
         console.log(`[LandingZoneMonitoring] Filled file name: ${fileName}`);
@@ -341,27 +324,27 @@ export class LandingZoneMonitoringPage {
     if (monitoringType === "File Count in a Directory") {
       if (minFileCount !== undefined) {
         const minFileCountInput = this.page.locator(
-          '.ant-modal input[id*="minFileCount"]'
+          '.ant-modal input[id*="minFileCount"]',
         );
         await minFileCountInput.fill(minFileCount.toString());
         console.log(
-          `[LandingZoneMonitoring] Filled min file count: ${minFileCount}`
+          `[LandingZoneMonitoring] Filled min file count: ${minFileCount}`,
         );
       }
 
       if (maxFileCount !== undefined) {
         const maxFileCountInput = this.page.locator(
-          '.ant-modal input[id*="maxFileCount"]'
+          '.ant-modal input[id*="maxFileCount"]',
         );
         await maxFileCountInput.fill(maxFileCount.toString());
         console.log(
-          `[LandingZoneMonitoring] Filled max file count: ${maxFileCount}`
+          `[LandingZoneMonitoring] Filled max file count: ${maxFileCount}`,
         );
       }
 
       if (fileName) {
         const fileNameInput = this.page.locator(
-          '.ant-modal input[id*="fileName"]'
+          '.ant-modal input[id*="fileName"]',
         );
         await fileNameInput.fill(fileName);
         console.log(`[LandingZoneMonitoring] Filled file name: ${fileName}`);
@@ -404,7 +387,7 @@ export class LandingZoneMonitoringPage {
 
   private async fillContactField(
     contactType: string,
-    contacts: string[]
+    contacts: string[],
   ): Promise<void> {
     const contactFormItem = this.page
       .locator(".ant-modal .ant-form-item")
@@ -434,7 +417,7 @@ export class LandingZoneMonitoringPage {
       .locator(".ant-modal button")
       .allTextContents();
     console.log(
-      `[LandingZoneMonitoring] Available buttons: ${allButtons.join(", ")}`
+      `[LandingZoneMonitoring] Available buttons: ${allButtons.join(", ")}`,
     );
 
     // Ensure we're on the last tab (Notifications) to see the submit button
@@ -449,18 +432,18 @@ export class LandingZoneMonitoringPage {
     const preSubmitErrorCount = await preSubmitErrors.count();
     if (preSubmitErrorCount > 0) {
       console.log(
-        `[LandingZoneMonitoring] Found ${preSubmitErrorCount} validation errors before submit`
+        `[LandingZoneMonitoring] Found ${preSubmitErrorCount} validation errors before submit`,
       );
       const errorMessages = [];
       for (let i = 0; i < preSubmitErrorCount; i++) {
         const errorText = await preSubmitErrors.nth(i).textContent();
         errorMessages.push(errorText);
         console.log(
-          `[LandingZoneMonitoring] Pre-submit Error ${i + 1}: ${errorText}`
+          `[LandingZoneMonitoring] Pre-submit Error ${i + 1}: ${errorText}`,
         );
       }
       throw new Error(
-        `Form validation errors before submit: ${errorMessages.join(", ")}`
+        `Form validation errors before submit: ${errorMessages.join(", ")}`,
       );
     }
 
@@ -490,7 +473,7 @@ export class LandingZoneMonitoringPage {
 
     if (!isButtonVisible) {
       throw new Error(
-        "Submit button not found. Available buttons: " + allButtons.join(", ")
+        "Submit button not found. Available buttons: " + allButtons.join(", "),
       );
     }
 
@@ -507,7 +490,7 @@ export class LandingZoneMonitoringPage {
 
     if (errorCount > 0) {
       console.log(
-        `[LandingZoneMonitoring] Found ${errorCount} form errors after submit`
+        `[LandingZoneMonitoring] Found ${errorCount} form errors after submit`,
       );
       const errorMessages = [];
       for (let i = 0; i < errorCount; i++) {
@@ -531,7 +514,7 @@ export class LandingZoneMonitoringPage {
         .isVisible({ timeout: 1000 });
       if (!modalStillVisible) {
         console.log(
-          `[LandingZoneMonitoring] Modal closed successfully (after timeout)`
+          `[LandingZoneMonitoring] Modal closed successfully (after timeout)`,
         );
         return;
       } else {
@@ -540,8 +523,8 @@ export class LandingZoneMonitoringPage {
           .allTextContents();
         throw new Error(
           `Modal did not close after form submission. Final buttons: ${finalButtons.join(
-            ", "
-          )}`
+            ", ",
+          )}`,
         );
       }
     }

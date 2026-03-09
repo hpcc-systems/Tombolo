@@ -160,11 +160,10 @@ COPY --from=core-builder /app/Tombolo/core/package.json ./Tombolo/core/package.j
 COPY --from=db-builder /app/Tombolo/db/dist ./Tombolo/db/dist
 COPY --from=db-builder /app/Tombolo/db/package.json ./Tombolo/db/package.json
 
-# Copy db migrations, seeders, config, and utils (needed at runtime)
+# Copy db migrations, seeders and config (needed at runtime)
 COPY Tombolo/db/migrations ./Tombolo/db/migrations
 COPY Tombolo/db/seeders ./Tombolo/db/seeders
 COPY Tombolo/db/config ./Tombolo/db/config
-COPY Tombolo/db/utils ./Tombolo/db/utils
 
 # Copy Docker-specific .sequelizerc and rename it
 COPY Tombolo/server/.sequelizerc.docker ./Tombolo/server/.sequelizerc
@@ -272,11 +271,10 @@ COPY --from=db-builder /app/Tombolo/db/package.json ./Tombolo/db/package.json
 # Copy jobs source code
 COPY Tombolo/jobs ./Tombolo/jobs
 
-# Copy db migrations, seeders, config, and utils (needed at runtime)
+# Copy db migrations, seeders, and config (needed at runtime)
 COPY Tombolo/db/migrations ./Tombolo/db/migrations
 COPY Tombolo/db/seeders ./Tombolo/db/seeders
 COPY Tombolo/db/config ./Tombolo/db/config
-COPY Tombolo/db/utils ./Tombolo/db/utils
 
 # Build TypeScript without source maps for production
 WORKDIR /app/Tombolo/jobs

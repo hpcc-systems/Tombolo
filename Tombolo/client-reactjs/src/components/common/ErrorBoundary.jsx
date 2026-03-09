@@ -15,10 +15,8 @@ class ErrorBoundary extends Component {
     return { hasError: true, message: error.message };
   }
 
-  componentDidCatch(error, info) {
-    console.log('--Error Boundaries catch ----------------------------------------');
-    console.dir({ error, info }, { depth: null });
-    console.log('------------------------------------------');
+  componentDidCatch(error) {
+    console.error(error);
   }
 
   render() {

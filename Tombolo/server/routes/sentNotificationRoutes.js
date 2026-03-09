@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   validateCreateSentNotification,
   validateGetSentNotificationByAppId,
   validateGetSentNotificationById,
@@ -9,10 +9,10 @@ const {
   validateBulkDeleteSentNotifications,
   validateUpdateSentNotifications,
   validateBodyId,
-} = require('../middlewares/sentNotificationMiddleware');
+} from '../middlewares/sentNotificationMiddleware.js';
 
 //Local imports
-const {
+import {
   createSentNotification,
   getSentNotifications,
   getSentNotification,
@@ -20,7 +20,7 @@ const {
   deleteSentNotifications,
   updateSentNotifications,
   getNotificationHtml,
-} = require('../controllers/sentNotificationController');
+} from '../controllers/sentNotificationController.js';
 
 // Create a new sent notification
 router.post(
@@ -71,4 +71,4 @@ router.post(
   getNotificationHtml
 );
 
-module.exports = router;
+export default router;

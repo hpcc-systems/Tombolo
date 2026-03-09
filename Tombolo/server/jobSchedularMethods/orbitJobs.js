@@ -1,8 +1,10 @@
-const path = require('path');
-const logger = require('../config/logger');
+import path from 'path';
+import logger from '../config/logger.js';
 
-const { OrbitMonitoring } = require('../models');
+import { OrbitMonitoring } from '../models/index.js';
+import { getDirname } from '../utils/polyfills.js';
 
+const __dirname = getDirname(import.meta.url);
 const MEGAPHONE_JOB = 'orbitMegaphone.js';
 const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
 const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';
@@ -71,7 +73,7 @@ async function scheduleOrbitMonitoringOnServerStart() {
   }
 }
 
-module.exports = {
+export {
   createOrbitMegaphoneJob,
   createOrbitMonitoringJob,
   createOrbitProfileMonitoringJob,

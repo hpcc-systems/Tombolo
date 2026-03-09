@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
-const { RefreshToken } = require('../models');
-const { blacklistToken } = require('../utils/tokenBlackListing');
-const logger = require('../config/logger');
-const { verifyToken } = require('../utils/authUtil');
-const { sendSuccess, sendError } = require('../utils/response');
+import jwt from 'jsonwebtoken';
+import { RefreshToken } from '../models/index.js';
+import { blacklistToken } from '../utils/tokenBlackListing.js';
+import logger from '../config/logger.js';
+import { verifyToken } from '../utils/authUtil.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 
 // Get all active sessions
 const activeSessionsByUserId = async (req, res) => {
@@ -107,7 +107,7 @@ const destroyActiveSessions = async (req, res) => {
 };
 
 //Exports
-module.exports = {
+export {
   activeSessionsByUserId,
   destroyOneActiveSession,
   destroyActiveSessions,

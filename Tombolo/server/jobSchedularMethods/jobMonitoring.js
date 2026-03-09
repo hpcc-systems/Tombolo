@@ -1,17 +1,19 @@
-const path = require('path');
-const {
+import path from 'path';
+import {
   job_monitoring_interval,
   intermediate_job_monitoring_interval,
   job_punctuality_monitoring_interval,
   job_time_series_analysis_interval,
-} = require('../config/monitorings');
-const logger = require('../config/logger');
-const {
+} from '../config/monitorings.js';
+import logger from '../config/logger.js';
+import {
   generateTimeSlotsForJobMonitoring,
   generateIntervalString,
-} = require('./jobSchedularUtils.js');
+} from './jobSchedularUtils.js';
+import { getDirname } from '../utils/polyfills.js';
 
 // Constants
+const __dirname = getDirname(import.meta.url);
 const MONITOR_JOBS_FILE_NAME = 'monitorJobs.js';
 const MONITOR_INTERMEDIATE_JOBS_FILE_NAME = 'monitorIntermediateStateJobs.js';
 const MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME = 'monitorJobPunctuality.js';
@@ -188,7 +190,7 @@ function createWuInfoFetchingJob(data = {}) {
   }
 }
 
-module.exports = {
+export {
   startJobMonitoring,
   startIntermediateJobsMonitoring,
   startJobPunctualityMonitoring,

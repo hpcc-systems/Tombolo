@@ -1,13 +1,13 @@
-const logger = require('../config/logger');
-const {
+import logger from '../config/logger.js';
+import {
   Integration,
   IntegrationMapping,
   OrbitBuild,
   MonitoringNotification,
   NotificationQueue,
-} = require('../models');
+} from '../models/index.js';
 
-const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
+import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
 (async () => {
   try {
@@ -36,7 +36,6 @@ const { runMySQLQuery, orbitDbConfig } = require('../utils/runSQLQueries.js');
 
       let application_id = integration.dataValues?.application_id;
 
-      // eslint-disable-next-line quotes
       const query = `select * from orbitreport.DimReceiveInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc limit 1`;
       const result = await runMySQLQuery(query, orbitDbConfig);
 

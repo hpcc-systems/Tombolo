@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { validate } = require('../middlewares/validateRequestBody');
-const {
+import { validate } from '../middlewares/validateRequestBody.js';
+import {
   createClusterMonitoring,
   getClusterMonitoringById,
   getAllClusterMonitoring,
@@ -11,15 +11,15 @@ const {
   bulkUpdateClusterMonitoring,
   deleteClusterMonitoring,
   toggleBulkClusterMonitoringStatus,
-} = require('../controllers/clusterMonitoringController');
+} from '../controllers/clusterMonitoringController.js';
 
-const {
+import {
   createOrUpdateMonitoringPayload,
   monitoringIdAsParam,
   monitoringIdOnBody,
   evaluateMonitoringPayload,
   deleteMonitoringPayload,
-} = require('../middlewares/clusterMonitoringMiddleware');
+} from '../middlewares/clusterMonitoringMiddleware.js';
 
 // Create
 router.post(
@@ -65,4 +65,4 @@ router.patch('/bulkUpdate', bulkUpdateClusterMonitoring);
 // Delete (handles single ID or array of IDs)
 router.delete('/', validate(deleteMonitoringPayload), deleteClusterMonitoring);
 
-module.exports = router;
+export default router;

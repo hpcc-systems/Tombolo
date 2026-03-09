@@ -8,6 +8,23 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/tests/setupTests.js',
+    coverage: {
+      enabled: true,
+      provider: 'v8',
+      reporter: ['text-summary', 'lcov', 'html'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'src/tests/',
+        '**/*.test.{js,jsx,ts,tsx}',
+        '**/*.spec.{js,jsx,ts,tsx}',
+        '**/vite.config.js',
+        '**/vitest.config.js',
+        'nginx/',
+        'public/',
+        'eslint.config.mjs',
+      ],
+    },
     // Better test isolation configuration
     pool: 'forks',
     poolOptions: {
@@ -34,6 +51,10 @@ export default defineConfig({
     // Better environment setup
     env: {
       NODE_ENV: 'test',
+      VITE_AUTH_METHODS: 'traditional,azure',
+      VITE_AZURE_CLIENT_ID: 'test-client-id',
+      VITE_AZURE_TENENT_ID: 'test-tenant-id',
+      VITE_AZURE_REDIRECT_URI: 'http://localhost:3000',
     },
   },
   resolve: {

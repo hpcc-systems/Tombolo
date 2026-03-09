@@ -83,6 +83,16 @@
 .ml12 {
   margin-left: 12px;
 }
+.linkButton {
+  padding: 0;
+  height: auto;
+  text-align: left;
+}
+.smallTag {
+  font-size: 10px;
+  line-height: 16px;
+  padding: 0 4px;
+}
 
 /* Card helpers */
 .cardMarginBottom16 {
@@ -96,7 +106,11 @@
   border-bottom: 1px solid #f0f0f0;
 }
 .scrollAreaTall {
-  height: 520px;
+  /* Use max-height to prevent the explorer from forcing the page taller than the viewport
+     and set a slightly shorter minimum height so it doesn't extend below the screen
+     when combined with other page components. */
+  max-height: 520px;
+  min-height: 320px;
   overflow: auto;
   padding: 12px;
 }
@@ -168,6 +182,23 @@
   padding: 6px 12px;
 }
 
+/* Compact button for tight header use (reduced padding and font-size) */
+.compactBtn {
+  padding: 4px 8px;
+  height: 28px;
+  font-size: 12px;
+}
+
+/* Fix for fixed table columns overlapping other elements (like tooltips or headers)
+   When scrolling horizontally, AntD uses fixed positioning for some columns.
+   We need them to stay below the global app header (which now has z-index: 1000)
+   and standard overlays.
+*/
+:global(.ant-table-cell-fix-right),
+:global(.ant-table-cell-fix-left) {
+  z-index: 10 !important;
+}
+
 /* Table row highlights (global classes used by rowClassName) */
 :global(.wu-row-failed) {
   background-color: #ffe5e5 !important;
@@ -194,4 +225,11 @@
 }
 :global(.problem-row-warning:hover) {
   background-color: #ffe8cc !important;
+}
+.highlightRow {
+  background-color: #e6f7ff !important;
+  border-left: 3px solid #1890ff;
+}
+.highlightRow:hover {
+  background-color: #bae7ff !important;
 }

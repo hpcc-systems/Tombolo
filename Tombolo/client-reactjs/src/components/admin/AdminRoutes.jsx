@@ -14,11 +14,12 @@ const ScheduledJobsPage = React.lazy(() => import('./ScheduledJobsPage'));
 // const Compliance = React.lazy(() => import('./Compliance/Compliance'));
 const Integrations = React.lazy(() => import('./Integrations'));
 const IntegrationSettings = React.lazy(() => import('./Integrations/IntegrationSettings'));
-const TeamsNotification = React.lazy(() => import('./notifications/MsTeams/Teams'));
 const UserManagement = React.lazy(() => import('./userManagement/index.jsx'));
 const Settings = React.lazy(() => import('./settings'));
-const WorkUnitHistory = React.lazy(() => import('./workunitHistory/WorkUnitHistory'));
-const WorkUnitDetails = React.lazy(() => import('./workunitHistory/WorkUnitDetails'));
+const WorkUnitHistory = React.lazy(() => import('./workunitHistory/index.jsx'));
+const WorkUnitDetails = React.lazy(() => import('./workunitHistory/details/index.jsx'));
+const WorkUnitAnalytics = React.lazy(() => import('./workunitAnalytics/index.jsx'));
+const WorkUnitDashboard = React.lazy(() => import('./workunits/dashboard/'));
 
 const AdminRoutes = () => {
   return (
@@ -28,7 +29,6 @@ const AdminRoutes = () => {
       <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
       <PrivateRoute path="/admin/clusters/logs" component={ClusterLogs} />
       <PrivateRoute path="/admin/clusters" component={Clusters} />
-      <PrivateRoute path="/admin/notification-settings/msTeams" component={TeamsNotification} />
       {/* <PrivateRoute path="/admin/github" component={GitHubSettings} /> */}
       {/* <PrivateRoute path="/admin/compliance/:tabName?" component={Compliance} /> */}
       <PrivateRoute path="/admin/users" component={Users} />
@@ -36,8 +36,10 @@ const AdminRoutes = () => {
       <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
       <PrivateRoute path="/admin/integrations" component={Integrations} />
       <PrivateRoute path="/admin/settings" component={Settings} />
-      <PrivateRoute exact path="/admin/workunits/:clusterId/:wuid" component={WorkUnitDetails} />
-      <PrivateRoute path="/admin/workunits" component={WorkUnitHistory} />
+      <PrivateRoute exact path="/workunits/history/:clusterId/:wuid" component={WorkUnitDetails} />
+      <PrivateRoute path="/workunits/history" component={WorkUnitHistory} />
+      <PrivateRoute path="/workunits/sql" component={WorkUnitAnalytics} />
+      <PrivateRoute path="/workunits/dashboard" component={WorkUnitDashboard} />
     </Switch>
   );
 };

@@ -1,7 +1,7 @@
-const { logOrPostMessage } = require('../jobUtils');
+import { logOrPostMessage } from '../jobUtils.js';
 
-const hpccUtil = require('../../utils/hpcc-util');
-const { Cluster } = require('../../models');
+import { getClusterTimezoneOffset as utilGetClusterTzOffset } from '../../utils/hpcc-util.js';
+import { Cluster } from '../../models/index.js';
 
 async function getClusterTimezoneOffset() {
   const startTime = new Date();
@@ -31,7 +31,7 @@ async function getClusterTimezoneOffset() {
   for (const c of clusters) {
     try {
       //get offset for cluster
-      const offset = await hpccUtil.getClusterTimezoneOffset(c.id);
+      const offset = await utilGetClusterTzOffset(c.id);
 
       //get cluster
       let newCluster = await Cluster.findOne({
@@ -78,4 +78,4 @@ async function getClusterTimezoneOffset() {
   await getClusterTimezoneOffset();
 })();
 
-module.exports = getClusterTimezoneOffset;
+export default getClusterTimezoneOffset;
