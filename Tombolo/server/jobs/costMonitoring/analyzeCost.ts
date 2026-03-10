@@ -720,7 +720,10 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
   const ownerAndSupervisorConfig =
     costMonitoring.metaData?.notificationMetaData?.ownerAndSupervisor;
 
-  if (ownerAndSupervisorConfig) {
+  if (
+    Array.isArray(ownerAndSupervisorConfig) &&
+    ownerAndSupervisorConfig.length > 0
+  ) {
     // Send individual notifications to users and their managers
     await notifyIndividualUsersAndManagers(
       erroringUsers,

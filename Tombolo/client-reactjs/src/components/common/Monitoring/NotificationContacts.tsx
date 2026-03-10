@@ -19,7 +19,7 @@ const NotificationContacts: React.FC<any> = ({ children, enableOwnerSupervisorCo
       {asrIntegration && <AsrSpecificNotificationsDetails />}
       {enableOwnerSupervisorContact ? (
         <Form.Item label="Notify Owner and Supervisor" name="ownerAndSupervisor">
-          <Select placeholder="Select an option" style={{ width: '100%' }} mode="tags">
+          <Select placeholder="Select an option" style={{ width: '100%' }} mode="multiple">
             <Select.Option value="owner">Notify User ( workunit owner)</Select.Option>
             <Select.Option value="supervisor">Notify User's Supervisor</Select.Option>
           </Select>
