@@ -3,7 +3,7 @@ import { Op } from 'sequelize';
 import { WorkUnit, WorkUnitDetails, sequelize } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
-import levenshtein from 'fast-levenshtein';
+import { findFuzzyMatches } from '../utils/fuzzyMatch.js';
 
 type ScopeNode = Record<string, unknown> & { children: ScopeNode[] };
 
@@ -261,36 +261,22 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
       raw: true,
     });
 
-    // Using fast-levenshtein to find similar job names
-    // job name must be normalized before comparison - remove punctuation, and remove digits, and convert to lower case
-    const normalize = (name: string) =>
-      name
-        .toLowerCase()
-        .replace(/[\d\W]+/g, ' ')
-        .trim();
-
+    // Using enhanced fuzzy matching with substring intelligence
     const MIN_SIMILARITY = 0.8; // 80% similar (adjust between 0.7-0.9)
 
-    const calculateSimilarity = (str1: string, str2: string): number => {
-      const distance = levenshtein.get(str1, str2);
-      const maxLength = Math.max(str1.length, str2.length);
-      return maxLength === 0 ? 1.0 : 1 - distance / maxLength;
-    };
+    const fuzzyResults = findFuzzyMatches(
+      jobName,
+      wus.filter(w => w.jobName),
+      w => w.jobName,
+      { minSimilarity: MIN_SIMILARITY }
+    );
 
-    const similarJobs = wus
-      .filter(w => w.jobName)
-      .map(w => {
-        const normalized1 = normalize(w.jobName);
-        const normalized2 = normalize(jobName);
-        const similarity = calculateSimilarity(normalized1, normalized2);
-        return {
-          ...w,
-          similarity: Math.round(similarity * 100) / 100, // Round to 2 decimals
-          distance: levenshtein.get(normalized1, normalized2),
-        };
-      })
-      .filter(w => w.similarity >= MIN_SIMILARITY)
-      .sort((a, b) => b.similarity - a.similarity); // Sort by similarity descending
+    const similarJobs = fuzzyResults.map(result => ({
+      ...result.item,
+      similarity: result.similarity,
+      distance: result.distance,
+      matchType: result.matchType,
+    }));
 
     if (similarJobs.length === 0) {
       return sendError(
