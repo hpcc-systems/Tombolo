@@ -7,7 +7,7 @@ import {
   UNIT_LOOKUP,
   relevantMetrics,
 } from '@tombolo/shared';
-import logger from '../../../config/logger.js';
+import logger from '@/config/logger.js';
 
 // Type for database row objects (what processScopeToRow returns)
 type WorkUnitDetailRow = {

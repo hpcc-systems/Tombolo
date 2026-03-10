@@ -1,5 +1,11 @@
-import { ArchiveManager } from '../utils/archiveUtils.js';
-import { Op, Sequelize, ModelStatic, Model } from 'sequelize';
+import { ArchiveManager, type ArchiveOptions } from './archiveUtils.js';
+import {
+  Op,
+  Sequelize,
+  ModelStatic,
+  Model,
+  type WhereOptions,
+} from 'sequelize';
 
 class ArchiveService {
   protected sequelize: Sequelize;
@@ -22,8 +28,9 @@ class ArchiveService {
 
   async archiveRecords(
     originalModelName: string,
-    whereClause: any,
-    archiveMetadata: Record<string, any> = {}
+    whereClause: WhereOptions,
+    archiveMetadata: Record<string, unknown> = {},
+    options: ArchiveOptions = {}
   ): Promise<number> {
     const originalModel = this.sequelize.models[originalModelName];
     if (!originalModel) {
@@ -33,13 +40,14 @@ class ArchiveService {
     return await this.archiveManager.archiveRecords(
       originalModel,
       whereClause,
-      archiveMetadata
+      archiveMetadata,
+      options
     );
   }
 
   async getArchivedData(
     originalModelName: string,
-    filters: any = {}
+    filters: WhereOptions = {}
   ): Promise<Model[]> {
     const ArchiveModel = await this.getArchiveModel(originalModelName);
     return await ArchiveModel.findAll({
@@ -50,15 +58,19 @@ class ArchiveService {
 
   async restoreArchivedData(
     originalModelName: string,
-    archivedRecordIds: any[]
+    ids: (string | number)[]
   ): Promise<number> {
-    const ArchiveModel = await this.getArchiveModel(originalModelName);
     const originalModel = this.sequelize.models[originalModelName];
+    if (!originalModel) {
+      throw new Error(`Original model ${originalModelName} not found`);
+    }
 
+    const ArchiveModel = this.archiveManager.getArchiveModel(originalModel);
     const transaction = await this.sequelize.transaction();
+
     try {
       const archivedRecords = await ArchiveModel.findAll({
-        where: { id: { [Op.in]: archivedRecordIds } },
+        where: { id: { [Op.in]: ids } },
         transaction,
       });
 
@@ -68,15 +80,17 @@ class ArchiveService {
       }
 
       const restoreData = archivedRecords.map(record => {
-        const data = record.toJSON();
-        delete data.archivedAt;
+        const { archivedAt: _archivedAt, ...data } = record.toJSON() as Record<
+          string,
+          unknown
+        >;
         return data;
       });
 
       await originalModel.bulkCreate(restoreData, { transaction });
 
       await ArchiveModel.destroy({
-        where: { id: { [Op.in]: archivedRecordIds } },
+        where: { id: { [Op.in]: ids } },
         transaction,
       });
 

@@ -242,6 +242,8 @@ vi.mock('../models/index.js', () => {
     sequelize: {
       transaction,
       literal: vi.fn(value => value),
+      fn: vi.fn((...args) => args),
+      col: vi.fn(col => col),
       __commit: commit, // Expose for test access
       __rollback: rollback, // Expose for test access
     },

@@ -11,7 +11,7 @@ export default [
   ...rootConfig,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.js', '**/*.mjs'],
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: __dirname,

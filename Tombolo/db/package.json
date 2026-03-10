@@ -3,14 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     }
   },
   "files": [
@@ -35,7 +32,7 @@
     "esm:build": "tsup",
     "typecheck": "tsc --noEmit",
     "build:check": "pnpm typecheck && pnpm build",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch --no-clean",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "db:migrate": "sequelize db:migrate",
