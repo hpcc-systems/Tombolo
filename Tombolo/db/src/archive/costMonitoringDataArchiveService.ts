@@ -1,13 +1,48 @@
 import { ArchiveService } from './archiveService.js';
-import { Op, Sequelize, Model } from 'sequelize';
-import logger from '../config/logger.js';
+import { Op, Sequelize, Model, type WhereOptions } from 'sequelize';
+import type { Logger } from '@tombolo/shared/backend';
+import { logger as defaultLogger } from '@tombolo/shared/backend';
+
+interface CostArchiveStats {
+  totalRecords: number;
+  oldestArchive: Date | null;
+  latestArchive: Date | null;
+  uniqueClusters: number;
+}
+
+interface CostArchiveStatsByCluster {
+  clusterId: string;
+  recordCount: number;
+  oldestRecord: Date | null;
+  newestRecord: Date | null;
+  firstArchivedAt: Date | null;
+  lastArchivedAt: Date | null;
+}
+
+interface CostArchiveStatsRaw {
+  totalRecords: string | number;
+  oldestArchive: Date | null;
+  latestArchive: Date | null;
+  uniqueClusters: string | number;
+}
+
+interface CostArchiveStatsByClusterRaw {
+  clusterId: string;
+  recordCount: string | number;
+  oldestRecord: Date | null;
+  newestRecord: Date | null;
+  firstArchivedAt: Date | null;
+  lastArchivedAt: Date | null;
+}
 
 class CostMonitoringDataArchiveService extends ArchiveService {
   private modelName: string;
+  private logger: Logger;
 
-  constructor(sequelize: Sequelize) {
+  constructor(sequelize: Sequelize, logger: Logger = defaultLogger) {
     super(sequelize);
     this.modelName = 'CostMonitoringData';
+    this.logger = logger;
   }
 
   async archiveOldCostData(daysToKeep: number = 30): Promise<number> {
@@ -15,39 +50,30 @@ class CostMonitoringDataArchiveService extends ArchiveService {
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
     try {
-      const archivedCount = await this.archiveRecords(this.modelName, {
-        date: { [Op.lt]: cutoffDate },
-      });
+      const archivedCount = await this.archiveRecords(
+        this.modelName,
+        {
+          date: { [Op.lt]: cutoffDate },
+        },
+        {},
+        { forceDelete: true }
+      );
 
-      logger.info(
+      this.logger.info(
         `Archived ${archivedCount} cost monitoring records older than ${daysToKeep} days`
       );
       return archivedCount;
     } catch (error) {
-      logger.error('Failed to archive cost monitoring data:', error);
+      this.logger.error('Failed to archive cost monitoring data:', error);
       throw error;
     }
   }
 
-  async getCostDataArchive(filters: any = {}): Promise<Model[]> {
+  async getCostDataArchive(filters: WhereOptions = {}): Promise<Model[]> {
     return await this.getArchivedData(this.modelName, filters);
   }
 
-  async restoreCostData(archivedRecordIds: any[]): Promise<number> {
-    try {
-      const restoredCount = await this.restoreArchivedData(
-        this.modelName,
-        archivedRecordIds
-      );
-      logger.info(`Restored ${restoredCount} cost monitoring records`);
-      return restoredCount;
-    } catch (error) {
-      logger.error('Failed to restore cost monitoring data:', error);
-      throw error;
-    }
-  }
-
-  async getArchiveStats(): Promise<any> {
+  async getArchiveStats(): Promise<CostArchiveStats> {
     const ArchiveModel = await this.getArchiveModel(this.modelName);
 
     const stats = await ArchiveModel.findAll({
@@ -72,7 +98,13 @@ class CostMonitoringDataArchiveService extends ArchiveService {
       raw: true,
     });
 
-    return stats[0];
+    const raw = stats[0] as unknown as CostArchiveStatsRaw;
+    return {
+      totalRecords: Number(raw?.totalRecords ?? 0),
+      oldestArchive: raw?.oldestArchive ?? null,
+      latestArchive: raw?.latestArchive ?? null,
+      uniqueClusters: Number(raw?.uniqueClusters ?? 0),
+    };
   }
 
   async cleanupOldArchives(
@@ -87,9 +119,10 @@ class CostMonitoringDataArchiveService extends ArchiveService {
       where: {
         archivedAt: { [Op.lt]: cutoffDate },
       },
+      force: true,
     });
 
-    logger.info(
+    this.logger.info(
       `Cleaned up ${deletedCount} archived records older than ${archiveRetentionDays} days`
     );
     return deletedCount;
@@ -103,7 +136,7 @@ class CostMonitoringDataArchiveService extends ArchiveService {
    */
   async getArchivedDataByCluster(
     clusterId: string,
-    additionalFilters: any = {}
+    additionalFilters: WhereOptions = {}
   ): Promise<Model[]> {
     return await this.getCostDataArchive({
       clusterId,
@@ -125,17 +158,22 @@ class CostMonitoringDataArchiveService extends ArchiveService {
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
     try {
-      const archivedCount = await this.archiveRecords(this.modelName, {
-        clusterId,
-        date: { [Op.lt]: cutoffDate },
-      });
+      const archivedCount = await this.archiveRecords(
+        this.modelName,
+        {
+          clusterId,
+          date: { [Op.lt]: cutoffDate },
+        },
+        {},
+        { forceDelete: true }
+      );
 
-      logger.info(
+      this.logger.info(
         `Archived ${archivedCount} cost monitoring records for cluster ${clusterId} older than ${daysToKeep} days`
       );
       return archivedCount;
     } catch (error) {
-      logger.error(
+      this.logger.error(
         `Failed to archive cost monitoring data for cluster ${clusterId}:`,
         error
       );
@@ -147,7 +185,7 @@ class CostMonitoringDataArchiveService extends ArchiveService {
    * Get archive statistics grouped by cluster
    * @returns {Promise<Array>} Statistics per cluster including record counts and date ranges
    */
-  async getArchiveStatsByCluster(): Promise<any[]> {
+  async getArchiveStatsByCluster(): Promise<CostArchiveStatsByCluster[]> {
     const ArchiveModel = await this.getArchiveModel(this.modelName);
 
     const stats = await ArchiveModel.findAll({
@@ -169,7 +207,14 @@ class CostMonitoringDataArchiveService extends ArchiveService {
       raw: true,
     });
 
-    return stats;
+    return (stats as unknown as CostArchiveStatsByClusterRaw[]).map(row => ({
+      clusterId: row.clusterId,
+      recordCount: Number(row.recordCount ?? 0),
+      oldestRecord: row.oldestRecord ?? null,
+      newestRecord: row.newestRecord ?? null,
+      firstArchivedAt: row.firstArchivedAt ?? null,
+      lastArchivedAt: row.lastArchivedAt ?? null,
+    }));
   }
 }
 

@@ -4,15 +4,24 @@ export enum wuHistoryJobType {
   INFO = 'info',
 }
 
-export interface ScheduledJob {
+export interface ScheduledJob<T = Record<string, unknown>> {
   name: string;
   jobId: string;
-  data: Record<string, unknown>;
+  data: T;
   schedule: string;
   description?: string;
 }
 
 export interface WorkunitHistoryJobData {
   type: wuHistoryJobType;
+  [key: string]: unknown;
+}
+
+export type ArchiveJobType = 'cost-monitoring';
+
+export interface ArchiveJobData {
+  type: ArchiveJobType;
+  daysToKeep?: number;
+  retentionDays?: number;
   [key: string]: unknown;
 }

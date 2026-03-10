@@ -52,8 +52,6 @@ import {
   createAnalyzeCostJob,
 } from '../jobSchedularMethods/costMonitoring.js';
 
-import { createDataArchiveJob } from '../jobSchedularMethods/archive.js';
-
 import {
   removeUnverifiedUser,
   sendPasswordExpiryEmails,
@@ -163,7 +161,6 @@ class JobScheduler {
       await this.checkClusterContainerization();
       await this.createMonitorCostJob();
       await this.createOrbitProfileMonitoringJob();
-      await this.createDataArchiveJob();
       await removeUnverifiedUser.call(this);
       await sendPasswordExpiryEmails.call(this);
       await sendAccountDeleteEmails.call(this);
@@ -277,10 +274,6 @@ class JobScheduler {
   // Job that fetches workunit info
   createWuInfoFetchingJob(data: any): any {
     return createWuInfoFetchingJob.call(this, data);
-  }
-
-  createDataArchiveJob(): any {
-    return createDataArchiveJob.call(this);
   }
 
   createMonitorCostJob(): any {
