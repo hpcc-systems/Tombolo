@@ -1,0 +1,212 @@
+// Fuzzy matching utility for client-side grouping
+// Based on fast-levenshtein with substring intelligence
+
+export interface FuzzyMatchOptions {
+  minSimilarity?: number;
+  minSubstringLength?: number;
+  maxSubstringLength?: number;
+}
+
+export interface FuzzyMatchResult<T = unknown> {
+  item: T;
+  similarity: number;
+  distance: number;
+  matchType: 'exact' | 'substring' | 'fuzzy';
+}
+
+function normalize(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[\d\W]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ''); // Remove all spaces after normalization
+}
+
+function generateSubstrings(str: string, minLen: number = 3, maxLen: number = 5): string[] {
+  const substrings: string[] = [];
+  for (let len = minLen; len <= Math.min(maxLen, str.length); len++) {
+    for (let i = 0; i <= str.length - len; i++) {
+      substrings.push(str.substring(i, i + len));
+    }
+  }
+  return substrings;
+}
+
+// Simple Levenshtein distance calculation (avoiding external dependency)
+function levenshteinDistance(str1: string, str2: string): number {
+  const matrix = Array(str2.length + 1)
+    .fill(null)
+    .map(() => Array(str1.length + 1).fill(null));
+
+  for (let i = 0; i <= str1.length; i++) {
+    matrix[0][i] = i;
+  }
+
+  for (let j = 0; j <= str2.length; j++) {
+    matrix[j][0] = j;
+  }
+
+  for (let j = 1; j <= str2.length; j++) {
+    for (let i = 1; i <= str1.length; i++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        matrix[j][i] = matrix[j - 1][i - 1];
+      } else {
+        matrix[j][i] = Math.min(
+          matrix[j - 1][i - 1] + 1, // substitution
+          matrix[j][i - 1] + 1, // insertion
+          matrix[j - 1][i] + 1 // deletion
+        );
+      }
+    }
+  }
+
+  return matrix[str2.length][str1.length];
+}
+
+export function getSimilarityWithSubstringBonus(
+  str1: string,
+  str2: string
+): {
+  similarity: number;
+  matchType: 'exact' | 'substring' | 'fuzzy';
+} {
+  const norm1 = normalize(str1);
+  const norm2 = normalize(str2);
+
+  // Tier 1: Exact match (100%)
+  if (norm1 === norm2) {
+    return { similarity: 1.0, matchType: 'exact' };
+  }
+
+  // Tier 2: Full substring match with minimum length (90%)
+  if (norm2.includes(norm1) && norm1.length >= 4) {
+    // Search term is contained in compared word
+    return { similarity: 0.9, matchType: 'substring' };
+  }
+  if (norm1.includes(norm2) && norm2.length >= 4) {
+    // Compared word is contained in search term
+    return { similarity: 0.9, matchType: 'substring' };
+  }
+
+  // Tier 3: Check for 4+ character substring match (~90%)
+  if (norm1.length >= 4) {
+    for (let len = Math.min(norm1.length, 8); len >= 4; len--) {
+      for (let i = 0; i <= norm1.length - len; i++) {
+        const sub = norm1.substring(i, i + len);
+        if (norm2.includes(sub)) {
+          return { similarity: 0.9, matchType: 'substring' };
+        }
+      }
+    }
+  }
+
+  // Tier 4: Calculate fuzzy match with bonuses
+  // Only check smaller substrings (3 chars) if longer match failed
+  const substrings = generateSubstrings(norm1, 3, 3);
+
+  // Check if any substring is in the compared word
+  let substringMatch = false;
+  for (const sub of substrings) {
+    if (norm2.includes(sub)) {
+      substringMatch = true;
+      break;
+    }
+  }
+
+  // Calculate base Levenshtein similarity
+  const distance = levenshteinDistance(norm1, norm2);
+  const maxLen = Math.max(norm1.length, norm2.length);
+  if (maxLen === 0) return { similarity: 1, matchType: 'exact' };
+  const baseSim = 1 - distance / maxLen;
+
+  // Bonus for consecutive characters
+  let consecutiveCount = 0;
+  let maxConsecutive = 0;
+  let j = 0;
+
+  for (let i = 0; i < norm2.length && j < norm1.length; i++) {
+    if (norm2[i] === norm1[j]) {
+      consecutiveCount++;
+      j++;
+      maxConsecutive = Math.max(maxConsecutive, consecutiveCount);
+    } else {
+      consecutiveCount = 0;
+    }
+  }
+
+  const consecutiveBonus = maxConsecutive / norm1.length;
+
+  // If substring match found, boost the score
+  if (substringMatch) {
+    const similarity = Math.max(
+      baseSim * 0.5 + consecutiveBonus * 0.3 + 0.2,
+      baseSim * 0.6 + consecutiveBonus * 0.4 + 0.15
+    );
+    return { similarity, matchType: 'substring' };
+  }
+
+  // Combine base similarity with consecutive bonus (weighted average)
+  const similarity = baseSim * 0.6 + consecutiveBonus * 0.4;
+  return { similarity, matchType: 'fuzzy' };
+}
+
+export function findFuzzyMatches<T>(
+  searchTerm: string,
+  items: T[],
+  getSearchField: (item: T) => string,
+  options: FuzzyMatchOptions = {}
+): FuzzyMatchResult<T>[] {
+  const { minSimilarity = 0.8 } = options;
+
+  const results: FuzzyMatchResult<T>[] = items
+    .filter(item => getSearchField(item)) // Filter out items without the field
+    .map(item => {
+      const fieldValue = getSearchField(item);
+      const { similarity, matchType } = getSimilarityWithSubstringBonus(searchTerm, fieldValue);
+      const norm1 = normalize(searchTerm);
+      const norm2 = normalize(fieldValue);
+
+      return {
+        item,
+        similarity: Math.round(similarity * 100) / 100, // Round to 2 decimals
+        distance: levenshteinDistance(norm1, norm2),
+        matchType,
+      };
+    })
+    .filter(result => result.similarity >= minSimilarity)
+    .sort((a, b) => b.similarity - a.similarity); // Sort by similarity descending
+
+  return results;
+}
+
+export function fuzzyScore(str1: string, str2: string): number {
+  return getSimilarityWithSubstringBonus(str1, str2).similarity;
+}
+
+// Group workunits by similar job names using fuzzy matching
+export function groupWorkunitsByName(workunits: any[], threshold = 0.8): { [key: string]: any[] } {
+  const groups: { [key: string]: any[] } = {};
+  const processed = new Set<string>();
+
+  workunits.forEach(wu => {
+    if (!wu.jobName || processed.has(wu.wuId)) return;
+
+    // Use the first occurrence as the group key
+    const groupKey = wu.jobName;
+
+    // Find all similar job names to this workunit
+    const unprocessedWorkunits = workunits.filter(w => w.jobName && !processed.has(w.wuId));
+
+    const similarJobs = findFuzzyMatches(wu.jobName, unprocessedWorkunits, w => w.jobName, {
+      minSimilarity: threshold,
+    });
+
+    // Create group with similar jobs
+    groups[groupKey] = similarJobs.map(result => result.item);
+
+    // Mark all items in this group as processed
+    similarJobs.forEach(result => processed.add(result.item.wuId));
+  });
+
+  return groups;
+}
