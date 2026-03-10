@@ -145,13 +145,13 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       );
     }
 
-    if (connectionId !== null) {
-      // When the response is closed before we finish writing (client cancelled), kill the
-      // running MySQL query. res.on('close') is more reliable than req.on('close') in
-      // Express because it tracks the response lifecycle directly.
-      onClose = () => {
-        isCancelled = true;
-        // Run KILL QUERY on a separate connection — the transaction's connection is busy.
+    // Always attach a close listener so isCancelled is set regardless of whether
+    // CONNECTION_ID() was available. This prevents writing to a closed socket even
+    // when KILL QUERY cannot be issued.
+    onClose = () => {
+      isCancelled = true;
+      // Only issue KILL QUERY when we have the connection ID.
+      if (connectionId !== null) {
         sequelize
           .query(`KILL QUERY ${connectionId}`)
           .then(() => {
@@ -163,9 +163,9 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
             // ER_NO_SUCH_THREAD (1094) fires when the query already finished — safe to ignore.
             logger.debug('KILL QUERY result (may be harmless):', killErr);
           });
-      };
-      res.on('close', onClose);
-    }
+      }
+    };
+    res.on('close', onClose);
 
     // Execute the query on the same pinned connection via the transaction.
     const startTime = Date.now();

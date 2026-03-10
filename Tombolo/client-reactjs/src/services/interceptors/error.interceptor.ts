@@ -17,7 +17,9 @@ export const errorInterceptor = (apiClient: AxiosInstance): void => {
     async (error: AxiosError) => {
       // Let cancellation errors propagate unchanged so callers can detect them with
       // axios.isCancel() or by checking error.code === 'ERR_CANCELED'.
-      if (axios.isCancel(error)) {
+      // Also handle AbortController-driven cancellations which set code = 'ERR_CANCELED'
+      // rather than the legacy cancel marker.
+      if (axios.isCancel(error) || error.code === 'ERR_CANCELED') {
         return Promise.reject(error);
       }
 
