@@ -1,4 +1,4 @@
-import { logOrPostMessage } from '../jobs/jobUtils.js';
+import logger from '../config/logger.js';
 
 interface MSGraphUser {
   id: string;
@@ -29,17 +29,18 @@ class MSGraphClient {
   private readonly clientId: string;
   private readonly clientSecret: string;
   private readonly tenantId: string;
+  private readonly isConfigured: boolean;
 
   constructor() {
     this.clientId = process.env.CLIENT_ID_MS_GRAPH || '';
     this.clientSecret = process.env.CLIENT_SECRET_MS_GRAPH || '';
     this.tenantId = process.env.TENENT_ID || '';
+    this.isConfigured = !!(this.clientId && this.clientSecret && this.tenantId);
 
-    if (!this.clientId || !this.clientSecret || !this.tenantId) {
-      logOrPostMessage({
-        level: 'warn',
-        text: 'MS Graph credentials not configured in environment variables',
-      });
+    if (!this.isConfigured) {
+      logger.warn(
+        'MS Graph credentials not configured in environment variables'
+      );
     }
   }
 
@@ -79,10 +80,7 @@ class MSGraphClient {
 
       return this.accessToken;
     } catch (error) {
-      logOrPostMessage({
-        level: 'error',
-        text: `Failed to obtain MS Graph access token: ${error.message}`,
-      });
+      logger.error(`Failed to obtain MS Graph access token: ${error.message}`);
       throw error;
     }
   }
@@ -92,6 +90,10 @@ class MSGraphClient {
    * Returns the first matching user
    */
   async getUserByUpnPrefix(upnPrefix: string): Promise<MSGraphUser | null> {
+    if (!this.isConfigured) {
+      return null;
+    }
+
     try {
       const token = await this.getAccessToken();
       const fields =
@@ -115,10 +117,9 @@ class MSGraphClient {
 
       return null;
     } catch (error) {
-      logOrPostMessage({
-        level: 'error',
-        text: `Failed to fetch user by UPN prefix '${upnPrefix}': ${error.message}`,
-      });
+      logger.error(
+        `Failed to fetch user by UPN prefix '${upnPrefix}': ${error.message}`
+      );
       return null;
     }
   }
@@ -127,6 +128,10 @@ class MSGraphClient {
    * Get a user's manager by their email or UPN
    */
   async getUserManager(emailOrUpn: string): Promise<MSGraphManager | null> {
+    if (!this.isConfigured) {
+      return null;
+    }
+
     try {
       const token = await this.getAccessToken();
       const fields =
@@ -149,10 +154,9 @@ class MSGraphClient {
       const manager: MSGraphManager = await response.json();
       return manager;
     } catch (error) {
-      logOrPostMessage({
-        level: 'error',
-        text: `Failed to fetch manager for '${emailOrUpn}': ${error.message}`,
-      });
+      logger.error(
+        `Failed to fetch manager for '${emailOrUpn}': ${error.message}`
+      );
       return null;
     }
   }
@@ -162,6 +166,10 @@ class MSGraphClient {
    * Convenience method that combines getUserByUpnPrefix and getUserManager
    */
   async getUserWithManager(upnPrefix: string): Promise<UserWithManager> {
+    if (!this.isConfigured) {
+      return { user: null, manager: null };
+    }
+
     const user = await this.getUserByUpnPrefix(upnPrefix);
 
     if (!user) {
@@ -180,6 +188,10 @@ class MSGraphClient {
   async getUsersWithManagers(
     upnPrefixes: string[]
   ): Promise<Map<string, UserWithManager>> {
+    if (!this.isConfigured) {
+      return new Map();
+    }
+
     const results = new Map<string, UserWithManager>();
 
     // Process in parallel but with reasonable concurrency
