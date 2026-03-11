@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   Statistic,
+  Tabs,
 } from 'antd';
 import {
   ReloadOutlined,
@@ -28,6 +29,7 @@ import dayjs from 'dayjs';
 import workunitsService from '@/services/workunits.service';
 import clustersService from '@/services/clusters.service';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
+import { groupWorkunitsByName } from '../../common/fuzzyMatch';
 import styles from './workunitHistory.module.css';
 
 const { Title, Text } = Typography;
@@ -55,6 +57,8 @@ const WorkUnitHistory: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<string>(() => loadLocalStorage('wuh.list.sortOrder', 'desc'));
   const [clusters, setClusters] = useState<any[]>([]);
   const [clusterMap, setClusterMap] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<string>('1');
+  const [groupedData, setGroupedData] = useState<any[]>([]);
 
   // Filters
   const [filters, setFilters] = useState<any>(() => {
@@ -195,6 +199,47 @@ const WorkUnitHistory: React.FC = () => {
     setSortField('workUnitTimestamp');
     setSortOrder('desc');
   };
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    if (key === '2' && data.length > 0) {
+      console.info('Switching to grouped view, processing data...');
+      const groupedDataResult = groupWorkunitsByName(data, 0.8);
+      console.info('Grouped Workunits by Job Name:', groupedDataResult);
+      console.info('Number of groups:', Object.keys(groupedDataResult).length);
+
+      // Convert to array format for table display
+      const groupsArray = Object.entries(groupedDataResult)
+        .map(([groupName, workunits]) => {
+          // Sort by timestamp to get the latest job
+          const sortedWorkunits = (workunits as any[]).sort(
+            (a, b) => new Date(b.workUnitTimestamp || 0).getTime() - new Date(a.workUnitTimestamp || 0).getTime()
+          );
+          const latestJob = sortedWorkunits[0];
+
+          return {
+            key: groupName, // Required by antd Table
+            groupName,
+            latestJob,
+            workunits: sortedWorkunits,
+            count: workunits.length,
+            // Properties from latest job for display
+            jobName: latestJob.jobName,
+            wuId: latestJob.wuId,
+            clusterId: latestJob.clusterId,
+            owner: latestJob.owner,
+            state: latestJob.state,
+            totalCost: latestJob.totalCost,
+            totalClusterTime: latestJob.totalClusterTime,
+            workUnitTimestamp: latestJob.workUnitTimestamp,
+            detailsFetchedAt: latestJob.detailsFetchedAt,
+          };
+        })
+        .sort((a, b) => b.count - a.count); // Sort by count descending
+
+      console.info('Groups as array:', groupsArray);
+      setGroupedData(groupsArray);
+    }
+  };
 
   const handleView = (record: any) => {
     history.push(`/workunits/history/${record.clusterId}/${record.wuId}`);
@@ -275,6 +320,142 @@ const WorkUnitHistory: React.FC = () => {
       key: 'actions',
       width: 80,
       fixed: 'right' as const,
+      render: (_: any, record: any) => (
+        <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
+          <Button
+            type="primary"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            disabled={!record.detailsFetchedAt}>
+            Details
+          </Button>
+        </Tooltip>
+      ),
+    },
+  ];
+
+  // Columns for grouped table (showing latest job from each group)
+  const groupedColumns = [
+    {
+      title: 'Job Name Group',
+      dataIndex: 'jobName',
+      key: 'groupName',
+      ellipsis: true,
+      render: (text: any, record: any) => (
+        <Space direction="vertical" size={0}>
+          <Space size={4} align="center">
+            <Text strong className={styles.ellipsis}>
+              {text || record.latestJob.wuId}
+            </Text>
+            <Tag color="blue">{record.count} jobs</Tag>
+          </Space>
+          <Text type="secondary" className={`${styles.smallText} ${styles.ellipsis}`}>
+            Latest: {record.latestJob.wuId}
+          </Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Cluster',
+      dataIndex: 'clusterId',
+      key: 'clusterId',
+      width: 80,
+      ellipsis: true,
+      render: (clusterId: string) => clusterMap[clusterId] || clusterId,
+    },
+    {
+      title: 'Owner',
+      dataIndex: 'owner',
+      key: 'owner',
+      width: 80,
+      ellipsis: true,
+    },
+  ];
+
+  // Columns for nested table (compact view with separated WU ID)
+  const nestedColumns = [
+    {
+      title: 'Job Name',
+      dataIndex: 'jobName',
+      key: 'jobName',
+      ellipsis: true,
+      render: (text: any, record: any) => (
+        <Button
+          type="link"
+          className={styles.linkButton}
+          onClick={() => handleView(record)}
+          disabled={!record.detailsFetchedAt}>
+          <Text strong className={styles.ellipsis}>
+            {text || record.wuId}
+          </Text>
+        </Button>
+      ),
+    },
+    {
+      title: 'WU ID',
+      dataIndex: 'wuId',
+      key: 'wuId',
+      width: 120,
+      ellipsis: true,
+      render: (text: string, record: any) => (
+        <Space size={4} align="center">
+          <Text className={styles.ellipsis}>{text}</Text>
+          {!record.detailsFetchedAt && (
+            <Tooltip title="Details not yet fetched">
+              <Tag color="default" size="small">
+                Not Fetched
+              </Tag>
+            </Tooltip>
+          )}
+        </Space>
+      ),
+    },
+    {
+      title: 'Cluster',
+      dataIndex: 'clusterId',
+      key: 'clusterId',
+      width: 100,
+      ellipsis: true,
+      render: (clusterId: string) => clusterMap[clusterId] || clusterId,
+    },
+    {
+      title: 'Owner',
+      dataIndex: 'owner',
+      key: 'owner',
+      width: 80,
+      ellipsis: true,
+    },
+    {
+      title: 'State',
+      dataIndex: 'state',
+      key: 'state',
+      width: 80,
+      render: (state: any) => {
+        const colorMap: Record<string, any> = {
+          completed: 'success',
+          failed: 'error',
+          running: 'processing',
+          aborted: 'warning',
+        };
+        return (
+          <Tag color={colorMap[state] || 'default'} size="small">
+            {state ? state.toUpperCase() : 'UNKNOWN'}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: 'Cost',
+      dataIndex: 'totalCost',
+      key: 'totalCost',
+      width: 80,
+      render: (cost: any) => (cost != null ? `$${cost.toFixed(4)}` : '-'),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 80,
       render: (_: any, record: any) => (
         <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
           <Button
@@ -436,32 +617,98 @@ const WorkUnitHistory: React.FC = () => {
         </Space>
       </Card>
 
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={data}
-          rowKey="wuId"
-          loading={loading}
-          pagination={{
-            current: page,
-            pageSize: limit,
-            total: total,
-            showSizeChanger: true,
-            showTotal: total => `Total ${total} workunits`,
-            pageSizeOptions: ['25', '50', '100', '200'],
-          }}
-          onChange={handleTableChange}
-          rowClassName={record => {
-            if (record.state === 'failed' || record.state === 'aborted') {
-              return 'wu-row-failed';
-            }
-            // Orange for long running (>2h) - totalClusterTime is in hours
-            if (record.state === 'running' && (record.totalClusterTime || 0) > 2) {
-              return 'wu-row-long-running';
-            }
-            return '';
-          }}
-          scroll={{ x: 'max-content' }}
+      <Card title="Workunits">
+        <Tabs
+          activeKey={activeTab}
+          onChange={handleTabChange}
+          items={[
+            {
+              key: '1',
+              label: 'List View',
+              children: (
+                <Table
+                  columns={columns}
+                  dataSource={data}
+                  rowKey="wuId"
+                  loading={loading}
+                  pagination={{
+                    current: page,
+                    pageSize: limit,
+                    total: total,
+                    showSizeChanger: true,
+                    showTotal: total => `Total ${total} workunits`,
+                    pageSizeOptions: ['25', '50', '100', '200'],
+                  }}
+                  onChange={handleTableChange}
+                  rowClassName={record => {
+                    if (record.state === 'failed' || record.state === 'aborted') {
+                      return 'wu-row-failed';
+                    }
+                    // Orange for long running (>2h) - totalClusterTime is in hours
+                    if (record.state === 'running' && (record.totalClusterTime || 0) > 2) {
+                      return 'wu-row-long-running';
+                    }
+                    return '';
+                  }}
+                  scroll={{ x: 'max-content' }}
+                />
+              ),
+            },
+            {
+              key: '2',
+              label: 'Grouped',
+              children: (
+                <Table
+                  columns={groupedColumns}
+                  dataSource={groupedData}
+                  rowKey="key"
+                  loading={loading}
+                  size="small"
+                  expandable={{
+                    expandedRowRender: record => (
+                      <div>
+                        <Table
+                          columns={nestedColumns}
+                          dataSource={record.workunits}
+                          rowKey="wuId"
+                          pagination={false}
+                          size="small"
+                          bordered
+                          className="nested-table"
+                          components={{
+                            header: {
+                              cell: (props: any) => (
+                                <th
+                                  {...props}
+                                  style={{
+                                    ...props.style,
+                                    backgroundColor: '#e6f4ff',
+                                    fontWeight: 600,
+                                    color: '#1677ff',
+                                  }}
+                                />
+                              ),
+                            },
+                          }}
+                          rowClassName={subRecord => {
+                            if (subRecord.state === 'failed' || subRecord.state === 'aborted') {
+                              return 'wu-row-failed';
+                            }
+                            if (subRecord.state === 'running' && (subRecord.totalClusterTime || 0) > 2) {
+                              return 'wu-row-long-running';
+                            }
+                            return '';
+                          }}
+                          scroll={{ x: 'max-content' }}
+                        />
+                      </div>
+                    ),
+                  }}
+                  scroll={{ x: 'max-content' }}
+                />
+              ),
+            },
+          ]}
         />
       </Card>
     </div>
