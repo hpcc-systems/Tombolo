@@ -20,6 +20,7 @@ import {
 import { Op } from 'sequelize';
 import _ from 'lodash';
 import currencyCodeToSymbol from '../../utils/currencyCodeToSymbol.js';
+import { msGraphClient, extractFirstName } from '../../utils/msGraphHelper.js';
 
 const notificationPrefix = 'CM';
 const domainMap = new Map();
@@ -66,6 +67,8 @@ function createCMNotificationPayload({
   asrSpecificMetaData,
   idempotencyKey,
   currencyCode = 'USD',
+  templateName = 'analyzeCost',
+  userName = undefined,
 }) {
   const currencySymbol = currencyCodeToSymbol(currencyCode);
   let description = '';
@@ -107,16 +110,22 @@ function createCMNotificationPayload({
   }
 
   const currentTime = findLocalDateTimeAtCluster(tzOffset);
+
+  // Add userName to metaData if provided (for individual notifications)
+  const metaData = userName
+    ? { ...asrSpecificMetaData, userName }
+    : asrSpecificMetaData;
+
   return createNotificationPayload({
     type: 'email',
     notificationDescription: description,
-    templateName: 'analyzeCost',
+    templateName,
     originationId: monitoringType.id,
     applicationId: costMonitoring.applicationId,
     subject: `Cost Monitoring Alert from ${process.env.INSTANCE_NAME} : Cost threshold ${currencySymbol}${threshold} passed`,
     recipients: { primaryContacts, secondaryContacts, notifyContacts },
     issue: { currencySymbol, ...issueObject },
-    asrSpecificMetaData,
+    asrSpecificMetaData: metaData,
     notificationId: generateNotificationId({
       notificationPrefix,
       timezoneOffset: tzOffset,
@@ -131,8 +140,8 @@ function createCMNotificationPayload({
 
 // Use the clusterMap to reduce database calls when the cluster has already been retrieved during job execution
 async function getClusters(clusterIds) {
-  let resultClusters = [];
-  let clustersToGet = [];
+  const resultClusters = [];
+  const clustersToGet = [];
   for (const clusterId of clusterIds) {
     if (clusterMap.has(clusterId)) {
       resultClusters.push(clusterMap.get(clusterId));
@@ -261,6 +270,158 @@ async function emailAlreadySent(idempotencyKey) {
   }
 
   return !!existingNotification;
+}
+
+/**
+ * Send individual notifications to each user and their manager
+ * for users who have exceeded the cost threshold
+ */
+async function notifyIndividualUsersAndManagers(
+  erroringUsers,
+  costMonitoring,
+  monitoringType,
+  threshold,
+  clusters,
+  currencyCode,
+  asrSpecificMetaData
+) {
+  try {
+    logOrPostMessage({
+      level: 'info',
+      text: `Notifying ${erroringUsers.length} individual users and their managers`,
+    });
+
+    for (const erroringUser of erroringUsers) {
+      try {
+        // Fetch user and manager details from MS Graph
+        const username = erroringUser.username;
+        const usernameWithDomain = `${username}@`;
+
+        logOrPostMessage({
+          level: 'info',
+          text: `Fetching MS Graph data for user: ${username}`,
+        });
+
+        const contacts =
+          await msGraphClient.getUserWithManager(usernameWithDomain);
+
+        if (!contacts?.user) {
+          logOrPostMessage({
+            level: 'warn',
+            text: `No user found in MS Graph for username: ${username}`,
+          });
+          continue;
+        }
+
+        const userEmail = contacts.user.mail;
+        const managerEmail = contacts.manager?.mail;
+
+        // Get configuration for who should receive notifications
+        const ownerAndSupervisorConfig =
+          costMonitoring.metaData?.notificationMetaData?.ownerAndSupervisor ||
+          {};
+
+        const notifyOwner = ownerAndSupervisorConfig.includes('owner') === true;
+        const notifySupervisor =
+          ownerAndSupervisorConfig.includes('supervisor') === true;
+
+        // Determine recipients based on configuration
+        const primaryContacts = [];
+        const secondaryContacts = [];
+
+        if (notifyOwner && userEmail) {
+          primaryContacts.push(userEmail);
+        }
+
+        if (notifySupervisor && managerEmail) {
+          secondaryContacts.push(managerEmail);
+        }
+
+        // Skip if no recipients configured
+        if (primaryContacts.length === 0 && secondaryContacts.length === 0) {
+          logOrPostMessage({
+            level: 'warn',
+            text: `No recipients configured for user: ${username}. Owner: ${notifyOwner}, Supervisor: ${notifySupervisor}`,
+          });
+          continue;
+        }
+
+        // Build unique idempotency key for individual user notification
+        // Uses different prefix and scope to avoid collision with admin notifications
+        const userIdempotencyKey = generateNotificationIdempotencyKey({
+          prefix: `${notificationPrefix}_INDIVIDUAL`,
+          applicationId: costMonitoring.applicationId,
+          monitoringId: costMonitoring.id,
+          scope: 'user',
+          clusterIds: costMonitoring.clusterIds,
+          dayBucket: new Date().toISOString().split('T')[0],
+          specificSignature: `username:${username}|cost:${erroringUser.totalCost.toFixed(2)}|threshold:${threshold}`,
+        });
+
+        // Check if notification already sent
+        const alreadySent = await emailAlreadySent(userIdempotencyKey);
+        if (alreadySent) continue;
+
+        // Calculate how much the threshold was exceeded
+        const totalCost = erroringUser.totalCost;
+        const exceededBy = totalCost - threshold;
+        const firstName = extractFirstName(contacts.user.displayName);
+
+        // Create notification payload for this specific user
+        const notificationPayload = createCMNotificationPayload({
+          monitoringType,
+          costMonitoring,
+          threshold,
+          erroringClusters: [],
+          erroringUsers: [erroringUser], // Only this user
+          clusters,
+          primaryContacts,
+          secondaryContacts,
+          notifyContacts: [],
+          asrSpecificMetaData: {
+            ...asrSpecificMetaData,
+            totalCost,
+            exceededBy,
+            ownerId: username,
+            instanceName: process.env.INSTANCE_NAME,
+          },
+          idempotencyKey: userIdempotencyKey,
+          currencyCode,
+          templateName: 'analyzeCostIndividual',
+          userName: firstName,
+        });
+
+        // Queue the notification
+        await NotificationQueue.create(notificationPayload as any);
+
+        const recipientInfo = [];
+        if (primaryContacts.length > 0)
+          recipientInfo.push(`TO: ${primaryContacts.join(', ')}`);
+        if (secondaryContacts.length > 0)
+          recipientInfo.push(`CC: ${secondaryContacts.join(', ')}`);
+
+        logOrPostMessage({
+          level: 'info',
+          text: `Individual notification queued for user: ${username} (${recipientInfo.join(', ')})`,
+        });
+      } catch (userError) {
+        logOrPostMessage({
+          level: 'error',
+          text: `Failed to process individual notification for user ${erroringUser.username}: ${userError.message}`,
+        });
+      }
+    }
+
+    logOrPostMessage({
+      level: 'info',
+      text: 'Finished processing individual user notifications',
+    });
+  } catch (error) {
+    logOrPostMessage({
+      level: 'error',
+      text: `Error in notifyIndividualUsersAndManagers: ${error.message}`,
+    });
+  }
 }
 
 async function analyzeClusterCost(
@@ -554,6 +715,31 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     notificationPayload,
     clusters[0].timezone_offset
   );
+
+  // Check if owner/supervisor notifications are configured
+  const ownerAndSupervisorConfig =
+    costMonitoring.metaData?.notificationMetaData?.ownerAndSupervisor;
+
+  if (
+    Array.isArray(ownerAndSupervisorConfig) &&
+    ownerAndSupervisorConfig.length > 0
+  ) {
+    // Send individual notifications to users and their managers
+    await notifyIndividualUsersAndManagers(
+      erroringUsers,
+      costMonitoring,
+      monitoringType,
+      threshold,
+      clusters,
+      currencyCode,
+      asrSpecificMetaData
+    );
+  } else {
+    logOrPostMessage({
+      level: 'info',
+      text: `Owner/supervisor notifications not configured for cost monitoring: ${costMonitoring.id}`,
+    });
+  }
 }
 
 async function analyzeCost() {
@@ -622,6 +808,7 @@ export {
   getAsrData,
   sendNocNotification,
   emailAlreadySent,
+  notifyIndividualUsersAndManagers,
   analyzeClusterCost,
   analyzeUserCost,
   analyzeCost,
