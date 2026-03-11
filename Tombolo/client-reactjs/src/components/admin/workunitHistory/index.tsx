@@ -373,6 +373,104 @@ const WorkUnitHistory: React.FC = () => {
     },
   ];
 
+  // Columns for nested table (compact view with separated WU ID)
+  const nestedColumns = [
+    {
+      title: 'Job Name',
+      dataIndex: 'jobName',
+      key: 'jobName',
+      ellipsis: true,
+      render: (text: any, record: any) => (
+        <Button
+          type="link"
+          className={styles.linkButton}
+          onClick={() => handleView(record)}
+          disabled={!record.detailsFetchedAt}>
+          <Text strong className={styles.ellipsis}>
+            {text || record.wuId}
+          </Text>
+        </Button>
+      ),
+    },
+    {
+      title: 'WU ID',
+      dataIndex: 'wuId',
+      key: 'wuId',
+      width: 120,
+      ellipsis: true,
+      render: (text: string, record: any) => (
+        <Space size={4} align="center">
+          <Text className={styles.ellipsis}>{text}</Text>
+          {!record.detailsFetchedAt && (
+            <Tooltip title="Details not yet fetched">
+              <Tag color="default" size="small">
+                Not Fetched
+              </Tag>
+            </Tooltip>
+          )}
+        </Space>
+      ),
+    },
+    {
+      title: 'Cluster',
+      dataIndex: 'clusterId',
+      key: 'clusterId',
+      width: 100,
+      ellipsis: true,
+      render: (clusterId: string) => clusterMap[clusterId] || clusterId,
+    },
+    {
+      title: 'Owner',
+      dataIndex: 'owner',
+      key: 'owner',
+      width: 80,
+      ellipsis: true,
+    },
+    {
+      title: 'State',
+      dataIndex: 'state',
+      key: 'state',
+      width: 80,
+      render: (state: any) => {
+        const colorMap: Record<string, any> = {
+          completed: 'success',
+          failed: 'error',
+          running: 'processing',
+          aborted: 'warning',
+        };
+        return (
+          <Tag color={colorMap[state] || 'default'} size="small">
+            {state ? state.toUpperCase() : 'UNKNOWN'}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: 'Cost',
+      dataIndex: 'totalCost',
+      key: 'totalCost',
+      width: 80,
+      render: (cost: any) => (cost != null ? `$${cost.toFixed(4)}` : '-'),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 80,
+      render: (_: any, record: any) => (
+        <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
+          <Button
+            type="primary"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            disabled={!record.detailsFetchedAt}>
+            Details
+          </Button>
+        </Tooltip>
+      ),
+    },
+  ];
+
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLight}`}>
       <Title level={2}>Workunit History</Title>
@@ -519,14 +617,14 @@ const WorkUnitHistory: React.FC = () => {
         </Space>
       </Card>
 
-      <Card>
+      <Card title="Workunits">
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}
           items={[
             {
               key: '1',
-              label: 'Workunits',
+              label: 'List View',
               children: (
                 <Table
                   columns={columns}
@@ -558,7 +656,7 @@ const WorkUnitHistory: React.FC = () => {
             },
             {
               key: '2',
-              label: 'Work Units Grouped by Name',
+              label: 'Grouped',
               children: (
                 <Table
                   columns={groupedColumns}
@@ -566,31 +664,44 @@ const WorkUnitHistory: React.FC = () => {
                   rowKey="key"
                   loading={loading}
                   size="small"
-                  pagination={{
-                    pageSize: 50,
-                    showSizeChanger: true,
-                    showTotal: total => `Total ${total} job groups`,
-                    pageSizeOptions: ['25', '50', '100'],
-                  }}
                   expandable={{
                     expandedRowRender: record => (
-                      <Table
-                        columns={columns}
-                        dataSource={record.workunits}
-                        rowKey="wuId"
-                        pagination={false}
-                        size="small"
-                        rowClassName={subRecord => {
-                          if (subRecord.state === 'failed' || subRecord.state === 'aborted') {
-                            return 'wu-row-failed';
-                          }
-                          if (subRecord.state === 'running' && (subRecord.totalClusterTime || 0) > 2) {
-                            return 'wu-row-long-running';
-                          }
-                          return '';
-                        }}
-                        scroll={{ x: 'max-content' }}
-                      />
+                      <div>
+                        <Table
+                          columns={nestedColumns}
+                          dataSource={record.workunits}
+                          rowKey="wuId"
+                          pagination={false}
+                          size="small"
+                          bordered
+                          className="nested-table"
+                          components={{
+                            header: {
+                              cell: (props: any) => (
+                                <th
+                                  {...props}
+                                  style={{
+                                    ...props.style,
+                                    backgroundColor: '#e6f4ff',
+                                    fontWeight: 600,
+                                    color: '#1677ff',
+                                  }}
+                                />
+                              ),
+                            },
+                          }}
+                          rowClassName={subRecord => {
+                            if (subRecord.state === 'failed' || subRecord.state === 'aborted') {
+                              return 'wu-row-failed';
+                            }
+                            if (subRecord.state === 'running' && (subRecord.totalClusterTime || 0) > 2) {
+                              return 'wu-row-long-running';
+                            }
+                            return '';
+                          }}
+                          scroll={{ x: 'max-content' }}
+                        />
+                      </div>
                     ),
                   }}
                   scroll={{ x: 'max-content' }}
