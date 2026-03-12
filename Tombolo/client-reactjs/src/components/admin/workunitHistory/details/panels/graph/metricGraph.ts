@@ -2,13 +2,11 @@
 
 import { d3Event, select as d3Select, SVGZoomWidget } from '@hpcc-js/common';
 import { Graphviz } from '@hpcc-js/wasm-graphviz';
-import { Graph2, hashSum, scopedLogger } from '@hpcc-js/util';
+import { Graph2, hashSum } from '@hpcc-js/util';
 import { LayoutStatus, isLayoutComplete } from './metricsTypes';
 import type { IScopeEx, MetricsView } from './metricsTypes';
 
 import './metricGraph.css';
-
-const logger = scopedLogger('tombolo/util/metricGraph.ts');
 
 // Simple %key% template formatter replacing ECLWatch's src/Utility format()
 function format(tpl: string, data: Record<string, unknown>): string {
@@ -201,12 +199,12 @@ export class MetricGraph extends Graph2<IScopeEx, IScopeEdge, IScopeEx> {
     data.forEach((scope: IScopeEx) => {
       if (scope.type === 'edge' && scope.IdSource !== undefined && scope.IdTarget !== undefined) {
         if (!this.vertexExists(this._activityIndex[(scope as IScopeEdge).IdSource]))
-          logger.warning(`Missing vertex:  ${(scope as IScopeEdge).IdSource}`);
+          console.error(`MetricGraph: missing source vertex: ${(scope as IScopeEdge).IdSource}`);
         else if (!this.vertexExists(this._activityIndex[(scope as IScopeEdge).IdTarget])) {
-          logger.warning(`Missing vertex:  ${(scope as IScopeEdge).IdTarget}`);
+          console.error(`MetricGraph: missing target vertex: ${(scope as IScopeEdge).IdTarget}`);
         } else {
           if (scope.__parentName && !this.subgraphExists(scope.__parentName)) {
-            logger.warning(`Edge missing subgraph:  ${scope.__parentName}`);
+            console.error(`MetricGraph: edge missing subgraph: ${scope.__parentName}`);
           }
           if (this.subgraphExists(scope.__parentName)) {
             this.addEdge(scope as IScopeEdge, this.subgraph(scope.__parentName));
@@ -563,14 +561,14 @@ class LayoutCache {
             return { svg } as GraphvizWorkerResponse;
           } catch (e: any) {
             const error = e?.message ?? String(e);
-            logger.error(`Invalid DOT:  ${error}`);
+            console.error('MetricGraph: Graphviz failed to render the graph layout', error);
             this._cache[hashDot].error = error;
             return { error, errorDot: dot } as GraphvizWorkerError;
           }
         })
         .catch(e => {
           const error = e?.message ?? String(e);
-          logger.error(`Graphviz WASM load failed:  ${error}`);
+          console.error('MetricGraph: Graphviz WASM failed to load', error);
           this._cache[hashDot].error = error;
           return { error, errorDot: dot } as GraphvizWorkerError;
         });
@@ -761,7 +759,9 @@ export class MetricGraphWidget extends SVGZoomWidget {
       const startPos = svg.indexOf('<g id=');
       const endPos = svg.indexOf('</svg>');
       if (startPos === -1 || endPos === -1) {
-        logger.error(`renderSVG: unexpected SVG format — markers not found (startPos=${startPos}, endPos=${endPos})`);
+        console.error(
+          `MetricGraph: unexpected SVG format — markers not found (startPos=${startPos}, endPos=${endPos})`
+        );
         reject(new Error('SVG is not in the expected Graphviz format'));
         return;
       }
