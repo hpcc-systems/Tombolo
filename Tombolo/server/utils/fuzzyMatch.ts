@@ -2,6 +2,10 @@ import levenshtein from 'fast-levenshtein';
 
 export interface FuzzyMatchOptions {
   minSimilarity?: number;
+}
+
+export interface FuzzyMatchOptions {
+  minSimilarity?: number;
   minSubstringLength?: number;
   maxSubstringLength?: number;
 }
