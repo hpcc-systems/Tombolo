@@ -125,7 +125,7 @@ const HierarchyExplorer: React.FC<HierarchyExplorerProps> = ({
   // Notify parent whenever the resolved node or breadcrumb changes
   useEffect(() => {
     onSelect?.({ node: selectedNode, breadcrumb });
-  }, [selectedNode, breadcrumb]);
+  }, [selectedNode, breadcrumb, onSelect]);
 
   const renderTitle = (n: any) => (
     <Space size={8}>

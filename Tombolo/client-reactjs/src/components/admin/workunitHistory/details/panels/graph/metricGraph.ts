@@ -103,7 +103,7 @@ export class MetricGraph extends Graph2<IScopeEx, IScopeEdge, IScopeEx> {
     return this;
   }
 
-  protected parentName(scopeName: string): string {
+  protected parentName(scopeName: string): string | undefined {
     const lastIdx = scopeName.lastIndexOf(':');
     if (lastIdx >= 0) {
       return scopeName.substring(0, lastIdx);
@@ -616,7 +616,7 @@ export class MetricGraphWidget extends SVGZoomWidget {
   }
 
   exists(id: string): boolean {
-    return id && !this._renderElement.select(`#${encodeID(id)}`).empty();
+    return !!id && !this._renderElement.select(`#${encodeID(id)}`).empty();
   }
 
   clearSelection(broadcast = false): void {
@@ -756,10 +756,15 @@ export class MetricGraphWidget extends SVGZoomWidget {
   }
 
   async renderSVG(svg: string): Promise<void> {
-    return new Promise<void>(resolve => {
+    return new Promise<void>((resolve, reject) => {
       this._selection = {};
       const startPos = svg.indexOf('<g id=');
       const endPos = svg.indexOf('</svg>');
+      if (startPos === -1 || endPos === -1) {
+        logger.error(`renderSVG: unexpected SVG format — markers not found (startPos=${startPos}, endPos=${endPos})`);
+        reject(new Error('SVG is not in the expected Graphviz format'));
+        return;
+      }
       this._renderElement.html(svg.substring(startPos, endPos));
       setTimeout(() => {
         this.zoomToFit(0);
