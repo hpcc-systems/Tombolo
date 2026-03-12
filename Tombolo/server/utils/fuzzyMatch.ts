@@ -6,8 +6,6 @@ export interface FuzzyMatchOptions {
 
 export interface FuzzyMatchOptions {
   minSimilarity?: number;
-  minSubstringLength?: number;
-  maxSubstringLength?: number;
 }
 
 export interface FuzzyMatchResult<T = unknown> {
