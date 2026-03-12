@@ -86,6 +86,12 @@ const validateComparePreviousByWuid = [
   stringParam('wuid', false),
 ];
 
+// Validation for GET /api/workunits/:clusterId/:wuid/graph
+const validateGetWorkunitGraph = [
+  stringParam('clusterId', false),
+  stringParam('wuid', false),
+];
+
 export {
   validateGetWorkunits,
   validateGetWorkunit,
@@ -97,4 +103,5 @@ export {
   validateGetJobHistoryByJobName,
   validateGetJobHistoryByJobNameWStats,
   validateComparePreviousByWuid,
+  validateGetWorkunitGraph,
 };
