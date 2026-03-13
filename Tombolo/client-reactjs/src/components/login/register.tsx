@@ -25,7 +25,7 @@ const methods = Array.isArray(authMethodsRaw)
 
 const hasAllAzureEnv = [
   import.meta.env.VITE_AZURE_CLIENT_ID,
-  import.meta.env.VITE_AZURE_TENENT_ID,
+  import.meta.env.VITE_AZURE_TENANT_ID,
   import.meta.env.VITE_AZURE_REDIRECT_URI,
 ].every((v: any) => typeof v === 'string' && v.trim().length > 0);
 
@@ -173,7 +173,11 @@ const Register: React.FC = () => {
             <>
               {azureEnabled && (
                 <div style={{ marginBottom: '16px' }}>
-                  <AzureLoginButton onClick={() => azureRegister()} disabled={loading} label="Register with Microsoft" />
+                  <AzureLoginButton
+                    onClick={() => azureRegister()}
+                    disabled={loading}
+                    label="Register with Microsoft"
+                  />
                 </div>
               )}
               {traditionalEnabled && azureEnabled && <Divider>Or</Divider>}

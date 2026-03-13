@@ -1057,7 +1057,7 @@ const handlePasswordResetRequest = async (req: Request, res: Response) => {
 // Login or register with azure user - loginOrRegisterAzureUser [ `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/token`]
 const loginOrRegisterAzureUser = async (req, res, next) => {
   try {
-    const msEndPoint = `https://login.microsoftonline.com/${process.env.TENENT_ID}/oauth2/v2.0/token`;
+    const msEndPoint = `https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`;
 
     const { code } = req.body;
 
