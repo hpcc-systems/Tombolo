@@ -8,6 +8,7 @@ import {
   getJobHistoryByJobName,
   getJobHistoryByJobNameWStats,
   comparePreviousByWuid,
+  getWorkunitGraph,
 } from '../controllers/workunitController.js';
 import {
   validateGetWorkunits,
@@ -18,6 +19,7 @@ import {
   validateGetJobHistoryByJobName,
   validateGetJobHistoryByJobNameWStats,
   validateComparePreviousByWuid,
+  validateGetWorkunitGraph,
 } from '../middlewares/workunitMiddleware.js';
 import { validate } from '../middlewares/validateRequestBody.js';
 
@@ -66,6 +68,13 @@ router.get(
   '/:clusterId/:wuid/compare-previous',
   validate(validateComparePreviousByWuid),
   comparePreviousByWuid
+);
+
+// GET /api/workunits/:clusterId/:wuid/graph - Live graph scopes from HPCC cluster
+router.get(
+  '/:clusterId/:wuid/graph',
+  validate(validateGetWorkunitGraph),
+  getWorkunitGraph
 );
 
 export default router;

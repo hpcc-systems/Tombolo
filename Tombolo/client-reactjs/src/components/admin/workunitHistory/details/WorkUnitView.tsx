@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, Card, Tag, Typography, Space, Row, Col, Statistic, Alert } from 'antd';
 import {
-  ClockCircleOutlined,
+  ApartmentOutlined,
   BarChartOutlined,
-  FieldTimeOutlined,
-  TableOutlined,
+  ClockCircleOutlined,
   DatabaseOutlined,
+  FieldTimeOutlined,
   HistoryOutlined,
+  TableOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import AllMetricsPanel from './panels/AllMetricsPanel';
+import GraphPanel from './panels/graph/GraphPanel';
+import HierarchyExplorer, { HierarchyExplorerSelectPayload } from './panels/HierarchyExplorer';
 import OverviewPanel from './panels/OverviewPanel';
 import TimelinePanel from './panels/TimelinePanel';
 import SqlPanel from './panels/SqlPanel';
@@ -35,6 +38,12 @@ interface Props {
 const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
   const roleArray = getRoleNameArray();
   const isAdminOrOwner = roleArray.includes('owner') || roleArray.includes('administrator');
+
+  const [graphSelectedNode, setGraphSelectedNode] = useState<any>(null);
+  const handleGraphExplorerSelect = ({ node }: HierarchyExplorerSelectPayload) => setGraphSelectedNode(node);
+  const graphSelectedScopeName: string | null = graphSelectedNode?.scopeName ?? null;
+
+  const [activeTab, setActiveTab] = useState<string>('overview');
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
       <Card className={styles.cardMarginBottom16}>
@@ -66,7 +75,7 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
         </Row>
       </Card>
 
-      <Tabs defaultActiveKey="overview" size="large">
+      <Tabs defaultActiveKey="overview" activeKey={activeTab} onChange={setActiveTab} size="large">
         <TabPane
           tab={
             <span>
@@ -106,6 +115,44 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
             </Card>
           ) : (
             <TimelinePanel wu={wu} details={details} />
+          )}
+        </TabPane>
+
+        <TabPane
+          tab={
+            <span>
+              <ApartmentOutlined /> Graph
+            </span>
+          }
+          key="graph">
+          {details.length === 0 ? (
+            <Card>
+              <Alert
+                message="No Details Available"
+                description="Detailed performance metrics have not been fetched for this workunit yet."
+                type="info"
+                showIcon
+              />
+            </Card>
+          ) : (
+            <Row gutter={[16, 16]}>
+              <Col xs={24} lg={8} xl={7}>
+                <HierarchyExplorer
+                  details={details}
+                  storageKeyPrefix="wuh.graph"
+                  onSelect={handleGraphExplorerSelect}
+                />
+              </Col>
+              <Col xs={24} lg={16} xl={17}>
+                <GraphPanel
+                  clusterId={wu.clusterId}
+                  wuid={wu.wuId}
+                  selectedScopeId={graphSelectedScopeName}
+                  height="calc(100vh - 280px)"
+                  active={activeTab === 'graph'}
+                />
+              </Col>
+            </Row>
           )}
         </TabPane>
 
