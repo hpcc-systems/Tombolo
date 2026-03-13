@@ -2,10 +2,6 @@ import levenshtein from 'fast-levenshtein';
 
 export interface FuzzyMatchOptions {
   minSimilarity?: number;
-}
-
-export interface FuzzyMatchOptions {
-  minSimilarity?: number;
   minSubstringLength?: number;
   maxSubstringLength?: number;
 }
@@ -41,11 +37,13 @@ function generateSubstrings(
 
 export function getSimilarityWithSubstringBonus(
   str1: string,
-  str2: string
+  str2: string,
+  options: FuzzyMatchOptions = {}
 ): {
   similarity: number;
   matchType: 'exact' | 'substring' | 'fuzzy';
 } {
+  const { minSubstringLength = 3, maxSubstringLength = 8 } = options;
   const norm1 = normalize(str1);
   const norm2 = normalize(str2);
 
@@ -55,18 +53,22 @@ export function getSimilarityWithSubstringBonus(
   }
 
   // Tier 2: Full substring match with minimum length (90%)
-  if (norm2.includes(norm1) && norm1.length >= 4) {
+  if (norm2.includes(norm1) && norm1.length >= minSubstringLength) {
     // Search term is contained in compared word
     return { similarity: 0.9, matchType: 'substring' };
   }
-  if (norm1.includes(norm2) && norm2.length >= 4) {
+  if (norm1.includes(norm2) && norm2.length >= minSubstringLength) {
     // Compared word is contained in search term
     return { similarity: 0.9, matchType: 'substring' };
   }
 
-  // Tier 3: Check for 4+ character substring match (~90%)
-  if (norm1.length >= 4) {
-    for (let len = Math.min(norm1.length, 8); len >= 4; len--) {
+  // Tier 3: Check for configurable character substring match (~90%)
+  if (norm1.length >= minSubstringLength) {
+    for (
+      let len = Math.min(norm1.length, maxSubstringLength);
+      len >= minSubstringLength;
+      len--
+    ) {
       for (let i = 0; i <= norm1.length - len; i++) {
         const sub = norm1.substring(i, i + len);
         if (norm2.includes(sub)) {
@@ -77,8 +79,12 @@ export function getSimilarityWithSubstringBonus(
   }
 
   // Tier 4: Calculate fuzzy match with bonuses
-  // Only check smaller substrings (3 chars) if longer match failed
-  const substrings = generateSubstrings(norm1, 3, 3);
+  // Only check smaller substrings if longer match failed
+  const substrings = generateSubstrings(
+    norm1,
+    minSubstringLength,
+    minSubstringLength
+  );
 
   // Check if any substring is in the compared word
   let substringMatch = false;
@@ -140,7 +146,8 @@ export function findFuzzyMatches<T>(
       const fieldValue = getSearchField(item);
       const { similarity, matchType } = getSimilarityWithSubstringBonus(
         searchTerm,
-        fieldValue
+        fieldValue,
+        options
       );
       const norm1 = normalize(searchTerm);
       const norm2 = normalize(fieldValue);
@@ -158,6 +165,10 @@ export function findFuzzyMatches<T>(
   return results;
 }
 
-export function fuzzyScore(str1: string, str2: string): number {
-  return getSimilarityWithSubstringBonus(str1, str2).similarity;
+export function fuzzyScore(
+  str1: string,
+  str2: string,
+  options: FuzzyMatchOptions = {}
+): number {
+  return getSimilarityWithSubstringBonus(str1, str2, options).similarity;
 }
