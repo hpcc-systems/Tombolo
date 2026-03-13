@@ -34,7 +34,7 @@ class MSGraphClient {
   constructor() {
     this.clientId = process.env.CLIENT_ID_MS_GRAPH || '';
     this.clientSecret = process.env.CLIENT_SECRET_MS_GRAPH || '';
-    this.tenantId = process.env.TENENT_ID || '';
+    this.tenantId = process.env.TENANT_ID || '';
     this.isConfigured = !!(this.clientId && this.clientSecret && this.tenantId);
 
     if (!this.isConfigured) {

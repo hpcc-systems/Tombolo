@@ -1,6 +1,6 @@
 export default {
-  identityMetadata: `https://login.microsoftonline.com/${process.env.TENENT_ID}/v2.0/.well-known/openid-configuration`,
-  issuer: `https://login.microsoftonline.com/${process.env.TENENT_ID}/v2.0`,
+  identityMetadata: `https://login.microsoftonline.com/${process.env.TENANT_ID}/v2.0/.well-known/openid-configuration`,
+  issuer: `https://login.microsoftonline.com/${process.env.TENANT_ID}/v2.0`,
   clientID: process.env.CLIENT_ID,
   audience: process.env.CLIENT_ID,
   validateIssuer: true,
