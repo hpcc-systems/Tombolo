@@ -3,11 +3,15 @@ import { Op } from 'sequelize';
 import { WorkUnit, WorkUnitDetails, sequelize } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
+import { findFuzzyMatches } from '../utils/fuzzyMatch.js';
+
+type ScopeNode = Record<string, unknown> & { children: ScopeNode[] };
+
 // Build hierarchy from flat details (graphs, scoped by parent prefixes)
-const buildScopeHierarchy = (details: any) => {
-  const map = new Map();
-  const roots = [];
-  const orphans = [];
+const buildScopeHierarchy = (details: WorkUnitDetails[]) => {
+  const map = new Map<string, ScopeNode>();
+  const roots: ScopeNode[] = [];
+  const orphans: ScopeNode[] = [];
 
   details.forEach(item => {
     const key = item.scopeId || item.scopeName;
@@ -57,7 +61,7 @@ async function getWorkunits(req: Request, res: Response) {
     } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (clusterId) where.clusterId = clusterId;
     if (state) where.state = { [Op.in]: String(state).split(',') };
@@ -233,23 +237,14 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
       clusterId: string;
       jobName: string;
     };
-    const { startDate, limit = 100 } = req.query;
+    const { limit = 100 } = req.query;
 
     // Build where clause
-    const where: any = {
+    const where: Record<string, unknown> = {
       clusterId,
-      jobName,
     };
 
-    // Add date filter if provided
-    if (startDate) {
-      where.workUnitTimestamp = {
-        [Op.gte]: new Date(String(startDate)),
-      };
-    }
-
-    // Fetch workunits
-    const workunits = await WorkUnit.findAll({
+    const wus = await WorkUnit.findAll({
       where,
       order: [['workUnitTimestamp', 'DESC']], // Most recent first
       limit: parseInt(String(limit)),
@@ -263,9 +258,35 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
         'owner',
         'clusterId',
       ],
+      raw: true,
     });
 
-    return sendSuccess(res, workunits);
+    // Using enhanced fuzzy matching with substring intelligence
+    const MIN_SIMILARITY = 0.8; // 80% similar (adjust between 0.7-0.9)
+
+    const fuzzyResults = findFuzzyMatches(
+      jobName,
+      wus.filter(w => w.jobName),
+      w => w.jobName,
+      { minSimilarity: MIN_SIMILARITY }
+    );
+
+    const similarJobs = fuzzyResults.map(result => ({
+      ...result.item,
+      similarity: result.similarity,
+      distance: result.distance,
+      matchType: result.matchType,
+    }));
+
+    if (similarJobs.length === 0) {
+      return sendError(
+        res,
+        'No similar jobs found within similarity threshold',
+        404
+      );
+    }
+
+    return sendSuccess(res, similarJobs);
   } catch (error) {
     logger.error('Error fetching job history:', error);
     return sendError(res, 'Failed to fetch job history', 500);
@@ -273,6 +294,12 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
 }
 
 async function getJobHistoryByJobNameWStats(req: Request, res: Response) {
+  logger.info(
+    'getJobHistoryByJobNameWStats called with params:',
+    req.params,
+    'and query:',
+    req.query
+  );
   try {
     const { clusterId, jobName } = req.params as {
       clusterId: string;
@@ -280,7 +307,7 @@ async function getJobHistoryByJobNameWStats(req: Request, res: Response) {
     };
     const { startDate } = req.query;
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       clusterId,
       jobName,
     };

@@ -200,6 +200,12 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       },
     },
     {
+      title: 'Job Name',
+      dataIndex: 'jobName',
+      key: 'jobName',
+      width: 180,
+    },
+    {
       title: 'WUID',
       dataIndex: 'wuId',
       key: 'wuId',
@@ -220,7 +226,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       title: 'Submitted',
       dataIndex: 'workUnitTimestamp',
       key: 'workUnitTimestamp',
-      width: 180,
+      width: 80,
       render: (timestamp: string) => (
         <Tooltip title={dayjs(timestamp).format('YYYY-MM-DD HH:mm:ss')}>
           <Text>{dayjs(timestamp).fromNow()}</Text>
