@@ -21,6 +21,7 @@ import {
 import styles from './workunitAnalytics.module.css';
 import {
   PlayCircleOutlined,
+  StopOutlined,
   SaveOutlined,
   ClearOutlined,
   DownloadOutlined,
@@ -46,6 +47,7 @@ import {
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import { format } from 'sql-formatter';
+import axios from 'axios';
 import { apiClient } from '@/services/api';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import QUERY_TEMPLATES from './queryTemplates';
@@ -99,6 +101,7 @@ type SchemaData = Record<string, SchemaColumn[]>;
 const AnalyticsWorkspace = () => {
   const history = useHistory();
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // State management
   const [sql, setSql] = useState('-- Enter your SQL query here\nSELECT * FROM work_unit_details LIMIT 10');
@@ -172,6 +175,10 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
+    // Create a new AbortController for this request so the user can cancel mid-flight.
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsExecuting(true);
     const startTime = Date.now();
 
@@ -185,6 +192,7 @@ const AnalyticsWorkspace = () => {
         },
         {
           timeout: 120000, // 2 minutes for analytics queries
+          signal: controller.signal,
         }
       );
 
@@ -218,10 +226,15 @@ const AnalyticsWorkspace = () => {
 
       message.success(`Query executed successfully (${executionTime}ms)`);
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      message.error(err.response?.data?.message || err.message || 'Failed to execute query');
-      console.error('Query execution error:', error);
+      if (axios.isCancel(error)) {
+        message.info('Query cancelled');
+      } else {
+        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        message.error(err.response?.data?.message || err.message || 'Failed to execute query');
+        console.error('Query execution error:', error);
+      }
     } finally {
+      abortControllerRef.current = null;
       setIsExecuting(false);
     }
   };
@@ -792,6 +805,13 @@ const AnalyticsWorkspace = () => {
               <Space>
                 <Button type="primary" icon={<PlayCircleOutlined />} loading={isExecuting} onClick={executeQuery}>
                   Execute (Ctrl+Enter)
+                </Button>
+                <Button
+                  icon={<StopOutlined />}
+                  danger
+                  disabled={!isExecuting}
+                  onClick={() => abortControllerRef.current?.abort()}>
+                  Cancel
                 </Button>
                 <Button icon={<FormatPainterOutlined />} onClick={formatSql}>
                   Format SQL
