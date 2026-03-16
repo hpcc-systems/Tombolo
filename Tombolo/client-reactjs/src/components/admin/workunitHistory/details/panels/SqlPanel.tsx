@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Card, Empty, Space, Table, Typography, message } from 'antd';
-import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined, StopOutlined } from '@ant-design/icons';
 import { apiClient } from '@/services/api';
+import axios from 'axios';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor, { OnMount } from '@monaco-editor/react';
 import debounce from 'lodash/debounce';
@@ -33,6 +34,7 @@ const SqlPanel: React.FC<Props> = ({ clusterId, wuid, clusterName }) => {
   const [error, setError] = useState<string | null>(null);
   const editorRef = useRef<unknown>(null);
   const monacoRef = useRef<unknown>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const MIN_TABLE_ROWS = 15;
   const ROW_HEIGHT_PX = 28;
@@ -95,28 +97,42 @@ const SqlPanel: React.FC<Props> = ({ clusterId, wuid, clusterName }) => {
       message.warning(lintSql.reason || 'SQL did not pass validation');
       return;
     }
+
+    // Create a new AbortController for this request so the user can cancel mid-flight.
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setExecuting(true);
     setError(null);
     try {
-      const response = await apiClient.post('/workunitAnalytics/query', {
-        sql,
-        options: {
-          scopeToWuid: wuid,
-          scopeToClusterId: clusterId,
+      const response = await apiClient.post(
+        '/workunitAnalytics/query',
+        {
+          sql,
+          options: {
+            scopeToWuid: wuid,
+            scopeToClusterId: clusterId,
+          },
         },
-      });
+        { signal: controller.signal }
+      );
       setResult(response.data);
     } catch (err: unknown) {
-      const anyErr = err as {
-        response?: { data?: { message?: string } };
-        messages?: string[];
-        raw?: { message?: string };
-      };
-      const serverMsg = anyErr?.response?.data?.message || anyErr?.messages?.[0];
-      const detailedMsg = serverMsg || anyErr?.raw?.message || 'Failed to execute SQL';
-      setError(detailedMsg);
-      message.error('Failed to execute SQL');
+      if (axios.isCancel(err)) {
+        message.info('Query cancelled');
+      } else {
+        const anyErr = err as {
+          response?: { data?: { message?: string } };
+          messages?: string[];
+          raw?: { message?: string };
+        };
+        const serverMsg = anyErr?.response?.data?.message || anyErr?.messages?.[0];
+        const detailedMsg = serverMsg || anyErr?.raw?.message || 'Failed to execute SQL';
+        setError(detailedMsg);
+        message.error('Failed to execute SQL');
+      }
     } finally {
+      abortControllerRef.current = null;
       setExecuting(false);
     }
   };
@@ -249,6 +265,13 @@ const SqlPanel: React.FC<Props> = ({ clusterId, wuid, clusterName }) => {
               onClick={runQuery}
               disabled={executing || !lintSql.ok}>
               Run
+            </Button>
+            <Button
+              icon={<StopOutlined />}
+              danger
+              disabled={!executing}
+              onClick={() => abortControllerRef.current?.abort()}>
+              Cancel
             </Button>
             <Button icon={<ReloadOutlined />} onClick={() => setSql(DEFAULT_SQL)} disabled={executing}>
               Reset to default

@@ -1,3 +1,4 @@
+import axios from 'axios';
 import type { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 
 const ignore401Routes = ['/auth/loginBasicUser', '/auth/resetTempPassword'];
@@ -14,6 +15,14 @@ export const errorInterceptor = (apiClient: AxiosInstance): void => {
   apiClient.interceptors.response.use(
     (response: AxiosResponse) => response,
     async (error: AxiosError) => {
+      // Let cancellation errors propagate unchanged so callers can detect them with
+      // axios.isCancel() or by checking error.code === 'ERR_CANCELED'.
+      // Also handle AbortController-driven cancellations which set code = 'ERR_CANCELED'
+      // rather than the legacy cancel marker.
+      if (axios.isCancel(error) || error.code === 'ERR_CANCELED') {
+        return Promise.reject(error);
+      }
+
       const { response, config } = error;
 
       if (!response) {

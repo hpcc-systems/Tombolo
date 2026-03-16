@@ -4,6 +4,16 @@ import { sequelize } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 
+interface SchemaColumnRow {
+  name: string;
+  type: string;
+  nullable: string;
+  key: string;
+  description: string;
+  ORDINAL_POSITION: number;
+  keyType: 'PRI' | 'FK' | 'MUL' | null;
+}
+
 /**
  * Execute a general analytics SQL query
  * Unlike the workunit-scoped query, this allows querying across all data
@@ -13,6 +23,9 @@ import logger from '../config/logger.js';
  * This function receives pre-validated SQL
  */
 async function executeAnalyticsQuery(req: Request, res: Response) {
+  let isCancelled = false;
+  let onClose: (() => void) | null = null;
+
   try {
     // Log the incoming request body for debugging
     logger.debug(
@@ -109,13 +122,79 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       finalSql = `${finalSql} LIMIT ${MAX_LIMIT}`;
     }
 
-    // Execute the query
+    // Use a transaction to pin both the CONNECTION_ID() query and the user query to the
+    // same MySQL thread. This is the idiomatic Sequelize way to guarantee same-connection
+    // execution — the transaction is never committed since we only run SELECTs.
+    const t = await sequelize.transaction();
+
+    let connectionId: number | null = null;
+    try {
+      // Retrieve the MySQL connection ID for this thread so we can cancel it if needed.
+      const connIdRows = (await sequelize.query(
+        'SELECT CONNECTION_ID() AS id',
+        {
+          type: QueryTypes.SELECT,
+          transaction: t,
+        }
+      )) as Array<{ id: number }>;
+      connectionId = connIdRows[0]?.id ?? null;
+    } catch (connIdErr) {
+      logger.debug(
+        'Could not retrieve CONNECTION_ID, cancellation will be unavailable:',
+        connIdErr
+      );
+    }
+
+    // Always attach a close listener so isCancelled is set regardless of whether
+    // CONNECTION_ID() was available. This prevents writing to a closed socket even
+    // when KILL QUERY cannot be issued.
+    onClose = () => {
+      isCancelled = true;
+      // Only issue KILL QUERY when we have the connection ID.
+      if (connectionId !== null) {
+        sequelize
+          .query(`KILL QUERY ${connectionId}`)
+          .then(() => {
+            logger.debug(
+              `Cancelled analytics query on MySQL connection ${connectionId}`
+            );
+          })
+          .catch(killErr => {
+            // ER_NO_SUCH_THREAD (1094) fires when the query already finished — safe to ignore.
+            logger.debug('KILL QUERY result (may be harmless):', killErr);
+          });
+      }
+    };
+    res.on('close', onClose);
+
+    // Execute the query on the same pinned connection via the transaction.
     const startTime = Date.now();
 
-    const rows = await sequelize.query(finalSql, {
-      type: QueryTypes.SELECT,
-      logging: sql => logger.debug('Analytics query:', sql),
-    });
+    let rows: Record<string, unknown>[];
+    try {
+      rows = (await sequelize.query(finalSql, {
+        type: QueryTypes.SELECT,
+        logging: sql => logger.debug('Analytics query:', sql),
+        transaction: t,
+      })) as Record<string, unknown>[];
+    } finally {
+      // Always roll back — we only did SELECTs so this is a no-op on data, but it
+      // releases the connection back to the pool.
+      try {
+        await t.rollback();
+      } catch (rbErr) {
+        logger.debug(
+          'Transaction rollback error (may be harmless after kill):',
+          rbErr
+        );
+      }
+    }
+
+    // Remove the close listener — query completed before the client disconnected.
+    if (onClose) res.off('close', onClose);
+
+    // If the client disconnected mid-query, avoid writing to a closed response.
+    if (isCancelled) return;
 
     const executionTime = Date.now() - startTime;
 
@@ -131,6 +210,14 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       limited: rows.length === MAX_LIMIT,
     });
   } catch (err) {
+    if (onClose) res.off('close', onClose);
+
+    if (isCancelled) {
+      // Query was killed because the client disconnected — not an error worth logging.
+      logger.debug('Analytics query was cancelled by client');
+      return;
+    }
+
     logger.error('Analytics query execution error:', err);
 
     // Extract useful error message
@@ -203,8 +290,8 @@ async function getSchema(req: Request, res: Response) {
       ];
       const filteredColumns =
         tableName === 'clusters'
-          ? columns.filter(
-              col => !sensitiveColumns.includes((col as any).name.toLowerCase())
+          ? (columns as SchemaColumnRow[]).filter(
+              col => !sensitiveColumns.includes(col.name.toLowerCase())
             )
           : columns;
 
@@ -212,7 +299,7 @@ async function getSchema(req: Request, res: Response) {
     }
 
     // If no tableName, return all allowed tables with their schemas
-    const allSchemas = {};
+    const allSchemas: Record<string, SchemaColumnRow[]> = {};
     const sensitiveColumns = ['username', 'hash', 'password', 'password_hash'];
 
     for (const table of allowedTables) {
@@ -250,11 +337,11 @@ async function getSchema(req: Request, res: Response) {
 
       // Filter out sensitive columns from clusters table
       if (table === 'clusters') {
-        allSchemas[table] = columns.filter(
-          col => !sensitiveColumns.includes((col as any).name.toLowerCase())
+        allSchemas[table] = (columns as SchemaColumnRow[]).filter(
+          col => !sensitiveColumns.includes(col.name.toLowerCase())
         );
       } else {
-        allSchemas[table] = columns;
+        allSchemas[table] = columns as SchemaColumnRow[];
       }
     }
 
