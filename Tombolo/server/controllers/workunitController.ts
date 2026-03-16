@@ -1,17 +1,28 @@
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { Op, WhereOptions, InferAttributes } from 'sequelize';
+import { Workunit } from '@hpcc-js/comms';
 import { WorkUnit, WorkUnitDetails, sequelize } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
+import { getCluster } from '../utils/hpcc-util.js';
+import { getClusterOptions } from '../utils/getClusterOptions.js';
+
+type ScopeNode = InferAttributes<WorkUnitDetails> & { children: ScopeNode[] };
+
+interface WorkUnitAggregate {
+  totalCost: string | null;
+  avgClusterTime: string | null;
+}
+
 // Build hierarchy from flat details (graphs, scoped by parent prefixes)
-const buildScopeHierarchy = (details: any) => {
-  const map = new Map();
-  const roots = [];
-  const orphans = [];
+const buildScopeHierarchy = (details: WorkUnitDetails[]): ScopeNode[] => {
+  const map = new Map<string, ScopeNode>();
+  const roots: ScopeNode[] = [];
+  const orphans: ScopeNode[] = [];
 
   details.forEach(item => {
     const key = item.scopeId || item.scopeName;
-    const node = {
+    const node: ScopeNode = {
       ...item.get({ plain: true }),
       children: [],
     };
@@ -20,7 +31,7 @@ const buildScopeHierarchy = (details: any) => {
 
   details.forEach(item => {
     const key = item.scopeId || item.scopeName;
-    const node = map.get(key);
+    const node = map.get(key)!;
 
     if (item.scopeType === 'graph') {
       roots.push(node);
@@ -57,23 +68,20 @@ async function getWorkunits(req: Request, res: Response) {
     } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
-    const where: any = {};
+    const where: WhereOptions<InferAttributes<WorkUnit>> = {};
 
-    if (clusterId) where.clusterId = clusterId;
+    if (clusterId) where.clusterId = String(clusterId);
     if (state) where.state = { [Op.in]: String(state).split(',') };
     if (owner) where.owner = { [Op.like]: `%${owner}%` };
     if (jobName) where.jobName = { [Op.like]: `%${jobName}%` };
-    if (dateFrom) {
-      where.workUnitTimestamp = where.workUnitTimestamp || {};
-      where.workUnitTimestamp[Op.gte] = new Date(String(dateFrom));
-    }
-    if (dateTo) {
-      where.workUnitTimestamp = where.workUnitTimestamp || {};
-      where.workUnitTimestamp[Op.lte] = new Date(String(dateTo));
+    if (dateFrom || dateTo) {
+      where.workUnitTimestamp = {
+        ...(dateFrom ? { [Op.gte]: new Date(String(dateFrom)) } : {}),
+        ...(dateTo ? { [Op.lte]: new Date(String(dateTo)) } : {}),
+      };
     }
     if (costAbove) {
-      where.totalCost = where.totalCost || {};
-      where.totalCost[Op.gt] = parseFloat(String(costAbove));
+      where.totalCost = { [Op.gt]: parseFloat(String(costAbove)) };
     }
     if (req.query.detailsFetched !== undefined) {
       if (req.query.detailsFetched === 'true') {
@@ -116,7 +124,11 @@ async function getWorkunits(req: Request, res: Response) {
       }),
     ]);
 
-    const agg = (aggregateRows[0] as any) || {};
+    const rawAgg = aggregateRows[0] as unknown as WorkUnitAggregate | undefined;
+    const agg: WorkUnitAggregate = rawAgg ?? {
+      totalCost: null,
+      avgClusterTime: null,
+    };
 
     return sendSuccess(res, {
       total: count,
@@ -236,7 +248,7 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
     const { startDate, limit = 100 } = req.query;
 
     // Build where clause
-    const where: any = {
+    const where: WhereOptions<InferAttributes<WorkUnit>> = {
       clusterId,
       jobName,
     };
@@ -280,7 +292,7 @@ async function getJobHistoryByJobNameWStats(req: Request, res: Response) {
     };
     const { startDate } = req.query;
 
-    const where: any = {
+    const where: WhereOptions<InferAttributes<WorkUnit>> = {
       clusterId,
       jobName,
     };
@@ -412,6 +424,83 @@ async function comparePreviousByWuid(req: Request, res: Response) {
   }
 }
 
+/**
+ * Proxy WUDetails to the HPCC cluster and return normalised IScope[] for
+ * the client-side MetricGraph renderer (Graph tab on workunit detail page).
+ */
+async function getWorkunitGraph(req: Request, res: Response) {
+  const { clusterId, wuid } = req.params as { clusterId: string; wuid: string };
+
+  try {
+    const cluster = await getCluster(clusterId);
+    const { hash, username, allowSelfSigned, thor_host, thor_port } = cluster;
+
+    const opts = getClusterOptions(
+      {
+        baseUrl: `${thor_host}:${thor_port}`,
+        userID: username ?? '',
+        password: hash ?? '',
+      },
+      allowSelfSigned
+    );
+
+    const wu = Workunit.attach(opts, wuid);
+
+    const { data } = await wu.fetchDetailsNormalized({
+      ScopeFilter: {
+        MaxDepth: 999999,
+        ScopeTypes: [
+          'graph',
+          'subgraph',
+          'child',
+          'activity',
+          'operation',
+          'edge',
+          'workflow',
+        ],
+      },
+      NestedFilter: { Depth: 999999, ScopeTypes: [] },
+      PropertiesToReturn: {
+        AllScopes: true,
+        AllAttributes: true,
+        AllProperties: true,
+        AllStatistics: true,
+        AllHints: true,
+        AllNotes: true,
+      },
+      ScopeOptions: {
+        IncludeId: true,
+        IncludeScope: true,
+        IncludeScopeType: true,
+        IncludeMatchedScopesInResults: true,
+      },
+      PropertyOptions: {
+        IncludeName: true,
+        IncludeRawValue: true,
+        IncludeFormatted: true,
+        IncludeMeasure: true,
+        IncludeCreator: false,
+        IncludeCreatorType: false,
+      },
+    });
+
+    return sendSuccess(res, data);
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : 'Failed to fetch workunit graph';
+    logger.error('getWorkunitGraph error:', err);
+
+    // Surface cluster-unreachable errors with a friendlier status
+    const status =
+      message.toLowerCase().includes('not reachable') ||
+      message.toLowerCase().includes('cannot open workunit')
+        ? 503
+        : 500;
+
+    return sendError(res, message, status);
+  }
+}
+
 export {
   getWorkunits,
   getWorkunit,
@@ -421,4 +510,5 @@ export {
   getJobHistoryByJobName,
   getJobHistoryByJobNameWStats,
   comparePreviousByWuid,
+  getWorkunitGraph,
 };
