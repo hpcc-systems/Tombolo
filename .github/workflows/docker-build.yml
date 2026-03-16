@@ -59,6 +59,9 @@ jobs:
           cd Tombolo
           docker compose config --quiet || (echo "Error: docker-compose.yml is invalid" && exit 1)
 
+      - name: Setup cluster whitelist
+        run: cp Tombolo/server/cluster-whitelist.sample.js Tombolo/server/cluster-whitelist.js
+
       - name: Build Docker images
         run: pnpm docker:build
         env:
