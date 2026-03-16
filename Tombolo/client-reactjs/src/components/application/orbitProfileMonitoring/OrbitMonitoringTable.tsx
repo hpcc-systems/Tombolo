@@ -1,0 +1,171 @@
+import React from 'react';
+import { Table, Space, Tooltip, Popconfirm, Popover } from 'antd';
+import { Link } from 'react-router-dom';
+import startCase from 'lodash/startCase';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleFilled,
+  BellOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  CopyOutlined,
+  DownOutlined,
+} from '@ant-design/icons';
+
+import styles from './orbitMonitoring.module.css';
+import commonStyles from '../../common/common.module.css';
+import { APPROVAL_STATUS } from '@/components/common/Constants';
+
+const approveButtonColor = (approvalStatus: any) => {
+  if (approvalStatus === APPROVAL_STATUS.PENDING) {
+    return 'var(--primary)';
+  } else if (approvalStatus === APPROVAL_STATUS.APPROVED) {
+    return 'var(--success)';
+  } else {
+    return 'var(--danger)';
+  }
+};
+
+function OrbitMonitoringTable(props: any) {
+  const {
+    orbitMonitoringData,
+    onEdit,
+    onCopy,
+    onDelete,
+    onToggleStatus,
+    loading,
+    setDisplayViewDetailsModal,
+    setSelectedMonitoring,
+    isReader,
+    selectedRows,
+    setSelectedRows,
+    applicationId,
+    setApproveRejectModal,
+  } = props;
+
+  const editOrbitMonitoring = (record: any) => {
+    if (onEdit) onEdit(record);
+  };
+
+  const evaluateMonitoring = (record: any) => {
+    setSelectedMonitoring(record);
+    if (setApproveRejectModal) setApproveRejectModal(true);
+  };
+
+  const duplicateOrbitMonitoring = (record: any) => {
+    if (onCopy) onCopy(record);
+  };
+
+  const toggleMonitoringStatus = async (record: any, action: any) => {
+    if (onToggleStatus) {
+      const isActive = action === 'start';
+      await onToggleStatus([record.id], isActive);
+    }
+  };
+
+  const handleDelete = async (id: any) => {
+    if (onDelete) onDelete(id);
+  };
+
+  const viewDetails = (monitoringId: any) => {
+    setDisplayViewDetailsModal(true);
+    const selectedMonitoring = orbitMonitoringData.find((m: any) => m.id === monitoringId);
+    setSelectedMonitoring(selectedMonitoring);
+  };
+
+  const columns: any[] = [
+    { title: 'Name', dataIndex: 'monitoringName', render: (monitoringName: any) => monitoringName || 'N/A' },
+    { title: 'Build Name', dataIndex: 'metaData', render: (_: any, record: any) => record.metaData?.asrSpecificMetaData?.buildName || 'N/A' },
+    { title: 'Active', dataIndex: 'isActive', render: (isActive: any) => (isActive ? 'Yes' : 'No') },
+    { title: 'Approval Status', dataIndex: 'approvalStatus', render: (status: any) => startCase(status) },
+    {
+      title: 'Created by',
+      dataIndex: 'creator',
+      key: 'creator',
+      render: (creator: any) => {
+        const { firstName, lastName, email } = creator || {};
+        const name = `${firstName || ''} ${lastName || ''}`.trim();
+        return (
+          <Tooltip title={<div><div>E-mail: {email}</div></div>}>
+            <span style={{ color: 'var(--primary)' }}>{name || 'N/A'}</span>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: 'Actions',
+      dataIndex: 'actions',
+      render: (_: any, record: any) => (
+        <Space size="middle">
+          <Tooltip title="View">
+            <EyeOutlined onClick={() => viewDetails(record.id)} style={{ color: 'var(--primary)' }} />
+          </Tooltip>
+          {!isReader ? (
+            <>
+              <Tooltip title="Edit">
+                <EditOutlined style={{ color: 'var(--primary)', marginRight: 15 }} onClick={() => editOrbitMonitoring(record)} />
+              </Tooltip>
+
+              <Popover
+                placement="bottom"
+                content={
+                  <div style={{ display: 'flex', flexDirection: 'column', color: 'var(--primary)', cursor: 'pointer' }} className={styles.orbitMonitoringTable__hidden_actions}>
+                    <div title="Approve" onClick={() => evaluateMonitoring(record)}>
+                      <CheckCircleFilled style={{ color: approveButtonColor(record.approvalStatus), marginRight: 15 }} /> Approve / Reject
+                    </div>
+
+                    {record.isActive ? (
+                      <div onClick={() => toggleMonitoringStatus(record, 'pause')}>
+                        <PauseCircleOutlined disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED} style={{ color: 'var(--primary)', marginRight: 15 }} />
+                        Pause
+                      </div>
+                    ) : (
+                      <div onClick={() => toggleMonitoringStatus(record, 'start')}>
+                        <PlayCircleOutlined disabled={record.approvalStatus !== APPROVAL_STATUS.APPROVED} style={{ color: 'var(--primary)', marginRight: 15 }} />
+                        Start
+                      </div>
+                    )}
+
+                    <Popconfirm title={<><div style={{ fontWeight: 'bold' }}>{`Delete ${record.monitoringName}`}</div><div style={{ maxWidth: 400 }}>This action will delete all related data including notifications generated by this monitoring. If you would like to keep the data, you can deactivate the monitoring instead.</div></>} onConfirm={() => handleDelete(record.id)} okText="Continue" okButtonProps={{ danger: true }} cancelText="Close" cancelButtonProps={{ type: 'primary', ghost: true }} style={{ width: '500px !important' }}>
+                      <DeleteOutlined style={{ marginRight: 15 }} /> Delete
+                    </Popconfirm>
+                    <Link to={`/${applicationId}/dashboard/notifications?monitoringId=${record.id}&monitoringType=orbitMonitoring`}>
+                      <BellOutlined style={{ marginRight: 15 }} /> Notifications
+                    </Link>
+                    <div style={{ color: 'var(--primary)' }} onClick={() => duplicateOrbitMonitoring(record)}>
+                      <CopyOutlined style={{ marginRight: 15 }} /> Duplicate
+                    </div>
+                  </div>
+                }>
+                <span style={{ color: 'var(--secondary)' }}>More <DownOutlined style={{ fontSize: '10px' }} /></span>
+              </Popover>
+            </>
+          ) : null}
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <Table
+      size="small"
+      columns={columns}
+      dataSource={orbitMonitoringData}
+      loading={loading}
+      className={styles.orbit_monitoring_table}
+      rowKey={(record: any) => record.id}
+      rowSelection={{ type: 'checkbox', onChange: (_selectedRowKeys: any, selectedRowsData: any) => { setSelectedRows(selectedRowsData); } }}
+      pagination={{ pageSize: 20 }}
+      rowClassName={(record: any) => {
+        let className = record?.isActive ? commonStyles.table_active_row : commonStyles.table_inactive_row;
+        const idsOfSelectedRows = selectedRows.map((row: any) => row.id);
+        if (idsOfSelectedRows.includes(record.id)) className += styles.orbitMonitoringTable__selected_row;
+        return className;
+      }}
+    />
+  );
+}
+
+export default OrbitMonitoringTable;

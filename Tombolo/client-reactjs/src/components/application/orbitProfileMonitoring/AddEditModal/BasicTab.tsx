@@ -1,0 +1,110 @@
+import React, { useEffect, useRef } from 'react';
+import { Form, Input, Select, Row, Col } from 'antd';
+import { DescriptionFormRules, MonitoringNameFormRules } from '../../../common/FormRules';
+
+const { TextArea } = Input;
+const { Option } = Select;
+
+const severityLevels = [0, 1, 2, 3];
+
+type AnyForm = any;
+
+interface Props {
+  form: AnyForm;
+  domains: any[];
+  productCategories: any[];
+  selectedDomain?: any;
+  setSelectedDomain: (d: any) => void;
+  isEditing: boolean;
+  selectedMonitoring?: any;
+}
+
+const BasicTab: React.FC<Props> = ({ form, domains, productCategories, setSelectedDomain, isEditing }) => {
+  const nameRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (form && !isEditing && nameRef.current) {
+      nameRef.current.focus();
+    }
+  }, [form, isEditing]);
+
+  const handleDomainChange = (value: any) => {
+    form.setFieldsValue({ productCategory: undefined });
+    setSelectedDomain(value);
+  };
+
+  return (
+    <Form form={form} layout="vertical">
+      <Form.Item
+        label="Monitoring Name"
+        name="monitoringName"
+        rules={[
+          ...MonitoringNameFormRules,
+          () => ({
+            validator(_, value) {
+              if (isEditing) return Promise.resolve();
+              return Promise.resolve();
+            },
+          }),
+        ]}>
+        <Input placeholder="Enter a name" ref={nameRef} />
+      </Form.Item>
+
+      <Form.Item label="Description" name="description" rules={DescriptionFormRules}>
+        <TextArea
+          placeholder="Enter a short description"
+          rows={2}
+          maxLength={150}
+          showCount
+          autoSize={{
+            minRows: 2,
+            maxRows: 4,
+          }}
+        />
+      </Form.Item>
+
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item label="Domain" name="domain" rules={[{ required: true, message: 'Please select a domain' }]}>
+            <Select onChange={handleDomainChange} placeholder="Select domain">
+              {domains?.map((d, i) => (
+                <Option key={i} value={d.value}>
+                  {d.label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item
+            label="Product Category"
+            name="productCategory"
+            rules={[{ required: true, message: 'Please select a product category' }]}>
+            <Select placeholder="Select product category">
+              {productCategories?.map((c, i) => (
+                <Option key={i} value={c.value}>
+                  {c.label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Form.Item
+        label="Severity"
+        name="severity"
+        rules={[{ required: true, message: 'Please select a severity level' }]}>
+        <Select placeholder="Select a severity level">
+          {severityLevels.map((level, i) => (
+            <Option key={i} value={level}>
+              {level}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+    </Form>
+  );
+};
+
+export default BasicTab;

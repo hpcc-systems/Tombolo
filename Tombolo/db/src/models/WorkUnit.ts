@@ -79,20 +79,12 @@ export class WorkUnit extends Model<
   declare jobName?: string | null;
 
   @AllowNull(false)
-  @Column(DataType.INTEGER)
-  declare stateId: number;
-
-  @AllowNull(false)
   @Column(DataType.STRING)
   declare state: string;
 
   @AllowNull(false)
   @Column(DataType.BOOLEAN)
   declare protected: boolean;
-
-  @AllowNull(false)
-  @Column(DataType.INTEGER)
-  declare action: number;
 
   @Column(DataType.STRING)
   declare actionEx?: string | null;
@@ -124,6 +116,14 @@ export class WorkUnit extends Model<
   @AllowNull(false)
   @Column(DataType.FLOAT)
   declare totalCost: number;
+
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  declare endTimestamp?: Date | null;
+
+  @AllowNull(true)
+  @Column(DataType.FLOAT)
+  declare savingPotential?: number | null;
 
   @AllowNull(true)
   @Column(DataType.DATE)

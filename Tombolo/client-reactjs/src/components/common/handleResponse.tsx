@@ -1,0 +1,41 @@
+import React from 'react';
+import { notification } from 'antd';
+
+export const handleError = (error: any) => {
+  let messages: string[] = [];
+
+  if (Array.isArray(error)) {
+    messages = error;
+  } else if (typeof error === 'string') {
+    messages = [error];
+  } else if (error?.messages && Array.isArray(error.messages)) {
+    messages = error.messages;
+  } else if (error?.message) {
+    messages = [error.message];
+  } else {
+    messages = ['An unknown error occurred'];
+  }
+
+  notification.error({
+    message: 'Error occurred',
+    className: 'error-notification',
+    showProgress: true,
+    duration: 8,
+    description: (
+      <>
+        {messages.map((msg, idx) => (
+          <div key={idx}>{msg}</div>
+        ))}
+      </>
+    ),
+  });
+};
+
+export const handleSuccess = (message?: string) => {
+  notification.success({
+    message,
+    className: 'success-notification',
+    showProgress: true,
+    duration: 5,
+  });
+};
