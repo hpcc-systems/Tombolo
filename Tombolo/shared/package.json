@@ -4,8 +4,6 @@
   "private": true,
   "description": "Shared utilities and common functionality for Tombolo packages",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -31,7 +29,7 @@
     "build": "tsup",
     "esm:build": "tsup",
     "typecheck": "tsc --noEmit",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch --no-clean",
     "test": "echo \"No tests yet\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

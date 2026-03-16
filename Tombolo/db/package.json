@@ -3,14 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     }
   },
   "files": [
@@ -35,18 +32,22 @@
     "esm:build": "tsup",
     "typecheck": "tsc --noEmit",
     "build:check": "pnpm typecheck && pnpm build",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch --no-clean",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "db:migrate": "sequelize db:migrate",
     "db:create": "sequelize db:create",
     "db:seed": "sequelize db:seed:all",
     "db:drop": "sequelize db:drop",
     "clean": "rm -rf .turbo dist",
-    "clean:deps": "rm -rf node_modules"
+    "clean:deps": "rm -rf node_modules",
+    "migration:generate": "sequelize-cli migration:generate --name"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "sequelize-cli": "^6.6.3",
     "tsup": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
   }
 }

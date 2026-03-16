@@ -98,6 +98,9 @@ COPY Tombolo/client-reactjs ./Tombolo/client-reactjs
 
 WORKDIR /app/Tombolo/client-reactjs
 
+# Type-check TypeScript before building
+RUN pnpm run typecheck
+
 # Build the React app
 RUN pnpm run build
 
@@ -142,8 +145,8 @@ COPY Tombolo/db/package.json ./Tombolo/db/
 COPY Tombolo/shared/package.json ./Tombolo/shared/
 COPY Tombolo/core/package.json ./Tombolo/core/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile --prod
+# Install all dependencies (including devDependencies needed for TypeScript build)
+RUN pnpm install --frozen-lockfile
 
 # Copy server source code
 COPY Tombolo/server ./Tombolo/server
@@ -165,10 +168,12 @@ COPY Tombolo/db/migrations ./Tombolo/db/migrations
 COPY Tombolo/db/seeders ./Tombolo/db/seeders
 COPY Tombolo/db/config ./Tombolo/db/config
 
-# Copy Docker-specific .sequelizerc and rename it
-COPY Tombolo/server/.sequelizerc.docker ./Tombolo/server/.sequelizerc
+# Build TypeScript server (typecheck + tsup transpile)
+WORKDIR /app/Tombolo/server
+RUN pnpm build
 
 # Use pnpm deploy to create a clean deployment structure
+WORKDIR /app
 RUN pnpm --filter @tombolo/server deploy /deploy/server --prod --legacy
 
 # ===========================================

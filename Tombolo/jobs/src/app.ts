@@ -3,10 +3,14 @@ import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { Redis } from 'ioredis';
-import { registerScheduledJobs } from './scheduler.js';
-import { workunitHistoryQueue } from './queues/workunitHistoryQueue.js';
-import { workunitHistoryWorker } from './workers/workunitHistory/workunitHistoryWorker.js';
-import { redisConnectionOptions } from './config/config.js';
+import {
+  workunitHistoryQueue,
+  registerScheduledJobs,
+} from './queues/workunitHistory.js';
+import { workunitHistoryWorker } from './workers/workunitHistory/index.js';
+import { archiveQueue, registerArchiveJobs } from './queues/archive/index.js';
+import { archiveWorker } from './workers/archive/index.js';
+import { redisConnectionOptions } from './config/redis.js';
 import logger from './config/logger.js';
 import { formatErrorForLogging } from './utils/errorFormatter.js';
 
@@ -39,16 +43,22 @@ async function startJobProcessor() {
   logger.info(
     `Workunit history worker started (concurrency: 1) - Worker ready: ${workunitHistoryWorker.isRunning()}`
   );
+  logger.info(
+    `Archive worker started (concurrency: 1) - Worker ready: ${archiveWorker.isRunning()}`
+  );
 
-  // Register scheduled jobs
   await registerScheduledJobs();
+  await registerArchiveJobs();
 
   // Setup Bull Board
   const serverAdapter = new ExpressAdapter();
   serverAdapter.setBasePath('/admin/queues');
 
   createBullBoard({
-    queues: [new BullMQAdapter(workunitHistoryQueue)],
+    queues: [
+      new BullMQAdapter(workunitHistoryQueue),
+      new BullMQAdapter(archiveQueue),
+    ],
     serverAdapter: serverAdapter,
   });
 

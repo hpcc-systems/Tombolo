@@ -8,25 +8,11 @@ import type {
 const { MonitoringType, MonitoringLog, WorkUnit } = db;
 import { retryWithBackoff } from '@tombolo/shared';
 import { parseWorkunitTimestamp } from '@tombolo/shared';
-import logger from '../../../config/logger.js';
+import logger from '@/config/logger.js';
 
 // Constants
 const MONITORING_TYPE_NAME = 'WorkUnit History';
-const DB_BATCH_SIZE = 200; // Maximum records per database insert to prevent crashes
-
-/**
- * Splits an array into chunks of specified size
- * @param array - Array to split
- * @param chunkSize - Size of each chunk
- * @returns Array of chunks
- */
-function chunkArray<T>(array: T[], chunkSize: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < array.length; i += chunkSize) {
-    chunks.push(array.slice(i, i + chunkSize));
-  }
-  return chunks;
-}
+const MS_IN_HOUR = 3_600_000;
 
 /**
  * Gets the start and end time for fetching workunits
@@ -74,29 +60,39 @@ function transformWorkunitData(
     parseFloat(String(workunit.FileAccessCost || 0)) || 0.0;
   const compileCost = parseFloat(String(workunit.CompileCost || 0)) || 0.0;
   const totalCost = executeCost + fileAccessCost + compileCost;
+  const totalClusterTime =
+    parseFloat(String(workunit.TotalClusterTime || 0)) || 0.0;
+
+  const workUnitTimestamp = parseWorkunitTimestamp(
+    String(workunit.Wuid),
+    timezoneOffset
+  );
+
+  const endTimestamp = new Date(
+    workUnitTimestamp.getTime() + totalClusterTime * MS_IN_HOUR
+  );
 
   return {
     wuId: String(workunit.Wuid),
     clusterId,
-    workUnitTimestamp: parseWorkunitTimestamp(
-      String(workunit.Wuid),
-      timezoneOffset
-    ),
+    workUnitTimestamp,
     owner: String(workunit.Owner || 'unknown'),
     engine: String(workunit.Cluster || 'unknown'),
     jobName: workunit.Jobname ? String(workunit.Jobname) : null,
-    stateId: Number(workunit.StateID) || 0,
     state: String(workunit.State || 'unknown'),
     protected: workunit.Protected === true,
-    action: Number(workunit.Action) || 0,
     actionEx: workunit.ActionEx ? String(workunit.ActionEx) : null,
     isPausing: workunit.IsPausing === true,
     thorLcr: workunit.ThorLCR === true,
-    totalClusterTime: parseFloat(String(workunit.TotalClusterTime || 0)) || 0.0,
+    totalClusterTime,
+    endTimestamp,
     executeCost,
     fileAccessCost,
     compileCost,
     totalCost,
+    savingPotential: workunit.CostSavingPotential
+      ? parseFloat(String(workunit.CostSavingPotential || 0))
+      : null,
   };
 }
 
@@ -183,43 +179,33 @@ async function getWorkUnits(
         transformWorkunitData(wu, clusterId, timezoneOffset)
       );
 
-      // Split into smaller batches to prevent database overload
-      const batches = chunkArray(transformedWorkunits, DB_BATCH_SIZE);
-
       logger.info(
-        `Inserting ${transformedWorkunits.length} workunits in ${batches.length} batch(es) for cluster ${clusterId}`
+        `Inserting ${transformedWorkunits.length} workunits for cluster ${clusterId}`
       );
 
-      // Insert each batch separately
-      for (const [batchIndex, batch] of batches.entries()) {
-        logger.info(
-          `Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} records) for cluster ${clusterId}`
-        );
+      await WorkUnit.bulkCreate(transformedWorkunits, {
+        updateOnDuplicate: [
+          'workUnitTimestamp',
+          'owner',
+          'engine',
+          'jobName',
+          'state',
+          'protected',
+          'actionEx',
+          'isPausing',
+          'thorLcr',
+          'totalClusterTime',
+          'endTimestamp',
+          'executeCost',
+          'fileAccessCost',
+          'compileCost',
+          'totalCost',
+          'savingPotential',
+          'updatedAt',
+        ],
+      });
 
-        await WorkUnit.bulkCreate(batch, {
-          updateOnDuplicate: [
-            'workUnitTimestamp',
-            'owner',
-            'engine',
-            'jobName',
-            'stateId',
-            'state',
-            'protected',
-            'action',
-            'actionEx',
-            'isPausing',
-            'thorLcr',
-            'totalClusterTime',
-            'executeCost',
-            'fileAccessCost',
-            'compileCost',
-            'totalCost',
-            'updatedAt',
-          ],
-        });
-
-        totalInserted += batch.length;
-      }
+      totalInserted += transformedWorkunits.length;
 
       logger.info(
         `Processed ${totalFetched} workunits (inserted/updated: ${totalInserted}) for cluster ${clusterId}`

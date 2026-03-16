@@ -1,0 +1,159 @@
+import { body } from 'express-validator';
+import { Request, Response, NextFunction } from 'express';
+import {
+  emailBody,
+  objectBody,
+  uuidParam,
+  NAME_LENGTH,
+  COMMENT_LENGTH,
+  stringBody,
+  bodyUuids,
+} from './commonMiddleware.js';
+import jwt from 'jsonwebtoken';
+import { sendError } from '../utils/response.js';
+
+import logger from '../config/logger.js';
+import { User } from '../models/index.js';
+
+// Validate registration payload
+const validateNewUserPayload = [
+  stringBody('registrationMethod', false, {
+    isIn: ['traditional', 'azure'],
+  }),
+  stringBody('firstName', false, { length: { ...NAME_LENGTH } }),
+  stringBody('lastName', false, { length: { ...NAME_LENGTH } }),
+  emailBody('email'),
+  body('password')
+    .if(body('registrationMethod').equals('traditional'))
+    .isString()
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/[A-Z]/)
+    .withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/)
+    .withMessage('Password must contain at least one lowercase letter')
+    .matches(/[0-9]/)
+    .withMessage('Password must contain at least one number')
+    .matches(/[\W_]/)
+    .withMessage('Password must contain at least one special character'),
+  objectBody('metaData', true),
+];
+
+// Validate login payload
+const validateLoginPayload = [emailBody('email'), stringBody('password')];
+
+const validateEmailDuplicate = [
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    const message = 'Email already in use';
+    const user = await User.findOne({ where: { email } });
+    if (user) {
+      return sendError(res, message, 400);
+    }
+    next();
+  },
+];
+
+// Validate valid access token is present in the request header
+const verifyValidTokenExists = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const accessToken = req.cookies.token;
+
+  if (!accessToken) {
+    logger.error('Authorization: Access token not provided');
+    return sendError(res, 'Access token not provided', 401);
+  }
+
+  try {
+    // Verify the token (checks for tampering and expiration)
+    jwt.verify(accessToken, process.env.JWT_SECRET!);
+
+    // Attach token to req object for further processing in the controller
+    (req as any).accessToken = accessToken;
+    next(); // Proceed to the controller
+  } catch (err: any) {
+    logger.error('Authorization: Invalid or expired access token', err.message);
+    return sendError(res, 'Invalid or expired access token', 401);
+  }
+};
+
+const validatePasswordResetRequestPayload = [emailBody('email')];
+
+//validateResetPasswordPayload - comes in request body - token must be present and must be UUID, password must be present and meet password requirements
+const validateResetPasswordPayload = [
+  body('token')
+    .isString()
+    .notEmpty()
+    .withMessage('Token is required')
+    .isUUID()
+    .withMessage('Token must be a valid UUID'),
+  body('password')
+    .isString()
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/[A-Z]/)
+    .withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/)
+    .withMessage('Password must contain at least one lowercase letter')
+    .matches(/[0-9]/)
+    .withMessage('Password must contain at least one number')
+    .matches(/[\W_]/)
+    .withMessage('Password must contain at least one special character'),
+];
+
+// Verify if the request body has code -> Auth code from azure
+const validateAzureAuthCode = [
+  stringBody('code', false, {
+    length: { min: 1, max: 10000 },
+    alphaNumeric: false, // Explicitly disable alphanumeric check
+  }),
+];
+
+const validateAccessRequest = [
+  bodyUuids.id,
+  stringBody('comment', false, { length: { ...COMMENT_LENGTH } }),
+];
+
+// Validate refresh token request - only checks if token exists in cookie, not if it's valid
+const validateRefreshTokenRequest = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    logger.error('Authorization: No token provided for refresh');
+    return sendError(res, 'No token provided', 401);
+  }
+
+  // Attach token to req object for controller processing
+  (req as any).accessToken = token;
+  next();
+};
+
+// Validate login payload
+const validateEmailInBody = [emailBody('email')];
+const validateResetToken = [uuidParam('token')];
+
+// Exports
+export {
+  validateNewUserPayload,
+  validateLoginPayload,
+  validateEmailDuplicate,
+  verifyValidTokenExists,
+  validateRefreshTokenRequest,
+  validatePasswordResetRequestPayload,
+  validateResetPasswordPayload,
+  validateAzureAuthCode,
+  validateAccessRequest,
+  validateEmailInBody,
+  validateResetToken,
+};

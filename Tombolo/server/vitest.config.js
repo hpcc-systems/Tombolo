@@ -18,7 +18,11 @@ export default defineConfig({
         '**/*.test.js',
         '**/*.spec.js',
         'vitest.config.js',
-        'jest.config.js',
+        '.sequelizerc.docker',
+        'process.yml',
+        'nodemon.json',
+        'tsx-worker-loader.mjs',
+        'cluster-whitelist.*',
       ],
     },
 

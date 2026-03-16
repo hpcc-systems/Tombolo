@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { CostMonitoring } from '../../models/index.js';
 import { getUuids, getCostMonitoring, AUTHED_USER_ID } from '../helpers.js';
 import { Op } from 'sequelize';
-import { getUserFkIncludes } from '../../utils/getUserFkIncludes.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
 
 describe('costMonitoring Routes', () => {
@@ -47,7 +46,6 @@ describe('costMonitoring Routes', () => {
         where: {
           id: { [Op.in]: [uuid] },
         },
-        include: getUserFkIncludes(true),
       }
     );
   });
@@ -79,7 +77,6 @@ describe('costMonitoring Routes', () => {
         where: {
           id: { [Op.in]: uuids },
         },
-        include: getUserFkIncludes(true),
       }
     );
   });
