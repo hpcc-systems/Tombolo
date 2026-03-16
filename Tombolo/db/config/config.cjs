@@ -16,7 +16,9 @@ const commonDbConfigOptions = {
   seederStorage: 'sequelize',
   seederStorageTableName: 'sequelize_seeders',
   migrationStorageTableName: 'sequelize_migrations',
-  logging: msg => logger.debug(msg), // change winston settings to 'debug' to see this log
+  logging: msg => {
+    if (msg.startsWith('==')) logger.info(msg);
+  }, // only log migration/seeder status, not SQL queries
 };
 
 // SSL configuration if enabled
