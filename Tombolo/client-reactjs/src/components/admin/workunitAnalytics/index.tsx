@@ -34,7 +34,8 @@ import {
   ClockCircleOutlined,
   TableOutlined,
   FormatPainterOutlined,
-  FileAddOutlined,
+  PlusOutlined,
+  FilterOutlined,
   StarOutlined,
   StarFilled,
   KeyOutlined,
@@ -117,6 +118,7 @@ const AnalyticsWorkspace = () => {
   const [schemaData, setSchemaData] = useState<SchemaData | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(true);
   const [chartModalVisible, setChartModalVisible] = useState(false);
+  const [whereClauseVisible, setWhereClauseVisible] = useState(false);
 
   // Persist sidebar preferences to localStorage
   useEffect(() => {
@@ -413,17 +415,31 @@ const AnalyticsWorkspace = () => {
         <Title level={5}>Query Library</Title>
       </div>
 
-      <Collapse defaultActiveKey={[]} ghost className={styles.libraryCollapse}>
+      <Collapse accordion defaultActiveKey={[]} ghost className={styles.libraryCollapse}>
         <Panel
           header={
-            <Space>
-              <StarFilled style={{ color: '#faad14' }} />
-              <Text strong>Saved Queries</Text>
-              <Tag>{savedQueries.length}</Tag>
-            </Space>
+            <div className={styles.panelHeaderWithAction}>
+              <Space>
+                <StarFilled style={{ color: '#faad14' }} />
+                <Text strong>
+                  Saved Queries
+                  <span
+                    style={{
+                      fontSize: 10,
+                      marginLeft: 4,
+                      background: '#e0e0e0',
+                      padding: '2px 4px',
+                      borderRadius: '4px',
+                    }}>
+                    {savedQueries.length}
+                  </span>
+                </Text>
+              </Space>
+            </div>
           }
           key="saved-queries">
-          {/* <Button
+          <div className={styles.panelScrollContent}>
+            {/* <Button
             type="dashed"
             icon={<FileAddOutlined />}
             block
@@ -432,100 +448,135 @@ const AnalyticsWorkspace = () => {
             Save Current Query
           </Button> */}
 
-          {savedQueries.length === 0 ? (
-            <Empty description="No saved queries yet" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          ) : (
-            <div className={styles.savedQueriesList}>
-              {savedQueries
-                .sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0))
-                .map(query => (
-                  <Card
-                    key={query.id}
-                    size="small"
-                    className={`${styles.savedQueryCard} ${selectedQuery === query.id ? styles.selected : ''}`}
-                    hoverable
-                    onClick={() => loadSavedQuery(query)}>
-                    <div className={styles.savedQueryHeader}>
-                      <Text strong ellipsis>
-                        {query.name}
+            {savedQueries.length === 0 ? (
+              <Empty description="No saved queries yet" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            ) : (
+              <div className={styles.savedQueriesList}>
+                {savedQueries
+                  .sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0))
+                  .map(query => (
+                    <Card
+                      key={query.id}
+                      size="small"
+                      className={`${styles.savedQueryCard} ${selectedQuery === query.id ? styles.selected : ''}`}
+                      hoverable
+                      onClick={() => loadSavedQuery(query)}>
+                      <div className={styles.savedQueryHeader}>
+                        <Text strong ellipsis>
+                          {query.name}
+                        </Text>
+                        <Space>
+                          <Tooltip title={query.favorite ? 'Unfavorite' : 'Favorite'}>
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={query.favorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
+                              onClick={e => {
+                                e.stopPropagation();
+                                toggleFavorite(query.id);
+                              }}
+                            />
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <Button
+                              type="text"
+                              size="small"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={e => {
+                                e.stopPropagation();
+                                deleteSavedQuery(query.id);
+                              }}
+                            />
+                          </Tooltip>
+                        </Space>
+                      </div>
+                      {query.description && (
+                        <Paragraph
+                          ellipsis={{ rows: 2 }}
+                          type="secondary"
+                          style={{ fontSize: 12, marginTop: 4, marginBottom: 0 }}>
+                          {query.description}
+                        </Paragraph>
+                      )}
+                      <Text type="secondary" style={{ fontSize: 11 }}>
+                        {new Date(query.createdAt).toLocaleDateString()}
                       </Text>
-                      <Space>
-                        <Tooltip title={query.favorite ? 'Unfavorite' : 'Favorite'}>
-                          <Button
-                            type="text"
-                            size="small"
-                            icon={query.favorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
-                            onClick={e => {
-                              e.stopPropagation();
-                              toggleFavorite(query.id);
-                            }}
-                          />
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <Button
-                            type="text"
-                            size="small"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={e => {
-                              e.stopPropagation();
-                              deleteSavedQuery(query.id);
-                            }}
-                          />
-                        </Tooltip>
-                      </Space>
-                    </div>
-                    {query.description && (
-                      <Paragraph
-                        ellipsis={{ rows: 2 }}
-                        type="secondary"
-                        style={{ fontSize: 12, marginTop: 4, marginBottom: 0 }}>
-                        {query.description}
-                      </Paragraph>
-                    )}
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                      {new Date(query.createdAt).toLocaleDateString()}
-                    </Text>
-                  </Card>
-                ))}
-            </div>
-          )}
+                    </Card>
+                  ))}
+              </div>
+            )}
+          </div>
         </Panel>
 
         <Panel
           header={
-            <Space>
-              <FileTextOutlined />
-              <Text strong>Templates</Text>
-            </Space>
+            <div className={styles.panelHeaderWithAction}>
+              <Space>
+                <FilterOutlined />
+                <Text strong>Where Clause</Text>
+              </Space>
+              <Tooltip title="Add new where clause">
+                <Button
+                  size="small"
+                  icon={<PlusOutlined />}
+                  className={styles.panelAddBtn}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setWhereClauseVisible(true);
+                  }}
+                />
+              </Tooltip>
+            </div>
+          }
+          key="where-clause">
+          <div className={styles.panelScrollContent}>
+            <Empty description="No where clauses yet" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          </div>
+        </Panel>
+
+        <Panel
+          header={
+            <div className={styles.panelHeaderWithAction}>
+              <Space>
+                <FileTextOutlined />
+                <Text strong>Templates</Text>
+              </Space>
+            </div>
           }
           key="templates">
-          {Object.entries(QUERY_TEMPLATES).map(([category, templates]) => (
-            <div key={category} className={styles.templateCategory}>
-              <Text type="secondary" strong style={{ fontSize: 12 }}>
-                {category}
-              </Text>
-              <div className={styles.templateList}>
-                {templates.map((template, idx) => (
-                  <Tooltip
-                    key={idx}
-                    title={
-                      <div>
-                        <div style={{ marginBottom: 8 }}>{template.description}</div>
-                        <pre style={{ fontSize: 11, margin: 0 }}>{template.sql.slice(0, 200)}...</pre>
-                      </div>
-                    }
-                    placement="right">
-                    <Card size="small" hoverable className={styles.templateCard} onClick={() => loadTemplate(template)}>
-                      <Text ellipsis style={{ fontSize: 13 }}>
-                        {template.name}
-                      </Text>
-                    </Card>
-                  </Tooltip>
-                ))}
+          <div className={styles.panelScrollContent}>
+            {Object.entries(QUERY_TEMPLATES).map(([category, templates]) => (
+              <div key={category} className={styles.templateCategory}>
+                <Text type="secondary" strong style={{ fontSize: 12 }}>
+                  {category}
+                </Text>
+                <div className={styles.templateList}>
+                  {templates.map((template, idx) => (
+                    <Tooltip
+                      key={idx}
+                      title={
+                        <div>
+                          <div style={{ marginBottom: 8 }}>{template.description}</div>
+                          <pre style={{ fontSize: 11, margin: 0 }}>{template.sql.slice(0, 200)}...</pre>
+                        </div>
+                      }
+                      placement="right">
+                      <Card
+                        size="small"
+                        hoverable
+                        className={styles.templateCard}
+                        onClick={() => loadTemplate(template)}>
+                        <Text ellipsis style={{ fontSize: 13 }}>
+                          {template.name}
+                        </Text>
+                      </Card>
+                    </Tooltip>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </Panel>
       </Collapse>
     </div>
@@ -794,6 +845,31 @@ const AnalyticsWorkspace = () => {
 
           {/* Main Content Area */}
           <Content className={styles.mainContent}>
+            {/* Query Builder Card */}
+            {whereClauseVisible && (
+              <div className={styles.queryBuilderContainer}>
+                <Card
+                  className={styles.queryBuilderCard}
+                  title={
+                    <Space>
+                      <FilterOutlined />
+                      <Text strong>Query Builder</Text>
+                    </Space>
+                  }
+                  extra={
+                    <Button size="small" danger onClick={() => setWhereClauseVisible(false)}>
+                      Close
+                    </Button>
+                  }
+                  size="small">
+                  <div className={styles.queryBuilderBody}>
+                    {/* Query builder UI will go here */}
+                    <Text type="secondary">Query builder coming soon...</Text>
+                  </div>
+                </Card>
+              </div>
+            )}
+
             {/* SQL Editor */}
             <div className={styles.editorContainer}>
               <div className={styles.editorFrame}>
