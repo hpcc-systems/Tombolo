@@ -34,8 +34,6 @@ import {
   ClockCircleOutlined,
   TableOutlined,
   FormatPainterOutlined,
-  ExpandOutlined,
-  CompressOutlined,
   FileAddOutlined,
   StarOutlined,
   StarFilled,
@@ -46,7 +44,9 @@ import {
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import { format } from 'sql-formatter';
+
 import { apiClient } from '@/services/api';
+import { LeftPanelIcon, RightPanelIcon } from './PanelIcons';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import QUERY_TEMPLATES from './queryTemplates';
 import ChartModal from './ChartModal';
@@ -413,7 +413,7 @@ const AnalyticsWorkspace = () => {
         <Title level={5}>Query Library</Title>
       </div>
 
-      <Collapse defaultActiveKey={['saved-queries']} ghost className={styles.libraryCollapse}>
+      <Collapse defaultActiveKey={[]} ghost className={styles.libraryCollapse}>
         <Panel
           header={
             <Space>
@@ -423,14 +423,14 @@ const AnalyticsWorkspace = () => {
             </Space>
           }
           key="saved-queries">
-          <Button
+          {/* <Button
             type="dashed"
             icon={<FileAddOutlined />}
             block
             onClick={() => setSaveModalVisible(true)}
             style={{ marginBottom: 12 }}>
             Save Current Query
-          </Button>
+          </Button> */}
 
           {savedQueries.length === 0 ? (
             <Empty description="No saved queries yet" image={Empty.PRESENTED_IMAGE_SIMPLE} />
@@ -538,7 +538,7 @@ const AnalyticsWorkspace = () => {
         <Title level={5}>Schema Reference</Title>
       </div>
 
-      <Collapse defaultActiveKey={['schema']} ghost>
+      <Collapse defaultActiveKey={[]} ghost>
         <Panel
           header={
             <Space>
@@ -754,151 +754,182 @@ const AnalyticsWorkspace = () => {
   };
 
   return (
-    <div className={styles.analyticsWorkspace}>
-      <Layout style={{ height: '100vh' }}>
-        {/* Left Sidebar - Query Library */}
-        {!leftCollapsed && (
-          <Sider width={300} theme="light" className={styles.leftSidebar}>
-            {renderQueryLibrary()}
-          </Sider>
-        )}
-
-        {/* Main Content Area */}
-        <Content className={styles.mainContent}>
-          <div className={styles.contentHeader}>
-            <div className={styles.headerLeft}>
-              <Title level={3} style={{ margin: 0 }}>
-                <ThunderboltOutlined /> Analytics Workspace
-              </Title>
-              <Text type="secondary">Query and analyze workunit data with SQL</Text>
-            </div>
-            <Space>
-              <Button
-                icon={leftCollapsed ? <ExpandOutlined /> : <CompressOutlined />}
-                onClick={() => setLeftCollapsed(!leftCollapsed)}>
-                {leftCollapsed ? 'Show' : 'Hide'} Library
-              </Button>
-              <Button
-                icon={rightCollapsed ? <ExpandOutlined /> : <CompressOutlined />}
-                onClick={() => setRightCollapsed(!rightCollapsed)}>
-                {rightCollapsed ? 'Show' : 'Hide'} Schema
-              </Button>
-            </Space>
-          </div>
-
-          {/* SQL Editor */}
-          <div className={styles.editorContainer}>
-            <div className={styles.editorToolbar}>
-              <Space>
-                <Button type="primary" icon={<PlayCircleOutlined />} loading={isExecuting} onClick={executeQuery}>
-                  Execute (Ctrl+Enter)
-                </Button>
-                <Button icon={<FormatPainterOutlined />} onClick={formatSql}>
-                  Format SQL
-                </Button>
-                <Button icon={<SaveOutlined />} onClick={() => setSaveModalVisible(true)}>
-                  Save Query
-                </Button>
-                <Button icon={<ClearOutlined />} onClick={clearEditor}>
-                  Clear
-                </Button>
-              </Space>
-            </div>
-
-            <div className={styles.monacoWrapper}>
-              <Editor
-                height="400px"
-                defaultLanguage="sql"
-                value={sql}
-                onChange={value => setSql(value || '')}
-                onMount={(editor, monaco) => {
-                  editorRef.current = editor;
-                  // Add keybinding for execute
-                  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, executeQuery);
-                  // Add keybinding for save
-                  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => setSaveModalVisible(true));
-                  // Add keybinding for format
-                  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, formatSql);
-                }}
-                theme="vs"
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  lineNumbers: 'on',
-                  scrollBeyondLastLine: false,
-                  automaticLayout: true,
-                  tabSize: 2,
-                  wordWrap: 'on',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Results */}
-          {renderResults()}
-
-          {/* Query History */}
-          {renderQueryHistory()}
-        </Content>
-
-        {/* Right Sidebar - Schema Browser */}
-        {!rightCollapsed && (
-          <Sider width={300} theme="light" className={styles.rightSidebar}>
-            {renderSchemaBrowser()}
-          </Sider>
-        )}
-      </Layout>
-
-      {/* Save Query Modal */}
-      <Modal title="Save Query" open={saveModalVisible} onCancel={() => setSaveModalVisible(false)} footer={null}>
-        <Form onFinish={saveQuery} layout="vertical">
-          <Form.Item label="Query Name" name="name" rules={[{ required: true, message: 'Please enter a query name' }]}>
-            <Input placeholder="e.g., Failed Jobs Last Week" />
-          </Form.Item>
-          <Form.Item label="Description (Optional)" name="description">
-            <Input.TextArea rows={3} placeholder="Describe what this query does..." />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                Save
-              </Button>
-              <Button onClick={() => setSaveModalVisible(false)}>Cancel</Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Template Variables Modal */}
-      <Modal
-        title={`Template: ${currentTemplate?.name}`}
-        open={variableModalVisible}
-        onCancel={() => setVariableModalVisible(false)}
-        onOk={applyTemplateWithVariables}>
-        <Text type="secondary" style={{ marginBottom: 16, display: 'block' }}>
-          This template requires the following variables:
-        </Text>
-        <Space direction="vertical" style={{ width: '100%' }}>
-          {Object.keys(templateVariables).map(varName => (
-            <div key={varName}>
-              <Text strong>{varName}:</Text>
-              <Input
-                placeholder={`Enter ${varName}`}
-                value={templateVariables[varName]}
-                onChange={e =>
-                  setTemplateVariables({
-                    ...templateVariables,
-                    [varName]: e.target.value,
-                  })
-                }
-              />
-            </div>
-          ))}
+    <div>
+      <div className={styles.contentHeader}>
+        <div className={styles.headerLeft}>
+          <Title level={4} style={{ margin: 0 }}>
+            <ThunderboltOutlined /> Analytics Workspace
+          </Title>
+          <Text type="secondary" style={{ fontSize: '1rem' }}>
+            Query and analyze workunit data with SQL
+          </Text>
+        </div>
+        <Space size={4}>
+          <Tooltip title={leftCollapsed ? 'Show Query Library' : 'Hide Query Library'} placement="bottom">
+            <Button
+              type="text"
+              className={`${styles.sidebarToggleBtn} ${!leftCollapsed ? styles.sidebarToggleBtnActive : ''}`}
+              icon={<LeftPanelIcon color={!leftCollapsed ? '#1d4ed8' : '#374151'} />}
+              onClick={() => setLeftCollapsed(!leftCollapsed)}
+            />
+          </Tooltip>
+          <Tooltip title={rightCollapsed ? 'Show Schema Browser' : 'Hide Schema Browser'} placement="bottom">
+            <Button
+              type="text"
+              className={`${styles.sidebarToggleBtn} ${!rightCollapsed ? styles.sidebarToggleBtnActive : ''}`}
+              icon={<RightPanelIcon color={!rightCollapsed ? '#1d4ed8' : '#374151'} />}
+              onClick={() => setRightCollapsed(!rightCollapsed)}
+            />
+          </Tooltip>
         </Space>
-      </Modal>
+      </div>
+      <div className={styles.analyticsWorkspace}>
+        <Layout style={{ height: '100vh' }}>
+          {/* Left Sidebar - Query Library */}
+          {!leftCollapsed && (
+            <Sider width={300} theme="light" className={styles.leftSidebar}>
+              {renderQueryLibrary()}
+            </Sider>
+          )}
 
-      {/* Chart Modal */}
-      <ChartModal visible={chartModalVisible} onClose={() => setChartModalVisible(false)} data={queryResults} />
+          {/* Main Content Area */}
+          <Content className={styles.mainContent}>
+            {/* SQL Editor */}
+            <div className={styles.editorContainer}>
+              <div className={styles.editorFrame}>
+                {/* Top-right floating actions: Format, Clear */}
+                <div className={styles.editorTopActions}>
+                  <Tooltip title="Format SQL (Ctrl+K)">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<FormatPainterOutlined />}
+                      onClick={formatSql}
+                      className={styles.editorActionBtn}
+                    />
+                  </Tooltip>
+                  <Tooltip title="Clear editor">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<ClearOutlined />}
+                      onClick={clearEditor}
+                      className={styles.editorActionBtn}
+                    />
+                  </Tooltip>
+                </div>
+
+                <div className={styles.monacoWrapper}>
+                  <Editor
+                    height="400px"
+                    defaultLanguage="sql"
+                    value={sql}
+                    onChange={value => setSql(value || '')}
+                    onMount={(editor, monaco) => {
+                      editorRef.current = editor;
+                      // Add keybinding for execute
+                      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, executeQuery);
+                      // Add keybinding for save
+                      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => setSaveModalVisible(true));
+                      // Add keybinding for format
+                      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, formatSql);
+                    }}
+                    theme="vs-dark"
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      lineNumbers: 'on',
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      tabSize: 2,
+                      wordWrap: 'on',
+                      padding: { top: 16 },
+                    }}
+                  />
+                </div>
+
+                {/* Bottom-right floating actions: Save, Execute */}
+                <div className={styles.editorBottomActions}>
+                  <Button
+                    icon={<SaveOutlined />}
+                    onClick={() => setSaveModalVisible(true)}
+                    className={styles.editorActionBtn}>
+                    Save Query
+                  </Button>
+                  <Button type="primary" icon={<PlayCircleOutlined />} loading={isExecuting} onClick={executeQuery}>
+                    Execute
+                  </Button>
+                </div>
+              </div>
+            </div>
+            {/* Results */}
+            {renderResults()}
+            {/* Query History */}
+            {renderQueryHistory()}
+          </Content>
+
+          {/* Right Sidebar - Schema Browser */}
+          {!rightCollapsed && (
+            <Sider width={300} theme="light" className={styles.rightSidebar}>
+              {renderSchemaBrowser()}
+            </Sider>
+          )}
+        </Layout>
+
+        {/* Save Query Modal */}
+        <Modal title="Save Query" open={saveModalVisible} onCancel={() => setSaveModalVisible(false)} footer={null}>
+          <Form onFinish={saveQuery} layout="vertical">
+            <Form.Item
+              label="Query Name"
+              name="name"
+              rules={[{ required: true, message: 'Please enter a query name' }]}>
+              <Input placeholder="e.g., Failed Jobs Last Week" />
+            </Form.Item>
+            <Form.Item label="Description (Optional)" name="description">
+              <Input.TextArea rows={3} placeholder="Describe what this query does..." />
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button type="primary" htmlType="submit">
+                  Save
+                </Button>
+                <Button onClick={() => setSaveModalVisible(false)}>Cancel</Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* Template Variables Modal */}
+        <Modal
+          title={`Template: ${currentTemplate?.name}`}
+          open={variableModalVisible}
+          onCancel={() => setVariableModalVisible(false)}
+          onOk={applyTemplateWithVariables}>
+          <Text type="secondary" style={{ marginBottom: 16, display: 'block' }}>
+            This template requires the following variables:
+          </Text>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            {Object.keys(templateVariables).map(varName => (
+              <div key={varName}>
+                <Text strong>{varName}:</Text>
+                <Input
+                  placeholder={`Enter ${varName}`}
+                  value={templateVariables[varName]}
+                  onChange={e =>
+                    setTemplateVariables({
+                      ...templateVariables,
+                      [varName]: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            ))}
+          </Space>
+        </Modal>
+
+        {/* Chart Modal */}
+        <ChartModal visible={chartModalVisible} onClose={() => setChartModalVisible(false)} data={queryResults} />
+      </div>
     </div>
   );
 };
