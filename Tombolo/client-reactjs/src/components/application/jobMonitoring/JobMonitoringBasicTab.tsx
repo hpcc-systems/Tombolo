@@ -132,7 +132,7 @@ const JobMonitoringBasicTab: React.FC<Props> = ({
 
         setJobs(cleanedData);
       }
-    } catch (err) {
+    } catch (_err) {
       // ignore
     } finally {
       setFetchingJobs(false);

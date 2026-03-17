@@ -44,7 +44,7 @@ services:
       target: server
     volumes:
       - /tmp/pm2:/tmp/pm2
-      - ./server/cluster-whitelist.js:/app/cluster-whitelist.js
+      - ./server/cluster-whitelist.js:/app/dist/cluster-whitelist.js
       - ./dockerLogs/server:/app/logs
       - ./certs:/usr/local/share/ca-certificates
       - ./customCerts:/customCerts

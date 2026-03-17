@@ -38,7 +38,7 @@ const NotificationActions: React.FC<Props> = ({
       setNotifications((prevNotifications: any[]) =>
         prevNotifications.filter(notification => !selectedNotificationsIds.includes(notification.id))
       );
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to delete selected notifications');
     }
   };

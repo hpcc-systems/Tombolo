@@ -4,7 +4,7 @@ import type {
 } from '@tombolo/db';
 import { WorkUnit, WorkUnitException, sequelize } from '@tombolo/db';
 import { TERMINAL_STATES } from '@tombolo/shared';
-import logger from '../../../config/logger.js';
+import logger from '@/config/logger.js';
 import { Workunit } from '@hpcc-js/comms';
 import { getClusterOptions, getClusters } from '@tombolo/core';
 import { ifEmptyUndef } from '@tombolo/shared';

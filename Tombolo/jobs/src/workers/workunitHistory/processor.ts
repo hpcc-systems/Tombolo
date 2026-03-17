@@ -2,14 +2,11 @@ import { Job } from 'bullmq';
 import { workunitQuery } from './handlers/wuQuery.js';
 import { getWorkunitDetails } from './handlers/wuDetails.js';
 import { getWorkunitInfo } from './handlers/wuInfo.js';
-import { wuHistoryJobType } from '../../config/constants.js';
-import logger from '../../config/logger.js';
-
-// Job data interface - exported for type checking
-export interface WorkunitHistoryJobData {
-  type: wuHistoryJobType;
-  [key: string]: unknown;
-}
+import {
+  wuHistoryJobType,
+  type WorkunitHistoryJobData,
+} from '@/types/index.js';
+import logger from '@/config/logger.js';
 
 // Job processor function - exported as default for BullMQ worker threads
 export default async function processWorkunitHistoryJob(

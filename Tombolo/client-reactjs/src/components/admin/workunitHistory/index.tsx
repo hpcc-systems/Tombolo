@@ -112,23 +112,13 @@ const WorkUnitHistory: React.FC = () => {
       setData(result.data || []);
       setTotal(result.total || 0);
 
-      // Calculate statistics
-      if (result.data && result.data.length > 0) {
-        const totalCost = result.data.reduce((sum: number, wu: any) => sum + (wu.totalCost || 0), 0);
-        // totalClusterTime is in hours, convert to seconds for display
-        const avgTime = result.data.reduce((sum: number, wu: any) => sum + (wu.totalClusterTime || 0), 0) / result.data.length * 3600;
-        setStatistics({
-          totalJobs: result.total,
-          totalCost,
-          avgTime,
-        });
-      } else {
-        setStatistics({
-          totalJobs: 0,
-          totalCost: 0,
-          avgTime: 0,
-        });
-      }
+      // Use backend-calculated aggregates (computed over all matching rows, not just the current page)
+      setStatistics({
+        totalJobs: result.total || 0,
+        totalCost: result.totalCost ?? 0,
+        // avgClusterTime is in hours from the backend; convert to seconds for display
+        avgTime: (result.avgClusterTime ?? 0) * 3600,
+      });
     } catch (error) {
       console.error('Error fetching workunits:', error);
       message.error('Failed to load workunit history');

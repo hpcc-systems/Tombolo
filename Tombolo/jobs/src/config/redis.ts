@@ -27,9 +27,7 @@ export const redisConnectionOptions: RedisOptions = {
   retryStrategy: (times: number) => {
     // Retry after 1s, 2s, 4s, 8s, etc., with a max of 10s
     const delay = Math.min(times * 1000, 10000);
-    logger.warn(
-      `Redis connection retry attempt ${times}, waiting ${delay}ms`
-    );
+    logger.warn(`Redis connection retry attempt ${times}, waiting ${delay}ms`);
     return delay;
   },
   connectTimeout: 10000, // 10 seconds

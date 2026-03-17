@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
-import { redisConnectionOptions } from '../../config/config.js';
-import logger from '../../config/logger.js';
-import { formatErrorForLogging } from '../../utils/errorFormatter.js';
+import { redisConnectionOptions } from '@/config/redis.js';
+import logger from '@/config/logger.js';
+import { formatErrorForLogging } from '@/utils/errorFormatter.js';
 
 // Import the processor function directly (runs in main thread)
 import processWorkunitHistoryJob from './processor.js';

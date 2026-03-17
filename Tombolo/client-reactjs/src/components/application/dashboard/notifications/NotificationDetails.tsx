@@ -22,7 +22,7 @@ const NotificationDetails: React.FC<Props> = ({ selectedNotification }) => {
           const { id } = selectedNotification;
           const notificationHtmlCode = await notificationsService.getNotificationHtmlCode(id);
           setNotificationHtmlCode(notificationHtmlCode);
-        } catch (err) {
+        } catch (_err) {
           // Error handled by service layer
         } finally {
           setFetchingNotificationDetails(false);
@@ -43,10 +43,20 @@ const NotificationDetails: React.FC<Props> = ({ selectedNotification }) => {
           <Descriptions.Item label="Reason ">{selectedNotification.notificationTitle}</Descriptions.Item>
 
           <Descriptions.Item label="Status ">{selectedNotification.status}</Descriptions.Item>
-          {selectedNotification.recipients && (
+          {selectedNotification?.metaData?.notificationDetails?.mainRecipients && (
             <Descriptions.Item label="Recipient(s) ">
               <div className={`${styles.notifications__fixedSizeDescriptionItem} tiny-scroll-bar`}>
-                {selectedNotification?.recipients?.intended.map((r: any, i: number) => (
+                {selectedNotification?.metaData?.notificationDetails?.mainRecipients?.map((r: any, i: number) => (
+                  <Tag key={i}>{r}</Tag>
+                ))}
+              </div>
+            </Descriptions.Item>
+          )}
+
+          {selectedNotification?.metaData?.notificationDetails?.cc && (
+            <Descriptions.Item label="CC Recipient(s) ">
+              <div className={`${styles.notifications__fixedSizeDescriptionItem} tiny-scroll-bar`}>
+                {selectedNotification?.metaData?.notificationDetails?.cc?.map((r: any, i: number) => (
                   <Tag key={i}>{r}</Tag>
                 ))}
               </div>

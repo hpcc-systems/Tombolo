@@ -3,12 +3,14 @@ import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { Redis } from 'ioredis';
-import { registerScheduledJobs } from './scheduler.js';
-import { workunitHistoryQueue } from './queues/workunitHistoryQueue.js';
-import { hpccToolsQueue } from './queues/hpccToolsQueue.js';
-import { workunitHistoryWorker } from './workers/workunitHistory/workunitHistoryWorker.js';
-import { hpccToolsWorker } from './workers/hpccTools/hpccToolsWorker.js';
-import { redisConnectionOptions } from './config/config.js';
+import {
+  workunitHistoryQueue,
+  registerScheduledJobs,
+} from './queues/workunitHistory.js';
+import { workunitHistoryWorker } from './workers/workunitHistory/index.js';
+import { archiveQueue, registerArchiveJobs } from './queues/archive/index.js';
+import { archiveWorker } from './workers/archive/index.js';
+import { redisConnectionOptions } from './config/redis.js';
 import logger from './config/logger.js';
 import { formatErrorForLogging } from './utils/errorFormatter.js';
 
@@ -37,23 +39,26 @@ const PORT = process.env.BULL_BOARD_PORT || 3005;
 async function startJobProcessor() {
   logger.info('Starting BullMQ job processor...');
 
-  // Start the workers (they will process jobs as they come in)
+  // Start the worker (it will process jobs as they come in)
   logger.info(
     `Workunit history worker started (concurrency: 1) - Worker ready: ${workunitHistoryWorker.isRunning()}`
   );
   logger.info(
-    `hpcc-tools worker started (concurrency: 1) - Worker ready: ${hpccToolsWorker.isRunning()}`
+    `Archive worker started (concurrency: 1) - Worker ready: ${archiveWorker.isRunning()}`
   );
 
-  // Register scheduled jobs
   await registerScheduledJobs();
+  await registerArchiveJobs();
 
   // Setup Bull Board
   const serverAdapter = new ExpressAdapter();
   serverAdapter.setBasePath('/admin/queues');
 
   createBullBoard({
-    queues: [new BullMQAdapter(workunitHistoryQueue), new BullMQAdapter(hpccToolsQueue)],
+    queues: [
+      new BullMQAdapter(workunitHistoryQueue),
+      new BullMQAdapter(archiveQueue),
+    ],
     serverAdapter: serverAdapter,
   });
 

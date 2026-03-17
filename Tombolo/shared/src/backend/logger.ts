@@ -61,6 +61,20 @@ function cleanLogEntry(info: any): Record<string, any> {
   delete logEntry.message;
   delete logEntry.timestamp;
   delete logEntry.stack;
+
+  // Remove keys merged from splat args to avoid duplicating them in the output
+  // (they are already appended directly to the message string)
+  const splat = info[Symbol.for('splat')];
+  if (splat) {
+    for (const arg of splat) {
+      if (typeof arg === 'object' && arg !== null && !(arg instanceof Error)) {
+        for (const key of Object.keys(arg)) {
+          delete logEntry[key];
+        }
+      }
+    }
+  }
+
   delete logEntry[Symbol.for('splat')];
   delete logEntry[Symbol.for('level')];
   delete logEntry[Symbol.for('message')];

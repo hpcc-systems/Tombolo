@@ -50,6 +50,11 @@ const workunitsService = {
     const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/compare-previous`);
     return response.data;
   },
+
+  getGraph: async (clusterId: string, wuid: string): Promise<any[]> => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/graph`);
+    return response.data;
+  },
 };
 
 export default workunitsService;

@@ -7,7 +7,7 @@ import {
   UNIT_LOOKUP,
   relevantMetrics,
 } from '@tombolo/shared';
-import logger from '../../../config/logger.js';
+import logger from '@/config/logger.js';
 
 // Type for database row objects (what processScopeToRow returns)
 type WorkUnitDetailRow = {
@@ -433,6 +433,9 @@ async function fetchWorkunitDetails(clusterOptions: IOptions, wuId: string) {
         ScopeFilter: {
           MaxDepth: 999999,
           // Only get scopes that typically have performance data
+          ScopeTypes: ACCEPTED_SCOPE_TYPES,
+        },
+        NestedFilter: {
           ScopeTypes: ACCEPTED_SCOPE_TYPES,
         },
         ScopeOptions: {

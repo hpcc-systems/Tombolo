@@ -256,12 +256,13 @@ function CostMonitoring() {
 
       // Group Notification specific metaData and delete from allInputs
       const notificationMetaData: any = {};
-      const { threshold, primaryContacts, secondaryContacts, notifyContacts } = allInputs;
+      const { threshold, primaryContacts, secondaryContacts, notifyContacts, ownerAndSupervisor } = allInputs;
       const notificationSpecificFields = {
         notificationCondition: threshold,
         primaryContacts,
         secondaryContacts,
         notifyContacts,
+        ownerAndSupervisor,
       };
       for (let key in notificationSpecificFields) {
         if ((notificationSpecificFields as any)[key] !== undefined) {

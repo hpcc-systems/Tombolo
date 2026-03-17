@@ -186,7 +186,9 @@ async function toggleCostMonitoringActive(req: Request, res: Response) {
       'Cost monitoring(s) toggled successfully'
     );
   } catch (err) {
-    transaction && (await transaction.rollback());
+    if (transaction) {
+      await transaction.rollback();
+    }
     logger.error('Failed to toggle cost monitoring isActive', err);
     return sendError(res, err.message);
   }
@@ -229,7 +231,9 @@ async function bulkUpdateCostMonitoring(req: Request, res: Response) {
     await transaction.commit();
     return sendSuccess(res, null, 'Cost monitorings updated successfully');
   } catch (err) {
-    transaction && (await transaction.rollback());
+    if (transaction) {
+      await transaction.rollback();
+    }
     logger.error('Failed to bulk update cost monitoring', err);
     return sendError(res, err.message);
   }

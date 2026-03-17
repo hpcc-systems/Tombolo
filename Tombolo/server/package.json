@@ -80,6 +80,7 @@
     "tsup": "catalog:",
     "tsx": "^4.21.0",
     "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
     "vitest": "catalog:"
   }
 }

@@ -134,7 +134,7 @@ const formatDateTimeShort = (timestamp: any) => {
   );
 };
 
-const DateWithTooltip: React.FC<{ timestamp: any }> = ({ timestamp }) => {
+const DateWithTooltip: React.FC<{ timestamp: string }> = ({ timestamp }) => {
   const dateTime = new Date(timestamp);
   return (
     <Tooltip title={formatDateTime(dateTime)}>

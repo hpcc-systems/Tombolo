@@ -1,12 +1,17 @@
 import React from 'react';
+import Text from '../common/Text';
 
 const CollaboratorGuide: React.FC = () => (
-  <div className="guide">
-    <h2>Collaborator Guide</h2>
-    <p>
-      Use this guide to manage collaborators: invite users, assign roles, and configure permissions for accessing
-      Tombolo resources.
-    </p>
+  <div>
+    <h2> Collaborator </h2>
+    <div>
+      To associate consumers, suppliers, and owners with assets, you need to add them first. This is necessary if you
+      want to tag an asset with a collaborator.
+    </div>
+
+    <div style={{ marginTop: '10px' }}>{<Text text="Consumer - Product/Application/Group consuming the asset" />}</div>
+    <div>{<Text text="Supplied - Supplier of the asset data (DMV, Insurance company etc)" />}</div>
+    <div>{<Text text="Owner - Contact Person/Group for an asset" />}</div>
   </div>
 );
 

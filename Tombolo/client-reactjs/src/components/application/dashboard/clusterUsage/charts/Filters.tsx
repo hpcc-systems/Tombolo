@@ -39,7 +39,7 @@ const Filters: React.FC<Props> = ({
       const { clusterOptions: selected, dateRange } = form.getFieldsValue();
       setSelectedCluster(selected);
       setHistoryDateRange(dateRange);
-    } catch (err) {
+    } catch (_err) {
       handleError('Failed to fetch data');
     }
   };

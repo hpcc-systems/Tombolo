@@ -1,4 +1,4 @@
-import { readableLabels } from '../constants';
+import { readableLabels } from '../constants/index.js';
 
 const formatNumber = (n: any): string =>
   n == null ? '-' : Number(n).toLocaleString();
