@@ -10,6 +10,11 @@ import {
 import { workunitHistoryWorker } from './workers/workunitHistory/index.js';
 import { archiveQueue, registerArchiveJobs } from './queues/archive/index.js';
 import { archiveWorker } from './workers/archive/index.js';
+import {
+  hpccToolsQueue,
+  registerHpccToolsJobs,
+} from './queues/hpccToolsQueue.js';
+import { hpccToolsWorker } from './workers/hpccTools/hpccToolsWorker.js';
 import { redisConnectionOptions } from './config/redis.js';
 import logger from './config/logger.js';
 import { formatErrorForLogging } from './utils/errorFormatter.js';
@@ -46,9 +51,13 @@ async function startJobProcessor() {
   logger.info(
     `Archive worker started (concurrency: 1) - Worker ready: ${archiveWorker.isRunning()}`
   );
+  logger.info(
+    `hpcc-tools worker started (concurrency: 1) - Worker ready: ${hpccToolsWorker.isRunning()}`
+  );
 
   await registerScheduledJobs();
   await registerArchiveJobs();
+  await registerHpccToolsJobs();
 
   // Setup Bull Board
   const serverAdapter = new ExpressAdapter();
@@ -58,6 +67,7 @@ async function startJobProcessor() {
     queues: [
       new BullMQAdapter(workunitHistoryQueue),
       new BullMQAdapter(archiveQueue),
+      new BullMQAdapter(hpccToolsQueue),
     ],
     serverAdapter: serverAdapter,
   });
