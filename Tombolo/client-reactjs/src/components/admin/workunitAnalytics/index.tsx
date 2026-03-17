@@ -97,12 +97,15 @@ interface SchemaColumn {
 
 type SchemaData = Record<string, SchemaColumn[]>;
 
+const DEFAULT_SQL = '-- Enter your SQL query here\nSELECT * FROM work_unit_details LIMIT 10';
+const WHERE_CLAUSE_STARTER = 'SELECT wuId FROM work_unit_details WHERE ';
+
 const AnalyticsWorkspace = () => {
   const history = useHistory();
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
 
   // State management
-  const [sql, setSql] = useState('-- Enter your SQL query here\nSELECT * FROM work_unit_details LIMIT 10');
+  const [sql, setSql] = useState(DEFAULT_SQL);
   const [queryResults, setQueryResults] = useState<QueryResult | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [queryHistory, setQueryHistory] = useState<HistoryEntry[]>([]);
@@ -516,17 +519,20 @@ const AnalyticsWorkspace = () => {
                 <FilterOutlined />
                 <Text strong>Where Clause</Text>
               </Space>
-              <Tooltip title="Add new where clause">
-                <Button
-                  size="small"
-                  icon={<PlusOutlined />}
-                  className={styles.panelAddBtn}
-                  onClick={e => {
-                    e.stopPropagation();
-                    setWhereClauseVisible(true);
-                  }}
-                />
-              </Tooltip>
+              {!whereClauseVisible && (
+                <Tooltip title="Add new where clause">
+                  <Button
+                    size="small"
+                    icon={<PlusOutlined />}
+                    className={styles.panelAddBtn}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setSql(WHERE_CLAUSE_STARTER);
+                      setWhereClauseVisible(true);
+                    }}
+                  />
+                </Tooltip>
+              )}
             </div>
           }
           key="where-clause">
@@ -857,7 +863,13 @@ const AnalyticsWorkspace = () => {
                     </Space>
                   }
                   extra={
-                    <Button size="small" danger onClick={() => setWhereClauseVisible(false)}>
+                    <Button
+                      size="small"
+                      danger
+                      onClick={() => {
+                        setWhereClauseVisible(false);
+                        setSql(DEFAULT_SQL);
+                      }}>
                       Close
                     </Button>
                   }
