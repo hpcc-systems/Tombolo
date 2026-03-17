@@ -9,17 +9,26 @@ import {
 } from '@tombolo/shared';
 import logger from '@/config/logger.js';
 
+type ScopeType =
+  | 'activity'
+  | 'subgraph'
+  | 'graph'
+  | 'operation'
+  | 'global'
+  | 'workflow'
+  | null;
+
 // Type for database row objects (what processScopeToRow returns)
 type WorkUnitDetailRow = {
   clusterId: string;
   wuId: string;
   scopeId: string;
   scopeName: string;
-  scopeType: string | null;
+  scopeType: ScopeType;
   label: string | null;
   kind: number | null;
   fileName: string | null;
-  [key: string]: string | number | null; // Dynamic metric fields
+  [key: string]: string | number | ScopeType; // Dynamic metric fields
 };
 
 // Constants
@@ -427,9 +436,9 @@ function processScopeToRow(
   return {
     clusterId,
     wuId,
-    scopeId: scope?.Id || (isGlobal ? 'global' : scope?.Id),
-    scopeName: scopeName || (isGlobal ? 'global' : scopeName),
-    scopeType: scopeType || null, // Convert empty string to null (not a valid ENUM value)
+    scopeId: isGlobal ? (scope?.Id ?? 'global') : scope?.Id,
+    scopeName: isGlobal ? (scopeName ?? 'global') : scopeName,
+    scopeType: (scopeType || null) as ScopeType, // Convert empty string to null (not a valid ENUM value)
     label: label ? truncateString(label, 250) : null,
     kind: kind ? parseInt(kind, 10) : null,
     fileName: filename ? truncateString(filename, 125) : null,

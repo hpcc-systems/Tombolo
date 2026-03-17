@@ -17,7 +17,11 @@ const commonDbConfigOptions = {
   seederStorageTableName: 'sequelize_seeders',
   migrationStorageTableName: 'sequelize_migrations',
   logging: msg => {
-    if (msg.startsWith('==')) logger.info(msg);
+    if (typeof msg === 'string' && msg.startsWith('==')) {
+      logger.info(msg);
+    } else {
+      logger.debug(msg);
+    }
   }, // only log migration/seeder status, not SQL queries
 };
 
