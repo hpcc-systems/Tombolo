@@ -52,13 +52,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 import http from 'http';
+import { Socket } from 'net';
 const server = http.createServer(app);
 server.maxHeadersCount = 1000;
 server.keepAliveTimeout = 65000;
 server.headersTimeout = 66000;
 
-const sockets = new Set<any>();
-server.on('connection', (socket: any) => {
+const sockets = new Set<Socket>();
+server.on('connection', (socket: Socket) => {
   sockets.add(socket);
   socket.on('close', () => sockets.delete(socket));
 });
@@ -119,11 +120,14 @@ app.use('/api/wizard', wizard);
 
 // Expose hpcc-tools documentation and data files
 // Served before authentication to ensure iframe accessibility and robust data fetching
+// In Docker the repo lives on the shared named volume at /app/hpcc-tools-data.
+// Outside Docker it lives as a sibling to the server package directory.
+const hpccToolsDir = fs.existsSync('/.dockerenv')
+  ? '/app/hpcc-tools-data'
+  : path.join(process.cwd(), '..', 'hpcc-tools');
 app.use(
   '/api/hpcc-tools-docs',
-  express.static(
-    path.join(process.cwd(), '..', 'hpcc-tools', 'hpcc-tools', 'docs')
-  )
+  express.static(path.join(hpccToolsDir, 'hpcc-tools', 'docs'))
 );
 
 // Validate access token and csrf tokens, all routes below require these
@@ -156,7 +160,7 @@ app.use('/api/workunitAnalytics', workunitAnalytics);
 app.use('/api/workunit-dashboard', workunitDashboard);
 
 // Safety net for unhandled errors
-app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   logger.error(
     `Error caught by Express error handler on route ${req.path}`,
     err

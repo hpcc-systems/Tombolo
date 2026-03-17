@@ -13,9 +13,11 @@ export default async function processHpccToolsJob(job: Job) {
 
   // Repository details
   const repoUrl = 'https://github.com/hpcc-systems/hpcc-tools.git';
-  // Root of the Tombolo folder (assuming we are running from Tombolo/jobs)
-  const tomboloRoot = path.resolve(process.cwd(), '..');
-  const parentDir = path.join(tomboloRoot, 'hpcc-tools');
+  // In Docker the repo lives on the shared named volume at /app/hpcc-tools-data.
+  // Outside Docker it lives as a sibling to the jobs package directory.
+  const parentDir = fs.existsSync('/.dockerenv')
+    ? '/app/hpcc-tools-data'
+    : path.resolve(process.cwd(), '..', 'hpcc-tools');
   const repoDir = path.join(parentDir, 'hpcc-tools');
 
   try {
