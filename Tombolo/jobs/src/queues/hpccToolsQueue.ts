@@ -1,6 +1,6 @@
 import { Queue } from 'bullmq';
 import { redisConnectionOptions } from '@/config/redis.js';
-import { hpccToolsJobType, type ScheduledJob } from '@/types/index.js';
+import { HpccToolsJobType, type ScheduledJob } from '@/types/index.js';
 import logger from '@/config/logger.js';
 
 export const hpccToolsQueue = new Queue('hpcc-tools', {
@@ -17,7 +17,7 @@ const scheduledJobs: ScheduledJob[] = [
   {
     name: 'hpccToolsSync',
     jobId: 'hpccToolsSync-recurring',
-    data: { type: hpccToolsJobType.SYNC },
+    data: { type: HpccToolsJobType.SYNC },
     schedule: '0 0 * * * *', // Every hour
     description: 'Sync hpcc-tools repository',
   },

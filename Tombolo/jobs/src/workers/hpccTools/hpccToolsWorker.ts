@@ -12,10 +12,10 @@ export const hpccToolsWorker = new Worker('hpcc-tools', processHpccToolsJob, {
   concurrency: 1, // Ensure only one git sync at a time
   limiter: {
     max: 1,
-    duration: 1000,
+    duration: 1_000,
   },
-  lockDuration: 300000, // 5 minutes
-  lockRenewTime: 150000,
+  lockDuration: 600_000, // 10 minutes
+  lockRenewTime: 150_000,
 });
 
 // Worker event handlers

@@ -1,4 +1,4 @@
-export enum hpccToolsJobType {
+export enum HpccToolsJobType {
   SYNC = 'sync',
 }
 
