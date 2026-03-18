@@ -15,7 +15,7 @@ const WorkUnitHistory = React.lazy(() => import('./workunitHistory/index'));
 const WorkUnitDetails = React.lazy(() => import('./workunitHistory/details/index'));
 const WorkUnitAnalytics = React.lazy(() => import('./workunitAnalytics/index'));
 const WorkUnitDashboard = React.lazy(() => import('./workunits/dashboard/'));
-const HPCC_Tools = React.lazy(() => import('./HPCC-Tools'));
+const HPCC_Tools = React.lazy(() => import('./HPCCTools'));
 
 const AdminRoutes: React.FC = () => {
   return (

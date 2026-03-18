@@ -72,6 +72,8 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
     (integration: IntegrationUI) => integration.name === 'ASR' && integration.application_id === applicationId
   );
 
+  const hpccToolsIntegration = integrations.some((integration: IntegrationUI) => integration.name === 'HPCC-Tools');
+
   useEffect(() => {
     setDisabled(!(application && applicationId));
   }, [application, applicationId]);
@@ -361,18 +363,19 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
       null,
       clusterDisabled
     ),
-    getItem(
-      <Link to={'/admin/hpcc-tools'}>
-        <span>
-          <FileTextOutlined />
-          <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>HPCC Tools</span>
-        </span>
-      </Link>,
-      '14',
-      null,
-      null,
-      null
-    ),
+    hpccToolsIntegration &&
+      getItem(
+        <Link to={'/admin/hpcc-tools'}>
+          <span>
+            <FileTextOutlined />
+            <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>HPCC Tools</span>
+          </span>
+        </Link>,
+        '14',
+        null,
+        null,
+        null
+      ),
   ];
   const onClick = (e: any) => setCurrent(e.key);
 
