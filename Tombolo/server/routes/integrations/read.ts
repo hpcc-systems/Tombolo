@@ -37,6 +37,7 @@ router.get('/getAllActive/', async (req: Request, res: Response) => {
         },
       ],
       raw: true,
+      nest: true,
     });
     return sendSuccess(res, integrationMappingDetails);
   } catch (err) {

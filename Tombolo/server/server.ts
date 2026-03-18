@@ -93,6 +93,7 @@ import sent_notifications from './routes/sentNotificationRoutes.js';
 import monitorings from './routes/monitoringTypeRoutes.js';
 import asr from './routes/asrRoutes.js';
 import wizard from './routes/wizardRoutes.js';
+import hpccTools from './routes/hpccToolsRoutes.js';
 
 //MVC & TESTED
 import auth from './routes/authRoutes.js';
@@ -120,15 +121,6 @@ app.use('/api/wizard', wizard);
 
 // Expose hpcc-tools documentation and data files
 // Served before authentication to ensure iframe accessibility and robust data fetching
-// In Docker the repo lives on the shared named volume at /app/hpcc-tools-data.
-// Outside Docker it lives as a sibling to the server package directory.
-const hpccToolsDir = fs.existsSync('/.dockerenv')
-  ? '/app/hpcc-tools-data'
-  : path.join(process.cwd(), '..', 'hpcc-tools');
-app.use(
-  '/api/hpcc-tools-docs',
-  express.static(path.join(hpccToolsDir, 'hpcc-tools', 'docs'))
-);
 
 // Validate access token and csrf tokens, all routes below require these
 app.use(validateToken);
@@ -158,6 +150,7 @@ app.use('/api/orbitProfileMonitoring', orbitProfileMonitoring);
 app.use('/api/workunits', workunits);
 app.use('/api/workunitAnalytics', workunitAnalytics);
 app.use('/api/workunit-dashboard', workunitDashboard);
+app.use('/api/hpcc-tools-docs', hpccTools);
 
 // Safety net for unhandled errors
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
