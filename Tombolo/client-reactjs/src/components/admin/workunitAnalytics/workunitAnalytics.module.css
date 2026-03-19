@@ -347,6 +347,18 @@
   border-color: var(--aw-accent-primary) !important;
 }
 
+/* Applied filter styling - distinct and prominent */
+.saved-query-card.appliedFilter {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--aw-bg-tertiary) 100%) !important;
+  border: 2px solid var(--aw-accent-success) !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+}
+
+.saved-query-card.appliedFilter:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, var(--aw-bg-tertiary) 100%) !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
 .saved-query-card .ant-card-body {
   padding: 12px !important;
 }
@@ -366,6 +378,21 @@
 }
 
 .where-clause-card:hover .where-card-actions {
+  opacity: 1;
+}
+
+/* Always show recall button for applied filters */
+.where-clause-card.appliedFilter .recallButton {
+  opacity: 1;
+}
+
+/* Keep delete button hidden until hover, even for applied filters */
+.where-clause-card.appliedFilter .deleteButton {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.where-clause-card.appliedFilter:hover .deleteButton {
   opacity: 1;
 }
 
