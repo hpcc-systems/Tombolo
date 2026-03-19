@@ -9,6 +9,7 @@ import { createRequire } from 'module';
 
 // Import all models
 import { AccountVerificationCode } from './AccountVerificationCode.js';
+import { AnalyticsFilter } from './AnalyticsFilter.js';
 import { Application } from './Application.js';
 import { AsrDomain } from './AsrDomain.js';
 import { AsrDomainToProductsRelation } from './AsrDomainToProductsRelation.js';
@@ -123,6 +124,7 @@ const sequelizeOptions: SequelizeOptions & { models: any[] } = {
   logging: config.logging,
   models: [
     AccountVerificationCode,
+    AnalyticsFilter,
     Application,
     AsrDomain,
     AsrDomainToProductsRelation,
@@ -186,6 +188,7 @@ export type MonitoringLogInstance = MonitoringLog;
 
 // Export all models
 export {
+  AnalyticsFilter,
   AccountVerificationCode,
   Application,
   AsrDomain,
@@ -232,6 +235,7 @@ export default {
   sequelize,
   Sequelize,
   AccountVerificationCode,
+  AnalyticsFilter,
   Application,
   AsrDomain,
   AsrDomainToProductsRelation,
