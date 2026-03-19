@@ -8,7 +8,7 @@ const formatSeconds = (s: number | string | null | undefined): string =>
   s == null || isNaN(Number(s)) ? '-' : `${Number(s).toFixed(3)}s`;
 
 // Format duration as "Hh Mm" using whole numbers for hours/minutes
-const formatDurationHms = (
+const formatDurationHm = (
   seconds: number | string | null | undefined
 ): string => {
   if (seconds == null || isNaN(Number(seconds))) return '-';
@@ -44,8 +44,23 @@ const formatPercentage = (p: number | string | null | undefined): string =>
 const formatCurrency = (
   n: number | string | null | undefined,
   decimals = 2
-): string =>
-  n == null || isNaN(Number(n)) ? '-' : `$${Number(n).toFixed(decimals)}`;
+): string => {
+  if (n == null || isNaN(Number(n))) return '-';
+  const num = Number(n);
+  try {
+    const nf = new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+    return nf.format(num);
+  } catch (_e) {
+    const sign = num < 0 ? '-' : '';
+    const abs = Math.abs(num);
+    return `${sign}$${abs.toFixed(decimals)}`;
+  }
+};
 
 /**
  * Parses workunit timestamp from wuId and applies timezone offset
@@ -129,7 +144,7 @@ function normalizeLabel(
 export {
   formatNumber,
   formatSeconds,
-  formatDurationHms,
+  formatDurationHm,
   formatHours,
   formatCurrency,
   formatBytes,
