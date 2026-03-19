@@ -218,6 +218,7 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  margin-bottom: 0.5rem;
 }
 
 .where-connector {
