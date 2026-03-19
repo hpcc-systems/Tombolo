@@ -302,8 +302,8 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 
-# Install PM2 globally
-RUN pnpm add -g pm2
+# Install PM2 and git globally
+RUN pnpm add -g pm2 && apk add --no-cache git openssh-client
 
 # Copy deployed jobs from builder (includes node_modules with workspace deps resolved)
 COPY --from=jobs-builder /deploy/jobs /app

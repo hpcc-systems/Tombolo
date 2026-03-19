@@ -49,6 +49,7 @@ services:
       - ./certs:/usr/local/share/ca-certificates
       - ./customCerts:/customCerts
       - ./gitClones:/gitClones
+      - hpcc-tools-data:/app/hpcc-tools-data
     networks:
       - tombolo-network
     ports:
@@ -85,7 +86,14 @@ services:
       context: ..
       dockerfile: Tombolo/Dockerfile
       target: jobs
+    environment:
+      DB_PORT: 3306 # Override for container-to-container communication
+      LOG_DIR: /app/logs
+      NODE_OPTIONS: --max-old-space-size=2048
+      SSH_AUTH_SOCK: /ssh-agent
     volumes:
+      - $SSH_AUTH_SOCK:/ssh-agent
+      - hpcc-tools-data:/app/hpcc-tools-data
       - ./dockerLogs/jobs:/app/logs
     networks:
       - tombolo-network
@@ -98,10 +106,6 @@ services:
         condition: service_healthy
     env_file:
       - .env
-    environment:
-      DB_PORT: 3306 # Override for container-to-container communication
-      LOG_DIR: /app/logs
-      NODE_OPTIONS: --max-old-space-size=2048
     logging:
       driver: "json-file"
       options:
