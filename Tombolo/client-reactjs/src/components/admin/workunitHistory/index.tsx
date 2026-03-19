@@ -26,6 +26,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import workunitsService from '@/services/workunits.service';
+import { formatCurrency, formatHours } from '@tombolo/shared';
 import clustersService from '@/services/clusters.service';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import styles from './workunitHistory.module.css';
@@ -33,16 +34,6 @@ import styles from './workunitHistory.module.css';
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
-
-const formatTime = (seconds: any) => {
-  if (seconds == null) return '-';
-  const hours = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  if (hours > 0) return `${hours}h ${mins}m`;
-  if (mins > 0) return `${mins}m ${secs}s`;
-  return `${secs}s`;
-};
 
 const WorkUnitHistory: React.FC = () => {
   const history = useHistory();
@@ -268,7 +259,7 @@ const WorkUnitHistory: React.FC = () => {
       key: 'totalCost',
       width: 80,
       sorter: true,
-      render: (cost: any) => (cost != null ? `$${cost.toFixed(4)}` : '-'),
+      render: (cost: any) => (cost != null ? formatCurrency(cost) : '-'),
     },
     {
       title: 'Actions',
@@ -333,7 +324,7 @@ const WorkUnitHistory: React.FC = () => {
                   Avg Time
                 </Text>
               }
-              value={formatTime(statistics.avgTime)}
+              value={formatHours((statistics.avgTime || 0) / 3600)}
               prefix={<ClockCircleOutlined style={{ fontSize: '14px' }} />}
               valueStyle={{ fontSize: '20px' }}
             />

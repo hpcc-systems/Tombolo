@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Tag, Badge, Empty } from 'antd';
 import { WarningOutlined, CloseCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { formatCurrency } from '@tombolo/shared';
 
 export type JobSeverity = 'critical' | 'warning' | 'info';
 
@@ -172,7 +173,7 @@ export default function ProblematicJobs({ jobs }: ProblematicJobsProps) {
                       fontSize: 12,
                       fontFamily: 'var(--font-mono), monospace',
                     }}>
-                    ${job.cost.toFixed(2)}
+                    {formatCurrency(job.cost)}
                   </span>
                 </div>
                 <div style={{ marginTop: 2 }}>

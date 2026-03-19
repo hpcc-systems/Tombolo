@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 
 import CostSummary, { type DashboardSummary } from './cards/CostSummary';
+import { formatCurrency } from '@tombolo/shared';
 import CostBarChart, { type DailyCost } from './cards/CostBarChart';
 import CostByCluster, { type ClusterCost } from './cards/CostByEnvironment';
 import ProblematicJobs, { type ProblematicJob } from './cards/ProblematicJobs';
@@ -261,7 +262,7 @@ export default function DashboardPage() {
                                 textAlign: 'right',
                                 flexShrink: 0,
                               }}>
-                              ${o.cost.toFixed(2)}
+                              {formatCurrency(o.cost)}
                             </span>
                             <span
                               style={{

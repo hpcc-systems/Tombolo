@@ -1,5 +1,6 @@
 import { Table, Tag, Tooltip, Input, Select, Button } from 'antd';
 import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
+import { formatCurrency } from '@tombolo/shared';
 import { useState, useMemo } from 'react';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -135,7 +136,7 @@ export default function WorkunitTable({ workunits }: WorkunitTableProps) {
             color: val > 15 ? '#dc2626' : val > 8 ? '#d97706' : '#16a34a',
             fontWeight: 600,
           }}>
-          ${val.toFixed(2)}
+          {formatCurrency(val)}
         </span>
       ),
     },
@@ -170,9 +171,9 @@ export default function WorkunitTable({ workunits }: WorkunitTableProps) {
           <Tooltip
             title={
               <div>
-                <div>Compute: ${compute.toFixed(2)}</div>
-                <div>File Access: ${fileAccess.toFixed(2)}</div>
-                <div>Compile: ${compile.toFixed(2)}</div>
+                <div>Compute: {formatCurrency(compute)}</div>
+                <div>File Access: {formatCurrency(fileAccess)}</div>
+                <div>Compile: {formatCurrency(compile)}</div>
               </div>
             }>
             <div
