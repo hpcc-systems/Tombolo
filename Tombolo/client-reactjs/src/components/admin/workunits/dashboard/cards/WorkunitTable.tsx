@@ -22,7 +22,7 @@ export interface WorkunitRecord {
   cpuHours?: number;
   endTime?: string;
   costBreakdown: CostBreakdown;
-  clusterId?: string;
+  clusterId: string;
   detailsFetchedAt?: string;
 }
 
@@ -110,8 +110,8 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
         cost: wu.totalCost ?? 0,
         cpuHours: wu.totalClusterTime ?? 0,
         duration: (wu.totalClusterTime ?? 0) * 60, // hours → minutes
-        endTime: wu.endTimestamp ?? null,
-        detailsFetchedAt: wu.detailsFetchedAt ?? null,
+        endTime: wu.endTimestamp ?? undefined,
+        detailsFetchedAt: wu.detailsFetchedAt ?? undefined,
         costBreakdown: {
           compute: wu.executeCost ?? 0,
           fileAccess: wu.fileAccessCost ?? 0,
@@ -139,6 +139,16 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
     endTime: 'endTimestamp',
   };
 
+  // Reverse map: backend field → column dataIndex (for controlled sortOrder)
+  const backendToColumnMap: Record<string, string> = {
+    totalCost: 'cost',
+    totalClusterTime: 'duration',
+    endTimestamp: 'endTime',
+  };
+
+  // The column dataIndex that is currently active, used to set controlled sortOrder
+  const activeSortColumn = backendToColumnMap[sortField] ?? sortField;
+
   const handleTableChange = (pagination: any, _filters: any, sorter: any, extra: any) => {
     if (extra?.action === 'sort') {
       const s = Array.isArray(sorter) ? sorter[0] : sorter;
@@ -148,8 +158,12 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
         setSortOrder(s.order === 'ascend' ? 'asc' : 'desc');
         setPage(1);
         setLimit(pagination.pageSize ?? 15);
+      } else {
+        // Sort cleared — reset to default so UI and API stay in sync
+        setSortField('totalCost');
+        setSortOrder('desc');
+        setPage(1);
       }
-      // If sort was cleared (s.order falsy), do nothing — keep current sort state
     } else {
       // 'paginate' or 'filter' — never touch sort state
       setPage(pagination.current ?? 1);
@@ -235,7 +249,7 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
       width: 100,
       sorter: true,
       sortDirections: ['ascend', 'descend', 'ascend'] as const,
-      defaultSortOrder: 'descend' as const,
+      sortOrder: activeSortColumn === 'cost' ? (sortOrder === 'asc' ? 'ascend' : 'descend') : null,
       render: (val: number) => (
         <span
           style={{
@@ -254,6 +268,7 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
       width: 100,
       sorter: true,
       sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortOrder: activeSortColumn === 'duration' ? (sortOrder === 'asc' ? 'ascend' : 'descend') : null,
       render: (val: number) => {
         const h = Math.floor(val / 60);
         const m = Math.round(val % 60);
@@ -272,6 +287,7 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
       width: 160,
       sorter: true,
       sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortOrder: activeSortColumn === 'endTime' ? (sortOrder === 'asc' ? 'ascend' : 'descend') : null,
       render: (val: string | null) =>
         val ? (
           <span style={{ color: '#6b7280', fontSize: 12 }}>{new Date(val).toLocaleString()}</span>
