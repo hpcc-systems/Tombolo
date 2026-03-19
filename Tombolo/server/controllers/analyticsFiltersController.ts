@@ -175,11 +175,13 @@ export async function deleteAnalyticsFilter(req: Request, res: Response) {
       return sendError(res, 'Filter not found', 404);
     }
 
-    // Soft delete the filter
+    // Update deletedBy before soft delete (paranoid mode will set deletedAt)
     await filter.update({
       deletedBy: userId,
-      deletedAt: new Date(),
     });
+
+    // Use destroy() to trigger paranoid soft delete
+    await filter.destroy();
 
     sendSuccess(res, null, 'Filter deleted successfully');
   } catch (error) {

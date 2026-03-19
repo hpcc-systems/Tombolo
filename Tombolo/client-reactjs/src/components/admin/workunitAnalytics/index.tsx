@@ -481,6 +481,13 @@ const AnalyticsWorkspace = () => {
   const deleteFilter = async (id: string) => {
     try {
       await analyticsFiltersService.delete(id);
+      // Remove from applied filters if it was applied
+      setAppliedFilterIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+      // Update local state
       const updated = (savedFilters || []).filter(f => f.id !== id);
       setSavedFilters(updated);
       handleSuccess('Filter deleted successfully');
@@ -615,6 +622,62 @@ const AnalyticsWorkspace = () => {
         return { ...row, [field]: value };
       })
     );
+  };
+
+  // Get operators based on column data type
+  const getOperatorsForColumn = (columnName: string): string[] => {
+    if (!columnName || !schemaData) return WHERE_OPERATORS;
+
+    // Find the column type from schema
+    let columnType = '';
+    for (const cols of Object.values(schemaData)) {
+      const col = cols.find(c => c.name === columnName);
+      if (col) {
+        columnType = col.type.toLowerCase();
+        break;
+      }
+    }
+
+    console.info(`Column: ${columnName}, Type: ${columnType}`);
+
+    // Determine if it's numeric or string type
+    const isNumeric = /^(int|integer|bigint|smallint|tinyint|decimal|numeric|float|double|real|number)/.test(
+      columnType
+    );
+    const isDate = /^(date|datetime|timestamp|time)/.test(columnType);
+    // For strings, match common string types including uuid
+    const isString = /^(char|varchar|text|string|enum|uuid|guid)/.test(columnType) || columnType.includes('char');
+
+    if (isNumeric || isDate) {
+      return ['=', '!=', '>', '<', '>=', '<=', 'IS NULL', 'IS NOT NULL', 'IN'];
+    } else if (isString) {
+      return ['=', '!=', 'LIKE', 'NOT LIKE', 'IS NULL', 'IS NOT NULL', 'IN'];
+    }
+
+    // Default: assume string type for safety (don't show comparison operators)
+    console.info(`Unknown type for ${columnName}, defaulting to string operators`);
+    return ['=', '!=', 'LIKE', 'NOT LIKE', 'IS NULL', 'IS NOT NULL', 'IN'];
+  };
+
+  // Get available columns excluding already selected ones
+  const getAvailableColumns = (currentRowId: number): Record<string, SchemaColumn[]> => {
+    if (!schemaData) return {};
+
+    // Get columns already selected in other rows
+    const usedColumns = new Set(
+      whereClauses.filter(row => row.id !== currentRowId && row.column).map(row => row.column)
+    );
+
+    // Filter out used columns from each table
+    const availableSchema: Record<string, SchemaColumn[]> = {};
+    for (const [table, cols] of Object.entries(schemaData)) {
+      const availableCols = cols.filter(col => !usedColumns.has(col.name));
+      if (availableCols.length > 0) {
+        availableSchema[table] = availableCols;
+      }
+    }
+
+    return availableSchema;
   };
 
   // Render query library (left sidebar)
@@ -1147,76 +1210,81 @@ const AnalyticsWorkspace = () => {
                   size="small">
                   <div className={styles.queryBuilderBody}>
                     <div className={styles.whereClauseRowsScrollable}>
-                      {whereClauses.map((row, idx) => (
-                        <div key={row.id} className={styles.whereClauseRow}>
-                          <span className={styles.whereConnector}>{idx === 0 ? 'WHERE' : 'AND'}</span>
+                      {whereClauses.map((row, idx) => {
+                        const availableSchema = getAvailableColumns(row.id);
+                        const operatorsForColumn = getOperatorsForColumn(row.column);
 
-                          <Select
-                            placeholder="Column"
-                            value={row.column || undefined}
-                            onChange={val => updateWhereClause(row.id, 'column', val)}
-                            showSearch
-                            size="small"
-                            className={styles.whereColumnSelect}>
-                            {schemaData
-                              ? Object.entries(schemaData).map(([table, cols]) => (
-                                  <Select.OptGroup label={table} key={table}>
-                                    {cols.map(col => (
-                                      <Select.Option key={`${table}.${col.name}`} value={col.name}>
-                                        {col.name}
-                                      </Select.Option>
-                                    ))}
-                                  </Select.OptGroup>
-                                ))
-                              : null}
-                          </Select>
+                        return (
+                          <div key={row.id} className={styles.whereClauseRow}>
+                            <span className={styles.whereConnector}>{idx === 0 ? 'WHERE' : 'AND'}</span>
 
-                          <Select
-                            value={row.operator}
-                            onChange={val => updateWhereClause(row.id, 'operator', val)}
-                            size="small"
-                            className={styles.whereOperatorSelect}>
-                            {WHERE_OPERATORS.map(op => (
-                              <Select.Option key={op} value={op}>
-                                {op}
-                              </Select.Option>
-                            ))}
-                          </Select>
-
-                          {!['IS NULL', 'IS NOT NULL'].includes(row.operator) && (
-                            <Input
-                              placeholder="Value"
-                              value={row.value}
-                              onChange={e => updateWhereClause(row.id, 'value', e.target.value)}
+                            <Select
+                              placeholder="Column"
+                              value={row.column || undefined}
+                              onChange={val => {
+                                updateWhereClause(row.id, 'column', val);
+                                // Reset operator to '=' when column changes
+                                updateWhereClause(row.id, 'operator', '=');
+                              }}
+                              showSearch
                               size="small"
-                              className={styles.whereValueInput}
-                            />
-                          )}
+                              className={styles.whereColumnSelect}>
+                              {Object.entries(availableSchema).map(([table, cols]) => (
+                                <Select.OptGroup label={table} key={table}>
+                                  {cols.map(col => (
+                                    <Select.Option key={`${table}.${col.name}`} value={col.name}>
+                                      {col.name}
+                                    </Select.Option>
+                                  ))}
+                                </Select.OptGroup>
+                              ))}
+                            </Select>
 
-                          <Tooltip title="Add condition">
-                            <Button
-                              type="text"
+                            <Select
+                              value={row.operator}
+                              onChange={val => updateWhereClause(row.id, 'operator', val)}
                               size="small"
-                              icon={<PlusOutlined />}
-                              onClick={addWhereClause}
-                              className={styles.whereRowBtn}
-                            />
-                          </Tooltip>
+                              className={styles.whereOperatorSelect}>
+                              {operatorsForColumn.map(op => (
+                                <Select.Option key={op} value={op}>
+                                  {op}
+                                </Select.Option>
+                              ))}
+                            </Select>
 
-                          {whereClauses.length > 1 && (
-                            <Tooltip title="Remove condition">
-                              <Button
-                                type="text"
+                            {!['IS NULL', 'IS NOT NULL'].includes(row.operator) && (
+                              <Input
+                                placeholder="Value"
+                                value={row.value}
+                                onChange={e => updateWhereClause(row.id, 'value', e.target.value)}
                                 size="small"
-                                danger
-                                icon={<MinusOutlined />}
-                                onClick={() => removeWhereClause(row.id)}
+                                className={styles.whereValueInput}
+                              />
+                            )}
+
+                            {whereClauses.length > 1 && (
+                              <Tooltip title="Remove condition">
+                                <Button
+                                  size="small"
+                                  danger
+                                  icon={<MinusOutlined />}
+                                  onClick={() => removeWhereClause(row.id)}
+                                  className={styles.whereRowBtn}
+                                />
+                              </Tooltip>
+                            )}
+
+                            <Tooltip title="Add condition">
+                              <Button
+                                size="small"
+                                icon={<PlusOutlined />}
+                                onClick={addWhereClause}
                                 className={styles.whereRowBtn}
                               />
                             </Tooltip>
-                          )}
-                        </div>
-                      ))}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </Card>
@@ -1349,6 +1417,7 @@ const AnalyticsWorkspace = () => {
         {/* Save Filter from Editor Modal */}
         <Modal
           title="Save Filter from Query"
+          destroyOnHidden={true}
           open={saveFilterFromEditorModalVisible}
           onCancel={() => {
             setSaveFilterFromEditorModalVisible(false);
