@@ -17,6 +17,7 @@ import {
   Typography,
   Card,
   Statistic,
+  Select,
 } from 'antd';
 import styles from './workunitAnalytics.module.css';
 import {
@@ -34,7 +35,9 @@ import {
   ClockCircleOutlined,
   TableOutlined,
   FormatPainterOutlined,
+  ReloadOutlined,
   PlusOutlined,
+  MinusOutlined,
   FilterOutlined,
   StarOutlined,
   StarFilled,
@@ -42,6 +45,7 @@ import {
   LinkOutlined,
   MenuOutlined,
   LineChartOutlined,
+  RollbackOutlined,
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import { format } from 'sql-formatter';
@@ -53,6 +57,26 @@ import QUERY_TEMPLATES from './queryTemplates';
 import ChartModal from './ChartModal';
 
 import type { editor as MonacoEditor } from 'monaco-editor';
+import {
+  DEFAULT_SQL,
+  WHERE_OPERATORS,
+  INITIAL_WHERE_ROW,
+  SQL_FORMATTER_OPTIONS,
+  QUERY_TIMEOUT_MS,
+  MAX_HISTORY_ITEMS,
+} from './constants';
+import {
+  sanitizeValue,
+  buildConditionString,
+  stripComments,
+  extractWhereClause,
+  hasWhereClause as hasWhere,
+  ensureSpacing,
+  cleanUpSQLFormatting,
+  exportToCSV as exportResults,
+  formatTime,
+} from './utils';
+import type { WhereClauseRow } from './utils';
 
 const { Sider, Content } = Layout;
 const { Panel } = Collapse;
@@ -97,8 +121,12 @@ interface SchemaColumn {
 
 type SchemaData = Record<string, SchemaColumn[]>;
 
-const DEFAULT_SQL = '-- Enter your SQL query here\nSELECT * FROM work_unit_details LIMIT 10';
-const WHERE_CLAUSE_STARTER = 'SELECT wuId FROM work_unit_details WHERE ';
+interface SavedFilter {
+  id: number;
+  name: string;
+  conditions: string;
+  createdAt: string;
+}
 
 const AnalyticsWorkspace = () => {
   const history = useHistory();
@@ -121,7 +149,15 @@ const AnalyticsWorkspace = () => {
   const [schemaData, setSchemaData] = useState<SchemaData | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(true);
   const [chartModalVisible, setChartModalVisible] = useState(false);
-  const [whereClauseVisible, setWhereClauseVisible] = useState(false);
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
+  const [filterBuilderVisible, setFilterBuilderVisible] = useState(false);
+  const [whereClauses, setWhereClauses] = useState<WhereClauseRow[]>([INITIAL_WHERE_ROW()]);
+  const [saveFilterFromEditorModalVisible, setSaveFilterFromEditorModalVisible] = useState(false);
+  const [extractedFilterConditions, setExtractedFilterConditions] = useState('');
+  const [sqlWhenBuilderOpened, setSqlWhenBuilderOpened] = useState('');
+  const [appliedFilterIds, setAppliedFilterIds] = useState<Set<number>>(new Set());
+
+  const hasWhereClause = useMemo(() => hasWhere(sql), [sql]);
 
   // Persist sidebar preferences to localStorage
   useEffect(() => {
@@ -140,7 +176,6 @@ const AnalyticsWorkspace = () => {
         const response = await apiClient.get('/workunitAnalytics/schema');
         setSchemaData(response.data);
       } catch (error) {
-        console.error('Failed to load schema:', error);
         message.error('Failed to load database schema');
       } finally {
         setIsLoadingSchema(false);
@@ -155,8 +190,8 @@ const AnalyticsWorkspace = () => {
     if (saved) {
       try {
         setSavedQueries(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load saved queries', e);
+      } catch {
+        message.error('Failed to load saved queries');
       }
     }
 
@@ -164,11 +199,73 @@ const AnalyticsWorkspace = () => {
     if (storedHistory) {
       try {
         setQueryHistory(JSON.parse(storedHistory));
-      } catch (e) {
-        console.error('Failed to load query history', e);
+      } catch {
+        message.error('Failed to load query history');
+      }
+    }
+
+    const storedFilters = localStorage.getItem('analytics_filters');
+    if (storedFilters) {
+      try {
+        setSavedFilters(JSON.parse(storedFilters));
+      } catch {
+        message.error('Failed to load saved filters');
       }
     }
   }, []);
+
+  // Auto-update SQL editor when filter builder conditions change
+  useEffect(() => {
+    if (!filterBuilderVisible) return;
+
+    const newConditions = whereClauses.filter(row => row.column).map(row => buildConditionString(row));
+
+    const baseSql = sqlWhenBuilderOpened || sql;
+    const strippedSql = stripComments(baseSql);
+    const whereMatch = strippedSql.match(/\bwhere\b(.+?)(?:\b(?:group\s+by|order\s+by|limit|;)\b|$)/is);
+
+    if (newConditions.length === 0) {
+      // No conditions from filter builder - keep original SQL if it had WHERE
+      if (whereMatch) {
+        setSql(baseSql);
+      } else {
+        // Add empty WHERE clause
+        const insertMatch = strippedSql.match(/\b(group\s+by|order\s+by|limit)\b/i);
+        if (insertMatch && insertMatch.index !== undefined) {
+          const beforeInsert = strippedSql.substring(0, insertMatch.index).trim();
+          const afterInsert = strippedSql.substring(insertMatch.index);
+          setSql(`${beforeInsert}\nWHERE \n${afterInsert}`);
+        } else {
+          setSql(`${strippedSql}\nWHERE `);
+        }
+      }
+      return;
+    }
+
+    const newWhereClause = newConditions.join('\n  AND ');
+
+    if (whereMatch) {
+      // Existing WHERE clause - append new conditions with AND
+      const existingWhere = whereMatch[1].trim();
+      const beforeWhere = strippedSql.substring(0, whereMatch.index! + 5); // +5 for "WHERE"
+      const afterMatch = whereMatch.index! + 5 + whereMatch[1].length;
+      const afterWhere = strippedSql.substring(afterMatch);
+
+      const spacedAfterWhere = ensureSpacing(afterWhere);
+      const updatedSql = `${beforeWhere} ${existingWhere}\n  AND ${newWhereClause}${spacedAfterWhere}`;
+      setSql(updatedSql);
+    } else {
+      // No existing WHERE - add it before GROUP BY/ORDER BY/LIMIT or at end
+      const insertMatch = strippedSql.match(/\b(group\s+by|order\s+by|limit)\b/i);
+      if (insertMatch && insertMatch.index !== undefined) {
+        const beforeInsert = strippedSql.substring(0, insertMatch.index).trim();
+        const afterInsert = strippedSql.substring(insertMatch.index);
+        setSql(`${beforeInsert}\nWHERE ${newWhereClause}\n${afterInsert}`);
+      } else {
+        setSql(`${strippedSql}\nWHERE ${newWhereClause}`);
+      }
+    }
+  }, [whereClauses, filterBuilderVisible, sqlWhenBuilderOpened]);
 
   // Execute SQL query
   const executeQuery = async () => {
@@ -181,16 +278,13 @@ const AnalyticsWorkspace = () => {
     const startTime = Date.now();
 
     try {
-      // Use the workunitAnalytics service with extended timeout for long-running queries
       const result = await apiClient.post(
         '/workunitAnalytics/query',
         {
           sql,
           options: {},
         },
-        {
-          timeout: 120000, // 2 minutes for analytics queries
-        }
+        { timeout: QUERY_TIMEOUT_MS }
       );
 
       const executionTime = Date.now() - startTime;
@@ -217,15 +311,14 @@ const AnalyticsWorkspace = () => {
         rowCount: result.data.rows.length,
       };
 
-      const newHistory = [historyEntry, ...queryHistory].slice(0, 20);
+      const newHistory = [historyEntry, ...queryHistory].slice(0, MAX_HISTORY_ITEMS);
       setQueryHistory(newHistory);
       localStorage.setItem('analytics_query_history', JSON.stringify(newHistory));
 
-      message.success(`Query executed successfully (${executionTime}ms)`);
+      message.success(`Query executed successfully (${formatTime(executionTime)})`);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } }; message?: string };
       message.error(err.response?.data?.message || err.message || 'Failed to execute query');
-      console.error('Query execution error:', error);
     } finally {
       setIsExecuting(false);
     }
@@ -234,15 +327,10 @@ const AnalyticsWorkspace = () => {
   // Format SQL
   const formatSql = () => {
     try {
-      const formatted = format(sql, {
-        language: 'mysql',
-        tabWidth: 2,
-        keywordCase: 'upper',
-      });
+      const formatted = format(sql, SQL_FORMATTER_OPTIONS);
       setSql(formatted);
       message.success('SQL formatted successfully');
-    } catch (error) {
-      console.error(error);
+    } catch {
       message.error('Failed to format SQL');
     }
   };
@@ -252,6 +340,7 @@ const AnalyticsWorkspace = () => {
     setSql('');
     setQueryResults(null);
     setExecutionStats(null);
+    setAppliedFilterIds(new Set());
   };
 
   // Save query
@@ -349,49 +438,19 @@ const AnalyticsWorkspace = () => {
     }));
   }, [schemaData]);
 
-  // Export results to CSV
   const exportToCSV = () => {
     if (!queryResults || !queryResults.rows.length) {
-      message.warning('No results to export');
       return;
     }
-
-    const headers = queryResults.columns.join(',');
-    const rows = queryResults.rows
-      .map(row =>
-        queryResults.columns
-          .map(col => {
-            const value = row[col];
-            // Escape quotes and wrap in quotes if contains comma
-            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-              return `"${value.replace(/"/g, '""')}"`;
-            }
-            return value;
-          })
-          .join(',')
-      )
-      .join('\n');
-
-    const csv = `${headers}\n${rows}`;
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `query-results-${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    message.success('Results exported to CSV');
+    exportResults(queryResults.columns, queryResults.rows);
   };
 
-  // Insert column name at cursor
   const insertColumn = (columnName: string) => {
     if (editorRef.current) {
       const editor = editorRef.current;
       const position = editor.getPosition();
       if (!position) return;
 
-      // Extract just the column name if it has table prefix
       const columnParts = columnName.split('.');
       const actualColumnName = columnParts.length === 2 ? columnParts[1] : columnName;
 
@@ -411,6 +470,132 @@ const AnalyticsWorkspace = () => {
     }
   };
 
+  const deleteFilter = (id: number) => {
+    const updated = savedFilters.filter(f => f.id !== id);
+    setSavedFilters(updated);
+    localStorage.setItem('analytics_filters', JSON.stringify(updated));
+    message.success('Filter deleted');
+  };
+
+  const saveFilterFromEditor = () => {
+    const conditions = extractWhereClause(sql);
+
+    if (!conditions) {
+      message.error('No WHERE clause found in the query');
+      return;
+    }
+
+    setExtractedFilterConditions(conditions);
+    setSaveFilterFromEditorModalVisible(true);
+  };
+
+  const confirmSaveFilterFromEditor = (values: { name: string }) => {
+    const filter: SavedFilter = {
+      id: Date.now(),
+      name: values.name,
+      conditions: extractedFilterConditions,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updated = [filter, ...savedFilters];
+    setSavedFilters(updated);
+    localStorage.setItem('analytics_filters', JSON.stringify(updated));
+    setSaveFilterFromEditorModalVisible(false);
+    setExtractedFilterConditions('');
+    message.success(`Filter "${filter.name}" saved`);
+  };
+
+  const applyFilterToEditor = (filter: SavedFilter) => {
+    const conditions = sanitizeValue(filter.conditions);
+    if (!conditions) {
+      message.warning('Filter has no conditions');
+      return;
+    }
+
+    const currentSql = sql.trim();
+    const strippedSql = stripComments(currentSql);
+
+    if (!/^select\b/i.test(strippedSql)) {
+      message.error('Can only apply a filter to a SELECT statement');
+      return;
+    }
+
+    const whereMatch = currentSql.match(/\bwhere\b(.+?)(?:\b(?:group\s+by|order\s+by|limit|;)\b|$)/is);
+
+    let newSql: string;
+
+    if (whereMatch) {
+      const beforeWhere = currentSql.substring(0, whereMatch.index! + 5);
+      const existingWhere = whereMatch[1].trim();
+      const afterMatch = whereMatch.index! + 5 + whereMatch[1].length;
+      const afterWhere = currentSql.substring(afterMatch);
+
+      const spacedAfterWhere = ensureSpacing(afterWhere);
+      newSql = `${beforeWhere} (${conditions})\n  AND ${existingWhere}${spacedAfterWhere}`;
+    } else {
+      const insertMatch = currentSql.match(/\b(group\s+by|order\s+by|limit)\b/is);
+      if (insertMatch && insertMatch.index !== undefined) {
+        const beforeInsert = currentSql.substring(0, insertMatch.index).trim();
+        const afterInsert = currentSql.substring(insertMatch.index);
+        newSql = `${beforeInsert}\nWHERE (${conditions})\n${afterInsert}`;
+      } else {
+        newSql = `${currentSql}\nWHERE (${conditions})`;
+      }
+    }
+
+    setSql(newSql);
+    setAppliedFilterIds(prev => new Set(prev).add(filter.id));
+    message.success(`Applied "${filter.name}" to query`);
+  };
+
+  const recallFilterFromEditor = (filter: SavedFilter) => {
+    const conditions = sanitizeValue(filter.conditions);
+    if (!conditions) {
+      message.warning('Filter has no conditions');
+      return;
+    }
+
+    const currentSql = sql.trim();
+    const conditionsPattern = `(${conditions})`;
+
+    if (!currentSql.includes(conditionsPattern)) {
+      message.warning(`Filter "${filter.name}" not found in current query`);
+      return;
+    }
+
+    let newSql = currentSql.replace(conditionsPattern, '');
+    newSql = cleanUpSQLFormatting(newSql);
+
+    setSql(newSql);
+    setAppliedFilterIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(filter.id);
+      return newSet;
+    });
+    message.success(`Recalled "${filter.name}" from query`);
+  };
+
+  // Filter builder helpers
+  const addWhereClause = () => {
+    setWhereClauses(prev => [...prev, INITIAL_WHERE_ROW()]);
+  };
+
+  const removeWhereClause = (id: number) => {
+    setWhereClauses(prev => prev.filter(row => row.id !== id));
+  };
+
+  const updateWhereClause = (id: number, field: keyof WhereClauseRow, value: string) => {
+    setWhereClauses(prev =>
+      prev.map(row => {
+        if (row.id !== id) return row;
+        if (field === 'operator' && (value === 'IS NULL' || value === 'IS NOT NULL')) {
+          return { ...row, operator: value, value: '' };
+        }
+        return { ...row, [field]: value };
+      })
+    );
+  };
+
   // Render query library (left sidebar)
   const renderQueryLibrary = () => (
     <div className={styles.queryLibrary}>
@@ -423,19 +608,10 @@ const AnalyticsWorkspace = () => {
           header={
             <div className={styles.panelHeaderWithAction}>
               <Space>
-                <StarFilled style={{ color: '#faad14' }} />
+                <StarFilled className={styles.iconStarFilled} />
                 <Text strong>
                   Saved Queries
-                  <span
-                    style={{
-                      fontSize: 10,
-                      marginLeft: 4,
-                      background: '#e0e0e0',
-                      padding: '2px 4px',
-                      borderRadius: '4px',
-                    }}>
-                    {savedQueries.length}
-                  </span>
+                  <span className={styles.badgeCount}>{savedQueries.length}</span>
                 </Text>
               </Space>
             </div>
@@ -473,7 +649,9 @@ const AnalyticsWorkspace = () => {
                             <Button
                               type="text"
                               size="small"
-                              icon={query.favorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
+                              icon={
+                                query.favorite ? <StarFilled className={styles.iconStarFilled} /> : <StarOutlined />
+                              }
                               onClick={e => {
                                 e.stopPropagation();
                                 toggleFavorite(query.id);
@@ -495,14 +673,11 @@ const AnalyticsWorkspace = () => {
                         </Space>
                       </div>
                       {query.description && (
-                        <Paragraph
-                          ellipsis={{ rows: 2 }}
-                          type="secondary"
-                          style={{ fontSize: 12, marginTop: 4, marginBottom: 0 }}>
+                        <Paragraph ellipsis={{ rows: 2 }} type="secondary" className={styles.textSmall}>
                           {query.description}
                         </Paragraph>
                       )}
-                      <Text type="secondary" style={{ fontSize: 11 }}>
+                      <Text type="secondary" className={styles.textSmall}>
                         {new Date(query.createdAt).toLocaleDateString()}
                       </Text>
                     </Card>
@@ -517,27 +692,97 @@ const AnalyticsWorkspace = () => {
             <div className={styles.panelHeaderWithAction}>
               <Space>
                 <FilterOutlined />
-                <Text strong>Where Clause</Text>
+                <Text strong>
+                  Filters
+                  {savedFilters.length > 0 && <span className={styles.badgeCount}>{savedFilters.length}</span>}
+                </Text>
               </Space>
-              {!whereClauseVisible && (
-                <Tooltip title="Add new where clause">
+              {!filterBuilderVisible && (
+                <Tooltip title="Add new filter">
                   <Button
                     size="small"
                     icon={<PlusOutlined />}
                     className={styles.panelAddBtn}
                     onClick={e => {
                       e.stopPropagation();
-                      setSql(WHERE_CLAUSE_STARTER);
-                      setWhereClauseVisible(true);
+                      setSqlWhenBuilderOpened(sql); // Save current SQL
+                      setWhereClauses([INITIAL_WHERE_ROW()]);
+                      setFilterBuilderVisible(true);
                     }}
                   />
                 </Tooltip>
               )}
             </div>
           }
-          key="where-clause">
+          key="filters">
           <div className={styles.panelScrollContent}>
-            <Empty description="No where clauses yet" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            {savedFilters.length === 0 ? (
+              <Empty description="No saved filters" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            ) : (
+              <div className={styles.savedQueriesList}>
+                {savedFilters.map(filter => (
+                  <Tooltip
+                    key={filter.id}
+                    title={
+                      <Text type="secondary" style={{ color: 'var(--white)' }}>
+                        {filter.conditions}
+                      </Text>
+                    }
+                    placement="top">
+                    <Card
+                      key={filter.id}
+                      size="small"
+                      hoverable
+                      className={`${styles.savedQueryCard} ${styles.whereClauseCard}`}>
+                      <div className={styles.savedQueryHeader}>
+                        <Text strong ellipsis className={styles.flex1}>
+                          {filter.name}
+                        </Text>
+                        <Space size={2} className={styles.whereCardActions}>
+                          {appliedFilterIds.has(filter.id) ? (
+                            <Tooltip title="Recall from editor query">
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={<RollbackOutlined className={styles.iconWarning} />}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  recallFilterFromEditor(filter);
+                                }}
+                              />
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="Apply to editor query">
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={<PlayCircleOutlined className={styles.iconPrimary} />}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  applyFilterToEditor(filter);
+                                }}
+                              />
+                            </Tooltip>
+                          )}
+                          <Tooltip title="Delete">
+                            <Button
+                              type="text"
+                              size="small"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={e => {
+                                e.stopPropagation();
+                                deleteFilter(filter.id);
+                              }}
+                            />
+                          </Tooltip>
+                        </Space>
+                      </div>
+                    </Card>
+                  </Tooltip>
+                ))}
+              </div>
+            )}
           </div>
         </Panel>
 
@@ -554,7 +799,7 @@ const AnalyticsWorkspace = () => {
           <div className={styles.panelScrollContent}>
             {Object.entries(QUERY_TEMPLATES).map(([category, templates]) => (
               <div key={category} className={styles.templateCategory}>
-                <Text type="secondary" strong style={{ fontSize: 12 }}>
+                <Text type="secondary" strong className={styles.textRegular}>
                   {category}
                 </Text>
                 <div className={styles.templateList}>
@@ -563,8 +808,8 @@ const AnalyticsWorkspace = () => {
                       key={idx}
                       title={
                         <div>
-                          <div style={{ marginBottom: 8 }}>{template.description}</div>
-                          <pre style={{ fontSize: 11, margin: 0 }}>{template.sql.slice(0, 200)}...</pre>
+                          <div className={styles.templateDescription}>{template.description}</div>
+                          <pre className={styles.templatePreview}>{template.sql.slice(0, 200)}...</pre>
                         </div>
                       }
                       placement="right">
@@ -573,7 +818,7 @@ const AnalyticsWorkspace = () => {
                         hoverable
                         className={styles.templateCard}
                         onClick={() => loadTemplate(template)}>
-                        <Text ellipsis style={{ fontSize: 13 }}>
+                        <Text ellipsis className={styles.textMedium}>
                           {template.name}
                         </Text>
                       </Card>
@@ -622,12 +867,12 @@ const AnalyticsWorkspace = () => {
                   title={node.description ? `${node.type ? `${node.type} - ` : ''}${node.description}` : null}
                   placement="right">
                   <span>
-                    {node.keyType === 'PRI' && <KeyOutlined style={{ marginRight: 6, color: '#faad14' }} />}
-                    {node.keyType === 'FK' && <LinkOutlined style={{ marginRight: 6, color: '#52c41a' }} />}
-                    {node.keyType === 'MUL' && <MenuOutlined style={{ marginRight: 6, color: '#8c8c8c' }} />}
+                    {node.keyType === 'PRI' && <KeyOutlined className={styles.iconKey} />}
+                    {node.keyType === 'FK' && <LinkOutlined className={styles.iconLink} />}
+                    {node.keyType === 'MUL' && <MenuOutlined className={styles.iconMenu} />}
                     {node.title}
                     {node.type && (
-                      <Tag style={{ marginLeft: 8, fontSize: 10 }} color="blue">
+                      <Tag className={styles.tagSmall} color="blue">
                         {node.type}
                       </Tag>
                     )}
@@ -649,7 +894,7 @@ const AnalyticsWorkspace = () => {
               </Space>
             }
             key="query-info">
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space direction="vertical" className={styles.fullWidth}>
               <Statistic
                 title="Execution Time"
                 value={executionStats.executionTime}
@@ -787,8 +1032,8 @@ const AnalyticsWorkspace = () => {
               hoverable
               className={styles.historyCard}
               onClick={() => loadFromHistory(item)}>
-              <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                <Text ellipsis code style={{ fontSize: 12 }}>
+              <Space direction="vertical" size={4} className={styles.spaceFullWidth}>
+                <Text ellipsis code className={styles.textRegular}>
                   {item.sql.split('\n')[0].slice(0, 100)}...
                 </Text>
                 <Space size="small">
@@ -798,7 +1043,7 @@ const AnalyticsWorkspace = () => {
                   <Tag color="green" style={{ fontSize: 10 }}>
                     {item.executionTime}ms
                   </Tag>
-                  <Text type="secondary" style={{ fontSize: 10 }}>
+                  <Text type="secondary" className={styles.textTiny}>
                     {new Date(item.timestamp).toLocaleString()}
                   </Text>
                 </Space>
@@ -841,7 +1086,7 @@ const AnalyticsWorkspace = () => {
         </Space>
       </div>
       <div className={styles.analyticsWorkspace}>
-        <Layout style={{ height: '100vh' }}>
+        <Layout className={styles.layoutFullHeight}>
           {/* Left Sidebar - Query Library */}
           {!leftCollapsed && (
             <Sider width={300} theme="light" className={styles.leftSidebar}>
@@ -851,15 +1096,15 @@ const AnalyticsWorkspace = () => {
 
           {/* Main Content Area */}
           <Content className={styles.mainContent}>
-            {/* Query Builder Card */}
-            {whereClauseVisible && (
+            {/* Filter Builder Card */}
+            {filterBuilderVisible && (
               <div className={styles.queryBuilderContainer}>
                 <Card
                   className={styles.queryBuilderCard}
                   title={
                     <Space>
                       <FilterOutlined />
-                      <Text strong>Query Builder</Text>
+                      <Text strong>Filter Builder</Text>
                     </Space>
                   }
                   extra={
@@ -867,16 +1112,89 @@ const AnalyticsWorkspace = () => {
                       size="small"
                       danger
                       onClick={() => {
-                        setWhereClauseVisible(false);
+                        setFilterBuilderVisible(false);
+                        setWhereClauses([INITIAL_WHERE_ROW()]);
+                        setSqlWhenBuilderOpened(''); // Clear saved SQL
                         setSql(DEFAULT_SQL);
+                        setAppliedFilterIds(new Set());
                       }}>
                       Close
                     </Button>
                   }
                   size="small">
                   <div className={styles.queryBuilderBody}>
-                    {/* Query builder UI will go here */}
-                    <Text type="secondary">Query builder coming soon...</Text>
+                    <div className={styles.whereClauseRowsScrollable}>
+                      {whereClauses.map((row, idx) => (
+                        <div key={row.id} className={styles.whereClauseRow}>
+                          <span className={styles.whereConnector}>{idx === 0 ? 'WHERE' : 'AND'}</span>
+
+                          <Select
+                            placeholder="Column"
+                            value={row.column || undefined}
+                            onChange={val => updateWhereClause(row.id, 'column', val)}
+                            showSearch
+                            size="small"
+                            className={styles.whereColumnSelect}>
+                            {schemaData
+                              ? Object.entries(schemaData).map(([table, cols]) => (
+                                  <Select.OptGroup label={table} key={table}>
+                                    {cols.map(col => (
+                                      <Select.Option key={`${table}.${col.name}`} value={col.name}>
+                                        {col.name}
+                                      </Select.Option>
+                                    ))}
+                                  </Select.OptGroup>
+                                ))
+                              : null}
+                          </Select>
+
+                          <Select
+                            value={row.operator}
+                            onChange={val => updateWhereClause(row.id, 'operator', val)}
+                            size="small"
+                            className={styles.whereOperatorSelect}>
+                            {WHERE_OPERATORS.map(op => (
+                              <Select.Option key={op} value={op}>
+                                {op}
+                              </Select.Option>
+                            ))}
+                          </Select>
+
+                          {!['IS NULL', 'IS NOT NULL'].includes(row.operator) && (
+                            <Input
+                              placeholder="Value"
+                              value={row.value}
+                              onChange={e => updateWhereClause(row.id, 'value', e.target.value)}
+                              size="small"
+                              className={styles.whereValueInput}
+                            />
+                          )}
+
+                          <Tooltip title="Add condition">
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<PlusOutlined />}
+                              onClick={addWhereClause}
+                              className={styles.whereRowBtn}
+                            />
+                          </Tooltip>
+
+                          {whereClauses.length > 1 && (
+                            <Tooltip title="Remove condition">
+                              <Button
+                                type="text"
+                                size="small"
+                                danger
+                                icon={<MinusOutlined />}
+                                onClick={() => removeWhereClause(row.id)}
+                                className={styles.whereRowBtn}
+                              />
+                            </Tooltip>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </Card>
               </div>
@@ -887,6 +1205,19 @@ const AnalyticsWorkspace = () => {
               <div className={styles.editorFrame}>
                 {/* Top-right floating actions: Format, Clear */}
                 <div className={styles.editorTopActions}>
+                  <Tooltip title="Reset to default">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<ReloadOutlined />}
+                      onClick={() => {
+                        setSql(DEFAULT_SQL);
+                        setQueryResults(null);
+                        setAppliedFilterIds(new Set());
+                      }}
+                      className={styles.editorActionBtn}
+                    />
+                  </Tooltip>
                   <Tooltip title="Format SQL (Ctrl+K)">
                     <Button
                       type="text"
@@ -938,6 +1269,11 @@ const AnalyticsWorkspace = () => {
 
                 {/* Bottom-right floating actions: Save, Execute */}
                 <div className={styles.editorBottomActions}>
+                  {hasWhereClause && (
+                    <Button icon={<FilterOutlined />} onClick={saveFilterFromEditor} className={styles.editorActionBtn}>
+                      Save Filter
+                    </Button>
+                  )}
                   <Button
                     icon={<SaveOutlined />}
                     onClick={() => setSaveModalVisible(true)}
@@ -982,6 +1318,47 @@ const AnalyticsWorkspace = () => {
                   Save
                 </Button>
                 <Button onClick={() => setSaveModalVisible(false)}>Cancel</Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* Save Filter from Editor Modal */}
+        <Modal
+          title="Save Filter from Query"
+          open={saveFilterFromEditorModalVisible}
+          onCancel={() => {
+            setSaveFilterFromEditorModalVisible(false);
+            setExtractedFilterConditions('');
+          }}
+          footer={null}>
+          <Form onFinish={confirmSaveFilterFromEditor} layout="vertical">
+            <Form.Item label="Extracted Conditions">
+              <Input.TextArea
+                value={extractedFilterConditions}
+                rows={4}
+                readOnly
+                style={{ fontFamily: 'monospace', backgroundColor: '#f5f5f5' }}
+              />
+            </Form.Item>
+            <Form.Item
+              label="Filter Name"
+              name="name"
+              rules={[{ required: true, message: 'Please enter a filter name' }]}>
+              <Input placeholder="e.g., Active Jobs Filter" autoFocus />
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button type="primary" htmlType="submit">
+                  Save
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSaveFilterFromEditorModalVisible(false);
+                    setExtractedFilterConditions('');
+                  }}>
+                  Cancel
+                </Button>
               </Space>
             </Form.Item>
           </Form>
