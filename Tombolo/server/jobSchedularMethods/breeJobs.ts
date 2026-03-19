@@ -1,3 +1,4 @@
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 import logger from '../config/logger.js';
 import { join } from 'path';
 import { getDirname } from '../utils/polyfills.js';
@@ -6,7 +7,6 @@ import { resolveJobPath } from './jobPathResolver.js';
 const __dirname = getDirname(import.meta.url);
 
 function createNewBreeJob(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   this: any,
   {
     uniqueJobName,
@@ -32,9 +32,7 @@ function createNewBreeJob(
     uniqueJobName: string;
     cron?: string;
     jobfileName: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sprayedFileScope?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     manualJob_meta?: any;
     sprayFileName?: string;
     sprayDropZone?: string;
@@ -42,7 +40,6 @@ function createNewBreeJob(
     dataflowId?: string;
     dataflowVersionId?: string | null;
     clusterId?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metaData?: any;
     jobName?: string;
     contact?: string;
@@ -61,7 +58,6 @@ function createNewBreeJob(
     'jobs',
     jobfileName
   );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const job: any = {
     name: uniqueJobName,
     path: resolveJobPath(defaultDistPath),
@@ -97,7 +93,6 @@ function createNewBreeJob(
   this.bree.add(job);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function removeJobFromScheduler(this: any, name: string): Promise<any> {
   try {
     const existingJob = this.bree.config.jobs.find(job => job.name === name);
@@ -117,7 +112,6 @@ async function removeJobFromScheduler(this: any, name: string): Promise<any> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function removeAllFromBree(this: any, namePart: string): Promise<void> {
   try {
     const existingJobs = this.bree.config.jobs.filter(job =>
@@ -141,12 +135,10 @@ async function removeAllFromBree(this: any, namePart: string): Promise<void> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getAllJobs(this: any): any[] {
   return this.bree.config.jobs;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function stopJob(this: any, jobName: string): Promise<any> {
   const job = this.bree.config.jobs.find(job => job.name === jobName);
   try {
@@ -170,7 +162,6 @@ async function stopJob(this: any, jobName: string): Promise<any> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function stopAllJobs(this: any): Promise<any> {
   try {
     const allJobs = [...this.bree.config.jobs];
@@ -186,7 +177,6 @@ async function stopAllJobs(this: any): Promise<any> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function startJob(this: any, jobName: string): any {
   const job = this.bree.config.jobs.find(job => job.name === jobName);
   try {
@@ -210,7 +200,6 @@ function startJob(this: any, jobName: string): any {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function startAllJobs(this: any): any {
   try {
     const allJobs = [...this.bree.config.jobs];
@@ -226,7 +215,6 @@ function startAllJobs(this: any): any {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function logBreeJobs(this: any): void {
   if (process.env.NODE_ENV === 'production') return; //do not polute logs during production;
   const jobs = this.bree.config.jobs;
