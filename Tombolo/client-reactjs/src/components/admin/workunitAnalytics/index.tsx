@@ -53,6 +53,8 @@ import { format } from 'sql-formatter';
 import { apiClient } from '@/services/api';
 import { LeftPanelIcon, RightPanelIcon } from './PanelIcons';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
+import analyticsFiltersService from '@/services/analyticsFilters.service';
+import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import QUERY_TEMPLATES from './queryTemplates';
 import ChartModal from './ChartModal';
 
@@ -122,7 +124,7 @@ interface SchemaColumn {
 type SchemaData = Record<string, SchemaColumn[]>;
 
 interface SavedFilter {
-  id: number;
+  id: string;
   name: string;
   conditions: string;
   createdAt: string;
@@ -155,7 +157,7 @@ const AnalyticsWorkspace = () => {
   const [saveFilterFromEditorModalVisible, setSaveFilterFromEditorModalVisible] = useState(false);
   const [extractedFilterConditions, setExtractedFilterConditions] = useState('');
   const [sqlWhenBuilderOpened, setSqlWhenBuilderOpened] = useState('');
-  const [appliedFilterIds, setAppliedFilterIds] = useState<Set<number>>(new Set());
+  const [appliedFilterIds, setAppliedFilterIds] = useState<Set<string>>(new Set());
 
   const hasWhereClause = useMemo(() => hasWhere(sql), [sql]);
 
@@ -175,7 +177,7 @@ const AnalyticsWorkspace = () => {
         setIsLoadingSchema(true);
         const response = await apiClient.get('/workunitAnalytics/schema');
         setSchemaData(response.data);
-      } catch (error) {
+      } catch (_error) {
         message.error('Failed to load database schema');
       } finally {
         setIsLoadingSchema(false);
@@ -204,14 +206,20 @@ const AnalyticsWorkspace = () => {
       }
     }
 
-    const storedFilters = localStorage.getItem('analytics_filters');
-    if (storedFilters) {
+    // Load filters from backend API
+    const loadFilters = async () => {
       try {
-        setSavedFilters(JSON.parse(storedFilters));
-      } catch {
+        const filters = await analyticsFiltersService.getAll();
+        // Ensure filters is an array and filter out any invalid items
+        const validFilters = Array.isArray(filters) ? filters.filter(f => f && f.id && f.conditions) : [];
+        setSavedFilters(validFilters);
+      } catch (_error) {
+        console.error('Failed to load filters:', _error);
         message.error('Failed to load saved filters');
+        setSavedFilters([]); // Ensure it's always an array
       }
-    }
+    };
+    loadFilters();
   }, []);
 
   // Auto-update SQL editor when filter builder conditions change
@@ -470,11 +478,17 @@ const AnalyticsWorkspace = () => {
     }
   };
 
-  const deleteFilter = (id: number) => {
-    const updated = savedFilters.filter(f => f.id !== id);
-    setSavedFilters(updated);
-    localStorage.setItem('analytics_filters', JSON.stringify(updated));
-    message.success('Filter deleted');
+  const deleteFilter = async (id: string) => {
+    try {
+      await analyticsFiltersService.delete(id);
+      const updated = (savedFilters || []).filter(f => f.id !== id);
+      setSavedFilters(updated);
+      handleSuccess('Filter deleted successfully');
+    } catch (error: any) {
+      console.error('Failed to delete filter:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete filter';
+      handleError(errorMessage);
+    }
   };
 
   const saveFilterFromEditor = () => {
@@ -489,20 +503,27 @@ const AnalyticsWorkspace = () => {
     setSaveFilterFromEditorModalVisible(true);
   };
 
-  const confirmSaveFilterFromEditor = (values: { name: string }) => {
-    const filter: SavedFilter = {
-      id: Date.now(),
-      name: values.name,
-      conditions: extractedFilterConditions,
-      createdAt: new Date().toISOString(),
-    };
+  const confirmSaveFilterFromEditor = async (values: { name: string }) => {
+    try {
+      const newFilter = await analyticsFiltersService.create({
+        name: values.name,
+        conditions: extractedFilterConditions,
+      });
 
-    const updated = [filter, ...savedFilters];
-    setSavedFilters(updated);
-    localStorage.setItem('analytics_filters', JSON.stringify(updated));
-    setSaveFilterFromEditorModalVisible(false);
-    setExtractedFilterConditions('');
-    message.success(`Filter "${filter.name}" saved`);
+      if (!newFilter || typeof newFilter !== 'object') {
+        throw new Error('Invalid response from server: filter data is missing');
+      }
+
+      const updated = [newFilter, ...(savedFilters || [])];
+      setSavedFilters(updated);
+      setSaveFilterFromEditorModalVisible(false);
+      setExtractedFilterConditions('');
+      handleSuccess(`Filter "${newFilter.name}" saved successfully`);
+    } catch (error: any) {
+      console.error('Failed to save filter:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save filter';
+      handleError(errorMessage);
+    }
   };
 
   const applyFilterToEditor = (filter: SavedFilter) => {
@@ -694,7 +715,7 @@ const AnalyticsWorkspace = () => {
                 <FilterOutlined />
                 <Text strong>
                   Filters
-                  {savedFilters.length > 0 && <span className={styles.badgeCount}>{savedFilters.length}</span>}
+                  {(savedFilters?.length || 0) > 0 && <span className={styles.badgeCount}>{savedFilters.length}</span>}
                 </Text>
               </Space>
               {!filterBuilderVisible && (
@@ -716,71 +737,73 @@ const AnalyticsWorkspace = () => {
           }
           key="filters">
           <div className={styles.panelScrollContent}>
-            {savedFilters.length === 0 ? (
+            {(savedFilters?.length || 0) === 0 ? (
               <Empty description="No saved filters" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             ) : (
               <div className={styles.savedQueriesList}>
-                {savedFilters.map(filter => (
-                  <Tooltip
-                    key={filter.id}
-                    title={
-                      <Text type="secondary" style={{ color: 'var(--white)' }}>
-                        {filter.conditions}
-                      </Text>
-                    }
-                    placement="top">
-                    <Card
+                {savedFilters
+                  ?.filter(f => f && f.id && f.conditions)
+                  .map(filter => (
+                    <Tooltip
                       key={filter.id}
-                      size="small"
-                      hoverable
-                      className={`${styles.savedQueryCard} ${styles.whereClauseCard}`}>
-                      <div className={styles.savedQueryHeader}>
-                        <Text strong ellipsis className={styles.flex1}>
-                          {filter.name}
+                      title={
+                        <Text type="secondary" style={{ color: 'var(--white)' }}>
+                          {filter.conditions}
                         </Text>
-                        <Space size={2} className={styles.whereCardActions}>
-                          {appliedFilterIds.has(filter.id) ? (
-                            <Tooltip title="Recall from editor query">
+                      }
+                      placement="top">
+                      <Card
+                        key={filter.id}
+                        size="small"
+                        hoverable
+                        className={`${styles.savedQueryCard} ${styles.whereClauseCard}`}>
+                        <div className={styles.savedQueryHeader}>
+                          <Text strong ellipsis className={styles.flex1}>
+                            {filter.name}
+                          </Text>
+                          <Space size={2} className={styles.whereCardActions}>
+                            {appliedFilterIds.has(filter.id) ? (
+                              <Tooltip title="Recall from editor query">
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  icon={<RollbackOutlined className={styles.iconWarning} />}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    recallFilterFromEditor(filter);
+                                  }}
+                                />
+                              </Tooltip>
+                            ) : (
+                              <Tooltip title="Apply to editor query">
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  icon={<PlayCircleOutlined className={styles.iconPrimary} />}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    applyFilterToEditor(filter);
+                                  }}
+                                />
+                              </Tooltip>
+                            )}
+                            <Tooltip title="Delete">
                               <Button
                                 type="text"
                                 size="small"
-                                icon={<RollbackOutlined className={styles.iconWarning} />}
+                                danger
+                                icon={<DeleteOutlined />}
                                 onClick={e => {
                                   e.stopPropagation();
-                                  recallFilterFromEditor(filter);
+                                  deleteFilter(filter.id);
                                 }}
                               />
                             </Tooltip>
-                          ) : (
-                            <Tooltip title="Apply to editor query">
-                              <Button
-                                type="text"
-                                size="small"
-                                icon={<PlayCircleOutlined className={styles.iconPrimary} />}
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  applyFilterToEditor(filter);
-                                }}
-                              />
-                            </Tooltip>
-                          )}
-                          <Tooltip title="Delete">
-                            <Button
-                              type="text"
-                              size="small"
-                              danger
-                              icon={<DeleteOutlined />}
-                              onClick={e => {
-                                e.stopPropagation();
-                                deleteFilter(filter.id);
-                              }}
-                            />
-                          </Tooltip>
-                        </Space>
-                      </div>
-                    </Card>
-                  </Tooltip>
-                ))}
+                          </Space>
+                        </div>
+                      </Card>
+                    </Tooltip>
+                  ))}
               </div>
             )}
           </div>
@@ -1344,8 +1367,22 @@ const AnalyticsWorkspace = () => {
             <Form.Item
               label="Filter Name"
               name="name"
-              rules={[{ required: true, message: 'Please enter a filter name' }]}>
-              <Input placeholder="e.g., Active Jobs Filter" autoFocus />
+              rules={[
+                { required: true, message: 'Please enter a filter name' },
+                { max: 30, message: 'Filter name must be 30 characters or less' },
+                {
+                  validator: async (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const trimmedValue = value.trim();
+                    const isDuplicate = savedFilters?.some(f => f.name.toLowerCase() === trimmedValue.toLowerCase());
+                    if (isDuplicate) {
+                      return Promise.reject(new Error('A filter with this name already exists'));
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}>
+              <Input placeholder="e.g., Active Jobs Filter" maxLength={30} autoFocus showCount />
             </Form.Item>
             <Form.Item>
               <Space>

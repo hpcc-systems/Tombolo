@@ -109,6 +109,7 @@ import orbitProfileMonitoring from './routes/orbitProfileMonitoringRoutes.js';
 import workunits from './routes/workunitRoutes.js';
 import workunitAnalytics from './routes/workunitAnalyticsRoutes.js';
 import workunitDashboard from './routes/workunitDashboardRoutes.js';
+import analyticsFilters from './routes/analyticsFiltersRoutes.js';
 
 // Use compression to reduce the size of the response body and increase the speed of a web application
 app.use(compression());
@@ -145,6 +146,7 @@ app.use('/api/orbitProfileMonitoring', orbitProfileMonitoring);
 app.use('/api/workunits', workunits);
 app.use('/api/workunitAnalytics', workunitAnalytics);
 app.use('/api/workunit-dashboard', workunitDashboard);
+app.use('/api/analyticsFilters', analyticsFilters);
 
 // Safety net for unhandled errors
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
