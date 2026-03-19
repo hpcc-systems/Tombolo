@@ -1,4 +1,4 @@
-import path from 'path';
+import { join } from 'path';
 
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
@@ -7,13 +7,14 @@ import { resolveJobPath } from './jobPathResolver.js';
 const __dirname = getDirname(import.meta.url);
 const JOB_STATUS_POLLER = 'statusPoller.js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function scheduleJobStatusPolling(this: any): Promise<void> {
   logger.info('Status puller for dataflow jobs initialized ...');
 
   try {
-    let jobName = 'job-status-poller-' + new Date().getTime();
+    const jobName = 'job-status-poller-' + new Date().getTime();
 
-    const defaultDistPath = path.join(
+    const defaultDistPath = join(
       __dirname,
       '..',
       '..',
