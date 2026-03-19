@@ -6,7 +6,6 @@ import {
   Input,
   Table,
   Tooltip,
-  message,
   Modal,
   Form,
   Tag,
@@ -158,6 +157,7 @@ const AnalyticsWorkspace = () => {
   const [extractedFilterConditions, setExtractedFilterConditions] = useState('');
   const [sqlWhenBuilderOpened, setSqlWhenBuilderOpened] = useState('');
   const [appliedFilterIds, setAppliedFilterIds] = useState<Set<string>>(new Set());
+  const [isQueryExecuted, setIsQueryExecuted] = useState(false);
 
   const hasWhereClause = useMemo(() => hasWhere(sql), [sql]);
 
@@ -178,7 +178,7 @@ const AnalyticsWorkspace = () => {
         const response = await apiClient.get('/workunitAnalytics/schema');
         setSchemaData(response.data);
       } catch (_error) {
-        message.error('Failed to load database schema');
+        handleError('Failed to load database schema');
       } finally {
         setIsLoadingSchema(false);
       }
@@ -193,7 +193,7 @@ const AnalyticsWorkspace = () => {
       try {
         setSavedQueries(JSON.parse(saved));
       } catch {
-        message.error('Failed to load saved queries');
+        handleError('Failed to load saved queries');
       }
     }
 
@@ -202,7 +202,7 @@ const AnalyticsWorkspace = () => {
       try {
         setQueryHistory(JSON.parse(storedHistory));
       } catch {
-        message.error('Failed to load query history');
+        handleError('Failed to load query history');
       }
     }
 
@@ -215,7 +215,7 @@ const AnalyticsWorkspace = () => {
         setSavedFilters(validFilters);
       } catch (_error) {
         console.error('Failed to load filters:', _error);
-        message.error('Failed to load saved filters');
+        handleError('Failed to load saved filters');
         setSavedFilters([]); // Ensure it's always an array
       }
     };
@@ -278,7 +278,7 @@ const AnalyticsWorkspace = () => {
   // Execute SQL query
   const executeQuery = async () => {
     if (!sql.trim()) {
-      message.warning('Please enter a SQL query');
+      handleError('Please enter a SQL query');
       return;
     }
 
@@ -323,10 +323,13 @@ const AnalyticsWorkspace = () => {
       setQueryHistory(newHistory);
       localStorage.setItem('analytics_query_history', JSON.stringify(newHistory));
 
-      message.success(`Query executed successfully (${formatTime(executionTime)})`);
+      // Mark query as executed
+      setIsQueryExecuted(true);
+
+      handleSuccess(`Query executed successfully (${formatTime(executionTime)})`);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } }; message?: string };
-      message.error(err.response?.data?.message || err.message || 'Failed to execute query');
+      handleError(err.response?.data?.message || err.message || 'Failed to execute query');
     } finally {
       setIsExecuting(false);
     }
@@ -337,9 +340,9 @@ const AnalyticsWorkspace = () => {
     try {
       const formatted = format(sql, SQL_FORMATTER_OPTIONS);
       setSql(formatted);
-      message.success('SQL formatted successfully');
+      handleSuccess('SQL formatted successfully');
     } catch {
-      message.error('Failed to format SQL');
+      handleError('Failed to format SQL');
     }
   };
 
@@ -349,6 +352,7 @@ const AnalyticsWorkspace = () => {
     setQueryResults(null);
     setExecutionStats(null);
     setAppliedFilterIds(new Set());
+    setIsQueryExecuted(false);
   };
 
   // Save query
@@ -367,14 +371,24 @@ const AnalyticsWorkspace = () => {
     localStorage.setItem('analytics_saved_queries', JSON.stringify(updated));
 
     setSaveModalVisible(false);
-    message.success('Query saved successfully');
+    handleSuccess('Query saved successfully');
+  };
+
+  // Handle save query button click with validation
+  const handleSaveQueryClick = () => {
+    if (!isQueryExecuted) {
+      handleError('Please execute the query to verify it works correctly before saving');
+      return;
+    }
+    setSaveModalVisible(true);
   };
 
   // Load saved query
   const loadSavedQuery = (query: SavedQuery) => {
     setSql(query.sql);
     setSelectedQuery(query.id);
-    message.success(`Loaded query: ${query.name}`);
+    setIsQueryExecuted(false);
+    handleSuccess(`Loaded query: ${query.name}`);
   };
 
   // Delete saved query
@@ -382,7 +396,7 @@ const AnalyticsWorkspace = () => {
     const updated = savedQueries.filter(q => q.id !== queryId);
     setSavedQueries(updated);
     localStorage.setItem('analytics_saved_queries', JSON.stringify(updated));
-    message.success('Query deleted');
+    handleSuccess('Query deleted');
   };
 
   // Toggle favorite
@@ -405,7 +419,8 @@ const AnalyticsWorkspace = () => {
       setVariableModalVisible(true);
     } else {
       setSql(template.sql);
-      message.success(`Loaded template: ${template.name}`);
+      setIsQueryExecuted(false);
+      handleSuccess(`Loaded template: ${template.name}`);
     }
   };
 
@@ -417,14 +432,16 @@ const AnalyticsWorkspace = () => {
       finalSql = finalSql.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
     });
     setSql(finalSql);
+    setIsQueryExecuted(false);
     setVariableModalVisible(false);
-    message.success(`Loaded template: ${currentTemplate.name}`);
+    handleSuccess(`Loaded template: ${currentTemplate.name}`);
   };
 
   // Load from history
   const loadFromHistory = (historyItem: HistoryEntry) => {
     setSql(historyItem.sql);
-    message.success('Query loaded from history');
+    setIsQueryExecuted(false);
+    handleSuccess('Query loaded from history');
   };
 
   // Convert schema data to tree structure
@@ -474,7 +491,7 @@ const AnalyticsWorkspace = () => {
         },
       ]);
       editor.focus();
-      message.success(`Inserted: ${actualColumnName}`);
+      handleSuccess(`Inserted: ${actualColumnName}`);
     }
   };
 
@@ -499,10 +516,16 @@ const AnalyticsWorkspace = () => {
   };
 
   const saveFilterFromEditor = () => {
+    // Validate that query has been executed
+    if (!isQueryExecuted) {
+      handleError('Please execute the query to verify it works correctly before saving the filter');
+      return;
+    }
+
     const conditions = extractWhereClause(sql);
 
     if (!conditions) {
-      message.error('No WHERE clause found in the query');
+      handleError('No WHERE clause found in the query');
       return;
     }
 
@@ -536,7 +559,7 @@ const AnalyticsWorkspace = () => {
   const applyFilterToEditor = (filter: SavedFilter) => {
     const conditions = sanitizeValue(filter.conditions);
     if (!conditions) {
-      message.warning('Filter has no conditions');
+      handleError('Filter has no conditions');
       return;
     }
 
@@ -544,7 +567,7 @@ const AnalyticsWorkspace = () => {
     const strippedSql = stripComments(currentSql);
 
     if (!/^select\b/i.test(strippedSql)) {
-      message.error('Can only apply a filter to a SELECT statement');
+      handleError('Can only apply a filter to a SELECT statement');
       return;
     }
 
@@ -572,14 +595,15 @@ const AnalyticsWorkspace = () => {
     }
 
     setSql(newSql);
+    setIsQueryExecuted(false);
     setAppliedFilterIds(prev => new Set(prev).add(filter.id));
-    message.success(`Applied "${filter.name}" to query`);
+    handleSuccess(`Applied "${filter.name}" to query`);
   };
 
   const recallFilterFromEditor = (filter: SavedFilter) => {
     const conditions = sanitizeValue(filter.conditions);
     if (!conditions) {
-      message.warning('Filter has no conditions');
+      handleError('Filter has no conditions');
       return;
     }
 
@@ -587,7 +611,7 @@ const AnalyticsWorkspace = () => {
     const conditionsPattern = `(${conditions})`;
 
     if (!currentSql.includes(conditionsPattern)) {
-      message.warning(`Filter "${filter.name}" not found in current query`);
+      handleError(`Filter "${filter.name}" not found in current query`);
       return;
     }
 
@@ -595,12 +619,13 @@ const AnalyticsWorkspace = () => {
     newSql = cleanUpSQLFormatting(newSql);
 
     setSql(newSql);
+    setIsQueryExecuted(false);
     setAppliedFilterIds(prev => {
       const newSet = new Set(prev);
       newSet.delete(filter.id);
       return newSet;
     });
-    message.success(`Recalled "${filter.name}" from query`);
+    handleSuccess(`Recalled "${filter.name}" from query`);
   };
 
   // Filter builder helpers
@@ -1104,7 +1129,7 @@ const AnalyticsWorkspace = () => {
             onClick={() => {
               setQueryHistory([]);
               localStorage.removeItem('analytics_query_history');
-              message.success('Query history cleared');
+              handleSuccess('Query history cleared');
             }}>
             Clear History
           </Button>
@@ -1203,6 +1228,7 @@ const AnalyticsWorkspace = () => {
                         setSqlWhenBuilderOpened(''); // Clear saved SQL
                         setSql(DEFAULT_SQL);
                         setAppliedFilterIds(new Set());
+                        setIsQueryExecuted(false);
                       }}>
                       Close
                     </Button>
@@ -1305,6 +1331,7 @@ const AnalyticsWorkspace = () => {
                         setSql(DEFAULT_SQL);
                         setQueryResults(null);
                         setAppliedFilterIds(new Set());
+                        setIsQueryExecuted(false);
                       }}
                       className={styles.editorActionBtn}
                     />
@@ -1334,13 +1361,16 @@ const AnalyticsWorkspace = () => {
                     height="400px"
                     defaultLanguage="sql"
                     value={sql}
-                    onChange={value => setSql(value || '')}
+                    onChange={value => {
+                      setSql(value || '');
+                      setIsQueryExecuted(false);
+                    }}
                     onMount={(editor, monaco) => {
                       editorRef.current = editor;
                       // Add keybinding for execute
                       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, executeQuery);
                       // Add keybinding for save
-                      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => setSaveModalVisible(true));
+                      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, handleSaveQueryClick);
                       // Add keybinding for format
                       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, formatSql);
                     }}
@@ -1365,10 +1395,7 @@ const AnalyticsWorkspace = () => {
                       Save Filter
                     </Button>
                   )}
-                  <Button
-                    icon={<SaveOutlined />}
-                    onClick={() => setSaveModalVisible(true)}
-                    className={styles.editorActionBtn}>
+                  <Button icon={<SaveOutlined />} onClick={handleSaveQueryClick} className={styles.editorActionBtn}>
                     Save Query
                   </Button>
                   <Button type="primary" icon={<PlayCircleOutlined />} loading={isExecuting} onClick={executeQuery}>
