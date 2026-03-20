@@ -1,18 +1,19 @@
-import path from 'path';
+import { join } from 'path';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
 import { resolveJobPath } from './jobPathResolver.js';
 
 const __dirname = getDirname(import.meta.url);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function removeUnverifiedUser(this: any): Promise<void> {
   try {
-    let jobName = 'remove-unverified-users-' + new Date().getTime();
+    const jobName = 'remove-unverified-users-' + new Date().getTime();
     this.bree.add({
       name: jobName,
       interval: '3600s',
       path: resolveJobPath(
-        path.join(
+        join(
           __dirname,
           '..',
           'jobs',
@@ -35,20 +36,15 @@ async function removeUnverifiedUser(this: any): Promise<void> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendPasswordExpiryEmails(this: any): Promise<void> {
   try {
-    let jobName = 'password-expiry-' + new Date().getTime();
+    const jobName = 'password-expiry-' + new Date().getTime();
     this.bree.add({
       name: jobName,
       interval: '12h',
       path: resolveJobPath(
-        path.join(
-          __dirname,
-          '..',
-          'jobs',
-          'userManagement',
-          'passwordExpiry.js'
-        )
+        join(__dirname, '..', 'jobs', 'userManagement', 'passwordExpiry.js')
       ),
       worker: {
         workerData: {
@@ -67,14 +63,15 @@ async function sendPasswordExpiryEmails(this: any): Promise<void> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendAccountDeleteEmails(this: any): Promise<void> {
   try {
-    let jobName = 'account-delete-' + new Date().getTime();
+    const jobName = 'account-delete-' + new Date().getTime();
     this.bree.add({
       name: jobName,
       interval: '12h',
       path: resolveJobPath(
-        path.join(__dirname, '..', 'jobs', 'userManagement', 'accountDelete.js')
+        join(__dirname, '..', 'jobs', 'userManagement', 'accountDelete.js')
       ),
       worker: {
         workerData: {

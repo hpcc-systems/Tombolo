@@ -1,3 +1,7 @@
+export enum HpccToolsJobType {
+  SYNC = 'sync',
+}
+
 export enum wuHistoryJobType {
   QUERY = 'query',
   DETAILS = 'details',

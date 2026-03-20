@@ -1,4 +1,5 @@
-import path from 'path';
+import { join } from 'path';
+import Bree from 'bree';
 import logger from '../config/logger.js';
 import { resolveJobPath } from './jobPathResolver.js';
 
@@ -10,9 +11,9 @@ const MEGAPHONE_JOB = 'orbitMegaphone.js';
 const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
 const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';
 
-function createOrbitMegaphoneJob(this: any): void {
+function createOrbitMegaphoneJob(this: { bree: Bree }): void {
   const uniqueJobName = 'Orbit Megaphone Job';
-  const defaultDistPath = path.join(
+  const defaultDistPath = join(
     __dirname,
     '..',
     '..',
@@ -31,11 +32,11 @@ function createOrbitMegaphoneJob(this: any): void {
 }
 
 function createOrbitMonitoringJob(
-  this: any,
+  this: { bree: Bree },
   { orbitMonitoring_id, cron }: { orbitMonitoring_id: string; cron: string }
 ): void {
   const uniqueJobName = `Orbit Monitoring - ${orbitMonitoring_id}`;
-  const defaultDistPath2 = path.join(
+  const defaultDistPath2 = join(
     __dirname,
     '..',
     '..',
@@ -56,13 +57,13 @@ function createOrbitMonitoringJob(
 }
 
 function createOrbitProfileMonitoringJob(
-  this: any,
+  this: { bree: Bree },
   {
     uniqueJobName = 'Orbit Profile Monitoring',
   }: { uniqueJobName?: string } = {}
 ): void {
   const jobName = uniqueJobName;
-  const defaultDistPath3 = path.join(
+  const defaultDistPath3 = join(
     __dirname,
     '..',
     '..',
@@ -81,11 +82,12 @@ function createOrbitProfileMonitoringJob(
   logger.info(`Orbit profile monitoring job scheduled ...`);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function scheduleOrbitMonitoringOnServerStart(this: any): Promise<void> {
   try {
     logger.info('Orbit monitoring initialized ...');
     const orbitMonitorings = await OrbitMonitoring.findAll({ raw: true });
-    for (let monitoring of orbitMonitorings) {
+    for (const monitoring of orbitMonitorings) {
       const { id, cron, isActive } = monitoring;
       if (isActive) {
         this.createOrbitMonitoringJob({

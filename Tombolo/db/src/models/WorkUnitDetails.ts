@@ -52,9 +52,25 @@ export class WorkUnitDetails extends Model<
   @Column(DataType.STRING(130))
   declare scopeName: string;
 
-  @AllowNull(false)
-  @Column(DataType.ENUM('activity', 'subgraph', 'graph', 'operation'))
-  declare scopeType: 'activity' | 'subgraph' | 'graph' | 'operation' | string;
+  @AllowNull(true)
+  @Column(
+    DataType.ENUM(
+      'activity',
+      'subgraph',
+      'graph',
+      'operation',
+      'global',
+      'workflow'
+    )
+  )
+  declare scopeType:
+    | 'activity'
+    | 'subgraph'
+    | 'graph'
+    | 'operation'
+    | 'global'
+    | 'workflow'
+    | null;
 
   @Column(DataType.STRING(255))
   declare label?: string | null;

@@ -45,7 +45,7 @@ export default [
   },
   {
     // Legacy CJS migrations and config files
-    files: ['migrations/**/*.cjs', 'config/**/*.cjs'],
+    files: ['migrations/**/*.cjs', 'seeders/**/*.cjs', 'config/**/*.cjs'],
     languageOptions: {
       globals: {
         ...globals.node,
