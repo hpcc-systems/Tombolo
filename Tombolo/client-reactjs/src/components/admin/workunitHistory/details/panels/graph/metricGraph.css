@@ -1,0 +1,54 @@
+/* MetricGraph widget styles */
+.hpcc-js-component {
+  overflow: hidden;
+}
+
+/* Selection highlight - overrides default stroke via CSS vars */
+.metric-graph-container .node.selected path,
+.metric-graph-container .node.selected polygon,
+.metric-graph-container .node.selected ellipse {
+  stroke: #1677ff;
+  stroke-width: 2;
+}
+
+.metric-graph-container .node.selected path:not([stroke]),
+.metric-graph-container .node.selected polygon:not([stroke]),
+.metric-graph-container .node.selected ellipse:not([stroke]) {
+  fill: #e6f4ff;
+}
+
+/* Status classes */
+.metric-graph-container .node.started path,
+.metric-graph-container .node.started polygon {
+  stroke: #52c41a;
+}
+
+.metric-graph-container .node.completed path,
+.metric-graph-container .node.completed polygon {
+  stroke: #1677ff;
+}
+
+.metric-graph-container .node.error path,
+.metric-graph-container .node.error polygon {
+  stroke: #ff4d4f;
+}
+
+.metric-graph-container .node.warning path,
+.metric-graph-container .node.warning polygon {
+  stroke: #faad14;
+}
+
+/* Edge status */
+.metric-graph-container .edge.started path {
+  stroke: #52c41a;
+}
+
+.metric-graph-container .edge.completed path {
+  stroke: #1677ff;
+}
+
+/* Warning icon text appended by MetricGraphWidget */
+.metric-graph-container text.warning {
+  fill: #faad14 !important;
+  stroke: none !important;
+}

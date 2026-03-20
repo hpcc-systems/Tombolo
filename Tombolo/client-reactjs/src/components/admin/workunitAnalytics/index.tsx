@@ -22,6 +22,7 @@ import {
 import styles from './workunitAnalytics.module.css';
 import {
   PlayCircleOutlined,
+  StopOutlined,
   SaveOutlined,
   ClearOutlined,
   DownloadOutlined,
@@ -51,7 +52,7 @@ import {
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import { format } from 'sql-formatter';
-
+import axios from 'axios';
 import { apiClient } from '@/services/api';
 import { LeftPanelIcon, RightPanelIcon } from './PanelIcons';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
@@ -82,11 +83,10 @@ import {
   formatTime,
 } from './utils';
 import type { WhereClauseRow } from './utils';
-import { T } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 const { Sider, Content } = Layout;
 const { Panel } = Collapse;
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 interface QueryResult {
   columns: string[];
@@ -137,6 +137,7 @@ interface SavedFilter {
 const AnalyticsWorkspace = () => {
   const history = useHistory();
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // State management
   const [sql, setSql] = useState(DEFAULT_SQL);
@@ -287,6 +288,10 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
+    // Create a new AbortController for this request so the user can cancel mid-flight.
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsExecuting(true);
     const startTime = Date.now();
 
@@ -297,7 +302,10 @@ const AnalyticsWorkspace = () => {
           sql,
           options: {},
         },
-        { timeout: QUERY_TIMEOUT_MS }
+        {
+          timeout: QUERY_TIMEOUT_MS,
+          signal: controller.signal,
+        }
       );
 
       const executionTime = Date.now() - startTime;
@@ -333,9 +341,15 @@ const AnalyticsWorkspace = () => {
 
       handleSuccess(`Query executed successfully (${formatTime(executionTime)})`);
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      handleError(err.response?.data?.message || err.message || 'Failed to execute query');
+      if (axios.isCancel(error)) {
+        handleSuccess('Query cancelled');
+      } else {
+        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        handleError(err.response?.data?.message || err.message || 'Failed to execute query');
+        console.error('Query execution error:', error);
+      }
     } finally {
+      abortControllerRef.current = null;
       setIsExecuting(false);
     }
   };
@@ -1489,6 +1503,14 @@ const AnalyticsWorkspace = () => {
                     ))}
                   <Button icon={<SaveOutlined />} onClick={handleSaveQueryClick} className={styles.editorActionBtn}>
                     Save Query
+                  </Button>
+                  <Button
+                    icon={<StopOutlined />}
+                    danger
+                    disabled={!isExecuting}
+                    onClick={() => abortControllerRef.current?.abort()}
+                    className={styles.editorActionBtn}>
+                    Cancel
                   </Button>
                   <Button type="primary" icon={<PlayCircleOutlined />} loading={isExecuting} onClick={executeQuery}>
                     Execute

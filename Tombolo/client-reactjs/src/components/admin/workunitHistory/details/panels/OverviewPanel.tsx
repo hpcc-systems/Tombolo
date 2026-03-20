@@ -1,79 +1,27 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Space,
-  Input,
-  Checkbox,
-  InputNumber,
-  Tooltip,
-  Tag,
-  Tree,
-  Descriptions,
-  Table,
   Breadcrumb,
+  Card,
+  Col,
+  Descriptions,
   Divider,
   Empty,
+  Row,
+  Space,
+  Statistic,
+  Table,
+  Tag,
   Typography,
 } from 'antd';
-import {
-  SearchOutlined,
-  ProfileOutlined,
-  NodeIndexOutlined,
-  FieldTimeOutlined,
-  DatabaseOutlined,
-  ClusterOutlined,
-} from '@ant-design/icons';
-import {
-  formatSeconds,
-  formatNumber,
-  formatBytes,
-  SCOPE_TYPES,
-  normalizeLabel,
-  renderAnyMetric,
-} from '@tombolo/shared';
-import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
-import { flattenTree } from '../../common';
+import { DatabaseOutlined, FieldTimeOutlined, NodeIndexOutlined, ProfileOutlined } from '@ant-design/icons';
+import { formatBytes, formatNumber, formatSeconds, renderAnyMetric } from '@tombolo/shared';
+import HierarchyExplorer, {
+  HierarchyExplorerSelectPayload,
+  buildScopeTree,
+  findPathByKey,
+  flattenTree,
+} from './HierarchyExplorer';
 import styles from '../../workunitHistory.module.css';
-
-function buildScopeTree(details: any[]) {
-  const map = new Map();
-  const roots: any[] = [];
-  details.forEach(d => {
-    const key = d.scopeId || d.scopeName;
-    map.set(key, { ...d, key, children: [] });
-  });
-  details.forEach(d => {
-    const key = d.scopeId || d.scopeName;
-    const node = map.get(key);
-    const sid = d.scopeId;
-    if (d.scopeType === 'graph' || !sid || !sid.includes(':')) {
-      roots.push(node);
-    } else {
-      const parentKey = sid.split(':').slice(0, -1).join(':');
-      const parent = map.get(parentKey);
-      (parent ? parent.children : roots).push(node);
-    }
-  });
-  return roots;
-}
-
-function findPathByKey(nodes: any[], key: any) {
-  const stack: any[] = [];
-  const dfs = (list: any[]) => {
-    for (const n of list) {
-      stack.push(n);
-      if (n.key === key) return true;
-      if (n.children && dfs(n.children)) return true;
-      stack.pop();
-    }
-    return false;
-  };
-  dfs(nodes);
-  return stack.map(n => ({ title: n.scopeName, key: n.key }));
-}
 
 const { Text } = Typography;
 
@@ -84,49 +32,32 @@ interface Props {
 }
 
 const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
-  const [types, setTypes] = useState<any>(loadLocalStorage('wuh.overview.types', SCOPE_TYPES));
-  const [q, setQ] = useState<string>(loadLocalStorage('wuh.overview.q', ''));
-  const [minElapsed, setMinElapsed] = useState<number>(loadLocalStorage('wuh.overview.minElapsed', 0));
-  const [expandedKeys, setExpandedKeys] = useState<any[]>(loadLocalStorage('wuh.overview.expandedKeys', []));
-  const [selectedKey, setSelectedKey] = useState<any>(null);
+  const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [breadcrumb, setBreadcrumb] = useState<{ title: string; key: any }[]>([]);
 
-  useEffect(() => saveLocalStorage('wuh.overview.types', types), [types]);
-  useEffect(() => saveLocalStorage('wuh.overview.q', q), [q]);
-  useEffect(() => saveLocalStorage('wuh.overview.minElapsed', minElapsed), [minElapsed]);
-  useEffect(() => saveLocalStorage('wuh.overview.expandedKeys', expandedKeys), [expandedKeys]);
+  const treeNodes = useMemo(() => buildScopeTree(details || []), [details]);
 
-  const treeRaw = useMemo(() => buildScopeTree(details || []), [details]);
-
-  const term = q.trim().toLowerCase();
-  const nodeMatches = (n: any) => {
-    if (!types.includes(n.scopeType)) return false;
-    if (minElapsed && Number(n.TimeElapsed || 0) < Number(minElapsed)) return false;
-    if (term) {
-      const s = `${n.scopeName || ''} ${n.label || ''} ${n.fileName || ''}`.toLowerCase();
-      if (!s.includes(term)) return false;
+  const selectNodeByKey = (key: any) => {
+    const flat = flattenTree(treeNodes);
+    const node = flat.find((n: any) => n.key === key);
+    if (node) {
+      setSelectedNode(node);
+      setBreadcrumb(findPathByKey(treeNodes, key));
     }
-    return true;
   };
 
-  const treeFiltered = useMemo(() => {
-    const clone = (node: any) => ({ ...node, children: node.children?.map(clone) || [] });
-    const roots = treeRaw.map(clone);
-    const prune = (node: any) => {
-      const match = nodeMatches(node);
-      node.children = node.children.map(prune).filter(Boolean);
-      return match || node.children.length ? node : null;
-    };
-    return roots.map(prune).filter(Boolean);
-  }, [treeRaw, types, term, minElapsed]);
+  const handleExplorerSelect = ({ node, breadcrumb: bc }: HierarchyExplorerSelectPayload) => {
+    setSelectedNode(node);
+    setBreadcrumb(bc);
+  };
 
-  const flatList = useMemo(() => flattenTree(treeFiltered), [treeFiltered]);
   const summary = useMemo(() => {
     let rows = 0,
       diskR = 0,
       diskW = 0,
       maxMem = 0,
       totalElapsed = 0;
-    flatList.forEach((d: any) => {
+    (details || []).forEach((d: any) => {
       rows += Number(d.NumRowsProcessed || 0);
       diskR += Number(d.SizeDiskRead || 0);
       diskW += Number(d.SizeDiskWrite || 0);
@@ -134,54 +65,14 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
       totalElapsed += Number(d.TimeElapsed || 0);
     });
     const counts = {
-      total: flatList.length,
-      graph: flatList.filter((d: any) => d.scopeType === 'graph').length,
-      subgraph: flatList.filter((d: any) => d.scopeType === 'subgraph').length,
-      activity: flatList.filter((d: any) => d.scopeType === 'activity').length,
-      operation: flatList.filter((d: any) => d.scopeType === 'operation').length,
+      total: (details || []).length,
+      graph: (details || []).filter((d: any) => d.scopeType === 'graph').length,
+      subgraph: (details || []).filter((d: any) => d.scopeType === 'subgraph').length,
+      activity: (details || []).filter((d: any) => d.scopeType === 'activity').length,
+      operation: (details || []).filter((d: any) => d.scopeType === 'operation').length,
     };
     return { rows, diskR, diskW, maxMem, totalElapsed, counts };
-  }, [flatList]);
-
-  const renderTitle = (n: any) => (
-    <Space size={8}>
-      <Tag color="blue" className={styles.tagCapitalize}>
-        {n.scopeType}
-      </Tag>
-      <span className={styles.ellipsis}>{n.scopeName}</span>
-      {n.label && <span className={styles.mutedTextSmall}>({normalizeLabel(n.label)})</span>}
-      <span className={`${styles.subtleText} ${styles.numericText}`}>
-        <Tooltip title="Elapsed">⏱ {formatSeconds(n.TimeElapsed)}</Tooltip>
-        {n.NumRowsProcessed != null && (
-          <>
-            {' '}
-            • <Tooltip title="Rows">🔢 {formatNumber(n.NumRowsProcessed)}</Tooltip>
-          </>
-        )}
-        {n.PeakMemoryUsage != null && (
-          <>
-            {' '}
-            • <Tooltip title="Peak Memory">🧠 {formatBytes(n.PeakMemoryUsage)}</Tooltip>
-          </>
-        )}
-      </span>
-    </Space>
-  );
-
-  const toAntTreeNodes = (nodes: any[]) =>
-    nodes.map(n => ({
-      key: n.key,
-      title: renderTitle(n),
-      children: n.children && n.children.length ? toAntTreeNodes(n.children) : undefined,
-    }));
-
-  const antTreeData = useMemo(() => toAntTreeNodes(treeFiltered), [treeFiltered]);
-
-  const selectedNode = useMemo(() => flatList.find((n: any) => n.key === selectedKey) || null, [flatList, selectedKey]);
-  const breadcrumb = useMemo(
-    () => (selectedKey ? findPathByKey(treeFiltered, selectedKey) : []),
-    [treeFiltered, selectedKey]
-  );
+  }, [details]);
 
   const childCols = [
     {
@@ -294,65 +185,14 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
         </Row>
       </Card>
 
-      <Row gutter={16}>
-        <Col xs={24} lg={12} xxl={10}>
-          <Card
-            title={
-              <Space>
-                <ClusterOutlined /> Hierarchy Explorer
-              </Space>
-            }
-            className={styles.cardNoBodyPadding}>
-            <div className={styles.sectionHeader}>
-              <Space wrap>
-                <Input
-                  allowClear
-                  value={q}
-                  onChange={e => setQ(e.target.value)}
-                  prefix={<SearchOutlined />}
-                  placeholder="Search scope, label, file"
-                  className={styles.w260}
-                />
-                <Checkbox.Group
-                  value={types}
-                  onChange={setTypes}
-                  options={[
-                    { label: 'Graph', value: 'graph' },
-                    { label: 'Subgraph', value: 'subgraph' },
-                    { label: 'Activity', value: 'activity' },
-                    { label: 'Operation', value: 'operation' },
-                  ]}
-                />
-                <Space size={8}>
-                  <span>Min Elapsed</span>
-                  <InputNumber
-                    min={0}
-                    value={minElapsed}
-                    onChange={(v: any) => setMinElapsed(Number(v || 0))}
-                    placeholder="s"
-                  />
-                </Space>
-              </Space>
-            </div>
-            <div className={styles.scrollAreaTall}>
-              {antTreeData.length ? (
-                <Tree
-                  blockNode
-                  showLine
-                  treeData={antTreeData}
-                  expandedKeys={expandedKeys}
-                  onExpand={setExpandedKeys}
-                  selectedKeys={selectedKey ? [selectedKey] : []}
-                  onSelect={keys => setSelectedKey(keys[0])}
-                />
-              ) : (
-                <Empty description="No scopes match filters" />
-              )}
-            </div>
-          </Card>
+      <Row gutter={[16, 16]}>
+        {/* ── Left column: Hierarchy Explorer ── */}
+        <Col xs={24} lg={10} xl={9}>
+          <HierarchyExplorer details={details} storageKeyPrefix="wuh.overview" onSelect={handleExplorerSelect} />
         </Col>
 
-        <Col xs={24} lg={12} xxl={14}>
+        {/* ── Right column: Scope Details ── */}
+        <Col xs={24} lg={14} xl={15}>
           <Card
             title={
               <Space>
@@ -366,7 +206,10 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
               <div className={styles.scrollAreaTall}>
                 <Breadcrumb className={styles.mb12}>
                   {breadcrumb.map((b: any) => (
-                    <Breadcrumb.Item key={b.key} onClick={() => setSelectedKey(b.key)} className={styles.cursorPointer}>
+                    <Breadcrumb.Item
+                      key={b.key}
+                      onClick={() => selectNodeByKey(b.key)}
+                      className={styles.cursorPointer}>
                       {b.title}
                     </Breadcrumb.Item>
                   ))}
@@ -403,7 +246,7 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
                       rowKey={(r: any) => r.key}
                       dataSource={selectedNode.children}
                       columns={childCols}
-                      onRow={record => ({ onClick: () => setSelectedKey(record.key) })}
+                      onRow={record => ({ onClick: () => selectNodeByKey(record.key) })}
                     />
                   </Card>
                 )}
