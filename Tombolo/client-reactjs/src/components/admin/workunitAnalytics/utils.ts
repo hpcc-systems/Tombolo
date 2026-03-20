@@ -50,6 +50,32 @@ export const ensureSpacing = (text: string): string => {
   return text.trim() ? '\n' + text.trim() : '';
 };
 
+// Strip matching outer parentheses from a condition string
+// Only removes them if they wrap the entire condition
+export const stripOuterParentheses = (condition: string): string => {
+  const trimmed = condition.trim();
+
+  // Check if it starts with ( and ends with )
+  if (!trimmed.startsWith('(') || !trimmed.endsWith(')')) {
+    return trimmed;
+  }
+
+  // Verify the opening ( matches the closing ) and wraps the entire string
+  let depth = 0;
+  for (let i = 0; i < trimmed.length; i++) {
+    if (trimmed[i] === '(') depth++;
+    if (trimmed[i] === ')') depth--;
+
+    // If depth reaches 0 before the last character, the outer parens don't wrap everything
+    if (depth === 0 && i < trimmed.length - 1) {
+      return trimmed;
+    }
+  }
+
+  // If we get here, the outer parentheses wrap the entire condition
+  return trimmed.slice(1, -1).trim();
+};
+
 export const cleanUpSQLFormatting = (sql: string): string => {
   let cleaned = sql;
 

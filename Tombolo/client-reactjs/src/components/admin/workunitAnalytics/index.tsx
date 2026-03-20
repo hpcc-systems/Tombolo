@@ -47,6 +47,7 @@ import {
   LineChartOutlined,
   RollbackOutlined,
   EllipsisOutlined,
+  CloseOutlined,
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import { format } from 'sql-formatter';
@@ -75,6 +76,7 @@ import {
   extractWhereClause,
   hasWhereClause as hasWhere,
   ensureSpacing,
+  stripOuterParentheses,
   cleanUpSQLFormatting,
   exportToCSV as exportResults,
   formatTime,
@@ -530,7 +532,10 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
-    setExtractedFilterConditions(conditions);
+    // Strip outer parentheses if they exist (from previous filter application)
+    const cleanedConditions = stripOuterParentheses(conditions);
+
+    setExtractedFilterConditions(cleanedConditions);
     setSaveFilterFromEditorModalVisible(true);
   };
 
@@ -577,15 +582,19 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
+    // Strip outer parentheses if they exist (from previous filter application)
+    const cleanedConditions = stripOuterParentheses(conditions);
+
     try {
       const updatedFilter = await analyticsFiltersService.update(appliedFilterIds, {
-        conditions,
+        conditions: cleanedConditions,
         name: appliedFilter.name,
       });
 
-      // Update local state
+      // Update local state - keep appliedFilterIds set so recall button remains visible
       const updated = (savedFilters || []).map(f => (f.id === appliedFilterIds ? updatedFilter : f));
       setSavedFilters(updated);
+      setIsQueryExecuted(false);
       handleSuccess(`Updated "${appliedFilter.name}" successfully`);
     } catch (error: any) {
       console.error('Failed to update filter:', error);
@@ -749,11 +758,12 @@ const AnalyticsWorkspace = () => {
   const renderQueryLibrary = () => (
     <div className={styles.queryLibrary}>
       <div className={styles.sidebarHeader}>
-        <Title level={5}>Query Library</Title>
+        <Title level={4}>Query Library</Title>
       </div>
 
       <Collapse defaultActiveKey={[]} ghost className={styles.libraryCollapse}>
         <Panel
+          className={styles.queryPanel}
           header={
             <div className={styles.panelHeaderWithAction}>
               <Space>
@@ -849,6 +859,8 @@ const AnalyticsWorkspace = () => {
                 <Tooltip title="Add new filter">
                   <Button
                     size="small"
+                    type="primary"
+                    shape="circle"
                     icon={<PlusOutlined />}
                     className={styles.panelAddBtn}
                     onClick={e => {
@@ -882,7 +894,13 @@ const AnalyticsWorkspace = () => {
                       <div
                         className={`${styles.savedQueryCard} ${styles.whereClauseCard} ${
                           appliedFilterIds === filter.id ? styles.selectedQuery : ''
-                        }`}>
+                        }`}
+                        onClick={() => {
+                          // Only apply filter if not already applied
+                          if (appliedFilterIds !== filter.id) {
+                            applyFilterToEditor(filter);
+                          }
+                        }}>
                         <div className={styles.savedQueryHeader}>
                           <Text ellipsis className={styles.flex1}>
                             {filter.name}
@@ -893,8 +911,8 @@ const AnalyticsWorkspace = () => {
                             )} */}
                           </Text>
                           <Space size={2} className={styles.whereCardActions}>
-                            {appliedFilterIds === filter.id ? (
-                              <Tooltip title="Recall from editor query" placement="bottom">
+                            {appliedFilterIds === filter.id && (
+                              <Tooltip title="Recall" placement="bottom">
                                 <Button
                                   type="text"
                                   size="small"
@@ -903,18 +921,6 @@ const AnalyticsWorkspace = () => {
                                   onClick={e => {
                                     e.stopPropagation();
                                     recallFilterFromEditor(filter);
-                                  }}
-                                />
-                              </Tooltip>
-                            ) : (
-                              <Tooltip title="Apply to editor query" placement="bottom">
-                                <Button
-                                  type="text"
-                                  size="small"
-                                  icon={<PlayCircleOutlined className={styles.iconPrimary} />}
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    applyFilterToEditor(filter);
                                   }}
                                 />
                               </Tooltip>
@@ -953,34 +959,34 @@ const AnalyticsWorkspace = () => {
             </div>
           }
           key="templates">
-          <div className={styles.panelScrollContent}>
-            {Object.entries(QUERY_TEMPLATES).map(([category, templates]) => (
-              <div key={category} className={styles.templateCategory}>
-                <Text type="secondary" strong className={styles.textRegular}>
-                  {category}
-                </Text>
-                <div className={styles.templateList}>
-                  {templates.map((template, idx) => (
-                    <Tooltip
-                      key={idx}
-                      title={
-                        <div>
-                          <div className={styles.templateDescription}>{template.description}</div>
-                          <pre className={styles.templatePreview}>{template.sql.slice(0, 200)}...</pre>
-                        </div>
-                      }
-                      placement="right">
-                      <div className={styles.templateCard} onClick={() => loadTemplate(template)}>
-                        <Text ellipsis className={styles.textMedium}>
-                          {template.name}
-                        </Text>
+          {/* <div className={styles.panelScrollContent}> */}
+          {Object.entries(QUERY_TEMPLATES).map(([category, templates]) => (
+            <div key={category} className={styles.templateCategory}>
+              <Text type="secondary" strong className={styles.textRegular}>
+                {category}
+              </Text>
+              <div className={styles.templateList}>
+                {templates.map((template, idx) => (
+                  <Tooltip
+                    key={idx}
+                    title={
+                      <div>
+                        <div className={styles.templateDescription}>{template.description}</div>
+                        <pre className={styles.templatePreview}>{template.sql.slice(0, 200)}...</pre>
                       </div>
-                    </Tooltip>
-                  ))}
-                </div>
+                    }
+                    placement="right">
+                    <div className={styles.templateCard} onClick={() => loadTemplate(template)}>
+                      <Text ellipsis className={styles.textMedium}>
+                        {template.name}
+                      </Text>
+                    </div>
+                  </Tooltip>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+          {/* </div> */}
         </Panel>
 
         <Panel
@@ -997,7 +1003,9 @@ const AnalyticsWorkspace = () => {
                 <Tooltip title="Clear history">
                   <Button
                     size="small"
-                    danger
+                    // danger
+                    type="primary"
+                    shape="circle"
                     icon={<DeleteOutlined />}
                     className={styles.panelAddBtn}
                     onClick={e => {
@@ -1272,7 +1280,8 @@ const AnalyticsWorkspace = () => {
                   extra={
                     <Button
                       size="small"
-                      danger
+                      // danger
+                      icon={<CloseOutlined />}
                       onClick={() => {
                         setFilterBuilderVisible(false);
                         setWhereClauses([INITIAL_WHERE_ROW()]);
@@ -1280,9 +1289,7 @@ const AnalyticsWorkspace = () => {
                         setSql(DEFAULT_SQL);
                         setAppliedFilterIds(null);
                         setIsQueryExecuted(false);
-                      }}>
-                      Close
-                    </Button>
+                      }}></Button>
                   }
                   size="small">
                   <div className={styles.queryBuilderBody}>
@@ -1344,6 +1351,7 @@ const AnalyticsWorkspace = () => {
                                 <Button
                                   size="small"
                                   danger
+                                  shape="circle"
                                   icon={<MinusOutlined />}
                                   onClick={() => removeWhereClause(row.id)}
                                   className={styles.whereRowBtn}
@@ -1354,6 +1362,9 @@ const AnalyticsWorkspace = () => {
                             <Tooltip title="Add condition">
                               <Button
                                 size="small"
+                                type="primary"
+                                ghost
+                                shape="circle"
                                 icon={<PlusOutlined />}
                                 onClick={addWhereClause}
                                 className={styles.whereRowBtn}
