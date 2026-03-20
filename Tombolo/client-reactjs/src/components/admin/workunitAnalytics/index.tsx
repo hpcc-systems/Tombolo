@@ -23,6 +23,7 @@ import styles from './workunitAnalytics.module.css';
 import {
   PlayCircleOutlined,
   StopOutlined,
+  LoadingOutlined,
   SaveOutlined,
   ClearOutlined,
   DownloadOutlined,
@@ -1504,17 +1505,19 @@ const AnalyticsWorkspace = () => {
                   <Button icon={<SaveOutlined />} onClick={handleSaveQueryClick} className={styles.editorActionBtn}>
                     Save Query
                   </Button>
-                  <Button
-                    icon={<StopOutlined />}
-                    danger
-                    disabled={!isExecuting}
-                    onClick={() => abortControllerRef.current?.abort()}
-                    className={styles.editorActionBtn}>
-                    Cancel
+
+                  <Button type="primary" icon={isExecuting ? null : <PlayCircleOutlined />} onClick={executeQuery}>
+                    {isExecuting ? 'Executing...' : 'Execute'}
                   </Button>
-                  <Button type="primary" icon={<PlayCircleOutlined />} loading={isExecuting} onClick={executeQuery}>
-                    Execute
-                  </Button>
+                  {isExecuting && (
+                    <Button
+                      icon={<StopOutlined />}
+                      danger
+                      onClick={() => abortControllerRef.current?.abort()}
+                      className={styles.editorActionBtn}>
+                      Cancel
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
