@@ -1,5 +1,6 @@
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 import logger from '../config/logger.js';
-import path from 'path';
+import { join } from 'path';
 import { getDirname } from '../utils/polyfills.js';
 import { resolveJobPath } from './jobPathResolver.js';
 
@@ -49,7 +50,7 @@ function createNewBreeJob(
     jobExecutionGroupId?: string;
   }
 ): void {
-  const defaultDistPath = path.join(
+  const defaultDistPath = join(
     __dirname,
     '..',
     '..',

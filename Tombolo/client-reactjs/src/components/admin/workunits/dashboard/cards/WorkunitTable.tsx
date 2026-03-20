@@ -1,8 +1,10 @@
 import { Table, Tag, Tooltip, Input, Select, Button } from 'antd';
 import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
 import { formatCurrency } from '@tombolo/shared';
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { ColumnsType } from 'antd/es/table';
+import workunitsService from '@/services/workunits.service';
+import clustersService from '@/services/clusters.service';
 
 export interface CostBreakdown {
   compute: number;
@@ -21,12 +23,14 @@ export interface WorkunitRecord {
   cpuHours?: number;
   endTime?: string;
   costBreakdown: CostBreakdown;
-  clusterId?: string;
+  clusterId: string;
   detailsFetchedAt?: string;
 }
 
 interface WorkunitTableProps {
-  workunits: WorkunitRecord[];
+  startDate: string;
+  endDate: string;
+  clusterId?: string;
 }
 
 const stateColors: Record<string, string> = {
@@ -37,27 +41,141 @@ const stateColors: Record<string, string> = {
   waiting: 'default',
 };
 
-export default function WorkunitTable({ workunits }: WorkunitTableProps) {
-  const [search, setSearch] = useState('');
+export default function WorkunitTable({ startDate, endDate, clusterId }: WorkunitTableProps) {
+  const [data, setData] = useState<WorkunitRecord[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
+  const [sortField, setSortField] = useState('totalCost');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [clusterMap, setClusterMap] = useState<Record<string, string>>({});
+
+  // Controlled text inputs
+  const [jobNameInput, setJobNameInput] = useState('');
+  const [ownerInput, setOwnerInput] = useState('');
   const [stateFilter, setStateFilter] = useState<string | undefined>(undefined);
 
-  const filtered = useMemo(() => {
-    let data = workunits;
-    if (search) {
-      const q = search.toLowerCase();
-      data = data.filter(
-        wu =>
-          (wu.jobName || '').toLowerCase().includes(q) ||
-          (wu.wuid || '').toLowerCase().includes(q) ||
-          (wu.owner || '').toLowerCase().includes(q) ||
-          (wu.cluster || '').toLowerCase().includes(q)
-      );
+  // Debounced values used in API calls
+  const [debouncedJobName, setDebouncedJobName] = useState('');
+  const [debouncedOwner, setDebouncedOwner] = useState('');
+
+  // Debounce text inputs by 400ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedJobName(jobNameInput);
+      setDebouncedOwner(ownerInput);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [jobNameInput, ownerInput]);
+
+  // Fetch cluster names once for display
+  useEffect(() => {
+    clustersService
+      .getAll()
+      .then((clusters: any[]) => {
+        const map: Record<string, string> = {};
+        (clusters || []).forEach((c: any) => {
+          map[c.id] = c.name;
+        });
+        setClusterMap(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params: Record<string, any> = {
+        page,
+        limit,
+        sort: sortField,
+        order: sortOrder,
+        dateFrom: startDate,
+        dateTo: endDate,
+      };
+      if (clusterId) params.clusterId = clusterId;
+      if (debouncedJobName) params.jobName = debouncedJobName;
+      if (debouncedOwner) params.owner = debouncedOwner;
+      if (stateFilter) params.state = stateFilter;
+
+      const result = await workunitsService.getAll(params);
+      const rows: WorkunitRecord[] = (result.data || []).map((wu: any) => ({
+        wuid: wu.wuId,
+        jobName: wu.jobName,
+        clusterId: wu.clusterId,
+        cluster: wu.clusterId, // resolved to name in render via clusterMap
+        owner: wu.owner,
+        state: wu.state,
+        cost: wu.totalCost ?? 0,
+        cpuHours: wu.totalClusterTime ?? 0,
+        duration: (wu.totalClusterTime ?? 0) * 60, // hours → minutes
+        endTime: wu.endTimestamp ?? undefined,
+        detailsFetchedAt: wu.detailsFetchedAt ?? undefined,
+        costBreakdown: {
+          compute: wu.executeCost ?? 0,
+          fileAccess: wu.fileAccessCost ?? 0,
+          compile: wu.compileCost ?? 0,
+        },
+      }));
+      setData(rows);
+      setTotal(result.total || 0);
+    } catch (err) {
+      console.error('WorkunitTable fetch error:', err);
+    } finally {
+      setLoading(false);
     }
-    if (stateFilter) {
-      data = data.filter(wu => wu.state === stateFilter);
+    // clusterMap intentionally omitted — names are resolved in render only
+  }, [page, limit, sortField, sortOrder, startDate, endDate, clusterId, debouncedJobName, debouncedOwner, stateFilter]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Map from column dataIndex → backend sort field name where they differ
+  const sortFieldMap: Record<string, string> = {
+    cost: 'totalCost',
+    duration: 'totalClusterTime',
+    endTime: 'endTimestamp',
+  };
+
+  // Reverse map: backend field → column dataIndex (for controlled sortOrder)
+  const backendToColumnMap: Record<string, string> = {
+    totalCost: 'cost',
+    totalClusterTime: 'duration',
+    endTimestamp: 'endTime',
+  };
+
+  // The column dataIndex that is currently active, used to set controlled sortOrder
+  const activeSortColumn = backendToColumnMap[sortField] ?? sortField;
+
+  const handleTableChange = (pagination: any, _filters: any, sorter: any, extra: any) => {
+    if (extra?.action === 'sort') {
+      const s = Array.isArray(sorter) ? sorter[0] : sorter;
+      if (s?.field && s?.order) {
+        const backendField = sortFieldMap[String(s.field)] ?? String(s.field);
+        setSortField(backendField);
+        setSortOrder(s.order === 'ascend' ? 'asc' : 'desc');
+        setPage(1);
+        setLimit(pagination.pageSize ?? 15);
+      } else {
+        // Sort cleared — reset to default so UI and API stay in sync
+        setSortField('totalCost');
+        setSortOrder('desc');
+        setPage(1);
+      }
+    } else {
+      // 'paginate' or 'filter' — never touch sort state
+      setPage(pagination.current ?? 1);
+      setLimit(pagination.pageSize ?? 15);
     }
-    return data;
-  }, [workunits, search, stateFilter]);
+  };
+
+  const handleStateFilterChange = (val: string | undefined) => {
+    setStateFilter(val);
+    setPage(1);
+  };
 
   const columns: ColumnsType<WorkunitRecord> = [
     {
@@ -81,18 +199,21 @@ export default function WorkunitTable({ workunits }: WorkunitTableProps) {
       dataIndex: 'jobName',
       key: 'jobName',
       ellipsis: true,
-      render: (val: string) => (
-        <Tooltip title={val}>
-          <span style={{ color: '#374151', fontWeight: 500 }}>{val}</span>
-        </Tooltip>
-      ),
+      render: (val: string) =>
+        val ? (
+          <Tooltip title={val}>
+            <span style={{ color: '#374151', fontWeight: 500 }}>{val}</span>
+          </Tooltip>
+        ) : (
+          <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>&lt;Unnamed&gt;</span>
+        ),
     },
     {
       title: 'Cluster',
-      dataIndex: 'cluster',
+      dataIndex: 'clusterId',
       key: 'cluster',
       width: 100,
-      render: (val: string) => (
+      render: (clusterId: string) => (
         <Tag
           style={{
             borderRadius: 4,
@@ -100,7 +221,7 @@ export default function WorkunitTable({ workunits }: WorkunitTableProps) {
             fontSize: 10,
             letterSpacing: '0.5px',
           }}>
-          {val}
+          {clusterMap[clusterId] || clusterId}
         </Tag>
       ),
     },
@@ -127,8 +248,9 @@ export default function WorkunitTable({ workunits }: WorkunitTableProps) {
       dataIndex: 'cost',
       key: 'cost',
       width: 100,
-      sorter: (a, b) => a.cost - b.cost,
-      defaultSortOrder: 'descend',
+      sorter: true,
+      sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortOrder: activeSortColumn === 'cost' ? (sortOrder === 'asc' ? 'ascend' : 'descend') : null,
       render: (val: number) => (
         <span
           style={{
@@ -145,7 +267,9 @@ export default function WorkunitTable({ workunits }: WorkunitTableProps) {
       dataIndex: 'duration',
       key: 'duration',
       width: 100,
-      sorter: (a, b) => a.duration - b.duration,
+      sorter: true,
+      sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortOrder: activeSortColumn === 'duration' ? (sortOrder === 'asc' ? 'ascend' : 'descend') : null,
       render: (val: number) => {
         const h = Math.floor(val / 60);
         const m = Math.round(val % 60);
@@ -156,6 +280,21 @@ export default function WorkunitTable({ workunits }: WorkunitTableProps) {
           </span>
         );
       },
+    },
+    {
+      title: 'End Time',
+      dataIndex: 'endTime',
+      key: 'endTime',
+      width: 160,
+      sorter: true,
+      sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortOrder: activeSortColumn === 'endTime' ? (sortOrder === 'asc' ? 'ascend' : 'descend') : null,
+      render: (val: string | null) =>
+        val ? (
+          <span style={{ color: '#6b7280', fontSize: 12 }}>{new Date(val).toLocaleString()}</span>
+        ) : (
+          <span style={{ color: '#9ca3af' }}>—</span>
+        ),
     },
     {
       title: 'Cost Breakdown',
@@ -252,17 +391,25 @@ export default function WorkunitTable({ workunits }: WorkunitTableProps) {
           flexWrap: 'wrap',
         }}>
         <Input
-          placeholder="Search jobs, WUIDs, owners..."
+          placeholder="Search by job name..."
           prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ maxWidth: 320 }}
+          value={jobNameInput}
+          onChange={e => setJobNameInput(e.target.value)}
+          style={{ maxWidth: 240 }}
+          allowClear
+        />
+        <Input
+          placeholder="Search by owner..."
+          prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
+          value={ownerInput}
+          onChange={e => setOwnerInput(e.target.value)}
+          style={{ maxWidth: 200 }}
           allowClear
         />
         <Select
           placeholder="Filter by state"
           value={stateFilter}
-          onChange={(val: string | undefined) => setStateFilter(val)}
+          onChange={handleStateFilterChange}
           allowClear
           style={{ minWidth: 160 }}
           options={[
@@ -276,16 +423,20 @@ export default function WorkunitTable({ workunits }: WorkunitTableProps) {
       </div>
       <Table<WorkunitRecord>
         columns={columns}
-        dataSource={filtered}
+        dataSource={data}
+        loading={loading}
         rowKey={record => `${record.clusterId}:${record.wuid}`}
         size="small"
         scroll={{ x: 1200 }}
         pagination={{
-          pageSize: 15,
+          current: page,
+          pageSize: limit,
+          total,
           size: 'small',
           showSizeChanger: true,
-          showTotal: total => <span style={{ color: '#6b7280', fontSize: 12 }}>{total} workunits</span>,
+          showTotal: t => <span style={{ color: '#6b7280', fontSize: 12 }}>{t} workunits</span>,
         }}
+        onChange={handleTableChange}
         style={{ borderRadius: 8, overflow: 'hidden' }}
       />
     </div>
