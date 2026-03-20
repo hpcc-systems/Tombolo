@@ -1,4 +1,4 @@
-import path from 'path';
+import { join } from 'path';
 
 import { FileMonitoring } from '../models/index.js';
 import { getDirname } from '../utils/polyfills.js';
@@ -13,6 +13,7 @@ const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
 // const FILE_MONITORING = `fileMonitoringPoller.${JOB_EXTENSION}`;
 
 function createLandingZoneFileMonitoringBreeJob(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   this: any,
   {
     filemonitoring_id,
@@ -20,7 +21,7 @@ function createLandingZoneFileMonitoringBreeJob(
     cron,
   }: { filemonitoring_id: string; name: string; cron: string }
 ): void {
-  const defaultDistPath = path.join(
+  const defaultDistPath = join(
     __dirname,
     '..',
     '..',
@@ -40,6 +41,7 @@ function createLandingZoneFileMonitoringBreeJob(
 }
 
 function createLogicalFileMonitoringBreeJob(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   this: any,
   {
     filemonitoring_id,
@@ -47,7 +49,7 @@ function createLogicalFileMonitoringBreeJob(
     cron,
   }: { filemonitoring_id: string; name: string; cron: string }
 ): void {
-  const defaultDistPath2 = path.join(
+  const defaultDistPath2 = join(
     __dirname,
     '..',
     '..',
@@ -67,6 +69,7 @@ function createLogicalFileMonitoringBreeJob(
 }
 
 async function scheduleFileMonitoringBreeJob(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   this: any,
   {
     filemonitoring_id,
@@ -95,6 +98,7 @@ async function scheduleFileMonitoringBreeJob(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function scheduleFileMonitoringOnServerStart(this: any): Promise<void> {
   try {
     const activeLandingZoneFileMonitoring = (await FileMonitoring.findAll({
@@ -103,6 +107,7 @@ async function scheduleFileMonitoringOnServerStart(this: any): Promise<void> {
         // monitoringAssetType: "landingZoneFile",
       },
       raw: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     })) as any[];
     for (const monitoring of activeLandingZoneFileMonitoring) {
       await this.scheduleFileMonitoringBreeJob({
@@ -124,7 +129,7 @@ async function scheduleFileMonitoringOnServerStart(this: any): Promise<void> {
 //     this.bree.add({
 //       name: jobName,
 //       interval: '500s',
-//       path: path.join(__dirname, '..', 'jobs', FILE_MONITORING),
+//       path: join(__dirname, '..', 'jobs', FILE_MONITORING),
 //       worker: {
 //         workerData: {
 //           jobName: jobName,

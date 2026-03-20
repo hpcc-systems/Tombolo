@@ -1,4 +1,4 @@
-import path from 'path';
+import { join } from 'path';
 import { resolveJobPath } from './jobPathResolver.js';
 
 //Local imports
@@ -20,21 +20,16 @@ const CHECK_CLUSTER_CONTAINERIZATION_FILE_NAME =
   'checkIfClusterIsContainerized.js';
 
 // Cluster status monitoring bree job
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function startClusterMonitoring(this: any): Promise<void> {
   try {
-    let jobName = 'cluster-monitoring' + new Date().getTime();
+    const jobName = 'cluster-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
       // interval: '10s', // For development
       interval: `${cluster_monitoring_interval}m`,
       path: resolveJobPath(
-        path.join(
-          __dirname,
-          '..',
-          'jobs',
-          'cluster',
-          CLUSTER_MONITORING_FILE_NAME
-        )
+        join(__dirname, '..', 'jobs', 'cluster', CLUSTER_MONITORING_FILE_NAME)
       ),
       worker: {
         workerData: {
@@ -50,15 +45,16 @@ async function startClusterMonitoring(this: any): Promise<void> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function scheduleClusterTimezoneOffset(this: any): Promise<void> {
   logger.info('Cluster timezone offset checker job initialized ...');
   try {
-    let jobName = 'cluster-timezone-offset-' + new Date().getTime();
+    const jobName = 'cluster-timezone-offset-' + new Date().getTime();
     this.bree.add({
       name: jobName,
       interval: 'at 02:30am also at 02:30pm',
       path: resolveJobPath(
-        path.join(__dirname, '..', 'jobs', 'cluster', CLUSTER_TIMEZONE_OFFSET)
+        join(__dirname, '..', 'jobs', 'cluster', CLUSTER_TIMEZONE_OFFSET)
       ),
       worker: {
         workerData: {
@@ -74,6 +70,7 @@ async function scheduleClusterTimezoneOffset(this: any): Promise<void> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createClusterUsageHistoryJob(this: any): Promise<void> {
   const uniqueJobName = 'Cluster Usage History Tracker';
   const job = {
@@ -81,13 +78,7 @@ async function createClusterUsageHistoryJob(this: any): Promise<void> {
     // interval: "10s", // For development
     name: uniqueJobName,
     path: resolveJobPath(
-      path.join(
-        __dirname,
-        '..',
-        'jobs',
-        'cluster',
-        CLUSTER_USAGE_HISTORY_TRACKER
-      )
+      join(__dirname, '..', 'jobs', 'cluster', CLUSTER_USAGE_HISTORY_TRACKER)
     ),
   };
   this.bree.add(job);
@@ -95,15 +86,16 @@ async function createClusterUsageHistoryJob(this: any): Promise<void> {
   logger.info('Cluster usage monitoring job initialized ...');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function checkClusterReachability(this: any): Promise<void> {
   try {
-    let jobName = 'cluster-reachability-monitoring' + new Date().getTime();
+    const jobName = 'cluster-reachability-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
       // interval: "10s", // For development
       interval: clusterReachabilityMonitoringInterval,
       path: resolveJobPath(
-        path.join(
+        join(
           __dirname,
           '..',
           'jobs',
@@ -125,15 +117,16 @@ async function checkClusterReachability(this: any): Promise<void> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function checkClusterContainerization(this: any): Promise<void> {
   try {
-    let jobName = 'cluster-containerization-check-' + new Date().getTime();
+    const jobName = 'cluster-containerization-check-' + new Date().getTime();
     this.bree.add({
       name: jobName,
       // interval: '10s', // For development
       cron: clusterContainerizationCheckInterval,
       path: resolveJobPath(
-        path.join(
+        join(
           __dirname,
           '..',
           'jobs',

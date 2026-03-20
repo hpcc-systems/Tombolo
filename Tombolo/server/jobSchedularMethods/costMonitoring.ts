@@ -1,4 +1,4 @@
-import path from 'path';
+import { join } from 'path';
 import { monitor_cost_interval } from '../config/monitorings.js';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
@@ -8,20 +8,15 @@ const __dirname = getDirname(import.meta.url);
 const MONITOR_COST_FILE_NAME = 'monitorCost.js';
 const ANALYZE_COST_FILE_NAME = 'analyzeCost.js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createMonitorCostJob(this: any): void {
   try {
-    let jobName = 'monitor-cost-' + new Date().getTime();
+    const jobName = 'monitor-cost-' + new Date().getTime();
     this.bree.add({
       name: jobName,
       interval: monitor_cost_interval,
       path: resolveJobPath(
-        path.join(
-          __dirname,
-          '..',
-          'jobs',
-          'costMonitoring',
-          MONITOR_COST_FILE_NAME
-        )
+        join(__dirname, '..', 'jobs', 'costMonitoring', MONITOR_COST_FILE_NAME)
       ),
       worker: {
         workerData: {
@@ -37,19 +32,14 @@ function createMonitorCostJob(this: any): void {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createAnalyzeCostJob(this: any): void {
   const analyzeCostJobName = `analyze-cost-${new Date().getTime()}`;
   try {
     this.bree.add({
       name: analyzeCostJobName,
       path: resolveJobPath(
-        path.join(
-          __dirname,
-          '..',
-          'jobs',
-          'costMonitoring',
-          ANALYZE_COST_FILE_NAME
-        )
+        join(__dirname, '..', 'jobs', 'costMonitoring', ANALYZE_COST_FILE_NAME)
       ),
       timeout: 0, // Run immediately
       worker: {

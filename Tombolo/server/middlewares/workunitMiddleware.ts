@@ -13,6 +13,7 @@ const VALID_SORT_FIELDS = [
   'jobName',
   'owner',
   'state',
+  'endTimestamp',
 ];
 
 // Valid order directions
