@@ -163,13 +163,20 @@ const WorkUnitHistory: React.FC = () => {
     fetchClusters();
   }, []);
 
-  const handleTableChange = (newPagination: any, _filters: any, sorter: any) => {
-    setPage(newPagination.current);
-    setLimit(newPagination.pageSize);
-
-    if (sorter.field) {
-      setSortField(sorter.field);
-      setSortOrder(sorter.order === 'ascend' ? 'asc' : 'desc');
+  const handleTableChange = (newPagination: any, _filters: any, sorter: any, extra: any) => {
+    if (extra?.action === 'sort') {
+      const s = Array.isArray(sorter) ? sorter[0] : sorter;
+      if (s?.field && s?.order) {
+        setSortField(s.field);
+        setSortOrder(s.order === 'ascend' ? 'asc' : 'desc');
+        setPage(1);
+        setLimit(newPagination.pageSize ?? limit);
+      }
+      // If sort was cleared (s.order falsy), do nothing — keep current sort state
+    } else {
+      // Only pagination changed
+      setPage(newPagination.current);
+      setLimit(newPagination.pageSize);
     }
   };
 
@@ -200,6 +207,11 @@ const WorkUnitHistory: React.FC = () => {
     history.push(`/workunits/history/${record.clusterId}/${record.wuId}`);
   };
 
+  const getSortOrder = (field: string) => {
+    if (sortField !== field) return null;
+    return sortOrder === 'asc' ? ('ascend' as const) : ('descend' as const);
+  };
+
   const columns = [
     {
       title: 'Job Name',
@@ -215,7 +227,11 @@ const WorkUnitHistory: React.FC = () => {
               onClick={() => handleView(record)}
               disabled={!record.detailsFetchedAt}>
               <Text strong className={styles.ellipsis}>
-                {text || record.wuId}
+                {text ? (
+                  text
+                ) : (
+                  <span style={{ color: '#9ca3af', fontStyle: 'italic', fontWeight: 'normal' }}>&lt;Unnamed&gt;</span>
+                )}
               </Text>
             </Button>
             {!record.detailsFetchedAt && (
@@ -231,6 +247,16 @@ const WorkUnitHistory: React.FC = () => {
           </Text>
         </Space>
       ),
+    },
+    {
+      title: 'Timestamp',
+      dataIndex: 'workUnitTimestamp',
+      key: 'workUnitTimestamp',
+      width: 160,
+      sorter: true,
+      sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortOrder: getSortOrder('workUnitTimestamp'),
+      render: (ts: any) => (ts ? dayjs(ts).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
       title: 'Cluster',
@@ -263,11 +289,23 @@ const WorkUnitHistory: React.FC = () => {
       },
     },
     {
+      title: 'Duration',
+      dataIndex: 'totalClusterTime',
+      key: 'totalClusterTime',
+      width: 100,
+      sorter: true,
+      sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortOrder: getSortOrder('totalClusterTime'),
+      render: (val: any) => formatTime(val != null ? val * 3600 : null),
+    },
+    {
       title: 'Cost',
       dataIndex: 'totalCost',
       key: 'totalCost',
       width: 80,
       sorter: true,
+      sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortOrder: getSortOrder('totalCost'),
       render: (cost: any) => (cost != null ? `$${cost.toFixed(4)}` : '-'),
     },
     {

@@ -8,7 +8,7 @@ import CostSummary, { type DashboardSummary } from './cards/CostSummary';
 import CostBarChart, { type DailyCost } from './cards/CostBarChart';
 import CostByCluster, { type ClusterCost } from './cards/CostByEnvironment';
 import ProblematicJobs, { type ProblematicJob } from './cards/ProblematicJobs';
-import WorkunitTable, { type WorkunitRecord } from './cards/WorkunitTable';
+import WorkunitTable from './cards/WorkunitTable';
 import TimeRangeSelector, { type TimePreset } from './cards/TimeRangeSelector';
 import workunitDashboardService, { type DashboardData, type OwnerCost } from '@/services/workunitDashboard.service';
 
@@ -42,7 +42,6 @@ export default function DashboardPage() {
   }, [startDate, endDate]);
 
   const summary: DashboardSummary = dashboardData?.summary || {};
-  const workunits: WorkunitRecord[] = dashboardData?.workunits || [];
   const problematicJobs: ProblematicJob[] = dashboardData?.problematicJobs || [];
   const dailyCosts: DailyCost[] = dashboardData?.dailyCosts || [];
   const clusterCosts: ClusterCost[] = dashboardData?.clusterBreakdown || [];
@@ -353,7 +352,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-                <WorkunitTable workunits={workunits} />
+                <WorkunitTable startDate={startDate.toISOString()} endDate={endDate.toISOString()} />
               </div>
             </>
           )}

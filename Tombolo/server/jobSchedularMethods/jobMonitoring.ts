@@ -1,4 +1,4 @@
-import path from 'path';
+import { join } from 'path';
 import {
   job_monitoring_interval,
   intermediate_job_monitoring_interval,
@@ -31,10 +31,11 @@ const humanReadableIntervalForJobMonitoring = generateIntervalString({
 });
 
 // Job monitoring bree job
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function startJobMonitoring(this: any): Promise<void> {
   try {
-    let jobName = 'job-monitoring' + new Date().getTime();
-    const defaultDistPath = path.join(
+    const jobName = 'job-monitoring' + new Date().getTime();
+    const defaultDistPath = join(
       __dirname,
       '..',
       '..',
@@ -73,10 +74,11 @@ const humanReadableIntervalForIntermediateJobMonitoring =
   });
 
 // Intermediate jobs monitoring bree job
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function startIntermediateJobsMonitoring(this: any): Promise<void> {
   try {
-    let jobName = 'intermediate-state-jobs-monitoring' + new Date().getTime();
-    const defaultDistPath2 = path.join(
+    const jobName = 'intermediate-state-jobs-monitoring' + new Date().getTime();
+    const defaultDistPath2 = join(
       __dirname,
       '..',
       '..',
@@ -115,11 +117,12 @@ const humanReadableIntervalForJobPunctualityMonitoring = generateIntervalString(
   }
 );
 
-// Job punctuality monitoring bree job
+// Job punctuality monitoring bree
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function startJobPunctualityMonitoring(this: any): Promise<void> {
   try {
-    let jobName = 'job-punctuality-monitoring' + new Date().getTime();
-    const defaultDistPath3 = path.join(
+    const jobName = 'job-punctuality-monitoring' + new Date().getTime();
+    const defaultDistPath3 = join(
       __dirname,
       '..',
       '..',
@@ -156,10 +159,12 @@ const humanReadableIntervalForTimeSeriesJobMonitoring = generateIntervalString({
   timeSlots: timeSeriesJobMonitoringTimeSlots,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function startTimeSeriesAnalysisMonitoring(this: any): Promise<void> {
   try {
-    let jobName = 'job-time-series-analysis-monitoring' + new Date().getTime();
-    const defaultDistPath4 = path.join(
+    const jobName =
+      'job-time-series-analysis-monitoring' + new Date().getTime();
+    const defaultDistPath4 = join(
       __dirname,
       '..',
       '..',
@@ -188,10 +193,11 @@ async function startTimeSeriesAnalysisMonitoring(this: any): Promise<void> {
 }
 
 // Bree job that gets wu Info
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createWuInfoFetchingJob(this: any, data: any = {}): void {
   try {
-    let jobName = 'fetch-wu-info' + new Date().getTime();
-    const defaultDistPath5 = path.join(
+    const jobName = 'fetch-wu-info' + new Date().getTime();
+    const defaultDistPath5 = join(
       __dirname,
       '..',
       '..',
