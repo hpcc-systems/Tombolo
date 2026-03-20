@@ -752,7 +752,7 @@ const AnalyticsWorkspace = () => {
         <Title level={5}>Query Library</Title>
       </div>
 
-      <Collapse accordion defaultActiveKey={[]} ghost className={styles.libraryCollapse}>
+      <Collapse defaultActiveKey={[]} ghost className={styles.libraryCollapse}>
         <Panel
           header={
             <div className={styles.panelHeaderWithAction}>
@@ -789,11 +789,12 @@ const AnalyticsWorkspace = () => {
                         onClick={() => loadSavedQuery(query)}>
                         <div className={styles.savedQueryHeader}>
                           <Text ellipsis>{query.name}</Text>
-                          <Space>
+                          <Space size={2} className={styles.whereCardActions}>
                             <Tooltip title={query.favorite ? 'Unfavorite' : 'Favorite'} placement="bottom">
                               <Button
                                 type="text"
                                 size="small"
+                                className={styles.favoriteButton}
                                 icon={
                                   query.favorite ? <StarFilled className={styles.iconStarFilled} /> : <StarOutlined />
                                 }
@@ -808,6 +809,7 @@ const AnalyticsWorkspace = () => {
                                 type="text"
                                 size="small"
                                 danger
+                                className={styles.deleteButton}
                                 icon={<DeleteOutlined />}
                                 onClick={e => {
                                   e.stopPropagation();
@@ -946,6 +948,7 @@ const AnalyticsWorkspace = () => {
               <Space>
                 <FileTextOutlined />
                 <Text strong>Templates</Text>
+                <span className={styles.badgeCount}>{Object.keys(QUERY_TEMPLATES).length}</span>
               </Space>
             </div>
           }
@@ -977,6 +980,69 @@ const AnalyticsWorkspace = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </Panel>
+
+        <Panel
+          header={
+            <div className={styles.panelHeaderWithAction}>
+              <Space>
+                <HistoryOutlined />
+                <Text strong>
+                  Recent Queries
+                  <span className={styles.badgeCount}>{queryHistory.length}</span>
+                </Text>
+              </Space>
+              {queryHistory.length > 0 && (
+                <Tooltip title="Clear history">
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    className={styles.panelAddBtn}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setQueryHistory([]);
+                      localStorage.removeItem('analytics_query_history');
+                      handleSuccess('Query history cleared');
+                    }}
+                  />
+                </Tooltip>
+              )}
+            </div>
+          }
+          key="recent-queries">
+          <div className={styles.panelScrollContent}>
+            {queryHistory.length === 0 ? (
+              <Empty description="No recent queries" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            ) : (
+              <div className={styles.savedQueriesList}>
+                {queryHistory.map(item => (
+                  <Tooltip
+                    key={item.id}
+                    title={
+                      <div>
+                        <pre style={{ margin: 0, fontSize: 11, marginBottom: 8 }}>{item.sql}</pre>
+                        <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.85)' }}>
+                          {item.rowCount} rows • {item.executionTime}ms
+                        </div>
+                      </div>
+                    }
+                    placement="top">
+                    <div onClick={() => loadFromHistory(item)}>
+                      {/* <div className={styles.savedQueryHeader}> */}
+                      <Text ellipsis code className={styles.flex1}>
+                        {item.sql.split('\n')[0].slice(0, 60)}...
+                      </Text>
+                      {/* </div> */}
+                      <Text type="secondary" style={{ fontSize: 10, marginTop: 4, display: 'block' }}>
+                        {new Date(item.timestamp).toLocaleString()}
+                      </Text>
+                    </div>
+                  </Tooltip>
+                ))}
+              </div>
+            )}
           </div>
         </Panel>
       </Collapse>
@@ -1147,60 +1213,6 @@ const AnalyticsWorkspace = () => {
           scroll={{ x: 'max-content', y: 400 }}
           size="small"
         />
-      </div>
-    );
-  };
-
-  // Render query history
-  const renderQueryHistory = () => {
-    if (queryHistory.length === 0) return null;
-
-    return (
-      <div className={styles.queryHistory}>
-        <div className={styles.historyHeader}>
-          <Space>
-            <HistoryOutlined />
-            <Text strong>Recent Queries</Text>
-          </Space>
-          <Button
-            size="small"
-            danger
-            onClick={() => {
-              setQueryHistory([]);
-              localStorage.removeItem('analytics_query_history');
-              handleSuccess('Query history cleared');
-            }}>
-            Clear History
-          </Button>
-        </div>
-
-        <div className={styles.historyList}>
-          {queryHistory.map(item => (
-            <Card
-              key={item.id}
-              size="small"
-              hoverable
-              className={styles.historyCard}
-              onClick={() => loadFromHistory(item)}>
-              <Space direction="vertical" size={4} className={styles.spaceFullWidth}>
-                <Text ellipsis code className={styles.textRegular}>
-                  {item.sql.split('\n')[0].slice(0, 100)}...
-                </Text>
-                <Space size="small">
-                  <Tag color="blue" style={{ fontSize: 10 }}>
-                    {item.rowCount} rows
-                  </Tag>
-                  <Tag color="green" style={{ fontSize: 10 }}>
-                    {item.executionTime}ms
-                  </Tag>
-                  <Text type="secondary" className={styles.textTiny}>
-                    {new Date(item.timestamp).toLocaleString()}
-                  </Text>
-                </Space>
-              </Space>
-            </Card>
-          ))}
-        </div>
       </div>
     );
   };
@@ -1475,8 +1487,6 @@ const AnalyticsWorkspace = () => {
             </div>
             {/* Results */}
             {renderResults()}
-            {/* Query History */}
-            {renderQueryHistory()}
           </Content>
 
           {/* Right Sidebar - Schema Browser */}

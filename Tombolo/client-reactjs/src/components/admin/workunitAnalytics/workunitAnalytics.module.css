@@ -345,7 +345,7 @@
 /* Applied filter styling - distinct and prominent */
 .saved-query-card.selectedQuery {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--aw-bg-tertiary) 100%) !important;
-  border: 2px solid var(--aw-accent-success) !important;
+  border: 1px solid var(--aw-accent-success) !important;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
 }
 
@@ -373,6 +373,17 @@
 }
 
 .where-clause-card:hover .where-card-actions {
+  opacity: 1;
+}
+
+/* Hide action buttons for saved queries until hovered */
+.saved-query-card .where-card-actions {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.saved-query-card:hover .where-card-actions {
   opacity: 1;
 }
 
