@@ -1,7 +1,4 @@
 // VS Code-style sidebar panel toggle icons.
-// Uses `currentColor` so the caller controls the color via CSS.
-// Default stroke is dark (#1f1f1f) so they read well on white/light backgrounds.
-
 export const LeftPanelIcon = ({ color = '#333131' }: { color?: string }) => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     {/* outer border */}

@@ -163,7 +163,7 @@ const AnalyticsWorkspace = () => {
   const [saveFilterFromEditorModalVisible, setSaveFilterFromEditorModalVisible] = useState(false);
   const [extractedFilterConditions, setExtractedFilterConditions] = useState('');
   const [sqlWhenBuilderOpened, setSqlWhenBuilderOpened] = useState('');
-  const [appliedFilterIds, setAppliedFilterIds] = useState<string | null>(null);
+  const [appliedFilterId, setAppliedFilterId] = useState<string | null>(null);
   const [isQueryExecuted, setIsQueryExecuted] = useState(false);
 
   const hasWhereClause = useMemo(() => hasWhere(sql), [sql]);
@@ -346,6 +346,7 @@ const AnalyticsWorkspace = () => {
         handleSuccess('Query cancelled');
       } else {
         const err = error as { response?: { data?: { message?: string } }; message?: string };
+        console.log('---', err.response);
         handleError(err.response?.data?.message || err.message || 'Failed to execute query');
         console.error('Query execution error:', error);
       }
@@ -371,7 +372,7 @@ const AnalyticsWorkspace = () => {
     setSql('');
     setQueryResults(null);
     setExecutionStats(null);
-    setAppliedFilterIds(null);
+    setAppliedFilterId(null);
     setIsQueryExecuted(false);
   };
 
@@ -519,8 +520,8 @@ const AnalyticsWorkspace = () => {
     try {
       await analyticsFiltersService.delete(id);
       // Remove from applied filters if it was applied
-      if (appliedFilterIds === id) {
-        setAppliedFilterIds(null);
+      if (appliedFilterId === id) {
+        setAppliedFilterId(null);
       }
       // Update local state
       const updated = (savedFilters || []).filter(f => f.id !== id);
@@ -578,7 +579,7 @@ const AnalyticsWorkspace = () => {
   };
 
   const updateExistingFilter = async () => {
-    if (!appliedFilterIds) return;
+    if (!appliedFilterId) return;
 
     if (!isQueryExecuted) {
       handleError('Please execute the query before saving the filter');
@@ -591,7 +592,7 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
-    const appliedFilter = savedFilters?.find(f => f.id === appliedFilterIds);
+    const appliedFilter = savedFilters?.find(f => f.id === appliedFilterId);
     if (!appliedFilter) {
       handleError('Applied filter not found');
       return;
@@ -601,13 +602,13 @@ const AnalyticsWorkspace = () => {
     const cleanedConditions = stripOuterParentheses(conditions);
 
     try {
-      const updatedFilter = await analyticsFiltersService.update(appliedFilterIds, {
+      const updatedFilter = await analyticsFiltersService.update(appliedFilterId, {
         conditions: cleanedConditions,
         name: appliedFilter.name,
       });
 
-      // Update local state - keep appliedFilterIds set so recall button remains visible
-      const updated = (savedFilters || []).map(f => (f.id === appliedFilterIds ? updatedFilter : f));
+      // Update local state - keep appliedFilterId set so recall button remains visible
+      const updated = (savedFilters || []).map(f => (f.id === appliedFilterId ? updatedFilter : f));
       setSavedFilters(updated);
       setIsQueryExecuted(false);
       handleSuccess(`Updated "${appliedFilter.name}" successfully`);
@@ -620,7 +621,7 @@ const AnalyticsWorkspace = () => {
 
   const applyFilterToEditor = (filter: SavedFilter) => {
     // Check if there's already an applied filter
-    if (appliedFilterIds && appliedFilterIds !== filter.id) {
+    if (appliedFilterId && appliedFilterId !== filter.id) {
       handleError('Please recall the currently applied filter before applying a new one');
       return;
     }
@@ -664,7 +665,7 @@ const AnalyticsWorkspace = () => {
 
     setSql(newSql);
     setIsQueryExecuted(false);
-    setAppliedFilterIds(filter.id);
+    setAppliedFilterId(filter.id);
     handleSuccess(`Applied "${filter.name}" to query`);
   };
 
@@ -688,7 +689,7 @@ const AnalyticsWorkspace = () => {
 
     setSql(newSql);
     setIsQueryExecuted(false);
-    setAppliedFilterIds(null);
+    setAppliedFilterId(null);
     handleSuccess(`Recalled "${filter.name}" from query`);
   };
 
@@ -727,8 +728,6 @@ const AnalyticsWorkspace = () => {
       }
     }
 
-    console.info(`Column: ${columnName}, Type: ${columnType}`);
-
     // Determine if it's numeric or string type
     const isNumeric = /^(int|integer|bigint|smallint|tinyint|decimal|numeric|float|double|real|number)/.test(
       columnType
@@ -744,7 +743,6 @@ const AnalyticsWorkspace = () => {
     }
 
     // Default: assume string type for safety (don't show comparison operators)
-    console.info(`Unknown type for ${columnName}, defaulting to string operators`);
     return ['=', '!=', 'LIKE', 'NOT LIKE', 'IS NULL', 'IS NOT NULL', 'IN'];
   };
 
@@ -773,7 +771,7 @@ const AnalyticsWorkspace = () => {
   const renderQueryLibrary = () => (
     <div className={styles.queryLibrary}>
       <div className={styles.sidebarHeader}>
-        <Title level={4}>Query Library</Title>
+        <Title level={5}>Query Library</Title>
       </div>
 
       <Collapse defaultActiveKey={[]} ghost className={styles.libraryCollapse}>
@@ -908,25 +906,25 @@ const AnalyticsWorkspace = () => {
                       placement="top">
                       <div
                         className={`${styles.savedQueryCard} ${styles.whereClauseCard} ${
-                          appliedFilterIds === filter.id ? styles.selectedQuery : ''
+                          appliedFilterId === filter.id ? styles.selectedQuery : ''
                         }`}
                         onClick={() => {
                           // Only apply filter if not already applied
-                          if (appliedFilterIds !== filter.id) {
+                          if (appliedFilterId !== filter.id) {
                             applyFilterToEditor(filter);
                           }
                         }}>
                         <div className={styles.savedQueryHeader}>
                           <Text ellipsis className={styles.flex1}>
                             {filter.name}
-                            {/* {appliedFilterIds === filter.id && (
+                            {/* {appliedFilterId === filter.id && (
                               <Tag color="green" style={{ marginLeft: 8 }}>
                                 Applied
                               </Tag>
                             )} */}
                           </Text>
                           <Space size={2} className={styles.whereCardActions}>
-                            {appliedFilterIds === filter.id && (
+                            {appliedFilterId === filter.id && (
                               <Tooltip title="Recall" placement="bottom">
                                 <Button
                                   type="text"
@@ -1302,7 +1300,7 @@ const AnalyticsWorkspace = () => {
                         setWhereClauses([INITIAL_WHERE_ROW()]);
                         setSqlWhenBuilderOpened(''); // Clear saved SQL
                         setSql(DEFAULT_SQL);
-                        setAppliedFilterIds(null);
+                        setAppliedFilterId(null);
                         setIsQueryExecuted(false);
                       }}></Button>
                   }
@@ -1407,7 +1405,7 @@ const AnalyticsWorkspace = () => {
                       onClick={() => {
                         setSql(DEFAULT_SQL);
                         setQueryResults(null);
-                        setAppliedFilterIds(null);
+                        setAppliedFilterId(null);
                         setIsQueryExecuted(false);
                       }}
                       className={styles.editorActionBtn}
@@ -1468,7 +1466,7 @@ const AnalyticsWorkspace = () => {
                 {/* Bottom-right floating actions: Save, Execute */}
                 <div className={styles.editorBottomActions}>
                   {hasWhereClause &&
-                    (appliedFilterIds ? (
+                    (appliedFilterId ? (
                       <Space.Compact className={styles.editorActionBtn}>
                         <Button className={styles.editorActionBtn} onClick={() => updateExistingFilter()}>
                           Save Filter
@@ -1506,7 +1504,11 @@ const AnalyticsWorkspace = () => {
                     Save Query
                   </Button>
 
-                  <Button type="primary" icon={isExecuting ? null : <PlayCircleOutlined />} onClick={executeQuery}>
+                  <Button
+                    type="primary"
+                    icon={isExecuting ? <LoadingOutlined spin /> : <PlayCircleOutlined />}
+                    onClick={executeQuery}
+                    disabled={isExecuting}>
                     {isExecuting ? 'Executing...' : 'Execute'}
                   </Button>
                   {isExecuting && (
