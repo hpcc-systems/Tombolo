@@ -17,6 +17,7 @@ import {
   Card,
   Statistic,
   Select,
+  Dropdown,
 } from 'antd';
 import styles from './workunitAnalytics.module.css';
 import {
@@ -45,6 +46,7 @@ import {
   MenuOutlined,
   LineChartOutlined,
   RollbackOutlined,
+  EllipsisOutlined,
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import { format } from 'sql-formatter';
@@ -78,6 +80,7 @@ import {
   formatTime,
 } from './utils';
 import type { WhereClauseRow } from './utils';
+import { T } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 const { Sider, Content } = Layout;
 const { Panel } = Collapse;
@@ -554,6 +557,43 @@ const AnalyticsWorkspace = () => {
     }
   };
 
+  const updateExistingFilter = async () => {
+    if (!appliedFilterIds) return;
+
+    if (!isQueryExecuted) {
+      handleError('Please execute the query before saving the filter');
+      return;
+    }
+
+    const conditions = extractWhereClause(sql);
+    if (!conditions) {
+      handleError('No WHERE clause found in the query');
+      return;
+    }
+
+    const appliedFilter = savedFilters?.find(f => f.id === appliedFilterIds);
+    if (!appliedFilter) {
+      handleError('Applied filter not found');
+      return;
+    }
+
+    try {
+      const updatedFilter = await analyticsFiltersService.update(appliedFilterIds, {
+        conditions,
+        name: appliedFilter.name,
+      });
+
+      // Update local state
+      const updated = (savedFilters || []).map(f => (f.id === appliedFilterIds ? updatedFilter : f));
+      setSavedFilters(updated);
+      handleSuccess(`Updated "${appliedFilter.name}" successfully`);
+    } catch (error: any) {
+      console.error('Failed to update filter:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update filter';
+      handleError(errorMessage);
+    }
+  };
+
   const applyFilterToEditor = (filter: SavedFilter) => {
     // Check if there's already an applied filter
     if (appliedFilterIds && appliedFilterIds !== filter.id) {
@@ -743,53 +783,50 @@ const AnalyticsWorkspace = () => {
                 {savedQueries
                   .sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0))
                   .map(query => (
-                    <Card
-                      key={query.id}
-                      size="small"
-                      className={`${styles.savedQueryCard} ${selectedQuery === query.id ? styles.selected : ''}`}
-                      hoverable
-                      onClick={() => loadSavedQuery(query)}>
-                      <div className={styles.savedQueryHeader}>
-                        <Text strong ellipsis>
-                          {query.name}
-                        </Text>
-                        <Space>
-                          <Tooltip title={query.favorite ? 'Unfavorite' : 'Favorite'}>
-                            <Button
-                              type="text"
-                              size="small"
-                              icon={
-                                query.favorite ? <StarFilled className={styles.iconStarFilled} /> : <StarOutlined />
-                              }
-                              onClick={e => {
-                                e.stopPropagation();
-                                toggleFavorite(query.id);
-                              }}
-                            />
-                          </Tooltip>
-                          <Tooltip title="Delete">
-                            <Button
-                              type="text"
-                              size="small"
-                              danger
-                              icon={<DeleteOutlined />}
-                              onClick={e => {
-                                e.stopPropagation();
-                                deleteSavedQuery(query.id);
-                              }}
-                            />
-                          </Tooltip>
-                        </Space>
-                      </div>
-                      {query.description && (
+                    <Tooltip title={query.description} placement="top" key={query.id}>
+                      <div
+                        className={`${styles.savedQueryCard} ${selectedQuery === query.id ? styles.selectedQuery : ''}`}
+                        onClick={() => loadSavedQuery(query)}>
+                        <div className={styles.savedQueryHeader}>
+                          <Text ellipsis>{query.name}</Text>
+                          <Space>
+                            <Tooltip title={query.favorite ? 'Unfavorite' : 'Favorite'} placement="bottom">
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={
+                                  query.favorite ? <StarFilled className={styles.iconStarFilled} /> : <StarOutlined />
+                                }
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  toggleFavorite(query.id);
+                                }}
+                              />
+                            </Tooltip>
+                            <Tooltip title="Delete" placement="bottom">
+                              <Button
+                                type="text"
+                                size="small"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  deleteSavedQuery(query.id);
+                                }}
+                              />
+                            </Tooltip>
+                          </Space>
+                        </div>
+                        {/* {query.description && (
                         <Paragraph ellipsis={{ rows: 2 }} type="secondary" className={styles.textSmall}>
                           {query.description}
                         </Paragraph>
-                      )}
-                      <Text type="secondary" className={styles.textSmall}>
+                      )} */}
+                        {/* <Text type="secondary" className={styles.textSmall}>
                         {new Date(query.createdAt).toLocaleDateString()}
-                      </Text>
-                    </Card>
+                      </Text> */}
+                      </div>
+                    </Tooltip>
                   ))}
               </div>
             )}
@@ -840,15 +877,12 @@ const AnalyticsWorkspace = () => {
                         </Text>
                       }
                       placement="top">
-                      <Card
-                        key={filter.id}
-                        size="small"
-                        hoverable={appliedFilterIds !== filter.id}
+                      <div
                         className={`${styles.savedQueryCard} ${styles.whereClauseCard} ${
-                          appliedFilterIds === filter.id ? styles.appliedFilter : ''
+                          appliedFilterIds === filter.id ? styles.selectedQuery : ''
                         }`}>
                         <div className={styles.savedQueryHeader}>
-                          <Text strong ellipsis className={styles.flex1}>
+                          <Text ellipsis className={styles.flex1}>
                             {filter.name}
                             {/* {appliedFilterIds === filter.id && (
                               <Tag color="green" style={{ marginLeft: 8 }}>
@@ -858,7 +892,7 @@ const AnalyticsWorkspace = () => {
                           </Text>
                           <Space size={2} className={styles.whereCardActions}>
                             {appliedFilterIds === filter.id ? (
-                              <Tooltip title="Recall from editor query">
+                              <Tooltip title="Recall from editor query" placement="bottom">
                                 <Button
                                   type="text"
                                   size="small"
@@ -871,7 +905,7 @@ const AnalyticsWorkspace = () => {
                                 />
                               </Tooltip>
                             ) : (
-                              <Tooltip title="Apply to editor query">
+                              <Tooltip title="Apply to editor query" placement="bottom">
                                 <Button
                                   type="text"
                                   size="small"
@@ -883,7 +917,7 @@ const AnalyticsWorkspace = () => {
                                 />
                               </Tooltip>
                             )}
-                            <Tooltip title="Delete">
+                            <Tooltip title="Delete" placement="bottom">
                               <Button
                                 type="text"
                                 size="small"
@@ -898,7 +932,7 @@ const AnalyticsWorkspace = () => {
                             </Tooltip>
                           </Space>
                         </div>
-                      </Card>
+                      </div>
                     </Tooltip>
                   ))}
               </div>
@@ -933,15 +967,11 @@ const AnalyticsWorkspace = () => {
                         </div>
                       }
                       placement="right">
-                      <Card
-                        size="small"
-                        hoverable
-                        className={styles.templateCard}
-                        onClick={() => loadTemplate(template)}>
+                      <div className={styles.templateCard} onClick={() => loadTemplate(template)}>
                         <Text ellipsis className={styles.textMedium}>
                           {template.name}
                         </Text>
-                      </Card>
+                      </div>
                     </Tooltip>
                   ))}
                 </div>
@@ -1399,11 +1429,41 @@ const AnalyticsWorkspace = () => {
 
                 {/* Bottom-right floating actions: Save, Execute */}
                 <div className={styles.editorBottomActions}>
-                  {hasWhereClause && (
-                    <Button icon={<FilterOutlined />} onClick={saveFilterFromEditor} className={styles.editorActionBtn}>
-                      Save Filter
-                    </Button>
-                  )}
+                  {hasWhereClause &&
+                    (appliedFilterIds ? (
+                      <Space.Compact className={styles.editorActionBtn}>
+                        <Button className={styles.editorActionBtn} onClick={() => updateExistingFilter()}>
+                          Save Filter
+                        </Button>
+                        <Dropdown
+                          menu={{
+                            items: [
+                              {
+                                key: 'update',
+                                label: 'Save (Update Current)',
+                                icon: <SaveOutlined />,
+                                onClick: () => updateExistingFilter(),
+                              },
+                              {
+                                key: 'new',
+                                label: 'Save as New Filter',
+                                icon: <PlusOutlined />,
+                                onClick: () => saveFilterFromEditor(),
+                              },
+                            ],
+                          }}
+                          placement="bottomRight">
+                          <Button icon={<EllipsisOutlined />} className={styles.editorActionBtn} />
+                        </Dropdown>
+                      </Space.Compact>
+                    ) : (
+                      <Button
+                        icon={<FilterOutlined />}
+                        onClick={saveFilterFromEditor}
+                        className={styles.editorActionBtn}>
+                        Save Filter
+                      </Button>
+                    ))}
                   <Button icon={<SaveOutlined />} onClick={handleSaveQueryClick} className={styles.editorActionBtn}>
                     Save Query
                   </Button>
