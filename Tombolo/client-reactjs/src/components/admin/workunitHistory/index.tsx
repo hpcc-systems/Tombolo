@@ -124,7 +124,6 @@ const WorkUnitHistory: React.FC = () => {
         avgTime: (result.avgClusterTime ?? 0) * 3600,
       });
     } catch (error) {
-      console.error('Error fetching workunits:', error);
       message.error('Failed to load workunit history');
     } finally {
       setLoading(false);
@@ -203,10 +202,7 @@ const WorkUnitHistory: React.FC = () => {
   const handleTabChange = (key: string) => {
     setActiveTab(key);
     if (key === '2' && data.length > 0) {
-      console.info('Switching to grouped view, processing data...');
       const groupedDataResult = groupWorkunitsByName(data, 0.8);
-      console.info('Grouped Workunits by Job Name:', groupedDataResult);
-      console.info('Number of groups:', Object.keys(groupedDataResult).length);
 
       // Convert to array format for table display
       const groupsArray = Object.entries(groupedDataResult)
@@ -237,7 +233,6 @@ const WorkUnitHistory: React.FC = () => {
         })
         .sort((a, b) => b.count - a.count); // Sort by count descending
 
-      console.info('Groups as array:', groupsArray);
       setGroupedData(groupsArray);
     }
   };

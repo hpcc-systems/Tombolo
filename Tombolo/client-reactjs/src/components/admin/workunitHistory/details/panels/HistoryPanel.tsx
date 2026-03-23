@@ -99,7 +99,6 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       });
       setHistory(data || []);
     } catch (err: any) {
-      console.error('Error fetching job history:', err);
       setError(err.message || 'Failed to load job history');
       message.error('Failed to load job history');
     } finally {

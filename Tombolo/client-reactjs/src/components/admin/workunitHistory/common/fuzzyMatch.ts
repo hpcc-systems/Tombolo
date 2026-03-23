@@ -25,10 +25,6 @@ export function groupWorkunitsByName(workunits: any[], threshold = 0.8): { [key:
     // Mark all items in this group as processed
     similarJobs.forEach(result => processed.add(result.item.wuId));
   });
-
-  console.log('------------------------');
-  console.log('Groups : ', groups);
-  console.log('------------------------');
   return groups;
 }
 
