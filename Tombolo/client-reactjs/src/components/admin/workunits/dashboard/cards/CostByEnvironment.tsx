@@ -1,4 +1,5 @@
 import { Card, Progress } from 'antd';
+import { formatCurrency, formatPercentage } from '@tombolo/shared';
 
 export interface ClusterCost {
   cluster: string;
@@ -58,14 +59,14 @@ export default function CostByCluster({ data }: CostByEnvironmentProps) {
                     fontSize: 13,
                     fontFamily: 'var(--font-mono), monospace',
                   }}>
-                  ${item.cost.toFixed(2)}
+                  {formatCurrency(item.cost)}
                   <span
                     style={{
                       color: '#9ca3af',
                       marginLeft: 6,
                       fontSize: 11,
                     }}>
-                    ({pct.toFixed(1)}%)
+                    ({formatPercentage(pct)})
                   </span>
                 </span>
               </div>

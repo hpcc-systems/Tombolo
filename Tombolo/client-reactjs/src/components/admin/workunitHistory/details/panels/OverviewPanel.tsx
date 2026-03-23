@@ -14,7 +14,7 @@ import {
   Typography,
 } from 'antd';
 import { DatabaseOutlined, FieldTimeOutlined, NodeIndexOutlined, ProfileOutlined } from '@ant-design/icons';
-import { formatBytes, formatNumber, formatSeconds, renderAnyMetric } from '@tombolo/shared';
+import { formatBytes, formatNumber, formatSeconds, renderAnyMetric, formatHours } from '@tombolo/shared';
 import HierarchyExplorer, {
   HierarchyExplorerSelectPayload,
   buildScopeTree,
@@ -144,7 +144,7 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
               <Col span={8}>
                 <Statistic
                   title="Total Elapsed"
-                  valueRender={() => <span>{formatSeconds(wu.totalClusterTime * 3600)}</span>}
+                  value={formatHours(wu.totalClusterTime)}
                   prefix={<FieldTimeOutlined />}
                 />
               </Col>

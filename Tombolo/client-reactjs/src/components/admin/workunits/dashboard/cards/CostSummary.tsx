@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Statistic, Row, Col } from 'antd';
 import { DollarOutlined, ClusterOutlined, ThunderboltOutlined, FieldTimeOutlined } from '@ant-design/icons';
+import { formatCurrency } from '@tombolo/shared';
 
 export interface DashboardSummary {
   totalCost?: number;
@@ -51,7 +52,7 @@ export default function CostSummary({ summary }: CostSummaryProps) {
     {
       title: 'Total Runtime Hours',
       value: totalRuntimeHours,
-      precision: 1,
+      precision: 2,
       icon: <ThunderboltOutlined />,
       color: '#e8b84b',
     },
@@ -129,7 +130,7 @@ export default function CostSummary({ summary }: CostSummaryProps) {
             <span>
               Cost:{' '}
               <span style={{ fontFamily: 'var(--font-mono), monospace', color: '#111827' }}>
-                ${failedCost.toFixed(2)}
+                {formatCurrency(failedCost)}
               </span>
             </span>
           </div>

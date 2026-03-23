@@ -33,6 +33,7 @@ import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import workunitsService from '@/services/workunits.service';
 import styles from '../../workunitHistory.module.css';
+import { formatCurrency, formatPercentage } from '@tombolo/shared';
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
@@ -240,12 +241,12 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
           <Space>
             <Text>{formatDuration(time)}</Text>
             {indicator === 'worse' && (diff ?? 0) > 20 && (
-              <Tooltip title={`${Number(diff ?? 0).toFixed(1)}% slower than average`}>
+              <Tooltip title={`${formatPercentage(diff ?? 0)} slower than average`}>
                 <RiseOutlined style={{ color: '#ff4d4f' }} />
               </Tooltip>
             )}
             {indicator === 'better' && (diff ?? 0) < -20 && (
-              <Tooltip title={`${Math.abs(diff ?? 0).toFixed(1)}% faster than average`}>
+              <Tooltip title={`${formatPercentage(Math.abs(diff ?? 0))} faster than average`}>
                 <FallOutlined style={{ color: '#52c41a' }} />
               </Tooltip>
             )}
@@ -258,7 +259,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       dataIndex: 'totalCost',
       key: 'totalCost',
       width: 100,
-      render: (cost: number | null) => (cost != null ? `$${cost.toFixed(4)}` : '-'),
+      render: (cost: number | null) => (cost != null ? formatCurrency(cost) : '-'),
     },
     {
       title: 'vs Previous',
@@ -276,20 +277,20 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
         if (indicator === 'similar') {
           return (
             <Text type="secondary">
-              <SwapOutlined /> ~{Math.abs(change).toFixed(1)}%
+              <SwapOutlined /> ~{formatPercentage(Math.abs(change))}
             </Text>
           );
         }
         if (indicator === 'better') {
           return (
             <Text type="success">
-              <FallOutlined /> {Math.abs(change).toFixed(1)}%
+              <FallOutlined /> {formatPercentage(Math.abs(change))}
             </Text>
           );
         }
         return (
           <Text type="danger">
-            <RiseOutlined /> +{change.toFixed(1)}%
+            <RiseOutlined /> +{formatPercentage(change)}
           </Text>
         );
       },
@@ -421,15 +422,15 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
                         <Text type="secondary">-</Text>
                       ) : comparison.durationIndicator === 'better' ? (
                         <Text type="success">
-                          <FallOutlined /> {Math.abs(comparison.durationChange).toFixed(1)}% faster
+                          <FallOutlined /> {formatPercentage(Math.abs(comparison.durationChange))} faster
                         </Text>
                       ) : comparison.durationIndicator === 'worse' ? (
                         <Text type="danger">
-                          <RiseOutlined /> {comparison.durationChange.toFixed(1)}% slower
+                          <RiseOutlined /> {formatPercentage(comparison.durationChange)} slower
                         </Text>
                       ) : (
                         <Text type="secondary">
-                          <SwapOutlined /> Similar (~{Math.abs(comparison.durationChange).toFixed(1)}%)
+                          <SwapOutlined /> Similar (~{formatPercentage(Math.abs(comparison.durationChange))})
                         </Text>
                       )}
                     </Space>
@@ -441,15 +442,15 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
                         <Text type="secondary">-</Text>
                       ) : comparison.costIndicator === 'better' ? (
                         <Text type="success">
-                          <FallOutlined /> {Math.abs(comparison.costChange).toFixed(1)}% cheaper
+                          <FallOutlined /> {formatPercentage(Math.abs(comparison.costChange))} cheaper
                         </Text>
                       ) : comparison.costIndicator === 'worse' ? (
                         <Text type="danger">
-                          <RiseOutlined /> {comparison.costChange.toFixed(1)}% more expensive
+                          <RiseOutlined /> {formatPercentage(comparison.costChange)} more expensive
                         </Text>
                       ) : (
                         <Text type="secondary">
-                          <SwapOutlined /> Similar (~{Math.abs(comparison.costChange).toFixed(1)}%)
+                          <SwapOutlined /> Similar (~{formatPercentage(Math.abs(comparison.costChange))})
                         </Text>
                       )}
                     </Space>
@@ -477,7 +478,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
             <Statistic
               title="Success Rate"
               value={statistics.successRate}
-              precision={1}
+              precision={2}
               suffix="%"
               valueStyle={{
                 color: statistics.successRate >= 95 ? '#52c41a' : statistics.successRate >= 80 ? '#faad14' : '#ff4d4f',
@@ -492,7 +493,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
             />
           </Col>
           <Col xs={12} sm={6}>
-            <Statistic title="Avg Cost" value={statistics.avgCost} precision={4} prefix="$" />
+            <Statistic title="Avg Cost" value={formatCurrency(statistics.avgCost)} />
           </Col>
         </Row>
         <Row gutter={[16, 16]} style={{ marginTop: 16 }}>

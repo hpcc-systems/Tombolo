@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import { formatHours, formatCurrency } from '@tombolo/shared';
 import AllMetricsPanel from './panels/AllMetricsPanel';
 import GraphPanel from './panels/graph/GraphPanel';
 import HierarchyExplorer, { HierarchyExplorerSelectPayload } from './panels/HierarchyExplorer';
@@ -25,9 +26,6 @@ dayjs.extend(duration);
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs as any;
-
-const formatTime = (seconds: any) =>
-  seconds == null ? '-' : dayjs.duration(seconds, 'seconds').format('HH:mm:ss.SSS');
 
 interface Props {
   wu: any;
@@ -64,12 +62,8 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
           </Col>
           <Col>
             <Space size="large">
-              <Statistic
-                title="Total Time"
-                value={formatTime(wu.totalClusterTime * 3600)}
-                prefix={<ClockCircleOutlined />}
-              />
-              <Statistic title="Total Cost" value={wu.totalCost != null ? `$${wu.totalCost.toFixed(4)}` : '-'} />
+              <Statistic title="Total Time" value={formatHours(wu.totalClusterTime)} prefix={<ClockCircleOutlined />} />
+              <Statistic title="Total Cost" value={formatCurrency(wu.totalCost)} />
             </Space>
           </Col>
         </Row>
