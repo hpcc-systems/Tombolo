@@ -3,3 +3,4 @@ export * from './constants/index.js';
 export * from './retryWithBackoff.js';
 export * from './cipher.js';
 export * from './types/index.js';
+export * from './fuzzyMatch.js';

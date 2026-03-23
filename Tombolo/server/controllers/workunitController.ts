@@ -6,6 +6,7 @@ import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 import { getCluster } from '../utils/hpcc-util.js';
 import { getClusterOptions } from '../utils/getClusterOptions.js';
+import { findFuzzyMatches } from '@tombolo/shared';
 
 type ScopeNode = InferAttributes<WorkUnitDetails> & { children: ScopeNode[] };
 
@@ -249,23 +250,16 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
       clusterId: string;
       jobName: string;
     };
-    const { startDate, limit = 100 } = req.query;
+    // Fetch larger candidate set before fuzzy matching to avoid missing similar jobs
+    // that aren't in the most recent N workunits
+    const { limit = 500 } = req.query;
 
     // Build where clause
     const where: WhereOptions<InferAttributes<WorkUnit>> = {
       clusterId,
-      jobName,
     };
 
-    // Add date filter if provided
-    if (startDate) {
-      where.workUnitTimestamp = {
-        [Op.gte]: new Date(String(startDate)),
-      };
-    }
-
-    // Fetch workunits
-    const workunits = await WorkUnit.findAll({
+    const wus = await WorkUnit.findAll({
       where,
       order: [['workUnitTimestamp', 'DESC']], // Most recent first
       limit: parseInt(String(limit)),
@@ -279,9 +273,28 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
         'owner',
         'clusterId',
       ],
+      raw: true,
     });
 
-    return sendSuccess(res, workunits);
+    // Using enhanced fuzzy matching with substring intelligence
+    const MIN_SIMILARITY = 0.8; // 80% similar (adjust between 0.7-0.9)
+
+    const fuzzyResults = findFuzzyMatches(
+      jobName,
+      wus.filter(w => w.jobName),
+      w => w.jobName,
+      { minSimilarity: MIN_SIMILARITY }
+    );
+
+    const similarJobs = fuzzyResults.map(result => ({
+      ...result.item,
+      similarity: result.similarity,
+      distance: result.distance,
+      matchType: result.matchType,
+    }));
+
+    // Return empty array for no matches (not a 404) - client handles empty state gracefully
+    return sendSuccess(res, similarJobs);
   } catch (error) {
     logger.error('Error fetching job history:', error);
     return sendError(res, 'Failed to fetch job history', 500);
