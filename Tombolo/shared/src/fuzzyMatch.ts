@@ -43,7 +43,7 @@ export function getSimilarityWithSubstringBonus(
   similarity: number;
   matchType: 'exact' | 'substring' | 'fuzzy';
 } {
-  const { minSubstringLength = 3, maxSubstringLength = 8 } = options;
+  const { minSubstringLength = 5, maxSubstringLength = 8 } = options;
   const norm1 = normalize(str1);
   const norm2 = normalize(str2);
 
