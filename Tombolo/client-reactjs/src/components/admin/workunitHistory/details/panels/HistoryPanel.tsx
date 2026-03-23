@@ -204,6 +204,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       dataIndex: 'jobName',
       key: 'jobName',
       width: 180,
+      ellipsis: true,
     },
     {
       title: 'WUID',

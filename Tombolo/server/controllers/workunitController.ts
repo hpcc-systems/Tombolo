@@ -246,7 +246,9 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
       clusterId: string;
       jobName: string;
     };
-    const { limit = 100 } = req.query;
+    // Fetch larger candidate set before fuzzy matching to avoid missing similar jobs
+    // that aren't in the most recent N workunits
+    const { limit = 500 } = req.query;
 
     // Build where clause
     const where: WhereOptions<InferAttributes<WorkUnit>> = {
@@ -287,14 +289,7 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
       matchType: result.matchType,
     }));
 
-    if (similarJobs.length === 0) {
-      return sendError(
-        res,
-        'No similar jobs found within similarity threshold',
-        404
-      );
-    }
-
+    // Return empty array for no matches (not a 404) - client handles empty state gracefully
     return sendSuccess(res, similarJobs);
   } catch (error) {
     logger.error('Error fetching job history:', error);
