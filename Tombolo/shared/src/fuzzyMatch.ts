@@ -47,6 +47,14 @@ export function getSimilarityWithSubstringBonus(
   const norm1 = normalize(str1);
   const norm2 = normalize(str2);
 
+  // Guard against empty normalized strings (prevents NaN from division by 0)
+  if (norm1.length === 0) {
+    return {
+      similarity: norm2.length === 0 ? 1 : 0,
+      matchType: norm2.length === 0 ? 'exact' : 'fuzzy',
+    };
+  }
+
   // Tier 1: Exact match (100%)
   if (norm1 === norm2) {
     return { similarity: 1.0, matchType: 'exact' };
@@ -120,15 +128,18 @@ export function getSimilarityWithSubstringBonus(
 
   // If substring match found, boost the score
   if (substringMatch) {
-    const similarity = Math.max(
-      baseSim * 0.5 + consecutiveBonus * 0.3 + 0.2,
-      baseSim * 0.6 + consecutiveBonus * 0.4 + 0.15
+    const similarity = Math.min(
+      1.0,
+      Math.max(
+        baseSim * 0.5 + consecutiveBonus * 0.3 + 0.2,
+        baseSim * 0.6 + consecutiveBonus * 0.4 + 0.15
+      )
     );
     return { similarity, matchType: 'substring' };
   }
 
   // Combine base similarity with consecutive bonus (weighted average)
-  const similarity = baseSim * 0.6 + consecutiveBonus * 0.4;
+  const similarity = Math.min(1.0, baseSim * 0.6 + consecutiveBonus * 0.4);
   return { similarity, matchType: 'fuzzy' };
 }
 
@@ -140,26 +151,37 @@ export function findFuzzyMatches<T>(
 ): FuzzyMatchResult<T>[] {
   const { minSimilarity = 0.8 } = options;
 
-  const results: FuzzyMatchResult<T>[] = items
-    .filter(item => getSearchField(item)) // Filter out items without the field
-    .map(item => {
-      const fieldValue = getSearchField(item);
+  // Cache field values to avoid duplicate getSearchField calls
+  const itemsWithFields = items
+    .map(item => ({
+      item,
+      fieldValue: getSearchField(item),
+    }))
+    .filter(({ fieldValue }) => fieldValue); // Filter out items without the field
+
+  const norm1 = normalize(searchTerm);
+
+  const results: FuzzyMatchResult<T>[] = itemsWithFields
+    .map(({ item, fieldValue }) => {
       const { similarity, matchType } = getSimilarityWithSubstringBonus(
         searchTerm,
         fieldValue,
         options
       );
-      const norm1 = normalize(searchTerm);
       const norm2 = normalize(fieldValue);
 
       return {
         item,
-        similarity: Math.round(similarity * 100) / 100, // Round to 2 decimals
+        similarity, // Keep raw similarity for filtering
         distance: levenshtein.get(norm1, norm2),
         matchType,
       };
     })
-    .filter(result => result.similarity >= minSimilarity)
+    .filter(result => result.similarity >= minSimilarity) // Filter with raw similarity
+    .map(result => ({
+      ...result,
+      similarity: Math.round(result.similarity * 100) / 100, // Round for presentation
+    }))
     .sort((a, b) => b.similarity - a.similarity); // Sort by similarity descending
 
   return results;
