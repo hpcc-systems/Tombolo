@@ -527,21 +527,37 @@ async function getWorkunitScopes(req: Request, res: Response) {
       wuid: string;
       clusterId: string;
     };
-    const limit = Math.min(parseInt(String(req.query.limit || '200')), 1000);
-    const cursor = req.query.cursor ? parseInt(String(req.query.cursor)) : 0; // offset-based cursor
+    const parsedLimit = parseInt(String(req.query.limit), 10);
+    const limit = Math.min(
+      Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 200,
+      1000
+    );
+    // Keyset cursor: the last seen `id` from the previous page (0 = first page)
+    const parsedCursor = parseInt(String(req.query.cursor), 10);
+    const cursorId =
+      Number.isFinite(parsedCursor) && parsedCursor > 0 ? parsedCursor : 0;
+
+    const where: WhereOptions<InferAttributes<WorkUnitDetails>> = {
+      wuId: wuid,
+      clusterId,
+      ...(cursorId > 0 ? { id: { [Op.gt]: cursorId } } : {}),
+    };
 
     const { count, rows } = await WorkUnitDetails.findAndCountAll({
-      where: { wuId: wuid, clusterId },
+      where,
       order: [['id', 'ASC']],
       limit,
-      offset: cursor,
     });
 
     const items = rows.map(r => r.get({ plain: true }));
-    const nextCursor =
-      cursor + rows.length < count ? cursor + rows.length : null;
+    const nextCursor = rows.length === limit ? rows[rows.length - 1].id : null;
 
-    return sendSuccess(res, { total: count, cursor, nextCursor, items });
+    return sendSuccess(res, {
+      total: count,
+      cursor: cursorId,
+      nextCursor,
+      items,
+    });
   } catch (err) {
     logger.error('Get workunit scopes error:', err);
     return sendError(res, 'Failed to fetch scopes', 500);

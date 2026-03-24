@@ -18,6 +18,17 @@ const formatDurationHm = (
   return `${hours > 0 ? `${hours}h ` : ''}${mins}m`;
 };
 
+// Format a duration in seconds as hours (e.g. 1.23h) for values >= 1 hour,
+// or fall back to formatSeconds for shorter durations.
+const formatSecondsAsHours = (
+  sec: number | string | null | undefined
+): string => {
+  if (sec == null || isNaN(Number(sec))) return '-';
+  const hours = Number(sec) / 3600;
+  if (hours < 1) return formatSeconds(sec);
+  return `${hours.toFixed(2)}h`;
+};
+
 // Format hours as a decimal number with 2 decimals (e.g. 1.23h)
 const formatHours = (
   h: number | string | null | undefined,
@@ -148,6 +159,7 @@ export {
   formatNumber,
   formatSeconds,
   formatDurationHm,
+  formatSecondsAsHours,
   formatHours,
   formatCurrency,
   formatBytes,

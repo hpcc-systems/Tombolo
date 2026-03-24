@@ -80,6 +80,27 @@ const defaultFilters: Filters = {
 
 // ── Data Processing ──────────────────────────────────────────────────────────
 
+// ── Attribute Formatting ─────────────────────────────────────────────────────
+
+function formatAttributeValue(key: string, value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  const k = key.toLowerCase();
+  const num = Number(value);
+  if (!isNaN(num) && String(value).trim() !== '') {
+    if (/size|bytes|memory|disk|read|write/.test(k)) return formatBytes(num);
+    if (/time|elapsed|latency|duration/.test(k)) return formatSeconds(num);
+    if (/num|count|rows|records/.test(k)) return formatNumber(num);
+  }
+  return String(value);
+}
+
 function processTimelineData(details: any[]): TimelineItem[] {
   if (!details || details.length === 0) return [];
 
@@ -807,8 +828,8 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([k, v]) => (
                     <Descriptions.Item key={k} label={k}>
-                      <Text copyable style={{ fontSize: 12 }}>
-                        {String(v)}
+                      <Text copyable={{ text: String(v) }} style={{ fontSize: 12 }}>
+                        {formatAttributeValue(k, v)}
                       </Text>
                     </Descriptions.Item>
                   ))}

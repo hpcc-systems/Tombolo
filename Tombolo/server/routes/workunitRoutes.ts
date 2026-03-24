@@ -23,6 +23,9 @@ import {
   validateGetJobHistoryByJobNameWStats,
   validateComparePreviousByWuid,
   validateGetWorkunitGraph,
+  validateGetWorkunitScopes,
+  validateGetWorkunitScopesSummary,
+  validateGetScopeHistory,
 } from '../middlewares/workunitMiddleware.js';
 import { validate } from '../middlewares/validateRequestBody.js';
 
@@ -82,10 +85,22 @@ router.get(
 
 // Scopes: paged list, summary and scope history (used by virtualized UI)
 // GET /api/workunits/:clusterId/:wuid/scopes
-router.get('/:clusterId/:wuid/scopes', getWorkunitScopes);
+router.get(
+  '/:clusterId/:wuid/scopes',
+  validate(validateGetWorkunitScopes),
+  getWorkunitScopes
+);
 // GET /api/workunits/:clusterId/:wuid/scopes/summary
-router.get('/:clusterId/:wuid/scopes/summary', getWorkunitScopesSummary);
+router.get(
+  '/:clusterId/:wuid/scopes/summary',
+  validate(validateGetWorkunitScopesSummary),
+  getWorkunitScopesSummary
+);
 // GET /api/workunits/:clusterId/:wuid/scopes/:scopeId/history
-router.get('/:clusterId/:wuid/scopes/:scopeId/history', getScopeHistory);
+router.get(
+  '/:clusterId/:wuid/scopes/:scopeId/history',
+  validate(validateGetScopeHistory),
+  getScopeHistory
+);
 
 export default router;

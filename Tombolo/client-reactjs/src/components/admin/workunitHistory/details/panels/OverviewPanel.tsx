@@ -22,7 +22,14 @@ import {
   CloseCircleOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
-import { SCOPE_TYPE_COLORS } from '@tombolo/shared';
+import {
+  SCOPE_TYPE_COLORS,
+  formatBytes,
+  formatNumber,
+  formatSeconds,
+  formatSecondsAsHours,
+  renderAnyMetric as renderAnyMetricShared,
+} from '@tombolo/shared';
 import HierarchyExplorer, {
   HierarchyExplorerSelectPayload,
   buildScopeTree,
@@ -32,57 +39,9 @@ import HierarchyExplorer, {
 
 const { Text } = Typography;
 
-// ── Formatters ───────────────────────────────────────────────────────────────
-
-function formatBytes(bytes: number | null | undefined): string {
-  if (bytes == null || bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
-}
-
-function formatNumber(num: number | null | undefined): string {
-  if (num == null) return '0';
-  return num.toLocaleString();
-}
-
-function formatSeconds(sec: number | null | undefined): string {
-  if (sec == null) return '0s';
-  const s = Number(sec);
-  if (isNaN(s)) return '0s';
-  if (s < 60) return `${s.toFixed(2)}s`;
-  const mins = Math.floor(s / 60);
-  const secs = s % 60;
-  return `${mins}m ${secs.toFixed(0)}s`;
-}
-
-function formatHours(sec: number | null | undefined): string {
-  if (sec == null) return '0h';
-  const hours = sec / 3600;
-  if (hours < 1) return formatSeconds(sec);
-  return `${hours.toFixed(2)}h`;
-}
-
 function renderAnyMetric(key: string, value: any): React.ReactNode {
-  if (value == null) return '-';
-  if (key.toLowerCase().includes('time') || key.toLowerCase().includes('elapsed')) {
-    return formatSeconds(Number(value));
-  }
-  if (
-    key.toLowerCase().includes('size') ||
-    key.toLowerCase().includes('memory') ||
-    key.toLowerCase().includes('bytes')
-  ) {
-    return formatBytes(Number(value));
-  }
-  if (key.toLowerCase().includes('rows') || key.toLowerCase().includes('count')) {
-    return formatNumber(Number(value));
-  }
-  if (typeof value === 'boolean') {
-    return value ? 'Yes' : 'No';
-  }
-  return String(value);
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  return renderAnyMetricShared(key, value);
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -167,12 +126,12 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
           <Tag
             color={
               r.scopeType === 'graph'
-                ? '#1677ff'
+                ? SCOPE_TYPE_COLORS.graph
                 : r.scopeType === 'subgraph'
-                  ? '#52c41a'
+                  ? SCOPE_TYPE_COLORS.subgraph
                   : r.scopeType === 'activity'
-                    ? '#faad14'
-                    : '#eb2f96'
+                    ? SCOPE_TYPE_COLORS.activity
+                    : SCOPE_TYPE_COLORS.operation
             }
             style={{ textTransform: 'capitalize', margin: 0 }}>
             {r.scopeType}
@@ -243,7 +202,7 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
               <Col span={8}>
                 <Statistic
                   title="Total Elapsed"
-                  value={formatHours(summary.totalElapsed)}
+                  value={formatSecondsAsHours(summary.totalElapsed)}
                   prefix={<FieldTimeOutlined />}
                   valueStyle={{ fontSize: 20 }}
                 />
