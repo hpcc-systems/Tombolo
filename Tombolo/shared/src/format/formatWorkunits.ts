@@ -125,13 +125,16 @@ function renderAnyMetric(
   return String(value);
 }
 
-function normalizeLabel(
+function formatLabel(
   label: string | null | undefined
 ): string | null | undefined {
   if (!label) return label;
 
-  // Normalize: replace newlines, &apos;, and multiple spaces with a single space
-  const normalized = label.replace(/&apos;|\s+/g, ' ').trim();
+  // Replace HTML entity &apos; with a space, then collapse all whitespace sequences
+  const normalized = label
+    .replace(/&apos;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   const lower = normalized.toLowerCase();
   for (const prefix in readableLabels) {
     if (lower.startsWith(prefix)) {
@@ -148,7 +151,7 @@ export {
   formatHours,
   formatCurrency,
   formatBytes,
-  normalizeLabel,
+  formatLabel,
   formatPercentage,
   parseWorkunitTimestamp,
   renderAnyMetric,

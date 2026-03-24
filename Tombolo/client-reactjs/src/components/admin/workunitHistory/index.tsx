@@ -27,7 +27,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import workunitsService from '@/services/workunits.service';
-import { formatCurrency, formatHours } from '@tombolo/shared';
+import { formatCurrency, formatDurationHm, formatHours } from '@tombolo/shared';
 import clustersService from '@/services/clusters.service';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import { groupWorkunitsByName } from './common/fuzzyMatch';
@@ -114,7 +114,7 @@ const WorkUnitHistory: React.FC = () => {
         // avgClusterTime is in hours from the backend; convert to seconds for display
         avgTime: (result.avgClusterTime ?? 0) * 3600,
       });
-    } catch (error) {
+    } catch (_error) {
       message.error('Failed to load workunit history');
     } finally {
       setLoading(false);
@@ -286,7 +286,7 @@ const WorkUnitHistory: React.FC = () => {
       key: 'workUnitTimestamp',
       width: 160,
       sorter: true,
-      sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortDirections: ['ascend', 'descend', 'ascend'] as ('ascend' | 'descend')[],
       sortOrder: getSortOrder('workUnitTimestamp'),
       render: (ts: any) => (ts ? dayjs(ts).format('YYYY-MM-DD HH:mm') : '-'),
     },
@@ -326,9 +326,9 @@ const WorkUnitHistory: React.FC = () => {
       key: 'totalClusterTime',
       width: 100,
       sorter: true,
-      sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortDirections: ['ascend', 'descend', 'ascend'] as ('ascend' | 'descend')[],
       sortOrder: getSortOrder('totalClusterTime'),
-      render: (val: any) => formatTime(val != null ? val * 3600 : null),
+      render: (val: any) => formatDurationHm(val != null ? val * 3600 : null),
     },
     {
       title: 'Cost',
@@ -336,7 +336,7 @@ const WorkUnitHistory: React.FC = () => {
       key: 'totalCost',
       width: 80,
       sorter: true,
-      sortDirections: ['ascend', 'descend', 'ascend'] as const,
+      sortDirections: ['ascend', 'descend', 'ascend'] as ('ascend' | 'descend')[],
       sortOrder: getSortOrder('totalCost'),
       render: (cost: any) => (cost != null ? formatCurrency(cost) : '-'),
     },

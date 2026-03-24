@@ -13,23 +13,95 @@ import {
   Tag,
   Typography,
 } from 'antd';
-import { DatabaseOutlined, FieldTimeOutlined, NodeIndexOutlined, ProfileOutlined } from '@ant-design/icons';
-import { formatBytes, formatNumber, formatSeconds, renderAnyMetric, formatHours } from '@tombolo/shared';
+import {
+  DatabaseOutlined,
+  FieldTimeOutlined,
+  NodeIndexOutlined,
+  ProfileOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
+import { SCOPE_TYPE_COLORS } from '@tombolo/shared';
 import HierarchyExplorer, {
   HierarchyExplorerSelectPayload,
   buildScopeTree,
   findPathByKey,
   flattenTree,
 } from './HierarchyExplorer';
-import styles from '../../workunitHistory.module.css';
 
 const { Text } = Typography;
 
+// ── Formatters ───────────────────────────────────────────────────────────────
+
+function formatBytes(bytes: number | null | undefined): string {
+  if (bytes == null || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+}
+
+function formatNumber(num: number | null | undefined): string {
+  if (num == null) return '0';
+  return num.toLocaleString();
+}
+
+function formatSeconds(sec: number | null | undefined): string {
+  if (sec == null) return '0s';
+  const s = Number(sec);
+  if (isNaN(s)) return '0s';
+  if (s < 60) return `${s.toFixed(2)}s`;
+  const mins = Math.floor(s / 60);
+  const secs = s % 60;
+  return `${mins}m ${secs.toFixed(0)}s`;
+}
+
+function formatHours(sec: number | null | undefined): string {
+  if (sec == null) return '0h';
+  const hours = sec / 3600;
+  if (hours < 1) return formatSeconds(sec);
+  return `${hours.toFixed(2)}h`;
+}
+
+function renderAnyMetric(key: string, value: any): React.ReactNode {
+  if (value == null) return '-';
+  if (key.toLowerCase().includes('time') || key.toLowerCase().includes('elapsed')) {
+    return formatSeconds(Number(value));
+  }
+  if (
+    key.toLowerCase().includes('size') ||
+    key.toLowerCase().includes('memory') ||
+    key.toLowerCase().includes('bytes')
+  ) {
+    return formatBytes(Number(value));
+  }
+  if (key.toLowerCase().includes('rows') || key.toLowerCase().includes('count')) {
+    return formatNumber(Number(value));
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'Yes' : 'No';
+  }
+  return String(value);
+}
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
 interface Props {
-  wu: any;
+  wu: {
+    jobName?: string;
+    wuId?: string;
+    state?: string;
+    engine?: string;
+    clusterId?: string;
+    owner?: string;
+    totalClusterTime?: number;
+  };
   details: any[];
   clusterName?: string;
 }
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
   const [selectedNode, setSelectedNode] = useState<any>(null);
@@ -62,7 +134,7 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
       diskR += Number(d.SizeDiskRead || 0);
       diskW += Number(d.SizeDiskWrite || 0);
       maxMem = Math.max(maxMem, Number(d.PeakMemoryUsage || 0));
-      totalElapsed += Number(d.TimeElapsed || 0);
+      if (d.scopeType === 'graph') totalElapsed += Number(d.TimeElapsed || 0);
     });
     const counts = {
       total: (details || []).length,
@@ -74,24 +146,45 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
     return { rows, diskR, diskW, maxMem, totalElapsed, counts };
   }, [details]);
 
+  const stateIcon =
+    wu.state === 'completed' ? (
+      <CheckCircleOutlined style={{ color: '#52c41a' }} />
+    ) : wu.state === 'failed' ? (
+      <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+    ) : (
+      <SyncOutlined spin style={{ color: '#1677ff' }} />
+    );
+
+  const stateColor = wu.state === 'completed' ? 'success' : wu.state === 'failed' ? 'error' : 'processing';
+
   const childCols = [
     {
       title: 'Scope',
       dataIndex: 'scopeName',
       key: 'scopeName',
       render: (v: any, r: any) => (
-        <Space size={6} align="start">
-          <Tag color="blue" className={`${styles.tagCapitalize} ${styles.mr0}`}>
+        <Space size={8} align="center">
+          <Tag
+            color={
+              r.scopeType === 'graph'
+                ? '#1677ff'
+                : r.scopeType === 'subgraph'
+                  ? '#52c41a'
+                  : r.scopeType === 'activity'
+                    ? '#faad14'
+                    : '#eb2f96'
+            }
+            style={{ textTransform: 'capitalize', margin: 0 }}>
             {r.scopeType}
           </Tag>
-          <Space direction="vertical" size={0}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span>{v}</span>
             {r.label && (
-              <Text type="secondary" className={styles.smallText}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
                 {r.label}
               </Text>
             )}
-          </Space>
+          </div>
         </Space>
       ),
     },
@@ -100,7 +193,8 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
       dataIndex: 'TimeElapsed',
       key: 'TimeElapsed',
       align: 'right' as const,
-      render: (v: any) => <span className={styles.numericText}>{formatSeconds(v)}</span>,
+      width: 100,
+      render: (v: any) => <span style={{ fontFamily: 'monospace' }}>{formatSeconds(v)}</span>,
       sorter: (a: any, b: any) => (a.TimeElapsed || 0) - (b.TimeElapsed || 0),
     },
     {
@@ -108,7 +202,8 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
       dataIndex: 'NumRowsProcessed',
       key: 'NumRowsProcessed',
       align: 'right' as const,
-      render: (v: any) => <span className={styles.numericText}>{formatNumber(v)}</span>,
+      width: 100,
+      render: (v: any) => <span style={{ fontFamily: 'monospace' }}>{formatNumber(v)}</span>,
       sorter: (a: any, b: any) => (a.NumRowsProcessed || 0) - (b.NumRowsProcessed || 0),
     },
     {
@@ -116,27 +211,31 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
       dataIndex: 'PeakMemoryUsage',
       key: 'PeakMemoryUsage',
       align: 'right' as const,
-      render: (v: any) => <span className={styles.numericText}>{formatBytes(v)}</span>,
+      width: 100,
+      render: (v: any) => <span style={{ fontFamily: 'monospace' }}>{formatBytes(v)}</span>,
       sorter: (a: any, b: any) => (a.PeakMemoryUsage || 0) - (b.PeakMemoryUsage || 0),
     },
   ];
 
   return (
-    <Space direction="vertical" size={16} className={styles.fullWidth}>
+    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      {/* Summary Card */}
       <Card>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
-            <Space direction="vertical" size={6}>
-              <Space size={8}>
-                <ProfileOutlined />
-                <span className={styles.fw600}>{wu.jobName || wu.wuId}</span>
-                <Tag color={wu.state === 'completed' ? 'success' : wu.state === 'failed' ? 'error' : 'processing'}>
+            <Space direction="vertical" size={4}>
+              <Space size={12} align="center">
+                <ProfileOutlined style={{ fontSize: 20, color: '#1677ff' }} />
+                <Text strong style={{ fontSize: 16 }}>
+                  {wu.jobName || wu.wuId}
+                </Text>
+                <Tag color={stateColor} icon={stateIcon}>
                   {(wu.state || '').toUpperCase()}
                 </Tag>
               </Space>
-              <div className={styles.mutedTextMid}>
+              <Text type="secondary" style={{ marginLeft: 32 }}>
                 {wu.wuId} • Engine: {wu.engine} • Cluster: {clusterName || wu.clusterId} • Owner: {wu.owner}
-              </div>
+              </Text>
             </Space>
           </Col>
           <Col xs={24} md={12}>
@@ -144,80 +243,102 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
               <Col span={8}>
                 <Statistic
                   title="Total Elapsed"
-                  value={formatHours(wu.totalClusterTime)}
+                  value={formatHours(summary.totalElapsed)}
                   prefix={<FieldTimeOutlined />}
+                  valueStyle={{ fontSize: 20 }}
                 />
               </Col>
               <Col span={8}>
                 <Statistic
                   title="Total Rows"
-                  valueRender={() => <span>{formatNumber(summary.rows)}</span>}
+                  value={formatNumber(summary.rows)}
                   prefix={<DatabaseOutlined />}
+                  valueStyle={{ fontSize: 20 }}
                 />
               </Col>
               <Col span={8}>
                 <Statistic
                   title="Max Memory"
-                  valueRender={() => <span>{formatBytes(summary.maxMem)}</span>}
+                  value={formatBytes(summary.maxMem)}
                   prefix={<NodeIndexOutlined />}
+                  valueStyle={{ fontSize: 20 }}
                 />
               </Col>
             </Row>
           </Col>
         </Row>
-        <Divider className={styles.dividerTight} />
+        <Divider style={{ margin: '16px 0' }} />
         <Row gutter={[16, 16]}>
-          <Col xs={12} md={6}>
-            <Statistic title="Scopes" value={summary.counts.total} />
+          <Col xs={12} sm={4}>
+            <Statistic
+              title="Total Scopes"
+              value={summary.counts.total}
+              valueStyle={{ color: SCOPE_TYPE_COLORS.graph }}
+            />
           </Col>
-          <Col xs={12} md={4}>
-            <Statistic title="Graphs" value={summary.counts.graph} />
+          <Col xs={12} sm={5}>
+            <Statistic title="Graphs" value={summary.counts.graph} valueStyle={{ color: SCOPE_TYPE_COLORS.graph }} />
           </Col>
-          <Col xs={12} md={6}>
-            <Statistic title="Subgraphs" value={summary.counts.subgraph} />
+          <Col xs={12} sm={5}>
+            <Statistic
+              title="Subgraphs"
+              value={summary.counts.subgraph}
+              valueStyle={{ color: SCOPE_TYPE_COLORS.subgraph }}
+            />
           </Col>
-          <Col xs={12} md={4}>
-            <Statistic title="Activities" value={summary.counts.activity} />
+          <Col xs={12} sm={5}>
+            <Statistic
+              title="Activities"
+              value={summary.counts.activity}
+              valueStyle={{ color: SCOPE_TYPE_COLORS.activity }}
+            />
           </Col>
-          <Col xs={12} md={4}>
-            <Statistic title="Operations" value={summary.counts.operation} />
+          <Col xs={12} sm={5}>
+            <Statistic
+              title="Operations"
+              value={summary.counts.operation}
+              valueStyle={{ color: SCOPE_TYPE_COLORS.operation }}
+            />
           </Col>
         </Row>
       </Card>
 
+      {/* Main Content */}
       <Row gutter={[16, 16]}>
-        {/* ── Left column: Hierarchy Explorer ── */}
+        {/* Left: Hierarchy Explorer */}
         <Col xs={24} lg={10} xl={9}>
           <HierarchyExplorer details={details} storageKeyPrefix="wuh.overview" onSelect={handleExplorerSelect} />
         </Col>
 
-        {/* ── Right column: Scope Details ── */}
+        {/* Right: Scope Details */}
         <Col xs={24} lg={14} xl={15}>
           <Card
             title={
               <Space>
-                <NodeIndexOutlined /> Scope Details
+                <NodeIndexOutlined />
+                <span>Scope Details</span>
               </Space>
             }
-            className={styles.cardNoBodyPadding}>
+            styles={{ body: { padding: 0 } }}>
             {!selectedNode ? (
-              <Empty description="Select a scope from the tree to view details" className={styles.contentPadding} />
+              <Empty description="Select a scope from the tree to view details" style={{ padding: '48px 24px' }} />
             ) : (
-              <div className={styles.scrollAreaTall}>
-                <Breadcrumb className={styles.mb12}>
-                  {breadcrumb.map((b: any) => (
-                    <Breadcrumb.Item
-                      key={b.key}
-                      onClick={() => selectNodeByKey(b.key)}
-                      className={styles.cursorPointer}>
-                      {b.title}
-                    </Breadcrumb.Item>
-                  ))}
-                </Breadcrumb>
+              <div style={{ maxHeight: 540, overflowY: 'auto', padding: 16 }}>
+                <Breadcrumb
+                  style={{ marginBottom: 16 }}
+                  items={breadcrumb.map(b => ({
+                    key: b.key,
+                    title: (
+                      <span onClick={() => selectNodeByKey(b.key)} style={{ cursor: 'pointer', color: '#1677ff' }}>
+                        {b.title}
+                      </span>
+                    ),
+                  }))}
+                />
                 <Descriptions size="small" bordered column={2}>
                   {Object.entries(selectedNode)
                     .filter(([key, value]) => {
-                      if (['key', 'children', 'id', '_level', 'scopeId', 'clusterId', 'wuId'].includes(key))
+                      if (['key', 'children', 'id', '_level', '_depth', 'scopeId', 'clusterId', 'wuId'].includes(key))
                         return false;
                       if (value === null || value === undefined || value === '') return false;
                       return true;
@@ -239,14 +360,17 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
                 </Descriptions>
 
                 {!!(selectedNode.children && selectedNode.children.length) && (
-                  <Card size="small" className={styles.mt16} title="Children">
+                  <Card size="small" style={{ marginTop: 16 }} title={`Children (${selectedNode.children.length})`}>
                     <Table
                       size="small"
-                      pagination={{ pageSize: 10 }}
+                      pagination={{ pageSize: 10, size: 'small' }}
                       rowKey={(r: any) => r.key}
-                      dataSource={selectedNode.children}
+                      dataSource={selectedNode.children.map(({ children: _c, ...rest }: any) => rest)}
                       columns={childCols}
-                      onRow={record => ({ onClick: () => selectNodeByKey(record.key) })}
+                      onRow={record => ({
+                        onClick: () => selectNodeByKey(record.key),
+                        style: { cursor: 'pointer' },
+                      })}
                     />
                   </Card>
                 )}

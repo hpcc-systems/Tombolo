@@ -9,6 +9,9 @@ import {
   getJobHistoryByJobNameWStats,
   comparePreviousByWuid,
   getWorkunitGraph,
+  getWorkunitScopes,
+  getWorkunitScopesSummary,
+  getScopeHistory,
 } from '../controllers/workunitController.js';
 import {
   validateGetWorkunits,
@@ -76,5 +79,13 @@ router.get(
   validate(validateGetWorkunitGraph),
   getWorkunitGraph
 );
+
+// Scopes: paged list, summary and scope history (used by virtualized UI)
+// GET /api/workunits/:clusterId/:wuid/scopes
+router.get('/:clusterId/:wuid/scopes', getWorkunitScopes);
+// GET /api/workunits/:clusterId/:wuid/scopes/summary
+router.get('/:clusterId/:wuid/scopes/summary', getWorkunitScopesSummary);
+// GET /api/workunits/:clusterId/:wuid/scopes/:scopeId/history
+router.get('/:clusterId/:wuid/scopes/:scopeId/history', getScopeHistory);
 
 export default router;

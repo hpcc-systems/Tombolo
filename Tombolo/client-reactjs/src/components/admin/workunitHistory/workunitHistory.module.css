@@ -65,6 +65,30 @@
 .mutedTextMid {
   color: #888;
 }
+.mutedTextSmall {
+  color: #999;
+  font-size: 11px;
+}
+.pocRow {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-sizing: border-box;
+}
+.pocRow:hover {
+  background: #fafafa;
+}
+.pocRowSelected {
+  background: #e6f4ff;
+}
+.pocTreeLabel {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .numericText {
   font-variant-numeric: tabular-nums;
 }
