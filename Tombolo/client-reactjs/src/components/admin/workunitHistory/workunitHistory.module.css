@@ -65,6 +65,30 @@
 .mutedTextMid {
   color: #888;
 }
+.mutedTextSmall {
+  color: #999;
+  font-size: 11px;
+}
+.scopeRow {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-sizing: border-box;
+}
+.scopeRow:hover {
+  background: #fafafa;
+}
+.scopeRowSelected {
+  background: #e6f4ff;
+}
+.scopeTreeLabel {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .numericText {
   font-variant-numeric: tabular-nums;
 }

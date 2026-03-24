@@ -55,6 +55,22 @@ const workunitsService = {
     const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/graph`);
     return response.data;
   },
+
+  // Paging & lazy fetch helpers for scopes (virtualization support)
+  getScopes: async (clusterId: string, wuid: string, options: { limit?: number; cursor?: number } = {}): Promise<any> => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/scopes`, { params: options });
+    return response.data;
+  },
+
+  getScopesSummary: async (clusterId: string, wuid: string): Promise<any> => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/scopes/summary`);
+    return response.data;
+  },
+
+  getScopeHistory: async (clusterId: string, wuid: string, scopeId: string): Promise<any> => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/scopes/${encodeURIComponent(scopeId)}/history`);
+    return response.data;
+  },
 };
 
 export default workunitsService;

@@ -518,6 +518,97 @@ async function getWorkunitGraph(req: Request, res: Response) {
   }
 }
 
+// (exports consolidated below)
+
+// New endpoints for pagination and scope history
+async function getWorkunitScopes(req: Request, res: Response) {
+  try {
+    const { wuid, clusterId } = req.params as {
+      wuid: string;
+      clusterId: string;
+    };
+    const parsedLimit = parseInt(String(req.query.limit), 10);
+    const limit = Math.min(
+      Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 200,
+      1000
+    );
+    // Keyset cursor: the last seen `id` from the previous page (0 = first page)
+    const parsedCursor = parseInt(String(req.query.cursor), 10);
+    const cursorId =
+      Number.isFinite(parsedCursor) && parsedCursor > 0 ? parsedCursor : 0;
+
+    const where: WhereOptions<InferAttributes<WorkUnitDetails>> = {
+      wuId: wuid,
+      clusterId,
+      ...(cursorId > 0 ? { id: { [Op.gt]: cursorId } } : {}),
+    };
+
+    const { count, rows } = await WorkUnitDetails.findAndCountAll({
+      where,
+      order: [['id', 'ASC']],
+      limit,
+    });
+
+    const items = rows.map(r => r.get({ plain: true }));
+    const nextCursor = rows.length === limit ? rows[rows.length - 1].id : null;
+
+    return sendSuccess(res, {
+      total: count,
+      cursor: cursorId,
+      nextCursor,
+      items,
+    });
+  } catch (err) {
+    logger.error('Get workunit scopes error:', err);
+    return sendError(res, 'Failed to fetch scopes', 500);
+  }
+}
+
+async function getWorkunitScopesSummary(req: Request, res: Response) {
+  try {
+    const { wuid, clusterId } = req.params as {
+      wuid: string;
+      clusterId: string;
+    };
+    const counts = await WorkUnitDetails.findAll({
+      where: { wuId: wuid, clusterId },
+      attributes: [
+        'scopeType',
+        [sequelize.fn('COUNT', sequelize.col('scopeType')), 'count'],
+      ],
+      group: ['scopeType'],
+      raw: true,
+    });
+    return sendSuccess(res, counts);
+  } catch (err) {
+    logger.error('Get scopes summary error:', err);
+    return sendError(res, 'Failed to fetch scopes summary', 500);
+  }
+}
+
+async function getScopeHistory(req: Request, res: Response) {
+  try {
+    const { wuid, clusterId, scopeId } = req.params as {
+      wuid: string;
+      clusterId: string;
+      scopeId: string;
+    };
+    const details = await WorkUnitDetails.findAll({
+      where: { wuId: wuid, clusterId, scopeId },
+      order: [['id', 'ASC']],
+    });
+    if (!details || details.length === 0)
+      return sendError(res, 'No history for scope', 404);
+    return sendSuccess(
+      res,
+      details.map(d => d.get({ plain: true }))
+    );
+  } catch (err) {
+    logger.error('Get scope history error:', err);
+    return sendError(res, 'Failed to fetch scope history', 500);
+  }
+}
+
 export {
   getWorkunits,
   getWorkunit,
@@ -528,4 +619,7 @@ export {
   getJobHistoryByJobNameWStats,
   comparePreviousByWuid,
   getWorkunitGraph,
+  getWorkunitScopes,
+  getWorkunitScopesSummary,
+  getScopeHistory,
 };

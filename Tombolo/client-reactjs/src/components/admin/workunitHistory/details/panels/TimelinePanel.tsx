@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
+import { List, RowComponentProps } from 'react-window';
 import {
   Card,
   Row,
@@ -6,8 +7,6 @@ import {
   Statistic,
   Space,
   Input,
-  Select,
-  Button,
   Drawer,
   Descriptions,
   Empty,
@@ -16,6 +15,9 @@ import {
   Segmented,
   Tooltip,
   Alert,
+  Collapse,
+  Checkbox,
+  InputNumber,
 } from 'antd';
 import {
   SearchOutlined,
@@ -25,24 +27,23 @@ import {
   FilterOutlined,
   InfoCircleOutlined,
   WarningOutlined,
+  ThunderboltOutlined,
+  HddOutlined,
 } from '@ant-design/icons';
-import { formatSeconds, formatNumber, formatBytes, renderAnyMetric } from '@tombolo/shared';
+import { formatSeconds, formatNumber, formatBytes } from '@tombolo/shared';
 
 const { Text } = Typography;
 
-interface ScopeConfigEntry {
-  color: string;
-  label: string;
-  icon: string;
-}
+// ── Scope Configuration ──────────────────────────────────────────────────────
 
-// Scope type colors and metadata
-const SCOPE_CONFIG: Record<string, ScopeConfigEntry> = {
-  graph: { color: '#1890ff', label: 'Graph', icon: '📊' },
-  subgraph: { color: '#13c2c2', label: 'Subgraph', icon: '📁' },
-  activity: { color: '#52c41a', label: 'Activity', icon: '⚙️' },
-  operation: { color: '#fa8c16', label: 'Operation', icon: '🔧' },
+const SCOPE_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  graph: { label: 'Graph', color: '#1677ff', icon: <BarChartOutlined style={{ color: '#1677ff' }} /> },
+  subgraph: { label: 'Subgraph', color: '#52c41a', icon: <BarChartOutlined style={{ color: '#52c41a' }} /> },
+  activity: { label: 'Activity', color: '#faad14', icon: <ThunderboltOutlined style={{ color: '#faad14' }} /> },
+  operation: { label: 'Operation', color: '#eb2f96', icon: <HddOutlined style={{ color: '#eb2f96' }} /> },
 };
+
+// ── Types ────────────────────────────────────────────────────────────────────
 
 interface TimelineItem {
   id: string;
@@ -61,7 +62,45 @@ interface TimelineItem {
   rawData: any;
 }
 
-// Process raw details into timeline items
+interface Filters {
+  scopeTypes: string[];
+  minElapsed: number | null;
+  maxElapsed: number | null;
+  minRows: number | null;
+  maxRows: number | null;
+}
+
+const defaultFilters: Filters = {
+  scopeTypes: ['graph', 'subgraph', 'activity', 'operation'],
+  minElapsed: null,
+  maxElapsed: null,
+  minRows: null,
+  maxRows: null,
+};
+
+// ── Data Processing ──────────────────────────────────────────────────────────
+
+// ── Attribute Formatting ─────────────────────────────────────────────────────
+
+function formatAttributeValue(key: string, value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  const k = key.toLowerCase();
+  const num = Number(value);
+  if (!isNaN(num) && String(value).trim() !== '') {
+    if (/size|bytes|memory|disk|read|write/.test(k)) return formatBytes(num);
+    if (/time|elapsed|latency|duration/.test(k)) return formatSeconds(num);
+    if (/num|count|rows|records/.test(k)) return formatNumber(num);
+  }
+  return String(value);
+}
+
 function processTimelineData(details: any[]): TimelineItem[] {
   if (!details || details.length === 0) return [];
 
@@ -88,13 +127,11 @@ function processTimelineData(details: any[]): TimelineItem[] {
         rawData: d,
       };
     })
-    .filter(item => item.elapsed > 0); // Only show scopes that took time
+    .filter(item => item.elapsed > 0);
 
-  // Sort by start time for better visual flow
   return items.sort((a, b) => a.start - b.start);
 }
 
-// Calculate critical path (simplified heuristic: longest running scopes)
 function identifyCriticalPath(items: TimelineItem[], topN = 10): string[] {
   return [...items]
     .sort((a, b) => b.elapsed - a.elapsed)
@@ -102,7 +139,6 @@ function identifyCriticalPath(items: TimelineItem[], topN = 10): string[] {
     .map(item => item.id);
 }
 
-// Group items into swim lanes by graph
 function groupByGraph(items: TimelineItem[]): Map<string, TimelineItem[]> {
   const groups = new Map<string, TimelineItem[]>();
 
@@ -124,15 +160,157 @@ function groupByGraph(items: TimelineItem[]): Map<string, TimelineItem[]> {
   return groups;
 }
 
+// ── Row Component for Virtualized List ───────────────────────────────────────
+
+interface TimelineRowData {
+  items: TimelineItem[];
+  timelineBounds: { min: number; max: number; duration: number };
+  criticalPathIds: string[];
+  highlightMode: 'none' | 'critical' | 'slow';
+  onItemClick: (item: TimelineItem) => void;
+}
+
+const TimelineRow = ({
+  index,
+  style,
+  items,
+  timelineBounds,
+  criticalPathIds,
+  highlightMode,
+  onItemClick,
+}: RowComponentProps<TimelineRowData>): React.ReactElement | null => {
+  const item = items[index];
+  if (!item) return null;
+
+  const { min, max } = timelineBounds;
+  const totalSpan = max - min;
+
+  const leftPercent = totalSpan > 0 ? ((item.start - min) / totalSpan) * 100 : 0;
+  const widthPercent = totalSpan > 0 ? Math.max((item.elapsed / totalSpan) * 100, 0.5) : 100;
+
+  const isHighlighted =
+    highlightMode === 'critical'
+      ? criticalPathIds.includes(item.id)
+      : highlightMode === 'slow'
+        ? item.elapsed >= timelineBounds.duration * 0.1
+        : false;
+
+  const config = SCOPE_CONFIG[item.type] || SCOPE_CONFIG.activity;
+
+  return (
+    <div
+      style={{
+        ...style,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 12px',
+        borderBottom: '1px solid #f0f0f0',
+        cursor: 'pointer',
+        backgroundColor: 'transparent',
+        transition: 'background-color 0.15s ease',
+      }}
+      onClick={() => onItemClick(item)}
+      onMouseEnter={e => {
+        e.currentTarget.style.backgroundColor = '#fafafa';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.backgroundColor = 'transparent';
+      }}>
+      {/* Name Column */}
+      <div style={{ width: '25%', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <span style={{ flexShrink: 0 }}>{config.icon}</span>
+        <Tooltip title={item.name}>
+          <Text
+            ellipsis
+            style={{
+              fontSize: 12,
+              fontWeight: isHighlighted ? 600 : 400,
+              flex: 1,
+              minWidth: 0,
+            }}>
+            {item.name}
+          </Text>
+        </Tooltip>
+      </div>
+
+      {/* Timeline Bar Column */}
+      <div style={{ width: '55%', padding: '0 8px' }}>
+        <div
+          style={{
+            position: 'relative',
+            height: 20,
+            background: '#f5f5f5',
+            borderRadius: 4,
+            overflow: 'hidden',
+          }}>
+          <Tooltip title={`${formatSeconds(item.elapsed)} | ${formatNumber(item.rows)} rows`}>
+            <div
+              style={{
+                position: 'absolute',
+                left: `${leftPercent}%`,
+                width: `${widthPercent}%`,
+                minWidth: 4,
+                height: '100%',
+                background: config.color,
+                opacity: isHighlighted ? 1 : 0.7,
+                border: isHighlighted ? '2px solid #000' : 'none',
+                borderRadius: 2,
+                transition: 'all 0.2s',
+              }}
+            />
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Duration & Rows Column */}
+      <div style={{ width: '20%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+        <Text
+          type="secondary"
+          style={{
+            fontSize: 11,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 3,
+            backgroundColor: '#f5f5f5',
+            padding: '2px 6px',
+            borderRadius: 4,
+          }}>
+          <ClockCircleOutlined style={{ fontSize: 10 }} />
+          {formatSeconds(item.elapsed)}
+        </Text>
+        {item.rows > 0 && (
+          <Text
+            type="secondary"
+            style={{
+              fontSize: 11,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 3,
+              backgroundColor: '#f5f5f5',
+              padding: '2px 6px',
+              borderRadius: 4,
+            }}>
+            <DatabaseOutlined style={{ fontSize: 10 }} />
+            {formatNumber(item.rows)}
+          </Text>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ── Main Component ───────────────────────────────────────────────────────────
+
 interface Props {
-  wu: any;
+  wu?: any;
   details: any[];
 }
 
 const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState(['graph', 'subgraph', 'activity', 'operation']);
-  const [viewMode, setViewMode] = useState<'gantt' | 'swim-lanes' | 'list'>('gantt');
+  const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [viewMode, setViewMode] = useState<'timeline' | 'swim-lanes'>('timeline');
   const [highlightMode, setHighlightMode] = useState<'none' | 'critical' | 'slow'>('none');
   const [selectedItem, setSelectedItem] = useState<TimelineItem | null>(null);
 
@@ -142,15 +320,27 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
   // Filter items
   const filteredItems = useMemo(() => {
     return allItems.filter(item => {
-      if (!selectedTypes.includes(item.type)) return false;
+      // Scope type filter
+      if (!filters.scopeTypes.includes(item.type)) return false;
+
+      // Text search
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         const searchText = `${item.name} ${item.label || ''} ${item.fileName || ''}`.toLowerCase();
         if (!searchText.includes(term)) return false;
       }
+
+      // Elapsed time filter
+      if (filters.minElapsed !== null && item.elapsed < filters.minElapsed) return false;
+      if (filters.maxElapsed !== null && item.elapsed > filters.maxElapsed) return false;
+
+      // Rows filter
+      if (filters.minRows !== null && item.rows < filters.minRows) return false;
+      if (filters.maxRows !== null && item.rows > filters.maxRows) return false;
+
       return true;
     });
-  }, [allItems, selectedTypes, searchTerm]);
+  }, [allItems, filters, searchTerm]);
 
   // Calculate timeline bounds
   const timelineBounds = useMemo(() => {
@@ -198,86 +388,33 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
   // Group by graph for swim lane view
   const graphGroups = useMemo(() => groupByGraph(filteredItems), [filteredItems]);
 
-  // Determine if item should be highlighted
-  const shouldHighlight = (item: TimelineItem) => {
-    if (highlightMode === 'critical') return criticalPathIds.includes(item.id);
-    if (highlightMode === 'slow') {
-      const threshold = timelineBounds.duration * 0.1;
-      return item.elapsed >= threshold;
-    }
-    return false;
-  };
+  const handleItemClick = useCallback((item: TimelineItem) => {
+    setSelectedItem(item);
+  }, []);
 
-  // Reset all filters
-  const handleReset = () => {
-    setSearchTerm('');
-    setSelectedTypes(['graph', 'subgraph', 'activity', 'operation']);
-    setViewMode('gantt');
-    setHighlightMode('none');
-  };
+  const rowProps = useMemo<TimelineRowData>(
+    () => ({
+      items: filteredItems,
+      timelineBounds,
+      criticalPathIds,
+      highlightMode,
+      onItemClick: handleItemClick,
+    }),
+    [filteredItems, timelineBounds, criticalPathIds, highlightMode, handleItemClick]
+  );
 
-  // Render timeline bar
-  const renderTimelineBar = (item: TimelineItem) => {
-    const { min, max } = timelineBounds;
-    const totalSpan = max - min;
+  const hasActiveFilters =
+    filters.scopeTypes.length < 4 ||
+    filters.minElapsed !== null ||
+    filters.maxElapsed !== null ||
+    filters.minRows !== null ||
+    filters.maxRows !== null;
 
-    if (totalSpan === 0) return null;
-
-    const leftPercent = ((item.start - min) / totalSpan) * 100;
-    const widthPercent = (item.elapsed / totalSpan) * 100;
-    const isHighlighted = shouldHighlight(item);
-    const config = SCOPE_CONFIG[item.type] || SCOPE_CONFIG.activity;
-
-    return (
-      <div
-        key={item.id}
-        className="timeline-row"
-        style={{ padding: '4px 0', borderBottom: '1px solid #f0f0f0', cursor: 'pointer' }}
-        onClick={() => setSelectedItem(item)}>
-        <Row gutter={8} align="middle">
-          <Col span={6}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>{config.icon}</span>
-              <Tooltip title={item.name}>
-                <Text ellipsis style={{ fontSize: 12, fontWeight: isHighlighted ? 600 : 400 }}>
-                  {item.name}
-                </Text>
-              </Tooltip>
-            </div>
-          </Col>
-          <Col span={14}>
-            <div
-              style={{ position: 'relative', height: 24, background: '#f5f5f5', borderRadius: 4, overflow: 'hidden' }}>
-              <div
-                style={{
-                  position: 'absolute',
-                  left: `${leftPercent}%`,
-                  width: `${widthPercent}%`,
-                  height: '100%',
-                  background: config.color,
-                  opacity: isHighlighted ? 1 : 0.7,
-                  border: isHighlighted ? '2px solid #000' : 'none',
-                  borderRadius: 2,
-                  transition: 'all 0.2s',
-                }}
-              />
-            </div>
-          </Col>
-          <Col span={4} style={{ textAlign: 'right' }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {formatSeconds(item.elapsed)}
-            </Text>
-          </Col>
-        </Row>
-      </div>
-    );
-  };
-
-  // Render swim lane view
+  // Render swim lane view (non-virtualized for grouped display)
   const renderSwimLanes = () => {
     const lanes = Array.from(graphGroups.entries());
     return (
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space direction="vertical" size={12} style={{ width: '100%' }}>
         {lanes.map(([graphKey, items]) => (
           <Card
             key={graphKey}
@@ -287,44 +424,60 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
                 <Text strong>{graphKey}</Text>
                 <Tag>{items.length} scopes</Tag>
               </Space>
-            }>
-            {items.map(item => renderTimelineBar(item))}
+            }
+            styles={{ body: { padding: 0 } }}>
+            <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+              {items.map(item => {
+                const config = SCOPE_CONFIG[item.type] || SCOPE_CONFIG.activity;
+                const { min, max } = timelineBounds;
+                const totalSpan = max - min;
+                const leftPercent = totalSpan > 0 ? ((item.start - min) / totalSpan) * 100 : 0;
+                const widthPercent = totalSpan > 0 ? Math.max((item.elapsed / totalSpan) * 100, 0.5) : 100;
+
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '6px 12px',
+                      borderBottom: '1px solid #f0f0f0',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setSelectedItem(item)}>
+                    <div style={{ width: '30%', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {config.icon}
+                      <Text ellipsis style={{ fontSize: 12 }}>
+                        {item.name}
+                      </Text>
+                    </div>
+                    <div style={{ width: '50%', padding: '0 8px' }}>
+                      <div style={{ position: 'relative', height: 16, background: '#f5f5f5', borderRadius: 4 }}>
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: `${leftPercent}%`,
+                            width: `${widthPercent}%`,
+                            minWidth: 4,
+                            height: '100%',
+                            background: config.color,
+                            borderRadius: 2,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ width: '20%', textAlign: 'right' }}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>
+                        {formatSeconds(item.elapsed)}
+                      </Text>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </Card>
         ))}
       </Space>
-    );
-  };
-
-  const renderListView = () => {
-    return (
-      <div>
-        {filteredItems.map(item => (
-          <Card key={item.id} size="small" hoverable style={{ marginBottom: 8 }} onClick={() => setSelectedItem(item)}>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Space>
-                  <span>{SCOPE_CONFIG[item.type]?.icon}</span>
-                  <Text strong>{item.name}</Text>
-                </Space>
-              </Col>
-              <Col span={4}>
-                <Statistic
-                  title="Duration"
-                  value={item.elapsed}
-                  formatter={v => formatSeconds(v as number)}
-                  valueStyle={{ fontSize: 14 }}
-                />
-              </Col>
-              <Col span={4}>
-                <Statistic title="Rows" value={formatNumber(item.rows)} valueStyle={{ fontSize: 14 }} />
-              </Col>
-              <Col span={4}>
-                <Statistic title="Memory" value={formatBytes(item.memory)} valueStyle={{ fontSize: 14 }} />
-              </Col>
-            </Row>
-          </Card>
-        ))}
-      </div>
     );
   };
 
@@ -335,16 +488,22 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
       {/* Summary Statistics */}
-      <Card>
+      <Card size="small">
         <Row gutter={[16, 16]}>
           <Col xs={12} sm={6}>
-            <Statistic title="Total Scopes" value={statistics.count} prefix={<BarChartOutlined />} />
+            <Statistic
+              title="Total Scopes"
+              value={statistics.count}
+              prefix={<BarChartOutlined />}
+              valueStyle={{ fontSize: 20 }}
+            />
           </Col>
           <Col xs={12} sm={6}>
             <Statistic
               title="Execution Time"
               value={formatSeconds(timelineBounds.duration)}
               prefix={<ClockCircleOutlined />}
+              valueStyle={{ fontSize: 20 }}
             />
           </Col>
           <Col xs={12} sm={6}>
@@ -352,10 +511,11 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
               title="Rows Processed"
               value={formatNumber(statistics.totalRows)}
               prefix={<DatabaseOutlined />}
+              valueStyle={{ fontSize: 20 }}
             />
           </Col>
           <Col xs={12} sm={6}>
-            <Statistic title="Peak Memory" value={formatBytes(statistics.maxMemory)} />
+            <Statistic title="Peak Memory" value={formatBytes(statistics.maxMemory)} valueStyle={{ fontSize: 20 }} />
           </Col>
         </Row>
         {statistics.slowestItem && (
@@ -365,8 +525,8 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
               <Space>
                 <WarningOutlined />
                 <Text>
-                  Slowest scope: <Text strong>{(statistics.slowestItem as TimelineItem).name}</Text> (
-                  {formatSeconds((statistics.slowestItem as TimelineItem).elapsed)})
+                  Slowest scope: <Text strong>{statistics.slowestItem.name}</Text> (
+                  {formatSeconds(statistics.slowestItem.elapsed)})
                 </Text>
               </Space>
             }
@@ -376,162 +536,291 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
         )}
       </Card>
 
-      {/* Controls */}
-      <Card>
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
-          <Row gutter={[16, 16]} align="middle">
-            <Col xs={24} md={8}>
-              <Input
-                allowClear
-                prefix={<SearchOutlined />}
-                placeholder="Search by name, label, or file..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-            </Col>
-            <Col xs={24} md={8}>
-              <Select
-                mode="multiple"
-                placeholder="Filter by type"
-                value={selectedTypes}
-                onChange={setSelectedTypes}
-                style={{ width: '100%' }}
-                maxTagCount="responsive">
-                {Object.entries(SCOPE_CONFIG).map(([key, config]) => (
-                  <Select.Option key={key} value={key}>
-                    {config.icon} {config.label}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Col>
-            <Col xs={24} md={8}>
-              <Button icon={<FilterOutlined />} onClick={handleReset} block>
-                Reset Filters
-              </Button>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Space>
-                <Text type="secondary">View:</Text>
-                <Segmented
-                  value={viewMode}
-                  onChange={v => setViewMode(v as 'gantt' | 'swim-lanes' | 'list')}
-                  options={[
-                    { label: 'Timeline', value: 'gantt' },
-                    { label: 'Swim Lanes', value: 'swim-lanes' },
-                    { label: 'List', value: 'list' },
-                  ]}
-                />
-              </Space>
-            </Col>
-            <Col span={12}>
-              <Space>
-                <Text type="secondary">Highlight:</Text>
-                <Segmented
-                  value={highlightMode}
-                  onChange={v => setHighlightMode(v as 'none' | 'critical' | 'slow')}
-                  options={[
-                    { label: 'None', value: 'none' },
-                    { label: 'Critical Path', value: 'critical' },
-                    { label: 'Slowest', value: 'slow' },
-                  ]}
-                />
-              </Space>
-            </Col>
-          </Row>
-        </Space>
-      </Card>
-
       {/* Timeline Visualization */}
       <Card
         title={
           <Space>
-            <Text strong>Execution Timeline</Text>
-            <Tooltip title="Click on any bar to see detailed metrics">
-              <InfoCircleOutlined />
-            </Tooltip>
+            <ClockCircleOutlined />
+            <span>Execution Timeline</span>
+            <Tag style={{ marginLeft: 8, fontWeight: 'normal' }}>{filteredItems.length} items</Tag>
           </Space>
-        }>
-        {filteredItems.length === 0 ? (
-          <Empty description="No items match your filters" />
-        ) : (
-          <>
-            <div style={{ marginBottom: 16, padding: '0 8px' }}>
-              <Row gutter={8}>
-                <Col span={6}></Col>
-                <Col span={14}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: 11,
-                      color: '#8c8c8c',
-                      borderBottom: '1px solid #d9d9d9',
-                      paddingBottom: 4,
-                    }}>
-                    <span>{formatSeconds(timelineBounds.min)}</span>
-                    <span>{formatSeconds((timelineBounds.min + timelineBounds.max) / 2)}</span>
-                    <span>{formatSeconds(timelineBounds.max)}</span>
-                  </div>
-                </Col>
-                <Col span={4}></Col>
-              </Row>
+        }
+        extra={
+          <Tooltip title="Click on any bar to see detailed metrics">
+            <InfoCircleOutlined />
+          </Tooltip>
+        }
+        styles={{ body: { padding: 0 } }}>
+        {/* Controls */}
+        <div style={{ padding: 12, borderBottom: '1px solid #f0f0f0' }}>
+          <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <Input
+              allowClear
+              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+              placeholder="Search by name, label, or file..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+
+            <Collapse
+              ghost
+              size="small"
+              activeKey={filtersExpanded ? ['filters'] : []}
+              onChange={keys => setFiltersExpanded(keys.includes('filters'))}
+              items={[
+                {
+                  key: 'filters',
+                  label: (
+                    <Space size={4}>
+                      <FilterOutlined style={{ fontSize: 12 }} />
+                      <span style={{ fontSize: 13 }}>Filters</span>
+                      {hasActiveFilters && (
+                        <Tag color="blue" style={{ marginLeft: 4, fontSize: 11 }}>
+                          Active
+                        </Tag>
+                      )}
+                    </Space>
+                  ),
+                  children: (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 8 }}>
+                      {/* Scope Types */}
+                      <div>
+                        <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                          Scope Types
+                        </Text>
+                        <Checkbox.Group
+                          value={filters.scopeTypes}
+                          onChange={vals => setFilters(f => ({ ...f, scopeTypes: vals as string[] }))}
+                          style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                          {Object.entries(SCOPE_CONFIG).map(([type, config]) => (
+                            <Checkbox key={type} value={type} style={{ marginRight: 0 }}>
+                              <Tag color={config.color} style={{ margin: 0, cursor: 'pointer' }}>
+                                {config.label}
+                              </Tag>
+                            </Checkbox>
+                          ))}
+                        </Checkbox.Group>
+                      </div>
+
+                      {/* Elapsed Time Range */}
+                      <div>
+                        <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                          Elapsed Time (seconds)
+                        </Text>
+                        <Space size={8}>
+                          <InputNumber
+                            size="small"
+                            placeholder="Min"
+                            min={0}
+                            value={filters.minElapsed}
+                            onChange={val => setFilters(f => ({ ...f, minElapsed: val }))}
+                            style={{ width: 80 }}
+                          />
+                          <Text type="secondary">to</Text>
+                          <InputNumber
+                            size="small"
+                            placeholder="Max"
+                            min={0}
+                            value={filters.maxElapsed}
+                            onChange={val => setFilters(f => ({ ...f, maxElapsed: val }))}
+                            style={{ width: 80 }}
+                          />
+                        </Space>
+                      </div>
+
+                      {/* Rows Range */}
+                      <div>
+                        <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                          Rows Processed
+                        </Text>
+                        <Space size={8}>
+                          <InputNumber
+                            size="small"
+                            placeholder="Min"
+                            min={0}
+                            value={filters.minRows}
+                            onChange={val => setFilters(f => ({ ...f, minRows: val }))}
+                            style={{ width: 80 }}
+                          />
+                          <Text type="secondary">to</Text>
+                          <InputNumber
+                            size="small"
+                            placeholder="Max"
+                            min={0}
+                            value={filters.maxRows}
+                            onChange={val => setFilters(f => ({ ...f, maxRows: val }))}
+                            style={{ width: 80 }}
+                          />
+                        </Space>
+                      </div>
+
+                      {/* Reset */}
+                      <div>
+                        <Tag style={{ cursor: 'pointer' }} onClick={() => setFilters(defaultFilters)}>
+                          Reset Filters
+                        </Tag>
+                      </div>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Space>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    View:
+                  </Text>
+                  <Segmented
+                    size="small"
+                    value={viewMode}
+                    onChange={v => setViewMode(v as 'timeline' | 'swim-lanes')}
+                    options={[
+                      { label: 'Timeline', value: 'timeline' },
+                      { label: 'Swim Lanes', value: 'swim-lanes' },
+                    ]}
+                  />
+                </Space>
+              </Col>
+              <Col span={12}>
+                <Space>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Highlight:
+                  </Text>
+                  <Segmented
+                    size="small"
+                    value={highlightMode}
+                    onChange={v => setHighlightMode(v as 'none' | 'critical' | 'slow')}
+                    options={[
+                      { label: 'None', value: 'none' },
+                      { label: 'Critical Path', value: 'critical' },
+                      { label: 'Slowest', value: 'slow' },
+                    ]}
+                  />
+                </Space>
+              </Col>
+            </Row>
+          </Space>
+        </div>
+
+        {/* Timeline Scale Header */}
+        {filteredItems.length > 0 && viewMode === 'timeline' && (
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid #f0f0f0', background: '#fafafa' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ width: '25%' }}>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  Scope
+                </Text>
+              </div>
+              <div style={{ width: '55%', padding: '0 8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#8c8c8c' }}>
+                  <span>{formatSeconds(timelineBounds.min)}</span>
+                  <span>{formatSeconds((timelineBounds.min + timelineBounds.max) / 2)}</span>
+                  <span>{formatSeconds(timelineBounds.max)}</span>
+                </div>
+              </div>
+              <div style={{ width: '20%', textAlign: 'right' }}>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  Duration / Rows
+                </Text>
+              </div>
             </div>
-            <div style={{ maxHeight: 600, overflowY: 'auto' }}>
-              {viewMode === 'gantt' && filteredItems.map(item => renderTimelineBar(item))}
-              {viewMode === 'swim-lanes' && renderSwimLanes()}
-              {viewMode === 'list' && renderListView()}
-            </div>
-            <div style={{ marginTop: 16, textAlign: 'center' }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                Showing {filteredItems.length} of {allItems.length} scopes
-              </Text>
-            </div>
-          </>
+          </div>
         )}
+
+        {/* Timeline Content */}
+        {filteredItems.length === 0 ? (
+          <div style={{ padding: 24 }}>
+            <Empty description="No items match your filters" />
+          </div>
+        ) : viewMode === 'timeline' ? (
+          <div style={{ height: 450 }}>
+            <List
+              rowCount={filteredItems.length}
+              rowHeight={40}
+              rowComponent={TimelineRow}
+              rowProps={rowProps}
+              style={{ height: '100%' }}
+            />
+          </div>
+        ) : (
+          <div style={{ padding: 12, maxHeight: 500, overflowY: 'auto' }}>{renderSwimLanes()}</div>
+        )}
+
+        {/* Footer */}
+        <div style={{ padding: '8px 12px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            Showing {filteredItems.length} of {allItems.length} scopes
+          </Text>
+        </div>
       </Card>
 
       {/* Details Drawer */}
       <Drawer
         title={
-          <Space>
-            <span>{SCOPE_CONFIG[selectedItem?.type ?? '']?.icon}</span>
-            <span>{selectedItem?.name}</span>
-          </Space>
+          selectedItem && (
+            <Space>
+              {SCOPE_CONFIG[selectedItem.type]?.icon}
+              <span>{selectedItem.name}</span>
+            </Space>
+          )
         }
         placement="right"
         open={!!selectedItem}
-        width={600}
+        width={500}
         onClose={() => setSelectedItem(null)}>
         {selectedItem && (
           <Space direction="vertical" size={16} style={{ width: '100%' }}>
             <Card size="small" title="Performance Metrics">
-              <Row gutter={16}>
+              <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <Statistic
                     title="Duration"
                     value={formatSeconds(selectedItem.elapsed)}
                     prefix={<ClockCircleOutlined />}
+                    valueStyle={{ fontSize: 18 }}
                   />
                 </Col>
                 <Col span={12}>
-                  <Statistic title="Rows Processed" value={formatNumber(selectedItem.rows)} />
+                  <Statistic
+                    title="Rows Processed"
+                    value={formatNumber(selectedItem.rows)}
+                    prefix={<DatabaseOutlined />}
+                    valueStyle={{ fontSize: 18 }}
+                  />
                 </Col>
                 <Col span={12}>
-                  <Statistic title="Disk Read" value={formatBytes(selectedItem.diskRead)} />
+                  <Statistic
+                    title="Disk Read"
+                    value={formatBytes(selectedItem.diskRead)}
+                    valueStyle={{ fontSize: 18 }}
+                  />
                 </Col>
                 <Col span={12}>
-                  <Statistic title="Disk Write" value={formatBytes(selectedItem.diskWrite)} />
+                  <Statistic
+                    title="Disk Write"
+                    value={formatBytes(selectedItem.diskWrite)}
+                    valueStyle={{ fontSize: 18 }}
+                  />
                 </Col>
                 <Col span={12}>
-                  <Statistic title="Peak Memory" value={formatBytes(selectedItem.memory)} />
+                  <Statistic
+                    title="Peak Memory"
+                    value={formatBytes(selectedItem.memory)}
+                    valueStyle={{ fontSize: 18 }}
+                  />
                 </Col>
                 <Col span={12}>
-                  <Statistic title="Type" value={SCOPE_CONFIG[selectedItem.type]?.label} />
+                  <Statistic
+                    title="Type"
+                    value={SCOPE_CONFIG[selectedItem.type]?.label || selectedItem.type}
+                    valueStyle={{ fontSize: 18 }}
+                  />
                 </Col>
               </Row>
             </Card>
+
             <Card size="small" title="All Attributes">
               <Descriptions column={1} size="small" bordered>
                 {Object.entries(selectedItem.rawData)
@@ -539,7 +828,9 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([k, v]) => (
                     <Descriptions.Item key={k} label={k}>
-                      {renderAnyMetric(k, v)}
+                      <Text copyable={{ text: String(v) }} style={{ fontSize: 12 }}>
+                        {formatAttributeValue(k, v)}
+                      </Text>
                     </Descriptions.Item>
                   ))}
               </Descriptions>

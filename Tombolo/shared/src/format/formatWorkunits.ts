@@ -18,6 +18,17 @@ const formatDurationHm = (
   return `${hours > 0 ? `${hours}h ` : ''}${mins}m`;
 };
 
+// Format a duration in seconds as hours (e.g. 1.23h) for values >= 1 hour,
+// or fall back to formatSeconds for shorter durations.
+const formatSecondsAsHours = (
+  sec: number | string | null | undefined
+): string => {
+  if (sec == null || isNaN(Number(sec))) return '-';
+  const hours = Number(sec) / 3600;
+  if (hours < 1) return formatSeconds(sec);
+  return `${hours.toFixed(2)}h`;
+};
+
 // Format hours as a decimal number with 2 decimals (e.g. 1.23h)
 const formatHours = (
   h: number | string | null | undefined,
@@ -125,13 +136,16 @@ function renderAnyMetric(
   return String(value);
 }
 
-function normalizeLabel(
+function formatLabel(
   label: string | null | undefined
 ): string | null | undefined {
   if (!label) return label;
 
-  // Normalize: replace newlines, &apos;, and multiple spaces with a single space
-  const normalized = label.replace(/&apos;|\s+/g, ' ').trim();
+  // Replace HTML entity &apos; with a space, then collapse all whitespace sequences
+  const normalized = label
+    .replace(/&apos;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   const lower = normalized.toLowerCase();
   for (const prefix in readableLabels) {
     if (lower.startsWith(prefix)) {
@@ -145,10 +159,11 @@ export {
   formatNumber,
   formatSeconds,
   formatDurationHm,
+  formatSecondsAsHours,
   formatHours,
   formatCurrency,
   formatBytes,
-  normalizeLabel,
+  formatLabel,
   formatPercentage,
   parseWorkunitTimestamp,
   renderAnyMetric,

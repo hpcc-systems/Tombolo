@@ -93,6 +93,27 @@ const validateGetWorkunitGraph = [
   stringParam('wuid', false),
 ];
 
+// Validation for GET /api/workunits/:clusterId/:wuid/scopes
+const validateGetWorkunitScopes = [
+  stringParam('clusterId', false),
+  stringParam('wuid', false),
+  intQuery('limit', true),
+  intQuery('cursor', true),
+];
+
+// Validation for GET /api/workunits/:clusterId/:wuid/scopes/summary
+const validateGetWorkunitScopesSummary = [
+  stringParam('clusterId', false),
+  stringParam('wuid', false),
+];
+
+// Validation for GET /api/workunits/:clusterId/:wuid/scopes/:scopeId/history
+const validateGetScopeHistory = [
+  stringParam('clusterId', false),
+  stringParam('wuid', false),
+  stringParam('scopeId', false),
+];
+
 export {
   validateGetWorkunits,
   validateGetWorkunit,
@@ -105,4 +126,7 @@ export {
   validateGetJobHistoryByJobNameWStats,
   validateComparePreviousByWuid,
   validateGetWorkunitGraph,
+  validateGetWorkunitScopes,
+  validateGetWorkunitScopesSummary,
+  validateGetScopeHistory,
 };

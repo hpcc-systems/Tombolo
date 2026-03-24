@@ -493,8 +493,6 @@ const readableLabels: Record<string, string> = {
   store: 'Store',
 };
 
-
-
 const TERMINAL_STATES = ['completed', 'failed', 'aborted'] as const;
 
 const SCOPE_TYPES = ['graph', 'subgraph', 'activity', 'operation'] as const;

@@ -7,12 +7,10 @@ import {
   DatabaseOutlined,
   FieldTimeOutlined,
   HistoryOutlined,
-  TableOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { formatHours, formatCurrency } from '@tombolo/shared';
-import AllMetricsPanel from './panels/AllMetricsPanel';
 import GraphPanel from './panels/graph/GraphPanel';
 import HierarchyExplorer, { HierarchyExplorerSelectPayload } from './panels/HierarchyExplorer';
 import OverviewPanel from './panels/OverviewPanel';
@@ -62,7 +60,11 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
           </Col>
           <Col>
             <Space size="large">
-              <Statistic title="Total Time" value={formatHours(wu.totalClusterTime)} prefix={<ClockCircleOutlined />} />
+              <Statistic
+                title="Total Runtime"
+                value={formatHours(wu.totalClusterTime)}
+                prefix={<ClockCircleOutlined />}
+              />
               <Statistic title="Total Cost" value={formatCurrency(wu.totalCost)} />
             </Space>
           </Col>
@@ -158,16 +160,6 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
           }
           key="history">
           <HistoryPanel wu={wu} clusterId={wu.clusterId} clusterName={clusterName} />
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <TableOutlined /> All Metrics
-            </span>
-          }
-          key="metrics">
-          <AllMetricsPanel details={details} />
         </TabPane>
 
         {isAdminOrOwner && (
