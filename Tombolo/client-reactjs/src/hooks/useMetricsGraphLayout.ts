@@ -2,8 +2,8 @@ import * as React from 'react';
 import {
   isGraphvizWorkerResponse,
   layoutCache,
-} from '../components/admin/workunitHistory/details/panels/graph/metricGraph';
-import { LayoutStatus } from '../components/admin/workunitHistory/details/panels/graph/metricsTypes';
+} from '@/components/admin/workunits/history/details/panels/graph/metricGraph';
+import { LayoutStatus } from '@/components/admin/workunits/history/details/panels/graph/metricsTypes';
 
 /**
  * Drives the Graphviz WASM layout pipeline for a DOT string.
