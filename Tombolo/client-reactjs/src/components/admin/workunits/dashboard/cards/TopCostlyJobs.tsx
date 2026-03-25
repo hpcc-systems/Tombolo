@@ -58,7 +58,7 @@ const CostBreakdownBar = ({
 
 export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
   const history = useHistory();
-  const [showAll, setShowAll] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
 
   // Group workunits using fuzzy matching and aggregate costs
   const jobGroups = useMemo(() => {
@@ -93,7 +93,15 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
     return groups.sort((a, b) => b.totalCost - a.totalCost);
   }, [workunits]);
 
-  const displayedGroups = showAll ? jobGroups.slice(0, 10) : jobGroups.slice(0, 5);
+  const displayedGroups = jobGroups.slice(0, visibleCount);
+
+  const handleViewMore = () => {
+    setVisibleCount(prev => prev + 5);
+  };
+
+  const handleShowLess = () => {
+    setVisibleCount(5);
+  };
 
   const handleView = (record: ExpensiveWorkunit) => {
     history.push(`/workunits/history/${record.clusterId}/${record.wuId}`);
@@ -109,9 +117,7 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       render: (text: string, record: JobGroup) => (
         <Space size={4} align="center">
           <span className={styles.jobNameGroup}>{text}</span>
-          <Tag color="blue">
-            {record.count} job{record.count !== 1 ? 's' : ''}
-          </Tag>
+          <Tag color="blue">{record.count}</Tag>
         </Space>
       ),
     },
@@ -255,9 +261,16 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       />
       {jobGroups.length > 5 && (
         <div className={styles.viewMoreContainer}>
-          <Button type="link" onClick={() => setShowAll(!showAll)}>
-            {showAll ? 'Show Less' : `View More (${Math.min(jobGroups.length, 10)} total)`}
-          </Button>
+          {visibleCount > 5 && (
+            <Button type="link" onClick={handleShowLess}>
+              Show Less
+            </Button>
+          )}
+          {visibleCount < jobGroups.length && (
+            <Button type="link" onClick={handleViewMore}>
+              View More (+5)
+            </Button>
+          )}
         </div>
       )}
     </Card>
