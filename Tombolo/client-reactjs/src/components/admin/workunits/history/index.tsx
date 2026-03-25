@@ -30,7 +30,7 @@ import workunitsService from '@/services/workunits.service';
 import { formatCurrency, formatDurationHm, formatHours } from '@tombolo/shared';
 import clustersService from '@/services/clusters.service';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
-import { groupWorkunitsByName } from './common/fuzzyMatch';
+import { groupWorkunitsByName } from '@/components/admin/workunits/history/common/fuzzyMatch';
 import styles from './workunitHistory.module.css';
 
 const { Title, Text } = Typography;

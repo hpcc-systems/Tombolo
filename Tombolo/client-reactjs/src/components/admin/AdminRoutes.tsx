@@ -11,9 +11,9 @@ const Integrations = React.lazy(() => import('./Integrations'));
 const IntegrationSettings = React.lazy(() => import('./Integrations/IntegrationSettings'));
 const UserManagement = React.lazy(() => import('./userManagement'));
 const Settings = React.lazy(() => import('./settings'));
-const WorkUnitHistory = React.lazy(() => import('./workunitHistory/index'));
-const WorkUnitDetails = React.lazy(() => import('./workunitHistory/details/index'));
-const WorkUnitAnalytics = React.lazy(() => import('./workunitAnalytics/index'));
+const WorkUnitHistory = React.lazy(() => import('./workunits/history'));
+const WorkUnitDetails = React.lazy(() => import('./workunits/history/details'));
+const WorkUnitAnalytics = React.lazy(() => import('./workunits/analytics'));
 const WorkUnitDashboard = React.lazy(() => import('./workunits/dashboard/'));
 const HPCC_Tools = React.lazy(() => import('./HPCCTools'));
 
