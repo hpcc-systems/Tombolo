@@ -25,6 +25,7 @@ import {
 import {
   SCOPE_TYPE_COLORS,
   formatBytes,
+  formatLabel,
   formatNumber,
   formatSeconds,
   formatSecondsAsHours,
@@ -140,7 +141,7 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
             <span>{v}</span>
             {r.label && (
               <Text type="secondary" style={{ fontSize: 12 }}>
-                {r.label}
+                {formatLabel(r.label)}
               </Text>
             )}
           </div>
