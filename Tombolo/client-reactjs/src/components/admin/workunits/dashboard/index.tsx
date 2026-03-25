@@ -9,9 +9,14 @@ import { formatCurrency } from '@tombolo/shared';
 import CostBarChart, { type DailyCost } from './cards/CostBarChart';
 import CostByCluster, { type ClusterCost } from './cards/CostByEnvironment';
 import ProblematicJobs, { type ProblematicJob } from './cards/ProblematicJobs';
+import TopCostlyJobs from './cards/TopCostlyJobs';
 import WorkunitTable from './cards/WorkunitTable';
 import TimeRangeSelector, { type TimePreset } from './cards/TimeRangeSelector';
-import workunitDashboardService, { type DashboardData, type OwnerCost } from '@/services/workunitDashboard.service';
+import workunitDashboardService, {
+  type DashboardData,
+  type OwnerCost,
+  type ExpensiveWorkunit,
+} from '@/services/workunitDashboard.service';
 
 export default function DashboardPage() {
   const [preset, setPreset] = useState<TimePreset>('30d');
@@ -47,6 +52,7 @@ export default function DashboardPage() {
   const dailyCosts: DailyCost[] = dashboardData?.dailyCosts || [];
   const clusterCosts: ClusterCost[] = dashboardData?.clusterBreakdown || [];
   const ownerCosts: OwnerCost[] = dashboardData?.ownerBreakdown || [];
+  const expensiveWorkunits: ExpensiveWorkunit[] = dashboardData?.expensiveWorkunits || [];
 
   const totalOwnerCost = useMemo(() => ownerCosts.reduce((sum, owner) => sum + owner.cost, 0), [ownerCosts]);
 
@@ -283,6 +289,13 @@ export default function DashboardPage() {
                   <ProblematicJobs jobs={problematicJobs} />
                 </Col>
               </Row>
+
+              {/* Top Costly Jobs */}
+              {expensiveWorkunits.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <TopCostlyJobs workunits={expensiveWorkunits} />
+                </div>
+              )}
 
               {/* Workunit Table */}
               <div
