@@ -1,6 +1,12 @@
 import React from 'react';
 import { Card, Statistic, Row, Col } from 'antd';
-import { DollarOutlined, ClusterOutlined, ThunderboltOutlined, FieldTimeOutlined } from '@ant-design/icons';
+import {
+  DollarOutlined,
+  ClusterOutlined,
+  ThunderboltOutlined,
+  FieldTimeOutlined,
+  ExclamationCircleOutlined,
+} from '@ant-design/icons';
 import { formatCurrency } from '@tombolo/shared';
 
 export interface DashboardSummary {
@@ -66,41 +72,44 @@ export default function CostSummary({ summary }: CostSummaryProps) {
     },
   ];
 
+  const failedPercentage = totalCost > 0 ? ((failedCost / totalCost) * 100).toFixed(1) : '0.0';
+
   return (
-    <Row gutter={[16, 16]}>
+    <Row gutter={[16, 16]} style={{ display: 'flex', flexWrap: 'wrap' }}>
       {stats.map(stat => (
-        <Col xs={24} sm={12} lg={6} key={stat.title}>
+        <Col xs={24} sm={12} lg={6} style={{ flex: '1 1 0', minWidth: 200 }} key={stat.title}>
           <Card
             style={{
               background: '#ffffff',
               borderColor: '#e5e7eb',
               borderRadius: 8,
+              height: '100%',
             }}
-            styles={{ body: { padding: '20px 24px' } }}>
+            styles={{ body: { padding: '16px 20px' } }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div
                 style={{
-                  width: 42,
-                  height: 42,
+                  width: 40,
+                  height: 40,
                   borderRadius: 8,
                   background: `${stat.color}18`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 20,
+                  fontSize: 18,
                   color: stat.color,
                   flexShrink: 0,
                 }}>
                 {stat.icon}
               </div>
               <Statistic
-                title={<span style={{ color: '#6b7280', fontSize: 13 }}>{stat.title}</span>}
+                title={<span style={{ color: '#6b7280', fontSize: 12 }}>{stat.title}</span>}
                 value={stat.value}
                 prefix={stat.prefix}
                 precision={stat.precision}
                 valueStyle={{
                   color: '#111827',
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: 600,
                   fontFamily: 'var(--font-mono), monospace',
                 }}
@@ -109,31 +118,52 @@ export default function CostSummary({ summary }: CostSummaryProps) {
           </Card>
         </Col>
       ))}
+
+      {/* Failed Jobs Card - Only show if there are failed jobs */}
       {failedJobs > 0 && (
-        <Col span={24}>
-          <div
+        <Col xs={24} sm={12} lg={6} style={{ flex: '1 1 0', minWidth: 200 }}>
+          <Card
             style={{
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
+              background: '#ffffff',
+              borderColor: '#fecaca',
               borderRadius: 8,
-              padding: '10px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              fontSize: 13,
-              color: '#dc2626',
-            }}>
-            <span style={{ fontWeight: 600 }}>
-              {failedJobs} failed job{failedJobs > 1 ? 's' : ''}
-            </span>
-            <span style={{ color: '#b91c1c' }}>{'  |  '}</span>
-            <span>
-              Cost:{' '}
-              <span style={{ fontFamily: 'var(--font-mono), monospace', color: '#111827' }}>
-                {formatCurrency(failedCost)}
-              </span>
-            </span>
-          </div>
+              borderWidth: 1,
+              height: '100%',
+            }}
+            styles={{ body: { padding: '16px 20px' } }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 8,
+                  background: '#dc262618',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 18,
+                  color: '#dc2626',
+                  flexShrink: 0,
+                }}>
+                <ExclamationCircleOutlined />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: '#6b7280', fontSize: 12, marginBottom: 4 }}>
+                  Failed ({formatCurrency(failedCost)} | {failedPercentage}%)
+                </div>
+                <div
+                  style={{
+                    color: '#111827',
+                    fontSize: 22,
+                    fontWeight: 600,
+                    fontFamily: 'var(--font-mono), monospace',
+                    lineHeight: 1.2,
+                  }}>
+                  {failedJobs.toLocaleString()}
+                </div>
+              </div>
+            </div>
+          </Card>
         </Col>
       )}
     </Row>
