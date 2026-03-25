@@ -9,9 +9,15 @@ import { formatCurrency } from '@tombolo/shared';
 import CostBarChart, { type DailyCost } from './cards/CostBarChart';
 import CostByCluster, { type ClusterCost } from './cards/CostByEnvironment';
 import ProblematicJobs, { type ProblematicJob } from './cards/ProblematicJobs';
+import TopCostlyJobs from './cards/TopCostlyJobs';
 import WorkunitTable from './cards/WorkunitTable';
 import TimeRangeSelector, { type TimePreset } from './cards/TimeRangeSelector';
-import workunitDashboardService, { type DashboardData, type OwnerCost } from '@/services/workunitDashboard.service';
+import workunitDashboardService, {
+  type DashboardData,
+  type OwnerCost,
+  type ExpensiveWorkunit,
+} from '@/services/workunitDashboard.service';
+import styles from './Dashboard.module.css';
 
 export default function DashboardPage() {
   const [preset, setPreset] = useState<TimePreset>('30d');
@@ -47,6 +53,7 @@ export default function DashboardPage() {
   const dailyCosts: DailyCost[] = dashboardData?.dailyCosts || [];
   const clusterCosts: ClusterCost[] = dashboardData?.clusterBreakdown || [];
   const ownerCosts: OwnerCost[] = dashboardData?.ownerBreakdown || [];
+  const expensiveWorkunits: ExpensiveWorkunit[] = dashboardData?.expensiveWorkunits || [];
 
   const totalOwnerCost = useMemo(() => ownerCosts.reduce((sum, owner) => sum + owner.cost, 0), [ownerCosts]);
 
@@ -82,65 +89,26 @@ export default function DashboardPage() {
           },
         },
       }}>
-      <div
-        style={{
-          minHeight: '100vh',
-          background: '#f8fafc',
-          padding: '0 0 40px',
-        }}>
+      <div className={styles.container}>
         {/* Header */}
-        <header
-          style={{
-            background: '#ffffff',
-            borderBottom: '1px solid #e5e7eb',
-            padding: '16px 32px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            position: 'sticky',
-            top: 0,
-            zIndex: 100,
-          }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <DashboardOutlined style={{ fontSize: 22, color: '#3dd68c' }} />
+        <header className={styles.header}>
+          <div className={styles.headerLeft}>
+            <DashboardOutlined className={styles.headerIcon} />
             <div>
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: '#111827',
-                  lineHeight: 1.2,
-                }}>
-                Workunit Dashboard
-              </h1>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 12,
-                  color: '#6b7280',
-                }}>
-                Cost analytics and monitoring
-              </p>
+              <h1 className={styles.headerTitle}>Workunit Dashboard</h1>
+              <p className={styles.headerSubtitle}>Cost analytics and monitoring</p>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ClusterOutlined style={{ color: '#6b7280' }} />
-            <span style={{ color: '#6b7280', fontSize: 12 }}>{summary.totalJobs || 0} total workunits</span>
+          <div className={styles.headerRight}>
+            <ClusterOutlined className={styles.headerRightIcon} />
+            <span className={styles.headerRightText}>{summary.totalJobs || 0} total workunits</span>
           </div>
         </header>
 
         {/* Content */}
-        <main style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 24px' }}>
+        <main className={styles.main}>
           {/* Time Range Selector */}
-          <div
-            style={{
-              background: '#ffffff',
-              borderRadius: 8,
-              border: '1px solid #e5e7eb',
-              padding: '14px 20px',
-              marginBottom: 24,
-            }}>
+          <div className={styles.timeRangeSelector}>
             <TimeRangeSelector
               preset={preset}
               startDate={startDate}
@@ -152,9 +120,9 @@ export default function DashboardPage() {
 
           {/* Loading State */}
           {loading && (
-            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+            <div className={styles.loadingContainer}>
               <Spin size="large" />
-              <p style={{ marginTop: 16, color: '#6b7280' }}>Loading dashboard data...</p>
+              <p className={styles.loadingText}>Loading dashboard data...</p>
             </div>
           )}
 
@@ -165,7 +133,7 @@ export default function DashboardPage() {
               description={error}
               type="error"
               showIcon
-              style={{ marginBottom: 24 }}
+              className={styles.errorAlert}
             />
           )}
 
@@ -173,12 +141,19 @@ export default function DashboardPage() {
           {!loading && !error && dashboardData && (
             <>
               {/* Cost Summary Stats */}
-              <div style={{ marginBottom: 24 }}>
+              <div className={styles.section}>
                 <CostSummary summary={summary} />
               </div>
 
+              {/* Top Costly Jobs */}
+              {expensiveWorkunits.length > 0 && (
+                <div className={styles.section}>
+                  <TopCostlyJobs workunits={expensiveWorkunits} />
+                </div>
+              )}
+
               {/* Charts Row */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+              <Row gutter={[16, 16]} className={styles.section}>
                 <Col xs={24} lg={14}>
                   <CostBarChart data={dailyCosts} />
                 </Col>
@@ -188,91 +163,26 @@ export default function DashboardPage() {
               </Row>
 
               {/* Cost by Owner + Problematic Jobs */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+              <Row gutter={[16, 16]} className={styles.section}>
                 <Col xs={24} lg={16}>
                   <Card
-                    title={
-                      <span
-                        style={{
-                          color: '#111827',
-                          fontWeight: 600,
-                          fontSize: 15,
-                        }}>
-                        Cost by Owner
-                      </span>
-                    }
-                    style={{
-                      background: '#ffffff',
-                      borderColor: '#e5e7eb',
-                      borderRadius: 8,
-                    }}
+                    title={<span className={styles.costByOwnerTitle}>Cost by Owner</span>}
+                    className={styles.costByOwnerCard}
                     styles={{ body: { padding: '16px 20px' } }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 12,
-                      }}>
+                    <div className={styles.ownerList}>
                       {ownerCosts.map(o => {
                         const pct = totalOwnerCost > 0 ? (o.cost / totalOwnerCost) * 100 : 0;
                         return (
-                          <div
-                            key={o.owner}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 12,
-                            }}>
-                            <span
-                              style={{
-                                color: '#6b7280',
-                                fontSize: 13,
-                                width: 120,
-                                flexShrink: 0,
-                              }}>
-                              {o.owner}
-                            </span>
-                            <div
-                              style={{
-                                flex: 1,
-                                height: 20,
-                                background: '#f3f4f6',
-                                borderRadius: 4,
-                                overflow: 'hidden',
-                                position: 'relative',
-                              }}>
+                          <div key={o.owner} className={styles.ownerItem}>
+                            <span className={styles.ownerName}>{o.owner}</span>
+                            <div className={styles.ownerBarContainer}>
                               <div
-                                style={{
-                                  width: `${pct}%`,
-                                  height: '100%',
-                                  background: 'linear-gradient(90deg, #3dd68c 0%, #2a9d68 100%)',
-                                  borderRadius: 4,
-                                  transition: 'width 0.4s ease',
-                                  minWidth: pct > 0 ? 4 : 0,
-                                }}
+                                className={styles.ownerBar}
+                                style={{ width: `${pct}%`, minWidth: pct > 0 ? 4 : 0 }}
                               />
                             </div>
-                            <span
-                              style={{
-                                color: '#111827',
-                                fontSize: 12,
-                                fontFamily: 'var(--font-mono), monospace',
-                                width: 70,
-                                textAlign: 'right',
-                                flexShrink: 0,
-                              }}>
-                              {formatCurrency(o.cost)}
-                            </span>
-                            <span
-                              style={{
-                                color: '#6b7280',
-                                fontSize: 11,
-                                width: 50,
-                                textAlign: 'right',
-                                flexShrink: 0,
-                              }}>
-                              {o.count} jobs
-                            </span>
+                            <span className={styles.ownerCost}>{formatCurrency(o.cost)}</span>
+                            <span className={styles.ownerCount}>{o.count} jobs</span>
                           </div>
                         );
                       })}
@@ -285,70 +195,20 @@ export default function DashboardPage() {
               </Row>
 
               {/* Workunit Table */}
-              <div
-                style={{
-                  background: '#ffffff',
-                  borderRadius: 8,
-                  border: '1px solid #e5e7eb',
-                  padding: 20,
-                }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 16,
-                  }}>
-                  <h2
-                    style={{
-                      color: '#111827',
-                      fontSize: 15,
-                      fontWeight: 600,
-                      margin: 0,
-                    }}>
-                    Workunits
-                  </h2>
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 16,
-                      fontSize: 11,
-                      color: '#9ca3af',
-                    }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: 2,
-                          background: '#16a34a',
-                          display: 'inline-block',
-                        }}
-                      />
+              <div className={styles.workunitTableContainer}>
+                <div className={styles.workunitTableHeader}>
+                  <h2 className={styles.workunitTableTitle}>Workunits</h2>
+                  <div className={styles.workunitTableLegend}>
+                    <span className={styles.legendItem}>
+                      <span className={`${styles.legendSwatch} ${styles.legendSwatchCompute}`} />
                       Compute
                     </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: 2,
-                          background: '#2563eb',
-                          display: 'inline-block',
-                        }}
-                      />
+                    <span className={styles.legendItem}>
+                      <span className={`${styles.legendSwatch} ${styles.legendSwatchFileAccess}`} />
                       File Access
                     </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: 2,
-                          background: '#d97706',
-                          display: 'inline-block',
-                        }}
-                      />
+                    <span className={styles.legendItem}>
+                      <span className={`${styles.legendSwatch} ${styles.legendSwatchCompile}`} />
                       Compile
                     </span>
                   </div>

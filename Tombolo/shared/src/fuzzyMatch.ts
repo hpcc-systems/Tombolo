@@ -71,7 +71,9 @@ export function getSimilarityWithSubstringBonus(
   }
 
   // Tier 3: Check for configurable character substring match (~90%)
+  // Only return high similarity if the substring is significant relative to string length
   if (norm1.length >= minSubstringLength) {
+    const minStringLength = Math.min(norm1.length, norm2.length);
     for (
       let len = Math.min(norm1.length, maxSubstringLength);
       len >= minSubstringLength;
@@ -80,7 +82,14 @@ export function getSimilarityWithSubstringBonus(
       for (let i = 0; i <= norm1.length - len; i++) {
         const sub = norm1.substring(i, i + len);
         if (norm2.includes(sub)) {
-          return { similarity: 0.9, matchType: 'substring' };
+          // Only consider it a strong match if the substring is a significant portion
+          // Require substring to be at least 40% of the shorter string
+          const substringRatio = len / minStringLength;
+          if (substringRatio >= 0.4) {
+            return { similarity: 0.9, matchType: 'substring' };
+          }
+          // If substring is smaller, continue checking for longer matches
+          // but don't return immediately
         }
       }
     }

@@ -1,0 +1,103 @@
+.card {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  border-radius: 8px;
+}
+
+.cardTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titleText {
+  color: #111827;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.legendSwatchCompute {
+  background: #16a34a;
+}
+
+.legendSwatchFileAccess {
+  background: #2563eb;
+}
+
+.legendSwatchCompile {
+  background: #d97706;
+}
+
+.costBreakdownBar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.costSegmentCompute {
+  background: #16a34a;
+  transition: width 0.3s;
+}
+
+.costSegmentFileAccess {
+  background: #2563eb;
+  transition: width 0.3s;
+}
+
+.costSegmentCompile {
+  flex: 1;
+  background: #d97706;
+  transition: width 0.3s;
+}
+
+.jobNameGroup {
+  font-weight: 600;
+  color: #111827;
+}
+
+.jobNameButton {
+  padding: 0;
+  height: auto;
+  font-weight: 600;
+}
+
+.wuIdText {
+  font-size: 12px;
+}
+
+.totalCost {
+  font-weight: 600;
+  color: #111827;
+}
+
+.nestedTable {
+  margin-left: 24px;
+}
+
+.viewMoreContainer {
+  margin-top: 16px;
+  text-align: right;
+}

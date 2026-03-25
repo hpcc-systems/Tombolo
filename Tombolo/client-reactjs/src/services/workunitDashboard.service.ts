@@ -10,12 +10,28 @@ export interface OwnerCost {
   count: number;
 }
 
+export interface ExpensiveWorkunit {
+  wuId: string;
+  jobName: string;
+  clusterId: string;
+  owner: string;
+  state: string;
+  totalCost: number;
+  executeCost: number;
+  fileAccessCost: number;
+  compileCost: number;
+  totalClusterTime: number;
+  workUnitTimestamp: string;
+  detailsFetchedAt: string | null;
+}
+
 export interface DashboardData {
   summary: DashboardSummary;
   dailyCosts: DailyCost[];
   clusterBreakdown: ClusterCost[];
   ownerBreakdown: OwnerCost[];
   problematicJobs: ProblematicJob[];
+  expensiveWorkunits: ExpensiveWorkunit[];
 }
 
 export interface DashboardParams {
