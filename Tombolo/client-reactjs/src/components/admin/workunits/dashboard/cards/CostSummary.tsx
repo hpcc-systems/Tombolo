@@ -8,6 +8,7 @@ import {
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { formatCurrency } from '@tombolo/shared';
+import styles from './CostSummary.module.css';
 
 export interface DashboardSummary {
   totalCost?: number;
@@ -75,35 +76,18 @@ export default function CostSummary({ summary }: CostSummaryProps) {
   const failedPercentage = totalCost > 0 ? ((failedCost / totalCost) * 100).toFixed(1) : '0.0';
 
   return (
-    <Row gutter={[16, 16]} style={{ display: 'flex', flexWrap: 'wrap' }}>
+    <Row gutter={[16, 16]} className={styles.statsRow}>
       {stats.map(stat => (
-        <Col xs={24} sm={12} lg={6} style={{ flex: '1 1 0', minWidth: 200 }} key={stat.title}>
-          <Card
-            style={{
-              background: '#ffffff',
-              borderColor: '#e5e7eb',
-              borderRadius: 8,
-              height: '100%',
-            }}
-            styles={{ body: { padding: '16px 20px' } }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Col xs={24} sm={12} lg={6} className={styles.statCol} key={stat.title}>
+          <Card className={styles.statCard} styles={{ body: { padding: '16px 20px' } }}>
+            <div className={styles.statContent}>
               <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 8,
-                  background: `${stat.color}18`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 18,
-                  color: stat.color,
-                  flexShrink: 0,
-                }}>
+                className={styles.iconContainer}
+                style={{ background: `${stat.color}18`, color: stat.color }}>
                 {stat.icon}
               </div>
               <Statistic
-                title={<span style={{ color: '#6b7280', fontSize: 12 }}>{stat.title}</span>}
+                title={<span className={styles.statTitle}>{stat.title}</span>}
                 value={stat.value}
                 prefix={stat.prefix}
                 precision={stat.precision}
@@ -121,46 +105,17 @@ export default function CostSummary({ summary }: CostSummaryProps) {
 
       {/* Failed Jobs Card - Only show if there are failed jobs */}
       {failedJobs > 0 && (
-        <Col xs={24} sm={12} lg={6} style={{ flex: '1 1 0', minWidth: 200 }}>
-          <Card
-            style={{
-              background: '#ffffff',
-              borderColor: '#fecaca',
-              borderRadius: 8,
-              borderWidth: 1,
-              height: '100%',
-            }}
-            styles={{ body: { padding: '16px 20px' } }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 8,
-                  background: '#dc262618',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 18,
-                  color: '#dc2626',
-                  flexShrink: 0,
-                }}>
+        <Col xs={24} sm={12} lg={6} className={styles.statCol}>
+          <Card className={styles.failedCard} styles={{ body: { padding: '16px 20px' } }}>
+            <div className={styles.statContent}>
+              <div className={styles.failedIconContainer}>
                 <ExclamationCircleOutlined />
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: '#6b7280', fontSize: 12, marginBottom: 4 }}>
+              <div className={styles.failedContent}>
+                <div className={styles.failedTitle}>
                   Failed ({formatCurrency(failedCost)} | {failedPercentage}%)
                 </div>
-                <div
-                  style={{
-                    color: '#111827',
-                    fontSize: 22,
-                    fontWeight: 600,
-                    fontFamily: 'var(--font-mono), monospace',
-                    lineHeight: 1.2,
-                  }}>
-                  {failedJobs.toLocaleString()}
-                </div>
+                <div className={styles.failedValue}>{failedJobs.toLocaleString()}</div>
               </div>
             </div>
           </Card>

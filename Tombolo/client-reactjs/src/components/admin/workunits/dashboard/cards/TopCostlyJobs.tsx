@@ -5,6 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { formatCurrency } from '@tombolo/shared';
 import { groupWorkunitsByName } from '@/components/admin/workunitHistory/common/fuzzyMatch';
 import type { ExpensiveWorkunit } from '@/services/workunitDashboard.service';
+import styles from './TopCostlyJobs.module.css';
 
 interface TopCostlyJobsProps {
   workunits: ExpensiveWorkunit[];
@@ -46,36 +47,10 @@ const CostBreakdownBar = ({
           <div>Compile: {formatCurrency(compile)}</div>
         </div>
       }>
-      <div
-        style={{
-          display: 'flex',
-          width: '100%',
-          height: 8,
-          borderRadius: 4,
-          overflow: 'hidden',
-          background: '#f3f4f6',
-        }}>
-        <div
-          style={{
-            width: `${cPct}%`,
-            background: '#16a34a',
-            transition: 'width 0.3s',
-          }}
-        />
-        <div
-          style={{
-            width: `${fPct}%`,
-            background: '#2563eb',
-            transition: 'width 0.3s',
-          }}
-        />
-        <div
-          style={{
-            flex: 1,
-            background: '#d97706',
-            transition: 'width 0.3s',
-          }}
-        />
+      <div className={styles.costBreakdownBar}>
+        <div className={styles.costSegmentCompute} style={{ width: `${cPct}%` }} />
+        <div className={styles.costSegmentFileAccess} style={{ width: `${fPct}%` }} />
+        <div className={styles.costSegmentCompile} />
       </div>
     </Tooltip>
   );
@@ -133,7 +108,7 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       ellipsis: true,
       render: (text: string, record: JobGroup) => (
         <Space size={4} align="center">
-          <span style={{ fontWeight: 600, color: '#111827' }}>{text}</span>
+          <span className={styles.jobNameGroup}>{text}</span>
           <Tag color="blue">
             {record.count} job{record.count !== 1 ? 's' : ''}
           </Tag>
@@ -145,7 +120,7 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       dataIndex: 'totalCost',
       key: 'totalCost',
       width: 120,
-      render: (cost: number) => <span style={{ fontWeight: 600, color: '#111827' }}>{formatCurrency(cost)}</span>,
+      render: (cost: number) => <span className={styles.totalCost}>{formatCurrency(cost)}</span>,
     },
     {
       title: 'Cost Breakdown',
@@ -171,7 +146,7 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       render: (text: string, record: ExpensiveWorkunit) => (
         <Button
           type="link"
-          style={{ padding: 0, height: 'auto', fontWeight: 600 }}
+          className={styles.jobNameButton}
           onClick={() => handleView(record)}
           disabled={!record.detailsFetchedAt}>
           {text || record.wuId}
@@ -184,7 +159,7 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       key: 'wuId',
       width: 140,
       ellipsis: true,
-      render: (text: string) => <span style={{ fontSize: 12 }}>{text}</span>,
+      render: (text: string) => <span className={styles.wuIdText}>{text}</span>,
     },
     {
       title: 'Owner',
@@ -238,59 +213,25 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
   return (
     <Card
       title={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#111827', fontWeight: 600, fontSize: 15 }}>Top Costly Jobs</span>
-          <div
-            style={{
-              display: 'flex',
-              gap: 16,
-              fontSize: 11,
-              color: '#9ca3af',
-            }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 2,
-                  background: '#16a34a',
-                  display: 'inline-block',
-                }}
-              />
+        <div className={styles.cardTitle}>
+          <span className={styles.titleText}>Top Costly Jobs</span>
+          <div className={styles.legend}>
+            <span className={styles.legendItem}>
+              <span className={`${styles.legendSwatch} ${styles.legendSwatchCompute}`} />
               Compute
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 2,
-                  background: '#2563eb',
-                  display: 'inline-block',
-                }}
-              />
+            <span className={styles.legendItem}>
+              <span className={`${styles.legendSwatch} ${styles.legendSwatchFileAccess}`} />
               File Access
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 2,
-                  background: '#d97706',
-                  display: 'inline-block',
-                }}
-              />
+            <span className={styles.legendItem}>
+              <span className={`${styles.legendSwatch} ${styles.legendSwatchCompile}`} />
               Compile
             </span>
           </div>
         </div>
       }
-      style={{
-        background: '#ffffff',
-        borderColor: '#e5e7eb',
-        borderRadius: 8,
-      }}
+      className={styles.card}
       styles={{ body: { padding: '16px 20px' } }}>
       <Table
         columns={groupColumns}
@@ -306,14 +247,14 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
               pagination={false}
               size="small"
               rowKey="wuId"
-              style={{ marginLeft: 24 }}
+              className={styles.nestedTable}
             />
           ),
           rowExpandable: () => true,
         }}
       />
       {jobGroups.length > 5 && (
-        <div style={{ marginTop: 16, textAlign: 'right' }}>
+        <div className={styles.viewMoreContainer}>
           <Button type="link" onClick={() => setShowAll(!showAll)}>
             {showAll ? 'Show Less' : `View More (${Math.min(jobGroups.length, 10)} total)`}
           </Button>

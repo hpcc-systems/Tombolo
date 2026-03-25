@@ -1,0 +1,84 @@
+.statsRow {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.statCol {
+  flex: 1 1 0;
+  min-width: 200px;
+}
+
+.statCard {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  border-radius: 8px;
+  height: 100%;
+}
+
+.statContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconContainer {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.statTitle {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.statValue {
+  color: #111827;
+  font-size: 22px;
+  font-weight: 600;
+  font-family: var(--font-mono), monospace;
+}
+
+.failedCard {
+  background: #ffffff;
+  border-color: #fecaca;
+  border-radius: 8px;
+  border-width: 1px;
+  height: 100%;
+}
+
+.failedIconContainer {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #dc262618;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.failedContent {
+  flex: 1;
+}
+
+.failedTitle {
+  color: #6b7280;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.failedValue {
+  color: #111827;
+  font-size: 22px;
+  font-weight: 600;
+  font-family: var(--font-mono), monospace;
+  line-height: 1.2;
+}
