@@ -183,6 +183,13 @@ export default function DashboardPage() {
                 <CostSummary summary={summary} />
               </div>
 
+              {/* Top Costly Jobs */}
+              {expensiveWorkunits.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <TopCostlyJobs workunits={expensiveWorkunits} />
+                </div>
+              )}
+
               {/* Charts Row */}
               <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 <Col xs={24} lg={14}>
@@ -289,13 +296,6 @@ export default function DashboardPage() {
                   <ProblematicJobs jobs={problematicJobs} />
                 </Col>
               </Row>
-
-              {/* Top Costly Jobs */}
-              {expensiveWorkunits.length > 0 && (
-                <div style={{ marginBottom: 24 }}>
-                  <TopCostlyJobs workunits={expensiveWorkunits} />
-                </div>
-              )}
 
               {/* Workunit Table */}
               <div

@@ -17,6 +17,9 @@ export interface ExpensiveWorkunit {
   owner: string;
   state: string;
   totalCost: number;
+  executeCost: number;
+  fileAccessCost: number;
+  compileCost: number;
   totalClusterTime: number;
   workUnitTimestamp: string;
   detailsFetchedAt: string | null;

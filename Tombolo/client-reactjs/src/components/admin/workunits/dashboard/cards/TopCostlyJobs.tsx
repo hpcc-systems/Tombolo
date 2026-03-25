@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Card, Table, Progress, Space, Tag, Button, Tooltip } from 'antd';
+import { Card, Table, Space, Tag, Button, Tooltip } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import { useHistory } from 'react-router-dom';
 import { formatCurrency } from '@tombolo/shared';
@@ -15,8 +15,71 @@ interface JobGroup {
   groupName: string;
   count: number;
   totalCost: number;
+  executeCost: number;
+  fileAccessCost: number;
+  compileCost: number;
   workunits: ExpensiveWorkunit[];
 }
+
+// Cost breakdown bar component
+const CostBreakdownBar = ({
+  compute,
+  fileAccess,
+  compile,
+}: {
+  compute: number;
+  fileAccess: number;
+  compile: number;
+}) => {
+  const total = compute + fileAccess + compile;
+  if (total === 0) return null;
+
+  const cPct = (compute / total) * 100;
+  const fPct = (fileAccess / total) * 100;
+
+  return (
+    <Tooltip
+      title={
+        <div>
+          <div>Compute: {formatCurrency(compute)}</div>
+          <div>File Access: {formatCurrency(fileAccess)}</div>
+          <div>Compile: {formatCurrency(compile)}</div>
+        </div>
+      }>
+      <div
+        style={{
+          display: 'flex',
+          width: '100%',
+          height: 8,
+          borderRadius: 4,
+          overflow: 'hidden',
+          background: '#f3f4f6',
+        }}>
+        <div
+          style={{
+            width: `${cPct}%`,
+            background: '#16a34a',
+            transition: 'width 0.3s',
+          }}
+        />
+        <div
+          style={{
+            width: `${fPct}%`,
+            background: '#2563eb',
+            transition: 'width 0.3s',
+          }}
+        />
+        <div
+          style={{
+            flex: 1,
+            background: '#d97706',
+            transition: 'width 0.3s',
+          }}
+        />
+      </div>
+    </Tooltip>
+  );
+};
 
 export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
   const history = useHistory();
@@ -33,12 +96,18 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
     const groups: JobGroup[] = Object.entries(grouped).map(([groupName, wus]) => {
       const workunitArray = wus as ExpensiveWorkunit[];
       const totalCost = workunitArray.reduce((sum, wu) => sum + (wu.totalCost || 0), 0);
+      const executeCost = workunitArray.reduce((sum, wu) => sum + (wu.executeCost || 0), 0);
+      const fileAccessCost = workunitArray.reduce((sum, wu) => sum + (wu.fileAccessCost || 0), 0);
+      const compileCost = workunitArray.reduce((sum, wu) => sum + (wu.compileCost || 0), 0);
 
       return {
         key: groupName,
         groupName: groupName || 'Unnamed',
         count: workunitArray.length,
         totalCost,
+        executeCost,
+        fileAccessCost,
+        compileCost,
         workunits: workunitArray.sort(
           (a, b) => new Date(b.workUnitTimestamp).getTime() - new Date(a.workUnitTimestamp).getTime()
         ),
@@ -47,10 +116,6 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
 
     // Sort by total cost descending
     return groups.sort((a, b) => b.totalCost - a.totalCost);
-  }, [workunits]);
-
-  const totalDashboardCost = useMemo(() => {
-    return workunits.reduce((sum, wu) => sum + (wu.totalCost || 0), 0);
   }, [workunits]);
 
   const displayedGroups = showAll ? jobGroups.slice(0, 10) : jobGroups.slice(0, 5);
@@ -79,28 +144,24 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       title: 'Total Cost',
       dataIndex: 'totalCost',
       key: 'totalCost',
-      width: 150,
+      width: 120,
       render: (cost: number) => <span style={{ fontWeight: 600, color: '#111827' }}>{formatCurrency(cost)}</span>,
     },
     {
-      title: 'Cost Share',
-      key: 'progress',
+      title: 'Cost Breakdown',
+      key: 'costBreakdown',
       width: 200,
-      render: (_: any, record: JobGroup) => {
-        const percentage = totalDashboardCost > 0 ? (record.totalCost / totalDashboardCost) * 100 : 0;
-        // Color code by magnitude
-        const color = percentage > 70 ? '#dc2626' : percentage > 30 ? '#d97706' : '#16a34a';
-        return (
-          <Tooltip title={`${percentage.toFixed(1)}% of total cost`}>
-            <Progress percent={percentage} showInfo={false} strokeColor={color} trailColor="#f3f4f6" size="small" />
-          </Tooltip>
-        );
-      },
+      render: (_: any, record: JobGroup) => (
+        <CostBreakdownBar
+          compute={record.executeCost}
+          fileAccess={record.fileAccessCost}
+          compile={record.compileCost}
+        />
+      ),
     },
   ];
 
   // Nested table columns (child rows - individual workunits)
-  // Reusing exact structure from workunit history nested table
   const nestedColumns = [
     {
       title: 'Job Name',
@@ -121,40 +182,16 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       title: 'WU ID',
       dataIndex: 'wuId',
       key: 'wuId',
-      width: 220,
+      width: 140,
       ellipsis: true,
-      render: (text: string, record: ExpensiveWorkunit) => (
-        <Space size={4} align="center">
-          <span style={{ fontSize: 12 }}>{text}</span>
-          {!record.detailsFetchedAt && (
-            <Tooltip title="Details not yet fetched">
-              <Tag color="default">Not Fetched</Tag>
-            </Tooltip>
-          )}
-        </Space>
-      ),
+      render: (text: string) => <span style={{ fontSize: 12 }}>{text}</span>,
     },
     {
       title: 'Owner',
       dataIndex: 'owner',
       key: 'owner',
-      width: 80,
+      width: 100,
       ellipsis: true,
-    },
-    {
-      title: 'State',
-      dataIndex: 'state',
-      key: 'state',
-      width: 80,
-      render: (state: string) => {
-        const colorMap: Record<string, string> = {
-          completed: 'success',
-          failed: 'error',
-          running: 'processing',
-          aborted: 'warning',
-        };
-        return <Tag color={colorMap[state] || 'default'}>{state ? state.toUpperCase() : 'UNKNOWN'}</Tag>;
-      },
     },
     {
       title: 'Cost',
@@ -162,6 +199,18 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       key: 'totalCost',
       width: 80,
       render: (cost: number) => formatCurrency(cost),
+    },
+    {
+      title: 'Cost Breakdown',
+      key: 'costBreakdown',
+      width: 200,
+      render: (_: any, record: ExpensiveWorkunit) => (
+        <CostBreakdownBar
+          compute={record.executeCost}
+          fileAccess={record.fileAccessCost}
+          compile={record.compileCost}
+        />
+      ),
     },
     {
       title: 'Actions',
@@ -188,7 +237,55 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
 
   return (
     <Card
-      title={<span style={{ color: '#111827', fontWeight: 600, fontSize: 15 }}>Top Costly Jobs</span>}
+      title={
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ color: '#111827', fontWeight: 600, fontSize: 15 }}>Top Costly Jobs</span>
+          <div
+            style={{
+              display: 'flex',
+              gap: 16,
+              fontSize: 11,
+              color: '#9ca3af',
+            }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 2,
+                  background: '#16a34a',
+                  display: 'inline-block',
+                }}
+              />
+              Compute
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 2,
+                  background: '#2563eb',
+                  display: 'inline-block',
+                }}
+              />
+              File Access
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 2,
+                  background: '#d97706',
+                  display: 'inline-block',
+                }}
+              />
+              Compile
+            </span>
+          </div>
+        </div>
+      }
       style={{
         background: '#ffffff',
         borderColor: '#e5e7eb',

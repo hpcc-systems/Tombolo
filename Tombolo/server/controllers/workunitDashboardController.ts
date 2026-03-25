@@ -51,6 +51,9 @@ interface ExpensiveWorkunitRow {
   owner: string;
   state: string;
   totalCost: string;
+  executeCost: string;
+  fileAccessCost: string;
+  compileCost: string;
   totalClusterTime: string;
   workUnitTimestamp: string;
   detailsFetchedAt: string | null;
@@ -235,6 +238,9 @@ async function getDashboardData(req: Request, res: Response) {
           wu.owner,
           wu.state,
           wu.totalCost,
+          wu.executeCost,
+          wu.fileAccessCost,
+          wu.compileCost,
           wu.totalClusterTime,
           wu.workUnitTimestamp,
           wu.detailsFetchedAt
@@ -307,6 +313,9 @@ async function getDashboardData(req: Request, res: Response) {
           owner: w.owner,
           state: w.state,
           totalCost: parseFloat(w.totalCost) || 0,
+          executeCost: parseFloat(w.executeCost) || 0,
+          fileAccessCost: parseFloat(w.fileAccessCost) || 0,
+          compileCost: parseFloat(w.compileCost) || 0,
           totalClusterTime: parseFloat(w.totalClusterTime) || 0,
           workUnitTimestamp: w.workUnitTimestamp,
           detailsFetchedAt: w.detailsFetchedAt,
