@@ -2,10 +2,10 @@
   display: flex;
   flex-wrap: wrap;
 }
+}
 
 .statCol {
-  flex: 1 1 0;
-  min-width: 200px;
+  /* flex: 1 1 0; removed to let Ant Design Col control sizing */
 }
 
 .statCard {

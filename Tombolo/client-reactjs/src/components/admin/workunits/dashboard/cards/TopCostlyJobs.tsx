@@ -37,6 +37,7 @@ const CostBreakdownBar = ({
 
   const cPct = (compute / total) * 100;
   const fPct = (fileAccess / total) * 100;
+  const compilePct = (compile / total) * 100;
 
   return (
     <Tooltip
@@ -50,7 +51,7 @@ const CostBreakdownBar = ({
       <div className={styles.costBreakdownBar}>
         <div className={styles.costSegmentCompute} style={{ width: `${cPct}%` }} />
         <div className={styles.costSegmentFileAccess} style={{ width: `${fPct}%` }} />
-        <div className={styles.costSegmentCompile} />
+        {compile > 0 && <div className={styles.costSegmentCompile} style={{ width: `${compilePct}%` }} />}
       </div>
     </Tooltip>
   );
