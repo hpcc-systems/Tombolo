@@ -34,6 +34,17 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
   } = {};
   let querySource: 'scoped-workunit-sql' | 'analytics-page-sql' =
     'analytics-page-sql';
+  let logContext: {
+    source: 'scoped-workunit-sql' | 'analytics-page-sql';
+    userId?: string;
+    scopeToWuid: string | null;
+    scopeToClusterId: string | null;
+  } = {
+    source: querySource,
+    userId: (req as Request & { user?: { id?: string } }).user?.id,
+    scopeToWuid: null,
+    scopeToClusterId: null,
+  };
 
   try {
     // SQL and options are already validated by middleware
@@ -43,12 +54,15 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       options.scopeToWuid || options.scopeToClusterId
     );
     querySource = isScopedQuery ? 'scoped-workunit-sql' : 'analytics-page-sql';
-
-    logger.info('Analytics SQL query started', {
+    logContext = {
       source: querySource,
       userId: (req as Request & { user?: { id?: string } }).user?.id,
       scopeToWuid: options.scopeToWuid || null,
       scopeToClusterId: options.scopeToClusterId || null,
+    };
+
+    logger.info('Analytics SQL query started', {
+      ...logContext,
       requestedLimit: options.limit || 1000,
       sql: rawSql,
     });
@@ -166,17 +180,13 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     // when KILL QUERY cannot be issued.
     onClose = () => {
       isCancelled = true;
-      const cancelledAtTotalMs = Date.now() - requestStartedAt;
+      const now = Date.now();
+      const cancelledAtTotalMs = now - requestStartedAt;
       const cancelledAtExecutionMs =
-        queryExecutionStartedAt === null
-          ? null
-          : Date.now() - queryExecutionStartedAt;
+        queryExecutionStartedAt === null ? null : now - queryExecutionStartedAt;
 
       logger.info('Analytics SQL query cancelled by client', {
-        source: querySource,
-        userId: (req as Request & { user?: { id?: string } }).user?.id,
-        scopeToWuid: options.scopeToWuid || null,
-        scopeToClusterId: options.scopeToClusterId || null,
+        ...logContext,
         cancelledAtExecutionMs,
         cancelledAtTotalMs,
       });
@@ -236,10 +246,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       Array.isArray(rows) && rows.length > 0 ? Object.keys(rows[0]) : [];
 
     logger.info('Analytics SQL query completed', {
-      source: querySource,
-      userId: (req as Request & { user?: { id?: string } }).user?.id,
-      scopeToWuid: options.scopeToWuid || null,
-      scopeToClusterId: options.scopeToClusterId || null,
+      ...logContext,
       rowCount: rows.length,
       executionTimeMs: executionTime,
       totalResponseTimeMs,
@@ -261,10 +268,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     }
 
     logger.error('Analytics query execution error:', {
-      source: querySource,
-      userId: (req as Request & { user?: { id?: string } }).user?.id,
-      scopeToWuid: options.scopeToWuid || null,
-      scopeToClusterId: options.scopeToClusterId || null,
+      ...logContext,
       elapsedMs: Date.now() - requestStartedAt,
       err,
     });
