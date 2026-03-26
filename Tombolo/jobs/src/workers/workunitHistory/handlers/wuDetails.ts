@@ -271,21 +271,16 @@ async function bulkCreateWithDiagnostics(batch: WorkUnitDetailRow[]) {
 const relevantMetricsSet = new Set<string>(relevantMetrics);
 
 /**
- * Removes apostrophes from scope labels.
- * Fast-path avoids allocations when no entity exists.
+ * Normalizes scope labels to match shared formatting behavior.
+ * Replaces &apos; with spaces and collapses whitespace.
  */
 function sanitizeScopeLabel(value: string): string {
-  if (value.indexOf('&apos;') === -1 && value.indexOf("'") === -1) return value;
+  if (value.indexOf('&apos;') === -1) return value;
 
-  let sanitized = value;
-  if (sanitized.indexOf('&apos;') !== -1) {
-    sanitized = sanitized.split('&apos;').join('');
-  }
-  if (sanitized.indexOf("'") !== -1) {
-    sanitized = sanitized.split("'").join('');
-  }
-
-  return sanitized;
+  return value
+    .replace(/&apos;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /**
