@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch } from 'react-router-dom';
+import { Redirect, Route, Switch } from 'react-router-dom';
 import { PrivateRoute } from '../common/PrivateRoute';
 
 //home page
@@ -28,6 +28,14 @@ const AppRoutes = () => {
       <PrivateRoute path="/:applicationId/costMonitoring" component={CostMonitoring} />
       <PrivateRoute path="/:applicationId/landingZoneMonitoring" component={LandingZoneMonitoring} />
       <PrivateRoute path="/:applicationId/dashboard/notifications" component={Notifications} />
+      <Route
+        path="*"
+        render={({ location }) => {
+          const isAdminOrWorkunitPath =
+            location.pathname.startsWith('/admin') || location.pathname.startsWith('/workunits');
+          return isAdminOrWorkunitPath ? null : <Redirect to="/" />;
+        }}
+      />
     </Switch>
   );
 };

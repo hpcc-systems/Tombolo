@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch } from 'react-router-dom';
+import { Redirect, Route, Switch } from 'react-router-dom';
 import { PrivateRoute } from '../common/PrivateRoute';
 
 const Users = React.lazy(() => import('./Users'));
@@ -34,6 +34,14 @@ const AdminRoutes: React.FC = () => {
       <PrivateRoute path="/workunits/history" component={WorkUnitHistory} />
       <PrivateRoute path="/workunits/sql" component={WorkUnitAnalytics} />
       <PrivateRoute path="/workunits/dashboard" component={WorkUnitDashboard} />
+      <Route
+        path="*"
+        render={({ location }) => {
+          const isAdminOrWorkunitPath =
+            location.pathname.startsWith('/admin') || location.pathname.startsWith('/workunits');
+          return isAdminOrWorkunitPath ? <Redirect to="/" /> : null;
+        }}
+      />
     </Switch>
   );
 };

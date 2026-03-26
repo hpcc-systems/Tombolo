@@ -107,7 +107,7 @@ const App: FC = () => {
     localStorage.setItem('collapsed', String(c));
   };
 
-  const roleArray = useMemo(() => getRoleNameArray(), []);
+  const roleArray = useMemo(() => getRoleNameArray(), [user]);
   const isOwnerOrAdmin = useMemo(
     () => roleArray?.includes('administrator') || roleArray?.includes('owner'),
     [roleArray]
