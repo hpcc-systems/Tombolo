@@ -415,6 +415,7 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
           {menu(workunitItems)}
           {collapsed ? null : title('Admin')}
           {menu(adminItems)}
+          {collapsed ? null : <div style={{ height: 56 }} />}
         </>
       )}
     </Sider>
