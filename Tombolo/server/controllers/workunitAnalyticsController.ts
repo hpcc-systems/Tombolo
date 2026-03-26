@@ -25,17 +25,33 @@ interface SchemaColumnRow {
 async function executeAnalyticsQuery(req: Request, res: Response) {
   let isCancelled = false;
   let onClose: (() => void) | null = null;
+  const requestStartedAt = Date.now();
+  let queryExecutionStartedAt: number | null = null;
+  let options: {
+    scopeToWuid?: string;
+    scopeToClusterId?: string;
+    limit?: number;
+  } = {};
+  let querySource: 'scoped-workunit-sql' | 'analytics-page-sql' =
+    'analytics-page-sql';
 
   try {
-    // Log the incoming request body for debugging
-    logger.debug(
-      'Analytics query request body:',
-      JSON.stringify(req.body, null, 2)
-    );
-
     // SQL and options are already validated by middleware
     const rawSql = req.body.sql.trim();
-    const options = req.body.options || {};
+    options = req.body.options || {};
+    const isScopedQuery = Boolean(
+      options.scopeToWuid || options.scopeToClusterId
+    );
+    querySource = isScopedQuery ? 'scoped-workunit-sql' : 'analytics-page-sql';
+
+    logger.info('Analytics SQL query started', {
+      source: querySource,
+      userId: (req as Request & { user?: { id?: string } }).user?.id,
+      scopeToWuid: options.scopeToWuid || null,
+      scopeToClusterId: options.scopeToClusterId || null,
+      requestedLimit: options.limit || 1000,
+      sql: rawSql,
+    });
 
     // Apply automatic scoping if provided
     let scopedSql = rawSql;
@@ -150,6 +166,21 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     // when KILL QUERY cannot be issued.
     onClose = () => {
       isCancelled = true;
+      const cancelledAtTotalMs = Date.now() - requestStartedAt;
+      const cancelledAtExecutionMs =
+        queryExecutionStartedAt === null
+          ? null
+          : Date.now() - queryExecutionStartedAt;
+
+      logger.info('Analytics SQL query cancelled by client', {
+        source: querySource,
+        userId: (req as Request & { user?: { id?: string } }).user?.id,
+        scopeToWuid: options.scopeToWuid || null,
+        scopeToClusterId: options.scopeToClusterId || null,
+        cancelledAtExecutionMs,
+        cancelledAtTotalMs,
+      });
+
       // Only issue KILL QUERY when we have the connection ID.
       if (connectionId !== null) {
         sequelize
@@ -168,6 +199,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     res.on('close', onClose);
 
     // Execute the query on the same pinned connection via the transaction.
+    queryExecutionStartedAt = Date.now();
     const startTime = Date.now();
 
     let rows: Record<string, unknown>[];
@@ -197,10 +229,21 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     if (isCancelled) return;
 
     const executionTime = Date.now() - startTime;
+    const totalResponseTimeMs = Date.now() - requestStartedAt;
 
     // Extract column names
     const columns =
       Array.isArray(rows) && rows.length > 0 ? Object.keys(rows[0]) : [];
+
+    logger.info('Analytics SQL query completed', {
+      source: querySource,
+      userId: (req as Request & { user?: { id?: string } }).user?.id,
+      scopeToWuid: options.scopeToWuid || null,
+      scopeToClusterId: options.scopeToClusterId || null,
+      rowCount: rows.length,
+      executionTimeMs: executionTime,
+      totalResponseTimeMs,
+    });
 
     return sendSuccess(res, {
       columns,
@@ -214,11 +257,17 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 
     if (isCancelled) {
       // Query was killed because the client disconnected — not an error worth logging.
-      logger.debug('Analytics query was cancelled by client');
       return;
     }
 
-    logger.error('Analytics query execution error:', err);
+    logger.error('Analytics query execution error:', {
+      source: querySource,
+      userId: (req as Request & { user?: { id?: string } }).user?.id,
+      scopeToWuid: options.scopeToWuid || null,
+      scopeToClusterId: options.scopeToClusterId || null,
+      elapsedMs: Date.now() - requestStartedAt,
+      err,
+    });
 
     // Extract useful error message
     const errorMessage =
