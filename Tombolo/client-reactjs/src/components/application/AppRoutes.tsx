@@ -1,6 +1,7 @@
 import React from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 import { PrivateRoute } from '../common/PrivateRoute';
+import { isAdminOrWorkunitPath } from '../common/routeMatching';
 
 //home page
 const Home = React.lazy(() => import('./home'));
@@ -15,7 +16,11 @@ const TimeSeriesAnalysis = React.lazy(() => import('./jobMonitoring/timeSeriesAn
 const LandingZoneMonitoring = React.lazy(() => import('./LandingZoneMonitoring'));
 const MyAccount = React.lazy(() => import('./myAccount/myAccount'));
 
-const AppRoutes = () => {
+type AppRoutesProps = {
+  allowAdminOrWorkunitPaths?: boolean;
+};
+
+const AppRoutes: React.FC<AppRoutesProps> = ({ allowAdminOrWorkunitPaths = false }) => {
   return (
     <Switch>
       <PrivateRoute exact path="/" component={Home} />
@@ -31,9 +36,11 @@ const AppRoutes = () => {
       <Route
         path="*"
         render={({ location }) => {
-          const isAdminOrWorkunitPath =
-            location.pathname.startsWith('/admin') || location.pathname.startsWith('/workunits');
-          return isAdminOrWorkunitPath ? null : <Redirect to="/" />;
+          if (isAdminOrWorkunitPath(location.pathname) && allowAdminOrWorkunitPaths) {
+            return null;
+          }
+
+          return <Redirect to="/" />;
         }}
       />
     </Switch>
