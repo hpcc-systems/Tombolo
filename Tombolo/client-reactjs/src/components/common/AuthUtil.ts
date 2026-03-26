@@ -1,8 +1,8 @@
 import { getUser } from './userStorage';
 
-export const getRoleNameArray = (): string[] => {
+export const getRoleNameArray = (userFromState?: any): string[] => {
   try {
-    const user = getUser();
+    const user = userFromState ?? getUser();
 
     if (!user) {
       return [];
