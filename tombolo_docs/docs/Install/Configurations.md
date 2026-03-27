@@ -267,7 +267,23 @@ Some services we recommend are: [SendGrid](https://sendgrid.com/), [Mailgun](htt
 
 ### 11. Integration-Specific Configuration
 
-If you have any integrations enabled and they have environment variables, they can be added to this configuration file as well. There is a placeholder section for those integration-specific variables. Please add them there.
+Integration-specific environment variables should only be configured when the related integration is enabled.
+
+#### Integrations
+
+##### HPCC Tools
+
+- **HPCC_TOOLS_REPO_URL**
+  Repository URL used by the HPCC Tools integration worker when cloning/updating the `hpcc-tools` repository.
+  For full setup details, see the [HPCC Tools Integration guide](../Developer/HPCCToolsIntegration).
+
+  Default (recommended for Docker-deployed instances):
+  `ssh://git@ssh.github.com:443/hpcc-systems/hpcc-tools.git`
+
+  Local development override example:
+  `https://github.com/hpcc-systems/hpcc-tools.git`
+
+  Leave this variable unset unless you are using the HPCC Tools integration. When unset, Tombolo uses the secure SSH default that is designed for containerized deployments.
 
 ### 12. Test Configuration
 

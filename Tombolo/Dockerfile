@@ -305,6 +305,17 @@ ENV PATH=$PNPM_HOME:$PATH
 # Install PM2 and git globally
 RUN pnpm add -g pm2 && apk add --no-cache git openssh-client
 
+# Pre-populate SSH known_hosts for non-interactive GitHub access in jobs worker.
+RUN mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh && \
+    (ssh-keyscan -T 10 -t rsa,ecdsa,ed25519 github.com 2>/dev/null | \
+        sed 's/^github\.com/github,github.com/' >> /root/.ssh/known_hosts || \
+        echo "Warning: failed to fetch github.com host keys during build") && \
+    (ssh-keyscan -T 10 -p 443 -t rsa,ecdsa,ed25519 ssh.github.com 2>/dev/null | \
+        sed 's/^\[ssh\.github\.com\]:443/[ssh.github.com]:443/' >> /root/.ssh/known_hosts || \
+        echo "Warning: failed to fetch ssh.github.com:443 host keys during build") && \
+    chmod 644 /root/.ssh/known_hosts
+
 # Copy deployed jobs from builder (includes node_modules with workspace deps resolved)
 COPY --from=jobs-builder /deploy/jobs /app
 
