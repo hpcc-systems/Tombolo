@@ -1,11 +1,12 @@
 .statsRow {
   display: flex;
-  flex-wrap: wrap;
-}
+  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .statCol {
-  /* flex: 1 1 0; removed to let Ant Design Col control sizing */
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .statCard {

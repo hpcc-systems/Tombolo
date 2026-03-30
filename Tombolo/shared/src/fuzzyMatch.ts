@@ -72,8 +72,10 @@ export function getSimilarityWithSubstringBonus(
 
   // Tier 3: Check for configurable character substring match (~90%)
   // Only return high similarity if the substring is significant relative to string length
+  const SUBSTRING_THRESHOLD = 0.4;
   if (norm1.length >= minSubstringLength) {
     const minStringLength = Math.min(norm1.length, norm2.length);
+    if (minStringLength === 0) return 0;
     for (
       let len = Math.min(norm1.length, maxSubstringLength);
       len >= minSubstringLength;

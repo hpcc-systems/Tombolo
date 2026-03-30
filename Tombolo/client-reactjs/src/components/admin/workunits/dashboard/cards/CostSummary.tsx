@@ -78,12 +78,10 @@ export default function CostSummary({ summary }: CostSummaryProps) {
   return (
     <Row gutter={[16, 16]} className={styles.statsRow}>
       {stats.map(stat => (
-        <Col xs={24} sm={12} lg={6} className={styles.statCol} key={stat.title}>
+        <Col className={styles.statCol} key={stat.title}>
           <Card className={styles.statCard} styles={{ body: { padding: '16px 20px' } }}>
             <div className={styles.statContent}>
-              <div
-                className={styles.iconContainer}
-                style={{ background: `${stat.color}18`, color: stat.color }}>
+              <div className={styles.iconContainer} style={{ background: `${stat.color}18`, color: stat.color }}>
                 {stat.icon}
               </div>
               <Statistic
@@ -105,7 +103,7 @@ export default function CostSummary({ summary }: CostSummaryProps) {
 
       {/* Failed Jobs Card - Only show if there are failed jobs */}
       {failedJobs > 0 && (
-        <Col xs={24} sm={12} lg={6} className={styles.statCol}>
+        <Col className={styles.statCol}>
           <Card className={styles.failedCard} styles={{ body: { padding: '16px 20px' } }}>
             <div className={styles.statContent}>
               <div className={styles.failedIconContainer}>
