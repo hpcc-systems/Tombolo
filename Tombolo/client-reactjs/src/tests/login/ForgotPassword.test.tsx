@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
@@ -105,7 +105,7 @@ describe('ForgotPassword', () => {
 
       const longEmail = 'a'.repeat(60) + '@test.com'; // Over 64 chars
       const emailInput = screen.getByLabelText(/Email/i);
-      await user.type(emailInput, longEmail);
+      fireEvent.change(emailInput, { target: { value: longEmail } });
 
       const submitButton = screen.getByRole('button', { name: /Reset Password/i });
       await user.click(submitButton);
