@@ -75,7 +75,7 @@ export function getSimilarityWithSubstringBonus(
   const SUBSTRING_THRESHOLD = 0.4;
   if (norm1.length >= minSubstringLength) {
     const minStringLength = Math.min(norm1.length, norm2.length);
-    if (minStringLength === 0) return 0;
+    if (minStringLength === 0) return { similarity: 0, matchType: 'fuzzy' };
     for (
       let len = Math.min(norm1.length, maxSubstringLength);
       len >= minSubstringLength;
