@@ -271,6 +271,19 @@ async function bulkCreateWithDiagnostics(batch: WorkUnitDetailRow[]) {
 const relevantMetricsSet = new Set<string>(relevantMetrics);
 
 /**
+ * Normalizes scope labels to match shared formatting behavior.
+ * Replaces &apos; with spaces and collapses whitespace.
+ */
+function sanitizeScopeLabel(value: string): string {
+  if (value.indexOf('&apos;') === -1) return value;
+
+  return value
+    .replace(/&apos;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * Extracts performance metrics from a scope's properties
  * @param {Object} scope - The scope object containing performance data
  * @param {string} clusterId - The cluster ID for error tracking
@@ -439,7 +452,10 @@ function processScopeToRow(
     scopeId: isGlobal ? (scope?.Id ?? 'global') : scope?.Id,
     scopeName: isGlobal ? (scopeName ?? 'global') : scopeName,
     scopeType: (scopeType || null) as ScopeType, // Convert empty string to null (not a valid ENUM value)
-    label: label ? truncateString(label, 250) : null,
+    label:
+      typeof label === 'string'
+        ? truncateString(sanitizeScopeLabel(label), 250)
+        : null,
     kind: kind ? parseInt(kind, 10) : null,
     fileName: filename ? truncateString(filename, 125) : null,
     ...metrics,
