@@ -2,6 +2,8 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 
+const isCI = Boolean(process.env.CI);
+
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -9,7 +11,7 @@ export default defineConfig({
     globals: true,
     setupFiles: './src/tests/setupTests.ts',
     coverage: {
-      enabled: true,
+      enabled: process.env.VITEST_COVERAGE === 'true',
       provider: 'v8',
       reporter: ['text-summary', 'lcov', 'html'],
       reportsDirectory: './coverage',
@@ -26,17 +28,16 @@ export default defineConfig({
       ],
     },
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    maxWorkers: isCI ? 2 : '50%',
     isolate: true,
-    maxConcurrency: 1,
-    reporters: ['verbose', 'json'],
-    outputFile: {
-      json: './test-results.json',
-    },
+    reporters: isCI ? ['default', 'json'] : ['default'],
+    ...(isCI
+      ? {
+          outputFile: {
+            json: './test-results.json',
+          },
+        }
+      : {}),
     testTimeout: 10000,
     hookTimeout: 10000,
     clearMocks: true,

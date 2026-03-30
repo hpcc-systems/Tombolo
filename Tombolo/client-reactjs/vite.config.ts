@@ -67,8 +67,10 @@ export default function config({ mode }: { mode: string }) {
       rollupOptions: {
         output: {
           chunkFileNames: 'static/js/[name].chunk.js',
-          manualChunks: {
-            monaco: ['monaco-editor'],
+          manualChunks(id) {
+            if (id.includes('monaco-editor')) {
+              return 'monaco';
+            }
           },
         },
       },

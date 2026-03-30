@@ -32,11 +32,6 @@ export default defineConfig({
 
     // Better test isolation
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: false,
-      },
-    },
 
     // Timeouts
     testTimeout: 30000,

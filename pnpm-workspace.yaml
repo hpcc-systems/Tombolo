@@ -7,22 +7,34 @@ packages:
   - Tombolo/jobs
 
 catalog:
+  "@eslint/js": ^9.39.1
+  "@typescript-eslint/eslint-plugin": ^8.57.2
+  "@typescript-eslint/parser": ^8.57.2
   "@hpcc-js/comms": ^3.12.0
+  "@types/express": ^5.0.6
   "@types/node": ^24.10.9
   "@types/uuid": ^8.3.4
-  "@vitest/coverage-v8": ^3.2.4
+  "@types/lodash": ^4.17.24
+  "@vitest/coverage-v8": ^4.1.2
+  akeyless: ^5.0.22
   axios: ^1.13.5
   dotenv: ^16.4.7
+  eslint: ^9.39.1
+  eslint-plugin-react: ^7.37.5
+  eslint-plugin-react-hooks: ^7.0.1
+  eslint-plugin-unused-imports: ^4.4.1
   express: ^5.2.1
-  lodash: ^4.17.21
+  globals: ^17.4.0
+  lodash: ^4.17.23
   mysql2: ^3.9.1
   nodemon: ^3.1.7
   prettier: ^3.5.3
   sequelize: ^6.37.8
   tsup: ^8.5.1
+  tsx: ^4.21.0
   typescript: ^5.9.3
-  typescript-eslint: ^8.46.2
+  typescript-eslint: ^8.57.2
   uuid: ^8.3.2
-  vitest: ^3.2.4
+  vitest: ^4.1.2
   winston: ^3.18.3
   winston-daily-rotate-file: ^5.0.0
