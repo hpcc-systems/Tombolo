@@ -44,6 +44,21 @@ interface ProblematicJobRow {
   cluster: string;
 }
 
+interface ExpensiveWorkunitRow {
+  wuId: string;
+  jobName: string;
+  clusterId: string;
+  owner: string;
+  state: string;
+  totalCost: string;
+  executeCost: string;
+  fileAccessCost: string;
+  compileCost: string;
+  totalClusterTime: string;
+  workUnitTimestamp: string;
+  detailsFetchedAt: string | null;
+}
+
 /**
  * Get dashboard data with aggregations
  * @route GET /api/workunit-dashboard
@@ -72,6 +87,7 @@ async function getDashboardData(req: Request, res: Response) {
       clusterBreakdownResult,
       ownerBreakdownResult,
       problematicJobsResult,
+      expensiveWorkunitsResult,
     ] = await Promise.all([
       // 1. Summary Stats Query
       sequelize.query<SummaryRow>(
@@ -211,6 +227,33 @@ async function getDashboardData(req: Request, res: Response) {
         `,
         { replacements, type: QueryTypes.SELECT }
       ),
+
+      // 6. Expensive Workunits Query (for client-side fuzzy grouping)
+      sequelize.query<ExpensiveWorkunitRow>(
+        `
+        SELECT 
+          wu.wuId,
+          wu.jobName,
+          wu.clusterId,
+          wu.owner,
+          wu.state,
+          wu.totalCost,
+          wu.executeCost,
+          wu.fileAccessCost,
+          wu.compileCost,
+          wu.totalClusterTime,
+          wu.workUnitTimestamp,
+          wu.detailsFetchedAt
+        FROM work_units wu
+        WHERE wu.workUnitTimestamp BETWEEN :startDate AND :endDate
+          AND (:clusterId IS NULL OR wu.clusterId = :clusterId)
+          AND wu.deletedAt IS NULL
+          AND wu.totalCost > 0.01
+        ORDER BY wu.totalCost DESC
+        LIMIT 100
+        `,
+        { replacements, type: QueryTypes.SELECT }
+      ),
     ]);
 
     // Extract results
@@ -262,6 +305,20 @@ async function getDashboardData(req: Request, res: Response) {
           cost: parseFloat(p.cost) || 0,
           owner: p.owner,
           cluster: p.cluster,
+        })),
+        expensiveWorkunits: expensiveWorkunitsResult.map(w => ({
+          wuId: w.wuId,
+          jobName: w.jobName,
+          clusterId: w.clusterId,
+          owner: w.owner,
+          state: w.state,
+          totalCost: parseFloat(w.totalCost) || 0,
+          executeCost: parseFloat(w.executeCost) || 0,
+          fileAccessCost: parseFloat(w.fileAccessCost) || 0,
+          compileCost: parseFloat(w.compileCost) || 0,
+          totalClusterTime: parseFloat(w.totalClusterTime) || 0,
+          workUnitTimestamp: w.workUnitTimestamp,
+          detailsFetchedAt: w.detailsFetchedAt,
         })),
       },
       'Dashboard data retrieved successfully'

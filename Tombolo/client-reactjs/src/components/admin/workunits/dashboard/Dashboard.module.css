@@ -1,0 +1,206 @@
+.container {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 0 0 40px;
+}
+
+.header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerIcon {
+  font-size: 22px;
+  color: #3dd68c;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.headerSubtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerRightIcon {
+  color: #6b7280;
+}
+
+.headerRightText {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 24px;
+}
+
+.timeRangeSelector {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+}
+
+.loadingContainer {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.loadingText {
+  margin-top: 16px;
+  color: #6b7280;
+}
+
+.errorAlert {
+  margin-bottom: 24px;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.costByOwnerCard {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  border-radius: 8px;
+}
+
+.costByOwnerTitle {
+  color: #111827;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.ownerList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ownerItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ownerName {
+  color: #6b7280;
+  font-size: 13px;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.ownerBarContainer {
+  flex: 1;
+  height: 20px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ownerBar {
+  height: 100%;
+  background: linear-gradient(90deg, #3dd68c 0%, #2a9d68 100%);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.ownerCost {
+  color: #111827;
+  font-size: 12px;
+  font-family: var(--font-mono), monospace;
+  width: 70px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ownerCount {
+  color: #6b7280;
+  font-size: 11px;
+  width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.workunitTableContainer {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+}
+
+.workunitTableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.workunitTableTitle {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.workunitTableLegend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.legendSwatchCompute {
+  background: #16a34a;
+}
+
+.legendSwatchFileAccess {
+  background: #2563eb;
+}
+
+.legendSwatchCompile {
+  background: #d97706;
+}
