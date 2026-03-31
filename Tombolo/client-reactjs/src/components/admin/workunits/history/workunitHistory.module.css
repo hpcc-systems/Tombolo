@@ -260,6 +260,6 @@
 
 .summaryCard {
   border-width: 2px;
-  min-width: 180px;
+  min-width: 120px;
   background-color: var(--light);
 }
