@@ -49,7 +49,7 @@ services:
       - ./certs:/usr/local/share/ca-certificates
       - ./customCerts:/customCerts
       - ./gitClones:/gitClones
-      - hpcc-tools-data:/app/hpcc-tools-data
+      - ./hpcc-tools-data:/app/hpcc-tools-data
     networks:
       - tombolo-network
     ports:
@@ -93,7 +93,7 @@ services:
       SSH_AUTH_SOCK: /ssh-agent
     volumes:
       - $SSH_AUTH_SOCK:/ssh-agent
-      - hpcc-tools-data:/app/hpcc-tools-data
+      - ./hpcc-tools-data:/app/hpcc-tools-data
       - ./dockerLogs/jobs:/app/logs
     networks:
       - tombolo-network

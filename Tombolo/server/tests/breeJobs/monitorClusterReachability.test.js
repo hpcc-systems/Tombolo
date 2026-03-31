@@ -64,9 +64,11 @@ describe('monitorClusterReachability', () => {
       },
     ]);
     decryptString.mockReturnValue('decrypted');
-    AccountService.mockImplementation(() => ({
-      MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
-    }));
+    AccountService.mockImplementation(function () {
+      return {
+        MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
+      };
+    });
     passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(true);
     passwordExpiryInProximityNotificationPayload.mockReturnValue({});
     NotificationQueue.create.mockResolvedValue({});
@@ -99,9 +101,11 @@ describe('monitorClusterReachability', () => {
         metaData: {},
       },
     ]);
-    AccountService.mockImplementation(() => ({
-      MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 10 }),
-    }));
+    AccountService.mockImplementation(function () {
+      return {
+        MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 10 }),
+      };
+    });
     passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(false);
     Cluster.update.mockResolvedValue({});
     vi.clearAllMocks();
@@ -132,9 +136,11 @@ describe('monitorClusterReachability', () => {
       },
     ]);
     decryptString.mockReturnValue('decrypted');
-    AccountService.mockImplementation(() => ({
-      MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
-    }));
+    AccountService.mockImplementation(function () {
+      return {
+        MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
+      };
+    });
     passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(true);
     passwordExpiryInProximityNotificationPayload.mockReturnValue({});
     NotificationQueue.create.mockRejectedValue(new Error('Queue error'));
@@ -165,9 +171,11 @@ describe('monitorClusterReachability', () => {
       },
     ]);
     decryptString.mockReturnValue('decrypted');
-    AccountService.mockImplementation(() => ({
-      MyAccount: vi.fn().mockRejectedValue(new Error('Unreachable')),
-    }));
+    AccountService.mockImplementation(function () {
+      return {
+        MyAccount: vi.fn().mockRejectedValue(new Error('Unreachable')),
+      };
+    });
     Cluster.update.mockResolvedValue({});
     vi.clearAllMocks();
     await monitorClusterReachability();

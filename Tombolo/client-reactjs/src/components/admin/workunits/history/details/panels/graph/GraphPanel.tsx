@@ -10,14 +10,14 @@ import {
 } from '@ant-design/icons';
 import workunitsService from '@/services/workunits.service';
 import { AutosizeHpccJSComponent } from '@/components/common/HpccJSComponent';
-import { MetricGraph, MetricGraphWidget } from '@/components/admin/workunitHistory/details/panels/graph/metricGraph';
+import { MetricGraph, MetricGraphWidget } from '@/components/admin/workunits/history/details/panels/graph/metricGraph';
 import { useMetricsGraphLayout } from '@/hooks/useMetricsGraphLayout';
 import {
   defaultMetricsView,
   FetchStatus,
   isLayoutComplete,
   LayoutStatus,
-} from '@/components/admin/workunitHistory/details/panels/graph/metricsTypes';
+} from '@/components/admin/workunits/history/details/panels/graph/metricsTypes';
 
 const { Text } = Typography;
 

@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import eslint from 'vite-plugin-eslint2';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -67,8 +67,10 @@ export default function config({ mode }: { mode: string }) {
       rollupOptions: {
         output: {
           chunkFileNames: 'static/js/[name].chunk.js',
-          manualChunks: {
-            monaco: ['monaco-editor'],
+          manualChunks(id) {
+            if (id.includes('monaco-editor')) {
+              return 'monaco';
+            }
           },
         },
       },

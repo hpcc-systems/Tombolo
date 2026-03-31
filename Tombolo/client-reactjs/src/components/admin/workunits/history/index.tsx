@@ -15,7 +15,7 @@ import {
   Row,
   Col,
   Statistic,
-  Tabs,
+  Segmented,
 } from 'antd';
 import {
   ReloadOutlined,
@@ -27,10 +27,10 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import workunitsService from '@/services/workunits.service';
-import { formatCurrency, formatDurationHm, formatHours } from '@tombolo/shared';
+import { formatCurrency, formatHours } from '@tombolo/shared';
 import clustersService from '@/services/clusters.service';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
-import { groupWorkunitsByName } from './common/fuzzyMatch';
+import { groupWorkunitsByName } from '@/components/admin/workunits/history/common/fuzzyMatch';
 import styles from './workunitHistory.module.css';
 
 const { Title, Text } = Typography;
@@ -244,51 +244,46 @@ const WorkUnitHistory: React.FC = () => {
     return sortOrder === 'asc' ? ('ascend' as const) : ('descend' as const);
   };
 
+  const stateColors: Record<string, string> = {
+    completed: 'green',
+    failed: 'red',
+    running: 'blue',
+    blocked: 'orange',
+    waiting: 'default',
+    aborted: 'orange',
+  };
+
   const columns = [
+    {
+      title: 'WUID',
+      dataIndex: 'wuId',
+      key: 'wuId',
+      width: 135,
+      render: (val: string) => (
+        <span
+          style={{
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: 12,
+            color: '#2563eb',
+          }}>
+          {val}
+        </span>
+      ),
+    },
     {
       title: 'Job Name',
       dataIndex: 'jobName',
       key: 'jobName',
+      width: 200,
       ellipsis: true,
-      render: (text: any, record: any) => (
-        <Space direction="vertical" size={0}>
-          <Space size={4} align="center">
-            <Button
-              type="link"
-              className={styles.linkButton}
-              onClick={() => handleView(record)}
-              disabled={!record.detailsFetchedAt}>
-              <Text strong className={styles.ellipsis}>
-                {text ? (
-                  text
-                ) : (
-                  <span style={{ color: '#9ca3af', fontStyle: 'italic', fontWeight: 'normal' }}>&lt;Unnamed&gt;</span>
-                )}
-              </Text>
-            </Button>
-            {!record.detailsFetchedAt && (
-              <Tooltip title="Details not yet fetched">
-                <Tag color="default" className={styles.smallTag}>
-                  Not Fetched
-                </Tag>
-              </Tooltip>
-            )}
-          </Space>
-          <Text type="secondary" className={`${styles.smallText} ${styles.ellipsis}`}>
-            {record.wuId}
-          </Text>
-        </Space>
-      ),
-    },
-    {
-      title: 'Timestamp',
-      dataIndex: 'workUnitTimestamp',
-      key: 'workUnitTimestamp',
-      width: 160,
-      sorter: true,
-      sortDirections: ['ascend', 'descend', 'ascend'] as ('ascend' | 'descend')[],
-      sortOrder: getSortOrder('workUnitTimestamp'),
-      render: (ts: any) => (ts ? dayjs(ts).format('YYYY-MM-DD HH:mm') : '-'),
+      render: (val: string) =>
+        val ? (
+          <Tooltip title={val}>
+            <span style={{ color: '#374151', fontWeight: 500 }}>{val}</span>
+          </Tooltip>
+        ) : (
+          <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>&lt;Unnamed&gt;</span>
+        ),
     },
     {
       title: 'Cluster',
@@ -296,7 +291,17 @@ const WorkUnitHistory: React.FC = () => {
       key: 'clusterId',
       width: 120,
       ellipsis: true,
-      render: (clusterId: string) => clusterMap[clusterId] || clusterId,
+      render: (clusterId: string) => (
+        <Tag
+          style={{
+            borderRadius: 4,
+            textTransform: 'uppercase',
+            fontSize: 10,
+            letterSpacing: '0.5px',
+          }}>
+          {clusterMap[clusterId] || clusterId}
+        </Tag>
+      ),
     },
     {
       title: 'Owner',
@@ -304,21 +309,18 @@ const WorkUnitHistory: React.FC = () => {
       key: 'owner',
       width: 100,
       ellipsis: true,
+      render: (val: string) => <span style={{ color: '#6b7280', fontSize: 12 }}>{val}</span>,
     },
     {
       title: 'State',
       dataIndex: 'state',
       key: 'state',
       width: 90,
-      render: (state: any) => {
-        const colorMap: Record<string, any> = {
-          completed: 'success',
-          failed: 'error',
-          running: 'processing',
-          aborted: 'warning',
-        };
-        return <Tag color={colorMap[state] || 'default'}>{state ? state.toUpperCase() : 'UNKNOWN'}</Tag>;
-      },
+      render: (val: string) => (
+        <Tag color={stateColors[val]} style={{ borderRadius: 4 }}>
+          {val ? val.toUpperCase() : 'UNKNOWN'}
+        </Tag>
+      ),
     },
     {
       title: 'Duration',
@@ -328,35 +330,96 @@ const WorkUnitHistory: React.FC = () => {
       sorter: true,
       sortDirections: ['ascend', 'descend', 'ascend'] as ('ascend' | 'descend')[],
       sortOrder: getSortOrder('totalClusterTime'),
-      render: (val: any) => formatDurationHm(val != null ? val * 3600 : null),
+      render: (val: any) => {
+        if (val == null) return <span style={{ color: '#9ca3af' }}>—</span>;
+        const h = Math.floor(val);
+        const m = Math.round((val - h) * 60);
+        return (
+          <span style={{ color: '#6b7280', fontSize: 12 }}>
+            {h > 0 ? `${h}h ` : ''}
+            {m}m
+          </span>
+        );
+      },
     },
     {
       title: 'Cost',
       dataIndex: 'totalCost',
       key: 'totalCost',
-      width: 80,
+      width: 100,
       sorter: true,
       sortDirections: ['ascend', 'descend', 'ascend'] as ('ascend' | 'descend')[],
       sortOrder: getSortOrder('totalCost'),
-      render: (cost: any) => (cost != null ? formatCurrency(cost) : '-'),
+      render: (val: any) => (
+        <span
+          style={{
+            fontFamily: 'var(--font-mono), monospace',
+            color: val > 15 ? '#dc2626' : val > 8 ? '#d97706' : '#16a34a',
+            fontWeight: 600,
+          }}>
+          {val != null ? formatCurrency(val) : '-'}
+        </span>
+      ),
     },
     {
-      title: 'Actions',
-      key: 'actions',
-      width: 80,
-      fixed: 'right' as const,
-      render: (_: any, record: any) => (
-        <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
+      title: 'Cost Breakdown',
+      key: 'costBreakdown',
+      width: 200,
+      render: (_: any, record: any) => {
+        const compute = record.executeCost ?? 0;
+        const fileAccess = record.fileAccessCost ?? 0;
+        const compile = record.compileCost ?? 0;
+        const total = compute + fileAccess + compile;
+        if (total === 0) return null;
+        const cPct = (compute / total) * 100;
+        const fPct = (fileAccess / total) * 100;
+        return (
+          <Tooltip
+            title={
+              <div>
+                <div>Compute: {formatCurrency(compute)}</div>
+                <div>File Access: {formatCurrency(fileAccess)}</div>
+                <div>Compile: {formatCurrency(compile)}</div>
+              </div>
+            }>
+            <div
+              style={{
+                display: 'flex',
+                width: '100%',
+                height: 8,
+                borderRadius: 4,
+                overflow: 'hidden',
+                background: '#f3f4f6',
+              }}>
+              <div style={{ width: `${cPct}%`, background: '#16a34a', transition: 'width 0.3s' }} />
+              <div style={{ width: `${fPct}%`, background: '#2563eb', transition: 'width 0.3s' }} />
+              <div style={{ flex: 1, background: '#d97706', transition: 'width 0.3s' }} />
+            </div>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: 'Details',
+      key: 'details',
+      width: 100,
+      align: 'center' as const,
+      render: (_: any, record: any) => {
+        const hasDetails = record.clusterId && record.wuId && record.detailsFetchedAt;
+        return (
           <Button
-            type="primary"
+            type="link"
             size="small"
             icon={<EyeOutlined />}
-            onClick={() => handleView(record)}
-            disabled={!record.detailsFetchedAt}>
-            Details
+            disabled={!hasDetails}
+            onClick={() => {
+              if (hasDetails) handleView(record);
+            }}
+            style={{ color: hasDetails ? '#2563eb' : '#9ca3af', padding: 0 }}>
+            View
           </Button>
-        </Tooltip>
-      ),
+        );
+      },
     },
   ];
 
@@ -398,95 +461,155 @@ const WorkUnitHistory: React.FC = () => {
     },
   ];
 
-  // Columns for nested table (compact view with separated WU ID)
+  // Columns for nested table (matches list view styling, no backend sorting)
   const nestedColumns = [
+    {
+      title: 'WUID',
+      dataIndex: 'wuId',
+      key: 'wuId',
+      width: 140,
+      render: (val: string) => (
+        <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 12, color: '#2563eb' }}>{val}</span>
+      ),
+    },
     {
       title: 'Job Name',
       dataIndex: 'jobName',
       key: 'jobName',
+      width: 200,
       ellipsis: true,
-      render: (text: any, record: any) => (
-        <Button
-          type="link"
-          className={styles.linkButton}
-          onClick={() => handleView(record)}
-          disabled={!record.detailsFetchedAt}>
-          <Text strong className={styles.ellipsis}>
-            {text || record.wuId}
-          </Text>
-        </Button>
-      ),
-    },
-    {
-      title: 'WU ID',
-      dataIndex: 'wuId',
-      key: 'wuId',
-      width: 120,
-      ellipsis: true,
-      render: (text: string, record: any) => (
-        <Space size={4} align="center">
-          <Text className={styles.ellipsis}>{text}</Text>
-          {!record.detailsFetchedAt && (
-            <Tooltip title="Details not yet fetched">
-              <Tag color="default">Not Fetched</Tag>
-            </Tooltip>
-          )}
-        </Space>
-      ),
+      render: (val: string) =>
+        val ? (
+          <Tooltip title={val}>
+            <span style={{ color: '#374151', fontWeight: 500 }}>{val}</span>
+          </Tooltip>
+        ) : (
+          <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>&lt;Unnamed&gt;</span>
+        ),
     },
     {
       title: 'Cluster',
       dataIndex: 'clusterId',
       key: 'clusterId',
-      width: 100,
+      width: 120,
       ellipsis: true,
-      render: (clusterId: string) => clusterMap[clusterId] || clusterId,
+      render: (clusterId: string) => (
+        <Tag style={{ borderRadius: 4, textTransform: 'uppercase', fontSize: 10, letterSpacing: '0.5px' }}>
+          {clusterMap[clusterId] || clusterId}
+        </Tag>
+      ),
     },
     {
       title: 'Owner',
       dataIndex: 'owner',
       key: 'owner',
-      width: 80,
+      width: 100,
       ellipsis: true,
+      render: (val: string) => <span style={{ color: '#6b7280', fontSize: 12 }}>{val}</span>,
     },
     {
       title: 'State',
       dataIndex: 'state',
       key: 'state',
-      width: 80,
-      render: (state: any) => {
-        const colorMap: Record<string, any> = {
-          completed: 'success',
-          failed: 'error',
-          running: 'processing',
-          aborted: 'warning',
-        };
-        return <Tag color={colorMap[state] || 'default'}>{state ? state.toUpperCase() : 'UNKNOWN'}</Tag>;
+      width: 90,
+      render: (val: string) => (
+        <Tag color={stateColors[val]} style={{ borderRadius: 4 }}>
+          {val ? val.toUpperCase() : 'UNKNOWN'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Duration',
+      dataIndex: 'totalClusterTime',
+      key: 'totalClusterTime',
+      width: 100,
+      render: (val: any) => {
+        if (val == null) return <span style={{ color: '#9ca3af' }}>—</span>;
+        const h = Math.floor(val);
+        const m = Math.round((val - h) * 60);
+        return (
+          <span style={{ color: '#6b7280', fontSize: 12 }}>
+            {h > 0 ? `${h}h ` : ''}
+            {m}m
+          </span>
+        );
       },
     },
     {
       title: 'Cost',
       dataIndex: 'totalCost',
       key: 'totalCost',
-      width: 80,
-      render: (cost: any) => (cost != null ? `$${cost.toFixed(4)}` : '-'),
+      width: 100,
+      render: (val: any) => (
+        <span
+          style={{
+            fontFamily: 'var(--font-mono), monospace',
+            color: val > 15 ? '#dc2626' : val > 8 ? '#d97706' : '#16a34a',
+            fontWeight: 600,
+          }}>
+          {val != null ? formatCurrency(val) : '-'}
+        </span>
+      ),
     },
     {
-      title: 'Actions',
-      key: 'actions',
-      width: 80,
-      render: (_: any, record: any) => (
-        <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
+      title: 'Cost Breakdown',
+      key: 'costBreakdown',
+      width: 200,
+      render: (_: any, record: any) => {
+        const compute = record.executeCost ?? 0;
+        const fileAccess = record.fileAccessCost ?? 0;
+        const compile = record.compileCost ?? 0;
+        const total = compute + fileAccess + compile;
+        if (total === 0) return null;
+        const cPct = (compute / total) * 100;
+        const fPct = (fileAccess / total) * 100;
+        return (
+          <Tooltip
+            title={
+              <div>
+                <div>Compute: {formatCurrency(compute)}</div>
+                <div>File Access: {formatCurrency(fileAccess)}</div>
+                <div>Compile: {formatCurrency(compile)}</div>
+              </div>
+            }>
+            <div
+              style={{
+                display: 'flex',
+                width: '100%',
+                height: 8,
+                borderRadius: 4,
+                overflow: 'hidden',
+                background: '#f3f4f6',
+              }}>
+              <div style={{ width: `${cPct}%`, background: '#16a34a', transition: 'width 0.3s' }} />
+              <div style={{ width: `${fPct}%`, background: '#2563eb', transition: 'width 0.3s' }} />
+              <div style={{ flex: 1, background: '#d97706', transition: 'width 0.3s' }} />
+            </div>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: 'Details',
+      key: 'details',
+      width: 100,
+      align: 'center' as const,
+      render: (_: any, record: any) => {
+        const hasDetails = record.clusterId && record.wuId && record.detailsFetchedAt;
+        return (
           <Button
-            type="primary"
+            type="link"
             size="small"
             icon={<EyeOutlined />}
-            onClick={() => handleView(record)}
-            disabled={!record.detailsFetchedAt}>
-            Details
+            disabled={!hasDetails}
+            onClick={() => {
+              if (hasDetails) handleView(record);
+            }}
+            style={{ color: hasDetails ? '#2563eb' : '#9ca3af', padding: 0 }}>
+            View
           </Button>
-        </Tooltip>
-      ),
+        );
+      },
     },
   ];
 
@@ -636,99 +759,136 @@ const WorkUnitHistory: React.FC = () => {
         </Space>
       </Card>
 
-      <Card title="Workunits">
-        <Tabs
-          activeKey={activeTab}
-          onChange={handleTabChange}
-          items={[
-            {
-              key: '1',
-              label: 'List View',
-              children: (
-                <Table
-                  columns={columns}
-                  dataSource={data}
-                  rowKey="wuId"
-                  loading={loading}
-                  pagination={{
-                    current: page,
-                    pageSize: limit,
-                    total: total,
-                    showSizeChanger: true,
-                    showTotal: total => `Total ${total} workunits`,
-                    pageSizeOptions: ['25', '50', '100', '200'],
-                  }}
-                  onChange={handleTableChange}
-                  rowClassName={record => {
-                    if (record.state === 'failed' || record.state === 'aborted') {
-                      return 'wu-row-failed';
-                    }
-                    // Orange for long running (>2h) - totalClusterTime is in hours
-                    if (record.state === 'running' && (record.totalClusterTime || 0) > 2) {
-                      return 'wu-row-long-running';
-                    }
-                    return '';
-                  }}
-                  scroll={{ x: 'max-content' }}
-                />
+      <Card
+        title="Workunits"
+        styles={{ body: { padding: 0, overflow: 'hidden' } }}
+        extra={
+          <Space align="center">
+            {activeTab === '1' && (
+              <Space size={12}>
+                <Space size={4} align="center">
+                  <span
+                    style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#16a34a' }}
+                  />
+                  <span style={{ fontSize: 11, color: '#6b7280' }}>Compute</span>
+                </Space>
+                <Space size={4} align="center">
+                  <span
+                    style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#2563eb' }}
+                  />
+                  <span style={{ fontSize: 11, color: '#6b7280' }}>File Access</span>
+                </Space>
+                <Space size={4} align="center">
+                  <span
+                    style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#d97706' }}
+                  />
+                  <span style={{ fontSize: 11, color: '#6b7280' }}>Compile</span>
+                </Space>
+              </Space>
+            )}
+            <Segmented
+              value={activeTab}
+              onChange={handleTabChange}
+              options={[
+                { label: 'List View', value: '1' },
+                { label: 'Grouped', value: '2' },
+              ]}
+            />
+          </Space>
+        }>
+        {activeTab === '1' ? (
+          <Table
+            columns={columns}
+            dataSource={data}
+            rowKey={record => `${record.clusterId}:${record.wuId}`}
+            loading={loading}
+            size="small"
+            pagination={{
+              current: page,
+              pageSize: limit,
+              total: total,
+              size: 'small',
+              showSizeChanger: true,
+              showTotal: (total: number) => <span style={{ color: '#6b7280', fontSize: 12 }}>{total} workunits</span>,
+              pageSizeOptions: ['25', '50', '100', '200'],
+            }}
+            onChange={handleTableChange}
+            rowClassName={record => {
+              if (record.state === 'failed' || record.state === 'aborted') {
+                return 'wu-row-failed';
+              }
+              // Orange for long running (>2h) - totalClusterTime is in hours
+              if (record.state === 'running' && (record.totalClusterTime || 0) > 2) {
+                return 'wu-row-long-running';
+              }
+              return '';
+            }}
+            onRow={record => ({
+              onClick: () => {
+                if (record.clusterId && record.wuId && record.detailsFetchedAt) handleView(record);
+              },
+              style: { cursor: record.detailsFetchedAt ? 'pointer' : 'default' },
+            })}
+            style={{ borderRadius: 0, overflow: 'hidden' }}
+            scroll={{ x: 1100 }}
+          />
+        ) : (
+          <Table
+            columns={groupedColumns}
+            dataSource={groupedData}
+            rowKey="key"
+            loading={loading}
+            size="small"
+            expandable={{
+              expandRowByClick: true,
+              expandedRowRender: record => (
+                <div>
+                  <Table
+                    columns={nestedColumns}
+                    dataSource={record.workunits}
+                    rowKey="wuId"
+                    pagination={false}
+                    size="small"
+                    bordered
+                    className="nested-table"
+                    components={{
+                      header: {
+                        cell: (props: any) => (
+                          <th
+                            {...props}
+                            style={{
+                              ...props.style,
+                              backgroundColor: '#e6f4ff',
+                              fontWeight: 600,
+                              color: '#1677ff',
+                            }}
+                          />
+                        ),
+                      },
+                    }}
+                    rowClassName={subRecord => {
+                      if (subRecord.state === 'failed' || subRecord.state === 'aborted') {
+                        return 'wu-row-failed';
+                      }
+                      if (subRecord.state === 'running' && (subRecord.totalClusterTime || 0) > 2) {
+                        return 'wu-row-long-running';
+                      }
+                      return '';
+                    }}
+                    onRow={subRecord => ({
+                      onClick: () => {
+                        if (subRecord.clusterId && subRecord.wuId && subRecord.detailsFetchedAt) handleView(subRecord);
+                      },
+                      style: { cursor: subRecord.detailsFetchedAt ? 'pointer' : 'default' },
+                    })}
+                    scroll={{ x: 1100 }}
+                  />
+                </div>
               ),
-            },
-            {
-              key: '2',
-              label: 'Grouped',
-              children: (
-                <Table
-                  columns={groupedColumns}
-                  dataSource={groupedData}
-                  rowKey="key"
-                  loading={loading}
-                  size="small"
-                  expandable={{
-                    expandedRowRender: record => (
-                      <div>
-                        <Table
-                          columns={nestedColumns}
-                          dataSource={record.workunits}
-                          rowKey="wuId"
-                          pagination={false}
-                          size="small"
-                          bordered
-                          className="nested-table"
-                          components={{
-                            header: {
-                              cell: (props: any) => (
-                                <th
-                                  {...props}
-                                  style={{
-                                    ...props.style,
-                                    backgroundColor: '#e6f4ff',
-                                    fontWeight: 600,
-                                    color: '#1677ff',
-                                  }}
-                                />
-                              ),
-                            },
-                          }}
-                          rowClassName={subRecord => {
-                            if (subRecord.state === 'failed' || subRecord.state === 'aborted') {
-                              return 'wu-row-failed';
-                            }
-                            if (subRecord.state === 'running' && (subRecord.totalClusterTime || 0) > 2) {
-                              return 'wu-row-long-running';
-                            }
-                            return '';
-                          }}
-                          scroll={{ x: 'max-content' }}
-                        />
-                      </div>
-                    ),
-                  }}
-                  scroll={{ x: 'max-content' }}
-                />
-              ),
-            },
-          ]}
-        />
+            }}
+            scroll={{ x: 1100 }}
+          />
+        )}
       </Card>
     </div>
   );

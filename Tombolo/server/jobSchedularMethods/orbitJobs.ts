@@ -73,7 +73,7 @@ function createOrbitProfileMonitoringJob(
     ORBIT_PROFILE_MONITORING
   );
   const job = {
-    interval: '10s',
+    interval: '30m',
     name: jobName,
     path: resolveJobPath(defaultDistPath3),
   };

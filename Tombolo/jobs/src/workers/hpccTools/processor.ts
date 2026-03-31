@@ -31,7 +31,9 @@ export default async function processHpccToolsJob(job: Job) {
   }
 
   // Repository details
-  const repoUrl = 'https://github.com/hpcc-systems/hpcc-tools.git';
+  const repoUrl =
+    process.env.HPCC_TOOLS_REPO_URL ||
+    'ssh://git@ssh.github.com:443/hpcc-systems/hpcc-tools.git';
   // In Docker the repo lives on the shared named volume at /app/hpcc-tools-data.
   // Outside Docker it lives as a sibling to the jobs package directory.
   const parentDir = fs.existsSync('/.dockerenv')

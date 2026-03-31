@@ -45,6 +45,9 @@ export default [
     // Legacy JS test files
     files: ['tests/**/*.js', '**/*.test.js', '**/*.spec.js'],
     languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: __dirname,
+      },
       globals: {
         ...globals.node,
         ...globals.vitest,
@@ -69,6 +72,9 @@ export default [
     files: ['**/*.js', '**/*.mjs'],
     ignores: ['tests/**', '**/*.test.js', '**/*.spec.js', 'coverage/**'],
     languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: __dirname,
+      },
       globals: {
         ...globals.node,
       },

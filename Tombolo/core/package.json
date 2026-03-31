@@ -27,8 +27,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "tsup": "catalog:",
-    "typescript": "catalog:",
-    "typescript-eslint": "catalog:"
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@tombolo/db": "workspace:*",

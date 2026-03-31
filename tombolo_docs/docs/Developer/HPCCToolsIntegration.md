@@ -13,6 +13,12 @@ This guide explains how to configure a Linux VM (or local machine) so that Tombo
 
 Tombolo's `jobs` service needs access to a private GitHub repository at runtime (not at build time). Rather than embedding credentials in the image, the container authenticates through the host's SSH agent via a forwarded socket.
 
+By default, the HPCC Tools worker uses an SSH repository URL intended for Docker-deployed instances:
+
+`ssh://git@ssh.github.com:443/hpcc-systems/hpcc-tools.git`
+
+This default works with SSH agent forwarding and is the recommended production/deployment setup.
+
 **How it works:**
 
 1. A GitHub deploy key is generated on the VM and added to the private repository.
@@ -21,6 +27,16 @@ Tombolo's `jobs` service needs access to a private GitHub repository at runtime 
 4. When the container runs `git clone`, SSH uses the forwarded agent for authentication — no key material is ever written into the container.
 
 This approach is secure because the private key only exists on the VM's filesystem and in the in-memory agent. The container image itself contains no credentials and is safe to push to any registry.
+
+If you are doing local development and need a different repository URL (for example, HTTPS or another Git endpoint), set the `HPCC_TOOLS_REPO_URL` server environment variable in your `.env` file.
+
+Example:
+
+```bash
+HPCC_TOOLS_REPO_URL=https://github.com/hpcc-systems/hpcc-tools.git
+```
+
+Only override this value if you are actively using the HPCC Tools integration and have a local workflow that requires a non-default repo URL.
 
 ---
 
@@ -154,33 +170,13 @@ If empty, start the agent and reload your shell profile (see Section 4).
 
 ## 6. Container Expectations
 
-The container running the git clone must meet these requirements:
+For Tombolo Docker deployments, these requirements are already handled by the `jobs` image build:
 
-### Required packages
+- `git` and `openssh-client` are installed.
+- GitHub SSH host keys are pre-populated in `known_hosts` (including `ssh.github.com:443` for SSH-over-443).
+- `docker-compose.yml` and `docker-compose-sample.yml` already wire `SSH_AUTH_SOCK` into the `jobs` container.
 
-The container image must have `git` and `openssh-client` (or equivalent) installed. For a Debian/Ubuntu-based image:
-
-```dockerfile
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    openssh-client \
- && rm -rf /var/lib/apt/lists/*
-```
-
-### GitHub host key verification (`known_hosts`)
-
-SSH will refuse to connect to a host whose key is not in `known_hosts`. For GitHub, add the key at image build time so the container does not prompt interactively:
-
-```dockerfile
-RUN mkdir -p /root/.ssh && \
-    ssh-keyscan github.com >> /root/.ssh/known_hosts
-```
-
-This is safe to bake into the image — `known_hosts` contains only public host keys, not credentials.
-
-### Authentication is automatic
-
-Once the agent socket is mounted and `SSH_AUTH_SOCK` is set, any `git clone git@github.com:...` command inside the container will authenticate automatically through the forwarded agent. No additional configuration is needed inside the container.
+In other words, you typically do not need to add extra container-level SSH/Git setup unless you are building a custom image outside the provided Tombolo Docker files.
 
 ---
 
