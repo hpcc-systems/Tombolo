@@ -55,7 +55,7 @@ import Editor from '@monaco-editor/react';
 import { format } from 'sql-formatter';
 import axios from 'axios';
 import { apiClient } from '@/services/api';
-import { LeftPanelIcon, RightPanelIcon } from './PanelIcons';
+import { LeftPanelIcon, RightPanelIcon } from '@/components/common/icons/PanelIcons';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import analyticsFiltersService from '@/services/analyticsFilters.service';
 import { handleError, handleSuccess } from '@/components/common/handleResponse';
