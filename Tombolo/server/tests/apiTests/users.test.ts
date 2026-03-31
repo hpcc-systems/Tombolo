@@ -9,21 +9,24 @@ import {
 } from 'vitest';
 import request from 'supertest';
 import { app } from '../test_server.js';
-import {
-  User,
-  UserArchive,
-  NotificationQueue,
-  sequelize,
-} from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { User, UserArchive, NotificationQueue, sequelize } = mockedModels;
 import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import { getUsers, nonExistentID } from '../helpers.js';
+
+const sequelizeTx = sequelize as typeof sequelize & {
+  __commit: ReturnType<typeof vi.fn>;
+  __rollback: ReturnType<typeof vi.fn>;
+};
 
 beforeAll(async () => {});
 
 describe('User Routes', () => {
   beforeEach(() => {
-    vi.useFakeTimers('modern');
-    clearInterval(blacklistTokenIntervalId);
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
   });
 
   afterEach(() => {
@@ -90,8 +93,8 @@ describe('User Routes', () => {
     expect(res.body.data).toEqual(reqBody);
     expect(User.findOne).toHaveBeenCalled();
     expect(sequelize.transaction).toHaveBeenCalled();
-    expect(sequelize.__commit).toHaveBeenCalled();
-    expect(sequelize.__rollback).not.toHaveBeenCalled();
+    expect(sequelizeTx.__commit).toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).not.toHaveBeenCalled();
     expect(NotificationQueue.create).toHaveBeenCalled();
   });
 
@@ -100,8 +103,8 @@ describe('User Routes', () => {
     const user = users[0];
     User.findOne.mockResolvedValue(null);
     const reqBody = {
-      firstName: 'Johnny',
       ...user,
+      firstName: 'Johnny',
     };
 
     const res = await request(app)
@@ -113,8 +116,8 @@ describe('User Routes', () => {
     expect(res.body.message).toBe('User not found');
     expect(User.findOne).toHaveBeenCalled();
     expect(sequelize.transaction).toHaveBeenCalled();
-    expect(sequelize.__commit).not.toHaveBeenCalled();
-    expect(sequelize.__rollback).toHaveBeenCalled();
+    expect(sequelizeTx.__commit).not.toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).toHaveBeenCalled();
     expect(NotificationQueue.create).not.toHaveBeenCalled();
     // logger.error should NOT be called for business logic errors like "not found"
   });
@@ -164,8 +167,8 @@ describe('User Routes', () => {
     expect(User.update).toHaveBeenCalled();
     expect(NotificationQueue.create).toHaveBeenCalled();
     expect(sequelize.transaction).toHaveBeenCalled();
-    expect(sequelize.__commit).toHaveBeenCalled();
-    expect(sequelize.__rollback).not.toHaveBeenCalled();
+    expect(sequelizeTx.__commit).toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).not.toHaveBeenCalled();
   });
 
   it('change-password should return 400 if currentPassword is incorrect', async () => {
@@ -186,8 +189,8 @@ describe('User Routes', () => {
     expect(User.update).not.toHaveBeenCalled();
     expect(NotificationQueue.create).not.toHaveBeenCalled();
     expect(sequelize.transaction).toHaveBeenCalled();
-    expect(sequelize.__commit).not.toHaveBeenCalled();
-    expect(sequelize.__rollback).toHaveBeenCalled();
+    expect(sequelizeTx.__commit).not.toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).toHaveBeenCalled();
     // logger.error should NOT be called for validation errors like incorrect password
   });
 
@@ -207,8 +210,8 @@ describe('User Routes', () => {
     expect(User.update).not.toHaveBeenCalled();
     expect(NotificationQueue.create).not.toHaveBeenCalled();
     expect(sequelize.transaction).toHaveBeenCalled();
-    expect(sequelize.__commit).not.toHaveBeenCalled();
-    expect(sequelize.__rollback).toHaveBeenCalled();
+    expect(sequelizeTx.__commit).not.toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).toHaveBeenCalled();
     // logger.error should NOT be called for business logic errors like "not found"
   });
 

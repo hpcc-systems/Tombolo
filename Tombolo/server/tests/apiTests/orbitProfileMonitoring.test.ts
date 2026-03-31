@@ -4,7 +4,8 @@ import request from 'supertest';
 import { app } from '../test_server.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
-import { OrbitProfileMonitoring, sequelize } from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { OrbitProfileMonitoring, sequelize } = mockedModels;
 import {
   getOrbitProfileMonitoring,
   AUTHED_USER_ID,
@@ -14,8 +15,10 @@ import { APPROVAL_STATUS } from '../../config/constants.js';
 
 describe('orbitProfileMonitoring Routes', () => {
   beforeEach(() => {
-    vi.useFakeTimers('modern');
-    clearInterval(blacklistTokenIntervalId);
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
   });
 
   afterEach(() => {
@@ -94,7 +97,10 @@ describe('orbitProfileMonitoring Routes', () => {
   });
 
   it('PUT /:id should update orbit profile monitoring successfully', async () => {
-    const orbitProfileMonitoring = getOrbitProfileMonitoring({}, true);
+    const orbitProfileMonitoring = {
+      ...getOrbitProfileMonitoring({}, true),
+      update: vi.fn(),
+    };
     const updateData = {
       applicationId: orbitProfileMonitoring.applicationId,
       monitoringName: 'Updated Monitoring Name',
@@ -122,9 +128,7 @@ describe('orbitProfileMonitoring Routes', () => {
     OrbitProfileMonitoring.findOne.mockResolvedValue(orbitProfileMonitoring);
 
     // Mock the update method on the instance
-    orbitProfileMonitoring.update = vi
-      .fn()
-      .mockResolvedValue(updatedMonitoring);
+    orbitProfileMonitoring.update.mockResolvedValue(updatedMonitoring);
 
     // Mock findByPk to return the updated monitoring
     OrbitProfileMonitoring.findByPk.mockResolvedValue(updatedMonitoring);
@@ -138,16 +142,16 @@ describe('orbitProfileMonitoring Routes', () => {
     expect(res.body.message).toBe(
       'Orbit profile monitoring updated successfully'
     );
+    const { update: _update, ...expectedData } = updatedMonitoring;
     expect(res.body.data).toMatchObject({
-      ...updatedMonitoring,
+      ...expectedData,
       lastUpdatedBy: AUTHED_USER_ID,
       approvalStatus: 'pending',
     });
     expect(OrbitProfileMonitoring.findOne).toHaveBeenCalledWith({
       where: { id: orbitProfileMonitoring.id },
     });
-    const expectedUpdateData = { ...updateData };
-    delete expectedUpdateData.applicationId; // Controller removes applicationId
+    const { applicationId: _applicationId, ...expectedUpdateData } = updateData;
     expect(orbitProfileMonitoring.update).toHaveBeenCalledWith({
       ...expectedUpdateData,
       lastUpdatedBy: AUTHED_USER_ID,

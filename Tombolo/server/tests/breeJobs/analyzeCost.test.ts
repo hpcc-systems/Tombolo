@@ -10,7 +10,8 @@ import {
   analyzeCost,
 } from '../../jobs/costMonitoring/analyzeCost.js';
 
-import {
+import { mockedModels } from '../mockedModels.js';
+const {
   Integration,
   Cluster,
   CostMonitoring,
@@ -20,10 +21,12 @@ import {
   SentNotification,
   NotificationQueue,
   MonitoringType,
-} from '../../models/index.js';
+} = mockedModels;
 import * as monitorJobsUtil from '../../jobs/jobMonitoring/monitorJobsUtil.js';
 import { getCostMonitoring } from '../helpers.js';
 import { parentPort } from 'worker_threads';
+
+const workerParentPort = parentPort as NonNullable<typeof parentPort>;
 
 describe('analyzeCost.js', () => {
   beforeEach(() => {
@@ -66,6 +69,7 @@ describe('analyzeCost.js', () => {
         },
         threshold: 100,
         summedCost: 200,
+        clusters: [],
         erroringClusters: [
           {
             totalCost: 200,
@@ -76,6 +80,7 @@ describe('analyzeCost.js', () => {
             timezone_offset: 0,
           },
         ],
+        erroringUsers: [],
         primaryContacts: ['a'],
         secondaryContacts: ['b'],
         notifyContacts: ['c'],
@@ -105,7 +110,17 @@ describe('analyzeCost.js', () => {
     it('should throw error for invalid scope', () => {
       expect(() =>
         createCMNotificationPayload({
+          monitoringType: { id: 1 },
           costMonitoring: { monitoringScope: 'invalid' },
+          threshold: 0,
+          clusters: [],
+          erroringClusters: [],
+          erroringUsers: [],
+          primaryContacts: [],
+          secondaryContacts: [],
+          notifyContacts: [],
+          asrSpecificMetaData: {},
+          idempotencyKey: 'key',
         })
       ).toThrow('Invalid monitoring scope');
     });
@@ -151,7 +166,10 @@ describe('analyzeCost.js', () => {
       };
       const result = await getAsrData(costMonitoring);
       expect(result.primaryContacts).toEqual(['a']);
-      expect(result.asrSpecificMetaData.productShortCode).toBe('SC');
+      expect(
+        (result.asrSpecificMetaData as { productShortCode?: string })
+          .productShortCode
+      ).toBe('SC');
       spyBuildNotifId.mockRestore();
     });
   });
@@ -200,7 +218,10 @@ describe('analyzeCost.js', () => {
         .mockImplementation(() => 'key');
       const spyBuildPayload = vi
         .spyOn(monitorJobsUtil, 'createNotificationPayload')
-        .mockImplementation(() => {});
+        .mockImplementation(
+          () =>
+            ({}) as ReturnType<typeof monitorJobsUtil.createNotificationPayload>
+        );
 
       Cluster.findAll.mockResolvedValue([{ id: 1, name: 'test-cluster' }]);
       SentNotification.findOne.mockResolvedValue(null);
@@ -250,7 +271,10 @@ describe('analyzeCost.js', () => {
         .mockImplementation(() => 'key');
       const spyBuildPayload = vi
         .spyOn(monitorJobsUtil, 'createNotificationPayload')
-        .mockImplementation(() => {});
+        .mockImplementation(
+          () =>
+            ({}) as ReturnType<typeof monitorJobsUtil.createNotificationPayload>
+        );
 
       const spyBuildNotifId = vi
         .spyOn(monitorJobsUtil, 'generateNotificationId')
@@ -313,7 +337,7 @@ describe('analyzeCost.js', () => {
       const costMonitoring = { id: 3, monitoringScope: 'invalid' };
       CostMonitoring.findAll.mockResolvedValue([costMonitoring]);
       await analyzeCost();
-      expect(parentPort.postMessage).toHaveBeenCalledWith({
+      expect(workerParentPort.postMessage).toHaveBeenCalledWith({
         level: 'error',
         text: `Invalid monitoring scope (${costMonitoring.monitoringScope}) for analyzeCost: ${costMonitoring.id}`,
       });

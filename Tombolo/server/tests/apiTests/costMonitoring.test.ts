@@ -3,15 +3,18 @@ import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import request from 'supertest';
 import { app } from '../test_server.js';
 import { v4 as uuidv4 } from 'uuid';
-import { CostMonitoring } from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { CostMonitoring } = mockedModels;
 import { getUuids, getCostMonitoring, AUTHED_USER_ID } from '../helpers.js';
 import { Op } from 'sequelize';
 import { APPROVAL_STATUS } from '../../config/constants.js';
 
 describe('costMonitoring Routes', () => {
   beforeEach(() => {
-    vi.useFakeTimers('modern');
-    clearInterval(blacklistTokenIntervalId);
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
   });
 
   afterEach(() => {

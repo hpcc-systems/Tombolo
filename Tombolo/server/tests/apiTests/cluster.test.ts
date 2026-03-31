@@ -1,7 +1,8 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import { app } from '../test_server.js';
-import { Cluster } from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { Cluster } = mockedModels;
 import { v4 as uuidv4 } from 'uuid';
 import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import { getCluster, AUTHED_USER_ID, UUID_REGEX } from '../helpers.js';
@@ -13,9 +14,11 @@ const nonExistentID = uuidv4();
 
 describe('Cluster Routes', () => {
   beforeEach(() => {
-    vi.useFakeTimers('modern');
-    clearInterval(blacklistTokenIntervalId);
-    axios.get.mockResolvedValue({ status: 200, data: {} });
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
+    vi.mocked(axios.get).mockResolvedValue({ status: 200, data: {} } as never);
   });
 
   afterEach(() => {

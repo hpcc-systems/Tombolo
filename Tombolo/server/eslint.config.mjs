@@ -42,6 +42,21 @@ export default [
     },
   },
   {
+    // TS test files are excluded from tsconfig.json; lint them without project type-checking.
+    files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: null,
+        tsconfigRootDir: __dirname,
+      },
+      globals: {
+        ...globals.node,
+        ...globals.vitest,
+      },
+    },
+  },
+  {
     // Legacy JS test files
     files: ['tests/**/*.js', '**/*.test.js', '**/*.spec.js'],
     languageOptions: {

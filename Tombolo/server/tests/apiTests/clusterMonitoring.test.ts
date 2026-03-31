@@ -2,7 +2,8 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import request from 'supertest';
 import { app } from '../test_server.js';
-import { ClusterMonitoring } from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { ClusterMonitoring } = mockedModels;
 
 import {
   getClusterMonitoring,
@@ -16,8 +17,10 @@ const monitoringId = uuidv4();
 
 describe('Cluster Monitoring routes Routes', () => {
   beforeEach(() => {
-    vi.useFakeTimers('modern');
-    clearInterval(blacklistTokenIntervalId);
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
   });
 
   afterEach(() => {
@@ -61,10 +64,12 @@ describe('Cluster Monitoring routes Routes', () => {
 
   // Update existing cluster status monitoring
   it('PUT / should update an existing cluster status monitoring', async () => {
-    const monitoring = getClusterMonitoring({ id: monitoringId });
+    const monitoring = {
+      ...getClusterMonitoring({ id: monitoringId }),
+      update: vi.fn(),
+    };
 
-    // Mock the instance update method
-    monitoring.update = vi.fn().mockResolvedValue(monitoring);
+    monitoring.update.mockResolvedValue(monitoring);
 
     ClusterMonitoring.findOne.mockResolvedValue(monitoring);
 
