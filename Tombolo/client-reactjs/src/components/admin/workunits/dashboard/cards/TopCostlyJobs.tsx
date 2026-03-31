@@ -3,7 +3,7 @@ import { Card, Table, Space, Tag, Button, Tooltip } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import { useHistory } from 'react-router-dom';
 import { formatCurrency } from '@tombolo/shared';
-import { groupWorkunitsByName } from '@/components/admin/workunitHistory/common/fuzzyMatch';
+import { groupWorkunitsByName } from '@/components/admin/workunits/history/common/fuzzyMatch';
 import type { ExpensiveWorkunit } from '@/services/workunitDashboard.service';
 import styles from './TopCostlyJobs.module.css';
 
