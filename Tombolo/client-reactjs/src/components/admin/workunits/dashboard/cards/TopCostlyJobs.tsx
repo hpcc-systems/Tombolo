@@ -201,12 +201,16 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       render: (_: any, record: ExpensiveWorkunit) => (
         <Tooltip title={!record.detailsFetchedAt ? 'Details not yet fetched' : ''}>
           <Button
-            type="primary"
+            type="link"
             size="small"
             icon={<EyeOutlined />}
+            disabled={!record.detailsFetchedAt}
             onClick={() => handleView(record)}
-            disabled={!record.detailsFetchedAt}>
-            Details
+            style={{
+              color: record.detailsFetchedAt ? '#2563eb' : '#9ca3af',
+              padding: 0,
+            }}>
+            View
           </Button>
         </Tooltip>
       ),
