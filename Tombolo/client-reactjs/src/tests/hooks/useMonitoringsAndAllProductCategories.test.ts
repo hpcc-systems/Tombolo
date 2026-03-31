@@ -1,7 +1,5 @@
-/* eslint-env jest */
-/* eslint-disable prettier/prettier */
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi, it, expect, describe, beforeEach } from 'vitest';
 
 // Mock antd with both message and notification
 vi.mock('antd', () => ({

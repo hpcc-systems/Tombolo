@@ -306,12 +306,6 @@ describe('Register', () => {
       const user = userEvent.setup();
       const mockStore = createMockStore();
 
-      // Mock successful registration
-      const mockRegisterAction = vi.fn(() => ({
-        type: 'auth/registerBasicUser/fulfilled',
-        payload: { success: true },
-      }));
-
       renderWithProviders(<Register />, { store: mockStore });
 
       // Fill out form

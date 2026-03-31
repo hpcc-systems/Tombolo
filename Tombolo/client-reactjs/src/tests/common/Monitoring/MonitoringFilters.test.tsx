@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,7 +8,7 @@ vi.mock('antd', async importOriginal => {
   const antd = await importOriginal();
 
   const MockForm = ({ children, onValuesChange, className }) => (
-    <form data-testid="form" className={className} onChange={e => onValuesChange?.({}, {})}>
+    <form data-testid="form" className={className} onChange={_e => onValuesChange?.({}, {})}>
       {children}
     </form>
   );
@@ -24,7 +23,7 @@ vi.mock('antd', async importOriginal => {
   const MockRow = ({ children }) => <div data-testid="row">{children}</div>;
   const MockCol = ({ children, span }) => <div data-testid={`col-${span || 'n'}`}>{children}</div>;
 
-  const MockSelect = ({ children, placeholder, allowClear, mode, disabled }) => (
+  const MockSelect = ({ children, placeholder, _allowClear, mode, disabled }) => (
     <select aria-label={placeholder || 'select'} multiple={mode === 'multiple'} disabled={disabled}>
       {children}
     </select>
@@ -32,7 +31,7 @@ vi.mock('antd', async importOriginal => {
 
   MockSelect.Option = ({ value, children }) => <option value={value}>{children}</option>;
 
-  const MockInput = ({ placeholder, prefix, suffix, onChange, allowClear, disabled }) => (
+  const MockInput = ({ placeholder, prefix, suffix, onChange, _allowClear, disabled }) => (
     <div>
       {prefix}
       <input aria-label={placeholder || 'input'} placeholder={placeholder} disabled={disabled} onChange={onChange} />

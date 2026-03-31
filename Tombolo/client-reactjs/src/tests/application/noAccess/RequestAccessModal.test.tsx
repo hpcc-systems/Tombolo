@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Form, FormInstance } from 'antd';
+import type { ReactElement } from 'react';
 
 import RequestAccessModal from '@/components/application/noAccess/requestAccessModal';
 
@@ -10,7 +11,7 @@ const TestWrapper = ({
   children,
   form,
 }: {
-  children: (args: { form: FormInstance }) => React.ReactElement;
+  children: (args: { form: FormInstance }) => ReactElement;
   form?: FormInstance;
 }) => {
   const [testForm] = Form.useForm();
