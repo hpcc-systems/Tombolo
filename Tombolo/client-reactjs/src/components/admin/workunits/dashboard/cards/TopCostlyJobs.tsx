@@ -251,6 +251,7 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
         scroll={{ y: 400 }}
         size="small"
         expandable={{
+          expandRowByClick: true,
           expandedRowRender: (record: JobGroup) => (
             <Table
               columns={nestedColumns}
