@@ -72,7 +72,8 @@ const renderChangeValue = (current: number, previous: number): React.ReactNode =
   if (indicator === 'similar') {
     return (
       <Text type="secondary">
-        <SwapIcon size={12} style={{ verticalAlign: 'middle' }} /> ~{formatPercentage(Math.abs(change))}
+        <SwapIcon size={12} title="Similar change" aria-label="Similar change" style={{ verticalAlign: 'middle' }} />~
+        {formatPercentage(Math.abs(change))}
       </Text>
     );
   }
@@ -159,12 +160,12 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
   };
 
   useEffect(() => {
-    if (wu?.jobName) {
+    if (wu?.jobName && clusterId) {
       fetchHistory();
     } else {
       setLoading(false);
     }
-  }, [wu?.jobName, timeRange]);
+  }, [wu?.jobName, clusterId, timeRange]);
 
   // Filter history
   const filteredHistory = useMemo(() => {
@@ -181,7 +182,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
 
     const completed = filteredHistory.filter(h => h.state === 'completed');
     const durations = completed.map((h: any) => h.totalClusterTime).filter((d: any) => d != null);
-    const costs = filteredHistory
+    const costs = completed
       .map((h: any) => h.totalCost)
       .filter((c: any) => c != null)
       .map((c: number) => roundToDecimals(c, 2));
@@ -206,10 +207,10 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
 
     const previous = filteredHistory[currentIndex + 1];
     const durationChange = getPercentChange(wu.totalClusterTime, previous.totalClusterTime);
-    const costChange = getPercentChange(
-      roundToDecimals(wu.totalCost ?? 0, 2),
-      roundToDecimals(previous.totalCost ?? 0, 2)
-    );
+    const costChange =
+      wu.totalCost == null || previous.totalCost == null
+        ? null
+        : getPercentChange(roundToDecimals(wu.totalCost, 2), roundToDecimals(previous.totalCost, 2));
 
     return {
       previous,
@@ -232,6 +233,18 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
         isCurrent: h.wuId === wu?.wuId,
       }));
   }, [filteredHistory, wu]);
+
+  const previousRunMap = useMemo(() => {
+    const map = new Map<string, any>();
+    for (let i = 0; i < filteredHistory.length - 1; i += 1) {
+      const current = filteredHistory[i];
+      const previous = filteredHistory[i + 1];
+      if (current?.wuId && previous) {
+        map.set(current.wuId, previous);
+      }
+    }
+    return map;
+  }, [filteredHistory]);
 
   // Table columns
   const columns = [
@@ -326,9 +339,8 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       key: 'comparison',
       width: 120,
       ellipsis: true,
-      render: (_: any, record: any, index: number) => {
-        if (index === filteredHistory.length - 1) return '-';
-        const previous = filteredHistory[index + 1];
+      render: (_: any, record: any) => {
+        const previous = record?.wuId ? previousRunMap.get(record.wuId) : undefined;
         if (!previous || record.totalCost == null || previous.totalCost == null) return '-';
 
         const currentCost = roundToDecimals(record.totalCost, 2);
@@ -530,9 +542,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
 
       {/* Summary statistics */}
       <Card>
-        <div
-          title="Summary Statistics"
-          style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between' }}>
           {/* <Row gutter={[16, 16]}> */}
           <Card size="small" className={styles.summaryCard}>
             <Statistic title="Total Runs" value={statistics.totalRuns} prefix={<LineChartOutlined />} />
