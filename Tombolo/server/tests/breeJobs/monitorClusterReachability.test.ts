@@ -1,11 +1,24 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { monitorClusterReachability } from '../../jobs/cluster/monitorClusterReachability.js';
-import { Cluster, NotificationQueue } from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { Cluster, NotificationQueue } = mockedModels;
 import { parentPort } from 'worker_threads';
 import { AccountService } from '@hpcc-js/comms';
 import { decryptString } from '@tombolo/shared';
 import { passwordExpiryAlertDaysForCluster } from '../../config/monitorings.js';
 import { passwordExpiryInProximityNotificationPayload } from '../../jobs/cluster/clusterReachabilityMonitoringUtils.js';
+
+const mockedDecryptString = decryptString as unknown as ReturnType<
+  typeof vi.fn
+>;
+const mockedAccountService = AccountService as unknown as ReturnType<
+  typeof vi.fn
+>;
+const mockedPasswordExpiryPayload =
+  passwordExpiryInProximityNotificationPayload as unknown as ReturnType<
+    typeof vi.fn
+  >;
+const workerParentPort = parentPort as NonNullable<typeof parentPort>;
 
 vi.mock('@hpcc-js/comms');
 vi.mock('@tombolo/shared');
@@ -32,7 +45,7 @@ describe('monitorClusterReachability', () => {
     Cluster.findAll.mockResolvedValue([]);
     vi.clearAllMocks();
     await monitorClusterReachability();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'info',
         text: expect.stringContaining(
@@ -40,7 +53,7 @@ describe('monitorClusterReachability', () => {
         ),
       })
     );
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'info',
         text: expect.stringContaining('monitoring completed'),
@@ -63,22 +76,25 @@ describe('monitorClusterReachability', () => {
         metaData: {},
       },
     ]);
-    decryptString.mockReturnValue('decrypted');
-    AccountService.mockImplementation(function () {
+    mockedDecryptString.mockReturnValue('decrypted');
+    mockedAccountService.mockImplementation(function () {
       return {
         MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
       };
     });
     passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(true);
-    passwordExpiryInProximityNotificationPayload.mockReturnValue({});
+    mockedPasswordExpiryPayload.mockReturnValue({});
     NotificationQueue.create.mockResolvedValue({});
     Cluster.update.mockResolvedValue({});
     vi.clearAllMocks();
     await monitorClusterReachability();
-    expect(decryptString).toHaveBeenCalledWith('encrypted', expect.any(String));
+    expect(mockedDecryptString).toHaveBeenCalledWith(
+      'encrypted',
+      expect.any(String)
+    );
     expect(NotificationQueue.create).toHaveBeenCalled();
     expect(Cluster.update).toHaveBeenCalled();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'info',
         text: expect.stringContaining('is reachable'),
@@ -101,7 +117,7 @@ describe('monitorClusterReachability', () => {
         metaData: {},
       },
     ]);
-    AccountService.mockImplementation(function () {
+    mockedAccountService.mockImplementation(function () {
       return {
         MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 10 }),
       };
@@ -110,9 +126,9 @@ describe('monitorClusterReachability', () => {
     Cluster.update.mockResolvedValue({});
     vi.clearAllMocks();
     await monitorClusterReachability();
-    expect(decryptString).not.toHaveBeenCalled();
+    expect(mockedDecryptString).not.toHaveBeenCalled();
     expect(Cluster.update).toHaveBeenCalled();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'info',
         text: expect.stringContaining('is reachable'),
@@ -135,19 +151,19 @@ describe('monitorClusterReachability', () => {
         metaData: {},
       },
     ]);
-    decryptString.mockReturnValue('decrypted');
-    AccountService.mockImplementation(function () {
+    mockedDecryptString.mockReturnValue('decrypted');
+    mockedAccountService.mockImplementation(function () {
       return {
         MyAccount: vi.fn().mockResolvedValue({ passwordDaysRemaining: 5 }),
       };
     });
     passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(true);
-    passwordExpiryInProximityNotificationPayload.mockReturnValue({});
+    mockedPasswordExpiryPayload.mockReturnValue({});
     NotificationQueue.create.mockRejectedValue(new Error('Queue error'));
     Cluster.update.mockResolvedValue({});
     vi.clearAllMocks();
     await monitorClusterReachability();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'error',
         text: expect.stringContaining('failed to queue notification'),
@@ -170,8 +186,8 @@ describe('monitorClusterReachability', () => {
         metaData: {},
       },
     ]);
-    decryptString.mockReturnValue('decrypted');
-    AccountService.mockImplementation(function () {
+    mockedDecryptString.mockReturnValue('decrypted');
+    mockedAccountService.mockImplementation(function () {
       return {
         MyAccount: vi.fn().mockRejectedValue(new Error('Unreachable')),
       };
@@ -179,7 +195,7 @@ describe('monitorClusterReachability', () => {
     Cluster.update.mockResolvedValue({});
     vi.clearAllMocks();
     await monitorClusterReachability();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'error',
         text: expect.stringContaining('is not reachable'),
@@ -192,7 +208,7 @@ describe('monitorClusterReachability', () => {
     Cluster.findAll.mockRejectedValue(new Error('Top level error'));
     vi.clearAllMocks();
     await monitorClusterReachability();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'error',
         text: expect.stringContaining('monitoring failed'),

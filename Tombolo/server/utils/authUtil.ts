@@ -647,28 +647,31 @@ const getAccessRequestRecipients = async (): Promise<string[]> => {
       metaData.accessRequestEmailRecipientsRoles.length > 0
     ) {
       const roles = metaData.accessRequestEmailRecipientsRoles;
-
-      // Get role ids
-      const roleDetails = await RoleType.findAll({
-        where: { roleName: roles },
-        raw: true,
-      });
+      const roleDetails =
+        (await RoleType.findAll({
+          where: { roleName: roles },
+          raw: true,
+        })) || [];
 
       const roleIds = roleDetails.map((r: any) => r.id);
+      const users =
+        roleIds.length > 0
+          ? (await UserRole.findAll({
+              where: { roleId: roleIds },
+              include: [
+                {
+                  model: User,
+                  as: 'user',
+                  attributes: ['email'],
+                },
+              ],
+            })) || []
+          : [];
 
-      // Get all users with the roleIds above
-      const users = await UserRole.findAll({
-        where: { roleId: roleIds },
-        include: [
-          {
-            model: User,
-            as: 'user',
-            attributes: ['email'],
-          },
-        ],
-      });
+      const emails = users
+        .map((u: any) => u?.user?.email)
+        .filter((email: any) => email && email.trim());
 
-      const emails = users.map((u: any) => u.user.email);
       recipients = [...recipients, ...emails];
     }
 

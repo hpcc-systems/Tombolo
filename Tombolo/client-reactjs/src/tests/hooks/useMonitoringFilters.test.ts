@@ -1,7 +1,5 @@
-/* eslint-env jest */
-/* eslint-disable prettier/prettier */
 import { renderHook, act } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi, it, expect, describe, beforeEach } from 'vitest';
 
 // We will mock debounce to execute immediately to simplify timing behavior
 vi.mock('lodash/debounce', () => ({ default: fn => fn }));

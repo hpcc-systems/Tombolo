@@ -1,17 +1,26 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { monitorCluster } from '../../jobs/cluster/clusterMonitoring.js';
-import {
+import { mockedModels } from '../mockedModels.js';
+const {
   ClusterMonitoring,
   MonitoringType,
   NotificationQueue,
   AsrProduct,
   AsrDomain,
   MonitoringLog,
-} from '../../models/index.js';
+} = mockedModels;
 import { parentPort } from 'worker_threads';
 import axios from 'axios';
 import { decryptString } from '@tombolo/shared';
 import { generateNotificationId } from '../../jobs/jobMonitoring/monitorJobsUtil.js';
+
+const workerParentPort = parentPort as NonNullable<typeof parentPort>;
+const mockedDecryptString = decryptString as unknown as ReturnType<
+  typeof vi.fn
+>;
+const mockedAxiosPost = axios.post as unknown as ReturnType<typeof vi.fn>;
+const mockedGenerateNotificationId =
+  generateNotificationId as unknown as ReturnType<typeof vi.fn>;
 
 vi.mock('axios');
 vi.mock('@tombolo/shared');
@@ -39,7 +48,7 @@ describe('monitorCluster', () => {
   it('should post error if monitoring type not found', async () => {
     MonitoringType.findOne.mockResolvedValue(null);
     await monitorCluster();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'error',
         text: expect.stringContaining(
@@ -53,7 +62,7 @@ describe('monitorCluster', () => {
     MonitoringType.findOne.mockResolvedValue({ id: 1 });
     ClusterMonitoring.findAll.mockResolvedValue([]);
     await monitorCluster();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'info',
         text: expect.stringContaining(
@@ -91,8 +100,8 @@ describe('monitorCluster', () => {
         },
       },
     ]);
-    decryptString.mockReturnValue('decrypted');
-    axios.post.mockResolvedValue({
+    mockedDecryptString.mockReturnValue('decrypted');
+    mockedAxiosPost.mockResolvedValue({
       data: {
         ActivityResponse: {
           ThorClusterList: {
@@ -104,9 +113,9 @@ describe('monitorCluster', () => {
         },
       },
     });
-    generateNotificationId.mockReturnValue('notifId');
+    mockedGenerateNotificationId.mockReturnValue('notifId');
     await monitorCluster();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'info',
         text: expect.stringContaining(
@@ -114,7 +123,7 @@ describe('monitorCluster', () => {
         ),
       })
     );
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'verbose',
         text: expect.stringContaining('Detected 1 problematic cluster(s)'),
@@ -146,10 +155,10 @@ describe('monitorCluster', () => {
         },
       },
     ]);
-    decryptString.mockReturnValue('decrypted');
-    axios.post.mockRejectedValue(new Error('fail'));
+    mockedDecryptString.mockReturnValue('decrypted');
+    mockedAxiosPost.mockRejectedValue(new Error('fail'));
     await monitorCluster();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'error',
         text: expect.stringContaining('Error while monitoring cluster status'),
@@ -181,8 +190,8 @@ describe('monitorCluster', () => {
         },
       },
     ]);
-    decryptString.mockReturnValue('decrypted');
-    axios.post.mockResolvedValue({
+    mockedDecryptString.mockReturnValue('decrypted');
+    mockedAxiosPost.mockResolvedValue({
       data: {
         ActivityResponse: {
           ThorClusterList: {
@@ -193,9 +202,9 @@ describe('monitorCluster', () => {
     });
     AsrProduct.findOne.mockRejectedValue(new Error('product fail'));
     AsrDomain.findOne.mockRejectedValue(new Error('domain fail'));
-    generateNotificationId.mockReturnValue('notifId');
+    mockedGenerateNotificationId.mockReturnValue('notifId');
     await monitorCluster();
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'warn',
         text: expect.stringContaining(
@@ -203,7 +212,7 @@ describe('monitorCluster', () => {
         ),
       })
     );
-    expect(parentPort.postMessage).toHaveBeenCalledWith(
+    expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 'warn',
         text: expect.stringContaining('Error while getting ASR domain'),

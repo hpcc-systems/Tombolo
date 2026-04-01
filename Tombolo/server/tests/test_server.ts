@@ -3,6 +3,7 @@ const pathToEnv = path.join(process.cwd(), '..', '..', '.env');
 import dotenv from 'dotenv';
 dotenv.config({ path: pathToEnv });
 import express from 'express';
+import type { RequestHandler } from 'express';
 // import db from '../models/index.js';
 import logger from '../config/logger.js';
 import cookieParser from 'cookie-parser';
@@ -13,11 +14,13 @@ process.env.NODE_ENV = 'test';
 
 const app = express();
 const port = process.env.TEST_SERVER_PORT || 3004;
+const validateTokenMiddleware = fakeValidateTokenMiddleware as RequestHandler;
+const csrfProtectionMiddleware = fakeCsrfProtection as RequestHandler;
 
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
-app.use(fakeCsrfProtection); // Mock CSRF protection for testing
+app.use(csrfProtectionMiddleware); // Mock CSRF protection for testing
 
 // Import routes
 import auth from '../routes/authRoutes.js';
@@ -35,32 +38,28 @@ import workunits from '../routes/workunitRoutes.js';
 
 // Use routes
 app.use('/api/auth', auth);
-app.use('/api/users', fakeValidateTokenMiddleware, user);
+app.use('/api/users', validateTokenMiddleware, user);
 app.use('/api/instance', instance);
-app.use('/api/cluster', fakeValidateTokenMiddleware, cluster);
+app.use('/api/cluster', validateTokenMiddleware, cluster);
 app.use('/api/session', session);
 app.use('/api/roles', roles);
 app.use(
   '/api/landingZoneMonitoring',
-  fakeValidateTokenMiddleware,
+  validateTokenMiddleware,
   landingZoneMonitoring
 );
-app.use(
-  '/api/clusterMonitoring',
-  fakeValidateTokenMiddleware,
-  clusterMonitoring
-);
-app.use('/api/costMonitoring', fakeValidateTokenMiddleware, costMonitoring);
-app.use('/api/fileMonitoring', fakeValidateTokenMiddleware, fileMonitoring);
+app.use('/api/clusterMonitoring', validateTokenMiddleware, clusterMonitoring);
+app.use('/api/costMonitoring', validateTokenMiddleware, costMonitoring);
+app.use('/api/fileMonitoring', validateTokenMiddleware, fileMonitoring);
 app.use(
   '/api/orbitProfileMonitoring',
-  fakeValidateTokenMiddleware,
+  validateTokenMiddleware,
   orbitProfileMonitoring
 );
-app.use('/api/workunits', fakeValidateTokenMiddleware, workunits);
+app.use('/api/workunits', validateTokenMiddleware, workunits);
 
 // Function to start the server
-let server;
+let server: ReturnType<typeof app.listen> | null = null;
 const startServer = async () => {
   try {
     // await db.sequelize.authenticate();
