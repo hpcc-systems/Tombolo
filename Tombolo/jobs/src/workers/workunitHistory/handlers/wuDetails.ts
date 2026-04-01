@@ -9,22 +9,32 @@ import {
 } from '@tombolo/shared';
 import logger from '@/config/logger.js';
 
+type ScopeType =
+  | 'activity'
+  | 'subgraph'
+  | 'graph'
+  | 'operation'
+  | 'global'
+  | 'workflow'
+  | null;
+
 // Type for database row objects (what processScopeToRow returns)
 type WorkUnitDetailRow = {
   clusterId: string;
   wuId: string;
   scopeId: string;
   scopeName: string;
-  scopeType: string;
+  scopeType: ScopeType;
   label: string | null;
   kind: number | null;
   fileName: string | null;
-  [key: string]: string | number | null; // Dynamic metric fields
+  [key: string]: string | number | ScopeType; // Dynamic metric fields
 };
 
 // Constants
 const TERMINAL_STATES = ['completed', 'failed', 'aborted'];
 const ACCEPTED_SCOPE_TYPES = [
+  'global',
   'activity',
   'subgraph',
   'graph',
@@ -36,6 +46,8 @@ const ACCEPTED_SCOPE_TYPES = [
 type OutOfRangeTimeValue = {
   clusterId: string;
   wuId: string;
+  scopeName: string | undefined;
+  scopeType: string | undefined;
   fieldName: string;
   value: number;
   reason: 'negative' | 'exceeds_max';
@@ -123,7 +135,7 @@ function logOutOfRangeSummary() {
     );
     negativeValues.forEach(ex => {
       logger.warn(
-        `  WorkUnit: ${ex.wuId} | Cluster: ${ex.clusterId} | Property: ${ex.fieldName} | Value: ${ex.value}s | Original: ${ex.originalNanoseconds}ns`
+        `  WorkUnit: ${ex.wuId} | Cluster: ${ex.clusterId} | Scope: ${ex.scopeName} (${ex.scopeType}) | Property: ${ex.fieldName} | Value: ${ex.value}s | Original: ${ex.originalNanoseconds}ns`
       );
     });
   }
@@ -138,7 +150,7 @@ function logOutOfRangeSummary() {
         ? (ex.maxAllowed / 86400).toFixed(2)
         : 'N/A';
       logger.warn(
-        `  WorkUnit: ${ex.wuId} | Cluster: ${ex.clusterId} | Property: ${ex.fieldName} | Value: ${ex.value}s (${days} days) | Max Allowed: ${ex.maxAllowed}s (${maxDays} days) | Original: ${ex.originalNanoseconds}ns`
+        `  WorkUnit: ${ex.wuId} | Cluster: ${ex.clusterId} | Scope: ${ex.scopeName} (${ex.scopeType}) | Property: ${ex.fieldName} | Value: ${ex.value}s (${days} days) | Max Allowed: ${ex.maxAllowed}s (${maxDays} days) | Original: ${ex.originalNanoseconds}ns`
       );
     });
   }
@@ -256,7 +268,20 @@ async function bulkCreateWithDiagnostics(batch: WorkUnitDetailRow[]) {
 }
 
 // Create Sets for O(1) lookup instead of O(n) array.includes()
-const relevantMetricsSet = new Set(relevantMetrics);
+const relevantMetricsSet = new Set<string>(relevantMetrics);
+
+/**
+ * Normalizes scope labels to match shared formatting behavior.
+ * Replaces &apos; with spaces and collapses whitespace.
+ */
+function sanitizeScopeLabel(value: string): string {
+  if (value.indexOf('&apos;') === -1) return value;
+
+  return value
+    .replace(/&apos;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 /**
  * Extracts performance metrics from a scope's properties
@@ -267,7 +292,9 @@ const relevantMetricsSet = new Set(relevantMetrics);
 function extractPerformanceMetrics(
   scope: WsWorkunits.Scope,
   clusterId: string,
-  wuId: string
+  wuId: string,
+  scopeName: string | undefined,
+  scopeType: string | undefined
 ) {
   const metrics = {};
 
@@ -302,6 +329,8 @@ function extractPerformanceMetrics(
           outOfRangeTimeValues.push({
             clusterId,
             wuId,
+            scopeName,
+            scopeType,
             fieldName: name,
             value: rounded,
             reason: 'negative',
@@ -309,7 +338,7 @@ function extractPerformanceMetrics(
           });
 
           logger.warn(
-            `Out-of-range time value detected: ${name} = ${rounded}s (negative value, likely clock skew) in wuId=${wuId}, clusterId=${clusterId}`
+            `Out-of-range time value detected: ${name} = ${rounded}s (negative value, likely clock skew) in wuId=${wuId}, clusterId=${clusterId}, scopeName=${scopeName}, scopeType=${scopeType}`
           );
 
           return null;
@@ -322,6 +351,8 @@ function extractPerformanceMetrics(
           outOfRangeTimeValues.push({
             clusterId,
             wuId,
+            scopeName,
+            scopeType,
             fieldName: name,
             value: rounded,
             reason: 'exceeds_max',
@@ -330,7 +361,7 @@ function extractPerformanceMetrics(
           });
 
           logger.warn(
-            `Out-of-range time value detected: ${name} = ${rounded}s (${days} days, exceeds max ${MAX_DECIMAL_13_6}s) in wuId=${wuId}, clusterId=${clusterId}`
+            `Out-of-range time value detected: ${name} = ${rounded}s (${days} days, exceeds max ${MAX_DECIMAL_13_6}s) in wuId=${wuId}, clusterId=${clusterId}, scopeName=${scopeName}, scopeType=${scopeType}`
           );
 
           return null;
@@ -356,7 +387,7 @@ function extractPerformanceMetrics(
   // Extract properties into clean + converted metrics object
   scope.Properties.Property.forEach(prop => {
     const propName = prop.Name as string;
-    if (relevantMetricsSet.has(propName as any)) {
+    if (relevantMetricsSet.has(propName)) {
       const value =
         prop.RawValue !== undefined ? prop.RawValue : prop.Formatted;
       const converted = convertByUnit(propName, value);
@@ -386,8 +417,16 @@ function processScopeToRow(
   if (!ACCEPTED_SCOPE_TYPES.includes(scopeType)) return null;
   if (scopeName && scopeName.startsWith('>compile')) return null;
 
-  const metrics = extractPerformanceMetrics(scope, clusterId, wuId);
-  if (!metrics || Object.keys(metrics).length === 0) return null;
+  const metrics = extractPerformanceMetrics(
+    scope,
+    clusterId,
+    wuId,
+    scopeName,
+    scopeType
+  );
+  // Always insert global scopes (even without metrics); skip all other scope types with no metrics
+  if (scopeType !== 'global' && (!metrics || Object.keys(metrics).length === 0))
+    return null;
 
   // Extract properties efficiently with early termination
   let kind = null;
@@ -405,13 +444,18 @@ function processScopeToRow(
     filename = filenameProp?.RawValue ?? null;
   }
 
+  const isGlobal = scopeType === 'global';
+
   return {
     clusterId,
     wuId,
-    scopeId: scope?.Id,
-    scopeName: scopeName,
-    scopeType: scopeType,
-    label: label ? truncateString(label, 250) : null,
+    scopeId: isGlobal ? (scope?.Id ?? 'global') : scope?.Id,
+    scopeName: isGlobal ? (scopeName ?? 'global') : scopeName,
+    scopeType: (scopeType || null) as ScopeType, // Convert empty string to null (not a valid ENUM value)
+    label:
+      typeof label === 'string'
+        ? truncateString(sanitizeScopeLabel(label), 250)
+        : null,
     kind: kind ? parseInt(kind, 10) : null,
     fileName: filename ? truncateString(filename, 125) : null,
     ...metrics,

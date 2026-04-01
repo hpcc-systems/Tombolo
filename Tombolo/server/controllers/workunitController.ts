@@ -6,6 +6,7 @@ import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 import { getCluster } from '../utils/hpcc-util.js';
 import { getClusterOptions } from '../utils/getClusterOptions.js';
+import { findFuzzyMatches } from '@tombolo/shared';
 
 type ScopeNode = InferAttributes<WorkUnitDetails> & { children: ScopeNode[] };
 
@@ -103,6 +104,10 @@ async function getWorkunits(req: Request, res: Response) {
           'totalClusterTime',
           'totalCost',
           'workUnitTimestamp',
+          'endTimestamp',
+          'executeCost',
+          'fileAccessCost',
+          'compileCost',
           'detailsFetchedAt',
           [sequelize.literal('detailsFetchedAt IS NOT NULL'), 'hasDetails'],
         ],
@@ -245,23 +250,16 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
       clusterId: string;
       jobName: string;
     };
-    const { startDate, limit = 100 } = req.query;
+    // Fetch larger candidate set before fuzzy matching to avoid missing similar jobs
+    // that aren't in the most recent N workunits
+    const { limit = 500 } = req.query;
 
     // Build where clause
     const where: WhereOptions<InferAttributes<WorkUnit>> = {
       clusterId,
-      jobName,
     };
 
-    // Add date filter if provided
-    if (startDate) {
-      where.workUnitTimestamp = {
-        [Op.gte]: new Date(String(startDate)),
-      };
-    }
-
-    // Fetch workunits
-    const workunits = await WorkUnit.findAll({
+    const wus = await WorkUnit.findAll({
       where,
       order: [['workUnitTimestamp', 'DESC']], // Most recent first
       limit: parseInt(String(limit)),
@@ -275,9 +273,28 @@ async function getJobHistoryByJobName(req: Request, res: Response) {
         'owner',
         'clusterId',
       ],
+      raw: true,
     });
 
-    return sendSuccess(res, workunits);
+    // Using enhanced fuzzy matching with substring intelligence
+    const MIN_SIMILARITY = 0.8; // 80% similar (adjust between 0.7-0.9)
+
+    const fuzzyResults = findFuzzyMatches(
+      jobName,
+      wus.filter(w => w.jobName),
+      w => w.jobName,
+      { minSimilarity: MIN_SIMILARITY }
+    );
+
+    const similarJobs = fuzzyResults.map(result => ({
+      ...result.item,
+      similarity: result.similarity,
+      distance: result.distance,
+      matchType: result.matchType,
+    }));
+
+    // Return empty array for no matches (not a 404) - client handles empty state gracefully
+    return sendSuccess(res, similarJobs);
   } catch (error) {
     logger.error('Error fetching job history:', error);
     return sendError(res, 'Failed to fetch job history', 500);
@@ -501,6 +518,97 @@ async function getWorkunitGraph(req: Request, res: Response) {
   }
 }
 
+// (exports consolidated below)
+
+// New endpoints for pagination and scope history
+async function getWorkunitScopes(req: Request, res: Response) {
+  try {
+    const { wuid, clusterId } = req.params as {
+      wuid: string;
+      clusterId: string;
+    };
+    const parsedLimit = parseInt(String(req.query.limit), 10);
+    const limit = Math.min(
+      Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 200,
+      1000
+    );
+    // Keyset cursor: the last seen `id` from the previous page (0 = first page)
+    const parsedCursor = parseInt(String(req.query.cursor), 10);
+    const cursorId =
+      Number.isFinite(parsedCursor) && parsedCursor > 0 ? parsedCursor : 0;
+
+    const where: WhereOptions<InferAttributes<WorkUnitDetails>> = {
+      wuId: wuid,
+      clusterId,
+      ...(cursorId > 0 ? { id: { [Op.gt]: cursorId } } : {}),
+    };
+
+    const { count, rows } = await WorkUnitDetails.findAndCountAll({
+      where,
+      order: [['id', 'ASC']],
+      limit,
+    });
+
+    const items = rows.map(r => r.get({ plain: true }));
+    const nextCursor = rows.length === limit ? rows[rows.length - 1].id : null;
+
+    return sendSuccess(res, {
+      total: count,
+      cursor: cursorId,
+      nextCursor,
+      items,
+    });
+  } catch (err) {
+    logger.error('Get workunit scopes error:', err);
+    return sendError(res, 'Failed to fetch scopes', 500);
+  }
+}
+
+async function getWorkunitScopesSummary(req: Request, res: Response) {
+  try {
+    const { wuid, clusterId } = req.params as {
+      wuid: string;
+      clusterId: string;
+    };
+    const counts = await WorkUnitDetails.findAll({
+      where: { wuId: wuid, clusterId },
+      attributes: [
+        'scopeType',
+        [sequelize.fn('COUNT', sequelize.col('scopeType')), 'count'],
+      ],
+      group: ['scopeType'],
+      raw: true,
+    });
+    return sendSuccess(res, counts);
+  } catch (err) {
+    logger.error('Get scopes summary error:', err);
+    return sendError(res, 'Failed to fetch scopes summary', 500);
+  }
+}
+
+async function getScopeHistory(req: Request, res: Response) {
+  try {
+    const { wuid, clusterId, scopeId } = req.params as {
+      wuid: string;
+      clusterId: string;
+      scopeId: string;
+    };
+    const details = await WorkUnitDetails.findAll({
+      where: { wuId: wuid, clusterId, scopeId },
+      order: [['id', 'ASC']],
+    });
+    if (!details || details.length === 0)
+      return sendError(res, 'No history for scope', 404);
+    return sendSuccess(
+      res,
+      details.map(d => d.get({ plain: true }))
+    );
+  } catch (err) {
+    logger.error('Get scope history error:', err);
+    return sendError(res, 'Failed to fetch scope history', 500);
+  }
+}
+
 export {
   getWorkunits,
   getWorkunit,
@@ -511,4 +619,7 @@ export {
   getJobHistoryByJobNameWStats,
   comparePreviousByWuid,
   getWorkunitGraph,
+  getWorkunitScopes,
+  getWorkunitScopesSummary,
+  getScopeHistory,
 };

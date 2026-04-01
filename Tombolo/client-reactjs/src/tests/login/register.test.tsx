@@ -177,7 +177,7 @@ describe('Register', () => {
 
       const firstNameInput = screen.getByLabelText(/First Name/i);
       const longName = 'a'.repeat(65);
-      await user.type(firstNameInput, longName);
+      fireEvent.change(firstNameInput, { target: { value: longName } });
 
       const registerButtons = screen.getAllByRole('button', { name: /Register/i });
       const submitButton = registerButtons.find(button => (button as HTMLButtonElement).type === 'submit');
@@ -194,7 +194,7 @@ describe('Register', () => {
 
       const lastNameInput = screen.getByLabelText(/Last Name/i);
       const longName = 'a'.repeat(65);
-      await user.type(lastNameInput, longName);
+      fireEvent.change(lastNameInput, { target: { value: longName } });
 
       const registerButtons = screen.getAllByRole('button', { name: /Register/i });
       const submitButton = registerButtons.find(button => (button as HTMLButtonElement).type === 'submit');
@@ -305,12 +305,6 @@ describe('Register', () => {
     it('displays success message after successful registration', async () => {
       const user = userEvent.setup();
       const mockStore = createMockStore();
-
-      // Mock successful registration
-      const mockRegisterAction = vi.fn(() => ({
-        type: 'auth/registerBasicUser/fulfilled',
-        payload: { success: true },
-      }));
 
       renderWithProviders(<Register />, { store: mockStore });
 

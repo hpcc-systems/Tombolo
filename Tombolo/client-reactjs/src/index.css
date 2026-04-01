@@ -338,39 +338,6 @@ path,
 .jtk-endpoint {
   cursor: pointer;
 }
-.ant-layout-content {
-  /* margin-left: 0px !important; */
-}
-
-/*.ant-btn-primary:active, .ant-btn-primary.active {
-  color: #fff;
-  background-color: #008000;
-  border-color: #008000;
-}
-
-.ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):active {
-    color: #fff;
-    background: #008000;
-    border-color: #008000;
-}
-
-.ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
-    color: #fff;
-    background: #008000;
-    border-color: #008000;
-}
-
-.ant-btn-primary {
-    color: #fff;
-    background-color: #008000;
-    border-color: #008000;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
-    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.045);
-}*/
-/* .navbar .home-logo {
-  color: #ff5722 !important;
-  font-weight: bold;
-} */
 
 #applicationSelect {
   min-width: 155px;
@@ -389,13 +356,6 @@ path,
 .active {
   color: #1890ff !important;
 }
-
-/* .ant-radio-group-solid
-  .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
-  color: #fff;
-  background: #6c757d;
-  border-color: #6c757d;
-} */
 
 .ant-radio-button-wrapper-checked:hover {
   color: #fff;

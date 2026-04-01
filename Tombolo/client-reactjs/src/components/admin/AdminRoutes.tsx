@@ -1,6 +1,7 @@
 import React from 'react';
-import { Switch } from 'react-router-dom';
+import { Redirect, Route, Switch } from 'react-router-dom';
 import { PrivateRoute } from '../common/PrivateRoute';
+import { isAdminOrWorkunitPath } from '../common/routeMatching';
 
 const Users = React.lazy(() => import('./Users'));
 const AdminApplications = React.lazy(() => import('./apps/Applications'));
@@ -11,10 +12,11 @@ const Integrations = React.lazy(() => import('./Integrations'));
 const IntegrationSettings = React.lazy(() => import('./Integrations/IntegrationSettings'));
 const UserManagement = React.lazy(() => import('./userManagement'));
 const Settings = React.lazy(() => import('./settings'));
-const WorkUnitHistory = React.lazy(() => import('./workunitHistory/index'));
-const WorkUnitDetails = React.lazy(() => import('./workunitHistory/details/index'));
-const WorkUnitAnalytics = React.lazy(() => import('./workunitAnalytics/index'));
+const WorkUnitHistory = React.lazy(() => import('./workunits/history'));
+const WorkUnitDetails = React.lazy(() => import('./workunits/history/details'));
+const WorkUnitAnalytics = React.lazy(() => import('./workunits/analytics'));
 const WorkUnitDashboard = React.lazy(() => import('./workunits/dashboard/'));
+const HPCC_Tools = React.lazy(() => import('./HPCCTools'));
 
 const AdminRoutes: React.FC = () => {
   return (
@@ -28,10 +30,17 @@ const AdminRoutes: React.FC = () => {
       <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
       <PrivateRoute path="/admin/integrations" component={Integrations} />
       <PrivateRoute path="/admin/settings" component={Settings} />
+      <PrivateRoute path="/admin/hpcc-tools" component={HPCC_Tools} />
       <PrivateRoute exact path="/workunits/history/:clusterId/:wuid" component={WorkUnitDetails} />
       <PrivateRoute path="/workunits/history" component={WorkUnitHistory} />
       <PrivateRoute path="/workunits/sql" component={WorkUnitAnalytics} />
       <PrivateRoute path="/workunits/dashboard" component={WorkUnitDashboard} />
+      <Route
+        path="*"
+        render={({ location }) => {
+          return isAdminOrWorkunitPath(location.pathname) ? <Redirect to="/" /> : null;
+        }}
+      />
     </Switch>
   );
 };

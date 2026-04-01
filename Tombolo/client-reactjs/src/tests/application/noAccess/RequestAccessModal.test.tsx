@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Form, FormInstance } from 'antd';
+import type { ReactElement } from 'react';
 
 import RequestAccessModal from '@/components/application/noAccess/requestAccessModal';
 
@@ -10,7 +11,7 @@ const TestWrapper = ({
   children,
   form,
 }: {
-  children: (args: { form: FormInstance }) => React.ReactElement;
+  children: (args: { form: FormInstance }) => ReactElement;
   form?: FormInstance;
 }) => {
   const [testForm] = Form.useForm();
@@ -112,7 +113,8 @@ describe('RequestAccessModal', () => {
       const textarea = screen.getByLabelText(/Additional Information/i);
       const longComment = 'a'.repeat(300);
 
-      await user.type(textarea, longComment);
+      // Use a single change event instead of typing 300 characters to avoid CI timeouts.
+      fireEvent.change(textarea, { target: { value: longComment } });
 
       const submitButton = screen.getByRole('button', { name: /Submit/i });
       await user.click(submitButton);

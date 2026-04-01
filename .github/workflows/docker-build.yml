@@ -44,6 +44,12 @@ jobs:
           cd Tombolo
           cp docker-compose-sample.yml docker-compose.yml
           cp .env.sample .env
+          # CI-only defaults so compose interpolation has safe non-empty values.
+          FAKE_SSH_AUTH_SOCK=/tmp/ssh-agent-ci.sock
+          touch "$FAKE_SSH_AUTH_SOCK"
+          echo "SSH_AUTH_SOCK=$FAKE_SSH_AUTH_SOCK" >> $GITHUB_ENV
+          echo "MAXMEM_BYTES=268435456" >> $GITHUB_ENV
+          echo "MAXMEM_HUMAN=256mb" >> $GITHUB_ENV
           # Set required dummy values for build
           sed -i 's/DB_USERNAME=database_user/DB_USERNAME=ci_test_user/' .env
           sed -i 's/DB_PASSWORD=database_user_password/DB_PASSWORD=ci_test_password/' .env

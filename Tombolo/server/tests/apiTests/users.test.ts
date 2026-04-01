@@ -1,0 +1,281 @@
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from 'vitest';
+import request from 'supertest';
+import { app } from '../test_server.js';
+import { mockedModels } from '../mockedModels.js';
+const { User, UserArchive, NotificationQueue, sequelize } = mockedModels;
+import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import { getUsers, nonExistentID } from '../helpers.js';
+
+const sequelizeTx = sequelize as typeof sequelize & {
+  __commit: ReturnType<typeof vi.fn>;
+  __rollback: ReturnType<typeof vi.fn>;
+};
+
+beforeAll(async () => {});
+
+describe('User Routes', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
+  });
+
+  afterEach(() => {
+    vi.clearAllTimers();
+    vi.clearAllMocks();
+  });
+
+  it('get-users should get all users', async () => {
+    const users = getUsers();
+    User.findAll.mockResolvedValue(users);
+
+    const res = await request(app).get('/api/users');
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toBe('Users retrieved successfully');
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data.length).toBe(users.length);
+    expect(res.body.data[0].email).toBe(users[0].email);
+    expect(User.findAll).toHaveBeenCalled();
+  });
+
+  it('get-user should get a user by ID', async () => {
+    const users = getUsers();
+    const user = users[0];
+    User.findOne.mockResolvedValue(user);
+
+    const res = await request(app).get(`/api/users/${user.id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.email).toBe(user.email);
+    expect(res.body.data.id).toBe(user.id);
+    expect(User.findOne).toHaveBeenCalled();
+  });
+
+  it('get-user should return 404 if user not found', async () => {
+    User.findOne.mockResolvedValue(null);
+
+    const res = await request(app).get(`/api/users/${nonExistentID}`);
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('User not found');
+    expect(User.findOne).toHaveBeenCalledWith({ where: { id: nonExistentID } });
+    // logger.error should NOT be called for business logic errors like "not found"
+  });
+
+  it('update-user should update a users info', async () => {
+    const users = getUsers();
+    const user = users[0];
+    const reqBody = {
+      firstName: 'Johnny',
+      id: user.id,
+    };
+
+    User.findOne.mockResolvedValue({
+      ...user,
+      save: vi.fn().mockResolvedValue(reqBody),
+    });
+
+    const res = await request(app).patch(`/api/users/${user.id}`).send(reqBody);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toBe('User updated successfully');
+    expect(res.body.data).toEqual(reqBody);
+    expect(User.findOne).toHaveBeenCalled();
+    expect(sequelize.transaction).toHaveBeenCalled();
+    expect(sequelizeTx.__commit).toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).not.toHaveBeenCalled();
+    expect(NotificationQueue.create).toHaveBeenCalled();
+  });
+
+  it('update-user should return 404 if user id is invalid', async () => {
+    const users = getUsers();
+    const user = users[0];
+    User.findOne.mockResolvedValue(null);
+    const reqBody = {
+      ...user,
+      firstName: 'Johnny',
+    };
+
+    const res = await request(app)
+      .patch(`/api/users/${nonExistentID}`)
+      .send(reqBody);
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('User not found');
+    expect(User.findOne).toHaveBeenCalled();
+    expect(sequelize.transaction).toHaveBeenCalled();
+    expect(sequelizeTx.__commit).not.toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).toHaveBeenCalled();
+    expect(NotificationQueue.create).not.toHaveBeenCalled();
+    // logger.error should NOT be called for business logic errors like "not found"
+  });
+
+  it('delete-user should delete a user by ID', async () => {
+    const users = getUsers();
+    const user = users[0];
+    User.findByPk.mockResolvedValue({ dataValues: user });
+    UserArchive.create.mockResolvedValue(true);
+    User.destroy.mockResolvedValue(true);
+
+    const res = await request(app).delete(`/api/users/${user.id}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toBe('User deleted successfully');
+    expect(User.destroy).toHaveBeenCalled();
+    expect(UserArchive.create).toHaveBeenCalled();
+  });
+
+  it('delete-user should return 404 if user not found', async () => {
+    User.findByPk.mockResolvedValue(null);
+
+    const res = await request(app).delete(`/api/users/${nonExistentID}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(User.destroy).not.toHaveBeenCalled();
+    expect(UserArchive.create).not.toHaveBeenCalled();
+  });
+
+  it('change-password should change user password', async () => {
+    const users = getUsers();
+    const user = users[0];
+    User.findOne.mockResolvedValue(user);
+
+    const res = await request(app)
+      .patch(`/api/users/change-password/${user.id}`)
+      .send({
+        currentPassword: 'Password123!',
+        newPassword: 'NewPassword123!',
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(User.findOne).toHaveBeenCalled();
+    expect(User.update).toHaveBeenCalled();
+    expect(NotificationQueue.create).toHaveBeenCalled();
+    expect(sequelize.transaction).toHaveBeenCalled();
+    expect(sequelizeTx.__commit).toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).not.toHaveBeenCalled();
+  });
+
+  it('change-password should return 400 if currentPassword is incorrect', async () => {
+    const users = getUsers();
+    const user = users[0];
+    User.findOne.mockResolvedValue(user);
+
+    const res = await request(app)
+      .patch(`/api/users/change-password/${user.id}`)
+      .send({
+        currentPassword: 'WrongPassword',
+        newPassword: 'NewPassword123!',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(User.findOne).toHaveBeenCalled();
+    expect(User.update).not.toHaveBeenCalled();
+    expect(NotificationQueue.create).not.toHaveBeenCalled();
+    expect(sequelize.transaction).toHaveBeenCalled();
+    expect(sequelizeTx.__commit).not.toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).toHaveBeenCalled();
+    // logger.error should NOT be called for validation errors like incorrect password
+  });
+
+  it('change-password should return 404 if user does not exist', async () => {
+    User.findOne.mockResolvedValue(null);
+
+    const res = await request(app)
+      .patch(`/api/users/change-password/${nonExistentID}`)
+      .send({
+        currentPassword: 'WrongPassword',
+        newPassword: 'NewPassword123!',
+      });
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(User.findOne).toHaveBeenCalled();
+    expect(User.update).not.toHaveBeenCalled();
+    expect(NotificationQueue.create).not.toHaveBeenCalled();
+    expect(sequelize.transaction).toHaveBeenCalled();
+    expect(sequelizeTx.__commit).not.toHaveBeenCalled();
+    expect(sequelizeTx.__rollback).toHaveBeenCalled();
+    // logger.error should NOT be called for business logic errors like "not found"
+  });
+
+  it('reset-password-for-user should return 200 for generating password reset link', async () => {
+    // TODO: Create this test
+  });
+
+  it('reset-password-for-user should return 404 if user not found for password reset', async () => {
+    // TODO: Create this test
+  });
+
+  it('bulk-delete should bulk delete users', async () => {
+    const users = getUsers();
+    User.findByPk
+      .mockReturnValueOnce({ dataValues: users[0] })
+      .mockReturnValueOnce({ dataValues: users[1] });
+    UserArchive.create
+      .mockResolvedValueOnce({
+        ...users[0],
+        removedAt: new Date(),
+        removedBy: 'Admin Removal',
+      })
+      .mockResolvedValueOnce({
+        ...users[1],
+        removedAt: new Date(),
+        removedBy: 'Admin Removal',
+      });
+
+    const ids = users.map(user => user.id);
+    const res = await request(app)
+      .delete('/api/users/bulk-delete')
+      .send({ ids });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toContain('Users deleted successfully');
+    expect(User.findByPk).toHaveBeenCalledTimes(2);
+    expect(UserArchive.create).toHaveBeenCalledTimes(2);
+    expect(User.destroy).toHaveBeenCalledTimes(2);
+  });
+
+  it('bulk-delete should fail to delete some users if some invalid users', async () => {
+    const users = getUsers();
+    User.findByPk
+      .mockReturnValueOnce({ dataValues: users[0] })
+      .mockReturnValueOnce(null);
+    UserArchive.create.mockResolvedValueOnce({
+      ...users[0],
+      removedAt: new Date(),
+      removedBy: 'Admin Removal',
+    });
+    User.destroy.mockResolvedValue(true);
+
+    const ids = [users[0].id, nonExistentID];
+    const res = await request(app)
+      .delete('/api/users/bulk-delete')
+      .send({ ids });
+
+    expect(res.status).toBe(207);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('Some users could not be deleted');
+    // expect(res.body.data.deletedCount).toBe(1);
+    // expect(res.body.data.idsCount).toBe(2);
+    expect(User.findByPk).toHaveBeenCalledTimes(2);
+    expect(UserArchive.create).toHaveBeenCalledTimes(1);
+    expect(User.destroy).toHaveBeenCalledTimes(1);
+  });
+});

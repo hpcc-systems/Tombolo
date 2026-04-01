@@ -1,4 +1,4 @@
-import path from 'path';
+import { join } from 'path';
 import {
   lz_monitoring_interval,
   lz_file_count_monitoring_interval,
@@ -40,16 +40,17 @@ const humanReadableIntervalForSpaceUsageMonitoring = generateIntervalString({
 });
 
 // Job monitoring bree job
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function startLzFileMovementMonitoring(this: any): Promise<void> {
   try {
-    let jobName =
+    const jobName =
       'landing-zone-file-movement-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
       // interval: '20s', // For development
       interval: humanReadableIntervalForJobMonitoring,
       path: resolveJobPath(
-        path.join(
+        join(
           __dirname,
           '..',
           '..',
@@ -74,15 +75,16 @@ async function startLzFileMovementMonitoring(this: any): Promise<void> {
 }
 
 // File count monitoring bree job
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function startLzFileCountMonitoring(this: any): Promise<void> {
   try {
-    let jobName = 'landing-zone-file-count-monitoring' + new Date().getTime();
+    const jobName = 'landing-zone-file-count-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
       // interval: '20s', // For development
       interval: humanReadableIntervalForFileCountMonitoring,
       path: resolveJobPath(
-        path.join(
+        join(
           __dirname,
           '..',
           '..',
@@ -107,15 +109,17 @@ async function startLzFileCountMonitoring(this: any): Promise<void> {
 }
 
 // Space usage monitoring bree job
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function startLzSpaceUsageMonitoring(this: any): Promise<void> {
   try {
-    let jobName = 'landing-zone-space-usage-monitoring' + new Date().getTime();
+    const jobName =
+      'landing-zone-space-usage-monitoring' + new Date().getTime();
     this.bree.add({
       name: jobName,
       // interval: '20s', // For development
       interval: humanReadableIntervalForSpaceUsageMonitoring,
       path: resolveJobPath(
-        path.join(
+        join(
           __dirname,
           '..',
           '..',

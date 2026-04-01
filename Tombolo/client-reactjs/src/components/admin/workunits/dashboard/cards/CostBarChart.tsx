@@ -1,4 +1,5 @@
 import { Card, Tooltip } from 'antd';
+import { formatCurrency } from '@tombolo/shared';
 
 export interface DailyCost {
   date: string;
@@ -76,7 +77,7 @@ export default function CostBarChart({ data }: CostBarChartProps) {
                   textAlign: 'right',
                   lineHeight: 1,
                 }}>
-                ${value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toFixed(0)}
+                ${value >= 1000 ? `${Math.round(value / 1000)}k` : Math.round(value).toLocaleString()}
               </div>
             ))}
         </div>
@@ -133,7 +134,7 @@ export default function CostBarChart({ data }: CostBarChartProps) {
                       <div style={{ fontWeight: 'bold', marginBottom: 6 }}>{item.date}</div>
                       <div
                         style={{ marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-                        <div style={{ fontSize: 14, fontWeight: 'bold' }}>Cost: ${(item.cost || 0).toFixed(2)}</div>
+                        <div style={{ fontSize: 14, fontWeight: 'bold' }}>Cost: {formatCurrency(item.cost || 0)}</div>
                       </div>
                       <div style={{ marginTop: 4 }}>
                         <div style={{ color: '#22c55e' }}>✓ Good: {item.other}</div>

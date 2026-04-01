@@ -1,4 +1,4 @@
-import path from 'path';
+import { join } from 'path';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
 import { resolveJobPath } from './jobPathResolver.js';
@@ -6,9 +6,10 @@ import { resolveJobPath } from './jobPathResolver.js';
 const __dirname = getDirname(import.meta.url);
 const INTEGRATION_CREATION = 'integrationCreation.js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function createIntegrationCreationJob(this: any): Promise<void> {
   const uniqueJobName = `Integration Creation Job`;
-  const defaultDistPath = path.join(
+  const defaultDistPath = join(
     __dirname,
     '..',
     '..',

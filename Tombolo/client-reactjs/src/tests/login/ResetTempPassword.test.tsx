@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
@@ -130,9 +130,10 @@ describe('ResetTempPassword', () => {
       const newPasswordInput = screen.getByLabelText(/New Password/i);
       const confirmPasswordInput = screen.getByLabelText(/Confirm Password/i);
 
-      await user.type(tempPasswordInput, 'TempPass123!');
-      await user.type(newPasswordInput, longPassword);
-      await user.type(confirmPasswordInput, longPassword);
+      fireEvent.change(tempPasswordInput, { target: { value: 'TempPass123!' } });
+      // Avoid CI flakiness from typing long strings character-by-character.
+      fireEvent.change(newPasswordInput, { target: { value: longPassword } });
+      fireEvent.change(confirmPasswordInput, { target: { value: longPassword } });
 
       const submitButton = screen.getByRole('button', { name: /Reset Password/i });
       await user.click(submitButton);
@@ -168,21 +169,26 @@ describe('ResetTempPassword', () => {
       const newPasswordInput = screen.getByLabelText(/New Password/i);
       const confirmPasswordInput = screen.getByLabelText(/Confirm Password/i);
 
-      await user.type(tempPasswordInput, 'TempPass123!');
-      await user.type(newPasswordInput, 'NewSecurePassword123!');
-      await user.type(confirmPasswordInput, 'NewSecurePassword123!');
+      fireEvent.change(tempPasswordInput, { target: { value: 'TempPass123!' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'NewSecurePassword123!' } });
+      fireEvent.change(confirmPasswordInput, { target: { value: 'NewSecurePassword123!' } });
 
       const submitButton = screen.getByRole('button', { name: /Reset Password/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(authService.resetTempPassword).toHaveBeenCalledWith({
-          tempPassword: 'TempPass123!',
-          password: 'NewSecurePassword123!',
-          confirmPassword: 'NewSecurePassword123!',
-          token: 'mock-token-123',
-          deviceInfo: expect.any(Object),
-        });
+        expect(authService.resetTempPassword).toHaveBeenCalledWith(
+          expect.objectContaining({
+            tempPassword: 'TempPass123!',
+            password: 'NewSecurePassword123!',
+            confirmPassword: 'NewSecurePassword123!',
+            token: 'mock-token-123',
+            deviceInfo: {
+              userAgent: 'test-agent',
+              platform: 'test-platform',
+            },
+          })
+        );
       });
 
       expect(setUser).toHaveBeenCalled();

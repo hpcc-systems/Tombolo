@@ -4,8 +4,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['./tests/setup.js'],
-    globalTeardown: './tests/globalTeardown.js',
+    setupFiles: ['./tests/setup.ts'],
+    globalTeardown: './tests/globalTeardown.ts',
 
     coverage: {
       enabled: true,
@@ -15,8 +15,8 @@ export default defineConfig({
       exclude: [
         'node_modules/',
         'tests/',
-        '**/*.test.js',
-        '**/*.spec.js',
+        '**/*.test.ts',
+        '**/*.spec.ts',
         'vitest.config.js',
         '.sequelizerc.docker',
         'process.yml',
@@ -27,16 +27,11 @@ export default defineConfig({
     },
 
     // Test file patterns
-    include: ['tests/**/*.test.js'],
+    include: ['tests/**/*.test.ts'],
     exclude: ['node_modules/', 'build/'],
 
     // Better test isolation
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: false,
-      },
-    },
 
     // Timeouts
     testTimeout: 30000,
@@ -58,19 +53,19 @@ export default defineConfig({
     {
       test: {
         name: 'api',
-        include: ['tests/apiTests/**/*.test.js'],
+        include: ['tests/apiTests/**/*.test.ts'],
         environment: 'node',
         globals: true,
-        setupFiles: ['./tests/setup.js'],
+        setupFiles: ['./tests/setup.ts'],
       },
     },
     {
       test: {
         name: 'jobs',
-        include: ['tests/breeJobs/**/*.test.js'],
+        include: ['tests/breeJobs/**/*.test.ts'],
         environment: 'node',
         globals: true,
-        setupFiles: ['./tests/setup.js'],
+        setupFiles: ['./tests/setup.ts'],
       },
     },
   ],

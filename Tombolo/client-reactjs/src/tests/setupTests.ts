@@ -1,6 +1,21 @@
+/* eslint-disable no-console */
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
+
+const originalConsoleError = console.error;
+const originalConsoleLog = console.log;
+const originalConsoleDebug = console.debug;
+const originalConsoleInfo = console.info;
+const originalGetComputedStyle = window.getComputedStyle.bind(window);
+
+// Keep test output clean: suppress app-level console noise during unit tests.
+beforeEach(() => {
+  console.error = vi.fn();
+  console.log = vi.fn();
+  console.debug = vi.fn();
+  console.info = vi.fn();
+});
 
 // Mock antd notification and message globally
 vi.mock('antd', async importOriginal => {
@@ -34,6 +49,10 @@ if (!window.location.href || window.location.href === 'about:blank') {
 
 // Cleanup DOM after each test
 afterEach(() => {
+  console.error = originalConsoleError;
+  console.log = originalConsoleLog;
+  console.debug = originalConsoleDebug;
+  console.info = originalConsoleInfo;
   cleanup();
 });
 
@@ -55,3 +74,13 @@ if (!(window as any).matchMedia) {
     dispatchEvent: () => false,
   });
 }
+
+// JSDOM does not support pseudo-element computed styles.
+// Some UI dependencies call getComputedStyle(el, '::before' | '::after').
+window.getComputedStyle = ((element: Element, pseudoElt?: string | null) => {
+  if (pseudoElt) {
+    return originalGetComputedStyle(element);
+  }
+
+  return originalGetComputedStyle(element);
+}) as typeof window.getComputedStyle;

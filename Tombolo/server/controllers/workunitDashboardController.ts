@@ -44,20 +44,18 @@ interface ProblematicJobRow {
   cluster: string;
 }
 
-interface WorkunitRow {
-  wuid: string;
+interface ExpensiveWorkunitRow {
+  wuId: string;
   jobName: string;
   clusterId: string;
-  cluster: string;
   owner: string;
   state: string;
-  cost: string;
-  cpuHours: string;
-  duration: string;
-  endTime: string | null;
+  totalCost: string;
   executeCost: string;
   fileAccessCost: string;
   compileCost: string;
+  totalClusterTime: string;
+  workUnitTimestamp: string;
   detailsFetchedAt: string | null;
 }
 
@@ -89,7 +87,7 @@ async function getDashboardData(req: Request, res: Response) {
       clusterBreakdownResult,
       ownerBreakdownResult,
       problematicJobsResult,
-      workunitsResult,
+      expensiveWorkunitsResult,
     ] = await Promise.all([
       // 1. Summary Stats Query
       sequelize.query<SummaryRow>(
@@ -230,30 +228,28 @@ async function getDashboardData(req: Request, res: Response) {
         { replacements, type: QueryTypes.SELECT }
       ),
 
-      // 6. Workunits List Query (paginated)
-      sequelize.query<WorkunitRow>(
+      // 6. Expensive Workunits Query (for client-side fuzzy grouping)
+      sequelize.query<ExpensiveWorkunitRow>(
         `
         SELECT 
-          wu.wuId as wuid,
+          wu.wuId,
           wu.jobName,
           wu.clusterId,
-          c.name as cluster,
           wu.owner,
           wu.state,
-          wu.totalCost as cost,
-          wu.totalClusterTime as cpuHours,
-          wu.totalClusterTime * 60 as duration,
-          DATE_ADD(wu.workUnitTimestamp, INTERVAL wu.totalClusterTime HOUR) as endTime,
+          wu.totalCost,
           wu.executeCost,
           wu.fileAccessCost,
           wu.compileCost,
+          wu.totalClusterTime,
+          wu.workUnitTimestamp,
           wu.detailsFetchedAt
         FROM work_units wu
-        INNER JOIN clusters c ON wu.clusterId = c.id
         WHERE wu.workUnitTimestamp BETWEEN :startDate AND :endDate
           AND (:clusterId IS NULL OR wu.clusterId = :clusterId)
           AND wu.deletedAt IS NULL
-        ORDER BY wu.workUnitTimestamp DESC
+          AND wu.totalCost > 0.01
+        ORDER BY wu.totalCost DESC
         LIMIT 100
         `,
         { replacements, type: QueryTypes.SELECT }
@@ -269,27 +265,6 @@ async function getDashboardData(req: Request, res: Response) {
       failedCount: '0',
       failedCost: '0',
     };
-
-    // TODO: Verify that duration calculation (totalClusterTime * 60) accurately represents job duration
-    // Post-process workunits to add costBreakdown structure
-    const workunits = workunitsResult.map(wu => ({
-      wuid: wu.wuid,
-      jobName: wu.jobName,
-      clusterId: wu.clusterId,
-      cluster: wu.cluster,
-      owner: wu.owner,
-      state: wu.state,
-      cost: parseFloat(wu.cost) || 0,
-      cpuHours: parseFloat(wu.cpuHours) || 0,
-      duration: parseFloat(wu.duration) || 0,
-      endTime: wu.endTime,
-      detailsFetchedAt: wu.detailsFetchedAt,
-      costBreakdown: {
-        compute: parseFloat(wu.executeCost) || 0,
-        fileAccess: parseFloat(wu.fileAccessCost) || 0,
-        compile: parseFloat(wu.compileCost) || 0,
-      },
-    }));
 
     // TODO: Add logic to compare jobs to previous executions to detect performance degradation
     // This may require a pre-computed table/view for efficiency
@@ -331,7 +306,20 @@ async function getDashboardData(req: Request, res: Response) {
           owner: p.owner,
           cluster: p.cluster,
         })),
-        workunits,
+        expensiveWorkunits: expensiveWorkunitsResult.map(w => ({
+          wuId: w.wuId,
+          jobName: w.jobName,
+          clusterId: w.clusterId,
+          owner: w.owner,
+          state: w.state,
+          totalCost: parseFloat(w.totalCost) || 0,
+          executeCost: parseFloat(w.executeCost) || 0,
+          fileAccessCost: parseFloat(w.fileAccessCost) || 0,
+          compileCost: parseFloat(w.compileCost) || 0,
+          totalClusterTime: parseFloat(w.totalClusterTime) || 0,
+          workUnitTimestamp: w.workUnitTimestamp,
+          detailsFetchedAt: w.detailsFetchedAt,
+        })),
       },
       'Dashboard data retrieved successfully'
     );

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import Bree from 'bree';
 import path from 'path';
 import { pathToFileURL } from 'url';

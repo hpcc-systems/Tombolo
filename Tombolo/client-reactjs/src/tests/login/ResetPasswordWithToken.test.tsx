@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
@@ -385,8 +385,9 @@ describe('ResetPasswordWithToken', () => {
       const newPasswordInput = screen.getByLabelText(/New Password/i);
       const confirmPasswordInput = screen.getByLabelText(/Confirm Password/i);
 
-      await user.type(newPasswordInput, longPassword);
-      await user.type(confirmPasswordInput, longPassword);
+      // Avoid CI flakiness from typing long strings character-by-character.
+      fireEvent.change(newPasswordInput, { target: { value: longPassword } });
+      fireEvent.change(confirmPasswordInput, { target: { value: longPassword } });
 
       const submitButton = screen.getByRole('button', { name: /Reset Password/i });
       await user.click(submitButton);

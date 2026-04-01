@@ -3,12 +3,26 @@ import type { DashboardSummary } from '@/components/admin/workunits/dashboard/ca
 import type { DailyCost } from '@/components/admin/workunits/dashboard/cards/CostBarChart';
 import type { ClusterCost } from '@/components/admin/workunits/dashboard/cards/CostByEnvironment';
 import type { ProblematicJob } from '@/components/admin/workunits/dashboard/cards/ProblematicJobs';
-import type { WorkunitRecord } from '@/components/admin/workunits/dashboard/cards/WorkunitTable';
 
 export interface OwnerCost {
   owner: string;
   cost: number;
   count: number;
+}
+
+export interface ExpensiveWorkunit {
+  wuId: string;
+  jobName: string;
+  clusterId: string;
+  owner: string;
+  state: string;
+  totalCost: number;
+  executeCost: number;
+  fileAccessCost: number;
+  compileCost: number;
+  totalClusterTime: number;
+  workUnitTimestamp: string;
+  detailsFetchedAt: string | null;
 }
 
 export interface DashboardData {
@@ -17,7 +31,7 @@ export interface DashboardData {
   clusterBreakdown: ClusterCost[];
   ownerBreakdown: OwnerCost[];
   problematicJobs: ProblematicJob[];
-  workunits: WorkunitRecord[];
+  expensiveWorkunits: ExpensiveWorkunit[];
 }
 
 export interface DashboardParams {

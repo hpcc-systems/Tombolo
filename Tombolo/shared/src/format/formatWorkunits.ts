@@ -1,13 +1,43 @@
 import { readableLabels } from '../constants/index.js';
 
-const formatNumber = (n: any): string =>
-  n == null ? '-' : Number(n).toLocaleString();
+const formatNumber = (n: number | string | null | undefined): string =>
+  n == null || isNaN(Number(n)) ? '-' : Math.round(Number(n)).toLocaleString();
 
-const formatSeconds = (s: any): string =>
-  s == null || isNaN(s) ? '-' : `${Number(s).toFixed(3)}s`;
+// Default seconds formatter: show seconds with 3 decimal places (e.g. 1.234s)
+const formatSeconds = (s: number | string | null | undefined): string =>
+  s == null || isNaN(Number(s)) ? '-' : `${Number(s).toFixed(3)}s`;
 
-const formatBytes = (bytes: any): string => {
-  if (bytes == null || isNaN(bytes)) return '-';
+// Format duration as "Hh Mm" using whole numbers for hours/minutes
+const formatDurationHm = (
+  seconds: number | string | null | undefined
+): string => {
+  if (seconds == null || isNaN(Number(seconds))) return '-';
+  const total = Math.max(0, Math.floor(Number(seconds)));
+  const hours = Math.floor(total / 3600);
+  const mins = Math.floor((total % 3600) / 60);
+  return `${hours > 0 ? `${hours}h ` : ''}${mins}m`;
+};
+
+// Format a duration in seconds as hours (e.g. 1.23h) for values >= 1 hour,
+// or fall back to formatSeconds for shorter durations.
+const formatSecondsAsHours = (
+  sec: number | string | null | undefined
+): string => {
+  if (sec == null || isNaN(Number(sec))) return '-';
+  const hours = Number(sec) / 3600;
+  if (hours < 1) return formatSeconds(sec);
+  return `${hours.toFixed(2)}h`;
+};
+
+// Format hours as a decimal number with 2 decimals (e.g. 1.23h)
+const formatHours = (
+  h: number | string | null | undefined,
+  decimals = 2
+): string =>
+  h == null || isNaN(Number(h)) ? '-' : `${Number(h).toFixed(decimals)}h`;
+
+const formatBytes = (bytes: number | string | null | undefined): string => {
+  if (bytes == null || isNaN(Number(bytes))) return '-';
   let size = Number(bytes);
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   let i = 0;
@@ -18,8 +48,30 @@ const formatBytes = (bytes: any): string => {
   return `${size.toFixed(2)} ${units[i]}`;
 };
 
-const formatPercentage = (p: any): string =>
-  p == null ? '-' : `${Number(p).toFixed(2)}%`;
+const formatPercentage = (p: number | string | null | undefined): string =>
+  p == null || isNaN(Number(p)) ? '-' : `${Number(p).toFixed(2)}%`;
+
+// Currency formatting: default 2 decimals
+const formatCurrency = (
+  n: number | string | null | undefined,
+  decimals = 2
+): string => {
+  if (n == null || isNaN(Number(n))) return '-';
+  const num = Number(n);
+  try {
+    const nf = new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+    return nf.format(num);
+  } catch (_e) {
+    const sign = num < 0 ? '-' : '';
+    const abs = Math.abs(num);
+    return `${sign}$${abs.toFixed(decimals)}`;
+  }
+};
 
 /**
  * Parses workunit timestamp from wuId and applies timezone offset
@@ -62,7 +114,10 @@ function parseWorkunitTimestamp(
   return timestamp;
 }
 
-function renderAnyMetric(key: string, value: any): string {
+function renderAnyMetric(
+  key: string,
+  value: number | string | null | undefined
+): string {
   const lower = String(key).toLowerCase();
   if (
     lower.includes('time') ||
@@ -81,13 +136,16 @@ function renderAnyMetric(key: string, value: any): string {
   return String(value);
 }
 
-function normalizeLabel(
+function formatLabel(
   label: string | null | undefined
 ): string | null | undefined {
   if (!label) return label;
 
-  // Normalize: replace newlines, &apos;, and multiple spaces with a single space
-  const normalized = label.replace(/&apos;|\s+/g, ' ').trim();
+  // Replace HTML entity &apos; with a space, then collapse all whitespace sequences
+  const normalized = label
+    .replace(/&apos;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   const lower = normalized.toLowerCase();
   for (const prefix in readableLabels) {
     if (lower.startsWith(prefix)) {
@@ -100,8 +158,12 @@ function normalizeLabel(
 export {
   formatNumber,
   formatSeconds,
+  formatDurationHm,
+  formatSecondsAsHours,
+  formatHours,
+  formatCurrency,
   formatBytes,
-  normalizeLabel,
+  formatLabel,
   formatPercentage,
   parseWorkunitTimestamp,
   renderAnyMetric,

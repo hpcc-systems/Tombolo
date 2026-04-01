@@ -37,11 +37,12 @@
     "clean:deps": "rm -rf node_modules"
   },
   "devDependencies": {
+    "@types/fast-levenshtein": "^0.0.4",
     "tsup": "catalog:",
-    "typescript": "catalog:",
-    "typescript-eslint": "catalog:"
+    "typescript": "catalog:"
   },
   "dependencies": {
+    "fast-levenshtein": "^3.0.0",
     "winston": "catalog:",
     "winston-daily-rotate-file": "catalog:"
   }
