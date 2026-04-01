@@ -100,37 +100,34 @@ async function saveApplication(req: AuthenticatedRequest, res: Response) {
     if (req.body.id === '') {
       const creatorId = req.user?.id;
 
+      if (!creatorId) {
+        return sendError(res, 'Unauthorized: User not authenticated', 401);
+      }
+
       const application = await Application.create({
         title: req.body.title,
         description: req.body.description,
         creator: creatorId,
         visibility: req.body.visibility,
       });
-      if (creatorId) {
-        const userApp = await UserApplication.create({
-          user_id: creatorId,
-          application_id: application.id,
-          createdBy: creatorId,
-          user_app_relation: 'created',
-        });
 
-        return sendSuccess(
-          res,
-          {
-            id: application.id,
-            title: application.title,
-            description: application.description,
-            user_app_id: userApp.id,
-          },
-          'Application created successfully'
-        );
-      } else {
-        return sendSuccess(
-          res,
-          { id: application.id },
-          'Application created successfully'
-        );
-      }
+      const userApp = await UserApplication.create({
+        user_id: creatorId,
+        application_id: application.id,
+        createdBy: creatorId,
+        user_app_relation: 'created',
+      });
+
+      return sendSuccess(
+        res,
+        {
+          id: application.id,
+          title: application.title,
+          description: application.description,
+          user_app_id: userApp.id,
+        },
+        'Application created successfully'
+      );
     } else {
       await Application.update(req.body, {
         where: { id: req.body.id },

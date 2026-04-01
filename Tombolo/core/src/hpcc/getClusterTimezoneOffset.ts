@@ -62,6 +62,9 @@ export async function getClusterTimezoneOffset(
 
     return Math.floor(timeZoneOffsetInMinutes);
   } catch (err) {
-    throw new Error((err as Error).message);
+    const message = err instanceof Error ? err.message : String(err);
+    const wrappedError = new Error(message) as Error & { cause?: unknown };
+    wrappedError.cause = err;
+    throw wrappedError;
   }
 }

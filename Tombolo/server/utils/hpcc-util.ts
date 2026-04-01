@@ -472,7 +472,7 @@ export async function getSuperFile(
   }
 }
 
-type GetSuperFilesReponse = {
+type GetSuperFilesResponse = {
   text: string;
   value: string;
   superOwners: string;
@@ -481,7 +481,7 @@ type GetSuperFilesReponse = {
 export async function getSuperFiles(
   clusterId: string,
   fileName: string
-): Promise<GetSuperFilesReponse[]> {
+): Promise<GetSuperFilesResponse[]> {
   try {
     const dfuService = await getDFUService(clusterId);
     if (!dfuService) {
@@ -504,7 +504,7 @@ export async function getSuperFiles(
     });
 
     //build output
-    const output: GetSuperFilesReponse[] = [];
+    const output: GetSuperFilesResponse[] = [];
     if (
       superFileList.DFULogicalFiles &&
       superFileList.DFULogicalFiles.DFULogicalFile.length > 0
@@ -523,5 +523,6 @@ export async function getSuperFiles(
     return output;
   } catch (err) {
     logger.error('hpcc-util - getSuperFiles: ', err);
+    throw err;
   }
 }

@@ -99,6 +99,10 @@ jobs:
         working-directory: Tombolo/shared
         run: pnpm build
 
+      - name: Build core package
+        working-directory: Tombolo/core
+        run: pnpm build
+
       - name: build db package
         working-directory: Tombolo/db
         run: pnpm build

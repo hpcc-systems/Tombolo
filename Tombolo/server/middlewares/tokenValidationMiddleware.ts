@@ -21,7 +21,7 @@ const tokenValidationMiddleware = async (
     // Verify and decode token
     const decoded = await verifyToken(token, process.env.JWT_SECRET!);
 
-    if (typeof decoded === 'string') {
+    if (!isValidAuthenticatedUser(decoded)) {
       return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
 
@@ -48,17 +48,29 @@ const tokenValidationMiddleware = async (
   }
 };
 
+const isValidAuthenticatedUser = (
+  decoded: unknown
+): decoded is AuthenticatedUser => {
+  if (!decoded || typeof decoded !== 'object') {
+    return false;
+  }
+
+  if (!('id' in decoded)) {
+    return false;
+  }
+
+  const { id } = decoded as { id?: unknown };
+  return typeof id === 'string' || typeof id === 'number';
+};
+
 // Function to verify token
-const verifyToken = (
-  token: string,
-  secret: string
-): Promise<AuthenticatedUser | string> => {
+const verifyToken = (token: string, secret: string): Promise<unknown> => {
   return new Promise((resolve, reject) => {
     jwt.verify(token, secret, (err, decoded) => {
       if (err) {
         reject(err);
       } else {
-        resolve(decoded as AuthenticatedUser | string);
+        resolve(decoded);
       }
     });
   });
