@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { RoleType } from '../models/index.js';
+import { RoleType } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 
 const getAllRoles = async (req: Request, res: Response) => {

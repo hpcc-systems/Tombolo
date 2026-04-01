@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import logger from '../config/logger.js';
-import { NotificationQueue } from '../models/index.js';
+import { NotificationQueue } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 
 async function createNotificationQueue(req: Request, res: Response) {

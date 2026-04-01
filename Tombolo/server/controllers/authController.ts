@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Imports from libraries
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
@@ -24,7 +25,7 @@ import {
   AccountVerificationCode,
   SentNotification,
   sequelize,
-} from '../models/index.js';
+} from '@tombolo/db';
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -1055,7 +1056,7 @@ const handlePasswordResetRequest = async (req: Request, res: Response) => {
 };
 
 // Login or register with azure user - loginOrRegisterAzureUser [ `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/token`]
-const loginOrRegisterAzureUser = async (req, res, next) => {
+const loginOrRegisterAzureUser = async (req: Request, res: Response) => {
   try {
     const msEndPoint = `https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`;
 
@@ -1617,7 +1618,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
 const getCurrentUser = async (req: Request, res: Response) => {
   try {
     // Decode token to get user id
-    const accessToken = (req as any).accessToken;
+    const accessToken = req.accessToken;
     const decodedToken = jwt.verify(accessToken, process.env.JWT_SECRET) as any;
     const userId = decodedToken.id;
 

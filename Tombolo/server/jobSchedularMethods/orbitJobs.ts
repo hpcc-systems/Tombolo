@@ -3,7 +3,7 @@ import Bree from 'bree';
 import logger from '../config/logger.js';
 import { resolveJobPath } from './jobPathResolver.js';
 
-import { OrbitMonitoring } from '../models/index.js';
+import { OrbitMonitoring } from '@tombolo/db';
 import { getDirname } from '../utils/polyfills.js';
 
 const __dirname = getDirname(import.meta.url);

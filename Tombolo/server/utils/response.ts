@@ -21,6 +21,12 @@ interface ErrorMapEntry {
   message: string;
 }
 
+interface StructuredErrorPayload {
+  message: string;
+  data?: unknown;
+  errors?: Array<string | Error | object>;
+}
+
 /**
  * Sends a standardized JSON response to the client.
  */
@@ -68,10 +74,31 @@ const sendSuccess = (
  */
 const sendError = (
   res: Response,
-  error: string | Error | Array<string | Error>,
+  error: string | Error | Array<string | Error> | StructuredErrorPayload,
   status = 500
 ): Response => {
   let errorsArray: string[];
+
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    !Array.isArray(error) &&
+    !(error instanceof Error) &&
+    'message' in error
+  ) {
+    const payload = error as StructuredErrorPayload;
+    const normalizedErrors = (payload.errors || [payload.message]).map(e =>
+      typeof e === 'string' ? e : (e as Error)?.message || JSON.stringify(e)
+    );
+
+    return sendResponse(res, {
+      status,
+      success: false,
+      message: payload.message,
+      data: payload.data ?? null,
+      errors: normalizedErrors,
+    });
+  }
 
   if (Array.isArray(error)) {
     errorsArray = error.map(e =>

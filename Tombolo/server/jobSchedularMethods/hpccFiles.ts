@@ -1,6 +1,6 @@
 import { join } from 'path';
 
-import { FileMonitoring } from '../models/index.js';
+import { FileMonitoring } from '@tombolo/db';
 import { getDirname } from '../utils/polyfills.js';
 import logger from '../config/logger.js';
 import { resolveJobPath } from './jobPathResolver.js';

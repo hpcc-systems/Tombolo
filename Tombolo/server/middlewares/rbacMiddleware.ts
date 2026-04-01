@@ -8,10 +8,10 @@ const validateUserRole = (allowedRoles: string[]) => {
       return next();
     }
 
-    const userRoles = (req as any).user.roles || [];
-    const allUserRoles = userRoles.map(
-      (role: any) => role.role_details.roleName
-    );
+    const userRoles = req.user?.roles || [];
+    const allUserRoles = userRoles
+      .map(role => role.role_details?.roleName)
+      .filter((roleName): roleName is string => Boolean(roleName));
 
     // Check if user has the required role
     const hasRole = allowedRoles.some(role => allUserRoles.includes(role));

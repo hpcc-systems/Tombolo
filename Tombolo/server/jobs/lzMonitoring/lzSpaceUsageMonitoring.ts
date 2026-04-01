@@ -5,7 +5,7 @@ import {
   NotificationQueue,
   AsrProduct,
   AsrDomain,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { logOrPostMessage } from '../jobUtils.js';
 import { decryptString } from '@tombolo/shared';
 import { FileSprayService } from '@hpcc-js/comms';
@@ -277,7 +277,7 @@ const monitoring_name = 'Landing Zone Monitoring';
           }
         }
 
-        let notificationId = generateNotificationId({
+        const notificationId = generateNotificationId({
           notificationPrefix,
           timezoneOffset: uniqueClustersObj[clusterId].timezone_offset,
         });

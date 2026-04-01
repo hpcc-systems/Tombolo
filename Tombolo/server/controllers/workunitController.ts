@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { Op, WhereOptions, InferAttributes } from 'sequelize';
 import { Workunit } from '@hpcc-js/comms';
-import { WorkUnit, WorkUnitDetails, sequelize } from '../models/index.js';
+import { getCluster } from '@tombolo/core';
+import { WorkUnit, WorkUnitDetails, sequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
-import { getCluster } from '../utils/hpcc-util.js';
 import { getClusterOptions } from '../utils/getClusterOptions.js';
 import { findFuzzyMatches } from '@tombolo/shared';
 

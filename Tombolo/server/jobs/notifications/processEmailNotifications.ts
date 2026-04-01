@@ -2,7 +2,7 @@
 import { Op } from 'sequelize';
 
 //Local Imports
-import { NotificationQueue, SentNotification } from '../../models/index.js';
+import { NotificationQueue, SentNotification } from '@tombolo/db';
 import logger from '../../config/logger.js';
 import { sendEmail, retryOptions } from '../../config/emailConfig.js';
 const { maxRetries } = retryOptions;
@@ -31,7 +31,7 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
     }
 
     // Sort out notifications that meet the criteria to be sent
-    for (let notification of notifications) {
+    for (const notification of notifications) {
       const { deliveryType, reTryAfter, lastScanned, deliveryTime } =
         notification;
 
@@ -53,7 +53,7 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
     }
 
     // If there are notifications to be sent - send the emails
-    for (let notification of notificationsToBeSent) {
+    for (const notification of notificationsToBeSent) {
       const {
         metaData,
         attemptCount,
@@ -130,7 +130,7 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
     //Update sent notifications table
     try {
       // clean successfully delivered notifications
-      for (let notification of successfulDelivery) {
+      for (const notification of successfulDelivery) {
         const notificationCopy = { ...notification };
         delete notificationCopy.htmlBody;
         delete notificationCopy.notificationQueueId;

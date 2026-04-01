@@ -1,4 +1,4 @@
-import { TokenBlackList } from '../models/index.js';
+import { TokenBlackList } from '@tombolo/db';
 import logger from '../config/logger.js';
 
 // Create the Map (tokenId as key and expiration time as value)

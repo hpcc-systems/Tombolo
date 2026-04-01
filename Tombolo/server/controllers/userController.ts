@@ -6,7 +6,7 @@ import moment from 'moment';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { sequelize } from '../models/index.js';
+import { sequelize } from '@tombolo/db';
 import { Op } from 'sequelize';
 
 // Local imports
@@ -20,14 +20,13 @@ import {
   AccountVerificationCode,
   PasswordResetLink,
   RefreshToken,
-} from '../models/index.js';
+} from '@tombolo/db';
 import {
   setPasswordExpiry,
   trimURL,
   checkPasswordSecurityViolations,
   setPreviousPasswords,
   generatePassword,
-  sendAccountUnlockedEmail,
   deleteUser as deleteUserUtil,
   checkIfSystemUser,
   generateAccessToken,
@@ -135,7 +134,7 @@ const updateBasicUserInfo = async (req: Request, res: Response) => {
           notificationDescription: 'Account Change',
           changedInfo,
         },
-        createdBy: (req as any).user.id,
+        createdBy: req.user.id,
       },
       { transaction: t }
     );
@@ -278,11 +277,21 @@ const changePassword = async (req: Request, res: Response) => {
     });
     const refreshToken = generateRefreshToken({ tokenId });
 
-    // Decode refresh token to get iat and exp
-    const { iat, exp } = jwt.verify(
-      refreshToken,
-      process.env.JWT_REFRESH_SECRET
-    ) as any;
+    const refreshSecret = process.env.JWT_REFRESH_SECRET;
+    if (!refreshSecret) {
+      throw new Error('JWT_REFRESH_SECRET is not configured');
+    }
+
+    // Decode refresh token and ensure it contains numeric iat/exp claims
+    const decodedRefreshToken = jwt.verify(refreshToken, refreshSecret);
+    if (
+      typeof decodedRefreshToken === 'string' ||
+      typeof decodedRefreshToken.iat !== 'number' ||
+      typeof decodedRefreshToken.exp !== 'number'
+    ) {
+      throw new Error('Invalid refresh token payload');
+    }
+    const { iat, exp } = decodedRefreshToken;
 
     // Create new refresh token in database
     await RefreshToken.create(
@@ -320,9 +329,9 @@ const bulkDeleteUsers = async (req: Request, res: Response) => {
     const { ids } = req.body;
 
     let deletedCount = 0;
-    let idsCount = ids.length;
+    const idsCount = ids.length;
     // Loop through each user and delete
-    for (let id of ids) {
+    for (const id of ids) {
       const deleted = await deleteUserUtil(id, 'Admin Removal');
       if (deleted) {
         deletedCount++;
@@ -347,7 +356,7 @@ const bulkUpdateUsers = async (req: Request, res: Response) => {
     const errors = [];
 
     // Loop through each user and update the fields provided
-    for (let user of users) {
+    for (const user of users) {
       const { id } = user;
       try {
         const existing = await User.findOne({ where: { id } });
@@ -358,7 +367,7 @@ const bulkUpdateUsers = async (req: Request, res: Response) => {
         }
 
         // Update fields provided
-        for (let key in user) {
+        for (const key in user) {
           if (key !== 'id') {
             existing[key] = user[key];
           }
@@ -390,7 +399,7 @@ const updateUserRoles = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { roles } = req.body;
-    const creator = (req as any).user.id;
+    const creator = req.user.id;
 
     // Find existing user details
     const existingUser = await User.findOne({ where: { id }, transaction: t });
@@ -453,7 +462,7 @@ const updateUserApplications = async (req: Request, res: Response) => {
 
   try {
     // Get user applications by id
-    const { user } = req as any;
+    const { user } = req;
     const { id: user_id } = req.params;
     const { applications } = req.body;
 
@@ -583,7 +592,7 @@ const createUser = async (req: Request, res: Response) => {
     const userRoles = roles.map(role => ({
       userId: newUser.id,
       roleId: role,
-      createdBy: (req as any).user.id,
+      createdBy: req.user.id,
     }));
     await UserRole.bulkCreate(userRoles);
 
@@ -591,7 +600,7 @@ const createUser = async (req: Request, res: Response) => {
     const userApplications = applications.map(application => ({
       user_id: newUser.id,
       application_id: application,
-      createdBy: (req as any).user.id,
+      createdBy: req.user.id,
     }));
     await UserApplication.bulkCreate(userApplications);
 
@@ -636,7 +645,7 @@ const createUser = async (req: Request, res: Response) => {
         notificationDescription: 'Complete your Registration',
         validForHours: 24,
       },
-      createdBy: (req as any).user.id,
+      createdBy: req.user.id,
     });
 
     // Remove hash
@@ -768,7 +777,7 @@ const unlockAccount = async (req: Request, res: Response) => {
           notificationDescription: 'Account Unlocked',
           loginLink: `${trimURL(process.env.WEB_URL)}/login`,
         },
-        createdBy: (req as any).user?.id || 'System',
+        createdBy: req.user?.id || 'System',
       });
     } catch (notificationErr) {
       logger.error(
