@@ -48,6 +48,7 @@ import { UserRole } from './UserRole.js';
 import { WorkUnit } from './WorkUnit.js';
 import { WorkUnitDetails } from './WorkUnitDetails.js';
 import { WorkUnitException } from './WorkUnitException.js';
+import { WorkUnitFiles } from './WorkUnitFiles.js';
 import type { WorkUnitExceptionCreationAttributes } from './WorkUnitException.js';
 
 // tsup with shims=true will handle __dirname and import.meta.url correctly
@@ -163,6 +164,7 @@ const sequelizeOptions: SequelizeOptions & { models: any[] } = {
     WorkUnit,
     WorkUnitDetails,
     WorkUnitException,
+    WorkUnitFiles,
   ],
 };
 
@@ -228,6 +230,7 @@ export {
   WorkUnit,
   WorkUnitDetails,
   WorkUnitException,
+  WorkUnitFiles,
 };
 
 // Default export with sequelize instance and all models
@@ -274,4 +277,5 @@ export default {
   WorkUnit,
   WorkUnitDetails,
   WorkUnitException,
+  WorkUnitFiles,
 };
