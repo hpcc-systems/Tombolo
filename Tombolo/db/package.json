@@ -32,7 +32,7 @@
     "esm:build": "tsup",
     "typecheck": "tsc --noEmit",
     "build:check": "pnpm typecheck && pnpm build",
-    "dev": "tsup --watch --no-clean",
+    "dev": "tsup --watch --no-clean --config tsup.config.dev.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "db:migrate": "sequelize db:migrate",
