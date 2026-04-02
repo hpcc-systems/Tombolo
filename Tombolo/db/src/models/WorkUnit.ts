@@ -45,8 +45,8 @@ import { Cluster } from './Cluster.js';
       fields: ['detailsFetchedAt'],
     },
     {
-      name: 'work_units_exceptions_fetched_idx',
-      fields: ['exceptionsFetchedAt'],
+      name: 'work_units_info_fetched_idx',
+      fields: ['infoFetchedAt'],
     },
   ],
 })
@@ -131,7 +131,7 @@ export class WorkUnit extends Model<
 
   @AllowNull(true)
   @Column(DataType.DATE)
-  declare exceptionsFetchedAt?: Date | null;
+  declare infoFetchedAt?: Date | null;
 
   @AllowNull(false)
   @Default(false)

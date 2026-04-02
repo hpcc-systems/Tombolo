@@ -23,7 +23,7 @@ async function fetchWorkunits(clusterId: string): Promise<WorkUnit[]> {
     where: {
       clusterId,
       state: TERMINAL_STATES,
-      exceptionsFetchedAt: null,
+      infoFetchedAt: null,
       clusterDeleted: false,
     },
     limit: 20,
@@ -68,7 +68,7 @@ async function saveClusterDbUpdates(
     if (successfulWuIds.length > 0) {
       const ids = Array.from(new Set(successfulWuIds));
       await WorkUnit.update(
-        { exceptionsFetchedAt: new Date() },
+        { infoFetchedAt: new Date() },
         { where: { clusterId, wuId: ids }, transaction: t }
       );
     }
