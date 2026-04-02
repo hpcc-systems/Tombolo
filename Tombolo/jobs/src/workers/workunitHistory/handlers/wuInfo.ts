@@ -1,8 +1,14 @@
 import type {
   Transaction,
   WorkUnitExceptionCreationAttributes,
+  WorkUnitFileCreationAttributes,
 } from '@tombolo/db';
-import { WorkUnit, WorkUnitException, sequelize } from '@tombolo/db';
+import {
+  WorkUnit,
+  WorkUnitException,
+  WorkUnitFile,
+  sequelize,
+} from '@tombolo/db';
 import { TERMINAL_STATES } from '@tombolo/shared';
 import logger from '@/config/logger.js';
 import { Workunit } from '@hpcc-js/comms';
@@ -30,12 +36,21 @@ async function fetchWorkunits(clusterId: string): Promise<WorkUnit[]> {
 async function saveClusterDbUpdates(
   clusterId: string,
   exceptionsToCreate: WorkUnitExceptionCreationAttributes[],
+  filesToCreate: WorkUnitFileCreationAttributes[],
   deletedWuIds: string[],
   successfulWuIds: string[]
 ) {
   await sequelize.transaction(async (t: Transaction) => {
     if (exceptionsToCreate.length > 0) {
       await WorkUnitException.bulkCreate(exceptionsToCreate, {
+        ignoreDuplicates: true,
+        validate: true,
+        transaction: t,
+      });
+    }
+
+    if (filesToCreate.length > 0) {
+      await WorkUnitFile.bulkCreate(filesToCreate, {
         ignoreDuplicates: true,
         validate: true,
         transaction: t,
@@ -110,6 +125,7 @@ async function getWorkunitInfo() {
 
     // Per-cluster accumulators
     const exceptionsToCreate: WorkUnitExceptionCreationAttributes[] = [];
+    const filesToCreate: WorkUnitFileCreationAttributes[] = [];
     const successfulWuIds: string[] = [];
     const deletedWuIds: string[] = [];
 
@@ -129,8 +145,8 @@ async function getWorkunitInfo() {
         const wuInfo = await attachedWu.fetchInfo({
           IncludeExceptions: true,
           IncludeGraphs: false,
-          IncludeSourceFiles: false,
-          IncludeResults: false,
+          IncludeSourceFiles: true,
+          IncludeResults: true,
           IncludeResultsViewNames: false,
           IncludeVariables: false,
           IncludeTimers: false,
@@ -164,13 +180,36 @@ async function getWorkunitInfo() {
         // Consider this WU successfully fetched even if there are no exceptions
         successfulWuIds.push(wu.wuId);
 
+        const inputFiles = wuInfo.Workunit.SourceFiles.ECLSourceFile;
+        const outputFiles = wuInfo.Workunit.Results.ECLResult;
+        for (const inputFile of inputFiles) {
+          if (!inputFile.Name) continue;
+
+          filesToCreate.push({
+            wuId: wu.wuId,
+            clusterId: clusterId,
+            fileName: inputFile.Name,
+            fileType: 'input',
+          });
+        }
+
+        for (const outputFile of outputFiles) {
+          if (!outputFile.FileName) continue;
+
+          filesToCreate.push({
+            wuId: wu.wuId,
+            clusterId: clusterId,
+            fileName: outputFile.FileName,
+            fileType: 'output',
+          });
+        }
+
         const exceptions = wuInfo?.Workunit?.Exceptions?.ECLException ?? [];
         for (const exception of exceptions) {
           if (exception.Severity.toLowerCase() === 'info') continue;
 
           exceptionsToCreate.push({
             wuId: wu.wuId,
-            sequenceNo: undefined, // This will be set by sequelize
             clusterId: clusterId,
             severity: exception.Severity,
             source: ifEmptyUndef(exception.Source),
@@ -183,7 +222,6 @@ async function getWorkunitInfo() {
             scope: exception.Scope,
             priority: exception.Priority,
             cost: exception.Cost,
-            createdAt: new Date(),
           });
         }
       } catch (err) {
@@ -218,6 +256,7 @@ async function getWorkunitInfo() {
       await saveClusterDbUpdates(
         clusterId,
         exceptionsToCreate,
+        filesToCreate,
         deletedWuIds,
         successfulWuIds
       );
