@@ -47,7 +47,8 @@
       "react-error-overlay": "6.0.9",
       "cron-validate": "1.4.5",
       "glob": "^10.5.0",
-      "flatted": ">=3.4.2"
+      "flatted": ">=3.4.2",
+      "socket.io-parser": "^4.2.6"
     },
     "packageExtensions": {
       "bree@8.0.5": {
