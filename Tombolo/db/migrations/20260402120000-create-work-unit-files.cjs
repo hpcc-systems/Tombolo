@@ -4,14 +4,18 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('work_unit_files', {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.BIGINT.UNSIGNED,
+      },
       wuId: {
         allowNull: false,
-        primaryKey: true,
         type: Sequelize.STRING(30),
       },
       clusterId: {
         allowNull: false,
-        primaryKey: true,
         type: Sequelize.UUID,
         references: {
           model: 'clusters',
@@ -48,6 +52,10 @@ module.exports = {
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
+    });
+
+    await queryInterface.addIndex('work_unit_files', ['clusterId', 'wuId'], {
+      name: 'work_unit_files_cluster_wu_idx',
     });
   },
 

@@ -11,6 +11,7 @@ import {
   DeletedAt,
 } from 'sequelize-typescript';
 import type {
+  CreationAttributes,
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,
@@ -23,21 +24,29 @@ import { WorkUnit } from './WorkUnit.js';
   updatedAt: false,
   paranoid: true,
   timestamps: true,
+  indexes: [
+    {
+      name: 'work_unit_files_cluster_wu_idx',
+      fields: ['clusterId', 'wuId'],
+    },
+  ],
 })
-export class WorkUnitFiles extends Model<
-  InferAttributes<WorkUnitFiles>,
-  InferCreationAttributes<WorkUnitFiles>
+export class WorkUnitFile extends Model<
+  InferAttributes<WorkUnitFile>,
+  InferCreationAttributes<WorkUnitFile>
 > {
   @PrimaryKey
-  @ForeignKey(() => WorkUnit)
-  @Column(DataType.STRING(30))
-  declare wuId: string;
+  @Column({ type: DataType.BIGINT.UNSIGNED, autoIncrement: true })
+  declare id: CreationOptional<number>;
 
-  @PrimaryKey
   @ForeignKey(() => Cluster)
   @ForeignKey(() => WorkUnit)
   @Column(DataType.UUID)
   declare clusterId: string;
+
+  @ForeignKey(() => WorkUnit)
+  @Column(DataType.STRING(30))
+  declare wuId: string;
 
   @AllowNull(false)
   @Column(DataType.TEXT)
@@ -70,3 +79,5 @@ export class WorkUnitFiles extends Model<
   })
   declare workUnit?: WorkUnit;
 }
+
+export type WorkUnitFileCreationAttributes = CreationAttributes<WorkUnitFile>;
