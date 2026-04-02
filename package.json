@@ -49,7 +49,8 @@
       "glob": "^10.5.0",
       "flatted": ">=3.4.2",
       "socket.io-parser": "^4.2.6",
-      "lodash": "^4.18.0"
+      "lodash": "^4.18.0",
+      "serialize-javascript": "^7.0.3"
     },
     "packageExtensions": {
       "bree@8.0.5": {
