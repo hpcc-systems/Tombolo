@@ -61,8 +61,8 @@ catalogs:
       specifier: ^17.4.0
       version: 17.4.0
     lodash:
-      specifier: ^4.17.23
-      version: 4.17.23
+      specifier: ^4.18.1
+      version: 4.18.1
     mysql2:
       specifier: ^3.9.1
       version: 3.16.1
@@ -104,6 +104,7 @@ overrides:
   react-error-overlay: 6.0.9
   cron-validate: 1.4.5
   glob: ^10.5.0
+  flatted: '>=3.4.2'
 
 packageExtensionsChecksum: sha256-CVtVoY6PJVXReKZXqatC2PtQlPIAl3b0b6sUazmDk+w=
 
@@ -185,7 +186,7 @@ importers:
         version: 4.10.1
       lodash:
         specifier: 'catalog:'
-        version: 4.17.23
+        version: 4.18.1
       moment:
         specifier: ^2.30.1
         version: 2.30.1
@@ -474,7 +475,7 @@ importers:
         version: 9.0.3
       lodash:
         specifier: 'catalog:'
-        version: 4.17.23
+        version: 4.18.1
       moment:
         specifier: ^2.29.4
         version: 2.30.1
@@ -2288,6 +2289,7 @@ packages:
   '@xmldom/xmldom@0.9.8':
     resolution: {integrity: sha512-p96FSY54r+WJ50FIOsCOjyj/wavs8921hG5+kVMmZgKcvIKxMXHTrjNJvRgWa/zuX3B6t2lijLNFaOyuxUH+2A==}
     engines: {node: '>=14.6'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -3290,8 +3292,8 @@ packages:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
     engines: {node: '>=16'}
 
-  flatted@3.3.3:
-    resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
+  flatted@3.4.2:
+    resolution: {integrity: sha512-PjDse7RzhcPkIJwy5t7KPWQSZ9cAbzQXcafsetQoD7sOJRQlGikNbx7yZp2OotDnJyrDcbyRq3Ttb18iYOqkxA==}
 
   flru@1.0.2:
     resolution: {integrity: sha512-kWyh8ADvHBFz6ua5xYOPnUroZTT/bwWfrCeL0Wj1dzG4/YOmOcfJ99W8dOVyyynJN35rZ9aCOtHChqQovV7yog==}
@@ -4036,6 +4038,9 @@ packages:
 
   lodash@4.17.23:
     resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
+
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   logform@2.7.0:
     resolution: {integrity: sha512-TFYA4jnP7PVbmlBIfhlSe+WKxs9dklXMTEGcBCIvLhE/Tn3H6Gk1norupVW7m5Cnd4bLcr08AytbyV/xj7f/kQ==}
@@ -5801,13 +5806,13 @@ snapshots:
 
   '@ant-design/charts-util@0.0.1-alpha.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      lodash: 4.17.23
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
   '@ant-design/charts-util@0.0.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      lodash: 4.17.23
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
@@ -5815,7 +5820,7 @@ snapshots:
     dependencies:
       '@ant-design/graphs': 2.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(workerize-loader@2.0.2(webpack@5.104.1(esbuild@0.27.2)))
       '@ant-design/plots': 2.6.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      lodash: 4.17.23
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     transitivePeerDependencies:
@@ -5861,7 +5866,7 @@ snapshots:
       '@antv/g6': 5.0.51(workerize-loader@2.0.2(webpack@5.104.1(esbuild@0.27.2)))
       '@antv/g6-extension-react': 0.2.6(@antv/g6@5.0.51(workerize-loader@2.0.2(webpack@5.104.1(esbuild@0.27.2))))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@antv/graphin': 3.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(workerize-loader@2.0.2(webpack@5.104.1(esbuild@0.27.2)))
-      lodash: 4.17.23
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       styled-components: 6.3.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -5896,7 +5901,7 @@ snapshots:
       '@antv/g': 6.3.1
       '@antv/g2': 5.4.8
       '@antv/g2-extension-plot': 0.2.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
@@ -8353,7 +8358,7 @@ snapshots:
   dagre@0.8.5:
     dependencies:
       graphlib: 2.1.8
-      lodash: 4.17.23
+      lodash: 4.18.1
 
   data-urls@7.0.0(@noble/hashes@1.8.0):
     dependencies:
@@ -8785,7 +8790,7 @@ snapshots:
 
   express-validator@6.15.0:
     dependencies:
-      lodash: 4.17.23
+      lodash: 4.18.1
       validator: 13.15.26
 
   express@5.2.1:
@@ -8883,10 +8888,10 @@ snapshots:
 
   flat-cache@4.0.1:
     dependencies:
-      flatted: 3.3.3
+      flatted: 3.4.2
       keyv: 4.5.4
 
-  flatted@3.3.3: {}
+  flatted@3.4.2: {}
 
   flru@1.0.2: {}
 
@@ -9032,7 +9037,7 @@ snapshots:
 
   graphlib@2.1.8:
     dependencies:
-      lodash: 4.17.23
+      lodash: 4.18.1
 
   has-bigints@1.1.0: {}
 
@@ -9628,6 +9633,8 @@ snapshots:
       lodash._baseuniq: 4.6.0
 
   lodash@4.17.23: {}
+
+  lodash@4.18.1: {}
 
   logform@2.7.0:
     dependencies:
@@ -11605,7 +11612,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.28.6
       '@types/lodash': 4.17.24
-      lodash: 4.17.23
+      lodash: 4.18.1
       lodash-es: 4.17.23
       nanoclone: 0.2.1
       property-expr: 2.0.6
