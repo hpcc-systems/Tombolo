@@ -60,9 +60,6 @@ catalogs:
     globals:
       specifier: ^17.4.0
       version: 17.4.0
-    lodash:
-      specifier: ^4.18.1
-      version: 4.18.1
     mysql2:
       specifier: ^3.9.1
       version: 3.16.1
@@ -106,6 +103,7 @@ overrides:
   glob: ^10.5.0
   flatted: '>=3.4.2'
   socket.io-parser: ^4.2.6
+  lodash: ^4.18.0
 
 packageExtensionsChecksum: sha256-CVtVoY6PJVXReKZXqatC2PtQlPIAl3b0b6sUazmDk+w=
 
@@ -186,7 +184,7 @@ importers:
         specifier: ^4.10.1
         version: 4.10.1
       lodash:
-        specifier: 'catalog:'
+        specifier: ^4.18.0
         version: 4.18.1
       moment:
         specifier: ^2.30.1
@@ -472,7 +470,7 @@ importers:
         specifier: ^9.0.3
         version: 9.0.3
       lodash:
-        specifier: 'catalog:'
+        specifier: ^4.18.0
         version: 4.18.1
       moment:
         specifier: ^2.29.4
@@ -4027,9 +4025,6 @@ packages:
 
   lodash.uniqby@4.5.0:
     resolution: {integrity: sha512-IRt7cfTtHy6f1aRVA5n7kT8rgN3N1nH6MOWLcHfpWG2SH19E3JksLK38MktLxZDhlAjCP9jpIXkOnRXlu6oByQ==}
-
-  lodash@4.17.23:
-    resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
 
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
@@ -9620,8 +9615,6 @@ snapshots:
       lodash._baseiteratee: 4.7.0
       lodash._baseuniq: 4.6.0
 
-  lodash@4.17.23: {}
-
   lodash@4.18.1: {}
 
   logform@2.7.0:
@@ -10523,7 +10516,7 @@ snapshots:
 
   redis-info@3.1.0:
     dependencies:
-      lodash: 4.17.23
+      lodash: 4.18.1
 
   redis-parser@3.0.0:
     dependencies:
@@ -10736,7 +10729,7 @@ snapshots:
     dependencies:
       fs-extra: 9.1.0
       js-beautify: 1.15.4
-      lodash: 4.17.23
+      lodash: 4.18.1
       picocolors: 1.1.1
       resolve: 1.22.11
       umzug: 2.3.0
@@ -10759,7 +10752,7 @@ snapshots:
       debug: 4.4.3(supports-color@5.5.0)
       dottie: 2.0.6
       inflection: 1.13.4
-      lodash: 4.17.23
+      lodash: 4.18.1
       moment: 2.30.1
       moment-timezone: 0.5.48
       pg-connection-string: 2.10.1
