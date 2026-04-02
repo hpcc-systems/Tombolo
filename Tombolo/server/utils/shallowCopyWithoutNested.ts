@@ -1,12 +1,22 @@
-const shallowCopyWithoutNested = (
-  obj: Record<string, any>
-): Record<string, any> => {
-  const newObj: Record<string, any> = {};
+type ShallowCopyWithoutNestedValue<T> = T extends object ? null : T;
+
+type ShallowCopyWithoutNestedResult<T extends Record<string, unknown>> = {
+  [K in keyof T]: ShallowCopyWithoutNestedValue<T[K]>;
+};
+
+const shallowCopyWithoutNested = <T extends Record<string, unknown>>(
+  obj: T
+): ShallowCopyWithoutNestedResult<T> => {
+  const newObj = {} as ShallowCopyWithoutNestedResult<T>;
 
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      newObj[key] =
-        typeof obj[key] === 'object' && obj[key] !== null ? null : obj[key];
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const typedKey = key as keyof T;
+      const value = obj[typedKey];
+      newObj[typedKey] =
+        typeof value === 'object' && value !== null
+          ? null
+          : (value as ShallowCopyWithoutNestedResult<T>[typeof typedKey]);
     }
   }
 
@@ -14,9 +24,3 @@ const shallowCopyWithoutNested = (
 };
 
 export default shallowCopyWithoutNested;
-
-// Tests
-// const original = { a: 1, b: { c: 2 }, d: 'hello' };
-// const copy = shallowCopyWithoutNested(original);
-// console.log(copy); // { a: 1, b: null, d: 'hello' }
-// console.log(original); // { a: 1, b: { c: 2 }, d: 'hello' }

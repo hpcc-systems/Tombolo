@@ -124,6 +124,7 @@ const monitoring_name = 'Landing Zone Monitoring';
           depth,
           fileNameToMatch,
           metaData: { monitoringData },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } = monitoring as any;
 
         // Destructure monitoringData

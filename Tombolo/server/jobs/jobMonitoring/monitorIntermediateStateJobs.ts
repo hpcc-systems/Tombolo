@@ -27,6 +27,11 @@ import {
 } from './monitorJobsUtil.js';
 import shallowCopyWithOutNested from '../../utils/shallowCopyWithoutNested.js';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
+import type { ClusterWithPassword } from '../../types/cluster.js';
+
+type ClusterWithPasswordAndLocalTime = ClusterWithPassword & {
+  localTime: Date;
+};
 
 (async () => {
   logOrPostMessage({
@@ -79,35 +84,43 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
       raw: true,
     });
 
-    // Decrypt cluster passwords if they exist
-    clustersInfo.forEach(clusterInfo => {
-      try {
-        const clusterExtended = clusterInfo as any;
-        if (clusterInfo.hash) {
-          clusterExtended.password = decryptString(
-            clusterInfo.hash,
-            process.env.ENCRYPTION_KEY
-          );
-        } else {
-          clusterExtended.password = null;
-        }
-
-        clusterExtended.localTime = findLocalDateTimeAtCluster(
+    // Decrypt cluster passwords and compute cluster-local time
+    const clustersInfoWithPassword: ClusterWithPasswordAndLocalTime[] =
+      clustersInfo.map(clusterInfo => {
+        const localTime = findLocalDateTimeAtCluster(
           clusterInfo.timezone_offset || 0
         );
-      } catch (error) {
-        logOrPostMessage({
-          level: 'error',
-          text: `Intermediate State Job Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
-        });
-      }
-    });
+
+        try {
+          return {
+            ...clusterInfo,
+            password: clusterInfo.hash
+              ? decryptString(clusterInfo.hash, process.env.ENCRYPTION_KEY)
+              : null,
+            localTime,
+          };
+        } catch (error) {
+          logOrPostMessage({
+            level: 'error',
+            text: `Intermediate State Job Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
+          });
+
+          return {
+            ...clusterInfo,
+            password: null,
+            localTime,
+          };
+        }
+      });
 
     // Cluster info as object with cluster ID as key
-    const clustersInfoObj = clustersInfo.reduce((acc, cluster) => {
-      acc[cluster.id] = cluster;
-      return acc;
-    }, {});
+    const clustersInfoObj = clustersInfoWithPassword.reduce(
+      (acc, cluster) => {
+        acc[cluster.id] = cluster;
+        return acc;
+      },
+      {} as Record<string, ClusterWithPasswordAndLocalTime>
+    );
 
     // Combine all the intermediate wus in an array
     const allIntermediateWus = monitoringsWithIntermediateStateWus.reduce(

@@ -2,16 +2,16 @@ interface ValidationError {
   location?: string;
   msg?: string;
   param?: string;
-  value?: any;
-  nestedErrors?: ValidationError[];
+  _value?: unknown;
+  _nestedErrors?: ValidationError[];
 }
 
 export default ({
   location,
   msg,
   param,
-  value,
-  nestedErrors,
+  _value,
+  _nestedErrors,
 }: ValidationError) => {
   return `${location}[${param}]: ${msg}`;
 };

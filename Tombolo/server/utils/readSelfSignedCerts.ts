@@ -45,7 +45,7 @@ const readSelfSignedCerts = (): void => {
     const customAgent = new https.Agent({
       ca: [...tls.rootCertificates, ...customCertFiles],
       rejectUnauthorized: true,
-      checkServerIdentity: (hostname: string, cert: any) => {
+      checkServerIdentity: (hostname: string, cert: tls.PeerCertificate) => {
         const certCN = cert.subject?.CN || '';
         // Use warning key to ensure no duplicate logs
         const warningKey = `${hostname}:${certCN}`;

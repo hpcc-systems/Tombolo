@@ -1,6 +1,74 @@
 import _ from 'lodash';
 
-function emailBody(notificationDetails: any, metaDifference?: any[]): string {
+type TemplateValue = string | number | boolean | null | undefined;
+
+interface MetaDifferenceItem {
+  attribute: string;
+  oldValue: TemplateValue;
+  newValue: TemplateValue;
+}
+
+interface EmailNotificationDetails {
+  details: Record<string, TemplateValue>;
+  text: string;
+}
+
+interface MessageCardNotificationDetails {
+  details: Record<string, TemplateValue>;
+  title: string;
+}
+
+interface OrbitIssueDetails {
+  host: string;
+  build: string;
+  cron: string;
+  status: string;
+  workUnit: string;
+  metaDifference?: MetaDifferenceItem[];
+}
+
+interface OrbitMonitoringDetails {
+  issue: OrbitIssueDetails;
+  date: string;
+  product: string;
+  severityCode: string;
+  remedy: string;
+  region: string;
+  businessUnit: string;
+  notification_id: string;
+}
+
+interface OrbitBuildDetails {
+  name: string;
+  status: string;
+  subStatus: string;
+  lastrun?: TemplateValue;
+  HpccWorkUnit?: TemplateValue;
+  lastRun?: TemplateValue;
+  workunit?: TemplateValue;
+}
+
+type Fact = Record<string, TemplateValue>;
+
+interface MessageCardFact {
+  name: string;
+  value: TemplateValue;
+}
+
+type Identifier = string | number;
+
+interface MessageCardBodyParams {
+  notificationDetails: MessageCardNotificationDetails;
+  notification_id: Identifier;
+  filemonitoring_id?: Identifier;
+  fileName?: string;
+  metaDifference?: MetaDifferenceItem[];
+}
+
+function emailBody(
+  notificationDetails: EmailNotificationDetails,
+  metaDifference?: MetaDifferenceItem[]
+): string {
   const { details, text } = notificationDetails;
 
   let tableRows = '';
@@ -22,7 +90,7 @@ function emailBody(notificationDetails: any, metaDifference?: any[]): string {
 
   let body = '';
 
-  for (let keys in details) {
+  for (const keys in details) {
     body += `<div>${keys}: ${details[keys]}</div>`;
   }
 
@@ -34,7 +102,9 @@ function emailBody(notificationDetails: any, metaDifference?: any[]): string {
   return body;
 }
 
-function orbitMonitoringEmailBody(buildDetails: any): string {
+function orbitMonitoringEmailBody(
+  buildDetails: OrbitMonitoringDetails
+): string {
   //build out issue row
   let issue = ``;
 
@@ -55,7 +125,7 @@ function orbitMonitoringEmailBody(buildDetails: any): string {
   issue += `RETURNED JOB STATE: ${buildDetails.issue.status} <br/>`;
   issue += `RETURNED JOB WUID: ${buildDetails.issue.workUnit} <br/>`;
 
-  let tableRows = `<td><strong>PRODUCT</strong></td><td>${buildDetails.product.toUpperCase()}</td></tr>
+  const tableRows = `<td><strong>PRODUCT</strong></td><td>${buildDetails.product.toUpperCase()}</td></tr>
             <tr><td><strong>ISSUE</strong></td><td>${issue}</td></tr>
             <tr><td><strong>SEV_CODE</strong></td><td>${
               buildDetails.severityCode
@@ -92,7 +162,7 @@ function orbitMonitoringEmailBody(buildDetails: any): string {
 
 function orbitMonitoringMessageCard(
   title: string,
-  buildDetails: any,
+  buildDetails: OrbitMonitoringDetails,
   notification_id: string
 ): string {
   let issue = ``;
@@ -114,7 +184,7 @@ function orbitMonitoringMessageCard(
   issue += `RETURNED JOB STATE: ${buildDetails.issue.status} <br/>`;
   issue += `RETURNED JOB WUID: ${buildDetails.issue.workUnit} <br/>`;
 
-  let tableRows = `<td><strong>PRODUCT</strong></td><td>${buildDetails.product.toUpperCase()}</td></tr>
+  const tableRows = `<td><strong>PRODUCT</strong></td><td>${buildDetails.product.toUpperCase()}</td></tr>
             <tr><td><strong>ISSUE</strong></td><td>${issue}</td></tr>
             <tr><td><strong>SEV_CODE</strong></td><td>${
               buildDetails.severityCode
@@ -140,10 +210,10 @@ function orbitMonitoringMessageCard(
                 ${tableRows}
               </table></div>`;
 
-  let allFacts = [];
+  const allFacts: MessageCardFact[] = [];
 
   allFacts.push({ name: '', value: table });
-  let cardData = `"notification_id": "${notification_id}"`;
+  const cardData = `"notification_id": "${notification_id}"`;
 
   const body = JSON.stringify({
     '@type': 'MessageCard',
@@ -227,7 +297,7 @@ function orbitMonitoringMessageCard(
   return body;
 }
 
-function orbitBuildEmailBody(buildDetails: any): string {
+function orbitBuildEmailBody(buildDetails: OrbitBuildDetails): string {
   const tableRows = `<tr>
             <td>${buildDetails.name}</td>
             <td>${buildDetails.status}</td>
@@ -253,13 +323,13 @@ function orbitBuildEmailBody(buildDetails: any): string {
 
 function orbitBuildMessageCard(
   title: string,
-  facts: any[],
+  facts: Fact[],
   notification_id: string
 ): string {
-  let allFacts = [];
+  let allFacts: MessageCardFact[] = [];
   const cardData = `"notification_id": "${notification_id}"`;
   facts.forEach(fact => {
-    for (let key in fact) {
+    for (const key in fact) {
       allFacts.push({ name: key, value: fact[key] });
     }
     allFacts = [...allFacts];
@@ -346,10 +416,10 @@ function orbitBuildMessageCard(
   return body;
 }
 
-function clusterMonitoringEmailBody(facts: any[]): string {
+function clusterMonitoringEmailBody(facts: Fact[]): string {
   let body = '<div>';
   facts.forEach(fact => {
-    for (let key in fact) {
+    for (const key in fact) {
       body += `<div>${_.capitalize(key)} : ${fact[key]}`;
     }
     body += `</br></br>`;
@@ -360,13 +430,13 @@ function clusterMonitoringEmailBody(facts: any[]): string {
 
 function clusterMonitoringMessageCard(
   title: string,
-  facts: any[],
+  facts: Fact[],
   notification_id: string
-): any {
-  let allFacts = [];
+): Record<string, unknown> {
+  let allFacts: MessageCardFact[] = [];
   const cardData = `"notification_id": "${notification_id}"`;
   facts.forEach(fact => {
-    for (let key in fact) {
+    for (const key in fact) {
       allFacts.push({ name: key, value: fact[key] });
     }
     allFacts = [...allFacts];
@@ -459,13 +529,7 @@ function messageCardBody({
   filemonitoring_id,
   fileName,
   metaDifference,
-}: {
-  notificationDetails: any;
-  notification_id: any;
-  filemonitoring_id: any;
-  fileName: any;
-  metaDifference: any;
-}): string {
+}: MessageCardBodyParams): string {
   const { details, title } = notificationDetails;
 
   // -----------------------------------------------------------------------------
@@ -494,8 +558,8 @@ function messageCardBody({
     cardData = `"notification_id": "${notification_id}"`;
   }
 
-  const facts = [];
-  for (let key in details) {
+  const facts: MessageCardFact[] = [];
+  for (const key in details) {
     facts.push({
       name: key,
       value: details[key],
