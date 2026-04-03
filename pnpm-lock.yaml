@@ -10,8 +10,8 @@ catalogs:
       specifier: ^9.39.1
       version: 9.39.4
     '@hpcc-js/comms':
-      specifier: ^3.12.0
-      version: 3.14.0
+      specifier: ^3.15.2
+      version: 3.15.2
     '@types/express':
       specifier: ^5.0.6
       version: 5.0.6
@@ -145,7 +145,7 @@ importers:
         version: 3.7.2
       '@hpcc-js/comms':
         specifier: 'catalog:'
-        version: 3.14.0
+        version: 3.15.2
       '@hpcc-js/graph':
         specifier: ^3.7.1
         version: 3.7.1
@@ -293,7 +293,7 @@ importers:
     dependencies:
       '@hpcc-js/comms':
         specifier: 'catalog:'
-        version: 3.14.0
+        version: 3.15.2
       '@tombolo/db':
         specifier: workspace:*
         version: link:../db
@@ -410,7 +410,7 @@ importers:
     dependencies:
       '@hpcc-js/comms':
         specifier: 'catalog:'
-        version: 3.14.0
+        version: 3.15.2
       '@tombolo/db':
         specifier: workspace:*
         version: link:../db
@@ -1257,8 +1257,8 @@ packages:
   '@hpcc-js/common@3.7.2':
     resolution: {integrity: sha512-6HXlxTHi7MojXuxjlpiJBLyuYwTlx6SWawjDq1kW1LzJxWFCcl5ozPYRVnABzzxJdGgfdHNWOaHcIDbGHpOs3g==}
 
-  '@hpcc-js/comms@3.14.0':
-    resolution: {integrity: sha512-72GQazA08vKgAqu3PjR+nlX0bWUKyomVb11LQCP6ht9ZCbbWeHqoci2BWsVBKOzlbimWcTlrNgH1RwSr98V0lg==}
+  '@hpcc-js/comms@3.15.2':
+    resolution: {integrity: sha512-jJ2iNyc38kdYwZ9PQWV6WISEyg5ace3HQzaX3T57zRsX+89kCIykrd4dSfJ00zl4oMWA11cTq+KCk9N9mWfk6g==}
 
   '@hpcc-js/graph@3.7.1':
     resolution: {integrity: sha512-Fszu6sQp5uUhBwE3vRkHvomPtT3ZG5jNuGqUp6l/qLqeJwzf6U1BU0y7w0V6/eTVyqyKNzQPgRF/NHV9MmB24g==}
@@ -1271,6 +1271,9 @@ packages:
 
   '@hpcc-js/util@3.5.1':
     resolution: {integrity: sha512-5yWuKh+GDk1l3iJeVYGUI0waPnANcvcYuEAZu+B5AEF4IvxJ9g3edKIKl/sFkePLaCb4qVo+CoIuGUkaZ48qHw==}
+
+  '@hpcc-js/util@3.5.2':
+    resolution: {integrity: sha512-pIy+H+qu+SGwKwuZhn1j6COO0qvvoTnX37QEZLKJ3yPd5qErl7VKC/UnHIMNH033rqrQjtIhqlH2aX3CRlncgg==}
 
   '@hpcc-js/wasm-graphviz@1.21.1':
     resolution: {integrity: sha512-PHwgQEbfSPblh/cV422FRNU1mD3ISErOmGP8knX+TNWeUCfrbSV4dvPJnN36D+Cg6Dm4vjtnhlt3J8cUkbAS3Q==}
@@ -2281,7 +2284,6 @@ packages:
   '@xmldom/xmldom@0.9.8':
     resolution: {integrity: sha512-p96FSY54r+WJ50FIOsCOjyj/wavs8921hG5+kVMmZgKcvIKxMXHTrjNJvRgWa/zuX3B6t2lijLNFaOyuxUH+2A==}
     engines: {node: '>=14.6'}
-    deprecated: this version has critical issues, please update to the latest version
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -5463,8 +5465,8 @@ packages:
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
-  undici@7.18.2:
-    resolution: {integrity: sha512-y+8YjDFzWdQlSE9N5nzKMT3g4a5UBX1HKowfdXh0uvAnTaqqwqB92Jt4UXBAeKekDs5IaDKyJFR4X1gYVCgXcw==}
+  undici@7.24.4:
+    resolution: {integrity: sha512-BM/JzwwaRXxrLdElV2Uo6cTLEjhSb3WXboncJamZ15NgUURmvlXvxa6xkwIOILIjPNo9i8ku136ZvWV0Uly8+w==}
     engines: {node: '>=20.18.1'}
 
   undici@7.24.6:
@@ -6690,11 +6692,11 @@ snapshots:
       '@types/d3-transition': 1.3.6
       '@types/d3-zoom': 1.8.7
 
-  '@hpcc-js/comms@3.14.0':
+  '@hpcc-js/comms@3.15.2':
     dependencies:
-      '@hpcc-js/util': 3.5.1
+      '@hpcc-js/util': 3.5.2
       '@xmldom/xmldom': 0.9.8
-      undici: 7.18.2
+      undici: 7.24.4
 
   '@hpcc-js/graph@3.7.1':
     dependencies:
@@ -6715,6 +6717,10 @@ snapshots:
       '@hpcc-js/common': 3.7.2
 
   '@hpcc-js/util@3.5.1':
+    dependencies:
+      '@xmldom/xmldom': 0.9.8
+
+  '@hpcc-js/util@3.5.2':
     dependencies:
       '@xmldom/xmldom': 0.9.8
 
@@ -11273,7 +11279,7 @@ snapshots:
 
   undici-types@7.16.0: {}
 
-  undici@7.18.2: {}
+  undici@7.24.4: {}
 
   undici@7.24.6: {}
 
