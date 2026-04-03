@@ -40,7 +40,6 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "cron-parser": "^4.9.0",
-    "cron-validate": "^1.5.2",
     "csrf-csrf": "^3.1.0",
     "dotenv": "catalog:",
     "ejs": "^3.1.10",
