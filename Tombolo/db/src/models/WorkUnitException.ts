@@ -79,7 +79,7 @@ export class WorkUnitException extends Model<
 
   @CreatedAt
   @AllowNull(false)
-  @Column(DataType.DATE)
+  @Column({ type: DataType.DATE, defaultValue: DataType.NOW })
   declare createdAt: CreationOptional<Date>;
 
   @DeletedAt

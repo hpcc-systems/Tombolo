@@ -28,6 +28,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.TEXT,
       },
+      fileNameHash: {
+        allowNull: false,
+        type: Sequelize.STRING(64),
+      },
       fileType: {
         allowNull: false,
         type: Sequelize.ENUM('input', 'output'),
@@ -57,6 +61,15 @@ module.exports = {
     await queryInterface.addIndex('work_unit_files', ['clusterId', 'wuId'], {
       name: 'work_unit_files_cluster_wu_idx',
     });
+
+    await queryInterface.addIndex(
+      'work_unit_files',
+      ['wuId', 'clusterId', 'fileType', 'fileNameHash'],
+      {
+        name: 'work_unit_files_unique_file_idx',
+        unique: true,
+      }
+    );
   },
 
   // eslint-disable-next-line no-unused-vars

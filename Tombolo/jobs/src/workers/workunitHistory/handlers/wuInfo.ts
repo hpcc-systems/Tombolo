@@ -52,6 +52,7 @@ async function saveClusterDbUpdates(
     if (filesToCreate.length > 0) {
       await WorkUnitFile.bulkCreate(filesToCreate, {
         ignoreDuplicates: true,
+        hooks: true,
         validate: true,
         transaction: t,
       });
@@ -167,8 +168,14 @@ async function getWorkunitInfo() {
         const durMs = Date.now() - startedAt;
         const exceptionCount =
           wuInfo?.Workunit?.Exceptions?.ECLException?.length ?? 0;
+        const inputFileCount =
+          wuInfo.Workunit.SourceFiles?.ECLSourceFile?.length ?? 0;
+        const outputFileCount =
+          wuInfo.Workunit.Results?.ECLResult?.filter(result => result.FileName)
+            ?.length ?? 0;
+        const totalFileCount = inputFileCount + outputFileCount;
         logger.info(
-          `WUInfo: fetched wuId=${wu.wuId} in ${durMs}ms, exceptions=${exceptionCount} (heapUsedΔMB=${(
+          `WUInfo: fetched wuId=${wu.wuId} in ${durMs}ms, exceptions=${exceptionCount}, fileCount=${totalFileCount} (heapUsedΔMB=${(
             (memAfter.heapUsed - memBefore.heapUsed) /
             1024 /
             1024

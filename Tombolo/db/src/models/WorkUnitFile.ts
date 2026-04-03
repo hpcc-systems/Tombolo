@@ -7,9 +7,12 @@ import {
   AllowNull,
   ForeignKey,
   BelongsTo,
+  BeforeBulkCreate,
+  BeforeValidate,
   CreatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import { createHash } from 'node:crypto';
 import type {
   CreationAttributes,
   CreationOptional,
@@ -29,12 +32,21 @@ import { WorkUnit } from './WorkUnit.js';
       name: 'work_unit_files_cluster_wu_idx',
       fields: ['clusterId', 'wuId'],
     },
+    {
+      name: 'work_unit_files_unique_file_idx',
+      unique: true,
+      fields: ['wuId', 'clusterId', 'fileType', 'fileNameHash'],
+    },
   ],
 })
 export class WorkUnitFile extends Model<
   InferAttributes<WorkUnitFile>,
   InferCreationAttributes<WorkUnitFile>
 > {
+  static hashFileName(fileName: string): string {
+    return createHash('sha256').update(fileName).digest('hex');
+  }
+
   @PrimaryKey
   @Column({ type: DataType.BIGINT.UNSIGNED, autoIncrement: true })
   declare id: CreationOptional<number>;
@@ -53,12 +65,16 @@ export class WorkUnitFile extends Model<
   declare fileName: string;
 
   @AllowNull(false)
+  @Column(DataType.STRING(64))
+  declare fileNameHash: CreationOptional<string>;
+
+  @AllowNull(false)
   @Column(DataType.ENUM('input', 'output'))
   declare fileType: 'input' | 'output';
 
   @CreatedAt
   @AllowNull(false)
-  @Column(DataType.DATE)
+  @Column({ type: DataType.DATE, defaultValue: DataType.NOW })
   declare createdAt: CreationOptional<Date>;
 
   @DeletedAt
@@ -78,6 +94,22 @@ export class WorkUnitFile extends Model<
     constraints: false,
   })
   declare workUnit?: WorkUnit;
+
+  @BeforeValidate
+  static setFileNameHash(instance: WorkUnitFile) {
+    if (instance.fileName && !instance.fileNameHash) {
+      instance.fileNameHash = WorkUnitFile.hashFileName(instance.fileName);
+    }
+  }
+
+  @BeforeBulkCreate
+  static setBulkFileNameHash(instances: WorkUnitFile[]) {
+    for (const instance of instances) {
+      if (instance.fileName && !instance.fileNameHash) {
+        instance.fileNameHash = WorkUnitFile.hashFileName(instance.fileName);
+      }
+    }
+  }
 }
 
 export type WorkUnitFileCreationAttributes = CreationAttributes<WorkUnitFile>;

@@ -49,8 +49,13 @@ async function clearQueueOnStartup(queue: Queue, queueName: string) {
 }
 
 async function clearBullMqStateOnStartup() {
-  if (process.env.NODE_ENV === 'production') {
-    logger.info('NODE_ENV=production, skipping BullMQ startup queue clear');
+  if (process.env.NODE_ENV !== 'development') {
+    logger.info(
+      'NODE_ENV is not development, skipping BullMQ startup queue clear',
+      {
+        nodeEnv: process.env.NODE_ENV,
+      }
+    );
     return;
   }
 
