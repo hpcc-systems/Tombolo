@@ -11,6 +11,7 @@ import {
   DeletedAt,
 } from 'sequelize-typescript';
 import type {
+  CreationAttributes,
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,
@@ -78,7 +79,7 @@ export class WorkUnitException extends Model<
 
   @CreatedAt
   @AllowNull(false)
-  @Column(DataType.DATE)
+  @Column({ type: DataType.DATE, defaultValue: DataType.NOW })
   declare createdAt: CreationOptional<Date>;
 
   @DeletedAt
@@ -105,4 +106,4 @@ export class WorkUnitException extends Model<
 
 // Export creation attributes type for use in other files
 export type WorkUnitExceptionCreationAttributes =
-  InferCreationAttributes<WorkUnitException>;
+  CreationAttributes<WorkUnitException>;
