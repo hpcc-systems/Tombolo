@@ -180,8 +180,8 @@ async function getWorkunitInfo() {
         // Consider this WU successfully fetched even if there are no exceptions
         successfulWuIds.push(wu.wuId);
 
-        const inputFiles = wuInfo.Workunit.SourceFiles.ECLSourceFile;
-        const outputFiles = wuInfo.Workunit.Results.ECLResult;
+        const inputFiles = wuInfo.Workunit.SourceFiles?.ECLSourceFile ?? [];
+        const outputFiles = wuInfo.Workunit.Results?.ECLResult ?? [];
         for (const inputFile of inputFiles) {
           if (!inputFile.Name) continue;
 
