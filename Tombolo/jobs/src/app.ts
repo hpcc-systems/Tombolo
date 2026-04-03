@@ -3,6 +3,7 @@ import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { Redis } from 'ioredis';
+import type { Queue } from 'bullmq';
 import {
   workunitHistoryQueue,
   registerScheduledJobs,
@@ -41,10 +42,51 @@ redisClient.on('reconnecting', () => {
 
 const PORT = process.env.BULL_BOARD_PORT || 3005;
 
+async function clearQueueOnStartup(queue: Queue, queueName: string) {
+  logger.warn(`Clearing BullMQ queue on startup: ${queueName}`);
+  await queue.obliterate({ force: true });
+  logger.info(`Cleared BullMQ queue on startup: ${queueName}`);
+}
+
+async function clearBullMqStateOnStartup() {
+  if (process.env.NODE_ENV !== 'development') {
+    logger.info(
+      'NODE_ENV is not development, skipping BullMQ startup queue clear',
+      {
+        nodeEnv: process.env.NODE_ENV,
+      }
+    );
+    return;
+  }
+
+  await clearQueueOnStartup(workunitHistoryQueue, 'workunit-history');
+  await clearQueueOnStartup(archiveQueue, 'archive');
+  await clearQueueOnStartup(hpccToolsQueue, 'hpcc-tools');
+}
+
+function runWorkerWithLogging(workerName: string, runner: () => Promise<void>) {
+  runner().catch(err => {
+    logger.error(
+      `${workerName} worker stopped unexpectedly`,
+      formatErrorForLogging(err)
+    );
+  });
+}
+
 async function startJobProcessor() {
   logger.info('Starting BullMQ job processor...');
 
-  // Start the worker (it will process jobs as they come in)
+  await clearBullMqStateOnStartup();
+
+  await registerScheduledJobs();
+  await registerArchiveJobs();
+  await registerHpccToolsJobs();
+
+  // Start workers after startup cleanup and schedule registration.
+  runWorkerWithLogging('Workunit history', () => workunitHistoryWorker.run());
+  runWorkerWithLogging('Archive', () => archiveWorker.run());
+  runWorkerWithLogging('hpcc-tools', () => hpccToolsWorker.run());
+
   logger.info(
     `Workunit history worker started (concurrency: 1) - Worker ready: ${workunitHistoryWorker.isRunning()}`
   );
@@ -54,10 +96,6 @@ async function startJobProcessor() {
   logger.info(
     `hpcc-tools worker started (concurrency: 1) - Worker ready: ${hpccToolsWorker.isRunning()}`
   );
-
-  await registerScheduledJobs();
-  await registerArchiveJobs();
-  await registerHpccToolsJobs();
 
   // Setup Bull Board
   const serverAdapter = new ExpressAdapter();

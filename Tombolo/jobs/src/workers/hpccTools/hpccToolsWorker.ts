@@ -8,6 +8,7 @@ import processHpccToolsJob from './processor.js';
  * BullMQ worker for the hpcc-tools repository sync job
  */
 export const hpccToolsWorker = new Worker('hpcc-tools', processHpccToolsJob, {
+  autorun: false,
   connection: redisConnectionOptions,
   concurrency: 1, // Ensure only one git sync at a time
   limiter: {
