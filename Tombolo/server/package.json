@@ -35,7 +35,7 @@
     "akeyless": "catalog:",
     "axios": "catalog:",
     "bcryptjs": "^3.0.3",
-    "bree": "^8.0.5",
+    "bree": "^9.2.9",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

@@ -143,7 +143,7 @@ class JobScheduler {
         }
 
         if (message?.action === 'remove') {
-          this.bree.remove(worker.name);
+          await this.bree.remove(worker.name);
           logger.info(`Job removed:  ${workerName}`);
         }
       },
@@ -181,7 +181,7 @@ class JobScheduler {
     return logBreeJobs.call(this);
   }
 
-  createNewBreeJob({
+  async createNewBreeJob({
     uniqueJobName,
     cron,
     jobfileName,
@@ -221,8 +221,8 @@ class JobScheduler {
     jobId?: string;
     title?: string;
     jobExecutionGroupId?: string;
-  }): any {
-    return createNewBreeJob.call(this, {
+  }): Promise<any> {
+    return await createNewBreeJob.call(this, {
       uniqueJobName,
       cron,
       jobfileName,

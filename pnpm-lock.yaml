@@ -429,8 +429,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       bree:
-        specifier: ^8.0.5
-        version: 8.0.5
+        specifier: ^9.2.9
+        version: 9.2.9
       compression:
         specifier: ^1.7.4
         version: 1.8.1
@@ -2504,10 +2504,6 @@ packages:
     resolution: {integrity: sha512-oP5VkATKlNwcgvxi0vM0p/D3n2C3EReYVX+DNYs5TjZFn/oQt2j+4sVJtSMr18pdRr8wjTcBl6LoV+FUwzPmNA==}
     engines: {node: '>=18'}
 
-  boolean@3.2.0:
-    resolution: {integrity: sha512-d0II/GO9uf9lfUHH2BQsjxzRJZBdsjgsBiW4BvhWk/3qoKwQFjIDVN19PfX8F2D/r9PCMTtLWjYVCFrpeYUzsw==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
-
   brace-expansion@2.0.2:
     resolution: {integrity: sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==}
 
@@ -2515,9 +2511,9 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  bree@8.0.5:
-    resolution: {integrity: sha512-OWJ0qbVMk7oGB2zaZULc2IYYJ8mjf3wUo99/1OBJzxHEIVHkwaFfH8gbm4jOWXpQ0pcmgXho0AmZYc3KD8mq3w==}
-    engines: {node: '>= 12.11.0'}
+  bree@9.2.9:
+    resolution: {integrity: sha512-LGAU0iJXRZp146SweBB37Xm44z4jCmsuD97W73747KpeZXYKcO8Vj3Th7xPeeTVmxCGzaV8KaMMtRAXCoujdBA==}
+    engines: {node: '>=12.17.0 <13.0.0-0||>=13.2.0'}
 
   browserslist@4.28.1:
     resolution: {integrity: sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==}
@@ -3697,13 +3693,6 @@ packages:
     resolution: {integrity: sha512-hFoiJiTl63nn+kstHGBtewWSKnQLpyb155KHheA1l39uvtO9nWIop1p3udqPcUd/xbF1VLMO4n7OI6p7RbngDg==}
     engines: {node: '>=8'}
 
-  is-string-and-not-blank@0.0.2:
-    resolution: {integrity: sha512-FyPGAbNVyZpTeDCTXnzuwbu9/WpNXbCfbHXLpCRpN4GANhS00eEIP5Ef+k5HYSNIzIhdN9zRDoBj6unscECvtQ==}
-    engines: {node: '>=6.4.0'}
-
-  is-string-blank@1.0.1:
-    resolution: {integrity: sha512-9H+ZBCVs3L9OYqv8nuUAzpcT9OTgMD1yAWrG7ihlnibdkbtB850heAmYWxHuXc4CHy4lKeK69tN+ny1K7gBIrw==}
-
   is-string@1.1.1:
     resolution: {integrity: sha512-BtEeSsoaQjlSPBemMQIrY1MY0uM6vnS1g5fmufYOtnxLGUZM2178PKbhsk7Ffv58IX+ZtcvoGwccYsh0PglkAA==}
     engines: {node: '>= 0.4'}
@@ -3715,10 +3704,6 @@ packages:
   is-typed-array@1.1.15:
     resolution: {integrity: sha512-p3EcsicXjit7SaskXHs1hA91QxgTw46Fv6EFKKGS5DRFLD8yKnohjF3hxoju94b/OcMZoQukzpPpBE9uLVKzgQ==}
     engines: {node: '>= 0.4'}
-
-  is-valid-path@0.1.1:
-    resolution: {integrity: sha512-+kwPrVDu9Ms03L90Qaml+79+6DZHqHyRoANI6IsZJ/g8frhnfchDOBCa0RbQ6/kdHt5CS5OeIEyrYznNuVN+8A==}
-    engines: {node: '>=0.10.0'}
 
   is-weakmap@2.0.2:
     resolution: {integrity: sha512-K5pXYOm9wqY1RgjpL3YTkF39tni1XajUIkawTLUo9EZEVUFga5gSQJF8nNS7ZwJQ02y+1YCNYcMh+HIf1ZqE+w==}
@@ -7935,8 +7920,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  boolean@3.2.0: {}
-
   brace-expansion@2.0.2:
     dependencies:
       balanced-match: 1.0.2
@@ -7945,21 +7928,16 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  bree@8.0.5:
+  bree@9.2.9:
     dependencies:
       '@breejs/later': 4.2.0
-      boolean: 3.2.0
       combine-errors: 3.0.3
       cron-validate: 1.4.5
-      debug: 4.4.3(supports-color@5.5.0)
       human-interval: 2.0.1
-      is-string-and-not-blank: 0.0.2
-      is-valid-path: 0.1.1
+      is-invalid-path: 0.1.0
       ms: 2.1.3
       p-wait-for: 3.2.0
       safe-timers: 1.1.0
-    transitivePeerDependencies:
-      - supports-color
 
   browserslist@4.28.1:
     dependencies:
@@ -9270,12 +9248,6 @@ snapshots:
 
   is-stream@2.0.1: {}
 
-  is-string-and-not-blank@0.0.2:
-    dependencies:
-      is-string-blank: 1.0.1
-
-  is-string-blank@1.0.1: {}
-
   is-string@1.1.1:
     dependencies:
       call-bound: 1.0.4
@@ -9290,10 +9262,6 @@ snapshots:
   is-typed-array@1.1.15:
     dependencies:
       which-typed-array: 1.1.19
-
-  is-valid-path@0.1.1:
-    dependencies:
-      is-invalid-path: 0.1.0
 
   is-weakmap@2.0.2: {}
 
