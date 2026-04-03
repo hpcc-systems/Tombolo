@@ -35,7 +35,7 @@
     "@eslint/js": "catalog:",
     "eslint": "catalog:",
     "globals": "catalog:",
-    "turbo": "^2.8.21",
+    "turbo": "^2.9.3",
     "typescript-eslint": "catalog:"
   },
   "engines": {
