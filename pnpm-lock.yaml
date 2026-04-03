@@ -494,7 +494,7 @@ importers:
         specifier: 'catalog:'
         version: 6.37.8(mysql2@3.16.1)
       sequelize-cli:
-        specifier: ^6.6.2
+        specifier: ^6.6.5
         version: 6.6.5
       sqlstring:
         specifier: ^2.3.3
