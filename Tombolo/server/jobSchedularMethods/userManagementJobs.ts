@@ -9,7 +9,7 @@ const __dirname = getDirname(import.meta.url);
 async function removeUnverifiedUser(this: any): Promise<void> {
   try {
     const jobName = 'remove-unverified-users-' + new Date().getTime();
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       interval: '3600s',
       path: resolveJobPath(
@@ -29,7 +29,7 @@ async function removeUnverifiedUser(this: any): Promise<void> {
       },
     });
 
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('User management (remove unverified user) initialized ...');
   } catch (err) {
     logger.error('userManagementJobs - removeUnverifiedUser: ', err);
@@ -40,7 +40,7 @@ async function removeUnverifiedUser(this: any): Promise<void> {
 async function sendPasswordExpiryEmails(this: any): Promise<void> {
   try {
     const jobName = 'password-expiry-' + new Date().getTime();
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       interval: '12h',
       path: resolveJobPath(
@@ -54,7 +54,7 @@ async function sendPasswordExpiryEmails(this: any): Promise<void> {
       },
     });
 
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info(
       'User management (send password expiry emails) initialized ...'
     );
@@ -67,7 +67,7 @@ async function sendPasswordExpiryEmails(this: any): Promise<void> {
 async function sendAccountDeleteEmails(this: any): Promise<void> {
   try {
     const jobName = 'account-delete-' + new Date().getTime();
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       interval: '12h',
       path: resolveJobPath(
@@ -81,7 +81,7 @@ async function sendAccountDeleteEmails(this: any): Promise<void> {
       },
     });
 
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('User management (account inactivity emails) initialized ...');
   } catch (err) {
     logger.error('userManagementJobs - sendAccountDeleteEmails: ', err);

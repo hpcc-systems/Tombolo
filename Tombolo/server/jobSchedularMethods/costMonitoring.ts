@@ -9,10 +9,10 @@ const MONITOR_COST_FILE_NAME = 'monitorCost.js';
 const ANALYZE_COST_FILE_NAME = 'analyzeCost.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function createMonitorCostJob(this: any): void {
+async function createMonitorCostJob(this: any): Promise<void> {
   try {
     const jobName = 'monitor-cost-' + new Date().getTime();
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       interval: monitor_cost_interval,
       path: resolveJobPath(
@@ -25,7 +25,7 @@ function createMonitorCostJob(this: any): void {
         },
       },
     });
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('Cost per user monitoring initialized ...');
   } catch (err) {
     logger.error('Failed to add monitor-cost-per-user job', err);
@@ -33,10 +33,10 @@ function createMonitorCostJob(this: any): void {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function createAnalyzeCostJob(this: any): void {
+async function createAnalyzeCostJob(this: any): Promise<void> {
   const analyzeCostJobName = `analyze-cost-${new Date().getTime()}`;
   try {
-    this.bree.add({
+    await this.bree.add({
       name: analyzeCostJobName,
       path: resolveJobPath(
         join(__dirname, '..', 'jobs', 'costMonitoring', ANALYZE_COST_FILE_NAME)
@@ -48,7 +48,7 @@ function createAnalyzeCostJob(this: any): void {
         },
       },
     });
-    this.bree.start(analyzeCostJobName);
+    await this.bree.start(analyzeCostJobName);
   } catch (err) {
     logger.error('Failed to add analyze-cost job', err);
   }
