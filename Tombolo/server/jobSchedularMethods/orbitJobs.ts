@@ -90,7 +90,7 @@ async function scheduleOrbitMonitoringOnServerStart(this: any): Promise<void> {
     for (const monitoring of orbitMonitorings) {
       const { id, cron, isActive } = monitoring;
       if (isActive) {
-        this.createOrbitMonitoringJob({
+        await this.createOrbitMonitoringJob({
           orbitMonitoring_id: id,
           cron,
         });
