@@ -7,9 +7,12 @@ import {
   AllowNull,
   ForeignKey,
   BelongsTo,
+  BeforeBulkCreate,
+  BeforeValidate,
   CreatedAt,
   DeletedAt,
 } from 'sequelize-typescript';
+import { createHash } from 'node:crypto';
 import type {
   CreationAttributes,
   CreationOptional,
@@ -24,25 +27,66 @@ import { WorkUnit } from './WorkUnit.js';
   updatedAt: false,
   paranoid: true,
   timestamps: true,
+  indexes: [
+    {
+      name: 'work_unit_exceptions_cluster_wu_idx',
+      fields: ['clusterId', 'wuId'],
+    },
+    {
+      name: 'work_unit_exceptions_unique_hash_idx',
+      unique: true,
+      fields: ['wuId', 'clusterId', 'exceptionHash'],
+    },
+  ],
 })
 export class WorkUnitException extends Model<
   InferAttributes<WorkUnitException>,
   InferCreationAttributes<WorkUnitException>
 > {
+  static hashExceptionIdentity(
+    severity: string,
+    source: string,
+    code: number,
+    message: string,
+    lineNo: number,
+    fileName: string,
+    activity: number,
+    scope: string,
+    priority: number
+  ): string {
+    return createHash('sha256')
+      .update(
+        [
+          severity,
+          source,
+          String(code),
+          message,
+          String(lineNo),
+          fileName,
+          String(activity),
+          scope,
+          String(priority),
+        ].join('|')
+      )
+      .digest('hex');
+  }
+
   @PrimaryKey
+  @Column({ type: DataType.BIGINT.UNSIGNED, autoIncrement: true })
+  declare id: CreationOptional<number>;
+
   @ForeignKey(() => WorkUnit)
   @Column(DataType.STRING(30))
   declare wuId: string;
 
-  @PrimaryKey
   @ForeignKey(() => Cluster)
   @ForeignKey(() => WorkUnit)
   @Column(DataType.UUID)
   declare clusterId: string;
 
-  @PrimaryKey
-  @Column(DataType.INTEGER)
-  declare sequenceNo: CreationOptional<number>;
+  @AllowNull(false)
+  @Column(DataType.STRING(64))
+  declare exceptionHash: CreationOptional<string>;
 
   @Column(DataType.STRING(20))
   declare severity?: string | null;
@@ -102,6 +146,32 @@ export class WorkUnitException extends Model<
     constraints: false,
   })
   declare workUnit?: WorkUnit;
+
+  @BeforeValidate
+  static setExceptionHash(instance: WorkUnitException) {
+    if (instance.exceptionHash) {
+      return;
+    }
+
+    instance.exceptionHash = WorkUnitException.hashExceptionIdentity(
+      instance.severity ?? '',
+      instance.source ?? '',
+      instance.code ?? 0,
+      instance.message ?? '',
+      instance.lineNo ?? 0,
+      instance.fileName ?? '',
+      instance.activity ?? 0,
+      instance.scope ?? '',
+      instance.priority ?? 0
+    );
+  }
+
+  @BeforeBulkCreate
+  static setBulkExceptionHash(instances: WorkUnitException[]) {
+    for (const instance of instances) {
+      WorkUnitException.setExceptionHash(instance);
+    }
+  }
 }
 
 // Export creation attributes type for use in other files

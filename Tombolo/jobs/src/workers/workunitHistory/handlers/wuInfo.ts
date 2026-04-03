@@ -44,6 +44,16 @@ async function saveClusterDbUpdates(
     if (exceptionsToCreate.length > 0) {
       await WorkUnitException.bulkCreate(exceptionsToCreate, {
         ignoreDuplicates: true,
+        hooks: true,
+        validate: true,
+        transaction: t,
+      });
+    }
+
+    if (filesToCreate.length > 0) {
+      await WorkUnitFile.bulkCreate(filesToCreate, {
+        ignoreDuplicates: true,
+        hooks: true,
         validate: true,
         transaction: t,
       });
