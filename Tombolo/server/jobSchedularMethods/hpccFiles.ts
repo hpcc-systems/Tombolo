@@ -90,7 +90,7 @@ async function scheduleFileMonitoringBreeJob(
       cron,
     });
   } else if (monitoringAssetType === 'logicalFile') {
-    await await createLogicalFileMonitoringBreeJob.call(this, {
+    await createLogicalFileMonitoringBreeJob.call(this, {
       filemonitoring_id,
       name,
       cron,

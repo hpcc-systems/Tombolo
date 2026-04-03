@@ -45,7 +45,7 @@ router.put(
     // Route logic
     const jobName = req.body.name;
     try {
-      const result = jobScheduler.startJob(jobName);
+      const result = await jobScheduler.startJob(jobName);
       return sendSuccess(res, result, 'Job started successfully');
     } catch (error) {
       logger.error('Something went wrong', error);
@@ -73,7 +73,7 @@ router.delete(
 router.put('/start_all', async (req: Request, res: Response) => {
   // Route logic
   try {
-    const result = jobScheduler.startAllJobs();
+    const result = await jobScheduler.startAllJobs();
     return sendSuccess(res, result, 'All jobs started successfully');
   } catch (error) {
     logger.error('Something went wrong', error);

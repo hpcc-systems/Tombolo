@@ -265,12 +265,12 @@ class JobScheduler {
     return await stopAllJobs.call(this);
   }
 
-  startJob(jobName: string): any {
-    return startJob.call(this, jobName);
+  async startJob(jobName: string): Promise<any> {
+    return await startJob.call(this, jobName);
   }
 
-  startAllJobs(): any {
-    return startAllJobs.call(this);
+  async startAllJobs(): Promise<any> {
+    return await startAllJobs.call(this);
   }
 
   // Job that fetches workunit info
