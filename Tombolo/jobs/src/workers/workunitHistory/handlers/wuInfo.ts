@@ -169,10 +169,11 @@ async function getWorkunitInfo() {
         const exceptionCount =
           wuInfo?.Workunit?.Exceptions?.ECLException?.length ?? 0;
         const inputFileCount =
-          wuInfo.Workunit.SourceFiles?.ECLSourceFile?.length ?? 0;
+          wuInfo?.Workunit?.SourceFiles?.ECLSourceFile?.length ?? 0;
         const outputFileCount =
-          wuInfo.Workunit.Results?.ECLResult?.filter(result => result.FileName)
-            ?.length ?? 0;
+          wuInfo?.Workunit?.Results?.ECLResult?.filter(
+            result => result.FileName
+          )?.length ?? 0;
         const totalFileCount = inputFileCount + outputFileCount;
         logger.info(
           `WUInfo: fetched wuId=${wu.wuId} in ${durMs}ms, exceptions=${exceptionCount}, fileCount=${totalFileCount} (heapUsedΔMB=${(
@@ -187,8 +188,8 @@ async function getWorkunitInfo() {
         // Consider this WU successfully fetched even if there are no exceptions
         successfulWuIds.push(wu.wuId);
 
-        const inputFiles = wuInfo.Workunit.SourceFiles?.ECLSourceFile ?? [];
-        const outputFiles = wuInfo.Workunit.Results?.ECLResult ?? [];
+        const inputFiles = wuInfo?.Workunit?.SourceFiles?.ECLSourceFile ?? [];
+        const outputFiles = wuInfo?.Workunit?.Results?.ECLResult ?? [];
         for (const inputFile of inputFiles) {
           if (!inputFile.Name) continue;
 
