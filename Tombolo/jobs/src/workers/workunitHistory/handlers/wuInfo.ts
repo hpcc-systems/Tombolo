@@ -59,6 +59,15 @@ async function saveClusterDbUpdates(
       });
     }
 
+    if (filesToCreate.length > 0) {
+      await WorkUnitFile.bulkCreate(filesToCreate, {
+        ignoreDuplicates: true,
+        hooks: true,
+        validate: true,
+        transaction: t,
+      });
+    }
+
     if (deletedWuIds.length > 0) {
       const ids = Array.from(new Set(deletedWuIds));
       await WorkUnit.update(
