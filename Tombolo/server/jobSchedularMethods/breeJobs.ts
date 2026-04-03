@@ -6,7 +6,7 @@ import { resolveJobPath } from './jobPathResolver.js';
 
 const __dirname = getDirname(import.meta.url);
 
-function createNewBreeJob(
+async function createNewBreeJob(
   this: any,
   {
     uniqueJobName,
@@ -49,7 +49,7 @@ function createNewBreeJob(
     title?: string;
     jobExecutionGroupId?: string;
   }
-): void {
+): Promise<void> {
   const defaultDistPath = join(
     __dirname,
     '..',
@@ -90,7 +90,7 @@ function createNewBreeJob(
     job.timeout = 0;
     job.worker.workerData.isCronJob = false;
   }
-  this.bree.add(job);
+  await this.bree.add(job);
 }
 
 async function removeJobFromScheduler(this: any, name: string): Promise<any> {
@@ -177,11 +177,11 @@ async function stopAllJobs(this: any): Promise<any> {
   }
 }
 
-function startJob(this: any, jobName: string): any {
+async function startJob(this: any, jobName: string): Promise<any> {
   const job = this.bree.config.jobs.find(job => job.name === jobName);
   try {
     if (job) {
-      this.bree.start(jobName);
+      await this.bree.start(jobName);
       return { success: true, job, jobs: this.bree.config.jobs };
     } else {
       return {
@@ -200,10 +200,10 @@ function startJob(this: any, jobName: string): any {
   }
 }
 
-function startAllJobs(this: any): any {
+async function startAllJobs(this: any): Promise<any> {
   try {
     const allJobs = [...this.bree.config.jobs];
-    this.bree.start();
+    await this.bree.start();
     return { success: true, jobs: allJobs };
   } catch (err) {
     logger.error('startAllJobs: ', err);

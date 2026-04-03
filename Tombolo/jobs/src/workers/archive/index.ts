@@ -28,6 +28,7 @@ async function processArchiveJob(job: Job<ArchiveJobData>) {
 }
 
 export const archiveWorker = new Worker('archive', processArchiveJob, {
+  autorun: false,
   connection: redisConnectionOptions,
   concurrency: 1,
   limiter: {

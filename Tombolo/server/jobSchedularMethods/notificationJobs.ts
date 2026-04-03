@@ -12,7 +12,7 @@ const __dirname = getDirname(import.meta.url);
 async function scheduleEmailNotificationProcessing(this: any): Promise<void> {
   try {
     const jobName = 'email-notification-processing-' + new Date().getTime();
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       interval: '60s', // Make it 120 seconds in production
       path: resolveJobPath(
@@ -26,7 +26,7 @@ async function scheduleEmailNotificationProcessing(this: any): Promise<void> {
       },
     });
 
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('E-mail Notification processing job initialized ...');
   } catch (err) {
     console.error(err);

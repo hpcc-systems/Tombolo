@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "esm:build": "tsup",
+    "esm:build": "tsup --no-clean",
     "dev": "tsup --watch --no-clean",
     "test": "echo \"No tests yet\"",
     "lint": "eslint .",

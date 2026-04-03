@@ -44,7 +44,7 @@ async function startJobMonitoring(this: any): Promise<void> {
       'jobMonitoring',
       MONITOR_JOBS_FILE_NAME.replace('.ts', '.js')
     );
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       // interval: "1m", // For development
       interval: humanReadableIntervalForJobMonitoring,
@@ -56,7 +56,7 @@ async function startJobMonitoring(this: any): Promise<void> {
         },
       },
     });
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('Job Monitoring initialized ...');
   } catch (err) {
     logger.error(err.message);
@@ -87,7 +87,7 @@ async function startIntermediateJobsMonitoring(this: any): Promise<void> {
       'jobMonitoring',
       MONITOR_INTERMEDIATE_JOBS_FILE_NAME.replace('.ts', '.js')
     );
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       // interval: "20s", // For development
       interval: humanReadableIntervalForIntermediateJobMonitoring,
@@ -99,7 +99,7 @@ async function startIntermediateJobsMonitoring(this: any): Promise<void> {
         },
       },
     });
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('Intermediate job monitoring initialized ...');
   } catch (err) {
     logger.error(err.message);
@@ -131,7 +131,7 @@ async function startJobPunctualityMonitoring(this: any): Promise<void> {
       'jobMonitoring',
       MONITOR_JOBS_JOB_PUNCTUALITY_FILE_NAME.replace('.ts', '.js')
     );
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       // interval: "30s", // For development
       interval: humanReadableIntervalForJobPunctualityMonitoring,
@@ -143,7 +143,7 @@ async function startJobPunctualityMonitoring(this: any): Promise<void> {
         },
       },
     });
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('Job punctuality monitoring initialized ...');
   } catch (err) {
     logger.error(err.message);
@@ -173,7 +173,7 @@ async function startTimeSeriesAnalysisMonitoring(this: any): Promise<void> {
       'jobMonitoring',
       MONITOR_JOBS_TIME_SERIES_ANALYSIS_FILE_NAME.replace('.ts', '.js')
     );
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       // interval: "60s", // For development
       interval: humanReadableIntervalForTimeSeriesJobMonitoring,
@@ -185,7 +185,7 @@ async function startTimeSeriesAnalysisMonitoring(this: any): Promise<void> {
         },
       },
     });
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('Job time series analysis monitoring initialized ...');
   } catch (err) {
     logger.error(err.message);
