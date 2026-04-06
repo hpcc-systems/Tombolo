@@ -19,6 +19,7 @@ import { hpccToolsWorker } from './workers/hpccTools/hpccToolsWorker.js';
 import { redisConnectionOptions } from './config/redis.js';
 import logger from './config/logger.js';
 import { formatErrorForLogging } from './utils/errorFormatter.js';
+import { hpccToolsRoutes } from './routes/hpccToolsRoutes.js';
 
 // Create Redis client for health checks
 const redisClient = new Redis(redisConnectionOptions);
@@ -40,7 +41,7 @@ redisClient.on('reconnecting', () => {
   logger.warn('Redis client reconnecting...');
 });
 
-const PORT = process.env.BULL_BOARD_PORT || 3005;
+const PORT = process.env.BULL_BOARD_PORT || 8678;
 
 async function clearQueueOnStartup(queue: Queue, queueName: string) {
   logger.warn(`Clearing BullMQ queue on startup: ${queueName}`);
@@ -112,6 +113,7 @@ async function startJobProcessor() {
 
   // Create Express app
   const app = express();
+  app.use(express.json());
 
   // API Key authentication middleware for Bull Board
   const apiKeyAuth = (
@@ -120,7 +122,8 @@ async function startJobProcessor() {
     next: express.NextFunction
   ) => {
     const apiKey = req.headers['x-api-key'] || req.query.apiKey;
-    const validApiKey = process.env.BULL_BOARD_API_KEY;
+    const validApiKey =
+      process.env.JOBS_API_KEY || process.env.BULL_BOARD_API_KEY;
 
     // Skip auth if no API key is configured
     if (!validApiKey) {
@@ -135,6 +138,7 @@ async function startJobProcessor() {
   };
 
   app.use('/admin/queues', apiKeyAuth, serverAdapter.getRouter());
+  app.use('/queue/hpcc-tools', apiKeyAuth, hpccToolsRoutes);
 
   // Health check endpoint
   app.get('/health', async (req, res) => {
