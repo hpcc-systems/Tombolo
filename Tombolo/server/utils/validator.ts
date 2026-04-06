@@ -1,17 +1,12 @@
-interface ValidationError {
-  location?: string;
-  msg?: string;
-  param?: string;
-  value?: any;
-  nestedErrors?: ValidationError[];
-}
+import { ErrorFormatter } from 'express-validator';
 
-export default ({
-  location,
-  msg,
-  param,
-  value,
-  nestedErrors,
-}: ValidationError) => {
-  return `${location}[${param}]: ${msg}`;
+const errorFormatter: ErrorFormatter<string> = error => {
+  // Field errors include location and path; other variants do not.
+  if ('path' in error) {
+    return `${error.location}[${error.path}]: ${error.msg}`;
+  }
+
+  return String(error.msg);
 };
+
+export default errorFormatter;

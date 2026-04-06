@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "esm:build": "tsup",
+    "esm:build": "tsup --no-clean",
     "typecheck": "tsc --noEmit",
     "dev": "tsup --watch --no-clean",
     "test": "echo \"No tests yet\"",
