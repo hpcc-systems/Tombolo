@@ -16,22 +16,13 @@ import {
   Tooltip,
   message,
 } from 'antd';
-import {
-  ClockCircleOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  LineChartOutlined,
-  ReloadOutlined,
-  RiseOutlined,
-  FallOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
+import { ClockCircleOutlined, LineChartOutlined, ReloadOutlined, RiseOutlined, FallOutlined } from '@ant-design/icons';
 import { Line } from '@ant-design/plots';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import workunitsService from '@/services/workunits.service';
+import SwapIcon from '@/components/common/icons/SwapIcon';
 import styles from '../../workunitHistory.module.css';
 import { formatCurrency, formatPercentage } from '@tombolo/shared';
 
@@ -57,6 +48,49 @@ const getPercentChange = (current: number | null | undefined, previous: number |
   return ((current - previous) / previous) * 100;
 };
 
+const roundToDecimals = (value: number, decimals = 2): number => {
+  return Number(value.toFixed(decimals));
+};
+
+const renderChangeValue = (current: number, previous: number): React.ReactNode => {
+  if (!Number.isFinite(current) || !Number.isFinite(previous)) return '-';
+
+  const roundedCurrent = roundToDecimals(current, 2);
+  const roundedPrevious = roundToDecimals(previous, 2);
+
+  if (roundedPrevious === 0) {
+    return roundedCurrent === 0 ? <Text type="secondary">0.00%</Text> : '-';
+  }
+
+  const change = getPercentChange(roundedCurrent, roundedPrevious);
+  if (change == null) return '-';
+  if (Math.abs(change) < 1e-8) {
+    return <Text type="secondary">0.00%</Text>;
+  }
+
+  const indicator = getPerformanceIndicator(change);
+  if (indicator === 'similar') {
+    return (
+      <Text type="secondary">
+        <SwapIcon size={12} title="Similar change" aria-label="Similar change" style={{ verticalAlign: 'middle' }} />~
+        {formatPercentage(Math.abs(change))}
+      </Text>
+    );
+  }
+  if (indicator === 'better') {
+    return (
+      <Text type="success">
+        <FallOutlined /> {formatPercentage(Math.abs(change))}
+      </Text>
+    );
+  }
+  return (
+    <Text type="danger">
+      <RiseOutlined /> +{formatPercentage(change)}
+    </Text>
+  );
+};
+
 // Determine if performance is better, worse, or similar
 const getPerformanceIndicator = (percentChange: number | null): PerformanceIndicator | null => {
   if (percentChange === null) return null;
@@ -78,8 +112,8 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
   const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
 
   const fetchHistory = async () => {
-    if (!wu?.jobName) {
-      setError('No job name available');
+    if (!wu?.jobName || !clusterId) {
+      setError('No job name or cluster ID available');
       setLoading(false);
       return;
     }
@@ -94,11 +128,29 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
         startDate = dayjs().subtract(days, 'days').toISOString();
       }
 
-      const data = await workunitsService.getJobHistory(clusterId, wu.jobName, {
+      const data = await workunitsService.getJobHistoryWithStats(clusterId, wu.jobName, {
         startDate,
         limit: 100,
       });
-      setHistory(data || []);
+
+      let runs: any[] = [];
+      if (Array.isArray(data)) {
+        runs = data;
+      } else if (Array.isArray(data?.runs)) {
+        runs = data.runs;
+      } else if (Array.isArray(data?.data?.runs)) {
+        runs = data.data.runs;
+      }
+
+      if (!runs.length) {
+        const fallback = await workunitsService.getJobHistory(clusterId, wu.jobName, {
+          startDate,
+          limit: 100,
+        });
+        runs = Array.isArray(fallback) ? fallback : fallback?.runs || [];
+      }
+
+      setHistory(runs);
     } catch (err: any) {
       setError(err.message || 'Failed to load job history');
       message.error('Failed to load job history');
@@ -108,20 +160,18 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
   };
 
   useEffect(() => {
-    if (wu?.jobName) {
+    if (wu?.jobName && clusterId) {
       fetchHistory();
     } else {
       setLoading(false);
     }
-  }, [wu?.jobName, timeRange]);
+  }, [wu?.jobName, clusterId, timeRange]);
 
   // Filter history
   const filteredHistory = useMemo(() => {
-    let data = [...history];
-    if (showOnlyCompleted) {
-      data = data.filter(item => item.state === 'completed');
-    }
-    return data;
+    const data = [...history];
+    const filtered = showOnlyCompleted ? data.filter(item => item.state === 'completed') : data;
+    return filtered.sort((a, b) => dayjs(b.workUnitTimestamp).diff(dayjs(a.workUnitTimestamp)));
   }, [history, showOnlyCompleted]);
 
   // Calculate statistics
@@ -132,7 +182,10 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
 
     const completed = filteredHistory.filter(h => h.state === 'completed');
     const durations = completed.map((h: any) => h.totalClusterTime).filter((d: any) => d != null);
-    const costs = filteredHistory.map((h: any) => h.totalCost).filter((c: any) => c != null);
+    const costs = completed
+      .map((h: any) => h.totalCost)
+      .filter((c: any) => c != null)
+      .map((c: number) => roundToDecimals(c, 2));
 
     return {
       totalRuns: filteredHistory.length,
@@ -140,7 +193,8 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       avgDuration: durations.length > 0 ? durations.reduce((a: number, b: number) => a + b, 0) / durations.length : 0,
       minDuration: durations.length > 0 ? Math.min(...durations) : 0,
       maxDuration: durations.length > 0 ? Math.max(...durations) : 0,
-      avgCost: costs.length > 0 ? costs.reduce((a: number, b: number) => a + b, 0) / costs.length : 0,
+      avgCost:
+        costs.length > 0 ? roundToDecimals(costs.reduce((a: number, b: number) => a + b, 0) / costs.length, 2) : 0,
     };
   }, [filteredHistory]);
 
@@ -153,7 +207,10 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
 
     const previous = filteredHistory[currentIndex + 1];
     const durationChange = getPercentChange(wu.totalClusterTime, previous.totalClusterTime);
-    const costChange = getPercentChange(wu.totalCost, previous.totalCost);
+    const costChange =
+      wu.totalCost == null || previous.totalCost == null
+        ? null
+        : getPercentChange(roundToDecimals(wu.totalCost, 2), roundToDecimals(previous.totalCost, 2));
 
     return {
       previous,
@@ -177,28 +234,20 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       }));
   }, [filteredHistory, wu]);
 
+  const previousRunMap = useMemo(() => {
+    const map = new Map<string, any>();
+    for (let i = 0; i < filteredHistory.length - 1; i += 1) {
+      const current = filteredHistory[i];
+      const previous = filteredHistory[i + 1];
+      if (current?.wuId && previous) {
+        map.set(current.wuId, previous);
+      }
+    }
+    return map;
+  }, [filteredHistory]);
+
   // Table columns
   const columns = [
-    {
-      title: 'Status',
-      dataIndex: 'state',
-      key: 'state',
-      width: 100,
-      render: (state: string) => {
-        const config: Record<string, { color: string; icon: React.ReactNode }> = {
-          completed: { color: 'success', icon: <CheckCircleOutlined /> },
-          failed: { color: 'error', icon: <CloseCircleOutlined /> },
-          running: { color: 'processing', icon: <ClockCircleOutlined /> },
-          aborted: { color: 'default', icon: <WarningOutlined /> },
-        };
-        const { color, icon } = config[state] || config.aborted;
-        return (
-          <Tag color={color} icon={icon}>
-            {state.toUpperCase()}
-          </Tag>
-        );
-      },
-    },
     {
       title: 'Job Name',
       dataIndex: 'jobName',
@@ -211,6 +260,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       dataIndex: 'wuId',
       key: 'wuId',
       width: 180,
+      ellipsis: true,
       render: (wuId: string, record: any) => (
         <Space>
           <Text
@@ -228,12 +278,14 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       dataIndex: 'workUnitTimestamp',
       key: 'workUnitTimestamp',
       width: 80,
+      ellipsis: true,
       render: (timestamp: string) => (
         <Tooltip title={dayjs(timestamp).format('YYYY-MM-DD HH:mm:ss')}>
           <Text>{dayjs(timestamp).fromNow()}</Text>
         </Tooltip>
       ),
     },
+
     {
       title: 'Duration',
       dataIndex: 'totalClusterTime',
@@ -265,40 +317,35 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       dataIndex: 'totalCost',
       key: 'totalCost',
       width: 100,
+      ellipsis: true,
       render: (cost: number | null) => (cost != null ? formatCurrency(cost) : '-'),
     },
     {
-      title: 'vs Previous',
+      title: 'vs Avg Cost',
+      key: 'avgCostComparison',
+      width: 140,
+      ellipsis: true,
+      render: (_: any, record: any) => {
+        if (record.totalCost == null) return '-';
+        const currentCost = roundToDecimals(record.totalCost, 2);
+        if (statistics.avgCost === 0) {
+          return currentCost === 0 ? <Text type="secondary">0.00%</Text> : '-';
+        }
+        return renderChangeValue(currentCost, statistics.avgCost);
+      },
+    },
+    {
+      title: 'Cost vs Previous',
       key: 'comparison',
       width: 120,
-      render: (_: any, record: any, index: number) => {
-        if (index === filteredHistory.length - 1) return '-';
-        const previous = filteredHistory[index + 1];
-        if (!previous || record.totalClusterTime == null || previous.totalClusterTime == null) return '-';
+      ellipsis: true,
+      render: (_: any, record: any) => {
+        const previous = record?.wuId ? previousRunMap.get(record.wuId) : undefined;
+        if (!previous || record.totalCost == null || previous.totalCost == null) return '-';
 
-        const change = getPercentChange(record.totalClusterTime, previous.totalClusterTime);
-        const indicator = getPerformanceIndicator(change);
-        if (change == null || indicator == null) return '-';
-
-        if (indicator === 'similar') {
-          return (
-            <Text type="secondary">
-              <SwapOutlined /> ~{formatPercentage(Math.abs(change))}
-            </Text>
-          );
-        }
-        if (indicator === 'better') {
-          return (
-            <Text type="success">
-              <FallOutlined /> {formatPercentage(Math.abs(change))}
-            </Text>
-          );
-        }
-        return (
-          <Text type="danger">
-            <RiseOutlined /> +{formatPercentage(change)}
-          </Text>
-        );
+        const currentCost = roundToDecimals(record.totalCost, 2);
+        const previousCost = roundToDecimals(previous.totalCost, 2);
+        return renderChangeValue(currentCost, previousCost);
       },
     },
     {
@@ -307,6 +354,23 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       key: 'owner',
       width: 120,
       ellipsis: true,
+    },
+    {
+      title: 'Status',
+      dataIndex: 'state',
+      key: 'state',
+      width: 100,
+      ellipsis: true,
+      render: (state: string) => {
+        const config: Record<string, { color: string }> = {
+          completed: { color: 'success' },
+          failed: { color: 'error' },
+          running: { color: 'processing' },
+          aborted: { color: 'default' },
+        };
+        const { color } = config[state] || config.aborted;
+        return <Tag color={color}>{state.toUpperCase()}</Tag>;
+      },
     },
   ];
 
@@ -436,7 +500,8 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
                         </Text>
                       ) : (
                         <Text type="secondary">
-                          <SwapOutlined /> Similar (~{formatPercentage(Math.abs(comparison.durationChange))})
+                          <SwapIcon size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Similar (~
+                          {formatPercentage(Math.abs(comparison.durationChange))})
                         </Text>
                       )}
                     </Space>
@@ -456,7 +521,8 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
                         </Text>
                       ) : (
                         <Text type="secondary">
-                          <SwapOutlined /> Similar (~{formatPercentage(Math.abs(comparison.costChange))})
+                          <SwapIcon size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Similar (~
+                          {formatPercentage(Math.abs(comparison.costChange))})
                         </Text>
                       )}
                     </Space>
@@ -475,12 +541,13 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       )}
 
       {/* Summary statistics */}
-      <Card title="Summary Statistics">
-        <Row gutter={[16, 16]}>
-          <Col xs={12} sm={6}>
+      <Card>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between' }}>
+          {/* <Row gutter={[16, 16]}> */}
+          <Card size="small" className={styles.summaryCard}>
             <Statistic title="Total Runs" value={statistics.totalRuns} prefix={<LineChartOutlined />} />
-          </Col>
-          <Col xs={12} sm={6}>
+          </Card>
+          <Card size="small" className={styles.summaryCard}>
             <Statistic
               title="Success Rate"
               value={statistics.successRate}
@@ -490,41 +557,42 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
                 color: statistics.successRate >= 95 ? '#52c41a' : statistics.successRate >= 80 ? '#faad14' : '#ff4d4f',
               }}
             />
-          </Col>
-          <Col xs={12} sm={6}>
+          </Card>
+          <Card size="small" className={styles.summaryCard}>
             <Statistic
               title="Avg Duration"
               value={formatDuration(statistics.avgDuration)}
               prefix={<ClockCircleOutlined />}
             />
-          </Col>
-          <Col xs={12} sm={6}>
+          </Card>
+          <Card size="small" className={styles.summaryCard}>
             <Statistic title="Avg Cost" value={formatCurrency(statistics.avgCost)} />
-          </Col>
-        </Row>
-        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-          <Col xs={12} sm={8}>
+          </Card>
+          {/* </Row> */}
+          {/* <Row gutter={[16, 16]} style={{ marginTop: 16 }}> */}
+          <Card size="small" className={styles.summaryCard}>
             <Statistic
               title="Fastest Run"
               value={formatDuration(statistics.minDuration)}
               valueStyle={{ fontSize: 14 }}
             />
-          </Col>
-          <Col xs={12} sm={8}>
+          </Card>
+          <Card size="small" className={styles.summaryCard}>
             <Statistic
               title="Slowest Run"
               value={formatDuration(statistics.maxDuration)}
               valueStyle={{ fontSize: 14 }}
             />
-          </Col>
-          <Col xs={12} sm={8}>
+          </Card>
+          <Card size="small" className={styles.summaryCard}>
             <Statistic
               title="Duration Range"
               value={formatDuration(statistics.maxDuration - statistics.minDuration)}
               valueStyle={{ fontSize: 14 }}
             />
-          </Col>
-        </Row>
+          </Card>
+          {/* </Row> */}
+        </div>
       </Card>
 
       {/* Performance trend chart */}
@@ -547,6 +615,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       {/* History table */}
       <Card title="Run History">
         <Table
+          size="small"
           dataSource={filteredHistory}
           columns={columns}
           rowKey="wuId"

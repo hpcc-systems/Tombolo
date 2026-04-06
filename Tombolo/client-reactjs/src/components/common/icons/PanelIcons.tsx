@@ -1,5 +1,10 @@
-// VS Code-style sidebar panel toggle icons.
-export const LeftPanelIcon = ({ color = '#333131' }: { color?: string }) => (
+import React from 'react';
+
+interface PanelIconProps {
+  color?: string;
+}
+
+export const LeftPanelIcon = ({ color = '#333131' }: PanelIconProps) => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     {/* outer border */}
     <rect x="0.75" y="0.75" width="14.5" height="14.5" rx="1.5" stroke={color} strokeWidth="1.2" />
@@ -10,7 +15,7 @@ export const LeftPanelIcon = ({ color = '#333131' }: { color?: string }) => (
   </svg>
 );
 
-export const RightPanelIcon = ({ color = '#333131' }: { color?: string }) => (
+export const RightPanelIcon = ({ color = '#333131' }: PanelIconProps) => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     {/* outer border */}
     <rect x="0.75" y="0.75" width="14.5" height="14.5" rx="1.5" stroke={color} strokeWidth="1.2" />
