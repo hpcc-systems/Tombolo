@@ -11,7 +11,7 @@ const MEGAPHONE_JOB = 'orbitMegaphone.js';
 const ORBIT_MONITORING = 'submitOrbitMonitoring.js';
 const ORBIT_PROFILE_MONITORING = 'monitorOrbitProfile.js';
 
-function createOrbitMegaphoneJob(this: { bree: Bree }): void {
+async function createOrbitMegaphoneJob(this: { bree: Bree }): Promise<void> {
   const uniqueJobName = 'Orbit Megaphone Job';
   const defaultDistPath = join(
     __dirname,
@@ -26,15 +26,15 @@ function createOrbitMegaphoneJob(this: { bree: Bree }): void {
     name: uniqueJobName,
     path: resolveJobPath(defaultDistPath),
   };
-  this.bree.add(job);
-  this.bree.start(uniqueJobName);
+  await this.bree.add(job);
+  await this.bree.start(uniqueJobName);
   logger.info('Orbit megaphone job initialized ...');
 }
 
-function createOrbitMonitoringJob(
+async function createOrbitMonitoringJob(
   this: { bree: Bree },
   { orbitMonitoring_id, cron }: { orbitMonitoring_id: string; cron: string }
-): void {
+): Promise<void> {
   const uniqueJobName = `Orbit Monitoring - ${orbitMonitoring_id}`;
   const defaultDistPath2 = join(
     __dirname,
@@ -52,16 +52,16 @@ function createOrbitMonitoringJob(
       workerData: { orbitMonitoring_id },
     },
   };
-  this.bree.add(job);
-  this.bree.start(uniqueJobName);
+  await this.bree.add(job);
+  await this.bree.start(uniqueJobName);
 }
 
-function createOrbitProfileMonitoringJob(
+async function createOrbitProfileMonitoringJob(
   this: { bree: Bree },
   {
     uniqueJobName = 'Orbit Profile Monitoring',
   }: { uniqueJobName?: string } = {}
-): void {
+): Promise<void> {
   const jobName = uniqueJobName;
   const defaultDistPath3 = join(
     __dirname,
@@ -77,8 +77,8 @@ function createOrbitProfileMonitoringJob(
     name: jobName,
     path: resolveJobPath(defaultDistPath3),
   };
-  this.bree.add(job);
-  this.bree.start(jobName);
+  await this.bree.add(job);
+  await this.bree.start(jobName);
   logger.info(`Orbit profile monitoring job scheduled ...`);
 }
 
@@ -90,7 +90,7 @@ async function scheduleOrbitMonitoringOnServerStart(this: any): Promise<void> {
     for (const monitoring of orbitMonitorings) {
       const { id, cron, isActive } = monitoring;
       if (isActive) {
-        this.createOrbitMonitoringJob({
+        await this.createOrbitMonitoringJob({
           orbitMonitoring_id: id,
           cron,
         });

@@ -9,7 +9,8 @@ import {
 } from 'vitest';
 import request from 'supertest';
 import { app } from '../test_server.js';
-import { FileMonitoring, sequelize } from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { FileMonitoring, sequelize } = mockedModels;
 import { v4 as uuidv4 } from 'uuid';
 import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import { AUTHED_USER_ID } from '../helpers.js';
@@ -59,8 +60,10 @@ function getFileMonitoringPayload(overrides = {}) {
 
 describe('File Monitoring API', () => {
   beforeEach(() => {
-    vi.useFakeTimers('modern');
-    clearInterval(blacklistTokenIntervalId);
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
   });
 
   afterEach(() => {

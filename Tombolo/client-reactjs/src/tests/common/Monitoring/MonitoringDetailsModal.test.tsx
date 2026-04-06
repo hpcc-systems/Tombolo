@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { vi, describe, expect, test, beforeEach } from 'vitest';
 import MonitoringDetailsModal from '@/components/common/Monitoring/MonitoringDetailsModal';
-import React from 'react';
 
 Object.defineProperty(window, 'getComputedStyle', {
   value: () => ({

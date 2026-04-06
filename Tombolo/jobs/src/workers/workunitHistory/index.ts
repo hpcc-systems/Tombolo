@@ -14,6 +14,7 @@ export const workunitHistoryWorker = new Worker(
   'workunit-history',
   processWorkunitHistoryJob, // Function instead of file path - runs in main thread
   {
+    autorun: false,
     connection: redisConnectionOptions,
     concurrency: 1, // IMPORTANT: Only process one job at a time
     limiter: {

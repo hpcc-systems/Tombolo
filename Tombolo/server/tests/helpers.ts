@@ -161,7 +161,7 @@ function getSentNotification() {
   };
 }
 
-function getLoginPayload(user) {
+function getLoginPayload(user: ReturnType<typeof getUsers>[number]) {
   return {
     registrationMethod: user.registrationMethod,
     firstName: user.firstName,
@@ -175,18 +175,22 @@ function getLoginPayload(user) {
   };
 }
 
-function fakeValidateTokenMiddleware(req, res, next) {
+function fakeValidateTokenMiddleware(
+  req: { user?: ReturnType<typeof getUsers>[number] },
+  _res: unknown,
+  next: () => void
+) {
   req.user = getUsers()[0];
   next();
 }
 
-function fakeCsrfProtection(req, res, next) {
+function fakeCsrfProtection(_req: unknown, _res: unknown, next: () => void) {
   next();
 }
 
 const nonExistentID = uuidv4();
 
-function getMockClusterForApi(clusterId) {
+function getMockClusterForApi(clusterId?: string) {
   return {
     id: clusterId || uuidv4(),
     thor_host: 'localhost',
@@ -197,7 +201,7 @@ function getMockClusterForApi(clusterId) {
   };
 }
 
-function getFileListQuery(clusterId) {
+function getFileListQuery(clusterId?: string) {
   return {
     clusterId: clusterId || uuidv4(),
     DropZoneName: 'test_dropzone',
@@ -239,8 +243,8 @@ function getLandingZoneMonitoringCreatePayload(overrides = {}) {
 }
 
 function getLandingZoneMonitoringUpdatePayload(
-  id,
-  validUserId,
+  id: string,
+  validUserId: string,
   overrides = {}
 ) {
   return {
@@ -254,7 +258,7 @@ function getLandingZoneMonitoringUpdatePayload(
   };
 }
 
-function getUuids(count) {
+function getUuids(count: number) {
   const uuids = [];
   for (let i = 0; i < count; i++) {
     uuids.push(uuidv4());
@@ -263,7 +267,7 @@ function getUuids(count) {
 }
 
 function getCostMonitoring(overrides = {}, dateStrings = false) {
-  let newDate = new Date();
+  let newDate: Date | string = new Date();
   if (dateStrings) {
     newDate = newDate.toISOString();
   }
@@ -298,7 +302,7 @@ function getCostMonitoring(overrides = {}, dateStrings = false) {
 }
 
 function getOrbitProfileMonitoring(overrides = {}, dateStrings = false) {
-  let newDate = new Date();
+  let newDate: Date | string = new Date();
   if (dateStrings) {
     newDate = newDate.toISOString();
   }
@@ -335,7 +339,7 @@ function getOrbitProfileMonitoring(overrides = {}, dateStrings = false) {
 }
 
 function getClusterMonitoring(overrides = {}) {
-  let newDate = new Date();
+  let newDate: Date | string = new Date();
   newDate = newDate.toISOString();
   return {
     id: uuidv4(),
@@ -363,7 +367,7 @@ function getClusterMonitoring(overrides = {}) {
 }
 
 function getWorkUnit(overrides = {}, dateStrings = false) {
-  let newDate = new Date();
+  let newDate: Date | string = new Date();
   if (dateStrings) {
     newDate = newDate.toISOString();
   }
@@ -394,7 +398,7 @@ function getWorkUnit(overrides = {}, dateStrings = false) {
 }
 
 function getWorkUnitDetails(overrides = {}, dateStrings = false) {
-  let newDate = new Date();
+  let newDate: Date | string = new Date();
   if (dateStrings) {
     newDate = newDate.toISOString();
   }

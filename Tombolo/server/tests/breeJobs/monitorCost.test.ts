@@ -6,18 +6,28 @@ import {
   monitorCost,
 } from '../../jobs/costMonitoring/monitorCost.js';
 
-import {
+import { mockedModels } from '../mockedModels.js';
+const {
   MonitoringLog,
   CostMonitoring,
   CostMonitoringData,
   Cluster,
   MonitoringType,
-} from '../../models/index.js';
+} = mockedModels;
 
 import { Workunit } from '@hpcc-js/comms';
 import { getClusters } from '../../utils/hpcc-util.js';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { parentPort } from 'worker_threads';
+
+const mockedGetClusters = getClusters as unknown as ReturnType<typeof vi.fn>;
+const mockedGetClusterOptions = getClusterOptions as unknown as ReturnType<
+  typeof vi.fn
+>;
+const mockedWorkunitQuery = Workunit.query as unknown as ReturnType<
+  typeof vi.fn
+>;
+const workerParentPort = parentPort as NonNullable<typeof parentPort>;
 
 vi.mock('@hpcc-js/comms');
 vi.mock('../../utils/hpcc-util.js');
@@ -94,7 +104,7 @@ describe('monitorCost', () => {
     it('should post message if no cost monitorings found', async () => {
       CostMonitoring.findAll.mockResolvedValue([]);
       await monitorCost();
-      expect(parentPort.postMessage).toHaveBeenCalledWith({
+      expect(workerParentPort.postMessage).toHaveBeenCalledWith({
         level: 'info',
         text: 'No cost monitorings found',
       });
@@ -105,7 +115,7 @@ describe('monitorCost', () => {
       MonitoringType.findOne.mockResolvedValue(null);
 
       await monitorCost();
-      expect(parentPort.postMessage).toHaveBeenCalledWith({
+      expect(workerParentPort.postMessage).toHaveBeenCalledWith({
         level: 'error',
         text: 'monitorCost: MonitoringType, "Cost Monitoring" not found',
       });
@@ -121,7 +131,7 @@ describe('monitorCost', () => {
       });
 
       // getClusters returns details for all clusterIds in one call
-      getClusters.mockResolvedValue([
+      mockedGetClusters.mockResolvedValue([
         {
           id: 1,
           thor_host: 'host',
@@ -133,8 +143,8 @@ describe('monitorCost', () => {
         },
       ]);
       MonitoringLog.findOne.mockResolvedValue(null);
-      getClusterOptions.mockReturnValue({});
-      Workunit.query.mockResolvedValue([
+      mockedGetClusterOptions.mockReturnValue({});
+      mockedWorkunitQuery.mockResolvedValue([
         {
           State: 'completed',
           Owner: 'user1',
@@ -151,11 +161,11 @@ describe('monitorCost', () => {
 
       expect(CostMonitoringData.create).toHaveBeenCalled();
       expect(MonitoringLog.create).toHaveBeenCalled();
-      expect(parentPort.postMessage).toHaveBeenCalledWith({
+      expect(workerParentPort.postMessage).toHaveBeenCalledWith({
         level: 'info',
         text: 'Cost Monitor Per user: Monitoring Finished ...',
       });
-      expect(parentPort.postMessage).toHaveBeenCalledWith({
+      expect(workerParentPort.postMessage).toHaveBeenCalledWith({
         action: 'trigger',
         type: 'monitor-cost',
       });
@@ -169,9 +179,9 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([{ id: 1, error: 'Cluster error' }]);
+      mockedGetClusters.mockResolvedValue([{ id: 1, error: 'Cluster error' }]);
       await monitorCost();
-      expect(parentPort.postMessage).toHaveBeenCalledWith(
+      expect(workerParentPort.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           level: 'error',
           text: expect.stringContaining('Failed to get cluster'),
@@ -187,13 +197,13 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([{ id: 1 }]);
-      Workunit.query.mockRejectedValue(new Error('WU error'));
+      mockedGetClusters.mockResolvedValue([{ id: 1 }]);
+      mockedWorkunitQuery.mockRejectedValue(new Error('WU error'));
       Cluster.findAll.mockResolvedValue([{ id: 1 }]);
       MonitoringLog.findOne.mockResolvedValue(null);
-      getClusterOptions.mockReturnValue({});
+      mockedGetClusterOptions.mockReturnValue({});
       await monitorCost();
-      expect(parentPort.postMessage).toHaveBeenCalledWith(
+      expect(workerParentPort.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           level: 'error',
           text: expect.stringContaining('Failed in cluster'),
@@ -209,8 +219,8 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([{ id: 1 }]);
-      Workunit.query.mockResolvedValue([
+      mockedGetClusters.mockResolvedValue([{ id: 1 }]);
+      mockedWorkunitQuery.mockResolvedValue([
         {
           State: 'completed',
           Owner: 'user1',
@@ -224,9 +234,9 @@ describe('monitorCost', () => {
       CostMonitoringData.create.mockRejectedValue(new Error('Create error'));
       Cluster.findAll.mockResolvedValue([{ id: 1 }]);
       MonitoringLog.findOne.mockResolvedValue(null);
-      getClusterOptions.mockReturnValue({});
+      mockedGetClusterOptions.mockReturnValue({});
       await monitorCost();
-      expect(parentPort.postMessage).toHaveBeenCalledWith(
+      expect(workerParentPort.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           level: 'error',
           text: expect.stringContaining('Failed in cluster'),
@@ -242,8 +252,8 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([{ id: 1 }]);
-      Workunit.query.mockResolvedValue([
+      mockedGetClusters.mockResolvedValue([{ id: 1 }]);
+      mockedWorkunitQuery.mockResolvedValue([
         {
           State: 'completed',
           Owner: 'user1',
@@ -258,9 +268,9 @@ describe('monitorCost', () => {
       MonitoringLog.create.mockRejectedValue(new Error('Log create error'));
       Cluster.findAll.mockResolvedValue([{ id: 1 }]);
       MonitoringLog.findOne.mockResolvedValue(null);
-      getClusterOptions.mockReturnValue({});
+      mockedGetClusterOptions.mockReturnValue({});
       await monitorCost();
-      expect(parentPort.postMessage).toHaveBeenCalledWith(
+      expect(workerParentPort.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           level: 'error',
           text: expect.stringContaining('Failed in cluster'),
@@ -279,8 +289,15 @@ describe('monitorCost', () => {
       const monitorCostModule =
         await import('../../jobs/costMonitoring/monitorCost.js');
 
-      models.CostMonitoring.findAll.mockResolvedValue([{ id: 'some-id' }]);
-      models.MonitoringType.findOne.mockResolvedValue(null);
+      const importedModels = models as unknown as {
+        CostMonitoring: { findAll: ReturnType<typeof vi.fn> };
+        MonitoringType: { findOne: ReturnType<typeof vi.fn> };
+      };
+
+      importedModels.CostMonitoring.findAll.mockResolvedValue([
+        { id: 'some-id' },
+      ]);
+      importedModels.MonitoringType.findOne.mockResolvedValue(null);
 
       await monitorCostModule.monitorCost();
       expect(logger.default.error).toHaveBeenCalledWith(
@@ -299,10 +316,10 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([{ id: 1 }]);
+      mockedGetClusters.mockResolvedValue([{ id: 1 }]);
       MonitoringLog.findOne.mockResolvedValue(null);
-      getClusterOptions.mockReturnValue({});
-      Workunit.query.mockResolvedValue([
+      mockedGetClusterOptions.mockReturnValue({});
+      mockedWorkunitQuery.mockResolvedValue([
         {
           State: 'completed',
           Owner: 'user1',
@@ -328,10 +345,10 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([{ id: 1 }, { id: 2 }]);
+      mockedGetClusters.mockResolvedValue([{ id: 1 }, { id: 2 }]);
       MonitoringLog.findOne.mockResolvedValue(null);
-      getClusterOptions.mockReturnValue({});
-      Workunit.query.mockResolvedValue([
+      mockedGetClusterOptions.mockReturnValue({});
+      mockedWorkunitQuery.mockResolvedValue([
         {
           State: 'completed',
           Owner: 'user1',
@@ -366,10 +383,10 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([{ id: 1 }]);
+      mockedGetClusters.mockResolvedValue([{ id: 1 }]);
       MonitoringLog.findOne.mockResolvedValue(null);
-      getClusterOptions.mockReturnValue({});
-      Workunit.query.mockResolvedValue([]);
+      mockedGetClusterOptions.mockReturnValue({});
+      mockedWorkunitQuery.mockResolvedValue([]);
       CostMonitoringData.create.mockResolvedValue({});
       MonitoringLog.create.mockResolvedValue({});
       await monitorCost();
@@ -385,10 +402,10 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([{ id: 1 }]);
+      mockedGetClusters.mockResolvedValue([{ id: 1 }]);
       MonitoringLog.findOne.mockResolvedValue(null);
-      getClusterOptions.mockReturnValue({});
-      Workunit.query.mockResolvedValue([
+      mockedGetClusterOptions.mockReturnValue({});
+      mockedWorkunitQuery.mockResolvedValue([
         {
           State: 'failed',
           Owner: 'user1',
@@ -414,10 +431,10 @@ describe('monitorCost', () => {
         id: 1,
         name: 'Cost Monitoring',
       });
-      getClusters.mockResolvedValue([{ id: 1 }]);
+      mockedGetClusters.mockResolvedValue([{ id: 1 }]);
       MonitoringLog.findOne.mockResolvedValue(null);
-      getClusterOptions.mockReturnValue({});
-      Workunit.query.mockResolvedValue([
+      mockedGetClusterOptions.mockReturnValue({});
+      mockedWorkunitQuery.mockResolvedValue([
         {
           State: 'completed',
           Owner: 'user1',

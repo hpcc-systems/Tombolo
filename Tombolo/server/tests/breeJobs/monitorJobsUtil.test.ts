@@ -86,6 +86,7 @@ describe('monitorJobsUtil', () => {
         originationId: 'orig',
         applicationId: 'app',
         subject: 'subject',
+        wuId: 'W20250825-123456',
         recipients: {
           primaryContacts: ['a'],
           secondaryContacts: ['b'],
@@ -95,6 +96,7 @@ describe('monitorJobsUtil', () => {
         issue: 'issue',
         firstLogged: 'first',
         lastLogged: 'last',
+        notificationDescription: 'desc',
       });
       expect(payload.type).toBe('email');
       expect(payload.metaData.subject).toBe('subject');

@@ -1,7 +1,8 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import { app } from '../test_server.js';
-import { LandingZoneMonitoring, Cluster } from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { LandingZoneMonitoring, Cluster } = mockedModels;
 import { v4 as uuidv4 } from 'uuid';
 import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import {
@@ -59,8 +60,10 @@ describe('Landing Zone Monitoring Routes', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    vi.useFakeTimers('modern');
-    clearInterval(blacklistTokenIntervalId);
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
     vi.clearAllMocks();
     // Set up ENCRYPTION_KEY for tests
     process.env = {

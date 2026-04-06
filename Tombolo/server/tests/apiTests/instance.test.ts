@@ -10,15 +10,18 @@ import {
 import request from 'supertest';
 import { app } from '../test_server.js';
 import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
-import { InstanceSettings } from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { InstanceSettings } = mockedModels;
 import { getInstanceSettings } from '../helpers.js';
 
 beforeAll(async () => {});
 
 describe('Instance Routes', () => {
   beforeEach(() => {
-    vi.useFakeTimers('modern');
-    clearInterval(blacklistTokenIntervalId);
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
   });
 
   afterEach(() => {

@@ -22,7 +22,7 @@ async function scheduleJobStatusPolling(this: any): Promise<void> {
       'jobs',
       JOB_STATUS_POLLER.replace('.ts', '.js')
     );
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       interval: '20s',
       path: resolveJobPath(defaultDistPath),
@@ -34,7 +34,7 @@ async function scheduleJobStatusPolling(this: any): Promise<void> {
       },
     });
 
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
   } catch (err) {
     logger.error('hpccJobs - scheduleJobStatusPolling: ', err);
   }

@@ -3,13 +3,16 @@ import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import request from 'supertest';
 import { app } from '../test_server.js';
 import { v4 as uuidv4 } from 'uuid';
-import { WorkUnit, WorkUnitDetails } from '../../models/index.js';
+import { mockedModels } from '../mockedModels.js';
+const { WorkUnit, WorkUnitDetails } = mockedModels;
 import { getWorkUnit, getWorkUnitDetails } from '../helpers.js';
 
 describe('Workunit Routes', () => {
   beforeEach(() => {
-    vi.useFakeTimers('modern');
-    clearInterval(blacklistTokenIntervalId);
+    vi.useFakeTimers();
+    if (blacklistTokenIntervalId) {
+      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
+    }
     WorkUnit.findAll.mockResolvedValue([]);
   });
 
