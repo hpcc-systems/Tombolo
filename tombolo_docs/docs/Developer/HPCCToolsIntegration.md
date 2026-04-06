@@ -38,6 +38,10 @@ HPCC_TOOLS_REPO_URL=https://github.com/hpcc-systems/hpcc-tools.git
 
 Only override this value if you are actively using the HPCC Tools integration and have a local workflow that requires a non-default repo URL.
 
+:::info Manual Sync Available in Integration Settings
+By default, HPCC Tools sync runs on a recurring schedule. If you need an immediate refresh, you can manually invoke a sync from **Admin -> Integrations -> HPCC Tools** in Tombolo by using the **Sync Now** button in Integration Settings.
+:::
+
 ---
 
 ## 2. Prerequisites
