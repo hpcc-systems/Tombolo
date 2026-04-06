@@ -35,6 +35,7 @@ import clusterMonitoring from '../routes/clusterMonitoringRoutes.js';
 import fileMonitoring from '../routes/fileMonitoringRoutes.js';
 import orbitProfileMonitoring from '../routes/orbitProfileMonitoringRoutes.js';
 import workunits from '../routes/workunitRoutes.js';
+import integrations from '../routes/integrations/read.js';
 
 // Use routes
 app.use('/api/auth', auth);
@@ -57,6 +58,7 @@ app.use(
   orbitProfileMonitoring
 );
 app.use('/api/workunits', validateTokenMiddleware, workunits);
+app.use('/api/integrations', validateTokenMiddleware, integrations);
 
 // Function to start the server
 let server: ReturnType<typeof app.listen> | null = null;
