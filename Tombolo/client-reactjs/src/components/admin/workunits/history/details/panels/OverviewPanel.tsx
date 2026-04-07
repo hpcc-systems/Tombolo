@@ -1,5 +1,18 @@
 import React, { useMemo, useState } from 'react';
-import { Breadcrumb, Card, Col, Descriptions, Empty, Row, Space, Statistic, Table, Tag, Typography } from 'antd';
+import {
+  Breadcrumb,
+  Card,
+  Col,
+  Descriptions,
+  Empty,
+  Row,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+  Typography,
+  Divider,
+} from 'antd';
 import {
   NodeIndexOutlined,
   ProfileOutlined,
@@ -185,6 +198,7 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
               {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
             </Text>
           </div>
+          <Divider />
           <Space wrap size="small" style={{ marginTop: '16px', width: '100%', justifyContent: 'space-between' }}>
             <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
               <Statistic

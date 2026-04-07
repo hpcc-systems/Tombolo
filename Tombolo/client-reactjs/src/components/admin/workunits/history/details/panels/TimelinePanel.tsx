@@ -18,6 +18,7 @@ import {
   Collapse,
   Checkbox,
   InputNumber,
+  Divider,
 } from 'antd';
 import {
   SearchOutlined,
@@ -508,6 +509,7 @@ const TimelinePanel: React.FC<Props> = ({ wu, details, clusterName }) => {
               </Typography.Text>
             </Space>
           </Col>
+          <Divider />
           <Space wrap size="small" style={{ marginTop: '16px', width: '100%', justifyContent: 'space-between' }}>
             <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
               <Statistic

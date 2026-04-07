@@ -15,6 +15,7 @@ import {
   Tooltip,
   message,
   Select,
+  Divider,
 } from 'antd';
 import { ClockCircleOutlined, LineChartOutlined, ReloadOutlined, RiseOutlined, FallOutlined } from '@ant-design/icons';
 import { Line } from '@ant-design/plots';
@@ -372,6 +373,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName, filterType 
     data: chartData,
     xField: 'date',
     yField: 'duration',
+    autoFit: true,
     point: {
       size: (datum: any) => (datum.isCurrent ? 8 : 4),
       shape: 'circle',
@@ -477,10 +479,11 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName, filterType 
             </Space>
           </Col>
         </Row>
-      </Card>
+        <Divider />
+        {/* </Card> */}
 
-      {/* Performance comparison with previous run */}
-      {comparison && (
+        {/* Performance comparison with previous run */}
+        {/* {comparison && (
         <Card>
           <Alert
             message="Comparison with Previous Run"
@@ -540,10 +543,10 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName, filterType 
             showIcon
           />
         </Card>
-      )}
+      )} */}
 
-      {/* Summary Statistics */}
-      <Card>
+        {/* Summary Statistics */}
+        {/* <Card> */}
         <Space wrap size="small" style={{ width: '100%', justifyContent: 'space-between' }}>
           <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
