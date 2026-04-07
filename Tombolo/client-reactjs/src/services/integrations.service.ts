@@ -51,6 +51,11 @@ const integrationsService = {
     );
     return response.data;
   },
+
+  triggerHpccToolsManualSync: async ({ integrationMappingId }: { integrationMappingId: string }): Promise<any> => {
+    const response = await apiClient.post(`/integrations/hpccTools/manualSync/${integrationMappingId}`);
+    return response.data;
+  },
 };
 
 export default integrationsService;
