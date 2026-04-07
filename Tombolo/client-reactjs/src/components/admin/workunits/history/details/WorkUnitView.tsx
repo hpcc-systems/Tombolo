@@ -44,36 +44,6 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName, onRefresh }) 
   const [historyFilter, setHistoryFilter] = useState<'all' | 'completed'>('all');
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
-      {/*  Card - One */}
-      <Card className={styles.cardMarginBottom16}>
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Title level={3}>
-              {wu.jobName || wu.wuId}
-              <Tag
-                className={styles.ml12}
-                color={wu.state === 'completed' ? 'success' : wu.state === 'failed' ? 'error' : 'processing'}>
-                {wu.state.toUpperCase()}
-              </Tag>
-            </Title>
-            <Text type="secondary">
-              {wu.wuId} • {clusterName || wu.clusterId} • Submitted{' '}
-              {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
-            </Text>
-          </Col>
-          <Col>
-            <Space size="large">
-              <Statistic
-                title="Total Runtime"
-                value={formatHours(wu.totalClusterTime)}
-                prefix={<ClockCircleOutlined />}
-              />
-              <Statistic title="Total Cost" value={formatCurrency(wu.totalCost)} />
-            </Space>
-          </Col>
-        </Row>
-      </Card>
-
       <Tabs
         defaultActiveKey="overview"
         activeKey={activeTab}
@@ -123,7 +93,7 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName, onRefresh }) 
               />
             </Card>
           ) : (
-            <TimelinePanel wu={wu} details={details} />
+            <TimelinePanel wu={wu} details={details} clusterName={clusterName} />
           )}
         </TabPane>
 
@@ -144,24 +114,62 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName, onRefresh }) 
               />
             </Card>
           ) : (
-            <Row gutter={[16, 16]}>
-              <Col xs={24} lg={8} xl={7}>
-                <HierarchyExplorer
-                  details={details}
-                  storageKeyPrefix="wuh.graph"
-                  onSelect={handleGraphExplorerSelect}
-                />
-              </Col>
-              <Col xs={24} lg={16} xl={17}>
-                <GraphPanel
-                  clusterId={wu.clusterId}
-                  wuid={wu.wuId}
-                  selectedScopeId={graphSelectedScopeName}
-                  height="calc(100vh - 280px)"
-                  active={activeTab === 'graph'}
-                />
-              </Col>
-            </Row>
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              {/* Job Information Header */}
+              <Card size="small">
+                <Row justify="space-between" align="middle">
+                  <Col>
+                    <Space direction="vertical" size={0}>
+                      <Space align="center">
+                        <Title level={4} style={{ margin: 0, color: '#1f2329' }}>
+                          {wu.jobName}
+                        </Title>
+                        <Tag color={wu.state === 'completed' ? 'green' : wu.state === 'failed' ? 'red' : 'blue'}>
+                          {wu.state?.toUpperCase()}
+                        </Tag>
+                      </Space>
+                      <Space split={<span style={{ color: '#8c8c8c' }}>•</span>} size="small">
+                        <Text type="secondary">
+                          Submitted: {dayjs(wu.workUnitTimestamp).format('MMM D, YYYY [at] h:mm A')}
+                        </Text>
+                        <Text type="secondary">WUID: {wu.wuId}</Text>
+                        <Text type="secondary">Cluster: {clusterName}</Text>
+                      </Space>
+                    </Space>
+                  </Col>
+                  <Col>
+                    <Space size="large">
+                      <Statistic
+                        title="Total Runtime"
+                        value={formatHours(wu.totalClusterTime)}
+                        prefix={<ClockCircleOutlined />}
+                      />
+                      <Statistic title="Total Cost" value={formatCurrency(wu.totalCost)} />
+                    </Space>
+                  </Col>
+                </Row>
+              </Card>
+
+              {/* Graph Content */}
+              <Row gutter={[16, 16]}>
+                <Col xs={24} lg={8} xl={7}>
+                  <HierarchyExplorer
+                    details={details}
+                    storageKeyPrefix="wuh.graph"
+                    onSelect={handleGraphExplorerSelect}
+                  />
+                </Col>
+                <Col xs={24} lg={16} xl={17}>
+                  <GraphPanel
+                    clusterId={wu.clusterId}
+                    wuid={wu.wuId}
+                    selectedScopeId={graphSelectedScopeName}
+                    height="calc(100vh - 280px)"
+                    active={activeTab === 'graph'}
+                  />
+                </Col>
+              </Row>
+            </Space>
           )}
         </TabPane>
 
@@ -189,7 +197,7 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName, onRefresh }) 
               </span>
             }
             key="sql">
-            <SqlPanel clusterId={wu.clusterId} wuid={wu.wuId} clusterName={clusterName} />
+            <SqlPanel wu={wu} clusterId={wu.clusterId} wuid={wu.wuId} clusterName={clusterName} />
           </TabPane>
         )}
       </Tabs>

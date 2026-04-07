@@ -24,7 +24,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import workunitsService from '@/services/workunits.service';
 import SwapIcon from '@/components/common/icons/SwapIcon';
 import styles from '../../workunitHistory.module.css';
-import { formatCurrency, formatPercentage } from '@tombolo/shared';
+import { formatCurrency, formatPercentage, formatHours } from '@tombolo/shared';
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
@@ -104,14 +104,7 @@ interface Props {
   onFilterChange?: (value: 'all' | 'completed') => void;
 }
 
-const HistoryPanel: React.FC<Props> = ({
-  wu,
-  clusterId,
-  clusterName,
-  onRefreshHistory,
-  filterType = 'all',
-  onFilterChange,
-}) => {
+const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName, filterType = 'all', onFilterChange }) => {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -449,13 +442,23 @@ const HistoryPanel: React.FC<Props> = ({
       {/* Header with job name */}
       <Card>
         <Row justify="space-between" align="middle">
-          <Col>
-            <Title level={4} style={{ margin: 0 }}>
-              Job History: {wu.jobName}
-            </Title>
-            <Text type="secondary">
-              Showing {filteredHistory.length} run{filteredHistory.length !== 1 ? 's' : ''} on {clusterName}
-            </Text>
+          <Col flex={1}>
+            <Space direction="vertical" size={4}>
+              <Space size={12} align="center">
+                <Title level={4} style={{ margin: 0 }}>
+                  {wu.jobName || wu.wuId}
+                </Title>
+                <Tag color={wu.state === 'completed' ? 'success' : wu.state === 'failed' ? 'error' : 'processing'}>
+                  {wu.state?.toUpperCase()}
+                </Tag>
+              </Space>
+              <Text type="secondary">
+                {wu.wuId} • {clusterName} • Submitted {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
+              </Text>
+              <Text type="secondary">
+                Showing {filteredHistory.length} run{filteredHistory.length !== 1 ? 's' : ''} for this job
+              </Text>
+            </Space>
           </Col>
           <Col>
             <Space>
@@ -539,59 +542,78 @@ const HistoryPanel: React.FC<Props> = ({
         </Card>
       )}
 
-      {/* Summary statistics */}
+      {/* Summary Statistics */}
       <Card>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between' }}>
-          {/* <Row gutter={[16, 16]}> */}
-          <Card size="small" className={styles.summaryCard}>
-            <Statistic title="Total Runs" value={statistics.totalRuns} prefix={<LineChartOutlined />} />
+        <Space wrap size="small" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+            <Statistic
+              title="Total Runtime"
+              value={formatHours(wu.totalClusterTime)}
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ fontSize: '1.2rem' }}
+            />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+            <Statistic title="Total Cost" value={formatCurrency(wu.totalCost)} valueStyle={{ fontSize: '1.2rem' }} />
+          </Card>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+            <Statistic
+              title="Total Runs"
+              value={statistics.totalRuns}
+              prefix={<LineChartOutlined />}
+              valueStyle={{ fontSize: '1.2rem' }}
+            />
+          </Card>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Success Rate"
               value={statistics.successRate}
               precision={2}
               suffix="%"
               valueStyle={{
+                fontSize: '1.2rem',
                 color: statistics.successRate >= 95 ? '#52c41a' : statistics.successRate >= 80 ? '#faad14' : '#ff4d4f',
               }}
             />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Avg Duration"
               value={formatDuration(statistics.avgDuration)}
               prefix={<ClockCircleOutlined />}
+              valueStyle={{ fontSize: '1.2rem' }}
             />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
-            <Statistic title="Avg Cost" value={formatCurrency(statistics.avgCost)} />
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+            <Statistic
+              title="Avg Cost"
+              value={formatCurrency(statistics.avgCost)}
+              valueStyle={{ fontSize: '1.2rem' }}
+            />
           </Card>
-          {/* </Row> */}
-          {/* <Row gutter={[16, 16]} style={{ marginTop: 16 }}> */}
-          <Card size="small" className={styles.summaryCard}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Fastest Run"
               value={formatDuration(statistics.minDuration)}
-              valueStyle={{ fontSize: 14 }}
+              valueStyle={{ fontSize: '1.2rem' }}
             />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Slowest Run"
               value={formatDuration(statistics.maxDuration)}
-              valueStyle={{ fontSize: 14 }}
+              valueStyle={{ fontSize: '1.2rem' }}
             />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
+          {/* <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Duration Range"
               value={formatDuration(statistics.maxDuration - statistics.minDuration)}
-              valueStyle={{ fontSize: 14 }}
+              titleStyle={{ fontWeight: 600, color: '#1677ff' }}
+              valueStyle={{ fontSize: '1.2rem' }}
             />
-          </Card>
-          {/* </Row> */}
-        </div>
+          </Card> */}
+        </Space>
       </Card>
 
       {/* Performance trend chart */}
