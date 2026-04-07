@@ -18,7 +18,7 @@ const scheduledJobs: ScheduledJob[] = [
     name: 'hpccToolsSync',
     jobId: 'hpccToolsSync-recurring',
     data: { type: HpccToolsJobType.SYNC },
-    schedule: '0 0 0 * * *', // Every 24 hours
+    schedule: '0 0 0 * * *', // Daily at 00:00
     description: 'Sync hpcc-tools repository',
   },
 ];

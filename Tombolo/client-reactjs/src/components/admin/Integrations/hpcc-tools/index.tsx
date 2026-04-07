@@ -35,7 +35,7 @@ const HpccToolsIntegrationSettings: React.FC<Props> = ({ integration_to_app_mapp
       <BreadCrumbs />
       <Card title="HPCC Tools Integration">
         <Descriptions column={1} bordered>
-          <Descriptions.Item label="Sync Frequency">Every 24 hours</Descriptions.Item>
+          <Descriptions.Item label="Sync Frequency">Daily (midnight)</Descriptions.Item>
           <Descriptions.Item label="Description">
             Tombolo automatically clones and updates the hpcc-tools repository on a recurring schedule. Enabling this
             integration activates the daily sync job and exposes the HPCC Tools documentation viewer in the left
