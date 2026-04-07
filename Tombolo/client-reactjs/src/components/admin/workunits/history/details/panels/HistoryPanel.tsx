@@ -8,13 +8,13 @@ import {
   Space,
   Button,
   Tag,
-  Select,
   Alert,
   Spin,
   Empty,
   Typography,
   Tooltip,
   message,
+  Select,
 } from 'antd';
 import { ClockCircleOutlined, LineChartOutlined, ReloadOutlined, RiseOutlined, FallOutlined } from '@ant-design/icons';
 import { Line } from '@ant-design/plots';
@@ -30,10 +30,8 @@ dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
 const { Text, Title } = Typography;
-const { Option } = Select;
 
 type PerformanceIndicator = 'better' | 'worse' | 'similar';
-type TimeRange = '7d' | '30d' | '90d' | 'all';
 
 // Format seconds to readable duration
 const formatDuration = (seconds: number | null | undefined): string => {
@@ -102,14 +100,21 @@ interface Props {
   wu: any;
   clusterId?: string;
   clusterName?: string;
+  filterType?: 'all' | 'completed';
+  onFilterChange?: (value: 'all' | 'completed') => void;
 }
 
-const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
+const HistoryPanel: React.FC<Props> = ({
+  wu,
+  clusterId,
+  clusterName,
+  onRefreshHistory,
+  filterType = 'all',
+  onFilterChange,
+}) => {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>('30d');
-  const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
 
   const fetchHistory = async () => {
     if (!wu?.jobName || !clusterId) {
@@ -123,10 +128,6 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
 
     try {
       let startDate: string | null = null;
-      if (timeRange !== 'all') {
-        const days = parseInt(timeRange);
-        startDate = dayjs().subtract(days, 'days').toISOString();
-      }
 
       const data = await workunitsService.getJobHistoryWithStats(clusterId, wu.jobName, {
         startDate,
@@ -165,14 +166,14 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
     } else {
       setLoading(false);
     }
-  }, [wu?.jobName, clusterId, timeRange]);
+  }, [wu?.jobName, clusterId]);
 
   // Filter history
   const filteredHistory = useMemo(() => {
     const data = [...history];
-    const filtered = showOnlyCompleted ? data.filter(item => item.state === 'completed') : data;
+    const filtered = filterType === 'completed' ? data.filter(item => item.state === 'completed') : data;
     return filtered.sort((a, b) => dayjs(b.workUnitTimestamp).diff(dayjs(a.workUnitTimestamp)));
-  }, [history, showOnlyCompleted]);
+  }, [history, filterType]);
 
   // Calculate statistics
   const statistics = useMemo(() => {
@@ -458,19 +459,17 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
           </Col>
           <Col>
             <Space>
-              <Select value={timeRange} onChange={v => setTimeRange(v as TimeRange)} style={{ width: 120 }}>
-                <Option value="7d">Last 7 days</Option>
-                <Option value="30d">Last 30 days</Option>
-                <Option value="90d">Last 90 days</Option>
-                <Option value="all">All time</Option>
-              </Select>
-              <Button
-                type={showOnlyCompleted ? 'primary' : 'default'}
-                onClick={() => setShowOnlyCompleted(!showOnlyCompleted)}>
-                {showOnlyCompleted ? 'Show All' : 'Completed Only'}
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={fetchHistory}>
-                Refresh
+              <Select
+                value={filterType}
+                onChange={onFilterChange}
+                style={{ width: 120 }}
+                options={[
+                  { label: 'Show All', value: 'all' },
+                  { label: 'Show Completed', value: 'completed' },
+                ]}
+              />
+              <Button type="primary" onClick={fetchHistory} ghost>
+                Refresh History
               </Button>
             </Space>
           </Col>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tabs, Card, Tag, Typography, Space, Row, Col, Statistic, Alert } from 'antd';
+import { Tabs, Card, Tag, Typography, Space, Row, Col, Statistic, Alert, Button } from 'antd';
 import {
   ApartmentOutlined,
   BarChartOutlined,
@@ -29,9 +29,10 @@ interface Props {
   wu: any;
   details: any[];
   clusterName?: string;
+  onRefresh?: () => void;
 }
 
-const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
+const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName, onRefresh }) => {
   const roleArray = getRoleNameArray();
   const isAdminOrOwner = roleArray.includes('owner') || roleArray.includes('administrator');
 
@@ -40,8 +41,10 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
   const graphSelectedScopeName: string | null = graphSelectedNode?.scopeName ?? null;
 
   const [activeTab, setActiveTab] = useState<string>('overview');
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'completed'>('all');
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
+      {/*  Card - One */}
       <Card className={styles.cardMarginBottom16}>
         <Row justify="space-between" align="middle">
           <Col>
@@ -71,7 +74,17 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
         </Row>
       </Card>
 
-      <Tabs defaultActiveKey="overview" activeKey={activeTab} onChange={setActiveTab} size="large">
+      <Tabs
+        defaultActiveKey="overview"
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        tabBarExtraContent={
+          onRefresh && (
+            <Button onClick={onRefresh} type="primary">
+              Refresh
+            </Button>
+          )
+        }>
         <TabPane
           tab={
             <span>
@@ -159,7 +172,13 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName }) => {
             </span>
           }
           key="history">
-          <HistoryPanel wu={wu} clusterId={wu.clusterId} clusterName={clusterName} />
+          <HistoryPanel
+            wu={wu}
+            clusterId={wu.clusterId}
+            clusterName={clusterName}
+            filterType={historyFilter}
+            onFilterChange={setHistoryFilter}
+          />
         </TabPane>
 
         {isAdminOrOwner && (
