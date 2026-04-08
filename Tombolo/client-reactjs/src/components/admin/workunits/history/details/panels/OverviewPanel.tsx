@@ -204,7 +204,6 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
               <Statistic
                 title="Total Runtime"
                 value={formatHours(wu.totalClusterTime)}
-                // prefix={<FieldTimeOutlined />}
                 valueStyle={{ fontSize: '1.2rem' }}
               />
             </Card>
@@ -215,7 +214,6 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
               <Statistic
                 title="Total Elapsed"
                 value={formatSecondsAsHours(summary.totalElapsed)}
-                // prefix={<FieldTimeOutlined />}
                 valueStyle={{ fontSize: '1.2rem' }}
               />
             </Card>

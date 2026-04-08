@@ -231,10 +231,10 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
           <Col>
             <Row gutter={16}>
               <Col>
-                <Statistic title="Total Runtime" value={formatHours(wu?.totalClusterTime)} size="small" />
+                <Statistic title="Total Runtime" value={formatHours(wu?.totalClusterTime)} />
               </Col>
               <Col>
-                <Statistic title="Total Cost" value={formatCurrency(wu?.totalCost)} size="small" />
+                <Statistic title="Total Cost" value={formatCurrency(wu?.totalCost)} />
               </Col>
             </Row>
           </Col>

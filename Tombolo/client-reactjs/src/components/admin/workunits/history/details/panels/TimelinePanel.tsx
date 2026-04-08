@@ -492,25 +492,32 @@ const TimelinePanel: React.FC<Props> = ({ wu, details, clusterName }) => {
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
       {/* Job Header */}
       <Card>
-        <Row justify="space-between" align="middle">
-          <Col flex={1}>
-            <Space direction="vertical" size={4}>
-              <Space size={12} align="center">
-                <Typography.Title level={4} style={{ margin: 0 }}>
-                  {wu?.jobName || wu?.wuId}
-                </Typography.Title>
-                <Tag color={wu?.state === 'completed' ? 'success' : wu?.state === 'failed' ? 'error' : 'processing'}>
-                  {wu?.state?.toUpperCase()}
-                </Tag>
-              </Space>
-              <Typography.Text type="secondary">
-                {wu?.wuId} • {clusterName || wu?.clusterId} • Submitted{' '}
-                {dayjs(wu?.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
-              </Typography.Text>
+        <div>
+          <Space direction="vertical" size={4}>
+            <Space size={12} align="center">
+              <Typography.Title level={4} style={{ margin: 0 }}>
+                {wu?.jobName || wu?.wuId}
+              </Typography.Title>
+              <Tag color={wu?.state === 'completed' ? 'success' : wu?.state === 'failed' ? 'error' : 'processing'}>
+                {wu?.state?.toUpperCase()}
+              </Tag>
             </Space>
-          </Col>
-          <Divider />
-          <Space wrap size="small" style={{ marginTop: '16px', width: '100%', justifyContent: 'space-between' }}>
+            <Typography.Text type="secondary">
+              {wu?.wuId} • {clusterName || wu?.clusterId} • Submitted{' '}
+              {dayjs(wu?.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
+            </Typography.Text>
+          </Space>
+
+          <Divider size="small" />
+
+          <Space
+            wrap
+            size="small"
+            style={{
+              marginTop: '16px',
+              width: '100%',
+              justifyContent: 'space-between',
+            }}>
             <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
               <Statistic
                 title="Total Runtime"
@@ -555,7 +562,7 @@ const TimelinePanel: React.FC<Props> = ({ wu, details, clusterName }) => {
               />
             </Card>
           </Space>
-        </Row>
+        </div>
       </Card>
 
       {/* Performance Alert */}
