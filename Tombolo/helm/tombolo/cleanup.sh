@@ -3,6 +3,7 @@ set -euo pipefail
 
 RELEASE_NAME="tombolo"
 NAMESPACE="tombolo"
+ENV_NAME="dev"
 DELETE_NAMESPACE=true
 DELETE_IMAGES=true
 ASSUME_YES=false
@@ -14,6 +15,7 @@ usage() {
 Usage: ./helm/tombolo/cleanup.sh [options]
 
 Options:
+  --env <name>         Environment name label (default: dev).
   --release <name>      Helm release name to uninstall (default: tombolo).
   --namespace <name>    Kubernetes namespace (default: tombolo).
   --keep-namespace      Do not delete namespace after uninstall.
@@ -61,6 +63,14 @@ error() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --env)
+      ENV_NAME="${2:-}"
+      if [[ -z "$ENV_NAME" ]]; then
+        error "--env requires a value"
+        exit 1
+      fi
+      shift 2
+      ;;
     --release)
       RELEASE_NAME="${2:-}"
       if [[ -z "$RELEASE_NAME" ]]; then
@@ -135,6 +145,7 @@ if [[ "$ASSUME_YES" != true ]]; then
     exit 1
   else
     echo "This will perform cleanup with the following settings:"
+    echo "  Environment:        $ENV_NAME"
     echo "  Release:            $RELEASE_NAME"
     echo "  Namespace:          $NAMESPACE"
     echo "  Delete namespace:   $DELETE_NAMESPACE"
