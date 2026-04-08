@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tombolo
+description: Kubernetes chart for Tombolo workspace services (server, client, jobs) and Redis
+type: application
+version: 0.1.0
+appVersion: "latest"

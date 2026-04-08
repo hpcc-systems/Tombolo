@@ -1,0 +1,214 @@
+namespace:
+  create: true
+  name: tombolo
+
+imagePullSecrets: []
+
+runtime:
+  config:
+    DB_HOSTNAME: localhost
+    DB_PORT: "3306"
+    DB_NAME: tombolo_kube
+    REDIS_HOST: "" # Leave empty for redis pod
+    REDIS_PORT: "" # Leave empty for redis pod
+    REDIS_DB: "0"
+  secret:
+    DB_USERNAME: "" # Leave empty for secret fetching
+    DB_PASSWORD: "" # Leave empty for secret fetching
+    REDIS_PASSWORD: "" # Leave empty for secret fetching
+    REDIS_USER: "" # Leave empty for secret fetching
+
+server:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/hpcc-systems/tombolo-server
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3001
+  service:
+    type: ClusterIP
+    port: 3001
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  config:
+    NODE_ENV: production
+    NODE_LOG_LEVEL: info
+    RUN_DB_BOOTSTRAP_ON_START: "false"
+    INSTANCE_NAME: tombolo
+    HOSTNAME: tombolo.local
+    SERVER_PORT: "3001"
+    WEB_URL: https://tombolo.example.com
+    MYSQL_SSL_ENABLED: "true"
+    JOBS_SERVICE_URL: http://tombolo-jobs:8678
+    RATE_LIMIT_REQUEST_MAX: "4000"
+    TEST_MODE: "false"
+    HPCC_TOOLS_REPO_URL: ssh://git@ssh.github.com:443/hpcc-systems/hpcc-tools.git
+    AKEYLESS_API_URL: https://api.akeyless.io
+    AKEYLESS_PATH_PREFIX: /tombolo/dev
+  startupProbe:
+    path: /api/status/health
+    failureThreshold: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+  livenessProbe:
+    path: /api/status/health
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    path: /api/status/health
+    initialDelaySeconds: 15
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 3
+  secret:
+    JWT_SECRET: ""
+    JWT_REFRESH_SECRET: ""
+    CSRF_SECRET: ""
+    ENCRYPTION_KEY: ""
+    JOBS_API_KEY: ""
+    AKEYLESS_ACCESS_ID: ""
+    AKEYLESS_ACCESS_KEY: ""
+    TENANT_ID: ""
+    CLIENT_ID: ""
+    CLIENT_SECRET: ""
+    REDIRECT_URI: ""
+    EMAIL_SMTP_HOST: ""
+    EMAIL_PORT: ""
+    EMAIL_SENDER: donotreply@tombolo.com
+    EMAIL_USER: ""
+    EMAIL_PASS: ""
+
+client:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/hpcc-systems/tombolo-client
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 80
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  livenessProbe:
+    path: /
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    path: /
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 3
+
+jobs:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/hpcc-systems/tombolo-jobs
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 8678
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 8678
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 3Gi
+  config:
+    NODE_ENV: production
+    LOG_DIR: /app/logs
+    BULL_BOARD_PORT: "8678"
+    HPCC_TOOLS_REPO_URL: ssh://git@ssh.github.com:443/hpcc-systems/hpcc-tools.git
+    GIT_TERMINAL_PROMPT: "0"
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 40
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 20
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 3
+  secret:
+    JOBS_API_KEY: ""
+
+redis:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: redis
+    tag: 8.4-alpine
+    pullPolicy: IfNotPresent
+  containerPort: 6379
+  service:
+    port: 6379
+  auth:
+    secretName: tombolo-runtime-secrets
+    passwordKey: REDIS_PASSWORD
+  runtime:
+    maxMemory: 400mb
+    maxMemoryPolicy: allkeys-lru
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  livenessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 5
+  readinessProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  hosts:
+    - host: tombolo.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: server
+          servicePort: 3001
+        - path: /socket.io
+          pathType: Prefix
+          service: server
+          servicePort: 3001
+        - path: /
+          pathType: Prefix
+          service: client
+          servicePort: 80
+  tls: []

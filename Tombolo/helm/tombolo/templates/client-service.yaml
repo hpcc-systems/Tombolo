@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tombolo-client
+  namespace: {{ include "tombolo.namespace" . }}
+spec:
+  type: {{ .Values.client.service.type }}
+  selector:
+    app: tombolo-client
+  ports:
+    - name: http
+      port: {{ .Values.client.service.port }}
+      targetPort: http

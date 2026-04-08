@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tombolo-client
+  namespace: {{ include "tombolo.namespace" . }}
+spec:
+  replicas: {{ .Values.client.replicaCount }}
+  selector:
+    matchLabels:
+      app: tombolo-client
+  template:
+    metadata:
+      labels:
+        app: tombolo-client
+    spec:
+{{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{- toYaml .Values.imagePullSecrets | nindent 8 }}
+{{- end }}
+      containers:
+        - name: client
+          image: "{{ .Values.client.image.repository }}:{{ .Values.client.image.tag }}"
+          imagePullPolicy: {{ .Values.client.image.pullPolicy }}
+          command: ["nginx", "-g", "daemon off;"]
+          volumeMounts:
+            - name: client-nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              readOnly: true
+            - name: client-nginx-config
+              mountPath: /etc/nginx/conf.d/tombolo-nginx.conf
+              subPath: tombolo-nginx.conf
+              readOnly: true
+          ports:
+            - name: http
+              containerPort: {{ .Values.client.containerPort }}
+          resources:
+{{- toYaml .Values.client.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.client.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.client.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.client.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.client.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.client.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.client.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.client.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.client.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.client.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.client.readinessProbe.failureThreshold }}
+      volumes:
+        - name: client-nginx-config
+          configMap:
+            name: tombolo-client-nginx

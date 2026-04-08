@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tombolo-jobs
+  namespace: {{ include "tombolo.namespace" . }}
+spec:
+  replicas: {{ .Values.jobs.replicaCount }}
+  selector:
+    matchLabels:
+      app: tombolo-jobs
+  template:
+    metadata:
+      labels:
+        app: tombolo-jobs
+      annotations:
+        configmap.reloader.stakater.com/reload: tombolo-jobs-config,tombolo-runtime-config
+        secret.reloader.stakater.com/reload: tombolo-jobs-secrets,tombolo-runtime-secrets
+    spec:
+{{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{- toYaml .Values.imagePullSecrets | nindent 8 }}
+{{- end }}
+      containers:
+        - name: jobs
+          image: "{{ .Values.jobs.image.repository }}:{{ .Values.jobs.image.tag }}"
+          imagePullPolicy: {{ .Values.jobs.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.jobs.containerPort }}
+          envFrom:
+            - configMapRef:
+                name: tombolo-jobs-config
+            - secretRef:
+                name: tombolo-jobs-secrets
+            - configMapRef:
+                name: tombolo-runtime-config
+                optional: true
+            - secretRef:
+                name: tombolo-runtime-secrets
+                optional: true
+          resources:
+{{- toYaml .Values.jobs.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.jobs.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.jobs.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.jobs.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.jobs.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.jobs.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.jobs.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.jobs.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.jobs.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.jobs.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.jobs.readinessProbe.failureThreshold }}

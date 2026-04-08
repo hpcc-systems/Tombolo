@@ -1,0 +1,15 @@
+{{- if .Values.jobs.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: tombolo-jobs
+  namespace: {{ include "tombolo.namespace" . }}
+spec:
+  type: {{ .Values.jobs.service.type }}
+  selector:
+    app: tombolo-jobs
+  ports:
+    - name: http
+      port: {{ .Values.jobs.service.port }}
+      targetPort: http
+{{- end }}
