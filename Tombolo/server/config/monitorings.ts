@@ -20,3 +20,8 @@ export const monitor_cost_interval = '1 hours' as const;
 // User account monitoring configuration
 export const passwordExpiryAlertDaysForUser = [10, 3, 1] as const;
 export const accountDeleteAlertDaysForUser = [10, 3, 1] as const;
+
+// Notification retention configuration
+export const notificationRetentionDays = 90 as const;
+export const notificationRetentionBatchSize = 1000 as const;
+export const notificationRetentionInterval = '12h' as const;

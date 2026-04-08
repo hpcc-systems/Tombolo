@@ -108,11 +108,15 @@ vi.mock('../models/index.js', () => {
       create: vi.fn(),
       findOne: vi.fn(),
       findAll: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
     },
     SentNotification: {
       create: vi.fn(),
       findOne: vi.fn(),
       findAll: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
     },
     AccountVerificationCode: {
       create: vi.fn(),
