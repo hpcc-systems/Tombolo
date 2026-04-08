@@ -1,0 +1,8 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "esm:build": {
+      "cache": false
+    }
+  }
+}
