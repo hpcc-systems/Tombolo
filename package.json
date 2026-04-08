@@ -30,10 +30,10 @@
     "docker:down": "cd Tombolo && docker compose down",
     "db:migration:generate": "pnpm --filter=@tombolo/db db:migration:generate",
     "db:migrate": "pnpm --filter=@tombolo/db db:migrate",
-    "helm:prepare": "cd Tombolo && ./helm/tombolo/prepare.sh",
-    "helm:run": "cd Tombolo && ./helm/tombolo/run.sh",
-    "helm:cleanup": "cd Tombolo && ./helm/tombolo/cleanup.sh",
-    "helm:cleanup:keep-images": "cd Tombolo && ./helm/tombolo/cleanup.sh --keep-images"
+    "helm:prepare": "cd Tombolo && ./helm/tombolo/prepare.sh --env dev",
+    "helm:run": "cd Tombolo && ./helm/tombolo/run.sh --env dev",
+    "helm:cleanup": "cd Tombolo && ./helm/tombolo/cleanup.sh --env dev",
+    "helm:cleanup:keep-images": "cd Tombolo && ./helm/tombolo/cleanup.sh --keep-images --env dev"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
