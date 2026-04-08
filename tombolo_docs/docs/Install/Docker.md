@@ -13,6 +13,8 @@ The [Guided Setup Script](./SetupScript) handles all the steps below interactive
 
 Tombolo can be deployed quickly by following a few simple steps and running a couple of Docker commands. With Docker, there are fewer prerequisites, and you don’t need to worry about installing multiple applications or having a specific operating system on your machine. This makes Docker the preferred packaging method for production, as it ensures consistency across environments, enhances portability, and simplifies the deployment process.
 
+If you are targeting Kubernetes instead of Docker Compose, use [Kubernetes Deployment](./Kubernetes) and [Kubernetes Environment Variables](./Kubernetes-Environment-Variables).
+
 ---
 
 ### System Requirements and Prerequisites
