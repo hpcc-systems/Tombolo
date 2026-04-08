@@ -230,6 +230,9 @@ RUN pnpm add -g node-gyp sequelize-cli pm2
 # Copy deployed server from builder
 COPY --from=server-builder /deploy/server /app
 
+# Include runtime whitelist file expected by compiled controllers.
+COPY --from=server-builder /app/Tombolo/server/cluster-whitelist.js /app/dist/cluster-whitelist.js
+
 # Create required directories
 RUN mkdir -p /gitClones
 

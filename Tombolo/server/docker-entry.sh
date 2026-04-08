@@ -8,31 +8,40 @@ port="${2:-3306}"
 
 log() { printf '%s %s\n' "$(date --iso-8601=seconds 2>/dev/null || date)" "$*"; }
 
+run_db_bootstrap="${RUN_DB_BOOTSTRAP_ON_START:-true}"
+
 log "Waiting for MySQL at ${host}:${port}..."
 while ! nc -z "${host}" "${port}" >/dev/null 2>&1; do
   log "Waiting for MySQL at ${host}:${port}..."
   sleep 2
 done
 
-log "MySQL is ready, initializing database..."
+case "$(printf '%s' "${run_db_bootstrap}" | tr '[:upper:]' '[:lower:]')" in
+  1|true|yes|on)
+    log "MySQL is ready, initializing database..."
 
-# sequelize-cli flags to avoid needing a .sequelizerc file
-# (the server package uses "type": "module" which conflicts with CJS .sequelizerc)
-SEQ_OPTS="--config node_modules/@tombolo/db/config/config.cjs --migrations-path node_modules/@tombolo/db/migrations --seeders-path node_modules/@tombolo/db/seeders --models-path node_modules/@tombolo/db/models"
+    # sequelize-cli flags to avoid needing a .sequelizerc file
+    # (the server package uses "type": "module" which conflicts with CJS .sequelizerc)
+    SEQ_OPTS="--config node_modules/@tombolo/db/config/config.cjs --migrations-path node_modules/@tombolo/db/migrations --seeders-path node_modules/@tombolo/db/seeders --models-path node_modules/@tombolo/db/models"
 
-if command -v sequelize >/dev/null 2>&1; then
-  if ! sequelize db:create ${SEQ_OPTS} >/dev/null 2>&1; then
-    log "sequelize db:create returned non-zero (continuing)"
-  fi
+    if command -v sequelize >/dev/null 2>&1; then
+      if ! sequelize db:create ${SEQ_OPTS} >/dev/null 2>&1; then
+        log "sequelize db:create returned non-zero (continuing)"
+      fi
 
-  log "Running migrations..."
-  sequelize db:migrate ${SEQ_OPTS} || log "migrations failed"
+      log "Running migrations..."
+      sequelize db:migrate ${SEQ_OPTS} || log "migrations failed"
 
-  log "Running seeds..."
-  sequelize db:seed:all ${SEQ_OPTS} || log "seeds failed"
-else
-  log "sequelize not found in PATH; skipping migrations/seeds"
-fi
+      log "Running seeds..."
+      sequelize db:seed:all ${SEQ_OPTS} || log "seeds failed"
+    else
+      log "sequelize not found in PATH; skipping migrations/seeds"
+    fi
+    ;;
+  *)
+    log "RUN_DB_BOOTSTRAP_ON_START=${run_db_bootstrap}; skipping db:create, migrations, and seeds"
+    ;;
+esac
 
 # Ensure mounted log directory exists and is writable (for application logs)
 mkdir -p /app/logs
