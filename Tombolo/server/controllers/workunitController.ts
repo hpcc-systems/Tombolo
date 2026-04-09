@@ -7,6 +7,7 @@ import logger from '../config/logger.js';
 import { getCluster } from '../utils/hpcc-util.js';
 import { getClusterOptions } from '../utils/getClusterOptions.js';
 import { findFuzzyMatches } from '@tombolo/shared';
+import type { WorkUnitDetailsResponse } from '@tombolo/shared';
 
 type ScopeNode = InferAttributes<WorkUnitDetails> & { children: ScopeNode[] };
 
@@ -190,9 +191,9 @@ async function getWorkunitDetails(req: Request, res: Response) {
     return sendSuccess(res, {
       wuId: wuid,
       clusterId,
-      fetchedAt: details[0].createdAt || new Date(),
+      fetchedAt: (details[0].createdAt || new Date()).toISOString(),
       graphs,
-    });
+    } satisfies WorkUnitDetailsResponse);
   } catch (err) {
     logger.error('Get workunit details error: ', err);
     return sendError(res, 'Failed to fetch details', 500);
