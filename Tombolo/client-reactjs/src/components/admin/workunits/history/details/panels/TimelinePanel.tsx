@@ -31,6 +31,7 @@ import {
   HddOutlined,
 } from '@ant-design/icons';
 import { formatSeconds, formatNumber, formatBytes } from '@tombolo/shared';
+import type { WorkUnit } from '@tombolo/shared';
 
 const { Text } = Typography;
 
@@ -302,7 +303,7 @@ const TimelineRow = ({
 // ── Main Component ───────────────────────────────────────────────────────────
 
 interface Props {
-  wu?: any;
+  wu?: WorkUnit;
   details: any[];
 }
 

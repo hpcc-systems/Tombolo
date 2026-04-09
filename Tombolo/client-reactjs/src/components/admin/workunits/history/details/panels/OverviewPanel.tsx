@@ -31,6 +31,7 @@ import {
   formatSecondsAsHours,
   renderAnyMetric as renderAnyMetricShared,
 } from '@tombolo/shared';
+import type { WorkUnit } from '@tombolo/shared';
 import HierarchyExplorer, {
   HierarchyExplorerSelectPayload,
   buildScopeTree,
@@ -48,15 +49,7 @@ function renderAnyMetric(key: string, value: any): React.ReactNode {
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  wu: {
-    jobName?: string;
-    wuId?: string;
-    state?: string;
-    engine?: string;
-    clusterId?: string;
-    owner?: string;
-    totalClusterTime?: number;
-  };
+  wu: WorkUnit;
   details: any[];
   clusterName?: string;
 }

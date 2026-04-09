@@ -11,6 +11,7 @@ import {
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { formatHours, formatCurrency } from '@tombolo/shared';
+import type { WorkUnit } from '@tombolo/shared';
 import GraphPanel from './panels/graph/GraphPanel';
 import HierarchyExplorer, { HierarchyExplorerSelectPayload } from './panels/HierarchyExplorer';
 import OverviewPanel from './panels/OverviewPanel';
@@ -26,7 +27,7 @@ const { Title, Text } = Typography;
 const { TabPane } = Tabs as any;
 
 interface Props {
-  wu: any;
+  wu: WorkUnit;
   details: any[];
   clusterName?: string;
 }

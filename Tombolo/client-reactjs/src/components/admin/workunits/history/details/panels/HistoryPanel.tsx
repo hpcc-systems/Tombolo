@@ -34,6 +34,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import workunitsService from '@/services/workunits.service';
 import styles from '../../workunitHistory.module.css';
 import { formatCurrency, formatPercentage } from '@tombolo/shared';
+import type { WorkUnit } from '@tombolo/shared';
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
@@ -65,7 +66,7 @@ const getPerformanceIndicator = (percentChange: number | null): PerformanceIndic
 };
 
 interface Props {
-  wu: any;
+  wu: WorkUnit;
   clusterId?: string;
   clusterName?: string;
 }
