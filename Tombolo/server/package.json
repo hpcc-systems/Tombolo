@@ -54,7 +54,7 @@
     "morgan": "^1.10.0",
     "mssql": "^12.1.0",
     "mysql2": "catalog:",
-    "nodemailer": "^8.0.4",
+    "nodemailer": "^8.0.5",
     "sequelize": "catalog:",
     "sequelize-cli": "^6.6.5",
     "sqlstring": "^2.3.3",
