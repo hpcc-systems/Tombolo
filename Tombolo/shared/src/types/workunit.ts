@@ -24,5 +24,14 @@ export interface WorkUnitDetailsResponse {
   wuId: string;
   clusterId: string;
   fetchedAt: string;
-  graphs: unknown[];
+  graphs: WorkUnitGraph[];
+}
+
+export interface WorkUnitGraph {
+  id?: string | number;
+  scopeId?: string | null;
+  scopeName?: string;
+  scopeType?: string;
+  children?: WorkUnitGraph[];
+  [key: string]: unknown;
 }

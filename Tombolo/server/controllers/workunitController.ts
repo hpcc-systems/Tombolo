@@ -188,10 +188,19 @@ async function getWorkunitDetails(req: Request, res: Response) {
 
     const graphs = buildScopeHierarchy(details);
 
+    const rawCreatedAt = details[0].createdAt;
+    const normalizedCreatedAt =
+      rawCreatedAt instanceof Date
+        ? rawCreatedAt
+        : new Date(rawCreatedAt ?? Date.now());
+    const fetchedAt = Number.isNaN(normalizedCreatedAt.getTime())
+      ? new Date().toISOString()
+      : normalizedCreatedAt.toISOString();
+
     return sendSuccess(res, {
       wuId: wuid,
       clusterId,
-      fetchedAt: (details[0].createdAt || new Date()).toISOString(),
+      fetchedAt,
       graphs,
     } satisfies WorkUnitDetailsResponse);
   } catch (err) {
