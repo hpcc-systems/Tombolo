@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Card, Empty, Space, Table, Typography, message, Row, Col, Statistic, Tag } from 'antd';
 import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined, StopOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -9,6 +9,7 @@ import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor, { OnMount } from '@monaco-editor/react';
 import debounce from 'lodash/debounce';
 import styles from '../../workunitHistory.module.css';
+import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
 
 const { Text } = Typography;
 
@@ -35,8 +36,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<{ columns: string[]; rows: Record<string, unknown>[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const editorRef = useRef<unknown>(null);
-  const monacoRef = useRef<unknown>(null);
+  const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const MIN_TABLE_ROWS = 15;
@@ -145,67 +145,25 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     return result.columns.map(col => ({ title: col, dataIndex: col, key: col, ellipsis: true }));
   }, [result]);
 
+  const registerCompletionProvider = useCallback((monaco: any) => {
+    registerSqlAutocomplete({
+      monaco,
+      completionProviderRef,
+      getTables: () => ['work_unit_details'],
+      getColumns: () => SUGGEST_COLUMNS,
+    });
+  }, []);
+
   const handleEditorMount: OnMount = (editor, monaco) => {
-    editorRef.current = editor;
-    monacoRef.current = monaco;
-
-    const disposable = monaco.languages.registerCompletionItemProvider('sql', {
-      triggerCharacters: ['.', ' ', '\n', '\t'],
-      provideCompletionItems: (model, position) => {
-        const word = model.getWordUntilPosition(position);
-        const range = {
-          startLineNumber: position.lineNumber,
-          endLineNumber: position.lineNumber,
-          startColumn: word.startColumn,
-          endColumn: word.endColumn,
-        };
-
-        const columnSuggestions = SUGGEST_COLUMNS.map(c => ({
-          label: c,
-          kind: monaco.languages.CompletionItemKind.Field,
-          insertText: c,
-          range,
-        }));
-
-        const keywordSuggestions = [
-          'SELECT',
-          'FROM',
-          'WHERE',
-          'AND',
-          'OR',
-          'ORDER BY',
-          'GROUP BY',
-          'LIMIT',
-          'ASC',
-          'DESC',
-          'COUNT',
-          'AVG',
-          'SUM',
-          'MIN',
-          'MAX',
-        ].map(k => ({
-          label: k,
-          kind: monaco.languages.CompletionItemKind.Keyword,
-          insertText: k,
-          range,
-        }));
-
-        const tableSuggestions = [{ label: 'work_unit_details', kind: monaco.languages.CompletionItemKind.Class }].map(
-          t => ({ ...t, insertText: t.label, range })
-        );
-
-        return { suggestions: [...keywordSuggestions, ...tableSuggestions, ...columnSuggestions] };
-      },
-    });
-
-    editor.onDidDispose(() => {
-      try {
-        disposable.dispose();
-      } catch (err) {
-        console.error('Failed to dispose SQL completion provider', err);
-      }
-    });
+    void editor;
+    registerCompletionProvider(monaco);
   };
+
+  useEffect(() => {
+    return () => {
+      disposeSqlAutocomplete(completionProviderRef);
+    };
+  }, []);
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -266,9 +224,11 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
             <Editor
               height="280px"
               defaultLanguage="sql"
+              beforeMount={registerCompletionProvider}
               value={sql}
               onChange={v => setSql(v ?? '')}
               onMount={handleEditorMount}
+              theme="vs-dark"
               options={{
                 minimap: { enabled: false },
                 fontSize: 13,
