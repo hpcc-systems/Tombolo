@@ -346,7 +346,6 @@ const AnalyticsWorkspace = () => {
         handleSuccess('Query cancelled');
       } else {
         const err = error as { response?: { data?: { message?: string } }; message?: string };
-        console.log('---', err.response);
         handleError(err.response?.data?.message || err.message || 'Failed to execute query');
         console.error('Query execution error:', error);
       }
@@ -1508,6 +1507,7 @@ const AnalyticsWorkspace = () => {
                     type="primary"
                     icon={isExecuting ? <LoadingOutlined spin /> : <PlayCircleOutlined />}
                     onClick={executeQuery}
+                    className={isExecuting ? styles.executingQueryBtn : undefined}
                     disabled={isExecuting}>
                     {isExecuting ? 'Executing...' : 'Execute'}
                   </Button>
