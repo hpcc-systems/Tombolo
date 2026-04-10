@@ -3,6 +3,182 @@ import { QueryTypes } from 'sequelize';
 import { sequelize } from '../models/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
+import { activityKindLabels } from '@tombolo/shared';
+
+const ACTIVITY_KIND_SOURCE_COLUMNS = new Set(['kind']);
+
+function splitSelectClause(selectClause: string): string[] {
+  const expressions: string[] = [];
+  let current = '';
+  let depth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inBacktick = false;
+
+  for (let i = 0; i < selectClause.length; i += 1) {
+    const ch = selectClause[i];
+    const prev = i > 0 ? selectClause[i - 1] : '';
+
+    if (ch === "'" && !inDoubleQuote && !inBacktick && prev !== '\\') {
+      inSingleQuote = !inSingleQuote;
+    } else if (ch === '"' && !inSingleQuote && !inBacktick && prev !== '\\') {
+      inDoubleQuote = !inDoubleQuote;
+    } else if (ch === '`' && !inSingleQuote && !inDoubleQuote) {
+      inBacktick = !inBacktick;
+    }
+
+    if (!inSingleQuote && !inDoubleQuote && !inBacktick) {
+      if (ch === '(') depth += 1;
+      if (ch === ')' && depth > 0) depth -= 1;
+    }
+
+    if (
+      ch === ',' &&
+      depth === 0 &&
+      !inSingleQuote &&
+      !inDoubleQuote &&
+      !inBacktick
+    ) {
+      if (current.trim()) expressions.push(current.trim());
+      current = '';
+      continue;
+    }
+
+    current += ch;
+  }
+
+  if (current.trim()) expressions.push(current.trim());
+  return expressions;
+}
+
+function parseColumnProjection(expression: string): {
+  outputColumn: string | null;
+  sourceColumn: string | null;
+} {
+  const asAliasMatch = expression.match(
+    /\s+AS\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?\s*$/i
+  );
+  const tailAliasMatch = expression.match(
+    /\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?\s*$/
+  );
+
+  let alias: string | null = null;
+  let baseExpr = expression;
+
+  if (asAliasMatch) {
+    alias = asAliasMatch[1];
+    baseExpr = expression.slice(0, asAliasMatch.index).trim();
+  } else if (tailAliasMatch) {
+    const potentialExpr = expression.slice(0, tailAliasMatch.index).trim();
+    if (potentialExpr && /[)\].`"'0-9a-zA-Z_]$/.test(potentialExpr)) {
+      alias = tailAliasMatch[1];
+      baseExpr = potentialExpr;
+    }
+  }
+
+  const sourceMatch = baseExpr.match(
+    /^(?:`?[a-zA-Z_][a-zA-Z0-9_]*`?\.)?`?([a-zA-Z_][a-zA-Z0-9_]*)`?$/
+  );
+
+  if (!sourceMatch) {
+    return { outputColumn: alias, sourceColumn: null };
+  }
+
+  const sourceColumn = sourceMatch[1];
+  return { outputColumn: alias || sourceColumn, sourceColumn };
+}
+
+function getOutputToSourceColumnMap(sql: string): Record<string, string> {
+  const cleanSql = sql.replace(/;\s*$/, '').trim();
+  const selectMatch = cleanSql.match(/^\s*SELECT\s+([\s\S]+?)\s+FROM\s+/i);
+  if (!selectMatch) return {};
+
+  const selectClause = selectMatch[1].replace(/^DISTINCT\s+/i, '').trim();
+  if (!selectClause || selectClause === '*') return {};
+
+  const map: Record<string, string> = {};
+  const projections = splitSelectClause(selectClause);
+
+  for (const projection of projections) {
+    const { outputColumn, sourceColumn } = parseColumnProjection(projection);
+    if (!outputColumn || !sourceColumn) continue;
+
+    map[outputColumn.toLowerCase()] = sourceColumn.toLowerCase();
+  }
+
+  return map;
+}
+
+function mapActivityKindIdsInRows(
+  rows: Record<string, unknown>[],
+  outputToSourceColumnMap: Record<string, string>
+): {
+  mappedRows: number;
+  mappedCells: number;
+  kindOutputColumns: string[];
+  aliasMapSize: number;
+} {
+  const mappedOutputColumns = new Set(
+    Object.entries(outputToSourceColumnMap)
+      .filter(([, sourceColumn]) =>
+        ACTIVITY_KIND_SOURCE_COLUMNS.has(sourceColumn.toLowerCase())
+      )
+      .map(([outputColumn]) => outputColumn.toLowerCase())
+  );
+
+  const explicitKindColumns = new Set<string>();
+  let mappedCells = 0;
+  let mappedRows = 0;
+
+  for (const row of rows) {
+    let rowMapped = false;
+    for (const [columnName, value] of Object.entries(row)) {
+      const normalizedColumnName = columnName.toLowerCase();
+      const sourceColumn = outputToSourceColumnMap[normalizedColumnName];
+      const isMappedFromKind =
+        sourceColumn !== undefined
+          ? ACTIVITY_KIND_SOURCE_COLUMNS.has(sourceColumn.toLowerCase())
+          : ACTIVITY_KIND_SOURCE_COLUMNS.has(normalizedColumnName);
+
+      if (!isMappedFromKind && !mappedOutputColumns.has(normalizedColumnName)) {
+        continue;
+      }
+
+      explicitKindColumns.add(columnName);
+
+      const kindId =
+        typeof value === 'number'
+          ? value
+          : typeof value === 'string' &&
+              value.trim() !== '' &&
+              !Number.isNaN(Number(value))
+            ? Number(value)
+            : null;
+
+      if (
+        kindId !== null &&
+        Number.isInteger(kindId) &&
+        kindId >= 0 &&
+        kindId < activityKindLabels.length
+      ) {
+        row[columnName] = `${activityKindLabels[kindId]} (${kindId})`;
+        mappedCells += 1;
+        rowMapped = true;
+      }
+    }
+
+    if (rowMapped) {
+      mappedRows += 1;
+    }
+  }
+
+  return {
+    mappedRows,
+    mappedCells,
+    kindOutputColumns: Array.from(explicitKindColumns),
+    aliasMapSize: Object.keys(outputToSourceColumnMap).length,
+  };
+}
 
 interface SchemaColumnRow {
   name: string;
@@ -48,7 +224,9 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 
   try {
     // SQL and options are already validated by middleware
-    const rawSql = req.body.sql.trim();
+    const inputSql = req.body.sql.trim();
+    const hadTrailingSemicolon = /;\s*$/.test(inputSql);
+    const rawSql = inputSql.replace(/;\s*$/, '');
     options = req.body.options || {};
     const isScopedQuery = Boolean(
       options.scopeToWuid || options.scopeToClusterId
@@ -152,6 +330,11 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       finalSql = `${finalSql} LIMIT ${MAX_LIMIT}`;
     }
 
+    // Preserve a single trailing semicolon if the original query had one.
+    if (hadTrailingSemicolon) {
+      finalSql = `${finalSql.replace(/;\s*$/, '')};`;
+    }
+
     // Use a transaction to pin both the CONNECTION_ID() query and the user query to the
     // same MySQL thread. This is the idiomatic Sequelize way to guarantee same-connection
     // execution — the transaction is never committed since we only run SELECTs.
@@ -240,6 +423,22 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 
     const executionTime = Date.now() - startTime;
     const totalResponseTimeMs = Date.now() - requestStartedAt;
+
+    // Replace activity kind ids with backend-owned labels before sending to clients.
+    const outputToSourceColumnMap = getOutputToSourceColumnMap(finalSql);
+    const activityKindMappingStats = mapActivityKindIdsInRows(
+      rows,
+      outputToSourceColumnMap
+    );
+
+    logger.debug('Activity kind mapping analysis', {
+      ...logContext,
+      aliasMapSize: activityKindMappingStats.aliasMapSize,
+      aliasMap: outputToSourceColumnMap,
+      kindOutputColumns: activityKindMappingStats.kindOutputColumns,
+      mappedRows: activityKindMappingStats.mappedRows,
+      mappedCells: activityKindMappingStats.mappedCells,
+    });
 
     // Extract column names
     const columns =
