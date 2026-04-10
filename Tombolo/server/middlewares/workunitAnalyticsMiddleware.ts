@@ -59,8 +59,9 @@ const validateAnalyticsQuery = [
     })
     .bail()
     .custom(value => {
-      // Check for semicolons (multiple statements)
-      if (value.includes(';')) {
+      // Allow a single statement terminator; reject multiple semicolons
+      const semicolonCount = (value.match(/;/g) || []).length;
+      if (semicolonCount > 1) {
         throw new Error('Multiple statements are not allowed');
       }
       return true;
@@ -293,7 +294,8 @@ const sqlValidationRules = {
   },
 
   noMultipleStatements: value => {
-    if (value.includes(';')) {
+    const semicolonCount = (value.match(/;/g) || []).length;
+    if (semicolonCount > 1) {
       throw new Error('Multiple statements are not allowed');
     }
     return true;
