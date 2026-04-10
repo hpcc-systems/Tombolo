@@ -149,11 +149,15 @@ function mapActivityKindIdsInRows(
       const kindId =
         typeof value === 'number'
           ? value
-          : typeof value === 'string' &&
-              value.trim() !== '' &&
-              !Number.isNaN(Number(value))
+          : typeof value === 'bigint' &&
+              value >= BigInt(Number.MIN_SAFE_INTEGER) &&
+              value <= BigInt(Number.MAX_SAFE_INTEGER)
             ? Number(value)
-            : null;
+            : typeof value === 'string' &&
+                value.trim() !== '' &&
+                !Number.isNaN(Number(value))
+              ? Number(value)
+              : null;
 
       if (
         kindId !== null &&

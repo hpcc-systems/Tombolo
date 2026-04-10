@@ -493,6 +493,9 @@ const readableLabels: Record<string, string> = {
   store: 'Store',
 };
 
+// The activityKindLabels ordering comes from the eclhelper.hpp:ThorActivityKind and the values come from thorcommon.cpp:getActivityText()
+// https://github.com/hpcc-systems/HPCC-Platform/blob/master/rtl/include/eclhelper.hpp#L879
+// https://github.com/hpcc-systems/HPCC-Platform/blob/master/common/thorhelper/thorcommon.cpp#L622
 const activityKindLabels = [
   'None',
   'Sub Graph',

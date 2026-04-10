@@ -59,11 +59,21 @@ const validateAnalyticsQuery = [
     })
     .bail()
     .custom(value => {
-      // Allow a single statement terminator; reject multiple semicolons
-      const semicolonCount = (value.match(/;/g) || []).length;
-      if (semicolonCount > 1) {
+      // Allow at most one statement terminator, and only as the final character
+      const firstSemicolonIndex = value.indexOf(';');
+      if (firstSemicolonIndex === -1) {
+        return true;
+      }
+
+      const lastSemicolonIndex = value.lastIndexOf(';');
+      const isSingleTrailingSemicolon =
+        firstSemicolonIndex === lastSemicolonIndex &&
+        firstSemicolonIndex === value.length - 1;
+
+      if (!isSingleTrailingSemicolon) {
         throw new Error('Multiple statements are not allowed');
       }
+
       return true;
     })
     .bail()
@@ -294,10 +304,20 @@ const sqlValidationRules = {
   },
 
   noMultipleStatements: value => {
-    const semicolonCount = (value.match(/;/g) || []).length;
-    if (semicolonCount > 1) {
+    const firstSemicolonIndex = value.indexOf(';');
+    if (firstSemicolonIndex === -1) {
+      return true;
+    }
+
+    const lastSemicolonIndex = value.lastIndexOf(';');
+    const isSingleTrailingSemicolon =
+      firstSemicolonIndex === lastSemicolonIndex &&
+      firstSemicolonIndex === value.length - 1;
+
+    if (!isSingleTrailingSemicolon) {
       throw new Error('Multiple statements are not allowed');
     }
+
     return true;
   },
 
