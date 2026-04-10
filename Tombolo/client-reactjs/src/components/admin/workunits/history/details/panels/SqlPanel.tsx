@@ -7,6 +7,7 @@ import { apiClient } from '@/services/api';
 import axios from 'axios';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor, { OnMount } from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
 import debounce from 'lodash/debounce';
 import styles from '../../workunitHistory.module.css';
 import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
@@ -145,17 +146,17 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     return result.columns.map(col => ({ title: col, dataIndex: col, key: col, ellipsis: true }));
   }, [result]);
 
-  const registerCompletionProvider = useCallback((monaco: any) => {
+  const registerCompletionProvider = useCallback((monaco: Monaco) => {
     registerSqlAutocomplete({
       monaco,
       completionProviderRef,
       getTables: () => ['work_unit_details'],
       getColumns: () => SUGGEST_COLUMNS,
+      triggerCharacters: ['.', ' ', '\n', '\t'],
     });
   }, []);
 
-  const handleEditorMount: OnMount = (editor, monaco) => {
-    void editor;
+  const handleEditorMount: OnMount = (_editor, monaco) => {
     registerCompletionProvider(monaco);
   };
 

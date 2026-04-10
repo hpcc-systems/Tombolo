@@ -52,6 +52,7 @@ import {
   CloseOutlined,
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
 import { format } from 'sql-formatter';
 import axios from 'axios';
 import { apiClient } from '@/services/api';
@@ -141,6 +142,8 @@ const AnalyticsWorkspace = () => {
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
   const schemaDataRef = useRef<SchemaData | null>(null);
+  const tableNamesRef = useRef<string[]>(['work_unit_details']);
+  const columnNamesRef = useRef<string[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // State management
@@ -173,21 +176,21 @@ const AnalyticsWorkspace = () => {
 
   useEffect(() => {
     schemaDataRef.current = schemaData;
+    if (schemaData) {
+      const tableNames = Object.keys(schemaData);
+      tableNamesRef.current = tableNames.length ? tableNames : ['work_unit_details'];
+      columnNamesRef.current = Array.from(
+        new Set(Object.values(schemaData).flatMap(cols => cols.map(col => col.name)))
+      );
+    }
   }, [schemaData]);
 
-  const registerSqlCompletionProvider = useCallback((monaco: any) => {
+  const registerSqlCompletionProvider = useCallback((monaco: Monaco) => {
     registerSqlAutocomplete({
       monaco,
       completionProviderRef,
-      getTables: () => {
-        const schema = schemaDataRef.current || {};
-        const tableNames = Object.keys(schema);
-        return tableNames.length ? tableNames : ['work_unit_details'];
-      },
-      getColumns: () => {
-        const schema = schemaDataRef.current || {};
-        return Array.from(new Set(Object.values(schema).flatMap(cols => cols.map(col => col.name))));
-      },
+      getTables: () => tableNamesRef.current,
+      getColumns: () => columnNamesRef.current,
     });
   }, []);
 
@@ -375,7 +378,6 @@ const AnalyticsWorkspace = () => {
         handleSuccess('Query cancelled');
       } else {
         const err = error as { response?: { data?: { message?: string } }; message?: string };
-        console.log('---', err.response);
         handleError(err.response?.data?.message || err.message || 'Failed to execute query');
         console.error('Query execution error:', error);
       }

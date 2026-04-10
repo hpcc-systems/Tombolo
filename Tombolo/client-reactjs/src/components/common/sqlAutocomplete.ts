@@ -1,3 +1,6 @@
+import type { Monaco } from '@monaco-editor/react';
+import type { editor, languages, Position, IDisposable } from 'monaco-editor';
+
 const SQL_KEYWORDS = [
   'SELECT',
   'FROM',
@@ -17,14 +20,16 @@ const SQL_KEYWORDS = [
 ];
 
 interface CompletionProviderRef {
-  current: { dispose: () => void } | null;
+  current: IDisposable | null;
 }
 
 interface RegisterSqlAutocompleteParams {
-  monaco: any;
+  monaco: Monaco;
   completionProviderRef: CompletionProviderRef;
   getTables: () => string[];
   getColumns: () => string[];
+  /** Characters that trigger the completion widget. Defaults to ['.', ' ']. */
+  triggerCharacters?: string[];
 }
 
 export const registerSqlAutocomplete = ({
@@ -32,12 +37,13 @@ export const registerSqlAutocomplete = ({
   completionProviderRef,
   getTables,
   getColumns,
+  triggerCharacters = ['.', ' '],
 }: RegisterSqlAutocompleteParams) => {
   if (completionProviderRef.current) return;
 
   completionProviderRef.current = monaco.languages.registerCompletionItemProvider('sql', {
-    triggerCharacters: ['.', ' '],
-    provideCompletionItems: (model: any, position: any) => {
+    triggerCharacters,
+    provideCompletionItems: (model: editor.ITextModel, position: Position): languages.CompletionList => {
       const word = model.getWordUntilPosition(position);
       const range = {
         startLineNumber: position.lineNumber,
