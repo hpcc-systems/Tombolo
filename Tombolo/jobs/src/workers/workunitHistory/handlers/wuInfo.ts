@@ -86,6 +86,43 @@ async function saveClusterDbUpdates(
   });
 }
 
+type ECLSourceFileNode = {
+  Name?: string;
+  IsSuperFile?: boolean;
+  ECLSourceFiles?: {
+    ECLSourceFile?: ECLSourceFileNode[];
+  };
+};
+
+function collectInputFiles(
+  files: ECLSourceFileNode[],
+  wuId: string,
+  clusterId: string,
+  filesToCreate: WorkUnitFileCreationAttributes[],
+  seen: WeakSet<ECLSourceFileNode> = new WeakSet()
+) {
+  for (const file of files) {
+    if (seen.has(file)) continue;
+    seen.add(file);
+
+    if (file.Name) {
+      filesToCreate.push({
+        wuId,
+        clusterId,
+        fileName: file.Name,
+        fileType: 'input',
+        isSuperFile: !!file.IsSuperFile,
+      });
+    }
+
+    if (!file.IsSuperFile) continue;
+    const nestedFiles = file.ECLSourceFiles?.ECLSourceFile ?? [];
+    if (nestedFiles.length === 0) continue;
+
+    collectInputFiles(nestedFiles, wuId, clusterId, filesToCreate, seen);
+  }
+}
+
 /*
  Main method for the WuInfo job
  */
@@ -200,16 +237,8 @@ async function getWorkunitInfo() {
 
         const inputFiles = wuInfo?.Workunit?.SourceFiles?.ECLSourceFile ?? [];
         const outputFiles = wuInfo?.Workunit?.Results?.ECLResult ?? [];
-        for (const inputFile of inputFiles) {
-          if (!inputFile.Name) continue;
 
-          filesToCreate.push({
-            wuId: wu.wuId,
-            clusterId: clusterId,
-            fileName: inputFile.Name,
-            fileType: 'input',
-          });
-        }
+        collectInputFiles(inputFiles, wu.wuId, clusterId, filesToCreate);
 
         for (const outputFile of outputFiles) {
           if (!outputFile.FileName) continue;
@@ -219,6 +248,7 @@ async function getWorkunitInfo() {
             clusterId: clusterId,
             fileName: outputFile.FileName,
             fileType: 'output',
+            isSuperFile: false,
           });
         }
 
