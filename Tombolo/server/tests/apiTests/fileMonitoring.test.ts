@@ -21,8 +21,8 @@ beforeAll(async () => {
   global.console = consoleModule.default; // restore native console
 });
 
-vi.mock('../../models/index.js', async () => {
-  const actual = await vi.importActual('../../models/index.js');
+vi.mock('@tombolo/db', async () => {
+  const actual = await vi.importActual('@tombolo/db');
   return {
     ...actual,
     FileMonitoring: {

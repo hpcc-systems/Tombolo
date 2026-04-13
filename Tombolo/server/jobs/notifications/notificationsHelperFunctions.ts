@@ -1,4 +1,4 @@
-import { NotificationQueue } from '../../models/index.js';
+import { NotificationQueue } from '@tombolo/db';
 import logger from '../../config/logger.js';
 
 import { retryOptions } from '../../config/emailConfig.js';

@@ -28,7 +28,7 @@ vi.mock('worker_threads', () => ({
 }));
 
 // Replace all calls of models to simulate database interactions
-vi.mock('../models/index.js', () => {
+vi.mock('@tombolo/db', () => {
   const commit = vi.fn();
   const rollback = vi.fn();
   const transaction = vi.fn(() => Promise.resolve({ commit, rollback }));

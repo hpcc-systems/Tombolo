@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
 
 import logger from '../config/logger.js';
-import { FileMonitoring, MonitoringNotification } from '../models/index.js';
+import { FileMonitoring, MonitoringNotification } from '@tombolo/db';
 import { getDirectories } from '../utils/hpcc-util.js';
 import wildCardStringMatch from '../utils/wildCardStringMatch.js';
 import { sendEmail } from '../config/emailConfig.js';
@@ -21,6 +21,7 @@ import {
       raw: true,
     });
 
+    /* eslint-disable prefer-const */
     let {
       name,
       id: filemonitoring_id,
@@ -45,11 +46,12 @@ import {
         notifications,
       },
     } = fileMonitoringDetails;
+    /* eslint-enable prefer-const */
 
     // const cluster = await getCluster(cluster_id);
     // const { timezone_offset } = cluster;
 
-    let currentTimeStamp = moment.utc().valueOf();
+    const currentTimeStamp = moment.utc().valueOf();
 
     const Path = `/var/lib/HPCCSystems/${landingZone}/${dirToMonitor.join('/')}/`;
 
@@ -59,7 +61,7 @@ import {
       Path,
       DirectoryOnly: false,
     });
-    let files: any[] = result.filter(item => !item.isDir);
+    const files: any[] = result.filter(item => !item.isDir);
 
     const newFilesToMonitor: any[] = [];
     const fileAndTimeStamps: any[] = [];
@@ -67,7 +69,7 @@ import {
     // Notification Details
     let emailNotificationDetails: any;
     let teamsNotificationDetails: any;
-    for (let notification of notifications) {
+    for (const notification of notifications) {
       if (notification.channel === 'eMail') {
         emailNotificationDetails = notification;
       }
@@ -77,13 +79,13 @@ import {
     }
 
     // Check for file detected, incorrect file size - if found push to this array
-    let newFileNotificationDetails: any[] = [];
+    const newFileNotificationDetails: any[] = [];
 
     //Check if new files that matches the fileName(wild card) have arrived since last monitored
     for (let i = 0; i < files.length; i++) {
-      let { name: fileName, filesize, modifiedtime } = files[i];
+      const { name: fileName, filesize, modifiedtime } = files[i];
 
-      let fileModifiedTime = moment(modifiedtime); // Convert uploaded_at to a Moment object
+      const fileModifiedTime = moment(modifiedtime); // Convert uploaded_at to a Moment object
       // fileModifiedTime = fileModifiedTime.utc().valueOf() - (60000 * timezone_offset);
       const fileModifiedTimeValue = fileModifiedTime.utc().valueOf();
 
@@ -166,7 +168,7 @@ import {
 
     // Send email notification for new && file not in range
     if (emailNotificationDetails && newFileNotificationDetails.length > 0) {
-      for (let detail of newFileNotificationDetails) {
+      for (const detail of newFileNotificationDetails) {
         try {
           const body = emailBody(detail);
           const notificationResponse = await sendEmail({
@@ -199,12 +201,12 @@ import {
     }
 
     if (teamsNotificationDetails && newFileNotificationDetails.length > 0) {
-      for (let detail of newFileNotificationDetails) {
+      for (const detail of newFileNotificationDetails) {
         const { recipients } = teamsNotificationDetails;
-        for (let recipient of recipients) {
+        for (const recipient of recipients) {
           try {
             const notification_id = uuidv4();
-            let body = messageCardBody({
+            const body = messageCardBody({
               notificationDetails: detail,
               notification_id,
               filemonitoring_id: filemonitoring_id,
@@ -262,7 +264,7 @@ import {
     });
 
     // Alert if file is stuck
-    for (let current of currentlyMonitoring) {
+    for (const current of currentlyMonitoring) {
       const { notified } = current;
       const pastExpectedMoveTime =
         current.expectedFileMoveTime < currentTimeStamp;
@@ -319,11 +321,11 @@ import {
       if (teamsNotificationDetails && !notified.includes('msTeams')) {
         // Send teams notification
         const { recipients } = teamsNotificationDetails;
-        for (let recipient of recipients) {
+        for (const recipient of recipients) {
           try {
             const { value } = currentlyMonitoringNotificationDetails;
             const notification_id = uuidv4();
-            let body = messageCardBody({
+            const body = messageCardBody({
               notificationDetails: currentlyMonitoringNotificationDetails,
               notification_id,
               filemonitoring_id,
@@ -368,6 +370,10 @@ import {
   } catch (err) {
     logger.error('submitLandingZoneFileMonitoring: ', err);
   } finally {
-    parentPort ? parentPort.postMessage('done') : process.exit(0);
+    if (parentPort) {
+      parentPort.postMessage('done');
+    } else {
+      process.exit(0);
+    }
   }
 })();

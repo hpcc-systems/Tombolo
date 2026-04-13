@@ -1,5 +1,5 @@
 import type { Mock } from 'vitest';
-import * as models from '../models/index.js';
+import * as models from '@tombolo/db';
 
 type DeepMocked<T> = {
   [K in keyof T]: T[K] extends (...args: infer _A) => infer _R

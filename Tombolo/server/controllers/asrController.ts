@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 // Local imports
-import { sequelize } from '../models/index.js';
+import { sequelize } from '@tombolo/db';
 import { sendError, sendSuccess } from '../utils/response.js';
 import {
   MonitoringType,
@@ -8,7 +8,7 @@ import {
   AsrMonitoringTypeToDomainsRelation as AsrDomainMonitoringTypeToDomains,
   AsrProduct,
   AsrDomainToProductsRelation,
-} from '../models/index.js';
+} from '@tombolo/db';
 import logger from '../config/logger.js';
 import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
 import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
@@ -32,7 +32,7 @@ async function createDomain(req: Request, res: Response) {
         region,
         severityThreshold,
         severityAlertRecipients,
-        createdBy: (req as any).user.id,
+        createdBy: req.user.id,
       });
 
       // create domain monitoring type mapping
@@ -40,7 +40,7 @@ async function createDomain(req: Request, res: Response) {
         return AsrDomainMonitoringTypeToDomains.create({
           domain_id: domain.id,
           monitoring_type_id: monitoringId,
-          createdBy: (req as any).user.id,
+          createdBy: req.user.id,
         });
       });
 
@@ -54,7 +54,7 @@ async function createDomain(req: Request, res: Response) {
         region,
         severityThreshold,
         severityAlertRecipients,
-        createdBy: (req as any).user.id,
+        createdBy: req.user.id,
       });
     }
     return sendSuccess(res, domain, 'Domain created successfully');
@@ -131,7 +131,7 @@ async function updateDomain(req: Request, res: Response) {
             region,
             severityThreshold,
             severityAlertRecipients,
-            updatedBy: (req as any).user.id,
+            updatedBy: req.user.id,
           },
           { where: { id: req.params.id }, transaction: t }
         );
@@ -149,7 +149,7 @@ async function updateDomain(req: Request, res: Response) {
             {
               domain_id: req.params.id as string,
               monitoring_type_id: monitoringId,
-              createdBy: (req as any).user.id,
+              createdBy: req.user.id,
             },
             { transaction: t }
           );
@@ -164,7 +164,7 @@ async function updateDomain(req: Request, res: Response) {
           region,
           severityThreshold,
           severityAlertRecipients,
-          updatedBy: (req as any).user.id,
+          updatedBy: req.user.id,
         },
         { where: { id: req.params.id } }
       );
@@ -184,7 +184,7 @@ async function deleteDomain(req: Request, res: Response) {
   try {
     const response = await AsrDomain.handleDelete({
       id: req.params.id,
-      deletedByUserId: (req as any).user.id,
+      deletedByUserId: req.user.id,
     });
 
     if (response === 0) {
@@ -208,7 +208,7 @@ async function createProduct(req: Request, res: Response) {
         name,
         shortCode,
         tier,
-        createdBy: (req as any).user.id,
+        createdBy: req.user.id,
       });
 
       //Create product domain mapping
@@ -216,7 +216,7 @@ async function createProduct(req: Request, res: Response) {
         return AsrDomainToProductsRelation.create({
           product_id: product.id,
           domain_id: domainId,
-          createdBy: (req as any).user.id,
+          createdBy: req.user.id,
         });
       });
       await Promise.all(createPromises);
@@ -225,7 +225,7 @@ async function createProduct(req: Request, res: Response) {
         name,
         shortCode,
         tier,
-        createdBy: (req as any).user.id,
+        createdBy: req.user.id,
       });
     }
     return sendSuccess(res, product, 'Product created successfully');
@@ -299,7 +299,7 @@ async function updateProduct(req: Request, res: Response) {
     if (domainIds) {
       response = await sequelize.transaction(async t => {
         await AsrProduct.update(
-          { name, shortCode, tier, updatedBy: (req as any).user.id },
+          { name, shortCode, tier, updatedBy: req.user.id },
           { where: { id: req.params.id }, transaction: t }
         );
 
@@ -316,7 +316,7 @@ async function updateProduct(req: Request, res: Response) {
             {
               product_id: req.params.id,
               domain_id: domainId,
-              updatedBy: (req as any).user.id,
+              updatedBy: req.user.id,
             },
             { transaction: t }
           );
@@ -326,7 +326,7 @@ async function updateProduct(req: Request, res: Response) {
       });
     } else {
       response = await AsrProduct.update(
-        { name, shortCode, tier, updatedBy: (req as any).user.id },
+        { name, shortCode, tier, updatedBy: req.user.id },
         { where: { id: req.params.id } }
       );
     }
@@ -345,7 +345,7 @@ async function deleteProduct(req: Request, res: Response) {
   try {
     const response = await AsrProduct.handleDelete({
       id: req.params.id,
-      deletedByUserId: (req as any).user.id,
+      deletedByUserId: req.user.id,
     });
 
     if (response === 0) {

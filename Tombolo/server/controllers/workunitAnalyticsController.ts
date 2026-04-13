@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { QueryTypes } from 'sequelize';
-import { sequelize } from '../models/index.js';
+import { sequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 
@@ -304,23 +304,23 @@ async function getSchema(req: Request, res: Response) {
 
       const columns = await sequelize.query(
         `
-        SELECT 
+        SELECT
           c.COLUMN_NAME as name,
           c.DATA_TYPE as type,
           c.IS_NULLABLE as nullable,
           c.COLUMN_KEY as \`key\`,
           c.COLUMN_COMMENT as description,
           c.ORDINAL_POSITION,
-          CASE 
+          CASE
             WHEN c.COLUMN_KEY = 'PRI' THEN 'PRI'
             WHEN MAX(kcu.REFERENCED_TABLE_NAME) IS NOT NULL THEN 'FK'
             WHEN c.COLUMN_KEY = 'MUL' THEN 'MUL'
             ELSE NULL
           END as keyType
         FROM INFORMATION_SCHEMA.COLUMNS c
-        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu 
-          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA 
-          AND c.TABLE_NAME = kcu.TABLE_NAME 
+        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+          AND c.TABLE_NAME = kcu.TABLE_NAME
           AND c.COLUMN_NAME = kcu.COLUMN_NAME
           AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
         WHERE c.TABLE_SCHEMA = DATABASE()
@@ -358,23 +358,23 @@ async function getSchema(req: Request, res: Response) {
     for (const table of allowedTables) {
       const columns = await sequelize.query(
         `
-        SELECT 
+        SELECT
           c.COLUMN_NAME as name,
           c.DATA_TYPE as type,
           c.IS_NULLABLE as nullable,
           c.COLUMN_KEY as \`key\`,
           c.COLUMN_COMMENT as description,
           c.ORDINAL_POSITION,
-          CASE 
+          CASE
             WHEN c.COLUMN_KEY = 'PRI' THEN 'PRI'
             WHEN MAX(kcu.REFERENCED_TABLE_NAME) IS NOT NULL THEN 'FK'
             WHEN c.COLUMN_KEY = 'MUL' THEN 'MUL'
             ELSE NULL
           END as keyType
         FROM INFORMATION_SCHEMA.COLUMNS c
-        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu 
-          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA 
-          AND c.TABLE_NAME = kcu.TABLE_NAME 
+        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+          AND c.TABLE_NAME = kcu.TABLE_NAME
           AND c.COLUMN_NAME = kcu.COLUMN_NAME
           AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
         WHERE c.TABLE_SCHEMA = DATABASE()
@@ -441,7 +441,7 @@ async function getDatabaseStats(req: Request, res: Response) {
   try {
     // Get table statistics for both tables
     const [tableStats] = await sequelize.query(`
-      SELECT 
+      SELECT
         table_name,
         table_rows,
         data_length,
@@ -455,7 +455,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     // Get record count by cluster from work_unit_details
     const clusterCounts = await sequelize.query(
       `
-      SELECT 
+      SELECT
         clusterId,
         COUNT(*) as count
       FROM work_unit_details
@@ -468,7 +468,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     // Get state distribution from work_unit_details
     const stateCounts = await sequelize.query(
       `
-      SELECT 
+      SELECT
         state,
         COUNT(*) as count
       FROM work_unit_details
@@ -480,7 +480,7 @@ async function getDatabaseStats(req: Request, res: Response) {
 
     // Get date range from work_unit_details
     const [dateRange] = await sequelize.query(`
-      SELECT 
+      SELECT
         MIN(workUnitTimestamp) as earliest,
         MAX(workUnitTimestamp) as latest
       FROM work_unit_details
@@ -488,7 +488,7 @@ async function getDatabaseStats(req: Request, res: Response) {
 
     // Get workunits table stats
     const [workunitStats] = await sequelize.query(`
-      SELECT 
+      SELECT
         COUNT(*) as total_workunits,
         COUNT(DISTINCT cluster_id) as unique_clusters,
         MIN(createdAt) as earliest_workunit,

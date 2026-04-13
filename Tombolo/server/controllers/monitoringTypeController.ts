@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { MonitoringType } from '../models/index.js';
+import { MonitoringType } from '@tombolo/db';
 import logger from '../config/logger.js';
 import { sendError, sendSuccess } from '../utils/response.js';
 

@@ -4,7 +4,7 @@ import { logOrPostMessage } from '../jobUtils.js';
 import { decryptString } from '@tombolo/shared';
 
 // Local Imports
-import { Cluster, JobMonitoringData } from '../../models/index.js';
+import { Cluster, JobMonitoringData } from '@tombolo/db';
 import { WorkunitsService } from '@hpcc-js/comms';
 import shallowCopyWithoutNested from '../../utils/shallowCopyWithoutNested.js';
 import { WUInfoOptions } from './monitorJobsUtil.js';
@@ -70,7 +70,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
     );
 
     // Get Matching work unites
-    let {
+    const {
       Workunits: { ECLWorkunit },
     } = await wuService.WUQuery({
       Jobname: jobName,

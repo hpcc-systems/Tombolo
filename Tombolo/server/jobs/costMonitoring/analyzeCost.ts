@@ -9,7 +9,7 @@ import {
   AsrProduct,
   Integration,
   SentNotification,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import {
   createNotificationPayload,
   findLocalDateTimeAtCluster,

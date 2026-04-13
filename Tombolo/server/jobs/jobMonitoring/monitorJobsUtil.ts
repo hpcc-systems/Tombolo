@@ -1,5 +1,5 @@
 // Local imports
-import { AsrDomain, AsrProduct } from '../../models/index.js';
+import { AsrDomain, AsrProduct } from '@tombolo/db';
 
 //Package(s)
 import moment from 'moment';
@@ -242,7 +242,7 @@ function calculateRunOrCompleteByTimeForDailyJobs({
     localDateTimeAtCluster.getTime() - backDateInMs
   );
 
-  let window = { frequency: 'daily', currentTime: localDateTimeAtCluster };
+  const window = { frequency: 'daily', currentTime: localDateTimeAtCluster };
 
   const startAndEnd = calculateStartAndEndDateTime({
     localDateTimeAtCluster: adjustedLocalTimeAtCluster,
@@ -302,7 +302,7 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({
     localDateTimeAtCluster.getTime() - backDateInMs
   );
 
-  let window: any = {
+  const window: any = {
     currentTime: localDateTimeAtCluster,
     frequency: 'monthly',
   };
@@ -344,9 +344,9 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({
     }
 
     // week of month
-    let momentDate = moment(adjustedLocalTimeAtCluster);
+    const momentDate = moment(adjustedLocalTimeAtCluster);
 
-    let thisWeek =
+    const thisWeek =
       momentDate.week() - moment(momentDate).startOf('month').week() + 1;
 
     // All weeks for matching day
@@ -402,7 +402,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({
   }
 
   // basic window object
-  let window = {
+  const window = {
     frequency: 'yearly',
     currentTime: localDateTimeAtCluster,
   };
@@ -452,8 +452,8 @@ function calculateRunOrCompleteByTimeForYearlyJobs({
     }
 
     // week of month
-    let momentDate = moment(adjustedLocalDateTimeAtCluster);
-    let thisWeek =
+    const momentDate = moment(adjustedLocalDateTimeAtCluster);
+    const thisWeek =
       momentDate.week() - moment(momentDate).startOf('month').week() + 1;
     const weeks = schedule.map(s => s.week);
     const scheduleWeekMatch = weeks.includes(thisWeek);
@@ -590,7 +590,7 @@ function calculateRunOrCompleteByTimes({
   backDateInMs = 0,
 }) {
   // determine frequency
-  let frequency = schedule[0].frequency;
+  const frequency = schedule[0].frequency;
 
   switch (frequency) {
     case 'daily':
@@ -708,21 +708,21 @@ function generateNotificationIdempotencyKey({
 // Generate a human readable notification ID in the format of <TEXT>_YYYYMMDD_HHMMSS_MS
 const generateNotificationId = ({ notificationPrefix, timezoneOffset }) => {
   // Get current date and time in UTC
-  let now = new Date();
+  const now = new Date();
 
   // Adjust for the timezone offset
   now.setMinutes(now.getMinutes() + timezoneOffset);
 
   // Get date components
-  let year = now.getUTCFullYear();
-  let month = String(now.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-based
-  let day = String(now.getUTCDate()).padStart(2, '0');
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const day = String(now.getUTCDate()).padStart(2, '0');
 
   // Get time components
-  let hours = String(now.getUTCHours()).padStart(2, '0');
-  let minutes = String(now.getUTCMinutes()).padStart(2, '0');
-  let seconds = String(now.getUTCSeconds()).padStart(2, '0');
-  let milliseconds = String(now.getUTCMilliseconds()).padStart(3, '0'); // Milliseconds can be 3 digits
+  const hours = String(now.getUTCHours()).padStart(2, '0');
+  const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+  const milliseconds = String(now.getUTCMilliseconds()).padStart(3, '0'); // Milliseconds can be 3 digits
 
   // Construct the unique ID
   return `${notificationPrefix}_${year}${month}${day}_${hours}${minutes}${seconds}_${milliseconds}`;

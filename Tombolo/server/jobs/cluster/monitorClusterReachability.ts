@@ -4,7 +4,7 @@ import { AccountService } from '@hpcc-js/comms';
 import { passwordExpiryAlertDaysForCluster } from '../../config/monitorings.js';
 import { passwordExpiryInProximityNotificationPayload } from './clusterReachabilityMonitoringUtils.js';
 import { decryptString } from '@tombolo/shared';
-import { Cluster, NotificationQueue } from '../../models/index.js';
+import { Cluster, NotificationQueue } from '@tombolo/db';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 async function monitorClusterReachability() {
@@ -32,7 +32,7 @@ async function monitorClusterReachability() {
     });
 
     //Loop through all clusters and check reachability
-    for (let cluster of allClusters) {
+    for (const cluster of allClusters) {
       // Destructure cluster
       const {
         accountMetaData,
@@ -127,7 +127,7 @@ async function monitorClusterReachability() {
           text: `Cluster reachability:  ${cluster.name} is not reachable -  ${err.message}`,
         });
         const newMetaData = { ...metaData };
-        let lastReachabilityInfo = { ...newMetaData.reachabilityInfo };
+        const lastReachabilityInfo = { ...newMetaData.reachabilityInfo };
         lastReachabilityInfo.reachable = false;
         lastReachabilityInfo.unReachableMessage = err.message;
         newMetaData.reachabilityInfo = lastReachabilityInfo;

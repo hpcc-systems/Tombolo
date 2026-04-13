@@ -1,11 +1,5 @@
 import axios from 'axios';
-
-interface ClusterReachabilityResult {
-  reached: boolean;
-  statusCode: number;
-  message: string;
-  error: any;
-}
+import type { ClusterReachabilityResult } from '../types/cluster.js';
 
 /**
  * Check if an HPCC cluster is reachable
@@ -41,15 +35,15 @@ export async function isClusterReachable(
       };
     } else {
       return {
-        reached: true,
+        reached: false,
         statusCode: response.status,
         message: 'Unknown response status',
         error: null,
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     let message: string;
-    if (error.response) {
+    if (axios.isAxiosError(error) && error.response) {
       // Server responded with an error status
       if (error.response.status === 401) {
         message = `${clusterHost} - Access denied`;
@@ -57,9 +51,11 @@ export async function isClusterReachable(
       } else {
         message = 'Unknown Error';
       }
-    } else {
+    } else if (axios.isAxiosError(error)) {
       // Network error or timeout
       message = `Checking cluster reachability - ${error.message}`;
+    } else {
+      message = 'Checking cluster reachability - Unknown error';
     }
 
     return { reached: false, statusCode: 503, message, error };

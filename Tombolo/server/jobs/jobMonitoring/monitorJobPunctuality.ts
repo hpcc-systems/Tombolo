@@ -20,7 +20,7 @@ import {
   Cluster,
   NotificationQueue,
   MonitoringType,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
 
@@ -99,7 +99,7 @@ const monitoringTypeName = 'Job Monitoring';
     });
 
     // Iterate over the job monitorings
-    for (let jobMonitoring of jobMonitorings) {
+    for (const jobMonitoring of jobMonitorings) {
       try {
         const {
           id,
@@ -192,9 +192,9 @@ const monitoringTypeName = 'Job Monitoring';
           continue;
         }
 
-        let alertTimePassed = window.start < window.currentTime;
+        const alertTimePassed = window.start < window.currentTime;
 
-        let lateByInMinutes = Math.floor(
+        const lateByInMinutes = Math.floor(
           (window.currentTime.getTime() - window.start.getTime()) / 60000
         );
 
