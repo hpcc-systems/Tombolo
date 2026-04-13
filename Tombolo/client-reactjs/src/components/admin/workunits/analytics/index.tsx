@@ -1548,6 +1548,7 @@ const AnalyticsWorkspace = () => {
                     type="primary"
                     icon={isExecuting ? <LoadingOutlined spin /> : <PlayCircleOutlined />}
                     onClick={executeQuery}
+                    className={isExecuting ? styles.executingQueryBtn : undefined}
                     disabled={isExecuting}>
                     {isExecuting ? 'Executing...' : 'Execute'}
                   </Button>
