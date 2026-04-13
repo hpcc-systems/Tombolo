@@ -17,7 +17,7 @@ catalog:
   "@types/lodash": ^4.17.24
   "@vitest/coverage-v8": ^4.1.2
   akeyless: ^5.0.22
-  axios: ^1.13.5
+  axios: ^1.15.0
   dotenv: ^16.4.7
   eslint: ^9.39.1
   eslint-plugin-react: ^7.37.5
