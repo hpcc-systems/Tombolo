@@ -38,6 +38,7 @@ import HierarchyExplorer, {
   findPathByKey,
   flattenTree,
 } from './HierarchyExplorer';
+import type { WorkUnit } from '@tombolo/shared';
 
 const { Text } = Typography;
 
@@ -46,23 +47,11 @@ function renderAnyMetric(key: string, value: any): React.ReactNode {
   return renderAnyMetricShared(key, value);
 }
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
 interface Props {
-  wu: {
-    jobName?: string;
-    wuId?: string;
-    state?: string;
-    engine?: string;
-    clusterId?: string;
-    owner?: string;
-    totalClusterTime?: number;
-  };
+  wu: WorkUnit;
   details: any[];
   clusterName?: string;
 }
-
-// ── Component ────────────────────────────────────────────────────────────────
 
 const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
   const [selectedNode, setSelectedNode] = useState<any>(null);

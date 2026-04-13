@@ -6,3 +6,4 @@ export * from './role.js';
 export * from './asr.js';
 export * from './notification.js';
 export * from './integration.js';
+export * from './workunit.js';

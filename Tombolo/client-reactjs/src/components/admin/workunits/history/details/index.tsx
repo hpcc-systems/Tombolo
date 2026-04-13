@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Spin, Button, message, Alert, Space } from 'antd';
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import workunitsService from '@/services/workunits.service';
+import type { WorkUnit } from '@tombolo/shared';
 import WorkUnitView from './WorkUnitView';
 import styles from '../workunitHistory.module.css';
 
@@ -19,7 +20,7 @@ const WorkUnitDetails: React.FC = () => {
   }, [clusters, clusterId]);
 
   const [loading, setLoading] = useState<boolean>(true);
-  const [wu, setWu] = useState<any>(null);
+  const [wu, setWu] = useState<WorkUnit | null>(null);
   const [details, setDetails] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 

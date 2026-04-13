@@ -1,4 +1,5 @@
 import { apiClient } from '@/services/api';
+import type { WorkUnit, WorkUnitDetailsResponse } from '@tombolo/shared';
 
 const workunitsService = {
   getAll: async (params: Record<string, any> = {}): Promise<any> => {
@@ -6,12 +7,12 @@ const workunitsService = {
     return response.data;
   },
 
-  getById: async (clusterId: string, wuid: string): Promise<any> => {
+  getById: async (clusterId: string, wuid: string): Promise<WorkUnit> => {
     const response = await apiClient.get(`/workunits/${clusterId}/${wuid}`);
     return response.data;
   },
 
-  getDetails: async (clusterId: string, wuid: string): Promise<any> => {
+  getDetails: async (clusterId: string, wuid: string): Promise<WorkUnitDetailsResponse> => {
     const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/details`);
     return response.data;
   },
@@ -57,7 +58,11 @@ const workunitsService = {
   },
 
   // Paging & lazy fetch helpers for scopes (virtualization support)
-  getScopes: async (clusterId: string, wuid: string, options: { limit?: number; cursor?: number } = {}): Promise<any> => {
+  getScopes: async (
+    clusterId: string,
+    wuid: string,
+    options: { limit?: number; cursor?: number } = {}
+  ): Promise<any> => {
     const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/scopes`, { params: options });
     return response.data;
   },
@@ -68,7 +73,9 @@ const workunitsService = {
   },
 
   getScopeHistory: async (clusterId: string, wuid: string, scopeId: string): Promise<any> => {
-    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/scopes/${encodeURIComponent(scopeId)}/history`);
+    const response = await apiClient.get(
+      `/workunits/${clusterId}/${wuid}/scopes/${encodeURIComponent(scopeId)}/history`
+    );
     return response.data;
   },
 };
