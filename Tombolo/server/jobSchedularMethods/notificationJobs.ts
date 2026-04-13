@@ -29,7 +29,7 @@ async function scheduleEmailNotificationProcessing(this: any): Promise<void> {
     await this.bree.start(jobName);
     logger.info('E-mail Notification processing job initialized ...');
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to schedule e-mail notification processing:', err);
   }
 }
 
