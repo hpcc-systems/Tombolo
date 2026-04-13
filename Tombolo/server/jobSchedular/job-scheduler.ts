@@ -32,7 +32,6 @@ import {
 } from '../jobSchedularMethods/hpccFiles.js';
 import {
   scheduleEmailNotificationProcessing,
-  scheduleRemoveOldNotificationsJob,
   //   scheduleTeamsNotificationProcessing,
 } from '../jobSchedularMethods/notificationJobs.js';
 
@@ -171,7 +170,6 @@ class JobScheduler {
       await startLzFileCountMonitoring.call(this);
       await startLzSpaceUsageMonitoring.call(this);
       await startClusterMonitoring.call(this);
-      await this.scheduleRemoveOldNotificationsJob();
       logger.info('-----------------------------');
       logger.info('Server is finished intializing, and is now running');
       logger.info('-----------------------------');
@@ -381,10 +379,6 @@ class JobScheduler {
   //Process notification queue
   scheduleEmailNotificationProcessing(): any {
     return scheduleEmailNotificationProcessing.call(this);
-  }
-
-  scheduleRemoveOldNotificationsJob(): any {
-    return scheduleRemoveOldNotificationsJob.call(this);
   }
 
   // createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {

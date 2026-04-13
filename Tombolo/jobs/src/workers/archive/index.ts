@@ -4,12 +4,14 @@ import logger from '@/config/logger.js';
 import { formatErrorForLogging } from '@/utils/errorFormatter.js';
 import type { ArchiveJobData, ArchiveJobType } from '@/types/index.js';
 import { runCostMonitoringArchive } from './costMonitoring.js';
+import { runNotificationArchive } from './notifications.js';
 
 const archiveHandlers: Record<
   ArchiveJobType,
   (job: ArchiveJobData) => Promise<any>
 > = {
   'cost-monitoring': runCostMonitoringArchive,
+  notifications: runNotificationArchive,
 };
 
 async function processArchiveJob(job: Job<ArchiveJobData>) {

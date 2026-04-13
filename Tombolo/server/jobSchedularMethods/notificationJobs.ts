@@ -2,14 +2,9 @@ import { join } from 'path';
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
 import { resolveJobPath } from './jobPathResolver.js';
-import { notificationRetentionInterval } from '../config/monitorings.js';
 const PROCESS_EMAIL_NOTIFICATIONS = join(
   'notifications',
   'processEmailNotifications.js'
-);
-const REMOVE_OLD_NOTIFICATIONS = join(
-  'notifications',
-  'removeOldNotifications.js'
 );
 const __dirname = getDirname(import.meta.url);
 
@@ -38,32 +33,4 @@ async function scheduleEmailNotificationProcessing(this: any): Promise<void> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function scheduleRemoveOldNotificationsJob(this: any): Promise<void> {
-  try {
-    const jobName = 'remove-old-notifications-' + new Date().getTime();
-    await this.bree.add({
-      name: jobName,
-      interval: notificationRetentionInterval,
-      path: resolveJobPath(
-        join(__dirname, '..', 'jobs', REMOVE_OLD_NOTIFICATIONS)
-      ),
-      worker: {
-        workerData: {
-          jobName,
-          WORKER_CREATED_AT: Date.now(),
-        },
-      },
-    });
-
-    await this.bree.start(jobName);
-    logger.info('Remove old notifications job initialized ...');
-  } catch (err) {
-    logger.error('scheduleRemoveOldNotificationsJob: ', err);
-  }
-}
-
-export {
-  scheduleEmailNotificationProcessing,
-  scheduleRemoveOldNotificationsJob,
-};
+export { scheduleEmailNotificationProcessing };
